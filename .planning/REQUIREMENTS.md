@@ -48,9 +48,9 @@
 
 - [ ] **REQ-nfr-performance**: Dashboard feed/tables API ≤500 ms at up to 1M signals; Web App first paint ≤3 s on 3G; Web App bundle ≤300 KB gzip.
 - [ ] **REQ-nfr-reliability**: Worker auto-restart; daily pg_dump retained 14 d + weekly full retained 8 wk; documented restore. One source's failure must not break others; failure alert ≤30 min (TZ §6.1.4); DB restore on a clean server per docs ≤2 h (TZ §6.1.5).
-- [ ] **REQ-nfr-security**: HTTPS everywhere; secrets in .env outside repo; initData signature verification; argon2 password hashing; dashboard access by account only; audit_log on all request changes + publications.
-- [ ] **REQ-nfr-observability**: Structured logs; alert when any collector fails >3 consecutive cycles; /health page.
-- [ ] **REQ-nfr-time-localization**: All timestamps UTC in DB; display in Asia/Tashkent.
+- [x] **REQ-nfr-security**: HTTPS everywhere; secrets in .env outside repo; initData signature verification; argon2 password hashing; dashboard access by account only; audit_log on all request changes + publications.
+- [x] **REQ-nfr-observability**: Structured logs; alert when any collector fails >3 consecutive cycles; /health page.
+- [x] **REQ-nfr-time-localization**: All timestamps UTC in DB; display in Asia/Tashkent.
 
 ## Future Milestone — Phase 2 (deferred; NOT in current roadmap)
 
@@ -86,9 +86,9 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | REQ-roles | Phase 1 | Pending |
-| REQ-nfr-security | Phase 1 | Pending |
-| REQ-nfr-observability | Phase 1 | Pending |
-| REQ-nfr-time-localization | Phase 1 | Pending |
+| REQ-nfr-security | Phase 1 | Complete |
+| REQ-nfr-observability | Phase 1 | Complete |
+| REQ-nfr-time-localization | Phase 1 | Complete |
 | REQ-uzex-parser | Phase 2 | Pending |
 | REQ-fx-rates | Phase 2 | Pending |
 | REQ-sources-health | Phase 2 | Pending |
@@ -111,6 +111,7 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | REQ-llm-budget | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements (Client Phase 1): 24 total (19 functional + 5 NFR)
 - Mapped to phases: 24
 - Unmapped: 0 ✓

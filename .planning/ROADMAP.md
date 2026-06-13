@@ -39,7 +39,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Plans**: 4 plansPlans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Monorepo + core config/secrets, db session/Base, structlog JSON, Asia/Tashkent helper, /health, docker-compose dev (postgres, redis, api, worker, beat)
+- [x] 01-01-PLAN.md — Monorepo + core config/secrets, db session/Base, structlog JSON, Asia/Tashkent helper, /health, docker-compose dev (postgres, redis, api, worker, beat)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -139,7 +139,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 0/4 | Not started | - |
+| 1. Walking Skeleton | 1/4 | In Progress|  |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
