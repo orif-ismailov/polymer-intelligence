@@ -1,0 +1,41 @@
+# Polymer Intelligence — Dashboard image (Next.js)
+# Build context: dashboard/
+# Usage:
+#   docker build -f deploy/Dockerfile.dashboard -t pi-dashboard:latest dashboard/
+
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependency files and install
+COPY package.json package-lock.json* ./
+RUN npm ci --prefer-offline
+
+# Copy source and build
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+# ── Production image ──────────────────────────────────────────────────────────
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Non-root user
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs
+
+# Copy standalone output (next.config.mjs: output: "standalone")
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+USER nextjs
+
+EXPOSE 3000
+ENV PORT=3000
+
+CMD ["node", "server.js"]
