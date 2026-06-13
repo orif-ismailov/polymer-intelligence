@@ -1,0 +1,124 @@
+# Polymer Intelligence — Development stack
+# ============================================================================
+# Usage:
+#   docker compose -f deploy/docker-compose.dev.yml up
+#
+# Prerequisites:
+#   - Copy deploy/.env.example → .env (repo root) and fill in secrets
+#   - Or set the env_file path below to wherever your .env lives
+#
+# Services: postgres, redis, api, worker, beat
+# (userbot and dashboard are separate and not included in the dev scaffold)
+# ============================================================================
+
+services:
+
+  # ── PostgreSQL 16 ──────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false   # .env lives outside the repo; not present in CI/scaffold validation
+    environment:
+      # Override with safe dev defaults if .env does not set these
+      POSTGRES_DB: polymer_intelligence
+      POSTGRES_USER: pi_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pi_user -d polymer_intelligence"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API (FastAPI + uvicorn) ────────────────────────────────────────────────
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false   # .env lives outside the repo; not present in CI/scaffold validation
+    environment:
+      DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/polymer_intelligence
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ../backend:/app  # live reload in dev
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Celery Worker ─────────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false   # .env lives outside the repo
+    environment:
+      DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/polymer_intelligence
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default
+    volumes:
+      - ../backend:/app
+
+  # ── Celery Beat (scheduler) ───────────────────────────────────────────────
+  beat:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false   # .env lives outside the repo
+    environment:
+      DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/polymer_intelligence
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    volumes:
+      - ../backend:/app
+
+volumes:
+  postgres_data:
+  redis_data:
