@@ -1,0 +1,77 @@
+{
+  "_comment": "Product relevance synonyms dictionary (dev-spec §2.1). Used by the UZEX relevance filter to match raw text to product codes. Format: product_code -> list of synonyms (RU/UZ/EN/common abbreviations). Admin-extensible via the admin UI in Phase 2.",
+  "PP": [
+    "полипропилен",
+    "пп",
+    "propilen",
+    "polipropilen",
+    "PP",
+    "ПП",
+    "Polypropylene",
+    "polypropylene"
+  ],
+  "HDPE": [
+    "полиэтилен высокого давления",
+    "ПЭВД",
+    "ПВД",
+    "полиэтилен высокой плотности",
+    "ПЭВП",
+    "HDPE",
+    "High Density Polyethylene",
+    "yuqori zichlikdagi polietilen",
+    "ПЕНД"
+  ],
+  "LDPE": [
+    "полиэтилен низкого давления",
+    "ПЭНД",
+    "ПНД",
+    "полиэтилен низкой плотности",
+    "ПЭНП",
+    "LDPE",
+    "Low Density Polyethylene",
+    "past zichlikdagi polietilen",
+    "ПЕНД"
+  ],
+  "LLDPE": [
+    "линейный полиэтилен низкой плотности",
+    "линейный ПЭНП",
+    "ЛПЭНП",
+    "LLDPE",
+    "Linear Low Density Polyethylene",
+    "chiziqli past zichlikdagi polietilen"
+  ],
+  "PVC": [
+    "поливинилхлорид",
+    "ПВХ",
+    "PVC",
+    "Polyvinyl Chloride",
+    "polivinilxlorid",
+    "винипласт"
+  ],
+  "PET": [
+    "полиэтилентерефталат",
+    "ПЭТФ",
+    "ПЭТ",
+    "PET",
+    "PETE",
+    "Polyethylene Terephthalate",
+    "polietilentereftalat"
+  ],
+  "PS": [
+    "полистирол",
+    "ПС",
+    "PS",
+    "Polystyrene",
+    "polistirol",
+    "HIPS",
+    "ударопрочный полистирол",
+    "УПС"
+  ],
+  "ABS": [
+    "АБС",
+    "ABS",
+    "ABS-пластик",
+    "акрилонитрилбутадиенстирол",
+    "ABS-plastik"
+  ]
+}

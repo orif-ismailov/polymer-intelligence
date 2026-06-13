@@ -1,0 +1,68 @@
+[
+  {
+    "product_code": "PP",
+    "code": "T30S",
+    "producer": "Shurtan GCC",
+    "description": "Полипропилен T30S (Шуртан ГХК) — гомополимер, волокно"
+  },
+  {
+    "product_code": "PP",
+    "code": "H030 SG",
+    "producer": "Shurtan GCC",
+    "description": "Полипропилен H030 SG (Шуртан ГХК) — гомополимер, инжекция"
+  },
+  {
+    "product_code": "PP",
+    "code": "PPH-FN04",
+    "producer": "Shurtan GCC",
+    "description": "Полипропилен PPH-FN04 (Шуртан ГХК) — гомополимер, плёнка"
+  },
+  {
+    "product_code": "PP",
+    "code": "030SG",
+    "producer": "Uz-Kor",
+    "description": "Полипропилен 030SG (Uz-Kor Gas Chemical) — гомополимер"
+  },
+  {
+    "product_code": "PP",
+    "code": "EP548R",
+    "producer": "Uz-Kor",
+    "description": "Полипропилен EP548R (Uz-Kor Gas Chemical) — сополимер"
+  },
+  {
+    "product_code": "HDPE",
+    "code": "F7000",
+    "producer": "Shurtan GCC",
+    "description": "Полиэтилен F7000 (Шуртан ГХК) — HDPE, трубная марка"
+  },
+  {
+    "product_code": "HDPE",
+    "code": "B5823",
+    "producer": "Shurtan GCC",
+    "description": "Полиэтилен B5823 (Шуртан ГХК) — HDPE, выдувная"
+  },
+  {
+    "product_code": "HDPE",
+    "code": "HD50200S",
+    "producer": "Uz-Kor",
+    "description": "Полиэтилен HD50200S (Uz-Kor Gas Chemical) — HDPE, литьё"
+  },
+  {
+    "product_code": "LDPE",
+    "code": "2420D",
+    "producer": "Uz-Kor",
+    "description": "Полиэтилен 2420D (Uz-Kor Gas Chemical) — LDPE"
+  },
+  {
+    "product_code": "LDPE",
+    "code": "153-02K",
+    "producer": "Uz-Kor",
+    "description": "Полиэтилен 153-02K (Uz-Kor Gas Chemical) — LDPE, пленка"
+  },
+  {
+    "product_code": "LLDPE",
+    "code": "LL0209AA",
+    "producer": "Uz-Kor",
+    "description": "Полиэтилен LL0209AA (Uz-Kor Gas Chemical) — LLDPE"
+  }
+]

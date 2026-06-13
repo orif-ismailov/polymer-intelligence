@@ -1,0 +1,58 @@
+[
+  {
+    "code": "PP",
+    "name_ru": "Полипропилен",
+    "name_uz": "Polipropilen",
+    "category": "polymer",
+    "sort_order": 1
+  },
+  {
+    "code": "HDPE",
+    "name_ru": "Полиэтилен высокого давления",
+    "name_uz": "Yuqori zichlikdagi polietilen",
+    "category": "polymer",
+    "sort_order": 2
+  },
+  {
+    "code": "LDPE",
+    "name_ru": "Полиэтилен низкого давления",
+    "name_uz": "Past zichlikdagi polietilen",
+    "category": "polymer",
+    "sort_order": 3
+  },
+  {
+    "code": "LLDPE",
+    "name_ru": "Линейный полиэтилен низкой плотности",
+    "name_uz": "Chiziqli past zichlikdagi polietilen",
+    "category": "polymer",
+    "sort_order": 4
+  },
+  {
+    "code": "PVC",
+    "name_ru": "Поливинилхлорид",
+    "name_uz": "Polivinilxlorid",
+    "category": "polymer",
+    "sort_order": 5
+  },
+  {
+    "code": "PET",
+    "name_ru": "Полиэтилентерефталат",
+    "name_uz": "Polietilentereftalat",
+    "category": "polymer",
+    "sort_order": 6
+  },
+  {
+    "code": "PS",
+    "name_ru": "Полистирол",
+    "name_uz": "Polistirol",
+    "category": "polymer",
+    "sort_order": 7
+  },
+  {
+    "code": "ABS",
+    "name_ru": "АБС-пластик",
+    "name_uz": "ABS-plastik",
+    "category": "polymer",
+    "sort_order": 8
+  }
+]

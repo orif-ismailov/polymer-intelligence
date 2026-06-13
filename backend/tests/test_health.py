@@ -74,3 +74,13 @@ class TestHealthEndpoint:
         """Response Content-Type must be application/json."""
         response = client.get("/api/v1/health")
         assert "application/json" in response.headers.get("content-type", "")
+
+    def test_health_response_has_schema_version_key(self, client: TestClient) -> None:
+        """Response JSON must contain a 'schema_version' key (may be null).
+
+        REQ-nfr-observability: /health reports schema migration status.
+        plan 01-02 requirement: schema_version field proves migrations applied.
+        """
+        response = client.get("/api/v1/health")
+        body = response.json()
+        assert "schema_version" in body
