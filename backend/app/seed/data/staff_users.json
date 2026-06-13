@@ -1,0 +1,30 @@
+[
+  {
+    "email": "admin@polymer.uz",
+    "full_name": "Admin User",
+    "role": "admin",
+    "password_env": "SEED_ADMIN_PASSWORD",
+    "password_dev_default": "admin_dev_password_change_in_prod"
+  },
+  {
+    "email": "analyst@polymer.uz",
+    "full_name": "Analyst User",
+    "role": "analyst",
+    "password_env": "SEED_ANALYST_PASSWORD",
+    "password_dev_default": "analyst_dev_password_change_in_prod"
+  },
+  {
+    "email": "trader@polymer.uz",
+    "full_name": "Trader User",
+    "role": "trader",
+    "password_env": "SEED_TRADER_PASSWORD",
+    "password_dev_default": "trader_dev_password_change_in_prod"
+  },
+  {
+    "email": "viewer@polymer.uz",
+    "full_name": "Viewer User",
+    "role": "viewer",
+    "password_env": "SEED_VIEWER_PASSWORD",
+    "password_dev_default": "viewer_dev_password_change_in_prod"
+  }
+]

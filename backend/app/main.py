@@ -13,11 +13,14 @@ For development with live reload:
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.logging import configure_logging
 from app.api.health import router as health_router
+from app.api.auth import router as auth_router
+from app.api.deps import require_admin, require_analyst_or_admin
+from app.models.staff import StaffUser
 
 
 def create_app() -> FastAPI:
@@ -57,6 +60,34 @@ def create_app() -> FastAPI:
     # ── Routers ───────────────────────────────────────────────────────────────
     # All API routes are mounted under /api/v1 per dev-spec §3.2.
     application.include_router(health_router, prefix="/api/v1")
+    application.include_router(auth_router, prefix="/api/v1")
+
+    # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
+    # These minimal routes exist to prove the require_role guard works end-to-end.
+    # The full /admin/users CRUD ships in Phase 4 (admin management screen).
+    # The full /analyst/* data endpoints ship in Phase 2+.
+
+    @application.get("/api/v1/admin/whoami", tags=["admin-demo"])
+    def admin_whoami(
+        current_user: StaffUser = Depends(require_admin),
+    ) -> dict:
+        """Admin-only demo route. Returns 403 for non-admin roles (REQ-roles guard test)."""
+        return {
+            "id": current_user.id,
+            "email": current_user.email,
+            "role": current_user.role.value,
+        }
+
+    @application.get("/api/v1/analyst/whoami", tags=["analyst-demo"])
+    def analyst_whoami(
+        current_user: StaffUser = Depends(require_analyst_or_admin),
+    ) -> dict:
+        """Analyst+admin demo route. Returns 403 for trader/viewer (REQ-roles guard test)."""
+        return {
+            "id": current_user.id,
+            "email": current_user.email,
+            "role": current_user.role.value,
+        }
 
     return application
 
