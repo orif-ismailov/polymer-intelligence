@@ -43,7 +43,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — SQLAlchemy models + 14 ENUMs + Alembic migration reproducing the locked schema verbatim (20 tables + v_live_feed), advisory-locked entrypoint, seed (products, UZ grades, synonyms)
+- [x] 01-02-PLAN.md — SQLAlchemy models + 14 ENUMs + Alembic migration reproducing the locked schema verbatim (20 tables + v_live_feed), advisory-locked entrypoint, seed (products, UZ grades, synonyms)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -139,7 +139,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 1/4 | In Progress|  |
+| 1. Walking Skeleton | 2/4 | In Progress|  |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Bootstrap files written; roadmap covers Client Phase 1 (E1–E6), 24/24 v1 requirements mapped.
-last_updated: "2026-06-13T16:09:26.219Z"
+stopped_at: Completed 01-02-PLAN.md — all 20 tables + 14 ENUMs + v_live_feed + advisory-locked entrypoint + seed
+last_updated: "2026-06-13T16:33:07.127Z"
 last_activity: 2026-06-13 -- Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 01 (walking-skeleton) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-13 -- Phase 01 execution started
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P02 | 19 | 2 tasks | 22 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Most relevant to Phase 1:
 - DEC-auth-split: JWT for dashboard (Phase 1) / Telegram initData for Web App (Phase 3)
 - DEC-tz-handling: UTC in DB, Asia/Tashkent display — centralize in a helper from the start
 - DEC-deploy-single-vps: docker compose container set (api, worker, beat, userbot, dashboard, postgres, redis, nginx)
+- [Phase ?]: SQLAlchemy 2 requires explicit SA column types for timestamptz (DateTime(timezone=True)) and uses Float not Real
+- [Phase ?]: synonyms table deferred to Phase 2 — locked DDL v1.1 has no synonyms table; synonyms.json seeded and ready for future migration
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-13T16:09:26.216Z
-Stopped at: Bootstrap files written; roadmap covers Client Phase 1 (E1–E6), 24/24 v1 requirements mapped.
+Last session: 2026-06-13T16:33:07.124Z
+Stopped at: Completed 01-02-PLAN.md — all 20 tables + 14 ENUMs + v_live_feed + advisory-locked entrypoint + seed
 Resume file: None
