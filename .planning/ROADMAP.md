@@ -14,7 +14,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [x] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (completed 2026-06-13)
+- [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (verification gaps found 2026-06-13 — 2 blockers: SC#1 docker/nginx, SC#5 CI image build)
 - [ ] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health
 - [ ] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications
 - [ ] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard
@@ -139,7 +139,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 4/4 | Complete   | 2026-06-13 |
+| 1. Walking Skeleton | 4/4 | Gaps found | - |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |

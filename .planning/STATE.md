@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 01-03-PLAN.md — JWT auth, argon2 hashing, RBAC require_role, audit_service, staff seed
+status: gaps_found
+stopped_at: Phase 01 verification — gaps_found (3/5 must-haves); 2 blockers: SC#1 docker/nginx, SC#5 CI image build
 last_updated: "2026-06-13T17:16:35.341Z"
-last_activity: 2026-06-13 -- Phase 01 execution started
+last_activity: 2026-06-13 -- Phase 01 executed (4/4 plans) then verified — gaps found
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 0
   total_plans: 4
   completed_plans: 4
-  percent: 17
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 ## Current Position
 
-Phase: 01 (walking-skeleton) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-06-13 -- Phase 01 execution started
+Phase: 01 (walking-skeleton) — GAPS FOUND (not complete)
+Plan: 4 of 4 executed
+Status: Verification gaps_found (3/5 must-haves). 2 blockers — SC#1: docker-compose missing nginx + broken Dockerfile path + nginx.conf missing events{}; SC#5: invalid PEP 517 build-backend + eslint gate neutered. Next: /gsd:plan-phase 01 --gaps
+Last activity: 2026-06-13 -- Phase 01 executed (4/4 plans) then verified — gaps found
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -105,5 +105,5 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 ## Session Continuity
 
 Last session: 2026-06-13T17:16:35.338Z
-Stopped at: Completed 01-03-PLAN.md — JWT auth, argon2 hashing, RBAC require_role, audit_service, staff seed
-Resume file: None
+Stopped at: Phase 01 verified — gaps_found (3/5). Resume via /gsd:plan-phase 01 --gaps → /gsd:execute-phase 01 --gaps-only
+Resume file: .planning/phases/01-walking-skeleton/01-VERIFICATION.md
