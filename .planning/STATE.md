@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: executing
-stopped_at: Completed 01-04-PLAN.md — CI + dashboard/webapp scaffolds + Dockerfiles + nginx rate-limit
-last_updated: "2026-06-13T17:02:40.286Z"
+status: verifying
+stopped_at: Completed 01-03-PLAN.md — JWT auth, argon2 hashing, RBAC require_role, audit_service, staff seed
+last_updated: "2026-06-13T17:16:35.341Z"
 last_activity: 2026-06-13 -- Phase 01 execution started
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 0
+  completed_plans: 4
+  percent: 17
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 Phase: 01 (walking-skeleton) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-13 -- Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01 P02 | 19 | 2 tasks | 22 files |
 | Phase 01 P04 | 25 | 2 tasks | 24 files |
+| Phase 01 P03 | 10 | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,9 @@ Most relevant to Phase 1:
 - [Phase ?]: nginx limit_req_zone rate=10r/m burst=5 nodelay on /api/v1/auth/login — closes ASVS L1 V2.2.1 at network layer (T-04-06)
 - [Phase ?]: Tailwind design tokens in tailwind.config.ts — no hardcoded hex in dashboard components (REQ-nfr-security)
 - [Phase ?]: Next.js output: standalone for Docker multi-stage build
+- [Phase ?]: APP_ENV=production gates Secure cookie flag for refresh token (False dev/test, True prod TLS behind nginx)
+- [Phase ?]: require_role reads role from verified JWT payload — no extra DB query needed for authorization
+- [Phase ?]: Audit write uses db.flush() not db.commit() — caller commits, audit row shares transaction with audited action
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-13T17:02:40.283Z
-Stopped at: Completed 01-04-PLAN.md — CI + dashboard/webapp scaffolds + Dockerfiles + nginx rate-limit
+Last session: 2026-06-13T17:16:35.338Z
+Stopped at: Completed 01-03-PLAN.md — JWT auth, argon2 hashing, RBAC require_role, audit_service, staff seed
 Resume file: None

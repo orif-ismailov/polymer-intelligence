@@ -26,7 +26,7 @@
 - [ ] **REQ-price-trends** (FR-12): Price chart per product/market from `price_points` (external-index overlay deferred to Phase 2).
 - [ ] **REQ-sources-health** (FR-13): Source state — last successful fetch, consecutive failure count, enable/disable.
 - [ ] **REQ-alerts** (FR-14): Alert feed + rules builder (product, volume/price threshold, urgency, delivery channels).
-- [ ] **REQ-roles** (FR-15): Roles admin / analyst / trader / viewer (ENUM staff_role). admin = all + users; analyst = data + rules + report approval; trader = view + work requests; viewer = view only.
+- [x] **REQ-roles** (FR-15): Roles admin / analyst / trader / viewer (ENUM staff_role). admin = all + users; analyst = data + rules + report approval; trader = view + work requests; viewer = view only.
 
 ### Bot & Publishing
 
@@ -85,7 +85,7 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REQ-roles | Phase 1 | Pending |
+| REQ-roles | Phase 1 | Complete |
 | REQ-nfr-security | Phase 1 | Complete |
 | REQ-nfr-observability | Phase 1 | Complete |
 | REQ-nfr-time-localization | Phase 1 | Complete |
