@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md — all 20 tables + 14 ENUMs + v_live_feed + advisory-locked entrypoint + seed
-last_updated: "2026-06-13T16:33:07.127Z"
+stopped_at: Completed 01-04-PLAN.md — CI + dashboard/webapp scaffolds + Dockerfiles + nginx rate-limit
+last_updated: "2026-06-13T17:02:40.286Z"
 last_activity: 2026-06-13 -- Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 01 (walking-skeleton) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-13 -- Phase 01 execution started
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01 P02 | 19 | 2 tasks | 22 files |
+| Phase 01 P04 | 25 | 2 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,9 @@ Most relevant to Phase 1:
 - DEC-deploy-single-vps: docker compose container set (api, worker, beat, userbot, dashboard, postgres, redis, nginx)
 - [Phase ?]: SQLAlchemy 2 requires explicit SA column types for timestamptz (DateTime(timezone=True)) and uses Float not Real
 - [Phase ?]: synonyms table deferred to Phase 2 — locked DDL v1.1 has no synonyms table; synonyms.json seeded and ready for future migration
+- [Phase ?]: nginx limit_req_zone rate=10r/m burst=5 nodelay on /api/v1/auth/login — closes ASVS L1 V2.2.1 at network layer (T-04-06)
+- [Phase ?]: Tailwind design tokens in tailwind.config.ts — no hardcoded hex in dashboard components (REQ-nfr-security)
+- [Phase ?]: Next.js output: standalone for Docker multi-stage build
 
 ### Pending Todos
 
@@ -96,6 +100,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-13T16:33:07.124Z
-Stopped at: Completed 01-02-PLAN.md — all 20 tables + 14 ENUMs + v_live_feed + advisory-locked entrypoint + seed
+Last session: 2026-06-13T17:02:40.283Z
+Stopped at: Completed 01-04-PLAN.md — CI + dashboard/webapp scaffolds + Dockerfiles + nginx rate-limit
 Resume file: None

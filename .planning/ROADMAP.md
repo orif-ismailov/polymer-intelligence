@@ -48,7 +48,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [ ] 01-03-PLAN.md — Auth backbone: argon2 hashing, JWT (access 15m + refresh 7d httpOnly), /auth/login + /auth/refresh, require_role guard (admin/analyst/trader/viewer), audit_log, per-role seed users
-- [ ] 01-04-PLAN.md — CI (ruff, mypy services/+schemas/, eslint+tsc, tests, image build), Next.js dashboard + React/Vite webapp scaffolds, Dockerfiles, TLS-ready nginx reverse proxy
+- [x] 01-04-PLAN.md — CI (ruff, mypy services/+schemas/, eslint+tsc, tests, image build), Next.js dashboard + React/Vite webapp scaffolds, Dockerfiles, TLS-ready nginx reverse proxy
 
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` — the migration MUST reproduce the locked DDL verbatim (raw_items, signals, requests, price_points, alerts, reports, sources, counterparties, fx_rates, staff_users, audit_log, ENUM types, v_live_feed). This is the foundation all phases build on.
 
@@ -139,7 +139,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 2/4 | In Progress|  |
+| 1. Walking Skeleton | 3/4 | In Progress|  |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
