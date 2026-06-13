@@ -32,7 +32,12 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   3. A staff user can log in and receive a JWT (access 15 min + refresh 7 d httpOnly); endpoints enforce admin/analyst/trader/viewer roles
   4. Passwords are argon2-hashed; secrets load from `.env` outside the repo; timestamps are stored UTC with an Asia/Tashkent display helper
   5. CI (ruff, mypy, eslint+tsc, tests, image build) passes green on the scaffold
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 01-01-PLAN.md — Monorepo + core config/secrets, db session/Base, structlog JSON, Asia/Tashkent helper, /health, docker-compose dev (postgres, redis, api, worker, beat)
+- [ ] 01-02-PLAN.md — SQLAlchemy models + 14 ENUMs + Alembic migration reproducing the locked schema verbatim (20 tables + v_live_feed), advisory-locked entrypoint, seed (products, UZ grades, synonyms)
+- [ ] 01-03-PLAN.md — Auth backbone: argon2 hashing, JWT (access 15m + refresh 7d httpOnly), /auth/login + /auth/refresh, require_role guard (admin/analyst/trader/viewer), audit_log, per-role seed users
+- [ ] 01-04-PLAN.md — CI (ruff, mypy services/+schemas/, eslint+tsc, tests, image build), Next.js dashboard + React/Vite webapp scaffolds, Dockerfiles, TLS-ready nginx reverse proxy
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` — the migration MUST reproduce the locked DDL verbatim (raw_items, signals, requests, price_points, alerts, reports, sources, counterparties, fx_rates, staff_users, audit_log, ENUM types, v_live_feed). This is the foundation all phases build on.
 
 ### Phase 2: Ingest Core + UZEX
@@ -107,7 +112,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 0/TBD | Not started | - |
+| 1. Walking Skeleton | 0/4 | Not started | - |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
