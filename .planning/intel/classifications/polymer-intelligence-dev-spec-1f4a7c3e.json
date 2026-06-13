@@ -1,0 +1,40 @@
+{
+  "source_path": "/Users/kholmumin/WebstormProjects/polymer-intelligence/docs/polymer-intelligence-dev-spec.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "Polymer Intelligence — Developer Implementation Specification",
+  "summary": "Developer implementation spec covering repo layout, data pipeline, backend services and REST API, Telegram layer, reports, frontend, deploy, testing, and an E1-E10 epic-to-task work breakdown.",
+  "scope": [
+    "monorepo layout",
+    "data ingestion pipeline",
+    "UZEX collector",
+    "Telethon userbot",
+    "LLM extraction",
+    "external indices (SunSirs, DCE, fx_rates)",
+    "source adapter registry",
+    "backend service layer",
+    "REST API /api/v1",
+    "alert engine",
+    "Celery queues and beat schedule",
+    "Telegram bot (aiogram)",
+    "request file attachments / MinIO",
+    "morning reports",
+    "Next.js dashboard",
+    "React/Vite Telegram Web App",
+    "deployment and ops",
+    "testing strategy",
+    "work breakdown E1-E10"
+  ],
+  "cross_refs": [
+    "polymer-intelligence-tz.md",
+    "polymer-intelligence-db-architecture.md",
+    "docs/extraction-schema.json",
+    "docs/runbook.md",
+    "deploy/.env.example",
+    "deploy/restore.sh"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

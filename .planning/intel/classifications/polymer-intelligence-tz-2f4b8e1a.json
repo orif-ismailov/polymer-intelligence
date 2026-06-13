@@ -1,0 +1,31 @@
+{
+  "source_path": "/Users/kholmumin/WebstormProjects/polymer-intelligence/docs/polymer-intelligence-tz.md",
+  "type": "PRD",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "ТЕХНИЧЕСКОЕ ЗАДАНИЕ — Polymer Intelligence (Uzbekistan polymer market analytics platform)",
+  "summary": "Technical requirements document defining goals, phased scope, functional requirements (FR-1..FR-22), non-functional requirements, and acceptance criteria for the Polymer Intelligence platform.",
+  "scope": [
+    "internal dashboard",
+    "Telegram Web App",
+    "Telegram bot",
+    "Telegram channel publishing",
+    "data collection engine",
+    "UZEX parser",
+    "Telegram channel monitoring (userbot)",
+    "external price indices (SunSirs, DCE)",
+    "purchase requests",
+    "AI extraction and lead scoring",
+    "alerts engine",
+    "source builder",
+    "currency rates (CBU)",
+    "reports engine",
+    "roles and audit log"
+  ],
+  "cross_refs": [
+    "polymer-intelligence-db-architecture.md"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": "Russian-language ТЗ. Strong PRD signals: phased scope, numbered functional requirements FR-1..FR-22, non-functional requirements, acceptance criteria. Contains a brief architecture/stack section (SPEC-leaning) but it is supporting context, not the document's primary contract; PRD dominates. Status 'на согласование' (under review/draft) — not a locked decision."
+}

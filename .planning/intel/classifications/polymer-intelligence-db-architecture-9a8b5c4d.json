@@ -1,0 +1,13 @@
+{
+  "source_path": "/Users/kholmumin/WebstormProjects/polymer-intelligence/docs/polymer-intelligence-db-architecture.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "Polymer Intelligence — Архитектура базы данных (Database Architecture)",
+  "summary": "PostgreSQL 16 database architecture with concrete DDL for the polymer market intelligence platform: raw ingest, normalized signals, requests, price points, alerts, reports.",
+  "scope": ["PostgreSQL 16 schema", "raw_items", "signals", "requests", "price_points", "alerts", "reports", "sources", "counterparties", "fx_rates", "data-flow pipeline", "screen-to-data mapping"],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": null,
+  "notes": "Dominant signals are concrete CREATE TABLE/TYPE DDL, data models, and a screen→data mapping table → SPEC (implementation contracts). Document records locked architectural/schema decisions and design principles but lacks ADR structure (no Context/Decision/Consequences sections, no Status: Accepted marker), so classified as SPEC rather than ADR. Russian-language source; title/summary rendered partly in English. Version history (v1.0/v1.1) present."
+}

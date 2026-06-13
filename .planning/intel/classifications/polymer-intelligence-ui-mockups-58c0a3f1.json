@@ -1,0 +1,26 @@
+{
+  "source_path": "/Users/kholmumin/WebstormProjects/polymer-intelligence/docs/polymer-intelligence-ui-mockups.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": false,
+  "title": "Polymer Intelligence — UI / Design Specification",
+  "summary": "Design documentation transcribed from client mockups: shared design system plus three frontend surfaces (public landing, internal dashboard, Telegram Web App wizard) with per-screen components and data mapping.",
+  "scope": [
+    "design system (dark theme, green accent, status/urgency color coding)",
+    "public landing page",
+    "internal dashboard",
+    "Telegram Web App",
+    "4-step request wizard",
+    "Purchase Requests master-detail screen",
+    "add-source wizard",
+    "screen-to-data mapping"
+  ],
+  "cross_refs": [
+    "docs/photo_2026-06-13 17.57.06.jpeg",
+    "db-architecture",
+    "dev-spec"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

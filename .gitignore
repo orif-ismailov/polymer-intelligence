@@ -1,0 +1,25 @@
+# Secrets & runtime credentials (dev-spec §5, §4.3)
+.env
+.env.*
+!.env.example
+*.session
+*.session-journal
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Node / frontend
+node_modules/
+.next/
+dist/
+build/
+*.log
+
+# OS / editor
+.DS_Store
