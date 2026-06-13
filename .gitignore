@@ -23,3 +23,8 @@ build/
 
 # OS / editor
 .DS_Store
+.idea/
+.claude/
+
+# Planning (GSD tooling — not part of the shipped codebase)
+.planning/config.json
