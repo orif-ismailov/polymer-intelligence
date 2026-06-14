@@ -11,6 +11,8 @@ loaded only from an untracked .env file (see deploy/.env.example contract).
 
 from __future__ import annotations
 
+from typing import Union
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -46,6 +48,16 @@ class Settings(BaseSettings):
     # ── Auth ──────────────────────────────────────────────────────────────────
     JWT_SECRET: str
 
+    # ── CORS ──────────────────────────────────────────────────────────────────
+    # Explicit non-wildcard list of allowed origins for credentialed CORS requests.
+    # Never default to ["*"] — wildcard with allow_credentials=True is both a
+    # security misconfiguration and non-functional per the CORS spec (CR-04).
+    # Parse a comma-separated env var, e.g.:
+    #   CORS_ALLOWED_ORIGINS=http://localhost:3000,https://dashboard.example.com
+    # Union[list[str], str] allows pydantic-settings to pass the raw comma-separated
+    # env string through to _parse_cors_origins (list[str] alone triggers JSON parsing).
+    CORS_ALLOWED_ORIGINS: Union[list[str], str] = ["http://localhost:3000"]
+
     # ── S3 / MinIO file storage ───────────────────────────────────────────────
     S3_ENDPOINT: str = ""
     S3_ACCESS_KEY: str
@@ -57,6 +69,37 @@ class Settings(BaseSettings):
 
     # ── Observability ─────────────────────────────────────────────────────────
     SENTRY_DSN: str = ""
+
+    @field_validator("JWT_SECRET")
+    @classmethod
+    def _jwt_secret_min_length(cls, v: str) -> str:
+        """Reject JWT secrets shorter than 32 characters at startup.
+
+        A short JWT secret makes HS256 tokens brute-forceable, defeating T-03-02.
+        The CI placeholder (ci-jwt-secret-placeholder-32chars!!) satisfies this.
+        WR-01: fail fast at startup rather than allowing a weak secret to persist.
+        """
+        if len(v) < 32:
+            raise ValueError("JWT_SECRET must be at least 32 characters")
+        return v
+
+    @field_validator("CORS_ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def _parse_cors_origins(cls, v: object) -> list[str]:
+        """Parse CORS_ALLOWED_ORIGINS from a comma-separated string or return list as-is.
+
+        Accepts:
+        - A list (already parsed by pydantic-settings from JSON env var): returned as-is.
+        - A comma-separated string (typical .env value): split on "," and strip whitespace,
+          dropping empty segments.
+
+        Never produces ["*"] — the default is a non-wildcard list (CR-04, T-03-05).
+        The Union[list[str], str] field type allows pydantic-settings to pass the raw string
+        through to this validator rather than failing on JSON decode.
+        """
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return list(v)  # type: ignore[arg-type]
 
     @field_validator("TZ_DISPLAY")
     @classmethod
