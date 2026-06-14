@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.core.security import (
     create_access_token,
     create_refresh_token,
+    dummy_verify,
     verify_password,
 )
 from app.models.staff import StaffUser
@@ -53,8 +54,11 @@ def authenticate(db: Session, email: str, password: str) -> Optional[StaffUser]:
     )
 
     if user is None:
-        # Run a dummy verify to prevent timing attacks (consume similar argon2 time)
-        verify_password(password, "$argon2id$v=19$m=65536,t=2,p=2$dummysalt$dummyhash")
+        # CR-05 / T-03-01: perform real argon2 KDF work so the unknown-user path
+        # consumes the same time as the wrong-password path, closing the timing oracle.
+        # dummy_verify uses a real precomputed argon2 hash (_DUMMY_HASH from security.py)
+        # and swallows the expected VerifyMismatchError — no InvalidHashError risk.
+        dummy_verify(password)
         return None
 
     if not verify_password(password, user.password_hash):

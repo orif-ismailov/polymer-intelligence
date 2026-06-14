@@ -31,6 +31,16 @@ _hasher = PasswordHasher(
     salt_len=16,
 )
 
+# ── Timing-attack mitigation: precomputed real dummy hash ──────────────────────
+# CR-05 / T-03-01: a REAL argon2 hash computed once at import.
+# When a login attempt arrives for a non-existent user, dummy_verify() is called
+# so the unknown-user path performs the SAME full KDF work as a wrong-password path.
+# The old approach used a malformed hash string ("$argon2id$...dummysalt$dummyhash")
+# which raised InvalidHashError immediately (no KDF work done), making the
+# user-not-found path dramatically faster than the wrong-password path and
+# reintroducing the user-enumeration timing oracle.
+_DUMMY_HASH = _hasher.hash("timing-attack-mitigation-dummy")
+
 # ── JWT constants ──────────────────────────────────────────────────────────────
 _ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
@@ -69,6 +79,30 @@ def verify_password(plain: str, hashed: str) -> bool:
         return _hasher.verify(hashed, plain)
     except (VerifyMismatchError, VerificationError, InvalidHashError):
         return False
+
+
+def dummy_verify(plain: str) -> None:
+    """Perform real argon2 KDF work against the precomputed dummy hash.
+
+    CR-05 / T-03-01: called on the user-not-found path in authenticate() so the
+    timing of a login attempt for a non-existent user converges with the timing of
+    a wrong-password attempt for a valid user.
+
+    The verify call will ALWAYS fail (VerifyMismatchError) because no real user
+    ever has a password that hashes to _DUMMY_HASH — but the full argon2 KDF work
+    IS performed (salted, iterated), preventing the timing oracle.
+
+    Does NOT raise — the mismatch is expected and swallowed.
+
+    Args:
+        plain: The candidate plaintext password (the attacker's guess).
+    """
+    try:
+        _hasher.verify(_DUMMY_HASH, plain)
+    except (VerifyMismatchError, VerificationError):
+        # Expected: the real dummy hash will never match any attacker-supplied password.
+        # We still performed full argon2 KDF work — that is the whole point.
+        pass
 
 
 def create_access_token(subject: str, role: str) -> str:

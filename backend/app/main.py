@@ -16,6 +16,7 @@ from __future__ import annotations
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.config import settings
 from app.core.logging import configure_logging
 from app.api.health import router as health_router
 from app.api.auth import router as auth_router
@@ -48,13 +49,19 @@ def create_app() -> FastAPI:
     )
 
     # ── CORS ──────────────────────────────────────────────────────────────────
-    # Configured to be restrictive; open up origins in the deploy .env for prod.
+    # CR-04 / T-03-05: origins come from settings.CORS_ALLOWED_ORIGINS (an explicit
+    # non-wildcard list). Wildcard allow_origins with allow_credentials=True is both
+    # a security misconfiguration and non-functional per the CORS spec — browsers
+    # reject credentialed responses when the server returns Access-Control-Allow-Origin: *.
+    # Set CORS_ALLOWED_ORIGINS in your .env to control which origins may send
+    # credentialed (cookie-bearing) requests; e.g.:
+    #   CORS_ALLOWED_ORIGINS=http://localhost:3000,https://dashboard.example.com
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],   # tighten this in production via env / nginx
+        allow_origins=settings.CORS_ALLOWED_ORIGINS,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
     )
 
     # ── Routers ───────────────────────────────────────────────────────────────
