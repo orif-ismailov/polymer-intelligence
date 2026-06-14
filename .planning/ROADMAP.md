@@ -14,7 +14,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (verification gaps found 2026-06-13 — 2 blockers: SC#1 docker/nginx, SC#5 CI image build)
+- [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (verification gaps found 2026-06-13 — 2 blockers: SC#1 docker/nginx, SC#5 CI image build; gap-closure plans 01-05..01-07 created 2026-06-14)
 - [ ] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health
 - [ ] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications
 - [ ] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard
@@ -36,7 +36,8 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   4. Passwords are argon2-hashed; secrets load from `.env` outside the repo; timestamps are stored UTC with an Asia/Tashkent display helper
   5. CI (ruff, mypy, eslint+tsc, tests, image build) passes green on the scaffold
 
-**Plans**: 4 plansPlans:
+**Plans**: 7 plans (4 executed + 3 gap-closure)
+
 **Wave 1**
 
 - [x] 01-01-PLAN.md — Monorepo + core config/secrets, db session/Base, structlog JSON, Asia/Tashkent helper, /health, docker-compose dev (postgres, redis, api, worker, beat)
@@ -49,6 +50,12 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 - [x] 01-03-PLAN.md — Auth backbone: argon2 hashing, JWT (access 15m + refresh 7d httpOnly), /auth/login + /auth/refresh, require_role guard (admin/analyst/trader/viewer), audit_log, per-role seed users
 - [x] 01-04-PLAN.md — CI (ruff, mypy services/+schemas/, eslint+tsc, tests, image build), Next.js dashboard + React/Vite webapp scaffolds, Dockerfiles, TLS-ready nginx reverse proxy
+
+**Wave 4 — Gap closure** *(remediation of verification gaps; plans run in parallel — no file overlap)*
+
+- [ ] 01-05-PLAN.md — SC#1 deployable stack: add nginx service + backend/Dockerfile so compose build blocks resolve, add nginx events{} block, fix CR-06 security-header inheritance
+- [ ] 01-06-PLAN.md — SC#5 green CI: fix invalid PEP 517 build-backend (setuptools.build_meta), remove `|| true` from both eslint gates and confirm scaffolds lint clean
+- [ ] 01-07-PLAN.md — REQ-nfr-security hardening: settings-driven CORS (no wildcard+credentials, CR-04), real argon2 dummy-verify (CR-05/T-03-01), JWT_SECRET ≥32-char startup validator (WR-01)
 
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` — the migration MUST reproduce the locked DDL verbatim (raw_items, signals, requests, price_points, alerts, reports, sources, counterparties, fx_rates, staff_users, audit_log, ENUM types, v_live_feed). This is the foundation all phases build on.
 
@@ -139,7 +146,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 4/4 | Gaps found | - |
+| 1. Walking Skeleton | 4/7 | Gap closure planned | - |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
@@ -148,3 +155,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 ---
 *Roadmap created: 2026-06-13 (Client Phase 1 milestone). Phase 2 international loop = planned follow-up milestone, not in this roadmap.*
+*Updated: 2026-06-14 — Phase 1 gap-closure plans 01-05..01-07 added (SC#1, SC#5, REQ-nfr-security hardening).*
