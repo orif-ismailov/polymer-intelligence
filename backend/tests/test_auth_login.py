@@ -289,3 +289,69 @@ def test_refresh_with_invalid_cookie_returns_401(auth_client: TestClient):
             bad_client.cookies.set("refresh_token", "totally.invalid.token")
             resp = bad_client.post("/api/v1/auth/refresh")
             assert resp.status_code == 401
+
+
+# ── Security hardening tests (CR-04, CR-05, T-03-01) ──────────────────────────
+
+def test_dummy_verify_does_not_raise() -> None:
+    """dummy_verify with any password must not raise (performs argon2 work against a real hash).
+
+    CR-05: the unknown-user path must perform full argon2 KDF so timings converge.
+    A valid argon2 hash is pre-computed at import; verify swallows the mismatch.
+    """
+    from app.core.security import dummy_verify
+    # Must not raise on any plaintext input
+    dummy_verify("any_password_at_all")
+    dummy_verify("")
+    dummy_verify("a" * 100)
+
+
+def test_dummy_verify_does_not_raise_invalid_hash_error() -> None:
+    """dummy_verify must NOT raise InvalidHashError — confirms it uses a real precomputed hash.
+
+    T-03-01: the old implementation raised InvalidHashError immediately (no KDF work done).
+    """
+    from argon2.exceptions import InvalidHashError
+    from app.core.security import dummy_verify
+    try:
+        dummy_verify("probe_password")
+    except InvalidHashError:
+        raise AssertionError(
+            "dummy_verify raised InvalidHashError — the dummy hash is malformed "
+            "(not a real argon2 hash). CR-05: replace with _hasher.hash() precomputed at import."
+        )
+
+
+def test_unknown_user_path_calls_dummy_verify(no_user_auth_client: TestClient) -> None:
+    """authenticate() with a non-existent email must call dummy_verify (user-not-found branch).
+
+    CR-05 / T-03-01: verifies the timing-attack mitigation is actually wired in auth_service.py.
+    """
+    with patch("app.services.auth_service.dummy_verify") as mock_dv:
+        resp = no_user_auth_client.post(
+            "/api/v1/auth/login",
+            json={"email": "nobody@polymer.uz", "password": "any_password"},
+        )
+    assert resp.status_code == 401
+    mock_dv.assert_called_once()
+
+
+def test_valid_login_still_works_regression(auth_client: TestClient) -> None:
+    """Regression: authenticate() still returns the StaffUser for valid credentials."""
+    resp = auth_client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@polymer.uz", "password": "admin_password_secure"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+
+def test_wrong_password_returns_401_regression(auth_client: TestClient) -> None:
+    """Regression: authenticate() returns None (401) for a wrong password."""
+    resp = auth_client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@polymer.uz", "password": "totally_wrong_password"},
+    )
+    assert resp.status_code == 401
