@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: gaps_found
-stopped_at: Phase 01 verification — gaps_found (3/5 must-haves); 2 blockers: SC#1 docker/nginx, SC#5 CI image build
-last_updated: "2026-06-13T17:16:35.341Z"
+status: verifying
+stopped_at: "Phase 01 verified — gaps_found (3/5). Resume via /gsd:plan-phase 01 --gaps → /gsd:execute-phase 01 --gaps-only"
+last_updated: "2026-06-14T08:03:45.356Z"
 last_activity: 2026-06-13 -- Phase 01 executed (4/4 plans) then verified — gaps found
 progress:
   total_phases: 6
