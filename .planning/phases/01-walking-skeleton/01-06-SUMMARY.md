@@ -117,6 +117,14 @@ No new network endpoints, auth paths, file access patterns, or schema changes in
 - CI can now pass green end-to-end (ruff, mypy, eslint+tsc, tests, image build) — the quality backbone is trustworthy for all later phases
 - No blockers for Phase 01 plan 07
 
+## Self-Check: PASSED
+
+- `backend/pyproject.toml` — FOUND
+- `.github/workflows/ci.yml` — FOUND
+- `01-06-SUMMARY.md` — FOUND
+- Commit `9eab0d5` — FOUND
+- Commit `96d8980` — FOUND
+
 ---
 *Phase: 01-walking-skeleton*
 *Completed: 2026-06-14*
