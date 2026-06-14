@@ -125,3 +125,52 @@ class TestRequiredSecrets:
             import app.core.config as cfg_module  # noqa: PLC0415
             with pytest.raises(Exception):  # pydantic ValidationError
                 cfg_module.Settings(_env_file=None)
+
+
+class TestJwtSecretValidator:
+    """JWT_SECRET field_validator rejects secrets shorter than 32 characters."""
+
+    def test_short_jwt_secret_raises_validation_error(self) -> None:
+        """Settings() with a JWT_SECRET shorter than 32 chars must raise a ValidationError."""
+        short_secret = "short_secret_31_chars_xxxxxxxx!"  # exactly 31 chars
+        assert len(short_secret) == 31, f"Test precondition failed: len={len(short_secret)}"
+        with pytest.raises(Exception):  # pydantic ValidationError
+            _make_settings(JWT_SECRET=short_secret)
+
+    def test_jwt_secret_exactly_32_chars_succeeds(self) -> None:
+        """Settings() with a JWT_SECRET of exactly 32 chars must succeed."""
+        secret_32 = "a" * 32
+        assert len(secret_32) == 32
+        settings = _make_settings(JWT_SECRET=secret_32)
+        assert settings.JWT_SECRET == secret_32
+
+    def test_jwt_secret_longer_than_32_chars_succeeds(self) -> None:
+        """Settings() with a JWT_SECRET longer than 32 chars must succeed."""
+        secret_long = "ci-jwt-secret-placeholder-32chars!!"
+        assert len(secret_long) >= 32
+        settings = _make_settings(JWT_SECRET=secret_long)
+        assert settings.JWT_SECRET == secret_long
+
+
+class TestCorsAllowedOriginsValidator:
+    """CORS_ALLOWED_ORIGINS setting: non-wildcard default, comma-separated env parsing."""
+
+    def test_cors_allowed_origins_default_is_non_wildcard(self) -> None:
+        """CORS_ALLOWED_ORIGINS must default to a non-empty list that does NOT contain '*'."""
+        settings = _make_settings()
+        origins = settings.CORS_ALLOWED_ORIGINS
+        assert isinstance(origins, list), "CORS_ALLOWED_ORIGINS must be a list"
+        assert len(origins) > 0, "CORS_ALLOWED_ORIGINS must have at least one entry"
+        assert "*" not in origins, (
+            f"CORS_ALLOWED_ORIGINS must not contain '*', got: {origins}"
+        )
+
+    def test_cors_allowed_origins_parses_comma_separated_env(self) -> None:
+        """CORS_ALLOWED_ORIGINS parses a comma-separated env value into a list of origins."""
+        env_value = "http://localhost:3000,https://dashboard.example.com"
+        settings = _make_settings(CORS_ALLOWED_ORIGINS=env_value)
+        origins = settings.CORS_ALLOWED_ORIGINS
+        assert isinstance(origins, list), "CORS_ALLOWED_ORIGINS must be a list"
+        assert len(origins) == 2, f"Expected 2 origins, got: {origins}"
+        assert "http://localhost:3000" in origins
+        assert "https://dashboard.example.com" in origins
