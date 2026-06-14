@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: "Phase 01 verified — gaps_found (3/5). Resume via /gsd:plan-phase 01 --gaps → /gsd:execute-phase 01 --gaps-only"
-last_updated: "2026-06-14T08:36:31.500Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-06-14T08:42:02.037Z"
 last_activity: 2026-06-14 -- Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 01 (walking-skeleton) — EXECUTING
-Plan: 1 of 7
-Status: Executing Phase 01
+Plan: 2 of 7
+Status: Ready to execute
 Last activity: 2026-06-14 -- Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P02 | 19 | 2 tasks | 22 files |
 | Phase 01 P04 | 25 | 2 tasks | 24 files |
 | Phase 01 P03 | 10 | 2 tasks | 13 files |
+| Phase 01 P05 | 8 minutes | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,7 @@ Most relevant to Phase 1:
 - [Phase ?]: APP_ENV=production gates Secure cookie flag for refresh token (False dev/test, True prod TLS behind nginx)
 - [Phase ?]: require_role reads role from verified JWT payload — no extra DB query needed for authorization
 - [Phase ?]: Audit write uses db.flush() not db.commit() — caller commits, audit row shares transaction with audited action
+- [Phase ?]: backend/Dockerfile added alongside deploy/Dockerfile.backend; nginx security headers re-declared in static-asset location to fix non-additive add_header drop (CR-06)
 
 ### Pending Todos
 
@@ -104,6 +106,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-13T17:16:35.338Z
-Stopped at: Phase 01 verified — gaps_found (3/5). Resume via /gsd:plan-phase 01 --gaps → /gsd:execute-phase 01 --gaps-only
-Resume file: .planning/phases/01-walking-skeleton/01-VERIFICATION.md
+Last session: 2026-06-14T08:42:02.032Z
+Stopped at: Completed 01-05-PLAN.md
+Resume file: None
