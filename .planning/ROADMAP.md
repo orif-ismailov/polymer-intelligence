@@ -54,7 +54,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Wave 4 — Gap closure** *(remediation of verification gaps; plans run in parallel — no file overlap)*
 
 - [x] 01-05-PLAN.md — SC#1 deployable stack: add nginx service + backend/Dockerfile so compose build blocks resolve, add nginx events{} block, fix CR-06 security-header inheritance
-- [ ] 01-06-PLAN.md — SC#5 green CI: fix invalid PEP 517 build-backend (setuptools.build_meta), remove `|| true` from both eslint gates and confirm scaffolds lint clean
+- [x] 01-06-PLAN.md — SC#5 green CI: fix invalid PEP 517 build-backend (setuptools.build_meta), remove `|| true` from both eslint gates and confirm scaffolds lint clean
 - [ ] 01-07-PLAN.md — REQ-nfr-security hardening: settings-driven CORS (no wildcard+credentials, CR-04), real argon2 dummy-verify (CR-05/T-03-01), JWT_SECRET ≥32-char startup validator (WR-01)
 
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` — the migration MUST reproduce the locked DDL verbatim (raw_items, signals, requests, price_points, alerts, reports, sources, counterparties, fx_rates, staff_users, audit_log, ENUM types, v_live_feed). This is the foundation all phases build on.
@@ -146,7 +146,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 5/7 | In Progress|  |
+| 1. Walking Skeleton | 6/7 | In Progress|  |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
