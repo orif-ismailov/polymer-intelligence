@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-06-14T08:49:54.000Z"
+stopped_at: Completed 01-07-PLAN.md
+last_updated: "2026-06-14T09:03:00.000Z"
 last_activity: 2026-06-14 -- Phase 01 execution started
 progress:
   total_phases: 6
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 01 (walking-skeleton) — EXECUTING
-Plan: 3 of 7
-Status: Ready to execute
-Last activity: 2026-06-14 -- Phase 01 execution started
+Plan: 7 of 7 (all plans complete)
+Status: Phase 01 complete
+Last activity: 2026-06-14 -- Phase 01 Plan 07 security hardening executed
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P03 | 10 | 2 tasks | 13 files |
 | Phase 01 P05 | 8 minutes | 2 tasks | 3 files |
 | Phase 01 P06 | 3min | 2 tasks | 3 files |
+| Phase 01 P07 | 9min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Most relevant to Phase 1:
 - [Phase ?]: backend/Dockerfile added alongside deploy/Dockerfile.backend; nginx security headers re-declared in static-asset location to fix non-additive add_header drop (CR-06)
 - [Phase 01-06]: Dashboard eslint CI command drops --ext flag (eslint 9 flat config rejects it; file matching comes from eslint.config.mjs)
 - [Phase 01-06]: webapp/package-lock.json synced (@emnapi packages) as Rule 3 auto-fix so npm ci succeeds in CI
+- [Phase 01-07]: CORS_ALLOWED_ORIGINS uses Union[list[str], str] field type so pydantic-settings v2 passes raw comma-separated env string to field_validator (list[str] alone triggers JSON decode failure)
+- [Phase 01-07]: _DUMMY_HASH computed at module import time (not per-request); dummy_verify pays full argon2 KDF on every unknown-user login attempt to equalize timing with wrong-password path
 
 ### Pending Todos
 
@@ -109,6 +112,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-14T08:49:46.160Z
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-06-14T09:03:00.000Z
+Stopped at: Completed 01-07-PLAN.md
 Resume file: None
