@@ -7,7 +7,7 @@
 #   - Copy deploy/.env.example → .env (repo root) and fill in secrets
 #   - Or set the env_file path below to wherever your .env lives
 #
-# Services: postgres, redis, api, worker, beat
+# Services: postgres, redis, api, worker, beat, nginx
 # (userbot and dashboard are separate and not included in the dev scaffold)
 # ============================================================================
 
@@ -118,6 +118,22 @@ services:
     command: celery -A app.tasks.celery_app beat --loglevel=info
     volumes:
       - ../backend:/app
+
+  # ── nginx reverse proxy ────────────────────────────────────────────────────
+  # Publishes 80 (HTTP→HTTPS redirect) and 443 (HTTPS main server).
+  # TLS cert volumes are wired in the prod compose; the dev service may fail
+  # TLS until certs exist under /etc/letsencrypt, but the service definition
+  # is structurally valid and required for SC#1 (compose stack must include nginx).
+  nginx:
+    image: nginx:stable
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
