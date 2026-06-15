@@ -1,16 +1,14 @@
 """
 Reference data seed script.
 
-Populates products, product_grades, and logs the synonyms dictionary.
+Populates products, product_grades, and synonyms dictionary.
 Idempotent: uses INSERT ... ON CONFLICT DO NOTHING on natural unique constraints,
 so re-running creates no duplicates.
 
-Seed scope (dev-spec §9 E1):
+Seed scope (dev-spec §9 E1 + Phase-2 v1.2):
 - products: polymer product types with RU/UZ names
 - product_grades: UZ-producer grades (Shurtan GCC, Uz-Kor)
-- synonyms: loaded and logged; DB write deferred until the synonyms table
-  is created in a future migration (schema-contract constraint: no new table
-  without a migration — Rule 4 applied at plan time, see seed/__init__.py)
+- synonyms: seeded into product_synonyms table (migration 0002 required)
 
 Usage:
     python -m app.seed.seed_reference
@@ -128,14 +126,82 @@ def load_synonyms() -> dict[str, list[str]]:
     """Load the synonyms dictionary from synonyms.json.
 
     Returns a dict mapping product_code -> list of synonym strings.
-    Phase 1: synonyms are loaded here but not written to DB because
-    the synonyms table is not yet in the schema. The data is available
-    in memory for the UZEX relevance filter to use (Phase 2 will add
-    the table and a migration that seeds from this file).
+    Skips the '_comment' key if present.
     """
     data = _load_json(_SYNONYMS_FILE)
     # Remove _comment key if present
     return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+def seed_synonyms(session: Session) -> int:
+    """Upsert synonyms from synonyms.json into product_synonyms idempotently.
+
+    Reads synonyms.json, resolves each product_code → products.id, normalizes
+    each synonym via relevance_service.normalize_term, and inserts with
+    INSERT ... ON CONFLICT (synonym_norm) DO NOTHING.
+
+    Requires migration 0002 (product_synonyms table) to have been applied.
+
+    Args:
+        session: Active SQLAlchemy session. Caller must commit.
+
+    Returns:
+        Number of rows inserted (0 on idempotent re-run).
+
+    Security (T-02-06):
+        UNIQUE(synonym_norm) + ON CONFLICT DO NOTHING ensures no duplicates
+        on repeated seeding.
+    """
+    from app.services.relevance_service import normalize_term  # noqa: PLC0415
+
+    synonyms_by_code = load_synonyms()
+    inserted = 0
+    skipped_codes: list[str] = []
+
+    for product_code, synonyms in synonyms_by_code.items():
+        # Resolve product_id by code
+        row = session.execute(
+            text("SELECT id FROM products WHERE code = :code"),
+            {"code": product_code},
+        ).fetchone()
+
+        if row is None:
+            logger.warning(
+                "seed.synonym_product_not_found",
+                extra={"product_code": product_code},
+            )
+            skipped_codes.append(product_code)
+            continue
+
+        product_id = row[0]
+
+        for synonym in synonyms:
+            norm = normalize_term(synonym)
+            result = session.execute(
+                text(
+                    """
+                    INSERT INTO product_synonyms (product_id, synonym, synonym_norm, source)
+                    VALUES (:product_id, :synonym, :norm, 'seed')
+                    ON CONFLICT (synonym_norm) DO NOTHING
+                    """
+                ),
+                {
+                    "product_id": product_id,
+                    "synonym": synonym,
+                    "norm": norm,
+                },
+            )
+            inserted += result.rowcount
+
+    session.flush()
+    logger.info(
+        "seed.synonyms_seeded",
+        extra={
+            "inserted": inserted,
+            "skipped_codes": skipped_codes,
+        },
+    )
+    return inserted
 
 
 def seed_all(session: Session) -> dict[str, int]:
@@ -145,25 +211,14 @@ def seed_all(session: Session) -> dict[str, int]:
     """
     products_inserted = seed_products(session)
     grades_inserted = seed_grades(session)
-
-    # Load synonyms (logs count; DB write deferred to Phase 2 migration)
-    synonyms = load_synonyms()
-    total_synonyms = sum(len(v) for v in synonyms.values())
-    logger.info(
-        "seed.synonyms_loaded",
-        extra={
-            "product_count": len(synonyms),
-            "synonym_count": total_synonyms,
-            "note": "DB write deferred — synonyms table created in Phase 2",
-        },
-    )
+    synonyms_inserted = seed_synonyms(session)
 
     session.commit()
 
     return {
         "products": products_inserted,
         "grades": grades_inserted,
-        "synonyms_loaded": total_synonyms,  # loaded but not written to DB yet
+        "synonyms": synonyms_inserted,
     }
 
 
