@@ -14,7 +14,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-05..01-07 executed 2026-06-14; live UAT 2026-06-15 found 3 issues → gap-closure plans 01-08..01-10 planned: dev-nginx boot fix SC#1, ruff/mypy green SC#5, S3 env-name CR-01)
+- [x] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-05..01-07 executed 2026-06-14; live UAT 2026-06-15 found 3 issues → gap-closure plans 01-08..01-10 planned: dev-nginx boot fix SC#1, ruff/mypy green SC#5, S3 env-name CR-01) (completed 2026-06-15)
 - [ ] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health
 - [ ] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications
 - [ ] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard
@@ -61,7 +61,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 - [x] 01-08-PLAN.md — SC#1 dev-nginx actually boots: drop the boot-time `dashboard` upstream resolution and the unmounted-letsencrypt-cert load so `docker compose up` brings nginx up and `/health` returns 200 (live re-verify required)
 - [x] 01-09-PLAN.md — REVIEW CR-01: rename CI `S3_ENDPOINT_URL` → `S3_ENDPOINT` so the case-sensitive Settings field reads it; regression test locks the CI env name to the field name (config default preserved, suite stays green)
-- [ ] 01-10-PLAN.md — SC#5 backend lint/type gate truly green: resolve the 124 `ruff check .` violations behavior-preservingly, make `mypy app/services`/`app/schemas` pass, and exact-pin ruff + mypy for reproducibility (pytest stays 100 passed / 17 skipped)
+- [x] 01-10-PLAN.md — SC#5 backend lint/type gate truly green: resolve the 124 `ruff check .` violations behavior-preservingly, make `mypy app/services`/`app/schemas` pass, and exact-pin ruff + mypy for reproducibility (pytest stays 100 passed / 17 skipped)
 
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` — the migration MUST reproduce the locked DDL verbatim (raw_items, signals, requests, price_points, alerts, reports, sources, counterparties, fx_rates, staff_users, audit_log, ENUM types, v_live_feed). This is the foundation all phases build on.
 
@@ -152,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 9/10 | In Progress|  |
+| 1. Walking Skeleton | 10/10 | Complete   | 2026-06-15 |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |

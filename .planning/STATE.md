@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 01-09-PLAN.md (UAT Gap 3 / CR-01: S3 env name mismatch fixed)"
-last_updated: "2026-06-15T07:30:45.730Z"
+stopped_at: "Completed 01-10-PLAN.md (UAT Gap 2 / SC#5: ruff+mypy gate green, tools pinned)"
+last_updated: "2026-06-15T08:00:08.227Z"
 last_activity: 2026-06-15 -- Phase 01 execution started
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 10
-  completed_plans: 9
-  percent: 0
+  completed_plans: 10
+  percent: 17
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 01 (walking-skeleton) — EXECUTING
-Plan: 2 of 10
+Plan: 3 of 10
 Status: Ready to execute
 Last activity: 2026-06-15 -- Phase 01 execution started
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P06 | 3min | 2 tasks | 3 files |
 | Phase 01 P07 | 9min | 2 tasks | 6 files |
 | Phase 01 P09 | 5min | 2 tasks | 2 files |
+| Phase 01 P10 | 28min | - tasks | - files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Most relevant to Phase 1:
 - [Phase 01-07]: _DUMMY_HASH computed at module import time (not per-request); dummy_verify pays full argon2 KDF on every unknown-user login attempt to equalize timing with wrong-password path
 - [Phase ?]: Keep S3_ENDPOINT: str = '' default in Phase 1 config.py — making it required breaks 100-passing suite; fail-fast validation deferred to Phase 2/3 S3 client construction
 - [Phase ?]: CI S3 env contract test uses text-based parsing (no PyYAML dep) — regex check on ci.yml text is equivalent for asserting key presence
+- [Phase ?]: ruff==0.15.17 and mypy==2.1.0 exact-pinned in [dev] for reproducible CI lint/type gate (UAT Gap 2 / SC#5)
+- [Phase ?]: UP042: all 14 (str, enum.Enum) converted to enum.StrEnum — suite stayed green; B008 silenced via extend-immutable-calls for FastAPI DI; app.schemas.* disables disallow_any_explicit to avoid pydantic false positives
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-15T07:30:45.727Z
-Stopped at: Completed 01-09-PLAN.md (UAT Gap 3 / CR-01: S3 env name mismatch fixed)
+Last session: 2026-06-15T08:00:08.224Z
+Stopped at: Completed 01-10-PLAN.md (UAT Gap 2 / SC#5: ruff+mypy gate green, tools pinned)
 Resume file: None
