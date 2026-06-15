@@ -90,6 +90,9 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
+    # REQ-nfr-reliability / T-02-25: auto-restarts on crash so a single worker
+    # failure never silently stops ingest. The */5 check_source_health task +
+    # 3-strike source_failure alert surface any persistent outage above this.
     restart: unless-stopped
     env_file:
       - path: ../.env
@@ -111,6 +114,8 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
+    # REQ-nfr-reliability / T-02-25: auto-restarts on crash so the beat
+    # scheduler never silently drops its periodic fetch/health schedule.
     restart: unless-stopped
     env_file:
       - path: ../.env

@@ -1,0 +1,96 @@
+[
+  {
+    "kind": "exchange",
+    "adapter": "uzex_offers",
+    "name": "UZEX Offers (UZS)",
+    "url": "https://uzex.uz/Trade/OffersSumNew",
+    "country": "UZ",
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "urls": [
+        "https://uzex.uz/Trade/OffersSumNew",
+        "https://uzex.uz/Trade/OffersCurrencyNew",
+        "https://uzex.uz/Trade/OffersImportNew"
+      ],
+      "table_selector": "table.custom-table-dark",
+      "columns": [
+        "lot",
+        "product_text",
+        "",
+        "volume",
+        "volume_unit",
+        "price",
+        "",
+        "counterparty_text",
+        "event_at"
+      ],
+      "currency": "UZS"
+    }
+  },
+  {
+    "kind": "exchange",
+    "adapter": "uzex_contracts",
+    "name": "UZEX Contracts (quotations)",
+    "url": "https://uzex.uz/Trade/ContractsSumNew",
+    "country": "UZ",
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "urls": [
+        "https://uzex.uz/Trade/ContractsSumNew",
+        "https://uzex.uz/Trade/ContractsCurrencyNew"
+      ],
+      "table_selector": "table.custom-table-dark",
+      "columns": [
+        "lot",
+        "product_text",
+        "volume",
+        "volume_unit",
+        "price",
+        "counterparty_text"
+      ],
+      "currency": "UZS"
+    }
+  },
+  {
+    "kind": "exchange",
+    "adapter": "uzex_deals",
+    "name": "UZEX Deals (concluded)",
+    "url": "https://uzex.uz/Trade/List",
+    "country": "UZ",
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "urls": [
+        "https://uzex.uz/Trade/List"
+      ],
+      "table_selector": "table.custom-table-dark",
+      "columns": [
+        "event_at",
+        "external_id",
+        "price",
+        "contract_no",
+        "product_text",
+        "volume",
+        "volume_unit",
+        "section",
+        ""
+      ],
+      "currency": "UZS"
+    }
+  },
+  {
+    "kind": "fx",
+    "adapter": "cbu_rates",
+    "name": "CBU FX Rates",
+    "url": "https://cbu.uz/en/arkhiv-kursov-valyut/json/",
+    "country": null,
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "endpoint": "https://cbu.uz/en/arkhiv-kursov-valyut/json/",
+      "base_currency": "UZS"
+    }
+  }
+]
