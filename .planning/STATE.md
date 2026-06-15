@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: executing
-stopped_at: "Phase 01 re-verification: gaps_found (3/5 must-haves) — SC#1 worker/beat, SC#2 migration lifespan, SC#5 dashboard tsc"
-last_updated: "2026-06-15T12:30:00.000Z"
-last_activity: 2026-06-15 -- Phase 01 gap-closure (01-08..01-10) executed; re-verification found 3 new gaps
+status: Awaiting decision — plan gap closure, fix inline, or accept deferrals
+stopped_at: "Completed 01-10-PLAN.md (UAT Gap 2 / SC#5: ruff+mypy gate green, tools pinned)"
+last_updated: "2026-06-15T11:31:53.291Z"
+last_activity: 2026-06-15 -- gap-closure 01-08..01-10 done; re-verification found 3 new gaps
 progress:
   total_phases: 6
   completed_phases: 0
