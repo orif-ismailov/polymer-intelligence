@@ -36,7 +36,13 @@ from app.models.enums import (  # noqa: F401
     Urgency,
 )
 from app.models.prices import PricePoint  # noqa: F401
-from app.models.reference import FxRate, Product, ProductGrade  # noqa: F401
+from app.models.reference import (  # noqa: F401
+    FxRate,
+    ManualClassificationItem,
+    Product,
+    ProductGrade,
+    ProductSynonym,
+)
 from app.models.reports import Report  # noqa: F401
 from app.models.requests import Client, Request, RequestFile, RequestStatusHistory  # noqa: F401
 from app.models.signals import Signal  # noqa: F401
@@ -63,6 +69,8 @@ __all__ = [
     "Product",
     "ProductGrade",
     "FxRate",
+    "ProductSynonym",
+    "ManualClassificationItem",
     # Sources / raw
     "Source",
     "RawItem",
