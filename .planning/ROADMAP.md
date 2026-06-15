@@ -78,7 +78,26 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   4. A SourceAdapter registry exists (`fetch`/`test`/`config_schema`); the synonyms dictionary drives relevance and is admin-top-up-able; non-polymer rows land as `raw_items` status='irrelevant'
   5. When one source fails 3 consecutive cycles it raises a `source_failure` alert within 30 min and the other collectors keep running; success resets the counter
 
-**Plans**: TBD
+**Plans**: 7 plans in 4 waves
+
+**Wave 1** *(foundations — parallel, no file overlap)*
+
+- [ ] 02-01-PLAN.md — Celery app + queue topology + Asia/Tashkent beat schedule + ingest config keys (unblocks Phase-1 SC#1 worker/beat carryover)
+- [ ] 02-02-PLAN.md — [BLOCKING migration 0002] product_synonyms + manual_classification_queue tables, synonyms.json seeder, relevance service (admin-top-up-able)
+- [ ] 02-03-PLAN.md — SourceAdapter Protocol + registry + SSRF-hardened httpx client + GET /admin/source-types (config_schema feed)
+
+**Wave 2** *(concrete adapters + parse — blocked on Wave 1)*
+
+- [ ] 02-04-PLAN.md — UZEX offers/contracts/deals adapters (selectolax, config-driven selectors) + immutable sha256-dedupe raw pipeline + HTML fixtures (has selectolax legitimacy + no-JS escalation checkpoint)
+- [ ] 02-05-PLAN.md — CBU rates adapter → fx_rates (on-read conversion) + rule-based parse_raw_item (raw → signals, relevance routing, grade regex, parse_runs journal)
+
+**Wave 3** *(health + alerting — blocked on Wave 2)*
+
+- [ ] 02-06-PLAN.md — Source-health bookkeeping + 3-consecutive-failure deduped source_failure alert + per-source failure isolation + check_source_health beat task + GET /admin/sources/health
+
+**Wave 4** *(reliability hardening + acceptance — blocked on Wave 3)*
+
+- [ ] 02-07-PLAN.md — Worker auto-restart + pg_dump backup + ≤2h restore runbook + UZEX/CBU source seeder + ≥95% accuracy gate on a ≥50-position control sample + live end-to-end human-verify checkpoint
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` (sources, raw_items, parse_runs, signals, price_points, fx_rates). UZEX selectors live in `sources.config`, not in code. No browser automation — escalate if a page needs JS.
 
 ### Phase 3: Client Circuit
@@ -153,7 +172,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
-| 2. Ingest Core + UZEX | 0/TBD | Not started | - |
+| 2. Ingest Core + UZEX | 0/7 | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
