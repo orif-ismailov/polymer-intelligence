@@ -1,28 +1,24 @@
 ---
-status: testing
+status: complete
 phase: 01-walking-skeleton
 source: [01-VERIFICATION.md, 01-08-SUMMARY.md, 01-09-SUMMARY.md, 01-10-SUMMARY.md]
 started: 2026-06-14T09:19:54Z
-updated: 2026-06-15T13:00:00Z
+updated: 2026-06-15T14:45:00Z
 ---
 
 ## Current Test
 
-number: 1
-name: Full CI pipeline passes green on a clean GitHub Actions checkout
-expected: |
-  Push to main/develop; all 5 GitHub Actions jobs go green — especially the
-  dashboard job, where the new `npx next typegen` step must generate
-  `.next/types/routes.d.ts` on a clean checkout so `tsc --noEmit` exits 0 (no TS2307).
-awaiting: user response
+[testing complete]
 
 ## Tests
 
 ### 1. Full CI pipeline passes green (live GitHub Actions run) — SC#5
 expected: Push to main/develop; all 5 jobs (backend ruff+mypy+pytest, dashboard eslint+typegen+tsc, webapp eslint+tsc, build-images) pass green on a clean runner checkout.
-result: pending
+result: pass
 note: |
-  All gates confirmed locally by the orchestrator: `ruff check .` 0 violations,
+  Confirmed green by the user's live GitHub Actions run (2026-06-15) after the CI-surfaced
+  fixes: test_config env isolation (653df3a), dashboard+webapp lock @emnapi sync (320f2b7),
+  dashboard image mkdir public (54acd93). Orchestrator pre-confirmed locally too: `ruff check .` 0 violations,
   `mypy app/services app/schemas` 0 errors, `pytest` 105 passed / 17 skipped, dashboard
   `next typegen` → `tsc --noEmit` exit 0, `eslint --max-warnings 0` exit 0. The remaining
   unknown is only the clean-runner behaviour of the new typegen step — needs a real CI run.
@@ -79,9 +75,9 @@ note: |
 ## Summary
 
 total: 2
-passed: 1
+passed: 2
 issues: 0
-pending: 1
+pending: 0
 skipped: 0
 blocked: 0
 
