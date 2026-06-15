@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: testing
-stopped_at: Phase 01 re-verification — human_needed (5/5 config-level); 6 human UAT items pending
-last_updated: "2026-06-14T09:19:54Z"
-last_activity: 2026-06-14 -- Phase 01 executed (7/7 plans) + re-verified → human_needed
+status: gaps_found
+stopped_at: Phase 01 live UAT found 3 issues (SC#1 dev-nginx boot, SC#5 ruff CI, CR-01 S3 env); gap-closure plans 01-08..01-10 created + checker-verified
+last_updated: "2026-06-15T00:00:00Z"
+last_activity: 2026-06-15 -- Phase 01 UAT (3 pass / 3 issues) → fix plans 01-08..01-10 ready
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 7
+  total_plans: 10
   completed_plans: 7
   percent: 0
 ---
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 ## Current Position
 
-Phase: 01 (walking-skeleton) — AWAITING HUMAN UAT (not complete)
-Plan: 7 of 7 executed (4 initial + 3 gap-closure)
-Status: Re-verification 5/5 config-level → human_needed. 6 UAT items pending (docker compose config/up, nginx -t, clean pip install, full CI run, browser CORS/cookie flow, REVIEW CR-01 S3 env mismatch). Next: /gsd-verify-work 01
-Last activity: 2026-06-14 -- Phase 01 Plan 07 security hardening executed; phase re-verified → human_needed
+Phase: 01 (walking-skeleton) — GAPS FOUND (not complete)
+Plan: 7 of 10 executed; 3 fix plans (01-08..01-10) ready
+Status: Live UAT 2026-06-15 — 3 pass (compose config, PEP517 build, CORS config), 3 issues: (2) nginx won't boot in dev compose [SC#1 blocker — dashboard upstream + unmounted certs], (4) ruff check . = 124 errors [SC#5 blocker — backend never linted], (6) S3_ENDPOINT_URL vs S3_ENDPOINT [CR-01 major]. Gap-closure plans 01-08/09/10 created + checker-PASSED. Next: /gsd-execute-phase 01 --gaps-only
+Last activity: 2026-06-15 -- Phase 01 UAT diagnosed; fix plans verified ready
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -112,6 +112,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-14T09:19:54Z
-Stopped at: Phase 01 re-verified → human_needed (5/5 config-level). Resume via /gsd-verify-work 01 to run the 6 UAT items; phase marks complete when UAT passes.
+Last session: 2026-06-15T00:00:00Z
+Stopped at: Phase 01 live UAT found 3 issues; fix plans 01-08..01-10 created + checker-PASSED. Resume via /gsd-execute-phase 01 --gaps-only.
 Resume file: .planning/phases/01-walking-skeleton/01-UAT.md
