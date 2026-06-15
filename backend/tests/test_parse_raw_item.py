@@ -523,10 +523,12 @@ class TestParseRawItemRouting:
 
             parse_raw_item(5)
 
-        # Check that a ParseRun-like object was added with model=NULL
+        # Check that a ParseRun ORM object was added with model=NULL
+        from app.models.sources import ParseRun  # noqa: PLC0415
+
         parse_run_added = None
         for obj in added_objects:
-            if hasattr(obj, "parser") and hasattr(obj, "model"):
+            if isinstance(obj, ParseRun):
                 parse_run_added = obj
                 break
 
