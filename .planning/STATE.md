@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: Awaiting decision — plan gap closure, fix inline, or accept deferrals
+status: executing
 stopped_at: "Completed 01-10-PLAN.md (UAT Gap 2 / SC#5: ruff+mypy gate green, tools pinned)"
-last_updated: "2026-06-15T11:31:53.291Z"
-last_activity: 2026-06-15 -- gap-closure 01-08..01-10 done; re-verification found 3 new gaps
+last_updated: "2026-06-15T11:58:12.549Z"
+last_activity: 2026-06-15 -- Phase 02 execution started
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 10
+  completed_phases: 1
+  total_plans: 17
   completed_plans: 10
-  percent: 0
+  percent: 17
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Every relevant market event lands accurately and quickly in a single normalized stream the team can see, filter, and act on — with no single source able to take the others down.
-**Current focus:** Phase 01 — walking-skeleton
+**Current focus:** Phase 02 — ingest-core-uzex
 
 ## Current Position
 
-Phase: 01 (walking-skeleton) — GAPS FOUND (re-verification 3/5 must-haves)
-Plan: 10 of 10 executed; phase NOT complete (3 gaps)
-Status: Awaiting decision — plan gap closure, fix inline, or accept deferrals
-Last activity: 2026-06-15 -- gap-closure 01-08..01-10 done; re-verification found 3 new gaps
+Phase: 02 (ingest-core-uzex) — EXECUTING
+Plan: 1 of 7
+Status: Executing Phase 02
+Last activity: 2026-06-15 -- Phase 02 execution started
 
 Progress: [████████░░] ~80% (3/5 success criteria fully met)
 
