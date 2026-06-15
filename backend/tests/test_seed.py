@@ -17,14 +17,16 @@ Run locally with a migrated test DB:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 from pathlib import Path
 
 import pytest
 import sqlalchemy as sa
-from alembic import command as alembic_command
 from alembic.config import Config
+
+from alembic import command as alembic_command
 
 BACKEND_DIR = Path(__file__).parent.parent
 SEED_DATA_DIR = BACKEND_DIR / "app" / "seed" / "data"
@@ -57,10 +59,8 @@ def migrated_db(engine):
     alembic_cfg.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
 
     # Ensure clean state
-    try:
+    with contextlib.suppress(Exception):
         alembic_command.downgrade(alembic_cfg, "base")
-    except Exception:
-        pass
     alembic_command.upgrade(alembic_cfg, "head")
 
     yield engine
@@ -128,11 +128,12 @@ class TestSeedProducts:
 
     def test_seed_products_inserts_expected_rows(self, migrated_db) -> None:
         """First seed run inserts the polymer products."""
-        from app.seed.seed_reference import seed_products  # noqa: PLC0415
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        SessionLocal = sessionmaker(bind=migrated_db)
-        with SessionLocal() as session:
+        from app.seed.seed_reference import seed_products  # noqa: PLC0415
+
+        session_factory = sessionmaker(bind=migrated_db)
+        with session_factory() as session:
             inserted = seed_products(session)
             session.commit()
 
@@ -140,16 +141,17 @@ class TestSeedProducts:
 
     def test_seed_products_is_idempotent(self, migrated_db) -> None:
         """Second seed run inserts 0 additional rows."""
-        from app.seed.seed_reference import seed_products  # noqa: PLC0415
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        SessionLocal = sessionmaker(bind=migrated_db)
+        from app.seed.seed_reference import seed_products  # noqa: PLC0415
+
+        session_factory = sessionmaker(bind=migrated_db)
         # First run (may already be seeded from previous test)
-        with SessionLocal() as session:
+        with session_factory() as session:
             seed_products(session)
             session.commit()
         # Second run must insert 0
-        with SessionLocal() as session:
+        with session_factory() as session:
             inserted = seed_products(session)
             session.commit()
 
@@ -158,10 +160,11 @@ class TestSeedProducts:
     def test_seed_products_required_codes_present(self, migrated_db) -> None:
         """After seeding, required product codes exist in the DB."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
+
         from app.seed.seed_reference import seed_all  # noqa: PLC0415
 
-        SessionLocal = sessionmaker(bind=migrated_db)
-        with SessionLocal() as session:
+        session_factory = sessionmaker(bind=migrated_db)
+        with session_factory() as session:
             seed_all(session)
 
         with migrated_db.connect() as conn:
@@ -182,11 +185,12 @@ class TestSeedGrades:
 
     def test_seed_grades_inserts_rows(self, migrated_db) -> None:
         """First seed run inserts UZ-producer grades."""
-        from app.seed.seed_reference import seed_all  # noqa: PLC0415
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        SessionLocal = sessionmaker(bind=migrated_db)
-        with SessionLocal() as session:
+        from app.seed.seed_reference import seed_all  # noqa: PLC0415
+
+        session_factory = sessionmaker(bind=migrated_db)
+        with session_factory() as session:
             counts = seed_all(session)
 
         assert counts["grades"] >= 0  # May be 0 if already seeded
@@ -201,16 +205,17 @@ class TestSeedGrades:
 
     def test_seed_grades_idempotent(self, migrated_db) -> None:
         """Running seed_all twice inserts 0 additional grade rows on second run."""
-        from app.seed.seed_reference import seed_grades  # noqa: PLC0415
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        SessionLocal = sessionmaker(bind=migrated_db)
+        from app.seed.seed_reference import seed_grades  # noqa: PLC0415
+
+        session_factory = sessionmaker(bind=migrated_db)
         # First run (idempotency baseline)
-        with SessionLocal() as session:
+        with session_factory() as session:
             seed_grades(session)
             session.commit()
         # Second run
-        with SessionLocal() as session:
+        with session_factory() as session:
             inserted = seed_grades(session)
             session.commit()
 

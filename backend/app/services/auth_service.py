@@ -10,13 +10,11 @@ T-03-06: identity derived only from the verified JWT, never from the request bod
 from __future__ import annotations
 
 import os
-from typing import Optional
 
 from fastapi import Response
 from sqlalchemy.orm import Session
 
 from app.core.security import (
-    create_access_token,
     create_refresh_token,
     dummy_verify,
     verify_password,
@@ -33,7 +31,7 @@ _REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 _COOKIE_SECURE = os.environ.get("APP_ENV", "development").lower() == "production"
 
 
-def authenticate(db: Session, email: str, password: str) -> Optional[StaffUser]:
+def authenticate(db: Session, email: str, password: str) -> StaffUser | None:
     """Authenticate a staff user by email and argon2-verified password.
 
     Returns the StaffUser if credentials are valid and the account is active.
@@ -49,7 +47,7 @@ def authenticate(db: Session, email: str, password: str) -> Optional[StaffUser]:
         The authenticated StaffUser, or None on any failure.
     """
     # T-03-08: parameterized SQLAlchemy query — no string-built SQL
-    user: Optional[StaffUser] = (
+    user: StaffUser | None = (
         db.query(StaffUser).filter(StaffUser.email == email).first()
     )
 

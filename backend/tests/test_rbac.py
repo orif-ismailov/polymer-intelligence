@@ -14,8 +14,8 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
+
 
 def _make_staff_user(
     id: int,
@@ -38,8 +38,8 @@ def _make_staff_user(
 
 def _make_rbac_client(staff_user: MagicMock) -> TestClient:
     """Build a TestClient with get_db mocked to return the given staff_user."""
-    from app.main import create_app
     from app.core.db import get_db
+    from app.main import create_app
 
     mock_db = MagicMock()
     mock_db.query.return_value.filter.return_value.first.return_value = staff_user

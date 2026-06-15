@@ -56,12 +56,12 @@ def get_current_staff_user(
     token = credentials.credentials
     try:
         payload = decode_token(token, expected_type="access")
-    except JWTError:
+    except JWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from exc
 
     # Extract the subject (staff_user id) from the verified token
     # T-03-06: identity comes ONLY from the verified token, never from the body
@@ -75,12 +75,12 @@ def get_current_staff_user(
 
     try:
         staff_user_id = int(subject)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token: invalid subject format",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from exc
 
     # Load the user from DB to confirm they still exist and check is_active
     user: StaffUser | None = (

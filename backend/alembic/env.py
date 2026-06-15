@@ -25,7 +25,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # ── Import models so Base.metadata knows all tables ──────────────────────────
 # This import triggers all model module imports via __init__.py
 import app.models  # noqa: F401, E402
-
 from app.core.db import Base  # noqa: E402
 
 # ── Alembic config object ─────────────────────────────────────────────────────
@@ -53,7 +52,7 @@ def get_url() -> str:
         if url is None:
             raise RuntimeError(
                 "DATABASE_URL not set and alembic.ini has no sqlalchemy.url"
-            )
+            ) from None
         return url
 
 

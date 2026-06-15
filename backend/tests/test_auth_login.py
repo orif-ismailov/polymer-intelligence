@@ -45,8 +45,8 @@ def _make_staff_user(
 @pytest.fixture
 def auth_client(monkeypatch) -> Generator[TestClient, None, None]:
     """TestClient with a mocked DB that has one seeded admin user."""
-    from app.main import create_app
     from app.core.db import get_db
+    from app.main import create_app
 
     admin_user = _make_staff_user(
         id=1,
@@ -76,16 +76,15 @@ def auth_client(monkeypatch) -> Generator[TestClient, None, None]:
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
 
-    with patch("app.api.health._check_redis", return_value="ok"):
-        with TestClient(application, raise_server_exceptions=True) as tc:
-            yield tc
+    with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as tc:
+        yield tc
 
 
 @pytest.fixture
 def inactive_auth_client(monkeypatch) -> Generator[TestClient, None, None]:
     """TestClient where the only user is inactive."""
-    from app.main import create_app
     from app.core.db import get_db
+    from app.main import create_app
 
     inactive_user = _make_staff_user(
         id=2,
@@ -110,16 +109,15 @@ def inactive_auth_client(monkeypatch) -> Generator[TestClient, None, None]:
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
 
-    with patch("app.api.health._check_redis", return_value="ok"):
-        with TestClient(application, raise_server_exceptions=True) as tc:
-            yield tc
+    with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as tc:
+        yield tc
 
 
 @pytest.fixture
 def no_user_auth_client() -> Generator[TestClient, None, None]:
     """TestClient where email lookup returns None (user not found)."""
-    from app.main import create_app
     from app.core.db import get_db
+    from app.main import create_app
 
     mock_db = MagicMock()
     mock_query = MagicMock()
@@ -136,9 +134,8 @@ def no_user_auth_client() -> Generator[TestClient, None, None]:
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
 
-    with patch("app.api.health._check_redis", return_value="ok"):
-        with TestClient(application, raise_server_exceptions=True) as tc:
-            yield tc
+    with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as tc:
+        yield tc
 
 
 # ── Login tests ────────────────────────────────────────────────────────────────
@@ -242,8 +239,8 @@ def test_refresh_with_valid_cookie_returns_new_access_token(auth_client: TestCli
 def test_refresh_without_cookie_returns_401(auth_client: TestClient):
     """POST /auth/refresh without a cookie returns 401."""
     # Use a fresh client with no cookies
-    from app.main import create_app
     from app.core.db import get_db
+    from app.main import create_app
 
     mock_db = MagicMock()
     mock_query = MagicMock()
@@ -258,18 +255,18 @@ def test_refresh_without_cookie_returns_401(auth_client: TestClient):
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
 
-    with patch("app.api.health._check_redis", return_value="ok"):
-        with TestClient(application, raise_server_exceptions=True) as fresh_client:
-            # Don't set any cookies - call refresh directly
-            resp = fresh_client.post("/api/v1/auth/refresh")
-            assert resp.status_code == 401
+    with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as fresh_client:
+        # Don't set any cookies - call refresh directly
+        resp = fresh_client.post("/api/v1/auth/refresh")
+        assert resp.status_code == 401
 
 
 def test_refresh_with_invalid_cookie_returns_401(auth_client: TestClient):
     """POST /auth/refresh with an invalid cookie value returns 401."""
-    from fastapi.testclient import TestClient as TC
-    from app.main import create_app
-    from app.core.db import get_db
+    from fastapi.testclient import TestClient as TestClientAlias  # noqa: PLC0415
+
+    from app.core.db import get_db  # noqa: PLC0415
+    from app.main import create_app  # noqa: PLC0415
 
     mock_db = MagicMock()
     mock_query = MagicMock()
@@ -284,11 +281,10 @@ def test_refresh_with_invalid_cookie_returns_401(auth_client: TestClient):
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
 
-    with patch("app.api.health._check_redis", return_value="ok"):
-        with TC(application, raise_server_exceptions=True) as bad_client:
-            bad_client.cookies.set("refresh_token", "totally.invalid.token")
-            resp = bad_client.post("/api/v1/auth/refresh")
-            assert resp.status_code == 401
+    with patch("app.api.health._check_redis", return_value="ok"), TestClientAlias(application, raise_server_exceptions=True) as bad_client:
+        bad_client.cookies.set("refresh_token", "totally.invalid.token")
+        resp = bad_client.post("/api/v1/auth/refresh")
+        assert resp.status_code == 401
 
 
 # ── Security hardening tests (CR-04, CR-05, T-03-01) ──────────────────────────
@@ -312,14 +308,15 @@ def test_dummy_verify_does_not_raise_invalid_hash_error() -> None:
     T-03-01: the old implementation raised InvalidHashError immediately (no KDF work done).
     """
     from argon2.exceptions import InvalidHashError
+
     from app.core.security import dummy_verify
     try:
         dummy_verify("probe_password")
-    except InvalidHashError:
+    except InvalidHashError as exc:
         raise AssertionError(
             "dummy_verify raised InvalidHashError — the dummy hash is malformed "
             "(not a real argon2 hash). CR-05: replace with _hasher.hash() precomputed at import."
-        )
+        ) from exc
 
 
 def test_unknown_user_path_calls_dummy_verify(no_user_auth_client: TestClient) -> None:

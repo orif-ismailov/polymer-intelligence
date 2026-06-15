@@ -14,9 +14,8 @@ safe approach.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, tzinfo
+from datetime import UTC, datetime, tzinfo
 from zoneinfo import ZoneInfo
-
 
 # Canonical display timezone — overridable via TZ_DISPLAY env var.
 # We do NOT import settings at module load time to avoid circular imports;
@@ -30,7 +29,7 @@ def utcnow() -> datetime:
     Use this everywhere instead of datetime.utcnow() (which is naïve and
     therefore ambiguous when stored alongside tz-aware values).
     """
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(tz=UTC)
 
 
 def to_display_tz(dt: datetime, tz: str | tzinfo | None = None) -> datetime:

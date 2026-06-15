@@ -31,8 +31,8 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.core.db import get_db
 from app.core.config import settings
+from app.core.db import get_db
 
 logger = logging.getLogger(__name__)
 

@@ -16,11 +16,11 @@ from __future__ import annotations
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
-from app.core.logging import configure_logging
-from app.api.health import router as health_router
 from app.api.auth import router as auth_router
 from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.health import router as health_router
+from app.core.config import settings
+from app.core.logging import configure_logging
 from app.models.staff import StaffUser
 
 

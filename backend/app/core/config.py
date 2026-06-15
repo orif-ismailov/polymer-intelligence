@@ -11,8 +11,6 @@ loaded only from an untracked .env file (see deploy/.env.example contract).
 
 from __future__ import annotations
 
-from typing import Union
-
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -56,7 +54,7 @@ class Settings(BaseSettings):
     #   CORS_ALLOWED_ORIGINS=http://localhost:3000,https://dashboard.example.com
     # Union[list[str], str] allows pydantic-settings to pass the raw comma-separated
     # env string through to _parse_cors_origins (list[str] alone triggers JSON parsing).
-    CORS_ALLOWED_ORIGINS: Union[list[str], str] = ["http://localhost:3000"]
+    CORS_ALLOWED_ORIGINS: list[str] | str = ["http://localhost:3000"]
 
     # ── S3 / MinIO file storage ───────────────────────────────────────────────
     S3_ENDPOINT: str = ""
@@ -99,7 +97,11 @@ class Settings(BaseSettings):
         """
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return list(v)  # type: ignore[arg-type]
+        # v is Union[list[str], str] at runtime (validated by pydantic field type);
+        # mypy sees `object` from the @classmethod generic — cast to narrow safely.
+        if isinstance(v, list):
+            return [str(item) for item in v]
+        return []  # unreachable at runtime; satisfies mypy exhaustiveness
 
     @field_validator("TZ_DISPLAY")
     @classmethod
@@ -114,4 +116,5 @@ class Settings(BaseSettings):
 
 
 # Single module-level accessor — import `settings` everywhere, do not call Settings() twice.
-settings = Settings()
+# BaseSettings reads required fields from environment; mypy can't see that.
+settings = Settings()  # type: ignore[call-arg]

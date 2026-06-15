@@ -13,10 +13,12 @@ T-03-03: type claim distinguishes access vs refresh; cross-use rejected.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+import contextlib
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
+from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 from jose import JWTError, jwt
 
 from app.core.config import settings
@@ -97,12 +99,10 @@ def dummy_verify(plain: str) -> None:
     Args:
         plain: The candidate plaintext password (the attacker's guess).
     """
-    try:
+    # Expected: the real dummy hash will never match any attacker-supplied password.
+    # We still performed full argon2 KDF work — that is the whole point.
+    with contextlib.suppress(VerifyMismatchError, VerificationError):
         _hasher.verify(_DUMMY_HASH, plain)
-    except (VerifyMismatchError, VerificationError):
-        # Expected: the real dummy hash will never match any attacker-supplied password.
-        # We still performed full argon2 KDF work — that is the whole point.
-        pass
 
 
 def create_access_token(subject: str, role: str) -> str:
@@ -122,7 +122,7 @@ def create_access_token(subject: str, role: str) -> str:
     Returns:
         A signed JWT access token string.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": subject,
         "role": role,
@@ -130,7 +130,7 @@ def create_access_token(subject: str, role: str) -> str:
         "iat": now,
         "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     }
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM)
+    return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 
 
 def create_refresh_token(subject: str) -> str:
@@ -151,17 +151,17 @@ def create_refresh_token(subject: str) -> str:
     Returns:
         A signed JWT refresh token string.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": subject,
         "type": "refresh",
         "iat": now,
         "exp": now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
     }
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM)
+    return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 
 
-def decode_token(token: str, expected_type: str) -> dict:
+def decode_token(token: str, expected_type: str) -> dict[str, Any]:
     """Decode and validate a JWT token.
 
     Verifies:
@@ -181,7 +181,7 @@ def decode_token(token: str, expected_type: str) -> dict:
                   token type does not match expected_type.
     """
     try:
-        payload = jwt.decode(
+        raw_payload: dict[str, Any] = jwt.decode(
             token,
             settings.JWT_SECRET,
             algorithms=[_ALGORITHM],
@@ -190,10 +190,10 @@ def decode_token(token: str, expected_type: str) -> dict:
         raise JWTError(f"Token validation failed: {exc}") from exc
 
     # T-03-03: enforce token-type claim to prevent cross-use of access/refresh tokens
-    token_type = payload.get("type")
+    token_type = raw_payload.get("type")
     if token_type != expected_type:
         raise JWTError(
             f"Token type mismatch: expected '{expected_type}', got '{token_type}'"
         )
 
-    return payload
+    return raw_payload

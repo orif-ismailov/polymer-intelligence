@@ -7,11 +7,11 @@ TZ_DISPLAY defaults to Asia/Tashkent.
 
 from __future__ import annotations
 
-import importlib
 import os
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 # Minimum required env vars — secrets that have no defaults
 _REQUIRED_SECRETS = {
@@ -74,12 +74,12 @@ class TestSettingsReadsEnv:
     def test_reads_database_url(self) -> None:
         url = "postgresql+psycopg://user:pass@host/db"
         settings = _make_settings(DATABASE_URL=url)
-        assert settings.DATABASE_URL == url
+        assert url == settings.DATABASE_URL
 
     def test_reads_redis_url(self) -> None:
         url = "redis://redis-host:6379/1"
         settings = _make_settings(REDIS_URL=url)
-        assert settings.REDIS_URL == url
+        assert url == settings.REDIS_URL
 
     def test_reads_tg_api_id_as_int(self) -> None:
         """TG_API_ID is declared as int, so it must be coerced from env string."""
@@ -97,7 +97,7 @@ class TestSettingsReadsEnv:
 
     def test_invalid_tz_display_raises(self) -> None:
         """Invalid timezone name must raise a validation error at instantiation."""
-        with pytest.raises(Exception):  # pydantic ValidationError
+        with pytest.raises(ValidationError):
             _make_settings(TZ_DISPLAY="Not/ATimezone")
 
 
@@ -123,7 +123,7 @@ class TestRequiredSecrets:
 
         with patch.dict(os.environ, env_without_secret, clear=True):
             import app.core.config as cfg_module  # noqa: PLC0415
-            with pytest.raises(Exception):  # pydantic ValidationError
+            with pytest.raises(ValidationError):
                 cfg_module.Settings(_env_file=None)
 
 
@@ -134,7 +134,7 @@ class TestJwtSecretValidator:
         """Settings() with a JWT_SECRET shorter than 32 chars must raise a ValidationError."""
         short_secret = "short_secret_31_chars_xxxxxxxx!"  # exactly 31 chars
         assert len(short_secret) == 31, f"Test precondition failed: len={len(short_secret)}"
-        with pytest.raises(Exception):  # pydantic ValidationError
+        with pytest.raises(ValidationError):
             _make_settings(JWT_SECRET=short_secret)
 
     def test_jwt_secret_exactly_32_chars_succeeds(self) -> None:
@@ -142,14 +142,14 @@ class TestJwtSecretValidator:
         secret_32 = "a" * 32
         assert len(secret_32) == 32
         settings = _make_settings(JWT_SECRET=secret_32)
-        assert settings.JWT_SECRET == secret_32
+        assert secret_32 == settings.JWT_SECRET
 
     def test_jwt_secret_longer_than_32_chars_succeeds(self) -> None:
         """Settings() with a JWT_SECRET longer than 32 chars must succeed."""
         secret_long = "ci-jwt-secret-placeholder-32chars!!"
         assert len(secret_long) >= 32
         settings = _make_settings(JWT_SECRET=secret_long)
-        assert settings.JWT_SECRET == secret_long
+        assert secret_long == settings.JWT_SECRET
 
 
 class TestCiEnvContract:

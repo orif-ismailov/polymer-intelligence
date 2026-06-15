@@ -10,8 +10,6 @@ Covers:
 
 from __future__ import annotations
 
-import pytest
-
 
 def test_hash_password_returns_argon2_format():
     """hash_password output starts with $argon2 identifier."""

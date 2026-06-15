@@ -108,11 +108,11 @@ def refresh_token(
 
     try:
         payload = decode_token(refresh_token_cookie, expected_type="refresh")
-    except JWTError:
+    except JWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
-        )
+        ) from exc
 
     subject = payload.get("sub")
     if subject is None:
@@ -123,11 +123,11 @@ def refresh_token(
 
     try:
         staff_user_id = int(subject)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token: invalid subject",
-        )
+        ) from exc
 
     # Re-load user from DB to confirm still active (role may have changed)
     user: StaffUser | None = (

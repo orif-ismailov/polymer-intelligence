@@ -13,8 +13,10 @@ Covers:
 from __future__ import annotations
 
 import time
+from datetime import UTC
 
 import pytest
+from jose import JWTError
 
 
 def test_create_access_token_has_access_type():
@@ -89,13 +91,13 @@ def test_decode_token_rejects_tampered_signature():
     parts[-1] = parts[-1][:-4] + "XXXX"
     tampered = ".".join(parts)
 
-    with pytest.raises(Exception):
+    with pytest.raises(JWTError):
         decode_token(tampered, expected_type="access")
 
 
 def test_decode_token_rejects_expired_token():
     """An expired token is rejected."""
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     from jose import jwt
 
@@ -106,14 +108,14 @@ def test_decode_token_rejects_expired_token():
         "sub": "1",
         "role": "admin",
         "type": "access",
-        "exp": datetime.now(timezone.utc) - timedelta(seconds=60),
-        "iat": datetime.now(timezone.utc) - timedelta(seconds=900),
+        "exp": datetime.now(UTC) - timedelta(seconds=60),
+        "iat": datetime.now(UTC) - timedelta(seconds=900),
     }
     expired_token = jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
 
     from app.core.security import decode_token
 
-    with pytest.raises(Exception):
+    with pytest.raises(JWTError):
         decode_token(expired_token, expected_type="access")
 
 
@@ -123,7 +125,7 @@ def test_decode_token_rejects_access_as_refresh():
 
     token = create_access_token(subject="1", role="admin")
 
-    with pytest.raises(Exception):
+    with pytest.raises(JWTError):
         decode_token(token, expected_type="refresh")
 
 
@@ -133,5 +135,5 @@ def test_decode_token_rejects_refresh_as_access():
 
     token = create_refresh_token(subject="1")
 
-    with pytest.raises(Exception):
+    with pytest.raises(JWTError):
         decode_token(token, expected_type="access")

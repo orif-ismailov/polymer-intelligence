@@ -54,9 +54,8 @@ def _mock_db_session() -> MagicMock:
 @pytest.fixture
 def client() -> Generator[TestClient, None, None]:
     """TestClient with db and redis probes mocked to return 'ok'."""
-    from app.main import create_app  # noqa: PLC0415
     from app.core.db import get_db  # noqa: PLC0415
-    from app.api.health import _check_redis  # noqa: PLC0415
+    from app.main import create_app  # noqa: PLC0415
 
     application = create_app()
 
@@ -69,16 +68,15 @@ def client() -> Generator[TestClient, None, None]:
     application.dependency_overrides[get_db] = _override_get_db
 
     # Patch _check_redis to avoid needing a live Redis connection
-    with patch("app.api.health._check_redis", return_value="ok"):
-        with TestClient(application) as test_client:
-            yield test_client
+    with patch("app.api.health._check_redis", return_value="ok"), TestClient(application) as test_client:
+        yield test_client
 
 
 @pytest.fixture
 def client_db_error() -> Generator[TestClient, None, None]:
     """TestClient where the db check returns an error (session.execute raises)."""
-    from app.main import create_app  # noqa: PLC0415
     from app.core.db import get_db  # noqa: PLC0415
+    from app.main import create_app  # noqa: PLC0415
 
     application = create_app()
 
@@ -89,16 +87,15 @@ def client_db_error() -> Generator[TestClient, None, None]:
 
     application.dependency_overrides[get_db] = _error_db
 
-    with patch("app.api.health._check_redis", return_value="ok"):
-        with TestClient(application) as test_client:
-            yield test_client
+    with patch("app.api.health._check_redis", return_value="ok"), TestClient(application) as test_client:
+        yield test_client
 
 
 @pytest.fixture
 def client_redis_error() -> Generator[TestClient, None, None]:
     """TestClient where the redis check returns an error."""
-    from app.main import create_app  # noqa: PLC0415
     from app.core.db import get_db  # noqa: PLC0415
+    from app.main import create_app  # noqa: PLC0415
 
     application = create_app()
 
@@ -109,6 +106,5 @@ def client_redis_error() -> Generator[TestClient, None, None]:
 
     application.dependency_overrides[get_db] = _override_get_db
 
-    with patch("app.api.health._check_redis", return_value="error"):
-        with TestClient(application) as test_client:
-            yield test_client
+    with patch("app.api.health._check_redis", return_value="error"), TestClient(application) as test_client:
+        yield test_client

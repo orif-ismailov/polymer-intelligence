@@ -43,7 +43,7 @@ _SYNONYMS_FILE = _DATA_DIR / "synonyms.json"
 
 def _load_json(path: Path) -> Any:
     """Load and return JSON from a file."""
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -168,9 +168,9 @@ def seed_all(session: Session) -> dict[str, int]:
 
 
 if __name__ == "__main__":
-    import sys
-    import os
     import logging as _logging
+    import os
+    import sys
 
     _logging.basicConfig(level=_logging.INFO)
 

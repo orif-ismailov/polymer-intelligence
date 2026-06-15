@@ -28,11 +28,12 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
+
+from alembic.config import Config
+from sqlalchemy import text
 
 from alembic import command as alembic_command
-from alembic.config import Config
-from pathlib import Path
-from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ def run_migrations() -> str:
     except Exception:
         database_url = os.environ.get("DATABASE_URL", "")
         if not database_url:
-            raise RuntimeError("DATABASE_URL is not set — cannot run migrations")
+            raise RuntimeError("DATABASE_URL is not set — cannot run migrations") from None
 
     logger.info("entrypoint.migration_start", extra={"url": database_url.split("@")[-1]})
 
@@ -148,10 +149,9 @@ def get_schema_version(database_url: str | None = None) -> str | None:
         logger.warning("entrypoint.get_schema_version_failed", exc_info=exc)
         return None
     finally:
-        try:
+        import contextlib  # noqa: PLC0415
+        with contextlib.suppress(Exception):
             engine.dispose()
-        except Exception:
-            pass
 
 
 if __name__ == "__main__":

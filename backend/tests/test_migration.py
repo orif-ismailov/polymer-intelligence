@@ -14,14 +14,15 @@ In CI: the postgres service container is configured in .github/workflows/*.yml.
 
 from __future__ import annotations
 
+import contextlib
 import os
-import subprocess
 from pathlib import Path
 
 import pytest
 import sqlalchemy as sa
-from alembic import command
 from alembic.config import Config
+
+from alembic import command
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -60,10 +61,8 @@ def engine():
 def clean_db(alembic_cfg: Config, engine):
     """Ensure the DB is clean before the test module runs, and clean up after."""
     # Downgrade to base first (in case a previous run left state)
-    try:
+    with contextlib.suppress(Exception):
         command.downgrade(alembic_cfg, "base")
-    except Exception:
-        pass
 
     yield
 
@@ -279,7 +278,6 @@ class TestAdvisoryLockEntrypoint:
     ) -> None:
         """Running the entrypoint applies the migration (alembic_version populated)."""
         import importlib.util
-        import sys
 
         entrypoint_path = BACKEND_DIR / "app" / "entrypoint.py"
         spec = importlib.util.spec_from_file_location("entrypoint", entrypoint_path)

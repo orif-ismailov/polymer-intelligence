@@ -13,7 +13,7 @@ from __future__ import annotations
 import enum
 
 
-class SourceKind(str, enum.Enum):
+class SourceKind(enum.StrEnum):
     """Type of data source."""
 
     exchange = "exchange"
@@ -25,7 +25,7 @@ class SourceKind(str, enum.Enum):
     rss = "rss"
 
 
-class ParseStatus(str, enum.Enum):
+class ParseStatus(enum.StrEnum):
     """Processing status of a raw item."""
 
     pending = "pending"
@@ -35,7 +35,7 @@ class ParseStatus(str, enum.Enum):
     irrelevant = "irrelevant"
 
 
-class CounterpartyRole(str, enum.Enum):
+class CounterpartyRole(enum.StrEnum):
     """Market role of a counterparty."""
 
     buyer = "buyer"
@@ -45,7 +45,7 @@ class CounterpartyRole(str, enum.Enum):
     unknown = "unknown"
 
 
-class SignalKind(str, enum.Enum):
+class SignalKind(enum.StrEnum):
     """Type of market signal."""
 
     buy_request = "buy_request"
@@ -55,7 +55,7 @@ class SignalKind(str, enum.Enum):
     news = "news"
 
 
-class PriceBasis(str, enum.Enum):
+class PriceBasis(enum.StrEnum):
     """Incoterms / delivery basis for price."""
 
     EXW = "EXW"
@@ -68,7 +68,7 @@ class PriceBasis(str, enum.Enum):
     unknown = "unknown"
 
 
-class Urgency(str, enum.Enum):
+class Urgency(enum.StrEnum):
     """Urgency / priority level."""
 
     low = "low"
@@ -76,7 +76,7 @@ class Urgency(str, enum.Enum):
     high = "high"
 
 
-class RequestStatus(str, enum.Enum):
+class RequestStatus(enum.StrEnum):
     """Client request lifecycle status."""
 
     new = "new"
@@ -88,16 +88,16 @@ class RequestStatus(str, enum.Enum):
     cancelled = "cancelled"
 
 
-class PricePointKind(str, enum.Enum):
+class PricePointKind(enum.StrEnum):
     """Type of derived price point."""
 
     deal_avg = "deal_avg"
     offer_avg = "offer_avg"
-    index = "index"
+    index = "index"  # type: ignore[assignment]  # "index" shadows str.index() method; DB ENUM value must stay "index"
     futures = "futures"
 
 
-class AlertKind(str, enum.Enum):
+class AlertKind(enum.StrEnum):
     """Type of alert rule / alert event."""
 
     new_hot_request = "new_hot_request"
@@ -109,7 +109,7 @@ class AlertKind(str, enum.Enum):
     custom = "custom"
 
 
-class DeliveryChannel(str, enum.Enum):
+class DeliveryChannel(enum.StrEnum):
     """Delivery channel for notifications."""
 
     telegram_dm = "telegram_dm"
@@ -118,7 +118,7 @@ class DeliveryChannel(str, enum.Enum):
     dashboard = "dashboard"
 
 
-class DeliveryStatus(str, enum.Enum):
+class DeliveryStatus(enum.StrEnum):
     """Delivery status for a notification."""
 
     queued = "queued"
@@ -126,7 +126,7 @@ class DeliveryStatus(str, enum.Enum):
     failed = "failed"
 
 
-class ReportKind(str, enum.Enum):
+class ReportKind(enum.StrEnum):
     """Type of market report."""
 
     morning = "morning"
@@ -135,7 +135,7 @@ class ReportKind(str, enum.Enum):
     custom = "custom"
 
 
-class ReportStatus(str, enum.Enum):
+class ReportStatus(enum.StrEnum):
     """Publication status of a report (human-in-the-loop)."""
 
     draft = "draft"
@@ -145,7 +145,7 @@ class ReportStatus(str, enum.Enum):
     rejected = "rejected"
 
 
-class StaffRole(str, enum.Enum):
+class StaffRole(enum.StrEnum):
     """Internal staff access role (REQ-roles, enforced in plan 01-03)."""
 
     admin = "admin"
