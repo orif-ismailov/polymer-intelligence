@@ -14,7 +14,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-05..01-07 executed 2026-06-14; re-verification 5/5 config-level — awaiting human UAT: docker/CI/browser live tests + REVIEW CR-01 S3 env mismatch)
+- [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-05..01-07 executed 2026-06-14; live UAT 2026-06-15 found 3 issues → gap-closure plans 01-08..01-10 planned: dev-nginx boot fix SC#1, ruff/mypy green SC#5, S3 env-name CR-01)
 - [ ] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health
 - [ ] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications
 - [ ] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard
@@ -36,7 +36,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   4. Passwords are argon2-hashed; secrets load from `.env` outside the repo; timestamps are stored UTC with an Asia/Tashkent display helper
   5. CI (ruff, mypy, eslint+tsc, tests, image build) passes green on the scaffold
 
-**Plans**: 7 plans (4 executed + 3 gap-closure)
+**Plans**: 10 plans (4 executed + 3 verification gap-closure + 3 UAT gap-closure)
 
 **Wave 1**
 
@@ -56,6 +56,12 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - [x] 01-05-PLAN.md — SC#1 deployable stack: add nginx service + backend/Dockerfile so compose build blocks resolve, add nginx events{} block, fix CR-06 security-header inheritance
 - [x] 01-06-PLAN.md — SC#5 green CI: fix invalid PEP 517 build-backend (setuptools.build_meta), remove `|| true` from both eslint gates and confirm scaffolds lint clean
 - [x] 01-07-PLAN.md — REQ-nfr-security hardening: settings-driven CORS (no wildcard+credentials, CR-04), real argon2 dummy-verify (CR-05/T-03-01), JWT_SECRET ≥32-char startup validator (WR-01)
+
+**Wave 5 — UAT gap closure** *(remediation of live-UAT findings 2026-06-15; 01-08 + 01-09 run in parallel, 01-10 serializes after 01-09 on shared config.py/ci.yml)*
+
+- [ ] 01-08-PLAN.md — SC#1 dev-nginx actually boots: drop the boot-time `dashboard` upstream resolution and the unmounted-letsencrypt-cert load so `docker compose up` brings nginx up and `/health` returns 200 (live re-verify required)
+- [ ] 01-09-PLAN.md — REVIEW CR-01: rename CI `S3_ENDPOINT_URL` → `S3_ENDPOINT` so the case-sensitive Settings field reads it; regression test locks the CI env name to the field name (config default preserved, suite stays green)
+- [ ] 01-10-PLAN.md — SC#5 backend lint/type gate truly green: resolve the 124 `ruff check .` violations behavior-preservingly, make `mypy app/services`/`app/schemas` pass, and exact-pin ruff + mypy for reproducibility (pytest stays 100 passed / 17 skipped)
 
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` — the migration MUST reproduce the locked DDL verbatim (raw_items, signals, requests, price_points, alerts, reports, sources, counterparties, fx_rates, staff_users, audit_log, ENUM types, v_live_feed). This is the foundation all phases build on.
 
@@ -146,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 7/7 | Human UAT | - |
+| 1. Walking Skeleton | 7/10 | UAT gap closure | - |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
@@ -155,4 +161,3 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 ---
 *Roadmap created: 2026-06-13 (Client Phase 1 milestone). Phase 2 international loop = planned follow-up milestone, not in this roadmap.*
-*Updated: 2026-06-14 — Phase 1 gap-closure plans 01-05..01-07 executed; re-verification 5/5 config-level → human_needed (UAT pending: docker/CI/browser + CR-01 S3 env).*
