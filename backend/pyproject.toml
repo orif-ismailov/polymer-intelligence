@@ -84,6 +84,12 @@ module = ["celery", "celery.*", "kombu", "kombu.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+# python-jose does not ship a py.typed marker or bundled stubs.
+# types-python-jose is available but not pinned; suppress here to keep CI green.
+module = ["jose", "jose.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["app.services.*"]
 disallow_untyped_defs = true
 disallow_any_explicit = true

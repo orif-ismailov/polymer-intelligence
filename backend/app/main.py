@@ -20,6 +20,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.admin_sources import router as admin_sources_router
 from app.api.auth import router as auth_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.health import router as health_router
@@ -94,6 +95,7 @@ def create_app() -> FastAPI:
     # All API routes are mounted under /api/v1 per dev-spec §3.2.
     application.include_router(health_router, prefix="/api/v1")
     application.include_router(auth_router, prefix="/api/v1")
+    application.include_router(admin_sources_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.
