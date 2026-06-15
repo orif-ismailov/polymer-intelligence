@@ -30,7 +30,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Requirements**: REQ-roles, REQ-nfr-security, REQ-nfr-observability, REQ-nfr-time-localization
 **Success Criteria** (what must be TRUE):
 
-  1. `docker compose up` brings up api, worker, beat, postgres, redis, nginx; `/health` returns OK
+  1. `docker compose up` brings up api, postgres, redis, nginx; `/health` returns OK. (worker + beat containers are defined and start, but their Celery app `app.tasks.celery_app` is built in Phase 2 — until then they intentionally idle/restart; full worker+beat operation is verified in Phase 2 where the beat schedule drives UZEX fetch. Deferred 2026-06-15 — see Deferred Items.)
   2. Alembic applies the full locked PostgreSQL 16 schema (all tables, ENUMs, `v_live_feed`) plus seed data (products, grades, synonyms) on a clean database
   3. A staff user can log in and receive a JWT (access 15 min + refresh 7 d httpOnly); endpoints enforce admin/analyst/trader/viewer roles
   4. Passwords are argon2-hashed; secrets load from `.env` outside the repo; timestamps are stored UTC with an Asia/Tashkent display helper

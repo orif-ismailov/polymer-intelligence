@@ -110,6 +110,7 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
+| Walking skeleton | SC#1 worker+beat Celery startup — needs `app.tasks.celery_app` (built in Phase 2; beat schedule drives UZEX fetch there) | Deferred to Phase 2 | 2026-06-15 |
 | International loop | REQ-international-feed (FR-3) | Future Milestone | 2026-06-13 |
 | Web App content | REQ-webapp-news (FR-8) | Future Milestone | 2026-06-13 |
 | Reports | REQ-reports (FR-18) | Future Milestone | 2026-06-13 |
