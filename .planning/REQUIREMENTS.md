@@ -24,7 +24,7 @@
 - [ ] **REQ-live-feed** (FR-10): Unified feed (`v_live_feed`) with filters (period, product, signal type, source, urgency); updates without reload (SSE or ≤30 s polling). *Acceptance (TZ §5 NFR): feed/table API ≤500 ms at up to 1M signals.*
 - [ ] **REQ-purchase-requests** (FR-11): Requests table + detail card (details, files, AI block — score, target-vs-avg price from price_points) + actions (status change, assign owner, notes); all actions → `audit_log`. Flagship Phase-1 master-detail screen.
 - [ ] **REQ-price-trends** (FR-12): Price chart per product/market from `price_points` (external-index overlay deferred to Phase 2).
-- [ ] **REQ-sources-health** (FR-13): Source state — last successful fetch, consecutive failure count, enable/disable.
+- [x] **REQ-sources-health** (FR-13): Source state — last successful fetch, consecutive failure count, enable/disable.
 - [ ] **REQ-alerts** (FR-14): Alert feed + rules builder (product, volume/price threshold, urgency, delivery channels).
 - [x] **REQ-roles** (FR-15): Roles admin / analyst / trader / viewer (ENUM staff_role). admin = all + users; analyst = data + rules + report approval; trader = view + work requests; viewer = view only.
 
@@ -91,7 +91,7 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | REQ-nfr-time-localization | Phase 1 | Complete |
 | REQ-uzex-parser | Phase 2 | Complete |
 | REQ-fx-rates | Phase 2 | Pending |
-| REQ-sources-health | Phase 2 | Pending |
+| REQ-sources-health | Phase 2 | Complete |
 | REQ-nfr-reliability | Phase 2 | Complete |
 | REQ-webapp-auth | Phase 3 | Pending |
 | REQ-request-wizard | Phase 3 | Pending |

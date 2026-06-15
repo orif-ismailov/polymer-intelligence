@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02-PLAN.md (synonyms table + relevance service)
-last_updated: "2026-06-15T12:26:48.214Z"
+stopped_at: Completed 02-03-PLAN.md (SourceAdapter registry + SSRF HTTP client + admin/source-types)
+last_updated: "2026-06-15T12:43:50.278Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 17
-  completed_plans: 12
+  completed_plans: 13
   percent: 17
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 02 (ingest-core-uzex) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-06-15
 
@@ -62,6 +62,7 @@ Progress: [███████░░░] 65%
 | Phase 01 P10 | 28min | - tasks | - files |
 | Phase 02-ingest-core-uzex P01 | 7min | 2 tasks | 9 files |
 | Phase 02 P02 | 25min | 2 tasks | 7 files |
+| Phase 02-ingest-core-uzex P03 | 10min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,10 @@ Most relevant to Phase 1:
 - [Phase ?]: No module-level synonym cache in match_product — DB query per call ensures admin-added rows are visible immediately (SC#4 admin-top-up-able)
 - [Phase ?]: product_text truncated to 512 chars before queue insert (T-02-05: DoS hardening against oversized UZEX cells)
 - [Phase ?]: queue_for_classification uses ON CONFLICT(raw_item_id) DO NOTHING; never touches consecutive_failures — unrecognized goods are NOT source_failure (REQ-uzex-parser)
+- [Phase 02-ingest-core-uzex]: DEC-source-adapter-registry: SourceAdapter is a typing.Protocol (runtime_checkable); adapters self-register by type_name at import time via register_adapter()
+- [Phase 02-ingest-core-uzex]: DEC-ssrf-dns-resolution: is_safe_url() resolves hostname via socket.getaddrinfo() before HTTP activity; DNS failure = fail-safe reject; blocks loopback/private/link-local/reserved IPs and non-http(s) schemes (T-02-07)
+- [Phase 02-ingest-core-uzex]: DEC-http-client-deferred-import: app.ingest.__init__.py omits http_client re-export to avoid triggering Settings() at pytest collection time; tests import directly from app.ingest.http_client inside function bodies
+- [Phase 02-ingest-core-uzex]: DEC-no-code-flag: telegram_channel/llm_page/html_table/rss have no_code=True (Phase-4 wizard-addable); uzex_*/cbu_rates/sunsirs/dce have no_code=False (built-in specialized adapters)
 
 ### Pending Todos
 
@@ -124,6 +129,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-15T12:26:48.211Z
-Stopped at: Completed 02-02-PLAN.md (synonyms table + relevance service)
+Last session: 2026-06-15T12:43:50.274Z
+Stopped at: Completed 02-03-PLAN.md (SourceAdapter registry + SSRF HTTP client + admin/source-types)
 Resume file: None
