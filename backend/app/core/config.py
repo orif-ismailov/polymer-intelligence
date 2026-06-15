@@ -62,6 +62,14 @@ class Settings(BaseSettings):
     S3_SECRET_KEY: str
     S3_BUCKET: str = "polymer-files"
 
+    # ── Ingest HTTP tunables (SPEC §2 collector rules) ────────────────────────
+    # Consumed by the httpx client in 02-03 and by the Celery worker tasks.
+    # All have safe defaults; override via .env for per-environment tuning.
+    INGEST_HTTP_TIMEOUT_SECONDS: int = 30
+    INGEST_HTTP_RETRIES: int = 3
+    INGEST_USER_AGENT: str = "PolymerIntelligence/1.0 (+contact@polymer.example)"
+    INGEST_PER_HOST_DELAY_SECONDS: float = 2.0
+
     # ── Timezone / display ────────────────────────────────────────────────────
     TZ_DISPLAY: str = "Asia/Tashkent"
 

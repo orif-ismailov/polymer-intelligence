@@ -79,6 +79,11 @@ warn_return_any = true
 warn_unused_configs = true
 
 [[tool.mypy.overrides]]
+# celery and kombu have no py.typed marker; ignore missing stubs for these packages.
+module = ["celery", "celery.*", "kombu", "kombu.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["app.services.*"]
 disallow_untyped_defs = true
 disallow_any_explicit = true
