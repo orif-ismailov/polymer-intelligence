@@ -13,6 +13,10 @@ For development with live reload:
 
 from __future__ import annotations
 
+import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,6 +26,27 @@ from app.api.health import router as health_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.models.staff import StaffUser
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
+    """Application startup/shutdown hook.
+
+    On startup, when settings.RUN_MIGRATIONS_ON_STARTUP is true, apply the locked
+    schema via the advisory-locked runner in app.entrypoint (SC#2 — a fresh
+    `docker compose up` migrates a clean database without a manual step). The flag
+    defaults false so the TestClient-built app in the suite/CI never attempts to
+    reach a database it does not have. Concurrent api workers serialize on the
+    pg advisory lock; `alembic upgrade head` is idempotent once at head.
+    """
+    if settings.RUN_MIGRATIONS_ON_STARTUP:
+        from app.entrypoint import run_migrations  # noqa: PLC0415 — avoid import-time cost in tests
+
+        revision = run_migrations()
+        logger.info("startup.migrations_applied", extra={"revision": revision})
+    yield
 
 
 def create_app() -> FastAPI:
@@ -46,6 +71,7 @@ def create_app() -> FastAPI:
         # Disable auto-generated docs in production (enable via env var if needed)
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
 
     # ── CORS ──────────────────────────────────────────────────────────────────

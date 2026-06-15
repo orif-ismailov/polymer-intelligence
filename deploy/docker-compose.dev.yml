@@ -68,7 +68,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    # Apply the locked schema AND seed reference + staff data BEFORE serving
+    # (SC#2 — fresh `docker compose up` migrates and seeds a clean DB, no manual
+    # step). All three steps are idempotent. They run as pre-start steps (the
+    # advisory-locked app.entrypoint runner + the ON CONFLICT seeders) rather than
+    # the in-app lifespan: under `--reload` with the bind-mounted source, alembic
+    # writing bytecode into /app makes the watcher restart uvicorn mid-migration.
+    # The lifespan hook (RUN_MIGRATIONS_ON_STARTUP, default false) stays available
+    # for prod/no-reload.
+    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ../backend:/app  # live reload in dev
     healthcheck:

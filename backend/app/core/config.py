@@ -68,6 +68,14 @@ class Settings(BaseSettings):
     # ── Observability ─────────────────────────────────────────────────────────
     SENTRY_DSN: str = ""
 
+    # ── Runtime ───────────────────────────────────────────────────────────────
+    # When true, the FastAPI lifespan runs `alembic upgrade head` (advisory-locked,
+    # see app.entrypoint.run_migrations) on startup so a fresh `docker compose up`
+    # auto-applies the locked schema (SC#2). Default false so the test suite and CI
+    # — which build the app via TestClient without a migratable database — never
+    # attempt migrations at import/startup. The dev compose sets this to "true".
+    RUN_MIGRATIONS_ON_STARTUP: bool = False
+
     @field_validator("JWT_SECRET")
     @classmethod
     def _jwt_secret_min_length(cls, v: str) -> str:

@@ -266,7 +266,7 @@ def upgrade() -> None:
             postgresql.ENUM(name="source_kind", create_type=False),
             nullable=True,
         ),
-        sa.Column("confidence", sa.Real(), nullable=False, server_default="1.0"),
+        sa.Column("confidence", sa.REAL(), nullable=False, server_default="1.0"),
         sa.ForeignKeyConstraint(
             ["counterparty_id"], ["counterparties.id"], ondelete="CASCADE"
         ),
