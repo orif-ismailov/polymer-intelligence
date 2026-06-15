@@ -88,7 +88,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 2** *(concrete adapters + parse — blocked on Wave 1)*
 
-- [ ] 02-04-PLAN.md — UZEX offers/contracts/deals adapters (selectolax, config-driven selectors) + immutable sha256-dedupe raw pipeline + HTML fixtures (has selectolax legitimacy + no-JS escalation checkpoint)
+- [x] 02-04-PLAN.md — UZEX offers/contracts/deals adapters (selectolax, config-driven selectors) + immutable sha256-dedupe raw pipeline + HTML fixtures (has selectolax legitimacy + no-JS escalation checkpoint)
 - [x] 02-05-PLAN.md — CBU rates adapter → fx_rates (on-read conversion) + rule-based parse_raw_item (raw → signals, relevance routing, grade regex, parse_runs journal)
 
 **Wave 3** *(health + alerting — blocked on Wave 2)*
@@ -173,7 +173,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
-| 2. Ingest Core + UZEX | 4/7 | In Progress|  |
+| 2. Ingest Core + UZEX | 5/7 | In Progress|  |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |

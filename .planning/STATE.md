@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 02 (ingest-core-uzex) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-06-15
 
@@ -63,6 +63,7 @@ Progress: [████████░░] 82%
 | Phase 02 P02 | 25min | 2 tasks | 7 files |
 | Phase 02-ingest-core-uzex P03 | 10min | 2 tasks | 10 files |
 | Phase 02-ingest-core-uzex P05 | 13min | 2 tasks | 10 files |
+| Phase 02-ingest-core-uzex P04 | 25min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,10 @@ Most relevant to Phase 1:
 - [Phase ?]: ruff==0.15.17 and mypy==2.1.0 exact-pinned in [dev] for reproducible CI lint/type gate (UAT Gap 2 / SC#5)
 - [Phase ?]: UP042: all 14 (str, enum.Enum) converted to enum.StrEnum — suite stayed green; B008 silenced via extend-immutable-calls for FastAPI DI; app.schemas.* disables disallow_any_explicit to avoid pydantic false positives
 - [Phase ?]: No module-level synonym cache in match_product — DB query per call ensures admin-added rows are visible immediately (SC#4 admin-top-up-able)
+- [Phase 02-04]: selectolax config-driven selectors: table_selector + columns list in source.config; no CSS selector literals in adapters.py (T-02-14)
+- [Phase 02-04]: compute_content_hash uses ASCII Unit Separator (0x1F) between fields, whitespace-collapsed content; sha256 digest → immutable ON CONFLICT DO NOTHING dedup
+- [Phase 02-04]: CAST(:payload AS JSONB) required for psycopg3 JSONB binding with raw SQL text()
+- [Phase 02-04]: event_at parsing deferred to 02-05 signals write; adapters set event_at=None on all drafts
 - [Phase ?]: product_text truncated to 512 chars before queue insert (T-02-05: DoS hardening against oversized UZEX cells)
 - [Phase ?]: queue_for_classification uses ON CONFLICT(raw_item_id) DO NOTHING; never touches consecutive_failures — unrecognized goods are NOT source_failure (REQ-uzex-parser)
 - [Phase 02-ingest-core-uzex]: DEC-source-adapter-registry: SourceAdapter is a typing.Protocol (runtime_checkable); adapters self-register by type_name at import time via register_adapter()
@@ -131,6 +136,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-15T13:03:05.728Z
-Stopped at: Completed 02-05-PLAN.md (CBU adapter + fx_service + parse_raw_item pipeline)
+Last session: 2026-06-15T13:41:00.000Z
+Stopped at: Completed 02-04-PLAN.md (UZEX parser + raw pipeline + uzex_fetch_* tasks)
 Resume file: None
