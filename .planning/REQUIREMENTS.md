@@ -9,7 +9,7 @@
 
 ### Data Collection
 
-- [ ] **REQ-uzex-parser** (FR-1): Parse listed uzex.uz sections (offers in sum/currency/import, quotation lists, registry of concluded deals) every 15 min during trading hours (Mon–Fri 09:00–18:00 Asia/Tashkent) and hourly otherwise. Extract product, grade (text), volume, price, currency, section, counterparties (if published), datetime. Polymer-relevant positions → `signals`; others → `raw_items` with status 'irrelevant'; unrecognized goods → manual-classification queue (no source_failure alert). *Acceptance (TZ §6.1.2): control sample ≥50 positions, field accuracy ≥95%.*
+- [x] **REQ-uzex-parser** (FR-1): Parse listed uzex.uz sections (offers in sum/currency/import, quotation lists, registry of concluded deals) every 15 min during trading hours (Mon–Fri 09:00–18:00 Asia/Tashkent) and hourly otherwise. Extract product, grade (text), volume, price, currency, section, counterparties (if published), datetime. Polymer-relevant positions → `signals`; others → `raw_items` with status 'irrelevant'; unrecognized goods → manual-classification queue (no source_failure alert). *Acceptance (TZ §6.1.2): control sample ≥50 positions, field accuracy ≥95%.*
 - [ ] **REQ-fx-rates** (FR-4): Daily import of official CBU RUz rate into `fx_rates`; conversion shown in UI next to original currency; original always preserved (conversion computed on read).
 
 ### Web App (Client)
@@ -47,7 +47,7 @@
 ### Non-Functional Requirements
 
 - [ ] **REQ-nfr-performance**: Dashboard feed/tables API ≤500 ms at up to 1M signals; Web App first paint ≤3 s on 3G; Web App bundle ≤300 KB gzip.
-- [ ] **REQ-nfr-reliability**: Worker auto-restart; daily pg_dump retained 14 d + weekly full retained 8 wk; documented restore. One source's failure must not break others; failure alert ≤30 min (TZ §6.1.4); DB restore on a clean server per docs ≤2 h (TZ §6.1.5).
+- [x] **REQ-nfr-reliability**: Worker auto-restart; daily pg_dump retained 14 d + weekly full retained 8 wk; documented restore. One source's failure must not break others; failure alert ≤30 min (TZ §6.1.4); DB restore on a clean server per docs ≤2 h (TZ §6.1.5).
 - [x] **REQ-nfr-security**: HTTPS everywhere; secrets in .env outside repo; initData signature verification; argon2 password hashing; dashboard access by account only; audit_log on all request changes + publications.
 - [x] **REQ-nfr-observability**: Structured logs; alert when any collector fails >3 consecutive cycles; /health page.
 - [x] **REQ-nfr-time-localization**: All timestamps UTC in DB; display in Asia/Tashkent.
@@ -89,10 +89,10 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | REQ-nfr-security | Phase 1 | Complete |
 | REQ-nfr-observability | Phase 1 | Complete |
 | REQ-nfr-time-localization | Phase 1 | Complete |
-| REQ-uzex-parser | Phase 2 | Pending |
+| REQ-uzex-parser | Phase 2 | Complete |
 | REQ-fx-rates | Phase 2 | Pending |
 | REQ-sources-health | Phase 2 | Pending |
-| REQ-nfr-reliability | Phase 2 | Pending |
+| REQ-nfr-reliability | Phase 2 | Complete |
 | REQ-webapp-auth | Phase 3 | Pending |
 | REQ-request-wizard | Phase 3 | Pending |
 | REQ-my-requests | Phase 3 | Pending |
