@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: gaps_found
-stopped_at: Phase 01 live UAT found 3 issues (SC#1 dev-nginx boot, SC#5 ruff CI, CR-01 S3 env); gap-closure plans 01-08..01-10 created + checker-verified
-last_updated: "2026-06-15T00:00:00Z"
-last_activity: 2026-06-15 -- Phase 01 UAT (3 pass / 3 issues) → fix plans 01-08..01-10 ready
+status: executing
+stopped_at: "Completed 01-09-PLAN.md (UAT Gap 3 / CR-01: S3 env name mismatch fixed)"
+last_updated: "2026-06-15T07:30:45.730Z"
+last_activity: 2026-06-15 -- Phase 01 execution started
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 9
   percent: 0
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 ## Current Position
 
-Phase: 01 (walking-skeleton) — GAPS FOUND (not complete)
-Plan: 7 of 10 executed; 3 fix plans (01-08..01-10) ready
-Status: Live UAT 2026-06-15 — 3 pass (compose config, PEP517 build, CORS config), 3 issues: (2) nginx won't boot in dev compose [SC#1 blocker — dashboard upstream + unmounted certs], (4) ruff check . = 124 errors [SC#5 blocker — backend never linted], (6) S3_ENDPOINT_URL vs S3_ENDPOINT [CR-01 major]. Gap-closure plans 01-08/09/10 created + checker-PASSED. Next: /gsd-execute-phase 01 --gaps-only
-Last activity: 2026-06-15 -- Phase 01 UAT diagnosed; fix plans verified ready
+Phase: 01 (walking-skeleton) — EXECUTING
+Plan: 2 of 10
+Status: Ready to execute
+Last activity: 2026-06-15 -- Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P05 | 8 minutes | 2 tasks | 3 files |
 | Phase 01 P06 | 3min | 2 tasks | 3 files |
 | Phase 01 P07 | 9min | 2 tasks | 6 files |
+| Phase 01 P09 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,8 @@ Most relevant to Phase 1:
 - [Phase 01-06]: webapp/package-lock.json synced (@emnapi packages) as Rule 3 auto-fix so npm ci succeeds in CI
 - [Phase 01-07]: CORS_ALLOWED_ORIGINS uses Union[list[str], str] field type so pydantic-settings v2 passes raw comma-separated env string to field_validator (list[str] alone triggers JSON decode failure)
 - [Phase 01-07]: _DUMMY_HASH computed at module import time (not per-request); dummy_verify pays full argon2 KDF on every unknown-user login attempt to equalize timing with wrong-password path
+- [Phase ?]: Keep S3_ENDPOINT: str = '' default in Phase 1 config.py — making it required breaks 100-passing suite; fail-fast validation deferred to Phase 2/3 S3 client construction
+- [Phase ?]: CI S3 env contract test uses text-based parsing (no PyYAML dep) — regex check on ci.yml text is equivalent for asserting key presence
 
 ### Pending Todos
 
@@ -112,6 +115,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-15T00:00:00Z
-Stopped at: Phase 01 live UAT found 3 issues; fix plans 01-08..01-10 created + checker-PASSED. Resume via /gsd-execute-phase 01 --gaps-only.
-Resume file: .planning/phases/01-walking-skeleton/01-UAT.md
+Last session: 2026-06-15T07:30:45.727Z
+Stopped at: Completed 01-09-PLAN.md (UAT Gap 3 / CR-01: S3 env name mismatch fixed)
+Resume file: None

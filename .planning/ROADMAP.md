@@ -59,8 +59,8 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 5 — UAT gap closure** *(remediation of live-UAT findings 2026-06-15; 01-08 + 01-09 run in parallel, 01-10 serializes after 01-09 on shared config.py/ci.yml)*
 
-- [ ] 01-08-PLAN.md — SC#1 dev-nginx actually boots: drop the boot-time `dashboard` upstream resolution and the unmounted-letsencrypt-cert load so `docker compose up` brings nginx up and `/health` returns 200 (live re-verify required)
-- [ ] 01-09-PLAN.md — REVIEW CR-01: rename CI `S3_ENDPOINT_URL` → `S3_ENDPOINT` so the case-sensitive Settings field reads it; regression test locks the CI env name to the field name (config default preserved, suite stays green)
+- [x] 01-08-PLAN.md — SC#1 dev-nginx actually boots: drop the boot-time `dashboard` upstream resolution and the unmounted-letsencrypt-cert load so `docker compose up` brings nginx up and `/health` returns 200 (live re-verify required)
+- [x] 01-09-PLAN.md — REVIEW CR-01: rename CI `S3_ENDPOINT_URL` → `S3_ENDPOINT` so the case-sensitive Settings field reads it; regression test locks the CI env name to the field name (config default preserved, suite stays green)
 - [ ] 01-10-PLAN.md — SC#5 backend lint/type gate truly green: resolve the 124 `ruff check .` violations behavior-preservingly, make `mypy app/services`/`app/schemas` pass, and exact-pin ruff + mypy for reproducibility (pytest stays 100 passed / 17 skipped)
 
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` — the migration MUST reproduce the locked DDL verbatim (raw_items, signals, requests, price_points, alerts, reports, sources, counterparties, fx_rates, staff_users, audit_log, ENUM types, v_live_feed). This is the foundation all phases build on.
@@ -152,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 7/10 | UAT gap closure | - |
+| 1. Walking Skeleton | 9/10 | In Progress|  |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
