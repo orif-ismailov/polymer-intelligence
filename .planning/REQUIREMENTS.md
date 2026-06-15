@@ -10,7 +10,7 @@
 ### Data Collection
 
 - [x] **REQ-uzex-parser** (FR-1): Parse listed uzex.uz sections (offers in sum/currency/import, quotation lists, registry of concluded deals) every 15 min during trading hours (Mon–Fri 09:00–18:00 Asia/Tashkent) and hourly otherwise. Extract product, grade (text), volume, price, currency, section, counterparties (if published), datetime. Polymer-relevant positions → `signals`; others → `raw_items` with status 'irrelevant'; unrecognized goods → manual-classification queue (no source_failure alert). *Acceptance (TZ §6.1.2): control sample ≥50 positions, field accuracy ≥95%.*
-- [ ] **REQ-fx-rates** (FR-4): Daily import of official CBU RUz rate into `fx_rates`; conversion shown in UI next to original currency; original always preserved (conversion computed on read).
+- [x] **REQ-fx-rates** (FR-4): Daily import of official CBU RUz rate into `fx_rates`; conversion shown in UI next to original currency; original always preserved (conversion computed on read).
 
 ### Web App (Client)
 
@@ -90,7 +90,7 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | REQ-nfr-observability | Phase 1 | Complete |
 | REQ-nfr-time-localization | Phase 1 | Complete |
 | REQ-uzex-parser | Phase 2 | Complete |
-| REQ-fx-rates | Phase 2 | Pending |
+| REQ-fx-rates | Phase 2 | Complete |
 | REQ-sources-health | Phase 2 | Complete |
 | REQ-nfr-reliability | Phase 2 | Complete |
 | REQ-webapp-auth | Phase 3 | Pending |
