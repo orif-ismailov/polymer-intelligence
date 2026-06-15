@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 01-10-PLAN.md (UAT Gap 2 / SC#5: ruff+mypy gate green, tools pinned)"
-last_updated: "2026-06-15T08:00:08.227Z"
-last_activity: 2026-06-15 -- Phase 01 execution started
+stopped_at: "Phase 01 re-verification: gaps_found (3/5 must-haves) — SC#1 worker/beat, SC#2 migration lifespan, SC#5 dashboard tsc"
+last_updated: "2026-06-15T12:30:00.000Z"
+last_activity: 2026-06-15 -- Phase 01 gap-closure (01-08..01-10) executed; re-verification found 3 new gaps
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 0
   total_plans: 10
   completed_plans: 10
-  percent: 17
+  percent: 0
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 ## Current Position
 
-Phase: 01 (walking-skeleton) — EXECUTING
-Plan: 3 of 10
-Status: Ready to execute
-Last activity: 2026-06-15 -- Phase 01 execution started
+Phase: 01 (walking-skeleton) — GAPS FOUND (re-verification 3/5 must-haves)
+Plan: 10 of 10 executed; phase NOT complete (3 gaps)
+Status: Awaiting decision — plan gap closure, fix inline, or accept deferrals
+Last activity: 2026-06-15 -- gap-closure 01-08..01-10 done; re-verification found 3 new gaps
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [████████░░] ~80% (3/5 success criteria fully met)
 
 ## Performance Metrics
 

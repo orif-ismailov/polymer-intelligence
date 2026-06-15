@@ -14,7 +14,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [x] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-05..01-07 executed 2026-06-14; live UAT 2026-06-15 found 3 issues → gap-closure plans 01-08..01-10 planned: dev-nginx boot fix SC#1, ruff/mypy green SC#5, S3 env-name CR-01) (completed 2026-06-15)
+- [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-08..01-10 executed 2026-06-15: dev-nginx boot SC#1 ✓ live, ruff/mypy green SC#5 ✓, S3 env CR-01 ✓; re-verification 2026-06-15 found 3 new gaps → 3/5 must-haves: SC#1 worker/beat crash on missing app.tasks [deferrable to Phase 2], SC#2 migrations not auto-applied on compose up [no lifespan hook], SC#5 dashboard tsc fails on clean CI [.next typegen missing])
 - [ ] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health
 - [ ] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications
 - [ ] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard
@@ -152,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Walking Skeleton | 10/10 | Complete   | 2026-06-15 |
+| 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 0/TBD | Not started | - |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
