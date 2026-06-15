@@ -30,12 +30,15 @@ _REQUIRED_SECRETS = {
 
 def _make_settings(**overrides: str):
     """Import a fresh Settings instance with monkeypatched env vars."""
-    # Unset any real .env so the test environment is fully controlled.
+    # Fully control the env: clear=True so ambient/CI-injected vars (e.g. the
+    # backend job exports S3_BUCKET=ci-bucket) cannot leak in and shadow the
+    # declared defaults this helper exists to test. Only _REQUIRED_SECRETS plus
+    # any explicit overrides are visible to Settings.
     env = {**_REQUIRED_SECRETS, **overrides}
     # Prevent pydantic-settings from reading a real .env file
     env["PYDANTIC_SETTINGS_ENV_FILE"] = ""
 
-    with patch.dict(os.environ, env, clear=False):
+    with patch.dict(os.environ, env, clear=True):
         # Force re-import to pick up the patched env (Settings reads env at instantiation)
         import app.core.config as cfg_module  # noqa: PLC0415
 
