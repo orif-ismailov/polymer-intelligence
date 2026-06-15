@@ -13,6 +13,11 @@ RUN npm ci --prefer-offline
 
 # Copy source and build
 COPY . .
+# Ensure public/ exists even when the app ships no static assets yet: git does not
+# track empty directories, so on a clean CI checkout dashboard/public/ is absent and
+# the runner stage's `COPY /app/public ./public` would fail. mkdir -p is idempotent
+# and never clobbers real assets if they are added later.
+RUN mkdir -p public
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
