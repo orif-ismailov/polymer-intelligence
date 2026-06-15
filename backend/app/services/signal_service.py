@@ -59,6 +59,12 @@ _SECTION_TO_KIND: dict[str, SignalKind] = {
 def _safe_decimal(value: object) -> decimal.Decimal | None:
     """Coerce a value to Decimal, returning None on failure (T-02-15).
 
+    Handles locale-format numbers with comma as decimal separator (e.g.
+    ``'8500000,0000'`` from UZEX HTML tables) by replacing the first comma
+    that looks like a decimal marker (digits on both sides with ≤4 decimal
+    digits) with a dot.  Thousands-separator commas (e.g. ``'8,500,000'``) are
+    stripped entirely before conversion.
+
     Never uses float() or eval() — strict Decimal parsing only.
 
     Args:
@@ -69,8 +75,29 @@ def _safe_decimal(value: object) -> decimal.Decimal | None:
     """
     if value is None:
         return None
+    import re as _re  # noqa: PLC0415
+    raw = str(value).strip()
+
+    # Normalize locale-format numbers:
+    # Case 1: Single comma with ≤4 trailing digits → decimal separator
+    #         e.g. '8500000,0000' → '8500000.0000'
+    # Case 2: Multiple commas (thousands separators) → strip all commas
+    #         e.g. '8,500,000' → '8500000'
+    comma_count = raw.count(",")
+    if comma_count == 1:
+        # Check if trailing digits after comma look like decimal (≤4 digits after comma)
+        m = _re.match(r"^(-?\d[\d\s]*),(\d{1,4})$", raw.replace(" ", ""))
+        raw = (
+            m.group(1).replace(" ", "") + "." + m.group(2)
+            if m
+            else raw.replace(",", "")
+        )
+    elif comma_count > 1:
+        # Multiple commas → all are thousands separators
+        raw = raw.replace(",", "")
+
     try:
-        d = decimal.Decimal(str(value).strip())
+        d = decimal.Decimal(raw)
         # Reject NaN and Inf (T-02-15)
         if not d.is_finite():
             return None

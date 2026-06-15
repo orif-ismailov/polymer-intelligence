@@ -317,11 +317,16 @@ class UzexDealsAdapter:
     config_schema: type[BaseModel] = UzexDealsConfig
 
     async def fetch(self, source: Source) -> list[RawItemDraft]:
-        """Fetch the UZEX deals registry and return row drafts."""
+        """Fetch the UZEX deals registry and return row drafts.
+
+        Passes section_label='deals' so that payload['section'] is 'deals'
+        (overrides the table column value 'внутренний' which is the market
+        section, not the trade type — ensures SignalKind.deal mapping).
+        """
         cfg: dict[str, object] = dict(source.config or {})
         raw_urls = cfg.get("urls")
         urls: list[str] = [str(u) for u in (raw_urls if isinstance(raw_urls, list) else [])] or UzexDealsConfig().urls
-        return await _fetch_and_parse(urls, cfg)
+        return await _fetch_and_parse(urls, cfg, section_label="deals")
 
     async def test(self, config: dict[str, object]) -> TestResult:
         """Fetch the first configured URL and return up to 10 sample rows."""

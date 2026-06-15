@@ -1,0 +1,1252 @@
+[
+  {
+    "id": 1,
+    "section": "offers",
+    "raw": {
+      "lot": "432100",
+      "product_text": "Полипропилен T30S Шуртан ГХК",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8500000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "10:00:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "25",
+      "price": "8500000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 2,
+    "section": "offers",
+    "raw": {
+      "lot": "432101",
+      "product_text": "Полипропилен H030 SG Шуртан ГХК",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8600000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "10:05:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "H030",
+      "volume": "25",
+      "price": "8600000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 3,
+    "section": "offers",
+    "raw": {
+      "lot": "432102",
+      "product_text": "Полиэтилен F7000 Шуртан ГХК",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "9200000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "10:10:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": "F7000",
+      "volume": "20",
+      "price": "9200000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 4,
+    "section": "offers",
+    "raw": {
+      "lot": "432103",
+      "product_text": "Полиэтилен B5823 выдувная",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "9100000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "10:15:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": "B5823",
+      "volume": "20",
+      "price": "9100000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 5,
+    "section": "offers",
+    "raw": {
+      "lot": "432104",
+      "product_text": "Полиэтилен 2420D УзКор",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "8800000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "10:20:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "LDPE",
+      "grade_text": "2420D",
+      "volume": "20",
+      "price": "8800000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 6,
+    "section": "offers",
+    "raw": {
+      "lot": "432105",
+      "product_text": "ПП T30S мешки 25кг",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8550000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "10:25:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "25",
+      "price": "8550000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 7,
+    "section": "offers",
+    "raw": {
+      "lot": "432106",
+      "product_text": "HDPE HD50200S УзКор литьё",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "price": "9300000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "10:30:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": null,
+      "volume": "15",
+      "price": "9300000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 8,
+    "section": "offers",
+    "raw": {
+      "lot": "432107",
+      "product_text": "Полипропилен EP548R сополимер",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "9000000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "10:35:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "EP548R",
+      "volume": "20",
+      "price": "9000000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 9,
+    "section": "offers",
+    "raw": {
+      "lot": "432108",
+      "product_text": "LLDPE LL0209AA УзКор",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "8750000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "10:40:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "LLDPE",
+      "grade_text": "LL0209AA",
+      "volume": "20",
+      "price": "8750000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 10,
+    "section": "offers",
+    "raw": {
+      "lot": "432109",
+      "product_text": "Поливинилхлорид ПВХ С-70",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "price": "7500000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Навоиазот",
+      "event_at": "10:45:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PVC",
+      "grade_text": null,
+      "volume": "10",
+      "price": "7500000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 11,
+    "section": "offers",
+    "raw": {
+      "lot": "432110",
+      "product_text": "Полипропилен 030SG УзКор",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8700000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "10:50:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "030SG",
+      "volume": "25",
+      "price": "8700000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 12,
+    "section": "offers",
+    "raw": {
+      "lot": "432111",
+      "product_text": "Полиэтилен ПЭНД 153-02K плёнка",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "8900000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "10:55:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "LDPE",
+      "grade_text": "02K",
+      "volume": "20",
+      "price": "8900000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 13,
+    "section": "offers",
+    "raw": {
+      "lot": "432112",
+      "product_text": "Полипропилен T30S 50 мешков",
+      "volume": "50",
+      "volume_unit": "тонна",
+      "price": "8520000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "11:00:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "50",
+      "price": "8520000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 14,
+    "section": "offers",
+    "raw": {
+      "lot": "432113",
+      "product_text": "HDPE F7000 трубная",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "9250000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "11:05:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": "F7000",
+      "volume": "25",
+      "price": "9250000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 15,
+    "section": "offers",
+    "raw": {
+      "lot": "432114",
+      "product_text": "Полистирол HIPS IF825",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "price": "12000000,0000",
+      "currency": "UZS",
+      "counterparty_text": "ТехноПласт",
+      "event_at": "11:10:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PS",
+      "grade_text": "IF825",
+      "volume": "10",
+      "price": "12000000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 16,
+    "section": "offers",
+    "raw": {
+      "lot": "432115",
+      "product_text": "АБС-пластик PA757 литьё",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "price": "15000000,0000",
+      "currency": "UZS",
+      "counterparty_text": "ПластТрейд",
+      "event_at": "11:15:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "ABS",
+      "grade_text": "PA757",
+      "volume": "10",
+      "price": "15000000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 17,
+    "section": "offers",
+    "raw": {
+      "lot": "432116",
+      "product_text": "Полиэтилентерефталат ПЭТФ",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "price": "11000000,0000",
+      "currency": "UZS",
+      "counterparty_text": "ПолиСтар",
+      "event_at": "11:20:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PET",
+      "grade_text": null,
+      "volume": "15",
+      "price": "11000000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 18,
+    "section": "offers",
+    "raw": {
+      "lot": "432117",
+      "product_text": "Полипропилен H030 SG (мешок 25кг)",
+      "volume": "30",
+      "volume_unit": "тонна",
+      "price": "8650000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "11:25:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "H030",
+      "volume": "30",
+      "price": "8650000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 19,
+    "section": "offers",
+    "raw": {
+      "lot": "432118",
+      "product_text": "Полиэтилен B5823 Шуртан",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "9150000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "11:30:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": "B5823",
+      "volume": "25",
+      "price": "9150000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 20,
+    "section": "offers",
+    "raw": {
+      "lot": "432119",
+      "product_text": "LLDPE LL0209AA линейный",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "price": "8780000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "11:35:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "LLDPE",
+      "grade_text": "LL0209AA",
+      "volume": "15",
+      "price": "8780000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 21,
+    "section": "offers",
+    "raw": {
+      "lot": "432120",
+      "product_text": "ПП EP548R сополимер 25кг мешок",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "9050000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "11:40:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "EP548R",
+      "volume": "25",
+      "price": "9050000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 22,
+    "section": "offers",
+    "raw": {
+      "lot": "432121",
+      "product_text": "Полипропилен T30S волокно",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "8530000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "11:45:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "20",
+      "price": "8530000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 23,
+    "section": "offers",
+    "raw": {
+      "lot": "432122",
+      "product_text": "HDPE HD50200S литьё",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "9350000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "11:50:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": null,
+      "volume": "20",
+      "price": "9350000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 24,
+    "section": "offers",
+    "raw": {
+      "lot": "432123",
+      "product_text": "Полиэтилен 2420D LDPE плёнка",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "price": "8820000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "event_at": "11:55:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "LDPE",
+      "grade_text": "2420D",
+      "volume": "15",
+      "price": "8820000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 25,
+    "section": "offers",
+    "raw": {
+      "lot": "432124",
+      "product_text": "PP T30S гомополимер волокно Шуртан",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8510000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "event_at": "12:00:00-15-06-2026",
+      "section": "offers"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "25",
+      "price": "8510000.0000",
+      "currency": "UZS",
+      "kind": "sell_offer"
+    }
+  },
+  {
+    "id": 26,
+    "section": "contracts",
+    "raw": {
+      "lot": "102",
+      "product_text": "Полипропилен T30S Шуртан котировка",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8450000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "25",
+      "price": "8450000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 27,
+    "section": "contracts",
+    "raw": {
+      "lot": "103",
+      "product_text": "Полипропилен H030 SG котировка",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8550000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "H030",
+      "volume": "25",
+      "price": "8550000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 28,
+    "section": "contracts",
+    "raw": {
+      "lot": "104",
+      "product_text": "Полиэтилен F7000 котировка",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "9150000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": "F7000",
+      "volume": "20",
+      "price": "9150000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 29,
+    "section": "contracts",
+    "raw": {
+      "lot": "105",
+      "product_text": "HDPE B5823 выдувная котировка",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "9050000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": "B5823",
+      "volume": "20",
+      "price": "9050000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 30,
+    "section": "contracts",
+    "raw": {
+      "lot": "106",
+      "product_text": "LDPE 2420D УзКор котировка",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "8750000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "LDPE",
+      "grade_text": "2420D",
+      "volume": "20",
+      "price": "8750000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 31,
+    "section": "contracts",
+    "raw": {
+      "lot": "107",
+      "product_text": "ПП EP548R сополимер котировка",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "8950000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "EP548R",
+      "volume": "20",
+      "price": "8950000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 32,
+    "section": "contracts",
+    "raw": {
+      "lot": "108",
+      "product_text": "LLDPE LL0209AA котировка",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "price": "8720000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "LLDPE",
+      "grade_text": "LL0209AA",
+      "volume": "15",
+      "price": "8720000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 33,
+    "section": "contracts",
+    "raw": {
+      "lot": "109",
+      "product_text": "ПВХ С-70 котировка",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "price": "7450000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Навоиазот",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "PVC",
+      "grade_text": null,
+      "volume": "10",
+      "price": "7450000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 34,
+    "section": "contracts",
+    "raw": {
+      "lot": "110",
+      "product_text": "Полиэтилентерефталат ПЭТФ котировка",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "price": "10900000,0000",
+      "currency": "UZS",
+      "counterparty_text": "ПолиСтар",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "PET",
+      "grade_text": null,
+      "volume": "15",
+      "price": "10900000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 35,
+    "section": "contracts",
+    "raw": {
+      "lot": "111",
+      "product_text": "Полистирол HIPS котировка",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "price": "11900000,0000",
+      "currency": "UZS",
+      "counterparty_text": "ТехноПласт",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "PS",
+      "grade_text": null,
+      "volume": "10",
+      "price": "11900000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 36,
+    "section": "contracts",
+    "raw": {
+      "lot": "112",
+      "product_text": "АБС PA757 котировка",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "price": "14900000,0000",
+      "currency": "UZS",
+      "counterparty_text": "ПластТрейд",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "ABS",
+      "grade_text": "PA757",
+      "volume": "10",
+      "price": "14900000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 37,
+    "section": "contracts",
+    "raw": {
+      "lot": "113",
+      "product_text": "PP T30S волокно котировка",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8460000,0000",
+      "currency": "UZS",
+      "counterparty_text": "Шуртан ГХК",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "25",
+      "price": "8460000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 38,
+    "section": "contracts",
+    "raw": {
+      "lot": "114",
+      "product_text": "HDPE HD50200S литьё котировка",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "price": "9280000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": null,
+      "volume": "15",
+      "price": "9280000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 39,
+    "section": "contracts",
+    "raw": {
+      "lot": "115",
+      "product_text": "PP 030SG котировка",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "price": "8650000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "030SG",
+      "volume": "25",
+      "price": "8650000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 40,
+    "section": "contracts",
+    "raw": {
+      "lot": "116",
+      "product_text": "LDPE 153-02K плёнка котировка",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "price": "8850000,0000",
+      "currency": "UZS",
+      "counterparty_text": "УзКор Газ Кимё",
+      "section": "contracts"
+    },
+    "expected": {
+      "product_code": "LDPE",
+      "grade_text": "02K",
+      "volume": "20",
+      "price": "8850000.0000",
+      "currency": "UZS",
+      "kind": "price_quote"
+    }
+  },
+  {
+    "id": 41,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:00:00",
+      "external_id": "8545001",
+      "price": "8500000000,0000",
+      "contract_no": "432100",
+      "product_text": "Полипропилен T30S",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "25",
+      "price": "8500000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 42,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:05:00",
+      "external_id": "8545002",
+      "price": "8600000000,0000",
+      "contract_no": "432101",
+      "product_text": "Полипропилен H030 SG",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "H030",
+      "volume": "25",
+      "price": "8600000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 43,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:10:00",
+      "external_id": "8545003",
+      "price": "9200000000,0000",
+      "contract_no": "432102",
+      "product_text": "Полиэтилен F7000 трубная",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": "F7000",
+      "volume": "20",
+      "price": "9200000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 44,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:15:00",
+      "external_id": "8545004",
+      "price": "9100000000,0000",
+      "contract_no": "432103",
+      "product_text": "Полиэтилен B5823",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": "B5823",
+      "volume": "20",
+      "price": "9100000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 45,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:20:00",
+      "external_id": "8545005",
+      "price": "8800000000,0000",
+      "contract_no": "432104",
+      "product_text": "LDPE 2420D УзКор",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "LDPE",
+      "grade_text": "2420D",
+      "volume": "20",
+      "price": "8800000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 46,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:25:00",
+      "external_id": "8545006",
+      "price": "8550000000,0000",
+      "contract_no": "432105",
+      "product_text": "ПП T30S гомополимер",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "T30S",
+      "volume": "25",
+      "price": "8550000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 47,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:30:00",
+      "external_id": "8545007",
+      "price": "9300000000,0000",
+      "contract_no": "432106",
+      "product_text": "HDPE HD50200S литьё",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "HDPE",
+      "grade_text": null,
+      "volume": "15",
+      "price": "9300000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 48,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:35:00",
+      "external_id": "8545008",
+      "price": "9000000000,0000",
+      "contract_no": "432107",
+      "product_text": "Полипропилен EP548R",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "EP548R",
+      "volume": "20",
+      "price": "9000000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 49,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:40:00",
+      "external_id": "8545009",
+      "price": "8750000000,0000",
+      "contract_no": "432108",
+      "product_text": "LLDPE LL0209AA линейный",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "LLDPE",
+      "grade_text": "LL0209AA",
+      "volume": "20",
+      "price": "8750000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 50,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:45:00",
+      "external_id": "8545010",
+      "price": "7500000000,0000",
+      "contract_no": "432109",
+      "product_text": "ПВХ С-70 суспензия",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "PVC",
+      "grade_text": null,
+      "volume": "10",
+      "price": "7500000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 51,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:50:00",
+      "external_id": "8545011",
+      "price": "8700000000,0000",
+      "contract_no": "432110",
+      "product_text": "Полипропилен 030SG",
+      "volume": "25",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "PP",
+      "grade_text": "030SG",
+      "volume": "25",
+      "price": "8700000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 52,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 10:55:00",
+      "external_id": "8545012",
+      "price": "8900000000,0000",
+      "contract_no": "432111",
+      "product_text": "LDPE 153-02K плёнка",
+      "volume": "20",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "LDPE",
+      "grade_text": "02K",
+      "volume": "20",
+      "price": "8900000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 53,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 11:00:00",
+      "external_id": "8545013",
+      "price": "11000000000,0000",
+      "contract_no": "432116",
+      "product_text": "ПЭТФ ПолиСтар",
+      "volume": "15",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "PET",
+      "grade_text": null,
+      "volume": "15",
+      "price": "11000000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 54,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 11:05:00",
+      "external_id": "8545014",
+      "price": "12000000000,0000",
+      "contract_no": "432114",
+      "product_text": "Полистирол HIPS IF825",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "PS",
+      "grade_text": "IF825",
+      "volume": "10",
+      "price": "12000000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  },
+  {
+    "id": 55,
+    "section": "deals",
+    "raw": {
+      "event_at": "15/06/2026 11:10:00",
+      "external_id": "8545015",
+      "price": "15000000000,0000",
+      "contract_no": "432115",
+      "product_text": "АБС PA757 литьё",
+      "volume": "10",
+      "volume_unit": "тонна",
+      "section": "deals",
+      "currency": "UZS"
+    },
+    "expected": {
+      "product_code": "ABS",
+      "grade_text": "PA757",
+      "volume": "10",
+      "price": "15000000000.0000",
+      "currency": "UZS",
+      "kind": "deal"
+    }
+  }
+]
