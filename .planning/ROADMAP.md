@@ -83,7 +83,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Wave 1** *(foundations — parallel, no file overlap)*
 
 - [x] 02-01-PLAN.md — Celery app + queue topology + Asia/Tashkent beat schedule + ingest config keys (unblocks Phase-1 SC#1 worker/beat carryover)
-- [ ] 02-02-PLAN.md — [BLOCKING migration 0002] product_synonyms + manual_classification_queue tables, synonyms.json seeder, relevance service (admin-top-up-able)
+- [x] 02-02-PLAN.md — [BLOCKING migration 0002] product_synonyms + manual_classification_queue tables, synonyms.json seeder, relevance service (admin-top-up-able)
 - [ ] 02-03-PLAN.md — SourceAdapter Protocol + registry + SSRF-hardened httpx client + GET /admin/source-types (config_schema feed)
 
 **Wave 2** *(concrete adapters + parse — blocked on Wave 1)*
@@ -98,6 +98,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Wave 4** *(reliability hardening + acceptance — blocked on Wave 3)*
 
 - [ ] 02-07-PLAN.md — Worker auto-restart + pg_dump backup + ≤2h restore runbook + UZEX/CBU source seeder + ≥95% accuracy gate on a ≥50-position control sample + live end-to-end human-verify checkpoint
+
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` (sources, raw_items, parse_runs, signals, price_points, fx_rates). UZEX selectors live in `sources.config`, not in code. No browser automation — escalate if a page needs JS.
 
 ### Phase 3: Client Circuit
@@ -172,7 +173,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
-| 2. Ingest Core + UZEX | 1/7 | In Progress|  |
+| 2. Ingest Core + UZEX | 2/7 | In Progress|  |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |

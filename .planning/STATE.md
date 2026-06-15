@@ -3,13 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-last_updated: "2026-06-15T12:14:32.719Z"
+stopped_at: Completed 02-02-PLAN.md (synonyms table + relevance service)
+last_updated: "2026-06-15T12:26:48.214Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 17
-  completed_plans: 11
+  completed_plans: 12
   percent: 17
 ---
 
@@ -25,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 02 (ingest-core-uzex) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-06-15
 
@@ -60,6 +61,7 @@ Progress: [███████░░░] 65%
 | Phase 01 P09 | 5min | 2 tasks | 2 files |
 | Phase 01 P10 | 28min | - tasks | - files |
 | Phase 02-ingest-core-uzex P01 | 7min | 2 tasks | 9 files |
+| Phase 02 P02 | 25min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -89,6 +91,9 @@ Most relevant to Phase 1:
 - [Phase ?]: CI S3 env contract test uses text-based parsing (no PyYAML dep) — regex check on ci.yml text is equivalent for asserting key presence
 - [Phase ?]: ruff==0.15.17 and mypy==2.1.0 exact-pinned in [dev] for reproducible CI lint/type gate (UAT Gap 2 / SC#5)
 - [Phase ?]: UP042: all 14 (str, enum.Enum) converted to enum.StrEnum — suite stayed green; B008 silenced via extend-immutable-calls for FastAPI DI; app.schemas.* disables disallow_any_explicit to avoid pydantic false positives
+- [Phase ?]: No module-level synonym cache in match_product — DB query per call ensures admin-added rows are visible immediately (SC#4 admin-top-up-able)
+- [Phase ?]: product_text truncated to 512 chars before queue insert (T-02-05: DoS hardening against oversized UZEX cells)
+- [Phase ?]: queue_for_classification uses ON CONFLICT(raw_item_id) DO NOTHING; never touches consecutive_failures — unrecognized goods are NOT source_failure (REQ-uzex-parser)
 
 ### Pending Todos
 
@@ -119,6 +124,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-15T12:14:32.714Z
-Stopped at: Completed 01-10-PLAN.md (UAT Gap 2 / SC#5: ruff+mypy gate green, tools pinned)
+Last session: 2026-06-15T12:26:48.211Z
+Stopped at: Completed 02-02-PLAN.md (synonyms table + relevance service)
 Resume file: None
