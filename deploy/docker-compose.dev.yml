@@ -120,18 +120,17 @@ services:
       - ../backend:/app
 
   # ── nginx reverse proxy ────────────────────────────────────────────────────
-  # Publishes 80 (HTTP→HTTPS redirect) and 443 (HTTPS main server).
-  # TLS cert volumes are wired in the prod compose; the dev service may fail
-  # TLS until certs exist under /etc/letsencrypt, but the service definition
-  # is structurally valid and required for SC#1 (compose stack must include nginx).
+  # Mounts the HTTP-only dev config (deploy/nginx/nginx.dev.conf).
+  # TLS (443/ssl), letsencrypt certs, and the dashboard upstream are prod-only
+  # and live in deploy/nginx/nginx.conf — not used here. Only port 80 is
+  # published in dev since the dev config has no TLS server block.
   nginx:
     image: nginx:stable
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - api
 
