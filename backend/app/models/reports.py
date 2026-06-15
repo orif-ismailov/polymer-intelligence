@@ -12,6 +12,7 @@ Phase 1: RU-only content.
 from __future__ import annotations
 
 import datetime
+from typing import Any
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, Text
 from sqlalchemy import Enum as PgEnum
@@ -37,7 +38,7 @@ class Report(Base):
     period_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     content_md: Mapped[str] = mapped_column(Text, nullable=False)                # markdown → TG/WebApp render
-    data_snapshot: Mapped[dict] = mapped_column(
+    data_snapshot: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default="{}"
     )                                                                             # numbers at generation time
     status: Mapped[ReportStatus] = mapped_column(

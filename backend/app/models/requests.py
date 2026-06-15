@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import datetime
 import decimal
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -27,7 +28,6 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB
@@ -129,7 +129,7 @@ class Request(Base):
     assigned_to: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )                                                                             # REFERENCES staff_users(id)
-    ai: Mapped[dict] = mapped_column(
+    ai: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default="{}"
     )                                                                             # match_score, price_analysis...
     created_at: Mapped[datetime.datetime] = mapped_column(

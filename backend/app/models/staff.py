@@ -18,6 +18,7 @@ staff_users columns for plan 01-03:
 from __future__ import annotations
 
 import datetime
+from typing import Any
 
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, Text
 from sqlalchemy import Enum as PgEnum
@@ -74,7 +75,7 @@ class AuditLog(Base):
     action: Mapped[str] = mapped_column(Text, nullable=False)                    # 'request.status_change', 'report.approve'
     entity: Mapped[str] = mapped_column(Text, nullable=False)
     entity_id: Mapped[str] = mapped_column(Text, nullable=False)
-    details: Mapped[dict] = mapped_column(
+    details: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default="{}"
     )
     created_at: Mapped[datetime.datetime] = mapped_column(

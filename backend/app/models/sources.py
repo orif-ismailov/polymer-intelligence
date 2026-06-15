@@ -10,6 +10,7 @@ INVARIANT: is_enabled = true => last_test_ok_at IS NOT NULL
 from __future__ import annotations
 
 import datetime
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -45,7 +46,7 @@ class Source(Base):
     adapter: Mapped[str] = mapped_column(Text, nullable=False)  # adapter registry name
     name: Mapped[str] = mapped_column(Text, nullable=False)
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    config: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    config: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     country: Mapped[str | None] = mapped_column(Text, nullable=True)             # 'UZ', 'CN', 'RU'
     is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     last_test_ok_at: Mapped[datetime.datetime | None] = mapped_column(
@@ -96,7 +97,7 @@ class RawItem(Base):
         Text, nullable=True
     )                                                                             # TG msg_id, UZEX lot#
     content: Mapped[str | None] = mapped_column(Text, nullable=True)             # text / HTML fragment
-    payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)           # structured data
+    payload: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)  # structured data
     content_hash: Mapped[bytes] = mapped_column(
         LargeBinary, nullable=False
     )                                                                             # sha256 for dedup
@@ -138,7 +139,7 @@ class ParseRun(Base):
     parser: Mapped[str] = mapped_column(Text, nullable=False)                    # 'uzex_table_v2', 'llm_extract'
     model: Mapped[str | None] = mapped_column(Text, nullable=True)               # 'claude-haiku-4-5', NULL for rule-based
     prompt_version: Mapped[str | None] = mapped_column(Text, nullable=True)
-    result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(Text, nullable=False)                    # 'ok' | 'error' | 'irrelevant'
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     tokens_in: Mapped[int | None] = mapped_column(Integer, nullable=True)

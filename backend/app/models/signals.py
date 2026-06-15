@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime
 import decimal
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -26,7 +27,7 @@ from sqlalchemy import (
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.core.db import Base
@@ -104,7 +105,7 @@ class Signal(Base):
     )                                                                             # raw name before linking
 
     # AI enrichment (recalculable)
-    ai: Mapped[dict] = mapped_column(
+    ai: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default="{}"
     )
     urgency: Mapped[Urgency | None] = mapped_column(
@@ -125,6 +126,6 @@ class Signal(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    extra: Mapped[dict] = mapped_column(
+    extra: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default="{}"
     )                                                                             # source-specific extras

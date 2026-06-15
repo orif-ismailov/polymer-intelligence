@@ -26,7 +26,7 @@ def write_audit(
     action: str,
     entity: str,
     entity_id: str,
-    details: dict | None = None,
+    details: dict[str, object] | None = None,
 ) -> AuditLog:
     """Insert an audit_log row for a privileged action.
 

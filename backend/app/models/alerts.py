@@ -13,6 +13,7 @@ Alert flow:
 from __future__ import annotations
 
 import datetime
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -44,8 +45,8 @@ class AlertRule(Base):
         nullable=False,
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    condition: Mapped[dict] = mapped_column(JSONB, nullable=False)               # {"product":"PP","volume_gte":200,...}
-    channels: Mapped[list] = mapped_column(
+    condition: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)      # {"product":"PP","volume_gte":200,...}
+    channels: Mapped[list[Any]] = mapped_column(
         JSONB, nullable=False, default=list, server_default="[]"
     )                                                                             # [{"type":"telegram_dm","chat_id":...}]
     is_enabled: Mapped[bool] = mapped_column(
