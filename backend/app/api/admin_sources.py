@@ -18,10 +18,15 @@ Security (T-02-10): endpoint is guarded by require_admin — non-admins get 403.
 
 from __future__ import annotations
 
+import datetime
+
+import sqlalchemy as sa
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
+from app.core.db import get_db
 from app.ingest.registry import list_adapters
 from app.models.staff import StaffUser
 
@@ -81,4 +86,74 @@ def get_source_types(
             no_code=_is_no_code(adapter.type_name),
         )
         for adapter in adapters
+    ]
+
+
+# ── Source health endpoint (REQ-sources-health) ───────────────────────────────
+
+
+class SourceHealthItem(BaseModel):
+    """Per-source health status item for GET /admin/sources/health.
+
+    Security (T-02-21): returns ONLY health + identity fields.
+    sources.config / credentials are never included.
+    """
+
+    id: int
+    name: str
+    adapter: str
+    kind: str
+    is_enabled: bool
+    last_fetch_at: datetime.datetime | None
+    last_success_at: datetime.datetime | None
+    consecutive_failures: int
+
+
+@router.get(
+    "/sources/health",
+    response_model=list[SourceHealthItem],
+    summary="List per-source health status",
+    description=(
+        "Returns per-source last_fetch_at, last_success_at, consecutive_failures, "
+        "is_enabled, adapter, kind, and id/name. "
+        "Admin-only (T-02-21: never exposes sources.config or credentials). "
+        "Used by the dashboard Sources screen (REQ-sources-health)."
+    ),
+)
+def get_sources_health(
+    _current_user: StaffUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> list[SourceHealthItem]:
+    """Return per-source health fields for all sources.
+
+    Security (T-02-21): Only identity + health fields are returned.
+    sources.config (which may contain credentials/selectors) is never exposed.
+
+    Raises:
+        HTTP 401: No or invalid Bearer token.
+        HTTP 403: Valid token but user is not an admin.
+    """
+    rows = db.execute(
+        sa.text(
+            """
+            SELECT id, name, adapter, kind::text, is_enabled,
+                   last_fetch_at, last_success_at, consecutive_failures
+            FROM sources
+            ORDER BY id
+            """
+        )
+    ).fetchall()
+
+    return [
+        SourceHealthItem(
+            id=row[0],
+            name=row[1],
+            adapter=row[2],
+            kind=row[3],
+            is_enabled=row[4],
+            last_fetch_at=row[5],
+            last_success_at=row[6],
+            consecutive_failures=row[7],
+        )
+        for row in rows
     ]

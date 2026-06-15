@@ -153,19 +153,18 @@ class TestAdminSourcesHealthEndpointUnit:
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = staff_user
 
-        # Build mock rows for execute().fetchall()
-        mock_row = MagicMock()
+        # Build mock rows for execute().fetchall() as tuples (matching indexed access row[N])
         mock_execute = MagicMock()
         mock_execute.fetchall.return_value = [
-            MagicMock(
-                id=s["id"],
-                name=s["name"],
-                adapter=s["adapter"],
-                kind=s["kind"],
-                is_enabled=s["is_enabled"],
-                last_fetch_at=s["last_fetch_at"],
-                last_success_at=s["last_success_at"],
-                consecutive_failures=s["consecutive_failures"],
+            (
+                s["id"],
+                s["name"],
+                s["adapter"],
+                s["kind"],
+                s["is_enabled"],
+                s["last_fetch_at"],
+                s["last_success_at"],
+                s["consecutive_failures"],
             )
             for s in mock_sources
         ]

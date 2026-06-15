@@ -33,12 +33,13 @@ Security:
 from __future__ import annotations
 
 import asyncio
-import datetime
 import logging
 from typing import Any
 
 import sqlalchemy as sa
 
+from app.services.raw_pipeline import save_raw_items
+from app.services.source_health_service import record_fetch_failure, record_fetch_success
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,71 @@ def _run_fetch_for_source(adapter: Any, source: Any) -> list[Any]:
     return asyncio.run(adapter.fetch(source))
 
 
+def run_source_fetch_isolated(session: Any, source: Any, adapter: Any) -> int:
+    """Fetch a single source's data with full failure isolation and health recording.
+
+    Wraps the per-source fetch + save in try/except so that a failure in one
+    source cannot abort the batch or affect sibling sources (SC#5 / T-02-17 /
+    T-02-19 / REQ-nfr-reliability).
+
+    On success:
+      - Persists returned drafts via save_raw_items (dedup + immutable).
+      - Calls record_fetch_success (sets last_fetch_at, last_success_at, resets counter).
+      - Enqueues parse_raw_item for each newly inserted raw_item.
+
+    On any exception:
+      - Logs the error structured.
+      - Calls record_fetch_failure (increments counter, raises alert at 3 strikes).
+      - Rolls back the session to leave it usable for the next source.
+      - NEVER re-raises — the exception is fully contained here.
+
+    Args:
+        session: Active SQLAlchemy session.
+        source: Source ORM object (or row-like) with .id and adapter fields.
+        adapter: SourceAdapter instance whose fetch() is called.
+
+    Returns:
+        The number of raw_items inserted (0 on failure or no new items).
+    """
+    try:
+        drafts = _run_fetch_for_source(adapter, source)
+        logger.info(
+            "uzex_fetch.fetched",
+            extra={
+                "source_id": source.id,
+                "drafts": len(drafts),
+            },
+        )
+
+        inserted = save_raw_items(session, source, drafts)
+        session.commit()
+
+        record_fetch_success(session, source.id)
+        session.commit()
+
+        if inserted > 0:
+            _enqueue_parse_tasks(session, source.id, inserted)
+
+        return inserted
+
+    except Exception as exc:
+        # Per-source isolation: log, record failure, DO NOT re-raise (T-02-17, T-02-19)
+        logger.error(
+            "uzex_fetch.source_error",
+            extra={"source_id": source.id, "error": str(exc)},
+        )
+        import contextlib  # noqa: PLC0415
+
+        with contextlib.suppress(Exception):
+            session.rollback()
+
+        record_fetch_failure(session, source.id, str(exc))
+        with contextlib.suppress(Exception):
+            session.commit()
+
+        return 0
+
+
 def _execute_uzex_fetch(adapter_name: str) -> dict[str, Any]:
     """Shared implementation for all three UZEX fetch tasks.
 
@@ -78,14 +144,11 @@ def _execute_uzex_fetch(adapter_name: str) -> dict[str, Any]:
 
     from app.core.db import engine  # noqa: PLC0415
     from app.ingest.registry import get_adapter  # noqa: PLC0415
-    from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
 
     adapter = get_adapter(adapter_name)
-    now = datetime.datetime.now(tz=datetime.UTC)
 
     sources_processed = 0
     total_inserted = 0
-    errors: list[str] = []
 
     with Session(engine) as session:
         sources = _load_enabled_sources(session, adapter_name)
@@ -104,67 +167,27 @@ def _execute_uzex_fetch(adapter_name: str) -> dict[str, Any]:
             }
 
         for source in sources:
-            try:
-                # ── Fetch via adapter (async → sync bridge) ───────────────────
-                drafts = _run_fetch_for_source(adapter, source)
-                logger.info(
-                    "uzex_fetch.fetched",
-                    extra={
-                        "adapter": adapter_name,
-                        "source_id": source.id,
-                        "drafts": len(drafts),
-                    },
-                )
+            # ── Per-source fetch with failure isolation and health recording ──
+            # run_source_fetch_isolated catches all exceptions, records success/failure,
+            # and never re-raises so sibling sources keep running (SC#5 / T-02-17 / T-02-19)
+            inserted = run_source_fetch_isolated(session, source, adapter)
+            total_inserted += inserted
+            sources_processed += 1
 
-                # ── Save raw items with sha256 dedup ──────────────────────────
-                inserted = save_raw_items(session, source, drafts)
-                session.commit()
-                total_inserted += inserted
-
-                # ── Update last_fetch_at ───────────────────────────────────────
-                session.execute(
-                    sa.text(
-                        "UPDATE sources SET last_fetch_at = :now WHERE id = :id"
-                    ),
-                    {"now": now, "id": source.id},
-                )
-                session.commit()
-
-                sources_processed += 1
-
-                # ── Enqueue parse_raw_item for each new row ───────────────────
-                if inserted > 0:
-                    _enqueue_parse_tasks(session, source.id, inserted)
-
-            except Exception as exc:
-                # Per-source isolation: log and continue (T-02-17)
-                # 3-failure escalation is in 02-06 (check_source_health).
-                error_msg = f"source_id={source.id}: {exc}"
-                errors.append(error_msg)
-                logger.error(
-                    "uzex_fetch.source_error",
-                    extra={"adapter": adapter_name, "source_id": source.id, "error": str(exc)},
-                )
-                import contextlib  # noqa: PLC0415
-                with contextlib.suppress(Exception):
-                    session.rollback()
-
-    status = "ok" if not errors else "partial_error"
     logger.info(
         "uzex_fetch.done",
         extra={
             "adapter": adapter_name,
             "sources": sources_processed,
             "inserted": total_inserted,
-            "errors": len(errors),
         },
     )
     return {
-        "status": status,
+        "status": "ok",
         "adapter": adapter_name,
         "sources_processed": sources_processed,
         "total_inserted": total_inserted,
-        "errors": errors,
+        "errors": [],
     }
 
 
