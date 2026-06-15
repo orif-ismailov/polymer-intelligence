@@ -3,13 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-last_updated: "2026-06-15T13:03:05.733Z"
+stopped_at: Completed 02-04-PLAN.md (UZEX parser + raw pipeline + uzex_fetch_* tasks)
+last_updated: "2026-06-15T13:41:52.762Z"
 last_activity: 2026-06-15
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 17
-  completed_plans: 14
+  completed_plans: 16
   percent: 17
 ---
 
@@ -25,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 02 (ingest-core-uzex) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-06-15
 
@@ -64,6 +65,7 @@ Progress: [████████░░] 82%
 | Phase 02-ingest-core-uzex P03 | 10min | 2 tasks | 10 files |
 | Phase 02-ingest-core-uzex P05 | 13min | 2 tasks | 10 files |
 | Phase 02-ingest-core-uzex P04 | 25min | 2 tasks | 11 files |
+| Phase 02-ingest-core-uzex P06 | 8min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -106,6 +108,9 @@ Most relevant to Phase 1:
 - [Phase 02-ingest-core-uzex]: DEC-no-code-flag: telegram_channel/llm_page/html_table/rss have no_code=True (Phase-4 wizard-addable); uzex_*/cbu_rates/sunsirs/dce have no_code=False (built-in specialized adapters)
 - [Phase ?]: Grade regex extended for digit-leading polymer grade codes (2420D pattern)
 - [Phase ?]: signal_service uses Mapping[str, object] for parsed arg (covariant) to satisfy strict mypy with dict[str, X] subtypes
+- [Phase 02-06]: source_health_service uses db.flush() not db.commit() — caller commits (consistent with audit_service pattern)
+- [Phase 02-06]: run_source_fetch_isolated: per-source try/except never re-raises — failure isolation SC#5/T-02-17/T-02-19; health service records success/failure
+- [Phase 02-06]: dedupe_key source_failure:{source_id}:{date} + ON CONFLICT DO NOTHING — at most one source_failure alert per source per day (T-02-20)
 
 ### Pending Todos
 
@@ -136,6 +141,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-15T13:41:00.000Z
-Stopped at: Completed 02-04-PLAN.md (UZEX parser + raw pipeline + uzex_fetch_* tasks)
+Last session: 2026-06-15T13:40:17.000Z
+Stopped at: Completed 02-06-PLAN.md (source health + failure isolation + check_source_health task + GET /admin/sources/health)
 Resume file: None

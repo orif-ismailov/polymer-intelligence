@@ -93,7 +93,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 3** *(health + alerting — blocked on Wave 2)*
 
-- [ ] 02-06-PLAN.md — Source-health bookkeeping + 3-consecutive-failure deduped source_failure alert + per-source failure isolation + check_source_health beat task + GET /admin/sources/health
+- [x] 02-06-PLAN.md — Source-health bookkeeping + 3-consecutive-failure deduped source_failure alert + per-source failure isolation + check_source_health beat task + GET /admin/sources/health
 
 **Wave 4** *(reliability hardening + acceptance — blocked on Wave 3)*
 
@@ -173,7 +173,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
-| 2. Ingest Core + UZEX | 5/7 | In Progress|  |
+| 2. Ingest Core + UZEX | 6/7 | In Progress|  |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
