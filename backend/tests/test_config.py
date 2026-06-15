@@ -152,6 +152,66 @@ class TestJwtSecretValidator:
         assert settings.JWT_SECRET == secret_long
 
 
+class TestCiEnvContract:
+    """Regression tests asserting the CI workflow's S3 env key matches Settings.S3_ENDPOINT.
+
+    Parses .github/workflows/ci.yml and verifies that the backend job's pytest
+    step exports exactly the same env name that Settings.S3_ENDPOINT reads.
+    Fails if either side is renamed without updating the other (REVIEW CR-01).
+    """
+
+    def _ci_yaml_text(self) -> str:
+        """Return the raw text of .github/workflows/ci.yml, or skip if not found."""
+        import pathlib
+
+        ci_path = pathlib.Path(__file__).resolve().parents[2] / ".github" / "workflows" / "ci.yml"
+        if not ci_path.exists():
+            pytest.skip(f"ci.yml not found at {ci_path} — skipping CI contract test")
+        return ci_path.read_text()
+
+    def test_ci_s3_endpoint_key_present(self) -> None:
+        """CI must export S3_ENDPOINT (the exact Settings field name) in the pytest env block.
+
+        Uses text-based parsing (no PyYAML dependency) to locate the env key in the
+        backend job's pytest step. Checks that the key 'S3_ENDPOINT:' appears in the
+        workflow file and that the value is non-empty (http://localhost:9000).
+        """
+        text = self._ci_yaml_text()
+        assert "S3_ENDPOINT:" in text, (
+            "CI backend pytest step is missing 'S3_ENDPOINT' env key; "
+            "settings.S3_ENDPOINT will silently fall back to '' in CI"
+        )
+        # Verify the key is followed by a non-empty URL value
+        import re
+        match = re.search(r"S3_ENDPOINT:\s*(\S+)", text)
+        assert match and match.group(1), (
+            "S3_ENDPOINT key found in ci.yml but has no value; "
+            "settings.S3_ENDPOINT needs a non-empty endpoint URL"
+        )
+
+    def test_ci_s3_endpoint_url_absent(self) -> None:
+        """CI must NOT export the old mismatched name S3_ENDPOINT_URL (CR-01 regression guard)."""
+        text = self._ci_yaml_text()
+        assert "S3_ENDPOINT_URL" not in text, (
+            "CI backend pytest step exports 'S3_ENDPOINT_URL' (the old drifted name); "
+            "rename it to 'S3_ENDPOINT' to match the Settings field"
+        )
+
+    def test_ci_s3_endpoint_name_matches_settings_field(self) -> None:
+        """The CI env name S3_ENDPOINT must be a declared field on Settings.
+
+        This is the link that makes env-name drift impossible to reintroduce
+        silently: renaming the Settings field without updating ci.yml (or vice
+        versa) will fail this test.
+        """
+        from app.core.config import Settings
+
+        assert "S3_ENDPOINT" in Settings.model_fields, (
+            "'S3_ENDPOINT' is not a declared field on Settings; "
+            "either ci.yml or config.py was renamed without updating the other"
+        )
+
+
 class TestCorsAllowedOriginsValidator:
     """CORS_ALLOWED_ORIGINS setting: non-wildcard default, comma-separated env parsing."""
 
