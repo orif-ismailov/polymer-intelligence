@@ -123,9 +123,17 @@ def run_source_fetch_isolated(session: Any, source: Any, adapter: Any) -> int:
         with contextlib.suppress(Exception):
             session.rollback()
 
-        record_fetch_failure(session, source.id, str(exc))
-        with contextlib.suppress(Exception):
+        # WR-06: do NOT suppress DB errors from record_fetch_failure — if health
+        # recording fails silently the 3-strike threshold can never be reached and
+        # no alert fires. Log at critical level instead of swallowing the error.
+        try:
+            record_fetch_failure(session, source.id, str(exc))
             session.commit()
+        except Exception as health_exc:
+            logger.critical(
+                "uzex_fetch.health_record_failed",
+                extra={"source_id": source.id, "error": str(health_exc)},
+            )
 
         return 0
 

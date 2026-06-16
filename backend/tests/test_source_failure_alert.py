@@ -133,10 +133,11 @@ class TestRunSourceFetchIsolated:
 
         adapter = MagicMock()
 
+        # save_raw_items now returns (count, inserted_ids) tuple (CR-04)
         with patch("app.tasks.ingest._run_fetch_for_source", return_value=[]), \
              patch("app.tasks.ingest.record_fetch_success") as mock_success, \
              patch("app.tasks.ingest.record_fetch_failure") as mock_fail, \
-             patch("app.tasks.ingest.save_raw_items", return_value=0):
+             patch("app.tasks.ingest.save_raw_items", return_value=(0, [])):
             run_source_fetch_isolated(session, source, adapter)
             mock_success.assert_called_once_with(session, source.id)
             mock_fail.assert_not_called()
