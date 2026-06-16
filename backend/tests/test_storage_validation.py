@@ -170,8 +170,9 @@ def test_upload_request_file_key_does_not_use_raw_filename(monkeypatch: pytest.M
     new_rf = MagicMock()
     new_rf.id = 1
 
-    # Patch the module-level s3_client and the RequestFile model
-    with patch.object(storage_service, "s3_client", mock_s3):
+    # Patch s3_client on app.core.storage (where it lives as a module-level var)
+    import app.core.storage as storage_module
+    with patch.object(storage_module, "s3_client", mock_s3):
         from app.services.storage_service import upload_request_file
 
         traversal_filename = "../../etc/passwd"
