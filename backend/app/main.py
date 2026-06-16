@@ -24,6 +24,7 @@ from app.api.admin_sources import router as admin_sources_router
 from app.api.auth import router as auth_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.health import router as health_router
+from app.api.telegram_webhook import router as telegram_webhook_router
 from app.api.webapp.requests import router as webapp_requests_router
 from app.api.webapp.me import router as webapp_me_router
 from app.api.webapp.files import router as webapp_files_router
@@ -50,6 +51,18 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
         revision = run_migrations()
         logger.info("startup.migrations_applied", extra={"revision": revision})
+
+    # Register the Telegram bot webhook + persistent Web App menu button.
+    # Guarded by PUBLIC_WEBAPP_URL — empty in dev/test so Telegram is never called
+    # without a live deployment. In production (PUBLIC_WEBAPP_URL set in .env),
+    # this runs once per api-container startup (idempotent — Telegram accepts
+    # re-registration of the same webhook URL).
+    if settings.PUBLIC_WEBAPP_URL:
+        from telegram.bot import setup_webhook  # noqa: PLC0415
+
+        await setup_webhook()
+        logger.info("lifespan.telegram_webhook_registered")
+
     yield
 
 
@@ -110,6 +123,8 @@ def create_app() -> FastAPI:
     application.include_router(webapp_requests_router, prefix="/api/v1")
     application.include_router(webapp_me_router, prefix="/api/v1")
     application.include_router(webapp_files_router, prefix="/api/v1")
+    # ── telegram bot webhook (dev-spec §4.1: webhook inside api container) ────
+    application.include_router(telegram_webhook_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.
