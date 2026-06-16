@@ -1,0 +1,109 @@
+{
+  "home": {
+    "heading": "Xush kelibsiz!",
+    "subheading": "Polimerlar uchun ariza qoldiring — biz eng yaxshi taklifni topamiz",
+    "prop": {
+      "fast": "Tez",
+      "convenient": "Qulay",
+      "reliable": "Ishonchli"
+    },
+    "cta": {
+      "submit": "Ariza qoldirish",
+      "myRequests": "Mening arizalarim"
+    }
+  },
+  "wizard": {
+    "step1": {
+      "title": "Mahsulot haqida ma'lumot"
+    },
+    "step2": {
+      "title": "Yetkazib berish shartlari"
+    },
+    "step3": {
+      "title": "Qo'shimcha ma'lumot"
+    },
+    "next": "Keyingi",
+    "submit": "Yuborish",
+    "product": "Mahsulot",
+    "grade": "Marka / Nav",
+    "polymerType": "Polimer turi",
+    "volume": "Hajm",
+    "volumeUnit": "Hajm birligi",
+    "targetPrice": "Maqsadli narx",
+    "currency": "Valyuta",
+    "incoterms": "Yetkazib berish shartlari (Incoterms)",
+    "destinationCountry": "Manzil davlat",
+    "portOrCity": "Port / Shahar",
+    "desiredDate": "Istagan sana",
+    "validityDays": "Amal qilish muddati (kun)",
+    "comment": "Izoh",
+    "productPlaceholder": "Mahsulotni tanlang",
+    "gradePlaceholder": "Masalan, T30S yoki H030 SG",
+    "polymerTypePlaceholder": "Masalan, gomopolimer",
+    "volumePlaceholder": "Masalan, 100",
+    "pricePlaceholder": "Masalan, 1200",
+    "portPlaceholder": "Masalan, Toshkent",
+    "commentPlaceholder": "Qo'shimcha talablar"
+  },
+  "confirm": {
+    "heading": "Ariza yuborildi!",
+    "subheading": "Sizning arizangiz qabul qilindi va mutaxassislarga topshirildi",
+    "cta": {
+      "myRequests": "Mening arizalarim",
+      "another": "Yangi ariza yaratish"
+    }
+  },
+  "myRequests": {
+    "title": "Mening arizalarim",
+    "empty": {
+      "heading": "Hali arizalar yo'q",
+      "body": "Birinchi arizangizni qoldiring — bu bir daqiqadan kam vaqt oladi",
+      "cta": "Ariza qoldirish"
+    }
+  },
+  "requestDetail": {
+    "title": "Ariza tafsilotlari",
+    "history": "Holat tarixi"
+  },
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "empty": {
+      "heading": "Hali bildirishnomalar yo'q",
+      "body": "Bu yerda arizalaringiz holati o'zgarishi haqida bildirishnomalar paydo bo'ladi"
+    }
+  },
+  "settings": {
+    "title": "Til va profil",
+    "language": "Interfeys tili",
+    "lang": {
+      "ru": "Русский",
+      "uz": "O'zbek"
+    }
+  },
+  "status": {
+    "new": "Yangi ariza",
+    "viewed": "Ko'rib chiqilmoqda",
+    "in_progress": "Ko'rib chiqilmoqda",
+    "offer_sent": "Taklif keldi",
+    "matched": "Tanlab olindi",
+    "closed": "Yopildi",
+    "cancelled": "Bekor qilindi"
+  },
+  "error": {
+    "submitFailed": "Ariza yuborib bo'lmadi. Ulanishni tekshiring va qayta urinib ko'ring",
+    "fileFailed": "«{{name}}» faylini yuklab bo'lmadi. Qayta urinib ko'ring",
+    "fileTooLarge": "Fayl 10 MB dan oshib ketdi. Kichikroq fayl tanlang",
+    "tooManyFiles": "5 tadan ko'p fayl biriktirib bo'lmaydi",
+    "fileType": "Format qo'llab-quvvatlanmaydi. PDF, Excel, JPG ruxsat etiladi",
+    "loadFailed": "Ma'lumotlarni yuklab bo'lmadi. Yangilash uchun pastga torting",
+    "authFailed": "Avtorizatsiya xatosi. Botdan ilovani qayta oching",
+    "required": "Majburiy maydon",
+    "volumePositive": "Hajm 0 dan katta bo'lishi kerak",
+    "gradeOrPolymer": "Marka yoki polimer turini kiriting"
+  },
+  "fileUploader": {
+    "remove": "{{name}} faylini o'chirish",
+    "attach": "Fayllarni biriktirish",
+    "hint": "PDF, Excel, JPG — 5 tagacha fayl, har biri 10 MB gacha"
+  }
+}
