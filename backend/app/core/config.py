@@ -84,6 +84,12 @@ class Settings(BaseSettings):
     # attempt migrations at import/startup. The dev compose sets this to "true".
     RUN_MIGRATIONS_ON_STARTUP: bool = False
 
+    # When True, the FastAPI app exposes /docs, /redoc, and /openapi.json.
+    # Must be False in production so the OpenAPI schema (full attack-surface map)
+    # is not publicly accessible (WR-03 / REQ-nfr-security).
+    # Set DEBUG=true in .env for local development.
+    DEBUG: bool = False
+
     @field_validator("JWT_SECRET")
     @classmethod
     def _jwt_secret_min_length(cls, v: str) -> str:

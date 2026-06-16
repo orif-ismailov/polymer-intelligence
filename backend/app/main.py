@@ -61,6 +61,13 @@ def create_app() -> FastAPI:
     """
     configure_logging()
 
+    # WR-03: gate OpenAPI docs behind settings.DEBUG so the full API schema
+    # (endpoints, request/response models, security requirements) is not publicly
+    # accessible in production. Set DEBUG=true in .env for local development.
+    _docs_url = "/docs" if settings.DEBUG else None
+    _redoc_url = "/redoc" if settings.DEBUG else None
+    _openapi_url = "/openapi.json" if settings.DEBUG else None
+
     application = FastAPI(
         title="Polymer Intelligence API",
         version="0.1.0",
@@ -69,9 +76,9 @@ def create_app() -> FastAPI:
             "Collects, structures, and delivers market information to internal dashboard, "
             "Telegram Web App, and Telegram bot/channel."
         ),
-        # Disable auto-generated docs in production (enable via env var if needed)
-        docs_url="/docs",
-        redoc_url="/redoc",
+        docs_url=_docs_url,
+        redoc_url=_redoc_url,
+        openapi_url=_openapi_url,
         lifespan=lifespan,
     )
 
