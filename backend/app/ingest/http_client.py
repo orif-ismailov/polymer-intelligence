@@ -47,6 +47,17 @@ MAX_RESPONSE_BYTES: int = 25 * 1024 * 1024  # 25 MB
 # Allowed URL schemes for outbound fetches
 _ALLOWED_SCHEMES: frozenset[str] = frozenset({"http", "https"})
 
+# Additional CIDR ranges not flagged by Python's ipaddress module but that must
+# be blocked for SSRF protection (CR-02 / T-02-07):
+#   - RFC 6598 CGNAT / shared address space (100.64.0.0/10) — Python 3.x does
+#     NOT classify this as is_private, is_reserved, or any other blocked attr.
+#     In cloud environments (AWS, GCP, Azure) internal load-balancers and VPC
+#     endpoints can reside here, so an attacker-controlled endpoint_url could
+#     reach internal services through this gap.
+_SSRF_BLOCKED_NETWORKS: tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...] = (
+    ipaddress.IPv4Network("100.64.0.0/10"),  # RFC 6598 — CGNAT/shared address space
+)
+
 # Per-host request timestamps: host -> last request epoch time
 # Used to enforce the per-host minimum delay between requests.
 _host_last_request: dict[str, float] = {}
@@ -118,16 +129,24 @@ def is_safe_url(url: str) -> bool:
 def _is_private_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     """Return True if the IP address should be blocked (SSRF guard).
 
-    Blocks loopback, private, link-local, and reserved addresses.
+    Blocks loopback, private, link-local, reserved addresses, and any range
+    listed in _SSRF_BLOCKED_NETWORKS (e.g. RFC 6598 CGNAT — CR-02 / T-02-07).
     """
-    return (
+    if (
         ip.is_loopback          # 127.0.0.1, ::1
         or ip.is_private        # 10.x, 172.16-31.x, 192.168.x, fc00::/7
         or ip.is_link_local     # 169.254.x.x, fe80::/10 (cloud metadata)
         or ip.is_reserved       # 240.0.0.0/4, etc.
         or ip.is_unspecified    # 0.0.0.0, ::
         or ip.is_multicast      # 224.0.0.0/4, ff00::/8
-    )
+    ):
+        return True
+    # Explicit check for ranges not covered by the standard ipaddress attributes
+    # (e.g. RFC 6598 CGNAT 100.64.0.0/10 is not flagged by any standard attr)
+    for net in _SSRF_BLOCKED_NETWORKS:
+        if ip in net:
+            return True
+    return False
 
 
 async def fetch_url(
@@ -191,7 +210,11 @@ async def fetch_url(
             async with (
                 httpx.AsyncClient(
                     timeout=httpx.Timeout(timeout),
-                    follow_redirects=True,
+                    # CR-01 / T-02-07: redirects are disabled to prevent SSRF bypass.
+                    # An HTTP 3xx response to an internal IP would bypass is_safe_url()
+                    # because the pre-request DNS check only validates the *original* URL.
+                    # Trusted data sources should always use direct (non-redirecting) URLs.
+                    follow_redirects=False,
                     headers=headers,
                 ) as client,
                 # Stream the response to enforce the body size cap without

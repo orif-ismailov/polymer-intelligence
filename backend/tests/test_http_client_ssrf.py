@@ -254,6 +254,77 @@ async def test_fetch_url_raises_for_oversized_body():
                 await http_client.fetch_url("https://example.com/bigfile")
 
 
+# ── is_safe_url: reject RFC 6598 CGNAT (CR-02) ─────────────────────────────────
+
+def test_is_safe_url_rejects_cgnat_100_64():
+    """CR-02: SSRF guard rejects 100.64.0.0/10 (RFC 6598 CGNAT — not flagged by ipaddress)."""
+    from app.ingest.http_client import is_safe_url  # noqa: PLC0415
+
+    with patch("socket.getaddrinfo", _make_getaddrinfo("100.64.0.1")):
+        assert is_safe_url("http://100.64.0.1") is False
+
+
+def test_is_safe_url_rejects_cgnat_100_127():
+    """CR-02: SSRF guard rejects 100.127.255.255 (upper end of RFC 6598 range)."""
+    from app.ingest.http_client import is_safe_url  # noqa: PLC0415
+
+    with patch("socket.getaddrinfo", _make_getaddrinfo("100.127.255.255")):
+        assert is_safe_url("http://cgnat.internal") is False
+
+
+def test_is_safe_url_accepts_100_128():
+    """CR-02: 100.128.0.1 is outside RFC 6598 range and should be accepted (public)."""
+    from app.ingest.http_client import is_safe_url  # noqa: PLC0415
+
+    with patch("socket.getaddrinfo", _make_getaddrinfo("100.128.0.1")):
+        assert is_safe_url("http://example.com/") is True
+
+
+# ── fetch_url: no-redirect SSRF guard (CR-01) ──────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_fetch_url_does_not_follow_redirects():
+    """CR-01: fetch_url must NOT follow HTTP redirects (follow_redirects=False).
+
+    A redirect to an internal IP bypasses the SSRF pre-request DNS check because
+    is_safe_url() only validates the *original* URL, not redirect targets.
+    """
+    import app.ingest.http_client as http_client  # noqa: PLC0415
+
+    redirect_followed = False
+
+    async def _redirect_transport_fn(request: httpx.Request) -> httpx.Response:
+        nonlocal redirect_followed
+        if str(request.url) == "https://example.com/":
+            # Attempt to redirect to internal IP
+            return httpx.Response(
+                301,
+                headers={"Location": "http://169.254.169.254/latest/meta-data/"},
+                content=b"",
+                request=request,
+            )
+        redirect_followed = True
+        return httpx.Response(200, content=b"metadata", request=request)
+
+    with patch.object(http_client, "is_safe_url", return_value=True), \
+         patch("app.ingest.http_client._enforce_host_delay", new=AsyncMock()):
+
+        class PatchedAsyncClient(httpx.AsyncClient):
+            def __init__(self, **kwargs):
+                kwargs.pop("transport", None)
+                transport = httpx.MockTransport(_redirect_transport_fn)
+                super().__init__(transport=transport, **kwargs)
+
+        with patch("httpx.AsyncClient", PatchedAsyncClient):
+            # With follow_redirects=False, the 301 response is returned as-is.
+            # raise_for_status() raises HTTPStatusError on 3xx.
+            with pytest.raises(httpx.HTTPStatusError):
+                await http_client.fetch_url("https://example.com/")
+
+    # The redirect target (internal IP) must never have been fetched
+    assert not redirect_followed, "fetch_url followed a redirect — SSRF bypass possible"
+
+
 # ── fetch_url: retry logic ──────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
