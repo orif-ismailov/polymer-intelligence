@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: completed
+status: executing
 stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-06-16T10:46:14.651Z"
-last_activity: 2026-06-16 -- Phase 03 planning complete
+last_updated: "2026-06-16T11:14:18.051Z"
+last_activity: 2026-06-16 -- Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 23
+  completed_plans: 18
   percent: 33
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Every relevant market event lands accurately and quickly in a single normalized stream the team can see, filter, and act on — with no single source able to take the others down.
-**Current focus:** Phase 02 — ingest-core-uzex
+**Current focus:** Phase 03 — client-circuit
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Phase 2 execution-complete; Phase 3 (Client Circuit) is next
-Last activity: 2026-06-16 -- Phase 03 planning complete
+Phase: 03 (client-circuit) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-06-16 -- Phase 03 execution started
 
-Progress: [████████░░] 82% (Phase 2 done; Phase 3 begins)
+Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 complete)
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [████████░░] 82% (Phase 2 done; Phase 3 begins)
 | Phase 02-ingest-core-uzex P04 | 25min | 2 tasks | 11 files |
 | Phase 02-ingest-core-uzex P06 | 8min | 2 tasks | 6 files |
 | Phase 02-ingest-core-uzex P07 | ~35min | 2 tasks | 12 files |
+| Phase 03-client-circuit P01 | 10min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,11 @@ Most relevant to Phase 1:
 - [Phase 02-07]: seed_sources: is_enabled=false + last_test_ok_at=NULL invariant enforced at seed time and verified in test — closes T-02-24
 - [Phase 02-07]: signal_service comma-decimal price parsing: replace ',' before float() cast (Rule-1 auto-fix); UzexDealsAdapter section_label corrected to 'deals' (Rule-1 auto-fix)
 - [Phase 02-07]: Accuracy harness uses pure-function path (parse_table_rows + create_signal_from_parse) with live-DB guard — CI-safe, no running DB needed; 100% on 55 positions = TZ §6.1.2 PASS
+- [Phase 03-01]: DEC-lazy-s3-client: _LazyS3Client proxy defers boto3 import until first attribute access — keeps pytest collection socket-free when boto3 not installed in venv
+- [Phase 03-01]: DEC-magic-byte-size-order: size check fires BEFORE magic-byte check in validate_upload — fast-path rejection for oversize files
+- [Phase 03-01]: DEC-traversal-safe-key: S3 key = requests/{id}/{token_hex(8)}-{os.path.basename(filename)} — strips directory components + random token (T-03-06)
+- [Phase 03-01]: DEC-generic-401: all initData failures → InvalidInitData (ValueError subclass) → get_current_client catches → generic 401 "Authentication required" (T-03-03)
+- [Phase 03-01]: DEC-dep-owns-commit: get_current_client calls db.commit() after upsert; service functions use db.flush() only (caller commits pattern)
 
 ### Pending Todos
 
@@ -147,6 +153,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-16T10:14:24.306Z
+Last session: 2026-06-16T11:14:18.046Z
 Stopped at: Phase 3 UI-SPEC approved
 Resume file: .planning/phases/03-client-circuit/03-UI-SPEC.md

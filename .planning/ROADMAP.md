@@ -118,7 +118,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 1** *(backend foundation)*
 
-- [ ] 03-01-PLAN.md — Deps (aiogram/boto3/python-multipart) + MinIO compose + S3 client + initData auth dep (get_current_client) + upload validation service + /webapp Pydantic schemas
+- [x] 03-01-PLAN.md — Deps (aiogram/boto3/python-multipart) + MinIO compose + S3 client + initData auth dep (get_current_client) + upload validation service + /webapp Pydantic schemas
 
 **Wave 2** *(parallel — backend API + frontend shell, no file overlap)*
 
@@ -133,6 +133,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Wave 4** *(acceptance gate)*
 
 - [ ] 03-06-PLAN.md — Automated SLA proxies (≤10 s readback, ≤30 s notify dispatch) + phase-03 acceptance doc mapping the 5 success criteria to a deploy-time live drill
+
 **UI hint**: yes
 **UI contract**: `docs/polymer-intelligence-ui-mockups.md` §4 (Surface C — 5 Web App screens: home, wizard steps 1–3, confirmation, plus Мои заявки / detail / notifications / profile-language). React + Vite + @telegram-apps/sdk, MainButton/BackButton, zustand state survives minimize, react-hook-form + zod, react-i18next ru/uz.
 
@@ -192,7 +193,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
-| 3. Client Circuit | 0/6 | Planned | - |
+| 3. Client Circuit | 1/6 | In Progress|  |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
