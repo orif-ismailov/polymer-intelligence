@@ -114,7 +114,25 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   4. The Web App toggles RU/UZ (default from Telegram language_code) and honors Telegram theme vars; first paint ≤3 s on 3G and bundle ≤300 KB gzip
   5. The bot greets the client with a Web App button and routes status notifications via the deliveries queue
 
-**Plans**: TBD
+**Plans**: 6 plans in 4 waves
+
+**Wave 1** *(backend foundation)*
+
+- [ ] 03-01-PLAN.md — Deps (aiogram/boto3/python-multipart) + MinIO compose + S3 client + initData auth dep (get_current_client) + upload validation service + /webapp Pydantic schemas
+
+**Wave 2** *(parallel — backend API + frontend shell, no file overlap)*
+
+- [ ] 03-02-PLAN.md — request_service (REQ-YYYY-MM-DD-NNNNN number + status machine + history + notify enqueue) + /webapp request/me/files API, initData-authed and IDOR-scoped
+- [ ] 03-04-PLAN.md — Web App shell (router + i18n ru/uz + Telegram SDK) + api client + zustand wizard store + Home (C-01) + 4-step wizard (C-02..C-05) with per-step zod validation
+
+**Wave 3** *(parallel — bot/notify + frontend my-requests, no file overlap)*
+
+- [ ] 03-03-PLAN.md — aiogram webhook bot (/start greeting + Web App button) + RU/UZ templates + send_status_change_notification notify task (D-10 labels, deep-link)
+- [ ] 03-05-PLAN.md — Мои заявки (C-06) + detail + Asia/Tashkent status timeline (C-07) + notifications (C-08) + RU/UZ settings toggle (C-09) + bundle ≤300 KB gzip
+
+**Wave 4** *(acceptance gate)*
+
+- [ ] 03-06-PLAN.md — Automated SLA proxies (≤10 s readback, ≤30 s notify dispatch) + phase-03 acceptance doc mapping the 5 success criteria to a deploy-time live drill
 **UI hint**: yes
 **UI contract**: `docs/polymer-intelligence-ui-mockups.md` §4 (Surface C — 5 Web App screens: home, wizard steps 1–3, confirmation, plus Мои заявки / detail / notifications / profile-language). React + Vite + @telegram-apps/sdk, MainButton/BackButton, zustand state survives minimize, react-hook-form + zod, react-i18next ru/uz.
 
@@ -174,7 +192,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
-| 3. Client Circuit | 0/TBD | Not started | - |
+| 3. Client Circuit | 0/6 | Planned | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
