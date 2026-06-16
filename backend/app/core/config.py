@@ -62,6 +62,15 @@ class Settings(BaseSettings):
     S3_SECRET_KEY: str
     S3_BUCKET: str = "polymer-files"
 
+    # ── Telegram Web App ──────────────────────────────────────────────────────
+    # Externally reachable Web App base URL used to build status-push deep-link
+    # buttons and to compute the webhook URL. Empty default keeps the test suite
+    # green (no live infrastructure needed); set in .env for production.
+    PUBLIC_WEBAPP_URL: str = ""
+    # 24-hour TTL for initData HMAC verification (dev-spec §3.2, T-03-02).
+    # initData older than this number of seconds is rejected as potentially replayed.
+    TELEGRAM_INIT_DATA_TTL_SECONDS: int = 86400
+
     # ── Ingest HTTP tunables (SPEC §2 collector rules) ────────────────────────
     # Consumed by the httpx client in 02-03 and by the Celery worker tasks.
     # All have safe defaults; override via .env for per-environment tuning.

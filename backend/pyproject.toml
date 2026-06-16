@@ -32,6 +32,12 @@ dependencies = [
     "python-jose[cryptography]>=3.3.0",
     # Timezone
     "tzdata>=2024.1",
+    # Telegram bot (aiogram 3 via FastAPI webhook — DEC-bot-webhook-no-separate-container)
+    "aiogram>=3.13.0",
+    # S3/MinIO file storage (boto3 AWS SDK; pypi.org/project/boto3 — T-03-SC approved)
+    "boto3>=1.34.0",
+    # FastAPI multipart file upload parsing (pypi.org/project/python-multipart — T-03-SC approved)
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
@@ -45,6 +51,8 @@ dev = [
     "ruff==0.15.17",
     "mypy==2.1.0",
     "types-redis==4.6.0.20241004",
+    # S3 mock for storage tests (pypi.org/project/moto — T-03-SC approved)
+    "moto>=5.0.0",
 ]
 
 [tool.setuptools.packages.find]
