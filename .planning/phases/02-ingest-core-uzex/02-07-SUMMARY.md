@@ -183,6 +183,16 @@ Phase 2 (Ingest Core + UZEX) is execution-complete:
 
 **Remaining concern:** The live SC#5 failure-isolation drill (deferred above) is the only unverified acceptance item in Phase 2. It should be completed at the earliest practical deploy-time opportunity before the Phase 6 acceptance run.
 
+## Self-Check: PASSED
+
+| Item | Status |
+|------|--------|
+| 02-07-SUMMARY.md | FOUND |
+| Commit 79d5d87 (SUMMARY) | FOUND |
+| Commit ea684c9 (STATE/ROADMAP) | FOUND |
+| Commit 961b706 (Task 2) | FOUND |
+| Commit 6c6e224 (Task 1) | FOUND |
+
 ---
 *Phase: 02-ingest-core-uzex*
 *Completed: 2026-06-16*
