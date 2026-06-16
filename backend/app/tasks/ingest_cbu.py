@@ -85,11 +85,42 @@ def fetch_cbu_rates() -> dict[str, Any]:
             )
             session.commit()
 
-    # Fetch and parse the CBU JSON
+    # Fetch and parse the CBU JSON.
+    # WR-07: use the adapter's fetch() method (which reads source.config.endpoint_url)
+    # rather than a private helper that always fetches from the hardcoded default URL.
+    # This makes the endpoint_url override in CbuRatesConfig actually functional in
+    # the scheduled task path (previously it was honoured only in test() and the
+    # protocol-compliance fetch() path, but the Celery task bypassed both).
     try:
-        # Run the async fetch in the sync Celery task via asyncio
-        body = asyncio.run(_fetch_cbu_body(adapter))
-        rate_rows = adapter._parse_cbu_json(body)
+        with Session(engine) as session:
+            if source_id is not None:
+                from app.models.sources import Source  # noqa: PLC0415
+
+                source_obj = session.get(Source, source_id)
+                if source_obj is not None:
+                    rate_row_drafts = asyncio.run(adapter.fetch(source_obj))
+                else:
+                    rate_row_drafts = asyncio.run(_fetch_default_drafts(adapter))
+            else:
+                rate_row_drafts = asyncio.run(_fetch_default_drafts(adapter))
+        # Convert RawItemDraft payloads back to CbuRateRow objects for upsert
+        from app.ingest.cbu_rates.adapter import CbuRateRow  # noqa: PLC0415
+        import datetime as _dt  # noqa: PLC0415
+        import decimal as _dec  # noqa: PLC0415
+
+        rate_rows = []
+        for draft in rate_row_drafts:
+            p = draft.payload or {}
+            try:
+                rate_rows.append(
+                    CbuRateRow(
+                        rate_date=_dt.date.fromisoformat(str(p["rate_date"])),
+                        ccy=str(p["ccy"]),
+                        rate=_dec.Decimal(str(p["rate"])),
+                    )
+                )
+            except (KeyError, ValueError, _dec.InvalidOperation):
+                continue
     except Exception as exc:
         logger.error("fetch_cbu_rates.fetch_error", extra={"error": str(exc)})
         return {"status": "error", "upserted": 0, "error": str(exc)}
@@ -122,13 +153,17 @@ def fetch_cbu_rates() -> dict[str, Any]:
     return {"status": "ok", "upserted": upserted, "error": None}
 
 
-async def _fetch_cbu_body(adapter: object) -> str:
-    """Async helper: fetch the raw CBU JSON body via the adapter's HTTP client.
+async def _fetch_default_drafts(adapter: object) -> list[object]:
+    """Async helper: fetch CBU rates from the default URL when no source row exists.
 
-    This is extracted to allow asyncio.run() from the sync Celery task.
+    WR-07: replaces _fetch_cbu_body (which always used the hardcoded URL and bypassed
+    source.config). When a source row IS available, adapter.fetch(source) is called
+    instead so endpoint_url from source.config is honoured.
     """
-    from app.ingest.cbu_rates.adapter import _CBU_DEFAULT_URL  # noqa: PLC0415
-    from app.ingest.http_client import fetch_url  # noqa: PLC0415
+    from app.ingest.cbu_rates.adapter import CbuRatesAdapter, _CBU_DEFAULT_URL  # noqa: PLC0415
 
-    response = await fetch_url(_CBU_DEFAULT_URL)
-    return response.text
+    class _FakeSource:
+        """Minimal Source duck-type for the adapter protocol when no DB row exists."""
+        config: dict = {"endpoint_url": _CBU_DEFAULT_URL}
+
+    return await adapter.fetch(_FakeSource())  # type: ignore[arg-type, union-attr]
