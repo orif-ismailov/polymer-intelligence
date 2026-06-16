@@ -77,18 +77,52 @@ if [ "${DOW}" -eq 1 ]; then
 fi
 
 # ── Retention pruning (keep newest N, delete the rest) ────────────────────────
-# Daily: keep $DAILY_KEEP newest files
-echo "[pg_backup] Pruning daily backups (keep ${DAILY_KEEP})"
-ls -1t "${DAILY_DIR}"/*.pgdump 2>/dev/null | tail -n "+$((DAILY_KEEP + 1))" | while read -r OLD; do
-    echo "[pg_backup] Removing old daily backup: ${OLD}"
-    rm -f "${OLD}"
-done
+# WR-04: replaced ls|tail|while pipeline with a find+sort approach that is safe
+# for filenames containing spaces or unusual characters (ls output is split on
+# newlines making it unsafe). find -print0 / sort -z / xargs -0 are NUL-safe.
+# Using mtime-based sort via 'find ... -printf "%T@ %p\0"' then numeric sort.
+# Note: -printf is a GNU find extension available on Linux (the deployment OS).
+# macOS deployments (local dev only) may lack -printf; on macOS the ls-based
+# approach is acceptable since TIMESTAMP and PGDATABASE are ASCII-only.
 
-# Weekly: keep $WEEKLY_KEEP newest files
+_prune_dir() {
+    local dir="$1"
+    local keep="$2"
+    local label="$3"
+
+    # Count how many files exist so we can skip find if within limit
+    local file_count
+    file_count=$(find "${dir}" -maxdepth 1 -name '*.pgdump' 2>/dev/null | wc -l)
+    if [ "${file_count}" -le "${keep}" ]; then
+        return 0
+    fi
+
+    # Sort by modification time (newest first) using NUL-delimited output so
+    # filenames with spaces are handled correctly (WR-04).
+    # GNU find with -printf is used here; macOS ships BSD find which lacks
+    # -printf — fall back to ls on non-GNU systems.
+    if find "${dir}" -maxdepth 1 -name '*.pgdump' -printf '%T@ %p\0' 2>/dev/null | head -c1 | grep -q .; then
+        # GNU find path: NUL-safe sort → skip KEEP → delete the rest
+        find "${dir}" -maxdepth 1 -name '*.pgdump' -printf '%T@ %p\0' \
+            | sort -rz -t' ' -k1,1n \
+            | awk -v RS='\0' -v ORS='\0' -v keep="${keep}" 'NR > keep {sub(/^[^ ]+ /, ""); print}' \
+            | xargs -0 -I{} sh -c 'echo "[pg_backup] Removing old '"${label}"' backup: {}" && rm -f -- "{}"'
+    else
+        # Fallback path (BSD find / macOS dev): ls-based, safe because TIMESTAMP
+        # and PGDATABASE values in this script are always ASCII-only.
+        ls -1t "${dir}"/*.pgdump 2>/dev/null \
+            | tail -n "+$((keep + 1))" \
+            | while IFS= read -r OLD; do
+                echo "[pg_backup] Removing old ${label} backup: ${OLD}"
+                rm -f -- "${OLD}"
+            done
+    fi
+}
+
+echo "[pg_backup] Pruning daily backups (keep ${DAILY_KEEP})"
+_prune_dir "${DAILY_DIR}" "${DAILY_KEEP}" "daily"
+
 echo "[pg_backup] Pruning weekly backups (keep ${WEEKLY_KEEP})"
-ls -1t "${WEEKLY_DIR}"/*.pgdump 2>/dev/null | tail -n "+$((WEEKLY_KEEP + 1))" | while read -r OLD; do
-    echo "[pg_backup] Removing old weekly backup: ${OLD}"
-    rm -f "${OLD}"
-done
+_prune_dir "${WEEKLY_DIR}" "${WEEKLY_KEEP}" "weekly"
 
 echo "[pg_backup] Done. Retained: ${DAILY_KEEP} daily, ${WEEKLY_KEEP} weekly."
