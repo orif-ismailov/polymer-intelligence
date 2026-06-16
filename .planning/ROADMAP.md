@@ -15,7 +15,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-08..01-10 executed 2026-06-15: dev-nginx boot SC#1 ✓ live, ruff/mypy green SC#5 ✓, S3 env CR-01 ✓; re-verification 2026-06-15 found 3 new gaps → 3/5 must-haves: SC#1 worker/beat crash on missing app.tasks [deferrable to Phase 2], SC#2 migrations not auto-applied on compose up [no lifespan hook], SC#5 dashboard tsc fails on clean CI [.next typegen missing])
-- [ ] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health
+- [x] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health (completed 2026-06-16)
 - [ ] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications
 - [ ] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard
 - [ ] **Phase 5: Telegram Monitoring + AI** (E5) - Userbot over the registry, LLM extraction + budget, needs_review flow, eval golden-set, control-sample run
@@ -173,7 +173,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
-| 2. Ingest Core + UZEX | 7/7 | Complete | 2026-06-16 |
+| 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
