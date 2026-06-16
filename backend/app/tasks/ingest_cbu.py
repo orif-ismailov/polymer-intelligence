@@ -104,9 +104,10 @@ def fetch_cbu_rates() -> dict[str, Any]:
             else:
                 rate_row_drafts = asyncio.run(_fetch_default_drafts(adapter))
         # Convert RawItemDraft payloads back to CbuRateRow objects for upsert
-        from app.ingest.cbu_rates.adapter import CbuRateRow  # noqa: PLC0415
         import datetime as _dt  # noqa: PLC0415
         import decimal as _dec  # noqa: PLC0415
+
+        from app.ingest.cbu_rates.adapter import CbuRateRow  # noqa: PLC0415
 
         rate_rows = []
         for draft in rate_row_drafts:
@@ -160,7 +161,7 @@ async def _fetch_default_drafts(adapter: object) -> list[object]:
     source.config). When a source row IS available, adapter.fetch(source) is called
     instead so endpoint_url from source.config is honoured.
     """
-    from app.ingest.cbu_rates.adapter import CbuRatesAdapter, _CBU_DEFAULT_URL  # noqa: PLC0415
+    from app.ingest.cbu_rates.adapter import _CBU_DEFAULT_URL  # noqa: PLC0415
 
     class _FakeSource:
         """Minimal Source duck-type for the adapter protocol when no DB row exists."""

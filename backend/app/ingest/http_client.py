@@ -143,10 +143,7 @@ def _is_private_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
         return True
     # Explicit check for ranges not covered by the standard ipaddress attributes
     # (e.g. RFC 6598 CGNAT 100.64.0.0/10 is not flagged by any standard attr)
-    for net in _SSRF_BLOCKED_NETWORKS:
-        if ip in net:
-            return True
-    return False
+    return any(ip in net for net in _SSRF_BLOCKED_NETWORKS)
 
 
 async def fetch_url(
