@@ -43,7 +43,10 @@
     "volumePlaceholder": "Masalan, 100",
     "pricePlaceholder": "Masalan, 1200",
     "portPlaceholder": "Masalan, Toshkent",
-    "commentPlaceholder": "Qo'shimcha talablar"
+    "commentPlaceholder": "Qo'shimcha talablar",
+    "incotermsNone": "Tanlanmagan",
+    "volumeUnit_MT": "MT (tonna)",
+    "volumeUnit_KG": "KG (kilogramm)"
   },
   "confirm": {
     "heading": "Ariza yuborildi!",

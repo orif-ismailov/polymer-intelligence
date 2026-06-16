@@ -43,7 +43,10 @@
     "volumePlaceholder": "Например, 100",
     "pricePlaceholder": "Например, 1200",
     "portPlaceholder": "Например, Ташкент",
-    "commentPlaceholder": "Любые дополнительные требования"
+    "commentPlaceholder": "Любые дополнительные требования",
+    "incotermsNone": "Не выбрано",
+    "volumeUnit_MT": "МТ (тонны)",
+    "volumeUnit_KG": "КГ (килограммы)"
   },
   "confirm": {
     "heading": "Заявка отправлена!",
