@@ -144,7 +144,11 @@ def raise_source_failure_alert(session: Session, source_id: int) -> None:
         session: Active SQLAlchemy session. Calls flush() — caller commits.
         source_id: The id of the failing source.
     """
-    today = datetime.date.today().isoformat()
+    # WR-01: use UTC date so the per-day dedup key is timezone-independent.
+    # datetime.date.today() returns the *system-local* date, which can be one
+    # day ahead of UTC on servers running TZ=Asia/Tashkent (UTC+5) after 19:00 UTC,
+    # allowing two alerts per UTC calendar day for the same source.
+    today = datetime.datetime.now(tz=datetime.UTC).date().isoformat()
     dedupe_key = f"source_failure:{source_id}:{today}"
 
     session.execute(
