@@ -122,7 +122,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 2** *(parallel — backend API + frontend shell, no file overlap)*
 
-- [ ] 03-02-PLAN.md — request_service (REQ-YYYY-MM-DD-NNNNN number + status machine + history + notify enqueue) + /webapp request/me/files API, initData-authed and IDOR-scoped
+- [x] 03-02-PLAN.md — request_service (REQ-YYYY-MM-DD-NNNNN number + status machine + history + notify enqueue) + /webapp request/me/files API, initData-authed and IDOR-scoped
 - [ ] 03-04-PLAN.md — Web App shell (router + i18n ru/uz + Telegram SDK) + api client + zustand wizard store + Home (C-01) + 4-step wizard (C-02..C-05) with per-step zod validation
 
 **Wave 3** *(parallel — bot/notify + frontend my-requests, no file overlap)*
@@ -193,7 +193,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
-| 3. Client Circuit | 1/6 | In Progress|  |
+| 3. Client Circuit | 2/6 | In Progress|  |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |

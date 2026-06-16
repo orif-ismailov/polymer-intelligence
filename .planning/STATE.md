@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-06-16T11:14:18.051Z"
+stopped_at: Phase 03-02 request API + service complete
+last_updated: "2026-06-16T11:33:31.662Z"
 last_activity: 2026-06-16 -- Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 18
+  completed_plans: 19
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 03 (client-circuit) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-06-16 -- Phase 03 execution started
 
@@ -68,6 +68,7 @@ Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 c
 | Phase 02-ingest-core-uzex P06 | 8min | 2 tasks | 6 files |
 | Phase 02-ingest-core-uzex P07 | ~35min | 2 tasks | 12 files |
 | Phase 03-client-circuit P01 | 10min | 3 tasks | 10 files |
+| Phase 03 P02 | 14min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,10 @@ Most relevant to Phase 1:
 - [Phase 03-01]: DEC-traversal-safe-key: S3 key = requests/{id}/{token_hex(8)}-{os.path.basename(filename)} — strips directory components + random token (T-03-06)
 - [Phase 03-01]: DEC-generic-401: all initData failures → InvalidInitData (ValueError subclass) → get_current_client catches → generic 401 "Authentication required" (T-03-03)
 - [Phase 03-01]: DEC-dep-owns-commit: get_current_client calls db.commit() after upsert; service functions use db.flush() only (caller commits pattern)
+- [Phase ?]: DEC-lazy-notify-import: send_status_change_notification imported inside function bodies, test patches app.tasks.notify with create=True
+- [Phase ?]: DEC-idor-opaque-404: cross-client request returns 404 not 403 (T-03-07 no information disclosure)
+- [Phase ?]: DEC-per-date-postgres-sequence: REQ number via per-date PostgreSQL sequence, Asia/Tashkent date, concurrency-safe
+- [Phase ?]: DEC-service-never-commits-confirmed: request_service uses db.flush() only; grep db.commit() returns 0
 
 ### Pending Todos
 
@@ -153,6 +158,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-16T11:14:18.046Z
-Stopped at: Phase 3 UI-SPEC approved
-Resume file: .planning/phases/03-client-circuit/03-UI-SPEC.md
+Last session: 2026-06-16T11:33:31.657Z
+Stopped at: Phase 03-02 request API + service complete
+Resume file: None
