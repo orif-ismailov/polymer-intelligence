@@ -115,3 +115,6 @@ disallow_any_explicit = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# Add repo root to sys.path so tests can import the telegram/ package
+# (which lives at repo root as a sibling of backend/, per dev-spec §4.1).
+pythonpath = [".", ".."]
