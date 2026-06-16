@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 03-02 request API + service complete
-last_updated: "2026-06-16T11:33:31.662Z"
+stopped_at: Phase 03-04 web-app frontend core complete
+last_updated: "2026-06-16T13:01:29.301Z"
 last_activity: 2026-06-16 -- Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 19
+  completed_plans: 20
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 03 (client-circuit) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-06-16 -- Phase 03 execution started
 
@@ -69,6 +69,7 @@ Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 c
 | Phase 02-ingest-core-uzex P07 | ~35min | 2 tasks | 12 files |
 | Phase 03-client-circuit P01 | 10min | 3 tasks | 10 files |
 | Phase 03 P02 | 14min | 2 tasks | 9 files |
+| Phase 03-client-circuit P04 | 90min | 4 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,10 @@ Most relevant to Phase 1:
 - [Phase ?]: DEC-idor-opaque-404: cross-client request returns 404 not 403 (T-03-07 no information disclosure)
 - [Phase ?]: DEC-per-date-postgres-sequence: REQ number via per-date PostgreSQL sequence, Asia/Tashkent date, concurrency-safe
 - [Phase ?]: DEC-service-never-commits-confirmed: request_service uses db.flush() only; grep db.commit() returns 0
+- [Phase ?]: DEC-03-04-hashrouter: HashRouter for Telegram Web App URL safety
+- [Phase ?]: DEC-03-04-submit-deferred: Task 3 submit→REQ-number→confirmation path deferred to 03-06 E2E plan by user agreement (frontend-only scope verified)
+- [Phase ?]: DEC-03-04-sequential-upload: Sequential file upload (for-await, not Promise.all) for 3G connection budget per D-01
+- [Phase ?]: DEC-03-04-static-products: Product list hardcoded static constant (PP/HDPE/LDPE/LLDPE/PVC/PET/PS/ABS) — no GET /products endpoint in Phase 3
 
 ### Pending Todos
 
@@ -158,6 +163,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-16T11:33:31.657Z
-Stopped at: Phase 03-02 request API + service complete
+Last session: 2026-06-16T13:01:29.298Z
+Stopped at: Phase 03-04 web-app frontend core complete
 Resume file: None
