@@ -401,18 +401,14 @@ class TestParseRawItemRouting:
 
             result = parse_raw_item(2)
 
-        # When match_product returns None, we use the product_text to decide routing.
-        # For "Цемент М400" (cement) there's no match, so it's unrecognized → queue
-        # The task treats "no match" as unrecognized (queue path) unless we distinguish
-        # known-non-polymer separately. The plan says: non-polymer recognized → irrelevant.
-        # Since we can't know if it's "recognized as non-polymer" without a separate DB lookup,
-        # the task treats match_product=None as "unrecognized" → queue.
-        # This test verifies the no-signal path.
-        assert result["status"] in ("irrelevant", "skipped")
+        # When match_product returns None (e.g. "Цемент М400" cement), the row is
+        # not a polymer signal: per dev-spec §2.1 + ROADMAP SC#4 it is marked
+        # parse_status='irrelevant' (and also queued for dictionary top-up).
+        assert result["status"] == "irrelevant"
         mock_create_signal.assert_not_called()
 
     def test_unrecognized_route_queues_no_source_failure(self) -> None:
-        """Unrecognized goods → queue, parse_status='skipped', no consecutive_failures."""
+        """Unrecognized goods → queue, parse_status='irrelevant', no consecutive_failures."""
         from app.tasks.parse import parse_raw_item  # noqa: PLC0415
 
         raw_item = MagicMock()
@@ -436,7 +432,7 @@ class TestParseRawItemRouting:
 
             result = parse_raw_item(3)
 
-        assert result["status"] in ("skipped", "queued")
+        assert result["status"] == "irrelevant"
         mock_create_signal.assert_not_called()
         mock_queue.assert_called_once()
 

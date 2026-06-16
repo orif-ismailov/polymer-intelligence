@@ -5,7 +5,7 @@ Reads a pending UZEX raw_item by ID and routes it through the parse pipeline:
 
   match_product(product_text) →
     (a) polymer match (product_id found)   → create Signal, set parse_status='parsed'
-    (b) no match (unrecognized)            → queue_for_classification, set parse_status='skipped'
+    (b) no match (unrecognized)            → queue_for_classification, set parse_status='irrelevant'
 
 Every parse is journaled in parse_runs with:
     parser = 'uzex_table_v1'
@@ -99,7 +99,7 @@ def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
 
     Routing:
         - polymer match  → signal created, parse_status='parsed'
-        - no match       → manual_classification_queue, parse_status='skipped'
+        - no match       → manual_classification_queue, parse_status='irrelevant'
         - already parsed → immediate return (idempotency guard)
         - error          → parse_runs status='error', parse_status='failed'
     """
@@ -177,12 +177,16 @@ def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
                 return {"status": "parsed", "signal_id": signal.id, "raw_item_id": raw_item_id}
 
             else:
-                # ── Branch (b): unrecognized → queue for manual classification ──
+                # ── Branch (b): no polymer match → irrelevant (+ queue for review) ──
+                # Per dev-spec §2.1 + ROADMAP SC#4: a non-matched row is marked
+                # parse_status='irrelevant' (kept out of signals; the weekly
+                # irrelevant-goods report keys on this status). It is ALSO queued for
+                # manual classification so the synonyms dictionary can be topped up.
                 # NOTE: This is NOT a source_failure (REQ-uzex-parser).
                 # Do NOT modify sources.consecutive_failures here — unrecognized goods
                 # are expected (new products, typos) and must not trigger source alerts.
                 queue_for_classification(session, raw_item_id, product_text)
-                raw_item.parse_status = "skipped"
+                raw_item.parse_status = "irrelevant"
 
                 parse_run = ParseRun(
                     raw_item_id=raw_item_id,
@@ -204,7 +208,7 @@ def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
                     },
                 )
                 return {
-                    "status": "skipped",
+                    "status": "irrelevant",
                     "raw_item_id": raw_item_id,
                     "reason": "unrecognized_product",
                 }
