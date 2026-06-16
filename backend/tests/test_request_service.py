@@ -209,7 +209,7 @@ class TestCreateRequest:
         client = _make_mock_client()
         data = _make_request_create()
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task:
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task:
             mock_task.apply_async = MagicMock()
             request_service.create_request(db=db, client=client, data=data)
 
@@ -227,7 +227,7 @@ class TestCreateRequest:
         client = _make_mock_client()
         data = _make_request_create()
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task:
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task:
             mock_task.apply_async = MagicMock()
             request_service.create_request(db=db, client=client, data=data)
 
@@ -245,7 +245,7 @@ class TestCreateRequest:
         client = _make_mock_client()
         data = _make_request_create()
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task:
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task:
             mock_task.apply_async = MagicMock()
             request_service.create_request(db=db, client=client, data=data)
 
@@ -263,7 +263,7 @@ class TestCreateRequest:
         client = _make_mock_client()
         data = _make_request_create()
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task:
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task:
             mock_task.apply_async = MagicMock()
             request_service.create_request(db=db, client=client, data=data)
 
@@ -299,7 +299,7 @@ class TestTransitionStatus:
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task:
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task:
             mock_task.apply_async = MagicMock()
             result = transition_status(db=db, request=req, to_status=RequestStatus.offer_sent)
 
@@ -314,7 +314,7 @@ class TestTransitionStatus:
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task:
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task:
             mock_task.apply_async = MagicMock()
             transition_status(db=db, request=req, to_status=RequestStatus.matched)
 
@@ -328,7 +328,7 @@ class TestTransitionStatus:
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task:
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task:
             mock_task.apply_async = MagicMock()
             transition_status(db=db, request=req, to_status=RequestStatus.offer_sent)
 
@@ -342,7 +342,7 @@ class TestTransitionStatus:
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task, \
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task, \
              patch("app.services.request_service.write_audit") as mock_audit:
             mock_task.apply_async = MagicMock()
             transition_status(db=db, request=req, to_status=RequestStatus.offer_sent, changed_by=5)
@@ -359,7 +359,7 @@ class TestTransitionStatus:
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task, \
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task, \
              patch("app.services.request_service.write_audit") as mock_audit:
             mock_task.apply_async = MagicMock()
             transition_status(db=db, request=req, to_status=RequestStatus.offer_sent, changed_by=None)
@@ -374,7 +374,7 @@ class TestTransitionStatus:
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
 
-        with patch("app.services.request_service.send_status_change_notification") as mock_task:
+        with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task:
             mock_task.apply_async = MagicMock()
             transition_status(db=db, request=req, to_status=RequestStatus.offer_sent)
 
