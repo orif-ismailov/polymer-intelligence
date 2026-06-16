@@ -97,7 +97,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 4** *(reliability hardening + acceptance — blocked on Wave 3)*
 
-- [ ] 02-07-PLAN.md — Worker auto-restart + pg_dump backup + ≤2h restore runbook + UZEX/CBU source seeder + ≥95% accuracy gate on a ≥50-position control sample + live end-to-end human-verify checkpoint
+- [x] 02-07-PLAN.md — Worker auto-restart + pg_dump backup + ≤2h restore runbook + UZEX/CBU source seeder + ≥95% accuracy gate on a ≥50-position control sample + live end-to-end human-verify checkpoint (live drill deferred to deploy; automated gate: 100% on 55 positions / TZ §6.1.2 PASS)
 
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` (sources, raw_items, parse_runs, signals, price_points, fx_rates). UZEX selectors live in `sources.config`, not in code. No browser automation — escalate if a page needs JS.
 
@@ -173,7 +173,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
-| 2. Ingest Core + UZEX | 6/7 | In Progress|  |
+| 2. Ingest Core + UZEX | 7/7 | Complete | 2026-06-16 |
 | 3. Client Circuit | 0/TBD | Not started | - |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |

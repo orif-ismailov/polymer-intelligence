@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-04-PLAN.md (UZEX parser + raw pipeline + uzex_fetch_* tasks)
-last_updated: "2026-06-15T13:41:52.762Z"
-last_activity: 2026-06-15
+stopped_at: Completed 02-07-PLAN.md (reliability hardening + accuracy closure — phase 2 execution-complete)
+last_updated: "2026-06-16T00:00:00Z"
+last_activity: 2026-06-16
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 17
-  completed_plans: 16
-  percent: 17
+  completed_plans: 17
+  percent: 18
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 ## Current Position
 
-Phase: 02 (ingest-core-uzex) — EXECUTING
-Plan: 7 of 7
-Status: Ready to execute
-Last activity: 2026-06-15
+Phase: 02 (ingest-core-uzex) — COMPLETE (all 7 plans executed)
+Plan: 7 of 7 (done)
+Status: Phase 2 execution-complete; Phase 3 (Client Circuit) is next
+Last activity: 2026-06-16
 
-Progress: [████████░░] 82%
+Progress: [████████░░] 82% (Phase 2 done; Phase 3 begins)
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [████████░░] 82%
 | Phase 02-ingest-core-uzex P05 | 13min | 2 tasks | 10 files |
 | Phase 02-ingest-core-uzex P04 | 25min | 2 tasks | 11 files |
 | Phase 02-ingest-core-uzex P06 | 8min | 2 tasks | 6 files |
+| Phase 02-ingest-core-uzex P07 | ~35min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,10 @@ Most relevant to Phase 1:
 - [Phase 02-06]: source_health_service uses db.flush() not db.commit() — caller commits (consistent with audit_service pattern)
 - [Phase 02-06]: run_source_fetch_isolated: per-source try/except never re-raises — failure isolation SC#5/T-02-17/T-02-19; health service records success/failure
 - [Phase 02-06]: dedupe_key source_failure:{source_id}:{date} + ON CONFLICT DO NOTHING — at most one source_failure alert per source per day (T-02-20)
+- [Phase 02-07]: pg_backup.sh uses umask 077 + chmod 600 on dump files — closes T-02-23 (info-disclosure on world-readable backups)
+- [Phase 02-07]: seed_sources: is_enabled=false + last_test_ok_at=NULL invariant enforced at seed time and verified in test — closes T-02-24
+- [Phase 02-07]: signal_service comma-decimal price parsing: replace ',' before float() cast (Rule-1 auto-fix); UzexDealsAdapter section_label corrected to 'deals' (Rule-1 auto-fix)
+- [Phase 02-07]: Accuracy harness uses pure-function path (parse_table_rows + create_signal_from_parse) with live-DB guard — CI-safe, no running DB needed; 100% on 55 positions = TZ §6.1.2 PASS
 
 ### Pending Todos
 
@@ -133,6 +138,7 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
 | Walking skeleton | SC#1 worker+beat Celery startup — needs `app.tasks.celery_app` (built in Phase 2; beat schedule drives UZEX fetch there) | Deferred to Phase 2 | 2026-06-15 |
+| UAT / Phase 2 SC#5 | Live docker-compose drill: worker/beat uptime, live UZEX fetch→signals, re-fetch dedupe, live FX import, 3-strike source_failure alert with isolation (SC#5 / TZ §6.1.4), restore-doc dry-run — user-approved deferral to deploy time (02-07 Task 3 checkpoint) | Pending — deploy-time UAT | 2026-06-16 |
 | International loop | REQ-international-feed (FR-3) | Future Milestone | 2026-06-13 |
 | Web App content | REQ-webapp-news (FR-8) | Future Milestone | 2026-06-13 |
 | Reports | REQ-reports (FR-18) | Future Milestone | 2026-06-13 |
@@ -141,6 +147,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-15T13:40:17.000Z
-Stopped at: Completed 02-06-PLAN.md (source health + failure isolation + check_source_health task + GET /admin/sources/health)
+Last session: 2026-06-16T00:00:00Z
+Stopped at: Completed 02-07-PLAN.md (reliability hardening + accuracy closure — phase 2 execution-complete; live drill deferred to deploy)
 Resume file: None
