@@ -92,7 +92,7 @@ def save_raw_items(
     session: Session,
     source: Source,
     drafts: list[RawItemDraft],
-) -> int:
+) -> tuple[int, list[int]]:
     """Insert raw item drafts into raw_items with sha256 dedup.
 
     Uses INSERT ... ON CONFLICT (source_id, content_hash) DO NOTHING so that:
@@ -100,18 +100,24 @@ def save_raw_items(
     - An identical second call inserts 0 rows (no duplicates).
     - Existing rows are NEVER updated (immutability invariant — DB-arch §2).
 
+    RETURNING id is used so callers receive the *exact* IDs of newly inserted
+    rows rather than re-querying by recency heuristic (CR-04 / T-02-12).
+
     Args:
         session: Active SQLAlchemy session. Caller commits.
         source: The Source ORM object (provides source.id).
         drafts: List of RawItemDraft objects to persist.  May be empty.
 
     Returns:
-        The number of newly inserted rows (0 for a fully duplicate batch).
+        A (count, inserted_ids) tuple:
+        - count: number of newly inserted rows (0 for a fully duplicate batch).
+        - inserted_ids: list of raw_items.id values for the inserted rows,
+          in insertion order. Empty list when count == 0.
     """
     if not drafts:
-        return 0
+        return 0, []
 
-    inserted = 0
+    inserted_ids: list[int] = []
 
     for draft in drafts:
         content_hash = compute_content_hash(
@@ -120,7 +126,8 @@ def save_raw_items(
             content=draft.content,
         )
 
-        # INSERT ... ON CONFLICT DO NOTHING (immutability invariant: no content mutation)
+        # INSERT ... ON CONFLICT DO NOTHING with RETURNING id so we get the
+        # exact row ID for newly inserted rows (no recency heuristic — CR-04).
         cursor = session.execute(
             sa.text(
                 """
@@ -132,6 +139,7 @@ def save_raw_items(
                      :content_hash, :event_at, 'pending', 0)
                 ON CONFLICT (source_id, content_hash)
                 DO NOTHING
+                RETURNING id
                 """
             ),
             {
@@ -144,11 +152,13 @@ def save_raw_items(
             },
         )
 
-        # rowcount == 1 if inserted, 0 if skipped on conflict
-        rowcount: int = getattr(cursor, "rowcount", 0)
-        if rowcount == 1:
-            inserted += 1
+        # RETURNING returns the row only when the INSERT actually happened;
+        # DO NOTHING on conflict causes an empty result set for duplicates.
+        row = cursor.fetchone()
+        if row is not None:
+            inserted_ids.append(int(row[0]))
 
+    inserted = len(inserted_ids)
     logger.info(
         "raw_pipeline.save_done",
         extra={
@@ -158,7 +168,7 @@ def save_raw_items(
             "skipped": len(drafts) - inserted,
         },
     )
-    return inserted
+    return inserted, inserted_ids
 
 
 def _payload_to_jsonb(payload: dict[str, object] | None) -> str | None:

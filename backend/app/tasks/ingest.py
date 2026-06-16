@@ -101,14 +101,14 @@ def run_source_fetch_isolated(session: Any, source: Any, adapter: Any) -> int:
             },
         )
 
-        inserted = save_raw_items(session, source, drafts)
+        inserted, inserted_ids = save_raw_items(session, source, drafts)
         session.commit()
 
         record_fetch_success(session, source.id)
         session.commit()
 
         if inserted > 0:
-            _enqueue_parse_tasks(session, source.id, inserted)
+            _enqueue_parse_tasks(inserted_ids)
 
         return inserted
 
@@ -191,30 +191,22 @@ def _execute_uzex_fetch(adapter_name: str) -> dict[str, Any]:
     }
 
 
-def _enqueue_parse_tasks(session: Any, source_id: int, count: int) -> None:
-    """Enqueue parse_raw_item tasks for the most recently inserted rows.
+def _enqueue_parse_tasks(inserted_ids: list[int]) -> None:
+    """Enqueue parse_raw_item tasks for the given raw_item IDs.
 
-    Queries raw_items for the latest `count` pending rows for this source
-    and sends a parse_raw_item task for each.
+    CR-04: uses the exact IDs returned by save_raw_items (via RETURNING id)
+    instead of re-querying by fetched_at DESC LIMIT, which could select rows
+    from a prior batch that are still pending.
+
+    Args:
+        inserted_ids: Exact raw_items.id values just inserted by save_raw_items.
     """
-    rows = session.execute(
-        sa.text(
-            """
-            SELECT id FROM raw_items
-            WHERE source_id = :sid AND parse_status = 'pending'
-            ORDER BY fetched_at DESC
-            LIMIT :lim
-            """
-        ),
-        {"sid": source_id, "lim": count},
-    ).fetchall()
-
-    for row in rows:
-        celery_app.send_task("parse_raw_item", args=[row[0]], queue="parse")
+    for raw_item_id in inserted_ids:
+        celery_app.send_task("parse_raw_item", args=[raw_item_id], queue="parse")
 
     logger.debug(
         "uzex_fetch.enqueue_parse",
-        extra={"source_id": source_id, "enqueued": len(rows)},
+        extra={"enqueued": len(inserted_ids)},
     )
 
 

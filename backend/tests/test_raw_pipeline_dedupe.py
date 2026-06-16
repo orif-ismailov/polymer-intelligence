@@ -171,10 +171,13 @@ class TestSaveRawItemsDeduplication:
                     for i in range(3)
                 ]
 
-                count = save_raw_items(session, source, drafts)
+                count, inserted_ids = save_raw_items(session, source, drafts)
                 session.commit()
 
                 assert count == 3, f"Expected 3 inserted, got {count}"
+                assert len(inserted_ids) == 3, (
+                    f"Expected 3 inserted_ids, got {inserted_ids}"
+                )
             finally:
                 self._delete_source(session, source_id)
 
@@ -202,15 +205,17 @@ class TestSaveRawItemsDeduplication:
                     for i in range(2)
                 ]
 
-                count1 = save_raw_items(session, source, drafts)
+                count1, ids1 = save_raw_items(session, source, drafts)
                 session.commit()
 
                 # Re-run with identical drafts
-                count2 = save_raw_items(session, source, drafts)
+                count2, ids2 = save_raw_items(session, source, drafts)
                 session.commit()
 
                 assert count1 == 2, f"First call should insert 2, got {count1}"
+                assert len(ids1) == 2, f"First call should return 2 IDs, got {ids1}"
                 assert count2 == 0, f"Second call should insert 0, got {count2}"
+                assert ids2 == [], f"Second call should return empty IDs, got {ids2}"
             finally:
                 self._delete_source(session, source_id)
 
@@ -239,7 +244,7 @@ class TestSaveRawItemsDeduplication:
                     for i in range(4)
                 ]
 
-                save_raw_items(session, source, drafts)
+                _count, _ids = save_raw_items(session, source, drafts)
                 session.commit()
 
                 count_before = session.execute(
@@ -248,7 +253,7 @@ class TestSaveRawItemsDeduplication:
                 ).scalar()
 
                 # Save same drafts again
-                save_raw_items(session, source, drafts)
+                _count2, _ids2 = save_raw_items(session, source, drafts)
                 session.commit()
 
                 count_after = session.execute(
@@ -287,7 +292,7 @@ class TestSaveRawItemsDeduplication:
                     )
                 ]
 
-                save_raw_items(session, source, drafts)
+                _count, _ids = save_raw_items(session, source, drafts)
                 session.commit()
 
                 row = session.execute(
