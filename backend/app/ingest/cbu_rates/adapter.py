@@ -155,6 +155,11 @@ class CbuRatesAdapter:
     async def fetch(self, source: Source) -> list[RawItemDraft]:
         """Fetch CBU rates and return as RawItemDraft for orchestration.
 
+        Reads endpoint_url and ccy_allowlist from source.config.
+        ccy_allowlist is an optional list of ISO 4217 codes (e.g. ["USD", "CNY"]);
+        when non-empty only those currencies are returned (WR-02: previously the
+        field was declared in CbuRatesConfig but never enforced here).
+
         Note: The fetch_cbu_rates Celery task calls the adapter directly and
         upserts via fx_service rather than going through the raw_items pipeline.
         This method is provided for protocol compliance.
@@ -163,11 +168,19 @@ class CbuRatesAdapter:
 
         config = source.config or {}
         endpoint_url = str(config.get("endpoint_url", _CBU_DEFAULT_URL))
+        # WR-02: enforce ccy_allowlist — empty list means accept all currencies
+        allowlist: list[str] = [
+            str(c).upper() for c in (config.get("ccy_allowlist") or [])
+        ]
 
         response = await fetch_url(endpoint_url)
         body = response.text
 
         rows = self._parse_cbu_json(body)
+
+        # Apply currency allowlist filter when configured
+        if allowlist:
+            rows = [r for r in rows if r.ccy in allowlist]
 
         # Return rows as RawItemDraft for protocol compliance
         return [
