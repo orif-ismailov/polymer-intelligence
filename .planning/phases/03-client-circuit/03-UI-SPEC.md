@@ -1,7 +1,7 @@
 ---
 phase: 3
 slug: client-circuit
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-16
@@ -30,6 +30,10 @@ created: 2026-06-16
 **Rule:** No hardcoded hex or RGB values in any component. Every color value MUST be a
 `var(--tg-theme-*)` reference with a dark-mode fallback literal. Telegram injects its own
 theme at runtime; the app adapts automatically.
+
+**Sole exception:** the destructive color `#ef4444` is a hardcoded hex because the Telegram
+theme spec exposes no `--tg-theme-*` destructive variable. This is the only permitted hardcoded
+production color value.
 
 Source: `webapp/src/App.tsx` (existing scaffold), `docs/polymer-intelligence-ui-mockups.md` §1
 ("Telegram Web App must honor Telegram theme variables"), dev-spec §6.2.
@@ -97,7 +101,7 @@ MUST NOT appear in production media queries or conditional styles.
 | Body text | `var(--tg-theme-text-color)` | `#f8fafc` | All primary text |
 | Hint / muted text | `var(--tg-theme-hint-color)` | `#94a3b8` | Labels, secondary copy, placeholders |
 | Link | `var(--tg-theme-link-color)` | `#38bdf8` | Inline text links only |
-| Destructive | `#ef4444` with 0.15 background-opacity | N/A | Cancel/delete actions only (see below) |
+| Destructive | `#ef4444` with 0.15 background-opacity | N/A — sole permitted hardcoded hex (no tg-theme equivalent) | Cancel/delete actions only (see below) |
 | Border / divider | `var(--tg-theme-secondary-bg-color)` at 1px | `#334155` | Card borders, field underlines |
 
 **Accent (`var(--tg-theme-button-color)`) reserved for:**
@@ -134,6 +138,10 @@ is a scope change (TZ §2.3.7).
 | # | Route / ID | Title (RU) | Entry point |
 |---|------------|------------|-------------|
 | C-01 | `/` (home) | Добро пожаловать! | Bot /start Web App button |
+
+**Home screen (C-01) focal point:** the primary visual anchor is the "Оставить заявку" CTA —
+it carries the only accent fill on the screen and must read as the dominant element. The heading
+"Добро пожаловать!" is secondary (typographic weight only, no accent); value props are tertiary.
 | C-02 | `/request/step/1` | Информация о продукте | "Оставить заявку" |
 | C-03 | `/request/step/2` | Условия поставки | Step 1 MainButton "Далее" |
 | C-04 | `/request/step/3` | Дополнительная информация | Step 2 MainButton "Далее" |
@@ -157,7 +165,7 @@ Hand-rolled components; no design system library. Telegram SDK handles MainButto
 | `StepIndicator` | C-02, C-03, C-04 | 4 dots; active = accent fill; past = accent outline; future = hint fill |
 | `FieldGroup` | C-02, C-03, C-04 | Label (13px/400) + input/select/textarea, inline zod error (13px destructive) |
 | `SelectField` | C-02, C-03 | Native `<select>` with tg-theme styling; avoid custom dropdown for bundle size |
-| `FileUploader` | C-04 | Drag-drop area + file list; shows name + size; remove button per file; 5-file / 10 MB limits enforced client-side with inline error |
+| `FileUploader` | C-04 | Drag-drop area + file list; shows name + size; remove (×) button per file with `aria-label="Удалить файл {name}"`; 5-file / 10 MB limits enforced client-side with inline error |
 | `RequestCard` | C-06 | Number, status chip, product name, date; full-width tap target → C-07 |
 | `StatusTimeline` | C-07 | Vertical list of `request_status_history` rows; Asia/Tashkent timestamps (DEC-tz-handling) |
 | `ConfirmationCard` | C-05 | Green check icon (24px), request number (15px/600), status chip "Новая заявка" |
@@ -242,7 +250,8 @@ that mirror every RU string below. Keys follow the pattern `screen.element`.
 | Request detail title | Детали заявки | `requestDetail.title` |
 | Status history heading | История статусов | `requestDetail.history` |
 | Notifications title | Уведомления | `notifications.title` |
-| Notifications empty | Уведомлений пока нет | `notifications.empty` |
+| Notifications empty heading | Уведомлений пока нет | `notifications.empty.heading` |
+| Notifications empty body | Здесь появятся уведомления об изменении статуса ваших заявок | `notifications.empty.body` |
 | Settings / profile title | Язык и профиль | `settings.title` |
 | Language label | Язык интерфейса | `settings.language` |
 | Language option RU | Русский | `settings.lang.ru` |
@@ -312,6 +321,7 @@ chunk stays under 300 KB gzip (not just uncompressed).
 | Requirement | Rule |
 |-------------|------|
 | Touch targets | ≥ 44 × 44px for all interactive elements (buttons, file remove, nav) |
+| Icon-only actions | Every icon-only control has an `aria-label`. The `FileUploader` × remove button uses `aria-label="Удалить файл {name}"` (key `fileUploader.remove`); icon-only nav items carry a text label or `aria-label` |
 | Color independence | Status chips use both color AND text label — never color alone |
 | Form fields | Every `<input>` / `<select>` / `<textarea>` has an associated `<label>` with `htmlFor`; errors referenced via `aria-describedby` |
 | Language attribute | `<html lang="ru">` / `<html lang="uz">` updated on language toggle |
@@ -345,11 +355,11 @@ Per CONTEXT.md `<deferred>` and ROADMAP.md:
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS (FLAG resolved — notification empty-state body added; "Далее"/"Отправить" accepted as Telegram MainButton convention)
+- [x] Dimension 2 Visuals: PASS (FLAG resolved — home focal point declared; × remove-button aria-label added)
+- [x] Dimension 3 Color: PASS (FLAG resolved — `#ef4444` documented as sole permitted hardcoded hex)
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED — verified by gsd-ui-checker 2026-06-16; 3 PASS, 3 FLAGs all resolved in-spec.
