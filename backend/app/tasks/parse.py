@@ -132,7 +132,14 @@ def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
 
             if product_id is not None:
                 # ── Branch (a): polymer match → create signal ──────────────────
-                grade_text_raw = str(payload.get("grade_text", "")).strip()
+                # WR-05: UZEX adapters do not populate 'grade_text' in the payload;
+                # the full product description (e.g. "ПП T30S Шуртан") lives in
+                # 'product_text'. Fall back to product_text so grade linking works
+                # for UZEX sources (grade_text from other adapters still wins when set).
+                grade_text_raw = (
+                    str(payload.get("grade_text", "")).strip()
+                    or str(payload.get("product_text", "")).strip()
+                )
                 grade_id, grade_text = extract_grade(grade_text_raw, session)
 
                 parsed = {
