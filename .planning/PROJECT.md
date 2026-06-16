@@ -14,14 +14,14 @@ Every relevant market event — a client request, a UZEX polymer position, a cha
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- [x] **REQ-uzex-parser** (FR-1): UZEX offers/quotations/concluded-deals → `signals` on schedule — _Validated in Phase 2 (E2 Ingest Core + UZEX); ≥95% accuracy gate = 100% on 55-position control sample. Live deploy-drill deferred (02-UAT.md)._
+- [x] **REQ-fx-rates** (FR-4): Daily CBU rate import; conversion computed on read, original preserved — _Validated in Phase 2 (E2)._
+- [x] **REQ-sources-health** (FR-13): Source health view + enable/disable; 3-strike `source_failure` alert with per-source isolation — _Validated in Phase 2 (E2). Live alert-isolation drill deferred (02-UAT.md)._
 
 ### Active
 
 <!-- Current milestone: Client Phase 1 (domestic-market MVP). Full list with IDs and acceptance criteria in REQUIREMENTS.md. -->
 
-- [ ] **REQ-uzex-parser** (FR-1): Parse UZEX offers/quotations/concluded-deals into `signals` on schedule
-- [ ] **REQ-fx-rates** (FR-4): Daily CBU rate import; conversion computed on read, original preserved
 - [ ] **REQ-webapp-auth** (FR-5): Telegram initData auth; first login creates a client
 - [ ] **REQ-request-wizard** (FR-6): 4-step Web App request wizard with files; REQ-YYYY-MM-DD-NNNNN number
 - [ ] **REQ-my-requests** (FR-7): Client request list + status history; bot push on status change
@@ -29,7 +29,6 @@ Every relevant market event — a client request, a UZEX polymer position, a cha
 - [ ] **REQ-live-feed** (FR-10): Unified filterable feed (v_live_feed), SSE/polling refresh
 - [ ] **REQ-purchase-requests** (FR-11): Requests table + detail card + actions, all → audit_log (flagship screen)
 - [ ] **REQ-price-trends** (FR-12): Price chart per product/market from price_points
-- [ ] **REQ-sources-health** (FR-13): Source health view + enable/disable
 - [ ] **REQ-alerts** (FR-14): Alert feed + rules builder + delivery
 - [ ] **REQ-roles** (FR-15): admin / analyst / trader / viewer authz
 - [ ] **REQ-bot-team** (FR-16): Deliver alerts to DM/group respecting Telegram rate limits
@@ -112,4 +111,4 @@ Phase 2 (international content loop) is a planned follow-up milestone, scoped bu
 | DEC-deploy-single-vps: one VPS, docker compose, nginx+TLS | simple, fits scale | — Pending |
 
 ---
-*Last updated: 2026-06-13 after ingest bootstrap (new-project-from-ingest)*
+*Last updated: 2026-06-16 — Phase 2 (E2 Ingest Core + UZEX) complete: immutable raw pipeline, SourceAdapter registry, UZEX collectors→signals, CBU FX, source-health alerting. REQ-uzex-parser / REQ-fx-rates / REQ-sources-health validated (live deploy-drill deferred, 02-UAT.md).*
