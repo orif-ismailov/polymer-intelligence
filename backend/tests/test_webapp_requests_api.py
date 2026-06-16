@@ -208,19 +208,36 @@ class TestCreateRequest:
 class TestListRequests:
     """GET /webapp/requests — list authenticated client's requests."""
 
-    def test_list_requests_returns_200(self, webapp_client: TestClient):
-        """Authenticated client gets 200 list."""
-        mock_req = _make_mock_request(id=1, client_id=1)
+    def test_list_requests_returns_200(self):
+        """Authenticated client gets 200 list (empty list ok)."""
+        from app.core.db import get_db  # noqa: PLC0415
+        from app.api.deps import get_current_client  # noqa: PLC0415
+        from app.main import create_app  # noqa: PLC0415
 
-        with patch("app.api.webapp.requests.Request") as mock_model:
-            # Simulate the query chain: .filter().order_by().all()
-            mock_query = MagicMock()
-            mock_query.filter.return_value = mock_query
-            mock_query.order_by.return_value = mock_query
-            mock_query.all.return_value = [mock_req]
+        mock_client = _make_mock_client(id=1)
+        mock_db = MagicMock()
+        mock_db.add = MagicMock()
+        mock_db.commit = MagicMock()
 
-            # We need to patch the db.query
-            resp = webapp_client.get("/api/v1/webapp/requests")
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.order_by.return_value = mock_query
+        mock_query.all.return_value = []  # empty list — valid response
+        mock_db.query.return_value = mock_query
+
+        def _override_get_db():
+            yield mock_db
+
+        def _override_get_current_client():
+            return mock_client
+
+        application = create_app()
+        application.dependency_overrides[get_db] = _override_get_db
+        application.dependency_overrides[get_current_client] = _override_get_current_client
+
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             TestClient(application, raise_server_exceptions=True) as tc:
+            resp = tc.get("/api/v1/webapp/requests")
 
         assert resp.status_code == 200, resp.text
         assert isinstance(resp.json(), list)
@@ -236,36 +253,95 @@ class TestListRequests:
 class TestGetRequestDetail:
     """GET /webapp/requests/{id} — IDOR-scoped detail view."""
 
-    def test_own_request_returns_200(self, webapp_client: TestClient):
-        """Get own request (client_id matches) → 200."""
-        mock_req = _make_mock_request(id=42, client_id=1)
+    def test_own_request_returns_200(self):
+        """Get own request (client_id matches) → 200 with correct detail."""
+        import datetime, decimal  # noqa: PLC0415
+        from app.models.enums import RequestStatus, PriceBasis  # noqa: PLC0415
+        from app.core.db import get_db  # noqa: PLC0415
+        from app.api.deps import get_current_client  # noqa: PLC0415
+        from app.main import create_app  # noqa: PLC0415
+
+        mock_client = _make_mock_client(id=1)
+
+        mock_req = MagicMock()
+        mock_req.id = 42
+        mock_req.client_id = 1
+        mock_req.number = "REQ-2026-06-16-00001"
+        mock_req.status = RequestStatus.new
+        mock_req.created_at = datetime.datetime(2026, 6, 16, 10, 0, 0, tzinfo=datetime.timezone.utc)
+        mock_req.product_id = 1
+        mock_req.grade_text = "HDPE 2420D"
+        mock_req.volume = decimal.Decimal("100")
+        mock_req.target_price = None
+        mock_req.currency = "USD"
+        mock_req.incoterms = PriceBasis.unknown
         mock_req.files = []
         mock_req.status_history = []
 
-        with patch("app.api.webapp.requests.Request") as mock_model:
-            mock_query = MagicMock()
-            mock_query.filter.return_value = mock_query
-            mock_query.first.return_value = mock_req
+        mock_db = MagicMock()
+        mock_db.add = MagicMock()
+        mock_db.commit = MagicMock()
+        mock_db.flush = MagicMock()
 
-            resp = webapp_client.get("/api/v1/webapp/requests/42")
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_req
+        mock_db.query.return_value = mock_query
 
-        # The actual response depends on whether db is properly mocked, so accept 200 or 404
-        # The important test is cross-client IDOR below
-        assert resp.status_code in (200, 404), resp.text
+        def _override_get_db():
+            yield mock_db
 
-    def test_cross_client_request_returns_404(self, webapp_client: TestClient):
+        def _override_get_current_client():
+            return mock_client
+
+        application = create_app()
+        application.dependency_overrides[get_db] = _override_get_db
+        application.dependency_overrides[get_current_client] = _override_get_current_client
+
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             TestClient(application, raise_server_exceptions=True) as tc:
+            resp = tc.get("/api/v1/webapp/requests/42")
+
+        assert resp.status_code == 200, resp.text
+        data = resp.json()
+        assert data["id"] == 42
+        assert data["number"] == "REQ-2026-06-16-00001"
+
+    def test_cross_client_request_returns_404(self):
         """Request owned by a different client → 404 (T-03-07 IDOR guard).
 
-        The handler must filter by client.id from the dependency, not just by request_id.
-        When the query returns None (no row with matching request_id AND client_id), 404.
+        The handler filters by BOTH request_id AND client_id.
+        When the query returns None (no row with matching id AND client_id), 404.
         """
-        with patch("app.api.webapp.requests.Request") as mock_model:
-            mock_query = MagicMock()
-            mock_query.filter.return_value = mock_query
-            # Return None = "not found OR not yours" — no hint to the attacker
-            mock_query.first.return_value = None
+        from app.core.db import get_db  # noqa: PLC0415
+        from app.api.deps import get_current_client  # noqa: PLC0415
+        from app.main import create_app  # noqa: PLC0415
 
-            resp = webapp_client.get("/api/v1/webapp/requests/999")
+        mock_client = _make_mock_client(id=1)  # caller is client id=1
+        mock_db = MagicMock()
+        mock_db.add = MagicMock()
+        mock_db.commit = MagicMock()
+
+        # db.query().filter().first() returns None — no request with both id AND client_id=1
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = None  # T-03-07: returns None for non-owned requests
+        mock_db.query.return_value = mock_query
+
+        def _override_get_db():
+            yield mock_db
+
+        def _override_get_current_client():
+            return mock_client
+
+        application = create_app()
+        application.dependency_overrides[get_db] = _override_get_db
+        application.dependency_overrides[get_current_client] = _override_get_current_client
+
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             TestClient(application, raise_server_exceptions=True) as tc:
+            # Request 999 is owned by client id=2 (not the calling client id=1)
+            resp = tc.get("/api/v1/webapp/requests/999")
 
         assert resp.status_code == 404, resp.text
 
@@ -330,117 +406,112 @@ class TestFileUpload:
         """Return bytes exceeding the 10 MB limit."""
         return b"%PDF" + b"x" * (10 * 1024 * 1024 + 1)
 
-    def test_valid_pdf_returns_201(self, webapp_client: TestClient):
+    def _make_file_tc(self, mock_req=None, file_count: int = 0):
+        """Create a TestClient with db properly wired for file upload tests."""
+        from app.core.db import get_db  # noqa: PLC0415
+        from app.api.deps import get_current_client  # noqa: PLC0415
+        from app.main import create_app  # noqa: PLC0415
+
+        mock_client = _make_mock_client(id=1)
+        mock_db = MagicMock()
+        mock_db.add = MagicMock()
+        mock_db.commit = MagicMock()
+        mock_db.flush = MagicMock()
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_req  # None for cross-client 404
+        mock_query.count.return_value = file_count  # existing file count
+        mock_db.query.return_value = mock_query
+
+        def _override_get_db():
+            yield mock_db
+
+        def _override_get_current_client():
+            return mock_client
+
+        application = create_app()
+        application.dependency_overrides[get_db] = _override_get_db
+        application.dependency_overrides[get_current_client] = _override_get_current_client
+        return application
+
+    def test_valid_pdf_returns_201(self):
         """Valid PDF ≤10 MB for own request → 201."""
         mock_req = _make_mock_request(id=42, client_id=1)
-        # existing files count = 0 (no existing files)
         mock_req_file = _make_mock_request_file(id=1, request_id=42)
+        application = self._make_file_tc(mock_req=mock_req, file_count=0)
 
-        with patch("app.api.webapp.files.Request") as mock_model, \
+        # Patch upload_request_file in app.api.webapp.files where it's called via storage_service
+        with patch("app.api.health._check_redis", return_value="ok"), \
              patch("app.api.webapp.files.storage_service") as mock_storage, \
-             patch("app.api.webapp.files.RequestFile") as mock_rf_model:
-            # Mock the request lookup
-            mock_query = MagicMock()
-            mock_query.filter.return_value = mock_query
-            mock_query.first.return_value = mock_req
-
-            # Mock existing files count
-            mock_count_query = MagicMock()
-            mock_count_query.filter.return_value = mock_count_query
-            mock_count_query.count.return_value = 0
-
+             TestClient(application, raise_server_exceptions=True) as tc:
             mock_storage.upload_request_file.return_value = mock_req_file
-            mock_storage.validate_upload.return_value = "application/pdf"
-
-            resp = webapp_client.post(
+            mock_storage.MAX_FILES = 5
+            resp = tc.post(
                 "/api/v1/webapp/requests/42/files",
                 files={"file": ("test.pdf", io.BytesIO(self._pdf_bytes()), "application/pdf")},
             )
 
-        # Accept 201 or 422/404 depending on how the mock is wired
-        # The key tests are the 422 for bad files and 404 for cross-client below
-        assert resp.status_code in (201, 422, 404, 500), resp.text
+        assert resp.status_code == 201, resp.text
 
-    def test_bad_magic_bytes_returns_422(self, webapp_client: TestClient):
-        """File with invalid magic bytes → 422 invalid_file_type."""
+    def test_bad_magic_bytes_returns_422(self):
+        """File with invalid magic bytes → 422 invalid_file_type (T-03-04)."""
         mock_req = _make_mock_request(id=42, client_id=1)
+        application = self._make_file_tc(mock_req=mock_req, file_count=0)
 
-        with patch("app.api.webapp.files.Request") as mock_model, \
-             patch("app.api.webapp.files.storage_service") as mock_storage, \
-             patch("app.api.webapp.files.RequestFile") as mock_rf_model:
-            mock_query = MagicMock()
-            mock_query.filter.return_value = mock_query
-            mock_query.first.return_value = mock_req
-            mock_count_query = MagicMock()
-            mock_count_query.filter.return_value = mock_count_query
-            mock_count_query.count.return_value = 0
-
-            # storage_service raises ValueError("invalid_file_type") for bad bytes
-            mock_storage.validate_upload.side_effect = ValueError("invalid_file_type")
-            mock_storage.upload_request_file.side_effect = ValueError("invalid_file_type")
-
-            resp = webapp_client.post(
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             TestClient(application, raise_server_exceptions=True) as tc:
+            # Bad magic bytes — storage_service.validate_upload raises ValueError
+            resp = tc.post(
                 "/api/v1/webapp/requests/42/files",
                 files={"file": ("bad.pdf", io.BytesIO(self._bad_bytes()), "application/pdf")},
             )
 
+        # validate_upload raises ValueError("invalid_file_type") → 422
         assert resp.status_code == 422, resp.text
 
-    def test_oversized_file_returns_422(self, webapp_client: TestClient):
-        """File >10 MB → 422 file_too_large."""
+    def test_oversized_file_returns_422(self):
+        """File >10 MB → 422 file_too_large (T-03-05)."""
         mock_req = _make_mock_request(id=42, client_id=1)
+        application = self._make_file_tc(mock_req=mock_req, file_count=0)
 
-        with patch("app.api.webapp.files.Request") as mock_model, \
-             patch("app.api.webapp.files.storage_service") as mock_storage:
-            mock_query = MagicMock()
-            mock_query.filter.return_value = mock_query
-            mock_query.first.return_value = mock_req
-            mock_count_query = MagicMock()
-            mock_count_query.filter.return_value = mock_count_query
-            mock_count_query.count.return_value = 0
+        # Build a file slightly over 10 MB (magic bytes + padding)
+        oversized = b"%PDF" + b"x" * (10 * 1024 * 1024 + 1)
 
-            mock_storage.validate_upload.side_effect = ValueError("file_too_large")
-            mock_storage.upload_request_file.side_effect = ValueError("file_too_large")
-
-            resp = webapp_client.post(
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             TestClient(application, raise_server_exceptions=True) as tc:
+            resp = tc.post(
                 "/api/v1/webapp/requests/42/files",
-                files={"file": ("big.pdf", io.BytesIO(self._oversized_bytes()), "application/pdf")},
+                files={"file": ("big.pdf", io.BytesIO(oversized), "application/pdf")},
             )
 
+        # validate_upload raises ValueError("file_too_large") → 422
         assert resp.status_code == 422, resp.text
 
-    def test_sixth_file_returns_422(self, webapp_client: TestClient):
-        """6th file upload when 5 already exist → 422 too_many_files."""
+    def test_sixth_file_returns_422(self):
+        """6th file upload when 5 already exist → 422 too_many_files (T-03-05)."""
         mock_req = _make_mock_request(id=42, client_id=1)
+        # file_count=5 means MAX_FILES is already reached
+        application = self._make_file_tc(mock_req=mock_req, file_count=5)
 
-        with patch("app.api.webapp.files.Request") as mock_model, \
-             patch("app.api.webapp.files.storage_service") as mock_storage, \
-             patch("app.api.webapp.files.RequestFile") as mock_rf_model:
-            mock_query = MagicMock()
-            mock_query.filter.return_value = mock_query
-            mock_query.first.return_value = mock_req
-            # 5 files already exist (at MAX_FILES limit)
-            mock_count_query = MagicMock()
-            mock_count_query.filter.return_value = mock_count_query
-            mock_count_query.count.return_value = 5
-
-            resp = webapp_client.post(
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             TestClient(application, raise_server_exceptions=True) as tc:
+            resp = tc.post(
                 "/api/v1/webapp/requests/42/files",
                 files={"file": ("test6.pdf", io.BytesIO(self._pdf_bytes()), "application/pdf")},
             )
 
         assert resp.status_code == 422, resp.text
+        assert "too_many_files" in resp.json().get("detail", "")
 
-    def test_cross_client_file_upload_returns_404(self, webapp_client: TestClient):
-        """Upload to a request owned by different client → 404 (IDOR guard)."""
-        with patch("app.api.webapp.files.Request") as mock_model, \
-             patch("app.api.webapp.files.storage_service") as mock_storage:
-            mock_query = MagicMock()
-            mock_query.filter.return_value = mock_query
-            # Request not found for this client (owned by someone else)
-            mock_query.first.return_value = None
+    def test_cross_client_file_upload_returns_404(self):
+        """Upload to a request owned by different client → 404 (T-03-07 IDOR guard)."""
+        # mock_req=None simulates: no request matching both request_id AND client_id
+        application = self._make_file_tc(mock_req=None, file_count=0)
 
-            resp = webapp_client.post(
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             TestClient(application, raise_server_exceptions=True) as tc:
+            resp = tc.post(
                 "/api/v1/webapp/requests/999/files",
                 files={"file": ("test.pdf", io.BytesIO(self._pdf_bytes()), "application/pdf")},
             )

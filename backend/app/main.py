@@ -24,6 +24,9 @@ from app.api.admin_sources import router as admin_sources_router
 from app.api.auth import router as auth_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.health import router as health_router
+from app.api.webapp.requests import router as webapp_requests_router
+from app.api.webapp.me import router as webapp_me_router
+from app.api.webapp.files import router as webapp_files_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.models.staff import StaffUser
@@ -103,6 +106,10 @@ def create_app() -> FastAPI:
     application.include_router(health_router, prefix="/api/v1")
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(admin_sources_router, prefix="/api/v1")
+    # ── webapp routers (Telegram Web App client surface) ─────────────────────
+    application.include_router(webapp_requests_router, prefix="/api/v1")
+    application.include_router(webapp_me_router, prefix="/api/v1")
+    application.include_router(webapp_files_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.
