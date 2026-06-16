@@ -127,7 +127,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 3** *(parallel — bot/notify + frontend my-requests, no file overlap)*
 
-- [ ] 03-03-PLAN.md — aiogram webhook bot (/start greeting + Web App button) + RU/UZ templates + send_status_change_notification notify task (D-10 labels, deep-link)
+- [x] 03-03-PLAN.md — aiogram webhook bot (/start greeting + Web App button) + RU/UZ templates + send_status_change_notification notify task (D-10 labels, deep-link)
 - [ ] 03-05-PLAN.md — Мои заявки (C-06) + detail + Asia/Tashkent status timeline (C-07) + notifications (C-08) + RU/UZ settings toggle (C-09) + bundle ≤300 KB gzip
 
 **Wave 4** *(acceptance gate)*
@@ -193,7 +193,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
-| 3. Client Circuit | 3/6 | In Progress|  |
+| 3. Client Circuit | 4/6 | In Progress|  |
 | 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |

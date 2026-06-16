@@ -31,7 +31,7 @@
 ### Bot & Publishing
 
 - [ ] **REQ-bot-team** (FR-16): Deliver alerts to DM/group per rules; Telegram rate limit respected via queue (`deliveries` table).
-- [ ] **REQ-bot-clients** (FR-17): Greeting, Web App button, status notifications to clients.
+- [x] **REQ-bot-clients** (FR-17): Greeting, Web App button, status notifications to clients.
 
 ### AI Processing
 
@@ -97,7 +97,7 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | REQ-request-wizard | Phase 3 | Complete |
 | REQ-my-requests | Phase 3 | Complete |
 | REQ-webapp-i18n | Phase 3 | Complete |
-| REQ-bot-clients | Phase 3 | Pending |
+| REQ-bot-clients | Phase 3 | Complete |
 | REQ-nfr-performance | Phase 3 | Complete |
 | REQ-live-feed | Phase 4 | Pending |
 | REQ-purchase-requests | Phase 4 | Pending |
