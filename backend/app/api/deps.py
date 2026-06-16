@@ -6,6 +6,7 @@ Identity is extracted from the verified JWT, never from the request body (T-03-0
 
 Dependencies provided:
 - get_current_staff_user: decodes Bearer access token, loads StaffUser, rejects if inactive
+- get_current_client: validates Telegram initData HMAC, upserts clients row, returns Client
 - require_role(*roles): dependency factory enforcing role membership from the token's role claim
 - require_admin: convenience shorthand for require_role(StaffRole.admin)
 """
@@ -14,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -22,6 +23,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.security import decode_token
 from app.models.enums import StaffRole
+from app.models.requests import Client
 from app.models.staff import StaffUser
 
 # HTTP Bearer token extractor — auto_error=False so we can return 401 (not 403) on missing header
@@ -143,3 +145,70 @@ require_admin = require_role(StaffRole.admin)
 
 #: Dependency that allows analyst and admin users.
 require_analyst_or_admin = require_role(StaffRole.analyst, StaffRole.admin)
+
+
+def get_current_client(
+    x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
+    db: Session = Depends(get_db),
+) -> Client:
+    """Validate Telegram initData HMAC, upsert clients row, return Client.
+
+    Dev-spec §3.2: header X-Telegram-Init-Data, HMAC per bot token, TTL 24h.
+
+    T-03-01: HMAC verified via hmac.compare_digest (constant-time).
+    T-03-02: auth_date TTL enforced; identity read only from verified payload.
+    T-03-03: generic 401 "Authentication required" for every failure path —
+             never reveals which check failed.
+    T-03-06 equivalent: identity derived from verified initData, never request body.
+             The function signature has no request-body parameter.
+
+    Raises:
+        HTTPException 401: with detail "Authentication required" on any failure
+            (missing header, bad HMAC, expired TTL, malformed input).
+
+    Returns:
+        The authenticated Client ORM object (existing or newly created row).
+    """
+    if x_telegram_init_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    from app.services.client_service import InvalidInitData, verify_init_data  # noqa: PLC0415
+    from app.services.client_service import get_or_create_client  # noqa: PLC0415
+
+    try:
+        payload = verify_init_data(x_telegram_init_data)
+    except (InvalidInitData, ValueError):
+        # Generic 401 — never reveal which check failed (T-03-03)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    # Extract identity from verified payload ONLY (T-03-06 equivalent)
+    user_info = payload.get("user")
+    if not isinstance(user_info, dict):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    try:
+        telegram_user_id = int(user_info["id"])
+    except (KeyError, ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    language_code: str = str(user_info.get("language_code", "ru"))
+
+    client = get_or_create_client(
+        db=db,
+        telegram_user_id=telegram_user_id,
+        language=language_code,
+    )
+    db.commit()  # The dependency owns the upsert transaction
+    return client
