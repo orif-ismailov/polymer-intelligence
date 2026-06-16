@@ -73,10 +73,17 @@ def test_json_only_serialization() -> None:
     assert list(celery_app.conf.accept_content) == ["json"]
 
 
-def test_placeholder_tasks_registered() -> None:
-    """All five scheduled task names must be registered before 02-04/05/06 land."""
+def test_real_tasks_registered() -> None:
+    """All five scheduled task names must be registered by the real implementation modules.
+
+    CR-03: placeholders.py was deleted because it registered the same Celery task
+    names as the real implementations (ingest.py, ingest_cbu.py, notify.py).
+    The real tasks must now be present in the registry on their own.
+    """
     from app.tasks.celery_app import celery_app  # noqa: PLC0415
-    import app.tasks.placeholders  # noqa: F401, PLC0415 — ensure side-effect
+    import app.tasks.ingest  # noqa: F401, PLC0415 — registers uzex_fetch_* tasks
+    import app.tasks.ingest_cbu  # noqa: F401, PLC0415 — registers fetch_cbu_rates
+    import app.tasks.notify  # noqa: F401, PLC0415 — registers check_source_health
 
     required_names = {
         "uzex_fetch_offers",
