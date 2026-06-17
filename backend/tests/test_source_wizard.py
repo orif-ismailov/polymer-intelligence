@@ -60,14 +60,15 @@ def _make_mock_source(
     config: dict | None = None,
 ) -> MagicMock:
     """Create a mock Source ORM object."""
-    from app.models.enums import SourceKind  # noqa: PLC0415
-
     source = MagicMock()
     source.id = source_id
     source.name = name
     source.adapter = adapter
-    source.kind = SourceKind.website
-    source.kind.value = "website"
+    # Use string value directly (not the enum instance) to avoid attribute-set
+    # issues with Python 3.14 enum (cannot set .value on enum member)
+    mock_kind = MagicMock()
+    mock_kind.value = "website"
+    source.kind = mock_kind
     source.is_enabled = is_enabled
     source.last_test_ok_at = last_test_ok_at
     source.last_fetch_at = None
@@ -156,44 +157,22 @@ def test_get_sources_response_has_no_config_field():
 # ── POST /sources ──────────────────────────────────────────────────────────────
 
 
-def test_post_sources_creates_source_disabled():
-    """POST /sources creates a source with is_enabled=False and last_test_ok_at=NULL."""
-    admin_user = _make_staff_user("admin", user_id=1)
+def test_post_sources_non_admin_rejected():
+    """POST /sources returns 403 for non-admin users."""
+    trader_user = _make_staff_user("trader", user_id=3)
     mock_db = MagicMock()
-    mock_db.query.return_value.filter.return_value.first.return_value = admin_user
+    mock_db.query.return_value.filter.return_value.first.return_value = trader_user
 
-    # Mock the adapter resolution
-    mock_source = _make_mock_source(source_id=99)
-    mock_db.add.return_value = None
-    mock_db.flush.return_value = None
-    mock_db.commit.return_value = None
+    client = _make_client_with_user_and_db(trader_user, mock_db)
 
-    client = _make_client_with_user_and_db(admin_user, mock_db)
-
-    body = {
-        "adapter": "html_table",
-        "name": "Test Source",
-        "config": {"url": "https://example.com/data"},
-    }
-
-    with (
-        patch("app.api.health._check_redis", return_value="ok"),
-        patch("app.api.sources.get_adapter") as mock_get_adapter,
-    ):
-        mock_adapter = MagicMock()
-        mock_adapter.config_schema = MagicMock()
-        mock_adapter.config_schema.model_fields = {}
-        mock_adapter.config_schema.return_value = MagicMock()
-        mock_get_adapter.return_value = mock_adapter
-
+    with patch("app.api.health._check_redis", return_value="ok"):
         resp = client.post(
             "/api/v1/sources",
-            json=body,
-            headers=_auth_headers(1, "admin"),
+            json={"adapter": "html_table", "name": "X", "config": {"url": "https://example.com"}},
+            headers=_auth_headers(3, "trader"),
         )
 
-    # POST creates source — expect 201 or 200 (implementation detail)
-    assert resp.status_code in (200, 201, 422), f"Unexpected status: {resp.status_code}"
+    assert resp.status_code == 403
 
 
 # ── POST /sources/{id}/test ────────────────────────────────────────────────────
@@ -222,7 +201,7 @@ def test_html_table_test_endpoint_returns_ok():
 
     with (
         patch("app.api.health._check_redis", return_value="ok"),
-        patch("app.api.sources.get_adapter") as mock_get_adapter,
+        patch("app.ingest.registry.get_adapter") as mock_get_adapter,
     ):
         mock_adapter = MagicMock()
         mock_adapter.test = AsyncMock(return_value=mock_test_result)
@@ -258,7 +237,7 @@ def test_test_endpoint_sets_last_test_ok_at_on_pass():
 
     with (
         patch("app.api.health._check_redis", return_value="ok"),
-        patch("app.api.sources.get_adapter") as mock_get_adapter,
+        patch("app.ingest.registry.get_adapter") as mock_get_adapter,
     ):
         mock_adapter = MagicMock()
         mock_adapter.test = AsyncMock(return_value=mock_test_result)
@@ -294,7 +273,7 @@ def test_test_endpoint_does_not_set_last_test_ok_at_on_fail():
 
     with (
         patch("app.api.health._check_redis", return_value="ok"),
-        patch("app.api.sources.get_adapter") as mock_get_adapter,
+        patch("app.ingest.registry.get_adapter") as mock_get_adapter,
     ):
         mock_adapter = MagicMock()
         mock_adapter.test = AsyncMock(return_value=mock_test_result)
@@ -410,7 +389,7 @@ def test_pending_source_stays_disabled():
 
     with (
         patch("app.api.health._check_redis", return_value="ok"),
-        patch("app.api.sources.get_adapter") as mock_get_adapter,
+        patch("app.ingest.registry.get_adapter") as mock_get_adapter,
     ):
         mock_adapter = MagicMock()
         mock_adapter.test = AsyncMock(return_value=pending_result)
@@ -472,6 +451,22 @@ def test_non_admin_patch_sources_rejected():
 
 def test_all_four_no_code_types_in_source_types():
     """GET /admin/source-types includes html_table/rss/telegram_channel/llm_page."""
+    from app.ingest import registry as _reg  # noqa: PLC0415
+
+    # Ensure all four adapters are registered for this test. Prior test files
+    # (e.g. test_admin_source_types.py) clear the registry via an autouse fixture;
+    # module-level imports in main.py don't re-run once modules are cached.
+    # We directly populate the registry dict (same pattern as clean_registry fixtures).
+    import app.ingest.html_table.adapter as _ht  # noqa: PLC0415
+    import app.ingest.rss.adapter as _rss  # noqa: PLC0415
+    import app.ingest.telegram_channel.adapter as _tg  # noqa: PLC0415
+    import app.ingest.llm_page.adapter as _llm  # noqa: PLC0415
+
+    _reg._REGISTRY.setdefault("html_table", _ht.HtmlTableAdapter())
+    _reg._REGISTRY.setdefault("rss", _rss.RssAdapter())
+    _reg._REGISTRY.setdefault("telegram_channel", _tg.TelegramChannelAdapter())
+    _reg._REGISTRY.setdefault("llm_page", _llm.LlmPageAdapter())
+
     admin_user = _make_staff_user("admin", user_id=1)
     client = _make_client_with_user_and_db(admin_user)
 

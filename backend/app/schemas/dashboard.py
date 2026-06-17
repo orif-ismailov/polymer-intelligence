@@ -4,10 +4,13 @@ Dashboard schemas — Pydantic v2 models for the live market feed and requests A
 Phase 4, Plan 01: Feed endpoint response models (FeedItem, FeedPage).
 Phase 4, Plan 04: Purchase Requests response models (RequestListOut, RequestDetailOut,
                    RequestPatch, StaffUserItem).
+Phase 4, Plan 06: Source constructor response models (SourceHealthItem, SourceCreate,
+                   SourcePatch, SourceTestOut).
 
 FeedItem maps to the v_live_feed columns (normalized signals + requests union).
 FeedPage wraps a list of FeedItem with keyset pagination cursors.
 RequestListOut / RequestDetailOut are the dashboard staff views (not client-facing).
+SourceHealthItem / SourceCreate / SourcePatch / SourceTestOut are the wizard API schemas.
 """
 
 from __future__ import annotations
@@ -167,3 +170,63 @@ class StaffUserItem(BaseModel):
     role: str                           # StaffRole value as string
     is_active: bool
     created_at: datetime.datetime
+
+
+# ── Source Constructor schemas (Phase 4, Plan 06) ─────────────────────────────
+
+
+class SourceHealthItem(BaseModel):
+    """Single source in GET /sources health list.
+
+    Security (T-04-22): never exposes the config column or any credentials.
+    Returns only identity + health fields used by the dashboard Sources screen.
+    Extends the admin_sources.SourceHealthItem with last_test_ok_at (wizard enable-gate).
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    adapter: str
+    kind: str
+    is_enabled: bool
+    last_fetch_at: datetime.datetime | None
+    last_success_at: datetime.datetime | None
+    consecutive_failures: int
+    last_test_ok_at: datetime.datetime | None
+
+
+class SourceCreate(BaseModel):
+    """Body for POST /sources — create a new source via the wizard.
+
+    adapter must be a no-code type (html_table, rss, telegram_channel, llm_page).
+    config is validated against the adapter's config_schema in the router.
+    """
+
+    adapter: str
+    name: str
+    config: dict[str, Any]
+
+
+class SourcePatch(BaseModel):
+    """Body for PATCH /sources/{id}.
+
+    All fields are optional. is_enabled=True requires last_test_ok_at IS NOT NULL
+    server-side (D-04 invariant / T-04-20).
+    """
+
+    is_enabled: bool | None = None
+    name: str | None = None
+
+
+class SourceTestOut(BaseModel):
+    """Response for POST /sources/{id}/test.
+
+    ok: whether the adapter test passed.
+    sample_rows: up to 10 normalized signal-draft rows (D-06).
+    error: human-readable error message when ok=False.
+    """
+
+    ok: bool
+    sample_rows: list[dict[str, Any]]
+    error: str | None

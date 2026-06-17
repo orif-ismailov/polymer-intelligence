@@ -27,6 +27,7 @@ from app.api.dashboard_requests import router as dashboard_requests_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
 from app.api.health import router as health_router
+from app.api.sources import router as sources_router
 from app.api.telegram_webhook import router as telegram_webhook_router
 from app.api.webapp.requests import router as webapp_requests_router
 from app.api.webapp.me import router as webapp_me_router
@@ -34,6 +35,16 @@ from app.api.webapp.files import router as webapp_files_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.models.staff import StaffUser
+
+# ── No-code adapter registration (Phase 4, Plan 06) ──────────────────────────
+# These imports register the four no-code adapters into the global adapter registry
+# at startup so GET /admin/source-types exposes their config_schema and POST
+# /sources/{id}/test can resolve them by type_name.
+# Pattern: mirroring how uzex adapters are registered (app.ingest.uzex package).
+import app.ingest.html_table       # noqa: E402, F401 — registers html_table adapter
+import app.ingest.rss              # noqa: E402, F401 — registers rss adapter
+import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
+import app.ingest.llm_page         # noqa: E402, F401 — registers llm_page adapter
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +137,8 @@ def create_app() -> FastAPI:
     application.include_router(feed_router, prefix="/api/v1")
     application.include_router(dashboard_requests_router, prefix="/api/v1")
     application.include_router(admin_users_router, prefix="/api/v1")
+    # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─
+    application.include_router(sources_router, prefix="/api/v1")
     # ── webapp routers (Telegram Web App client surface) ─────────────────────
     application.include_router(webapp_requests_router, prefix="/api/v1")
     application.include_router(webapp_me_router, prefix="/api/v1")
