@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 03-04 web-app frontend core complete
-last_updated: "2026-06-16T13:14:36.250Z"
+stopped_at: Phase 03-05 my-requests + detail UI complete
+last_updated: "2026-06-17T05:23:55.991Z"
 last_activity: 2026-06-16 -- Phase 03 execution started
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 03 (client-circuit) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-06-16 -- Phase 03 execution started
 
@@ -70,6 +70,7 @@ Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 c
 | Phase 03-client-circuit P01 | 10min | 3 tasks | 10 files |
 | Phase 03 P02 | 14min | 2 tasks | 9 files |
 | Phase 03-client-circuit P04 | 90min | 4 tasks | 21 files |
+| Phase 03 P05 | 60min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -132,6 +133,10 @@ Most relevant to Phase 1:
 - [Phase ?]: DEC-03-04-submit-deferred: Task 3 submit→REQ-number→confirmation path deferred to 03-06 E2E plan by user agreement (frontend-only scope verified)
 - [Phase ?]: DEC-03-04-sequential-upload: Sequential file upload (for-await, not Promise.all) for 3G connection budget per D-01
 - [Phase ?]: DEC-03-04-static-products: Product list hardcoded static constant (PP/HDPE/LDPE/LLDPE/PVC/PET/PS/ABS) — no GET /products endpoint in Phase 3
+- [Phase ?]: DEC-03-05-optimistic-language: Settings switches UI immediately on toggle; PATCH failure shows ErrorBanner without reverting language
+- [Phase ?]: DEC-03-05-backend-verify-deferred: backend-backed list/detail/timeline verification deferred to 03-06 E2E acceptance plan by user agreement at Task 3 checkpoint
+- [Phase ?]: DEC-03-05-vite8-manualchunks: manualChunks uses function form for Vite 8/rolldown; vendor+i18n chunks split; largest gzip 42.8 KB (REQ-nfr-performance PASS)
+- [Phase ?]: DEC-03-05-notifications-empty: Notifications C-08 shows EmptyState only in this phase — notification persistence is bot-side; screen exists as deep-link target per UI-SPEC C-08
 
 ### Pending Todos
 
@@ -163,6 +168,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-16T13:14:36.246Z
-Stopped at: Phase 03-04 web-app frontend core complete
+Last session: 2026-06-17T05:23:55.988Z
+Stopped at: Phase 03-05 my-requests + detail UI complete
 Resume file: None
