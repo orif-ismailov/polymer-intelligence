@@ -1,10 +1,11 @@
 ---
 phase: 4
 slug: dashboard-source-constructor
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-17
+reviewed_at: 2026-06-17
 ---
 
 # Phase 4 — UI Design Contract
