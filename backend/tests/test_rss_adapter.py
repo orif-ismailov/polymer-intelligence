@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 # RSS fixture with 3 items
-_RSS_FIXTURE = """<?xml version="1.0" encoding="UTF-8"?>
+_RSS_FIXTURE = b"""<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
     <title>Polymer Market Feed</title>
@@ -48,32 +48,34 @@ _RSS_FIXTURE = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 # RSS fixture with 15 items (for cap test)
-_RSS_15_ITEMS = """<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title>Large Feed</title>
-    <link>https://example.com</link>
-    <description>Large test feed</description>
-""" + "\n".join(
-    f"""    <item>
-      <title>Item {i} PP Raffia</title>
-      <link>https://example.com/{i}</link>
-      <description>Item number {i}</description>
-      <pubDate>Tue, 17 Jun 2026 10:{i:02d}:00 +0000</pubDate>
-    </item>"""
-    for i in range(1, 16)
-) + """
-  </channel>
-</rss>
-"""
+_RSS_15_ITEMS = (
+    b'<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel>'
+    b"<title>Large Feed</title><link>https://example.com</link><description>test</description>"
+    + b"".join(
+        f"<item><title>Item {i} PP Raffia</title><link>https://example.com/{i}</link>"
+        f"<description>Item number {i}</description>"
+        f"<pubDate>Tue, 17 Jun 2026 10:{i:02d}:00 +0000</pubDate></item>".encode()
+        for i in range(1, 16)
+    )
+    + b"</channel></rss>"
+)
 
 
 @pytest.fixture(autouse=True)
 def clean_registry():
-    """Clear registry before and after each test."""
+    """Ensure the rss adapter is registered for each test.
+
+    Clears registry, then uses the internal registry dict directly to add
+    the adapter without going through register_adapter() (which raises on
+    duplicate). This pattern avoids issues with module-level code only
+    running once per Python process (module import cache).
+    """
     from app.ingest.registry import _clear_registry  # noqa: PLC0415
+    from app.ingest import registry as _reg  # noqa: PLC0415
 
     _clear_registry()
+    import app.ingest.rss.adapter as _rss_mod  # noqa: PLC0415
+    _reg._REGISTRY["rss"] = _rss_mod.RssAdapter()
     yield
     _clear_registry()
 
@@ -83,30 +85,20 @@ def clean_registry():
 
 def test_rss_ssrf_reject_private_ip():
     """RssAdapter.test() returns ok=False for private IP URL (T-04-19)."""
-    import importlib  # noqa: PLC0415
-    import app.ingest.rss.adapter as rss_mod  # noqa: PLC0415
-    importlib.reload(rss_mod)
     from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
 
     adapter = RssAdapter()
-    result = asyncio.get_event_loop().run_until_complete(
-        adapter.test({"url": "http://192.168.1.1/feed"})
-    )
+    result = asyncio.run(adapter.test({"url": "http://192.168.1.1/feed"}))
     assert result.ok is False
     assert result.error is not None
 
 
 def test_rss_ssrf_reject_localhost():
     """RssAdapter.test() returns ok=False for localhost URL (T-04-19)."""
-    import importlib  # noqa: PLC0415
-    import app.ingest.rss.adapter as rss_mod  # noqa: PLC0415
-    importlib.reload(rss_mod)
     from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
 
     adapter = RssAdapter()
-    result = asyncio.get_event_loop().run_until_complete(
-        adapter.test({"url": "http://127.0.0.1/feed.xml"})
-    )
+    result = asyncio.run(adapter.test({"url": "http://127.0.0.1/feed.xml"}))
     assert result.ok is False
     assert result.error is not None
 
@@ -116,25 +108,26 @@ def test_rss_ssrf_reject_localhost():
 
 def test_rss_test_returns_normalized_rows():
     """RssAdapter.test() returns <=10 normalized signal-draft rows on happy path."""
-    import importlib  # noqa: PLC0415
-    import app.ingest.rss.adapter as rss_mod  # noqa: PLC0415
-    importlib.reload(rss_mod)
     from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
     from app.ingest.base import TestResult  # noqa: PLC0415
 
     adapter = RssAdapter()
 
     mock_response = MagicMock()
-    mock_response.text = _RSS_FIXTURE
-    mock_response.content = _RSS_FIXTURE.encode()
+    mock_response.text = _RSS_FIXTURE.decode()
+    mock_response.content = _RSS_FIXTURE
 
-    with (
-        patch("app.ingest.rss.adapter.is_safe_url", return_value=True),
-        patch("app.ingest.rss.adapter.fetch_url", new=AsyncMock(return_value=mock_response)),
-    ):
-        result = asyncio.get_event_loop().run_until_complete(
-            adapter.test({"url": "https://example.com/feed.rss"})
-        )
+    async def run():
+        with (
+            patch("app.ingest.rss.adapter.is_safe_url", return_value=True),
+            patch(
+                "app.ingest.rss.adapter.fetch_url",
+                new=AsyncMock(return_value=mock_response),
+            ),
+        ):
+            return await adapter.test({"url": "https://example.com/feed.rss"})
+
+    result = asyncio.run(run())
 
     assert isinstance(result, TestResult)
     assert result.ok is True
@@ -145,24 +138,25 @@ def test_rss_test_returns_normalized_rows():
 
 def test_rss_10_row_cap():
     """RssAdapter.test() returns at most 10 rows when feed has >10 items."""
-    import importlib  # noqa: PLC0415
-    import app.ingest.rss.adapter as rss_mod  # noqa: PLC0415
-    importlib.reload(rss_mod)
     from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
 
     adapter = RssAdapter()
 
     mock_response = MagicMock()
-    mock_response.text = _RSS_15_ITEMS
-    mock_response.content = _RSS_15_ITEMS.encode()
+    mock_response.text = _RSS_15_ITEMS.decode()
+    mock_response.content = _RSS_15_ITEMS
 
-    with (
-        patch("app.ingest.rss.adapter.is_safe_url", return_value=True),
-        patch("app.ingest.rss.adapter.fetch_url", new=AsyncMock(return_value=mock_response)),
-    ):
-        result = asyncio.get_event_loop().run_until_complete(
-            adapter.test({"url": "https://example.com/feed.rss"})
-        )
+    async def run():
+        with (
+            patch("app.ingest.rss.adapter.is_safe_url", return_value=True),
+            patch(
+                "app.ingest.rss.adapter.fetch_url",
+                new=AsyncMock(return_value=mock_response),
+            ),
+        ):
+            return await adapter.test({"url": "https://example.com/feed.rss"})
+
+    result = asyncio.run(run())
 
     assert result.ok is True
     assert len(result.sample_rows) <= 10
@@ -172,13 +166,7 @@ def test_rss_10_row_cap():
 
 
 def test_rss_adapter_registers_on_import():
-    """Importing app.ingest.rss registers rss adapter in the registry."""
-    import importlib  # noqa: PLC0415
-    import app.ingest.rss  # noqa: PLC0415
-    importlib.reload(app.ingest.rss)
-    import app.ingest.rss.adapter  # noqa: PLC0415
-    importlib.reload(app.ingest.rss.adapter)
-
+    """rss adapter is registered after importing the package."""
     from app.ingest.registry import get_adapter  # noqa: PLC0415
 
     adapter = get_adapter("rss")
@@ -188,11 +176,17 @@ def test_rss_adapter_registers_on_import():
 
 def test_rss_has_config_schema():
     """RssAdapter has a config_schema with url field."""
-    import importlib  # noqa: PLC0415
-    import app.ingest.rss.adapter as rss_mod  # noqa: PLC0415
-    importlib.reload(rss_mod)
     from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
 
     adapter = RssAdapter()
     schema = adapter.config_schema.model_json_schema()
-    assert "url" in schema.get("properties", {}) or "url" in str(schema)
+    props = schema.get("properties", {})
+    assert "url" in props
+
+
+def test_rss_type_name():
+    """RssAdapter.type_name is 'rss'."""
+    from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
+
+    adapter = RssAdapter()
+    assert adapter.type_name == "rss"
