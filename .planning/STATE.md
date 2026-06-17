@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-06-17T12:05:01Z"
-last_activity: 2026-06-17 -- Phase 04 Plan 03 complete (live market feed frontend)
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-06-17T12:18:36.862Z"
+last_activity: 2026-06-17
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 32
-  completed_plans: 24
+  completed_plans: 27
   percent: 50
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 04 (dashboard-source-constructor) — EXECUTING
-Plan: 4 of 9
+Plan: 5 of 9
 Status: Ready to execute
-Last activity: 2026-06-17 -- Phase 04 Plan 03 complete (live market feed frontend)
+Last activity: 2026-06-17 -- Phase 04 Plan 04 complete (purchase requests backend)
 
-Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 complete)
+Progress: [████████░░] 84%
 
 ## Performance Metrics
 
@@ -76,6 +76,7 @@ Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 c
 | Phase 04 P01 | 15min | 2 tasks | 6 files |
 | Phase 04 P02 | 8min | 2 tasks | 27 files created, 4 modified |
 | Phase 04 P03 | 5min | 2 tasks | 10 files created, 1 modified |
+| Phase 04 P04 | 20min | 2 tasks | 5 files created, 3 modified |
 
 ## Accumulated Context
 
@@ -149,6 +150,9 @@ Most relevant to Phase 1:
 - [Phase 04-02]: DEC-shadcn-v4-tw3-compat: shadcn@4.11.0 generates Tailwind v4 CSS syntax (--spacing(), OKLCH, tw-animate-css imports); project uses Tailwind v3 — globals.css reverted to hsl() vars, card.tsx uses direct spacing classes, calendar.tsx uses fixed rem value
 - [Phase 04-02]: DEC-jwt-memory-only: JWT access token stored in module-level variable via setToken/getToken in lib/api.ts — never localStorage, never DOM (T-04-06)
 - [Phase 04-02]: DEC-sse-ref-useeffect: useSSE onMessage ref update moved to useEffect per react-hooks/refs — avoids render-time ref mutation warning
+- [Phase 04-04]: DEC-04-04-contact-409: contact_buyer endpoint returns HTTP 409 when telegram_user_id IS NULL — semantically correct (state conflict: buyer exists but cannot be reached via Telegram) (D-11/Pitfall 6)
+- [Phase 04-04]: DEC-04-04-status-as-string: RequestListOut/RequestDetailOut serialize status/urgency/incoterms as .value strings in router to avoid Pydantic from_attributes enum issues in mock-DB tests
+- [Phase 04-04]: DEC-04-04-price-analysis-market-uz: compute_price_analysis hardcodes market='UZ' per RESEARCH Pattern 7; currency param is informational, price_points stores its own currency
 
 ### Pending Todos
 
@@ -181,6 +185,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-17T12:05:01Z
+Last session: 2026-06-17T12:18:36.855Z
 Stopped at: Completed 04-03-PLAN.md
 Resume file: None
