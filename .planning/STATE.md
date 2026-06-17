@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: executing
-stopped_at: Phase 03-05 my-requests + detail UI complete
-last_updated: "2026-06-17T05:23:55.991Z"
+status: verifying
+stopped_at: Phase 03-06 E2E acceptance complete — SLA gate green, live drill deferred to deploy time
+last_updated: "2026-06-17T05:36:56.565Z"
 last_activity: 2026-06-16 -- Phase 03 execution started
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 23
-  completed_plans: 22
-  percent: 33
+  completed_plans: 23
+  percent: 50
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 Phase: 03 (client-circuit) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-16 -- Phase 03 execution started
 
 Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 complete)
@@ -71,6 +71,7 @@ Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 c
 | Phase 03 P02 | 14min | 2 tasks | 9 files |
 | Phase 03-client-circuit P04 | 90min | 4 tasks | 21 files |
 | Phase 03 P05 | 60min | 3 tasks | 11 files |
+| Phase 03 P06 | 25min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,8 @@ Most relevant to Phase 1:
 - [Phase ?]: DEC-03-05-backend-verify-deferred: backend-backed list/detail/timeline verification deferred to 03-06 E2E acceptance plan by user agreement at Task 3 checkpoint
 - [Phase ?]: DEC-03-05-vite8-manualchunks: manualChunks uses function form for Vite 8/rolldown; vendor+i18n chunks split; largest gzip 42.8 KB (REQ-nfr-performance PASS)
 - [Phase ?]: DEC-03-05-notifications-empty: Notifications C-08 shows EmptyState only in this phase — notification persistence is bot-side; screen exists as deep-link target per UI-SPEC C-08
+- [Phase ?]: DEC-03-06-sla-gate: automated proxy tests (4/4 PASS) serve as CI gate; live wall-clock drill deferred to deploy time per user sign-off 2026-06-17
+- [Phase ?]: DEC-03-06-rolled-deferral: live UI verifications from 03-04 (wizard submit path) and 03-05 (list/detail/timeline/refetch) roll into the same deploy-time SC#1/SC#3 drill
 
 ### Pending Todos
 
@@ -160,6 +163,7 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 |----------|------|--------|-------------|
 | Walking skeleton | SC#1 worker+beat Celery startup — needs `app.tasks.celery_app` (built in Phase 2; beat schedule drives UZEX fetch there) | Deferred to Phase 2 | 2026-06-15 |
 | UAT / Phase 2 SC#5 | Live docker-compose drill: worker/beat uptime, live UZEX fetch→signals, re-fetch dedupe, live FX import, 3-strike source_failure alert with isolation (SC#5 / TZ §6.1.4), restore-doc dry-run — user-approved deferral to deploy time (02-07 Task 3 checkpoint) | Pending — deploy-time UAT | 2026-06-16 |
+| UAT / Phase 3 SC#1–SC#5 | Live client-circuit drill: SC#1 wizard submit→REQ number queryable ≤10 s, SC#2 files→MinIO, SC#3 status push ≤30 s, SC#4 RU/UZ toggle + theme + first paint, SC#5 /start greeting + notify queue — user-approved deferral to deploy time (03-06 Task 3 checkpoint, 2026-06-17). Also includes rolled-in 03-04 wizard submit path and 03-05 list/detail/timeline verifications. Prerequisites: real BOT_TOKEN, WEBHOOK_SECRET, public HTTPS PUBLIC_WEBAPP_URL. CI gate: test_request_sla.py 4/4 PASS. | Pending — deploy-time UAT | 2026-06-17 |
 | International loop | REQ-international-feed (FR-3) | Future Milestone | 2026-06-13 |
 | Web App content | REQ-webapp-news (FR-8) | Future Milestone | 2026-06-13 |
 | Reports | REQ-reports (FR-18) | Future Milestone | 2026-06-13 |
@@ -168,6 +172,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-17T05:23:55.988Z
-Stopped at: Phase 03-05 my-requests + detail UI complete
+Last session: 2026-06-17T05:36:56.562Z
+Stopped at: Phase 03-06 E2E acceptance complete — SLA gate green, live drill deferred to deploy time
 Resume file: None
