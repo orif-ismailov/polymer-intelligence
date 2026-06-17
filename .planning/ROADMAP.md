@@ -154,7 +154,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 1** *(foundation — parallel, no file overlap)*
 
-- [ ] 04-01-PLAN.md — Backend feed foundation: `GET /feed` keyset `(event_at, id)` pagination over `v_live_feed` + SSE `GET /feed/stream` (Redis pub/sub `feed:new`, unbuffered) + dashboard schemas + router registered (REQ-live-feed)
+- [x] 04-01-PLAN.md — Backend feed foundation: `GET /feed` keyset `(event_at, id)` pagination over `v_live_feed` + SSE `GET /feed/stream` (Redis pub/sub `feed:new`, unbuffered) + dashboard schemas + router registered (REQ-live-feed)
 - [ ] 04-02-PLAN.md — Frontend foundation (D-03): shadcn/ui init + token reconciliation (no token overwrite), auth-guarded app-router shell + 240px sidebar + AppShell, TanStack Query client, `useSSE` (backoff + 30 s polling fallback), typed `api.ts` Bearer client, Asia/Tashkent `tz.ts`, login submit (REQ-live-feed)
 
 **Wave 2** *(parallel — feed screen + requests backend, no file overlap)*
@@ -222,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
-| 4. Dashboard + Source Constructor | 0/9 | Planned | - |
+| 4. Dashboard + Source Constructor | 1/9 | In Progress|  |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 

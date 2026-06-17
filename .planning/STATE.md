@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 UI-SPEC approved
-last_updated: "2026-06-17T11:05:36.289Z"
-last_activity: 2026-06-17 -- Phase 04 planning complete
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-06-17T11:43:53.151Z"
+last_activity: 2026-06-17 -- Phase 04 execution started
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 23
-  completed_plans: 23
+  total_plans: 32
+  completed_plans: 24
   percent: 50
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Every relevant market event lands accurately and quickly in a single normalized stream the team can see, filter, and act on — with no single source able to take the others down.
-**Current focus:** Phase 03 — client-circuit
+**Current focus:** Phase 04 — dashboard-source-constructor
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (dashboard-source-constructor) — EXECUTING
+Plan: 2 of 9
 Status: Ready to execute
-Last activity: 2026-06-17 -- Phase 04 planning complete
+Last activity: 2026-06-17 -- Phase 04 execution started
 
 Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 complete)
 
@@ -73,6 +73,7 @@ Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 c
 | Phase 03-client-circuit P04 | 90min | 4 tasks | 21 files |
 | Phase 03 P05 | 60min | 3 tasks | 11 files |
 | Phase 03 P06 | 25min | 3 tasks | 3 files |
+| Phase 04 P01 | 15min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -141,6 +142,8 @@ Most relevant to Phase 1:
 - [Phase ?]: DEC-03-05-notifications-empty: Notifications C-08 shows EmptyState only in this phase — notification persistence is bot-side; screen exists as deep-link target per UI-SPEC C-08
 - [Phase ?]: DEC-03-06-sla-gate: automated proxy tests (4/4 PASS) serve as CI gate; live wall-clock drill deferred to deploy time per user sign-off 2026-06-17
 - [Phase ?]: DEC-03-06-rolled-deferral: live UI verifications from 03-04 (wizard submit path) and 03-05 (list/detail/timeline/refetch) roll into the same deploy-time SC#1/SC#3 drill
+- [Phase ?]: DEC-04-01-route-no-trailing-slash: feed.py route path='' avoids FastAPI 307 redirect on /api/v1/feed
+- [Phase ?]: DEC-04-01-lazy-redis-import: redis.asyncio imported inside function bodies in feed_bus.py — module import stays socket-free for pytest (mirrors request_service.py convention)
 
 ### Pending Todos
 
@@ -173,6 +176,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-17T09:49:18.922Z
-Stopped at: Phase 4 UI-SPEC approved
-Resume file: .planning/phases/04-dashboard-source-constructor/04-UI-SPEC.md
+Last session: 2026-06-17T11:43:53.147Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

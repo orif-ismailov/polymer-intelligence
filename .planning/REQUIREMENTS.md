@@ -21,7 +21,7 @@
 
 ### Dashboard (Internal)
 
-- [ ] **REQ-live-feed** (FR-10): Unified feed (`v_live_feed`) with filters (period, product, signal type, source, urgency); updates without reload (SSE or ≤30 s polling). *Acceptance (TZ §5 NFR): feed/table API ≤500 ms at up to 1M signals.*
+- [x] **REQ-live-feed** (FR-10): Unified feed (`v_live_feed`) with filters (period, product, signal type, source, urgency); updates without reload (SSE or ≤30 s polling). *Acceptance (TZ §5 NFR): feed/table API ≤500 ms at up to 1M signals.*
 - [ ] **REQ-purchase-requests** (FR-11): Requests table + detail card (details, files, AI block — score, target-vs-avg price from price_points) + actions (status change, assign owner, notes); all actions → `audit_log`. Flagship Phase-1 master-detail screen.
 - [ ] **REQ-price-trends** (FR-12): Price chart per product/market from `price_points` (external-index overlay deferred to Phase 2).
 - [x] **REQ-sources-health** (FR-13): Source state — last successful fetch, consecutive failure count, enable/disable.
@@ -99,7 +99,7 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | REQ-webapp-i18n | Phase 3 | Complete |
 | REQ-bot-clients | Phase 3 | Complete |
 | REQ-nfr-performance | Phase 3 | Complete |
-| REQ-live-feed | Phase 4 | Pending |
+| REQ-live-feed | Phase 4 | Complete |
 | REQ-purchase-requests | Phase 4 | Pending |
 | REQ-price-trends | Phase 4 | Pending |
 | REQ-alerts | Phase 4 | Pending |
