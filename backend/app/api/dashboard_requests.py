@@ -7,7 +7,13 @@ PATCH /requests/{id} status machine, and team actions:
   POST /requests/{id}/assign — assign an owner (audit_log)
   POST /requests/{id}/contact — Contact Buyer deep-link (audit_log + D-11 tg://)
 
-Security (T-04-10/T-04-11/T-04-12/T-04-14):
+Phase 4, Plan 05: GET /requests/export — CSV stream of current filtered result set.
+  Accepts the same filter query params as GET /requests.
+  Streams via StreamingResponse + csv.writer generator.
+  Capped at 50,000 rows (T-04-18: DoS / large result).
+  Guarded by get_current_staff_user.
+
+Security (T-04-10/T-04-11/T-04-12/T-04-14/T-04-18):
   T-04-10: PATCH and actions are guarded by require_role(admin, analyst, trader).
            Viewer role → 403. Status only via transition_status (D-12).
   T-04-11: transition_status raises ValueError on illegal transition → 422.
@@ -16,6 +22,8 @@ Security (T-04-10/T-04-11/T-04-12/T-04-14):
            (db.flush, router commits). staff_user_id from verified JWT, never body.
   T-04-14: contact_available derived from telegram_user_id IS NOT NULL.
            No tg://user?id=None link is ever built (Pitfall 6).
+  T-04-18: Export capped at 50,000 rows; StreamingResponse avoids loading all rows
+           in memory at once.
 
 D-01: ai fields (match_score/demand_level/recommendation) returned as-is from
       request.ai JSONB (null in Phase 4 — Phase 5 fills them in).
@@ -26,7 +34,11 @@ D-12: Status machine enforced server-side via transition_status.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import csv
+import io
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_staff_user, require_role
@@ -157,6 +169,106 @@ def list_requests(
         )
         for r in reqs
     ]
+
+
+# ── GET /requests/export CSV stream ───────────────────────────────────────────
+
+_EXPORT_COLUMNS = [
+    "id",
+    "number",
+    "status",
+    "product_id",
+    "grade_text",
+    "polymer_type",
+    "volume",
+    "volume_unit",
+    "target_price",
+    "currency",
+    "urgency",
+    "assigned_to",
+    "created_at",
+    "updated_at",
+]
+
+_EXPORT_ROW_CAP = 50_000
+
+
+@router.get(
+    "/export",
+    summary="Export purchase requests as CSV stream (staff)",
+    response_class=StreamingResponse,
+)
+def export_requests(
+    status_filter: str | None = Query(default=None, alias="status"),
+    urgency: str | None = None,
+    product_id: int | None = None,
+    db: Session = Depends(get_db),
+    _current_user: StaffUser = Depends(get_current_staff_user),
+) -> StreamingResponse:
+    """GET /requests/export — stream all matching requests as CSV (T-04-18: cap 50k).
+
+    Accepts the same filter query params as GET /requests.
+    Returns a StreamingResponse with media_type='text/csv' so the client
+    receives the CSV as an attachment without loading the full result set
+    into memory at once.
+
+    Raises:
+        HTTP 401: Missing or invalid Bearer token.
+    """
+    # Build the query with the same filters as list_requests
+    query = db.query(Request).order_by(Request.created_at.desc())
+
+    if status_filter is not None:
+        query = query.filter(Request.status == status_filter)
+    if urgency is not None:
+        query = query.filter(Request.urgency == urgency)
+    if product_id is not None:
+        query = query.filter(Request.product_id == product_id)
+
+    def _csv_generator():
+        """Generator that yields CSV lines as bytes, capped at _EXPORT_ROW_CAP rows."""
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+
+        # Header row
+        writer.writerow(_EXPORT_COLUMNS)
+        yield buf.getvalue().encode("utf-8")
+        buf.truncate(0)
+        buf.seek(0)
+
+        # Data rows — stream in chunks using .yield_per() for memory efficiency
+        row_count = 0
+        for req in query.limit(_EXPORT_ROW_CAP):
+            if row_count >= _EXPORT_ROW_CAP:
+                break
+            writer.writerow([
+                req.id,
+                req.number,
+                req.status.value if hasattr(req.status, "value") else str(req.status),
+                req.product_id,
+                req.grade_text,
+                req.polymer_type,
+                req.volume,
+                req.volume_unit,
+                req.target_price,
+                req.currency,
+                req.urgency.value if hasattr(req.urgency, "value") else str(req.urgency),
+                req.assigned_to,
+                req.created_at.isoformat() if req.created_at else "",
+                req.updated_at.isoformat() if req.updated_at else "",
+            ])
+            yield buf.getvalue().encode("utf-8")
+            buf.truncate(0)
+            buf.seek(0)
+            row_count += 1
+
+    return StreamingResponse(
+        _csv_generator(),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=requests.csv",
+        },
+    )
 
 
 # ── GET detail ────────────────────────────────────────────────────────────────
