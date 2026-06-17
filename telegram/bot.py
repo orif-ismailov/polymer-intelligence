@@ -114,7 +114,9 @@ async def setup_webhook() -> None:
         f"{settings.PUBLIC_WEBAPP_URL}/api/v1/telegram/webhook/{settings.WEBHOOK_SECRET}"
     )
 
-    logger.info("setup_webhook.start", extra={"webhook_url": webhook_url})
+    # Log only the public base URL — never log the secret token (CR-03).
+    safe_url = f"{settings.PUBLIC_WEBAPP_URL}/api/v1/telegram/webhook/***"
+    logger.info("setup_webhook.start", extra={"webhook_url": safe_url})
 
     await bot.set_webhook(
         url=webhook_url,
