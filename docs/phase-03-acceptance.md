@@ -328,6 +328,43 @@ Use the printed string as the `X-Telegram-Init-Data` header value.
 
 ---
 
+## Sign-off: 03-06 Checkpoint (2026-06-17)
+
+**Decision:** APPROVED — deploy-time deferral of live SC#1–SC#5 drill.
+
+**Signed off by:** Product Owner (user) on 2026-06-17.
+
+**Rationale:** A real `BOT_TOKEN` and public HTTPS `PUBLIC_WEBAPP_URL` are not provisioned in
+the current dev environment. The automated SLA proxy tests in `backend/tests/test_request_sla.py`
+(4/4 PASS, see below) serve as the CI gate. This mirrors the Phase-2 (02-07) precedent where
+the live docker-compose drill was deferred to deploy time with automated tests covering CI.
+
+**Also deferred here:** The live UI verifications from 03-04 (wizard submit → REQ-number →
+confirmation path) and 03-05 (live my-requests list, detail status-history timeline,
+foreground-refetch on visibilitychange) are included in the deploy-time SC#1/SC#3 drill.
+Both were user-approved at their respective Task 3 checkpoints.
+
+**Prerequisites at deploy time:**
+
+| Prerequisite | Notes |
+|---|---|
+| Real `BOT_TOKEN` from @BotFather | Required for webhook registration + Telegram initData verification |
+| `WEBHOOK_SECRET` (random 32-char string) | Required for secure webhook validation |
+| Public HTTPS `PUBLIC_WEBAPP_URL` | e.g. `https://<ngrok-subdomain>.ngrok.io` — ngrok or any tunnel acceptable |
+| Dev stack on alternate ports | Use `--env-file` override if the standard ports conflict with an existing `deploy-*` stack |
+| `docker compose -f deploy/docker-compose.dev.yml up -d` | Full compose stack (api, worker, beat, minio, postgres, redis, nginx) healthy before drill |
+
+**Automated CI gate — `backend/tests/test_request_sla.py` (4/4 PASS):**
+
+| Test | Asserts | Result |
+|---|---|---|
+| `test_request_readback_within_10s` | POST→GET elapsed < 10.0 s; created REQ number appears in list | PASS |
+| `test_status_change_enqueues_notify_promptly` | `apply_async(queue="notify")` called with no `countdown`/`eta` | PASS |
+| `test_notify_task_no_long_sleep` | `notify.py` source contains no `time.sleep()` with constant > 1 s | PASS |
+| Full backend suite | `python -m pytest -q` — 384 passed, 65 skipped, 0 failures | PASS |
+
+---
+
 ## Live Results Log
 
 *(Fill in during the deploy-time drill)*
