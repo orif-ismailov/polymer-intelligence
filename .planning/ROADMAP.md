@@ -148,9 +148,37 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   2. On the Purchase Requests screen the team opens a request's detail card (details, files, AI block: score + target-vs-avg price), changes status, assigns an owner, and adds notes — every action writes to `audit_log`
   3. The team views a price chart per product/market sourced from `price_points`, and sees per-source health (last fetch, consecutive failures) with enable/disable
   4. The team builds an alert rule (product, volume/price threshold, urgency, channel); matches deliver to DM/group respecting Telegram rate limits via the `deliveries` queue
-  5. An admin adds a new public website AND a new Telegram channel through the add-source wizard with no developer: the form is auto-built from the adapter's config_schema, a Test shows a ≤10-row preview, the source cannot be enabled until a test passes, and its signals subsequently appear in the feed (TZ §6.1.6)
+  5. An admin adds a new public website AND a new Telegram channel through the add-source wizard with no developer: the form is auto-built from the adapter's config_schema, a Test shows a ≤10-row preview, the source cannot be enabled until a test passes, and its signals subsequently appear in the feed (TZ §6.1.6). **Cross-phase caveat (CONTEXT.md):** Phase 4 delivers website (`html_table`/`rss`) onboarding end-to-end; `telegram_channel`/`llm_page` are config-saveable in a PENDING state only — the "telegram-channel signals appear in feed" slice is a Phase-5/6 acceptance item (userbot + LLM extraction land then).
 
-**Plans**: TBD
+**Plans**: 9 plans in 6 waves (foundation-first per D-03)
+
+**Wave 1** *(foundation — parallel, no file overlap)*
+
+- [ ] 04-01-PLAN.md — Backend feed foundation: `GET /feed` keyset `(event_at, id)` pagination over `v_live_feed` + SSE `GET /feed/stream` (Redis pub/sub `feed:new`, unbuffered) + dashboard schemas + router registered (REQ-live-feed)
+- [ ] 04-02-PLAN.md — Frontend foundation (D-03): shadcn/ui init + token reconciliation (no token overwrite), auth-guarded app-router shell + 240px sidebar + AppShell, TanStack Query client, `useSSE` (backoff + 30 s polling fallback), typed `api.ts` Bearer client, Asia/Tashkent `tz.ts`, login submit (REQ-live-feed)
+
+**Wave 2** *(parallel — feed screen + requests backend, no file overlap)*
+
+- [ ] 04-03-PLAN.md — Live Market Feed screen: TanStack feed table + filters wired to `/feed` + SSE refresh, dashboard home (5 KPI cards, AI Market Signals D-01 placeholder panel), `/signals` + `/offers` pages (REQ-live-feed)
+- [ ] 04-04-PLAN.md — Flagship Purchase Requests backend: `GET/PATCH /requests` + note/assign/contact actions (all → `audit_log`, D-10), D-12 status machine via `transition_status`, D-11 contact deep-link, D-02 real price analysis, `GET /admin/users` (REQ-purchase-requests)
+
+**Wave 3** *(parallel — requests frontend + sources backend, no file overlap)*
+
+- [ ] 04-05-PLAN.md — Purchase Requests master-detail frontend: paginated table + filter bar + 6 KPI cards, 400px right detail Sheet (Request Details / Source Info / AI block D-01+D-02 / Files / Actions), all D-10/D-11/D-12 actions, CSV export endpoint + stream (REQ-purchase-requests)
+- [ ] 04-06-PLAN.md — Source constructor backend: `html_table`/`rss` live adapters (SSRF-guarded, ≤10-row preview D-06) + `telegram_channel`/`llm_page` pending stubs (D-04/D-05), `/sources` GET/POST/PATCH + `POST /sources/{id}/test`, server-side enable-gate invariant, startup registration (REQ-source-builder, REQ-sources-health)
+
+**Wave 4** *(alerts + prices backend — blocked on Wave 3 main.py)*
+
+- [ ] 04-07-PLAN.md — Alerts engine + team delivery + prices: `alert_service` hardcoded JSONB predicate interpreter (NOT eval, D-07) + dedupe + NEW `send_delivery` task on the `notify` queue with token-bucket (D-09), `/alert-rules` CRUD + `/alerts` feed (per-rule chat_id D-08), `GET /prices/series` (REQ-alerts, REQ-bot-team, REQ-price-trends)
+
+**Wave 5** *(remaining feature screens — blocked on Wave 4)*
+
+- [ ] 04-08-PLAN.md — Sources wizard (auto-form `JsonSchemaForm` from `config_schema`, real Test preview, enable-gate UI, pending pre-staging D-05) + Alerts feed + rule builder (full predicate set, `lead_score_gte` disabled D-07, per-rule chat_ids D-08) + Recharts Price Trends + admin users screen (REQ-source-builder, REQ-alerts, REQ-price-trends, REQ-sources-health)
+
+**Wave 6** *(acceptance gate)*
+
+- [ ] 04-09-PLAN.md — Acceptance gate: feed performance test (≤500 ms @ ~1M rows, REQ-nfr-performance) + dashboard RBAC matrix test (viewer 403 on writes) + `04-ACCEPTANCE.md` mapping SC#1–SC#5 to a deploy-time drill (honoring the SC#5 telegram cross-phase caveat) + human-verify checkpoint (all 6 requirements)
+
 **UI hint**: yes
 **UI contract**: `docs/polymer-intelligence-ui-mockups.md` §3 (Surface B — sidebar nav, dashboard home KPIs, the high-fidelity Purchase Requests master-detail, Price Trends Recharts, /sources add-source wizard, /alerts rules). Next.js app router, TS strict, TanStack Query/Table, shadcn/ui, dark theme via tailwind tokens (no hardcoded colors). Add-source forms render from `GET /admin/source-types` config_schema. Adapters added here: llm_page, html_table, rss (no-code); telegram_channel reused next phase.
 
@@ -194,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
-| 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
+| 4. Dashboard + Source Constructor | 0/9 | Planned | - |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
