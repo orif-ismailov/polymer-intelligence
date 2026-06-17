@@ -46,9 +46,14 @@ def _make_mock_client(id: int = 1, language: str = "ru") -> MagicMock:
 
 
 def _make_mock_request(id: int = 42, client_id: int = 1, number: str = "REQ-2026-06-16-00001") -> MagicMock:
-    """Return a MagicMock that quacks like a Request ORM object."""
-    from app.models.enums import RequestStatus  # noqa: PLC0415
-    import datetime
+    """Return a MagicMock that quacks like a Request ORM object.
+
+    Sets ALL fields required by RequestDetailOut (MR-03: polymer_type, volume_unit,
+    destination_country, port_or_city, desired_date, validity_days, urgency, comment
+    were added to the schema).
+    """
+    from app.models.enums import PriceBasis, RequestStatus, Urgency  # noqa: PLC0415
+    import datetime, decimal  # noqa: PLC0415, E401
     req = MagicMock()
     req.id = id
     req.client_id = client_id
@@ -57,11 +62,18 @@ def _make_mock_request(id: int = 42, client_id: int = 1, number: str = "REQ-2026
     req.created_at = datetime.datetime(2026, 6, 16, 10, 0, 0, tzinfo=datetime.timezone.utc)
     req.product_id = 1
     req.grade_text = "HDPE 2420D"
-    req.volume = 100
+    req.polymer_type = None
+    req.volume = decimal.Decimal("100")
+    req.volume_unit = "MT"
     req.target_price = None
     req.currency = "USD"
-    from app.models.enums import PriceBasis  # noqa: PLC0415
     req.incoterms = PriceBasis.unknown
+    req.destination_country = "UZ"
+    req.port_or_city = None
+    req.desired_date = None
+    req.validity_days = 30
+    req.urgency = Urgency.medium
+    req.comment = None
     req.files = []
     req.status_history = []
     return req
@@ -255,28 +267,13 @@ class TestGetRequestDetail:
 
     def test_own_request_returns_200(self):
         """Get own request (client_id matches) → 200 with correct detail."""
-        import datetime, decimal  # noqa: PLC0415
-        from app.models.enums import RequestStatus, PriceBasis  # noqa: PLC0415
         from app.core.db import get_db  # noqa: PLC0415
         from app.api.deps import get_current_client  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
         mock_client = _make_mock_client(id=1)
-
-        mock_req = MagicMock()
-        mock_req.id = 42
-        mock_req.client_id = 1
-        mock_req.number = "REQ-2026-06-16-00001"
-        mock_req.status = RequestStatus.new
-        mock_req.created_at = datetime.datetime(2026, 6, 16, 10, 0, 0, tzinfo=datetime.timezone.utc)
-        mock_req.product_id = 1
-        mock_req.grade_text = "HDPE 2420D"
-        mock_req.volume = decimal.Decimal("100")
-        mock_req.target_price = None
-        mock_req.currency = "USD"
-        mock_req.incoterms = PriceBasis.unknown
-        mock_req.files = []
-        mock_req.status_history = []
+        # Use the shared helper so all RequestDetailOut fields are present (MR-03)
+        mock_req = _make_mock_request(id=42, client_id=1)
 
         mock_db = MagicMock()
         mock_db.add = MagicMock()
