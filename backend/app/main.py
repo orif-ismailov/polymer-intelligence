@@ -21,7 +21,9 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.admin_sources import router as admin_sources_router
+from app.api.admin_users import router as admin_users_router
 from app.api.auth import router as auth_router
+from app.api.dashboard_requests import router as dashboard_requests_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
 from app.api.health import router as health_router
@@ -122,6 +124,8 @@ def create_app() -> FastAPI:
     application.include_router(admin_sources_router, prefix="/api/v1")
     # ── dashboard routers (Phase 4 internal team dashboard) ──────────────────
     application.include_router(feed_router, prefix="/api/v1")
+    application.include_router(dashboard_requests_router, prefix="/api/v1")
+    application.include_router(admin_users_router, prefix="/api/v1")
     # ── webapp routers (Telegram Web App client surface) ─────────────────────
     application.include_router(webapp_requests_router, prefix="/api/v1")
     application.include_router(webapp_me_router, prefix="/api/v1")
