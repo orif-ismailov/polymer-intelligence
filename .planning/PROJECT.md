@@ -17,22 +17,23 @@ Every relevant market event — a client request, a UZEX polymer position, a cha
 - [x] **REQ-uzex-parser** (FR-1): UZEX offers/quotations/concluded-deals → `signals` on schedule — _Validated in Phase 2 (E2 Ingest Core + UZEX); ≥95% accuracy gate = 100% on 55-position control sample. Live deploy-drill deferred (02-UAT.md)._
 - [x] **REQ-fx-rates** (FR-4): Daily CBU rate import; conversion computed on read, original preserved — _Validated in Phase 2 (E2)._
 - [x] **REQ-sources-health** (FR-13): Source health view + enable/disable; 3-strike `source_failure` alert with per-source isolation — _Validated in Phase 2 (E2). Live alert-isolation drill deferred (02-UAT.md)._
+- [x] **REQ-webapp-auth** (FR-5): Telegram initData auth; first login creates a client — _Validated in Phase 3 (E3 Client Circuit); HMAC verify + get_or_create_client, generic-401, future-token guard. Live deploy-drill deferred (03-UAT.md)._
+- [x] **REQ-request-wizard** (FR-6): 4-step Web App request wizard with files; REQ-YYYY-MM-DD-NNNNN number — _Validated in Phase 3 (E3); request_service number gen + status machine, /webapp API, direct MinIO uploads. Live deploy-drill deferred (03-UAT.md)._
+- [x] **REQ-my-requests** (FR-7): Client request list + status history; bot push on status change — _Validated in Phase 3 (E3); Мои заявки + detail + Asia/Tashkent timeline; notify task on `notify` queue (≤30 s dispatch proxy PASS). Live deploy-drill deferred (03-UAT.md)._
+- [x] **REQ-webapp-i18n** (FR-9): RU/UZ toggle, default from Telegram language_code — _Validated in Phase 3 (E3); react-i18next, 72/72 RU/UZ key parity, toggle persists._
+- [x] **REQ-bot-clients** (FR-17): Greeting, Web App button, status notifications to clients — _Validated in Phase 3 (E3); aiogram webhook bot /start greeting + Web App button + notify-queue routing. Live bot drill deferred (03-UAT.md)._
+- [x] **REQ-nfr-performance** (partial): Web App bundle ≤300 KB gzip (42.8 KB largest chunk) + SLA proxies (≤10 s readback, ≤30 s notify dispatch) — _Validated in Phase 3 (E3); first-paint-on-3G live measurement deferred (03-UAT.md)._
 
 ### Active
 
 <!-- Current milestone: Client Phase 1 (domestic-market MVP). Full list with IDs and acceptance criteria in REQUIREMENTS.md. -->
 
-- [ ] **REQ-webapp-auth** (FR-5): Telegram initData auth; first login creates a client
-- [ ] **REQ-request-wizard** (FR-6): 4-step Web App request wizard with files; REQ-YYYY-MM-DD-NNNNN number
-- [ ] **REQ-my-requests** (FR-7): Client request list + status history; bot push on status change
-- [ ] **REQ-webapp-i18n** (FR-9): RU/UZ toggle, default from Telegram language_code
 - [ ] **REQ-live-feed** (FR-10): Unified filterable feed (v_live_feed), SSE/polling refresh
 - [ ] **REQ-purchase-requests** (FR-11): Requests table + detail card + actions, all → audit_log (flagship screen)
 - [ ] **REQ-price-trends** (FR-12): Price chart per product/market from price_points
 - [ ] **REQ-alerts** (FR-14): Alert feed + rules builder + delivery
 - [ ] **REQ-roles** (FR-15): admin / analyst / trader / viewer authz
 - [ ] **REQ-bot-team** (FR-16): Deliver alerts to DM/group respecting Telegram rate limits
-- [ ] **REQ-bot-clients** (FR-17): Greeting, Web App button, status notifications to clients
 - [ ] **REQ-ai-extraction** (FR-19): LLM structuring per fixed JSON schema; journaled in parse_runs
 - [ ] **REQ-lead-scoring** (FR-20): lead_score + HOT/MEDIUM/LOW on signals/requests
 - [ ] **REQ-llm-budget** (FR-21): Daily token limit; graceful degradation to rule-based + catch-up
@@ -111,4 +112,4 @@ Phase 2 (international content loop) is a planned follow-up milestone, scoped bu
 | DEC-deploy-single-vps: one VPS, docker compose, nginx+TLS | simple, fits scale | — Pending |
 
 ---
-*Last updated: 2026-06-16 — Phase 2 (E2 Ingest Core + UZEX) complete: immutable raw pipeline, SourceAdapter registry, UZEX collectors→signals, CBU FX, source-health alerting. REQ-uzex-parser / REQ-fx-rates / REQ-sources-health validated (live deploy-drill deferred, 02-UAT.md).*
+*Last updated: 2026-06-17 — Phase 3 (E3 Client Circuit) complete: Telegram initData auth, 4-step Web App request wizard + Мои заявки/detail/timeline, RU/UZ i18n, direct MinIO uploads, aiogram client bot + status notifications. REQ-webapp-auth / REQ-request-wizard / REQ-my-requests / REQ-webapp-i18n / REQ-bot-clients validated; REQ-nfr-performance partial (bundle 42.8 KB + SLA proxies). All 9 code-review findings fixed. Live deploy-drill deferred (03-UAT.md). Next: Phase 4 — Dashboard + Source Constructor.*
