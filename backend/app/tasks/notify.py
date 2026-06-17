@@ -210,8 +210,8 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
                     "notify.status_change.no_telegram_user_id",
                     extra={"request_id": request_id, "client_id": client.id},
                 )
-
-            session.commit()
+            # MR-01: no session.commit() — this task only reads from the DB.
+            # The `with Session(engine) as session:` block closes (not commits) on exit.
 
     except Exception as exc:
         logger.error(
