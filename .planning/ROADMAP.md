@@ -164,7 +164,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 3** *(parallel — requests frontend + sources backend, no file overlap)*
 
-- [ ] 04-05-PLAN.md — Purchase Requests master-detail frontend: paginated table + filter bar + 6 KPI cards, 400px right detail Sheet (Request Details / Source Info / AI block D-01+D-02 / Files / Actions), all D-10/D-11/D-12 actions, CSV export endpoint + stream (REQ-purchase-requests)
+- [x] 04-05-PLAN.md — Purchase Requests master-detail frontend: paginated table + filter bar + 6 KPI cards, 400px right detail Sheet (Request Details / Source Info / AI block D-01+D-02 / Files / Actions), all D-10/D-11/D-12 actions, CSV export endpoint + stream (REQ-purchase-requests)
 - [ ] 04-06-PLAN.md — Source constructor backend: `html_table`/`rss` live adapters (SSRF-guarded, ≤10-row preview D-06) + `telegram_channel`/`llm_page` pending stubs (D-04/D-05), `/sources` GET/POST/PATCH + `POST /sources/{id}/test`, server-side enable-gate invariant, startup registration (REQ-source-builder, REQ-sources-health)
 
 **Wave 4** *(alerts + prices backend — blocked on Wave 3 main.py)*
