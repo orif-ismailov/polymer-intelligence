@@ -14,6 +14,7 @@ import type {
   ClientProfilePatch,
   RequestCreate,
   RequestDetail,
+  RequestFileMeta,
   RequestOut,
 } from "../types";
 
@@ -34,13 +35,15 @@ export class ApiError extends Error {
 // ── Core fetch wrapper ─────────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  // Do NOT set Content-Type for multipart/FormData — the browser must set it
+  // together with the multipart boundary. JSON requests keep the default.
+  const isFormData = options.body instanceof FormData;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       "X-Telegram-Init-Data": getInitData(),
-      // Spread caller headers AFTER defaults so caller can override Content-Type
-      // (e.g. multipart — see uploadFile below which passes its own headers)
+      // Spread caller headers last so callers can still override if needed
       ...options.headers,
     },
   });
@@ -84,19 +87,15 @@ export const api = {
    *
    * Uploads are sequential (called one at a time by Confirm.tsx) per D-01.
    */
-  uploadFile(requestId: number, file: File): Promise<void> {
+  uploadFile(requestId: number, file: File): Promise<RequestFileMeta> {
     const formData = new FormData();
     formData.append("file", file);
 
-    return apiFetch<void>(`/webapp/requests/${requestId}/files`, {
+    // apiFetch detects FormData and omits Content-Type so the browser sets the
+    // multipart boundary automatically. X-Telegram-Init-Data is injected by apiFetch.
+    return apiFetch<RequestFileMeta>(`/webapp/requests/${requestId}/files`, {
       method: "POST",
       body: formData,
-      headers: {
-        // Override to remove Content-Type so the browser sets the multipart boundary.
-        // X-Telegram-Init-Data is still injected inside apiFetch via the spread.
-        // We intentionally omit "Content-Type" by passing only the auth header here.
-        "X-Telegram-Init-Data": getInitData(),
-      },
     });
   },
 
