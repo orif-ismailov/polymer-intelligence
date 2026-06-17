@@ -292,6 +292,139 @@ def transition_status(
     return request
 
 
+# ── Phase 4 action functions ───────────────────────────────────────────────────
+#
+# Three new service functions added in Phase 4 (Plan 04-04).
+# All follow the service-never-commits axiom: db.flush() only, never db.commit().
+# The router owns the commit, ensuring audit rows share the action's transaction.
+
+
+def add_note(
+    db: Session,
+    request_id: int,
+    note_text: str,
+    staff_user_id: int,
+) -> None:
+    """Record a team note against a request and write an audit_log entry.
+
+    Does NOT commit — caller (router) commits.
+
+    Args:
+        db: Active SQLAlchemy session.
+        request_id: The request to annotate.
+        note_text: The note content.
+        staff_user_id: The acting staff user (from verified JWT, never body).
+    """
+    # Write audit row (details carries the note text for the audit trail)
+    write_audit(
+        db=db,
+        staff_user_id=staff_user_id,
+        action="request.add_note",
+        entity="requests",
+        entity_id=str(request_id),
+        details={"note": note_text},
+    )
+    # write_audit calls db.flush() internally; no additional flush needed.
+
+    logger.info(
+        "request_service.add_note",
+        extra={"request_id": request_id, "staff_user_id": staff_user_id},
+    )
+
+
+def assign_owner(
+    db: Session,
+    request: Request,
+    staff_user_id: int,
+    changed_by: int,
+) -> Request:
+    """Assign a staff owner to a request and write an audit_log entry.
+
+    Sets request.assigned_to = staff_user_id and writes an audit row.
+    Does NOT commit — caller (router) commits.
+
+    Args:
+        db: Active SQLAlchemy session.
+        request: The Request ORM object to update.
+        staff_user_id: The staff user being assigned as owner.
+        changed_by: The acting staff user id (from verified JWT, never body).
+
+    Returns:
+        The mutated Request ORM object.
+    """
+    old_assigned = request.assigned_to
+    request.assigned_to = staff_user_id
+
+    write_audit(
+        db=db,
+        staff_user_id=changed_by,
+        action="request.assign_owner",
+        entity="requests",
+        entity_id=str(request.id),
+        details={"assigned_to": staff_user_id, "previously": old_assigned},
+    )
+    # write_audit calls db.flush() internally.
+
+    logger.info(
+        "request_service.assign_owner",
+        extra={
+            "request_id": request.id,
+            "assigned_to": staff_user_id,
+            "changed_by": changed_by,
+        },
+    )
+    return request
+
+
+def log_contact_buyer(
+    db: Session,
+    request: Request,
+    staff_user_id: int,
+) -> Request:
+    """Log a Contact Buyer action, auto-advancing status if new/viewed.
+
+    If the request status is `new` or `viewed`, calls `transition_status` to
+    move it to `in_progress` (with audit + history).  Then writes a dedicated
+    "request.contact_buyer" audit entry.
+
+    Does NOT commit — caller (router) commits.
+
+    Args:
+        db: Active SQLAlchemy session.
+        request: The Request ORM object.
+        staff_user_id: The acting staff user id (from verified JWT, never body).
+
+    Returns:
+        The (possibly mutated) Request ORM object.
+    """
+    # D-12: Contact Buyer auto-advances status to in_progress when new/viewed.
+    # Reuse transition_status (never duplicate transition logic — Pitfall 5).
+    if request.status in {RequestStatus.new, RequestStatus.viewed}:
+        transition_status(
+            db=db,
+            request=request,
+            to_status=RequestStatus.in_progress,
+            changed_by=staff_user_id,
+        )
+
+    # Write the contact_buyer audit entry (separate from the status-change audit).
+    write_audit(
+        db=db,
+        staff_user_id=staff_user_id,
+        action="request.contact_buyer",
+        entity="requests",
+        entity_id=str(request.id),
+        details={},
+    )
+    # write_audit calls db.flush() internally.
+
+    logger.info(
+        "request_service.log_contact_buyer",
+        extra={"request_id": request.id, "staff_user_id": staff_user_id},
+    )
+    return request
+
+
 # ── Notify task import note ───────────────────────────────────────────────────
 #
 # The real send_status_change_notification task is registered in
