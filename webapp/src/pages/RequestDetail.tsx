@@ -182,9 +182,12 @@ export default function RequestDetailPage() {
               {detail.grade_text && (
                 <DetailRow label={t("wizard.grade")} value={detail.grade_text} />
               )}
+              {detail.polymer_type && (
+                <DetailRow label={t("wizard.polymerType")} value={detail.polymer_type} />
+              )}
               <DetailRow
                 label={t("wizard.volume")}
-                value={`${detail.volume}`}
+                value={`${detail.volume} ${detail.volume_unit}`}
               />
               {detail.target_price && (
                 <DetailRow
@@ -194,6 +197,24 @@ export default function RequestDetailPage() {
               )}
               {detail.incoterms && detail.incoterms !== "unknown" && (
                 <DetailRow label={t("wizard.incoterms")} value={detail.incoterms} />
+              )}
+              <DetailRow
+                label={t("wizard.destinationCountry")}
+                value={detail.destination_country}
+              />
+              {detail.port_or_city && (
+                <DetailRow label={t("wizard.portOrCity")} value={detail.port_or_city} />
+              )}
+              {detail.desired_date && (
+                <DetailRow label={t("wizard.desiredDate")} value={detail.desired_date} />
+              )}
+              <DetailRow
+                label={t("wizard.validityDays")}
+                value={`${detail.validity_days}`}
+              />
+              <DetailRow label={t("wizard.urgency")} value={detail.urgency} />
+              {detail.comment && (
+                <DetailRow label={t("wizard.comment")} value={detail.comment} />
               )}
             </div>
 

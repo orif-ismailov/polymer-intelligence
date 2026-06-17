@@ -115,15 +115,26 @@ class RequestOut(BaseModel):
 class RequestDetailOut(RequestOut):
     """Full representation of a client request (detail view).
 
-    Extends RequestOut with all fields, attached files, and status history.
+    Extends RequestOut with all fields written by RequestCreate, attached files,
+    and status history.  MR-03: added the 8 fields that were missing from the
+    original schema (polymer_type, volume_unit, destination_country, port_or_city,
+    desired_date, validity_days, urgency, comment).
     """
 
     product_id: int
     grade_text: str | None
+    polymer_type: str | None
     volume: decimal.Decimal
+    volume_unit: str
     target_price: decimal.Decimal | None
     currency: str
     incoterms: PriceBasis
+    destination_country: str
+    port_or_city: str | None
+    desired_date: datetime.date | None
+    validity_days: int
+    urgency: Urgency
+    comment: str | None
     files: list[RequestFileOut]
     history: list[StatusHistoryOut]
 

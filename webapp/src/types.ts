@@ -84,10 +84,18 @@ export interface StatusHistory {
 export interface RequestDetail extends RequestOut {
   product_id: number;
   grade_text: string | null;
+  polymer_type: string | null;
   volume: number;
+  volume_unit: string;
   target_price: number | null;
   currency: string;
   incoterms: PriceBasis;
+  destination_country: string;
+  port_or_city: string | null;
+  desired_date: string | null; // ISO date string YYYY-MM-DD
+  validity_days: number;
+  urgency: Urgency;
+  comment: string | null;
   files: RequestFileMeta[];
   history: StatusHistory[];
 }

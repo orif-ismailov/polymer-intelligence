@@ -124,7 +124,7 @@ def get_request(
 
     # Build detail out — history ordered ASC for timeline display
     history = sorted(req.status_history, key=lambda h: h.created_at)
-    # Return a dict that Pydantic can validate
+    # Return a dict that Pydantic can validate — MR-03: pass all detail fields
     return RequestDetailOut(
         id=req.id,
         number=req.number,
@@ -132,10 +132,18 @@ def get_request(
         created_at=req.created_at,
         product_id=req.product_id,
         grade_text=req.grade_text,
+        polymer_type=req.polymer_type,
         volume=req.volume,
+        volume_unit=req.volume_unit,
         target_price=req.target_price,
         currency=req.currency,
         incoterms=req.incoterms,
+        destination_country=req.destination_country,
+        port_or_city=req.port_or_city,
+        desired_date=req.desired_date,
+        validity_days=req.validity_days,
+        urgency=req.urgency,
+        comment=req.comment,
         files=req.files,
         history=history,
     )
