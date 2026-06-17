@@ -159,7 +159,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 2** *(parallel — feed screen + requests backend, no file overlap)*
 
-- [ ] 04-03-PLAN.md — Live Market Feed screen: TanStack feed table + filters wired to `/feed` + SSE refresh, dashboard home (5 KPI cards, AI Market Signals D-01 placeholder panel), `/signals` + `/offers` pages (REQ-live-feed)
+- [x] 04-03-PLAN.md — Live Market Feed screen: TanStack feed table + filters wired to `/feed` + SSE refresh, dashboard home (5 KPI cards, AI Market Signals D-01 placeholder panel), `/signals` + `/offers` pages (REQ-live-feed)
 - [ ] 04-04-PLAN.md — Flagship Purchase Requests backend: `GET/PATCH /requests` + note/assign/contact actions (all → `audit_log`, D-10), D-12 status machine via `transition_status`, D-11 contact deep-link, D-02 real price analysis, `GET /admin/users` (REQ-purchase-requests)
 
 **Wave 3** *(parallel — requests frontend + sources backend, no file overlap)*
@@ -222,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
-| 4. Dashboard + Source Constructor | 1/9 | In Progress|  |
+| 4. Dashboard + Source Constructor | 3/9 | In Progress|  |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
