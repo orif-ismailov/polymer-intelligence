@@ -111,7 +111,7 @@ def create_app() -> FastAPI:
         allow_origins=settings.CORS_ALLOWED_ORIGINS,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "X-Telegram-Init-Data"],
     )
 
     # ── Routers ───────────────────────────────────────────────────────────────
