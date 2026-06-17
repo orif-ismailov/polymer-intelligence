@@ -129,6 +129,46 @@ def test_verify_init_data_malformed_raises() -> None:
         verify_init_data("not=valid&initdata=true")
 
 
+def test_verify_init_data_future_auth_date_raises() -> None:
+    """HR-01: initData with auth_date far in the future is rejected (not treated as fresh).
+
+    A negative age_seconds (auth_date > now) must raise InvalidInitData.
+    Without the guard, age_seconds = -1_000_000 would pass the
+    `age_seconds > INIT_DATA_TTL_SECONDS` check silently.
+    """
+    from app.services.client_service import verify_init_data
+
+    # 1 000 000 seconds in the future — clearly illegitimate
+    future_ts = int(time.time()) + 1_000_000
+    raw = _make_init_data(auth_date=future_ts)
+
+    with pytest.raises(ValueError, match="future"):
+        verify_init_data(raw)
+
+
+def test_verify_init_data_ttl_patchable_via_settings() -> None:
+    """HR-02: TTL is read from settings at call time — patching settings affects the check.
+
+    When TELEGRAM_INIT_DATA_TTL_SECONDS is patched to 0 (zero-second TTL), a token
+    whose auth_date is even 1 second old must be rejected.  This would silently pass
+    if the TTL were captured as a module-level constant at import time.
+    """
+    from unittest.mock import patch as _patch
+
+    from app.services.client_service import verify_init_data
+
+    # Token signed 5 seconds ago — normally well within the 86 400 s default TTL
+    slightly_old_ts = int(time.time()) - 5
+    raw = _make_init_data(auth_date=slightly_old_ts)
+
+    # Patch settings to a 1-second TTL — the 5-second-old token must now be rejected
+    with _patch("app.services.client_service.settings") as mock_settings:
+        mock_settings.BOT_TOKEN = _BOT_TOKEN
+        mock_settings.TELEGRAM_INIT_DATA_TTL_SECONDS = 1
+        with pytest.raises(ValueError, match="expired"):
+            verify_init_data(raw)
+
+
 # ── get_or_create_client tests ─────────────────────────────────────────────────
 
 def test_get_or_create_client_maps_ru_language() -> None:
