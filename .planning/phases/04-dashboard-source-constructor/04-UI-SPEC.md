@@ -59,14 +59,14 @@ Exceptions:
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 14px | 400 (regular) | 1.5 | Table cells, sidebar items, form labels, card body |
-| Label | 12px | 500 (medium) | 1.4 | Status chips, column headers, filter tags, captions, "Updated N min ago" |
+| Label | 12px | 600 (semibold) | 1.4 | Status chips, column headers, filter tags, captions, "Updated N min ago" |
 | Heading | 20px | 600 (semibold) | 1.2 | Page headers, panel section titles, modal titles |
-| Display | 28px | 700 (bold) | 1.1 | KPI numeric values (e.g. "248", "$1,082") |
+| Display | 28px | 600 (semibold) | 1.1 | KPI numeric values (e.g. "248", "$1,082") — size alone creates the KPI hierarchy |
 
 Font family: `Inter, system-ui, sans-serif` for all roles above.
 Font family `mono`: `JetBrains Mono, Menlo, monospace` — reserved for request IDs (REQ-YYYY-MM-DD-NNNNN), prices in table cells where alignment precision matters, and hash/code values.
 
-Maximum weights in use: 400, 500, 600, 700. Executor must use only these four values.
+Maximum weights in use: 400 (regular) and 600 (semibold). Executor must use only these two values — no 500, no 700.
 
 ---
 
@@ -132,7 +132,7 @@ All tokens are already declared in `dashboard/tailwind.config.ts`. Use Tailwind 
 ### Global Shell (Wave 1)
 
 **Left sidebar (240px fixed, `bg-background-secondary`):**
-- Logo + "Polymer Intelligence" wordmark at top (16px semibold, accent text)
+- Logo + "Polymer Intelligence" wordmark at top (20px semibold, accent text) — maps to Heading scale size for prominent brand presence
 - Nav groups with 12px uppercase label: MAIN / REQUESTS / SOURCES / SETTINGS
 - Active item: left border 2px accent, text-foreground, bg-background-tertiary
 - Collapsed hover state: bg-background-tertiary transition-colors 150ms
@@ -145,16 +145,18 @@ All tokens are already declared in `dashboard/tailwind.config.ts`. Use Tailwind 
 
 ### Dashboard Home (`/`)
 
+**Primary visual anchor:** the KPI cards row — 28px Display values draw the eye first, establishing at-a-glance health of the market before the user scans lower panels.
+
 **KPI cards (5):** Total Buyers, Total Sellers, Active Requests, Hot Leads, Price Alerts.
 
 - AI-dependent KPI ("Hot Leads"): renders in final layout shape; numeric shows real count from `requests WHERE lead_score IS NOT NULL` (empty = 0 in Phase 4 since Phase 5 fills lead_score). Chip label: "high priority". Icon: flame (lucide `Flame`).
 - Non-AI KPIs: live from DB aggregates.
-- Card anatomy: icon (24px, `foreground-muted`) + label (12px, `foreground-muted`) + value (28px bold, `foreground`) + delta chip (12px, `status-new` blue for neutral, accent green for positive).
+- Card anatomy: icon (24px, `foreground-muted`) + label (12px weight 600, `foreground-muted`) + value (28px weight 600, `foreground`) + delta chip (12px weight 600, `status-new` blue for neutral, accent green for positive).
 
 **Live Market Feed panel:**
 - Rows: BUYER chip / SELLER chip / REQUEST chip (kind colors) + product + volume + region + price + relative time + "View detail" link.
 - "View all" link → `/requests` or `/signals`.
-- Empty state: icon `Activity` (lucide, 32px, `foreground-muted`) + "No market activity yet" heading (16px) + "Signals will appear here as sources report" body (14px, `foreground-muted`).
+- Empty state: icon `Activity` (lucide, 32px, `foreground-muted`) + "No market activity yet" heading (14px weight 600, `foreground`) + "Signals will appear here as sources report" body (14px weight 400, `foreground-muted`).
 
 **Price Trends panel:**
 - Recharts `LineChart`, responsive container 100% width × 200px height.
@@ -175,7 +177,7 @@ All tokens are already declared in `dashboard/tailwind.config.ts`. Use Tailwind 
 
 **Header row:**
 - Left: "Purchase Requests" (20px semibold) + subtitle (14px, `foreground-muted`): "Real-time buyer requests collected from exchanges, websites and channels"
-- Right: Search input (280px, lucide `Search` icon), Export button (outline), Settings icon button, "● Live Data" indicator (8px pulsing dot, accent + "Live Data" 12px accent text)
+- Right: Search input (280px, lucide `Search` icon), Export button (outline), Settings icon button (`aria-label="Table settings"`, 44px touch target), "● Live Data" indicator (8px pulsing dot, accent + "Live Data" 12px accent text)
 
 **Filter bar (below header):**
 - Period select, Product select, Region select (not in mockup but standard), Source select, "More Filters" button (outline, `ChevronDown` icon).
@@ -245,7 +247,7 @@ All tokens are already declared in `dashboard/tailwind.config.ts`. Use Tailwind 
 
 **"+ Add Source" wizard (D-04, D-05, D-06):**
 - Entry: "Add Source" button (accent, `Plus` icon) top-right of sources page.
-- Step 1 — Pick type: radio card group (4 cards in 2×2 grid): "HTML Table", "RSS Feed", "Telegram Channel" (with Phase 5 badge), "LLM Page" (with Phase 5 badge). Cards: 160px × 100px, icon (32px) + type name (14px semibold) + description (12px, `foreground-muted`). Phase-5 types show amber "Phase 5" badge, are selectable (pre-staging allowed, D-05) but warn on selection.
+- Step 1 — Pick type: radio card group (4 cards in 2×2 grid): "HTML Table", "RSS Feed", "Telegram Channel" (with Phase 5 badge), "LLM Page" (with Phase 5 badge). Cards: 160px × 100px, icon (32px) + type name (14px weight 400, `foreground`) + description (12px weight 600, `foreground-muted`). Phase-5 types show amber "Phase 5" badge, are selectable (pre-staging allowed, D-05) but warn on selection.
 - Step 2 — Configure: auto-form rendered from `GET /admin/source-types/{type}/config_schema`. Field types: text input, url input, select, textarea, integer. All fields carry labels (14px, `foreground-muted`) + placeholder text. Required fields marked with `*`. URL fields have SSRF hint text: "Public URLs only."
 - Step 3 — Test (html_table / rss only): "Run Test" button (accent). Loading: spinner + "Fetching source…" (14px). Success: preview table (≤10 rows) showing columns: Product / Grade / Volume / Price / Currency / Section / Event At — parsed signal drafts (D-06). Failure: red error banner (see Copywriting). Cannot proceed to enable until test passes. `telegram_channel`/`llm_page` skip Test step; wizard saves to pending state directly.
 - Step 4 — Enable/Save: "Enable Source" (accent, only available if test passed or type is pending) / "Save as Pending" (outline). Source cannot be set `is_enabled=true` without `last_test_ok_at IS NOT NULL` — enforced server-side.
