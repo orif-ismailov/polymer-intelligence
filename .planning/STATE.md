@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-06-17T11:43:53.151Z"
-last_activity: 2026-06-17 -- Phase 04 execution started
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-06-17T12:04:00Z"
+last_activity: 2026-06-17 -- Phase 04 Plan 02 complete (dashboard foundation)
 progress:
   total_phases: 6
   completed_phases: 3
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 04 (dashboard-source-constructor) — EXECUTING
-Plan: 2 of 9
+Plan: 3 of 9
 Status: Ready to execute
-Last activity: 2026-06-17 -- Phase 04 execution started
+Last activity: 2026-06-17 -- Phase 04 Plan 02 complete (dashboard foundation)
 
 Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 complete)
 
@@ -74,6 +74,7 @@ Progress: [████████░░] 78% (Phase 2 done; Phase 3 plan 1/6 c
 | Phase 03 P05 | 60min | 3 tasks | 11 files |
 | Phase 03 P06 | 25min | 3 tasks | 3 files |
 | Phase 04 P01 | 15min | 2 tasks | 6 files |
+| Phase 04 P02 | 8min | 2 tasks | 27 files created, 4 modified |
 
 ## Accumulated Context
 
@@ -144,6 +145,9 @@ Most relevant to Phase 1:
 - [Phase ?]: DEC-03-06-rolled-deferral: live UI verifications from 03-04 (wizard submit path) and 03-05 (list/detail/timeline/refetch) roll into the same deploy-time SC#1/SC#3 drill
 - [Phase ?]: DEC-04-01-route-no-trailing-slash: feed.py route path='' avoids FastAPI 307 redirect on /api/v1/feed
 - [Phase ?]: DEC-04-01-lazy-redis-import: redis.asyncio imported inside function bodies in feed_bus.py — module import stays socket-free for pytest (mirrors request_service.py convention)
+- [Phase 04-02]: DEC-shadcn-v4-tw3-compat: shadcn@4.11.0 generates Tailwind v4 CSS syntax (--spacing(), OKLCH, tw-animate-css imports); project uses Tailwind v3 — globals.css reverted to hsl() vars, card.tsx uses direct spacing classes, calendar.tsx uses fixed rem value
+- [Phase 04-02]: DEC-jwt-memory-only: JWT access token stored in module-level variable via setToken/getToken in lib/api.ts — never localStorage, never DOM (T-04-06)
+- [Phase 04-02]: DEC-sse-ref-useeffect: useSSE onMessage ref update moved to useEffect per react-hooks/refs — avoids render-time ref mutation warning
 
 ### Pending Todos
 
@@ -176,6 +180,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-17T11:43:53.147Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-06-17T12:04:00Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None

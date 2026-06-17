@@ -155,7 +155,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Wave 1** *(foundation — parallel, no file overlap)*
 
 - [x] 04-01-PLAN.md — Backend feed foundation: `GET /feed` keyset `(event_at, id)` pagination over `v_live_feed` + SSE `GET /feed/stream` (Redis pub/sub `feed:new`, unbuffered) + dashboard schemas + router registered (REQ-live-feed)
-- [ ] 04-02-PLAN.md — Frontend foundation (D-03): shadcn/ui init + token reconciliation (no token overwrite), auth-guarded app-router shell + 240px sidebar + AppShell, TanStack Query client, `useSSE` (backoff + 30 s polling fallback), typed `api.ts` Bearer client, Asia/Tashkent `tz.ts`, login submit (REQ-live-feed)
+- [x] 04-02-PLAN.md — Frontend foundation (D-03): shadcn/ui init + token reconciliation (no token overwrite), auth-guarded app-router shell + 240px sidebar + AppShell, TanStack Query client, `useSSE` (backoff + 30 s polling fallback), typed `api.ts` Bearer client, Asia/Tashkent `tz.ts`, login submit (REQ-live-feed)
 
 **Wave 2** *(parallel — feed screen + requests backend, no file overlap)*
 
