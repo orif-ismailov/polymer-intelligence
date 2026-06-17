@@ -1,0 +1,205 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Activity,
+  BarChart3,
+  Bell,
+  Database,
+  Flame,
+  Globe,
+  Home,
+  ShoppingCart,
+  Tag,
+  Users,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  /** Role required to see this item. Undefined = visible to all roles. */
+  minRole?: "admin" | "analyst" | "trader";
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "MAIN",
+    items: [
+      { label: "Dashboard", href: "/", icon: Home },
+      { label: "Live Feed", href: "/signals", icon: Activity },
+    ],
+  },
+  {
+    label: "REQUESTS",
+    items: [
+      { label: "Purchase Requests", href: "/requests", icon: ShoppingCart },
+      { label: "Offers", href: "/offers", icon: Tag },
+    ],
+  },
+  {
+    label: "SOURCES",
+    items: [
+      { label: "Sources", href: "/sources", icon: Database },
+      { label: "Alerts", href: "/alerts", icon: Bell },
+    ],
+  },
+  {
+    label: "SETTINGS",
+    items: [
+      { label: "Prices", href: "/prices", icon: BarChart3 },
+      {
+        label: "Admin Users",
+        href: "/admin/users",
+        icon: Users,
+        minRole: "admin",
+      },
+    ],
+  },
+];
+
+/** Maps role string to numeric level for comparison */
+const ROLE_LEVEL: Record<string, number> = {
+  viewer: 0,
+  trader: 1,
+  analyst: 2,
+  admin: 3,
+};
+
+const ROLE_MIN_LEVEL: Record<"admin" | "analyst" | "trader", number> = {
+  trader: 1,
+  analyst: 2,
+  admin: 3,
+};
+
+function canView(item: NavItem, role: string | null): boolean {
+  if (!item.minRole) return true;
+  const userLevel = ROLE_LEVEL[role ?? "viewer"] ?? 0;
+  return userLevel >= ROLE_MIN_LEVEL[item.minRole];
+}
+
+function getInitials(email: string): string {
+  const parts = email.split("@")[0]?.split(".") ?? [];
+  if (parts.length >= 2) {
+    return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
+  }
+  return (email[0] ?? "?").toUpperCase();
+}
+
+const ROLE_BADGE_CLASSES: Record<string, string> = {
+  admin: "bg-accent/20 text-accent",
+  analyst: "bg-blue-500/20 text-blue-400",
+  trader: "bg-amber-500/20 text-amber-400",
+  viewer: "bg-background-tertiary text-foreground-muted",
+};
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const { user } = useAuth();
+
+  const role = user?.role ?? "viewer";
+
+  function isActive(href: string): boolean {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  }
+
+  return (
+    <aside
+      className="flex h-screen w-60 flex-shrink-0 flex-col bg-background-secondary border-r border-border"
+      aria-label="Main navigation"
+    >
+      {/* Logo + wordmark */}
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
+        <Globe className="h-5 w-5 text-accent flex-shrink-0" aria-hidden="true" />
+        <span className="text-base font-semibold text-accent leading-tight">
+          Polymer Intelligence
+        </span>
+      </div>
+
+      {/* Nav groups */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3" aria-label="Dashboard navigation">
+        {NAV_GROUPS.map((group) => {
+          const visibleItems = group.items.filter((item) =>
+            canView(item, role),
+          );
+          if (visibleItems.length === 0) return null;
+          return (
+            <div key={group.label} className="mb-6">
+              {/* Group label */}
+              <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                {group.label}
+              </p>
+              <ul role="list" className="space-y-0.5">
+                {visibleItems.map((item) => {
+                  const active = isActive(item.href);
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                          active
+                            ? "border-l-2 border-accent bg-background-tertiary text-foreground font-medium"
+                            : "border-l-2 border-transparent text-foreground-muted hover:bg-background-tertiary hover:text-foreground",
+                        )}
+                        aria-current={active ? "page" : undefined}
+                      >
+                        <Icon
+                          className={cn(
+                            "h-4 w-4 flex-shrink-0",
+                            active ? "text-accent" : "text-foreground-muted",
+                          )}
+                          aria-hidden="true"
+                        />
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* User footer */}
+      <div className="border-t border-border px-4 py-4">
+        <div className="flex items-center gap-3">
+          {/* Initials avatar */}
+          <div
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent/20 text-accent text-xs font-semibold"
+            aria-hidden="true"
+          >
+            {user ? getInitials(user.email) : (
+              <Flame className="h-4 w-4" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-foreground">
+              {user?.email ?? "Guest"}
+            </p>
+            <span
+              className={cn(
+                "inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium",
+                ROLE_BADGE_CLASSES[role] ?? ROLE_BADGE_CLASSES.viewer,
+              )}
+            >
+              {role}
+            </span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

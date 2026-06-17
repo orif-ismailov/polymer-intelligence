@@ -1,15 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { login } = useAuth();
 
-  // Auth wiring arrives in Phase 4 (plan 01-03 delivers the /auth/login endpoint)
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: Phase 4 — wire to POST /api/v1/auth/login with JWT
+    setError(null);
+    setLoading(true);
+    try {
+      const data = await apiFetch<LoginResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      login(data.access_token);
+      router.push("/");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Login failed. Check your credentials.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -23,6 +49,15 @@ export default function LoginPage() {
           onSubmit={handleSubmit}
           className="rounded-lg border border-border bg-background-secondary p-6 shadow-lg"
         >
+          {/* Error banner */}
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 rounded-md border border-status-cancelled/30 bg-status-cancelled/10 px-3 py-2 text-sm text-status-cancelled"
+            >
+              {error}
+            </div>
+          )}
           <div className="mb-4">
             <label
               htmlFor="email"
@@ -61,9 +96,10 @@ export default function LoginPage() {
           </div>
           <button
             type="submit"
-            className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background-secondary"
+            disabled={loading}
+            className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background-secondary disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Sign in
+            {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
       </div>
