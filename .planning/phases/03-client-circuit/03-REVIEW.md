@@ -1,9 +1,11 @@
 ---
-status: issues
+status: resolved
 phase: 03-client-circuit
 reviewed_base: e024332
 reviewed_at: 2026-06-17
+fixed_at: 2026-06-17
 findings_total: 9
+findings_fixed: 9
 findings_by_severity:
   critical: 3
   high: 2
@@ -14,9 +16,10 @@ findings_by_severity:
 # Phase 03: Client Circuit — Code Review
 
 **Reviewed:** 2026-06-17
+**Fixed:** 2026-06-17 — all 9 findings resolved
 **Depth:** deep (cross-file analysis)
 **Files Reviewed:** 28
-**Status:** issues_found
+**Status:** resolved — backend 386 passed / 65 skipped; webapp build green
 
 ## Summary
 
@@ -26,7 +29,7 @@ Phase 3 implements the Telegram Web App client circuit: initData HMAC auth, requ
 
 ## Critical Issues
 
-### CR-01: CORS `allow_headers` Missing `X-Telegram-Init-Data` — Every Authenticated Webapp Call Fails Cross-Origin
+### CR-01: CORS `allow_headers` Missing `X-Telegram-Init-Data` — Every Authenticated Webapp Call Fails Cross-Origin ✓ RESOLVED (commit cc20644)
 
 **File:** `backend/app/main.py:114`
 
@@ -49,7 +52,7 @@ application.add_middleware(
 
 ---
 
-### CR-02: `uploadFile` in `api/client.ts` Sets `Content-Type: application/json` on Multipart Upload — File Uploads Broken
+### CR-02: `uploadFile` in `api/client.ts` Sets `Content-Type: application/json` on Multipart Upload — File Uploads Broken ✓ RESOLVED (commit 0379b82)
 
 **File:** `webapp/src/api/client.ts:36-54` (default headers) and `webapp/src/api/client.ts:91-101` (uploadFile)
 
@@ -79,7 +82,7 @@ And remove the redundant `"X-Telegram-Init-Data": getInitData()` from `uploadFil
 
 ---
 
-### CR-03: Webhook Secret Logged at INFO Level — Secret Exposed in Structured Logs
+### CR-03: Webhook Secret Logged at INFO Level — Secret Exposed in Structured Logs ✓ RESOLVED (commit 40410f4)
 
 **File:** `telegram/bot.py:113-117`
 
@@ -103,7 +106,7 @@ The actual `webhook_url` (with secret) is only passed to `bot.set_webhook()`.
 
 ## High Severity
 
-### HR-01: `auth_date` TTL Check Accepts Future Timestamps — Weak Replay Protection
+### HR-01: `auth_date` TTL Check Accepts Future Timestamps — Weak Replay Protection ✓ RESOLVED (commits c7d872f RED, cef4893 GREEN)
 
 **File:** `backend/app/services/client_service.py:111-113`
 
@@ -127,7 +130,7 @@ if age_seconds > INIT_DATA_TTL_SECONDS:
 
 ---
 
-### HR-02: `INIT_DATA_TTL_SECONDS` Module-Level Constant Bound at Import Time — Patching `settings` in Tests Has No Effect
+### HR-02: `INIT_DATA_TTL_SECONDS` Module-Level Constant Bound at Import Time — Patching `settings` in Tests Has No Effect ✓ RESOLVED (commits c7d872f RED, cef4893 GREEN)
 
 **File:** `backend/app/services/client_service.py:34`
 
@@ -153,7 +156,7 @@ def verify_init_data(raw: str) -> dict[str, object]:
 
 ## Medium Severity
 
-### MR-01: `send_status_change_notification` Calls `session.commit()` When Nothing Has Been Written — Unnecessary Noise
+### MR-01: `send_status_change_notification` Calls `session.commit()` When Nothing Has Been Written — Unnecessary Noise ✓ RESOLVED (commit 6cc9335)
 
 **File:** `backend/app/tasks/notify.py:214`
 
@@ -171,7 +174,7 @@ The notify task only reads `request` and `client`; it never writes to the databa
 
 ---
 
-### MR-02: `uploadFile` in `api/client.ts` Declares Return Type `Promise<void>` but `apiFetch` Always Calls `res.json()` — Silent Parse Error
+### MR-02: `uploadFile` in `api/client.ts` Declares Return Type `Promise<void>` but `apiFetch` Always Calls `res.json()` — Silent Parse Error ✓ RESOLVED (commit 0379b82, co-fixed with CR-02)
 
 **File:** `webapp/src/api/client.ts:53` and `webapp/src/api/client.ts:87`
 
@@ -183,7 +186,7 @@ More importantly: if the backend is ever changed to return HTTP 204 No Content, 
 
 ---
 
-### MR-03: `RequestDetailOut` Schema Omits Several Fields Present on the `Request` Model — Incomplete Detail View
+### MR-03: `RequestDetailOut` Schema Omits Several Fields Present on the `Request` Model — Incomplete Detail View ✓ RESOLVED (commits ab59e70, ce4b26a)
 
 **File:** `backend/app/schemas/webapp.py:115-130`
 
@@ -225,7 +228,7 @@ Also update `backend/app/api/webapp/requests.py:128-141` to pass these fields to
 
 ## Low Severity
 
-### LR-01: No Input Length Limit on Free-Text Fields in `RequestCreate` — Unbounded DB Writes
+### LR-01: No Input Length Limit on Free-Text Fields in `RequestCreate` — Unbounded DB Writes ✓ RESOLVED (commit 2f50b36)
 
 **File:** `backend/app/schemas/webapp.py:42-54`
 
