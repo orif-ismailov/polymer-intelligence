@@ -1,8 +1,8 @@
 /**
  * Purchase Requests page — flagship master-detail screen (REQ-purchase-requests).
  *
- * Server component: renders static header and KPI card layout.
- * Client components (in Suspense): RequestsFilterBar, RequestsTable, RequestDetailPanel.
+ * "use client" required so Lucide icon components can be passed as props to KpiCard
+ * (functions cannot be passed from Server Components to Client Components in Next.js).
  *
  * Header: title + subtitle, Search input, "Export CSV" button, Settings icon, "● Live Data".
  * KPIs: Total Requests, Total Volume, Avg Target Price, Hot Requests, Sources, Updated.
@@ -13,6 +13,8 @@
  * UI-SPEC §Purchase Requests / Export button behavior (CSV).
  * No hardcoded hex — token classes only.
  */
+
+"use client";
 
 import { Suspense } from "react";
 import {
