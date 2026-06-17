@@ -30,8 +30,10 @@ from app.models.requests import Client
 
 logger = logging.getLogger(__name__)
 
-# Module-level constant sourced from settings so tests can patch settings in conftest.
-INIT_DATA_TTL_SECONDS: int = settings.TELEGRAM_INIT_DATA_TTL_SECONDS
+# NOTE: TTL is intentionally NOT captured as a module-level constant; it is read from
+# settings inside verify_init_data() at call time so tests can patch
+# settings.TELEGRAM_INIT_DATA_TTL_SECONDS without the cached value taking precedence
+# (HR-02). The old module-level constant is gone.
 
 
 class InvalidInitData(ValueError):
@@ -109,8 +111,14 @@ def verify_init_data(raw: str) -> dict[str, object]:
         raise InvalidInitData("missing or invalid auth_date") from exc
 
     age_seconds = int(time.time()) - auth_date
-    if age_seconds > INIT_DATA_TTL_SECONDS:
-        raise InvalidInitData(f"initData expired: age={age_seconds}s > TTL={INIT_DATA_TTL_SECONDS}s")
+    # HR-01: reject tokens from the future (more than 5 minutes of clock skew allowed)
+    if age_seconds < -300:
+        raise InvalidInitData(f"initData from the future: age={age_seconds}s")
+    # HR-02: read TTL from settings at call time (not a module-level constant) so
+    # tests can patch settings.TELEGRAM_INIT_DATA_TTL_SECONDS without interference.
+    ttl = settings.TELEGRAM_INIT_DATA_TTL_SECONDS
+    if age_seconds > ttl:
+        raise InvalidInitData(f"initData expired: age={age_seconds}s > TTL={ttl}s")
 
     # Parse the 'user' JSON field
     try:
