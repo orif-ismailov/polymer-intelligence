@@ -137,6 +137,22 @@ Phase 3 is complete. All implementation committed and CI green:
 
 Phase 4 (Dashboard + Source Constructor) can begin. It depends on `requests` data from Phase 3 and the `/webapp/requests` API for the Purchase Requests master-detail screen.
 
+## Self-Check: PASSED
+
+| Check | Result |
+|---|---|
+| `docs/phase-03-acceptance.md` exists | FOUND |
+| `docs/phase-03-acceptance.md` cites TZ §6.1.1 | PASS (grep confirmed) |
+| `docs/phase-03-acceptance.md` has deferral sign-off section | PASS |
+| `.planning/phases/03-client-circuit/03-06-SUMMARY.md` exists | FOUND |
+| Commit `d60e814` (SLA tests) | FOUND |
+| Commit `393a31a` (acceptance doc) | FOUND |
+| Commit `ffd03e3` (deferral annotation + SUMMARY) | FOUND |
+| Commit `432948d` (STATE.md + ROADMAP.md) | FOUND |
+| ROADMAP.md Phase 3 row shows `6/6 Complete 2026-06-17` | PASS |
+| STATE.md Deferred Items has Phase 3 SC#1–SC#5 row | PASS |
+| STATE.md stopped-at updated | PASS |
+
 ---
 *Phase: 03-client-circuit*
 *Completed: 2026-06-17*
