@@ -1,9 +1,138 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply antialiased bg-background text-foreground;
+  }
+
+  /*
+   * shadcn CSS variables reconciled to the locked Polymer Intelligence dark tokens.
+   * Source of truth: dashboard/tailwind.config.ts (DO NOT overwrite that file).
+   * The existing Tailwind tokens are used as hex values; these OKLCH equivalents
+   * are derived from the same hex values for shadcn component internals.
+   *
+   * Mapping:
+   *   --background       ← #0f172a (bg-background, slate-900)
+   *   --card             ← #1e293b (bg-background-secondary, slate-800)
+   *   --popover          ← #1e293b (bg-background-secondary, slate-800)
+   *   --primary          ← #10b981 (accent, emerald-500)
+   *   --muted            ← #334155 (bg-background-tertiary, slate-700)
+   *   --accent           ← #334155 (bg-background-tertiary, slate-700)
+   *   --border           ← #334155 (border-DEFAULT, slate-700)
+   *   --input            ← #334155 (border-DEFAULT, slate-700)
+   *   --ring             ← #10b981 (accent, emerald-500)
+   *   --foreground       ← #f8fafc (foreground.DEFAULT, slate-50)
+   *   --muted-foreground ← #94a3b8 (foreground-muted, slate-400)
+   */
+
+  :root {
+    /* Light mode — not used (html.dark is always set in layout.tsx) */
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+  }
+
+  /* Dark theme — reconciled to the locked Polymer Intelligence dark tokens */
+  .dark {
+    /* #0f172a slate-900 → background */
+    --background: oklch(0.176 0.020 252.6);
+
+    /* #f8fafc slate-50 → foreground */
+    --foreground: oklch(0.985 0.002 247.8);
+
+    /* #1e293b slate-800 → card / popover */
+    --card: oklch(0.248 0.018 260.0);
+    --card-foreground: oklch(0.985 0.002 247.8);
+    --popover: oklch(0.248 0.018 260.0);
+    --popover-foreground: oklch(0.985 0.002 247.8);
+
+    /* #10b981 emerald-500 → primary / ring (accent) */
+    --primary: oklch(0.673 0.158 160.0);
+    --primary-foreground: oklch(1 0 0);
+
+    /* #334155 slate-700 → secondary / muted / accent surface */
+    --secondary: oklch(0.354 0.018 263.8);
+    --secondary-foreground: oklch(0.985 0.002 247.8);
+    --muted: oklch(0.354 0.018 263.8);
+
+    /* #94a3b8 slate-400 → muted-foreground */
+    --muted-foreground: oklch(0.673 0.018 264.5);
+
+    /* #334155 slate-700 → accent surface (hover/active backgrounds) */
+    --accent: oklch(0.354 0.018 263.8);
+    --accent-foreground: oklch(0.985 0.002 247.8);
+
+    /* destructive stays red */
+    --destructive: oklch(0.704 0.191 22.216);
+
+    /* #334155 slate-700 → border / input */
+    --border: oklch(0.354 0.018 263.8);
+    --input: oklch(0.354 0.018 263.8);
+
+    /* #10b981 emerald-500 → ring */
+    --ring: oklch(0.673 0.158 160.0);
+
+    /* Chart colors */
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+
+    /* Sidebar: bg-background-secondary */
+    --sidebar: oklch(0.248 0.018 260.0);
+    --sidebar-foreground: oklch(0.985 0.002 247.8);
+
+    /* Sidebar primary: accent green */
+    --sidebar-primary: oklch(0.673 0.158 160.0);
+    --sidebar-primary-foreground: oklch(1 0 0);
+
+    /* Sidebar accent: bg-background-tertiary */
+    --sidebar-accent: oklch(0.354 0.018 263.8);
+    --sidebar-accent-foreground: oklch(0.985 0.002 247.8);
+
+    /* Sidebar border / ring */
+    --sidebar-border: oklch(0.354 0.018 263.8);
+    --sidebar-ring: oklch(0.673 0.158 160.0);
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
   }
 }
