@@ -19,7 +19,7 @@ from __future__ import annotations
 import datetime
 import decimal
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.enums import PriceBasis, RequestStatus, Urgency
 
@@ -39,19 +39,19 @@ class RequestCreate(BaseModel):
     """
 
     product_id: int
-    grade_text: str | None = None
-    polymer_type: str | None = None
+    grade_text: str | None = Field(default=None, max_length=500)
+    polymer_type: str | None = Field(default=None, max_length=500)
     volume: decimal.Decimal
     volume_unit: str = "MT"
     target_price: decimal.Decimal | None = None
     currency: str = "USD"
     incoterms: PriceBasis = PriceBasis.unknown
     destination_country: str = "UZ"
-    port_or_city: str | None = None
+    port_or_city: str | None = Field(default=None, max_length=200)
     desired_date: datetime.date | None = None
     validity_days: int = 30
     urgency: Urgency = Urgency.medium
-    comment: str | None = None
+    comment: str | None = Field(default=None, max_length=2000)
 
     @field_validator("volume")
     @classmethod
