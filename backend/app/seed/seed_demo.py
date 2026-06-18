@@ -56,26 +56,34 @@ def seed_demo() -> bool:
         # ── Sources ─────────────────────────────────────────────────────────
         # One healthy website (enabled), one healthy RSS, one pending channel
         # (disabled — shows the "Pending activation (Phase 5)" state on /sources).
+        # WR-08: include config column so the enabled html_table source has a
+        # valid URL/table_selector when the adapter's fetch() is called.
+        # Without config the adapter returns [] silently (null config = empty url).
         website_id = db.execute(
             sa.text(
                 """
                 INSERT INTO sources (kind, adapter, name, url, country, is_enabled,
-                                     last_test_ok_at, last_success_at, consecutive_failures)
+                                     config, last_test_ok_at, last_success_at, consecutive_failures)
                 VALUES ('website', 'html_table', :name, 'https://example.uz/prices',
-                        'UZ', true, :now, :now, 0)
+                        'UZ', true,
+                        '{"url": "https://example.uz/prices", "table_selector": "table"}'::jsonb,
+                        :now, :now, 0)
                 RETURNING id
                 """
             ),
             {"name": f"{_SENTINEL} Uzbek Polymer Exchange", "now": now},
         ).scalar_one()
 
+        # WR-08: include config for RSS source too
         db.execute(
             sa.text(
                 """
                 INSERT INTO sources (kind, adapter, name, url, country, is_enabled,
-                                     last_test_ok_at, last_success_at, consecutive_failures)
+                                     config, last_test_ok_at, last_success_at, consecutive_failures)
                 VALUES ('rss', 'rss', :name, 'https://example.uz/feed.xml',
-                        'UZ', true, :now, :now, 0)
+                        'UZ', true,
+                        '{"url": "https://example.uz/feed.xml", "currency_default": "USD"}'::jsonb,
+                        :now, :now, 0)
                 """
             ),
             {"name": f"{_SENTINEL} Market News RSS", "now": now},
