@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 04-06-PLAN.md
+status: ready
+stopped_at: Completed Phase 04 — verified, code-reviewed + fixed (9/9 plans)
 last_updated: "2026-06-18T10:43:38.353Z"
 last_activity: 2026-06-18
 progress:
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Every relevant market event lands accurately and quickly in a single normalized stream the team can see, filter, and act on — with no single source able to take the others down.
-**Current focus:** Phase 04 — dashboard-source-constructor
+**Current focus:** Phase 05 — telegram-monitoring-ai (next)
 
 ## Current Position
 
 Phase: 5
 Plan: Not started
-Status: Phase complete — ready for verification
+Status: Phase 04 complete & verified (code review applied — 5 critical + 8 warning fixed). Phase 05 next — GATED on customer-provided inputs (Telegram userbot account + API_ID/API_HASH, AI control samples, synonyms/channel lists).
 Last activity: 2026-06-18
 
 Progress: [██████████] 97%
