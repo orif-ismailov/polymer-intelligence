@@ -50,4 +50,12 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "check_source_health",
         "schedule": crontab(minute="*/5"),
     },
+    # ── Userbot heartbeat health check: every 5 minutes ──────────────────────
+    # Reads the Redis heartbeat written by the userbot process (userbot:heartbeat).
+    # Raises a deduped source_failure alert when the userbot has been silent
+    # for more than USERBOT_SILENCE_SECONDS (300 s = 5 min) — ROADMAP SC#1.
+    "check_userbot_health": {
+        "task": "check_userbot_health",
+        "schedule": crontab(minute="*/5"),
+    },
 }
