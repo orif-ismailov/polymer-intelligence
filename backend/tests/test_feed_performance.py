@@ -48,10 +48,14 @@ def _build_app_with_real_db():
 
 
 def _get_real_engine():
-    """Return the SQLAlchemy engine from app.core.db for raw SQL execution."""
+    """Return a synchronous SQLAlchemy engine for raw SQL execution.
+
+    Keeps the project's psycopg v3 dialect (postgresql+psycopg://) — psycopg v3
+    drives synchronous engines fine, and psycopg2 is not installed.
+    """
     import sqlalchemy as sa
     from app.core.config import settings
-    return sa.create_engine(settings.DATABASE_URL.replace("+psycopg", ""))
+    return sa.create_engine(str(settings.DATABASE_URL))
 
 
 # ---------------------------------------------------------------------------
@@ -61,14 +65,31 @@ def _get_real_engine():
 
 @pytest.fixture(scope="module")
 def perf_engine():
-    """Engine scoped to the module — one connection pool for all perf tests."""
+    """Engine scoped to the module — one connection pool for all perf tests.
+
+    Probes connectivity and SKIPS (rather than errors) when no real Postgres is
+    reachable with the feed schema present. This keeps `pytest -m performance` a
+    clean no-op in any environment without a purpose-built perf database (CI,
+    a developer laptop, the dev stack's `test` DB that may not exist) — it never
+    targets or pollutes the real application database. Keeps the project's
+    psycopg v3 dialect; psycopg2 is intentionally not installed.
+    """
+    import sqlalchemy as sa
     from sqlalchemy import create_engine
+    from sqlalchemy.exc import SQLAlchemyError
     from app.core.config import settings
-    db_url = str(settings.DATABASE_URL)
-    # Use psycopg2-style URL for synchronous SQLAlchemy engine
-    if "+psycopg" in db_url:
-        db_url = db_url.replace("+psycopg", "", 1)
-    return create_engine(db_url, pool_pre_ping=True)
+
+    engine = create_engine(str(settings.DATABASE_URL), pool_pre_ping=True)
+    try:
+        with engine.connect() as conn:
+            # Require both connectivity and the signals table (the feed backing store).
+            conn.execute(sa.text("SELECT 1 FROM signals LIMIT 1"))
+    except SQLAlchemyError as exc:
+        pytest.skip(
+            "No reachable Postgres with the feed schema for the performance "
+            f"test ({exc.__class__.__name__}) — provide a perf DB to run it."
+        )
+    return engine
 
 
 @pytest.fixture(scope="module")
@@ -205,14 +226,14 @@ def test_feed_keyset_no_seq_scan(seeded_feed_db):
                price, currency, region, urgency, status, event_at
         FROM v_live_feed
         WHERE
-            (:cursor_ea IS NULL
-             OR event_at < :cursor_ea
-             OR (event_at = :cursor_ea AND id < :cursor_id))
-          AND (:kind IS NULL OR kind = :kind)
-          AND (:product_id IS NULL OR product_id = :product_id)
-          AND (:source IS NULL OR origin = :source)
-          AND (:urgency IS NULL OR urgency = :urgency)
-          AND (:period_lower IS NULL OR event_at >= :period_lower)
+            (CAST(:cursor_ea AS timestamptz) IS NULL
+             OR event_at < CAST(:cursor_ea AS timestamptz)
+             OR (event_at = CAST(:cursor_ea AS timestamptz) AND id < CAST(:cursor_id AS bigint)))
+          AND (CAST(:kind AS text) IS NULL OR kind = CAST(:kind AS text))
+          AND (CAST(:product_id AS integer) IS NULL OR product_id = CAST(:product_id AS integer))
+          AND (CAST(:source AS text) IS NULL OR origin = CAST(:source AS text))
+          AND (CAST(:urgency AS text) IS NULL OR urgency::text = CAST(:urgency AS text))
+          AND (CAST(:period_lower AS timestamptz) IS NULL OR event_at >= CAST(:period_lower AS timestamptz))
         ORDER BY event_at DESC, id DESC
         LIMIT :limit
         """

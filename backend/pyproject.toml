@@ -121,3 +121,7 @@ pythonpath = [".", ".."]
 markers = [
     "performance: integration test requiring a live Postgres DB at ~1M rows; run with -m performance",
 ]
+# Exclude the heavy performance suite from the default run (it seeds ~1M rows and
+# needs real Postgres). Run it explicitly with `pytest -m performance` — the CLI
+# marker expression overrides this default.
+addopts = "-m 'not performance'"
