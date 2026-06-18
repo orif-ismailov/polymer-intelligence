@@ -199,7 +199,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 1** *(contract + [BLOCKING] migration)*
 
-- [ ] 05-01-PLAN.md — Extraction contract: `ExtractionResult` Pydantic schema + immutable versioned prompt (`extract_v1.md` + loader) + published `docs/extraction-schema.json` + anthropic/instructor/telethon deps + **[BLOCKING] Alembic 0003** (parse_runs.latency_ms) (REQ-ai-extraction)
+- [x] 05-01-PLAN.md — Extraction contract: `ExtractionResult` Pydantic schema + immutable versioned prompt (`extract_v1.md` + loader) + published `docs/extraction-schema.json` + anthropic/instructor/telethon deps + **[BLOCKING] Alembic 0003** (parse_runs.latency_ms) (REQ-ai-extraction)
 
 **Wave 2** *(parallel — userbot + LLM service layer, no file overlap)*
 
@@ -241,7 +241,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
-| 5. Telegram Monitoring + AI | 0/5 | Planned | - |
+| 5. Telegram Monitoring + AI | 1/5 | In Progress|  |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
 ---
