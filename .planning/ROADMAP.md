@@ -17,7 +17,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-08..01-10 executed 2026-06-15: dev-nginx boot SC#1 ✓ live, ruff/mypy green SC#5 ✓, S3 env CR-01 ✓; re-verification 2026-06-15 found 3 new gaps → 3/5 must-haves: SC#1 worker/beat crash on missing app.tasks [deferrable to Phase 2], SC#2 migrations not auto-applied on compose up [no lifespan hook], SC#5 dashboard tsc fails on clean CI [.next typegen missing])
 - [x] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health (completed 2026-06-16)
 - [x] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications (completed 2026-06-17)
-- [ ] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard
+- [x] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard (completed 2026-06-18)
 - [ ] **Phase 5: Telegram Monitoring + AI** (E5) - Userbot over the registry, LLM extraction + budget, needs_review flow, eval golden-set, control-sample run
 - [ ] **Phase 6: Acceptance & Handover** (E6) - TZ §6.1 acceptance criteria, restore test, runbook, handover
 
@@ -177,7 +177,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 6** *(acceptance gate)*
 
-- [ ] 04-09-PLAN.md — Acceptance gate: feed performance test (≤500 ms @ ~1M rows, REQ-nfr-performance) + dashboard RBAC matrix test (viewer 403 on writes) + `04-ACCEPTANCE.md` mapping SC#1–SC#5 to a deploy-time drill (honoring the SC#5 telegram cross-phase caveat) + human-verify checkpoint (all 6 requirements)
+- [x] 04-09-PLAN.md — Acceptance gate: feed performance test (≤500 ms @ ~1M rows, REQ-nfr-performance) + dashboard RBAC matrix test (viewer 403 on writes) + `04-ACCEPTANCE.md` mapping SC#1–SC#5 to a deploy-time drill (honoring the SC#5 telegram cross-phase caveat) + human-verify checkpoint (all 6 requirements)
 
 **UI hint**: yes
 **UI contract**: `docs/polymer-intelligence-ui-mockups.md` §3 (Surface B — sidebar nav, dashboard home KPIs, the high-fidelity Purchase Requests master-detail, Price Trends Recharts, /sources add-source wizard, /alerts rules). Next.js app router, TS strict, TanStack Query/Table, shadcn/ui, dark theme via tailwind tokens (no hardcoded colors). Add-source forms render from `GET /admin/source-types` config_schema. Adapters added here: llm_page, html_table, rss (no-code); telegram_channel reused next phase.
@@ -222,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
-| 4. Dashboard + Source Constructor | 8/9 | In Progress|  |
+| 4. Dashboard + Source Constructor | 9/9 | Complete   | 2026-06-18 |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
