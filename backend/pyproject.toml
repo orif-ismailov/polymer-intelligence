@@ -118,3 +118,6 @@ asyncio_mode = "auto"
 # Add repo root to sys.path so tests can import the telegram/ package
 # (which lives at repo root as a sibling of backend/, per dev-spec §4.1).
 pythonpath = [".", ".."]
+markers = [
+    "performance: integration test requiring a live Postgres DB at ~1M rows; run with -m performance",
+]
