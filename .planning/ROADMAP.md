@@ -203,8 +203,8 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 2** *(parallel — userbot + LLM service layer, no file overlap)*
 
-- [ ] 05-02-PLAN.md — Net-new Telethon userbot (separate long-lived process) + live `telegram_channel` adapter + Redis heartbeat + channel-reread-without-restart + userbot-silent admin alert (REQ-telegram-monitoring)
-- [ ] 05-03-PLAN.md — Extractor service (`extract_signal`, instructor TOOLS, temp=0, prompt-cached, fully journaled) + Redis token-budget gate + real rule-based fallback + lead scoring (REQ-ai-extraction, REQ-lead-scoring, REQ-llm-budget)
+- [x] 05-02-PLAN.md — Net-new Telethon userbot (separate long-lived process) + live `telegram_channel` adapter + Redis heartbeat + channel-reread-without-restart + userbot-silent admin alert (REQ-telegram-monitoring)
+- [x] 05-03-PLAN.md — Extractor service (`extract_signal`, instructor TOOLS, temp=0, prompt-cached, fully journaled) + Redis token-budget gate + real rule-based fallback + lead scoring (REQ-ai-extraction, REQ-lead-scoring, REQ-llm-budget)
 
 **Wave 3** *(orchestration — blocked on 05-01 + 05-03)*
 
@@ -241,7 +241,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
-| 5. Telegram Monitoring + AI | 1/5 | In Progress|  |
+| 5. Telegram Monitoring + AI | 3/5 | In Progress|  |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
 ---
