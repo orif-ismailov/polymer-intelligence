@@ -137,19 +137,32 @@ def _build_request_detail(
 def list_requests(
     db: Session = Depends(get_db),
     current_user: StaffUser = Depends(get_current_staff_user),
+    status_filter: str | None = Query(default=None, alias="status"),
+    urgency: str | None = None,
+    product_id: int | None = None,
 ) -> list[RequestListOut]:
-    """GET /requests — return all requests ordered newest-first.
+    """GET /requests — return requests ordered newest-first with optional filters.
+
+    Filter query params (all optional):
+    - status: filter by request status (e.g. "new", "in_progress")
+    - urgency: filter by urgency level (e.g. "high", "medium", "low")
+    - product_id: filter by numeric product id
 
     JWT-guarded (any staff role). Returns RequestListOut[] (no detail fields).
 
     Raises:
         HTTP 401: Missing or invalid Bearer token.
     """
-    reqs = (
-        db.query(Request)
-        .order_by(Request.created_at.desc())
-        .all()
-    )
+    query = db.query(Request).order_by(Request.created_at.desc())
+
+    if status_filter is not None:
+        query = query.filter(Request.status == status_filter)
+    if urgency is not None:
+        query = query.filter(Request.urgency == urgency)
+    if product_id is not None:
+        query = query.filter(Request.product_id == product_id)
+
+    reqs = query.all()
     return [
         RequestListOut(
             id=r.id,
