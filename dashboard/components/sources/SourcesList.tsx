@@ -13,7 +13,7 @@
  * No hardcoded hex. All colors via Tailwind token classes.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, FlaskConical, ToggleLeft, ToggleRight } from "lucide-react";
 import {
@@ -72,9 +72,15 @@ function TestResultBanner({ sourceId, onClose }: { sourceId: number; onClose: ()
   const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  useState(() => {
+  // CR-05: replace the anti-pattern useState initializer (which fires side-effects
+  // on every render in React Strict Mode double-invocation) with a proper useEffect
+  // that runs once on mount and cleans up if the component unmounts before the
+  // fetch resolves (prevents "state update on unmounted component" warnings).
+  useEffect(() => {
+    let cancelled = false;
     apiFetch<SourceTestResult>(`/sources/${sourceId}/test`, { method: "POST" })
       .then((r) => {
+        if (cancelled) return;
         setResult(r);
         setRunning(false);
         if (r.ok) {
@@ -82,10 +88,12 @@ function TestResultBanner({ sourceId, onClose }: { sourceId: number; onClose: ()
         }
       })
       .catch(() => {
+        if (cancelled) return;
         setError("Test request failed. Check your connection.");
         setRunning(false);
       });
-  });
+    return () => { cancelled = true; };
+  }, [sourceId, queryClient]);
 
   if (running) {
     return (
