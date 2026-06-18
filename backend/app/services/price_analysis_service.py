@@ -84,6 +84,15 @@ def compute_price_analysis(
 
     market_avg = decimal.Decimal(str(row[0]))
 
+    # Guard against zero market average (e.g. product with a recorded zero-price).
+    # Decimal raises DivisionByZero / InvalidOperation on 0/0 — return None instead.
+    if market_avg == 0:
+        logger.debug(
+            "price_analysis_service.zero_market_avg",
+            extra={"product_id": product_id},
+        )
+        return None
+
     # delta_pct: positive means target is above market (buyer willing to pay more)
     delta_pct = float((target_price - market_avg) / market_avg * 100)
     delta_pct_rounded = round(delta_pct, 1)
