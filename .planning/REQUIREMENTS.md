@@ -38,7 +38,7 @@
 - [ ] **REQ-ai-extraction** (FR-19): Structure channel messages and free-text requests per a fixed JSON schema; prompt version and model journaled in `parse_runs`.
 - [ ] **REQ-lead-scoring** (FR-20): lead_score (0–1) and HOT/MEDIUM/LOW by rules + LLM; stored in signals.ai / requests.ai; recomputed on prompt-version change.
 - [ ] **REQ-llm-budget** (FR-21): Configurable daily token limit (Redis counter); on exceed, extraction degrades to rule-based + reprocessing queue; admin alerted; per-source 7-day token spend visible for AI sources.
-- [ ] **REQ-source-builder** (FR-22): Admin adds a source via dashboard wizard — pick type (telegram_channel / llm_page / html_table / rss) → auto-built form from adapter config_schema → Test run with extracted-record preview → enable. Enabling without a passing test is impossible; AI sources show token spend; new-source data flows through the common pipeline with no code changes. *Acceptance (TZ §6.1.6): admin adds a public site + Telegram channel with no developer; signals appear in feed; failed-test source cannot be enabled.*
+- [x] **REQ-source-builder** (FR-22): Admin adds a source via dashboard wizard — pick type (telegram_channel / llm_page / html_table / rss) → auto-built form from adapter config_schema → Test run with extracted-record preview → enable. Enabling without a passing test is impossible; AI sources show token spend; new-source data flows through the common pipeline with no code changes. *Acceptance (TZ §6.1.6): admin adds a public site + Telegram channel with no developer; signals appear in feed; failed-test source cannot be enabled.*
 
 ### Telegram Monitoring
 
@@ -104,7 +104,7 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | REQ-price-trends | Phase 4 | Complete |
 | REQ-alerts | Phase 4 | Complete |
 | REQ-bot-team | Phase 4 | Complete |
-| REQ-source-builder | Phase 4 | Pending |
+| REQ-source-builder | Phase 4 | Complete |
 | REQ-telegram-monitoring | Phase 5 | Pending |
 | REQ-ai-extraction | Phase 5 | Pending |
 | REQ-lead-scoring | Phase 5 | Pending |

@@ -173,7 +173,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 5** *(remaining feature screens — blocked on Wave 4)*
 
-- [ ] 04-08-PLAN.md — Sources wizard (auto-form `JsonSchemaForm` from `config_schema`, real Test preview, enable-gate UI, pending pre-staging D-05) + Alerts feed + rule builder (full predicate set, `lead_score_gte` disabled D-07, per-rule chat_ids D-08) + Recharts Price Trends + admin users screen (REQ-source-builder, REQ-alerts, REQ-price-trends, REQ-sources-health)
+- [x] 04-08-PLAN.md — Sources wizard (auto-form `JsonSchemaForm` from `config_schema`, real Test preview, enable-gate UI, pending pre-staging D-05) + Alerts feed + rule builder (full predicate set, `lead_score_gte` disabled D-07, per-rule chat_ids D-08) + Recharts Price Trends + admin users screen (REQ-source-builder, REQ-alerts, REQ-price-trends, REQ-sources-health)
 
 **Wave 6** *(acceptance gate)*
 
@@ -222,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
-| 4. Dashboard + Source Constructor | 7/9 | In Progress|  |
+| 4. Dashboard + Source Constructor | 8/9 | In Progress|  |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
