@@ -44,6 +44,7 @@ send_delivery:
 from __future__ import annotations
 
 import asyncio
+import html
 import logging
 from typing import Any
 
@@ -320,8 +321,12 @@ def send_delivery(alert_id: int) -> dict[str, Any]:
                 )
                 return {"status": "ok", "sent": 0, "error": None}
 
-            # Compose the message text: title + body
-            message_text = f"<b>{alert.title}</b>\n\n{alert.body}"
+            # WR-04: HTML-escape dynamic title/body before embedding in <b>…</b> tags
+            # so that alert content containing "<", ">", "&" doesn't malform the Telegram
+            # HTML message (e.g. "PP > 1000 MT" would otherwise break the markup).
+            safe_title = html.escape(alert.title)
+            safe_body = html.escape(alert.body)
+            message_text = f"<b>{safe_title}</b>\n\n{safe_body}"
             sent_count = 0
 
             for delivery in deliveries:
@@ -345,6 +350,7 @@ def send_delivery(alert_id: int) -> dict[str, Any]:
                         bot.send_message(
                             chat_id=chat_id,
                             text=message_text,
+                            parse_mode="HTML",  # WR-04: render <b> tags; without this they appear as literal text
                         )
                     )
 
