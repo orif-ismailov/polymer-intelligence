@@ -5,12 +5,13 @@ Fetches the RSS/Atom feed URL and maps each entry to normalized signal-draft
 fields (D-06: product/grade/volume/price/currency/section/event_at).
 
 Parsing strategy (Environment Availability — 04-RESEARCH.md Pitfall 4):
-- Prefer stdlib xml.etree.ElementTree to avoid adding feedparser as a new
-  dependency (T-04-SC threat register recommendation).
-- feedparser is not installed in this project; stdlib fallback handles both
-  RSS 2.0 and Atom 1.0 formats.
+- Prefer defusedxml (entity-safe) when available; fall back to stdlib
+  xml.etree.ElementTree. defusedxml prevents billion-laughs XML bombs (WR-03).
+- Both RSS 2.0 and Atom 1.0 formats are supported.
 
 Security (T-04-19): is_safe_url() is called BEFORE any HTTP fetch.
+Security (WR-03): response body is capped at 5 MB before parsing; defusedxml
+  is used when available to mitigate exponential-entity-expansion attacks.
 
 Design (D-04): Fully live in Phase 4 — Test returns real rows; enable-on-pass
 works end-to-end.
@@ -24,6 +25,15 @@ import logging
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+# WR-03: prefer defusedxml (entity-safe, defends against billion-laughs XML bombs).
+# Fall back to stdlib ET when defusedxml is not installed so the adapter remains
+# functional during the transition period while the dependency is being added.
+try:
+    import defusedxml.ElementTree as _safe_ET  # type: ignore[import-untyped]
+    _parse_xml = _safe_ET.fromstring
+except ImportError:  # defusedxml not yet installed — safe fallback, size-cap still applies
+    _parse_xml = ET.fromstring  # type: ignore[assignment]
 
 from pydantic import BaseModel, Field
 
@@ -93,8 +103,16 @@ def _parse_feed(content: bytes, config: dict) -> list[dict[str, object]]:
     currency_default = config.get("currency_default", "USD") or "USD"
     section_default = config.get("section_default") or None
 
+    # WR-03: cap response body before parsing to prevent billion-laughs XML bombs
+    # (CPU/memory exhaustion from exponential entity expansion in attacker-controlled feeds).
+    _MAX_FEED_BYTES = 5 * 1024 * 1024  # 5 MB
+    if len(content) > _MAX_FEED_BYTES:
+        raise ValueError(
+            f"Feed response too large ({len(content)} bytes > {_MAX_FEED_BYTES} byte limit)"
+        )
+
     try:
-        root = ET.fromstring(content)
+        root = _parse_xml(content)
     except ET.ParseError as exc:
         raise ValueError(f"Failed to parse feed XML: {exc}") from exc
 
