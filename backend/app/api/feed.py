@@ -175,14 +175,14 @@ def get_feed(
                price, currency, region, urgency, status, event_at
         FROM v_live_feed
         WHERE
-            (:cursor_ea IS NULL
-             OR event_at < :cursor_ea
-             OR (event_at = :cursor_ea AND id < :cursor_id))
-          AND (:kind IS NULL OR kind = :kind)
-          AND (:product_id IS NULL OR product_id = :product_id)
-          AND (:source IS NULL OR origin = :source)
-          AND (:urgency IS NULL OR urgency = :urgency)
-          AND (:period_lower IS NULL OR event_at >= :period_lower)
+            (CAST(:cursor_ea AS timestamptz) IS NULL
+             OR event_at < CAST(:cursor_ea AS timestamptz)
+             OR (event_at = CAST(:cursor_ea AS timestamptz) AND id < CAST(:cursor_id AS bigint)))
+          AND (CAST(:kind AS text) IS NULL OR kind = CAST(:kind AS text))
+          AND (CAST(:product_id AS integer) IS NULL OR product_id = CAST(:product_id AS integer))
+          AND (CAST(:source AS text) IS NULL OR origin = CAST(:source AS text))
+          AND (CAST(:urgency AS text) IS NULL OR urgency::text = CAST(:urgency AS text))
+          AND (CAST(:period_lower AS timestamptz) IS NULL OR event_at >= CAST(:period_lower AS timestamptz))
         ORDER BY event_at DESC, id DESC
         LIMIT :limit
         """
