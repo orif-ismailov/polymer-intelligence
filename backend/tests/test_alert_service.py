@@ -336,7 +336,11 @@ class TestDedupe:
             assert mock_db.add.called
 
     def test_dedupe_on_integrity_error(self) -> None:
-        """IntegrityError on flush → rollback + continue (no delivery, no dispatch)."""
+        """IntegrityError on flush → SAVEPOINT rollback + continue (no delivery, no dispatch).
+
+        CR-02: the fix uses db.begin_nested() (SAVEPOINT) instead of db.rollback() so only
+        the duplicate alert insert is undone, not the caller's entire transaction.
+        """
         from sqlalchemy.exc import IntegrityError  # noqa: PLC0415
 
         from app.services.alert_service import evaluate_alert_rules  # noqa: PLC0415
@@ -347,7 +351,16 @@ class TestDedupe:
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.all.return_value = [rule]
-        # ALL flushes raise IntegrityError → alert already exists
+
+        # begin_nested() returns a context manager; its __exit__ raises IntegrityError
+        # when flush() inside the block raises IntegrityError.
+        nested_ctx = MagicMock()
+        nested_ctx.__enter__ = MagicMock(return_value=nested_ctx)
+        nested_ctx.__exit__ = MagicMock(return_value=False)  # re-raises exceptions
+        mock_db.begin_nested = MagicMock(return_value=nested_ctx)
+
+        # flush() raises IntegrityError → caught by begin_nested().__exit__ which
+        # re-raises it → caught by the service's except IntegrityError block.
         mock_db.flush = MagicMock(side_effect=IntegrityError("unique", {}, Exception()))
 
         with patch("app.services.alert_service._load_entity", return_value=signal), \
@@ -357,8 +370,10 @@ class TestDedupe:
 
             evaluate_alert_rules(mock_db, signal_id=77)
 
-        # db.rollback() must be called on IntegrityError
-        mock_db.rollback.assert_called()
+        # begin_nested() must have been called (SAVEPOINT pattern — CR-02)
+        mock_db.begin_nested.assert_called()
+        # db.rollback() on the shared session must NOT be called (would wipe caller's tx)
+        mock_db.rollback.assert_not_called()
         # No deliveries dispatched
         mock_send_delivery.apply_async.assert_not_called()
 

@@ -233,12 +233,16 @@ def evaluate_alert_rules(
             request_id=request_id,
             dedupe_key=dedupe_key,
         )
-        db.add(alert)
 
+        # Use a SAVEPOINT so that a duplicate-key IntegrityError only rolls back
+        # this alert insert, not the caller's entire transaction.
+        # (Service-never-commits: db.rollback() on the shared session would wipe
+        # everything the caller wrote before calling evaluate_alert_rules — CR-02.)
         try:
-            db.flush()  # get alert.id; raises IntegrityError on duplicate dedupe_key
+            with db.begin_nested():   # SAVEPOINT
+                db.add(alert)
+                db.flush()  # get alert.id; raises IntegrityError on duplicate dedupe_key
         except IntegrityError:
-            db.rollback()
             logger.info(
                 "alert_service.dedupe_skip",
                 extra={"rule_id": rule.id, "entity_type": entity_type, "entity_id": entity_id},
