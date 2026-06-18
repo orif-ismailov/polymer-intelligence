@@ -74,6 +74,7 @@ export function RequestActions({
   const [noteText, setNoteText] = useState("");
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(status);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // Fetch staff users for Assign Owner dropdown
@@ -182,16 +183,19 @@ export function RequestActions({
 
   const handleStatusChange = useCallback(
     (newStatus: string) => {
-      setSelectedStatus(newStatus);
-      if (newStatus !== "cancelled") {
+      if (newStatus === "cancelled") {
+        setSelectedStatus("cancelled");
+        setShowCancelDialog(true);
+      } else {
+        setSelectedStatus(newStatus);
         statusMutation.mutate(newStatus);
       }
-      // "cancelled" is handled by AlertDialog confirm
     },
     [statusMutation],
   );
 
   const handleConfirmCancel = useCallback(() => {
+    setShowCancelDialog(false);
     statusMutation.mutate("cancelled");
   }, [statusMutation]);
 
@@ -313,56 +317,61 @@ export function RequestActions({
         >
           Status
         </label>
-        <AlertDialog>
-          <div className="relative">
-            <select
-              id={`status-select-${requestId}`}
-              value={selectedStatus}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "cancelled") {
-                  // Will be confirmed by AlertDialog
-                  setSelectedStatus("cancelled");
-                } else {
-                  handleStatusChange(val);
-                }
-              }}
-              disabled={isAnyLoading}
-              className="w-full h-8 rounded-lg border border-border bg-background-secondary px-2.5 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* WR-06: use controlled open prop on AlertDialog so Radix manages focus-trap,
+            Escape key, and ARIA attributes correctly. Previously the dialog was opened
+            via conditional rendering without wiring onOpenChange, breaking Escape key. */}
+        <div className="relative">
+          <select
+            id={`status-select-${requestId}`}
+            value={selectedStatus}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            disabled={isAnyLoading}
+            className="w-full h-8 rounded-lg border border-border bg-background-secondary px-2.5 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          {/* Cancel confirmation dialog */}
-          {selectedStatus === "cancelled" && (
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Cancel this request? This cannot be undone. The buyer will not
-                  be notified automatically.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel
-                  onClick={() => setSelectedStatus(status)}
-                >
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleConfirmCancel}
-                  className="bg-red-500 text-white hover:bg-red-600"
-                >
-                  Confirm
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          )}
+        {/* Cancel confirmation dialog — controlled open prop (WR-06) */}
+        <AlertDialog
+          open={showCancelDialog}
+          onOpenChange={(open) => {
+            if (!open) {
+              // Escape key or outside click: revert selectedStatus to the current status
+              setSelectedStatus(status);
+              setShowCancelDialog(false);
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cancel this request? This cannot be undone. The buyer will not
+                be notified automatically.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => {
+                  setSelectedStatus(status);
+                  setShowCancelDialog(false);
+                }}
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmCancel}
+                className="bg-red-500 text-white hover:bg-red-600"
+              >
+                Confirm
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
         </AlertDialog>
       </div>
 
