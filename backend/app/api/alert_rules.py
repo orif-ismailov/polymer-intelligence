@@ -113,17 +113,19 @@ def _rule_to_out(rule: AlertRule) -> AlertRuleOut:
 
 @router.get("", response_model=list[AlertRuleOut])
 def list_alert_rules(
+    limit: int = Query(default=100, le=500),
     db: Session = Depends(get_db),
     _: StaffUser = Depends(get_current_staff_user),
 ) -> list[AlertRuleOut]:
-    """List all alert rules (staff read).
+    """List alert rules (staff read).
 
-    Returns all rules ordered by created_at descending.
+    Returns up to `limit` rules ordered by created_at descending (max 500).
     Accessible by all staff roles (read-only).
     """
     rules = (
         db.query(AlertRule)
         .order_by(AlertRule.created_at.desc())
+        .limit(limit)
         .all()
     )
     return [_rule_to_out(r) for r in rules]
