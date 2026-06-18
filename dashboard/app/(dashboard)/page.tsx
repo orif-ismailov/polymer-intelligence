@@ -7,7 +7,12 @@
  *
  * Live Market Feed panel: LiveFeedTable (compact).
  * AI Market Signals panel: AiMarketSignalsPanel (D-01 placeholder, final shape).
+ *
+ * "use client" required so Lucide icon components can be passed as props to KpiCard
+ * (functions cannot be passed from Server Components to Client Components in Next.js).
  */
+
+"use client";
 
 import { Suspense } from "react";
 import { Users, TrendingUp, FileText, Flame, Bell } from "lucide-react";
