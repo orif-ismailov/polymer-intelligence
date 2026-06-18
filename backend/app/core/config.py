@@ -45,6 +45,16 @@ class Settings(BaseSettings):
     # ── Telegram userbot ──────────────────────────────────────────────────────
     TG_API_ID: int
     TG_API_HASH: str
+    # Session string generated once locally via the interactive StringSession login
+    # flow (see userbot/session.py). Stored in .env, NEVER committed (T-05-05).
+    # Empty default so the API/worker/beat services can start without it;
+    # the userbot raises a clear error at startup if this is empty.
+    TG_SESSION_STRING: str = ""
+    # How often the userbot re-reads the enabled channel list (seconds).
+    # Default 600 = ~10 min — ROADMAP SC#1 "rereads the channel list every ~10 min".
+    USERBOT_CHANNEL_REREAD_SECONDS: int = 600
+    # How often the userbot writes its Redis heartbeat (seconds).
+    USERBOT_HEARTBEAT_SECONDS: int = 60
 
     # ── Auth ──────────────────────────────────────────────────────────────────
     JWT_SECRET: str
