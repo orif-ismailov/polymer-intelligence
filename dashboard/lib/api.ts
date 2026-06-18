@@ -21,6 +21,35 @@ export function getToken(): string | null {
   return _inMemoryToken;
 }
 
+/**
+ * Silently mint a fresh access token from the httpOnly refresh cookie.
+ *
+ * The access token lives only in memory (XSS-safe) and is therefore lost on a
+ * full page reload or when navigating directly to a protected URL. The backend
+ * issues a 7-day httpOnly refresh cookie at login (path=/api/v1/auth); this
+ * exchanges it for a new 15-min access token via POST /auth/refresh.
+ *
+ * Uses a raw fetch (not apiFetch) so a 401 here does NOT trigger the global
+ * redirect-to-login side effect — the caller decides what to do on failure.
+ * Returns the new access token on success, or null when there is no valid
+ * refresh cookie (caller should then redirect to /login).
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { access_token?: string };
+    if (!data.access_token) return null;
+    setToken(data.access_token);
+    return data.access_token;
+  } catch {
+    return null;
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -52,6 +81,8 @@ export async function apiFetch<T>(
   const response = await fetch(url, {
     ...init,
     headers,
+    // Send/receive the httpOnly refresh cookie (login sets it; refresh reads it).
+    credentials: "include",
   });
 
   if (response.status === 401) {

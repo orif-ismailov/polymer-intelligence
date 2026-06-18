@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
+import { refreshAccessToken } from "@/lib/api";
 import queryClient from "@/lib/queryClient";
 
 /**
  * Auth-guarded route-group layout for all dashboard routes.
  *
  * Security boundary: API's require_role is the real guard (PATTERNS.md Shared Patterns).
- * This layout is UX-layer — redirects to /login on absent/expired JWT.
+ * This layout is UX-layer.
  *
- * T-04-05: Absent/expired JWT → redirect to /login.
- * Wraps children in QueryClientProvider (TanStack Query singleton).
+ * The access token lives only in memory, so a full reload / direct navigation
+ * starts unauthenticated. Before bouncing to /login we attempt a silent refresh
+ * from the httpOnly refresh cookie (T-04-05 / DEC-auth-split) — only redirect if
+ * that fails. Wraps children in QueryClientProvider (TanStack Query singleton).
  */
 export default function DashboardLayout({
   children,
@@ -22,16 +25,34 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, login } = useAuth();
+  // True until we know whether the user is authenticated (incl. a refresh attempt).
+  const [checking, setChecking] = useState(!isAuthenticated);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
+    if (isAuthenticated) {
+      setChecking(false);
+      return;
     }
-  }, [isAuthenticated, router]);
+    let cancelled = false;
+    (async () => {
+      const token = await refreshAccessToken();
+      if (cancelled) return;
+      if (token) {
+        login(token);
+      } else {
+        router.replace("/login");
+      }
+      setChecking(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, login, router]);
 
-  // While redirecting, render nothing to avoid flash of protected content
-  if (!isAuthenticated) {
+  // While verifying (or redirecting), render nothing to avoid a flash of
+  // protected content or a premature login bounce.
+  if (checking || !isAuthenticated) {
     return null;
   }
 
