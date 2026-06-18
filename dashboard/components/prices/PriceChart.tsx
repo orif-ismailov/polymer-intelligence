@@ -58,6 +58,20 @@ interface PriceChartProps {
   fxRate?: number;         // UZS per USD (for on-read conversion)
 }
 
+// ─── Slug → numeric product_id mapping ────────────────────────────────────────
+// IDs match the seed data in seed_demo.py and the /prices/series backend contract.
+// The backend only accepts product_id (integer); product_slug is a frontend concept.
+const SLUG_TO_ID: Record<string, number> = {
+  pp_raffia: 1,
+  hdpe: 2,
+  ldpe: 3,
+  lldpe: 4,
+  pvc: 5,
+  pet: 6,
+  ps: 7,
+  abs: 8,
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string): string {
@@ -75,8 +89,11 @@ export function PriceChart({
   currency,
   fxRate = 1,
 }: PriceChartProps) {
+  // Map slug → numeric product_id that the backend expects (CR-04).
+  // product_slug is a frontend concept; the backend /prices/series only accepts product_id.
+  const productId = SLUG_TO_ID[product];
   const params = new URLSearchParams({
-    product_slug: product,
+    ...(productId != null ? { product_id: String(productId) } : {}),
     ...(market && market !== "All" ? { market } : {}),
     date_from: dateFrom,
     date_to: dateTo,
