@@ -41,6 +41,14 @@ dependencies = [
     # XML entity-safe parser — defends against billion-laughs XML bombs in RSS/Atom feeds (WR-03)
     # pypi.org/project/defusedxml — T-04-SC approved
     "defusedxml>=0.7.1",
+    # AI extraction dependencies (Phase 5) — all three packages verified canonical on PyPI
+    # and approved by the user before installation (T-05-SC package-legitimacy gate).
+    # anthropic: pypi.org/project/anthropic (Anthropic official SDK)
+    "anthropic>=0.40,<1.0",
+    # instructor: pypi.org/project/instructor (jxnl-instructor-ai structured outputs)
+    "instructor>=1.5,<2.0",
+    # telethon: pypi.org/project/telethon (LonamiWebs MTProto userbot client)
+    "telethon>=1.36,<2.0",
 ]
 
 [project.optional-dependencies]
@@ -60,7 +68,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["app*"]
+include = ["app*", "parsing*"]
 
 [tool.ruff]
 line-length = 100
@@ -114,6 +122,18 @@ disallow_any_explicit = true
 module = ["app.schemas.*"]
 disallow_untyped_defs = true
 disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+# instructor does not ship a py.typed marker; ignore missing stubs.
+# pypi.org/project/instructor — T-05-SC approved (package legitimacy verified).
+module = ["instructor", "instructor.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# telethon does not ship a py.typed marker; ignore missing stubs.
+# pypi.org/project/telethon — T-05-SC approved (package legitimacy verified).
+module = ["telethon", "telethon.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

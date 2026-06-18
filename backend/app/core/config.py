@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     LLM_EXTRACT_MODEL: str = "claude-haiku-4-5"
     LLM_REPORT_MODEL: str = "claude-sonnet-4-5"
     LLM_DAILY_TOKEN_LIMIT: int = 500_000
+    # Prompt version pin — stored verbatim in parse_runs.prompt_version for replay.
+    # When the prompt changes, create parsing/prompts/extract_vN.md and update this.
+    LLM_PROMPT_VERSION: str = "v1"
 
     # ── Telegram bot ──────────────────────────────────────────────────────────
     BOT_TOKEN: str
