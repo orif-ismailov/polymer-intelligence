@@ -401,21 +401,19 @@ class TestDeliveryDispatch:
              patch("app.services.alert_service.Alert", return_value=alert_mock), \
              patch("app.services.alert_service.Delivery", side_effect=capture_delivery):
 
-            with patch("app.tasks.notify.send_delivery") as mock_task:
-                mock_task.apply_async = MagicMock()
+            # Lazy import inside evaluate_alert_rules resolves to app.tasks.notify.send_delivery
+            # Patch at the source module so the lazy import picks up the mock.
+            with patch("app.tasks.notify.send_delivery") as mock_sd:
+                mock_sd.apply_async = MagicMock()
 
-                # Lazy import inside evaluate_alert_rules → patch the module
-                with patch("app.services.alert_service.send_delivery") as mock_sd:
-                    mock_sd.apply_async = MagicMock()
+                evaluate_alert_rules(mock_db, signal_id=55)
 
-                    evaluate_alert_rules(mock_db, signal_id=55)
-
-                    # send_delivery.apply_async called with queue="notify"
-                    assert mock_sd.apply_async.called
-                    call_kwargs = mock_sd.apply_async.call_args
-                    assert call_kwargs[1].get("queue") == "notify" or (
-                        len(call_kwargs[0]) > 1 and "notify" in str(call_kwargs)
-                    )
+                # send_delivery.apply_async called with queue="notify"
+                assert mock_sd.apply_async.called
+                call_kwargs = mock_sd.apply_async.call_args
+                assert call_kwargs[1].get("queue") == "notify" or (
+                    len(call_kwargs[0]) > 1 and "notify" in str(call_kwargs)
+                )
 
         # Two deliveries created (one per channel)
         assert len(delivery_instances) == 2
