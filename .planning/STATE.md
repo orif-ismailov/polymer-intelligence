@@ -4,13 +4,13 @@ milestone: v1.1
 milestone_name: milestone
 status: executing
 stopped_at: Completed 04-06-PLAN.md
-last_updated: "2026-06-17T12:52:00Z"
-last_activity: 2026-06-17
+last_updated: "2026-06-18T07:20:52.697Z"
+last_activity: 2026-06-17 -- Phase 04 Plan 06 complete (no-code source constructor backend)
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 32
-  completed_plans: 27
+  completed_plans: 30
   percent: 50
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 04 (dashboard-source-constructor) — EXECUTING
-Plan: 7 of 9
+Plan: 8 of 9
 Status: Ready to execute
 Last activity: 2026-06-17 -- Phase 04 Plan 06 complete (no-code source constructor backend)
 
@@ -79,6 +79,7 @@ Progress: [████████░░] 84%
 | Phase 04 P04 | 20min | 2 tasks | 5 files created, 3 modified |
 | Phase 04 P05 | ~15min | 3 tasks | 8 files created, 1 modified |
 | Phase 04 P06 | ~15min | 2 tasks | 10 files created, 2 modified |
+| Phase 04 P07 | 7min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -162,6 +163,10 @@ Most relevant to Phase 1:
 - [Phase 04-06]: DEC-04-06-lazy-ssrf-proxies: is_safe_url/fetch_url imported as module-level lazy proxy functions in adapters — stable patch targets for tests while maintaining DEC-http-client-deferred-import
 - [Phase 04-06]: DEC-04-06-registry-isolation: test fixtures use _reg._REGISTRY direct dict access for re-population after _clear_registry() — avoids 'already registered' ValueError from module cache
 - [Phase 04-06]: DEC-04-06-asyncio-run: asyncio.run() replaces asyncio.get_event_loop().run_until_complete() in tests — Python 3.14 no longer auto-creates event loop in main thread
+- [Phase 04-07]: DEC-04-07-lazy-patch-at-source: send_delivery lazy imported inside evaluate_alert_rules body — tests patch at app.tasks.notify.send_delivery (source module), not app.services.alert_service.send_delivery (no module-level attribute)
+- [Phase 04-07]: DEC-04-07-no-eval-in-docstring: alert_service.py docstrings avoid literal "eval(" string to pass T-04-24 source-scan test (test_no_eval_in_alert_service reads file as text)
+- [Phase 04-07]: DEC-04-07-weekly-aggregate-sql: prices.py selects daily vs weekly SQL branch by (date_to - date_from).days > 365 in router; weekly uses date_trunc('week') GROUP BY per dev-spec §3.1
+- [Phase 04-07]: DEC-04-07-send-delivery-commits: send_delivery Celery task calls session.commit() (unlike service-layer flush-only); task is its own transaction boundary in Celery worker context
 
 ### Pending Todos
 
@@ -194,6 +199,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-17T12:52:00Z
+Last session: 2026-06-18T07:20:52.693Z
 Stopped at: Completed 04-06-PLAN.md
 Resume file: None

@@ -169,7 +169,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 4** *(alerts + prices backend — blocked on Wave 3 main.py)*
 
-- [ ] 04-07-PLAN.md — Alerts engine + team delivery + prices: `alert_service` hardcoded JSONB predicate interpreter (NOT eval, D-07) + dedupe + NEW `send_delivery` task on the `notify` queue with token-bucket (D-09), `/alert-rules` CRUD + `/alerts` feed (per-rule chat_id D-08), `GET /prices/series` (REQ-alerts, REQ-bot-team, REQ-price-trends)
+- [x] 04-07-PLAN.md — Alerts engine + team delivery + prices: `alert_service` hardcoded JSONB predicate interpreter (NOT eval, D-07) + dedupe + NEW `send_delivery` task on the `notify` queue with token-bucket (D-09), `/alert-rules` CRUD + `/alerts` feed (per-rule chat_id D-08), `GET /prices/series` (REQ-alerts, REQ-bot-team, REQ-price-trends)
 
 **Wave 5** *(remaining feature screens — blocked on Wave 4)*
 
@@ -222,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
-| 4. Dashboard + Source Constructor | 4/9 | In Progress|  |
+| 4. Dashboard + Source Constructor | 7/9 | In Progress|  |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
