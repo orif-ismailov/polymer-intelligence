@@ -6,11 +6,15 @@ Phase 4, Plan 04: Purchase Requests response models (RequestListOut, RequestDeta
                    RequestPatch, StaffUserItem).
 Phase 4, Plan 06: Source constructor response models (SourceHealthItem, SourceCreate,
                    SourcePatch, SourceTestOut).
+Phase 4, Plan 07: Alert rules + prices response models (AlertRuleCreate, AlertRulePatch,
+                   AlertRuleOut, AlertOut, PriceSeriesOut).
 
 FeedItem maps to the v_live_feed columns (normalized signals + requests union).
 FeedPage wraps a list of FeedItem with keyset pagination cursors.
 RequestListOut / RequestDetailOut are the dashboard staff views (not client-facing).
 SourceHealthItem / SourceCreate / SourcePatch / SourceTestOut are the wizard API schemas.
+AlertRuleCreate / AlertRulePatch / AlertRuleOut / AlertOut are the alert rules CRUD schemas.
+PriceSeriesOut is the price series data point schema.
 """
 
 from __future__ import annotations
@@ -230,3 +234,91 @@ class SourceTestOut(BaseModel):
     ok: bool
     sample_rows: list[dict[str, Any]]
     error: str | None
+
+
+# ── Alert Rules + Alerts schemas (Phase 4, Plan 07) ───────────────────────────
+
+# Known predicate keys for the Phase-4 alert interpreter (T-04-24).
+# Used for server-side validation of rule condition objects.
+KNOWN_PREDICATE_KEYS: frozenset[str] = frozenset({
+    "kind",
+    "product_id",
+    "volume_gte",
+    "urgency_in",
+    "source_kind",
+    "lead_score_gte",  # D-07: authored but never matching until Phase 5 AI
+})
+
+
+class AlertRuleCreate(BaseModel):
+    """Body for POST /alert-rules — create a new alert rule.
+
+    condition must only use keys from the known predicate set (T-04-24).
+    channels stores per-rule delivery targets: [{"type": "telegram_dm", "chat_id": N}].
+    """
+
+    name: str
+    kind: str = "custom"
+    condition: dict[str, Any]    # validated against KNOWN_PREDICATE_KEYS in router
+    channels: list[dict[str, Any]]  # [{"type": "telegram_dm", "chat_id": int}]
+    is_enabled: bool = True
+
+
+class AlertRulePatch(BaseModel):
+    """Body for PATCH /alert-rules/{id} — update an alert rule (partial update).
+
+    All fields are optional. condition and channels follow same validation as create.
+    """
+
+    name: str | None = None
+    condition: dict[str, Any] | None = None
+    channels: list[dict[str, Any]] | None = None
+    is_enabled: bool | None = None
+
+
+class AlertRuleOut(BaseModel):
+    """Single alert rule in GET /alert-rules response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    kind: str
+    name: str
+    condition: dict[str, Any]
+    channels: list[Any]
+    is_enabled: bool
+    created_by: int | None
+    created_at: datetime.datetime
+
+
+class AlertOut(BaseModel):
+    """Single alert in GET /alerts feed (newest-first)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    kind: str
+    rule_id: int | None
+    severity: str
+    title: str
+    body: str
+    signal_id: int | None
+    request_id: int | None
+    dedupe_key: str | None
+    created_at: datetime.datetime
+
+
+# ── Price Series schema (Phase 4, Plan 07) ────────────────────────────────────
+
+
+class PriceSeriesOut(BaseModel):
+    """Single data point in GET /prices/series response.
+
+    observed_on: the date (or start of week for >1yr weekly-aggregate points).
+    price_avg: average price for the period.
+    currency: the price currency (USD / UZS / CNY).
+    """
+
+    observed_on: datetime.date
+    price_avg: decimal.Decimal
+    currency: str

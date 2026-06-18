@@ -22,11 +22,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.admin_sources import router as admin_sources_router
 from app.api.admin_users import router as admin_users_router
+from app.api.alert_rules import alerts_router, router as alert_rules_router
 from app.api.auth import router as auth_router
 from app.api.dashboard_requests import router as dashboard_requests_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
 from app.api.health import router as health_router
+from app.api.prices import router as prices_router
 from app.api.sources import router as sources_router
 from app.api.telegram_webhook import router as telegram_webhook_router
 from app.api.webapp.requests import router as webapp_requests_router
@@ -139,6 +141,11 @@ def create_app() -> FastAPI:
     application.include_router(admin_users_router, prefix="/api/v1")
     # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─
     application.include_router(sources_router, prefix="/api/v1")
+    # ── alerts engine routers (Phase 4, Plan 07 — alert rules CRUD + alerts feed) ─
+    application.include_router(alert_rules_router, prefix="/api/v1")
+    application.include_router(alerts_router, prefix="/api/v1")
+    # ── prices router (Phase 4, Plan 07 — price series endpoint) ─────────────
+    application.include_router(prices_router, prefix="/api/v1")
     # ── webapp routers (Telegram Web App client surface) ─────────────────────
     application.include_router(webapp_requests_router, prefix="/api/v1")
     application.include_router(webapp_me_router, prefix="/api/v1")
