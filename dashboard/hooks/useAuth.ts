@@ -37,7 +37,7 @@ function isTokenExpired(token: string): boolean {
     const parts = token.split(".");
     if (parts.length !== 3) return true;
     const payload = JSON.parse(atob(parts[1]!));
-    if (!payload.exp) return false;
+    if (!payload.exp) return true;  // WR-07: no exp claim = treat as expired (fail-closed)
     // exp is seconds since epoch
     return Date.now() / 1000 > payload.exp;
   } catch {
