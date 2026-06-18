@@ -239,16 +239,15 @@ class TestInstructorRetryExceptionPropagates:
 
     def test_instructor_retry_exception_propagates(self) -> None:
         """InstructorRetryException raised by create_with_completion must propagate."""
-        from instructor.exceptions import InstructorRetryException
+        from instructor.core import InstructorRetryException
 
         with patch("parsing.extractor._client") as mock_client:
-            # Simulate instructor exhausting all retries
+            # Simulate instructor exhausting all retries (instructor 1.15.3 signature)
             mock_client.messages.create_with_completion.side_effect = (
                 InstructorRetryException(
-                    message="All retries failed",
+                    "All retries failed",
                     n_attempts=2,
-                    last_completion=MagicMock(),
-                    messages=[],
+                    total_usage=120,
                 )
             )
 
