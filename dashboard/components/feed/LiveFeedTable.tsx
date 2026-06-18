@@ -11,7 +11,7 @@
  * - All styling via token classes (no hardcoded hex) — T-04-08
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import {
@@ -164,6 +164,22 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "" }: 
   // Keyset cursor stack for Prev/Next navigation
   const [cursorStack, setCursorStack] = useState<Array<{ event_at: string; id: number }>>([]);
   const currentCursor = cursorStack[cursorStack.length - 1];
+
+  // WR-05: reset the cursor stack when any filter changes so we always start
+  // from page 1 of the new result set, not a stale cursor from the previous one.
+  const prevFiltersRef = useRef({ period, kind, source, urgency });
+  useEffect(() => {
+    const prev = prevFiltersRef.current;
+    if (
+      prev.period !== period ||
+      prev.kind !== kind ||
+      prev.source !== source ||
+      prev.urgency !== urgency
+    ) {
+      setCursorStack([]);
+      prevFiltersRef.current = { period, kind, source, urgency };
+    }
+  }, [period, kind, source, urgency]);
 
   const filters: FeedFilters = {
     period,
