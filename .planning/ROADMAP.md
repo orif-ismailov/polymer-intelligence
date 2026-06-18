@@ -222,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
-| 4. Dashboard + Source Constructor | 9/9 | Complete   | 2026-06-18 |
+| 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
 | 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
