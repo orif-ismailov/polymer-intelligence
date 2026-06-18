@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -48,14 +48,42 @@ def get_current_staff_user(
     Returns:
         The authenticated StaffUser ORM object.
     """
-    if credentials is None:
+    token = credentials.credentials if credentials is not None else None
+    return _resolve_staff_user(token, db)
+
+
+def get_current_staff_user_sse(
+    access_token: str | None = Query(default=None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+    db: Session = Depends(get_db),
+) -> StaffUser:
+    """Staff auth for EventSource (SSE) endpoints.
+
+    The browser ``EventSource`` API cannot set an ``Authorization`` header, so
+    for SSE routes the short-lived access JWT may instead be supplied as the
+    ``access_token`` query parameter. The ``Authorization`` header is still
+    preferred when present (e.g. for curl / tests). Verification, identity
+    extraction, and active-user checks are identical to
+    :func:`get_current_staff_user` (same 401/403 semantics).
+    """
+    token = credentials.credentials if credentials is not None else access_token
+    return _resolve_staff_user(token, db)
+
+
+def _resolve_staff_user(token: str | None, db: Session) -> StaffUser:
+    """Verify an access JWT string and load the active staff user it identifies.
+
+    Shared core of :func:`get_current_staff_user` (Bearer header) and
+    :func:`get_current_staff_user_sse` (header or query param). Centralising the
+    logic keeps the 401/403 behaviour identical across both entry points.
+    """
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = credentials.credentials
     try:
         payload = decode_token(token, expected_type="access")
     except JWTError as exc:

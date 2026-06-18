@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getToken } from "@/lib/api";
 
 const MIN_RETRY_MS = 1_000;
 const MAX_RETRY_MS = 30_000;
@@ -48,7 +49,16 @@ export function useSSE(url: string, onMessage: (data: string) => void) {
     function connect() {
       if (!mounted) return;
 
-      es = new EventSource(url, { withCredentials: true });
+      // EventSource cannot set an Authorization header, so the access JWT is
+      // passed as the access_token query param (backend get_current_staff_user_sse
+      // accepts it). Read the token at connect time so reconnects pick up refreshes.
+      const token = getToken();
+      const sep = url.includes("?") ? "&" : "?";
+      const fullUrl = token
+        ? `${url}${sep}access_token=${encodeURIComponent(token)}`
+        : url;
+
+      es = new EventSource(fullUrl, { withCredentials: true });
 
       es.onmessage = (evt: MessageEvent) => {
         // SSE succeeded — reset backoff

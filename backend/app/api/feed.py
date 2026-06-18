@@ -37,7 +37,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_staff_user
+from app.api.deps import get_current_staff_user, get_current_staff_user_sse
 from app.core.db import get_db
 from app.core.feed_bus import subscribe_feed_events
 from app.models.staff import StaffUser
@@ -225,11 +225,12 @@ def get_feed(
         "Server-Sent Events stream delivering new signal/request IDs as they arrive. "
         "Subscribe to trigger a feed refresh via TanStack Query invalidation. "
         "Returns text/event-stream with X-Accel-Buffering: no (prevents nginx buffering). "
-        "T-04-01: requires valid staff JWT."
+        "T-04-01: requires a valid staff JWT — via the Authorization header or, "
+        "since EventSource cannot set headers, the access_token query parameter."
     ),
 )
 async def feed_stream(
-    _current_user: StaffUser = Depends(get_current_staff_user),
+    _current_user: StaffUser = Depends(get_current_staff_user_sse),
 ) -> StreamingResponse:
     """Stream new entity IDs via Server-Sent Events.
 
