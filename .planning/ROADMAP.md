@@ -195,8 +195,26 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   4. When the daily token limit is exceeded, new items stay pending with rule-based fallback + nightly catch-up and the admin is alerted; per-source 7-day token spend is visible for AI sources
   5. On the customer's 100-message control sample, relevant-signal recall is ≥80% and field precision on detected signals ≥85% (TZ §6.1.3), measured via the eval tool + golden-set
 
-**Plans**: TBD
-**Schema contract**: `docs/polymer-intelligence-db-architecture.md` (raw_items, parse_runs, signals.ai). Extraction output per `docs/extraction-schema.json`; prompts in `parsing/prompts/extract_v{N}.md` (never edit old versions). Media not downloaded in Phase 1.
+**Plans**: 5 plans in 4 waves
+
+**Wave 1** *(contract + [BLOCKING] migration)*
+
+- [ ] 05-01-PLAN.md — Extraction contract: `ExtractionResult` Pydantic schema + immutable versioned prompt (`extract_v1.md` + loader) + published `docs/extraction-schema.json` + anthropic/instructor/telethon deps + **[BLOCKING] Alembic 0003** (parse_runs.latency_ms) (REQ-ai-extraction)
+
+**Wave 2** *(parallel — userbot + LLM service layer, no file overlap)*
+
+- [ ] 05-02-PLAN.md — Net-new Telethon userbot (separate long-lived process) + live `telegram_channel` adapter + Redis heartbeat + channel-reread-without-restart + userbot-silent admin alert (REQ-telegram-monitoring)
+- [ ] 05-03-PLAN.md — Extractor service (`extract_signal`, instructor TOOLS, temp=0, prompt-cached, fully journaled) + Redis token-budget gate + real rule-based fallback + lead scoring (REQ-ai-extraction, REQ-lead-scoring, REQ-llm-budget)
+
+**Wave 3** *(orchestration — blocked on 05-01 + 05-03)*
+
+- [ ] 05-04-PLAN.md — `parse_telegram_item` orchestrator (budget→LLM/fallback→journal→signal, confidence<0.5→needs_review, dead-letter, lead-score stamp) + nightly catch-up + budget admin alert + per-source 7-day spend + dashboard needs_review chip (REQ-ai-extraction, REQ-llm-budget, REQ-lead-scoring)
+
+**Wave 4** *(acceptance gate — blocked on 05-01 + 05-03 + 05-04)*
+
+- [ ] 05-05-PLAN.md — Eval harness (frozen-prediction recall≥80% / precision≥85% gate) + golden/synonym loader + unit-tested metrics + eval CLI + lead-score recompute-on-prompt-version backfill (REQ-ai-extraction, REQ-lead-scoring)
+
+**Schema contract**: `docs/polymer-intelligence-db-architecture.md` (raw_items, parse_runs, signals.ai). Extraction output per `docs/extraction-schema.json` (created in 05-01); prompts in `parsing/prompts/extract_v{N}.md` (never edit old versions — bump + recompute). Media not downloaded in Phase 1. **Gated on customer inputs** (userbot account + API_ID/API_HASH + session string, 100-message golden set, synonyms/channel lists) — plans run against example fixtures + env placeholders until delivered.
 
 ### Phase 6: Acceptance & Handover
 
@@ -223,7 +241,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
-| 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
+| 5. Telegram Monitoring + AI | 0/5 | Planned | - |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
 ---
