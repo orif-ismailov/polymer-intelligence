@@ -446,3 +446,76 @@ class TestUnauthenticatedRequests:
         client = _make_rbac_client(user)
         resp = client.post("/api/v1/alert-rules", json={})
         assert resp.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# DELETE /alert-rules/{id} — admin-only, CR-03
+# ---------------------------------------------------------------------------
+
+class TestAlertRulesDeleteAdminOnly:
+    """CR-03: DELETE /alert-rules/{id} must exist and require admin role."""
+
+    @pytest.mark.parametrize("role,user_id", [
+        ("viewer", 4),
+        ("analyst", 2),
+        ("trader", 3),
+    ])
+    def test_non_admin_rejected_from_delete_alert_rules(self, role: str, user_id: int):
+        """Non-admin roles must get 403 on DELETE /alert-rules/{id}."""
+        user = _make_staff_user(id=user_id, role=role)
+        client = _make_rbac_client(user)
+
+        resp = client.delete(
+            "/api/v1/alert-rules/1",
+            headers=_auth_headers(user_id, role),
+        )
+        assert resp.status_code == 403, (
+            f"Role {role!r} should be blocked (403) on DELETE /alert-rules/1, "
+            f"got {resp.status_code}"
+        )
+
+    def test_admin_delete_returns_404_for_missing_rule(self):
+        """Admin DELETE on non-existent rule returns 404 (auth was OK — not 403)."""
+        user = _make_staff_user(id=1, role="admin")
+        client = _make_rbac_client(user)
+
+        resp = client.delete(
+            "/api/v1/alert-rules/999999",
+            headers=_auth_headers(1, "admin"),
+        )
+        # 404 = rule not found (auth passed); 403 = auth failed (wrong)
+        assert resp.status_code != 403, (
+            f"Admin should not be blocked on DELETE /alert-rules/999999, got 403"
+        )
+
+    def test_admin_delete_existing_rule_returns_204(self):
+        """Admin DELETE on existing rule returns 204 No Content."""
+        from app.core.db import get_db
+        from app.main import create_app
+        from app.models.alerts import AlertRule
+
+        user = _make_staff_user(id=1, role="admin")
+
+        mock_rule = MagicMock(spec=AlertRule)
+        mock_rule.id = 42
+
+        mock_db = MagicMock()
+        mock_db.query.return_value.filter.return_value.first.return_value = user
+        mock_db.get.return_value = mock_rule
+
+        def _override_get_db() -> Generator[Any, None, None]:
+            yield mock_db
+
+        application = create_app()
+        application.dependency_overrides[get_db] = _override_get_db
+
+        with TestClient(application, raise_server_exceptions=False) as c:
+            resp = c.delete(
+                "/api/v1/alert-rules/42",
+                headers=_auth_headers(1, "admin"),
+            )
+        assert resp.status_code == 204, (
+            f"Admin DELETE on existing rule should return 204, got {resp.status_code}"
+        )
+        mock_db.delete.assert_called_once_with(mock_rule)
+        mock_db.commit.assert_called()

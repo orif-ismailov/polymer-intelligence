@@ -217,6 +217,38 @@ def update_alert_rule(
     return _rule_to_out(rule)
 
 
+@router.delete("/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_alert_rule(
+    rule_id: int,
+    db: Session = Depends(get_db),
+    current_user: StaffUser = Depends(require_admin),
+) -> None:
+    """Delete an alert rule (admin write).
+
+    Permanently removes the rule. Returns 204 No Content on success.
+
+    Security (T-04-25): require_admin — non-admin → 403.
+
+    Raises:
+        HTTP 403: Non-admin role.
+        HTTP 404: Rule not found.
+    """
+    rule: AlertRule | None = db.get(AlertRule, rule_id)
+    if rule is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Alert rule {rule_id} not found",
+        )
+
+    db.delete(rule)
+    db.commit()
+
+    logger.info(
+        "alert_rules.deleted",
+        extra={"rule_id": rule_id, "admin_id": current_user.id},
+    )
+
+
 # ── Alerts feed endpoint ───────────────────────────────────────────────────────
 
 
