@@ -21,7 +21,10 @@ Trigger:
 Design:
     - Runs bounded batches inside the service (batch_size=500 per flush).
     - Routes to the "parse" queue (same as LLM extraction tasks).
-    - Commits after each batch inside the task to keep transaction short.
+    - WR-09: single commit semantics. The service flushes per batch but the task
+      commits ONCE after the whole run completes successfully. A mid-run failure
+      therefore rolls back ALL batches (no partial persistence), and the
+      reported rescored_count on the success path always matches persisted work.
     - Idempotent: signals already at the new version are skipped.
     - Returns the total count of re-scored signals.
 
