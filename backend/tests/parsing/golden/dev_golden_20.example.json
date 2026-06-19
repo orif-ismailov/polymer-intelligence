@@ -1,0 +1,342 @@
+[
+  {
+    "id": 1,
+    "raw_text": "Продаём ПП T30S (Шуртан ГКК), 50 тонн, $950/MT EXW Ташкент. Продавец: Шуртан ГКК.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": "Шуртан ГКК",
+      "urgency": null
+    }
+  },
+  {
+    "id": 2,
+    "raw_text": "Куплю HDPE 2420D, 100 MT, цена договорная. Покупатель: ООО Полимер Трейд.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "HDPE",
+      "grade_text": "2420D",
+      "volume": 100,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": "Полимер Трейд",
+      "urgency": null
+    }
+  },
+  {
+    "id": 3,
+    "raw_text": "Сделка закрыта. ПВХ S-7058M, 80 МТ по цене $1050/MT. Покупатель: AgroPlast Toshkent.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "deal",
+      "product": "PVC",
+      "grade_text": "S-7058M",
+      "volume": 80,
+      "volume_unit": "MT",
+      "price": 1050,
+      "currency": "USD",
+      "counterparty_text": "AgroPlast Toshkent",
+      "urgency": null
+    }
+  },
+  {
+    "id": 4,
+    "raw_text": "Цена на ПВХ C-70 сегодня: 1 150 000 сум/кг. Данные UZEX.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "price_quote",
+      "product": "PVC",
+      "grade_text": "C-70",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": 1150000,
+      "currency": "UZS",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 5,
+    "raw_text": "УЗЭКС: итоги торгов за 18 июня 2026. Средняя цена PP T30S — $948/MT. Объём торгов — 250 MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "news",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 250,
+      "volume_unit": "MT",
+      "price": 948,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 6,
+    "raw_text": "Канал полимеры УЗ — подписывайтесь! Актуальные цены каждый день. Реклама.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 8,
+    "raw_text": "ПП рафия 9500000 за тонну. Есть партия.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "рафия",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": 9500000,
+      "currency": "UZS",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 9,
+    "raw_text": "HDPE 2020 — цена 850 у.е./MT. Партия 30 тонн.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "2020",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 850,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 11,
+    "raw_text": "Продаём ПП Т30С (кириллица), 50 тонн, $955/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "Т30С",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 955,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 14,
+    "raw_text": "HDPE, цена вопроса. 50 000 кг. Срочно нужен покупатель!",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": null,
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 15,
+    "raw_text": "5 вагонов LLDPE 218W. Отгрузка из Навои.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LLDPE",
+      "grade_text": "218W",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 17,
+    "raw_text": "Переслано от @polymer_uz_market (3 дня назад): Продаём ПП T30S 50 MT $940/MT.",
+    "fwd_from": {"channel": "@polymer_uz_market", "date": "2026-06-16T10:00:00Z"},
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 21,
+    "raw_text": "Ищем работу водителя-экспедитора. Опыт 5 лет. Т: 98-901-11-22-33.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 32,
+    "raw_text": "ПП BI-2, 50 000 кг, $940/MT. Имеется сертификат.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "BI-2",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 940,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 42,
+    "raw_text": "HDPE 5502, 80 MT, 1 020 000 UZS/MT. Самовывоз Ташкент.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "5502",
+      "volume": 80,
+      "volume_unit": "MT",
+      "price": 1020000,
+      "currency": "UZS",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 56,
+    "raw_text": "Сделка: PP T30S 100 MT по $945/MT с покупателем UzPetroTrade закрыта.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "deal",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 100,
+      "volume_unit": "MT",
+      "price": 945,
+      "currency": "USD",
+      "counterparty_text": "UzPetroTrade",
+      "urgency": null
+    }
+  },
+  {
+    "id": 60,
+    "raw_text": "ПЭТ 1000, 20 000 кг. Цена $855/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PET",
+      "grade_text": "1000",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": 855,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 69,
+    "raw_text": "Новость: ОПЕК сохраняет уровень добычи нефти.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 80,
+    "raw_text": "Переслано: LLDPE FS-040 80 MT $892/MT — предложение недельной давности.",
+    "fwd_from": {"channel": "@polymarket_uz", "date": "2026-06-11T09:00:00Z"},
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 88,
+    "raw_text": "Новость рынка: Цены на PP в РФ снизились на 2%. ICIS.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "news",
+      "product": "PP",
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  }
+]
