@@ -262,7 +262,12 @@ async def feed_stream(
 
     async def event_generator() -> Any:
         async for msg in subscribe_feed_events():
-            yield f"data: {msg}\n\n"
+            # WR-01: sanitize before framing. A CR/LF in the payload would break
+            # SSE framing (a stray "\n\n" terminates the event early or injects a
+            # fake event). The contract is a bare entity ref, so strip CR/LF and
+            # cap the length defensively.
+            safe = str(msg).replace("\r", "").replace("\n", "")[:128]
+            yield f"data: {safe}\n\n"
 
     return StreamingResponse(
         event_generator(),
