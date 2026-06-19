@@ -43,6 +43,7 @@ class FeedItem(BaseModel):
     urgency: str | None
     status: str | None
     event_at: datetime.datetime
+    needs_review: bool               # Phase 5: True when ai->>'needs_review'='true'
 
 
 class FeedPage(BaseModel):

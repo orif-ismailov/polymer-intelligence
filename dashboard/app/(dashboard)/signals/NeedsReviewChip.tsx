@@ -1,40 +1,30 @@
 "use client";
 
 /**
- * NeedsReviewChip — "Needs Review" filter chip that renders disabled
- * with tooltip "Available after Phase 5 AI" per UI-SPEC §Signals/Offers.
- * Disabled in Phase 4 — Phase 5 AI needs_review queue wires this.
+ * NeedsReviewChip — "Needs Review" filter chip.
+ * Phase 5: Enabled as a real toggle that filters the feed to ai.needs_review=true signals.
+ * Previously: disabled stub "Available after Phase 5 AI" (Phase 4 placeholder removed).
  */
 
-import { useState } from "react";
+interface NeedsReviewChipProps {
+  active: boolean;
+  onToggle: () => void;
+}
 
-export function NeedsReviewChip() {
-  const [showTooltip, setShowTooltip] = useState(false);
-
+export function NeedsReviewChip({ active, onToggle }: NeedsReviewChipProps) {
   return (
-    <div className="relative inline-flex">
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        aria-describedby="needs-review-tooltip"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-        onFocus={() => setShowTooltip(true)}
-        onBlur={() => setShowTooltip(false)}
-        className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-border bg-background-secondary px-3 py-1.5 text-xs font-semibold text-foreground-subtle opacity-50"
-      >
-        Needs Review
-      </button>
-      {showTooltip && (
-        <div
-          id="needs-review-tooltip"
-          role="tooltip"
-          className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-background-tertiary border border-border px-3 py-1.5 text-xs text-foreground shadow-lg z-10"
-        >
-          Available after Phase 5 AI
-        </div>
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={active}
+      className={[
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+        active
+          ? "border-accent bg-accent text-foreground-on-accent"
+          : "border-border bg-background-secondary text-foreground-subtle hover:border-accent hover:text-foreground",
+      ].join(" ")}
+    >
+      Needs Review
+    </button>
   );
 }
