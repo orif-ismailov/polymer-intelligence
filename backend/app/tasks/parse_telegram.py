@@ -115,6 +115,32 @@ def raise_budget_exceeded_alert(session: Any) -> None:
     _raise(session)
 
 
+def delete_existing_signals(session: Any, raw_item_id: int) -> int:
+    """Delete any Signal rows already written for a raw_item (idempotency guard).
+
+    A raw_item that was budget-deferred has a rule-based Signal written during the
+    degrade pass. When nightly_llm_catchup re-parses it with the LLM, this guard
+    supersedes the stale rule-based Signal so we never end up with two feed entries
+    (one rule-based, one LLM) for one source message (CR-03). On the normal first
+    pass this deletes nothing.
+
+    Returns the number of rows deleted.
+    """
+    from app.models.signals import Signal  # noqa: PLC0415
+
+    deleted = (
+        session.query(Signal)
+        .filter(Signal.raw_item_id == raw_item_id)
+        .delete(synchronize_session=False)
+    )
+    if deleted:
+        logger.info(
+            "parse_telegram.superseded_existing_signals",
+            extra={"raw_item_id": raw_item_id, "deleted": deleted},
+        )
+    return deleted
+
+
 def match_product(session: Any, text_: str) -> int | None:
     """Wrapper: call relevance_service.match_product."""
     from app.services.relevance_service import match_product as _match  # noqa: PLC0415
@@ -300,6 +326,11 @@ def parse_telegram_item(raw_item_id: int) -> dict[str, Any]:
         if result.is_relevant:
             # G2: confidence < 0.5 → needs_review=True (never auto-published HOT)
             needs_review = result.confidence < CONFIDENCE_REVIEW_THRESHOLD
+
+            # CR-03 idempotency: supersede any Signal already written for this
+            # raw_item (e.g. the rule-based Signal from a prior budget-deferred
+            # pass) so a catch-up reprocess updates rather than duplicates.
+            delete_existing_signals(session, raw_item_id)
 
             signal = create_signal_from_extraction(
                 session,
