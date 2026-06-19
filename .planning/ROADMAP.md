@@ -18,7 +18,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - [x] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health (completed 2026-06-16)
 - [x] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications (completed 2026-06-17)
 - [x] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard (completed 2026-06-18)
-- [ ] **Phase 5: Telegram Monitoring + AI** (E5) - Userbot over the registry, LLM extraction + budget, needs_review flow, eval golden-set, control-sample run
+- [x] **Phase 5: Telegram Monitoring + AI** (E5) - Userbot over the registry, LLM extraction + budget, needs_review flow, eval golden-set, control-sample run (completed 2026-06-19)
 - [ ] **Phase 6: Acceptance & Handover** (E6) - TZ §6.1 acceptance criteria, restore test, runbook, handover
 
 ## Phase Details
@@ -212,7 +212,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 4** *(acceptance gate — blocked on 05-01 + 05-03 + 05-04)*
 
-- [ ] 05-05-PLAN.md — Eval harness (frozen-prediction recall≥80% / precision≥85% gate) + golden/synonym loader + unit-tested metrics + eval CLI + lead-score recompute-on-prompt-version backfill (REQ-ai-extraction, REQ-lead-scoring)
+- [x] 05-05-PLAN.md — Eval harness (frozen-prediction recall≥80% / precision≥85% gate) + golden/synonym loader + unit-tested metrics + eval CLI + lead-score recompute-on-prompt-version backfill (REQ-ai-extraction, REQ-lead-scoring)
 
 **Schema contract**: `docs/polymer-intelligence-db-architecture.md` (raw_items, parse_runs, signals.ai). Extraction output per `docs/extraction-schema.json` (created in 05-01); prompts in `parsing/prompts/extract_v{N}.md` (never edit old versions — bump + recompute). Media not downloaded in Phase 1. **Gated on customer inputs** (userbot account + API_ID/API_HASH + session string, 100-message golden set, synonyms/channel lists) — plans run against example fixtures + env placeholders until delivered.
 
@@ -241,7 +241,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
-| 5. Telegram Monitoring + AI | 4/5 | In Progress|  |
+| 5. Telegram Monitoring + AI | 5/5 | Complete   | 2026-06-19 |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
 ---
