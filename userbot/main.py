@@ -51,6 +51,7 @@ async def run_userbot() -> None:
     # Import here so that importing this module in tests (for ast.parse) does
     # not trigger Settings() validation or Redis/DB connections.
     import redis as redis_lib  # noqa: PLC0415
+    import sqlalchemy as sa  # noqa: PLC0415
     from telethon import TelegramClient, events  # noqa: PLC0415
     from telethon.errors import FloodWaitError  # noqa: PLC0415
 
@@ -181,17 +182,17 @@ async def run_userbot() -> None:
 
                 # ── Persist via the immutable dedupe pipeline ─────────────────
                 with SessionLocal() as db_session:
-                    # Load Source ORM object for save_raw_items (requires source.id)
-                    source = db_session.execute(
-                        __import__("sqlalchemy", fromlist=["text"]).text(
-                            "SELECT id, adapter, config, is_enabled, "
-                            "last_test_ok_at, last_fetch_at, last_success_at, "
-                            "consecutive_failures FROM sources WHERE id = :id"
-                        ),
+                    # WR-08: cheap existence check only (the previous SELECT
+                    # pulled 8 columns whose values were discarded —
+                    # _MinimalSource is built from the already-known source_id).
+                    # Use a clean `import sqlalchemy as sa` instead of the
+                    # obfuscated __import__("sqlalchemy", ...) call.
+                    exists = db_session.execute(
+                        sa.text("SELECT 1 FROM sources WHERE id = :id"),
                         {"id": source_id},
                     ).fetchone()
 
-                    if source is None:
+                    if exists is None:
                         log.warning(
                             "userbot.source_not_found",
                             source_id=source_id,
