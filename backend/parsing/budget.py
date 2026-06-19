@@ -8,13 +8,12 @@ falls back to rule_based_extract and enqueues for nightly LLM catch-up.
 
 Design (AI-SPEC §4 budget.py Core Pattern + §6 G4):
 - One Redis key per UTC day: "llm_tokens:YYYY-MM-DD"
-- INCRBY + EXPIREAT in a single pipeline call (atomic: two commands execute
-  back-to-back without interleaving; note: Redis pipeline is not a transaction
-  unless MULTI/EXEC is used, but INCRBY is atomic per-command so the check
-  + rollback is safe under concurrent workers — worst case we over-spend by one
-  reservation that gets rolled back before any further spending)
-- On budget exceeded: DECRBY to roll back the reservation so the counter
-  remains accurate for the next caller
+- Reservation is a single server-side Lua script (EVAL) that reads the counter,
+  checks the limit, and only INCRBYs + sets the midnight EXPIREAT if the
+  reservation would keep the total at or below the limit. Because the
+  read-check-increment runs as one atomic operation, concurrent prefork workers
+  cannot collectively overshoot the cap (CR-05 — no read-modify-write race).
+- Rejected reservations never touch the counter, so no rollback is needed.
 - Expiry is set to UNIX timestamp of UTC midnight so the key auto-resets daily
   without a cron job
 
@@ -81,21 +80,15 @@ def key_for(d: date) -> str:
     return f"llm_tokens:{d.isoformat()}"
 
 
-def _seconds_until_midnight() -> int:
+def _next_midnight_ts() -> int:
     """Return the UNIX timestamp of the next UTC midnight.
 
     Used as the EXPIREAT argument so the daily budget key auto-resets.
     """
+    from datetime import timedelta
+
     now = datetime.now(tz=timezone.utc)
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    # Next midnight = today's midnight + 1 day
-    next_midnight = midnight.replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    # If now > midnight, advance to next day
-    if now >= next_midnight:
-        from datetime import timedelta
-        next_midnight = next_midnight + timedelta(days=1)
+    next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
     return int(next_midnight.timestamp())
 
 
@@ -104,44 +97,63 @@ def _seconds_until_midnight() -> int:
 # ---------------------------------------------------------------------------
 
 
-def check_and_reserve_tokens(estimated_tokens: int) -> None:
-    """Atomically check + increment the daily Redis token counter.
+# Atomic compare-and-set reservation. Reads the counter, and only INCRBYs (and
+# sets the midnight expiry) if the reservation would keep the total at or below
+# the limit. Returns the post-increment total on success, or -1 if the
+# reservation was rejected. Running the read-check-increment as a single Redis
+# server-side script eliminates the read-modify-write race that allowed N
+# concurrent workers to over-spend by up to N reservations (CR-05).
+_RESERVE_LUA = """
+local current = tonumber(redis.call('GET', KEYS[1]) or '0')
+local amount = tonumber(ARGV[1])
+local limit = tonumber(ARGV[2])
+if current + amount > limit then
+    return -1
+end
+local total = redis.call('INCRBY', KEYS[1], amount)
+redis.call('EXPIREAT', KEYS[1], tonumber(ARGV[3]))
+return total
+"""
 
-    Issues INCRBY + EXPIREAT in a pipeline (two atomic per-command operations).
-    If the resulting total exceeds DAILY_TOKEN_LIMIT, issues DECRBY to roll back
-    the reservation and raises BudgetExceeded.
+
+def check_and_reserve_tokens(estimated_tokens: int) -> None:
+    """Atomically check + reserve daily Redis token budget.
+
+    Runs a single server-side Lua script (EVAL) that reads the counter, checks
+    the limit, and only INCRBYs (plus sets the midnight EXPIREAT) if the
+    reservation would stay at or below DAILY_TOKEN_LIMIT. Because the
+    read-check-increment is one atomic operation, concurrent prefork workers
+    cannot collectively overshoot the cap.
 
     Args:
-        estimated_tokens: Conservative per-call token estimate (e.g. 400 for a
-                          typical extraction call). The actual spend is reconciled
-                          later by record_actual_tokens().
+        estimated_tokens: Conservative per-call token estimate. The actual spend
+                          is reconciled later by record_actual_tokens().
 
     Raises:
         BudgetExceeded: The daily limit would be exceeded. Caller must degrade
                         to rule-based fallback and enqueue for nightly catch-up.
 
     Security (T-05-12 / AI-SPEC G4):
-        This is the hard gate preventing cost DoS. The rollback ensures the counter
-        stays accurate even when concurrent workers simultaneously hit the limit.
+        This is the hard gate preventing cost DoS. The atomic compare-and-set
+        guarantees the cap holds under concurrency — no read-modify-write race.
     """
     key = key_for(date.today())
-    midnight_ts = _seconds_until_midnight()
+    midnight_ts = _next_midnight_ts()
 
-    pipe = _redis.pipeline()
-    pipe.incrby(key, estimated_tokens)
-    pipe.expireat(key, midnight_ts)
-    results = pipe.execute()
+    result = _redis.eval(
+        _RESERVE_LUA,
+        1,            # numkeys
+        key,          # KEYS[1]
+        estimated_tokens,  # ARGV[1]
+        DAILY_TOKEN_LIMIT,  # ARGV[2]
+        midnight_ts,  # ARGV[3]
+    )
 
-    new_total: int = results[0]
-
-    if new_total > DAILY_TOKEN_LIMIT:
-        # Roll back the reservation so the counter remains accurate.
-        # The next caller will see the pre-reservation total.
-        _redis.decrby(key, estimated_tokens)
+    if int(result) < 0:
+        current = daily_spend()
         raise BudgetExceeded(
             f"Daily token budget {DAILY_TOKEN_LIMIT:,} exhausted "
-            f"(current: {new_total - estimated_tokens:,}, "
-            f"requested: {estimated_tokens:,}). "
+            f"(current: {current:,}, requested: {estimated_tokens:,}). "
             "Degrade to rule-based fallback and enqueue for nightly catch-up."
         )
 

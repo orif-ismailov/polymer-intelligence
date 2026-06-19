@@ -1,130 +1,80 @@
 """
 Tests for parsing.budget — token-budget Redis gate.
 
-All tests use fakeredis or unittest.mock to avoid live Redis calls in CI.
+All tests use unittest.mock to avoid live Redis calls in CI.
 
 Test coverage:
-  1. check_and_reserve_tokens succeeds at counter=0 → counter becomes 400;
-     second reserve of 700 raises BudgetExceeded and counter is rolled back to 400
-  2. Daily key includes UTC date and expireat is called; daily_spend() returns counter
+  1. check_and_reserve_tokens uses an atomic EVAL compare-and-set: it succeeds
+     when the reservation fits under the limit and raises BudgetExceeded (without
+     mutating the counter) when it would exceed the limit.
+  2. Daily key includes UTC date and the EVAL sets a midnight EXPIREAT;
+     daily_spend() returns the counter.
   3. record_actual_tokens(reserved=400, actual=520) increments by +120 delta
 """
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
-from decimal import Decimal
+from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 
-def _make_fake_redis(initial_count: int = 0) -> MagicMock:
-    """Create a mock redis client that simulates INCRBY with a running counter."""
-    mock_redis = MagicMock()
-    _counter = {"value": initial_count}
+def _eval_compare_and_set(counter: dict[str, int]):
+    """Return an eval side-effect mirroring the Lua compare-and-set script.
 
-    def incrby_side_effect(key: str, amount: int) -> int:
-        _counter["value"] += amount
-        return _counter["value"]
+    Signature mirrors redis.eval(script, numkeys, key, amount, limit, midnight_ts).
+    Increments the in-memory counter only if it would stay within the limit;
+    returns the new total on success or -1 on rejection.
+    """
 
-    def decrby_side_effect(key: str, amount: int) -> int:
-        _counter["value"] -= amount
-        return _counter["value"]
+    def _side_effect(_script, _numkeys, _key, amount, limit, _ts):  # noqa: ANN001
+        amount = int(amount)
+        limit = int(limit)
+        if counter["value"] + amount > limit:
+            return -1
+        counter["value"] += amount
+        return counter["value"]
 
-    def get_side_effect(key: str) -> bytes | None:
-        return str(_counter["value"]).encode() if _counter["value"] else b"0"
-
-    mock_redis.incrby.side_effect = incrby_side_effect
-    mock_redis.decrby.side_effect = decrby_side_effect
-    mock_redis.get.side_effect = get_side_effect
-
-    # Pipeline mock for INCRBY + EXPIREAT
-    pipe = MagicMock()
-
-    def pipe_execute():
-        # Simulate INCRBY (first command in pipeline)
-        # The pipeline is set up as: pipe.incrby(key, amount); pipe.expireat(key, ts)
-        # We need to replay the commands
-        calls = pipe.incrby.call_args_list
-        if calls:
-            latest = calls[-1]
-            amount = latest[0][1] if latest[0] else latest[1].get("amount", 0)
-            new_val = incrby_side_effect(None, amount)
-            return [new_val, True]
-        return [_counter["value"], True]
-
-    pipe.execute.side_effect = pipe_execute
-    mock_redis.pipeline.return_value.__enter__ = MagicMock(return_value=pipe)
-    mock_redis.pipeline.return_value.__exit__ = MagicMock(return_value=False)
-    mock_redis.pipeline.return_value = pipe
-
-    return mock_redis, _counter
+    return _side_effect
 
 
 class TestCheckAndReserveTokens:
-    """Test 1: Reserve succeeds at 0; second reserve over limit raises BudgetExceeded + rollback."""
+    """Test 1: atomic EVAL reserve succeeds under limit; rejects over limit without mutating."""
 
     def test_reserve_succeeds_and_increments_counter(self) -> None:
         """check_and_reserve_tokens(400) increments the daily counter from 0 to 400."""
         import parsing.budget as budget_module
-        from parsing.schemas import BudgetExceeded
 
         mock_redis = MagicMock()
-        pipe = MagicMock()
-        mock_redis.pipeline.return_value = pipe
-
-        # Track counter state
-        _counter = {"value": 0}
-
-        def pipe_execute():
-            # Simulate the INCRBY 400
-            _counter["value"] += 400
-            return [_counter["value"], True]
-
-        pipe.execute.side_effect = pipe_execute
+        counter = {"value": 0}
+        mock_redis.eval.side_effect = _eval_compare_and_set(counter)
 
         with patch.object(budget_module, "_redis", mock_redis):
             with patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000):
                 budget_module.check_and_reserve_tokens(400)
 
-        # incrby should have been called on the pipe
-        pipe.incrby.assert_called_once()
-        assert _counter["value"] == 400
+        mock_redis.eval.assert_called_once()
+        assert counter["value"] == 400
 
-    def test_second_reserve_over_limit_raises_and_rolls_back(self) -> None:
-        """check_and_reserve_tokens raises BudgetExceeded and rolls back when limit exceeded."""
+    def test_reserve_over_limit_raises_and_does_not_mutate_counter(self) -> None:
+        """An over-limit reservation raises BudgetExceeded and never increments the counter."""
         import parsing.budget as budget_module
         from parsing.schemas import BudgetExceeded
 
         mock_redis = MagicMock()
-        pipe = MagicMock()
-        mock_redis.pipeline.return_value = pipe
-
-        _counter = {"value": 400}
-
-        def pipe_execute():
-            # pipe.incrby was called with the new amount; simulate adding 700 to existing 400
-            calls = pipe.incrby.call_args_list
-            amount = calls[-1][0][1] if calls[-1][0] else 0
-            _counter["value"] += amount
-            return [_counter["value"], True]
-
-        pipe.execute.side_effect = pipe_execute
+        counter = {"value": 400}
+        mock_redis.eval.side_effect = _eval_compare_and_set(counter)
+        # daily_spend() is called to build the error message
+        mock_redis.get.return_value = b"400"
 
         with patch.object(budget_module, "_redis", mock_redis):
             with patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000):
                 with pytest.raises(BudgetExceeded):
                     budget_module.check_and_reserve_tokens(700)
 
-        # After BudgetExceeded, decrby should be called to roll back
-        mock_redis.decrby.assert_called_once()
-        # The counter should be rolled back to 400 (decrby(700) on 1100 = 400)
-        decrby_call = mock_redis.decrby.call_args
-        amount_rolled_back = decrby_call[0][1]
-        assert amount_rolled_back == 700, (
-            f"Expected rollback of 700 tokens, got {amount_rolled_back}"
-        )
+        # Atomic rejection: counter must be untouched (no rollback dance needed).
+        assert counter["value"] == 400
 
 
 class TestDailyKeyAndExpireat:
@@ -138,24 +88,30 @@ class TestDailyKeyAndExpireat:
         key = key_for(today)
         assert today.isoformat() in key, f"Key {key!r} must contain today's date {today.isoformat()!r}"
 
-    def test_expireat_is_called_on_pipeline(self) -> None:
-        """The pipeline calls expireat to set midnight TTL."""
+    def test_eval_receives_key_amount_limit_and_midnight_ts(self) -> None:
+        """check_and_reserve_tokens passes (key, amount, limit, midnight_ts) to EVAL.
+
+        The midnight EXPIREAT is set inside the Lua script; we assert the script
+        is invoked with the daily key and a midnight timestamp argument.
+        """
         import parsing.budget as budget_module
 
         mock_redis = MagicMock()
-        pipe = MagicMock()
-        mock_redis.pipeline.return_value = pipe
-        pipe.execute.return_value = [50, True]  # new_total=50, expireat result
+        mock_redis.eval.return_value = 50  # under limit → reserved
 
         with patch.object(budget_module, "_redis", mock_redis):
             with patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000):
                 budget_module.check_and_reserve_tokens(50)
 
-        # expireat should be called on the pipeline
-        pipe.expireat.assert_called_once()
-        expireat_args = pipe.expireat.call_args[0]
-        # First arg is the key, second is the timestamp
-        assert len(expireat_args) >= 2, "expireat must be called with (key, timestamp)"
+        mock_redis.eval.assert_called_once()
+        call_args = mock_redis.eval.call_args[0]
+        # eval(script, numkeys, key, amount, limit, midnight_ts)
+        assert call_args[1] == 1, "numkeys must be 1"
+        assert date.today().isoformat() in call_args[2], "KEYS[1] must be today's daily key"
+        assert int(call_args[3]) == 50, "ARGV[1] must be the reservation amount"
+        assert int(call_args[4]) == 1000, "ARGV[2] must be the daily limit"
+        # ARGV[3] is the midnight UNIX timestamp (a large positive int)
+        assert int(call_args[5]) > 0, "ARGV[3] must be a midnight UNIX timestamp"
 
     def test_daily_spend_returns_counter_value(self) -> None:
         """daily_spend() returns the current counter value from Redis."""
