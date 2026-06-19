@@ -73,6 +73,8 @@ celery_app.conf.update(
         "check_userbot_health": {"queue": "ingest"},
         "app.tasks.parse.*": {"queue": "parse"},
         "parse_raw_item": {"queue": "parse"},
+        "parse_telegram_item": {"queue": "parse"},
+        "nightly_llm_catchup": {"queue": "parse"},
         "app.tasks.notify.*": {"queue": "notify"},
     },
 )

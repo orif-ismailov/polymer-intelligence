@@ -249,9 +249,9 @@ def test_instructor_retry_exception_dead_letters():
     mock_session.get.return_value = raw_item
 
     exc = InstructorRetryException(
-        message="All retries failed",
+        "All retries failed",
         n_attempts=2,
-        total_usage=MagicMock(),
+        total_usage=0,
         last_completion=None,
         messages=[],
     )
