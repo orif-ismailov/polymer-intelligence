@@ -27,7 +27,8 @@ def beat_schedule() -> dict[str, dict[str, object]]:
 def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> None:
     """BEAT_SCHEDULE must contain all scheduled task entries.
 
-    Phase 5 adds check_userbot_health to the existing five entries.
+    Phase 5 (05-02) adds check_userbot_health.
+    Phase 5 (05-04) adds nightly_llm_catchup for budget-deferred Telegram items.
     """
     required_keys = {
         "uzex_fetch_offers",
@@ -37,6 +38,8 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "check_source_health",
         # Phase 5 (05-02): userbot heartbeat health check — ROADMAP SC#1 liveness
         "check_userbot_health",
+        # Phase 5 (05-04): nightly LLM catch-up for budget-deferred items — ROADMAP SC#4
+        "nightly_llm_catchup",
     }
     assert set(beat_schedule.keys()) == required_keys, (
         f"Beat schedule keys mismatch: {set(beat_schedule.keys())!r}"
