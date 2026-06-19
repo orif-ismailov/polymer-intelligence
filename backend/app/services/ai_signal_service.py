@@ -85,14 +85,20 @@ def _map_urgency(urgency: UrgencyLevel | str | None) -> Urgency | None:
 
 
 def _map_kind(kind: Any) -> SignalKind:
-    """Map ExtractionResult.kind to DB SignalKind enum."""
+    """Map ExtractionResult.kind to DB SignalKind enum.
+
+    WR-07: missing or unrecognized kinds must NOT be coerced to an actionable
+    buy/sell direction (the old default of sell_offer fabricated market
+    direction). Fall back to the non-directional 'news' kind so an unknown kind
+    never invents a buy/sell signal in the feed.
+    """
     if kind is None:
-        return SignalKind.sell_offer  # safe default
+        return SignalKind.news  # non-directional fallback (never fabricate buy/sell)
     kind_val = kind.value if hasattr(kind, "value") else str(kind)
     try:
         return SignalKind(kind_val)
     except ValueError:
-        return SignalKind.sell_offer
+        return SignalKind.news
 
 
 def _parse_event_at(result: ExtractionResult, raw_item: Any) -> datetime.datetime:
