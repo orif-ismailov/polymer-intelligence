@@ -102,12 +102,59 @@ class TestMigration0003RevisionChain:
         assert "0003" in revisions, f"Revision 0003 not found. Available: {revisions}"
         assert "0002" in revisions, f"Revision 0002 not found. Available: {revisions}"
 
-    def test_0003_is_head(self) -> None:
-        """After adding 0003, it should be the head revision."""
+    def test_0003_is_not_head_after_0004(self) -> None:
+        """0003 is no longer head once 0004 is added; 0004 is the head."""
         script_dir = _get_alembic_script_dir()
         heads = script_dir.get_heads()
-        assert "0003" in heads, (
-            f"Revision 0003 is not the head. Current heads: {heads}"
+        assert "0004" in heads, (
+            f"Revision 0004 is not the head. Current heads: {heads}"
+        )
+        assert "0003" not in heads, (
+            f"Revision 0003 should no longer be head after 0004. Current heads: {heads}"
+        )
+
+
+class TestMigration0004RevisionChain:
+    """Verify the 0004 follow-up migration (budget_deferred enum + index fix)."""
+
+    @staticmethod
+    def _load_0004():  # type: ignore[no-untyped-def]
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "migration_0004",
+            BACKEND_DIR
+            / "alembic"
+            / "versions"
+            / "0004_phase5_budget_deferred_and_index_fix.py",
+        )
+        assert spec is not None
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)  # type: ignore[union-attr]
+        return module
+
+    def test_revision_is_0004(self) -> None:
+        module = self._load_0004()
+        assert module.revision == "0004", (
+            f"Expected revision '0004', got {module.revision!r}"
+        )
+
+    def test_down_revision_is_0003(self) -> None:
+        module = self._load_0004()
+        assert module.down_revision == "0003", (
+            f"Expected down_revision '0003', got {module.down_revision!r}"
+        )
+
+    def test_upgrade_and_downgrade_are_callable(self) -> None:
+        module = self._load_0004()
+        assert callable(module.upgrade), "upgrade() must be callable"
+        assert callable(module.downgrade), "downgrade() must be callable"
+
+    def test_revision_walk_includes_0004(self) -> None:
+        script_dir = _get_alembic_script_dir()
+        revisions = {r.revision for r in script_dir.walk_revisions()}
+        assert "0004" in revisions, (
+            f"Revision 0004 not found. Available: {revisions}"
         )
 
 
