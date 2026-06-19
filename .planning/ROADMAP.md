@@ -228,7 +228,26 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   3. The source-constructor acceptance passes: an admin onboards a new public site + Telegram channel with no developer and a failed-test source cannot be enabled (TZ §6.1.6)
   4. Deliverables are handed over: deployment + restore docs, runbook, prompt/extraction-schema descriptions, and admin instructions (sources, alert rules)
 
-**Plans**: TBD
+**Plans**: 7 plans in 4 waves
+
+**Wave 1** *(independent — parallel, no file overlap)*
+
+- [ ] 06-01-PLAN.md — Handover hygiene (D-07): commit `backend/uv.lock` + FastAPI/Starlette ceiling, modernise the 2 stale route-introspection tests, CI installs via `uv sync --frozen`
+- [ ] 06-02-PLAN.md — Restore test (D-04 / §6.1.5): `tests/restore/test_restore_local.sh` (pg_dump → fresh PG16 → restore via runbook → verify schema/rows/ENUMs/`v_live_feed` → assert ≤2h), refine `docs/runbook-backup-restore.md`
+- [ ] 06-03-PLAN.md — Channel close (D-03 / §6.1.6): `test_telegram_channel_close.py` — wizard add → enable-gate (422 without passing test) → fixture MTProto message → `parse_telegram_item` → signal in `v_live_feed`, key-free
+- [ ] 06-04-PLAN.md — Production compose (D-05.1): `deploy/docker-compose.yml` full container set (api, worker, beat, userbot, dashboard, postgres, redis, nginx), nginx-only ingress, TLS, no committed secrets
+
+**Wave 2** *(blocked on 06-04)*
+
+- [ ] 06-05-PLAN.md — Full-stack smoke (D-02): `tests/smoke/test_smoke_full_stack.sh` + `make smoke` — compose up → `/health` → synthetic request→`v_live_feed` → forced fake-source isolation + one `source_failure` alert
+
+**Wave 3** *(docs — blocked on 06-01/06-02/06-03/06-05 for evidence citation)*
+
+- [ ] 06-06-PLAN.md — Consolidated `06-ACCEPTANCE.md` (D-01, one row per §6.1.1–§6.1.6 + blocked-on column + single deploy-day checklist superseding 02/03/05-UAT) + `docs/deployment-guide.md` (D-05.2, EN) + `docs/admin-guide-ru.md` (D-05.3, RU)
+
+**Wave 4** *(capstone — blocked on 06-03 + 06-06)*
+
+- [ ] 06-07-PLAN.md — `HANDOVER.md` §9 index (D-05.4) + retire the SC#5 telegram cross-phase caveat in ROADMAP/04-CONTEXT (gated on 06-03 passing)
 
 ## Progress
 
@@ -242,7 +261,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
 | 5. Telegram Monitoring + AI | 5/5 | Complete    | 2026-06-19 |
-| 6. Acceptance & Handover | 0/TBD | Not started | - |
+| 6. Acceptance & Handover | 0/7 | Not started | - |
 
 ---
 *Roadmap created: 2026-06-13 (Client Phase 1 milestone). Phase 2 international loop = planned follow-up milestone, not in this roadmap.*
