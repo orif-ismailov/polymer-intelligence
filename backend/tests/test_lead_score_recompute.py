@@ -84,10 +84,13 @@ def _make_signal(
 
 
 def _make_mock_session(stale_signals: list[Any]) -> MagicMock:
-    """Build a mock session whose query returns stale_signals on first call, then [].
+    """Build a mock session whose query returns stale_signals on the first batch, then [].
 
-    The mock implements the SQLAlchemy query chain:
-    session.query(...).filter(...).filter(...).order_by(...).offset(...).limit(...).all()
+    The service now uses keyset pagination, so the chain is:
+    session.query(...).filter(...).filter(...).filter(...).order_by(...).limit(...).all()
+    (no .offset()). The mock returns the full stale_signals list on the first
+    .all() and an empty list thereafter, mirroring "all stale rows consumed in
+    one batch, next keyset page is empty".
     """
     session = MagicMock()
     query_mock = MagicMock()
@@ -96,25 +99,61 @@ def _make_mock_session(stale_signals: list[Any]) -> MagicMock:
 
     call_count = [0]
 
-    def _offset(offset_val: int) -> MagicMock:
-        limit_mock = MagicMock()
+    def _limit(limit_val: int) -> MagicMock:
+        all_mock = MagicMock()
 
-        def _limit(limit_val: int) -> MagicMock:
-            all_mock = MagicMock()
+        def _all() -> list[Any]:
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return stale_signals
+            return []
 
-            def _all() -> list[Any]:
-                call_count[0] += 1
-                if call_count[0] == 1:
-                    return stale_signals
-                return []
+        all_mock.all = _all
+        return all_mock
 
-            all_mock.all = _all
-            return all_mock
+    query_mock.limit = _limit
+    session.query.return_value = query_mock
+    return session
 
-        limit_mock.limit = _limit
-        return limit_mock
 
-    query_mock.offset = _offset
+def _make_keyset_mock_session(
+    all_signals: list[Any], *, new_version: str, batch_size: int
+) -> MagicMock:
+    """Build a mock session that emulates real keyset pagination semantics.
+
+    Each .all() returns the next batch_size signals that are (a) still stale
+    (scoring_prompt_version != new_version) and (b) have id greater than the
+    highest id already handed out — exactly the WHERE Signal.id > last_id keyset
+    the service applies. Because the service mutates signal.ai in place, rescored
+    rows drop out of the "stale" set on subsequent batches. This catches the
+    OFFSET-skip bug: an OFFSET-based loop would skip not-yet-processed rows.
+    """
+    session = MagicMock()
+    query_mock = MagicMock()
+    query_mock.filter.return_value = query_mock
+    query_mock.order_by.return_value = query_mock
+
+    cursor = {"last_id": 0}
+    ordered = sorted(all_signals, key=lambda s: s.id)
+
+    def _limit(limit_val: int) -> MagicMock:
+        all_mock = MagicMock()
+
+        def _all() -> list[Any]:
+            batch = [
+                s
+                for s in ordered
+                if s.id > cursor["last_id"]
+                and s.ai.get("scoring_prompt_version") != new_version
+            ][:limit_val]
+            if batch:
+                cursor["last_id"] = batch[-1].id
+            return batch
+
+        all_mock.all = _all
+        return all_mock
+
+    query_mock.limit = _limit
     session.query.return_value = query_mock
     return session
 
@@ -203,6 +242,31 @@ class TestRescoreOnPromptVersionChange:
         assert count == 1
         # Empty ai signal is untouched
         assert signal_empty_ai.ai == {}
+
+    def test_multi_batch_keyset_rescores_all_rows(self) -> None:
+        """WR-04: a stale set larger than one batch — every row reaches new_version.
+
+        Uses a keyset-aware mock that filters on Signal.id > last_id (the same
+        predicate the service applies) so the OFFSET-skip bug would be caught:
+        an advancing OFFSET would skip whole batches of not-yet-processed rows.
+        """
+        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+            rescore_on_prompt_version_change,
+        )
+
+        new_version = "lead_v2"
+        batch_size = 2
+        signals = [_make_signal(i, scoring_prompt_version="lead_v0") for i in range(1, 6)]
+
+        session = _make_keyset_mock_session(signals, new_version=new_version, batch_size=batch_size)
+
+        count = rescore_on_prompt_version_change(
+            session, new_version=new_version, batch_size=batch_size
+        )
+
+        assert count == len(signals)
+        for signal in signals:
+            assert signal.ai["scoring_prompt_version"] == new_version
 
     def test_session_flush_called(self) -> None:
         """session.flush() is called after each batch (service-never-commits)."""

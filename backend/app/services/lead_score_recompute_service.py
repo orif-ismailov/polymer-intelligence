@@ -44,6 +44,7 @@ import logging
 from typing import Any
 
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session
 
 from app.models.signals import Signal
@@ -144,7 +145,13 @@ def rescore_on_prompt_version_change(
     """
     now_iso = datetime.datetime.now(tz=datetime.UTC).isoformat()
     rescored_count = 0
-    offset = 0
+    # WR-04: keyset pagination on Signal.id instead of OFFSET. Updating a row
+    # drops it OUT of the stale filter, so an advancing OFFSET would skip
+    # batch_size not-yet-processed rows each round. Walking forward by id
+    # (id > last_id) visits every stale row exactly once and never revisits a
+    # processed/skipped one — also avoiding an infinite re-query-from-0 loop for
+    # rows that can't be updated (empty ai / scoring errors).
+    last_id = 0
 
     while True:
         # Select a batch of signals with stale scoring_prompt_version
@@ -157,15 +164,23 @@ def rescore_on_prompt_version_change(
                     Signal.ai["scoring_prompt_version"].as_string().is_(None),
                 )
             )
-            .filter(Signal.ai != sa.cast("{}", sa.dialects.postgresql.JSONB if hasattr(sa, "dialects") else sa.JSON))
+            # WR-03: explicit JSONB cast (import sqlalchemy.dialects.postgresql.JSONB)
+            # instead of the fragile hasattr(sa, "dialects") guard which could
+            # silently pick sa.JSON or raise AttributeError at query-build time.
+            .filter(Signal.ai != sa.cast("{}", JSONB))
+            .filter(Signal.id > last_id)
             .order_by(Signal.id)
-            .offset(offset)
             .limit(batch_size)
             .all()
         )
 
         if not stale_signals:
             break
+
+        # Advance the keyset cursor past every row seen this batch, including
+        # rows we skip below — they stay stale for a future run but must not be
+        # revisited in this loop (prevents an infinite loop on un-updatable rows).
+        last_id = stale_signals[-1].id
 
         for signal in stale_signals:
             # Skip signals with empty or null ai (no extraction yet)
@@ -197,12 +212,11 @@ def rescore_on_prompt_version_change(
             rescored_count += 1
 
         session.flush()
-        offset += batch_size
 
         logger.info(
             "lead_score_recompute.batch_done",
             extra={
-                "offset": offset,
+                "last_id": last_id,
                 "batch_size": len(stale_signals),
                 "rescored_total": rescored_count,
             },
