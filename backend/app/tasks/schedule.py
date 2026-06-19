@@ -58,4 +58,13 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "check_userbot_health",
         "schedule": crontab(minute="*/5"),
     },
+    # ── Nightly LLM catch-up: daily at 02:00 UTC ─────────────────────────────
+    # Reprocesses Telegram raw_items deferred during budget exhaustion
+    # (parse_status='budget_deferred'). Runs after the UTC midnight budget reset.
+    # Bounded batch (200 items max) to stay within the freshly-reset daily budget.
+    # ROADMAP SC#4: budget→pending+rule-based fallback+nightly catch-up+admin alert.
+    "nightly_llm_catchup": {
+        "task": "nightly_llm_catchup",
+        "schedule": crontab(minute=0, hour=2),
+    },
 }

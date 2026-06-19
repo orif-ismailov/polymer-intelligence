@@ -90,6 +90,11 @@ def _row_to_feed_item(row: Any) -> FeedItem:
         urgency = row.urgency
         status = row.status
         event_at = row.event_at
+        # Phase 5: needs_review from signals.ai JSONB (may be absent on legacy rows)
+        try:
+            needs_review = bool(row.needs_review)
+        except AttributeError:
+            needs_review = False
     except AttributeError:
         # Fallback to index-based access for plain tuples
         id_ = row[0]
@@ -104,6 +109,7 @@ def _row_to_feed_item(row: Any) -> FeedItem:
         urgency = row[9]
         status = row[10]
         event_at = row[11]
+        needs_review = bool(row[12]) if len(row) > 12 else False
 
     # Normalize volume/price: may be Decimal, float, str, or None
     volume = decimal.Decimal(str(volume_raw)) if volume_raw is not None else None
@@ -122,6 +128,7 @@ def _row_to_feed_item(row: Any) -> FeedItem:
         urgency=urgency,
         status=status,
         event_at=event_at,
+        needs_review=needs_review,
     )
 
 
@@ -146,6 +153,7 @@ def get_feed(
     source: str | None = Query(default=None),
     urgency: str | None = Query(default=None),
     period: str | None = Query(default=None),
+    needs_review: bool | None = Query(default=None),
     db: Session = Depends(get_db),
     _current_user: StaffUser = Depends(get_current_staff_user),
 ) -> FeedPage:
@@ -158,6 +166,7 @@ def get_feed(
     - source: filter by origin ('signal' or 'request')
     - urgency: filter by urgency level
     - period: preset duration lower-bound on event_at ('7d', '30d', '90d', etc.)
+    - needs_review: filter by AI review flag (Phase 5, bound param — T-05-19)
 
     Returns:
         FeedPage with items + next_cursor_event_at / next_cursor_id.
@@ -166,24 +175,29 @@ def get_feed(
     # Resolve period preset to absolute lower-bound timestamp
     period_lower_bound = _resolve_period(period)
 
-    # Keyset SELECT over v_live_feed
+    # Keyset SELECT over v_live_feed joined to signals for ai JSONB
     # T-04-02: all params bound — no string interpolation
     # T-04-03: keyset pagination only — no position-based pagination
+    # T-05-19: needs_review filter uses bound param (no interpolation)
     query = sa.text(
         """
-        SELECT id, origin, kind, product_id, grade_text, volume,
-               price, currency, region, urgency, status, event_at
-        FROM v_live_feed
+        SELECT v.id, v.origin, v.kind, v.product_id, v.grade_text, v.volume,
+               v.price, v.currency, v.region, v.urgency, v.status, v.event_at,
+               COALESCE((s.ai->>'needs_review')::boolean, false) AS needs_review
+        FROM v_live_feed v
+        LEFT JOIN signals s ON s.id = v.id AND v.origin = 'signal'
         WHERE
             (CAST(:cursor_ea AS timestamptz) IS NULL
-             OR event_at < CAST(:cursor_ea AS timestamptz)
-             OR (event_at = CAST(:cursor_ea AS timestamptz) AND id < CAST(:cursor_id AS bigint)))
-          AND (CAST(:kind AS text) IS NULL OR kind = CAST(:kind AS text))
-          AND (CAST(:product_id AS integer) IS NULL OR product_id = CAST(:product_id AS integer))
-          AND (CAST(:source AS text) IS NULL OR origin = CAST(:source AS text))
-          AND (CAST(:urgency AS text) IS NULL OR urgency::text = CAST(:urgency AS text))
-          AND (CAST(:period_lower AS timestamptz) IS NULL OR event_at >= CAST(:period_lower AS timestamptz))
-        ORDER BY event_at DESC, id DESC
+             OR v.event_at < CAST(:cursor_ea AS timestamptz)
+             OR (v.event_at = CAST(:cursor_ea AS timestamptz) AND v.id < CAST(:cursor_id AS bigint)))
+          AND (CAST(:kind AS text) IS NULL OR v.kind = CAST(:kind AS text))
+          AND (CAST(:product_id AS integer) IS NULL OR v.product_id = CAST(:product_id AS integer))
+          AND (CAST(:source AS text) IS NULL OR v.origin = CAST(:source AS text))
+          AND (CAST(:urgency AS text) IS NULL OR v.urgency::text = CAST(:urgency AS text))
+          AND (CAST(:period_lower AS timestamptz) IS NULL OR v.event_at >= CAST(:period_lower AS timestamptz))
+          AND (CAST(:needs_review AS boolean) IS NULL
+               OR (s.ai->>'needs_review')::boolean = CAST(:needs_review AS boolean))
+        ORDER BY v.event_at DESC, v.id DESC
         LIMIT :limit
         """
     )
@@ -196,6 +210,7 @@ def get_feed(
         "source": source,
         "urgency": urgency,
         "period_lower": period_lower_bound,
+        "needs_review": needs_review,
         "limit": limit,
     }
 

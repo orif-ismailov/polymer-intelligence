@@ -58,6 +58,7 @@ interface FeedFilters {
   urgency: string;
   cursor_event_at?: string;
   cursor_id?: number;
+  needs_review?: boolean;
 }
 
 function buildFeedUrl(filters: FeedFilters): string {
@@ -68,6 +69,7 @@ function buildFeedUrl(filters: FeedFilters): string {
   if (filters.urgency) params.set("urgency", filters.urgency);
   if (filters.cursor_event_at) params.set("cursor_event_at", filters.cursor_event_at);
   if (filters.cursor_id != null) params.set("cursor_id", String(filters.cursor_id));
+  if (filters.needs_review) params.set("needs_review", "true");
   params.set("limit", "50");
   return `/feed?${params.toString()}`;
 }
@@ -150,9 +152,11 @@ interface LiveFeedTableProps {
   /** Number of rows shown in compact mode */
   compact?: boolean;
   className?: string;
+  /** Phase 5: filter to needs_review=true signals when true */
+  needsReview?: boolean;
 }
 
-export function LiveFeedTable({ defaultKind, compact = false, className = "" }: LiveFeedTableProps) {
+export function LiveFeedTable({ defaultKind, compact = false, className = "", needsReview }: LiveFeedTableProps) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
@@ -167,19 +171,20 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "" }: 
 
   // WR-05: reset the cursor stack when any filter changes so we always start
   // from page 1 of the new result set, not a stale cursor from the previous one.
-  const prevFiltersRef = useRef({ period, kind, source, urgency });
+  const prevFiltersRef = useRef({ period, kind, source, urgency, needsReview });
   useEffect(() => {
     const prev = prevFiltersRef.current;
     if (
       prev.period !== period ||
       prev.kind !== kind ||
       prev.source !== source ||
-      prev.urgency !== urgency
+      prev.urgency !== urgency ||
+      prev.needsReview !== needsReview
     ) {
       setCursorStack([]);
-      prevFiltersRef.current = { period, kind, source, urgency };
+      prevFiltersRef.current = { period, kind, source, urgency, needsReview };
     }
-  }, [period, kind, source, urgency]);
+  }, [period, kind, source, urgency, needsReview]);
 
   const filters: FeedFilters = {
     period,
@@ -188,6 +193,7 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "" }: 
     urgency,
     cursor_event_at: currentCursor?.event_at,
     cursor_id: currentCursor?.id,
+    needs_review: needsReview,
   };
 
   // Query the feed — ['feed', filters] query key drives invalidation from SSE
