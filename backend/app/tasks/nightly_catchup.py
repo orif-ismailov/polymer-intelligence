@@ -41,8 +41,9 @@ from app.tasks.parse_telegram import enqueue_for_telegram_parse
 logger = logging.getLogger(__name__)
 
 # Maximum items to re-enqueue in a single nightly run.
-# At LLM_TOKEN_ESTIMATE=400 tokens per item, 200 items = 80,000 tokens max
-# — well within the default 500,000 daily budget.
+# At LLM_TOKEN_ESTIMATE=1200 tokens per item, 200 items = 240,000 tokens max
+# — within the default 500,000 daily budget. Items beyond the freshly-reset
+# budget defer again to the next nightly run.
 _CATCHUP_BATCH_LIMIT = 200
 
 

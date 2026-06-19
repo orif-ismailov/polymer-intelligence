@@ -53,9 +53,16 @@ from parsing.text_prep import prepare_message_text
 
 logger = logging.getLogger(__name__)
 
-# Conservative per-call token estimate for the budget pre-reservation.
-# Actual spend is reconciled by record_actual_tokens after a successful LLM call.
-LLM_TOKEN_ESTIMATE = 400
+# Conservative per-call token ceiling for the budget pre-reservation (WR-02).
+# Set close to the realistic upper bound of (tokens_in + tokens_out) for one
+# extraction call: non-cached input (message text + tool/schema preamble) plus
+# up to max_tokens=512 of output. The previous 400 estimate massively
+# under-reserved, letting true spend overshoot DAILY_TOKEN_LIMIT before
+# record_actual_tokens reconciled. cache_read tokens are intentionally EXCLUDED
+# from the budget (cached prompt prefix is billed at a fraction of input cost and
+# is not counted toward the daily token cap). Actual spend is reconciled by
+# record_actual_tokens after a successful LLM call.
+LLM_TOKEN_ESTIMATE = 1200
 
 
 # --------------------------------------------------------------------------
