@@ -208,7 +208,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 3** *(orchestration — blocked on 05-01 + 05-03)*
 
-- [ ] 05-04-PLAN.md — `parse_telegram_item` orchestrator (budget→LLM/fallback→journal→signal, confidence<0.5→needs_review, dead-letter, lead-score stamp) + nightly catch-up + budget admin alert + per-source 7-day spend + dashboard needs_review chip (REQ-ai-extraction, REQ-llm-budget, REQ-lead-scoring)
+- [x] 05-04-PLAN.md — `parse_telegram_item` orchestrator (budget→LLM/fallback→journal→signal, confidence<0.5→needs_review, dead-letter, lead-score stamp) + nightly catch-up + budget admin alert + per-source 7-day spend + dashboard needs_review chip (REQ-ai-extraction, REQ-llm-budget, REQ-lead-scoring)
 
 **Wave 4** *(acceptance gate — blocked on 05-01 + 05-03 + 05-04)*
 
@@ -241,7 +241,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
-| 5. Telegram Monitoring + AI | 3/5 | In Progress|  |
+| 5. Telegram Monitoring + AI | 4/5 | In Progress|  |
 | 6. Acceptance & Handover | 0/TBD | Not started | - |
 
 ---
