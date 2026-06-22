@@ -4,14 +4,14 @@ milestone: v1.1
 milestone_name: milestone
 status: executing
 stopped_at: Completed 06-05-PLAN.md
-last_updated: "2026-06-22T10:36:27.684Z"
+last_updated: "2026-06-22T10:41:42.589Z"
 last_activity: 2026-06-22 -- Phase 06 execution started
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 44
-  completed_plans: 43
-  percent: 83
+  completed_plans: 44
+  percent: 100
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 06 (acceptance-handover) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-06-22 -- Phase 06 execution started
 
@@ -88,6 +88,7 @@ Progress: [██████████] 97%
 | Phase 06-acceptance-handover P04 | 12 min | 1 tasks | 1 files |
 | Phase 06-acceptance-handover P05 | 35 min | 2 tasks | 3 files |
 | Phase 06 P06 | ~5 min | 3 tasks | 3 files |
+| Phase 06 P07 | 9 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -186,6 +187,8 @@ Most relevant to Phase 1:
 - [Phase 06-acceptance-handover]: CBU FX source seed kind corrected to external_index (was invalid 'fx') — Clean-deploy defect surfaced by the smoke; data-only fix keeps the locked source_kind schema untouched, no migration
 - [Phase 06]: 06-ACCEPTANCE.md consolidates TZ §6.1.1–§6.1.6 with GREEN automated evidence + a single Deploy-Day Checklist superseding 02/03/05-UAT — Customer-facing sign-off spine; customer-gated drills are marked blocked-on, not claimed passed
 - [Phase 06]: Deployment guide documents the webhook as auto-registered on api startup and userbot session via the userbot/session.py interactive StringSession flow — Matches the real code path (app/main.py lifespan, deploy/.env.example), not the plan's manual-curl / python -m wording
+- [Phase 06]: 06-07: Retired SC#5 telegram cross-phase caveat in ROADMAP + 04-CONTEXT — Gated on 06-03 test_telegram_channel_close.py passing (9 passed); historical text preserved with citation for the audit trail
+- [Phase 06]: 06-07: HANDOVER.md links the real prompt path backend/parsing/prompts/extract_v1.md — Plan's parsing/prompts/extract_v1.md did not exist; corrected to avoid a dangling §9 link (threat T-06-19)
 
 ### Pending Todos
 
@@ -218,6 +221,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-22T10:36:14.103Z
+Last session: 2026-06-22T10:41:32.259Z
 Stopped at: Completed 06-05-PLAN.md
 Resume file: None
