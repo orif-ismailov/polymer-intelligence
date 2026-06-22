@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-04-PLAN.md
-last_updated: "2026-06-22T10:05:50.395Z"
+stopped_at: Completed 06-05-PLAN.md
+last_updated: "2026-06-22T10:26:28.555Z"
 last_activity: 2026-06-22 -- Phase 06 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 44
-  completed_plans: 41
+  completed_plans: 42
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 06 (acceptance-handover) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-06-22 -- Phase 06 execution started
 
@@ -86,6 +86,7 @@ Progress: [██████████] 97%
 | Phase 06-acceptance-handover P02 | 25 min | 2 tasks | 2 files |
 | Phase 06-acceptance-handover P03 | 3 min | 2 tasks | 1 files |
 | Phase 06-acceptance-handover P04 | 12 min | 1 tasks | 1 files |
+| Phase 06-acceptance-handover P05 | 35 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -180,6 +181,8 @@ Most relevant to Phase 1:
 - [Phase 06-acceptance-handover]: DEC-06-04-no-weak-secret-defaults: prod compose sensitive vars use bare ${VAR} with no inline default — a missing secret fails fast at the app layer instead of booting with a weak default (WR-05 / T-06-09)
 - [Phase 06-acceptance-handover]: DEC-06-04-env-file-required-false-for-static-config: env_file stays required:false so docker compose config validates without a real .env; prod fail-fast is enforced in-app (pydantic Settings), not via required:true which would break static validation and recreate the WR-05 crash-loop
 - [Phase 06-acceptance-handover]: DEC-06-04-nginx-only-ingress: only nginx publishes host ports (80/443); api/worker/beat/userbot/dashboard/postgres/redis/minio are internal-only; userbot a separate python -m userbot.main process, aiogram webhook on api (no separate bot container)
+- [Phase 06-acceptance-handover]: make smoke (D-02): production-compose full-stack smoke on synthetic data — health, request→v_live_feed, source isolation + one source_failure alert — Pre-handover end-to-end confidence check; doubles as the deployment-guide stand-up validation
+- [Phase 06-acceptance-handover]: CBU FX source seed kind corrected to external_index (was invalid 'fx') — Clean-deploy defect surfaced by the smoke; data-only fix keeps the locked source_kind schema untouched, no migration
 
 ### Pending Todos
 
@@ -212,6 +215,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-22T10:05:38.540Z
-Stopped at: Completed 06-04-PLAN.md
+Last session: 2026-06-22T10:26:20.859Z
+Stopped at: Completed 06-05-PLAN.md
 Resume file: None

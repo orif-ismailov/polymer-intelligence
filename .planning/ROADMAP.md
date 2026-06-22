@@ -239,7 +239,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 2** *(blocked on 06-04)*
 
-- [ ] 06-05-PLAN.md — Full-stack smoke (D-02): `tests/smoke/test_smoke_full_stack.sh` + `make smoke` — compose up → `/health` → synthetic request→`v_live_feed` → forced fake-source isolation + one `source_failure` alert
+- [x] 06-05-PLAN.md — Full-stack smoke (D-02): `tests/smoke/test_smoke_full_stack.sh` + `make smoke` — compose up → `/health` → synthetic request→`v_live_feed` → forced fake-source isolation + one `source_failure` alert
 
 **Wave 3** *(docs — blocked on 06-01/06-02/06-03/06-05 for evidence citation)*
 
