@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
@@ -26,14 +26,10 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { isAuthenticated, login } = useAuth();
-  // True until we know whether the user is authenticated (incl. a refresh attempt).
-  const [checking, setChecking] = useState(!isAuthenticated);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setChecking(false);
-      return;
-    }
+    // Already authenticated — nothing to verify.
+    if (isAuthenticated) return;
     let cancelled = false;
     (async () => {
       const token = await refreshAccessToken();
@@ -43,16 +39,18 @@ export default function DashboardLayout({
       } else {
         router.replace("/login");
       }
-      setChecking(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [isAuthenticated, login, router]);
 
-  // While verifying (or redirecting), render nothing to avoid a flash of
-  // protected content or a premature login bounce.
-  if (checking || !isAuthenticated) {
+  // Render nothing until authenticated. This avoids a flash of protected content
+  // while the silent refresh runs, and avoids a premature /login bounce — the
+  // redirect is issued from the effect only after the refresh attempt fails.
+  // (Render outcome is children ⟺ isAuthenticated, so no separate "checking"
+  // state is needed; that synchronous setState-in-effect was also a render smell.)
+  if (!isAuthenticated) {
     return null;
   }
 
