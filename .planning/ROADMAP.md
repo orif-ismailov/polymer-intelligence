@@ -234,7 +234,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 - [x] 06-01-PLAN.md — Handover hygiene (D-07): commit `backend/uv.lock` + FastAPI/Starlette ceiling, modernise the 2 stale route-introspection tests, CI installs via `uv sync --frozen`
 - [x] 06-02-PLAN.md — Restore test (D-04 / §6.1.5): `tests/restore/test_restore_local.sh` (pg_dump → fresh PG16 → restore via runbook → verify schema/rows/ENUMs/`v_live_feed` → assert ≤2h), refine `docs/runbook-backup-restore.md`
-- [ ] 06-03-PLAN.md — Channel close (D-03 / §6.1.6): `test_telegram_channel_close.py` — wizard add → enable-gate (422 without passing test) → fixture MTProto message → `parse_telegram_item` → signal in `v_live_feed`, key-free
+- [x] 06-03-PLAN.md — Channel close (D-03 / §6.1.6): `test_telegram_channel_close.py` — wizard add → enable-gate (422 without passing test) → fixture MTProto message → `parse_telegram_item` → signal in `v_live_feed`, key-free
 - [ ] 06-04-PLAN.md — Production compose (D-05.1): `deploy/docker-compose.yml` full container set (api, worker, beat, userbot, dashboard, postgres, redis, nginx), nginx-only ingress, TLS, no committed secrets
 
 **Wave 2** *(blocked on 06-04)*
