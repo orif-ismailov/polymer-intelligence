@@ -41,7 +41,6 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
@@ -90,8 +89,10 @@ def _build_extraction_result_from_signal(signal: Signal) -> ExtractionResult:
         except ValueError:
             urgency = None
 
-    # Extract confidence from ai JSONB (default 0.8 for legacy rows without it)
-    ai: dict[str, Any] = signal.ai or {}
+    # Extract confidence from ai JSONB (default 0.8 for legacy rows without it).
+    # No explicit annotation: the type is inferred from signal.ai (dict[str, Any])
+    # so JSONB values stay dynamic for float() without an explicit-Any annotation.
+    ai = signal.ai or {}
     confidence: float = float(ai.get("confidence", 0.8))
     confidence = max(0.0, min(1.0, confidence))
 

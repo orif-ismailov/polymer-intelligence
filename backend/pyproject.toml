@@ -124,6 +124,17 @@ disallow_untyped_defs = true
 disallow_any_explicit = false
 
 [[tool.mypy.overrides]]
+# alert_service is a polymorphic JSONB predicate interpreter: evaluate_condition reads
+# heterogeneous condition values (lists, numbers) and entity attributes that differ
+# between Signal and Request (kind/ai only exist on Signal), using genuinely dynamic
+# `in`/`<` operations. Forcing explicit types here would mean casts/isinstance guards
+# inside security-sensitive predicate code (T-04-24) — riskier than this scoped, more
+# specific carve-out. disallow_untyped_defs stays enforced; only explicit-Any is relaxed.
+module = ["app.services.alert_service"]
+disallow_untyped_defs = true
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
 # instructor does not ship a py.typed marker; ignore missing stubs.
 # pypi.org/project/instructor — T-05-SC approved (package legitimacy verified).
 module = ["instructor", "instructor.*"]

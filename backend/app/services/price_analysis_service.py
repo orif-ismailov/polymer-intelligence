@@ -30,7 +30,7 @@ def compute_price_analysis(
     product_id: int,
     target_price: decimal.Decimal | None,
     currency: str,
-) -> dict | None:
+) -> dict[str, float | str] | None:
     """Compare target_price to the latest market average from price_points (market='UZ').
 
     Returns None when:

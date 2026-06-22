@@ -34,18 +34,18 @@ from __future__ import annotations
 import datetime
 import decimal
 import logging
-from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from app.models.enums import PriceBasis, SignalKind, Urgency
 from app.models.signals import Signal
-from app.models.sources import ParseRun
+from app.models.sources import ParseRun, RawItem
 from app.services.grade_service import extract_grade
 from app.services.relevance_service import match_product
 from parsing.lead_scoring import SCORING_PROMPT_VERSION, compute_lead_score
 from parsing.schemas import ExtractionResult, UrgencyLevel
+from parsing.schemas import SignalKind as ExtractionKind
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ def _map_urgency(urgency: UrgencyLevel | str | None) -> Urgency | None:
     return _URGENCY_MAP.get(urgency)
 
 
-def _map_kind(kind: Any) -> SignalKind:
+def _map_kind(kind: ExtractionKind | None) -> SignalKind:
     """Map ExtractionResult.kind to DB SignalKind enum.
 
     WR-07: missing or unrecognized kinds must NOT be coerced to an actionable
@@ -101,7 +101,7 @@ def _map_kind(kind: Any) -> SignalKind:
         return SignalKind.news
 
 
-def _parse_event_at(result: ExtractionResult, raw_item: Any) -> datetime.datetime:
+def _parse_event_at(result: ExtractionResult, raw_item: RawItem) -> datetime.datetime:
     """Extract event_at from result.event_at → raw_item.event_at → now."""
     if result.event_at:
         try:
@@ -112,7 +112,7 @@ def _parse_event_at(result: ExtractionResult, raw_item: Any) -> datetime.datetim
         except (ValueError, TypeError):
             pass
 
-    if getattr(raw_item, "event_at", None) is not None:
+    if raw_item.event_at is not None:
         return raw_item.event_at
 
     return datetime.datetime.now(tz=datetime.UTC)
@@ -133,7 +133,7 @@ def write_parse_run(
     tokens_in: int,
     tokens_out: int,
     latency_ms: float | int,
-    result: dict[str, Any] | None,
+    result: dict[str, object] | None,
     status: str,
     error: str | None,
 ) -> int:
@@ -188,9 +188,9 @@ def write_parse_run(
 
 def create_signal_from_extraction(
     session: Session,
-    raw_item: Any,
+    raw_item: RawItem,
     result: ExtractionResult,
-    journal: dict[str, Any],
+    journal: dict[str, object],
     *,
     needs_review: bool,
 ) -> Signal:
@@ -242,7 +242,7 @@ def create_signal_from_extraction(
     event_at = _parse_event_at(result, raw_item)
 
     # ── ai JSONB ─────────────────────────────────────────────────────────────
-    ai_data: dict[str, Any] = {
+    ai_data: dict[str, object] = {
         "lead_score": score,
         "classification": classification,
         "needs_review": needs_review,

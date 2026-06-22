@@ -74,14 +74,14 @@ def evaluate_condition(condition: dict[str, Any], entity: Any) -> bool:
             return False
 
     # product_id: entity.product_id must be in the list
-    if "product_id" in condition:
-        if entity.product_id not in condition["product_id"]:
-            return False
+    if "product_id" in condition and entity.product_id not in condition["product_id"]:
+        return False
 
     # volume_gte: entity.volume must be >= threshold
-    if "volume_gte" in condition:
-        if entity.volume is None or entity.volume < condition["volume_gte"]:
-            return False
+    if "volume_gte" in condition and (
+        entity.volume is None or entity.volume < condition["volume_gte"]
+    ):
+        return False
 
     # urgency_in: entity.urgency.value must be in the list
     if "urgency_in" in condition:
@@ -90,9 +90,8 @@ def evaluate_condition(condition: dict[str, Any], entity: Any) -> bool:
             return False
 
     # source_kind: entity.source_kind must be in the list
-    if "source_kind" in condition:
-        if entity.source_kind not in condition["source_kind"]:
-            return False
+    if "source_kind" in condition and entity.source_kind not in condition["source_kind"]:
+        return False
 
     # lead_score_gte: (entity.ai or {}).get("lead_score") >= threshold
     # Phase 4 (D-07): lead_score is None for all entities — this predicate never matches.
@@ -130,16 +129,16 @@ def _load_entity(
     """
     if signal_id is not None:
         from app.models.signals import Signal  # noqa: PLC0415
-        entity = db.get(Signal, signal_id)
-        if entity is None:
+        signal = db.get(Signal, signal_id)
+        if signal is None:
             raise ValueError(f"Signal {signal_id} not found")
-        return entity
+        return signal
     elif request_id is not None:
         from app.models.requests import Request  # noqa: PLC0415
-        entity = db.get(Request, request_id)
-        if entity is None:
+        request = db.get(Request, request_id)
+        if request is None:
             raise ValueError(f"Request {request_id} not found")
-        return entity
+        return request
     else:
         raise ValueError("Either signal_id or request_id must be provided")
 

@@ -104,7 +104,7 @@ def ensure_bucket() -> None:
         s3_client.head_bucket(Bucket=bucket_name)  # type: ignore[attr-defined]
         logger.debug("storage.ensure_bucket.exists", extra={"bucket": bucket_name})
     except botocore.exceptions.ClientError as exc:
-        error_code = exc.response["Error"]["Code"]  # type: ignore[index]
+        error_code = exc.response["Error"]["Code"]
         if error_code in ("404", "NoSuchBucket"):
             s3_client.create_bucket(Bucket=bucket_name)  # type: ignore[attr-defined]
             logger.info("storage.ensure_bucket.created", extra={"bucket": bucket_name})

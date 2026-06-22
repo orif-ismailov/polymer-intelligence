@@ -120,15 +120,21 @@ def verify_init_data(raw: str) -> dict[str, object]:
     if age_seconds > ttl:
         raise InvalidInitData(f"initData expired: age={age_seconds}s > TTL={ttl}s")
 
+    # Build the heterogeneous result dict: the verified string fields, plus the
+    # parsed 'user' sub-dict and the int auth_date. `fields` stays dict[str, str]
+    # for the HMAC step above; the public return type is dict[str, object], so we
+    # never assign an int/dict into a str-valued dict (fixes the prior type errors).
+    result: dict[str, object] = dict(fields)
+
     # Parse the 'user' JSON field
     try:
         user_raw = fields.get("user", "{}")
-        fields["user"] = json.loads(user_raw)
+        result["user"] = json.loads(user_raw)
     except (json.JSONDecodeError, TypeError) as exc:
         raise InvalidInitData("malformed user field") from exc
 
-    fields["auth_date"] = auth_date  # overwrite with int for convenience
-    return fields
+    result["auth_date"] = auth_date  # int for caller convenience
+    return result
 
 
 def get_or_create_client(
