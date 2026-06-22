@@ -18,7 +18,7 @@ lives one level above the repo root and is never committed.
 
 | # | Artifact (TZ §9) | Location | Description |
 |---|------------------|----------|-------------|
-| 1 | Source code (repository) | This repo — `backend/` (FastAPI + ingest + userbot), `web/` (Next.js dashboard) | Full codebase. Origin: `git@github.com:orif-ismailov/polymer-intelligence.git`. |
+| 1 | Source code (repository) | This repo — `backend/` (FastAPI + ingest + userbot), `dashboard/` (Next.js dashboard), `webapp/` (Telegram Web App) | Full codebase. Origin: `git@github.com:orif-ismailov/polymer-intelligence.git`. |
 | 2 | Production docker-compose | [`deploy/docker-compose.yml`](./deploy/docker-compose.yml) | The full production container set (Postgres, Redis, API, web, ingest worker, Telethon userbot, backup sidecar). Stood up and smoke-verified in 06-04/06-05. |
 | 3 | DB migrations | [`backend/alembic/`](./backend/alembic/) (versions in [`backend/alembic/versions/`](./backend/alembic/versions/)) | Alembic migration chain `0001`→`0004` (initial schema, synonyms + classification queue, Phase-5 AI extraction, budget/index fix). Run via `alembic upgrade head`. |
 | 4 | Deployment guide | [`docs/deployment-guide.md`](./docs/deployment-guide.md) | Bare-VPS → healthy-stack first-run procedure + the required-secrets matrix. References the restore runbook rather than duplicating it. |
