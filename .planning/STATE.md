@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-06-22T09:44:50.047Z"
+stopped_at: Completed 06-02-PLAN.md (restore drill + runbook validated)
+last_updated: "2026-06-22T09:54:43.037Z"
 last_activity: 2026-06-22 -- Phase 06 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 44
-  completed_plans: 38
+  completed_plans: 39
   percent: 83
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 06 (acceptance-handover) — EXECUTING
-Plan: 1 of 7
-Status: Executing Phase 06
+Plan: 2 of 7
+Status: Ready to execute
 Last activity: 2026-06-22 -- Phase 06 execution started
 
 Progress: [██████████] 97%
@@ -83,6 +83,7 @@ Progress: [██████████] 97%
 | Phase 04 P06 | ~15min | 2 tasks | 10 files created, 2 modified |
 | Phase 04 P07 | 7min | 2 tasks | 8 files |
 | Phase 04 P08 | 10min | 3 tasks | 10 files |
+| Phase 06-acceptance-handover P02 | 25 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -170,6 +171,9 @@ Most relevant to Phase 1:
 - [Phase 04-07]: DEC-04-07-no-eval-in-docstring: alert_service.py docstrings avoid literal "eval(" string to pass T-04-24 source-scan test (test_no_eval_in_alert_service reads file as text)
 - [Phase 04-07]: DEC-04-07-weekly-aggregate-sql: prices.py selects daily vs weekly SQL branch by (date_to - date_from).days > 365 in router; weekly uses date_trunc('week') GROUP BY per dev-spec §3.1
 - [Phase 04-07]: DEC-04-07-send-delivery-commits: send_delivery Celery task calls session.commit() (unlike service-layer flush-only); task is its own transaction boundary in Celery worker context
+- [Phase 06-acceptance-handover]: DEC-06-02-disposable-fresh-container: fresh tmpfs postgres:16-alpine container is the clean-server restore target; dev volume is read-only source, never dropped — Proves the restore procedure end-to-end without risking the dev data volume (T-06-04)
+- [Phase 06-acceptance-handover]: DEC-06-02-restore-from-file-not-pipe: pg_restore --jobs reads a docker cp'd file path, never stdin; runbook §3 corrected — Parallel restore cannot read from stdin (real gap surfaced by the drill)
+- [Phase 06-acceptance-handover]: DEC-06-02-pin-superuser-pi_user: runbook DROP/CREATE uses -U pi_user -d postgres — No separate 'postgres' role exists; pi_user is the bootstrap superuser
 
 ### Pending Todos
 
@@ -202,6 +206,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-19T11:16:07.738Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-acceptance-handover/06-CONTEXT.md
+Last session: 2026-06-22T09:54:35.135Z
+Stopped at: Completed 06-02-PLAN.md (restore drill + runbook validated)
+Resume file: None

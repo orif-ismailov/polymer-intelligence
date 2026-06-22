@@ -233,7 +233,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 **Wave 1** *(independent — parallel, no file overlap)*
 
 - [x] 06-01-PLAN.md — Handover hygiene (D-07): commit `backend/uv.lock` + FastAPI/Starlette ceiling, modernise the 2 stale route-introspection tests, CI installs via `uv sync --frozen`
-- [ ] 06-02-PLAN.md — Restore test (D-04 / §6.1.5): `tests/restore/test_restore_local.sh` (pg_dump → fresh PG16 → restore via runbook → verify schema/rows/ENUMs/`v_live_feed` → assert ≤2h), refine `docs/runbook-backup-restore.md`
+- [x] 06-02-PLAN.md — Restore test (D-04 / §6.1.5): `tests/restore/test_restore_local.sh` (pg_dump → fresh PG16 → restore via runbook → verify schema/rows/ENUMs/`v_live_feed` → assert ≤2h), refine `docs/runbook-backup-restore.md`
 - [ ] 06-03-PLAN.md — Channel close (D-03 / §6.1.6): `test_telegram_channel_close.py` — wizard add → enable-gate (422 without passing test) → fixture MTProto message → `parse_telegram_item` → signal in `v_live_feed`, key-free
 - [ ] 06-04-PLAN.md — Production compose (D-05.1): `deploy/docker-compose.yml` full container set (api, worker, beat, userbot, dashboard, postgres, redis, nginx), nginx-only ingress, TLS, no committed secrets
 
@@ -261,7 +261,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
 | 5. Telegram Monitoring + AI | 5/5 | Complete    | 2026-06-19 |
-| 6. Acceptance & Handover | 0/7 | Not started | - |
+| 6. Acceptance & Handover | 2/7 | In Progress|  |
 
 ---
 *Roadmap created: 2026-06-13 (Client Phase 1 milestone). Phase 2 international loop = planned follow-up milestone, not in this roadmap.*
