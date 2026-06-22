@@ -18,15 +18,12 @@ Security:
 
 from __future__ import annotations
 
-import asyncio
 import datetime
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -75,7 +72,7 @@ def _make_mock_source(
     source.last_success_at = None
     source.consecutive_failures = 0
     source.config = config or {"url": "https://example.com/data"}
-    source.created_at = datetime.datetime(2026, 6, 17, tzinfo=datetime.timezone.utc)
+    source.created_at = datetime.datetime(2026, 6, 17, tzinfo=datetime.UTC)
     return source
 
 
@@ -135,7 +132,7 @@ def test_get_sources_response_has_no_config_field():
     #                            last_success_at, consecutive_failures, last_test_ok_at)
     mock_row = (
         1, "My Source", "html_table", "website", False, None, None, 0,
-        datetime.datetime(2026, 6, 17, tzinfo=datetime.timezone.utc)
+        datetime.datetime(2026, 6, 17, tzinfo=datetime.UTC)
     )
     mock_result = MagicMock()
     mock_result.fetchall.return_value = [mock_row]
@@ -325,7 +322,7 @@ def test_enable_gate_allows_enable_when_test_passed():
     mock_source = _make_mock_source(
         source_id=4,
         is_enabled=False,
-        last_test_ok_at=datetime.datetime(2026, 6, 17, 12, 0, tzinfo=datetime.timezone.utc),
+        last_test_ok_at=datetime.datetime(2026, 6, 17, 12, 0, tzinfo=datetime.UTC),
     )
 
     mock_db = MagicMock()
@@ -451,16 +448,15 @@ def test_non_admin_patch_sources_rejected():
 
 def test_all_four_no_code_types_in_source_types():
     """GET /admin/source-types includes html_table/rss/telegram_channel/llm_page."""
-    from app.ingest import registry as _reg  # noqa: PLC0415
-
     # Ensure all four adapters are registered for this test. Prior test files
     # (e.g. test_admin_source_types.py) clear the registry via an autouse fixture;
     # module-level imports in main.py don't re-run once modules are cached.
     # We directly populate the registry dict (same pattern as clean_registry fixtures).
     import app.ingest.html_table.adapter as _ht  # noqa: PLC0415
+    import app.ingest.llm_page.adapter as _llm  # noqa: PLC0415
     import app.ingest.rss.adapter as _rss  # noqa: PLC0415
     import app.ingest.telegram_channel.adapter as _tg  # noqa: PLC0415
-    import app.ingest.llm_page.adapter as _llm  # noqa: PLC0415
+    from app.ingest import registry as _reg  # noqa: PLC0415
 
     _reg._REGISTRY.setdefault("html_table", _ht.HtmlTableAdapter())
     _reg._REGISTRY.setdefault("rss", _rss.RssAdapter())
@@ -494,8 +490,12 @@ def test_sources_router_mounted():
     from app.main import create_app  # noqa: PLC0415
 
     app = create_app()
-    paths = [getattr(r, "path", "") for r in app.routes]
+    # FastAPI >=0.137 includes sub-routers lazily as `_IncludedRouter` wrappers
+    # rather than flattening them into `app.routes` as APIRoute objects, so the
+    # registered paths must be read from the generated OpenAPI schema (which
+    # resolves the lazy inclusion tree) instead of iterating `app.routes`.
+    paths = app.openapi().get("paths", {})
     assert any(p.startswith("/api/v1/sources") for p in paths), (
-        f"/api/v1/sources* routes not found. Mounted paths starting with /api: "
-        f"{[p for p in paths if p.startswith('/api')]}"
+        f"/api/v1/sources* routes not found. Registered paths starting with /api: "
+        f"{sorted(p for p in paths if p.startswith('/api'))}"
     )

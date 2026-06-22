@@ -16,9 +16,7 @@ from __future__ import annotations
 import datetime
 from unittest.mock import MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers (same pattern as test_dashboard_requests.py, test_source_wizard.py)
@@ -215,7 +213,11 @@ class TestPricesApiRoutes:
         from app.main import create_app  # noqa: PLC0415
 
         app = create_app()
-        paths = [getattr(r, "path", "") for r in app.routes]
+        # FastAPI >=0.137 includes sub-routers lazily as `_IncludedRouter` wrappers
+        # rather than flattening them into `app.routes` as APIRoute objects, so the
+        # registered paths must be read from the generated OpenAPI schema (which
+        # resolves the lazy inclusion tree) instead of iterating `app.routes`.
+        paths = app.openapi().get("paths", {})
         assert any(p.startswith("/api/v1/prices") for p in paths), (
-            f"Expected /api/v1/prices* route, found: {[p for p in paths if p]}"
+            f"Expected /api/v1/prices* route, found: {sorted(paths)}"
         )
