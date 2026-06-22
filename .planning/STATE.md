@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-06-22T10:00:28.852Z"
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-06-22T10:05:50.395Z"
 last_activity: 2026-06-22 -- Phase 06 execution started
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 44
-  completed_plans: 40
+  completed_plans: 41
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 06 (acceptance-handover) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-06-22 -- Phase 06 execution started
 
@@ -85,6 +85,7 @@ Progress: [██████████] 97%
 | Phase 04 P08 | 10min | 3 tasks | 10 files |
 | Phase 06-acceptance-handover P02 | 25 min | 2 tasks | 2 files |
 | Phase 06-acceptance-handover P03 | 3 min | 2 tasks | 1 files |
+| Phase 06-acceptance-handover P04 | 12 min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -176,6 +177,9 @@ Most relevant to Phase 1:
 - [Phase 06-acceptance-handover]: DEC-06-02-restore-from-file-not-pipe: pg_restore --jobs reads a docker cp'd file path, never stdin; runbook §3 corrected — Parallel restore cannot read from stdin (real gap surfaced by the drill)
 - [Phase 06-acceptance-handover]: DEC-06-02-pin-superuser-pi_user: runbook DROP/CREATE uses -U pi_user -d postgres — No separate 'postgres' role exists; pi_user is the bootstrap superuser
 - [Phase 06-acceptance-handover]: 06-03: closed §6.1.6 telegram_channel slice with a key-free pytest module (real orchestrator + mocked seams), unblocking SC#5-caveat retirement in 06-07 — Proves enable-gate 422 + fixture-message→signal→v_live_feed deterministically with no real account
+- [Phase 06-acceptance-handover]: DEC-06-04-no-weak-secret-defaults: prod compose sensitive vars use bare ${VAR} with no inline default — a missing secret fails fast at the app layer instead of booting with a weak default (WR-05 / T-06-09)
+- [Phase 06-acceptance-handover]: DEC-06-04-env-file-required-false-for-static-config: env_file stays required:false so docker compose config validates without a real .env; prod fail-fast is enforced in-app (pydantic Settings), not via required:true which would break static validation and recreate the WR-05 crash-loop
+- [Phase 06-acceptance-handover]: DEC-06-04-nginx-only-ingress: only nginx publishes host ports (80/443); api/worker/beat/userbot/dashboard/postgres/redis/minio are internal-only; userbot a separate python -m userbot.main process, aiogram webhook on api (no separate bot container)
 
 ### Pending Todos
 
@@ -208,6 +212,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-22T10:00:22.973Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-06-22T10:05:38.540Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
