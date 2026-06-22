@@ -10,10 +10,6 @@ Verifies:
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
-import datetime
-
-import pytest
-
 
 # ---------------------------------------------------------------------------
 # Schema test
@@ -91,7 +87,7 @@ def test_non_ai_source_returns_zero_token_spend():
     mock_db.execute.return_value.fetchall.return_value = [mock_row]
     mock_user = MagicMock()
 
-    with patch("app.api.admin_sources.per_source_spend", return_value=9999) as mock_spend:
+    with patch("app.api.admin_sources.per_source_spend", return_value=9999):
         items = get_sources_health(_current_user=mock_user, db=mock_db)
 
     assert len(items) == 1

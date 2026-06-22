@@ -52,14 +52,16 @@ def _make_mock_request(id: int = 42, client_id: int = 1, number: str = "REQ-2026
     destination_country, port_or_city, desired_date, validity_days, urgency, comment
     were added to the schema).
     """
+    import datetime  # noqa: PLC0415, E401
+    import decimal
+
     from app.models.enums import PriceBasis, RequestStatus, Urgency  # noqa: PLC0415
-    import datetime, decimal  # noqa: PLC0415, E401
     req = MagicMock()
     req.id = id
     req.client_id = client_id
     req.number = number
     req.status = RequestStatus.new
-    req.created_at = datetime.datetime(2026, 6, 16, 10, 0, 0, tzinfo=datetime.timezone.utc)
+    req.created_at = datetime.datetime(2026, 6, 16, 10, 0, 0, tzinfo=datetime.UTC)
     req.product_id = 1
     req.grade_text = "HDPE 2420D"
     req.polymer_type = None
@@ -93,8 +95,8 @@ def _make_mock_request_file(id: int = 1, request_id: int = 42) -> MagicMock:
 @pytest.fixture
 def webapp_client() -> Generator[TestClient, None, None]:
     """TestClient with get_current_client and get_db overridden — happy path client id=1."""
-    from app.core.db import get_db  # noqa: PLC0415
     from app.api.deps import get_current_client  # noqa: PLC0415
+    from app.core.db import get_db  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
 
     mock_client = _make_mock_client(id=1)
@@ -222,8 +224,8 @@ class TestListRequests:
 
     def test_list_requests_returns_200(self):
         """Authenticated client gets 200 list (empty list ok)."""
-        from app.core.db import get_db  # noqa: PLC0415
         from app.api.deps import get_current_client  # noqa: PLC0415
+        from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
         mock_client = _make_mock_client(id=1)
@@ -267,8 +269,8 @@ class TestGetRequestDetail:
 
     def test_own_request_returns_200(self):
         """Get own request (client_id matches) → 200 with correct detail."""
-        from app.core.db import get_db  # noqa: PLC0415
         from app.api.deps import get_current_client  # noqa: PLC0415
+        from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
         mock_client = _make_mock_client(id=1)
@@ -310,8 +312,8 @@ class TestGetRequestDetail:
         The handler filters by BOTH request_id AND client_id.
         When the query returns None (no row with matching id AND client_id), 404.
         """
-        from app.core.db import get_db  # noqa: PLC0415
         from app.api.deps import get_current_client  # noqa: PLC0415
+        from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
         mock_client = _make_mock_client(id=1)  # caller is client id=1
@@ -405,8 +407,8 @@ class TestFileUpload:
 
     def _make_file_tc(self, mock_req=None, file_count: int = 0):
         """Create a TestClient with db properly wired for file upload tests."""
-        from app.core.db import get_db  # noqa: PLC0415
         from app.api.deps import get_current_client  # noqa: PLC0415
+        from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
         mock_client = _make_mock_client(id=1)

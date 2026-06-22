@@ -14,14 +14,10 @@ Redis is mocked with a simple in-memory MagicMock/dict.
 from __future__ import annotations
 
 import time
-from unittest.mock import MagicMock, call
-
-import pytest
+from unittest.mock import MagicMock
 
 # patch_env autouse fixture from conftest.py handles Settings env patching.
-
 from userbot.heartbeat import HEARTBEAT_KEY, read_heartbeat, write_heartbeat
-
 
 # ── Simple in-memory Redis mock ───────────────────────────────────────────────
 

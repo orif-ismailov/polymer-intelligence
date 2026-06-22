@@ -18,7 +18,7 @@ Design notes:
 
 from __future__ import annotations
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 # Constant — the single Redis pub/sub channel name for new feed events.
 FEED_CHANNEL = "feed:new"

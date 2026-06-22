@@ -18,14 +18,11 @@ established phase UAT deferral pattern.
 
 from __future__ import annotations
 
-import inspect
 from pathlib import Path
 
-import pytest
 import sqlalchemy as sa
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -47,10 +44,10 @@ class TestMigration0003RevisionChain:
 
     def test_revision_is_0003(self) -> None:
         """0003 module has revision = '0003'."""
-        import backend.alembic.versions as _versions_pkg  # noqa: F401 — ensure path
-
         # Import directly from the file path to avoid __init__ side effects
         import importlib.util
+
+        import backend.alembic.versions as _versions_pkg  # noqa: F401 — ensure path
         spec = importlib.util.spec_from_file_location(
             "migration_0003",
             BACKEND_DIR / "alembic" / "versions" / "0003_phase5_ai_extraction.py",

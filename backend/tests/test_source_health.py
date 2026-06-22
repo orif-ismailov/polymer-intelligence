@@ -83,6 +83,7 @@ class TestSourceHealthDB:
     def migrated_db(self, engine):
         """Apply migrations before the class tests."""
         from alembic.config import Config  # noqa: PLC0415
+
         from alembic import command as alembic_command  # noqa: PLC0415
 
         backend_dir = Path(__file__).parent.parent
@@ -144,6 +145,7 @@ class TestSourceHealthDB:
         """record_fetch_success sets last_fetch_at, last_success_at, and consecutive_failures=0."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.source_health_service import record_fetch_success  # noqa: PLC0415
 
         with Session(migrated_db) as session:
@@ -196,6 +198,7 @@ class TestSourceHealthDB:
         """record_fetch_failure increments consecutive_failures and returns the new count."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
 
         with Session(migrated_db) as session:
@@ -234,6 +237,7 @@ class TestSourceHealthDB:
         """3rd consecutive failure creates exactly one source_failure alert (dedupe)."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
 
         with Session(migrated_db) as session:
@@ -264,6 +268,7 @@ class TestSourceHealthDB:
         """4th failure on the same day does NOT create a duplicate alert (dedupe_key)."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
 
         with Session(migrated_db) as session:
@@ -291,6 +296,7 @@ class TestSourceHealthDB:
         """A success after failures resets consecutive_failures to 0 (next failure starts fresh)."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.source_health_service import (  # noqa: PLC0415
             record_fetch_failure,
             record_fetch_success,
@@ -341,6 +347,7 @@ class TestSourceHealthDB:
         """check_all_sources_health is idempotent: running twice creates exactly one alert."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.source_health_service import check_all_sources_health  # noqa: PLC0415
 
         with Session(migrated_db) as session:
@@ -380,6 +387,7 @@ class TestSourceHealthDB:
         """check_all_sources_health skips disabled sources even if consecutive_failures >= 3."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.source_health_service import check_all_sources_health  # noqa: PLC0415
 
         with Session(migrated_db) as session:
@@ -414,6 +422,7 @@ class TestSourceHealthDB:
         """The created alert has kind='source_failure' and the expected dedupe_key format."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
 
         with Session(migrated_db) as session:

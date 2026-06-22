@@ -16,21 +16,19 @@ All tests use mocks/patches — no live Telethon connection required.
 
 from __future__ import annotations
 
-import asyncio
 import datetime
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# patch_env autouse fixture from conftest.py handles Settings env patching.
+from app.ingest.base import TestResult
 
+# patch_env autouse fixture from conftest.py handles Settings env patching.
 from app.ingest.telegram_channel.adapter import (
     TelegramChannelAdapter,
     TelegramChannelConfig,
 )
-from app.ingest.base import TestResult
-
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -45,7 +43,7 @@ def _make_mock_message(
     msg = MagicMock()
     msg.id = message_id
     msg.message = text
-    msg.date = date or datetime.datetime(2026, 6, 18, 10, 0, 0, tzinfo=datetime.timezone.utc)
+    msg.date = date or datetime.datetime(2026, 6, 18, 10, 0, 0, tzinfo=datetime.UTC)
     msg.fwd_from = fwd_from
     return msg
 
@@ -85,7 +83,7 @@ class TestTelegramChannelAdapterTest:
 
     def test_stub_not_returned(self) -> None:
         """test() must NOT return the Phase-4 stub error 'Available after Phase 5'."""
-        adapter = TelegramChannelAdapter()
+        TelegramChannelAdapter()
         # The adapter is imported; if the stub were still there, the class body
         # would already be wrong. Verify that the old stub error is gone.
         import inspect
@@ -98,7 +96,7 @@ class TestTelegramChannelAdapterTest:
         messages = [
             _make_mock_message(i, f"PP raffia {i} MT") for i in range(1, 4)
         ]
-        mock_client = _make_mock_telethon_client(messages)
+        _make_mock_telethon_client(messages)
 
         config = {"username": "polymermarket_uz", "keywords": [], "backfill_days": 7}
 
@@ -280,8 +278,9 @@ class TestCheckUserbotHeartbeat:
 
     def test_dedupe_key_format(self) -> None:
         """The dedupe_key must be 'userbot_silent:{utc_date}'."""
-        from app.services.userbot_health_service import check_userbot_heartbeat
         import re
+
+        from app.services.userbot_health_service import check_userbot_heartbeat
 
         mock_redis = MagicMock()
         mock_redis.get.return_value = None  # absent heartbeat

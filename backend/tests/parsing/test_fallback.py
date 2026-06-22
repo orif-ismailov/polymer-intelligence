@@ -11,10 +11,6 @@ Test coverage:
 
 from __future__ import annotations
 
-from decimal import Decimal
-
-import pytest
-
 from parsing.schemas import CONFIDENCE_REVIEW_THRESHOLD, ExtractionResult
 
 

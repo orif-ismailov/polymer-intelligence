@@ -19,7 +19,6 @@ from typing import Any
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Skip guard — skip the entire module when no DB URL is configured, or when
 # the performance marker is not requested.  This keeps the standard suite fast
@@ -54,6 +53,7 @@ def _get_real_engine():
     drives synchronous engines fine, and psycopg2 is not installed.
     """
     import sqlalchemy as sa
+
     from app.core.config import settings
     return sa.create_engine(str(settings.DATABASE_URL))
 
@@ -77,6 +77,7 @@ def perf_engine():
     import sqlalchemy as sa
     from sqlalchemy import create_engine
     from sqlalchemy.exc import SQLAlchemyError
+
     from app.core.config import settings
 
     engine = create_engine(str(settings.DATABASE_URL), pool_pre_ping=True)
@@ -110,23 +111,24 @@ def seeded_feed_db(perf_engine):
     Yields the engine so tests can run raw SQL.
     """
     import datetime
+
     import sqlalchemy as sa
 
-    TARGET = 1_000_000
-    BATCH = 5_000
+    target = 1_000_000
+    batch = 5_000
 
     with perf_engine.connect() as conn:
         count = conn.execute(
             sa.text("SELECT COUNT(*) FROM signals")
         ).scalar_one()
 
-        if count < TARGET:
-            needed = TARGET - int(count)
+        if count < target:
+            needed = target - int(count)
             inserted = 0
-            base_time = datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
+            base_time = datetime.datetime(2024, 1, 1, tzinfo=datetime.UTC)
 
             while inserted < needed:
-                batch_size = min(BATCH, needed - inserted)
+                batch_size = min(batch, needed - inserted)
                 rows = []
                 for i in range(batch_size):
                     offset_secs = inserted + i
@@ -186,6 +188,7 @@ def test_feed_keyset_page_within_500ms(seeded_feed_db):
         pytest.skip("No Postgres DATABASE_URL — skipping performance test")
 
     from fastapi.testclient import TestClient
+
     from app.core.security import create_access_token
 
     app = _build_app_with_real_db()
@@ -274,6 +277,7 @@ def test_feed_second_page_within_500ms(seeded_feed_db):
         pytest.skip("No Postgres DATABASE_URL — skipping performance test")
 
     from fastapi.testclient import TestClient
+
     from app.core.security import create_access_token
 
     app = _build_app_with_real_db()

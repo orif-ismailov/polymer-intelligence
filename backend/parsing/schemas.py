@@ -26,10 +26,8 @@ from __future__ import annotations
 import re
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-
 
 # ---------------------------------------------------------------------------
 # Enumerations matching DB ENUMs exactly
@@ -100,25 +98,25 @@ class ExtractionResult(BaseModel):
     )
 
     # --- Signal classification (null when is_relevant=False) ---
-    kind: Optional[SignalKind] = Field(
+    kind: SignalKind | None = Field(
         default=None,
         description="Signal type matching signal_kind DB enum.",
     )
 
     # --- Product fields ---
-    product: Optional[str] = Field(
+    product: str | None = Field(
         default=None,
         max_length=32,
         description="Polymer code: PP, HDPE, LDPE, LLDPE, PVC, PET, PS, ABS, etc.",
     )
-    grade_text: Optional[str] = Field(
+    grade_text: str | None = Field(
         default=None,
         max_length=128,
         description="Grade/specification verbatim from source. Null if not mentioned.",
     )
 
     # --- Trade parameters ---
-    volume: Optional[Decimal] = Field(
+    volume: Decimal | None = Field(
         default=None,
         ge=Decimal("0"),
         description="Volume in metric tonnes. Null if not stated.",
@@ -127,36 +125,36 @@ class ExtractionResult(BaseModel):
         default="MT",
         description="Always MT for Phase 5.",
     )
-    price: Optional[Decimal] = Field(
+    price: Decimal | None = Field(
         default=None,
         ge=Decimal("0"),
         description="Unit price. Null if not stated.",
     )
-    currency: Optional[str] = Field(
+    currency: str | None = Field(
         default=None,
         min_length=3,
         max_length=3,
         description="ISO 4217 currency code: USD, UZS, RUB, CNY, EUR.",
     )
-    region: Optional[str] = Field(
+    region: str | None = Field(
         default=None,
         max_length=64,
         description="Market/region of the event. Null if not determinable.",
     )
 
     # --- Counterparty ---
-    counterparty_text: Optional[str] = Field(
+    counterparty_text: str | None = Field(
         default=None,
         max_length=256,
         description="Counterparty name verbatim. Null if not mentioned.",
     )
 
     # --- AI enrichment ---
-    urgency: Optional[UrgencyLevel] = Field(
+    urgency: UrgencyLevel | None = Field(
         default=None,
         description="Urgency level inferred from language cues.",
     )
-    lead_score: Optional[float] = Field(
+    lead_score: float | None = Field(
         default=None,
         ge=0.0,
         le=1.0,
@@ -181,7 +179,7 @@ class ExtractionResult(BaseModel):
     )
 
     # --- Temporal fields (for stale-repost handling; AI-SPEC §1b FM#5 / D14) ---
-    event_at: Optional[str] = Field(
+    event_at: str | None = Field(
         default=None,
         description=(
             "Original event timestamp ISO-8601 (UTC). "
@@ -203,7 +201,7 @@ class ExtractionResult(BaseModel):
 
     @field_validator("currency")
     @classmethod
-    def normalise_currency(cls, v: Optional[str]) -> Optional[str]:
+    def normalise_currency(cls, v: str | None) -> str | None:
         """Uppercase and validate currency as exactly 3 ASCII capital letters.
 
         Accepts: 'usd' → 'USD', 'UZS' → 'UZS'.
@@ -220,7 +218,7 @@ class ExtractionResult(BaseModel):
         return upper
 
     @model_validator(mode="after")
-    def irrelevant_fields_must_be_null(self) -> "ExtractionResult":
+    def irrelevant_fields_must_be_null(self) -> ExtractionResult:
         """If the message is not relevant, no market fields should be populated.
 
         This catches the hallucination pattern where the model invents values

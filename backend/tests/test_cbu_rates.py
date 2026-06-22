@@ -203,8 +203,9 @@ class TestCbuAdapterRegistration:
 
     def test_adapter_has_config_schema(self) -> None:
         """CbuRatesAdapter.config_schema is a pydantic BaseModel subclass."""
-        from app.ingest.cbu_rates.adapter import CbuRatesAdapter  # noqa: PLC0415
         from pydantic import BaseModel  # noqa: PLC0415
+
+        from app.ingest.cbu_rates.adapter import CbuRatesAdapter  # noqa: PLC0415
 
         adapter = CbuRatesAdapter()
         assert issubclass(adapter.config_schema, BaseModel)
@@ -234,6 +235,7 @@ class TestUpsertFxRatesDB:
     def migrated_db(self, engine):
         """Apply migrations before the class tests."""
         from alembic.config import Config  # noqa: PLC0415
+
         from alembic import command as alembic_command  # noqa: PLC0415
 
         backend_dir = Path(__file__).parent.parent
@@ -252,10 +254,11 @@ class TestUpsertFxRatesDB:
 
     def test_upsert_inserts_new_rows(self, migrated_db) -> None:
         """upsert_fx_rates inserts new rates into fx_rates."""
-        from sqlalchemy.orm import Session  # noqa: PLC0415
         import sqlalchemy as sa  # noqa: PLC0415
-        from app.services.fx_service import upsert_fx_rates  # noqa: PLC0415
+        from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.ingest.cbu_rates.adapter import CbuRateRow  # noqa: PLC0415
+        from app.services.fx_service import upsert_fx_rates  # noqa: PLC0415
 
         rate_date = datetime.date(2024, 3, 1)
         rates = [
@@ -279,10 +282,11 @@ class TestUpsertFxRatesDB:
 
     def test_upsert_is_idempotent(self, migrated_db) -> None:
         """Second upsert for same date/ccy inserts 0 net rows (ON CONFLICT idempotent)."""
-        from sqlalchemy.orm import Session  # noqa: PLC0415
         import sqlalchemy as sa  # noqa: PLC0415
-        from app.services.fx_service import upsert_fx_rates  # noqa: PLC0415
+        from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.ingest.cbu_rates.adapter import CbuRateRow  # noqa: PLC0415
+        from app.services.fx_service import upsert_fx_rates  # noqa: PLC0415
 
         rate_date = datetime.date(2024, 3, 2)
         rates = [

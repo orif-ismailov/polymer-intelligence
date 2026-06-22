@@ -9,8 +9,6 @@ Test coverage:
 
 from __future__ import annotations
 
-import pytest
-
 
 class TestPrepareMessageText:
     """Tests for text_prep.prepare_message_text."""

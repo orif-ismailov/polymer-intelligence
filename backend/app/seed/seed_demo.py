@@ -32,7 +32,7 @@ import sqlalchemy as sa
 from app.core.db import SessionLocal
 
 _SENTINEL = "DEMO —"
-_UTC = datetime.timezone.utc
+_UTC = datetime.UTC
 
 
 def _now() -> datetime.datetime:

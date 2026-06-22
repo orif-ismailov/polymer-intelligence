@@ -12,9 +12,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Test: nightly beat entry exists
 # ---------------------------------------------------------------------------
@@ -22,8 +19,9 @@ import pytest
 
 def test_nightly_llm_catchup_beat_entry_exists():
     """BEAT_SCHEDULE must contain 'nightly_llm_catchup' with hour=2."""
-    from app.tasks.schedule import BEAT_SCHEDULE  # noqa: PLC0415
     from celery.schedules import crontab  # noqa: PLC0415
+
+    from app.tasks.schedule import BEAT_SCHEDULE  # noqa: PLC0415
 
     assert "nightly_llm_catchup" in BEAT_SCHEDULE, (
         "nightly_llm_catchup not found in BEAT_SCHEDULE"

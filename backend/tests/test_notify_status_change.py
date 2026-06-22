@@ -21,9 +21,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
-
 # ── D-10 label map (matches CLIENT_STATUS_MAP in request_service.py + RU labels) ──
 # viewed → in_review → "На рассмотрении"
 _STATUS_LABELS_RU: dict[str, str] = {

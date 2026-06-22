@@ -70,8 +70,8 @@ def clean_registry():
     duplicate). This pattern avoids issues with module-level code only
     running once per Python process (module import cache).
     """
-    from app.ingest.registry import _clear_registry  # noqa: PLC0415
     from app.ingest import registry as _reg  # noqa: PLC0415
+    from app.ingest.registry import _clear_registry  # noqa: PLC0415
 
     _clear_registry()
     import app.ingest.rss.adapter as _rss_mod  # noqa: PLC0415
@@ -108,8 +108,8 @@ def test_rss_ssrf_reject_localhost():
 
 def test_rss_test_returns_normalized_rows():
     """RssAdapter.test() returns <=10 normalized signal-draft rows on happy path."""
-    from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
     from app.ingest.base import TestResult  # noqa: PLC0415
+    from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
 
     adapter = RssAdapter()
 

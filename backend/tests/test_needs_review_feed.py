@@ -11,12 +11,9 @@ Verifies:
 
 from __future__ import annotations
 
-from decimal import Decimal
-from unittest.mock import MagicMock, patch
 import datetime
-
-import pytest
-
+from decimal import Decimal
+from unittest.mock import MagicMock
 
 # ---------------------------------------------------------------------------
 # FeedItem schema test
@@ -25,8 +22,8 @@ import pytest
 
 def test_feed_item_has_needs_review_field():
     """FeedItem schema must have a needs_review: bool field."""
+
     from app.schemas.dashboard import FeedItem  # noqa: PLC0415
-    import inspect
 
     fields = FeedItem.model_fields
     assert "needs_review" in fields, f"needs_review field missing from FeedItem; got: {list(fields.keys())}"

@@ -15,6 +15,8 @@ from typing import Any
 
 import pytest
 
+from tests.parsing.eval_config import PRICE_TOLERANCE_PCT
+
 # ---------------------------------------------------------------------------
 # Imports under test
 # ---------------------------------------------------------------------------
@@ -22,10 +24,7 @@ from tests.parsing.eval_metrics import (
     compute_field_precision,
     compute_recall,
     match_field,
-    per_field_breakdown,
 )
-from tests.parsing.eval_config import GATE_FIELDS, PRICE_TOLERANCE_PCT
-
 
 # ---------------------------------------------------------------------------
 # Helpers to build minimal gold/pred rows
@@ -362,9 +361,10 @@ class TestGoldenLoader:
             assert "expected" in row, f"Row {row.get('id')} missing 'expected'"
             assert "is_relevant" in row, f"Row {row.get('id')} missing 'is_relevant'"
 
-    def test_load_golden_set_custom_path(self, tmp_path: "pytest.TempPath") -> None:
+    def test_load_golden_set_custom_path(self, tmp_path: pytest.TempPath) -> None:
         """load_golden_set(path) reads the specified file."""
         import json
+
         from tests.parsing.golden_loader import load_golden_set as _load_golden_set
         custom = [{"id": 99, "raw_text": "test", "is_relevant": False, "expected": {}}]
         f = tmp_path / "custom.json"

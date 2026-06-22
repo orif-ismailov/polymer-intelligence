@@ -208,7 +208,7 @@ def parse_telegram_item(raw_item_id: int) -> dict[str, Any]:
         - BudgetExceeded                        → rule_based fallback + deferred + alert (G4)
         - already parsed (double-parse guard)   → immediate return (idempotency)
     """
-    from app.models.sources import ParseRun, RawItem  # noqa: PLC0415
+    from app.models.sources import RawItem  # noqa: PLC0415
 
     with get_session() as session:
         # ── Load raw_item ──────────────────────────────────────────────────────

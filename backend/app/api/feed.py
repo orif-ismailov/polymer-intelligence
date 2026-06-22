@@ -66,7 +66,7 @@ def _resolve_period(period: str | None) -> datetime.datetime | None:
     delta = _PERIOD_DELTAS.get(period)
     if delta is None:
         return None
-    return datetime.datetime.now(tz=datetime.timezone.utc) - delta
+    return datetime.datetime.now(tz=datetime.UTC) - delta
 
 
 def _row_to_feed_item(row: Any) -> FeedItem:

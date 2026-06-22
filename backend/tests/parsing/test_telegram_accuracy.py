@@ -21,8 +21,8 @@ Key-free CI contract:
 
 from __future__ import annotations
 
+import contextlib
 import json
-import os
 from pathlib import Path
 from typing import Any
 
@@ -172,7 +172,11 @@ class TestTelegramAccuracyGate:
         n_rows: int,
     ) -> None:
         """Print UZEX-harness-style breakdown table."""
-        from tests.parsing.eval_config import GATE_FIELDS, PRECISION_GATE, RECALL_GATE  # noqa: PLC0415
+        from tests.parsing.eval_config import (  # noqa: PLC0415
+            GATE_FIELDS,
+            PRECISION_GATE,
+            RECALL_GATE,
+        )
 
         recall = breakdown["recall"]
         precision = breakdown["precision"]
@@ -293,7 +297,7 @@ class TestReportOnlyDimensions:
             1 for r in irrelevant_gold
             if predictions.get(r["id"], {}).get("is_relevant", False)
         )
-        tn = len(irrelevant_gold) - fp
+        len(irrelevant_gold) - fp
         relevance_precision_denom = sum(
             1 for pred in predictions.values() if pred.get("is_relevant", False)
         )
@@ -396,16 +400,14 @@ class TestReportOnlyDimensions:
 
 def pytest_addoption(parser: Any) -> None:
     """Add --runlive option for the refresh path."""
-    try:
+    # Option may already be added by another conftest
+    with contextlib.suppress(ValueError):
         parser.addoption(
             "--runlive",
             action="store_true",
             default=False,
             help="Enable live Anthropic API calls for prediction refresh (local only)",
         )
-    except ValueError:
-        # Option already added by another conftest
-        pass
 
 
 @pytest.fixture

@@ -21,11 +21,9 @@ Per-rule delivery channels (D-08):
 
 from __future__ import annotations
 
-import datetime
 import logging
 from typing import Any
 
-import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -35,11 +33,11 @@ from app.models.alerts import Alert, AlertRule
 from app.models.enums import AlertKind
 from app.models.staff import StaffUser
 from app.schemas.dashboard import (
+    KNOWN_PREDICATE_KEYS,
     AlertOut,
     AlertRuleCreate,
-    AlertRulePatch,
     AlertRuleOut,
-    KNOWN_PREDICATE_KEYS,
+    AlertRulePatch,
 )
 
 logger = logging.getLogger(__name__)
@@ -155,7 +153,7 @@ def create_alert_rule(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Unknown alert kind: {body.kind!r}. Valid kinds: {[k.value for k in AlertKind]}",
-        )
+        ) from None
 
     rule = AlertRule(
         kind=kind,

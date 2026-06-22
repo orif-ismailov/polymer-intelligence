@@ -29,11 +29,10 @@ import re
 import time
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -65,6 +64,7 @@ def _make_mock_db() -> MagicMock:
 def _make_mock_request_with_number(number: str = "REQ-2026-06-16-00001") -> MagicMock:
     """Return a MagicMock that quacks like a Request ORM object."""
     import datetime  # noqa: PLC0415
+
     from app.models.enums import PriceBasis, RequestStatus  # noqa: PLC0415
 
     req = MagicMock()
@@ -72,7 +72,7 @@ def _make_mock_request_with_number(number: str = "REQ-2026-06-16-00001") -> Magi
     req.client_id = 1
     req.number = number
     req.status = RequestStatus.new
-    req.created_at = datetime.datetime(2026, 6, 16, 10, 0, 0, tzinfo=datetime.timezone.utc)
+    req.created_at = datetime.datetime(2026, 6, 16, 10, 0, 0, tzinfo=datetime.UTC)
     req.product_id = 1
     req.grade_text = "HDPE 2420D"
     req.volume = 100
@@ -204,15 +204,14 @@ def test_status_change_enqueues_notify_promptly() -> None:
     mock_request.status = RequestStatus.new
 
     # Mock write_audit so the staff path doesn't break (no DB needed)
-    with patch("app.services.request_service.write_audit"):
-        with patch(
-            "app.tasks.notify.send_status_change_notification",
-            create=True,
-        ) as mock_task:
-            mock_apply_async = MagicMock()
-            mock_task.apply_async = mock_apply_async
+    with patch("app.services.request_service.write_audit"), patch(
+        "app.tasks.notify.send_status_change_notification",
+        create=True,
+    ) as mock_task:
+        mock_apply_async = MagicMock()
+        mock_task.apply_async = mock_apply_async
 
-            transition_status(db, mock_request, RequestStatus.viewed)
+        transition_status(db, mock_request, RequestStatus.viewed)
 
     # apply_async must have been called exactly once
     assert mock_apply_async.call_count == 1, (
@@ -224,7 +223,6 @@ def test_status_change_enqueues_notify_promptly() -> None:
     assert call_kwargs is not None, "apply_async was not called with any arguments"
 
     # queue= may be positional (args) or keyword (kwargs); check both
-    all_args = call_kwargs.args  # positional args tuple
     all_kwargs = call_kwargs.kwargs  # keyword args dict
     assert all_kwargs.get("queue") == "notify", (
         f"Expected queue='notify', got call: {call_kwargs!r}"

@@ -12,11 +12,11 @@ Covers:
 from __future__ import annotations
 
 import datetime
+
 import pytest
 
 from app.ingest.base import RawItemDraft, SourceAdapter, TestResult
 from app.ingest.registry import _clear_registry, get_adapter, list_adapters, register_adapter
-
 
 # ── Test helpers ────────────────────────────────────────────────────────────────
 
@@ -131,7 +131,7 @@ def test_dummy_adapter_satisfies_protocol():
 
 def test_raw_item_draft_fields():
     """RawItemDraft can be constructed with all fields."""
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    now = datetime.datetime.now(tz=datetime.UTC)
     draft = RawItemDraft(
         external_id="LOT-001",
         content="<html>...</html>",

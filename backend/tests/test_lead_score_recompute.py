@@ -18,8 +18,6 @@ from decimal import Decimal
 from typing import Any
 from unittest.mock import MagicMock
 
-import pytest
-
 # app.* imports are deferred inside test methods (PLC0415 pattern) to avoid
 # importing app.core.config at module collection time before conftest
 # patch_env fixture has set the required environment variables.

@@ -19,10 +19,7 @@ import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from parsing.schemas import ExtractionResult, SignalKind, UrgencyLevel
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -113,7 +110,7 @@ class TestWriteParseRun:
         # Make ParseRun return an instance with id=None by default
         from app.models.sources import ParseRun  # noqa: PLC0415
 
-        run_id = write_parse_run(
+        write_parse_run(
             mock_session,
             raw_item_id=1,
             parser="llm_extract_tools",
@@ -312,7 +309,6 @@ class TestCreateSignalFromExtraction:
 
     def test_signal_kind_from_extraction(self):
         """Signal.kind maps from ExtractionResult.kind."""
-        from app.models.enums import SignalKind as DBSignalKind  # noqa: PLC0415
 
         result = _make_extraction_result(kind=SignalKind.BUY_REQUEST)
         journal = _make_journal()
@@ -347,7 +343,6 @@ class TestCreateSignalFromExtraction:
 
     def test_urgency_denormalized_from_result(self):
         """urgency is denormalized from result.urgency."""
-        from app.models.enums import Urgency  # noqa: PLC0415
 
         result = _make_extraction_result(urgency=UrgencyLevel.HIGH)
         journal = _make_journal()

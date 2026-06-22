@@ -16,16 +16,12 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 # Ensure settings are patched before importing anything that imports config
 # (patch_env fixture from conftest.py handles this automatically via autouse=True).
-
 from userbot.channel_registry import (  # noqa: E402
     load_enabled_channel_sources,
     load_enabled_channels,
 )
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

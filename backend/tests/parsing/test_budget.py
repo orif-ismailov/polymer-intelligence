@@ -50,9 +50,9 @@ class TestCheckAndReserveTokens:
         counter = {"value": 0}
         mock_redis.eval.side_effect = _eval_compare_and_set(counter)
 
-        with patch.object(budget_module, "_redis", mock_redis):
-            with patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000):
-                budget_module.check_and_reserve_tokens(400)
+        with patch.object(budget_module, "_redis", mock_redis), \
+             patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000):
+            budget_module.check_and_reserve_tokens(400)
 
         mock_redis.eval.assert_called_once()
         assert counter["value"] == 400
@@ -68,10 +68,10 @@ class TestCheckAndReserveTokens:
         # daily_spend() is called to build the error message
         mock_redis.get.return_value = b"400"
 
-        with patch.object(budget_module, "_redis", mock_redis):
-            with patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000):
-                with pytest.raises(BudgetExceeded):
-                    budget_module.check_and_reserve_tokens(700)
+        with patch.object(budget_module, "_redis", mock_redis), \
+             patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000), \
+             pytest.raises(BudgetExceeded):
+            budget_module.check_and_reserve_tokens(700)
 
         # Atomic rejection: counter must be untouched (no rollback dance needed).
         assert counter["value"] == 400
@@ -99,9 +99,9 @@ class TestDailyKeyAndExpireat:
         mock_redis = MagicMock()
         mock_redis.eval.return_value = 50  # under limit → reserved
 
-        with patch.object(budget_module, "_redis", mock_redis):
-            with patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000):
-                budget_module.check_and_reserve_tokens(50)
+        with patch.object(budget_module, "_redis", mock_redis), \
+             patch.object(budget_module, "DAILY_TOKEN_LIMIT", 1000):
+            budget_module.check_and_reserve_tokens(50)
 
         mock_redis.eval.assert_called_once()
         call_args = mock_redis.eval.call_args[0]

@@ -13,8 +13,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-import pytest
-
 from parsing.schemas import ExtractionResult, SignalKind, UrgencyLevel
 
 
@@ -80,7 +78,7 @@ class TestComputeLeadScore:
 
     def test_hot_result_scores_high(self) -> None:
         """High-volume sell_offer with urgency=HIGH scores ≥0.7 → HOT."""
-        from parsing.lead_scoring import SCORING_PROMPT_VERSION, compute_lead_score
+        from parsing.lead_scoring import compute_lead_score
 
         result = _make_hot_result()
         score, classification = compute_lead_score(result)

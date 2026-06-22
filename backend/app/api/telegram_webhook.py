@@ -86,7 +86,6 @@ async def telegram_webhook(
     # Parse the JSON body into an aiogram Update and feed it to the Dispatcher.
     # Lazy imports keep this module import-safe (no network sockets at import time).
     from aiogram.types import Update  # noqa: PLC0415
-
     from telegram.bot import bot, dp  # noqa: PLC0415
 
     body = await request.json()

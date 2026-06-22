@@ -15,12 +15,9 @@ Tests cover the 8 required behaviors from 05-04 PLAN:
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, call, patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 from parsing.schemas import BudgetExceeded, ExtractionResult, SignalKind, UrgencyLevel
-
 
 # ---------------------------------------------------------------------------
 # Test helpers and fixtures
@@ -103,8 +100,8 @@ def _make_journal(
 def _import_task():
     """Import parse_telegram_item and helpers under test."""
     from app.tasks.parse_telegram import (  # noqa: PLC0415
-        parse_telegram_item,
         enqueue_for_telegram_parse,
+        parse_telegram_item,
     )
     return parse_telegram_item, enqueue_for_telegram_parse
 
@@ -269,7 +266,7 @@ def test_instructor_retry_exception_dead_letters():
 
         parse_telegram_item, _ = _import_task()
         # Must NOT raise (worker survives)
-        result = parse_telegram_item(1)
+        parse_telegram_item(1)
 
     # No signal created (G3)
     mock_create_signal.assert_not_called()
@@ -300,7 +297,7 @@ def test_budget_exceeded_degrades_to_rule_based():
         patch("app.tasks.parse_telegram.check_and_reserve_tokens", side_effect=BudgetExceeded("exhausted")),
         patch("app.tasks.parse_telegram.rule_based_extract", return_value=rule_result) as mock_rule_extract,
         patch("app.tasks.parse_telegram.prepare_message_text", return_value="Продаю ПП"),
-        patch("app.tasks.parse_telegram.write_parse_run", return_value=42) as mock_write_run,
+        patch("app.tasks.parse_telegram.write_parse_run", return_value=42),
         patch("app.tasks.parse_telegram.create_signal_from_extraction", return_value=MagicMock()) as mock_create_signal,
         patch("app.tasks.parse_telegram.enqueue_nightly_reprocess") as mock_nightly,
         patch("app.tasks.parse_telegram.raise_budget_exceeded_alert") as mock_alert,
@@ -411,7 +408,7 @@ def test_blank_content_marked_irrelevant_without_llm_call():
 
     with (
         patch("app.tasks.parse_telegram.get_session") as mock_get_session,
-        patch("app.tasks.parse_telegram.prepare_message_text", return_value="") as mock_prep,
+        patch("app.tasks.parse_telegram.prepare_message_text", return_value=""),
         patch("app.tasks.parse_telegram.extract_signal") as mock_extract,
         patch("app.tasks.parse_telegram.check_and_reserve_tokens") as mock_budget,
         patch("app.tasks.parse_telegram.write_parse_run", return_value=42) as mock_write_run,

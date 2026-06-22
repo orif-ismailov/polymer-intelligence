@@ -42,14 +42,14 @@ def _print_report(
     precision_status = "PASS" if precision >= precision_gate else "FAIL"
 
     print(f"\n{'='*70}")
-    print(f"Telegram AI Extraction — Acceptance Review")
+    print("Telegram AI Extraction — Acceptance Review")
     print(f"{'='*70}")
     print(f"  {'Rows evaluated':35s}: {n_rows}")
     print(f"  {'True positives':35s}: {tp}")
     print(f"  {'Gate fields':35s}: {n_fields}")
     print(f"{'─'*70}")
-    print(f"  {'D1 Recall (gate ≥{:.0%}):'.format(recall_gate):35s}  {recall:.1%}  [{recall_status}]")
-    print(f"  {'Field Precision (gate ≥{:.0%}):'.format(precision_gate):35s}  {precision:.1%}  [{precision_status}]")
+    print(f"  {f'D1 Recall (gate ≥{recall_gate:.0%}):':35s}  {recall:.1%}  [{recall_status}]")
+    print(f"  {f'Field Precision (gate ≥{precision_gate:.0%}):':35s}  {precision:.1%}  [{precision_status}]")
     print(f"{'─'*70}")
     print("  Per-field precision breakdown:")
     for field in gate_fields:
@@ -157,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR loading predictions (version={args.predictions!r}): {exc}", file=sys.stderr)
         print(
             "Tip: regenerate with:\n"
-            f"  pytest tests/parsing/test_telegram_accuracy.py -m refresh --runlive",
+            "  pytest tests/parsing/test_telegram_accuracy.py -m refresh --runlive",
             file=sys.stderr,
         )
         return 1

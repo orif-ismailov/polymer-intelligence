@@ -100,7 +100,8 @@ class TestConvertAmountUnit:
 
     def test_convert_amount_does_not_write(self) -> None:
         """convert_amount must not call session.execute with INSERT/UPDATE (read-only)."""
-        from unittest.mock import MagicMock, call  # noqa: PLC0415
+        from unittest.mock import MagicMock  # noqa: PLC0415
+
         from app.services.fx_service import convert_amount  # noqa: PLC0415
 
         session = MagicMock()
@@ -138,9 +139,11 @@ class TestConvertAmountDB:
     def seeded_db(self, engine):
         """Migrate and seed one USD rate for 2024-02-01."""
         import contextlib  # noqa: PLC0415
-        import sqlalchemy as sa  # noqa: PLC0415
         from pathlib import Path  # noqa: PLC0415
+
+        import sqlalchemy as sa  # noqa: PLC0415
         from alembic.config import Config  # noqa: PLC0415
+
         from alembic import command as alembic_command  # noqa: PLC0415
 
         backend_dir = Path(__file__).parent.parent
@@ -172,6 +175,7 @@ class TestConvertAmountDB:
     def test_convert_amount_exact_date(self, seeded_db) -> None:
         """convert_amount returns correct figure for exact-date rate."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.fx_service import convert_amount  # noqa: PLC0415
 
         with Session(seeded_db) as session:
@@ -188,6 +192,7 @@ class TestConvertAmountDB:
     def test_convert_amount_uses_most_recent_rate(self, seeded_db) -> None:
         """convert_amount uses most-recent rate ≤ on_date (not strictly equal)."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.fx_service import convert_amount  # noqa: PLC0415
 
         # 2024-02-03 > 2024-02-01 (our only seeded rate) → should still resolve
@@ -207,6 +212,7 @@ class TestConvertAmountDB:
     def test_convert_amount_returns_none_for_future_date_with_no_rate(self, seeded_db) -> None:
         """convert_amount returns None if on_date is before all available rates."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.fx_service import convert_amount  # noqa: PLC0415
 
         # 2020-01-01 is before any seeded rate → None
@@ -226,6 +232,7 @@ class TestConvertAmountDB:
         """convert_amount does NOT mutate fx_rates rows (original preserved)."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.fx_service import convert_amount  # noqa: PLC0415
 
         rate_date = datetime.date(2024, 2, 1)
@@ -259,6 +266,7 @@ class TestConvertAmountDB:
     def test_convert_missing_ccy_returns_none(self, seeded_db) -> None:
         """convert_amount returns None for a ccy with no rates at all."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.services.fx_service import convert_amount  # noqa: PLC0415
 
         with Session(seeded_db) as session:

@@ -36,7 +36,7 @@ Usage:
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import redis as redis_lib
 
@@ -87,7 +87,7 @@ def _next_midnight_ts() -> int:
     """
     from datetime import timedelta
 
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
     return int(next_midnight.timestamp())
 
@@ -216,12 +216,12 @@ def per_source_spend(session: object, source_id: int, days: int = 7) -> int:
     Returns:
         int: Total tokens consumed for this source in the last `days` days.
     """
-    from sqlalchemy import text as sa_text
-
     # Import inside function (lazy) so module is importable without a live DB in tests
     from datetime import timedelta
 
-    cutoff = datetime.now(tz=timezone.utc) - timedelta(days=days)
+    from sqlalchemy import text as sa_text
+
+    cutoff = datetime.now(tz=UTC) - timedelta(days=days)
 
     row = session.execute(  # type: ignore[union-attr]
         sa_text(

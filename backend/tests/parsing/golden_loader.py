@@ -23,6 +23,7 @@ Prediction shape (one dict per row_id):
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 from decimal import Decimal
@@ -101,10 +102,8 @@ def load_golden_set(path: str | None = None) -> list[dict[str, Any]]:
         for field in ("price", "volume"):
             v = expected.get(field)
             if v is not None:
-                try:
+                with contextlib.suppress(Exception):
                     expected[field] = Decimal(str(v))
-                except Exception:
-                    pass
     return data
 
 
@@ -145,10 +144,8 @@ def load_predictions(version: str) -> dict[int, dict[str, Any]]:
         for field in ("price", "volume"):
             v = val.get(field)
             if v is not None:
-                try:
+                with contextlib.suppress(Exception):
                     val[field] = Decimal(str(v))
-                except Exception:
-                    pass
         result[row_id] = val
     return result
 

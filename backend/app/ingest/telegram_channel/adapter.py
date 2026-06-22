@@ -17,6 +17,7 @@ Self-registers at import time via register_adapter().
 
 from __future__ import annotations
 
+import contextlib
 import datetime
 import logging
 from dataclasses import dataclass
@@ -171,12 +172,10 @@ class TelegramChannelAdapter:
             )
             return TestResult(ok=False, error=str(exc))
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 await client.disconnect()
-            except Exception:
-                pass
 
-    async def fetch(self, source: "Source") -> list[RawItemDraft]:
+    async def fetch(self, source: Source) -> list[RawItemDraft]:
         """Backfill recent history for the source (wizard/backfill path).
 
         Pulls up to ``config.backfill_days`` of messages from the channel and
@@ -228,7 +227,7 @@ class TelegramChannelAdapter:
         )
 
         drafts: list[RawItemDraft] = []
-        cutoff = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(
+        cutoff = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
             days=channel_config.backfill_days
         )
 
@@ -292,10 +291,8 @@ class TelegramChannelAdapter:
                 extra={"source_id": getattr(source, "id", None), "error": str(exc)},
             )
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 await client.disconnect()
-            except Exception:
-                pass
 
         logger.info(
             "telegram_channel_adapter.fetch_done",

@@ -145,7 +145,7 @@ def generate_request_number(db: Session) -> str:
 
 def create_request(
     db: Session,
-    client: "object",  # Client ORM object from get_current_client dep
+    client: object,  # Client ORM object from get_current_client dep
     data: RequestCreate,
 ) -> Request:
     """Generate REQ number, insert Request + history row, enqueue notify.

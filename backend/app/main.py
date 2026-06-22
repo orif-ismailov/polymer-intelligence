@@ -20,9 +20,19 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# ── No-code adapter registration (Phase 4, Plan 06) ──────────────────────────
+# These imports register the four no-code adapters into the global adapter registry
+# at startup so GET /admin/source-types exposes their config_schema and POST
+# /sources/{id}/test can resolve them by type_name.
+# Pattern: mirroring how uzex adapters are registered (app.ingest.uzex package).
+import app.ingest.html_table  # noqa: E402, F401 — registers html_table adapter
+import app.ingest.llm_page  # noqa: E402, F401 — registers llm_page adapter
+import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
+import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 from app.api.admin_sources import router as admin_sources_router
 from app.api.admin_users import router as admin_users_router
-from app.api.alert_rules import alerts_router, router as alert_rules_router
+from app.api.alert_rules import alerts_router
+from app.api.alert_rules import router as alert_rules_router
 from app.api.auth import router as auth_router
 from app.api.dashboard_requests import router as dashboard_requests_router
 from app.api.deps import require_admin, require_analyst_or_admin
@@ -31,22 +41,12 @@ from app.api.health import router as health_router
 from app.api.prices import router as prices_router
 from app.api.sources import router as sources_router
 from app.api.telegram_webhook import router as telegram_webhook_router
-from app.api.webapp.requests import router as webapp_requests_router
-from app.api.webapp.me import router as webapp_me_router
 from app.api.webapp.files import router as webapp_files_router
+from app.api.webapp.me import router as webapp_me_router
+from app.api.webapp.requests import router as webapp_requests_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.models.staff import StaffUser
-
-# ── No-code adapter registration (Phase 4, Plan 06) ──────────────────────────
-# These imports register the four no-code adapters into the global adapter registry
-# at startup so GET /admin/source-types exposes their config_schema and POST
-# /sources/{id}/test can resolve them by type_name.
-# Pattern: mirroring how uzex adapters are registered (app.ingest.uzex package).
-import app.ingest.html_table       # noqa: E402, F401 — registers html_table adapter
-import app.ingest.rss              # noqa: E402, F401 — registers rss adapter
-import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
-import app.ingest.llm_page         # noqa: E402, F401 — registers llm_page adapter
 
 logger = logging.getLogger(__name__)
 

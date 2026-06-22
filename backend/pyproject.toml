@@ -76,7 +76,17 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM"]
-ignore = ["E501"]
+ignore = [
+    "E501",
+    # UP042: the domain enums are declared `(str, Enum)` to match their PostgreSQL
+    # ENUMs verbatim. StrEnum would change `str(member)`/f-string output from
+    # "SignalKind.NEWS" to "news", a behavioural change we deliberately avoid.
+    "UP042",
+    # N818: this codebase consistently names domain exceptions without the `Error`
+    # suffix (InvalidInitData, BudgetExceeded). Disabled to match the established
+    # convention rather than rename 50+ references across 12 files.
+    "N818",
+]
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI requires Depends()/Query()/Cookie() in parameter defaults for its DI system.
@@ -91,6 +101,9 @@ extend-immutable-calls = [
     "fastapi.Form",
     "fastapi.File",
     "fastapi.security.HTTPBearer",
+    # require_role(...) is a dependency factory built once at import time and wrapped
+    # in Depends(...) — the same immutable-call pattern as the FastAPI markers above.
+    "app.api.deps.require_role",
 ]
 
 [tool.mypy]

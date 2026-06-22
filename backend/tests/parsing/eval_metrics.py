@@ -19,7 +19,6 @@ All functions accept the gold/pred row shapes defined in golden_loader.py:
 from __future__ import annotations
 
 import re
-import unicodedata
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
@@ -205,10 +204,7 @@ def _match_grade(gold_val: Any, sys_val: Any, synonyms: dict[str, str]) -> bool:
     gold_key = synonyms.get(gold_norm) or synonyms.get(str(gold_val).strip().casefold())
     sys_key = synonyms.get(sys_norm) or synonyms.get(str(sys_val).strip().casefold())
 
-    if gold_key is not None and sys_key is not None and gold_key == sys_key:
-        return True
-
-    return False
+    return bool(gold_key is not None and sys_key is not None and gold_key == sys_key)
 
 
 def _match_price(gold_val: Any, sys_val: Any) -> bool:

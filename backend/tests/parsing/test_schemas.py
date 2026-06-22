@@ -17,7 +17,7 @@ class TestExtractionResultValidation:
 
     def test_full_valid_sell_offer(self) -> None:
         """A complete sell_offer dict validates without error and coerces Decimal fields."""
-        from parsing.schemas import ExtractionResult, SignalKind, UrgencyLevel, FieldConfidence
+        from parsing.schemas import ExtractionResult, SignalKind, UrgencyLevel
 
         data = {
             "is_relevant": True,
@@ -224,8 +224,8 @@ class TestEnumParity:
 
     def test_signal_kind_parity_with_db_enum(self) -> None:
         """parsing.schemas.SignalKind values == app.models.enums.SignalKind values."""
-        from parsing.schemas import SignalKind as ParsingSignalKind
         from app.models.enums import SignalKind as DBSignalKind
+        from parsing.schemas import SignalKind as ParsingSignalKind
 
         parsing_values = {e.value for e in ParsingSignalKind}
         db_values = {e.value for e in DBSignalKind}
@@ -237,8 +237,8 @@ class TestEnumParity:
 
     def test_urgency_level_parity_with_db_enum(self) -> None:
         """parsing.schemas.UrgencyLevel values == app.models.enums.Urgency values."""
-        from parsing.schemas import UrgencyLevel as ParsingUrgency
         from app.models.enums import Urgency as DBUrgency
+        from parsing.schemas import UrgencyLevel as ParsingUrgency
 
         parsing_values = {e.value for e in ParsingUrgency}
         db_values = {e.value for e in DBUrgency}

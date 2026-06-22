@@ -250,8 +250,7 @@ def export_requests(
         buf.seek(0)
 
         # Data rows — stream in chunks using .yield_per() for memory efficiency
-        row_count = 0
-        for req in query.limit(_EXPORT_ROW_CAP):
+        for row_count, req in enumerate(query.limit(_EXPORT_ROW_CAP)):
             if row_count >= _EXPORT_ROW_CAP:
                 break
             writer.writerow([
@@ -273,7 +272,6 @@ def export_requests(
             yield buf.getvalue().encode("utf-8")
             buf.truncate(0)
             buf.seek(0)
-            row_count += 1
 
     return StreamingResponse(
         _csv_generator(),

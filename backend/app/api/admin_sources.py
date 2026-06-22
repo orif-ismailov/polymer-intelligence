@@ -147,7 +147,7 @@ def get_sources_health(
     ).fetchall()
 
     # AI adapter types that consume LLM tokens (REQ-llm-budget: per-source 7-day spend)
-    _AI_ADAPTER_PREFIXES: frozenset[str] = frozenset({"telegram_channel", "llm_page"})
+    _AI_ADAPTER_PREFIXES: frozenset[str] = frozenset({"telegram_channel", "llm_page"})  # noqa: N806
 
     return [
         SourceHealthItem(
