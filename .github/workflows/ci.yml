@@ -158,7 +158,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build backend image
-        run: docker build -f deploy/Dockerfile.backend -t pi-backend:ci backend/
+        # WR-02: build the SAME Dockerfile that deploy/docker-compose.dev.yml resolves
+        # (backend/Dockerfile) so any change to the runtime image is validated by CI.
+        run: docker build -t pi-backend:ci backend/
 
       - name: Build dashboard image
         run: docker build -f deploy/Dockerfile.dashboard -t pi-dashboard:ci dashboard/
