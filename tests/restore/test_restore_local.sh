@@ -128,12 +128,18 @@ docker compose -f "${COMPOSE_FILE}" exec -T postgres \
 note "Dump complete: $(wc -c < "${DUMP_FILE}") bytes."
 
 # ── 3. Capture source row counts ─────────────────────────────────────────────
-declare -A SRC_COUNTS
-for tbl in signals raw_items sources; do
-    SRC_COUNTS[$tbl]="$(docker compose -f "${COMPOSE_FILE}" exec -T postgres \
-        psql -U "${PGUSER}" -d "${PGDATABASE}" -tAc "SELECT count(*) FROM ${tbl};" | tr -d '[:space:]')"
-    note "source ${tbl} = ${SRC_COUNTS[$tbl]}"
-done
+# Plain shell vars (no `declare -A`) so this stays portable to Bash 3.2 (the
+# macOS dev default) as well as the Linux deployment Bash.
+src_count() {
+    docker compose -f "${COMPOSE_FILE}" exec -T postgres \
+        psql -U "${PGUSER}" -d "${PGDATABASE}" -tAc "SELECT count(*) FROM $1;" | tr -d '[:space:]'
+}
+SRC_SIGNALS_COUNT="$(src_count signals)"
+SRC_RAWITEMS_COUNT="$(src_count raw_items)"
+SRC_SOURCES_COUNT="$(src_count sources)"
+note "source signals = ${SRC_SIGNALS_COUNT}"
+note "source raw_items = ${SRC_RAWITEMS_COUNT}"
+note "source sources = ${SRC_SOURCES_COUNT}"
 
 # ── 4. Spin up a FRESH disposable postgres:16-alpine (clean server) ──────────
 # Distinct name + host port + tmpfs data dir (no volume) so the dev
@@ -170,18 +176,59 @@ restore_psql postgres "DROP DATABASE IF EXISTS ${PGDATABASE};" >/dev/null
 restore_psql postgres "CREATE DATABASE ${PGDATABASE} OWNER ${PGUSER};" >/dev/null
 
 note "Restore Step 3 — pg_restore --jobs=4…"
-docker exec -i -e PGPASSWORD="${PGPASSWORD}" "${RESTORE_CTR}" \
+# `pg_restore --jobs=N` (parallel) requires a seekable FILE, not stdin — it
+# errors "parallel restore from standard input is not supported". So copy the
+# dump into the container and restore from that path (matches runbook §3, which
+# passes a file path, not a pipe). The dump must be reachable as a file inside
+# the restore host — here via `docker cp`; on a real VPS via the host filesystem
+# or a bind-mount.
+CTR_DUMP="/tmp/pi_restore_drill.pgdump"
+docker cp "${DUMP_FILE}" "${RESTORE_CTR}:${CTR_DUMP}"
+docker exec -e PGPASSWORD="${PGPASSWORD}" "${RESTORE_CTR}" \
     pg_restore --username="${PGUSER}" --dbname="${PGDATABASE}" \
-        --no-owner --no-privileges --jobs=4 < "${DUMP_FILE}"
+        --no-owner --no-privileges --jobs=4 "${CTR_DUMP}"
+docker exec "${RESTORE_CTR}" rm -f "${CTR_DUMP}" >/dev/null 2>&1 || true
 
 # ── 5a. Apply pending migrations (runbook Step 4) ────────────────────────────
+# `app.entrypoint` constructs a full pydantic Settings() at import, so it needs
+# the same secrets (REDIS_URL, ANTHROPIC_API_KEY, JWT_SECRET, …) the api service
+# gets from the compose env_file. The runbook's `docker compose run --rm api`
+# inherits those automatically; a bare `docker run` does not. So we snapshot the
+# running api container's environment into a temp env-file (umask 077, removed on
+# exit) and override only DATABASE_URL to target the disposable restore server.
+# Using --env-file keeps secret VALUES off the command line / process table.
 if [ "${SKIP_MIGRATIONS}" != "1" ]; then
     note "Restore Step 4 — alembic upgrade head via app.entrypoint (idempotent)…"
+    MIG_ENV="$(mktemp -t pi_restore_mig_env.XXXXXX)"
+    # shellcheck disable=SC2064
+    trap "rm -f -- '${MIG_ENV}' '${DUMP_FILE}'; docker rm -f '${RESTORE_CTR}' >/dev/null 2>&1 || true" EXIT INT TERM
+    docker compose -f "${COMPOSE_FILE}" exec -T api printenv \
+        | grep -vE '^(DATABASE_URL|HOSTNAME|PATH|PWD|HOME|SHLVL|_|TERM)=' \
+        > "${MIG_ENV}" || fail "could not snapshot api env for migrations."
+    printf 'DATABASE_URL=postgresql+psycopg://%s:%s@%s:5432/%s\n' \
+        "${PGUSER}" "${PGPASSWORD}" "${RESTORE_ALIAS}" "${PGDATABASE}" >> "${MIG_ENV}"
+    # Bind-mount the CURRENT backend source over /app so the migration scripts the
+    # restored DB's alembic_version points at are present, even if the baked
+    # ${API_IMAGE} layer is older than the dump (the dev compose mounts the source
+    # the same way). Without this the run uses only the frozen image's migrations
+    # and "Can't locate revision" fires when the dump is newer than the image.
+    # Bash 3.2 (macOS) errors on empty-array expansion under `set -u`, so build
+    # the optional -v flag as two plain positional args instead of an array.
+    BACKEND_SRC="$(cd "$(dirname "${COMPOSE_FILE}")/../backend" 2>/dev/null && pwd || true)"
+    MIG_MOUNT_FLAG=""
+    MIG_MOUNT_VAL=""
+    if [ -n "${BACKEND_SRC}" ] && [ -d "${BACKEND_SRC}/alembic/versions" ]; then
+        MIG_MOUNT_FLAG="-v"
+        MIG_MOUNT_VAL="${BACKEND_SRC}:/app"
+        note "Mounting current backend source (${BACKEND_SRC}) for the migration step."
+    fi
     docker run --rm \
         --network "${DOCKER_NET}" \
-        -e DATABASE_URL="postgresql+psycopg://${PGUSER}:${PGPASSWORD}@${RESTORE_ALIAS}:5432/${PGDATABASE}" \
+        --env-file "${MIG_ENV}" \
+        ${MIG_MOUNT_FLAG:+"${MIG_MOUNT_FLAG}" "${MIG_MOUNT_VAL}"} \
         "${API_IMAGE}" python -m app.entrypoint \
         || fail "alembic upgrade head failed on the restored DB."
+    rm -f -- "${MIG_ENV}"
 else
     note "SKIP_MIGRATIONS=1 — skipping the Step-4 alembic upgrade head."
 fi
@@ -190,12 +237,15 @@ fi
 note "Verifying restored schema + rows + view + ENUMs…"
 
 # 6a. Per-table row-count equality
-for tbl in signals raw_items sources; do
+verify_count() {
+    local tbl="$1" want="$2" got
     got="$(restore_psql "${PGDATABASE}" "SELECT count(*) FROM ${tbl};" | tr -d '[:space:]')"
-    want="${SRC_COUNTS[$tbl]}"
     [ "${got}" = "${want}" ] || fail "row count mismatch for ${tbl}: restored=${got} source=${want}"
     note "OK ${tbl}: ${got} rows match source."
-done
+}
+verify_count signals   "${SRC_SIGNALS_COUNT}"
+verify_count raw_items "${SRC_RAWITEMS_COUNT}"
+verify_count sources   "${SRC_SOURCES_COUNT}"
 
 # 6b. ENUM presence — assert the 14 locked ENUMs are present
 ENUM_COUNT="$(restore_psql "${PGDATABASE}" "SELECT count(*) FROM pg_type WHERE typcategory='E';" | tr -d '[:space:]')"

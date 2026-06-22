@@ -65,45 +65,66 @@ docker compose -f deploy/docker-compose.dev.yml stop api worker beat
 
 ### Step 2: Create a clean target database
 
-Connect to PostgreSQL as a superuser:
+Connect to PostgreSQL as a superuser. **The bootstrap superuser is `pi_user`**
+(the `POSTGRES_USER` the container is initialised with) — there is **no separate
+`postgres` role** in this deployment, so use `-U pi_user`:
 
 ```bash
 docker compose -f deploy/docker-compose.dev.yml exec postgres \
-  psql -U postgres -c "DROP DATABASE IF EXISTS polymer_intelligence;"
+  psql -U pi_user -d postgres -c "DROP DATABASE IF EXISTS polymer_intelligence;"
 docker compose -f deploy/docker-compose.dev.yml exec postgres \
-  psql -U postgres -c "CREATE DATABASE polymer_intelligence OWNER pi_user;"
+  psql -U pi_user -d postgres -c "CREATE DATABASE polymer_intelligence OWNER pi_user;"
 ```
 
-> If you are restoring to a new/blank server, ensure `pi_user` exists first:
+> Connect to the maintenance `postgres` database (`-d postgres`) while dropping
+> `polymer_intelligence` — you cannot drop the database you are connected to.
+>
+> If you are restoring to a brand-new/blank server where `pi_user` does not yet
+> exist, the simplest path is to let the postgres container create it: set
+> `POSTGRES_USER=pi_user` / `POSTGRES_PASSWORD=<secret>` / `POSTGRES_DB=polymer_intelligence`
+> in the env so the entrypoint provisions the superuser and database on first
+> boot. Otherwise create it manually as an existing superuser:
 > ```sql
-> CREATE USER pi_user WITH PASSWORD '<secret>';
+> CREATE USER pi_user WITH SUPERUSER PASSWORD '<secret>';
 > ```
 
 ### Step 3: Restore the dump
 
-Run `pg_restore` against the dump file. Adjust paths to match where the dump is
-accessible from the postgres container (bind-mount or host path).
+Run `pg_restore` against the dump file.
+
+> **Important — `--jobs` needs a file, not a pipe.** Parallel restore
+> (`--jobs=N`) requires a **seekable dump file**; it fails with
+> *"parallel restore from standard input is not supported"* if you pipe the dump
+> in via stdin. The dump must therefore be reachable as a **file path** inside
+> whichever process runs `pg_restore`. When restoring through the container, copy
+> the dump in first (e.g. `docker cp <dump> deploy-postgres-1:/tmp/restore.pgdump`)
+> and pass that in-container path. When restoring on the host, pass the host path
+> directly. Use `--no-owner --no-privileges` so the restore does not fail on role
+> grants that may differ between source and target.
 
 ```bash
-# If the dump is on the host and the postgres container is running:
+# Option A — restore through the postgres container (host has no pg client tools):
+docker cp "${DUMP}" deploy-postgres-1:/tmp/restore.pgdump
 docker compose -f deploy/docker-compose.dev.yml exec postgres \
   pg_restore \
-    --host=localhost \
     --username=pi_user \
     --dbname=polymer_intelligence \
-    --no-password \
+    --no-owner \
+    --no-privileges \
     --jobs=4 \
-    /path/to/dump/pg_polymer_intelligence_<timestamp>.pgdump
+    /tmp/restore.pgdump
+docker compose -f deploy/docker-compose.dev.yml exec postgres rm -f /tmp/restore.pgdump
 ```
 
-Or run `pg_restore` directly on the VPS host (if postgres client tools are installed):
-
 ```bash
+# Option B — restore directly on the VPS host (postgres client tools installed):
 PGPASSWORD=<secret> pg_restore \
   --host=localhost \
   --port=5432 \
   --username=pi_user \
   --dbname=polymer_intelligence \
+  --no-owner \
+  --no-privileges \
   --jobs=4 \
   "${DUMP}"
 ```
@@ -120,6 +141,15 @@ docker compose -f deploy/docker-compose.dev.yml run --rm api \
 
 > `app.entrypoint` runs `alembic upgrade head` under an advisory lock and is
 > safe to run against an already-current schema (idempotent).
+>
+> **Migration scripts must be at least as new as the dump.** A custom-format dump
+> carries the source `alembic_version` (e.g. `0004`). The image/source you run
+> `app.entrypoint` from must contain that revision and any later ones, otherwise
+> alembic aborts with *"Can't locate revision identified by '<rev>'"*. Use the
+> `api` image **built from the current repo** (the dev compose bind-mounts
+> `../backend:/app`, so a `compose run --rm api` already sees the current
+> migrations). If you restore using a stale/baked image, rebuild it
+> (`docker compose build api`) or mount the current source before this step.
 
 ### Step 5: Re-seed reference data (if needed)
 
@@ -187,6 +217,24 @@ of a disaster event. The target covers:
 
 The 14-daily / 8-weekly retention policy (see §1) ensures a dump within 24 hours
 of the incident is always available — meeting the ≤ 2-hour window comfortably.
+
+### Validated by local restore drill
+
+This procedure is exercised end-to-end by `tests/restore/test_restore_local.sh`
+(D-04), which `pg_dump`s the live DB, restores it onto a **fresh disposable
+PostgreSQL 16 container** (a clean server), brings the schema to head, and
+verifies row counts + the 14 ENUMs + `v_live_feed`, gating on the ≤ 2-hour
+budget.
+
+| Run | Date | Dataset | Measured elapsed | Budget | Result |
+|-----|------|---------|------------------|--------|--------|
+| Local drill (this repo) | 2026-06-22 | dev DB (signals 45 / sources 3 / raw_items 0; `v_live_feed` 51) | **4 s** | 7200 s (≤2h) | **PASS** |
+
+> **Validated 2026-06-22:** local restore drill completed in 4 s (well under the
+> ≤2 h / TZ §6.1.5 budget) on a < 1 MB dev dataset. The wall-clock scales with
+> data volume; the < 5 GB production estimate above (≈ 20–50 min) keeps a wide
+> margin under the 2-hour target. A hardware-timing rerun on the customer VPS is
+> recorded as a deploy-day row in `06-ACCEPTANCE.md`.
 
 ---
 
