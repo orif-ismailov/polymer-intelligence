@@ -243,7 +243,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 **Wave 3** *(docs — blocked on 06-01/06-02/06-03/06-05 for evidence citation)*
 
-- [ ] 06-06-PLAN.md — Consolidated `06-ACCEPTANCE.md` (D-01, one row per §6.1.1–§6.1.6 + blocked-on column + single deploy-day checklist superseding 02/03/05-UAT) + `docs/deployment-guide.md` (D-05.2, EN) + `docs/admin-guide-ru.md` (D-05.3, RU)
+- [x] 06-06-PLAN.md — Consolidated `06-ACCEPTANCE.md` (D-01, one row per §6.1.1–§6.1.6 + blocked-on column + single deploy-day checklist superseding 02/03/05-UAT) + `docs/deployment-guide.md` (D-05.2, EN) + `docs/admin-guide-ru.md` (D-05.3, RU)
 
 **Wave 4** *(capstone — blocked on 06-03 + 06-06)*
 
@@ -261,7 +261,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
 | 5. Telegram Monitoring + AI | 5/5 | Complete    | 2026-06-19 |
-| 6. Acceptance & Handover | 2/7 | In Progress|  |
+| 6. Acceptance & Handover | 6/7 | In Progress|  |
 
 ---
 *Roadmap created: 2026-06-13 (Client Phase 1 milestone). Phase 2 international loop = planned follow-up milestone, not in this roadmap.*
