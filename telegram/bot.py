@@ -69,6 +69,16 @@ def load_template(lang: str, name: str) -> str:
 
 # ── Keyboard helper ───────────────────────────────────────────────────────────
 
+def _webapp_url() -> str:
+    """URL of the buyer Telegram Web App (request wizard).
+
+    PUBLIC_WEBAPP_URL is the deployment root (and the webhook base); the Mini App
+    itself is served at /webapp/ by nginx, while the dashboard sits at the root.
+    """
+    base = (settings.PUBLIC_WEBAPP_URL or "https://example.com").rstrip("/")
+    return f"{base}/webapp/"
+
+
 def web_app_keyboard(lang: str) -> "InlineKeyboardMarkup":
     """Return an inline keyboard with a single WebApp launch button.
 
@@ -86,7 +96,7 @@ def web_app_keyboard(lang: str) -> "InlineKeyboardMarkup":
     label = _WEB_APP_BUTTON_LABELS.get(lang, _WEB_APP_BUTTON_LABELS["ru"])
     button = InlineKeyboardButton(
         text=label,
-        web_app=WebAppInfo(url=settings.PUBLIC_WEBAPP_URL or "https://example.com"),
+        web_app=WebAppInfo(url=_webapp_url()),
     )
     return InlineKeyboardMarkup(inline_keyboard=[[button]])
 
@@ -128,7 +138,7 @@ async def setup_webhook() -> None:
     await bot.set_chat_menu_button(
         menu_button=MenuButtonWebApp(
             text="Открыть приложение",
-            web_app=WebAppInfo(url=settings.PUBLIC_WEBAPP_URL),
+            web_app=WebAppInfo(url=_webapp_url()),
         )
     )
 
