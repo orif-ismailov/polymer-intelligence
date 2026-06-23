@@ -23,11 +23,22 @@ import uuid
 import pytest
 
 # ── Live-DB guard ─────────────────────────────────────────────────────────────
+# Captured at import, BEFORE conftest's session-autouse patch_env overrides
+# DATABASE_URL with a placeholder (test:test). app.core.db.engine is built from the
+# patched value, so these real-connection tests must use _DB_URL (the actual CI URL)
+# instead — otherwise on CI they'd hit the live Postgres service as a nonexistent user.
 _DB_URL = os.environ.get("DATABASE_URL", "")
 _REQUIRES_LIVE_DB = pytest.mark.skipif(
     not _DB_URL or "localhost" not in _DB_URL and "postgres" not in _DB_URL,
     reason="Skipped: no live PostgreSQL DATABASE_URL configured",
 )
+
+
+def _live_engine() -> object:
+    """Engine bound to the real import-time DATABASE_URL (not conftest's placeholder)."""
+    from sqlalchemy import create_engine  # noqa: PLC0415
+
+    return create_engine(_DB_URL)
 
 
 # ── Unit tests (no DB required) ───────────────────────────────────────────────
@@ -99,11 +110,26 @@ class TestSaveRawItemsDeduplication:
 
     @pytest.fixture(autouse=True)
     def _skip_without_live_db(self) -> None:
-        """Extra guard: attempt DB import; skip if it fails."""
+        """Require a reachable, MIGRATED PostgreSQL — skip otherwise.
+
+        These are real-connection integration tests. CI starts a bare postgres
+        service with no schema (the backend job runs no migration before pytest),
+        so they skip there; they run against a developer's migrated DB when
+        DATABASE_URL points at one. to_regclass returns NULL when the table is absent.
+        """
+        import sqlalchemy as sa  # noqa: PLC0415
+
         try:
-            from app.core.db import engine  # noqa: F401, PLC0415
+            engine = _live_engine()
+            with engine.connect() as conn:
+                has_sources = conn.execute(
+                    sa.text("SELECT to_regclass('public.sources')")
+                ).scalar()
+            engine.dispose()
         except Exception as exc:
-            pytest.skip(f"Cannot import DB engine: {exc}")
+            pytest.skip(f"No reachable PostgreSQL ({exc})")
+        if has_sources is None:
+            pytest.skip("PostgreSQL reachable but schema not migrated (no 'sources' table)")
 
     def _make_source(self, session: object) -> object:
         """Insert a temporary Source row and return it."""
@@ -150,7 +176,7 @@ class TestSaveRawItemsDeduplication:
     def test_first_call_inserts_n_rows(self) -> None:
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.core.db import engine  # noqa: PLC0415
+        engine = _live_engine()
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
         from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
@@ -185,7 +211,7 @@ class TestSaveRawItemsDeduplication:
         """Identical second call must return 0 (ON CONFLICT DO NOTHING)."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.core.db import engine  # noqa: PLC0415
+        engine = _live_engine()
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
         from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
@@ -225,7 +251,7 @@ class TestSaveRawItemsDeduplication:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.core.db import engine  # noqa: PLC0415
+        engine = _live_engine()
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
         from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
@@ -275,7 +301,7 @@ class TestSaveRawItemsDeduplication:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.core.db import engine  # noqa: PLC0415
+        engine = _live_engine()
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
         from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
