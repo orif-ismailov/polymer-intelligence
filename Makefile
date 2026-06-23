@@ -4,7 +4,9 @@
 # These are thin wrappers around scripts/compose; backend dev commands continue
 # to run from backend/ (uv-managed). Targets here orchestrate the full stack.
 # =============================================================================
-.PHONY: help smoke
+.PHONY: help smoke webapp-bundle
+
+COMPOSE ?= docker compose -f deploy/docker-compose.yml
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -12,3 +14,6 @@ help: ## Show available targets
 
 smoke: ## Run the full-stack production-compose smoke (D-02, synthetic data + placeholder env)
 	bash tests/smoke/test_smoke_full_stack.sh
+
+webapp-bundle: ## Build the Telegram Web App and load it into the webapp_static volume (nginx serves /webapp/)
+	$(COMPOSE) --profile build run --rm --build webapp-build

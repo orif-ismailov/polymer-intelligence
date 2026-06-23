@@ -1,0 +1,26 @@
+# Polymer Intelligence — Telegram Web App static bundle builder
+# Build context: webapp/
+# Usage (one-shot, via compose): see the `webapp-build` service in
+#   deploy/docker-compose.yml (profile: build) and `make webapp-bundle`.
+#
+# The webapp calls the API at the relative path /api/v1 (proxied by nginx in prod),
+# so the build needs no environment or secrets. The final stage carries only the
+# built bundle; the compose service copies /dist into the shared webapp_static
+# volume that nginx serves at /webapp/.
+
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Install deps from the lockfile (layer-cached on unchanged manifests).
+COPY package.json package-lock.json* ./
+RUN npm ci --prefer-offline
+
+# Build the Vite bundle (npm run build = tsc && vite build → /app/dist).
+COPY . .
+RUN npm run build
+
+# ── Export stage — just the static bundle ─────────────────────────────────────
+# Kept tiny (alpine) so the one-shot copy service is fast; carries /dist only.
+FROM alpine:3
+COPY --from=build /app/dist /dist

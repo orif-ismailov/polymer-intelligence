@@ -178,6 +178,28 @@ stand-up sequence this guide describes, so a green smoke confirms the deployment
 
 ---
 
+## 4a. Load the Telegram Web App bundle
+
+nginx serves the Telegram Web App at `/webapp/` from the `webapp_static` volume,
+which is **empty until you populate it**. A one-shot `webapp-build` compose service
+(profile `build`) builds the Vite bundle and loads it into that volume — run it at
+deploy time and after every webapp change:
+
+```bash
+make webapp-bundle
+# equivalently:
+docker compose -f deploy/docker-compose.yml --profile build run --rm --build webapp-build
+```
+
+It prints `[webapp-build] bundle loaded into webapp_static` on success. Because it
+runs as a compose service, the project-prefixed `webapp_static` volume is resolved
+automatically — no need to know the `COMPOSE_PROJECT_NAME` prefix. nginx serves the
+files live from the shared volume, so no nginx restart is needed (re-run on each
+webapp update). The webapp calls the API at the relative `/api/v1` path (proxied by
+nginx), so the build needs no environment or secrets.
+
+---
+
 ## 5. Telegram Bot Webhook
 
 The bot runs as a **webhook endpoint inside the api container** (no separate bot
