@@ -10,8 +10,11 @@ Asserts:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 # ── Helpers (copied from test_dashboard_requests.py) ──────────────────────────
 
@@ -41,8 +44,9 @@ def _auth_headers(user_id: int, role: str) -> dict[str, str]:
 
 def _make_mock_request(id: int = 1) -> MagicMock:
     """Return a MagicMock that quacks like a Request ORM object for CSV export."""
-    from app.models.enums import RequestStatus  # noqa: PLC0415
     import datetime  # noqa: PLC0415
+
+    from app.models.enums import RequestStatus  # noqa: PLC0415
 
     req = MagicMock()
     req.id = id
@@ -67,8 +71,9 @@ def _make_mock_request(id: int = 1) -> MagicMock:
 class TestRequestsExportContentType:
     """GET /requests/export returns text/csv with attachment header."""
 
-    def _make_client(self, staff_user: MagicMock, requests: list) -> "TestClient":  # type: ignore[return]
+    def _make_client(self, staff_user: MagicMock, requests: list) -> TestClient:  # type: ignore[return]
         from fastapi.testclient import TestClient  # noqa: PLC0415
+
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
@@ -83,7 +88,6 @@ class TestRequestsExportContentType:
 
         def _query_side_effect(model):
             from app.models.staff import StaffUser  # noqa: PLC0415
-            from app.models.requests import Request  # noqa: PLC0415
             if model is StaffUser:
                 q = MagicMock()
                 q.filter.return_value.first.return_value = staff_user
@@ -154,7 +158,7 @@ class TestRequestsExportContentType:
         response = client.get("/api/v1/requests/export", headers=headers)
 
         assert response.status_code == 200
-        lines = [l for l in response.text.strip().splitlines() if l.strip()]
+        lines = [line for line in response.text.strip().splitlines() if line.strip()]
         # At least 2 lines: header + 1 data row
         assert len(lines) >= 2
         # Data row must contain the mocked id
@@ -169,7 +173,7 @@ class TestRequestsExportContentType:
         response = client.get("/api/v1/requests/export", headers=headers)
 
         assert response.status_code == 200
-        lines = [l for l in response.text.strip().splitlines() if l.strip()]
+        lines = [line for line in response.text.strip().splitlines() if line.strip()]
         # Only header row
         assert len(lines) == 1
 
@@ -180,6 +184,7 @@ class TestRequestsExportAuth:
     def test_export_returns_401_without_auth(self):
         """GET /requests/export returns 401 without a Bearer token."""
         from fastapi.testclient import TestClient  # noqa: PLC0415
+
         from app.main import create_app  # noqa: PLC0415
 
         app = create_app()

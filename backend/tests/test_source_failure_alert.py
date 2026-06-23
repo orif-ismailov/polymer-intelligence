@@ -302,6 +302,7 @@ class TestFailureIsolationDB:
     def migrated_db(self, engine):
         """Apply migrations before the class tests."""
         from alembic.config import Config  # noqa: PLC0415
+
         from alembic import command as alembic_command  # noqa: PLC0415
 
         backend_dir = Path(__file__).parent.parent
@@ -359,8 +360,9 @@ class TestFailureIsolationDB:
         """run_source_fetch_isolated: one source raising must not prevent siblings from succeeding."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
-        from app.tasks.ingest import run_source_fetch_isolated  # noqa: PLC0415
+
         from app.models.sources import Source  # noqa: PLC0415
+        from app.tasks.ingest import run_source_fetch_isolated  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             good_id_1 = self._make_source(session)
@@ -425,8 +427,9 @@ class TestFailureIsolationDB:
         """3 runs of run_source_fetch_isolated failing → exactly one source_failure alert."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
-        from app.tasks.ingest import run_source_fetch_isolated  # noqa: PLC0415
+
         from app.models.sources import Source  # noqa: PLC0415
+        from app.tasks.ingest import run_source_fetch_isolated  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             source_id = self._make_source(session)

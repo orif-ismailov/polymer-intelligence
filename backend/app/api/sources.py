@@ -134,7 +134,7 @@ def create_source(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unknown adapter type: {body.adapter!r}",
-        )
+        ) from None
 
     # Validate config against adapter's config_schema (422 on pydantic error)
     try:
@@ -219,7 +219,7 @@ async def test_source(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"No adapter registered for type {source.adapter!r}",
-        )
+        ) from None
 
     config: dict[str, Any] = dict(source.config or {})
     result = await adapter.test(config)

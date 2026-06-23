@@ -23,7 +23,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.enums import PriceBasis, RequestStatus, Urgency
 
-
 # ── Request creation ───────────────────────────────────────────────────────────
 
 class RequestCreate(BaseModel):
@@ -62,7 +61,7 @@ class RequestCreate(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def _d02_minimum_to_submit(self) -> "RequestCreate":
+    def _d02_minimum_to_submit(self) -> RequestCreate:
         """At least one of grade_text or polymer_type must be provided (D-02).
 
         The wizard Step 1 collects product + volume + (grade_text or polymer_type).

@@ -33,7 +33,6 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import pytest
 
-
 # ── DNS resolution patches ──────────────────────────────────────────────────────
 
 def _make_getaddrinfo(ip: str):
@@ -178,9 +177,9 @@ async def test_fetch_url_raises_for_private_url():
     """fetch_url raises ValueError for URLs that fail the SSRF guard."""
     from app.ingest.http_client import fetch_url  # noqa: PLC0415
 
-    with patch("socket.getaddrinfo", _make_getaddrinfo("127.0.0.1")):
-        with pytest.raises(ValueError, match="SSRF guard"):
-            await fetch_url("http://localhost/admin")
+    with patch("socket.getaddrinfo", _make_getaddrinfo("127.0.0.1")), \
+         pytest.raises(ValueError, match="SSRF guard"):
+        await fetch_url("http://localhost/admin")
 
 
 # ── fetch_url: settings propagation ────────────────────────────────────────────
@@ -249,9 +248,9 @@ async def test_fetch_url_raises_for_oversized_body():
                 transport = httpx.MockTransport(_oversized_transport_fn)
                 super().__init__(transport=transport, **kwargs)
 
-        with patch("httpx.AsyncClient", PatchedAsyncClient):
-            with pytest.raises(ValueError, match="size cap"):
-                await http_client.fetch_url("https://example.com/bigfile")
+        with patch("httpx.AsyncClient", PatchedAsyncClient), \
+             pytest.raises(ValueError, match="size cap"):
+            await http_client.fetch_url("https://example.com/bigfile")
 
 
 # ── is_safe_url: reject RFC 6598 CGNAT (CR-02) ─────────────────────────────────
@@ -315,11 +314,11 @@ async def test_fetch_url_does_not_follow_redirects():
                 transport = httpx.MockTransport(_redirect_transport_fn)
                 super().__init__(transport=transport, **kwargs)
 
-        with patch("httpx.AsyncClient", PatchedAsyncClient):
-            # With follow_redirects=False, the 301 response is returned as-is.
-            # raise_for_status() raises HTTPStatusError on 3xx.
-            with pytest.raises(httpx.HTTPStatusError):
-                await http_client.fetch_url("https://example.com/")
+        # With follow_redirects=False, the 301 response is returned as-is.
+        # raise_for_status() raises HTTPStatusError on 3xx.
+        with patch("httpx.AsyncClient", PatchedAsyncClient), \
+             pytest.raises(httpx.HTTPStatusError):
+            await http_client.fetch_url("https://example.com/")
 
     # The redirect target (internal IP) must never have been fetched
     assert not redirect_followed, "fetch_url followed a redirect — SSRF bypass possible"
@@ -350,9 +349,9 @@ async def test_fetch_url_retries_on_connection_error():
                 transport = httpx.MockTransport(_failing_transport_fn)
                 super().__init__(transport=transport, **kwargs)
 
-        with patch("httpx.AsyncClient", PatchedAsyncClient):
-            with pytest.raises(httpx.ConnectError):
-                await http_client.fetch_url("https://example.com/")
+        with patch("httpx.AsyncClient", PatchedAsyncClient), \
+             pytest.raises(httpx.ConnectError):
+            await http_client.fetch_url("https://example.com/")
 
     # Should attempt max_retries + 1 times total (initial + retries)
     assert attempt_count == settings.INGEST_HTTP_RETRIES + 1

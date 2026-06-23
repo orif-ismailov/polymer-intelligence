@@ -105,7 +105,7 @@ def _parse_feed(content: bytes, config: dict) -> list[dict[str, object]]:
 
     # WR-03: cap response body before parsing to prevent billion-laughs XML bombs
     # (CPU/memory exhaustion from exponential entity expansion in attacker-controlled feeds).
-    _MAX_FEED_BYTES = 5 * 1024 * 1024  # 5 MB
+    _MAX_FEED_BYTES = 5 * 1024 * 1024  # 5 MB  # noqa: N806
     if len(content) > _MAX_FEED_BYTES:
         raise ValueError(
             f"Feed response too large ({len(content)} bytes > {_MAX_FEED_BYTES} byte limit)"

@@ -128,6 +128,12 @@ class ParseRun(Base):
     """LLM parse journal: what model, what prompt, what result.
 
     Enables re-parsing with new prompts without losing original data.
+
+    parser discriminators:
+    - 'uzex_table_v1' / 'uzex_table_v2': rule-based UZEX adapters (no LLM call)
+    - 'llm_extract_tools' / 'llm_extract_native': Phase-5 LLM journal discriminators
+      (Anthropic API via instructor; matched by `parser LIKE 'llm_extract%'`)
+    - 'rule_based_fallback': Phase-5 budget-degrade fallback (no LLM call)
     """
 
     __tablename__ = "parse_runs"
@@ -136,7 +142,7 @@ class ParseRun(Base):
     raw_item_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("raw_items.id"), nullable=False
     )
-    parser: Mapped[str] = mapped_column(Text, nullable=False)                    # 'uzex_table_v2', 'llm_extract'
+    parser: Mapped[str] = mapped_column(Text, nullable=False)                    # 'uzex_table_v2', 'llm_extract_tools'
     model: Mapped[str | None] = mapped_column(Text, nullable=True)               # 'claude-haiku-4-5', NULL for rule-based
     prompt_version: Mapped[str | None] = mapped_column(Text, nullable=True)
     result: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
@@ -144,6 +150,10 @@ class ParseRun(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     tokens_in: Mapped[int | None] = mapped_column(Integer, nullable=True)
     tokens_out: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Phase-5 AI journaling: wall-clock LLM call latency in milliseconds.
+    # NULL for rule-based runs (parser NOT LIKE 'llm_extract%') that involve no network call.
+    # Added by migration 0003_phase5_ai_extraction.
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

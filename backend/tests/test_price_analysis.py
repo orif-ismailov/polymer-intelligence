@@ -16,7 +16,6 @@ from __future__ import annotations
 import decimal
 from unittest.mock import MagicMock
 
-
 # ── Helpers ─────────────────────────────────────────────────────────────────────
 
 def _make_mock_db() -> MagicMock:
@@ -155,8 +154,9 @@ class TestComputePriceAnalysis:
 
     def test_query_uses_price_points_and_market_uz(self):
         """The SQL query selects FROM price_points with market='UZ'."""
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
         import inspect
+
+        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
 
         source = inspect.getsource(compute_price_analysis)
         assert "price_points" in source, "Function must query price_points table"

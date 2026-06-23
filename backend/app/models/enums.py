@@ -33,6 +33,7 @@ class ParseStatus(enum.StrEnum):
     failed = "failed"
     skipped = "skipped"
     irrelevant = "irrelevant"
+    budget_deferred = "budget_deferred"  # Phase 5 G4: rule-based fallback ran, awaiting nightly LLM catch-up
 
 
 class CounterpartyRole(enum.StrEnum):

@@ -1,11 +1,13 @@
 /**
  * Signals page — full-page LiveFeedTable for all signal kinds.
  *
- * Adds a "Needs Review" filter chip that renders disabled with tooltip
- * "Available after Phase 5 AI" per UI-SPEC §Signals/Offers.
+ * Phase 5: NeedsReviewChip is now a real toggle that filters the feed
+ * to ?needs_review=true (signals where ai->>'needs_review'='true').
  */
 
-import { Suspense } from "react";
+"use client";
+
+import { useState, Suspense } from "react";
 
 import { LiveFeedTable } from "@/components/feed/LiveFeedTable";
 import { FeedFilters } from "@/components/feed/FeedFilters";
@@ -21,6 +23,8 @@ function FeedLoadingFallback() {
 }
 
 export default function SignalsPage() {
+  const [needsReview, setNeedsReview] = useState(false);
+
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -34,12 +38,15 @@ export default function SignalsPage() {
         <Suspense fallback={null}>
           <FeedFilters />
         </Suspense>
-        {/* Needs Review chip — disabled, Phase 5 tooltip */}
-        <NeedsReviewChip />
+        {/* Needs Review chip — Phase 5: real filter toggle */}
+        <NeedsReviewChip
+          active={needsReview}
+          onToggle={() => setNeedsReview((v) => !v)}
+        />
       </div>
 
       <Suspense fallback={<FeedLoadingFallback />}>
-        <LiveFeedTable />
+        <LiveFeedTable needsReview={needsReview || undefined} />
       </Suspense>
     </div>
   );

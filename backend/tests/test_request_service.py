@@ -19,7 +19,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _make_mock_db() -> MagicMock:
@@ -49,8 +48,9 @@ def _make_mock_request(status_val: str = "in_progress", id: int = 42) -> MagicMo
 
 def _make_request_create(**kwargs) -> MagicMock:
     """Return a RequestCreate schema instance with sane defaults."""
-    from app.schemas.webapp import RequestCreate  # noqa: PLC0415
     import decimal
+
+    from app.schemas.webapp import RequestCreate  # noqa: PLC0415
     data = {
         "product_id": 1,
         "grade_text": "HDPE 2420D",

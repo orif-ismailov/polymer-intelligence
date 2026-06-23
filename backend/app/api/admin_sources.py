@@ -29,6 +29,7 @@ from app.api.deps import require_admin
 from app.core.db import get_db
 from app.ingest.registry import list_adapters
 from app.models.staff import StaffUser
+from parsing.budget import per_source_spend
 
 router = APIRouter(prefix="/admin", tags=["admin-sources"])
 
@@ -107,6 +108,7 @@ class SourceHealthItem(BaseModel):
     last_fetch_at: datetime.datetime | None
     last_success_at: datetime.datetime | None
     consecutive_failures: int
+    token_spend_7d: int              # Phase 5: 7-day LLM token spend (0 for non-AI sources)
 
 
 @router.get(
@@ -144,6 +146,9 @@ def get_sources_health(
         )
     ).fetchall()
 
+    # AI adapter types that consume LLM tokens (REQ-llm-budget: per-source 7-day spend)
+    _AI_ADAPTER_PREFIXES: frozenset[str] = frozenset({"telegram_channel", "llm_page"})  # noqa: N806
+
     return [
         SourceHealthItem(
             id=row[0],
@@ -154,6 +159,11 @@ def get_sources_health(
             last_fetch_at=row[5],
             last_success_at=row[6],
             consecutive_failures=row[7],
+            token_spend_7d=(
+                per_source_spend(db, row[0], days=7)
+                if any(row[2].startswith(prefix) for prefix in _AI_ADAPTER_PREFIXES)
+                else 0
+            ),
         )
         for row in rows
     ]

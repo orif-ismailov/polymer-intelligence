@@ -1,9 +1,9 @@
 # Polymer Intelligence — Backend image (api / worker / beat roles)
 # Build context: backend/
-# This file is the compose-resolved target for api, worker, and beat services.
-# The legacy file deploy/Dockerfile.backend (context: backend/ via -f flag) remains
-# for the CI step: docker build -f deploy/Dockerfile.backend ... backend/
-# Both files are behaviourally equivalent; keep them in sync.
+# Single source of truth for the backend runtime image: compose builds it for the
+# api, worker, and beat services, and CI builds the same file (docker build backend/).
+# WR-02: the former duplicate deploy/Dockerfile.backend was removed so CI and compose
+# validate one identical image.
 #
 # Usage via compose:
 #   docker compose -f deploy/docker-compose.dev.yml up

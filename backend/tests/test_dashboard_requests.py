@@ -13,8 +13,11 @@ Covers:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -45,9 +48,10 @@ def _auth_headers(user_id: int, role: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def _make_client_with_user(staff_user: MagicMock) -> "TestClient":  # type: ignore[return]
+def _make_client_with_user(staff_user: MagicMock) -> TestClient:  # type: ignore[return]
     """Create a TestClient with the given staff_user injected as the auth dependency."""
     from fastapi.testclient import TestClient  # noqa: PLC0415
+
     from app.core.db import get_db  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
     mock_db = MagicMock()
@@ -185,8 +189,8 @@ class TestLogContactBuyer:
 
     def test_log_contact_buyer_transitions_from_new_to_in_progress(self):
         """From 'new' status, log_contact_buyer calls transition_status -> in_progress."""
-        from app.services import request_service  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
+        from app.services import request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request(status_val="new")
@@ -235,6 +239,7 @@ class TestGetRequestsList:
     def test_get_requests_returns_200_for_staff(self):
         """GET /requests returns 200 for authenticated staff (or 404 in RED before router mounted)."""
         from fastapi.testclient import TestClient  # noqa: PLC0415
+
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
@@ -259,6 +264,7 @@ class TestGetRequestsList:
     def test_get_requests_returns_401_without_auth(self):
         """GET /requests returns 401 without a Bearer token (or 404 in RED before router)."""
         from fastapi.testclient import TestClient  # noqa: PLC0415
+
         from app.main import create_app  # noqa: PLC0415
 
         app = create_app()
@@ -275,9 +281,9 @@ class TestGetRequestDetail:
     def test_detail_transitions_new_to_viewed_on_open(self):
         """Accessing a 'new' request transitions it to 'viewed' and commits."""
         from fastapi.testclient import TestClient  # noqa: PLC0415
+
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
-        from app.models.enums import RequestStatus  # noqa: PLC0415
 
         admin_user = _make_staff_user("admin", user_id=1)
         req = _make_mock_request(id=42, status_val="new", telegram_user_id=12345)
@@ -320,6 +326,7 @@ class TestGetRequestDetail:
     def test_detail_returns_404_for_missing_request(self):
         """GET /requests/{id} for non-existent request returns 404."""
         from fastapi.testclient import TestClient  # noqa: PLC0415
+
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
@@ -356,6 +363,7 @@ class TestPatchRequest:
     def test_invalid_transition_returns_422(self):
         """PATCH with an invalid status transition (new->closed) returns 422."""
         from fastapi.testclient import TestClient  # noqa: PLC0415
+
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
@@ -394,6 +402,7 @@ class TestPatchRequest:
     def test_viewer_patch_returns_403(self):
         """Viewer role cannot PATCH a request — returns 403 (T-04-10)."""
         from fastapi.testclient import TestClient  # noqa: PLC0415
+
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
@@ -425,8 +434,8 @@ class TestAuditTrail:
 
     def test_status_change_writes_audit(self):
         """transition_status with changed_by calls write_audit (tested via service)."""
-        from app.services.request_service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
+        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request(status_val="in_progress")

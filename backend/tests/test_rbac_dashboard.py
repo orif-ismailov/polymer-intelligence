@@ -40,7 +40,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-
 # ---------------------------------------------------------------------------
 # Shared helpers (mirrors test_rbac.py pattern exactly)
 # ---------------------------------------------------------------------------
@@ -111,7 +110,7 @@ class TestReadEndpointsAllowedForAllRoles:
         user = _make_staff_user(id=user_id, role=role)
         client = _make_rbac_client(user)
 
-        mock_db_session = client.app.dependency_overrides[
+        client.app.dependency_overrides[
             __import__("app.core.db", fromlist=["get_db"]).get_db
         ]
 
@@ -256,7 +255,7 @@ class TestSourcesWriteAdminOnly:
             headers=_auth_headers(1, "admin"),
         )
         assert resp.status_code != 403, (
-            f"Admin should not be blocked on POST /sources, got 403"
+            "Admin should not be blocked on POST /sources, got 403"
         )
 
 
@@ -286,7 +285,7 @@ class TestSourcesPatchAdminOnly:
     def test_admin_not_rejected_from_patch_sources(self):
         """Admin must NOT get 403 on PATCH /sources/{id}."""
         user = _make_staff_user(id=1, role="admin")
-        client = _make_rbac_client(user)
+        _make_rbac_client(user)
 
         # Mock the Source ORM lookup so the patch doesn't 404
         from app.models.sources import Source
@@ -322,7 +321,7 @@ class TestSourcesPatchAdminOnly:
                 headers=_auth_headers(1, "admin"),
             )
         assert resp.status_code != 403, (
-            f"Admin should not be blocked on PATCH /sources/1, got 403"
+            "Admin should not be blocked on PATCH /sources/1, got 403"
         )
 
 
@@ -376,7 +375,7 @@ class TestAlertRulesWriteAdminOnly:
             headers=_auth_headers(1, "admin"),
         )
         assert resp.status_code != 403, (
-            f"Admin should not be blocked on POST /alert-rules, got 403"
+            "Admin should not be blocked on POST /alert-rules, got 403"
         )
 
 
@@ -415,7 +414,7 @@ class TestAlertRulesPatchAdminOnly:
         )
         # 404 means auth was OK; 403 means auth failed
         assert resp.status_code != 403, (
-            f"Admin should not be blocked on PATCH /alert-rules/999, got 403"
+            "Admin should not be blocked on PATCH /alert-rules/999, got 403"
         )
 
 
@@ -485,7 +484,7 @@ class TestAlertRulesDeleteAdminOnly:
         )
         # 404 = rule not found (auth passed); 403 = auth failed (wrong)
         assert resp.status_code != 403, (
-            f"Admin should not be blocked on DELETE /alert-rules/999999, got 403"
+            "Admin should not be blocked on DELETE /alert-rules/999999, got 403"
         )
 
     def test_admin_delete_existing_rule_returns_204(self):

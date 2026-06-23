@@ -15,14 +15,11 @@ Security invariants:
 
 from __future__ import annotations
 
-import datetime
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -49,8 +46,8 @@ def _auth_headers(user_id: int = 1, role: str = "analyst") -> dict[str, str]:
 
 def _make_sse_client(staff_user: MagicMock | None = None) -> TestClient:
     """Build a TestClient with the db and staff user dep overridden for SSE tests."""
-    from app.core.db import get_db  # noqa: PLC0415
     from app.api.deps import get_current_staff_user  # noqa: PLC0415
+    from app.core.db import get_db  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
 
     if staff_user is None:

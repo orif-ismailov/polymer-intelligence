@@ -189,11 +189,11 @@ def decode_token(token: str, expected_type: str) -> dict[str, Any]:
     except JWTError as exc:
         raise JWTError(f"Token validation failed: {exc}") from exc
 
-    # T-03-03: enforce token-type claim to prevent cross-use of access/refresh tokens
-    token_type = raw_payload.get("type")
-    if token_type != expected_type:
-        raise JWTError(
-            f"Token type mismatch: expected '{expected_type}', got '{token_type}'"
-        )
+    # T-03-03: enforce token-type claim to prevent cross-use of access/refresh tokens.
+    # WR-04: do NOT echo the caller-supplied claim value back into the exception text —
+    # only the server-known expected_type is included, so no attacker-controlled data
+    # is reflected into logs or error responses.
+    if raw_payload.get("type") != expected_type:
+        raise JWTError(f"Token type mismatch: expected '{expected_type}'")
 
     return raw_payload

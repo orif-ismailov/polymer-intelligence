@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import pytest
 
-
 # ── Magic bytes ────────────────────────────────────────────────────────────────
 
 PDF_MAGIC = b"%PDF-1.7 rest of file..."
@@ -87,7 +86,7 @@ def test_validate_upload_text_file_rejected() -> None:
 
 def test_validate_upload_oversize_raises_file_too_large() -> None:
     """Content exceeding 10 MB raises ValueError('file_too_large')."""
-    from app.services.storage_service import validate_upload, MAX_SIZE_BYTES
+    from app.services.storage_service import MAX_SIZE_BYTES, validate_upload
 
     # 10 MB + 1 byte — just over the limit
     oversized = b"%PDF" + b"\x00" * (MAX_SIZE_BYTES + 1 - 4)
@@ -98,7 +97,7 @@ def test_validate_upload_oversize_raises_file_too_large() -> None:
 
 def test_validate_upload_exactly_max_size_accepted() -> None:
     """Content exactly at the 10 MB limit is accepted (boundary check)."""
-    from app.services.storage_service import validate_upload, MAX_SIZE_BYTES
+    from app.services.storage_service import MAX_SIZE_BYTES, validate_upload
 
     exactly_max = b"%PDF" + b"\x00" * (MAX_SIZE_BYTES - 4)
     assert len(exactly_max) == MAX_SIZE_BYTES
@@ -109,7 +108,7 @@ def test_validate_upload_exactly_max_size_accepted() -> None:
 
 def test_validate_upload_size_checked_before_magic() -> None:
     """Size check fires before magic-byte check (file_too_large, not invalid_file_type)."""
-    from app.services.storage_service import validate_upload, MAX_SIZE_BYTES
+    from app.services.storage_service import MAX_SIZE_BYTES, validate_upload
 
     # Oversized content with unknown magic bytes — must raise file_too_large, not invalid_file_type
     oversized_unknown = UNKNOWN_MAGIC + b"\x00" * MAX_SIZE_BYTES  # clearly > 10 MB
@@ -152,7 +151,7 @@ def test_upload_request_file_key_does_not_use_raw_filename(monkeypatch: pytest.M
     not result in an S3 key containing '..' components.
     """
     from unittest.mock import MagicMock, patch
-    from app.services import storage_service
+
 
     mock_s3 = MagicMock()
     mock_db = MagicMock()
@@ -176,7 +175,7 @@ def test_upload_request_file_key_does_not_use_raw_filename(monkeypatch: pytest.M
         from app.services.storage_service import upload_request_file
 
         traversal_filename = "../../etc/passwd"
-        result = upload_request_file(
+        upload_request_file(
             db=mock_db,
             request_id=42,
             content=PDF_MAGIC,

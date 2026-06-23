@@ -14,7 +14,6 @@ Coverage:
 
 from __future__ import annotations
 
-import os
 import pathlib
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -192,7 +191,6 @@ class TestAdapterRegistry:
 
     def test_uzex_offers_registered(self) -> None:
         import app.ingest.uzex  # noqa: F401 — triggers self-registration
-
         from app.ingest.registry import get_adapter
 
         adapter = get_adapter("uzex_offers")
@@ -200,7 +198,6 @@ class TestAdapterRegistry:
 
     def test_uzex_contracts_registered(self) -> None:
         import app.ingest.uzex  # noqa: F401
-
         from app.ingest.registry import get_adapter
 
         adapter = get_adapter("uzex_contracts")
@@ -208,7 +205,6 @@ class TestAdapterRegistry:
 
     def test_uzex_deals_registered(self) -> None:
         import app.ingest.uzex  # noqa: F401
-
         from app.ingest.registry import get_adapter
 
         adapter = get_adapter("uzex_deals")
@@ -231,7 +227,6 @@ class TestAdapterTestMethod:
     @pytest.mark.asyncio
     async def test_offers_test_caps_at_10(self) -> None:
         import app.ingest.uzex  # noqa: F401
-
         from app.ingest.uzex.adapters import UzexOffersAdapter
 
         html = _load_fixture("offers_sum.html")
@@ -251,7 +246,6 @@ class TestAdapterTestMethod:
     @pytest.mark.asyncio
     async def test_contracts_test_caps_at_10(self) -> None:
         import app.ingest.uzex  # noqa: F401
-
         from app.ingest.uzex.adapters import UzexContractsAdapter
 
         html = _load_fixture("contracts.html")
@@ -271,7 +265,6 @@ class TestAdapterTestMethod:
     @pytest.mark.asyncio
     async def test_deals_test_caps_at_10(self) -> None:
         import app.ingest.uzex  # noqa: F401
-
         from app.ingest.uzex.adapters import UzexDealsAdapter
 
         html = _load_fixture("deals.html")
@@ -298,7 +291,6 @@ class TestAdapterFetch:
     @pytest.mark.asyncio
     async def test_offers_fetch_uses_fetch_url(self) -> None:
         import app.ingest.uzex  # noqa: F401
-
         from app.ingest.uzex.adapters import UzexOffersAdapter
 
         html = _load_fixture("offers_sum.html")
@@ -326,7 +318,6 @@ class TestAdapterFetch:
     async def test_deals_fetch_returns_external_id(self) -> None:
         """Deals rows use col 1 (deal number) as external_id."""
         import app.ingest.uzex  # noqa: F401
-
         from app.ingest.uzex.adapters import UzexDealsAdapter
 
         html = _load_fixture("deals.html")
@@ -354,7 +345,6 @@ class TestAdapterFetch:
     async def test_offers_fetch_currency_in_payload(self) -> None:
         """Currency field should be injected into payload from config."""
         import app.ingest.uzex  # noqa: F401
-
         from app.ingest.uzex.adapters import UzexOffersAdapter
 
         html = _load_fixture("offers_sum.html")

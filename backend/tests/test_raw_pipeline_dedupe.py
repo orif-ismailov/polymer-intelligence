@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import os
 import uuid
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -149,11 +148,12 @@ class TestSaveRawItemsDeduplication:
         session.execute(sa.text("COMMIT"))  # type: ignore[attr-defined]
 
     def test_first_call_inserts_n_rows(self) -> None:
+        from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.core.db import engine  # noqa: PLC0415
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
         from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
-        from sqlalchemy.orm import Session  # noqa: PLC0415
 
         with Session(engine) as session:
             source_id = self._make_source(session)
@@ -183,11 +183,12 @@ class TestSaveRawItemsDeduplication:
 
     def test_second_call_inserts_zero_rows(self) -> None:
         """Identical second call must return 0 (ON CONFLICT DO NOTHING)."""
+        from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.core.db import engine  # noqa: PLC0415
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
         from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
-        from sqlalchemy.orm import Session  # noqa: PLC0415
 
         with Session(engine) as session:
             source_id = self._make_source(session)
@@ -222,11 +223,12 @@ class TestSaveRawItemsDeduplication:
     def test_row_count_unchanged_after_second_call(self) -> None:
         """Total raw_items for source must not change on duplicate save."""
         import sqlalchemy as sa  # noqa: PLC0415
+        from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.core.db import engine  # noqa: PLC0415
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
         from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
-        from sqlalchemy.orm import Session  # noqa: PLC0415
 
         with Session(engine) as session:
             source_id = self._make_source(session)
@@ -271,11 +273,12 @@ class TestSaveRawItemsDeduplication:
     def test_parse_status_defaults_to_pending(self) -> None:
         """Newly inserted raw_items must have parse_status='pending'."""
         import sqlalchemy as sa  # noqa: PLC0415
+        from sqlalchemy.orm import Session  # noqa: PLC0415
+
         from app.core.db import engine  # noqa: PLC0415
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
         from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
-        from sqlalchemy.orm import Session  # noqa: PLC0415
 
         with Session(engine) as session:
             source_id = self._make_source(session)

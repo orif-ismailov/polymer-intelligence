@@ -155,12 +155,12 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
     # - avoids circular imports at module level
     # - keeps module import socket-free (pytest collection safe)
     from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot, load_template  # noqa: PLC0415
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
     from app.models.requests import Request  # noqa: PLC0415
     from app.services.request_service import client_facing_status  # noqa: PLC0415
-    from telegram.bot import bot, load_template, web_app_keyboard  # noqa: PLC0415
 
     logger.info("notify.status_change.start", extra={"request_id": request_id})
 
@@ -189,7 +189,11 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
             )
 
             # Build deep-link inline keyboard button (T-03-12: own request only)
-            from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo  # noqa: PLC0415
+            from aiogram.types import (  # noqa: PLC0415
+                InlineKeyboardButton,
+                InlineKeyboardMarkup,
+                WebAppInfo,
+            )
 
             deep_link_url = f"{_settings.PUBLIC_WEBAPP_URL}/#/requests/{request.id}"
             open_label = "Открыть заявку" if lang == "ru" else "Arizani ochish"
@@ -285,11 +289,11 @@ def send_delivery(alert_id: int) -> dict[str, Any]:
     import time  # noqa: PLC0415
 
     from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
     from app.models.alerts import Alert, Delivery  # noqa: PLC0415
     from app.models.enums import DeliveryChannel, DeliveryStatus  # noqa: PLC0415
-    from telegram.bot import bot  # noqa: PLC0415
 
     logger.info("notify.send_delivery.start", extra={"alert_id": alert_id})
 

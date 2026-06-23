@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     LLM_EXTRACT_MODEL: str = "claude-haiku-4-5"
     LLM_REPORT_MODEL: str = "claude-sonnet-4-5"
     LLM_DAILY_TOKEN_LIMIT: int = 500_000
+    # Prompt version pin — stored verbatim in parse_runs.prompt_version for replay.
+    # When the prompt changes, create parsing/prompts/extract_vN.md and update this.
+    LLM_PROMPT_VERSION: str = "v1"
 
     # ── Telegram bot ──────────────────────────────────────────────────────────
     BOT_TOKEN: str
@@ -42,6 +45,16 @@ class Settings(BaseSettings):
     # ── Telegram userbot ──────────────────────────────────────────────────────
     TG_API_ID: int
     TG_API_HASH: str
+    # Session string generated once locally via the interactive StringSession login
+    # flow (see userbot/session.py). Stored in .env, NEVER committed (T-05-05).
+    # Empty default so the API/worker/beat services can start without it;
+    # the userbot raises a clear error at startup if this is empty.
+    TG_SESSION_STRING: str = ""
+    # How often the userbot re-reads the enabled channel list (seconds).
+    # Default 600 = ~10 min — ROADMAP SC#1 "rereads the channel list every ~10 min".
+    USERBOT_CHANNEL_REREAD_SECONDS: int = 600
+    # How often the userbot writes its Redis heartbeat (seconds).
+    USERBOT_HEARTBEAT_SECONDS: int = 60
 
     # ── Auth ──────────────────────────────────────────────────────────────────
     JWT_SECRET: str

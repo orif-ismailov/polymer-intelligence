@@ -22,10 +22,7 @@ Coverage target: 90%+ on interpreter branches (dev-spec §8).
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, call, patch
-
-import pytest
-
+from unittest.mock import MagicMock, patch
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -41,7 +38,7 @@ def _make_signal(
     ai: dict | None = None,
 ) -> MagicMock:
     """Return a MagicMock that quacks like a Signal ORM object."""
-    from app.models.enums import SignalKind, Urgency  # noqa: PLC0415
+    from app.models.enums import Urgency  # noqa: PLC0415
 
     sig = MagicMock()
     sig.kind = kind
@@ -293,8 +290,8 @@ class TestDedupe:
 
         # First call: flush succeeds (no IntegrityError)
         # Second call: flush raises IntegrityError (dedupe)
-        flush_first = MagicMock()
-        flush_second = MagicMock(side_effect=IntegrityError("", {}, Exception()))
+        MagicMock()
+        MagicMock(side_effect=IntegrityError("", {}, Exception()))
 
         flush_call_count = [0]
 
@@ -319,13 +316,13 @@ class TestDedupe:
         alert_mock = MagicMock()
         alert_mock.id = 99
 
-        with patch("app.services.alert_service.Alert") as MockAlert, \
+        with patch("app.services.alert_service.Alert") as mock_alert_cls, \
              patch("app.services.alert_service.Delivery"), \
-             patch("app.models.signals.Signal") as MockSignal:
+             patch("app.models.signals.Signal"):
 
             # Simulate: signal entity returned by _load_entity
             with patch("app.services.alert_service._load_entity", return_value=signal):
-                MockAlert.return_value = alert_mock
+                mock_alert_cls.return_value = alert_mock
 
                 with patch("app.tasks.notify.send_delivery") as mock_send_delivery:
                     mock_send_delivery.apply_async = MagicMock()
@@ -412,23 +409,22 @@ class TestDeliveryDispatch:
             delivery_instances.append(d)
             return d
 
+        # Lazy import inside evaluate_alert_rules resolves to app.tasks.notify.send_delivery
+        # Patch at the source module so the lazy import picks up the mock.
         with patch("app.services.alert_service._load_entity", return_value=signal), \
              patch("app.services.alert_service.Alert", return_value=alert_mock), \
-             patch("app.services.alert_service.Delivery", side_effect=capture_delivery):
+             patch("app.services.alert_service.Delivery", side_effect=capture_delivery), \
+             patch("app.tasks.notify.send_delivery") as mock_sd:
+            mock_sd.apply_async = MagicMock()
 
-            # Lazy import inside evaluate_alert_rules resolves to app.tasks.notify.send_delivery
-            # Patch at the source module so the lazy import picks up the mock.
-            with patch("app.tasks.notify.send_delivery") as mock_sd:
-                mock_sd.apply_async = MagicMock()
+            evaluate_alert_rules(mock_db, signal_id=55)
 
-                evaluate_alert_rules(mock_db, signal_id=55)
-
-                # send_delivery.apply_async called with queue="notify"
-                assert mock_sd.apply_async.called
-                call_kwargs = mock_sd.apply_async.call_args
-                assert call_kwargs[1].get("queue") == "notify" or (
-                    len(call_kwargs[0]) > 1 and "notify" in str(call_kwargs)
-                )
+            # send_delivery.apply_async called with queue="notify"
+            assert mock_sd.apply_async.called
+            call_kwargs = mock_sd.apply_async.call_args
+            assert call_kwargs[1].get("queue") == "notify" or (
+                len(call_kwargs[0]) > 1 and "notify" in str(call_kwargs)
+            )
 
         # Two deliveries created (one per channel)
         assert len(delivery_instances) == 2

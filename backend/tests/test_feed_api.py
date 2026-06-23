@@ -26,9 +26,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -80,14 +78,14 @@ def _make_feed_row(
     row.region = region
     row.urgency = urgency
     row.status = status
-    row.event_at = event_at or datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.timezone.utc)
+    row.event_at = event_at or datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.UTC)
     return row
 
 
 def _make_feed_client(rows: list[Any] | None = None, staff_user: MagicMock | None = None) -> TestClient:
     """Build a TestClient with db mocked to return feed rows for the feed endpoint."""
-    from app.core.db import get_db  # noqa: PLC0415
     from app.api.deps import get_current_staff_user  # noqa: PLC0415
+    from app.core.db import get_db  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
 
     if staff_user is None:
@@ -128,11 +126,11 @@ class TestFeedList:
         """Valid JWT returns 200 with items and pagination cursors."""
         row1 = _make_feed_row(
             id=2,
-            event_at=datetime.datetime(2026, 6, 17, 13, 0, 0, tzinfo=datetime.timezone.utc),
+            event_at=datetime.datetime(2026, 6, 17, 13, 0, 0, tzinfo=datetime.UTC),
         )
         row2 = _make_feed_row(
             id=1,
-            event_at=datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.timezone.utc),
+            event_at=datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.UTC),
         )
         client = _make_feed_client(rows=[row1, row2])
 
@@ -161,11 +159,11 @@ class TestFeedList:
         """next_cursor_id matches the last row's id (oldest row in newest-first order)."""
         row1 = _make_feed_row(
             id=10,
-            event_at=datetime.datetime(2026, 6, 17, 14, 0, 0, tzinfo=datetime.timezone.utc),
+            event_at=datetime.datetime(2026, 6, 17, 14, 0, 0, tzinfo=datetime.UTC),
         )
         row2 = _make_feed_row(
             id=5,
-            event_at=datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.timezone.utc),
+            event_at=datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.UTC),
         )
         client = _make_feed_client(rows=[row1, row2])
 
@@ -191,11 +189,11 @@ class TestFeedList:
         """Items are in newest-first order (event_at DESC, id DESC)."""
         row1 = _make_feed_row(
             id=10,
-            event_at=datetime.datetime(2026, 6, 17, 14, 0, 0, tzinfo=datetime.timezone.utc),
+            event_at=datetime.datetime(2026, 6, 17, 14, 0, 0, tzinfo=datetime.UTC),
         )
         row2 = _make_feed_row(
             id=5,
-            event_at=datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.timezone.utc),
+            event_at=datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.UTC),
         )
         # DB returns newest first (ORDER BY event_at DESC, id DESC)
         client = _make_feed_client(rows=[row1, row2])

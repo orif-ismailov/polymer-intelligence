@@ -315,7 +315,7 @@ def client_new_user() -> Generator[TestClient, None, None]:
 
 def test_get_current_client_missing_header_returns_401(client_valid_existing: TestClient) -> None:
     """Request with no X-Telegram-Init-Data header → 401 Authentication required."""
-    resp = client_valid_existing.get("/api/v1/health")  # any route
+    client_valid_existing.get("/api/v1/health")  # any route
     # Use the dedicated test endpoint — the health endpoint doesn't require auth.
     # We need to hit a route that uses get_current_client. Since /webapp/* doesn't
     # exist yet, we test the dependency directly via unit test instead.

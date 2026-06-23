@@ -18,8 +18,8 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 - [x] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health (completed 2026-06-16)
 - [x] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications (completed 2026-06-17)
 - [x] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard (completed 2026-06-18)
-- [ ] **Phase 5: Telegram Monitoring + AI** (E5) - Userbot over the registry, LLM extraction + budget, needs_review flow, eval golden-set, control-sample run
-- [ ] **Phase 6: Acceptance & Handover** (E6) - TZ §6.1 acceptance criteria, restore test, runbook, handover
+- [x] **Phase 5: Telegram Monitoring + AI** (E5) - Userbot over the registry, LLM extraction + budget, needs_review flow, eval golden-set, control-sample run (completed 2026-06-19)
+- [x] **Phase 6: Acceptance & Handover** (E6) - TZ §6.1 acceptance criteria, restore test, runbook, handover (completed 2026-06-22)
 
 ## Phase Details
 
@@ -148,7 +148,7 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   2. On the Purchase Requests screen the team opens a request's detail card (details, files, AI block: score + target-vs-avg price), changes status, assigns an owner, and adds notes — every action writes to `audit_log`
   3. The team views a price chart per product/market sourced from `price_points`, and sees per-source health (last fetch, consecutive failures) with enable/disable
   4. The team builds an alert rule (product, volume/price threshold, urgency, channel); matches deliver to DM/group respecting Telegram rate limits via the `deliveries` queue
-  5. An admin adds a new public website AND a new Telegram channel through the add-source wizard with no developer: the form is auto-built from the adapter's config_schema, a Test shows a ≤10-row preview, the source cannot be enabled until a test passes, and its signals subsequently appear in the feed (TZ §6.1.6). **Cross-phase caveat (CONTEXT.md):** Phase 4 delivers website (`html_table`/`rss`) onboarding end-to-end; `telegram_channel`/`llm_page` are config-saveable in a PENDING state only — the "telegram-channel signals appear in feed" slice is a Phase-5/6 acceptance item (userbot + LLM extraction land then).
+  5. An admin adds a new public website AND a new Telegram channel through the add-source wizard with no developer: the form is auto-built from the adapter's config_schema, a Test shows a ≤10-row preview, the source cannot be enabled until a test passes, and its signals subsequently appear in the feed (TZ §6.1.6). **Cross-phase caveat (CONTEXT.md) — RETIRED 2026-06-22:** ~~Phase 4 delivers website (`html_table`/`rss`) onboarding end-to-end; `telegram_channel`/`llm_page` are config-saveable in a PENDING state only — the "telegram-channel signals appear in feed" slice is a Phase-5/6 acceptance item (userbot + LLM extraction land then).~~ This caveat is now **RETIRED**: the `telegram_channel` slice was closed locally in Phase 6 by 06-03 (`backend/tests/test_telegram_channel_close.py`, 9 passed — wizard add → enable-gate 422 until Test passes → fixture MTProto message → `parse_telegram_item` → signal in `v_live_feed`, key-free). The remaining live-account ingestion is the deploy-day drill tracked in `.planning/phases/06-acceptance-handover/06-ACCEPTANCE.md`.
 
 **Plans**: 9 plans in 6 waves (foundation-first per D-03)
 
@@ -195,8 +195,26 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   4. When the daily token limit is exceeded, new items stay pending with rule-based fallback + nightly catch-up and the admin is alerted; per-source 7-day token spend is visible for AI sources
   5. On the customer's 100-message control sample, relevant-signal recall is ≥80% and field precision on detected signals ≥85% (TZ §6.1.3), measured via the eval tool + golden-set
 
-**Plans**: TBD
-**Schema contract**: `docs/polymer-intelligence-db-architecture.md` (raw_items, parse_runs, signals.ai). Extraction output per `docs/extraction-schema.json`; prompts in `parsing/prompts/extract_v{N}.md` (never edit old versions). Media not downloaded in Phase 1.
+**Plans**: 5 plans in 4 waves
+
+**Wave 1** *(contract + [BLOCKING] migration)*
+
+- [x] 05-01-PLAN.md — Extraction contract: `ExtractionResult` Pydantic schema + immutable versioned prompt (`extract_v1.md` + loader) + published `docs/extraction-schema.json` + anthropic/instructor/telethon deps + **[BLOCKING] Alembic 0003** (parse_runs.latency_ms) (REQ-ai-extraction)
+
+**Wave 2** *(parallel — userbot + LLM service layer, no file overlap)*
+
+- [x] 05-02-PLAN.md — Net-new Telethon userbot (separate long-lived process) + live `telegram_channel` adapter + Redis heartbeat + channel-reread-without-restart + userbot-silent admin alert (REQ-telegram-monitoring)
+- [x] 05-03-PLAN.md — Extractor service (`extract_signal`, instructor TOOLS, temp=0, prompt-cached, fully journaled) + Redis token-budget gate + real rule-based fallback + lead scoring (REQ-ai-extraction, REQ-lead-scoring, REQ-llm-budget)
+
+**Wave 3** *(orchestration — blocked on 05-01 + 05-03)*
+
+- [x] 05-04-PLAN.md — `parse_telegram_item` orchestrator (budget→LLM/fallback→journal→signal, confidence<0.5→needs_review, dead-letter, lead-score stamp) + nightly catch-up + budget admin alert + per-source 7-day spend + dashboard needs_review chip (REQ-ai-extraction, REQ-llm-budget, REQ-lead-scoring)
+
+**Wave 4** *(acceptance gate — blocked on 05-01 + 05-03 + 05-04)*
+
+- [x] 05-05-PLAN.md — Eval harness (frozen-prediction recall≥80% / precision≥85% gate) + golden/synonym loader + unit-tested metrics + eval CLI + lead-score recompute-on-prompt-version backfill (REQ-ai-extraction, REQ-lead-scoring)
+
+**Schema contract**: `docs/polymer-intelligence-db-architecture.md` (raw_items, parse_runs, signals.ai). Extraction output per `docs/extraction-schema.json` (created in 05-01); prompts in `parsing/prompts/extract_v{N}.md` (never edit old versions — bump + recompute). Media not downloaded in Phase 1. **Gated on customer inputs** (userbot account + API_ID/API_HASH + session string, 100-message golden set, synonyms/channel lists) — plans run against example fixtures + env placeholders until delivered.
 
 ### Phase 6: Acceptance & Handover
 
@@ -210,7 +228,26 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   3. The source-constructor acceptance passes: an admin onboards a new public site + Telegram channel with no developer and a failed-test source cannot be enabled (TZ §6.1.6)
   4. Deliverables are handed over: deployment + restore docs, runbook, prompt/extraction-schema descriptions, and admin instructions (sources, alert rules)
 
-**Plans**: TBD
+**Plans**: 7 plans in 4 waves
+
+**Wave 1** *(independent — parallel, no file overlap)*
+
+- [x] 06-01-PLAN.md — Handover hygiene (D-07): commit `backend/uv.lock` + FastAPI/Starlette ceiling, modernise the 2 stale route-introspection tests, CI installs via `uv sync --frozen`
+- [x] 06-02-PLAN.md — Restore test (D-04 / §6.1.5): `tests/restore/test_restore_local.sh` (pg_dump → fresh PG16 → restore via runbook → verify schema/rows/ENUMs/`v_live_feed` → assert ≤2h), refine `docs/runbook-backup-restore.md`
+- [x] 06-03-PLAN.md — Channel close (D-03 / §6.1.6): `test_telegram_channel_close.py` — wizard add → enable-gate (422 without passing test) → fixture MTProto message → `parse_telegram_item` → signal in `v_live_feed`, key-free
+- [x] 06-04-PLAN.md — Production compose (D-05.1): `deploy/docker-compose.yml` full container set (api, worker, beat, userbot, dashboard, postgres, redis, nginx), nginx-only ingress, TLS, no committed secrets
+
+**Wave 2** *(blocked on 06-04)*
+
+- [x] 06-05-PLAN.md — Full-stack smoke (D-02): `tests/smoke/test_smoke_full_stack.sh` + `make smoke` — compose up → `/health` → synthetic request→`v_live_feed` → forced fake-source isolation + one `source_failure` alert
+
+**Wave 3** *(docs — blocked on 06-01/06-02/06-03/06-05 for evidence citation)*
+
+- [x] 06-06-PLAN.md — Consolidated `06-ACCEPTANCE.md` (D-01, one row per §6.1.1–§6.1.6 + blocked-on column + single deploy-day checklist superseding 02/03/05-UAT) + `docs/deployment-guide.md` (D-05.2, EN) + `docs/admin-guide-ru.md` (D-05.3, RU)
+
+**Wave 4** *(capstone — blocked on 06-03 + 06-06)*
+
+- [x] 06-07-PLAN.md — `HANDOVER.md` §9 index (D-05.4) + retire the SC#5 telegram cross-phase caveat in ROADMAP/04-CONTEXT (gated on 06-03 passing)
 
 ## Progress
 
@@ -223,8 +260,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
 | 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
 | 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
-| 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
-| 6. Acceptance & Handover | 0/TBD | Not started | - |
+| 5. Telegram Monitoring + AI | 5/5 | Complete    | 2026-06-19 |
+| 6. Acceptance & Handover | 7/7 | Complete   | 2026-06-22 |
 
 ---
 *Roadmap created: 2026-06-13 (Client Phase 1 milestone). Phase 2 international loop = planned follow-up milestone, not in this roadmap.*

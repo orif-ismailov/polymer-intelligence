@@ -81,7 +81,7 @@
     }
   },
   {
-    "kind": "fx",
+    "kind": "external_index",
     "adapter": "cbu_rates",
     "name": "CBU FX Rates",
     "url": "https://cbu.uz/en/arkhiv-kursov-valyut/json/",

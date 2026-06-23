@@ -18,7 +18,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # HTML fixture: table with product/volume/price/currency data
 _HTML_TABLE_FIXTURE = """
 <html>
@@ -56,8 +55,8 @@ def clean_registry():
     duplicate). This pattern avoids issues with module-level code only
     running once per Python process (module import cache).
     """
-    from app.ingest.registry import _clear_registry  # noqa: PLC0415
     from app.ingest import registry as _reg  # noqa: PLC0415
+    from app.ingest.registry import _clear_registry  # noqa: PLC0415
 
     _clear_registry()
     # Import adapter module (first time runs side-effect registration; subsequent
@@ -96,8 +95,8 @@ def test_html_table_ssrf_reject_localhost():
 
 def test_html_table_test_returns_normalized_rows():
     """HtmlTableAdapter.test() returns <=10 normalized signal-draft rows on happy path."""
-    from app.ingest.html_table.adapter import HtmlTableAdapter  # noqa: PLC0415
     from app.ingest.base import TestResult  # noqa: PLC0415
+    from app.ingest.html_table.adapter import HtmlTableAdapter  # noqa: PLC0415
 
     adapter = HtmlTableAdapter()
 

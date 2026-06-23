@@ -203,8 +203,11 @@ def get_current_client(
             detail="Authentication required",
         )
 
-    from app.services.client_service import InvalidInitData, verify_init_data  # noqa: PLC0415
-    from app.services.client_service import get_or_create_client  # noqa: PLC0415
+    from app.services.client_service import (  # noqa: PLC0415
+        InvalidInitData,
+        get_or_create_client,  # noqa: PLC0415
+        verify_init_data,
+    )
 
     try:
         payload = verify_init_data(x_telegram_init_data)
@@ -213,7 +216,7 @@ def get_current_client(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
-        )
+        ) from None
 
     # Extract identity from verified payload ONLY (T-03-06 equivalent)
     user_info = payload.get("user")
@@ -229,7 +232,7 @@ def get_current_client(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
-        )
+        ) from None
 
     language_code: str = str(user_info.get("language_code", "ru"))
 

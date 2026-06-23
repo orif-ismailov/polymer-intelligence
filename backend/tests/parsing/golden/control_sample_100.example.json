@@ -1,0 +1,1702 @@
+[
+  {
+    "id": 1,
+    "raw_text": "Продаём ПП T30S (Шуртан ГКК), 50 тонн, $950/MT EXW Ташкент. Продавец: Шуртан ГКК.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": "Шуртан ГКК",
+      "urgency": null
+    }
+  },
+  {
+    "id": 2,
+    "raw_text": "Куплю HDPE 2420D, 100 MT, цена договорная. Покупатель: ООО Полимер Трейд.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "HDPE",
+      "grade_text": "2420D",
+      "volume": 100,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": "Полимер Трейд",
+      "urgency": null
+    }
+  },
+  {
+    "id": 3,
+    "raw_text": "Сделка закрыта. ПВХ S-7058M, 80 МТ по цене $1050/MT. Покупатель: AgroPlast Toshkent.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "deal",
+      "product": "PVC",
+      "grade_text": "S-7058M",
+      "volume": 80,
+      "volume_unit": "MT",
+      "price": 1050,
+      "currency": "USD",
+      "counterparty_text": "AgroPlast Toshkent",
+      "urgency": null
+    }
+  },
+  {
+    "id": 4,
+    "raw_text": "Цена на ПВХ C-70 сегодня: 1 150 000 сум/кг. Данные UZEX.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "price_quote",
+      "product": "PVC",
+      "grade_text": "C-70",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": 1150000,
+      "currency": "UZS",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 5,
+    "raw_text": "УЗЭКС: итоги торгов за 18 июня 2026. Средняя цена PP T30S — $948/MT. Объём торгов — 250 MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "news",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 250,
+      "volume_unit": "MT",
+      "price": 948,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 6,
+    "raw_text": "Канал полимеры УЗ — подписывайтесь! Актуальные цены каждый день. Реклама.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 7,
+    "raw_text": "Сдаю в аренду склад 500 кв.м., г. Ташкент. Тел: +998901234567.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 8,
+    "raw_text": "ПП рафия 9500000 за тонну. Есть партия.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "рафия",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": 9500000,
+      "currency": "UZS",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 9,
+    "raw_text": "HDPE 2020 — цена 850 у.е./MT. Партия 30 тонн.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "2020",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 850,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 10,
+    "raw_text": "ПП T30S, доступно 20 MT. Цена 11500 рублей за кг — ИП Иванов.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": 11500,
+      "currency": "RUB",
+      "counterparty_text": "ИП Иванов",
+      "urgency": null
+    }
+  },
+  {
+    "id": 11,
+    "raw_text": "Продаём ПП Т30С (кириллица), 50 тонн, $955/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "Т30С",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 955,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 12,
+    "raw_text": "ПП рафия (raffia) латинскими — есть в наличии 25 MT за $920.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "рафия",
+      "volume": 25,
+      "volume_unit": "MT",
+      "price": 920,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 13,
+    "raw_text": "ПП, 50 MT, $960. Хорошее качество.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": null,
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 960,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 14,
+    "raw_text": "HDPE, цена вопроса. 50 000 кг. Срочно нужен покупатель!",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": null,
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 15,
+    "raw_text": "5 вагонов LLDPE 218W. Отгрузка из Навои.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LLDPE",
+      "grade_text": "218W",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 16,
+    "raw_text": "Небольшая партия PET бутылочного, срочно. Цена договорная.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PET",
+      "grade_text": "бутылочный",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 17,
+    "raw_text": "Переслано от @polymer_uz_market (3 дня назад): Продаём ПП T30S 50 MT $940/MT.",
+    "fwd_from": {"channel": "@polymer_uz_market", "date": "2026-06-16T10:00:00Z"},
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 18,
+    "raw_text": "Продаём ПП T30S, объём 50 MT. Цена: 950–980 $/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 19,
+    "raw_text": "PVC ПВХ C-70 партия 20 MT, нет цены. Покупатель — ТашПластТрейд.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PVC",
+      "grade_text": "C-70",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": "ТашПластТрейд",
+      "urgency": null
+    }
+  },
+  {
+    "id": 20,
+    "raw_text": "ABS GP-22, $1200/MT, 15 MT. Продавец не указан.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "ABS",
+      "grade_text": "GP-22",
+      "volume": 15,
+      "volume_unit": "MT",
+      "price": 1200,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 21,
+    "raw_text": "Ищем работу водителя-экспедитора. Опыт 5 лет. Т: 98-901-11-22-33.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 22,
+    "raw_text": "Продаём оборудование для производства ПЭТ-тары б/у. Цена 15000$.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 23,
+    "raw_text": "HDPE 2420D, 40 MT, $905/MT. Наличие подтверждено. Срочно!",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "2420D",
+      "volume": 40,
+      "volume_unit": "MT",
+      "price": 905,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 24,
+    "raw_text": "PP H030 SG, 70 MT available, $985/MT CIF Tashkent. Contact: UzPetroTrade.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "H030 SG",
+      "volume": 70,
+      "volume_unit": "MT",
+      "price": 985,
+      "currency": "USD",
+      "counterparty_text": "UzPetroTrade",
+      "urgency": null
+    }
+  },
+  {
+    "id": 25,
+    "raw_text": "Куплю ПП рафия 100 MT. Цена до $960. Регион Ташкент.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PP",
+      "grade_text": "рафия",
+      "volume": 100,
+      "volume_unit": "MT",
+      "price": 960,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 26,
+    "raw_text": "ПП T30S — 50 тонн продам. $948/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 948,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 27,
+    "raw_text": "PS 525 (BASF), 20 MT, цена $1100/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PS",
+      "grade_text": "525",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": 1100,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 28,
+    "raw_text": "Спам: Выиграйте iPhone! Нажмите на ссылку ниже.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 29,
+    "raw_text": "ПЭТ бутылочный 1000 (Sabic), 30 MT, $870/MT. Отправка из РФ.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PET",
+      "grade_text": "1000",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 870,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 30,
+    "raw_text": "LDPE 158, 25 MT, $980/MT. Продавец — ПолиТрейд.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LDPE",
+      "grade_text": "158",
+      "volume": 25,
+      "volume_unit": "MT",
+      "price": 980,
+      "currency": "USD",
+      "counterparty_text": "ПолиТрейд",
+      "urgency": null
+    }
+  },
+  {
+    "id": 31,
+    "raw_text": "Срочно! ПВХ C-58, 10 MT, $930/MT. Сегодня до 18:00.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PVC",
+      "grade_text": "C-58",
+      "volume": 10,
+      "volume_unit": "MT",
+      "price": 930,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 32,
+    "raw_text": "ПП BI-2, 50 000 кг, $940/MT. Имеется сертификат.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "BI-2",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 940,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 33,
+    "raw_text": "Предлагаем LLDPE FS-040, 60 MT, $895/MT. Контакт: AsiaPolymer MCHJ.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LLDPE",
+      "grade_text": "FS-040",
+      "volume": 60,
+      "volume_unit": "MT",
+      "price": 895,
+      "currency": "USD",
+      "counterparty_text": "AsiaPolymer",
+      "urgency": null
+    }
+  },
+  {
+    "id": 34,
+    "raw_text": "Куплю ПЭТ-гранулят бутылочный, объём до 50 MT. Цена до $860/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PET",
+      "grade_text": "бутылочный",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 860,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 35,
+    "raw_text": "Закупаем HDPE ортодоксальный для трубного производства. 200 MT. Цена не выше $1000/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "HDPE",
+      "grade_text": "трубный",
+      "volume": 200,
+      "volume_unit": "MT",
+      "price": 1000,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 36,
+    "raw_text": "LDPE для плёнки — нужно 30 MT. Предложите цену. Срочно!",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "LDPE",
+      "grade_text": "плёночный",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 37,
+    "raw_text": "Переслано от @uz_chem_news (неделю назад): PP рафия 50 MT $900/MT. Шуртан.",
+    "fwd_from": {"channel": "@uz_chem_news", "date": "2026-06-12T08:00:00Z"},
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 38,
+    "raw_text": "ABS GP-35, 35 MT, $1250/MT. Есть в наличии на складе в Ташкенте.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "ABS",
+      "grade_text": "GP-35",
+      "volume": 35,
+      "volume_unit": "MT",
+      "price": 1250,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 39,
+    "raw_text": "PP fibre grade (волокно), 45 MT. Цена 12000 руб/кг.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "волокно",
+      "volume": 45,
+      "volume_unit": "MT",
+      "price": 12000,
+      "currency": "RUB",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 40,
+    "raw_text": "Сообщение о результатах конференции по нефтехимии в Ташкенте.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 41,
+    "raw_text": "ПП T30S (Шуртан), 50 тонн. $952/MT. Срок отгрузки — неделя.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 952,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 42,
+    "raw_text": "HDPE 5502, 80 MT, 1 020 000 UZS/MT. Самовывоз Ташкент.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "5502",
+      "volume": 80,
+      "volume_unit": "MT",
+      "price": 1020000,
+      "currency": "UZS",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 43,
+    "raw_text": "PVC S-7058M — продаётся 20 MT, цена от $1000 до $1050/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PVC",
+      "grade_text": "S-7058M",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": 1000,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 44,
+    "raw_text": "ПП Т30С (кирилл.) — нужен покупатель, 50 MT, $950.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "Т30С",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 45,
+    "raw_text": "Общество с ограниченной ответственностью ООО Полимер Сервис предлагает LDPE 10803-020, 60 MT, $975/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LDPE",
+      "grade_text": "10803-020",
+      "volume": 60,
+      "volume_unit": "MT",
+      "price": 975,
+      "currency": "USD",
+      "counterparty_text": "Полимер Сервис",
+      "urgency": null
+    }
+  },
+  {
+    "id": 46,
+    "raw_text": "🔥 Спешите! Скидки до 30% на упаковочные материалы. Только сегодня!",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 47,
+    "raw_text": "Продаём PET 1100 (бутылка), 25 MT. Цена $865/MT. Срочно!",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PET",
+      "grade_text": "1100",
+      "volume": 25,
+      "volume_unit": "MT",
+      "price": 865,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 48,
+    "raw_text": "LLDPE 218W, 50 MT, $890/MT. Доступно — ООО СтройПласт.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LLDPE",
+      "grade_text": "218W",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 890,
+      "currency": "USD",
+      "counterparty_text": "СтройПласт",
+      "urgency": null
+    }
+  },
+  {
+    "id": 49,
+    "raw_text": "Хочу купить PP T30S, нет объёма, цена интересует.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 50,
+    "raw_text": "ABS Kumho, 10 MT, $1180/MT. Качество A1.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "ABS",
+      "grade_text": "Kumho",
+      "volume": 10,
+      "volume_unit": "MT",
+      "price": 1180,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 51,
+    "raw_text": "Продаём PP T30S, 50 MT. Цена $950/MT. Отгрузка со склада Шуртан.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 52,
+    "raw_text": "Предлагаем HDPE 2420D, 90 MT, $910/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "2420D",
+      "volume": 90,
+      "volume_unit": "MT",
+      "price": 910,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 53,
+    "raw_text": "Предлагаем PVC S-58, 45 MT, $1010/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PVC",
+      "grade_text": "S-58",
+      "volume": 45,
+      "volume_unit": "MT",
+      "price": 1010,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 54,
+    "raw_text": "Куплю LLDPE 218W 30 MT по цене $880-890/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "LLDPE",
+      "grade_text": "218W",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 880,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 55,
+    "raw_text": "Продаём ABS ударопрочный, 20 MT, $1150/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "ABS",
+      "grade_text": "ударопрочный",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": 1150,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 56,
+    "raw_text": "Сделка: PP T30S 100 MT по $945/MT с покупателем UzPetroTrade закрыта.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "deal",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 100,
+      "volume_unit": "MT",
+      "price": 945,
+      "currency": "USD",
+      "counterparty_text": "UzPetroTrade",
+      "urgency": null
+    }
+  },
+  {
+    "id": 57,
+    "raw_text": "Политические новости: парламент обсудил вопросы экономики.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 58,
+    "raw_text": "PS GPPS 525, 30 MT, $1080/MT. Отгрузка Ташкент.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PS",
+      "grade_text": "GPPS 525",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 1080,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 59,
+    "raw_text": "Куплю LDPE 158 для производства стретч-плёнки. 50 MT. Цена до $970.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "LDPE",
+      "grade_text": "158",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 970,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 60,
+    "raw_text": "ПЭТ 1000, 20 000 кг. Цена $855/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PET",
+      "grade_text": "1000",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": 855,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 61,
+    "raw_text": "PP raffia (латиница), 45 MT, $930/MT. Шуртан отгрузка.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "рафия",
+      "volume": 45,
+      "volume_unit": "MT",
+      "price": 930,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 62,
+    "raw_text": "Сделка: HDPE 2420D 50 MT $908/MT — договор подписан.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "deal",
+      "product": "HDPE",
+      "grade_text": "2420D",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 908,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 63,
+    "raw_text": "LLDPE 218W, 3 вагона, цена $885/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LLDPE",
+      "grade_text": "218W",
+      "volume": null,
+      "volume_unit": "MT",
+      "price": 885,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 64,
+    "raw_text": "Набираем группу для обучения работе с полимерными материалами.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 65,
+    "raw_text": "PVC-U C-70, 50 MT, $1020/MT. ТашПластТрейд предлагает.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PVC",
+      "grade_text": "C-70",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 1020,
+      "currency": "USD",
+      "counterparty_text": "ТашПластТрейд",
+      "urgency": null
+    }
+  },
+  {
+    "id": 66,
+    "raw_text": "ABS 750SW (Samsung), 25 MT, $1220/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "ABS",
+      "grade_text": "750SW",
+      "volume": 25,
+      "volume_unit": "MT",
+      "price": 1220,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 67,
+    "raw_text": "Ищем: PVC для труб, 100 MT. Цена до $1050/MT. АО ТашТрубПласт.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PVC",
+      "grade_text": "трубный",
+      "volume": 100,
+      "volume_unit": "MT",
+      "price": 1050,
+      "currency": "USD",
+      "counterparty_text": "ТашТрубПласт",
+      "urgency": null
+    }
+  },
+  {
+    "id": 68,
+    "raw_text": "ПП H030 SG, 60 MT, $980/MT. Предложение актуально 3 дня.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "H030 SG",
+      "volume": 60,
+      "volume_unit": "MT",
+      "price": 980,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 69,
+    "raw_text": "Новость: ОПЕК сохраняет уровень добычи нефти.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 70,
+    "raw_text": "Куплю ПВХ C-58 или C-70, до 30 MT. Срочно!",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PVC",
+      "grade_text": "C-58",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 71,
+    "raw_text": "PET бутылочный 1200, 35 MT, $840/MT. Наличие есть.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PET",
+      "grade_text": "1200",
+      "volume": 35,
+      "volume_unit": "MT",
+      "price": 840,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 72,
+    "raw_text": "Куплю ПП рафия, 50–100 MT. Цена договорная, регион не важен.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PP",
+      "grade_text": "рафия",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 73,
+    "raw_text": "Продаём HDPE трубный PN16, 70 MT, $1000/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "трубный PN16",
+      "volume": 70,
+      "volume_unit": "MT",
+      "price": 1000,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 74,
+    "raw_text": "Реклама: Лучшие цены на упаковку! ООО УпакАвиа.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 75,
+    "raw_text": "LLDPE FS-040, 40 MT, $895/MT. Продавец — ООО АзияПолимер.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LLDPE",
+      "grade_text": "FS-040",
+      "volume": 40,
+      "volume_unit": "MT",
+      "price": 895,
+      "currency": "USD",
+      "counterparty_text": "АзияПолимер",
+      "urgency": null
+    }
+  },
+  {
+    "id": 76,
+    "raw_text": "PP T30S (Шуртан), 50 MT, $950. Нет данных о покупателе.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 77,
+    "raw_text": "Продаём ABS 750SW, 30 MT, цена — 1 200 000 сум за кг.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "ABS",
+      "grade_text": "750SW",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 1200000,
+      "currency": "UZS",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 78,
+    "raw_text": "Срочно куплю PS 525, 15 MT. Бюджет $1070/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PS",
+      "grade_text": "525",
+      "volume": 15,
+      "volume_unit": "MT",
+      "price": 1070,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 79,
+    "raw_text": "Продаём партию HDPE 5502, 100 MT, $930/MT. Контакт: Полимер Центральная Азия.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "5502",
+      "volume": 100,
+      "volume_unit": "MT",
+      "price": 930,
+      "currency": "USD",
+      "counterparty_text": "Полимер Центральная Азия",
+      "urgency": null
+    }
+  },
+  {
+    "id": 80,
+    "raw_text": "Переслано: LLDPE FS-040 80 MT $892/MT — предложение недельной давности.",
+    "fwd_from": {"channel": "@polymarket_uz", "date": "2026-06-11T09:00:00Z"},
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 81,
+    "raw_text": "Куплю PET бутылочный, 30 MT, $850/MT. Ташкент.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PET",
+      "grade_text": "бутылочный",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 850,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 82,
+    "raw_text": "LDPE 153, 25 MT, $970/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LDPE",
+      "grade_text": "153",
+      "volume": 25,
+      "volume_unit": "MT",
+      "price": 970,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 83,
+    "raw_text": "Объявление о продаже б/у форм для литья.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 84,
+    "raw_text": "Продаём PP T30S 50 000 кг. $950/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 85,
+    "raw_text": "Продаём HDPE 2420D, 30 MT. Цена 9 500 000 сум/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "2420D",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 9500000,
+      "currency": "UZS",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 86,
+    "raw_text": "PVC S-7058M, 55 MT, $1040/MT. Продаём.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PVC",
+      "grade_text": "S-7058M",
+      "volume": 55,
+      "volume_unit": "MT",
+      "price": 1040,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 87,
+    "raw_text": "PS UHI 525, 15 MT, $1090/MT. Наличие подтверждено.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PS",
+      "grade_text": "UHI 525",
+      "volume": 15,
+      "volume_unit": "MT",
+      "price": 1090,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 88,
+    "raw_text": "Новость рынка: Цены на PP в РФ снизились на 2%. ICIS.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "news",
+      "product": "PP",
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 89,
+    "raw_text": "Куплю ABS GP-22 или GP-35, до 30 MT. Срочно! Цена до $1200/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "ABS",
+      "grade_text": "GP-22",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 1200,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": "high"
+    }
+  },
+  {
+    "id": 90,
+    "raw_text": "PP injection grade T30S, 45 MT, $958/MT. Есть в Ташкенте.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 45,
+      "volume_unit": "MT",
+      "price": 958,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 91,
+    "raw_text": "Продаём LDPE пленочный 153, 30 MT, $975/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "LDPE",
+      "grade_text": "153",
+      "volume": 30,
+      "volume_unit": "MT",
+      "price": 975,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 92,
+    "raw_text": "Пластиковые пакеты оптом — минимальный заказ 1000 шт.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 93,
+    "raw_text": "PVC C-70 из Китая — 40 MT, $1015/MT. Доставка 4 недели.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PVC",
+      "grade_text": "C-70",
+      "volume": 40,
+      "volume_unit": "MT",
+      "price": 1015,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 94,
+    "raw_text": "Куплю LDPE 153 пленочный 40 MT. Цена до $965/MT. Регион любой.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "LDPE",
+      "grade_text": "153",
+      "volume": 40,
+      "volume_unit": "MT",
+      "price": 965,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 95,
+    "raw_text": "Сделка закрыта: ABS 750SW 20 MT $1215/MT. Покупатель — ТашПолимерТрейд.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "deal",
+      "product": "ABS",
+      "grade_text": "750SW",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": 1215,
+      "currency": "USD",
+      "counterparty_text": "ТашПолимерТрейд",
+      "urgency": null
+    }
+  },
+  {
+    "id": 96,
+    "raw_text": "Продаём ПП T30S, 50 MT, $950/MT. Телефон для связи: +998901234567.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "T30S",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 97,
+    "raw_text": "Транспортная компания: перевозки из Китая в Узбекистан, сборные грузы.",
+    "fwd_from": null,
+    "is_relevant": false,
+    "expected": {
+      "kind": null,
+      "product": null,
+      "grade_text": null,
+      "volume": null,
+      "volume_unit": "MT",
+      "price": null,
+      "currency": null,
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 98,
+    "raw_text": "Продаём HDPE труб. 3408, 80 MT, $1010/MT. ООО Полимер Сервис.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "HDPE",
+      "grade_text": "3408",
+      "volume": 80,
+      "volume_unit": "MT",
+      "price": 1010,
+      "currency": "USD",
+      "counterparty_text": "Полимер Сервис",
+      "urgency": null
+    }
+  },
+  {
+    "id": 99,
+    "raw_text": "Куплю PS 525 GPPS, 20 MT. Цена до $1075/MT.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "buy_request",
+      "product": "PS",
+      "grade_text": "525 GPPS",
+      "volume": 20,
+      "volume_unit": "MT",
+      "price": 1075,
+      "currency": "USD",
+      "counterparty_text": null,
+      "urgency": null
+    }
+  },
+  {
+    "id": 100,
+    "raw_text": "ПП Т30С кирилл./T30S латин. — 50 MT продаём $950/MT. Шуртан ГКК отгрузка.",
+    "fwd_from": null,
+    "is_relevant": true,
+    "expected": {
+      "kind": "sell_offer",
+      "product": "PP",
+      "grade_text": "Т30С",
+      "volume": 50,
+      "volume_unit": "MT",
+      "price": 950,
+      "currency": "USD",
+      "counterparty_text": "Шуртан ГКК",
+      "urgency": null
+    }
+  }
+]

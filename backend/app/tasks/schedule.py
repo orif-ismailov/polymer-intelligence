@@ -50,4 +50,21 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "check_source_health",
         "schedule": crontab(minute="*/5"),
     },
+    # ── Userbot heartbeat health check: every 5 minutes ──────────────────────
+    # Reads the Redis heartbeat written by the userbot process (userbot:heartbeat).
+    # Raises a deduped source_failure alert when the userbot has been silent
+    # for more than USERBOT_SILENCE_SECONDS (300 s = 5 min) — ROADMAP SC#1.
+    "check_userbot_health": {
+        "task": "check_userbot_health",
+        "schedule": crontab(minute="*/5"),
+    },
+    # ── Nightly LLM catch-up: daily at 02:00 UTC ─────────────────────────────
+    # Reprocesses Telegram raw_items deferred during budget exhaustion
+    # (parse_status='budget_deferred'). Runs after the UTC midnight budget reset.
+    # Bounded batch (200 items max) to stay within the freshly-reset daily budget.
+    # ROADMAP SC#4: budget→pending+rule-based fallback+nightly catch-up+admin alert.
+    "nightly_llm_catchup": {
+        "task": "nightly_llm_catchup",
+        "schedule": crontab(minute=0, hour=2),
+    },
 }

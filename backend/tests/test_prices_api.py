@@ -16,9 +16,7 @@ from __future__ import annotations
 import datetime
 from unittest.mock import MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers (same pattern as test_dashboard_requests.py, test_source_wizard.py)
@@ -215,7 +213,11 @@ class TestPricesApiRoutes:
         from app.main import create_app  # noqa: PLC0415
 
         app = create_app()
-        paths = [getattr(r, "path", "") for r in app.routes]
-        assert any(p.startswith("/api/v1/prices") for p in paths), (
-            f"Expected /api/v1/prices* route, found: {[p for p in paths if p]}"
+        # Resolve the route by endpoint name via url_path_for. This traverses FastAPI
+        # >=0.137's lazy `_IncludedRouter` inclusion tree (unlike walking `app.routes`
+        # for a flat `.path`, which only sees inline routes under Starlette 1.x) and
+        # raises NoMatchFound if the prices router was not mounted.
+        path = app.url_path_for("get_price_series")
+        assert path.startswith("/api/v1/prices"), (
+            f"Expected /api/v1/prices* route, got: {path}"
         )
