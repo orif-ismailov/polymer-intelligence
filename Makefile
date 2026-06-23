@@ -6,7 +6,10 @@
 # =============================================================================
 .PHONY: help smoke webapp-bundle
 
-COMPOSE ?= docker compose -f deploy/docker-compose.yml
+# --env-file .env: Compose otherwise looks for the interpolation .env next to the
+# compose file (deploy/), not the repo root — leaving ${POSTGRES_PASSWORD} etc.
+# empty. This also activates COMPOSE_PROJECT_NAME from .env so volume names match.
+COMPOSE ?= docker compose --env-file .env -f deploy/docker-compose.yml
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
