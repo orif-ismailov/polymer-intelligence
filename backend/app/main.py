@@ -73,11 +73,16 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # without a live deployment. In production (PUBLIC_WEBAPP_URL set in .env),
     # this runs once per api-container startup (idempotent — Telegram accepts
     # re-registration of the same webhook URL).
+    # Best-effort: a missing/placeholder BOT_TOKEN or a transient Telegram API error
+    # must NOT stop the API from serving the dashboard/web app. Log and continue.
     if settings.PUBLIC_WEBAPP_URL:
-        from telegram.bot import setup_webhook  # noqa: PLC0415
+        try:
+            from telegram.bot import setup_webhook  # noqa: PLC0415
 
-        await setup_webhook()
-        logger.info("lifespan.telegram_webhook_registered")
+            await setup_webhook()
+            logger.info("lifespan.telegram_webhook_registered")
+        except Exception:
+            logger.exception("lifespan.telegram_webhook_failed")
 
     yield
 
