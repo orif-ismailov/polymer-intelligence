@@ -109,6 +109,11 @@ services:
       S3_ENDPOINT: http://minio:9000
       # Production env — gates the Secure flag on the refresh cookie (TLS behind nginx).
       APP_ENV: production
+    volumes:
+      # The `telegram` (aiogram bot/webhook) package lives at the repo root, outside
+      # the backend image build context (../backend), so mount it read-only. The api
+      # serves the bot webhook + registers it on startup (when PUBLIC_WEBAPP_URL set).
+      - ../telegram:/app/telegram:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -148,8 +153,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      # `telegram` package (notify/send via the bot) is a repo-root package, not in
+      # the image — mount it read-only.
+      - ../telegram:/app/telegram:ro
     command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default
-    # No host ports, no bind-mount.
+    # No host ports.
 
   # ── Celery Beat (scheduler) ───────────────────────────────────────────────
   beat:
@@ -170,8 +179,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      # `telegram` package may be imported when the celery app loads its task modules.
+      - ../telegram:/app/telegram:ro
     command: celery -A app.tasks.celery_app beat --loglevel=info
-    # No host ports, no bind-mount.
+    # No host ports.
 
   # ── Telegram Userbot (long-lived MTProto monitoring process) ─────────────
   # DEC-userbot-separate-process: a SEPARATE service from worker/beat. Subscribes
@@ -216,6 +228,8 @@ services:
       # read-only at /app/userbot (WORKDIR is /app). The app.* modules it imports
       # ARE in the image.
       - ../userbot:/app/userbot:ro
+      # app.* may transitively import the repo-root `telegram` package too.
+      - ../telegram:/app/telegram:ro
     command: python -m userbot.main
     # No host ports.
 
