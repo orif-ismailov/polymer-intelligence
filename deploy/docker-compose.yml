@@ -210,10 +210,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      # The userbot package lives at the repo root, OUTSIDE the backend image's
+      # build context (../backend), so it is NOT baked into the image. Mount it
+      # read-only at /app/userbot (WORKDIR is /app). The app.* modules it imports
+      # ARE in the image.
+      - ../userbot:/app/userbot:ro
     command: python -m userbot.main
-    # No host ports. The userbot package ships inside the backend image (no
-    # bind-mount in prod); the dev compose's ../userbot:/app/userbot mount is
-    # dev-only live-reload and is intentionally omitted here.
+    # No host ports.
 
   # ── Dashboard (Next.js standalone) ─────────────────────────────────────────
   # Built from deploy/Dockerfile.dashboard (next.config: output: "standalone").
