@@ -14,6 +14,11 @@ import { Routes, Route } from "react-router-dom";
 
 // ── Shared style tokens (canonical source — reused by page components) ─────────
 
+// Intentional: `styles` is the canonical shared style-token object imported by the
+// page components. Co-locating it with the App component trips react-refresh's
+// only-export-components heuristic, but these are static tokens (no fast-refresh
+// benefit to splitting them into their own module).
+// eslint-disable-next-line react-refresh/only-export-components
 export const styles = {
   app: {
     minHeight: "100vh",

@@ -120,7 +120,7 @@ class TestSaveRawItemsDeduplication:
                 """
             ),
             {
-                "kind": SourceKind.html_table.value,
+                "kind": SourceKind.exchange.value,
                 "adapter": "uzex_offers",
                 "name": unique_name,
             },

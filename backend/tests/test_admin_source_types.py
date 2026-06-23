@@ -340,12 +340,11 @@ def test_no_code_false_for_cbu_rates():
 
 def test_admin_sources_router_mounted_in_main():
     """The admin_sources router is mounted in main.py under /api/v1."""
-    import subprocess  # noqa: PLC0415
-    result = subprocess.run(
-        ["grep", "-c", "admin_sources", "app/main.py"],
-        capture_output=True,
-        text=True,
-        cwd="/Users/kholmumin/WebstormProjects/polymer-intelligence/backend",
+    from pathlib import Path  # noqa: PLC0415
+
+    # Resolve app/main.py relative to this test file (backend/tests/ -> backend/)
+    # so the check is machine-independent (no hardcoded developer path).
+    main_py = Path(__file__).resolve().parents[1] / "app" / "main.py"
+    assert "admin_sources" in main_py.read_text(encoding="utf-8"), (
+        "admin_sources not found in app/main.py"
     )
-    count = int(result.stdout.strip())
-    assert count >= 1, "admin_sources not found in app/main.py"
