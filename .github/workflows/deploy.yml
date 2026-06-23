@@ -37,8 +37,10 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           command_timeout: 30m
           script: |
-            set -euo pipefail
-            cd /var/www/polymer
+            set -eu
+            # Repo path on the server. Override with the DEPLOY_PATH secret if it moves.
+            REPO="${{ secrets.DEPLOY_PATH }}"
+            cd "${REPO:-/var/www/polymer-intelligence}"
             git fetch origin
             git reset --hard origin/main
             COMPOSE="docker compose --env-file .env -f deploy/docker-compose.yml"
