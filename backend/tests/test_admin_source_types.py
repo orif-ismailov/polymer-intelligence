@@ -22,7 +22,6 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
-
 # ── Test helpers ────────────────────────────────────────────────────────────────
 
 def _make_staff_user(role: str, user_id: int = 1, is_active: bool = True):

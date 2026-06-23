@@ -14,39 +14,39 @@
 
 ### Web App (Client)
 
-- [ ] **REQ-webapp-auth** (FR-5): Authorization via Telegram initData (backend HMAC signature verification per request); first login creates a `clients` row.
-- [ ] **REQ-request-wizard** (FR-6): 4-step request wizard per mockups — (1) product/grade/type, (2) volume + target price, (3) Incoterms/country/port/date/validity, (4) comment + files (PDF/Excel/JPG, ≤10 MB, ≤5 files). Confirmation with number REQ-YYYY-MM-DD-NNNNN. *Acceptance (TZ §6.1.1): request appears in dashboard ≤10 s.*
-- [ ] **REQ-my-requests** (FR-7): Client's request list with current statuses + history; bot push on status change. *Acceptance (TZ §6.1.1): status change notification delivered ≤30 s.*
-- [ ] **REQ-webapp-i18n** (FR-9): RU/UZ languages; toggle in settings; default detected from Telegram language_code on first login.
+- [x] **REQ-webapp-auth** (FR-5): Authorization via Telegram initData (backend HMAC signature verification per request); first login creates a `clients` row.
+- [x] **REQ-request-wizard** (FR-6): 4-step request wizard per mockups — (1) product/grade/type, (2) volume + target price, (3) Incoterms/country/port/date/validity, (4) comment + files (PDF/Excel/JPG, ≤10 MB, ≤5 files). Confirmation with number REQ-YYYY-MM-DD-NNNNN. *Acceptance (TZ §6.1.1): request appears in dashboard ≤10 s.*
+- [x] **REQ-my-requests** (FR-7): Client's request list with current statuses + history; bot push on status change. *Acceptance (TZ §6.1.1): status change notification delivered ≤30 s.*
+- [x] **REQ-webapp-i18n** (FR-9): RU/UZ languages; toggle in settings; default detected from Telegram language_code on first login.
 
 ### Dashboard (Internal)
 
-- [ ] **REQ-live-feed** (FR-10): Unified feed (`v_live_feed`) with filters (period, product, signal type, source, urgency); updates without reload (SSE or ≤30 s polling). *Acceptance (TZ §5 NFR): feed/table API ≤500 ms at up to 1M signals.*
-- [ ] **REQ-purchase-requests** (FR-11): Requests table + detail card (details, files, AI block — score, target-vs-avg price from price_points) + actions (status change, assign owner, notes); all actions → `audit_log`. Flagship Phase-1 master-detail screen.
-- [ ] **REQ-price-trends** (FR-12): Price chart per product/market from `price_points` (external-index overlay deferred to Phase 2).
+- [x] **REQ-live-feed** (FR-10): Unified feed (`v_live_feed`) with filters (period, product, signal type, source, urgency); updates without reload (SSE or ≤30 s polling). *Acceptance (TZ §5 NFR): feed/table API ≤500 ms at up to 1M signals.*
+- [x] **REQ-purchase-requests** (FR-11): Requests table + detail card (details, files, AI block — score, target-vs-avg price from price_points) + actions (status change, assign owner, notes); all actions → `audit_log`. Flagship Phase-1 master-detail screen.
+- [x] **REQ-price-trends** (FR-12): Price chart per product/market from `price_points` (external-index overlay deferred to Phase 2).
 - [x] **REQ-sources-health** (FR-13): Source state — last successful fetch, consecutive failure count, enable/disable.
-- [ ] **REQ-alerts** (FR-14): Alert feed + rules builder (product, volume/price threshold, urgency, delivery channels).
+- [x] **REQ-alerts** (FR-14): Alert feed + rules builder (product, volume/price threshold, urgency, delivery channels).
 - [x] **REQ-roles** (FR-15): Roles admin / analyst / trader / viewer (ENUM staff_role). admin = all + users; analyst = data + rules + report approval; trader = view + work requests; viewer = view only.
 
 ### Bot & Publishing
 
-- [ ] **REQ-bot-team** (FR-16): Deliver alerts to DM/group per rules; Telegram rate limit respected via queue (`deliveries` table).
-- [ ] **REQ-bot-clients** (FR-17): Greeting, Web App button, status notifications to clients.
+- [x] **REQ-bot-team** (FR-16): Deliver alerts to DM/group per rules; Telegram rate limit respected via queue (`deliveries` table).
+- [x] **REQ-bot-clients** (FR-17): Greeting, Web App button, status notifications to clients.
 
 ### AI Processing
 
-- [ ] **REQ-ai-extraction** (FR-19): Structure channel messages and free-text requests per a fixed JSON schema; prompt version and model journaled in `parse_runs`.
-- [ ] **REQ-lead-scoring** (FR-20): lead_score (0–1) and HOT/MEDIUM/LOW by rules + LLM; stored in signals.ai / requests.ai; recomputed on prompt-version change.
-- [ ] **REQ-llm-budget** (FR-21): Configurable daily token limit (Redis counter); on exceed, extraction degrades to rule-based + reprocessing queue; admin alerted; per-source 7-day token spend visible for AI sources.
-- [ ] **REQ-source-builder** (FR-22): Admin adds a source via dashboard wizard — pick type (telegram_channel / llm_page / html_table / rss) → auto-built form from adapter config_schema → Test run with extracted-record preview → enable. Enabling without a passing test is impossible; AI sources show token spend; new-source data flows through the common pipeline with no code changes. *Acceptance (TZ §6.1.6): admin adds a public site + Telegram channel with no developer; signals appear in feed; failed-test source cannot be enabled.*
+- [x] **REQ-ai-extraction** (FR-19): Structure channel messages and free-text requests per a fixed JSON schema; prompt version and model journaled in `parse_runs`.
+- [x] **REQ-lead-scoring** (FR-20): lead_score (0–1) and HOT/MEDIUM/LOW by rules + LLM; stored in signals.ai / requests.ai; recomputed on prompt-version change.
+- [x] **REQ-llm-budget** (FR-21): Configurable daily token limit (Redis counter); on exceed, extraction degrades to rule-based + reprocessing queue; admin alerted; per-source 7-day token spend visible for AI sources.
+- [x] **REQ-source-builder** (FR-22): Admin adds a source via dashboard wizard — pick type (telegram_channel / llm_page / html_table / rss) → auto-built form from adapter config_schema → Test run with extracted-record preview → enable. Enabling without a passing test is impossible; AI sources show token spend; new-source data flows through the common pipeline with no code changes. *Acceptance (TZ §6.1.6): admin adds a public site + Telegram channel with no developer; signals appear in feed; failed-test source cannot be enabled.*
 
 ### Telegram Monitoring
 
-- [ ] **REQ-telegram-monitoring** (FR-2): Userbot (MTProto) reads new messages from 10–20 agreed public channels → `raw_items` → LLM classify relevant/not → on relevance extract signal structure (type, product, grade, volume, price, counterparty, urgency). *Acceptance (TZ §6.1.3): 100-message control sample — relevant-signal recall ≥80%, field precision on detected ≥85%.*
+- [x] **REQ-telegram-monitoring** (FR-2): Userbot (MTProto) reads new messages from 10–20 agreed public channels → `raw_items` → LLM classify relevant/not → on relevance extract signal structure (type, product, grade, volume, price, counterparty, urgency). *Acceptance (TZ §6.1.3): 100-message control sample — relevant-signal recall ≥80%, field precision on detected ≥85%.*
 
 ### Non-Functional Requirements
 
-- [ ] **REQ-nfr-performance**: Dashboard feed/tables API ≤500 ms at up to 1M signals; Web App first paint ≤3 s on 3G; Web App bundle ≤300 KB gzip.
+- [x] **REQ-nfr-performance**: Dashboard feed/tables API ≤500 ms at up to 1M signals; Web App first paint ≤3 s on 3G; Web App bundle ≤300 KB gzip.
 - [x] **REQ-nfr-reliability**: Worker auto-restart; daily pg_dump retained 14 d + weekly full retained 8 wk; documented restore. One source's failure must not break others; failure alert ≤30 min (TZ §6.1.4); DB restore on a clean server per docs ≤2 h (TZ §6.1.5).
 - [x] **REQ-nfr-security**: HTTPS everywhere; secrets in .env outside repo; initData signature verification; argon2 password hashing; dashboard access by account only; audit_log on all request changes + publications.
 - [x] **REQ-nfr-observability**: Structured logs; alert when any collector fails >3 consecutive cycles; /health page.
@@ -93,22 +93,22 @@ Current milestone (Client Phase 1). Each v1 requirement maps to exactly one phas
 | REQ-fx-rates | Phase 2 | Complete |
 | REQ-sources-health | Phase 2 | Complete |
 | REQ-nfr-reliability | Phase 2 | Complete |
-| REQ-webapp-auth | Phase 3 | Pending |
-| REQ-request-wizard | Phase 3 | Pending |
-| REQ-my-requests | Phase 3 | Pending |
-| REQ-webapp-i18n | Phase 3 | Pending |
-| REQ-bot-clients | Phase 3 | Pending |
-| REQ-nfr-performance | Phase 3 | Pending |
-| REQ-live-feed | Phase 4 | Pending |
-| REQ-purchase-requests | Phase 4 | Pending |
-| REQ-price-trends | Phase 4 | Pending |
-| REQ-alerts | Phase 4 | Pending |
-| REQ-bot-team | Phase 4 | Pending |
-| REQ-source-builder | Phase 4 | Pending |
-| REQ-telegram-monitoring | Phase 5 | Pending |
-| REQ-ai-extraction | Phase 5 | Pending |
-| REQ-lead-scoring | Phase 5 | Pending |
-| REQ-llm-budget | Phase 5 | Pending |
+| REQ-webapp-auth | Phase 3 | Complete |
+| REQ-request-wizard | Phase 3 | Complete |
+| REQ-my-requests | Phase 3 | Complete |
+| REQ-webapp-i18n | Phase 3 | Complete |
+| REQ-bot-clients | Phase 3 | Complete |
+| REQ-nfr-performance | Phase 3 | Complete |
+| REQ-live-feed | Phase 4 | Complete |
+| REQ-purchase-requests | Phase 4 | Complete |
+| REQ-price-trends | Phase 4 | Complete |
+| REQ-alerts | Phase 4 | Complete |
+| REQ-bot-team | Phase 4 | Complete |
+| REQ-source-builder | Phase 4 | Complete |
+| REQ-telegram-monitoring | Phase 5 | Complete |
+| REQ-ai-extraction | Phase 5 | Complete |
+| REQ-lead-scoring | Phase 5 | Complete |
+| REQ-llm-budget | Phase 5 | Complete |
 
 **Coverage:**
 

@@ -16,9 +16,9 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
 
 - [ ] **Phase 1: Walking Skeleton** (E1) - Monorepo, full DB schema + seed, JWT auth + roles, /health, CI, docker-compose (gap-closure plans 01-08..01-10 executed 2026-06-15: dev-nginx boot SC#1 ✓ live, ruff/mypy green SC#5 ✓, S3 env CR-01 ✓; re-verification 2026-06-15 found 3 new gaps → 3/5 must-haves: SC#1 worker/beat crash on missing app.tasks [deferrable to Phase 2], SC#2 migrations not auto-applied on compose up [no lifespan hook], SC#5 dashboard tsc fails on clean CI [.next typegen missing])
 - [x] **Phase 2: Ingest Core + UZEX** (E2) - Immutable raw pipeline, SourceAdapter registry, UZEX collectors → signals, FX rates, source health (completed 2026-06-16)
-- [ ] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications
-- [ ] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard
-- [ ] **Phase 5: Telegram Monitoring + AI** (E5) - Userbot over the registry, LLM extraction + budget, needs_review flow, eval golden-set, control-sample run
+- [x] **Phase 3: Client Circuit** (E3) - aiogram bot, Telegram Web App 4-step wizard + my-requests + i18n, files → MinIO, status notifications (completed 2026-06-17)
+- [x] **Phase 4: Dashboard + Source Constructor** (E4 + E4a) - Live feed, flagship Purchase Requests master-detail, prices, alerts, sources, no-code add-source wizard (completed 2026-06-18)
+- [x] **Phase 5: Telegram Monitoring + AI** (E5) - Userbot over the registry, LLM extraction + budget, needs_review flow, eval golden-set, control-sample run (completed 2026-06-19)
 - [ ] **Phase 6: Acceptance & Handover** (E6) - TZ §6.1 acceptance criteria, restore test, runbook, handover
 
 ## Phase Details
@@ -114,7 +114,26 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   4. The Web App toggles RU/UZ (default from Telegram language_code) and honors Telegram theme vars; first paint ≤3 s on 3G and bundle ≤300 KB gzip
   5. The bot greets the client with a Web App button and routes status notifications via the deliveries queue
 
-**Plans**: TBD
+**Plans**: 6 plans in 4 waves
+
+**Wave 1** *(backend foundation)*
+
+- [x] 03-01-PLAN.md — Deps (aiogram/boto3/python-multipart) + MinIO compose + S3 client + initData auth dep (get_current_client) + upload validation service + /webapp Pydantic schemas
+
+**Wave 2** *(parallel — backend API + frontend shell, no file overlap)*
+
+- [x] 03-02-PLAN.md — request_service (REQ-YYYY-MM-DD-NNNNN number + status machine + history + notify enqueue) + /webapp request/me/files API, initData-authed and IDOR-scoped
+- [x] 03-04-PLAN.md — Web App shell (router + i18n ru/uz + Telegram SDK) + api client + zustand wizard store + Home (C-01) + 4-step wizard (C-02..C-05) with per-step zod validation
+
+**Wave 3** *(parallel — bot/notify + frontend my-requests, no file overlap)*
+
+- [x] 03-03-PLAN.md — aiogram webhook bot (/start greeting + Web App button) + RU/UZ templates + send_status_change_notification notify task (D-10 labels, deep-link)
+- [x] 03-05-PLAN.md — Мои заявки (C-06) + detail + Asia/Tashkent status timeline (C-07) + notifications (C-08) + RU/UZ settings toggle (C-09) + bundle ≤300 KB gzip
+
+**Wave 4** *(acceptance gate)*
+
+- [x] 03-06-PLAN.md — Automated SLA proxies (≤10 s readback, ≤30 s notify dispatch) + phase-03 acceptance doc mapping the 5 success criteria to a deploy-time live drill
+
 **UI hint**: yes
 **UI contract**: `docs/polymer-intelligence-ui-mockups.md` §4 (Surface C — 5 Web App screens: home, wizard steps 1–3, confirmation, plus Мои заявки / detail / notifications / profile-language). React + Vite + @telegram-apps/sdk, MainButton/BackButton, zustand state survives minimize, react-hook-form + zod, react-i18next ru/uz.
 
@@ -129,9 +148,37 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   2. On the Purchase Requests screen the team opens a request's detail card (details, files, AI block: score + target-vs-avg price), changes status, assigns an owner, and adds notes — every action writes to `audit_log`
   3. The team views a price chart per product/market sourced from `price_points`, and sees per-source health (last fetch, consecutive failures) with enable/disable
   4. The team builds an alert rule (product, volume/price threshold, urgency, channel); matches deliver to DM/group respecting Telegram rate limits via the `deliveries` queue
-  5. An admin adds a new public website AND a new Telegram channel through the add-source wizard with no developer: the form is auto-built from the adapter's config_schema, a Test shows a ≤10-row preview, the source cannot be enabled until a test passes, and its signals subsequently appear in the feed (TZ §6.1.6)
+  5. An admin adds a new public website AND a new Telegram channel through the add-source wizard with no developer: the form is auto-built from the adapter's config_schema, a Test shows a ≤10-row preview, the source cannot be enabled until a test passes, and its signals subsequently appear in the feed (TZ §6.1.6). **Cross-phase caveat (CONTEXT.md):** Phase 4 delivers website (`html_table`/`rss`) onboarding end-to-end; `telegram_channel`/`llm_page` are config-saveable in a PENDING state only — the "telegram-channel signals appear in feed" slice is a Phase-5/6 acceptance item (userbot + LLM extraction land then).
 
-**Plans**: TBD
+**Plans**: 9 plans in 6 waves (foundation-first per D-03)
+
+**Wave 1** *(foundation — parallel, no file overlap)*
+
+- [x] 04-01-PLAN.md — Backend feed foundation: `GET /feed` keyset `(event_at, id)` pagination over `v_live_feed` + SSE `GET /feed/stream` (Redis pub/sub `feed:new`, unbuffered) + dashboard schemas + router registered (REQ-live-feed)
+- [x] 04-02-PLAN.md — Frontend foundation (D-03): shadcn/ui init + token reconciliation (no token overwrite), auth-guarded app-router shell + 240px sidebar + AppShell, TanStack Query client, `useSSE` (backoff + 30 s polling fallback), typed `api.ts` Bearer client, Asia/Tashkent `tz.ts`, login submit (REQ-live-feed)
+
+**Wave 2** *(parallel — feed screen + requests backend, no file overlap)*
+
+- [x] 04-03-PLAN.md — Live Market Feed screen: TanStack feed table + filters wired to `/feed` + SSE refresh, dashboard home (5 KPI cards, AI Market Signals D-01 placeholder panel), `/signals` + `/offers` pages (REQ-live-feed)
+- [x] 04-04-PLAN.md — Flagship Purchase Requests backend: `GET/PATCH /requests` + note/assign/contact actions (all → `audit_log`, D-10), D-12 status machine via `transition_status`, D-11 contact deep-link, D-02 real price analysis, `GET /admin/users` (REQ-purchase-requests)
+
+**Wave 3** *(parallel — requests frontend + sources backend, no file overlap)*
+
+- [x] 04-05-PLAN.md — Purchase Requests master-detail frontend: paginated table + filter bar + 6 KPI cards, 400px right detail Sheet (Request Details / Source Info / AI block D-01+D-02 / Files / Actions), all D-10/D-11/D-12 actions, CSV export endpoint + stream (REQ-purchase-requests)
+- [x] 04-06-PLAN.md — Source constructor backend: `html_table`/`rss` live adapters (SSRF-guarded, ≤10-row preview D-06) + `telegram_channel`/`llm_page` pending stubs (D-04/D-05), `/sources` GET/POST/PATCH + `POST /sources/{id}/test`, server-side enable-gate invariant, startup registration (REQ-source-builder, REQ-sources-health)
+
+**Wave 4** *(alerts + prices backend — blocked on Wave 3 main.py)*
+
+- [x] 04-07-PLAN.md — Alerts engine + team delivery + prices: `alert_service` hardcoded JSONB predicate interpreter (NOT eval, D-07) + dedupe + NEW `send_delivery` task on the `notify` queue with token-bucket (D-09), `/alert-rules` CRUD + `/alerts` feed (per-rule chat_id D-08), `GET /prices/series` (REQ-alerts, REQ-bot-team, REQ-price-trends)
+
+**Wave 5** *(remaining feature screens — blocked on Wave 4)*
+
+- [x] 04-08-PLAN.md — Sources wizard (auto-form `JsonSchemaForm` from `config_schema`, real Test preview, enable-gate UI, pending pre-staging D-05) + Alerts feed + rule builder (full predicate set, `lead_score_gte` disabled D-07, per-rule chat_ids D-08) + Recharts Price Trends + admin users screen (REQ-source-builder, REQ-alerts, REQ-price-trends, REQ-sources-health)
+
+**Wave 6** *(acceptance gate)*
+
+- [x] 04-09-PLAN.md — Acceptance gate: feed performance test (≤500 ms @ ~1M rows, REQ-nfr-performance) + dashboard RBAC matrix test (viewer 403 on writes) + `04-ACCEPTANCE.md` mapping SC#1–SC#5 to a deploy-time drill (honoring the SC#5 telegram cross-phase caveat) + human-verify checkpoint (all 6 requirements)
+
 **UI hint**: yes
 **UI contract**: `docs/polymer-intelligence-ui-mockups.md` §3 (Surface B — sidebar nav, dashboard home KPIs, the high-fidelity Purchase Requests master-detail, Price Trends Recharts, /sources add-source wizard, /alerts rules). Next.js app router, TS strict, TanStack Query/Table, shadcn/ui, dark theme via tailwind tokens (no hardcoded colors). Add-source forms render from `GET /admin/source-types` config_schema. Adapters added here: llm_page, html_table, rss (no-code); telegram_channel reused next phase.
 
@@ -148,8 +195,26 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   4. When the daily token limit is exceeded, new items stay pending with rule-based fallback + nightly catch-up and the admin is alerted; per-source 7-day token spend is visible for AI sources
   5. On the customer's 100-message control sample, relevant-signal recall is ≥80% and field precision on detected signals ≥85% (TZ §6.1.3), measured via the eval tool + golden-set
 
-**Plans**: TBD
-**Schema contract**: `docs/polymer-intelligence-db-architecture.md` (raw_items, parse_runs, signals.ai). Extraction output per `docs/extraction-schema.json`; prompts in `parsing/prompts/extract_v{N}.md` (never edit old versions). Media not downloaded in Phase 1.
+**Plans**: 5 plans in 4 waves
+
+**Wave 1** *(contract + [BLOCKING] migration)*
+
+- [x] 05-01-PLAN.md — Extraction contract: `ExtractionResult` Pydantic schema + immutable versioned prompt (`extract_v1.md` + loader) + published `docs/extraction-schema.json` + anthropic/instructor/telethon deps + **[BLOCKING] Alembic 0003** (parse_runs.latency_ms) (REQ-ai-extraction)
+
+**Wave 2** *(parallel — userbot + LLM service layer, no file overlap)*
+
+- [x] 05-02-PLAN.md — Net-new Telethon userbot (separate long-lived process) + live `telegram_channel` adapter + Redis heartbeat + channel-reread-without-restart + userbot-silent admin alert (REQ-telegram-monitoring)
+- [x] 05-03-PLAN.md — Extractor service (`extract_signal`, instructor TOOLS, temp=0, prompt-cached, fully journaled) + Redis token-budget gate + real rule-based fallback + lead scoring (REQ-ai-extraction, REQ-lead-scoring, REQ-llm-budget)
+
+**Wave 3** *(orchestration — blocked on 05-01 + 05-03)*
+
+- [x] 05-04-PLAN.md — `parse_telegram_item` orchestrator (budget→LLM/fallback→journal→signal, confidence<0.5→needs_review, dead-letter, lead-score stamp) + nightly catch-up + budget admin alert + per-source 7-day spend + dashboard needs_review chip (REQ-ai-extraction, REQ-llm-budget, REQ-lead-scoring)
+
+**Wave 4** *(acceptance gate — blocked on 05-01 + 05-03 + 05-04)*
+
+- [x] 05-05-PLAN.md — Eval harness (frozen-prediction recall≥80% / precision≥85% gate) + golden/synonym loader + unit-tested metrics + eval CLI + lead-score recompute-on-prompt-version backfill (REQ-ai-extraction, REQ-lead-scoring)
+
+**Schema contract**: `docs/polymer-intelligence-db-architecture.md` (raw_items, parse_runs, signals.ai). Extraction output per `docs/extraction-schema.json` (created in 05-01); prompts in `parsing/prompts/extract_v{N}.md` (never edit old versions — bump + recompute). Media not downloaded in Phase 1. **Gated on customer inputs** (userbot account + API_ID/API_HASH + session string, 100-message golden set, synonyms/channel lists) — plans run against example fixtures + env placeholders until delivered.
 
 ### Phase 6: Acceptance & Handover
 
@@ -163,7 +228,26 @@ The current milestone delivers **Client Phase 1** — the domestic-market MVP. W
   3. The source-constructor acceptance passes: an admin onboards a new public site + Telegram channel with no developer and a failed-test source cannot be enabled (TZ §6.1.6)
   4. Deliverables are handed over: deployment + restore docs, runbook, prompt/extraction-schema descriptions, and admin instructions (sources, alert rules)
 
-**Plans**: TBD
+**Plans**: 7 plans in 4 waves
+
+**Wave 1** *(independent — parallel, no file overlap)*
+
+- [ ] 06-01-PLAN.md — Handover hygiene (D-07): commit `backend/uv.lock` + FastAPI/Starlette ceiling, modernise the 2 stale route-introspection tests, CI installs via `uv sync --frozen`
+- [ ] 06-02-PLAN.md — Restore test (D-04 / §6.1.5): `tests/restore/test_restore_local.sh` (pg_dump → fresh PG16 → restore via runbook → verify schema/rows/ENUMs/`v_live_feed` → assert ≤2h), refine `docs/runbook-backup-restore.md`
+- [ ] 06-03-PLAN.md — Channel close (D-03 / §6.1.6): `test_telegram_channel_close.py` — wizard add → enable-gate (422 without passing test) → fixture MTProto message → `parse_telegram_item` → signal in `v_live_feed`, key-free
+- [ ] 06-04-PLAN.md — Production compose (D-05.1): `deploy/docker-compose.yml` full container set (api, worker, beat, userbot, dashboard, postgres, redis, nginx), nginx-only ingress, TLS, no committed secrets
+
+**Wave 2** *(blocked on 06-04)*
+
+- [ ] 06-05-PLAN.md — Full-stack smoke (D-02): `tests/smoke/test_smoke_full_stack.sh` + `make smoke` — compose up → `/health` → synthetic request→`v_live_feed` → forced fake-source isolation + one `source_failure` alert
+
+**Wave 3** *(docs — blocked on 06-01/06-02/06-03/06-05 for evidence citation)*
+
+- [ ] 06-06-PLAN.md — Consolidated `06-ACCEPTANCE.md` (D-01, one row per §6.1.1–§6.1.6 + blocked-on column + single deploy-day checklist superseding 02/03/05-UAT) + `docs/deployment-guide.md` (D-05.2, EN) + `docs/admin-guide-ru.md` (D-05.3, RU)
+
+**Wave 4** *(capstone — blocked on 06-03 + 06-06)*
+
+- [ ] 06-07-PLAN.md — `HANDOVER.md` §9 index (D-05.4) + retire the SC#5 telegram cross-phase caveat in ROADMAP/04-CONTEXT (gated on 06-03 passing)
 
 ## Progress
 
@@ -174,10 +258,10 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Walking Skeleton | 10/10 | Gaps Found | - |
 | 2. Ingest Core + UZEX | 7/7 | Complete    | 2026-06-16 |
-| 3. Client Circuit | 0/TBD | Not started | - |
-| 4. Dashboard + Source Constructor | 0/TBD | Not started | - |
-| 5. Telegram Monitoring + AI | 0/TBD | Not started | - |
-| 6. Acceptance & Handover | 0/TBD | Not started | - |
+| 3. Client Circuit | 6/6 | Complete    | 2026-06-17 |
+| 4. Dashboard + Source Constructor | 9/9 | Complete    | 2026-06-18 |
+| 5. Telegram Monitoring + AI | 5/5 | Complete    | 2026-06-19 |
+| 6. Acceptance & Handover | 0/7 | Not started | - |
 
 ---
 *Roadmap created: 2026-06-13 (Client Phase 1 milestone). Phase 2 international loop = planned follow-up milestone, not in this roadmap.*

@@ -4,6 +4,110 @@
 
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply antialiased bg-background text-foreground;
+  }
+
+  /*
+   * shadcn CSS variables reconciled to the locked Polymer Intelligence dark tokens.
+   * Source of truth: dashboard/tailwind.config.ts (DO NOT overwrite that file).
+   *
+   * Mapping (hex → OKLCH equivalents for shadcn component internals):
+   *   --background       ← #0f172a (bg-background, slate-900)
+   *   --card             ← #1e293b (bg-background-secondary, slate-800)
+   *   --popover          ← #1e293b (bg-background-secondary, slate-800)
+   *   --primary          ← #10b981 (accent, emerald-500)
+   *   --muted            ← #334155 (bg-background-tertiary, slate-700)
+   *   --accent           ← #334155 (bg-background-tertiary, slate-700)
+   *   --border           ← #334155 (border-DEFAULT, slate-700)
+   *   --input            ← #334155 (border-DEFAULT, slate-700)
+   *   --ring             ← #10b981 (accent, emerald-500)
+   *   --foreground       ← #f8fafc (foreground.DEFAULT, slate-50)
+   *   --muted-foreground ← #94a3b8 (foreground-muted, slate-400)
+   *
+   * NOTE: shadcn v4 uses OKLCH; Tailwind v3 uses hsl(). These vars are only consumed
+   * by shadcn component internals (bg-background, text-muted-foreground, etc.) which
+   * resolve via hsl(var(--name)) in their internal classes. The Tailwind utility classes
+   * on our custom components always use the tailwind.config.ts token names directly
+   * (bg-background-secondary, text-foreground-muted, etc.) — no conflict.
+   */
+
+  :root {
+    /* Light mode — not used (html.dark is always set in layout.tsx) */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  /* Dark theme — reconciled to the locked Polymer Intelligence dark tokens */
+  .dark {
+    /* #0f172a slate-900 → page background */
+    --background: 222 47% 11%;
+
+    /* #f8fafc slate-50 → main text */
+    --foreground: 210 40% 98%;
+
+    /* #1e293b slate-800 → cards, panels, modal surfaces */
+    --card: 215 28% 17%;
+    --card-foreground: 210 40% 98%;
+
+    /* #1e293b slate-800 → popovers */
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    /* #10b981 emerald-500 → primary CTA / active accent */
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    /* #334155 slate-700 → secondary surfaces */
+    --secondary: 215 19% 27%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* #334155 slate-700 → muted surfaces (input bg, hover bg) */
+    --muted: 215 19% 27%;
+
+    /* #94a3b8 slate-400 → muted text */
+    --muted-foreground: 215 20% 65%;
+
+    /* #334155 slate-700 → accent hover/active bg */
+    --accent: 215 19% 27%;
+    --accent-foreground: 210 40% 98%;
+
+    /* red-500 → destructive actions */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* #334155 slate-700 → border lines */
+    --border: 215 19% 27%;
+
+    /* #334155 slate-700 → input borders */
+    --input: 215 19% 27%;
+
+    /* #10b981 emerald-500 → focus ring */
+    --ring: 160 84% 39%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply font-sans;
   }
 }

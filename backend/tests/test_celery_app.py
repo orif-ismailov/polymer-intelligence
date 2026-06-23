@@ -80,10 +80,10 @@ def test_real_tasks_registered() -> None:
     names as the real implementations (ingest.py, ingest_cbu.py, notify.py).
     The real tasks must now be present in the registry on their own.
     """
-    from app.tasks.celery_app import celery_app  # noqa: PLC0415
     import app.tasks.ingest  # noqa: F401, PLC0415 — registers uzex_fetch_* tasks
     import app.tasks.ingest_cbu  # noqa: F401, PLC0415 — registers fetch_cbu_rates
     import app.tasks.notify  # noqa: F401, PLC0415 — registers check_source_health
+    from app.tasks.celery_app import celery_app  # noqa: PLC0415
 
     required_names = {
         "uzex_fetch_offers",

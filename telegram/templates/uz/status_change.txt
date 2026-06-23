@@ -1,0 +1,3 @@
+Ariza {number} → {status_label}
+
+Ilovada ariza tafsilotlarini ochish uchun quyidagi tugmani bosing.

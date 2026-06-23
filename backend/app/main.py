@@ -20,10 +20,30 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# ── No-code adapter registration (Phase 4, Plan 06) ──────────────────────────
+# These imports register the four no-code adapters into the global adapter registry
+# at startup so GET /admin/source-types exposes their config_schema and POST
+# /sources/{id}/test can resolve them by type_name.
+# Pattern: mirroring how uzex adapters are registered (app.ingest.uzex package).
+import app.ingest.html_table  # noqa: E402, F401 — registers html_table adapter
+import app.ingest.llm_page  # noqa: E402, F401 — registers llm_page adapter
+import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
+import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 from app.api.admin_sources import router as admin_sources_router
+from app.api.admin_users import router as admin_users_router
+from app.api.alert_rules import alerts_router
+from app.api.alert_rules import router as alert_rules_router
 from app.api.auth import router as auth_router
+from app.api.dashboard_requests import router as dashboard_requests_router
 from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.feed import router as feed_router
 from app.api.health import router as health_router
+from app.api.prices import router as prices_router
+from app.api.sources import router as sources_router
+from app.api.telegram_webhook import router as telegram_webhook_router
+from app.api.webapp.files import router as webapp_files_router
+from app.api.webapp.me import router as webapp_me_router
+from app.api.webapp.requests import router as webapp_requests_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.models.staff import StaffUser
@@ -47,6 +67,18 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
         revision = run_migrations()
         logger.info("startup.migrations_applied", extra={"revision": revision})
+
+    # Register the Telegram bot webhook + persistent Web App menu button.
+    # Guarded by PUBLIC_WEBAPP_URL — empty in dev/test so Telegram is never called
+    # without a live deployment. In production (PUBLIC_WEBAPP_URL set in .env),
+    # this runs once per api-container startup (idempotent — Telegram accepts
+    # re-registration of the same webhook URL).
+    if settings.PUBLIC_WEBAPP_URL:
+        from telegram.bot import setup_webhook  # noqa: PLC0415
+
+        await setup_webhook()
+        logger.info("lifespan.telegram_webhook_registered")
+
     yield
 
 
@@ -95,7 +127,7 @@ def create_app() -> FastAPI:
         allow_origins=settings.CORS_ALLOWED_ORIGINS,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "X-Telegram-Init-Data"],
     )
 
     # ── Routers ───────────────────────────────────────────────────────────────
@@ -103,6 +135,23 @@ def create_app() -> FastAPI:
     application.include_router(health_router, prefix="/api/v1")
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(admin_sources_router, prefix="/api/v1")
+    # ── dashboard routers (Phase 4 internal team dashboard) ──────────────────
+    application.include_router(feed_router, prefix="/api/v1")
+    application.include_router(dashboard_requests_router, prefix="/api/v1")
+    application.include_router(admin_users_router, prefix="/api/v1")
+    # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─
+    application.include_router(sources_router, prefix="/api/v1")
+    # ── alerts engine routers (Phase 4, Plan 07 — alert rules CRUD + alerts feed) ─
+    application.include_router(alert_rules_router, prefix="/api/v1")
+    application.include_router(alerts_router, prefix="/api/v1")
+    # ── prices router (Phase 4, Plan 07 — price series endpoint) ─────────────
+    application.include_router(prices_router, prefix="/api/v1")
+    # ── webapp routers (Telegram Web App client surface) ─────────────────────
+    application.include_router(webapp_requests_router, prefix="/api/v1")
+    application.include_router(webapp_me_router, prefix="/api/v1")
+    application.include_router(webapp_files_router, prefix="/api/v1")
+    # ── telegram bot webhook (dev-spec §4.1: webhook inside api container) ────
+    application.include_router(telegram_webhook_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.

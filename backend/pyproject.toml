@@ -32,6 +32,23 @@ dependencies = [
     "python-jose[cryptography]>=3.3.0",
     # Timezone
     "tzdata>=2024.1",
+    # Telegram bot (aiogram 3 via FastAPI webhook — DEC-bot-webhook-no-separate-container)
+    "aiogram>=3.13.0",
+    # S3/MinIO file storage (boto3 AWS SDK; pypi.org/project/boto3 — T-03-SC approved)
+    "boto3>=1.34.0",
+    # FastAPI multipart file upload parsing (pypi.org/project/python-multipart — T-03-SC approved)
+    "python-multipart>=0.0.9",
+    # XML entity-safe parser — defends against billion-laughs XML bombs in RSS/Atom feeds (WR-03)
+    # pypi.org/project/defusedxml — T-04-SC approved
+    "defusedxml>=0.7.1",
+    # AI extraction dependencies (Phase 5) — all three packages verified canonical on PyPI
+    # and approved by the user before installation (T-05-SC package-legitimacy gate).
+    # anthropic: pypi.org/project/anthropic (Anthropic official SDK)
+    "anthropic>=0.40,<1.0",
+    # instructor: pypi.org/project/instructor (jxnl-instructor-ai structured outputs)
+    "instructor>=1.5,<2.0",
+    # telethon: pypi.org/project/telethon (LonamiWebs MTProto userbot client)
+    "telethon>=1.36,<2.0",
 ]
 
 [project.optional-dependencies]
@@ -45,11 +62,13 @@ dev = [
     "ruff==0.15.17",
     "mypy==2.1.0",
     "types-redis==4.6.0.20241004",
+    # S3 mock for storage tests (pypi.org/project/moto — T-03-SC approved)
+    "moto>=5.0.0",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["app*"]
+include = ["app*", "parsing*"]
 
 [tool.ruff]
 line-length = 100
@@ -57,7 +76,17 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM"]
-ignore = ["E501"]
+ignore = [
+    "E501",
+    # UP042: the domain enums are declared `(str, Enum)` to match their PostgreSQL
+    # ENUMs verbatim. StrEnum would change `str(member)`/f-string output from
+    # "SignalKind.NEWS" to "news", a behavioural change we deliberately avoid.
+    "UP042",
+    # N818: this codebase consistently names domain exceptions without the `Error`
+    # suffix (InvalidInitData, BudgetExceeded). Disabled to match the established
+    # convention rather than rename 50+ references across 12 files.
+    "N818",
+]
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI requires Depends()/Query()/Cookie() in parameter defaults for its DI system.
@@ -72,6 +101,9 @@ extend-immutable-calls = [
     "fastapi.Form",
     "fastapi.File",
     "fastapi.security.HTTPBearer",
+    # require_role(...) is a dependency factory built once at import time and wrapped
+    # in Depends(...) — the same immutable-call pattern as the FastAPI markers above.
+    "app.api.deps.require_role",
 ]
 
 [tool.mypy]
@@ -104,6 +136,41 @@ module = ["app.schemas.*"]
 disallow_untyped_defs = true
 disallow_any_explicit = false
 
+[[tool.mypy.overrides]]
+# alert_service is a polymorphic JSONB predicate interpreter: evaluate_condition reads
+# heterogeneous condition values (lists, numbers) and entity attributes that differ
+# between Signal and Request (kind/ai only exist on Signal), using genuinely dynamic
+# `in`/`<` operations. Forcing explicit types here would mean casts/isinstance guards
+# inside security-sensitive predicate code (T-04-24) — riskier than this scoped, more
+# specific carve-out. disallow_untyped_defs stays enforced; only explicit-Any is relaxed.
+module = ["app.services.alert_service"]
+disallow_untyped_defs = true
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+# instructor does not ship a py.typed marker; ignore missing stubs.
+# pypi.org/project/instructor — T-05-SC approved (package legitimacy verified).
+module = ["instructor", "instructor.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# telethon does not ship a py.typed marker; ignore missing stubs.
+# pypi.org/project/telethon — T-05-SC approved (package legitimacy verified).
+module = ["telethon", "telethon.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# Add repo root to sys.path so tests can import the telegram/ package
+# (which lives at repo root as a sibling of backend/, per dev-spec §4.1).
+pythonpath = [".", ".."]
+markers = [
+    "performance: integration test requiring a live Postgres DB at ~1M rows; run with -m performance",
+    "gate: TZ §6.1.3 acceptance gate assertions — blocks CI (recall≥80% + precision≥85%); run with -m gate",
+    "refresh: regenerate frozen predictions via live LLM; local only; requires --runlive flag; never run in CI",
+]
+# Exclude the heavy performance suite from the default run (it seeds ~1M rows and
+# needs real Postgres). Run it explicitly with `pytest -m performance` — the CLI
+# marker expression overrides this default.
+addopts = "-m 'not performance and not refresh'"

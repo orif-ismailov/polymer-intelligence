@@ -1,0 +1,209 @@
+/**
+ * Thin @telegram-apps/sdk v2 wrapper.
+ *
+ * Provides:
+ *   - initTelegram()    — init SDK, expand viewport
+ *   - getInitData()     — raw initData string for the X-Telegram-Init-Data header
+ *   - mainButton        — setText/show/hide/enable/disable/onClick helpers
+ *   - backButton        — show/hide/onClick helpers
+ *   - haptics           — impactLight(), notifySuccess(), notifyError(), notifyWarning()
+ *
+ * The SDK v2 uses SafeWrapped functions with `.isAvailable()` (Computed<boolean>)
+ * guards. All calls are wrapped in try/catch so they degrade gracefully in
+ * browser/dev context outside Telegram.
+ */
+
+import {
+  init,
+  isTMA,
+  retrieveLaunchParams,
+  // mainButton scoped functions
+  mountMainButton,
+  setMainButtonParams,
+  onMainButtonClick,
+  offMainButtonClick,
+  // backButton scoped functions
+  mountBackButton,
+  showBackButton,
+  hideBackButton,
+  onBackButtonClick,
+  offBackButtonClick,
+  // haptic feedback
+  hapticFeedbackImpactOccurred,
+  hapticFeedbackNotificationOccurred,
+  // viewport
+  mountViewport,
+  expandViewport,
+} from "@telegram-apps/sdk";
+
+import type { EventListener } from "@telegram-apps/sdk";
+
+// ── SDK Initialisation ─────────────────────────────────────────────────────────
+
+let _initialized = false;
+
+export function initTelegram(): void {
+  if (_initialized) return;
+  try {
+    if (isTMA('simple')) {
+      init();
+      _initialized = true;
+
+      // Mount main button (needed before setParams/show/hide work)
+      try { mountMainButton(); } catch {/* not supported */}
+
+      // Mount back button
+      try { mountBackButton(); } catch {/* not supported */}
+
+      // Expand the Web App to full height
+      try {
+        mountViewport().then(() => {
+          try { expandViewport(); } catch {/* not supported */}
+        }).catch(() => {/* ignore */});
+      } catch {/* not supported */}
+    }
+  } catch {
+    // Outside Telegram — silently ignore (dev/browser testing)
+  }
+}
+
+// ── initData string ────────────────────────────────────────────────────────────
+
+export function getInitData(): string {
+  // @telegram-apps/sdk v2: retrieveLaunchParams().initDataRaw
+  try {
+    if (isTMA('simple')) {
+      const params = retrieveLaunchParams();
+      return params.initDataRaw ?? "";
+    }
+  } catch {
+    // fall through
+  }
+  // Fallback: Telegram.WebApp.initData (legacy SDK injected by index.html script)
+  return (
+    (
+      window as unknown as {
+        Telegram?: { WebApp?: { initData?: string } };
+      }
+    ).Telegram?.WebApp?.initData ?? ""
+  );
+}
+
+// ── Main Button helpers ────────────────────────────────────────────────────────
+
+type MainButtonClickListener = EventListener<"main_button_pressed">;
+type CleanupFn = () => void;
+
+export const mainButton = {
+  setText(text: string): void {
+    try { setMainButtonParams({ text }); } catch {/* dev env */}
+  },
+
+  show(): void {
+    try { setMainButtonParams({ isVisible: true }); } catch {/* dev env */}
+  },
+
+  hide(): void {
+    try { setMainButtonParams({ isVisible: false }); } catch {/* dev env */}
+  },
+
+  enable(): void {
+    try { setMainButtonParams({ isEnabled: true }); } catch {/* dev env */}
+  },
+
+  disable(): void {
+    try { setMainButtonParams({ isEnabled: false }); } catch {/* dev env */}
+  },
+
+  /** Registers a click handler. Returns a cleanup function. */
+  onClick(handler: MainButtonClickListener): CleanupFn {
+    try {
+      const avail = onMainButtonClick.isAvailable as unknown as () => boolean;
+      if (avail()) {
+        return onMainButtonClick(handler);
+      }
+    } catch {/* dev env */}
+    return () => {/* noop */};
+  },
+
+  offClick(handler: MainButtonClickListener): void {
+    try {
+      offMainButtonClick(handler);
+    } catch {/* dev env */}
+  },
+};
+
+// ── Back Button helpers ────────────────────────────────────────────────────────
+
+type BackButtonClickListener = EventListener<"back_button_pressed">;
+
+export const backButton = {
+  show(): void {
+    try {
+      if (showBackButton.isAvailable()) {
+        showBackButton();
+      }
+    } catch {/* dev env */}
+  },
+
+  hide(): void {
+    try {
+      if (hideBackButton.isAvailable()) {
+        hideBackButton();
+      }
+    } catch {/* dev env */}
+  },
+
+  /** Registers a click handler. Returns a cleanup function. */
+  onClick(handler: BackButtonClickListener): CleanupFn {
+    try {
+      const avail = onBackButtonClick.isAvailable as unknown as () => boolean;
+      if (avail()) {
+        return onBackButtonClick(handler);
+      }
+    } catch {/* dev env */}
+    return () => {/* noop */};
+  },
+
+  offClick(handler: BackButtonClickListener): void {
+    try {
+      if (offBackButtonClick.isAvailable()) {
+        offBackButtonClick(handler);
+      }
+    } catch {/* dev env */}
+  },
+};
+
+// ── Haptic feedback helpers ────────────────────────────────────────────────────
+
+export function impactLight(): void {
+  try {
+    if (hapticFeedbackImpactOccurred.isAvailable()) {
+      hapticFeedbackImpactOccurred("light");
+    }
+  } catch {/* dev env */}
+}
+
+export function notifySuccess(): void {
+  try {
+    if (hapticFeedbackNotificationOccurred.isAvailable()) {
+      hapticFeedbackNotificationOccurred("success");
+    }
+  } catch {/* dev env */}
+}
+
+export function notifyError(): void {
+  try {
+    if (hapticFeedbackNotificationOccurred.isAvailable()) {
+      hapticFeedbackNotificationOccurred("error");
+    }
+  } catch {/* dev env */}
+}
+
+export function notifyWarning(): void {
+  try {
+    if (hapticFeedbackNotificationOccurred.isAvailable()) {
+      hapticFeedbackNotificationOccurred("warning");
+    }
+  } catch {/* dev env */}
+}

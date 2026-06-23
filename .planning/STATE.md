@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: completed
-stopped_at: Completed 02-07-PLAN.md (reliability hardening + accuracy closure — phase 2 execution-complete; live drill deferred to deploy)
-last_updated: "2026-06-16T08:39:52.513Z"
-last_activity: 2026-06-16
+status: executing
+stopped_at: Phase 6 context gathered
+last_updated: "2026-06-19T11:40:35.748Z"
+last_activity: 2026-06-19 -- Phase 06 planning complete
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 17
-  completed_plans: 17
-  percent: 33
+  completed_phases: 5
+  total_plans: 37
+  completed_plans: 37
+  percent: 83
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Every relevant market event lands accurately and quickly in a single normalized stream the team can see, filter, and act on — with no single source able to take the others down.
-**Current focus:** Phase 02 — ingest-core-uzex
+**Current focus:** Phase 05 — telegram-monitoring-ai
 
 ## Current Position
 
-Phase: 3
+Phase: 6
 Plan: Not started
-Status: Phase 2 execution-complete; Phase 3 (Client Circuit) is next
-Last activity: 2026-06-16
+Status: Ready to execute
+Last activity: 2026-06-19 -- Phase 06 planning complete
 
-Progress: [████████░░] 82% (Phase 2 done; Phase 3 begins)
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 7
+- Total plans completed: 27
 - Average duration: -
 - Total execution time: -
 
@@ -45,6 +45,9 @@ Progress: [████████░░] 82% (Phase 2 done; Phase 3 begins)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 02 | 7 | - | - |
+| 03 | 6 | - | - |
+| 04 | 9 | - | - |
+| 05 | 5 | - | - |
 
 **Recent Trend:**
 
@@ -67,6 +70,19 @@ Progress: [████████░░] 82% (Phase 2 done; Phase 3 begins)
 | Phase 02-ingest-core-uzex P04 | 25min | 2 tasks | 11 files |
 | Phase 02-ingest-core-uzex P06 | 8min | 2 tasks | 6 files |
 | Phase 02-ingest-core-uzex P07 | ~35min | 2 tasks | 12 files |
+| Phase 03-client-circuit P01 | 10min | 3 tasks | 10 files |
+| Phase 03 P02 | 14min | 2 tasks | 9 files |
+| Phase 03-client-circuit P04 | 90min | 4 tasks | 21 files |
+| Phase 03 P05 | 60min | 3 tasks | 11 files |
+| Phase 03 P06 | 25min | 3 tasks | 3 files |
+| Phase 04 P01 | 15min | 2 tasks | 6 files |
+| Phase 04 P02 | 8min | 2 tasks | 27 files created, 4 modified |
+| Phase 04 P03 | 5min | 2 tasks | 10 files created, 1 modified |
+| Phase 04 P04 | 20min | 2 tasks | 5 files created, 3 modified |
+| Phase 04 P05 | ~15min | 3 tasks | 8 files created, 1 modified |
+| Phase 04 P06 | ~15min | 2 tasks | 10 files created, 2 modified |
+| Phase 04 P07 | 7min | 2 tasks | 8 files |
+| Phase 04 P08 | 10min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -116,6 +132,44 @@ Most relevant to Phase 1:
 - [Phase 02-07]: seed_sources: is_enabled=false + last_test_ok_at=NULL invariant enforced at seed time and verified in test — closes T-02-24
 - [Phase 02-07]: signal_service comma-decimal price parsing: replace ',' before float() cast (Rule-1 auto-fix); UzexDealsAdapter section_label corrected to 'deals' (Rule-1 auto-fix)
 - [Phase 02-07]: Accuracy harness uses pure-function path (parse_table_rows + create_signal_from_parse) with live-DB guard — CI-safe, no running DB needed; 100% on 55 positions = TZ §6.1.2 PASS
+- [Phase 03-01]: DEC-lazy-s3-client: _LazyS3Client proxy defers boto3 import until first attribute access — keeps pytest collection socket-free when boto3 not installed in venv
+- [Phase 03-01]: DEC-magic-byte-size-order: size check fires BEFORE magic-byte check in validate_upload — fast-path rejection for oversize files
+- [Phase 03-01]: DEC-traversal-safe-key: S3 key = requests/{id}/{token_hex(8)}-{os.path.basename(filename)} — strips directory components + random token (T-03-06)
+- [Phase 03-01]: DEC-generic-401: all initData failures → InvalidInitData (ValueError subclass) → get_current_client catches → generic 401 "Authentication required" (T-03-03)
+- [Phase 03-01]: DEC-dep-owns-commit: get_current_client calls db.commit() after upsert; service functions use db.flush() only (caller commits pattern)
+- [Phase ?]: DEC-lazy-notify-import: send_status_change_notification imported inside function bodies, test patches app.tasks.notify with create=True
+- [Phase ?]: DEC-idor-opaque-404: cross-client request returns 404 not 403 (T-03-07 no information disclosure)
+- [Phase ?]: DEC-per-date-postgres-sequence: REQ number via per-date PostgreSQL sequence, Asia/Tashkent date, concurrency-safe
+- [Phase ?]: DEC-service-never-commits-confirmed: request_service uses db.flush() only; grep db.commit() returns 0
+- [Phase ?]: DEC-03-04-hashrouter: HashRouter for Telegram Web App URL safety
+- [Phase ?]: DEC-03-04-submit-deferred: Task 3 submit→REQ-number→confirmation path deferred to 03-06 E2E plan by user agreement (frontend-only scope verified)
+- [Phase ?]: DEC-03-04-sequential-upload: Sequential file upload (for-await, not Promise.all) for 3G connection budget per D-01
+- [Phase ?]: DEC-03-04-static-products: Product list hardcoded static constant (PP/HDPE/LDPE/LLDPE/PVC/PET/PS/ABS) — no GET /products endpoint in Phase 3
+- [Phase ?]: DEC-03-05-optimistic-language: Settings switches UI immediately on toggle; PATCH failure shows ErrorBanner without reverting language
+- [Phase ?]: DEC-03-05-backend-verify-deferred: backend-backed list/detail/timeline verification deferred to 03-06 E2E acceptance plan by user agreement at Task 3 checkpoint
+- [Phase ?]: DEC-03-05-vite8-manualchunks: manualChunks uses function form for Vite 8/rolldown; vendor+i18n chunks split; largest gzip 42.8 KB (REQ-nfr-performance PASS)
+- [Phase ?]: DEC-03-05-notifications-empty: Notifications C-08 shows EmptyState only in this phase — notification persistence is bot-side; screen exists as deep-link target per UI-SPEC C-08
+- [Phase ?]: DEC-03-06-sla-gate: automated proxy tests (4/4 PASS) serve as CI gate; live wall-clock drill deferred to deploy time per user sign-off 2026-06-17
+- [Phase ?]: DEC-03-06-rolled-deferral: live UI verifications from 03-04 (wizard submit path) and 03-05 (list/detail/timeline/refetch) roll into the same deploy-time SC#1/SC#3 drill
+- [Phase ?]: DEC-04-01-route-no-trailing-slash: feed.py route path='' avoids FastAPI 307 redirect on /api/v1/feed
+- [Phase ?]: DEC-04-01-lazy-redis-import: redis.asyncio imported inside function bodies in feed_bus.py — module import stays socket-free for pytest (mirrors request_service.py convention)
+- [Phase 04-02]: DEC-shadcn-v4-tw3-compat: shadcn@4.11.0 generates Tailwind v4 CSS syntax (--spacing(), OKLCH, tw-animate-css imports); project uses Tailwind v3 — globals.css reverted to hsl() vars, card.tsx uses direct spacing classes, calendar.tsx uses fixed rem value
+- [Phase 04-02]: DEC-jwt-memory-only: JWT access token stored in module-level variable via setToken/getToken in lib/api.ts — never localStorage, never DOM (T-04-06)
+- [Phase 04-02]: DEC-sse-ref-useeffect: useSSE onMessage ref update moved to useEffect per react-hooks/refs — avoids render-time ref mutation warning
+- [Phase 04-04]: DEC-04-04-contact-409: contact_buyer endpoint returns HTTP 409 when telegram_user_id IS NULL — semantically correct (state conflict: buyer exists but cannot be reached via Telegram) (D-11/Pitfall 6)
+- [Phase 04-04]: DEC-04-04-status-as-string: RequestListOut/RequestDetailOut serialize status/urgency/incoterms as .value strings in router to avoid Pydantic from_attributes enum issues in mock-DB tests
+- [Phase 04-04]: DEC-04-04-price-analysis-market-uz: compute_price_analysis hardcodes market='UZ' per RESEARCH Pattern 7; currency param is informational, price_points stores its own currency
+- [Phase 04-05]: DEC-04-05-page-use-client: requests/page.tsx uses 'use client' because Lucide icon components cannot be passed as function props from Server Components to Client Components (Next.js App Router constraint)
+- [Phase 04-05]: DEC-04-05-kpi-stubs: /requests page KPI cards all show '—' — no aggregate KPI endpoint exists for /requests in Phase 4; card shapes are final (D-01 contract)
+- [Phase 04-05]: DEC-04-05-region-source-stubs: Region and Source columns in RequestsTable return '—' — RequestListOut schema from 04-04 does not include these fields; column structure matches UI-SPEC
+- [Phase 04-06]: DEC-04-06-stdlib-rss: stdlib xml.etree.ElementTree used for RSS/Atom parsing — avoids feedparser dependency per T-04-SC; handles RSS 2.0 and Atom 1.0
+- [Phase 04-06]: DEC-04-06-lazy-ssrf-proxies: is_safe_url/fetch_url imported as module-level lazy proxy functions in adapters — stable patch targets for tests while maintaining DEC-http-client-deferred-import
+- [Phase 04-06]: DEC-04-06-registry-isolation: test fixtures use _reg._REGISTRY direct dict access for re-population after _clear_registry() — avoids 'already registered' ValueError from module cache
+- [Phase 04-06]: DEC-04-06-asyncio-run: asyncio.run() replaces asyncio.get_event_loop().run_until_complete() in tests — Python 3.14 no longer auto-creates event loop in main thread
+- [Phase 04-07]: DEC-04-07-lazy-patch-at-source: send_delivery lazy imported inside evaluate_alert_rules body — tests patch at app.tasks.notify.send_delivery (source module), not app.services.alert_service.send_delivery (no module-level attribute)
+- [Phase 04-07]: DEC-04-07-no-eval-in-docstring: alert_service.py docstrings avoid literal "eval(" string to pass T-04-24 source-scan test (test_no_eval_in_alert_service reads file as text)
+- [Phase 04-07]: DEC-04-07-weekly-aggregate-sql: prices.py selects daily vs weekly SQL branch by (date_to - date_from).days > 365 in router; weekly uses date_trunc('week') GROUP BY per dev-spec §3.1
+- [Phase 04-07]: DEC-04-07-send-delivery-commits: send_delivery Celery task calls session.commit() (unlike service-layer flush-only); task is its own transaction boundary in Celery worker context
 
 ### Pending Todos
 
@@ -139,6 +193,7 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 |----------|------|--------|-------------|
 | Walking skeleton | SC#1 worker+beat Celery startup — needs `app.tasks.celery_app` (built in Phase 2; beat schedule drives UZEX fetch there) | Deferred to Phase 2 | 2026-06-15 |
 | UAT / Phase 2 SC#5 | Live docker-compose drill: worker/beat uptime, live UZEX fetch→signals, re-fetch dedupe, live FX import, 3-strike source_failure alert with isolation (SC#5 / TZ §6.1.4), restore-doc dry-run — user-approved deferral to deploy time (02-07 Task 3 checkpoint) | Pending — deploy-time UAT | 2026-06-16 |
+| UAT / Phase 3 SC#1–SC#5 | Live client-circuit drill: SC#1 wizard submit→REQ number queryable ≤10 s, SC#2 files→MinIO, SC#3 status push ≤30 s, SC#4 RU/UZ toggle + theme + first paint, SC#5 /start greeting + notify queue — user-approved deferral to deploy time (03-06 Task 3 checkpoint, 2026-06-17). Also includes rolled-in 03-04 wizard submit path and 03-05 list/detail/timeline verifications. Prerequisites: real BOT_TOKEN, WEBHOOK_SECRET, public HTTPS PUBLIC_WEBAPP_URL. CI gate: test_request_sla.py 4/4 PASS. | Pending — deploy-time UAT | 2026-06-17 |
 | International loop | REQ-international-feed (FR-3) | Future Milestone | 2026-06-13 |
 | Web App content | REQ-webapp-news (FR-8) | Future Milestone | 2026-06-13 |
 | Reports | REQ-reports (FR-18) | Future Milestone | 2026-06-13 |
@@ -147,6 +202,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-16T00:00:00Z
-Stopped at: Completed 02-07-PLAN.md (reliability hardening + accuracy closure — phase 2 execution-complete; live drill deferred to deploy)
-Resume file: None
+Last session: 2026-06-19T11:16:07.738Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-acceptance-handover/06-CONTEXT.md

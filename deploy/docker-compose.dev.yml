@@ -49,6 +49,25 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── MinIO (S3-compatible object storage for request file uploads) ─────────
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── API (FastAPI + uvicorn) ────────────────────────────────────────────────
   api:
     build:
@@ -61,12 +80,15 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/polymer_intelligence
       REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT: http://minio:9000
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     # Apply the locked schema AND seed reference + staff data BEFORE serving
     # (SC#2 — fresh `docker compose up` migrates and seeds a clean DB, no manual
@@ -100,6 +122,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/polymer_intelligence
       REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT: http://minio:9000
     depends_on:
       postgres:
         condition: service_healthy
@@ -132,6 +155,47 @@ services:
     volumes:
       - ../backend:/app
 
+  # ── Telegram Userbot (long-lived MTProto monitoring process) ─────────────
+  # DEC-userbot-separate-process: runs as a SEPARATE service from worker/beat.
+  # The userbot subscribes to enabled telegram_channel sources, writes new
+  # messages to raw_items via the immutable save_raw_items dedupe path, and
+  # emits a Redis heartbeat every USERBOT_HEARTBEAT_SECONDS (default 60 s).
+  # The check_userbot_health beat task monitors this heartbeat and raises a
+  # deduped admin alert on silence >5 min (ROADMAP SC#1 / T-05-08).
+  #
+  # Prerequisites (customer-side handoff):
+  #   1. Provide TG_API_ID and TG_API_HASH from https://my.telegram.org
+  #   2. Generate TG_SESSION_STRING once via userbot/session.py (interactive)
+  #   3. Add all three to .env (see deploy/.env.example [SECRET] markers)
+  userbot:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    # Long-lived process — restart on any crash so monitoring is not silently lost.
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false   # .env lives outside the repo; not present in CI/scaffold validation
+    environment:
+      DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/polymer_intelligence
+      REDIS_URL: redis://redis:6379/0
+      # Telegram userbot credentials (customer-provided — see .env.example)
+      TG_API_ID: ${TG_API_ID:-}
+      TG_API_HASH: ${TG_API_HASH:-}
+      TG_SESSION_STRING: ${TG_SESSION_STRING:-}
+      # Tuning (optional overrides; defaults from config.py are used if absent)
+      USERBOT_CHANNEL_REREAD_SECONDS: ${USERBOT_CHANNEL_REREAD_SECONDS:-600}
+      USERBOT_HEARTBEAT_SECONDS: ${USERBOT_HEARTBEAT_SECONDS:-60}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python -m userbot.main
+    volumes:
+      - ../backend:/app
+      - ../userbot:/app/userbot  # mount userbot package into the backend container
+
   # ── nginx reverse proxy ────────────────────────────────────────────────────
   # Mounts the HTTP-only dev config (deploy/nginx/nginx.dev.conf).
   # TLS (443/ssl), letsencrypt certs, and the dashboard upstream are prod-only
@@ -150,3 +214,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:

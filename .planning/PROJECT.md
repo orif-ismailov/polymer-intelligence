@@ -17,27 +17,30 @@ Every relevant market event — a client request, a UZEX polymer position, a cha
 - [x] **REQ-uzex-parser** (FR-1): UZEX offers/quotations/concluded-deals → `signals` on schedule — _Validated in Phase 2 (E2 Ingest Core + UZEX); ≥95% accuracy gate = 100% on 55-position control sample. Live deploy-drill deferred (02-UAT.md)._
 - [x] **REQ-fx-rates** (FR-4): Daily CBU rate import; conversion computed on read, original preserved — _Validated in Phase 2 (E2)._
 - [x] **REQ-sources-health** (FR-13): Source health view + enable/disable; 3-strike `source_failure` alert with per-source isolation — _Validated in Phase 2 (E2). Live alert-isolation drill deferred (02-UAT.md)._
+- [x] **REQ-webapp-auth** (FR-5): Telegram initData auth; first login creates a client — _Validated in Phase 3 (E3 Client Circuit); HMAC verify + get_or_create_client, generic-401, future-token guard. Live deploy-drill deferred (03-UAT.md)._
+- [x] **REQ-request-wizard** (FR-6): 4-step Web App request wizard with files; REQ-YYYY-MM-DD-NNNNN number — _Validated in Phase 3 (E3); request_service number gen + status machine, /webapp API, direct MinIO uploads. Live deploy-drill deferred (03-UAT.md)._
+- [x] **REQ-my-requests** (FR-7): Client request list + status history; bot push on status change — _Validated in Phase 3 (E3); Мои заявки + detail + Asia/Tashkent timeline; notify task on `notify` queue (≤30 s dispatch proxy PASS). Live deploy-drill deferred (03-UAT.md)._
+- [x] **REQ-webapp-i18n** (FR-9): RU/UZ toggle, default from Telegram language_code — _Validated in Phase 3 (E3); react-i18next, 72/72 RU/UZ key parity, toggle persists._
+- [x] **REQ-bot-clients** (FR-17): Greeting, Web App button, status notifications to clients — _Validated in Phase 3 (E3); aiogram webhook bot /start greeting + Web App button + notify-queue routing. Live bot drill deferred (03-UAT.md)._
+- [x] **REQ-nfr-performance** (partial): Web App bundle ≤300 KB gzip (42.8 KB largest chunk) + SLA proxies (≤10 s readback, ≤30 s notify dispatch) — _Validated in Phase 3 (E3); first-paint-on-3G live measurement deferred (03-UAT.md)._
+- [x] **REQ-telegram-monitoring** (FR-2): Userbot monitors public channels → LLM-extracted signals — _Validated in Phase 5 (E5); long-lived Telethon userbot as a separate process driven by the source registry, live telegram_channel adapter (test()/fetch()), Redis heartbeat + deduped silence alert, ~10-min channel-reread without restart. Live ingestion drill deferred (05-UAT.md, gated on customer TG account/session)._
+- [x] **REQ-ai-extraction** (FR-19): LLM structuring per fixed JSON schema; journaled in parse_runs — _Validated in Phase 5 (E5); instructor Mode.TOOLS extract_signal singleton against the fixed ExtractionResult schema + immutable versioned prompt (extract_v1), prompt-cached system block, exactly-one parse_runs journaling, confidence<0.5 → needs_review, InstructorRetryException dead-lettered._
+- [x] **REQ-lead-scoring** (FR-20): lead_score + HOT/MEDIUM/LOW on signals/requests — _Validated in Phase 5 (E5); deterministic scorer stamped into signals.ai (lead_score, classification, scored_at, prompt_version), recomputed (signals.ai overwritten) on scoring-prompt-version change._
+- [x] **REQ-llm-budget** (FR-21): Daily token limit; graceful degradation to rule-based + catch-up — _Validated in Phase 5 (E5); atomic Redis daily token gate (Lua compare-and-set), rule-based fallback on BudgetExceeded, nightly catch-up reprocess of budget-deferred items, deduped admin budget alert, per-source 7-day token spend._
+
+_Phase 5 measurable acceptance: the TZ §6.1.3 eval gate (relevant-signal recall ≥80% / per-field precision ≥85%) runs deterministically and key-free on committed example fixtures (100%/100%); the real-data control-sample run + live userbot drill are deferred to Phase 6 / customer-input delivery (05-UAT.md)._
 
 ### Active
 
 <!-- Current milestone: Client Phase 1 (domestic-market MVP). Full list with IDs and acceptance criteria in REQUIREMENTS.md. -->
 
-- [ ] **REQ-webapp-auth** (FR-5): Telegram initData auth; first login creates a client
-- [ ] **REQ-request-wizard** (FR-6): 4-step Web App request wizard with files; REQ-YYYY-MM-DD-NNNNN number
-- [ ] **REQ-my-requests** (FR-7): Client request list + status history; bot push on status change
-- [ ] **REQ-webapp-i18n** (FR-9): RU/UZ toggle, default from Telegram language_code
 - [ ] **REQ-live-feed** (FR-10): Unified filterable feed (v_live_feed), SSE/polling refresh
 - [ ] **REQ-purchase-requests** (FR-11): Requests table + detail card + actions, all → audit_log (flagship screen)
 - [ ] **REQ-price-trends** (FR-12): Price chart per product/market from price_points
 - [ ] **REQ-alerts** (FR-14): Alert feed + rules builder + delivery
 - [ ] **REQ-roles** (FR-15): admin / analyst / trader / viewer authz
 - [ ] **REQ-bot-team** (FR-16): Deliver alerts to DM/group respecting Telegram rate limits
-- [ ] **REQ-bot-clients** (FR-17): Greeting, Web App button, status notifications to clients
-- [ ] **REQ-ai-extraction** (FR-19): LLM structuring per fixed JSON schema; journaled in parse_runs
-- [ ] **REQ-lead-scoring** (FR-20): lead_score + HOT/MEDIUM/LOW on signals/requests
-- [ ] **REQ-llm-budget** (FR-21): Daily token limit; graceful degradation to rule-based + catch-up
 - [ ] **REQ-source-builder** (FR-22): Admin add-source wizard with mandatory passing test before enable
-- [ ] **REQ-telegram-monitoring** (FR-2): Userbot monitors public channels → LLM-extracted signals
 - [ ] **NFR groups**: performance, reliability, security, observability, time/localization
 
 ### Out of Scope
@@ -111,4 +114,4 @@ Phase 2 (international content loop) is a planned follow-up milestone, scoped bu
 | DEC-deploy-single-vps: one VPS, docker compose, nginx+TLS | simple, fits scale | — Pending |
 
 ---
-*Last updated: 2026-06-16 — Phase 2 (E2 Ingest Core + UZEX) complete: immutable raw pipeline, SourceAdapter registry, UZEX collectors→signals, CBU FX, source-health alerting. REQ-uzex-parser / REQ-fx-rates / REQ-sources-health validated (live deploy-drill deferred, 02-UAT.md).*
+*Last updated: 2026-06-19 — Phase 5 (E5 Telegram Monitoring + AI) complete: long-lived Telethon userbot over the source registry + live telegram_channel adapter + Redis heartbeat/silence alert; LLM extraction service (instructor Mode.TOOLS, fixed schema, prompt-cached) wired into a Celery parse_telegram_item pipeline (budget gate → extract/fallback → one parse_runs row → signals.ai stamped, confidence<0.5 → needs_review); atomic daily token budget + rule-based degradation + nightly catch-up; dashboard needs_review filter; eval golden-set harness enforcing the TZ §6.1.3 80/85 gate (100%/100% on example fixtures) + lead-score recompute on prompt-version change. REQ-telegram-monitoring / REQ-ai-extraction / REQ-lead-scoring / REQ-llm-budget validated (15/15 must-haves). Code review: 5 critical + 8 warning findings fixed (incl. budget_deferred enum/migration 0004, idempotent signals, atomic Lua token reservation). Two drills deferred to UAT/Phase 6 (gated on customer TG account/session + 100-message control sample). Known tech-debt: backend dependency reproducibility (no committed uv.lock; FastAPI/Starlette drift breaks 2 stale route-introspection tests) tracked in todos. Next: Phase 6 — Acceptance & Handover.*

@@ -70,8 +70,11 @@ celery_app.conf.update(
         "uzex_fetch_deals": {"queue": "ingest"},
         "fetch_cbu_rates": {"queue": "ingest"},
         "check_source_health": {"queue": "ingest"},
+        "check_userbot_health": {"queue": "ingest"},
         "app.tasks.parse.*": {"queue": "parse"},
         "parse_raw_item": {"queue": "parse"},
+        "parse_telegram_item": {"queue": "parse"},
+        "nightly_llm_catchup": {"queue": "parse"},
         "app.tasks.notify.*": {"queue": "notify"},
     },
 )

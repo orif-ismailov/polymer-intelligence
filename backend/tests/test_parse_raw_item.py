@@ -16,7 +16,6 @@ import contextlib
 import datetime
 import decimal
 import os
-import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -202,8 +201,8 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_sell_offer(self) -> None:
         """create_signal_from_parse creates sell_offer signal for offers section."""
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
         from app.models.enums import SignalKind  # noqa: PLC0415
+        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_POLYMER, source_id=5, raw_item_id=10)
@@ -226,8 +225,8 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_deal(self) -> None:
         """create_signal_from_parse creates deal signal for deals section."""
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
         from app.models.enums import SignalKind  # noqa: PLC0415
+        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_DEAL, source_id=3, raw_item_id=20)
@@ -239,8 +238,8 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_price_quote(self) -> None:
         """create_signal_from_parse creates price_quote signal for contracts section."""
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
         from app.models.enums import SignalKind  # noqa: PLC0415
+        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_PRICE_QUOTE, source_id=2, raw_item_id=30)
@@ -331,7 +330,7 @@ class TestParseRawItemRouting:
         item.source_id = source_id
         item.payload = payload
         item.parse_status = parse_status
-        item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.timezone.utc)
+        item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.UTC)
 
         # Allow parse_status assignment
         def set_status(val: str) -> None:
@@ -349,7 +348,7 @@ class TestParseRawItemRouting:
         raw_item.source_id = 1
         raw_item.payload = PAYLOAD_POLYMER
         raw_item.parse_status = "pending"
-        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.timezone.utc)
+        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.UTC)
 
         # Mock session, match_product returns product_id=1, create_signal succeeds
         with (
@@ -385,12 +384,12 @@ class TestParseRawItemRouting:
         raw_item.source_id = 1
         raw_item.payload = PAYLOAD_IRRELEVANT
         raw_item.parse_status = "pending"
-        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.timezone.utc)
+        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.UTC)
 
         with (
             patch("app.tasks.parse.get_session") as mock_get_session,
             patch("app.tasks.parse.match_product", return_value=None),
-            patch("app.tasks.parse.queue_for_classification") as mock_queue,
+            patch("app.tasks.parse.queue_for_classification"),
             patch("app.tasks.parse.create_signal_from_parse") as mock_create_signal,
         ):
             mock_session = MagicMock()
@@ -416,7 +415,7 @@ class TestParseRawItemRouting:
         raw_item.source_id = 1
         raw_item.payload = PAYLOAD_UNRECOGNIZED
         raw_item.parse_status = "pending"
-        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.timezone.utc)
+        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.UTC)
 
         with (
             patch("app.tasks.parse.get_session") as mock_get_session,
@@ -438,8 +437,8 @@ class TestParseRawItemRouting:
 
     def test_unrecognized_does_not_increment_consecutive_failures(self) -> None:
         """parse_raw_item for unrecognized good must NOT touch consecutive_failures."""
-        from app.tasks.parse import parse_raw_item  # noqa: PLC0415
         import inspect  # noqa: PLC0415
+
         import app.tasks.parse as parse_module  # noqa: PLC0415
 
         # Read the source of parse.py to assert it does NOT have consecutive_failures
@@ -470,7 +469,7 @@ class TestParseRawItemRouting:
         raw_item.source_id = 1
         raw_item.payload = PAYLOAD_POLYMER
         raw_item.parse_status = "parsed"  # already parsed!
-        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.timezone.utc)
+        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.UTC)
 
         with (
             patch("app.tasks.parse.get_session") as mock_get_session,
@@ -497,7 +496,7 @@ class TestParseRawItemRouting:
         raw_item.source_id = 1
         raw_item.payload = PAYLOAD_POLYMER
         raw_item.parse_status = "pending"
-        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.timezone.utc)
+        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.UTC)
 
         added_objects: list = []
 
@@ -550,9 +549,10 @@ class TestParseRawItemIntegrationDB:
     def seeded_db(self, engine):
         """Migrate, seed products+synonyms, insert a test source."""
         from alembic.config import Config  # noqa: PLC0415
+        from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
+
         from alembic import command as alembic_command  # noqa: PLC0415
         from app.seed.seed_reference import seed_all  # noqa: PLC0415
-        from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
         backend_dir = Path(__file__).parent.parent
         alembic_cfg = Config(str(backend_dir / "alembic.ini"))
@@ -611,10 +611,8 @@ class TestParseRawItemIntegrationDB:
             session.commit()
 
         # Run the parse task (with real DB)
-        from app.tasks.parse import parse_raw_item  # noqa: PLC0415
 
         # We need to mock the DB session to use our test DB
-        import json as json_module  # noqa: PLC0415
         from sqlalchemy.orm import Session as OrmSession  # noqa: PLC0415
 
         with OrmSession(seeded_db) as session:

@@ -59,10 +59,13 @@ def authenticate(db: Session, email: str, password: str) -> StaffUser | None:
         dummy_verify(password)
         return None
 
-    if not verify_password(password, user.password_hash):
-        return None
-
-    if not user.is_active:
+    # WR-03 / CR-05 / T-03-01: run the argon2 KDF unconditionally, then fold the
+    # wrong-password and deactivated-account rejections into a single branch. This
+    # makes the two failure paths indistinguishable in both response and timing —
+    # a correct password against a deactivated account behaves exactly like a wrong
+    # password, so an attacker cannot probe which accounts exist or are disabled.
+    password_ok = verify_password(password, user.password_hash)
+    if not password_ok or not user.is_active:
         return None
 
     return user

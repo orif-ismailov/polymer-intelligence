@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -182,8 +182,9 @@ class TestSeedSourcesUnit:
 
     def test_seed_sources_uses_is_enabled_false(self) -> None:
         """seed_sources SQL must hard-code is_enabled=false (T-02-24)."""
-        from app.seed import seed_sources as seed_module  # noqa: PLC0415
         import inspect  # noqa: PLC0415
+
+        from app.seed import seed_sources as seed_module  # noqa: PLC0415
 
         source = inspect.getsource(seed_module)
         assert "false" in source.lower(), (
@@ -196,8 +197,9 @@ class TestSeedSourcesUnit:
 
     def test_seed_sources_uses_last_test_ok_at_null(self) -> None:
         """seed_sources SQL must hard-code last_test_ok_at=NULL (T-02-24)."""
-        from app.seed import seed_sources as seed_module  # noqa: PLC0415
         import inspect  # noqa: PLC0415
+
+        from app.seed import seed_sources as seed_module  # noqa: PLC0415
 
         source = inspect.getsource(seed_module)
         assert "null" in source.lower(), (
@@ -234,9 +236,11 @@ class TestSeedSourcesIntegrationDB:
     @pytest.fixture(scope="class")
     def migrated_db(self, engine):
         """Apply migrations before seed tests and clean up after."""
-        from alembic.config import Config  # noqa: PLC0415
-        from alembic import command as alembic_command  # noqa: PLC0415
         import contextlib  # noqa: PLC0415
+
+        from alembic.config import Config  # noqa: PLC0415
+
+        from alembic import command as alembic_command  # noqa: PLC0415
 
         alembic_cfg = Config(str(BACKEND_DIR / "alembic.ini"))
         alembic_cfg.set_main_option("sqlalchemy.url", _DB_URL)
@@ -255,9 +259,10 @@ class TestSeedSourcesIntegrationDB:
         """seed_sources inserts all 4 source rows on a fresh DB."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
+
         from app.seed.seed_sources import seed_sources  # noqa: PLC0415
 
-        SessionLocal = sessionmaker(bind=migrated_db)
+        SessionLocal = sessionmaker(bind=migrated_db)  # noqa: N806
         with SessionLocal() as session:
             count = seed_sources(session)
             session.commit()
@@ -274,9 +279,10 @@ class TestSeedSourcesIntegrationDB:
     def test_seed_sources_idempotent_in_db(self, migrated_db) -> None:
         """seed_sources second run inserts 0 additional rows in a live DB."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
+
         from app.seed.seed_sources import seed_sources  # noqa: PLC0415
 
-        SessionLocal = sessionmaker(bind=migrated_db)
+        SessionLocal = sessionmaker(bind=migrated_db)  # noqa: N806
 
         # First run already done in test_seed_sources_inserts_four_rows
         with SessionLocal() as session:
