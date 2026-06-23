@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-06-19T11:40:35.748Z"
-last_activity: 2026-06-19 -- Phase 06 planning complete
+status: completed
+stopped_at: Completed 06-05-PLAN.md
+last_updated: "2026-06-22T10:50:19.596Z"
+last_activity: 2026-06-22 -- Phase 06 marked complete
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 37
-  completed_plans: 37
-  percent: 83
+  completed_phases: 6
+  total_plans: 44
+  completed_plans: 44
+  percent: 100
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Every relevant market event lands accurately and quickly in a single normalized stream the team can see, filter, and act on — with no single source able to take the others down.
-**Current focus:** Phase 05 — telegram-monitoring-ai
+**Current focus:** Phase 06 — acceptance-handover
 
 ## Current Position
 
-Phase: 6
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-19 -- Phase 06 planning complete
+Phase: 06 — COMPLETE
+Plan: 7 of 7
+Status: Phase 06 complete
+Last activity: 2026-06-22 -- Phase 06 marked complete
 
 Progress: [██████████] 97%
 
@@ -83,6 +83,12 @@ Progress: [██████████] 97%
 | Phase 04 P06 | ~15min | 2 tasks | 10 files created, 2 modified |
 | Phase 04 P07 | 7min | 2 tasks | 8 files |
 | Phase 04 P08 | 10min | 3 tasks | 10 files |
+| Phase 06-acceptance-handover P02 | 25 min | 2 tasks | 2 files |
+| Phase 06-acceptance-handover P03 | 3 min | 2 tasks | 1 files |
+| Phase 06-acceptance-handover P04 | 12 min | 1 tasks | 1 files |
+| Phase 06-acceptance-handover P05 | 35 min | 2 tasks | 3 files |
+| Phase 06 P06 | ~5 min | 3 tasks | 3 files |
+| Phase 06 P07 | 9 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -170,6 +176,19 @@ Most relevant to Phase 1:
 - [Phase 04-07]: DEC-04-07-no-eval-in-docstring: alert_service.py docstrings avoid literal "eval(" string to pass T-04-24 source-scan test (test_no_eval_in_alert_service reads file as text)
 - [Phase 04-07]: DEC-04-07-weekly-aggregate-sql: prices.py selects daily vs weekly SQL branch by (date_to - date_from).days > 365 in router; weekly uses date_trunc('week') GROUP BY per dev-spec §3.1
 - [Phase 04-07]: DEC-04-07-send-delivery-commits: send_delivery Celery task calls session.commit() (unlike service-layer flush-only); task is its own transaction boundary in Celery worker context
+- [Phase 06-acceptance-handover]: DEC-06-02-disposable-fresh-container: fresh tmpfs postgres:16-alpine container is the clean-server restore target; dev volume is read-only source, never dropped — Proves the restore procedure end-to-end without risking the dev data volume (T-06-04)
+- [Phase 06-acceptance-handover]: DEC-06-02-restore-from-file-not-pipe: pg_restore --jobs reads a docker cp'd file path, never stdin; runbook §3 corrected — Parallel restore cannot read from stdin (real gap surfaced by the drill)
+- [Phase 06-acceptance-handover]: DEC-06-02-pin-superuser-pi_user: runbook DROP/CREATE uses -U pi_user -d postgres — No separate 'postgres' role exists; pi_user is the bootstrap superuser
+- [Phase 06-acceptance-handover]: 06-03: closed §6.1.6 telegram_channel slice with a key-free pytest module (real orchestrator + mocked seams), unblocking SC#5-caveat retirement in 06-07 — Proves enable-gate 422 + fixture-message→signal→v_live_feed deterministically with no real account
+- [Phase 06-acceptance-handover]: DEC-06-04-no-weak-secret-defaults: prod compose sensitive vars use bare ${VAR} with no inline default — a missing secret fails fast at the app layer instead of booting with a weak default (WR-05 / T-06-09)
+- [Phase 06-acceptance-handover]: DEC-06-04-env-file-required-false-for-static-config: env_file stays required:false so docker compose config validates without a real .env; prod fail-fast is enforced in-app (pydantic Settings), not via required:true which would break static validation and recreate the WR-05 crash-loop
+- [Phase 06-acceptance-handover]: DEC-06-04-nginx-only-ingress: only nginx publishes host ports (80/443); api/worker/beat/userbot/dashboard/postgres/redis/minio are internal-only; userbot a separate python -m userbot.main process, aiogram webhook on api (no separate bot container)
+- [Phase 06-acceptance-handover]: make smoke (D-02): production-compose full-stack smoke on synthetic data — health, request→v_live_feed, source isolation + one source_failure alert — Pre-handover end-to-end confidence check; doubles as the deployment-guide stand-up validation
+- [Phase 06-acceptance-handover]: CBU FX source seed kind corrected to external_index (was invalid 'fx') — Clean-deploy defect surfaced by the smoke; data-only fix keeps the locked source_kind schema untouched, no migration
+- [Phase 06]: 06-ACCEPTANCE.md consolidates TZ §6.1.1–§6.1.6 with GREEN automated evidence + a single Deploy-Day Checklist superseding 02/03/05-UAT — Customer-facing sign-off spine; customer-gated drills are marked blocked-on, not claimed passed
+- [Phase 06]: Deployment guide documents the webhook as auto-registered on api startup and userbot session via the userbot/session.py interactive StringSession flow — Matches the real code path (app/main.py lifespan, deploy/.env.example), not the plan's manual-curl / python -m wording
+- [Phase 06]: 06-07: Retired SC#5 telegram cross-phase caveat in ROADMAP + 04-CONTEXT — Gated on 06-03 test_telegram_channel_close.py passing (9 passed); historical text preserved with citation for the audit trail
+- [Phase 06]: 06-07: HANDOVER.md links the real prompt path backend/parsing/prompts/extract_v1.md — Plan's parsing/prompts/extract_v1.md did not exist; corrected to avoid a dangling §9 link (threat T-06-19)
 
 ### Pending Todos
 
@@ -202,6 +221,6 @@ Phase-2 international-loop requirements are a planned follow-up milestone, regis
 
 ## Session Continuity
 
-Last session: 2026-06-19T11:16:07.738Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-acceptance-handover/06-CONTEXT.md
+Last session: 2026-06-22T10:41:32.259Z
+Stopped at: Completed 06-05-PLAN.md
+Resume file: None

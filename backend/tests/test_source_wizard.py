@@ -490,12 +490,11 @@ def test_sources_router_mounted():
     from app.main import create_app  # noqa: PLC0415
 
     app = create_app()
-    # FastAPI >=0.137 includes sub-routers lazily as `_IncludedRouter` wrappers
-    # rather than flattening them into `app.routes` as APIRoute objects, so the
-    # registered paths must be read from the generated OpenAPI schema (which
-    # resolves the lazy inclusion tree) instead of iterating `app.routes`.
-    paths = app.openapi().get("paths", {})
-    assert any(p.startswith("/api/v1/sources") for p in paths), (
-        f"/api/v1/sources* routes not found. Registered paths starting with /api: "
-        f"{sorted(p for p in paths if p.startswith('/api'))}"
+    # Resolve the route by endpoint name via url_path_for. This traverses FastAPI
+    # >=0.137's lazy `_IncludedRouter` inclusion tree (unlike walking `app.routes`
+    # for a flat `.path`, which only sees inline routes under Starlette 1.x) and
+    # raises NoMatchFound if the sources router was not mounted.
+    path = app.url_path_for("get_sources")
+    assert path.startswith("/api/v1/sources"), (
+        f"Expected /api/v1/sources* route, got: {path}"
     )

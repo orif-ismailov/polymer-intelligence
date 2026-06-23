@@ -39,15 +39,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: backend/pyproject.toml
+          version: "0.11.2"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
 
-      - name: Install dependencies
-        run: pip install --upgrade pip && pip install -e ".[dev]"
+      # 06-01 (D-07): install the exact, committed dependency graph from backend/uv.lock
+      # so CI builds are byte-reproducible (uv sync --frozen fails on any lock drift).
+      # Add the synced venv to PATH so the ruff/mypy/pytest steps below run from it.
+      - name: Install dependencies (uv sync --frozen)
+        run: |
+          uv python install ${{ env.PYTHON_VERSION }}
+          uv sync --frozen --extra dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       # ── Lint: ruff ─────────────────────────────────────────────────────────
       - name: Lint (ruff check)
@@ -114,6 +120,117 @@ jobs:
 
       - name: Type-check (tsc --noEmit)
         run: npx tsc --noEmit
+
+  # ── Dashboard e2e: Playwright against a live API + seed data ────────────────
+  # Brings up the FastAPI backend (migrate + seed reference/staff/demo) on :8000,
+  # then runs the Playwright suite, which starts `next dev` and proxies /api there.
+  dashboard-e2e:
+    name: Dashboard e2e (Playwright)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: polymer_intelligence_test
+          POSTGRES_USER: pi_user
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pi_user -d polymer_intelligence_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Backend secrets — placeholders so Settings doesn't fail-fast (same as the
+      # backend job). APP_ENV stays unset (non-production) so the refresh cookie is
+      # not Secure-only and works over http on the runner.
+      DATABASE_URL: postgresql+psycopg://pi_user:testpassword@localhost:5432/polymer_intelligence_test
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET: ci-jwt-secret-placeholder-must-be-at-least-32-chars
+      BOT_TOKEN: "123456789:AABBCCDDEEFFaabbccddeeff-placeholder"
+      WEBHOOK_SECRET: ci-webhook-secret-placeholder
+      TG_API_ID: "12345678"
+      TG_API_HASH: ci-tg-api-hash-placeholder-32chars!
+      ANTHROPIC_API_KEY: sk-ant-ci-placeholder
+      S3_ACCESS_KEY: ci-minio-access
+      S3_SECRET_KEY: ci-minio-secret
+      # The dashboard's next.config rewrites /api/* to this origin.
+      BACKEND_ORIGIN: http://localhost:8000
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.11.2"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Backend deps (uv sync --frozen)
+        working-directory: backend
+        run: |
+          uv python install ${{ env.PYTHON_VERSION }}
+          uv sync --frozen --extra dev
+
+      - name: Migrate + seed (reference, staff, demo)
+        working-directory: backend
+        run: |
+          uv run python -m app.entrypoint
+          uv run python -m app.seed.seed_reference
+          uv run python -m app.seed.seed_staff
+          uv run python -m app.seed.seed_demo
+
+      - name: Start API on :8000
+        working-directory: backend
+        run: |
+          nohup uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 > "$RUNNER_TEMP/uvicorn.log" 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 2
+          done
+          curl -sf http://localhost:8000/api/v1/health || { echo "API failed to start"; cat "$RUNNER_TEMP/uvicorn.log"; exit 1; }
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Dashboard deps
+        working-directory: dashboard
+        run: npm ci
+
+      - name: Install Playwright (chromium + OS deps)
+        working-directory: dashboard
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e
+        working-directory: dashboard
+        run: npm run e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: dashboard/playwright-report/
+          retention-days: 7
 
   # ── Webapp: eslint + tsc ───────────────────────────────────────────────────
   webapp:

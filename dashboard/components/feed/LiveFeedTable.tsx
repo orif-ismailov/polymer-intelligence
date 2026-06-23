@@ -209,6 +209,9 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
 
   useSSE("/api/v1/feed/stream", handleSSEMessage);
 
+  // TanStack Table's useReactTable returns non-memoizable functions, so the React
+  // Compiler skips this component — an intrinsic, harmless limitation of the library.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: data?.items ?? [],
     columns,

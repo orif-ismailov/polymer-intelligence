@@ -21,13 +21,21 @@ and `telegram_channel` monitoring (Phase 5, REQ-telegram-monitoring); published 
 `/reports` approve flow and `/counterparties` (Future Milestone). The public landing page
 (Surface A) and Web App (Surface C, Phase 3) are not rebuilt here.
 
-**Cross-phase boundary note (affects acceptance):** Roadmap SC#5 reads "an admin adds a new
-public website AND a new Telegram channel … its signals subsequently appear in the feed."
-Because the userbot and `llm_page` LLM extraction land in Phase 5, **the literal
-"telegram-channel signals appear in feed" portion of SC#5 is satisfied in Phase 5/6, not
-Phase 4.** Phase 4 delivers the full wizard + website (`html_table`/`rss`) onboarding
-end-to-end; `telegram_channel`/`llm_page` are config-saveable in a pending state (see D-04..D-06).
-Verifier/roadmap should treat that slice of SC#5 as a Phase-5/6 acceptance item.
+**Cross-phase boundary note (affects acceptance) — RETIRED 2026-06-22:** Roadmap SC#5 reads
+"an admin adds a new public website AND a new Telegram channel … its signals subsequently
+appear in the feed." This boundary note (carried since Phase 4) is now **RETIRED**: the
+`telegram_channel` slice was closed locally in Phase 6 by 06-03
+(`backend/tests/test_telegram_channel_close.py`, 9 passed — wizard add → enable-gate 422 until
+Test passes → fixture MTProto message → `parse_telegram_item` → signal in `v_live_feed`,
+key-free). Live-account ingestion remains the deploy-day drill in
+`.planning/phases/06-acceptance-handover/06-ACCEPTANCE.md`. Historical text preserved below for
+the audit trail:
+
+> ~~Because the userbot and `llm_page` LLM extraction land in Phase 5, **the literal
+> "telegram-channel signals appear in feed" portion of SC#5 is satisfied in Phase 5/6, not
+> Phase 4.** Phase 4 delivers the full wizard + website (`html_table`/`rss`) onboarding
+> end-to-end; `telegram_channel`/`llm_page` are config-saveable in a pending state (see D-04..D-06).
+> Verifier/roadmap should treat that slice of SC#5 as a Phase-5/6 acceptance item.~~
 </domain>
 
 <decisions>

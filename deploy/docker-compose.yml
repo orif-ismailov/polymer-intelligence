@@ -1,0 +1,262 @@
+# Polymer Intelligence — Production stack (D-05.1)
+# ============================================================================
+# Usage:
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+# Prerequisites (production):
+#   - Create a real .env ONE LEVEL ABOVE the repo root (../.env) from
+#     deploy/.env.example and fill in EVERY [SECRET] marker. The .env is NEVER
+#     committed (.gitignore). This compose holds NO secret literals — every
+#     secret is interpolated from .env via ${VAR} with no inline default, so a
+#     missing/empty secret fails fast at the app layer (pydantic Settings)
+#     instead of silently running with a weak default (WR-05).
+#   - Obtain TLS certs via certbot into the letsencrypt volume (see
+#     docs/deployment-guide.md). nginx mounts the TLS prod config nginx.conf.
+#
+# Container set (DEC-deploy-single-vps):
+#   api, worker, beat, userbot, dashboard, postgres, redis, minio, nginx
+#   - userbot is a SEPARATE long-lived process (DEC-userbot-separate-process)
+#   - the aiogram webhook is served by the api service (NO separate bot container)
+#   - nginx is the ONLY externally-exposed service (80/443); everything else is
+#     reachable only on the internal docker network (least privilege — T-06-10)
+#
+# Production deltas vs. docker-compose.dev.yml:
+#   - NO source bind-mounts (no live-reload; images are immutable in prod)
+#   - api command drops --reload
+#   - APP_ENV=production on api (gates the Secure refresh-cookie flag)
+#   - dashboard service added (Next.js standalone, deploy/Dockerfile.dashboard)
+#   - ONLY nginx publishes host ports (80, 443)
+#   - nginx mounts nginx.conf (TLS) + letsencrypt/certbot/webapp volumes
+#   - NO weak inline secret defaults (BOT_TOKEN/WEBHOOK_SECRET/TG_API_*/
+#     TG_SESSION_STRING/POSTGRES_PASSWORD/S3 creds are required at runtime)
+# ============================================================================
+
+services:
+
+  # ── PostgreSQL 16 ──────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false   # static `config` validation runs without a real .env;
+                          # the deployment guide REQUIRES a real .env at `up` time.
+    environment:
+      POSTGRES_DB: polymer_intelligence
+      POSTGRES_USER: pi_user
+      # No weak default — POSTGRES_PASSWORD must come from .env (WR-05 / T-06-09).
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # No host ports — postgres is internal-only (T-06-10).
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pi_user -d polymer_intelligence"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    # No host ports — redis is internal-only (T-06-10).
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO (S3-compatible object storage for request file uploads) ─────────
+  # Keep MinIO for self-hosted S3 file storage. To use an external/managed S3
+  # instead: drop this service and point S3_ENDPOINT/S3_ACCESS_KEY/S3_SECRET_KEY
+  # at the external provider via .env (the api/worker only need S3_* env vars).
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      # No weak defaults — S3 creds are required from .env (WR-05 / T-06-09).
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    # No host ports — MinIO is internal-only; reached by api/worker over the
+    # docker network at http://minio:9000 (T-06-10).
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API (FastAPI + uvicorn; also serves the aiogram webhook) ───────────────
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD}@postgres:5432/polymer_intelligence
+      REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT: http://minio:9000
+      # Production env — gates the Secure flag on the refresh cookie (TLS behind nginx).
+      APP_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    # Migrate + seed (reference, staff, sources) BEFORE serving — idempotent
+    # pre-start steps so a fresh deploy comes up fully provisioned with no manual
+    # step. NO --reload in production (immutable image, no bind-mount watcher).
+    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_sources && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    # No host ports — only nginx reaches the api over the docker network (T-06-10).
+    # No source bind-mount — the image is the single source of truth in prod.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Celery Worker ─────────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    # REQ-nfr-reliability / T-02-25: auto-restart on crash so a single worker
+    # failure never silently stops ingest.
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD}@postgres:5432/polymer_intelligence
+      REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT: http://minio:9000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default
+    # No host ports, no bind-mount.
+
+  # ── Celery Beat (scheduler) ───────────────────────────────────────────────
+  beat:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    # REQ-nfr-reliability / T-02-25: auto-restart so the beat scheduler never
+    # silently drops its periodic fetch/health schedule.
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD}@postgres:5432/polymer_intelligence
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    # No host ports, no bind-mount.
+
+  # ── Telegram Userbot (long-lived MTProto monitoring process) ─────────────
+  # DEC-userbot-separate-process: a SEPARATE service from worker/beat. Subscribes
+  # to enabled telegram_channel sources, writes new messages to raw_items via the
+  # immutable save_raw_items dedupe path, and emits a Redis heartbeat every
+  # USERBOT_HEARTBEAT_SECONDS. The check_userbot_health beat task monitors the
+  # heartbeat and raises a deduped admin alert on silence >5 min (SC#1 / T-05-08).
+  #
+  # Prerequisites (customer-side handoff):
+  #   1. Provide TG_API_ID and TG_API_HASH from https://my.telegram.org
+  #   2. Generate TG_SESSION_STRING once via userbot/session.py (interactive)
+  #   3. Add all three to .env (see deploy/.env.example [SECRET] markers)
+  userbot:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    # Long-lived process — restart on any crash so monitoring is not silently lost.
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD}@postgres:5432/polymer_intelligence
+      REDIS_URL: redis://redis:6379/0
+      # Telegram userbot credentials — required from .env, NO weak default so a
+      # misconfigured deploy fails fast instead of starting unauthenticated
+      # (WR-05 / T-06-09). Empty here → the userbot's own config validation rejects.
+      TG_API_ID: ${TG_API_ID}
+      TG_API_HASH: ${TG_API_HASH}
+      TG_SESSION_STRING: ${TG_SESSION_STRING}
+      # Tuning (optional overrides; config.py defaults apply if absent).
+      USERBOT_CHANNEL_REREAD_SECONDS: ${USERBOT_CHANNEL_REREAD_SECONDS:-600}
+      USERBOT_HEARTBEAT_SECONDS: ${USERBOT_HEARTBEAT_SECONDS:-60}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python -m userbot.main
+    # No host ports. The userbot package ships inside the backend image (no
+    # bind-mount in prod); the dev compose's ../userbot:/app/userbot mount is
+    # dev-only live-reload and is intentionally omitted here.
+
+  # ── Dashboard (Next.js standalone) ─────────────────────────────────────────
+  # Built from deploy/Dockerfile.dashboard (next.config: output: "standalone").
+  # Listens on :3000 internally; nginx proxies /dashboard/ → http://dashboard:3000/.
+  dashboard:
+    build:
+      context: ../dashboard
+      dockerfile: ../deploy/Dockerfile.dashboard
+    restart: unless-stopped
+    env_file:
+      - path: ../.env
+        required: false
+    # No host ports — only nginx reaches the dashboard over the docker network
+    # (T-06-10). The container's internal port stays 3000.
+    depends_on:
+      - api
+
+  # ── nginx reverse proxy (ONLY externally-exposed service) ──────────────────
+  # Mounts the TLS prod config (nginx.conf): 443 ssl + 80→443 redirect + the
+  # dashboard upstream + the /api proxy + letsencrypt cert paths (T-06-11). The
+  # dev HTTP-only nginx.dev.conf is intentionally NOT used here.
+  nginx:
+    image: nginx:stable
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # TLS production config (NOT nginx.dev.conf).
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Let's Encrypt certs (managed by certbot on the host) — referenced by
+      # ssl_certificate paths in nginx.conf.
+      - letsencrypt:/etc/letsencrypt:ro
+      # certbot webroot for the ACME http-01 challenge + renewals.
+      - certbot_www:/var/www/certbot
+      # Built static Telegram Web App served directly by nginx (/webapp/).
+      # Populate this volume with the built webapp bundle at deploy time
+      # (see docs/deployment-guide.md); empty until then.
+      - webapp_static:/var/www/webapp:ro
+    depends_on:
+      - api
+      - dashboard
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  letsencrypt:
+  certbot_www:
+  webapp_static:
