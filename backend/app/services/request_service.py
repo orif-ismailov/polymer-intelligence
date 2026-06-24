@@ -147,7 +147,12 @@ def generate_request_number(db: Session) -> str:
 
     seq_name = f"req_seq_{yyyymmdd}"
 
-    # CREATE SEQUENCE IF NOT EXISTS is idempotent; safe under concurrent load
+    # `CREATE SEQUENCE IF NOT EXISTS` is NOT concurrency-safe for the FIRST create
+    # of the day: two simultaneous first-submits race on the catalog and one errors
+    # (duplicate pg_type / "tuple concurrently updated") -> the request 500s. Take a
+    # per-date transaction advisory lock so the create is serialized; the date int
+    # is the lock key. Subsequent same-day calls take the lock briefly then no-op.
+    db.execute(sa.text("SELECT pg_advisory_xact_lock(:k)"), {"k": int(yyyymmdd)})
     db.execute(sa.text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name}"))  # noqa: S608
 
     # nextval is atomic — concurrency-safe counter

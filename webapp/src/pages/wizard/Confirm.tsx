@@ -19,7 +19,7 @@
  * MainButton is hidden on C-05 (after submission completes or errors).
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2 } from "lucide-react";
@@ -95,8 +95,14 @@ export default function Confirm() {
     }
   }, [store, t]);
 
-  // Submit on mount
+  // Submit on mount — exactly once. The ref guard makes this idempotent under React
+  // StrictMode's double-invoked mount effect (dev) and any remount, so we never POST
+  // the request twice (which created a duplicate AND raced the backend into a 500).
+  // The Retry button below calls doSubmit() directly and is intentionally not gated.
+  const autoSubmittedRef = useRef(false);
   useEffect(() => {
+    if (autoSubmittedRef.current) return;
+    autoSubmittedRef.current = true;
     void doSubmit();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

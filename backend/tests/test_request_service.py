@@ -90,10 +90,13 @@ class TestGenerateRequestNumber:
         mock_result_1.scalar.return_value = 1
         mock_result_2 = MagicMock()
         mock_result_2.scalar.return_value = 2
-        # Two execute calls per generate_request_number: CREATE SEQUENCE + SELECT nextval
+        # Three execute calls per generate_request_number:
+        # pg_advisory_xact_lock + CREATE SEQUENCE + SELECT nextval
         db.execute.side_effect = [
+            MagicMock(),          # pg_advisory_xact_lock call 1
             MagicMock(),          # CREATE SEQUENCE IF NOT EXISTS call 1
             mock_result_1,        # SELECT nextval call 1
+            MagicMock(),          # pg_advisory_xact_lock call 2
             MagicMock(),          # CREATE SEQUENCE IF NOT EXISTS call 2
             mock_result_2,        # SELECT nextval call 2
         ]
