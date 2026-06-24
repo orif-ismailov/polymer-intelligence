@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import datetime
 import decimal
+import json
 
 import sqlalchemy as sa
 
@@ -128,14 +129,33 @@ def seed_demo() -> bool:
             price = base_price[product_id] + (i % 11) * 7 - 35
             volume = 20 + (i % 9) * 15
             event_at = now - datetime.timedelta(hours=i * 5, minutes=(i * 13) % 60)
+            # AI enrichment (ai->>'classification' drives the dashboard "AI Market
+            # Signals" panel + the hot_leads KPI). Mirror urgency so a high-urgency
+            # signal is a HOT lead; the most-recent signals therefore include a HOT.
+            classification = {"low": "LOW", "medium": "MEDIUM", "high": "HOT"}[urgency]
+            lead_score = (
+                {"LOW": 0.40, "MEDIUM": 0.65, "HOT": 0.90}[classification] + (i % 5) * 0.01
+            )
+            ai_payload = json.dumps(
+                {
+                    "classification": classification,
+                    "lead_score": round(lead_score, 2),
+                    "needs_review": i % 4 == 0,
+                    "summary": (
+                        f"{classification} {kind.replace('_', ' ')} — "
+                        f"product {product_id}, {regions[i % len(regions)]}"
+                    ),
+                }
+            )
             db.execute(
                 sa.text(
                     """
                     INSERT INTO signals (kind, source_id, product_id, grade_text, volume,
                                          volume_unit, price, currency, region, urgency,
-                                         status, event_at, created_at)
+                                         ai, status, event_at, created_at)
                     VALUES (:kind, :source_id, :product_id, :grade, :volume, 'MT',
-                            :price, 'USD', :region, :urgency, 'new', :event_at, :now)
+                            :price, 'USD', :region, :urgency, CAST(:ai AS jsonb), 'new',
+                            :event_at, :now)
                     """
                 ),
                 {
@@ -147,6 +167,7 @@ def seed_demo() -> bool:
                     "price": decimal.Decimal(price),
                     "region": regions[i % len(regions)],
                     "urgency": urgency,
+                    "ai": ai_payload,
                     "event_at": event_at,
                     "now": now,
                 },
