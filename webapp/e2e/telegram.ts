@@ -94,6 +94,27 @@ export async function openApp(
   return { raw, user };
 }
 
+/**
+ * Open the app the way Telegram actually launches a Mini App: launch params
+ * (including the signed initData) in the URL **hash**. The app must capture initData
+ * and strip the tg params so HashRouter doesn't render a blank page.
+ */
+export async function openViaLaunchHash(
+  page: Page,
+  user: TgUser = TEST_BUYER,
+  botToken: string = BOT_TOKEN,
+): Promise<{ raw: string; user: TgUser }> {
+  const { raw } = signInitData(user, botToken);
+  const hash = new URLSearchParams({
+    tgWebAppData: raw,
+    tgWebAppVersion: "8.0",
+    tgWebAppPlatform: "web",
+    tgWebAppThemeParams: "{}",
+  }).toString();
+  await page.goto(`/#${hash}`);
+  return { raw, user };
+}
+
 /** A stable default test buyer. */
 export const TEST_BUYER: TgUser = {
   id: 555000777,

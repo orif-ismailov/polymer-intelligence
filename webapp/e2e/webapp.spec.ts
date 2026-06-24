@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { openApp } from "./telegram";
+import { openApp, openViaLaunchHash } from "./telegram";
 
 /**
  * Telegram Web App buyer journeys (Vite app). A signed initData is passed via the
@@ -9,6 +9,19 @@ import { openApp } from "./telegram";
  * Covers REQ-webapp-auth (initData) + the request wizard (REQ-webapp-request) — the
  * buyer half of the §6.1.1 "request reaches the dashboard" acceptance flow.
  */
+
+test("launches from the Telegram hash without blanking (HashRouter fix)", async ({ page }) => {
+  // Telegram opens the Mini App with #tgWebAppData=... — HashRouter would treat that
+  // as a route and render blank. The app must capture initData + clean the hash.
+  await openViaLaunchHash(page);
+  // Home rendered (not blank) and the launch hash was cleaned to the home route.
+  await expect(page.getByRole("button", { name: "Оставить заявку" })).toBeVisible();
+  await expect(page).toHaveURL(/#\/$/);
+  // initData was captured from the hash → an authed call works.
+  await page.getByRole("button", { name: "Мои заявки" }).click();
+  await expect(page.getByRole("heading", { name: /мои заявки/i })).toBeVisible();
+  await expect(page.getByText(/не удалось загрузить/i)).toHaveCount(0);
+});
 
 test("My Requests loads for an authenticated buyer (initData auth)", async ({ page }) => {
   await openApp(page, "/requests");

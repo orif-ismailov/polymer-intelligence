@@ -42,10 +42,45 @@ import type { EventListener } from "@telegram-apps/sdk";
 
 let _initialized = false;
 
+// initData captured from the launch hash before HashRouter clears it (see below).
+let _capturedInitData = "";
+
+/**
+ * Telegram opens the Mini App at `<url>#tgWebAppData=...&tgWebAppVersion=...`.
+ * Because the app routes with HashRouter, that launch hash would be interpreted as
+ * a route — matching nothing and rendering a BLANK page. So we capture initData
+ * from the hash up front, let the SDK read the hash during init(), then strip the
+ * tg params back to `#/` so HashRouter starts at the home route. getInitData()
+ * returns the captured value. Order matters: capture → init() → clean.
+ */
+function _captureLaunchInitData(): void {
+  try {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash.includes("tgWebApp")) return;
+    const raw = new URLSearchParams(hash).get("tgWebAppData");
+    if (raw) _capturedInitData = raw;
+  } catch {
+    /* ignore — dev/browser without a launch hash */
+  }
+}
+
+function _cleanLaunchHash(): void {
+  try {
+    if (!window.location.hash.includes("tgWebApp")) return;
+    const { pathname, search } = window.location;
+    window.history.replaceState(null, "", `${pathname}${search}#/`);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function initTelegram(): void {
   if (_initialized) return;
+  // 1. Capture initData from the launch hash before anything touches it.
+  _captureLaunchInitData();
   try {
     if (isTMA('simple')) {
+      // 2. The SDK reads the launch params from the hash here.
       init();
       _initialized = true;
 
@@ -64,12 +99,18 @@ export function initTelegram(): void {
     }
   } catch {
     // Outside Telegram — silently ignore (dev/browser testing)
+  } finally {
+    // 3. Strip the tg params so HashRouter routes to "/" instead of blanking.
+    _cleanLaunchHash();
   }
 }
 
 // ── initData string ────────────────────────────────────────────────────────────
 
 export function getInitData(): string {
+  // Prefer the value captured from the launch hash before it was stripped for the
+  // router — retrieveLaunchParams() / the legacy WebApp.initData may be empty now.
+  if (_capturedInitData) return _capturedInitData;
   // @telegram-apps/sdk v2: retrieveLaunchParams().initDataRaw
   try {
     if (isTMA('simple')) {
