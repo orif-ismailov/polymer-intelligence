@@ -225,10 +225,24 @@ async def fetch_url(
             _host_last_request[hostname] = time.monotonic()
 
             # Build a synthetic Response with the capped content so callers
-            # get a normal httpx.Response to work with
+            # get a normal httpx.Response to work with.
+            #
+            # _read_response_capped() streams via aiter_bytes(), which ALREADY
+            # decompresses per the response's Content-Encoding. Carrying the original
+            # Content-Encoding onto the synthetic Response would make httpx try to
+            # decompress the already-decoded body a SECOND time on .text/.content
+            # ("Error -3 while decompressing data: incorrect header check") — breaking
+            # every gzip/br/deflate-compressed source. Content-Length is likewise the
+            # compressed length and no longer matches. Drop both so the decoded content
+            # is served verbatim.
+            clean_headers = httpx.Headers(response.headers)
+            for _h in ("content-encoding", "content-length"):
+                if _h in clean_headers:
+                    del clean_headers[_h]
+
             return httpx.Response(
                 status_code=response.status_code,
-                headers=response.headers,
+                headers=clean_headers,
                 content=content,
                 request=response.request,
             )

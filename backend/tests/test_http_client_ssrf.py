@@ -355,3 +355,52 @@ async def test_fetch_url_retries_on_connection_error():
 
     # Should attempt max_retries + 1 times total (initial + retries)
     assert attempt_count == settings.INGEST_HTTP_RETRIES + 1
+
+
+# ── fetch_url: compressed responses must not be double-decompressed ─────────────
+
+
+@pytest.mark.asyncio
+async def test_fetch_url_decodes_gzip_without_double_decompress():
+    """Regression: a gzip-compressed source must be decoded exactly once.
+
+    _read_response_capped() streams via aiter_bytes(), which already decompresses
+    per Content-Encoding. The synthetic Response must therefore DROP Content-Encoding
+    so callers reading .text/.content don't re-inflate the decoded body and hit
+    'Error -3 while decompressing data: incorrect header check'. This silently broke
+    every gzip/br/deflate-compressed source (e.g. UZEX) in production.
+    """
+    import gzip  # noqa: PLC0415
+
+    import app.ingest.http_client as http_client  # noqa: PLC0415
+
+    html = (
+        "<html><body><table class='custom-table-dark'><tbody>"
+        "<tr><td>row</td></tr></tbody></table></body></html>"
+    )
+    gzipped = gzip.compress(html.encode("utf-8"))
+
+    async def _gzip_transport_fn(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            headers={"content-encoding": "gzip", "content-type": "text/html"},
+            content=gzipped,
+        )
+
+    with patch.object(http_client, "is_safe_url", return_value=True), \
+         patch("app.ingest.http_client._enforce_host_delay", new=AsyncMock()):
+
+        class PatchedAsyncClient(httpx.AsyncClient):
+            def __init__(self, **kwargs):
+                kwargs.pop("transport", None)
+                transport = httpx.MockTransport(_gzip_transport_fn)
+                super().__init__(transport=transport, **kwargs)
+
+        with patch("httpx.AsyncClient", PatchedAsyncClient):
+            resp = await http_client.fetch_url("https://example.com/")
+
+    # .text returns the decompressed HTML (would raise 'incorrect header check' if the
+    # Content-Encoding header were carried onto the already-decoded body).
+    assert "custom-table-dark" in resp.text
+    # The stale Content-Encoding/Content-Length are stripped from the synthetic response.
+    assert "content-encoding" not in resp.headers
