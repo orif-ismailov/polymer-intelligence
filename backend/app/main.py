@@ -34,6 +34,7 @@ from app.api.admin_users import router as admin_users_router
 from app.api.alert_rules import alerts_router
 from app.api.alert_rules import router as alert_rules_router
 from app.api.auth import router as auth_router
+from app.api.dashboard import router as dashboard_router
 from app.api.dashboard_requests import router as dashboard_requests_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
@@ -142,6 +143,7 @@ def create_app() -> FastAPI:
     application.include_router(admin_sources_router, prefix="/api/v1")
     # ── dashboard routers (Phase 4 internal team dashboard) ──────────────────
     application.include_router(feed_router, prefix="/api/v1")
+    application.include_router(dashboard_router, prefix="/api/v1")
     application.include_router(dashboard_requests_router, prefix="/api/v1")
     application.include_router(admin_users_router, prefix="/api/v1")
     # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─

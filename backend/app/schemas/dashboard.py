@@ -323,3 +323,76 @@ class PriceSeriesOut(BaseModel):
     observed_on: datetime.date
     price_avg: decimal.Decimal
     currency: str
+
+
+# ── Dashboard Home summary (overview page: KPIs + top panels) ──────────────────
+
+
+class DashboardKpis(BaseModel):
+    """Five KPI counts for the dashboard home header."""
+
+    total_buyers: int        # clients (webapp buyers)
+    total_sellers: int       # counterparties with role='seller'
+    active_requests: int     # requests not in a terminal status
+    hot_leads: int           # signals classified HOT by AI (Phase 5)
+    alert_rules: int         # enabled alert rules
+
+
+class DashboardRequestItem(BaseModel):
+    """A row in the home 'Top Buyer Requests' panel."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    number: str
+    product_id: int | None
+    product: str | None       # product code (e.g. 'PP'), joined from products
+    grade_text: str | None
+    volume: decimal.Decimal | None
+    target_price: decimal.Decimal | None
+    currency: str | None
+    urgency: str | None
+    status: str
+    created_at: datetime.datetime
+
+
+class DashboardOfferItem(BaseModel):
+    """A row in the home 'Top Seller Offers' panel (signals kind='sell_offer')."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    kind: str
+    product_id: int | None
+    product: str | None
+    grade_text: str | None
+    volume: decimal.Decimal | None
+    price: decimal.Decimal | None
+    currency: str | None
+    region: str | None
+    event_at: datetime.datetime
+
+
+class DashboardAiSignalItem(BaseModel):
+    """A row in the home 'AI Market Signals' panel (signals with AI classification)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    kind: str
+    product_id: int | None
+    product: str | None
+    grade_text: str | None
+    classification: str | None    # HOT | MEDIUM | LOW
+    lead_score: float | None
+    needs_review: bool
+    event_at: datetime.datetime
+
+
+class DashboardSummary(BaseModel):
+    """GET /dashboard/summary — everything the overview page needs in one call."""
+
+    kpis: DashboardKpis
+    top_requests: list[DashboardRequestItem]
+    top_offers: list[DashboardOfferItem]
+    ai_signals: list[DashboardAiSignalItem]
