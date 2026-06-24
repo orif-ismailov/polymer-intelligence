@@ -20,15 +20,21 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# ── No-code adapter registration (Phase 4, Plan 06) ──────────────────────────
-# These imports register the four no-code adapters into the global adapter registry
-# at startup so GET /admin/source-types exposes their config_schema and POST
-# /sources/{id}/test can resolve them by type_name.
-# Pattern: mirroring how uzex adapters are registered (app.ingest.uzex package).
+# ── Adapter registration (Phase 4, Plan 06) ──────────────────────────────────
+# These imports self-register the source adapters into the global registry at
+# startup so GET /admin/source-types exposes their config_schema and POST
+# /sources/{id}/test can resolve them by type_name. Both the no-code adapters
+# (html_table/llm_page/rss/telegram_channel, added via the source constructor) AND
+# the built-in code adapters for seeded sources (uzex_*, cbu_rates) must be
+# registered in the API process — the worker registers its own set in
+# app.tasks.ingest, so without these the dashboard "Test" button on a UZEX/CBU
+# source returns "No adapter registered for type '...'".
+import app.ingest.cbu_rates  # noqa: E402, F401 — registers cbu_rates adapter
 import app.ingest.html_table  # noqa: E402, F401 — registers html_table adapter
 import app.ingest.llm_page  # noqa: E402, F401 — registers llm_page adapter
 import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
+import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 from app.api.admin_sources import router as admin_sources_router
 from app.api.admin_users import router as admin_users_router
 from app.api.alert_rules import alerts_router
