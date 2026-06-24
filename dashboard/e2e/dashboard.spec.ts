@@ -8,6 +8,22 @@ import { test, expect } from "@playwright/test";
  * navigation smoke across every guarded section (REQ-dashboard).
  */
 
+test("home overview is wired to real data (no placeholders)", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: /^dashboard$/i })).toBeVisible();
+
+  // All the old "wired in Plan 04-XX" / "available after Phase 5" stubs are gone.
+  await expect(page.getByText(/wired in plan/i)).toHaveCount(0);
+  await expect(page.getByText(/available after phase 5/i)).toHaveCount(0);
+
+  // The three formerly-placeholder panels now render real seed data.
+  await expect(page.getByRole("heading", { name: /top buyer requests/i })).toBeVisible();
+  await expect(page.getByText(/^REQ-DEMO-\d+/).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /top seller offers/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /ai market signals/i })).toBeVisible();
+  await expect(page.getByText(/^HOT$/).first()).toBeVisible(); // seeded HOT-classified signal
+});
+
 test("flagship: Purchase Requests master-detail opens a request", async ({ page }) => {
   await page.goto("/requests");
 

@@ -1,36 +1,54 @@
 "use client";
 
 /**
- * AiMarketSignalsPanel — D-01 placeholder-aware AI panel.
- * Final layout shape with 3 placeholder rows — NOT a blank card, NOT a spinner.
- * Each row: icon + "AI analysis available after Phase 5" text + time placeholder.
- * Phase 5 wires in real AI signal data here.
+ * AiMarketSignalsPanel — renders real AI market signals from the dashboard summary.
  *
- * D-01 contract: "No hidden sections and no dead-end blank cards — Phase 5 just fills the data."
+ * Signals are fetched ONCE on the Dashboard home page and passed in as a prop
+ * (avoids double-fetching the summary endpoint). Each row shows product / grade,
+ * a HOT / MEDIUM / LOW classification badge, the lead score, and a relative time.
+ *
+ * States: loading spinner, graceful empty state, and the populated list.
+ * No hardcoded hex — token classes only.
  */
 
-import { Bot, TrendingUp, AlertTriangle } from "lucide-react";
+import { Bot } from "lucide-react";
 
-const PLACEHOLDER_ROWS = [
-  {
-    icon: TrendingUp,
-    label: "Market trend analysis",
-  },
-  {
-    icon: AlertTriangle,
-    label: "Demand signal detection",
-  },
-  {
-    icon: Bot,
-    label: "Price movement insight",
-  },
-];
+import { relativeTime } from "@/lib/tz";
+import type { DashboardAiSignal } from "@/hooks/useDashboardSummary";
+
+const CLASSIFICATION_CLASSES: Record<string, string> = {
+  HOT: "text-urgency-high border-urgency-high",
+  MEDIUM: "text-urgency-medium border-urgency-medium",
+  LOW: "text-urgency-low border-urgency-low",
+};
+
+function ClassificationBadge({ classification }: { classification: string | null }) {
+  if (!classification) {
+    return <span className="text-sm text-foreground-subtle">—</span>;
+  }
+  const colorClasses =
+    CLASSIFICATION_CLASSES[classification] ??
+    "text-foreground-muted border-foreground-muted";
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${colorClasses}`}
+    >
+      {classification}
+    </span>
+  );
+}
 
 interface AiMarketSignalsPanelProps {
+  signals?: DashboardAiSignal[];
+  isLoading?: boolean;
   className?: string;
 }
 
-export function AiMarketSignalsPanel({ className = "" }: AiMarketSignalsPanelProps) {
+export function AiMarketSignalsPanel({
+  signals,
+  isLoading = false,
+  className = "",
+}: AiMarketSignalsPanelProps) {
   return (
     <div
       className={`rounded-lg bg-background-secondary border border-border ${className}`}
@@ -41,32 +59,61 @@ export function AiMarketSignalsPanel({ className = "" }: AiMarketSignalsPanelPro
           <Bot size={20} className="text-foreground-muted" aria-hidden="true" />
           <h2 className="text-base font-semibold text-foreground">AI Market Signals</h2>
         </div>
-        <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-400 border border-amber-500/30">
-          after Phase 5
-        </span>
+        <a
+          href="/signals?needs_review=true"
+          className="text-sm text-accent hover:text-accent-light transition-colors"
+        >
+          View all
+        </a>
       </div>
-      <div className="divide-y divide-border">
-        {PLACEHOLDER_ROWS.map((row, i) => {
-          const Icon = row.icon;
-          return (
-            <div
-              key={i}
-              className="flex items-start gap-3 px-6 py-4"
-            >
-              <Icon
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <span className="ml-3 text-sm text-foreground-muted">Loading signals…</span>
+        </div>
+      ) : !signals?.length ? (
+        <div className="flex flex-col items-center justify-center gap-2 py-10">
+          <Bot size={28} className="text-foreground-muted" aria-hidden="true" />
+          <p className="text-sm text-foreground-muted">No AI signals yet</p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {signals.map((signal) => (
+            <li key={signal.id} className="flex items-center gap-4 px-6 py-4">
+              <Bot
                 size={20}
-                className="mt-0.5 flex-shrink-0 text-foreground-muted"
+                className="flex-shrink-0 text-foreground-muted"
                 aria-hidden="true"
               />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground-subtle italic">
-                  {row.label} — AI analysis available after Phase 5
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {signal.product ?? "—"}
+                  {signal.grade_text ? (
+                    <span className="font-normal text-foreground-muted">
+                      {" · "}
+                      {signal.grade_text}
+                    </span>
+                  ) : null}
                 </p>
+                <time
+                  dateTime={signal.event_at}
+                  title={signal.event_at}
+                  className="text-xs text-foreground-muted"
+                >
+                  {relativeTime(signal.event_at)}
+                </time>
               </div>
-            </div>
-          );
-        })}
-      </div>
+              <div className="flex items-center gap-4">
+                <span className="whitespace-nowrap text-sm font-mono text-foreground">
+                  {signal.lead_score != null ? `${signal.lead_score} pts` : "—"}
+                </span>
+                <ClassificationBadge classification={signal.classification} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
