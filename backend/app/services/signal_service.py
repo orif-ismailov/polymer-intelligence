@@ -180,6 +180,10 @@ def create_signal_from_parse(
         str(counterparty_text_raw).strip() if counterparty_text_raw else None
     )
 
+    # Region / delivery-warehouse location (e.g. UZEX "Omborning joylashuvi")
+    region_raw = payload.get("region")
+    region: str | None = str(region_raw).strip() if region_raw else None
+
     # Volume unit (default MT)
     volume_unit_raw = payload.get("volume_unit", "MT")
     volume_unit = str(volume_unit_raw).strip() if volume_unit_raw else "MT"
@@ -199,7 +203,7 @@ def create_signal_from_parse(
         price=price,
         currency=currency,
         price_basis=PriceBasis.unknown,
-        region=None,
+        region=region,
         destination=None,
         counterparty_id=None,
         counterparty_text=counterparty_text,

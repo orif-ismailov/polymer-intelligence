@@ -41,7 +41,7 @@ OFFERS_CONFIG: dict[str, Any] = {
         "volume_unit",
         "price",
         "",  # today's count — skip
-        "counterparty_text",
+        "region",  # "Omborning joylashuvi" — warehouse/delivery location
         "event_at",
     ],
     "currency": "UZS",
@@ -50,7 +50,7 @@ OFFERS_CONFIG: dict[str, Any] = {
 
 CONTRACTS_CONFIG: dict[str, Any] = {
     "table_selector": "table.custom-table-dark",
-    "columns": ["lot", "product_text", "volume", "volume_unit", "price", "counterparty_text"],
+    "columns": ["lot", "product_text", "volume", "volume_unit", "price", "region"],
     "currency": "UZS",
     "urls": ["https://uzex.uz/Trade/ContractsSumNew"],
 }

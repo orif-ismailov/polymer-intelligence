@@ -18,7 +18,7 @@ Column mapping:
   Use None or empty string for columns to skip.
   Field names correspond to RawItemDraft.payload keys:
     lot, product_text, grade_text, volume, price, currency, section,
-    counterparty_text, event_at, external_id, contract_no
+    counterparty_text, region, event_at, external_id, contract_no
 """
 
 from __future__ import annotations

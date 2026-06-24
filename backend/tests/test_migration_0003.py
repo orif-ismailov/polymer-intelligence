@@ -100,15 +100,15 @@ class TestMigration0003RevisionChain:
         assert "0002" in revisions, f"Revision 0002 not found. Available: {revisions}"
 
     def test_0003_is_not_head_after_0004(self) -> None:
-        """0003 is no longer head once 0004 is added; 0004 is the head."""
+        """0003 is no longer head once later migrations are added; history stays linear."""
         script_dir = _get_alembic_script_dir()
         heads = script_dir.get_heads()
-        assert "0004" in heads, (
-            f"Revision 0004 is not the head. Current heads: {heads}"
-        )
         assert "0003" not in heads, (
-            f"Revision 0003 should no longer be head after 0004. Current heads: {heads}"
+            f"Revision 0003 should no longer be head. Current heads: {heads}"
         )
+        # Linear history: exactly one head (0004, then 0005, …). Asserting a single
+        # head rather than a specific revision keeps this green as migrations are added.
+        assert len(heads) == 1, f"Expected a single linear migration head, got: {heads}"
 
 
 class TestMigration0004RevisionChain:

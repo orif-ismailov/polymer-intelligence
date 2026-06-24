@@ -22,7 +22,7 @@
         "volume_unit",
         "price",
         "",
-        "counterparty_text",
+        "region",
         "event_at"
       ],
       "currency": "UZS"
@@ -48,7 +48,7 @@
         "volume",
         "volume_unit",
         "price",
-        "counterparty_text"
+        "region"
       ],
       "currency": "UZS"
     }
