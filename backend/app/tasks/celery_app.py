@@ -34,6 +34,18 @@ celery_app.conf.update(
     # ── Broker / result backend ───────────────────────────────────────────────
     broker_url=settings.REDIS_URL,
     result_backend=settings.REDIS_URL,
+    # Bound Redis connect/op time so a *producer* (e.g. an HTTP handler enqueuing a
+    # notify task) fails fast instead of hanging on reconnect when Redis is down.
+    # Workers still reconnect at startup via broker_connection_retry_on_startup;
+    # this only caps each attempt. result_backend retry is capped because nothing in
+    # this app blocks on task results (notifications are fire-and-forget).
+    broker_transport_options={"socket_connect_timeout": 3, "socket_timeout": 3},
+    result_backend_transport_options={
+        "socket_connect_timeout": 3,
+        "socket_timeout": 3,
+        "retry_policy": {"max_retries": 1},
+    },
+    redis_socket_connect_timeout=3,
     # ── Timezone ──────────────────────────────────────────────────────────────
     timezone=settings.TZ_DISPLAY,  # "Asia/Tashkent" by default
     enable_utc=True,

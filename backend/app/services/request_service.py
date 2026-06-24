@@ -38,6 +38,32 @@ from app.services.audit_service import write_audit
 
 logger = logging.getLogger(__name__)
 
+
+def _enqueue_notify_soft(request_id: int) -> None:
+    """Enqueue the status-change notification, fail-soft.
+
+    The notification is a best-effort side effect: a Redis/broker outage must NOT
+    break the user-facing request creation or status transition (e.g. opening a
+    request detail auto-transitions new->viewed). ``retry=False`` makes the publish
+    fail fast — one attempt, bounded by the broker socket-connect timeout in
+    ``celery_app.py`` — and any failure is logged rather than raised.
+    """
+    from app.tasks.notify import send_status_change_notification  # noqa: PLC0415
+
+    try:
+        send_status_change_notification.apply_async(
+            args=[request_id], queue="notify", retry=False
+        )
+    except Exception as exc:
+        # Concise (no traceback): this can fire on every request while Redis is down.
+        logger.warning(
+            "notify enqueue failed (broker unavailable); request %s committed "
+            "without a status-change notification: %s",
+            request_id,
+            exc,
+        )
+
+
 # ── Status machine ────────────────────────────────────────────────────────────
 
 #: Valid transitions per dev-spec §3.
@@ -202,11 +228,8 @@ def create_request(
     db.add(hist)
     db.flush()
 
-    # 4. Enqueue the notify task (lazy import per notify.py convention — avoids
-    #    circular imports and keeps module import socket-free)
-    from app.tasks.notify import send_status_change_notification  # noqa: PLC0415
-
-    send_status_change_notification.apply_async(args=[req.id], queue="notify")
+    # 4. Enqueue the notify task (best-effort — must not fail request creation)
+    _enqueue_notify_soft(req.id)
 
     logger.info(
         "request_service.create",
@@ -275,10 +298,8 @@ def transition_status(
             details={"from": old_status.value, "to": to_status.value},
         )
 
-    # Enqueue the notify task (lazy import)
-    from app.tasks.notify import send_status_change_notification  # noqa: PLC0415
-
-    send_status_change_notification.apply_async(args=[request.id], queue="notify")
+    # Enqueue the notify task (best-effort — must not fail the status transition)
+    _enqueue_notify_soft(request.id)
 
     logger.info(
         "request_service.transition_status",
