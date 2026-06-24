@@ -108,3 +108,38 @@ def client_redis_error() -> Generator[TestClient, None, None]:
 
     with patch("app.api.health._check_redis", return_value="error"), TestClient(application) as test_client:
         yield test_client
+
+
+# ── Adapter registry isolation ────────────────────────────────────────────────
+# The source-adapter registry is a process-global mutated by import side-effects AND
+# by tests that call _clear_registry()/register_adapter(). main.py now imports the
+# uzex/cbu_rates adapters at startup, so they get cached early — a later
+# `import app.ingest.uzex` no longer re-registers them after a _clear_registry(),
+# which left the adapter-registration tests order-dependent. Snapshot the full
+# production set once and restore it after every test so order no longer matters.
+
+
+@pytest.fixture(scope="session")
+def _production_adapters(patch_env: None) -> dict[str, object]:
+    """Import every production adapter once (env patched) and snapshot the registry."""
+    import app.ingest.cbu_rates  # noqa: F401, PLC0415
+    import app.ingest.html_table  # noqa: F401, PLC0415
+    import app.ingest.llm_page  # noqa: F401, PLC0415
+    import app.ingest.rss  # noqa: F401, PLC0415
+    import app.ingest.telegram_channel  # noqa: F401, PLC0415
+    import app.ingest.uzex  # noqa: F401, PLC0415
+    from app.ingest import registry  # noqa: PLC0415
+
+    return dict(registry._REGISTRY)
+
+
+@pytest.fixture(autouse=True)
+def _restore_adapter_registry(
+    _production_adapters: dict[str, object],
+) -> Generator[None, None, None]:
+    """Reset the global adapter registry to the full production set after each test."""
+    from app.ingest import registry  # noqa: PLC0415
+
+    yield
+    registry._REGISTRY.clear()
+    registry._REGISTRY.update(_production_adapters)
