@@ -229,6 +229,57 @@ async def _fetch_and_parse(
     return drafts
 
 
+async def _test_sample(
+    urls: list[str],
+    config: dict[str, object],
+    section_label: str | None = None,
+) -> TestResult:
+    """Diagnostic fetch+parse for the admin "Test source" button.
+
+    Unlike _fetch_and_parse — which logs and *continues* past a failed URL so a
+    scheduled ingest job survives one bad page — the Test button must report WHY a
+    source yields no data. So:
+      - a fetch failure surfaces as ok=False with the exception (instead of being
+        swallowed and reported as a silent ok=True / empty sample_rows), and
+      - a reachable-but-empty page is reported as ok=False with the HTTP status, body
+        size, and selector, so a stale table_selector / bot-block / genuinely-empty
+        page can be told apart at a glance.
+    """
+    from app.ingest.http_client import fetch_url  # noqa: PLC0415 (avoid Settings init)
+
+    if not urls:
+        return TestResult(ok=False, error="No URLs configured")
+
+    url = urls[0]
+    try:
+        response = await fetch_url(url)
+    except Exception as exc:
+        return TestResult(ok=False, error=f"Fetch failed for {url}: {exc}")
+
+    html = response.text
+    rows = parse_table_rows(html, config)
+    if not rows:
+        selector = str(config.get("table_selector", "table.custom-table-dark"))
+        return TestResult(
+            ok=False,
+            error=(
+                f"Fetched {url} (HTTP {response.status_code}, {len(html)} bytes) but "
+                f"parsed 0 rows from '{selector}'. The page may be empty or bot-blocked, "
+                f"or the table_selector/columns are stale."
+            ),
+        )
+
+    currency = str(config.get("currency") or "UZS")
+    sample: list[dict[str, object]] = []
+    for idx, row in enumerate(rows[:10]):
+        payload: dict[str, object] = dict(row)
+        if section_label:
+            payload["section"] = section_label
+        payload["currency"] = currency
+        sample.append({"external_id": _row_external_id(row, url, idx), **payload})
+    return TestResult(ok=True, sample_rows=sample)
+
+
 # ── Adapters ──────────────────────────────────────────────────────────────────
 
 
@@ -255,19 +306,7 @@ class UzexOffersAdapter:
         """Fetch the first configured URL and return up to 10 sample rows."""
         raw_urls = config.get("urls")
         urls: list[str] = [str(u) for u in (raw_urls if isinstance(raw_urls, list) else [])] or UzexOffersConfig().urls
-        if not urls:
-            return TestResult(ok=False, error="No URLs configured")
-
-        try:
-            drafts = await _fetch_and_parse(urls[:1], config)
-            sample: list[dict[str, object]] = [
-                {"external_id": d.external_id, **(d.payload or {})}
-                for d in drafts[:10]
-            ]
-            return TestResult(ok=True, sample_rows=sample)
-        except Exception as exc:
-            logger.error("uzex_offers.test_error", extra={"error": str(exc)})
-            return TestResult(ok=False, error=str(exc))
+        return await _test_sample(urls, config)
 
 
 @dataclass
@@ -291,19 +330,7 @@ class UzexContractsAdapter:
         """Fetch the first configured URL and return up to 10 sample rows."""
         raw_urls = config.get("urls")
         urls: list[str] = [str(u) for u in (raw_urls if isinstance(raw_urls, list) else [])] or UzexContractsConfig().urls
-        if not urls:
-            return TestResult(ok=False, error="No URLs configured")
-
-        try:
-            drafts = await _fetch_and_parse(urls[:1], config)
-            sample: list[dict[str, object]] = [
-                {"external_id": d.external_id, **(d.payload or {})}
-                for d in drafts[:10]
-            ]
-            return TestResult(ok=True, sample_rows=sample)
-        except Exception as exc:
-            logger.error("uzex_contracts.test_error", extra={"error": str(exc)})
-            return TestResult(ok=False, error=str(exc))
+        return await _test_sample(urls, config)
 
 
 @dataclass
@@ -332,19 +359,7 @@ class UzexDealsAdapter:
         """Fetch the first configured URL and return up to 10 sample rows."""
         raw_urls = config.get("urls")
         urls: list[str] = [str(u) for u in (raw_urls if isinstance(raw_urls, list) else [])] or UzexDealsConfig().urls
-        if not urls:
-            return TestResult(ok=False, error="No URLs configured")
-
-        try:
-            drafts = await _fetch_and_parse(urls[:1], config)
-            sample: list[dict[str, object]] = [
-                {"external_id": d.external_id, **(d.payload or {})}
-                for d in drafts[:10]
-            ]
-            return TestResult(ok=True, sample_rows=sample)
-        except Exception as exc:
-            logger.error("uzex_deals.test_error", extra={"error": str(exc)})
-            return TestResult(ok=False, error=str(exc))
+        return await _test_sample(urls, config, section_label="deals")
 
 
 # ── Self-register on import ────────────────────────────────────────────────────
