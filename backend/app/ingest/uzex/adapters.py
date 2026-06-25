@@ -34,6 +34,7 @@ import hashlib
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import BaseModel, Field
 
@@ -48,6 +49,33 @@ logger = logging.getLogger(__name__)
 
 # Default CSS selector that works across all three UZEX table pages (T-02-14)
 _DEFAULT_TABLE_SELECTOR = "table.custom-table-dark"
+
+# ── Pagination defaults (overridable via source.config) ───────────────────────
+# UZEX list pages are paginated as ?page=N&length=L. A single page only ever
+# returns up to `length` rows, and parse_table_rows caps any page at 500
+# (MAX_ROWS_PER_PAGE), so to capture the FULL listing (observed live: ~2000+ open
+# offers) the adapter walks pages until a page yields no new rows.
+#
+# _DEFAULT_PAGE_LENGTH is kept < 500 on purpose: UZEX pins a "featured" lot at the
+# top of EVERY page, so a full page returns length+1 rows. Staying under the cap
+# guarantees the pin never pushes a real row past the 500-row truncation.
+_DEFAULT_PAGE_LENGTH = 400
+# Safety bound so a layout change that breaks the stop condition can't loop
+# forever (400 * 60 = 24k rows — far above any realistic UZEX listing).
+_DEFAULT_MAX_PAGES = 60
+# Query-param names UZEX uses for pagination (overridable via config for resilience).
+_PAGE_PARAM = "page"
+_LENGTH_PARAM = "length"
+
+
+def _with_query(url: str, **params: object) -> str:
+    """Return `url` with the given query params added/overridden (others kept)."""
+    parts = urlsplit(url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query.update({k: str(v) for k, v in params.items()})
+    return urlunsplit(
+        (parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)
+    )
 
 
 # ── Config schemas ────────────────────────────────────────────────────────────
@@ -183,44 +211,83 @@ async def _fetch_and_parse(
     config: dict[str, object],
     section_label: str | None = None,
 ) -> list[RawItemDraft]:
-    """Fetch each URL in source_urls, parse the table, return RawItemDraft list."""
+    """Fetch each URL in source_urls (paginating), parse, return RawItemDraft list.
+
+    Pagination (config-driven; see the _DEFAULT_PAGE_* constants):
+      For each base URL, request ?page=1&length=L, ?page=2&length=L, … until a
+      page yields no NEW rows. "New" is judged by external_id so the lot UZEX pins
+      at the top of every page is counted once, and an over-run page (which simply
+      repeats earlier rows) cleanly terminates the walk. Set config["paginate"] =
+      False to fetch a single page (legacy behaviour).
+
+    A fetch error stops pagination for THAT source only (keeping rows already
+    collected) and moves on — one bad page never aborts the batch (T-02-17).
+    """
     from app.ingest.http_client import fetch_url  # noqa: PLC0415 (avoid Settings init)
 
+    paginate = bool(config.get("paginate", True))
+    page_length = int(config.get("page_length") or _DEFAULT_PAGE_LENGTH)
+    max_pages = int(config.get("max_pages") or _DEFAULT_MAX_PAGES)
+    page_param = str(config.get("page_param") or _PAGE_PARAM)
+    length_param = str(config.get("length_param") or _LENGTH_PARAM)
+    currency = str(config.get("currency") or "UZS")
+
     drafts: list[RawItemDraft] = []
+    seen_ids: set[str] = set()
 
-    for url in source_urls:
-        try:
-            response = await fetch_url(url)
-        except Exception as exc:
-            logger.error(
-                "uzex_adapter.fetch_error",
-                extra={"url": url, "error": str(exc)},
+    for base_url in source_urls:
+        pages_walked = 0
+        for page in range(1, (max_pages if paginate else 1) + 1):
+            url = (
+                _with_query(base_url, **{page_param: page, length_param: page_length})
+                if paginate
+                else base_url
             )
-            continue
-
-        html = response.text
-        rows = parse_table_rows(html, config)
-
-        for idx, row in enumerate(rows):
-            # Add section label to payload if provided (per-URL metadata)
-            payload: dict[str, object] = dict(row)
-            if section_label:
-                payload["section"] = section_label
-            # Inject currency from config
-            currency = str(config.get("currency") or "UZS")
-            payload["currency"] = currency
-
-            external_id = _row_external_id(row, url, idx)
-            content = _row_content(row)
-
-            drafts.append(
-                RawItemDraft(
-                    external_id=external_id,
-                    content=content,
-                    payload=payload,
-                    event_at=None,  # event_at parsing deferred to 02-05 signals
+            try:
+                response = await fetch_url(url)
+            except Exception as exc:
+                logger.error(
+                    "uzex_adapter.fetch_error",
+                    extra={"url": url, "page": page, "error": str(exc)},
                 )
-            )
+                break  # stop paginating this source; keep what we have (T-02-17)
+
+            rows = parse_table_rows(response.text, config)
+            if not rows:
+                break  # empty page → past the last page
+
+            new_in_page = 0
+            for idx, row in enumerate(rows):
+                external_id = _row_external_id(row, url, idx)
+                if external_id in seen_ids:
+                    continue  # pinned/featured row repeats across pages — dedup
+                seen_ids.add(external_id)
+                new_in_page += 1
+
+                payload: dict[str, object] = dict(row)
+                if section_label:
+                    payload["section"] = section_label
+                payload["currency"] = currency
+
+                drafts.append(
+                    RawItemDraft(
+                        external_id=external_id,
+                        content=_row_content(row),
+                        payload=payload,
+                        event_at=None,  # event_at parsing deferred to 02-05 signals
+                    )
+                )
+
+            pages_walked += 1
+            # No new rows on this page → we've run past the real data (a repeat or
+            # pin-only page). Stop before requesting empty pages forever.
+            if new_in_page == 0 or not paginate:
+                break
+
+        logger.info(
+            "uzex_adapter.url_done",
+            extra={"url": base_url, "pages": pages_walked, "running_total": len(drafts)},
+        )
 
     logger.info(
         "uzex_adapter.fetch_done",
