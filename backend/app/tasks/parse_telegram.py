@@ -324,7 +324,9 @@ def parse_telegram_item(raw_item_id: int) -> dict[str, Any]:
             tokens_in=journal.get("tokens_in", 0),
             tokens_out=journal.get("tokens_out", 0),
             latency_ms=journal.get("latency_ms", 0),
-            result={"extraction": result.model_dump() if hasattr(result, "model_dump") else {}},
+            # mode="json": Decimal volume/price + enum kind must serialise into the
+            # JSONB result column (plain model_dump() leaves Decimal → json.dumps fails).
+            result={"extraction": result.model_dump(mode="json") if hasattr(result, "model_dump") else {}},
             status="ok",
             error=None,
         )

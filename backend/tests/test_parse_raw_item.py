@@ -534,6 +534,113 @@ class TestParseRawItemRouting:
         )
 
 
+# ── Unit tests: LLM fallback branch (UZEX_LLM_FALLBACK_ENABLED) ───────────────
+
+class TestParseRawItemLlmFallback:
+    """parse_raw_item routes unrecognized rows through the LLM when the flag is on."""
+
+    def _raw_item(self, payload: dict, content: str = "lot: 1; product_text: Поливинилхлорид") -> object:
+        raw_item = MagicMock()
+        raw_item.id = 7
+        raw_item.source_id = 1
+        raw_item.payload = payload
+        raw_item.content = content
+        raw_item.parse_status = "pending"
+        raw_item.event_at = datetime.datetime(2024, 1, 15, 10, 0, tzinfo=datetime.UTC)
+        return raw_item
+
+    def _llm_result(self, *, is_relevant: bool, confidence: float = 0.9) -> object:
+        result = MagicMock()
+        result.is_relevant = is_relevant
+        result.confidence = confidence
+        result.model_dump.return_value = {}
+        return result
+
+    def test_llm_relevant_creates_signal(self) -> None:
+        from app.tasks.parse import parse_raw_item  # noqa: PLC0415
+
+        raw_item = self._raw_item(PAYLOAD_UNRECOGNIZED)
+        mock_session = MagicMock()
+        mock_session.get.return_value = raw_item
+        mock_signal = MagicMock()
+        mock_signal.id = 123
+
+        with (
+            patch("app.tasks.parse._llm_fallback_enabled", return_value=True),
+            patch("app.tasks.parse.match_product", return_value=None),
+            patch("app.tasks.parse.get_session") as mock_get_session,
+            patch("app.tasks.parse.check_and_reserve_tokens"),
+            patch("app.tasks.parse.record_actual_tokens"),
+            patch("app.tasks.parse.write_parse_run", return_value=1),
+            patch(
+                "app.tasks.parse.llm_extract_signal",
+                return_value=(self._llm_result(is_relevant=True), {"parser": "llm_extract_tools", "model": "claude-haiku-4-5", "tokens_in": 500, "tokens_out": 200, "latency_ms": 10}),
+            ),
+            patch("app.tasks.parse.create_signal_from_extraction", return_value=mock_signal) as mock_create,
+        ):
+            mock_get_session.return_value.__enter__ = MagicMock(return_value=mock_session)
+            mock_get_session.return_value.__exit__ = MagicMock(return_value=False)
+            result = parse_raw_item(7)
+
+        assert result["status"] == "parsed"
+        assert result["signal_id"] == 123
+        assert result["via"] == "llm"
+        mock_create.assert_called_once()
+
+    def test_llm_irrelevant_no_signal(self) -> None:
+        from app.tasks.parse import parse_raw_item  # noqa: PLC0415
+
+        raw_item = self._raw_item(PAYLOAD_UNRECOGNIZED)
+        mock_session = MagicMock()
+        mock_session.get.return_value = raw_item
+
+        with (
+            patch("app.tasks.parse._llm_fallback_enabled", return_value=True),
+            patch("app.tasks.parse.match_product", return_value=None),
+            patch("app.tasks.parse.get_session") as mock_get_session,
+            patch("app.tasks.parse.check_and_reserve_tokens"),
+            patch("app.tasks.parse.record_actual_tokens"),
+            patch("app.tasks.parse.write_parse_run", return_value=1),
+            patch(
+                "app.tasks.parse.llm_extract_signal",
+                return_value=(self._llm_result(is_relevant=False), {"parser": "llm_extract_tools", "model": "claude-haiku-4-5", "tokens_in": 500, "tokens_out": 50, "latency_ms": 10}),
+            ),
+            patch("app.tasks.parse.create_signal_from_extraction") as mock_create,
+        ):
+            mock_get_session.return_value.__enter__ = MagicMock(return_value=mock_session)
+            mock_get_session.return_value.__exit__ = MagicMock(return_value=False)
+            result = parse_raw_item(7)
+
+        assert result["status"] == "irrelevant"
+        mock_create.assert_not_called()
+
+    def test_llm_budget_exceeded_degrades_to_queue(self) -> None:
+        from app.tasks.parse import parse_raw_item  # noqa: PLC0415
+        from parsing.schemas import BudgetExceeded  # noqa: PLC0415
+
+        raw_item = self._raw_item(PAYLOAD_UNRECOGNIZED)
+        mock_session = MagicMock()
+        mock_session.get.return_value = raw_item
+
+        with (
+            patch("app.tasks.parse._llm_fallback_enabled", return_value=True),
+            patch("app.tasks.parse.match_product", return_value=None),
+            patch("app.tasks.parse.get_session") as mock_get_session,
+            patch("app.tasks.parse.check_and_reserve_tokens", side_effect=BudgetExceeded("limit")),
+            patch("app.tasks.parse.write_parse_run", return_value=1),
+            patch("app.tasks.parse.queue_for_classification") as mock_queue,
+            patch("app.tasks.parse.create_signal_from_extraction") as mock_create,
+        ):
+            mock_get_session.return_value.__enter__ = MagicMock(return_value=mock_session)
+            mock_get_session.return_value.__exit__ = MagicMock(return_value=False)
+            result = parse_raw_item(7)
+
+        assert result["status"] == "irrelevant"
+        assert result["reason"] == "budget_exceeded"
+        mock_queue.assert_called_once()
+        mock_create.assert_not_called()
+
+
 # ── DB-backed integration tests ──────────────────────────────────────────────
 
 @_requires_real_db

@@ -87,6 +87,160 @@ def create_signal_from_parse(session: Any, raw_item: Any, parsed: Mapping[str, o
     return _create(session, raw_item, parsed)
 
 
+# ── LLM-fallback seam (feature-flagged; mirrors parse_telegram_item) ───────────
+# These thin wrappers exist so tests can patch app.tasks.parse.<name>. They are
+# only exercised when settings.UZEX_LLM_FALLBACK_ENABLED is True.
+
+# Conservative per-call token reservation (matches parse_telegram LLM_TOKEN_ESTIMATE).
+LLM_TOKEN_ESTIMATE = 1200
+
+
+def _llm_fallback_enabled() -> bool:
+    """Return the UZEX_LLM_FALLBACK_ENABLED flag (patchable seam for tests)."""
+    from app.core.config import settings  # noqa: PLC0415
+
+    return bool(settings.UZEX_LLM_FALLBACK_ENABLED)
+
+
+def llm_extract_signal(prepared_text: str) -> tuple[Any, dict]:
+    """Wrapper: call parsing.extractor.extract_signal."""
+    from parsing.extractor import extract_signal as _extract  # noqa: PLC0415
+
+    return _extract(prepared_text)
+
+
+def check_and_reserve_tokens(estimated: int) -> None:
+    """Wrapper: call parsing.budget.check_and_reserve_tokens."""
+    from parsing.budget import check_and_reserve_tokens as _check  # noqa: PLC0415
+
+    _check(estimated)
+
+
+def record_actual_tokens(reserved: int, actual: int) -> None:
+    """Wrapper: call parsing.budget.record_actual_tokens."""
+    from parsing.budget import record_actual_tokens as _record  # noqa: PLC0415
+
+    _record(reserved, actual)
+
+
+def write_parse_run(session: Any, raw_item_id: int, **kwargs: Any) -> int:
+    """Wrapper: call ai_signal_service.write_parse_run."""
+    from app.services.ai_signal_service import write_parse_run as _write  # noqa: PLC0415
+
+    return _write(session, raw_item_id, **kwargs)
+
+
+def create_signal_from_extraction(
+    session: Any, raw_item: Any, result: Any, journal: dict, **kwargs: Any
+) -> Any:
+    """Wrapper: call ai_signal_service.create_signal_from_extraction."""
+    from app.services.ai_signal_service import (  # noqa: PLC0415
+        create_signal_from_extraction as _create,
+    )
+
+    return _create(session, raw_item, result, journal, **kwargs)
+
+
+def _parse_via_llm(session: Any, raw_item: Any, product_text: str) -> dict[str, Any]:
+    """Route an unrecognized UZEX row through the LLM extractor (like Telegram).
+
+    Mirrors the parse_telegram_item guardrails:
+      - G6 blank-content guard (no LLM call for empty content)
+      - G4 budget gate; on BudgetExceeded it DEGRADES to the rule-based path
+        (queue_for_classification + irrelevant) rather than 'budget_deferred', because
+        nightly_llm_catchup only reprocesses telegram_channel items — using
+        budget_deferred here would strand the row. Re-enable later / raise the budget
+        to LLM-process it.
+      - G3 InstructorRetryException dead-letter (parse_status='failed', no signal)
+      - G5 parse_runs row written before the signal
+      - G2 confidence < threshold → needs_review=True
+
+    product_id resolution happens inside create_signal_from_extraction via
+    match_product on the LLM's canonical product code (e.g. "PVC").
+    """
+    from instructor.core import InstructorRetryException  # noqa: PLC0415
+
+    from parsing.budget import BudgetExceeded  # noqa: PLC0415
+    from parsing.schemas import CONFIDENCE_REVIEW_THRESHOLD  # noqa: PLC0415
+    from parsing.text_prep import prepare_message_text  # noqa: PLC0415
+
+    prepared = prepare_message_text(raw_item.content or "")
+    if not prepared:
+        write_parse_run(
+            session, raw_item.id, parser="llm_extract_tools", model=None,
+            prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
+            result={"note": "blank_content"}, status="ok", error=None,
+        )
+        raw_item.parse_status = "irrelevant"
+        session.commit()
+        return {"status": "irrelevant", "raw_item_id": raw_item.id, "reason": "blank_content"}
+
+    try:
+        check_and_reserve_tokens(LLM_TOKEN_ESTIMATE)
+        result, journal = llm_extract_signal(prepared)
+        record_actual_tokens(
+            LLM_TOKEN_ESTIMATE,
+            int(journal.get("tokens_in", 0)) + int(journal.get("tokens_out", 0)),
+        )
+    except BudgetExceeded:
+        # G4 degrade → today's rule-based no-match behaviour (queue + irrelevant).
+        logger.warning("parse_raw_item.budget_exceeded_degrade", extra={"raw_item_id": raw_item.id})
+        queue_for_classification(session, raw_item.id, product_text)
+        write_parse_run(
+            session, raw_item.id, parser="rule_based_fallback", model=None,
+            prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
+            result={"note": "budget_exceeded_degraded"}, status="ok", error=None,
+        )
+        raw_item.parse_status = "irrelevant"
+        session.commit()
+        return {"status": "irrelevant", "raw_item_id": raw_item.id, "reason": "budget_exceeded"}
+    except InstructorRetryException as exc:
+        logger.error("parse_raw_item.dead_letter", extra={"raw_item_id": raw_item.id, "error": str(exc)})
+        write_parse_run(
+            session, raw_item.id, parser="llm_extract_tools", model=None,
+            prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
+            result={"raw": "failed_attempts"}, status="error", error=str(exc)[:1000],
+        )
+        raw_item.parse_status = "failed"
+        session.commit()
+        return {"status": "dead_lettered", "raw_item_id": raw_item.id, "error": str(exc)[:200]}
+
+    # G5: attribution — parse_runs first, then signal.
+    write_parse_run(
+        session, raw_item.id, parser=journal.get("parser", "llm_extract_tools"),
+        model=journal.get("model"), prompt_version=journal.get("prompt_version"),
+        tokens_in=int(journal.get("tokens_in", 0)), tokens_out=int(journal.get("tokens_out", 0)),
+        latency_ms=journal.get("latency_ms", 0),
+        # mode="json" so Decimal volume/price + enum kind serialise into the JSONB
+        # audit column (plain model_dump() leaves Decimal, which json.dumps rejects).
+        result={"extraction": result.model_dump(mode="json") if hasattr(result, "model_dump") else {}},
+        status="ok", error=None,
+    )
+
+    if result.is_relevant:
+        needs_review = result.confidence < CONFIDENCE_REVIEW_THRESHOLD
+        signal = create_signal_from_extraction(
+            session, raw_item, result, journal, needs_review=needs_review
+        )
+        session.add(signal)
+        session.flush()
+        raw_item.parse_status = "parsed"
+        session.commit()
+        logger.info(
+            "parse_raw_item.llm_signal",
+            extra={"raw_item_id": raw_item.id, "signal_id": signal.id, "needs_review": needs_review},
+        )
+        return {
+            "status": "parsed", "signal_id": signal.id,
+            "raw_item_id": raw_item.id, "needs_review": needs_review, "via": "llm",
+        }
+
+    raw_item.parse_status = "irrelevant"
+    session.commit()
+    logger.info("parse_raw_item.llm_irrelevant", extra={"raw_item_id": raw_item.id})
+    return {"status": "irrelevant", "raw_item_id": raw_item.id, "via": "llm"}
+
+
 @celery_app.task(name="parse_raw_item")  # type: ignore[untyped-decorator]
 def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
     """Parse a single UZEX raw_item into the signals stream.
@@ -175,6 +329,13 @@ def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
                     },
                 )
                 return {"status": "parsed", "signal_id": signal.id, "raw_item_id": raw_item_id}
+
+            elif _llm_fallback_enabled():
+                # ── Branch (b'): no rule-based match → LLM extraction (like Telegram) ──
+                # When UZEX_LLM_FALLBACK_ENABLED, route the unrecognized row through the
+                # LLM extractor instead of straight to the manual-classification queue.
+                # _parse_via_llm owns its own commit + parse_runs journaling.
+                return _parse_via_llm(session, raw_item, product_text)
 
             else:
                 # ── Branch (b): no polymer match → irrelevant (+ queue for review) ──

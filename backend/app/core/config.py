@@ -37,6 +37,13 @@ class Settings(BaseSettings):
     # Prompt version pin — stored verbatim in parse_runs.prompt_version for replay.
     # When the prompt changes, create parsing/prompts/extract_vN.md and update this.
     LLM_PROMPT_VERSION: str = "v1"
+    # When True, UZEX rows that the rule-based dictionary does NOT recognize are
+    # routed through the LLM extractor (like Telegram) instead of being marked
+    # irrelevant + queued for manual classification. The LLM emits canonical product
+    # codes (e.g. "PVC") which the existing synonym dictionary resolves to product_id,
+    # so polymers in raw Russian/Uzbek text are caught without per-string hand-mapping.
+    # Off by default: it spends Anthropic tokens per unrecognized row (budget-gated).
+    UZEX_LLM_FALLBACK_ENABLED: bool = False
 
     # ── Telegram bot ──────────────────────────────────────────────────────────
     BOT_TOKEN: str
