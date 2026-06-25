@@ -135,6 +135,15 @@ disallow_untyped_defs = true
 disallow_any_explicit = true
 
 [[tool.mypy.overrides]]
+# The CI mypy gate targets app/services + app/schemas only (dev-spec §7); parsing/ is
+# not directly type-checked. When an app/services module transitively imports a parsing
+# helper (e.g. request_analysis_service -> parsing.budget), the parsing file's own
+# (ungated) type issues must not fail the services gate. parsing keeps its own quality
+# bar; this carve-out just stops transitive imports from leaking it in.
+module = ["parsing.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
 # pydantic BaseModel carries `Any` in its class body via __pydantic_parent_namespace__
 # and other class-vars; disallow_any_explicit would flag our schemas for pydantic's
 # internal stubs (false positive). Only disallow_untyped_defs is enforced here.

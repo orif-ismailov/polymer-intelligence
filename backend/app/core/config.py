@@ -44,6 +44,16 @@ class Settings(BaseSettings):
     # so polymers in raw Russian/Uzbek text are caught without per-string hand-mapping.
     # Off by default: it spends Anthropic tokens per unrecognized row (budget-gated).
     UZEX_LLM_FALLBACK_ENABLED: bool = False
+    # ── Request AI analysis (Phase 5 — buyer-request match/demand/recommendation) ─
+    # When True, a submitted buyer request is analysed by the LLM (match_score,
+    # demand_level, recommendation) and the result is stamped into requests.ai for the
+    # dashboard request-detail "AI-анализ" panel. Off → the panel keeps honest
+    # placeholders. Budget-gated like the extractor (spends Anthropic tokens per request).
+    REQUEST_AI_ANALYSIS_ENABLED: bool = True
+    REQUEST_AI_ANALYSIS_MODEL: str = "claude-haiku-4-5"
+    REQUEST_AI_ANALYSIS_PROMPT_VERSION: str = "v1"
+    # Conservative per-request token reservation for the budget guard.
+    REQUEST_AI_TOKEN_ESTIMATE: int = 1500
 
     # ── Telegram bot ──────────────────────────────────────────────────────────
     BOT_TOKEN: str

@@ -108,6 +108,7 @@ celery_app.conf.update(
         "parse_raw_item": {"queue": "parse"},
         "parse_telegram_item": {"queue": "parse"},
         "nightly_llm_catchup": {"queue": "parse"},
+        "analyze_request_ai": {"queue": "parse"},
         "app.tasks.notify.*": {"queue": "notify"},
     },
 )

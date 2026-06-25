@@ -30,6 +30,7 @@ from datetime import date
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.time import to_display_tz, utcnow
 from app.models.enums import RequestStatus
 from app.models.requests import Request, RequestStatusHistory
@@ -59,6 +60,28 @@ def _enqueue_notify_soft(request_id: int) -> None:
         logger.warning(
             "notify enqueue failed (broker unavailable); request %s committed "
             "without a status-change notification: %s",
+            request_id,
+            exc,
+        )
+
+
+def _enqueue_analysis_soft(request_id: int) -> None:
+    """Enqueue the LLM request-analysis task, fail-soft.
+
+    Like _enqueue_notify_soft: a Redis/broker outage (or the feature being disabled)
+    must never break request creation. The analysis is a best-effort enrichment — if
+    it never runs, the dashboard AI panel keeps its honest placeholders.
+    """
+    if not settings.REQUEST_AI_ANALYSIS_ENABLED:
+        return
+    from app.tasks.request_analysis import analyze_request_ai  # noqa: PLC0415
+
+    try:
+        analyze_request_ai.apply_async(args=[request_id], queue="parse", retry=False)
+    except Exception as exc:
+        logger.warning(
+            "request-analysis enqueue failed (broker unavailable); request %s "
+            "committed without AI analysis: %s",
             request_id,
             exc,
         )
@@ -235,6 +258,10 @@ def create_request(
 
     # 4. Enqueue the notify task (best-effort — must not fail request creation)
     _enqueue_notify_soft(req.id)
+
+    # 5. Enqueue the LLM analysis (best-effort — fills requests.ai for the dashboard
+    #    AI-анализ panel; a broker outage or disabled flag just leaves placeholders)
+    _enqueue_analysis_soft(req.id)
 
     logger.info(
         "request_service.create",

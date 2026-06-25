@@ -52,7 +52,11 @@ from app.schemas.dashboard import (
     RequestListOut,
     RequestPatch,
 )
-from app.services import price_analysis_service, request_service
+from app.services import (
+    price_analysis_service,
+    request_analysis_service,
+    request_service,
+)
 
 router = APIRouter(prefix="/requests", tags=["dashboard-requests"])
 
@@ -572,3 +576,50 @@ def contact_buyer(
         "contact_available": True,
         "tg_link": tg_link,
     }
+
+
+# ── POST /requests/{id}/analyze ───────────────────────────────────────────────
+
+@router.post(
+    "/{request_id}/analyze",
+    response_model=RequestDetailOut,
+    summary="Run (or re-run) LLM AI analysis for a request (staff)",
+)
+def analyze_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+    _current_user: StaffUser = Depends(
+        require_role(StaffRole.admin, StaffRole.analyst, StaffRole.trader)
+    ),
+) -> RequestDetailOut:
+    """POST /requests/{id}/analyze — synchronously run the LLM analysis and persist it.
+
+    New requests are analysed asynchronously on creation; this endpoint lets a trader
+    trigger or re-run it on demand (e.g. for requests created before the feature, or to
+    refresh after market data changes). Fills requests.ai (match_score / demand_level /
+    recommendation) and returns the updated detail.
+
+    Raises:
+        HTTP 401: Missing or invalid Bearer token.
+        HTTP 403: Viewer role.
+        HTTP 404: Request not found.
+        HTTP 503: AI analysis is disabled or could not complete (e.g. budget exhausted).
+    """
+    req: Request | None = (
+        db.query(Request).filter(Request.id == request_id).first()
+    )
+    if req is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Request not found",
+        )
+
+    ai_block = request_analysis_service.analyze_request(db, req)
+    if ai_block is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="ai_unavailable: analysis is disabled or the daily budget is exhausted",
+        )
+    db.commit()
+
+    return _build_request_detail(req, db)
