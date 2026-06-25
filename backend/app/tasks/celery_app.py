@@ -27,8 +27,29 @@ from kombu import Queue
 
 from app.core.config import settings
 
+# ── Task modules to import at worker/beat startup ─────────────────────────────
+# Every module that defines an @celery_app.task MUST be listed here. These are
+# imported lazily when the app finalizes (worker boot / first dispatch), so there
+# is no circular import with the task modules that import `celery_app` from here.
+#
+# Why not autodiscover_tasks(["app.tasks"])? With a single package argument Celery
+# looks for the module `app.tasks.tasks` (its default related_name="tasks"), which
+# does not exist in this project — so it imports NOTHING, the worker registers zero
+# tasks, and every dispatched task is discarded as "Received unregistered task".
+# An explicit include list is the deterministic fix.
+_TASK_MODULES = [
+    "app.tasks.ingest",
+    "app.tasks.ingest_cbu",
+    "app.tasks.parse",
+    "app.tasks.parse_telegram",
+    "app.tasks.notify",
+    "app.tasks.userbot_health",
+    "app.tasks.nightly_catchup",
+    "app.tasks.rescore",
+]
+
 # ── Celery application instance ───────────────────────────────────────────────
-celery_app = Celery("polymer_intelligence")
+celery_app = Celery("polymer_intelligence", include=_TASK_MODULES)
 
 celery_app.conf.update(
     # ── Broker / result backend ───────────────────────────────────────────────
@@ -91,10 +112,10 @@ celery_app.conf.update(
     },
 )
 
-# ── Autodiscovery ─────────────────────────────────────────────────────────────
-# Scan app.tasks.* for @celery_app.task decorators so later plans' modules
-# (02-04 uzex, 02-05 cbu, 02-06 health) auto-register without editing this file.
-celery_app.autodiscover_tasks(["app.tasks"])
+# ── Task registration ─────────────────────────────────────────────────────────
+# Tasks are registered via the explicit `include=_TASK_MODULES` list on the Celery
+# constructor above (autodiscover_tasks(["app.tasks"]) is a no-op here — see the
+# _TASK_MODULES comment). Add new task modules to that list.
 
 # ── Beat schedule ─────────────────────────────────────────────────────────────
 # Imported lazily to avoid a circular import: schedule.py imports crontab from
