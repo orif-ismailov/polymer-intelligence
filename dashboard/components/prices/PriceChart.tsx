@@ -12,6 +12,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import {
   LineChart,
   Line,
@@ -89,6 +90,7 @@ export function PriceChart({
   currency,
   fxRate = 1,
 }: PriceChartProps) {
+  const t = useTranslations("prices");
   // Map slug → numeric product_id that the backend expects (CR-04).
   // product_slug is a frontend concept; the backend /prices/series only accepts product_id.
   const productId = SLUG_TO_ID[product];
@@ -114,14 +116,14 @@ export function PriceChart({
   }));
 
   const strokeColor = SERIES_COLORS[product] ?? SERIES_COLORS.hdpe!;
-  const yLabel = `${currency}/MT`;
+  const yLabel = t("yAxisLabel", { currency });
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[400px] bg-background-secondary rounded-lg border border-border">
         <div className="flex flex-col items-center gap-3">
           <div className="h-6 w-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-          <span className="text-sm text-foreground-muted">Loading price data…</span>
+          <span className="text-sm text-foreground-muted">{t("loading")}</span>
         </div>
       </div>
     );
@@ -130,7 +132,7 @@ export function PriceChart({
   if (error) {
     return (
       <div className="flex items-center justify-center h-[400px] bg-background-secondary rounded-lg border border-urgency-high/30">
-        <p className="text-sm text-urgency-high">Failed to load price data. Please refresh.</p>
+        <p className="text-sm text-urgency-high">{t("error")}</p>
       </div>
     );
   }
@@ -139,7 +141,7 @@ export function PriceChart({
     return (
       <div className="flex items-center justify-center h-[400px] bg-background-secondary rounded-lg border border-border">
         <p className="text-sm text-foreground-muted text-center max-w-xs">
-          No price data for the selected filters. Adjust the date range or product selection.
+          {t("empty")}
         </p>
       </div>
     );
@@ -180,7 +182,10 @@ export function PriceChart({
               color: "#f8fafc", // foreground.DEFAULT
             }}
             formatter={(value: number) => [
-              `${value.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${currency}/MT`,
+              t("tooltipValue", {
+                value: value.toLocaleString("en-US", { maximumFractionDigits: 2 }),
+                currency,
+              }),
               product.replace("_", " ").toUpperCase(),
             ]}
             labelFormatter={formatDate}

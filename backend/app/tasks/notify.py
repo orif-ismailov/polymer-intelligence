@@ -75,9 +75,19 @@ _UZ_STATUS_LABELS: dict[str, str] = {
     "cancelled": "Bekor qilindi",
 }
 
+_TR_STATUS_LABELS: dict[str, str] = {
+    "new": "Yeni talep",
+    "in_review": "İnceleniyor",
+    "offer_received": "Teklif alındı",
+    "matched": "Eşleştirildi",
+    "closed": "Kapatıldı",
+    "cancelled": "İptal edildi",
+}
+
 _LANG_LABEL_MAP: dict[str, dict[str, str]] = {
     "ru": _RU_STATUS_LABELS,
     "uz": _UZ_STATUS_LABELS,
+    "tr": _TR_STATUS_LABELS,
 }
 
 

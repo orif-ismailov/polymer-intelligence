@@ -10,11 +10,13 @@
 
 import { Suspense } from "react";
 import { Bell } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertFeed } from "@/components/alerts/AlertFeed";
 import { RuleBuilder } from "@/components/alerts/RuleBuilder";
 
 function AlertsPageContent() {
+  const t = useTranslations("alerts");
   const { role } = useAuth();
   const isAdmin = role === "admin";
 
@@ -24,16 +26,16 @@ function AlertsPageContent() {
       <div className="flex items-center gap-3">
         <Bell size={24} className="text-foreground-muted" aria-hidden="true" />
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Alerts</h1>
+          <h1 className="text-xl font-semibold text-foreground">{t("pageTitle")}</h1>
           <p className="text-sm text-foreground-muted mt-0.5">
-            Triggered alerts and delivery rules
+            {t("pageSubtitle")}
           </p>
         </div>
       </div>
 
       {/* Alert feed */}
       <section>
-        <h2 className="text-base font-semibold text-foreground mb-3">Recent Alerts</h2>
+        <h2 className="text-base font-semibold text-foreground mb-3">{t("recentAlerts")}</h2>
         <AlertFeed />
       </section>
 

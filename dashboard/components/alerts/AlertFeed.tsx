@@ -13,6 +13,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/api";
 import { formatTashkent } from "@/lib/tz";
 
@@ -40,15 +41,15 @@ const SEVERITY_CLASSES: Record<string, string> = {
   critical: "text-urgency-high border-urgency-high",
 };
 
-const SEVERITY_LABELS: Record<string, string> = {
-  info: "Info",
-  warning: "Warning",
-  critical: "Critical",
-};
-
 function SeverityChip({ severity }: { severity: string }) {
+  const t = useTranslations("alerts");
   const cls = SEVERITY_CLASSES[severity] ?? "text-foreground-muted border-foreground-muted";
-  const label = SEVERITY_LABELS[severity] ?? severity;
+  const severityLabels: Record<string, string> = {
+    info: t("severity.info"),
+    warning: t("severity.warning"),
+    critical: t("severity.critical"),
+  };
+  const label = severityLabels[severity] ?? severity;
   return (
     <span
       className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${cls}`}
@@ -61,6 +62,7 @@ function SeverityChip({ severity }: { severity: string }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function AlertFeed() {
+  const t = useTranslations("alerts");
   const { data: alerts = [], isLoading, error } = useQuery<AlertOut[]>({
     queryKey: ["alerts"],
     queryFn: () => apiFetch<AlertOut[]>("/alerts"),
@@ -79,7 +81,7 @@ export function AlertFeed() {
   if (error) {
     return (
       <div className="rounded-lg border border-urgency-high/30 bg-urgency-high/10 p-4 text-sm text-urgency-high">
-        Failed to load alerts. Please refresh.
+        {t("loadError")}
       </div>
     );
   }
@@ -89,9 +91,9 @@ export function AlertFeed() {
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
         <Bell size={32} className="text-foreground-muted" aria-hidden="true" />
         <div>
-          <p className="text-sm font-semibold text-foreground">No alerts triggered yet</p>
+          <p className="text-sm font-semibold text-foreground">{t("empty.title")}</p>
           <p className="text-sm text-foreground-muted mt-0.5">
-            Configure a rule to start receiving alerts.
+            {t("empty.description")}
           </p>
         </div>
       </div>
@@ -103,10 +105,10 @@ export function AlertFeed() {
       <table className="w-full text-sm">
         <thead className="bg-background-tertiary">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">Severity</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">Message</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">Rule</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">Triggered At</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.severity")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.message")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.rule")}</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.triggeredAt")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -123,7 +125,7 @@ export function AlertFeed() {
               </td>
               <td className="px-4 py-3 text-foreground-muted text-xs">
                 {alert.rule_id !== null ? (
-                  <span className="font-mono">Rule #{alert.rule_id}</span>
+                  <span className="font-mono">{t("ruleRef", { id: alert.rule_id })}</span>
                 ) : (
                   <span className="text-foreground-subtle">—</span>
                 )}

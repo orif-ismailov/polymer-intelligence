@@ -24,7 +24,7 @@ import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
 import ErrorBanner from "../components/ErrorBanner";
 
-type Language = "ru" | "uz";
+type Language = "ru" | "uz" | "tr";
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
@@ -32,7 +32,8 @@ export default function Settings() {
   const [error, setError] = useState<string | null>(null);
 
   // Current language from i18n (initialized from localStorage/TG lang_code)
-  const currentLang = (i18n.language === "uz" ? "uz" : "ru") as Language;
+  const currentLang: Language =
+    i18n.language === "uz" ? "uz" : i18n.language === "tr" ? "tr" : "ru";
 
   // Telegram BackButton → Home
   useEffect(() => {
@@ -134,6 +135,14 @@ export default function Settings() {
               style={currentLang === "uz" ? activeSegment : inactiveSegment}
             >
               {t("settings.lang.uz")}
+            </button>
+            <button
+              type="button"
+              aria-pressed={currentLang === "tr"}
+              onClick={() => void handleLanguageChange("tr")}
+              style={currentLang === "tr" ? activeSegment : inactiveSegment}
+            >
+              {t("settings.lang.tr")}
             </button>
           </div>
         </div>

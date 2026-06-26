@@ -8,30 +8,31 @@
 "use client";
 
 import { useState, Suspense } from "react";
+import { useTranslations } from "next-intl";
 
 import { LiveFeedTable } from "@/components/feed/LiveFeedTable";
 import { FeedFilters } from "@/components/feed/FeedFilters";
 import { NeedsReviewChip } from "./NeedsReviewChip";
 
 function FeedLoadingFallback() {
+  const t = useTranslations("signals");
   return (
     <div className="flex items-center justify-center py-8">
       <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-      <span className="ml-3 text-sm text-foreground-muted">Loading…</span>
+      <span className="ml-3 text-sm text-foreground-muted">{t("loading")}</span>
     </div>
   );
 }
 
 export default function SignalsPage() {
   const [needsReview, setNeedsReview] = useState(false);
+  const t = useTranslations("signals");
 
   return (
     <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-foreground">Live Feed</h1>
-        <p className="mt-1 text-sm text-foreground-muted">
-          Real-time market signals from all configured sources
-        </p>
+        <h1 className="text-xl font-semibold text-foreground">{t("title")}</h1>
+        <p className="mt-1 text-sm text-foreground-muted">{t("subtitle")}</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

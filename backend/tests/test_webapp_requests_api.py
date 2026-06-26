@@ -377,8 +377,14 @@ class TestClientProfile:
         # but the endpoint should return 200 successfully
         assert "language" in data
 
+    def test_patch_me_language_tr_returns_200(self, webapp_client: TestClient):
+        """PATCH /webapp/me {language:'tr'} → 200 (Turkish is a supported language)."""
+        resp = webapp_client.patch("/api/v1/webapp/me", json={"language": "tr"})
+        assert resp.status_code == 200, resp.text
+        assert "language" in resp.json()
+
     def test_patch_me_invalid_language_returns_422(self, webapp_client: TestClient):
-        """PATCH /webapp/me {language:'en'} → 422 (only ru/uz allowed)."""
+        """PATCH /webapp/me {language:'en'} → 422 (en is not a supported language)."""
         resp = webapp_client.patch("/api/v1/webapp/me", json={"language": "en"})
         assert resp.status_code == 422, resp.text
 

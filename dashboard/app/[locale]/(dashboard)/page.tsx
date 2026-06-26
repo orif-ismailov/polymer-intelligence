@@ -20,6 +20,9 @@
 
 import { Suspense } from "react";
 import { Users, TrendingUp, FileText, Flame, Bell } from "lucide-react";
+import { useTranslations } from "next-intl";
+
+import { Link } from "@/i18n/navigation";
 
 import { KpiCard } from "@/components/shared/KpiCard";
 import { LiveFeedTable } from "@/components/feed/LiveFeedTable";
@@ -32,10 +35,11 @@ import { useDashboardSummary } from "@/hooks/useDashboardSummary";
 
 // Loading fallback for client components using useSearchParams
 function FeedLoadingFallback() {
+  const t = useTranslations("home");
   return (
     <div className="flex items-center justify-center py-8">
       <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-      <span className="ml-3 text-sm text-foreground-muted">Loading…</span>
+      <span className="ml-3 text-sm text-foreground-muted">{t("loading")}</span>
     </div>
   );
 }
@@ -56,6 +60,7 @@ function getChartRange(): { from: string; to: string } {
 }
 
 export default function DashboardHomePage() {
+  const t = useTranslations("home");
   const { data: summary, isLoading } = useDashboardSummary();
   const kpis = summary?.kpis;
   const chartRange = getChartRange();
@@ -64,9 +69,9 @@ export default function DashboardHomePage() {
     <div className="p-8 space-y-8">
       {/* Page header */}
       <div>
-        <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+        <h1 className="text-xl font-semibold text-foreground">{t("title")}</h1>
         <p className="mt-1 text-sm text-foreground-muted">
-          Market overview and activity summary
+          {t("subtitle")}
         </p>
       </div>
 
@@ -74,29 +79,29 @@ export default function DashboardHomePage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
           icon={Users}
-          label="Total Buyers"
+          label={t("kpiTotalBuyers")}
           value={kpis ? kpis.total_buyers : "—"}
         />
         <KpiCard
           icon={TrendingUp}
-          label="Total Sellers"
+          label={t("kpiTotalSellers")}
           value={kpis ? kpis.total_sellers : "—"}
         />
         <KpiCard
           icon={FileText}
-          label="Active Requests"
+          label={t("kpiActiveRequests")}
           value={kpis ? kpis.active_requests : "—"}
         />
         <KpiCard
           icon={Flame}
-          label="Hot Leads"
+          label={t("kpiHotLeads")}
           value={kpis ? kpis.hot_leads : "—"}
-          delta="high priority"
+          delta={t("kpiHotLeadsDelta")}
           deltaSentiment="neutral"
         />
         <KpiCard
           icon={Bell}
-          label="Price Alerts"
+          label={t("kpiPriceAlerts")}
           value={kpis ? kpis.alert_rules : "—"}
         />
       </div>
@@ -104,13 +109,13 @@ export default function DashboardHomePage() {
       {/* Live Market Feed panel */}
       <div className="rounded-lg bg-background-secondary border border-border">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="text-base font-semibold text-foreground">Live Market Feed</h2>
-          <a
+          <h2 className="text-base font-semibold text-foreground">{t("liveMarketFeed")}</h2>
+          <Link
             href="/signals"
             className="text-sm text-accent hover:text-accent-light transition-colors"
           >
-            View all
-          </a>
+            {t("viewAll")}
+          </Link>
         </div>
         <div className="p-4">
           <Suspense fallback={null}>
@@ -125,13 +130,13 @@ export default function DashboardHomePage() {
       {/* Price Trends panel — PP Raffia / 30d / USD (PriceChart fetches its own series) */}
       <div className="rounded-lg bg-background-secondary border border-border">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="text-base font-semibold text-foreground">Price Trends</h2>
-          <a
+          <h2 className="text-base font-semibold text-foreground">{t("priceTrends")}</h2>
+          <Link
             href="/prices"
             className="text-sm text-accent hover:text-accent-light transition-colors"
           >
-            View all
-          </a>
+            {t("viewAll")}
+          </Link>
         </div>
         <div className="p-4">
           <PriceChart

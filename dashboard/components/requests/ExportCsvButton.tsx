@@ -14,11 +14,13 @@
  */
 
 import { useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Download } from "lucide-react";
 import { ApiError } from "@/lib/api";
 
 export function ExportCsvButton() {
+  const t = useTranslations("requests");
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export function ExportCsvButton() {
         throw new ApiError(
           response.status,
           null,
-          "Export failed. Try again or contact support if the issue persists.",
+          t("exportError"),
         );
       }
 
@@ -72,12 +74,12 @@ export function ExportCsvButton() {
       const msg =
         err instanceof ApiError
           ? err.message
-          : "Export failed. Try again or contact support if the issue persists.";
+          : t("exportError");
       setError(msg);
     } finally {
       setIsLoading(false);
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -86,14 +88,14 @@ export function ExportCsvButton() {
         onClick={handleExport}
         disabled={isLoading}
         className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background-secondary px-3 text-sm text-foreground hover:bg-background-tertiary disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        aria-label="Export requests as CSV"
+        aria-label={t("exportAriaLabel")}
       >
         {isLoading ? (
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground-muted border-t-transparent" />
         ) : (
           <Download size={14} aria-hidden="true" />
         )}
-        Export CSV
+        {t("exportCsv")}
       </button>
       {error && (
         <p className="text-xs text-urgency-high" role="alert">

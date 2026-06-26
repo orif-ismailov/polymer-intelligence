@@ -1,0 +1,113 @@
+{
+  "home": {
+    "heading": "Hoş geldiniz!",
+    "subheading": "Polimerler için talep bırakın — en iyi teklifi biz buluruz",
+    "prop": {
+      "fast": "Hızlı",
+      "convenient": "Kullanışlı",
+      "reliable": "Güvenilir"
+    },
+    "cta": {
+      "submit": "Talep bırak",
+      "myRequests": "Taleplerim"
+    }
+  },
+  "wizard": {
+    "step1": {
+      "title": "Ürün bilgileri"
+    },
+    "step2": {
+      "title": "Teslimat koşulları"
+    },
+    "step3": {
+      "title": "Ek bilgiler"
+    },
+    "next": "İleri",
+    "submit": "Gönder",
+    "product": "Ürün",
+    "grade": "Marka / Tip",
+    "polymerType": "Polimer türü",
+    "volume": "Hacim",
+    "volumeUnit": "Hacim birimi",
+    "targetPrice": "Hedef fiyat",
+    "currency": "Para birimi",
+    "incoterms": "Teslimat koşulları (Incoterms)",
+    "destinationCountry": "Varış ülkesi",
+    "portOrCity": "Liman / Şehir",
+    "desiredDate": "İstenen tarih",
+    "validityDays": "Geçerlilik süresi (gün)",
+    "comment": "Yorum",
+    "productPlaceholder": "Ürün seçin",
+    "gradePlaceholder": "Örneğin, T30S veya H030 SG",
+    "polymerTypePlaceholder": "Örneğin, homopolimer",
+    "volumePlaceholder": "Örneğin, 100",
+    "pricePlaceholder": "Örneğin, 1200",
+    "portPlaceholder": "Örneğin, Taşkent",
+    "commentPlaceholder": "Diğer ek gereksinimler",
+    "incotermsNone": "Seçilmedi",
+    "volumeUnit_MT": "MT (ton)",
+    "volumeUnit_KG": "KG (kilogram)"
+  },
+  "confirm": {
+    "heading": "Talep gönderildi!",
+    "subheading": "Talebiniz alındı ve uzmanlara iletildi",
+    "cta": {
+      "myRequests": "Taleplerim",
+      "another": "Yeni talep oluştur"
+    }
+  },
+  "myRequests": {
+    "title": "Taleplerim",
+    "empty": {
+      "heading": "Henüz talep yok",
+      "body": "İlk talebinizi bırakın — bir dakikadan az sürer",
+      "cta": "Talep bırak"
+    }
+  },
+  "requestDetail": {
+    "title": "Talep ayrıntıları",
+    "history": "Durum geçmişi"
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "empty": {
+      "heading": "Henüz bildirim yok",
+      "body": "Taleplerinizin durum değişikliğiyle ilgili bildirimler burada görünür"
+    }
+  },
+  "settings": {
+    "title": "Dil ve profil",
+    "language": "Arayüz dili",
+    "lang": {
+      "ru": "Русский",
+      "uz": "O'zbek",
+      "tr": "Türkçe"
+    }
+  },
+  "status": {
+    "new": "Yeni talep",
+    "viewed": "İnceleniyor",
+    "in_progress": "İnceleniyor",
+    "offer_sent": "Teklif alındı",
+    "matched": "Eşleştirildi",
+    "closed": "Kapatıldı",
+    "cancelled": "İptal edildi"
+  },
+  "error": {
+    "submitFailed": "Talep gönderilemedi. Bağlantınızı kontrol edip tekrar deneyin",
+    "fileFailed": "«{{name}}» dosyası yüklenemedi. Tekrar deneyin",
+    "fileTooLarge": "Dosya 10 MB'ı aştı. Daha küçük bir dosya seçin",
+    "tooManyFiles": "5'ten fazla dosya eklenemez",
+    "fileType": "Format desteklenmiyor. PDF, Excel, JPG'ye izin verilir",
+    "loadFailed": "Veriler yüklenemedi. Yenilemek için aşağı çekin",
+    "authFailed": "Yetkilendirme hatası. Uygulamayı bottan tekrar açın",
+    "required": "Zorunlu alan",
+    "volumePositive": "Hacim 0'dan büyük olmalı",
+    "gradeOrPolymer": "Marka veya polimer türünü girin"
+  },
+  "fileUploader": {
+    "remove": "{{name}} dosyasını sil",
+    "attach": "Dosya ekle",
+    "hint": "PDF, Excel, JPG — en fazla 5 dosya, her biri 10 MB'a kadar"
+  }
+}

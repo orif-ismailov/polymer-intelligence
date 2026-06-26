@@ -18,6 +18,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalLink, Loader2 } from "lucide-react";
 
@@ -39,13 +40,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+// Option VALUES are stable identifiers; displayed labels are translated via t().
 const STATUS_OPTIONS = [
-  { value: "viewed", label: "Viewed" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "offer_sent", label: "Offer Sent" },
-  { value: "matched", label: "Matched" },
-  { value: "closed", label: "Closed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "viewed", labelKey: "statusOptViewed" },
+  { value: "in_progress", labelKey: "statusOptInProgress" },
+  { value: "offer_sent", labelKey: "statusOptOfferSent" },
+  { value: "matched", labelKey: "statusOptMatched" },
+  { value: "closed", labelKey: "statusOptClosed" },
+  { value: "cancelled", labelKey: "statusOptCancelled" },
 ];
 
 interface StaffUserItem {
@@ -69,6 +71,7 @@ export function RequestActions({
   contactAvailable,
   assignedTo,
 }: RequestActionsProps) {
+  const t = useTranslations("requests");
   const queryClient = useQueryClient();
 
   const [noteText, setNoteText] = useState("");
@@ -104,9 +107,7 @@ export function RequestActions({
       }
     },
     onError: () => {
-      setActionError(
-        "Status change failed. Refresh the page and try again.",
-      );
+      setActionError(t("errorStatusChange"));
     },
   });
 
@@ -123,9 +124,7 @@ export function RequestActions({
       invalidateRequest();
     },
     onError: () => {
-      setActionError(
-        "Note could not be saved. Check your connection and try again.",
-      );
+      setActionError(t("errorNoteSave"));
     },
   });
 
@@ -140,9 +139,7 @@ export function RequestActions({
       invalidateRequest();
     },
     onError: () => {
-      setActionError(
-        "Status change failed. Refresh the page and try again.",
-      );
+      setActionError(t("errorStatusChange"));
       setSelectedStatus(status); // revert optimistic
     },
   });
@@ -158,9 +155,7 @@ export function RequestActions({
       invalidateRequest();
     },
     onError: () => {
-      setActionError(
-        "Status change failed. Refresh the page and try again.",
-      );
+      setActionError(t("errorStatusChange"));
     },
   });
 
@@ -175,9 +170,7 @@ export function RequestActions({
       invalidateRequest();
     },
     onError: () => {
-      setActionError(
-        "Status change failed. Refresh the page and try again.",
-      );
+      setActionError(t("errorStatusChange"));
     },
   });
 
@@ -220,7 +213,7 @@ export function RequestActions({
             onClick={() => setActionError(null)}
             className="mt-1 text-xs text-urgency-high underline"
           >
-            Dismiss
+            {t("dismiss")}
           </button>
         </div>
       )}
@@ -239,7 +232,7 @@ export function RequestActions({
             ) : (
               <ExternalLink size={16} aria-hidden="true" />
             )}
-            Contact Buyer
+            {t("contactBuyer")}
           </button>
         ) : (
           <Tooltip>
@@ -252,11 +245,11 @@ export function RequestActions({
                   aria-disabled="true"
                 >
                   <ExternalLink size={16} aria-hidden="true" />
-                  Contact Buyer
+                  {t("contactBuyer")}
                 </button>
               </span>
             </TooltipTrigger>
-            <TooltipContent>No Telegram ID on file</TooltipContent>
+            <TooltipContent>{t("noTelegramId")}</TooltipContent>
           </Tooltip>
         )}
       </TooltipProvider>
@@ -270,7 +263,7 @@ export function RequestActions({
             disabled={isAnyLoading}
             className="inline-flex w-full items-center justify-center rounded-lg border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background-secondary"
           >
-            Add Note
+            {t("addNote")}
           </button>
         ) : (
           <>
@@ -278,9 +271,9 @@ export function RequestActions({
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               rows={4}
-              placeholder="Enter team note (not visible to client)…"
+              placeholder={t("notePlaceholder")}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-foreground-subtle resize-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background-secondary"
-              aria-label="Add note"
+              aria-label={t("addNote")}
             />
             <div className="flex gap-2">
               <button
@@ -292,7 +285,7 @@ export function RequestActions({
                 {noteMutation.isPending && (
                   <Loader2 size={14} className="animate-spin" aria-hidden="true" />
                 )}
-                Save Note
+                {t("saveNote")}
               </button>
               <button
                 type="button"
@@ -302,7 +295,7 @@ export function RequestActions({
                 }}
                 className="inline-flex items-center justify-center rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-background-tertiary transition-colors"
               >
-                Cancel
+                {t("cancel")}
               </button>
             </div>
           </>
@@ -315,7 +308,7 @@ export function RequestActions({
           htmlFor={`status-select-${requestId}`}
           className="text-xs text-foreground-muted"
         >
-          Status
+          {t("statusLabel")}
         </label>
         {/* WR-06: use controlled open prop on AlertDialog so Radix manages focus-trap,
             Escape key, and ARIA attributes correctly. Previously the dialog was opened
@@ -330,7 +323,7 @@ export function RequestActions({
           >
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -349,10 +342,9 @@ export function RequestActions({
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+              <AlertDialogTitle>{t("cancelDialogTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                Cancel this request? This cannot be undone. The buyer will not
-                be notified automatically.
+                {t("cancelDialogDescription")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -362,13 +354,13 @@ export function RequestActions({
                   setShowCancelDialog(false);
                 }}
               >
-                Cancel
+                {t("cancel")}
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleConfirmCancel}
                 className="bg-red-500 text-white hover:bg-red-600"
               >
-                Confirm
+                {t("confirm")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -382,7 +374,7 @@ export function RequestActions({
             htmlFor={`assign-select-${requestId}`}
             className="text-xs text-foreground-muted"
           >
-            Assign Owner
+            {t("assignOwner")}
           </label>
           <select
             id={`assign-select-${requestId}`}
@@ -396,7 +388,7 @@ export function RequestActions({
             disabled={isAnyLoading}
             className="w-full h-8 rounded-lg border border-border bg-background-secondary px-2.5 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <option value="">Unassigned</option>
+            <option value="">{t("unassigned")}</option>
             {staffUsers.map((user) => (
               <option key={user.id} value={user.id}>
                 {user.email} ({user.role})
@@ -416,7 +408,7 @@ export function RequestActions({
         {processedMutation.isPending && (
           <Loader2 size={16} className="animate-spin" aria-hidden="true" />
         )}
-        Mark as Processed
+        {t("markAsProcessed")}
       </button>
     </div>
   );

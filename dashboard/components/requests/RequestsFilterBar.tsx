@@ -9,32 +9,35 @@
  * No hardcoded hex — token classes only (UI-SPEC §Color).
  */
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { X, ChevronDown } from "lucide-react";
 
+// Option VALUES are stable identifiers; displayed labels are translated via t().
 const PERIOD_OPTIONS = [
-  { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "90d", label: "Last 90 days" },
-  { value: "all", label: "All time" },
+  { value: "7d", labelKey: "periodOpt7d" },
+  { value: "30d", labelKey: "periodOpt30d" },
+  { value: "90d", labelKey: "periodOpt90d" },
+  { value: "all", labelKey: "periodOptAll" },
 ];
 
 const URGENCY_OPTIONS = [
-  { value: "", label: "All urgency" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
+  { value: "", labelKey: "urgencyOptAll" },
+  { value: "high", labelKey: "urgencyOptHigh" },
+  { value: "medium", labelKey: "urgencyOptMedium" },
+  { value: "low", labelKey: "urgencyOptLow" },
 ];
 
 const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
-  { value: "new", label: "New" },
-  { value: "viewed", label: "Viewed" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "offer_sent", label: "Offer Sent" },
-  { value: "matched", label: "Matched" },
-  { value: "closed", label: "Closed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "", labelKey: "statusOptAll" },
+  { value: "new", labelKey: "statusOptNew" },
+  { value: "viewed", labelKey: "statusOptViewed" },
+  { value: "in_progress", labelKey: "statusOptInProgress" },
+  { value: "offer_sent", labelKey: "statusOptOfferSent" },
+  { value: "matched", labelKey: "statusOptMatched" },
+  { value: "closed", labelKey: "statusOptClosed" },
+  { value: "cancelled", labelKey: "statusOptCancelled" },
 ];
 
 interface ActiveFilter {
@@ -48,31 +51,40 @@ function getActiveFilters(
   urgency: string,
   status: string,
   product: string,
+  t: (key: string) => string,
 ): ActiveFilter[] {
   const filters: ActiveFilter[] = [];
   if (period && period !== "all")
     filters.push({
       key: "period",
-      label: "Period",
-      value: PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? period,
+      label: t("filterPeriod"),
+      value: PERIOD_OPTIONS.find((o) => o.value === period)
+        ? t(PERIOD_OPTIONS.find((o) => o.value === period)!.labelKey)
+        : period,
     });
   if (urgency)
     filters.push({
       key: "urgency",
-      label: "Urgency",
-      value: URGENCY_OPTIONS.find((o) => o.value === urgency)?.label ?? urgency,
+      label: t("filterUrgency"),
+      value: URGENCY_OPTIONS.find((o) => o.value === urgency)
+        ? t(URGENCY_OPTIONS.find((o) => o.value === urgency)!.labelKey)
+        : urgency,
     });
   if (status)
     filters.push({
       key: "status",
-      label: "Status",
-      value: STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status,
+      label: t("filterStatus"),
+      value: STATUS_OPTIONS.find((o) => o.value === status)
+        ? t(STATUS_OPTIONS.find((o) => o.value === status)!.labelKey)
+        : status,
     });
-  if (product) filters.push({ key: "product", label: "Product", value: product });
+  if (product)
+    filters.push({ key: "product", label: t("filterProduct"), value: product });
   return filters;
 }
 
 export function RequestsFilterBar() {
+  const t = useTranslations("requests");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -104,7 +116,7 @@ export function RequestsFilterBar() {
     router.replace("?");
   }
 
-  const activeFilters = getActiveFilters(period, urgency, status, product);
+  const activeFilters = getActiveFilters(period, urgency, status, product, t);
 
   return (
     <div className="flex flex-col gap-3">
@@ -113,7 +125,7 @@ export function RequestsFilterBar() {
         {/* Period */}
         <div className="relative">
           <label htmlFor="filter-period" className="sr-only">
-            Period
+            {t("filterPeriod")}
           </label>
           <select
             id="filter-period"
@@ -123,7 +135,7 @@ export function RequestsFilterBar() {
           >
             {PERIOD_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -137,7 +149,7 @@ export function RequestsFilterBar() {
         {/* Urgency */}
         <div className="relative">
           <label htmlFor="filter-urgency" className="sr-only">
-            Urgency
+            {t("filterUrgency")}
           </label>
           <select
             id="filter-urgency"
@@ -147,7 +159,7 @@ export function RequestsFilterBar() {
           >
             {URGENCY_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -161,7 +173,7 @@ export function RequestsFilterBar() {
         {/* Status */}
         <div className="relative">
           <label htmlFor="filter-status" className="sr-only">
-            Status
+            {t("filterStatus")}
           </label>
           <select
             id="filter-status"
@@ -171,7 +183,7 @@ export function RequestsFilterBar() {
           >
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {t(o.labelKey)}
               </option>
             ))}
           </select>
@@ -187,7 +199,7 @@ export function RequestsFilterBar() {
           type="button"
           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background-secondary px-3 text-sm text-foreground-muted hover:bg-background-tertiary hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          More Filters
+          {t("moreFilters")}
           <ChevronDown size={14} aria-hidden="true" />
         </button>
 
@@ -198,7 +210,7 @@ export function RequestsFilterBar() {
             onClick={clearFilters}
             className="text-sm text-accent hover:underline transition-colors"
           >
-            Clear filters
+            {t("clearFilters")}
           </button>
         )}
       </div>
@@ -217,7 +229,7 @@ export function RequestsFilterBar() {
                 type="button"
                 onClick={() => removeFilter(f.key)}
                 className="ml-0.5 rounded-full text-foreground-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                aria-label={`Remove ${f.label} filter`}
+                aria-label={t("removeFilter", { label: f.label })}
               >
                 <X size={10} aria-hidden="true" />
               </button>

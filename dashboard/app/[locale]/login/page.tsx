@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
+  const t = useTranslations("login");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,9 +32,7 @@ export default function LoginPage() {
       login(data.access_token);
       router.push("/");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Login failed. Check your credentials.",
-      );
+      setError(err instanceof Error ? err.message : t("failed"));
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">Polymer Intelligence</h1>
-          <p className="mt-1 text-sm text-foreground-muted">Sign in to the dashboard</p>
+          <p className="mt-1 text-sm text-foreground-muted">{t("subtitle")}</p>
         </div>
         <form
           onSubmit={handleSubmit}
@@ -63,7 +63,7 @@ export default function LoginPage() {
               htmlFor="email"
               className="mb-1 block text-sm font-medium text-foreground-muted"
             >
-              Email
+              {t("email")}
             </label>
             <input
               id="email"
@@ -73,7 +73,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-foreground-subtle focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-              placeholder="analyst@company.com"
+              placeholder={t("emailPlaceholder")}
             />
           </div>
           <div className="mb-6">
@@ -81,7 +81,7 @@ export default function LoginPage() {
               htmlFor="password"
               className="mb-1 block text-sm font-medium text-foreground-muted"
             >
-              Password
+              {t("password")}
             </label>
             <input
               id="password"
@@ -99,7 +99,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background-secondary disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? t("signingIn") : t("signIn")}
           </button>
         </form>
       </div>

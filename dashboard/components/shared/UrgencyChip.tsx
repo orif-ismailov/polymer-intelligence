@@ -7,20 +7,21 @@
  */
 
 import { Flame, Users, Download, type LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
-const URGENCY_CONFIG: Record<string, { label: string; colorClass: string; Icon: LucideIcon }> = {
+const URGENCY_CONFIG: Record<string, { labelKey: string; colorClass: string; Icon: LucideIcon }> = {
   high: {
-    label: "High",
+    labelKey: "urgency.high",
     colorClass: "text-urgency-high border-urgency-high",
     Icon: Flame,
   },
   medium: {
-    label: "Medium",
+    labelKey: "urgency.medium",
     colorClass: "text-urgency-medium border-urgency-medium",
     Icon: Users,
   },
   low: {
-    label: "Low",
+    labelKey: "urgency.low",
     colorClass: "text-urgency-low border-urgency-low",
     Icon: Download,
   },
@@ -32,6 +33,7 @@ interface UrgencyChipProps {
 }
 
 export function UrgencyChip({ urgency, className = "" }: UrgencyChipProps) {
+  const t = useTranslations("common");
   const config = URGENCY_CONFIG[urgency];
   if (!config) {
     return (
@@ -41,12 +43,13 @@ export function UrgencyChip({ urgency, className = "" }: UrgencyChipProps) {
     );
   }
 
-  const { label, colorClass, Icon } = config;
+  const { labelKey, colorClass, Icon } = config;
+  const label = t(labelKey);
 
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${colorClass} ${className}`}
-      aria-label={`Urgency: ${label}`}
+      aria-label={t("urgencyAriaLabel", { label })}
     >
       <Icon size={10} className="flex-shrink-0" aria-hidden="true" />
       {label}

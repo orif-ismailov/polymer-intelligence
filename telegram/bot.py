@@ -37,6 +37,7 @@ _TEMPLATES_DIR = Path(__file__).parent / "templates"
 _WEB_APP_BUTTON_LABELS: dict[str, str] = {
     "ru": "Открыть приложение",
     "uz": "Ilovani ochish",
+    "tr": "Uygulamayı aç",
 }
 
 

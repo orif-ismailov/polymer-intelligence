@@ -15,7 +15,9 @@
  */
 
 import { useMemo, useState, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   createColumnHelper,
@@ -69,6 +71,7 @@ const PAGE_SIZE = 10;
 const columnHelper = createColumnHelper<RequestListItem>();
 
 export function RequestsTable() {
+  const t = useTranslations("requests");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -112,7 +115,7 @@ export function RequestsTable() {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="inline-flex items-center gap-1 text-xs font-semibold text-foreground-muted uppercase tracking-wider hover:text-foreground transition-colors focus-visible:outline-none"
           >
-            Time
+            {t("colTime")}
             <ArrowUpDown size={12} aria-hidden="true" />
           </button>
         ),
@@ -131,7 +134,7 @@ export function RequestsTable() {
         id: "product",
         header: () => (
           <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-            Product
+            {t("colProduct")}
           </span>
         ),
         cell: (info) => (
@@ -145,7 +148,7 @@ export function RequestsTable() {
         id: "grade_type",
         header: () => (
           <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-            Grade / Type
+            {t("colGradeType")}
           </span>
         ),
         cell: (info) => (
@@ -163,7 +166,7 @@ export function RequestsTable() {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="inline-flex items-center gap-1 text-xs font-semibold text-foreground-muted uppercase tracking-wider hover:text-foreground transition-colors focus-visible:outline-none"
           >
-            Volume
+            {t("colVolume")}
             <ArrowUpDown size={12} aria-hidden="true" />
           </button>
         ),
@@ -188,7 +191,7 @@ export function RequestsTable() {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="inline-flex items-center gap-1 text-xs font-semibold text-foreground-muted uppercase tracking-wider hover:text-foreground transition-colors focus-visible:outline-none"
           >
-            Target Price
+            {t("colTargetPrice")}
             <ArrowUpDown size={12} aria-hidden="true" />
           </button>
         ),
@@ -209,7 +212,7 @@ export function RequestsTable() {
         id: "region",
         header: () => (
           <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-            Region
+            {t("colRegion")}
           </span>
         ),
         cell: () => (
@@ -221,7 +224,7 @@ export function RequestsTable() {
         id: "source",
         header: () => (
           <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-            Source
+            {t("colSource")}
           </span>
         ),
         cell: () => (
@@ -233,7 +236,7 @@ export function RequestsTable() {
         id: "urgency",
         header: () => (
           <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-            Urgency
+            {t("colUrgency")}
           </span>
         ),
         cell: (info) => {
@@ -250,7 +253,7 @@ export function RequestsTable() {
         id: "status",
         header: () => (
           <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-            Status
+            {t("colStatus")}
           </span>
         ),
         cell: (info) => {
@@ -264,7 +267,7 @@ export function RequestsTable() {
         size: 100,
       }),
     ],
-    [],
+    [t],
   );
 
   // TanStack Table's useReactTable returns non-memoizable functions, so the React
@@ -286,7 +289,7 @@ export function RequestsTable() {
       <div className="flex items-center justify-center py-12">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
         <span className="ml-3 text-sm text-foreground-muted">
-          Loading requests…
+          {t("loadingRequests")}
         </span>
       </div>
     );
@@ -296,8 +299,8 @@ export function RequestsTable() {
     return (
       <div className="rounded-lg bg-background-secondary border border-border p-6">
         <p className="text-sm text-urgency-high">
-          Failed to load requests:{" "}
-          {error instanceof Error ? error.message : "Unknown error"}
+          {t("loadError")}{" "}
+          {error instanceof Error ? error.message : t("unknownError")}
         </p>
       </div>
     );
@@ -312,10 +315,10 @@ export function RequestsTable() {
           aria-hidden="true"
         />
         <p className="text-sm font-semibold text-foreground">
-          No requests found
+          {t("emptyTitle")}
         </p>
         <p className="text-sm text-foreground-muted">
-          Try adjusting your filters or check back later.
+          {t("emptyDescription")}
         </p>
       </div>
     );
@@ -329,7 +332,7 @@ export function RequestsTable() {
         <table
           className="w-full text-sm"
           role="grid"
-          aria-label="Purchase requests table"
+          aria-label={t("tableAriaLabel")}
         >
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -402,22 +405,25 @@ export function RequestsTable() {
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
           className="inline-flex items-center gap-1 rounded-md border border-border bg-background-secondary px-3 py-1.5 text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-background-tertiary focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors"
-          aria-label="Previous page"
+          aria-label={t("previousPage")}
         >
           <ChevronLeft size={16} aria-hidden="true" />
-          Prev
+          {t("prev")}
         </button>
         <span className="text-xs text-foreground-muted">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {Math.max(totalPages, 1)} · {data.length} results
+          {t("pagination", {
+            page: table.getState().pagination.pageIndex + 1,
+            totalPages: Math.max(totalPages, 1),
+            results: data.length,
+          })}
         </span>
         <button
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
           className="inline-flex items-center gap-1 rounded-md border border-border bg-background-secondary px-3 py-1.5 text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-background-tertiary focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors"
-          aria-label="Next page"
+          aria-label={t("nextPage")}
         >
-          Next
+          {t("next")}
           <ChevronRight size={16} aria-hidden="true" />
         </button>
       </div>

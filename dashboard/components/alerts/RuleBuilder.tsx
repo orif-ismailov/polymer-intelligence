@@ -22,6 +22,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,19 +52,21 @@ interface AlertRuleOut {
 type KindValue = "buy_request" | "sell_offer" | "deal" | "price_quote";
 type UrgencyValue = "high" | "medium" | "low";
 
-const KIND_OPTIONS: { value: KindValue; label: string }[] = [
-  { value: "buy_request", label: "Buy Request" },
-  { value: "sell_offer", label: "Sell Offer" },
-  { value: "deal", label: "Deal" },
-  { value: "price_quote", label: "Price Quote" },
+const KIND_OPTIONS: { value: KindValue; labelKey: string }[] = [
+  { value: "buy_request", labelKey: "kindOptions.buy_request" },
+  { value: "sell_offer", labelKey: "kindOptions.sell_offer" },
+  { value: "deal", labelKey: "kindOptions.deal" },
+  { value: "price_quote", labelKey: "kindOptions.price_quote" },
 ];
 
-const URGENCY_OPTIONS: { value: UrgencyValue; label: string }[] = [
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
+const URGENCY_OPTIONS: { value: UrgencyValue; labelKey: string }[] = [
+  { value: "high", labelKey: "urgencyOptions.high" },
+  { value: "medium", labelKey: "urgencyOptions.medium" },
+  { value: "low", labelKey: "urgencyOptions.low" },
 ];
 
+// Product labels are proper nouns (polymer grades) and stay untranslated;
+// the "All Products" sentinel (empty value) is translated at render.
 const PRODUCT_OPTIONS = [
   { value: "", label: "All Products" },
   { value: "1", label: "PP Raffia" },
@@ -77,26 +80,27 @@ const PRODUCT_OPTIONS = [
 ];
 
 const SOURCE_KIND_OPTIONS = [
-  { value: "html_table", label: "HTML Table" },
-  { value: "rss", label: "RSS Feed" },
-  { value: "telegram_channel", label: "Telegram Channel" },
-  { value: "llm_page", label: "LLM Page" },
-  { value: "uzex_offers", label: "UZEX Offers" },
-  { value: "uzex_contracts", label: "UZEX Contracts" },
-  { value: "uzex_deals", label: "UZEX Deals" },
-  { value: "webapp", label: "Web App" },
+  { value: "html_table", labelKey: "sourceKindOptions.html_table" },
+  { value: "rss", labelKey: "sourceKindOptions.rss" },
+  { value: "telegram_channel", labelKey: "sourceKindOptions.telegram_channel" },
+  { value: "llm_page", labelKey: "sourceKindOptions.llm_page" },
+  { value: "uzex_offers", labelKey: "sourceKindOptions.uzex_offers" },
+  { value: "uzex_contracts", labelKey: "sourceKindOptions.uzex_contracts" },
+  { value: "uzex_deals", labelKey: "sourceKindOptions.uzex_deals" },
+  { value: "webapp", labelKey: "sourceKindOptions.webapp" },
 ];
 
 // ─── Predicate summary ────────────────────────────────────────────────────────
 
 function PredicateSummary({ condition }: { condition: Record<string, unknown> }) {
+  const t = useTranslations("alerts");
   const parts: string[] = [];
-  if (condition.kind) parts.push(`kind: ${(condition.kind as string[]).join(", ")}`);
-  if (condition.product_id) parts.push(`product #${condition.product_id}`);
-  if (condition.volume_gte) parts.push(`volume >= ${condition.volume_gte} MT`);
-  if (condition.urgency_in) parts.push(`urgency: ${(condition.urgency_in as string[]).join(", ")}`);
-  if (condition.source_kind) parts.push(`source: ${(condition.source_kind as string[]).join(", ")}`);
-  if (parts.length === 0) parts.push("Any signal");
+  if (condition.kind) parts.push(t("predicate.kind", { value: (condition.kind as string[]).join(", ") }));
+  if (condition.product_id) parts.push(t("predicate.product", { id: condition.product_id as number }));
+  if (condition.volume_gte) parts.push(t("predicate.volume", { value: condition.volume_gte as number }));
+  if (condition.urgency_in) parts.push(t("predicate.urgency", { value: (condition.urgency_in as string[]).join(", ") }));
+  if (condition.source_kind) parts.push(t("predicate.source", { value: (condition.source_kind as string[]).join(", ") }));
+  if (parts.length === 0) parts.push(t("predicate.any"));
   return <span className="text-xs text-foreground-muted">{parts.join(" · ")}</span>;
 }
 
@@ -111,13 +115,14 @@ function DeleteRuleDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("alerts");
   return (
     <AlertDialog open={open}>
       <AlertDialogContent className="bg-background-secondary border-border">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-foreground">Delete Alert Rule</AlertDialogTitle>
+          <AlertDialogTitle className="text-foreground">{t("deleteDialog.title")}</AlertDialogTitle>
           <AlertDialogDescription className="text-foreground-muted">
-            Delete this rule? Active deliveries using this rule will stop immediately.
+            {t("deleteDialog.description")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -125,13 +130,13 @@ function DeleteRuleDialog({
             onClick={onCancel}
             className="border-border bg-transparent text-foreground hover:bg-background-tertiary"
           >
-            Cancel
+            {t("deleteDialog.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-status-cancelled text-white hover:bg-status-cancelled/80"
           >
-            Delete
+            {t("deleteDialog.confirm")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -161,6 +166,7 @@ function RuleForm({
   onCancel: () => void;
   isSaving: boolean;
 }) {
+  const t = useTranslations("alerts");
   const [form, setForm] = useState<RuleFormState>({
     name: "",
     kinds: [],
@@ -199,7 +205,7 @@ function RuleForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) {
-      setNameError("Rule name is required");
+      setNameError(t("form.nameRequired"));
       return;
     }
     setNameError("");
@@ -211,14 +217,14 @@ function RuleForm({
       {/* Rule name */}
       <div className="flex flex-col gap-1">
         <label htmlFor="rule-name" className="text-xs font-semibold text-foreground-muted">
-          Rule Name <span className="text-urgency-high">*</span>
+          {t("form.nameLabel")} <span className="text-urgency-high">*</span>
         </label>
         <input
           id="rule-name"
           type="text"
           value={form.name}
           onChange={(e) => { setForm((p) => ({ ...p, name: e.target.value })); if (nameError) setNameError(""); }}
-          placeholder="E.g. Large PP buy requests"
+          placeholder={t("form.namePlaceholder")}
           className={`rounded-md border ${nameError ? "border-urgency-high" : "border-border"} bg-background-tertiary px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-background-secondary`}
         />
         {nameError && <p className="text-xs text-urgency-high">{nameError}</p>}
@@ -226,9 +232,9 @@ function RuleForm({
 
       {/* Kind multiselect */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold text-foreground-muted">Signal Kind</label>
+        <label className="text-xs font-semibold text-foreground-muted">{t("form.signalKindLabel")}</label>
         <div className="flex flex-wrap gap-2">
-          {KIND_OPTIONS.map(({ value, label }) => (
+          {KIND_OPTIONS.map(({ value, labelKey }) => (
             <button
               key={value}
               type="button"
@@ -239,7 +245,7 @@ function RuleForm({
                   : "bg-background-tertiary text-foreground-muted border-border hover:border-accent/50"
               }`}
             >
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </div>
@@ -247,7 +253,7 @@ function RuleForm({
 
       {/* Product */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="rule-product" className="text-xs font-semibold text-foreground-muted">Product</label>
+        <label htmlFor="rule-product" className="text-xs font-semibold text-foreground-muted">{t("form.productLabel")}</label>
         <select
           id="rule-product"
           value={form.productId}
@@ -255,14 +261,14 @@ function RuleForm({
           className="rounded-md border border-border bg-background-tertiary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-background-secondary"
         >
           {PRODUCT_OPTIONS.map(({ value, label }) => (
-            <option key={value} value={value}>{label}</option>
+            <option key={value} value={value}>{value === "" ? t("form.allProducts") : label}</option>
           ))}
         </select>
       </div>
 
       {/* Volume >= */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="rule-volume" className="text-xs font-semibold text-foreground-muted">Volume ≥ (MT)</label>
+        <label htmlFor="rule-volume" className="text-xs font-semibold text-foreground-muted">{t("form.volumeLabel")}</label>
         <input
           id="rule-volume"
           type="number"
@@ -270,16 +276,16 @@ function RuleForm({
           step="any"
           value={form.volumeGte}
           onChange={(e) => setForm((p) => ({ ...p, volumeGte: e.target.value }))}
-          placeholder="e.g. 100"
+          placeholder={t("form.volumePlaceholder")}
           className="rounded-md border border-border bg-background-tertiary px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-background-secondary"
         />
       </div>
 
       {/* Urgency checkboxes */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold text-foreground-muted">Urgency</label>
+        <label className="text-xs font-semibold text-foreground-muted">{t("form.urgencyLabel")}</label>
         <div className="flex gap-4">
-          {URGENCY_OPTIONS.map(({ value, label }) => (
+          {URGENCY_OPTIONS.map(({ value, labelKey }) => (
             <label key={value} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
               <input
                 type="checkbox"
@@ -287,7 +293,7 @@ function RuleForm({
                 onChange={() => toggleUrgency(value)}
                 className="h-4 w-4 rounded border-border bg-background-tertiary text-accent focus:ring-accent"
               />
-              {label}
+              {t(labelKey)}
             </label>
           ))}
         </div>
@@ -295,9 +301,9 @@ function RuleForm({
 
       {/* Source kind multiselect */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold text-foreground-muted">Source Kind</label>
+        <label className="text-xs font-semibold text-foreground-muted">{t("form.sourceKindLabel")}</label>
         <div className="flex flex-wrap gap-2">
-          {SOURCE_KIND_OPTIONS.map(({ value, label }) => (
+          {SOURCE_KIND_OPTIONS.map(({ value, labelKey }) => (
             <button
               key={value}
               type="button"
@@ -308,7 +314,7 @@ function RuleForm({
                   : "bg-background-tertiary text-foreground-muted border-border hover:border-accent/50"
               }`}
             >
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </div>
@@ -319,11 +325,11 @@ function RuleForm({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <label htmlFor="rule-lead-score" className="text-xs font-semibold text-foreground-muted">
-              Lead Score ≥
+              {t("form.leadScoreLabel")}
             </label>
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-400">
               <AlertCircle size={12} aria-hidden="true" />
-              Activates with Phase 5 AI
+              {t("form.leadScoreBadge")}
             </span>
           </div>
           <Tooltip>
@@ -335,12 +341,12 @@ function RuleForm({
                 max="1"
                 step="0.01"
                 disabled
-                placeholder="0.0 – 1.0"
+                placeholder={t("form.leadScorePlaceholder")}
                 className="rounded-md border border-border bg-background-tertiary/50 px-3 py-2 text-sm text-foreground-subtle placeholder:text-foreground-subtle cursor-not-allowed opacity-50 focus:outline-none"
               />
             } />
             <TooltipContent className="bg-background-tertiary text-foreground-muted text-xs border-border">
-              Available after Phase 5
+              {t("form.leadScoreTooltip")}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -349,7 +355,7 @@ function RuleForm({
       {/* Delivery chat_ids (D-08) */}
       <div className="flex flex-col gap-1">
         <label htmlFor="rule-chat-ids" className="text-xs font-semibold text-foreground-muted">
-          Delivery Telegram Chat IDs
+          {t("form.chatIdsLabel")}
         </label>
         <textarea
           id="rule-chat-ids"
@@ -360,14 +366,14 @@ function RuleForm({
           className="rounded-md border border-border bg-background-tertiary px-3 py-2 text-sm text-foreground font-mono placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-background-secondary resize-none"
         />
         <p className="text-xs text-foreground-subtle">
-          Enter Telegram chat IDs (e.g. -1001234567890 for groups). DM: your personal chat ID. One per line.
+          {t("form.chatIdsHelp")}
         </p>
       </div>
 
       {/* Urgency channel */}
       <div className="flex flex-col gap-1">
         <label htmlFor="rule-channel" className="text-xs font-semibold text-foreground-muted">
-          Urgency Channel
+          {t("form.urgencyChannelLabel")}
         </label>
         <select
           id="rule-channel"
@@ -375,8 +381,8 @@ function RuleForm({
           onChange={(e) => setForm((p) => ({ ...p, urgencyChannel: e.target.value as "dm" | "group" }))}
           className="rounded-md border border-border bg-background-tertiary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-background-secondary"
         >
-          <option value="dm">DM</option>
-          <option value="group">Group</option>
+          <option value="dm">{t("form.channelDm")}</option>
+          <option value="group">{t("form.channelGroup")}</option>
         </select>
       </div>
 
@@ -387,14 +393,14 @@ function RuleForm({
           onClick={onCancel}
           className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary transition-colors"
         >
-          Cancel
+          {t("form.cancel")}
         </button>
         <button
           type="submit"
           disabled={isSaving}
           className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background-secondary"
         >
-          {isSaving ? "Saving…" : "Save Rule"}
+          {isSaving ? t("form.saving") : t("form.save")}
         </button>
       </div>
     </form>
@@ -408,6 +414,7 @@ interface RuleBuilderProps {
 }
 
 export function RuleBuilder({ isAdmin }: RuleBuilderProps) {
+  const t = useTranslations("alerts");
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -427,7 +434,7 @@ export function RuleBuilder({ isAdmin }: RuleBuilderProps) {
       setSaveError(null);
     },
     onError: () => {
-      setSaveError("Failed to save rule. Check your inputs and try again.");
+      setSaveError(t("saveError"));
     },
   });
 
@@ -476,14 +483,14 @@ export function RuleBuilder({ isAdmin }: RuleBuilderProps) {
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">Alert Rules</h2>
+        <h2 className="text-base font-semibold text-foreground">{t("rulesTitle")}</h2>
         {isAdmin && (
           <button
             onClick={() => setShowForm((v) => !v)}
             className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-white hover:bg-accent-dark transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
           >
             <Plus size={16} aria-hidden="true" />
-            Create Rule
+            {t("createRule")}
           </button>
         )}
       </div>
@@ -491,7 +498,7 @@ export function RuleBuilder({ isAdmin }: RuleBuilderProps) {
       {/* Inline form */}
       {showForm && isAdmin && (
         <div className="rounded-lg border border-border bg-background-secondary p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-4">New Alert Rule</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-4">{t("newRule")}</h3>
           {saveError && (
             <div className="mb-4 rounded-md border border-urgency-high/30 bg-urgency-high/10 p-3 text-sm text-urgency-high">
               {saveError}
@@ -514,13 +521,13 @@ export function RuleBuilder({ isAdmin }: RuleBuilderProps) {
         </div>
       ) : rules.length === 0 ? (
         <div className="rounded-lg border border-border bg-background-secondary p-6 text-center">
-          <p className="text-sm text-foreground-muted">No alert rules configured yet.</p>
+          <p className="text-sm text-foreground-muted">{t("emptyRules")}</p>
           {isAdmin && !showForm && (
             <button
               onClick={() => setShowForm(true)}
               className="mt-2 text-sm text-accent hover:underline"
             >
-              Create your first rule
+              {t("createFirstRule")}
             </button>
           )}
         </div>
@@ -535,7 +542,7 @@ export function RuleBuilder({ isAdmin }: RuleBuilderProps) {
                 <span className="text-sm font-medium text-foreground">{rule.name}</span>
                 <PredicateSummary condition={rule.condition} />
                 <span className="text-xs text-foreground-subtle">
-                  {rule.channels.length} delivery target{rule.channels.length !== 1 ? "s" : ""}
+                  {t("deliveryTargets", { count: rule.channels.length })}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -546,13 +553,13 @@ export function RuleBuilder({ isAdmin }: RuleBuilderProps) {
                       : "text-foreground-muted border border-border"
                   }`}
                 >
-                  {rule.is_enabled ? "Active" : "Paused"}
+                  {rule.is_enabled ? t("statusActive") : t("statusPaused")}
                 </span>
                 {isAdmin && (
                   <button
                     onClick={() => setDeleteId(rule.id)}
                     className="rounded-md p-1.5 text-foreground-muted hover:text-urgency-high hover:bg-urgency-high/10 transition-colors"
-                    aria-label={`Delete rule ${rule.name}`}
+                    aria-label={t("deleteRuleAria", { name: rule.name })}
                   >
                     <Trash2 size={14} />
                   </button>

@@ -1,0 +1,511 @@
+{
+  "nav": {
+    "groups": {
+      "main": "ГЛАВНОЕ",
+      "requests": "ЗАЯВКИ",
+      "sources": "ИСТОЧНИКИ",
+      "settings": "НАСТРОЙКИ"
+    },
+    "items": {
+      "dashboard": "Панель",
+      "liveFeed": "Лента",
+      "purchaseRequests": "Заявки на закупку",
+      "offers": "Предложения",
+      "sources": "Источники",
+      "alerts": "Оповещения",
+      "prices": "Цены",
+      "adminUsers": "Пользователи"
+    },
+    "guest": "Гость"
+  },
+  "login": {
+    "subtitle": "Войдите в панель управления",
+    "email": "Эл. почта",
+    "password": "Пароль",
+    "signIn": "Войти",
+    "signingIn": "Вход…",
+    "failed": "Не удалось войти. Проверьте учётные данные.",
+    "emailPlaceholder": "analyst@company.com"
+  },
+  "signals": {
+    "title": "Лента",
+    "subtitle": "Рыночные сигналы в реальном времени из всех настроенных источников",
+    "loading": "Загрузка…"
+  },
+  "language": {
+    "label": "Язык",
+    "ru": "Русский",
+    "uz": "O'zbek",
+    "tr": "Türkçe"
+  },
+  "common": {
+    "status": {
+      "new": "Новая",
+      "viewed": "Просмотрена",
+      "in_progress": "В работе",
+      "offer_sent": "Предложение отправлено",
+      "matched": "Сопоставлена",
+      "closed": "Закрыта",
+      "cancelled": "Отменена"
+    },
+    "kind": {
+      "buy_request": "ПОКУПАТЕЛЬ",
+      "sell_offer": "ПРОДАВЕЦ",
+      "deal": "СДЕЛКА",
+      "price_quote": "ЦЕНА",
+      "news": "НОВОСТИ"
+    },
+    "urgency": {
+      "high": "Высокая",
+      "medium": "Средняя",
+      "low": "Низкая"
+    },
+    "urgencyAriaLabel": "Срочность: {label}",
+    "needsReview": "Требует проверки"
+  },
+  "home": {
+    "title": "Дашборд",
+    "subtitle": "Обзор рынка и сводка активности",
+    "kpiTotalBuyers": "Всего покупателей",
+    "kpiTotalSellers": "Всего продавцов",
+    "kpiActiveRequests": "Активные заявки",
+    "kpiHotLeads": "Горячие лиды",
+    "kpiHotLeadsDelta": "высокий приоритет",
+    "kpiPriceAlerts": "Ценовые оповещения",
+    "liveMarketFeed": "Лента рынка в реальном времени",
+    "priceTrends": "Динамика цен",
+    "aiMarketSignals": "ИИ-сигналы рынка",
+    "aiMarketSignalsAria": "Панель ИИ-сигналов рынка",
+    "topSellerOffers": "Топ предложений продавцов",
+    "topBuyerRequests": "Топ заявок покупателей",
+    "viewAll": "Смотреть все",
+    "loading": "Загрузка…",
+    "loadingSignals": "Загрузка сигналов…",
+    "noSignals": "Пока нет ИИ-сигналов",
+    "noOffers": "Пока нет предложений",
+    "noRequests": "Пока нет заявок",
+    "leadScore": "{score} б.",
+    "volumeMt": "{volume} т",
+    "pricePerMt": "{price} {currency}/т"
+  },
+  "feed": {
+    "loading": "Загрузка ленты…",
+    "tableLabel": "Лента рынка в реальном времени",
+    "error": {
+      "prefix": "Не удалось загрузить ленту:",
+      "unknown": "Неизвестная ошибка"
+    },
+    "empty": {
+      "title": "Пока нет рыночной активности",
+      "description": "Сигналы появятся здесь по мере поступления данных от источников."
+    },
+    "columns": {
+      "time": "Время",
+      "kind": "Тип",
+      "product": "Продукт / Марка",
+      "volume": "Объём",
+      "price": "Цена",
+      "region": "Регион",
+      "urgency": "Срочность",
+      "status": "Статус"
+    },
+    "pagination": {
+      "prev": "Назад",
+      "next": "Вперёд",
+      "prevLabel": "Предыдущая страница",
+      "nextLabel": "Следующая страница",
+      "results": "{count} результатов"
+    },
+    "filters": {
+      "period": "Период",
+      "kind": "Тип",
+      "source": "Источник",
+      "urgency": "Срочность",
+      "periodLabel": "Фильтр по периоду",
+      "kindLabel": "Фильтр по типу",
+      "sourceLabel": "Фильтр по источнику",
+      "urgencyLabel": "Фильтр по срочности",
+      "sourcePlaceholder": "Все источники"
+    },
+    "period": {
+      "7d": "Последние 7 дней",
+      "30d": "Последние 30 дней",
+      "90d": "Последние 90 дней"
+    },
+    "kind": {
+      "all": "Все типы",
+      "buy_request": "Запрос на покупку",
+      "sell_offer": "Предложение о продаже",
+      "deal": "Сделка",
+      "price_quote": "Котировка цены",
+      "news": "Новости"
+    },
+    "urgency": {
+      "all": "Любая срочность",
+      "high": "Высокая",
+      "medium": "Средняя",
+      "low": "Низкая"
+    }
+  },
+  "offers": {
+    "title": "Предложения продавцов",
+    "subtitle": "Активные предложения о продаже с бирж и отслеживаемых источников",
+    "loading": "Загрузка…"
+  },
+  "prices": {
+    "title": "Динамика цен",
+    "subtitle": "Цены полимерного рынка с UZEX и ЦБУ",
+    "market": "Рынок",
+    "marketAll": "Все",
+    "range": "Период",
+    "rangePreset": "{days} дн.",
+    "from": "С",
+    "to": "По",
+    "currency": "Валюта",
+    "loading": "Загрузка данных о ценах…",
+    "error": "Не удалось загрузить данные о ценах. Обновите страницу.",
+    "empty": "Нет данных о ценах для выбранных фильтров. Измените диапазон дат или выбор продукта.",
+    "yAxisLabel": "{currency}/т",
+    "tooltipValue": "{value} {currency}/т"
+  },
+  "requests": {
+    "loading": "Загрузка…",
+    "pageTitle": "Заявки на закупку",
+    "pageSubtitle": "Заявки покупателей в реальном времени, собранные с бирж, сайтов и каналов",
+    "searchPlaceholder": "Поиск заявок…",
+    "searchAriaLabel": "Поиск заявок",
+    "exportCsv": "Экспорт CSV",
+    "tableSettings": "Настройки таблицы",
+    "liveData": "Данные в реальном времени",
+    "kpiTotalRequests": "Всего заявок",
+    "kpiTotalVolume": "Общий объём",
+    "kpiAvgTargetPrice": "Средняя целевая цена",
+    "kpiHotRequests": "Срочные заявки",
+    "kpiSources": "Источники",
+    "kpiUpdated": "Обновлено",
+    "colTime": "Время",
+    "colProduct": "Продукт",
+    "colGradeType": "Марка / Тип",
+    "colVolume": "Объём",
+    "colTargetPrice": "Целевая цена",
+    "colRegion": "Регион",
+    "colSource": "Источник",
+    "colUrgency": "Срочность",
+    "colStatus": "Статус",
+    "loadingRequests": "Загрузка заявок…",
+    "loadError": "Не удалось загрузить заявки:",
+    "unknownError": "Неизвестная ошибка",
+    "emptyTitle": "Заявки не найдены",
+    "emptyDescription": "Попробуйте изменить фильтры или зайдите позже.",
+    "tableAriaLabel": "Таблица заявок на закупку",
+    "previousPage": "Предыдущая страница",
+    "prev": "Назад",
+    "pagination": "Страница {page} из {totalPages} · {results} результатов",
+    "nextPage": "Следующая страница",
+    "next": "Вперёд",
+    "filterPeriod": "Период",
+    "filterUrgency": "Срочность",
+    "filterStatus": "Статус",
+    "filterProduct": "Продукт",
+    "periodOpt7d": "Последние 7 дней",
+    "periodOpt30d": "Последние 30 дней",
+    "periodOpt90d": "Последние 90 дней",
+    "periodOptAll": "За всё время",
+    "urgencyOptAll": "Любая срочность",
+    "urgencyOptHigh": "Высокая",
+    "urgencyOptMedium": "Средняя",
+    "urgencyOptLow": "Низкая",
+    "statusOptAll": "Все статусы",
+    "statusOptNew": "Новая",
+    "statusOptViewed": "Просмотрена",
+    "statusOptInProgress": "В работе",
+    "statusOptOfferSent": "Предложение отправлено",
+    "statusOptMatched": "Сопоставлена",
+    "statusOptClosed": "Закрыта",
+    "statusOptCancelled": "Отменена",
+    "moreFilters": "Ещё фильтры",
+    "clearFilters": "Сбросить фильтры",
+    "removeFilter": "Удалить фильтр {label}",
+    "detailLoadError": "Не удалось загрузить детали заявки.",
+    "closeDetailPanel": "Закрыть панель деталей",
+    "productFallback": "Продукт #{id}",
+    "sectionRequestDetails": "Детали заявки",
+    "sectionSourceInformation": "Информация об источнике",
+    "sectionAiAnalysis": "AI-анализ",
+    "sectionFiles": "Файлы ({count})",
+    "sectionActions": "Действия",
+    "fieldVolume": "Объём",
+    "fieldTargetPrice": "Целевая цена",
+    "fieldDeliveryTerms": "Условия поставки",
+    "fieldDestination": "Назначение",
+    "fieldRequiredDate": "Требуемая дата",
+    "fieldValidityDays": "Срок действия (дней)",
+    "fieldAdditionalInfo": "Дополнительная информация",
+    "fieldPosted": "Опубликовано",
+    "fieldUpdated": "Обновлено",
+    "matchScore": "Оценка соответствия",
+    "priceAnalysis": "Анализ цены",
+    "marketAvg": "Среднерыночная",
+    "noPriceData": "Нет данных о ценах",
+    "demandLevel": "Уровень спроса",
+    "demandLevelPending": "Ожидается (Фаза 5)",
+    "recommendation": "Рекомендация",
+    "recommendationPending": "AI-анализ будет доступен после Фазы 5",
+    "demandLevelLow": "Низкий",
+    "demandLevelMedium": "Средний",
+    "demandLevelHigh": "Высокий",
+    "runAnalysis": "Запустить AI-анализ",
+    "rerunAnalysis": "Обновить AI-анализ",
+    "analyzing": "Анализируем…",
+    "analysisFailed": "Не удалось выполнить AI-анализ. Попробуйте снова.",
+    "errorStatusChange": "Не удалось изменить статус. Обновите страницу и попробуйте снова.",
+    "errorNoteSave": "Не удалось сохранить заметку. Проверьте соединение и попробуйте снова.",
+    "dismiss": "Закрыть",
+    "contactBuyer": "Связаться с покупателем",
+    "noTelegramId": "Нет Telegram ID в базе",
+    "addNote": "Добавить заметку",
+    "notePlaceholder": "Введите заметку команды (не видна клиенту)…",
+    "saveNote": "Сохранить заметку",
+    "cancel": "Отмена",
+    "statusLabel": "Статус",
+    "cancelDialogTitle": "Отменить эту заявку?",
+    "cancelDialogDescription": "Отменить эту заявку? Это действие нельзя отменить. Покупатель не будет уведомлён автоматически.",
+    "confirm": "Подтвердить",
+    "assignOwner": "Назначить ответственного",
+    "unassigned": "Не назначено",
+    "markAsProcessed": "Отметить как обработанную",
+    "exportError": "Не удалось выполнить экспорт. Попробуйте снова или обратитесь в поддержку, если проблема сохраняется.",
+    "exportAriaLabel": "Экспортировать заявки в CSV"
+  },
+  "sources": {
+    "title": "Источники",
+    "subtitle": "Управляйте источниками данных и отслеживайте состояние их сбора",
+    "addSource": "Добавить источник",
+    "loadError": "Не удалось загрузить источники. Обновите страницу.",
+    "never": "Никогда",
+    "columns": {
+      "nameType": "Название / Тип",
+      "status": "Статус",
+      "lastFetch": "Последний сбор",
+      "failures": "Сбои",
+      "test": "Тест",
+      "enable": "Включить"
+    },
+    "status": {
+      "pending": "Ожидает активации (Этап 5)",
+      "enabled": "Включён",
+      "disabled": "Отключён"
+    },
+    "empty": {
+      "title": "Источники не настроены",
+      "description": "Добавьте первый источник данных, чтобы начать сбор сигналов."
+    },
+    "adapterLabels": {
+      "html_table": "HTML-таблица",
+      "rss": "RSS-канал",
+      "telegram_channel": "Telegram-канал",
+      "llm_page": "LLM-страница",
+      "uzex_offers": "UZEX Предложения",
+      "uzex_contracts": "UZEX Контракты",
+      "uzex_deals": "UZEX Сделки",
+      "cbu_rates": "Курсы ЦБ РУз"
+    },
+    "testResult": {
+      "running": "Выполняется тест…",
+      "requestFailed": "Не удалось выполнить тест. Проверьте подключение.",
+      "passed": "Тест пройден — извлечено записей: {count}",
+      "failed": "Тест не пройден: {error}",
+      "unknownError": "Неизвестная ошибка"
+    },
+    "disableDialog": {
+      "title": "Отключить источник",
+      "description": "Отключить этот источник? Сбор данных прекратится до повторного включения.",
+      "cancel": "Отмена",
+      "confirm": "Отключить"
+    },
+    "test": {
+      "button": "Тест",
+      "unavailableAria": "Тест недоступен для источника в ожидании",
+      "availableAfterPhase5": "Доступно после Этапа 5",
+      "intro": "Запустите живой тест, чтобы проверить корректность извлечения данных. Будет показано до 10 нормализованных строк предпросмотра.",
+      "fetching": "Получение источника…",
+      "failedTitle": "Тест не пройден",
+      "failedBody": "Не удалось извлечь данные из этого источника. Проверьте URL и селекторы, затем повторите попытку.",
+      "passedTitle": "Тест пройден",
+      "passedBody": "Извлечено записей: {count}. Просмотрите предпросмотр и включите источник.",
+      "running": "Выполняется…",
+      "runButton": "Запустить тест",
+      "runError": "Не удалось выполнить тест. Проверьте подключение и повторите попытку."
+    },
+    "enable": {
+      "unavailableAria": "Включение недоступно для источника в ожидании",
+      "disableAria": "Отключить источник",
+      "enableAria": "Включить источник",
+      "mustTestFirst": "Источник должен пройти тест перед включением"
+    },
+    "dialogTitle": "Добавить источник данных",
+    "stepLabel": "Шаг {step}: {label}",
+    "steps": {
+      "pickType": "Выбор типа",
+      "configure": "Настройка",
+      "test": "Тест",
+      "enable": "Включение"
+    },
+    "typeLabels": {
+      "html_table": "HTML-таблица",
+      "rss": "RSS-канал",
+      "telegram_channel": "Telegram-канал",
+      "llm_page": "LLM-страница"
+    },
+    "typeDescriptions": {
+      "html_table": "Получение данных из HTML-таблицы на публичной веб-странице",
+      "rss": "Подписка на RSS- или Atom-канал",
+      "telegram_channel": "Мониторинг публичного Telegram-канала",
+      "llm_page": "Извлечение структурированных данных со страницы с помощью ИИ"
+    },
+    "phase5Badge": "Этап 5",
+    "pendingWarning": "<strong>{type}</strong> требует функций Этапа 5. Вы можете сохранить конфигурацию сейчас как ожидающую — она активируется, когда Этап 5 станет доступен.",
+    "continue": "Продолжить",
+    "sourceName": "Название источника",
+    "sourceNamePlaceholder": "Мой источник {type}",
+    "sourceNameRequired": "Введите название источника.",
+    "pendingTypeNotice": "Этот тип источника доступен на Этапе 5. Ваша конфигурация будет сохранена, но источник останется в состоянии ожидания до тех пор.",
+    "saveConfiguration": "Сохранить конфигурацию",
+    "continueToTest": "Перейти к тесту",
+    "saveConfigError": "Не удалось сохранить конфигурацию. Повторите попытку.",
+    "back": "Назад",
+    "pendingSaved": {
+      "title": "Конфигурация сохранена — ожидает активации (Этап 5)",
+      "body": "Этот источник сохранён. Он активируется автоматически, когда функции Этапа 5 станут доступны."
+    },
+    "readyToEnable": {
+      "title": "Тест пройден — источник готов к включению",
+      "body": "Включите источник, чтобы начать сбор данных из него."
+    },
+    "enableError": "Не удалось включить источник. Убедитесь, что тест пройден, и повторите попытку.",
+    "enabling": "Включение…",
+    "enableSource": "Включить источник",
+    "done": "Готово",
+    "saveAsPending": "Сохранить как ожидающий",
+    "form": {
+      "continue": "Продолжить",
+      "back": "Назад",
+      "required": "{label} обязательно для заполнения",
+      "noConfig": "Для этого типа источника настройка не требуется.",
+      "publicUrlsOnly": "Только публичные URL.",
+      "selectPlaceholder": "Выберите {label}…",
+      "enterPlaceholder": "Введите {label}…"
+    }
+  },
+  "alerts": {
+    "pageTitle": "Оповещения",
+    "pageSubtitle": "Сработавшие оповещения и правила доставки",
+    "recentAlerts": "Недавние оповещения",
+    "loadError": "Не удалось загрузить оповещения. Обновите страницу.",
+    "ruleRef": "Правило #{id}",
+    "severity": {
+      "info": "Инфо",
+      "warning": "Предупреждение",
+      "critical": "Критично"
+    },
+    "empty": {
+      "title": "Оповещения ещё не срабатывали",
+      "description": "Настройте правило, чтобы начать получать оповещения."
+    },
+    "table": {
+      "severity": "Серьёзность",
+      "message": "Сообщение",
+      "rule": "Правило",
+      "triggeredAt": "Время срабатывания"
+    },
+    "predicate": {
+      "kind": "тип: {value}",
+      "product": "продукт #{id}",
+      "volume": "объём ≥ {value} т",
+      "urgency": "срочность: {value}",
+      "source": "источник: {value}",
+      "any": "Любой сигнал"
+    },
+    "deleteDialog": {
+      "title": "Удалить правило оповещения",
+      "description": "Удалить это правило? Активные доставки по этому правилу будут немедленно остановлены.",
+      "cancel": "Отмена",
+      "confirm": "Удалить"
+    },
+    "kindOptions": {
+      "buy_request": "Заявка на покупку",
+      "sell_offer": "Предложение о продаже",
+      "deal": "Сделка",
+      "price_quote": "Котировка цены"
+    },
+    "urgencyOptions": {
+      "high": "Высокая",
+      "medium": "Средняя",
+      "low": "Низкая"
+    },
+    "sourceKindOptions": {
+      "html_table": "HTML-таблица",
+      "rss": "RSS-лента",
+      "telegram_channel": "Telegram-канал",
+      "llm_page": "LLM-страница",
+      "uzex_offers": "Предложения UZEX",
+      "uzex_contracts": "Контракты UZEX",
+      "uzex_deals": "Сделки UZEX",
+      "webapp": "Веб-приложение"
+    },
+    "form": {
+      "nameLabel": "Название правила",
+      "namePlaceholder": "Напр. Крупные заявки на покупку PP",
+      "nameRequired": "Название правила обязательно",
+      "signalKindLabel": "Тип сигнала",
+      "productLabel": "Продукт",
+      "allProducts": "Все продукты",
+      "volumeLabel": "Объём ≥ (т)",
+      "volumePlaceholder": "напр. 100",
+      "urgencyLabel": "Срочность",
+      "sourceKindLabel": "Тип источника",
+      "leadScoreLabel": "Оценка лида ≥",
+      "leadScoreBadge": "Активируется с ИИ Фазы 5",
+      "leadScorePlaceholder": "0.0 – 1.0",
+      "leadScoreTooltip": "Доступно после Фазы 5",
+      "chatIdsLabel": "Telegram chat ID для доставки",
+      "chatIdsHelp": "Введите Telegram chat ID (напр. -1001234567890 для групп). DM: ваш личный chat ID. По одному в строке.",
+      "urgencyChannelLabel": "Канал срочности",
+      "channelDm": "ЛС",
+      "channelGroup": "Группа",
+      "cancel": "Отмена",
+      "save": "Сохранить правило",
+      "saving": "Сохранение…"
+    },
+    "saveError": "Не удалось сохранить правило. Проверьте данные и попробуйте снова.",
+    "rulesTitle": "Правила оповещений",
+    "createRule": "Создать правило",
+    "newRule": "Новое правило оповещения",
+    "emptyRules": "Правила оповещений ещё не настроены.",
+    "createFirstRule": "Создайте своё первое правило",
+    "deliveryTargets": "{count, plural, one {# цель доставки} few {# цели доставки} many {# целей доставки} other {# цели доставки}}",
+    "statusActive": "Активно",
+    "statusPaused": "Приостановлено",
+    "deleteRuleAria": "Удалить правило {name}"
+  },
+  "admin": {
+    "pageTitle": "Администрирование пользователей",
+    "pageSubtitle": "Учётные записи сотрудников и назначение ролей",
+    "loadError": "Не удалось загрузить пользователей. Обновите страницу.",
+    "empty": "Сотрудники не найдены.",
+    "statusActive": "Активен",
+    "statusInactive": "Неактивен",
+    "table": {
+      "email": "Эл. почта",
+      "role": "Роль",
+      "status": "Статус",
+      "createdAt": "Создан"
+    },
+    "roles": {
+      "admin": "Администратор",
+      "analyst": "Аналитик",
+      "trader": "Трейдер",
+      "viewer": "Наблюдатель"
+    }
+  }
+}

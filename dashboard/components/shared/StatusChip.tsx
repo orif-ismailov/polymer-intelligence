@@ -6,6 +6,8 @@
  * Color alone never conveys status: label text + color (accessibility).
  */
 
+import { useTranslations } from "next-intl";
+
 const STATUS_CLASSES: Record<string, string> = {
   new: "text-status-new border-status-new",
   viewed: "text-status-viewed border-status-viewed",
@@ -16,14 +18,14 @@ const STATUS_CLASSES: Record<string, string> = {
   cancelled: "text-status-cancelled border-status-cancelled",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  new: "New",
-  viewed: "Viewed",
-  in_progress: "In Progress",
-  offer_sent: "Offer Sent",
-  matched: "Matched",
-  closed: "Closed",
-  cancelled: "Cancelled",
+const STATUS_KEYS: Record<string, string> = {
+  new: "status.new",
+  viewed: "status.viewed",
+  in_progress: "status.in_progress",
+  offer_sent: "status.offer_sent",
+  matched: "status.matched",
+  closed: "status.closed",
+  cancelled: "status.cancelled",
 };
 
 interface StatusChipProps {
@@ -32,8 +34,10 @@ interface StatusChipProps {
 }
 
 export function StatusChip({ status, className = "" }: StatusChipProps) {
+  const t = useTranslations("common");
   const colorClasses = STATUS_CLASSES[status] ?? "text-foreground-muted border-foreground-muted";
-  const label = STATUS_LABELS[status] ?? status;
+  const labelKey = STATUS_KEYS[status];
+  const label = labelKey ? t(labelKey) : status;
 
   return (
     <span

@@ -158,8 +158,10 @@ def get_or_create_client(
     Returns:
         The existing or newly created Client ORM object.
     """
-    # Normalize language_code → 'ru' | 'uz' only; everything else defaults to 'ru'
-    normalized_language = language if language in ("ru", "uz") else "ru"
+    # Normalize language_code to a supported language; unknown codes → default (ru)
+    from app.core.languages import normalize_language  # noqa: PLC0415
+
+    normalized_language = normalize_language(language)
 
     existing: Client | None = (
         db.query(Client)

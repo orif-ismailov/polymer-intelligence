@@ -1,0 +1,3 @@
+Talep {number} → {status_label}
+
+Talep ayrıntılarını uygulamada açmak için aşağıdaki düğmeye basın.

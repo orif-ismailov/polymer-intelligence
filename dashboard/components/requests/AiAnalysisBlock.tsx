@@ -1,19 +1,20 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
+
+import { apiFetch } from "@/lib/api";
+
 /**
- * AiAnalysisBlock — D-01/D-02 AI block for the request detail panel.
+ * AiAnalysisBlock — request-detail AI panel.
  *
- * D-01 placeholder contract: final-shape panels with honest placeholder text.
- *   - Match Score: progress bar empty (0%, "—" text). Phase 5 fills real data.
- *   - Demand Level: "Pending (Phase 5)".
- *   - Recommendation: "AI analysis available after Phase 5" (italic, foreground-subtle).
+ * Phase 5: match_score / demand_level / recommendation are computed by the LLM
+ * (request_analysis_service) and echoed from request.ai. When a request has not been
+ * analysed yet (ai empty), the fields fall back to honest placeholders and a "Run AI
+ * analysis" button triggers POST /requests/{id}/analyze (new requests are analysed
+ * automatically on submit). Price Analysis is real, non-AI data from price_points.
  *
- * D-02 REAL data: Price Analysis — computed server-side from price_points market='UZ'.
- *   - Positive delta (above market avg): text-accent
- *   - Negative delta (below market avg): text-urgency-medium
- *   - null price_analysis: "No price data available"
- *
- * RESEARCH Pattern 8 + PATTERNS.md AiAnalysisBlock section.
  * No hardcoded hex — token classes only.
  */
 
@@ -25,22 +26,53 @@ interface PriceAnalysis {
 }
 
 interface AiAnalysisBlockProps {
-  /** D-01: ai JSONB from the request — null fields in Phase 4. */
+  /** Request id — needed to (re)trigger analysis. */
+  requestId: number;
+  /** ai JSONB from the request (match_score/demand_level/recommendation when analysed). */
   ai: Record<string, unknown>;
-  /** D-02: real price analysis from price_points (may be null). */
+  /** Real price analysis from price_points (may be null). */
   priceAnalysis: PriceAnalysis | null;
 }
 
-export function AiAnalysisBlock({ ai, priceAnalysis }: AiAnalysisBlockProps) {
-  const matchScore =
-    typeof ai?.match_score === "number" ? ai.match_score : null;
+const DEMAND_CLASSES: Record<string, string> = {
+  low: "text-urgency-low",
+  medium: "text-urgency-medium",
+  high: "text-urgency-high",
+};
+
+export function AiAnalysisBlock({ requestId, ai, priceAnalysis }: AiAnalysisBlockProps) {
+  const t = useTranslations("requests");
+  const queryClient = useQueryClient();
+
+  const matchScore = typeof ai?.match_score === "number" ? ai.match_score : null;
+  const demandLevel =
+    typeof ai?.demand_level === "string" ? (ai.demand_level as string) : null;
+  const recommendation =
+    typeof ai?.recommendation === "string" && ai.recommendation.trim()
+      ? (ai.recommendation as string)
+      : null;
+  const hasAnalysis = matchScore != null || demandLevel != null || recommendation != null;
+
+  const analysis = useMutation({
+    mutationFn: () => apiFetch(`/requests/${requestId}/analyze`, { method: "POST" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["request", String(requestId)] });
+    },
+  });
+
+  function demandLabel(level: string): string {
+    if (level === "low") return t("demandLevelLow");
+    if (level === "medium") return t("demandLevelMedium");
+    if (level === "high") return t("demandLevelHigh");
+    return t("demandLevelPending");
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Match Score — D-01 placeholder (empty bar in Phase 4) */}
+      {/* Match Score */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs text-foreground-muted">Match Score</span>
+          <span className="text-xs text-foreground-muted">{t("matchScore")}</span>
           <span className="text-xs font-mono text-foreground-muted">
             {matchScore != null ? `${Math.round(matchScore * 100)}%` : "—"}
           </span>
@@ -51,22 +83,21 @@ export function AiAnalysisBlock({ ai, priceAnalysis }: AiAnalysisBlockProps) {
           aria-valuenow={matchScore != null ? Math.round(matchScore * 100) : 0}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label="Match score"
+          aria-label={t("matchScore")}
         >
           <div
             style={{
-              width:
-                matchScore != null ? `${Math.round(matchScore * 100)}%` : "0%",
+              width: matchScore != null ? `${Math.round(matchScore * 100)}%` : "0%",
             }}
             className="h-full bg-accent transition-all"
           />
         </div>
       </div>
 
-      {/* Price Analysis — D-02 REAL data (not AI-dependent) */}
+      {/* Price Analysis — real data (not AI-dependent) */}
       <div>
         <span className="text-xs text-foreground-muted block mb-1">
-          Price Analysis
+          {t("priceAnalysis")}
         </span>
         {priceAnalysis != null ? (
           <div className="flex flex-col gap-1">
@@ -81,7 +112,7 @@ export function AiAnalysisBlock({ ai, priceAnalysis }: AiAnalysisBlockProps) {
             </span>
             {priceAnalysis.market_avg != null && (
               <span className="text-xs text-foreground-muted">
-                Market avg: {priceAnalysis.market_avg} {" "}
+                {t("marketAvg")}: {priceAnalysis.market_avg} {" "}
                 {priceAnalysis.delta_pct != null && (
                   <span
                     className={
@@ -98,30 +129,66 @@ export function AiAnalysisBlock({ ai, priceAnalysis }: AiAnalysisBlockProps) {
             )}
           </div>
         ) : (
-          <span className="text-sm text-foreground-subtle">
-            No price data available
-          </span>
+          <span className="text-sm text-foreground-subtle">{t("noPriceData")}</span>
         )}
       </div>
 
-      {/* Demand Level — D-01 placeholder */}
+      {/* Demand Level — AI */}
       <div>
         <span className="text-xs text-foreground-muted block mb-1">
-          Demand Level
+          {t("demandLevel")}
         </span>
-        <span className="text-sm text-foreground-subtle">
-          Pending (Phase 5)
-        </span>
+        {demandLevel != null ? (
+          <span
+            className={`text-sm font-semibold ${
+              DEMAND_CLASSES[demandLevel] ?? "text-foreground"
+            }`}
+          >
+            {demandLabel(demandLevel)}
+          </span>
+        ) : (
+          <span className="text-sm text-foreground-subtle">{t("demandLevelPending")}</span>
+        )}
       </div>
 
-      {/* Recommendation — D-01 placeholder */}
+      {/* Recommendation — AI */}
       <div>
         <span className="text-xs text-foreground-muted block mb-1">
-          Recommendation
+          {t("recommendation")}
         </span>
-        <p className="text-sm text-foreground-subtle italic">
-          AI analysis available after Phase 5
-        </p>
+        {recommendation != null ? (
+          <p className="text-sm text-foreground">{recommendation}</p>
+        ) : (
+          <p className="text-sm text-foreground-subtle italic">
+            {t("recommendationPending")}
+          </p>
+        )}
+      </div>
+
+      {/* Run / re-run analysis */}
+      <div className="flex flex-col gap-1.5">
+        <button
+          type="button"
+          onClick={() => analysis.mutate()}
+          disabled={analysis.isPending}
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {analysis.isPending ? (
+            <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+          ) : (
+            <Sparkles size={15} aria-hidden="true" />
+          )}
+          {analysis.isPending
+            ? t("analyzing")
+            : hasAnalysis
+              ? t("rerunAnalysis")
+              : t("runAnalysis")}
+        </button>
+        {analysis.isError && (
+          <span role="alert" className="text-xs text-urgency-high">
+            {t("analysisFailed")}
+          </span>
+        )}
       </div>
     </div>
   );

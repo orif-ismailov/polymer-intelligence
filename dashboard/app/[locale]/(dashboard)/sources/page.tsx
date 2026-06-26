@@ -11,11 +11,13 @@
  */
 
 import { useState, Suspense } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, Server } from "lucide-react";
 import { SourcesList } from "@/components/sources/SourcesList";
 import { AddSourceWizard } from "@/components/sources/AddSourceWizard";
 
 function SourcesPageContent() {
+  const t = useTranslations("sources");
   const [wizardOpen, setWizardOpen] = useState(false);
 
   return (
@@ -25,10 +27,10 @@ function SourcesPageContent() {
         <div>
           <div className="flex items-center gap-3">
             <Server size={24} className="text-foreground-muted" aria-hidden="true" />
-            <h1 className="text-xl font-semibold text-foreground">Sources</h1>
+            <h1 className="text-xl font-semibold text-foreground">{t("title")}</h1>
           </div>
           <p className="text-sm text-foreground-muted mt-1">
-            Manage data sources and monitor their collection health
+            {t("subtitle")}
           </p>
         </div>
         <button
@@ -36,7 +38,7 @@ function SourcesPageContent() {
           className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
         >
           <Plus size={16} aria-hidden="true" />
-          Add Source
+          {t("addSource")}
         </button>
       </div>
 

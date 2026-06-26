@@ -51,9 +51,10 @@ async def cmd_start(message: Message) -> None:
         logger.warning("cmd_start: received message with no from_user")
         return
 
-    # Normalize language_code to 'ru' | 'uz'; anything else defaults to 'ru'
-    raw_lang = message.from_user.language_code or "ru"
-    lang = raw_lang if raw_lang in ("ru", "uz") else "ru"
+    # Normalize language_code to a supported language; anything else → default (ru)
+    from app.core.languages import normalize_language  # noqa: PLC0415
+
+    lang = normalize_language(message.from_user.language_code)
 
     telegram_user_id: int = message.from_user.id
     contact_name: str | None = message.from_user.full_name or None

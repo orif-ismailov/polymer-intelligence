@@ -157,7 +157,7 @@ class ClientProfilePatch(BaseModel):
     """Partial update body for PATCH /webapp/me.
 
     Only language, company_name, and contact_name are client-patchable.
-    language is validated to 'ru' or 'uz' only.
+    language is validated against the supported set (app.core.languages).
     """
 
     language: str | None = None
@@ -167,7 +167,9 @@ class ClientProfilePatch(BaseModel):
     @field_validator("language")
     @classmethod
     def _language_must_be_supported(cls, v: str | None) -> str | None:
-        """Language must be 'ru' or 'uz' when provided."""
-        if v is not None and v not in ("ru", "uz"):
-            raise ValueError("language must be 'ru' or 'uz'")
+        """Language must be one of SUPPORTED_LANGUAGES when provided."""
+        from app.core.languages import SUPPORTED_LANGUAGES  # noqa: PLC0415
+
+        if v is not None and v not in SUPPORTED_LANGUAGES:
+            raise ValueError(f"language must be one of {SUPPORTED_LANGUAGES}")
         return v

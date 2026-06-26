@@ -1,0 +1,511 @@
+{
+  "nav": {
+    "groups": {
+      "main": "ASOSIY",
+      "requests": "ARIZALAR",
+      "sources": "MANBALAR",
+      "settings": "SOZLAMALAR"
+    },
+    "items": {
+      "dashboard": "Boshqaruv paneli",
+      "liveFeed": "Jonli tasma",
+      "purchaseRequests": "Xarid arizalari",
+      "offers": "Takliflar",
+      "sources": "Manbalar",
+      "alerts": "Ogohlantirishlar",
+      "prices": "Narxlar",
+      "adminUsers": "Foydalanuvchilar"
+    },
+    "guest": "Mehmon"
+  },
+  "login": {
+    "subtitle": "Boshqaruv paneliga kiring",
+    "email": "Email",
+    "password": "Parol",
+    "signIn": "Kirish",
+    "signingIn": "Kirilmoqda…",
+    "failed": "Kirib bo'lmadi. Ma'lumotlarni tekshiring.",
+    "emailPlaceholder": "analyst@company.com"
+  },
+  "signals": {
+    "title": "Jonli tasma",
+    "subtitle": "Barcha sozlangan manbalardan real vaqtdagi bozor signallari",
+    "loading": "Yuklanmoqda…"
+  },
+  "language": {
+    "label": "Til",
+    "ru": "Русский",
+    "uz": "O'zbek",
+    "tr": "Türkçe"
+  },
+  "common": {
+    "status": {
+      "new": "Yangi",
+      "viewed": "Ko'rilgan",
+      "in_progress": "Jarayonda",
+      "offer_sent": "Taklif yuborildi",
+      "matched": "Moslashtirildi",
+      "closed": "Yopilgan",
+      "cancelled": "Bekor qilingan"
+    },
+    "kind": {
+      "buy_request": "XARIDOR",
+      "sell_offer": "SOTUVCHI",
+      "deal": "BITIM",
+      "price_quote": "NARX",
+      "news": "YANGILIKLAR"
+    },
+    "urgency": {
+      "high": "Yuqori",
+      "medium": "O'rta",
+      "low": "Past"
+    },
+    "urgencyAriaLabel": "Shoshilinchlik: {label}",
+    "needsReview": "Tekshirish kerak"
+  },
+  "home": {
+    "title": "Boshqaruv paneli",
+    "subtitle": "Bozor sharhi va faollik xulosasi",
+    "kpiTotalBuyers": "Jami xaridorlar",
+    "kpiTotalSellers": "Jami sotuvchilar",
+    "kpiActiveRequests": "Faol so'rovlar",
+    "kpiHotLeads": "Qaynoq lidlar",
+    "kpiHotLeadsDelta": "yuqori ustuvorlik",
+    "kpiPriceAlerts": "Narx ogohlantirishlari",
+    "liveMarketFeed": "Jonli bozor lentasi",
+    "priceTrends": "Narx tendentsiyalari",
+    "aiMarketSignals": "AI bozor signallari",
+    "aiMarketSignalsAria": "AI bozor signallari paneli",
+    "topSellerOffers": "Eng yaxshi sotuvchi takliflari",
+    "topBuyerRequests": "Eng yaxshi xaridor so'rovlari",
+    "viewAll": "Barchasini ko'rish",
+    "loading": "Yuklanmoqda…",
+    "loadingSignals": "Signallar yuklanmoqda…",
+    "noSignals": "Hozircha AI signallar yo'q",
+    "noOffers": "Hozircha takliflar yo'q",
+    "noRequests": "Hozircha so'rovlar yo'q",
+    "leadScore": "{score} ball",
+    "volumeMt": "{volume} t",
+    "pricePerMt": "{price} {currency}/t"
+  },
+  "feed": {
+    "loading": "Tasma yuklanmoqda…",
+    "tableLabel": "Jonli bozor tasmasi",
+    "error": {
+      "prefix": "Tasmani yuklab bo‘lmadi:",
+      "unknown": "Noma’lum xatolik"
+    },
+    "empty": {
+      "title": "Hozircha bozor faolligi yo‘q",
+      "description": "Manbalar ma’lumot berishi bilan signallar shu yerda paydo bo‘ladi."
+    },
+    "columns": {
+      "time": "Vaqt",
+      "kind": "Turi",
+      "product": "Mahsulot / Marka",
+      "volume": "Hajm",
+      "price": "Narx",
+      "region": "Hudud",
+      "urgency": "Shoshilinchlik",
+      "status": "Holat"
+    },
+    "pagination": {
+      "prev": "Orqaga",
+      "next": "Oldinga",
+      "prevLabel": "Oldingi sahifa",
+      "nextLabel": "Keyingi sahifa",
+      "results": "{count} ta natija"
+    },
+    "filters": {
+      "period": "Davr",
+      "kind": "Turi",
+      "source": "Manba",
+      "urgency": "Shoshilinchlik",
+      "periodLabel": "Davr bo‘yicha filtr",
+      "kindLabel": "Turi bo‘yicha filtr",
+      "sourceLabel": "Manba bo‘yicha filtr",
+      "urgencyLabel": "Shoshilinchlik bo‘yicha filtr",
+      "sourcePlaceholder": "Barcha manbalar"
+    },
+    "period": {
+      "7d": "Oxirgi 7 kun",
+      "30d": "Oxirgi 30 kun",
+      "90d": "Oxirgi 90 kun"
+    },
+    "kind": {
+      "all": "Barcha turlar",
+      "buy_request": "Sotib olish so‘rovi",
+      "sell_offer": "Sotuv taklifi",
+      "deal": "Bitim",
+      "price_quote": "Narx kotirovkasi",
+      "news": "Yangiliklar"
+    },
+    "urgency": {
+      "all": "Barcha shoshilinchlik",
+      "high": "Yuqori",
+      "medium": "O‘rta",
+      "low": "Past"
+    }
+  },
+  "offers": {
+    "title": "Sotuvchi takliflari",
+    "subtitle": "Birjalar va kuzatilayotgan manbalardagi faol sotuv takliflari",
+    "loading": "Yuklanmoqda…"
+  },
+  "prices": {
+    "title": "Narx tendensiyalari",
+    "subtitle": "UZEX va MBU dan polimer bozori narxlari",
+    "market": "Bozor",
+    "marketAll": "Barchasi",
+    "range": "Davr",
+    "rangePreset": "{days} kun",
+    "from": "Dan",
+    "to": "Gacha",
+    "currency": "Valyuta",
+    "loading": "Narx maʼlumotlari yuklanmoqda…",
+    "error": "Narx maʼlumotlarini yuklab boʻlmadi. Sahifani yangilang.",
+    "empty": "Tanlangan filtrlar uchun narx maʼlumotlari yoʻq. Sana oraligʻini yoki mahsulot tanlovini oʻzgartiring.",
+    "yAxisLabel": "{currency}/t",
+    "tooltipValue": "{value} {currency}/t"
+  },
+  "requests": {
+    "loading": "Yuklanmoqda…",
+    "pageTitle": "Xarid so'rovlari",
+    "pageSubtitle": "Birjalar, veb-saytlar va kanallardan to'plangan real vaqt rejimidagi xaridor so'rovlari",
+    "searchPlaceholder": "So'rovlarni qidirish…",
+    "searchAriaLabel": "So'rovlarni qidirish",
+    "exportCsv": "CSV eksport",
+    "tableSettings": "Jadval sozlamalari",
+    "liveData": "Jonli ma'lumotlar",
+    "kpiTotalRequests": "Jami so'rovlar",
+    "kpiTotalVolume": "Umumiy hajm",
+    "kpiAvgTargetPrice": "O'rtacha maqsadli narx",
+    "kpiHotRequests": "Shoshilinch so'rovlar",
+    "kpiSources": "Manbalar",
+    "kpiUpdated": "Yangilangan",
+    "colTime": "Vaqt",
+    "colProduct": "Mahsulot",
+    "colGradeType": "Marka / Tur",
+    "colVolume": "Hajm",
+    "colTargetPrice": "Maqsadli narx",
+    "colRegion": "Mintaqa",
+    "colSource": "Manba",
+    "colUrgency": "Shoshilinchlik",
+    "colStatus": "Holat",
+    "loadingRequests": "So'rovlar yuklanmoqda…",
+    "loadError": "So'rovlarni yuklab bo'lmadi:",
+    "unknownError": "Noma'lum xatolik",
+    "emptyTitle": "So'rovlar topilmadi",
+    "emptyDescription": "Filtrlarni o'zgartirib ko'ring yoki keyinroq qayting.",
+    "tableAriaLabel": "Xarid so'rovlari jadvali",
+    "previousPage": "Oldingi sahifa",
+    "prev": "Orqaga",
+    "pagination": "{totalPages} dan {page}-sahifa · {results} natija",
+    "nextPage": "Keyingi sahifa",
+    "next": "Oldinga",
+    "filterPeriod": "Davr",
+    "filterUrgency": "Shoshilinchlik",
+    "filterStatus": "Holat",
+    "filterProduct": "Mahsulot",
+    "periodOpt7d": "Oxirgi 7 kun",
+    "periodOpt30d": "Oxirgi 30 kun",
+    "periodOpt90d": "Oxirgi 90 kun",
+    "periodOptAll": "Butun davr",
+    "urgencyOptAll": "Har qanday shoshilinchlik",
+    "urgencyOptHigh": "Yuqori",
+    "urgencyOptMedium": "O'rta",
+    "urgencyOptLow": "Past",
+    "statusOptAll": "Barcha holatlar",
+    "statusOptNew": "Yangi",
+    "statusOptViewed": "Ko'rilgan",
+    "statusOptInProgress": "Jarayonda",
+    "statusOptOfferSent": "Taklif yuborilgan",
+    "statusOptMatched": "Moslashtirilgan",
+    "statusOptClosed": "Yopilgan",
+    "statusOptCancelled": "Bekor qilingan",
+    "moreFilters": "Ko'proq filtrlar",
+    "clearFilters": "Filtrlarni tozalash",
+    "removeFilter": "{label} filtrini olib tashlash",
+    "detailLoadError": "So'rov tafsilotlarini yuklab bo'lmadi.",
+    "closeDetailPanel": "Tafsilotlar panelini yopish",
+    "productFallback": "Mahsulot #{id}",
+    "sectionRequestDetails": "So'rov tafsilotlari",
+    "sectionSourceInformation": "Manba ma'lumotlari",
+    "sectionAiAnalysis": "AI tahlili",
+    "sectionFiles": "Fayllar ({count})",
+    "sectionActions": "Amallar",
+    "fieldVolume": "Hajm",
+    "fieldTargetPrice": "Maqsadli narx",
+    "fieldDeliveryTerms": "Yetkazib berish shartlari",
+    "fieldDestination": "Manzil",
+    "fieldRequiredDate": "Kerakli sana",
+    "fieldValidityDays": "Amal qilish muddati (kun)",
+    "fieldAdditionalInfo": "Qo'shimcha ma'lumot",
+    "fieldPosted": "E'lon qilingan",
+    "fieldUpdated": "Yangilangan",
+    "matchScore": "Moslik bahosi",
+    "priceAnalysis": "Narx tahlili",
+    "marketAvg": "Bozor o'rtachasi",
+    "noPriceData": "Narx ma'lumotlari yo'q",
+    "demandLevel": "Talab darajasi",
+    "demandLevelPending": "Kutilmoqda (5-bosqich)",
+    "recommendation": "Tavsiya",
+    "recommendationPending": "AI tahlili 5-bosqichdan keyin mavjud bo'ladi",
+    "demandLevelLow": "Past",
+    "demandLevelMedium": "O'rta",
+    "demandLevelHigh": "Yuqori",
+    "runAnalysis": "AI tahlilni ishga tushirish",
+    "rerunAnalysis": "AI tahlilni yangilash",
+    "analyzing": "Tahlil qilinmoqda…",
+    "analysisFailed": "AI tahlilni bajarib bo'lmadi. Qayta urinib ko'ring.",
+    "errorStatusChange": "Holatni o'zgartirib bo'lmadi. Sahifani yangilab, qayta urinib ko'ring.",
+    "errorNoteSave": "Eslatmani saqlab bo'lmadi. Ulanishni tekshirib, qayta urinib ko'ring.",
+    "dismiss": "Yopish",
+    "contactBuyer": "Xaridor bilan bog'lanish",
+    "noTelegramId": "Bazada Telegram ID yo'q",
+    "addNote": "Eslatma qo'shish",
+    "notePlaceholder": "Jamoa eslatmasini kiriting (mijozga ko'rinmaydi)…",
+    "saveNote": "Eslatmani saqlash",
+    "cancel": "Bekor qilish",
+    "statusLabel": "Holat",
+    "cancelDialogTitle": "Ushbu so'rov bekor qilinsinmi?",
+    "cancelDialogDescription": "Ushbu so'rov bekor qilinsinmi? Buni qaytarib bo'lmaydi. Xaridor avtomatik ravishda xabardor qilinmaydi.",
+    "confirm": "Tasdiqlash",
+    "assignOwner": "Mas'ulni tayinlash",
+    "unassigned": "Tayinlanmagan",
+    "markAsProcessed": "Qayta ishlangan deb belgilash",
+    "exportError": "Eksport amalga oshmadi. Qayta urinib ko'ring yoki muammo davom etsa qo'llab-quvvatlash xizmatiga murojaat qiling.",
+    "exportAriaLabel": "So'rovlarni CSV sifatida eksport qilish"
+  },
+  "sources": {
+    "title": "Manbalar",
+    "subtitle": "Maʼlumot manbalarini boshqaring va ularning yigʻish holatini kuzating",
+    "addSource": "Manba qoʻshish",
+    "loadError": "Manbalarni yuklab boʻlmadi. Sahifani yangilang.",
+    "never": "Hech qachon",
+    "columns": {
+      "nameType": "Nomi / Turi",
+      "status": "Holati",
+      "lastFetch": "Oxirgi yigʻish",
+      "failures": "Xatoliklar",
+      "test": "Test",
+      "enable": "Yoqish"
+    },
+    "status": {
+      "pending": "Faollashtirish kutilmoqda (5-bosqich)",
+      "enabled": "Yoqilgan",
+      "disabled": "Oʻchirilgan"
+    },
+    "empty": {
+      "title": "Manbalar sozlanmagan",
+      "description": "Signallarni yigʻishni boshlash uchun birinchi maʼlumot manbangizni qoʻshing."
+    },
+    "adapterLabels": {
+      "html_table": "HTML jadval",
+      "rss": "RSS lentasi",
+      "telegram_channel": "Telegram kanali",
+      "llm_page": "LLM sahifasi",
+      "uzex_offers": "UZEX Takliflar",
+      "uzex_contracts": "UZEX Shartnomalar",
+      "uzex_deals": "UZEX Bitimlar",
+      "cbu_rates": "MB kurslari"
+    },
+    "testResult": {
+      "running": "Test bajarilmoqda…",
+      "requestFailed": "Test soʻrovi bajarilmadi. Ulanishingizni tekshiring.",
+      "passed": "Test muvaffaqiyatli — {count} ta yozuv olindi",
+      "failed": "Test muvaffaqiyatsiz: {error}",
+      "unknownError": "Nomaʼlum xatolik"
+    },
+    "disableDialog": {
+      "title": "Manbani oʻchirish",
+      "description": "Ushbu manba oʻchirilsinmi? U qayta yoqilmaguncha maʼlumot yigʻishni toʻxtatadi.",
+      "cancel": "Bekor qilish",
+      "confirm": "Oʻchirish"
+    },
+    "test": {
+      "button": "Test",
+      "unavailableAria": "Kutilayotgan manba uchun test mavjud emas",
+      "availableAfterPhase5": "5-bosqichdan keyin mavjud",
+      "intro": "Manba maʼlumotlarni toʻgʻri olishini tekshirish uchun jonli test ishga tushiring. 10 tagacha normallashtirilgan koʻrib chiqish qatori koʻrsatiladi.",
+      "fetching": "Manba olinmoqda…",
+      "failedTitle": "Test muvaffaqiyatsiz",
+      "failedBody": "Ushbu manbadan maʼlumot olib boʻlmadi. URL va selektorlarni tekshiring, soʻng qayta urinib koʻring.",
+      "passedTitle": "Test muvaffaqiyatli",
+      "passedBody": "{count} ta yozuv olindi. Koʻrib chiqishni tekshiring va manbani yoqing.",
+      "running": "Bajarilmoqda…",
+      "runButton": "Testni ishga tushirish",
+      "runError": "Testni ishga tushirib boʻlmadi. Ulanishingizni tekshiring va qayta urinib koʻring."
+    },
+    "enable": {
+      "unavailableAria": "Kutilayotgan manba uchun yoqish mavjud emas",
+      "disableAria": "Manbani oʻchirish",
+      "enableAria": "Manbani yoqish",
+      "mustTestFirst": "Manba yoqilishidan oldin testdan oʻtishi kerak"
+    },
+    "dialogTitle": "Maʼlumot manbasi qoʻshish",
+    "stepLabel": "{step}-qadam: {label}",
+    "steps": {
+      "pickType": "Turini tanlash",
+      "configure": "Sozlash",
+      "test": "Test",
+      "enable": "Yoqish"
+    },
+    "typeLabels": {
+      "html_table": "HTML jadval",
+      "rss": "RSS lentasi",
+      "telegram_channel": "Telegram kanali",
+      "llm_page": "LLM sahifasi"
+    },
+    "typeDescriptions": {
+      "html_table": "Ommaviy veb-sahifadagi HTML jadvaldan maʼlumot olish",
+      "rss": "RSS yoki Atom lentasiga obuna boʻlish",
+      "telegram_channel": "Ommaviy Telegram kanalini kuzatish",
+      "llm_page": "AI yordamida veb-sahifadan tuzilgan maʼlumotlarni olish"
+    },
+    "phase5Badge": "5-bosqich",
+    "pendingWarning": "<strong>{type}</strong> 5-bosqich imkoniyatlarini talab qiladi. Konfiguratsiyani hozir kutilayotgan sifatida saqlashingiz mumkin — u 5-bosqich mavjud boʻlganda faollashadi.",
+    "continue": "Davom etish",
+    "sourceName": "Manba nomi",
+    "sourceNamePlaceholder": "Mening {type} manbam",
+    "sourceNameRequired": "Manba nomini kiriting.",
+    "pendingTypeNotice": "Ushbu manba turi 5-bosqichda mavjud. Konfiguratsiyangiz saqlanadi, biroq manba shu vaqtgacha kutilayotgan holatda qoladi.",
+    "saveConfiguration": "Konfiguratsiyani saqlash",
+    "continueToTest": "Testga oʻtish",
+    "saveConfigError": "Konfiguratsiyani saqlab boʻlmadi. Qayta urinib koʻring.",
+    "back": "Orqaga",
+    "pendingSaved": {
+      "title": "Konfiguratsiya saqlandi — faollashtirish kutilmoqda (5-bosqich)",
+      "body": "Ushbu manba saqlandi. U 5-bosqich imkoniyatlari mavjud boʻlganda avtomatik faollashadi."
+    },
+    "readyToEnable": {
+      "title": "Test muvaffaqiyatli — manba yoqishga tayyor",
+      "body": "Manbadan maʼlumot yigʻishni boshlash uchun uni yoqing."
+    },
+    "enableError": "Manbani yoqib boʻlmadi. Test oʻtganini tekshiring va qayta urinib koʻring.",
+    "enabling": "Yoqilmoqda…",
+    "enableSource": "Manbani yoqish",
+    "done": "Tayyor",
+    "saveAsPending": "Kutilayotgan sifatida saqlash",
+    "form": {
+      "continue": "Davom etish",
+      "back": "Orqaga",
+      "required": "{label} toʻldirilishi shart",
+      "noConfig": "Ushbu manba turi uchun sozlash talab qilinmaydi.",
+      "publicUrlsOnly": "Faqat ommaviy URL manzillar.",
+      "selectPlaceholder": "{label} ni tanlang…",
+      "enterPlaceholder": "{label} ni kiriting…"
+    }
+  },
+  "alerts": {
+    "pageTitle": "Ogohlantirishlar",
+    "pageSubtitle": "Ishga tushgan ogohlantirishlar va yetkazib berish qoidalari",
+    "recentAlerts": "So'nggi ogohlantirishlar",
+    "loadError": "Ogohlantirishlarni yuklab bo'lmadi. Sahifani yangilang.",
+    "ruleRef": "Qoida #{id}",
+    "severity": {
+      "info": "Ma'lumot",
+      "warning": "Ogohlantirish",
+      "critical": "Tanqidiy"
+    },
+    "empty": {
+      "title": "Hali ogohlantirishlar ishga tushmagan",
+      "description": "Ogohlantirishlarni olishni boshlash uchun qoida sozlang."
+    },
+    "table": {
+      "severity": "Darajasi",
+      "message": "Xabar",
+      "rule": "Qoida",
+      "triggeredAt": "Ishga tushgan vaqti"
+    },
+    "predicate": {
+      "kind": "turi: {value}",
+      "product": "mahsulot #{id}",
+      "volume": "hajm ≥ {value} t",
+      "urgency": "shoshilinchlik: {value}",
+      "source": "manba: {value}",
+      "any": "Har qanday signal"
+    },
+    "deleteDialog": {
+      "title": "Ogohlantirish qoidasini o'chirish",
+      "description": "Bu qoida o'chirilsinmi? Ushbu qoidadan foydalanayotgan faol yetkazib berishlar darhol to'xtaydi.",
+      "cancel": "Bekor qilish",
+      "confirm": "O'chirish"
+    },
+    "kindOptions": {
+      "buy_request": "Sotib olish so'rovi",
+      "sell_offer": "Sotuv taklifi",
+      "deal": "Bitim",
+      "price_quote": "Narx kotirovkasi"
+    },
+    "urgencyOptions": {
+      "high": "Yuqori",
+      "medium": "O'rta",
+      "low": "Past"
+    },
+    "sourceKindOptions": {
+      "html_table": "HTML jadval",
+      "rss": "RSS tasma",
+      "telegram_channel": "Telegram kanal",
+      "llm_page": "LLM sahifa",
+      "uzex_offers": "UZEX takliflari",
+      "uzex_contracts": "UZEX shartnomalari",
+      "uzex_deals": "UZEX bitimlari",
+      "webapp": "Veb-ilova"
+    },
+    "form": {
+      "nameLabel": "Qoida nomi",
+      "namePlaceholder": "Masalan: Yirik PP sotib olish so'rovlari",
+      "nameRequired": "Qoida nomi majburiy",
+      "signalKindLabel": "Signal turi",
+      "productLabel": "Mahsulot",
+      "allProducts": "Barcha mahsulotlar",
+      "volumeLabel": "Hajm ≥ (t)",
+      "volumePlaceholder": "masalan: 100",
+      "urgencyLabel": "Shoshilinchlik",
+      "sourceKindLabel": "Manba turi",
+      "leadScoreLabel": "Lid bahosi ≥",
+      "leadScoreBadge": "5-bosqich AI bilan faollashadi",
+      "leadScorePlaceholder": "0.0 – 1.0",
+      "leadScoreTooltip": "5-bosqichdan keyin mavjud",
+      "chatIdsLabel": "Yetkazib berish uchun Telegram chat ID lari",
+      "chatIdsHelp": "Telegram chat ID larini kiriting (masalan, guruhlar uchun -1001234567890). DM: shaxsiy chat ID ingiz. Har bir qatorga bittadan.",
+      "urgencyChannelLabel": "Shoshilinchlik kanali",
+      "channelDm": "DM",
+      "channelGroup": "Guruh",
+      "cancel": "Bekor qilish",
+      "save": "Qoidani saqlash",
+      "saving": "Saqlanmoqda…"
+    },
+    "saveError": "Qoidani saqlab bo'lmadi. Kiritilgan ma'lumotlarni tekshirib, qayta urinib ko'ring.",
+    "rulesTitle": "Ogohlantirish qoidalari",
+    "createRule": "Qoida yaratish",
+    "newRule": "Yangi ogohlantirish qoidasi",
+    "emptyRules": "Hali ogohlantirish qoidalari sozlanmagan.",
+    "createFirstRule": "Birinchi qoidangizni yarating",
+    "deliveryTargets": "{count, plural, one {# yetkazib berish manzili} other {# yetkazib berish manzili}}",
+    "statusActive": "Faol",
+    "statusPaused": "To'xtatilgan",
+    "deleteRuleAria": "{name} qoidasini o'chirish"
+  },
+  "admin": {
+    "pageTitle": "Foydalanuvchilar boshqaruvi",
+    "pageSubtitle": "Xodimlar hisoblari va rollar tayinlash",
+    "loadError": "Foydalanuvchilarni yuklab bo'lmadi. Sahifani yangilang.",
+    "empty": "Xodim foydalanuvchilari topilmadi.",
+    "statusActive": "Faol",
+    "statusInactive": "Nofaol",
+    "table": {
+      "email": "Elektron pochta",
+      "role": "Rol",
+      "status": "Holati",
+      "createdAt": "Yaratilgan"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "analyst": "Tahlilchi",
+      "trader": "Treyder",
+      "viewer": "Kuzatuvchi"
+    }
+  }
+}

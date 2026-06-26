@@ -11,7 +11,8 @@
  * - All styling via token classes (no hardcoded hex) — T-04-08
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import {
@@ -76,75 +77,77 @@ function buildFeedUrl(filters: FeedFilters): string {
 
 const columnHelper = createColumnHelper<FeedItem>();
 
-const columns = [
-  columnHelper.accessor("event_at", {
-    header: "Time",
-    cell: (info) => (
-      <time
-        dateTime={info.getValue()}
-        className="text-sm text-foreground-muted whitespace-nowrap"
-        title={info.getValue()}
-      >
-        {relativeTime(info.getValue())}
-      </time>
-    ),
-  }),
-  columnHelper.accessor("kind", {
-    header: "Kind",
-    cell: (info) => <KindChip kind={info.getValue()} />,
-  }),
-  columnHelper.accessor("grade_text", {
-    header: "Product / Grade",
-    cell: (info) => (
-      <span className="text-sm text-foreground">
-        {info.getValue() ?? "—"}
-      </span>
-    ),
-  }),
-  columnHelper.accessor("volume", {
-    header: "Volume",
-    cell: (info) => (
-      <span className="text-sm font-mono text-foreground">
-        {info.getValue() != null ? `${info.getValue()} MT` : "—"}
-      </span>
-    ),
-  }),
-  columnHelper.accessor("price", {
-    header: "Price",
-    cell: (info) => {
-      const row = info.row.original;
-      const price = info.getValue();
-      const currency = row.currency ?? "USD";
-      return (
-        <span className="text-sm font-mono text-foreground">
-          {price != null ? `${price} ${currency}/MT` : "—"}
+function buildColumns(t: (key: string) => string) {
+  return [
+    columnHelper.accessor("event_at", {
+      header: t("columns.time"),
+      cell: (info) => (
+        <time
+          dateTime={info.getValue()}
+          className="text-sm text-foreground-muted whitespace-nowrap"
+          title={info.getValue()}
+        >
+          {relativeTime(info.getValue())}
+        </time>
+      ),
+    }),
+    columnHelper.accessor("kind", {
+      header: t("columns.kind"),
+      cell: (info) => <KindChip kind={info.getValue()} />,
+    }),
+    columnHelper.accessor("grade_text", {
+      header: t("columns.product"),
+      cell: (info) => (
+        <span className="text-sm text-foreground">
+          {info.getValue() ?? "—"}
         </span>
-      );
-    },
-  }),
-  columnHelper.accessor("region", {
-    header: "Region",
-    cell: (info) => (
-      <span className="text-sm text-foreground">
-        {info.getValue() ?? "—"}
-      </span>
-    ),
-  }),
-  columnHelper.accessor("urgency", {
-    header: "Urgency",
-    cell: (info) => {
-      const urgency = info.getValue();
-      return urgency ? <UrgencyChip urgency={urgency} /> : <span className="text-foreground-subtle">—</span>;
-    },
-  }),
-  columnHelper.accessor("status", {
-    header: "Status",
-    cell: (info) => {
-      const status = info.getValue();
-      return status ? <StatusChip status={status} /> : <span className="text-foreground-subtle">—</span>;
-    },
-  }),
-];
+      ),
+    }),
+    columnHelper.accessor("volume", {
+      header: t("columns.volume"),
+      cell: (info) => (
+        <span className="text-sm font-mono text-foreground">
+          {info.getValue() != null ? `${info.getValue()} MT` : "—"}
+        </span>
+      ),
+    }),
+    columnHelper.accessor("price", {
+      header: t("columns.price"),
+      cell: (info) => {
+        const row = info.row.original;
+        const price = info.getValue();
+        const currency = row.currency ?? "USD";
+        return (
+          <span className="text-sm font-mono text-foreground">
+            {price != null ? `${price} ${currency}/MT` : "—"}
+          </span>
+        );
+      },
+    }),
+    columnHelper.accessor("region", {
+      header: t("columns.region"),
+      cell: (info) => (
+        <span className="text-sm text-foreground">
+          {info.getValue() ?? "—"}
+        </span>
+      ),
+    }),
+    columnHelper.accessor("urgency", {
+      header: t("columns.urgency"),
+      cell: (info) => {
+        const urgency = info.getValue();
+        return urgency ? <UrgencyChip urgency={urgency} /> : <span className="text-foreground-subtle">—</span>;
+      },
+    }),
+    columnHelper.accessor("status", {
+      header: t("columns.status"),
+      cell: (info) => {
+        const status = info.getValue();
+        return status ? <StatusChip status={status} /> : <span className="text-foreground-subtle">—</span>;
+      },
+    }),
+  ];
+}
 
 interface LiveFeedTableProps {
   /** Pre-set kind filter (for /offers page: "sell_offer") */
@@ -157,6 +160,7 @@ interface LiveFeedTableProps {
 }
 
 export function LiveFeedTable({ defaultKind, compact = false, className = "", needsReview }: LiveFeedTableProps) {
+  const t = useTranslations("feed");
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
@@ -209,6 +213,8 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
 
   useSSE("/api/v1/feed/stream", handleSSEMessage);
 
+  const columns = useMemo(() => buildColumns(t), [t]);
+
   // TanStack Table's useReactTable returns non-memoizable functions, so the React
   // Compiler skips this component — an intrinsic, harmless limitation of the library.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -238,7 +244,7 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
     return (
       <div className={`flex items-center justify-center py-12 ${className}`}>
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        <span className="ml-3 text-sm text-foreground-muted">Loading feed…</span>
+        <span className="ml-3 text-sm text-foreground-muted">{t("loading")}</span>
       </div>
     );
   }
@@ -247,7 +253,7 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
     return (
       <div className={`rounded-lg bg-background-secondary border border-border p-6 ${className}`}>
         <p className="text-sm text-urgency-high">
-          Failed to load feed: {error instanceof Error ? error.message : "Unknown error"}
+          {t("error.prefix")} {error instanceof Error ? error.message : t("error.unknown")}
         </p>
       </div>
     );
@@ -257,9 +263,9 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
     return (
       <div className={`flex flex-col items-center justify-center gap-3 py-16 ${className}`}>
         <Activity size={32} className="text-foreground-muted" aria-hidden="true" />
-        <p className="text-sm font-semibold text-foreground">No market activity yet</p>
+        <p className="text-sm font-semibold text-foreground">{t("empty.title")}</p>
         <p className="text-sm text-foreground-muted">
-          Signals will appear here as sources report data.
+          {t("empty.description")}
         </p>
       </div>
     );
@@ -270,7 +276,7 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
   return (
     <div className={`flex flex-col gap-4 ${className}`}>
       <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full text-sm" role="grid" aria-label="Live market feed">
+        <table className="w-full text-sm" role="grid" aria-label={t("tableLabel")}>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b border-border bg-background-secondary">
@@ -310,21 +316,21 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
             onClick={handlePrev}
             disabled={!hasPrev}
             className="inline-flex items-center gap-1 rounded-md border border-border bg-background-secondary px-3 py-1.5 text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-background-tertiary focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors"
-            aria-label="Previous page"
+            aria-label={t("pagination.prevLabel")}
           >
             <ChevronLeft size={16} />
-            Prev
+            {t("pagination.prev")}
           </button>
           <span className="text-xs text-foreground-muted">
-            {data.items.length} results
+            {t("pagination.results", { count: data.items.length })}
           </span>
           <button
             onClick={handleNext}
             disabled={!hasNext}
             className="inline-flex items-center gap-1 rounded-md border border-border bg-background-secondary px-3 py-1.5 text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-background-tertiary focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors"
-            aria-label="Next page"
+            aria-label={t("pagination.nextLabel")}
           >
-            Next
+            {t("pagination.next")}
             <ChevronRight size={16} />
           </button>
         </div>

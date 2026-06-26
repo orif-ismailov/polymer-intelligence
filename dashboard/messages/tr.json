@@ -1,0 +1,511 @@
+{
+  "nav": {
+    "groups": {
+      "main": "ANA",
+      "requests": "TALEPLER",
+      "sources": "KAYNAKLAR",
+      "settings": "AYARLAR"
+    },
+    "items": {
+      "dashboard": "Panel",
+      "liveFeed": "Canlı akış",
+      "purchaseRequests": "Satın alma talepleri",
+      "offers": "Teklifler",
+      "sources": "Kaynaklar",
+      "alerts": "Uyarılar",
+      "prices": "Fiyatlar",
+      "adminUsers": "Kullanıcılar"
+    },
+    "guest": "Misafir"
+  },
+  "login": {
+    "subtitle": "Panele giriş yapın",
+    "email": "E-posta",
+    "password": "Şifre",
+    "signIn": "Giriş yap",
+    "signingIn": "Giriş yapılıyor…",
+    "failed": "Giriş başarısız. Bilgilerinizi kontrol edin.",
+    "emailPlaceholder": "analyst@company.com"
+  },
+  "signals": {
+    "title": "Canlı akış",
+    "subtitle": "Tüm yapılandırılmış kaynaklardan gerçek zamanlı piyasa sinyalleri",
+    "loading": "Yükleniyor…"
+  },
+  "language": {
+    "label": "Dil",
+    "ru": "Русский",
+    "uz": "O'zbek",
+    "tr": "Türkçe"
+  },
+  "common": {
+    "status": {
+      "new": "Yeni",
+      "viewed": "Görüldü",
+      "in_progress": "İşlemde",
+      "offer_sent": "Teklif Gönderildi",
+      "matched": "Eşleşti",
+      "closed": "Kapatıldı",
+      "cancelled": "İptal Edildi"
+    },
+    "kind": {
+      "buy_request": "ALICI",
+      "sell_offer": "SATICI",
+      "deal": "ANLAŞMA",
+      "price_quote": "FİYAT",
+      "news": "HABERLER"
+    },
+    "urgency": {
+      "high": "Yüksek",
+      "medium": "Orta",
+      "low": "Düşük"
+    },
+    "urgencyAriaLabel": "Aciliyet: {label}",
+    "needsReview": "İnceleme Gerekli"
+  },
+  "home": {
+    "title": "Gösterge Paneli",
+    "subtitle": "Pazar genel görünümü ve etkinlik özeti",
+    "kpiTotalBuyers": "Toplam Alıcılar",
+    "kpiTotalSellers": "Toplam Satıcılar",
+    "kpiActiveRequests": "Aktif Talepler",
+    "kpiHotLeads": "Sıcak Adaylar",
+    "kpiHotLeadsDelta": "yüksek öncelik",
+    "kpiPriceAlerts": "Fiyat Uyarıları",
+    "liveMarketFeed": "Canlı Pazar Akışı",
+    "priceTrends": "Fiyat Trendleri",
+    "aiMarketSignals": "Yapay Zeka Pazar Sinyalleri",
+    "aiMarketSignalsAria": "Yapay Zeka Pazar Sinyalleri paneli",
+    "topSellerOffers": "En İyi Satıcı Teklifleri",
+    "topBuyerRequests": "En İyi Alıcı Talepleri",
+    "viewAll": "Tümünü gör",
+    "loading": "Yükleniyor…",
+    "loadingSignals": "Sinyaller yükleniyor…",
+    "noSignals": "Henüz yapay zeka sinyali yok",
+    "noOffers": "Henüz teklif yok",
+    "noRequests": "Henüz talep yok",
+    "leadScore": "{score} puan",
+    "volumeMt": "{volume} t",
+    "pricePerMt": "{price} {currency}/t"
+  },
+  "feed": {
+    "loading": "Akış yükleniyor…",
+    "tableLabel": "Canlı piyasa akışı",
+    "error": {
+      "prefix": "Akış yüklenemedi:",
+      "unknown": "Bilinmeyen hata"
+    },
+    "empty": {
+      "title": "Henüz piyasa hareketi yok",
+      "description": "Kaynaklar veri bildirdikçe sinyaller burada görünecek."
+    },
+    "columns": {
+      "time": "Zaman",
+      "kind": "Tür",
+      "product": "Ürün / Sınıf",
+      "volume": "Hacim",
+      "price": "Fiyat",
+      "region": "Bölge",
+      "urgency": "Aciliyet",
+      "status": "Durum"
+    },
+    "pagination": {
+      "prev": "Önceki",
+      "next": "Sonraki",
+      "prevLabel": "Önceki sayfa",
+      "nextLabel": "Sonraki sayfa",
+      "results": "{count} sonuç"
+    },
+    "filters": {
+      "period": "Dönem",
+      "kind": "Tür",
+      "source": "Kaynak",
+      "urgency": "Aciliyet",
+      "periodLabel": "Döneme göre filtrele",
+      "kindLabel": "Türe göre filtrele",
+      "sourceLabel": "Kaynağa göre filtrele",
+      "urgencyLabel": "Aciliyete göre filtrele",
+      "sourcePlaceholder": "Tüm kaynaklar"
+    },
+    "period": {
+      "7d": "Son 7 gün",
+      "30d": "Son 30 gün",
+      "90d": "Son 90 gün"
+    },
+    "kind": {
+      "all": "Tüm türler",
+      "buy_request": "Alım talebi",
+      "sell_offer": "Satış teklifi",
+      "deal": "Anlaşma",
+      "price_quote": "Fiyat kotasyonu",
+      "news": "Haberler"
+    },
+    "urgency": {
+      "all": "Tüm aciliyetler",
+      "high": "Yüksek",
+      "medium": "Orta",
+      "low": "Düşük"
+    }
+  },
+  "offers": {
+    "title": "Satıcı Teklifleri",
+    "subtitle": "Borsalardan ve izlenen kaynaklardan aktif satış teklifleri",
+    "loading": "Yükleniyor…"
+  },
+  "prices": {
+    "title": "Fiyat Trendleri",
+    "subtitle": "UZEX ve CBU'dan polimer piyasası fiyatları",
+    "market": "Piyasa",
+    "marketAll": "Tümü",
+    "range": "Aralık",
+    "rangePreset": "{days} gün",
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "currency": "Para Birimi",
+    "loading": "Fiyat verileri yükleniyor…",
+    "error": "Fiyat verileri yüklenemedi. Lütfen yenileyin.",
+    "empty": "Seçili filtreler için fiyat verisi yok. Tarih aralığını veya ürün seçimini değiştirin.",
+    "yAxisLabel": "{currency}/ton",
+    "tooltipValue": "{value} {currency}/ton"
+  },
+  "requests": {
+    "loading": "Yükleniyor…",
+    "pageTitle": "Satın Alma Talepleri",
+    "pageSubtitle": "Borsalardan, web sitelerinden ve kanallardan toplanan gerçek zamanlı alıcı talepleri",
+    "searchPlaceholder": "Talepleri ara…",
+    "searchAriaLabel": "Talepleri ara",
+    "exportCsv": "CSV Dışa Aktar",
+    "tableSettings": "Tablo ayarları",
+    "liveData": "Canlı Veri",
+    "kpiTotalRequests": "Toplam Talep",
+    "kpiTotalVolume": "Toplam Hacim",
+    "kpiAvgTargetPrice": "Ort. Hedef Fiyat",
+    "kpiHotRequests": "Acil Talepler",
+    "kpiSources": "Kaynaklar",
+    "kpiUpdated": "Güncellendi",
+    "colTime": "Zaman",
+    "colProduct": "Ürün",
+    "colGradeType": "Tip / Sınıf",
+    "colVolume": "Hacim",
+    "colTargetPrice": "Hedef Fiyat",
+    "colRegion": "Bölge",
+    "colSource": "Kaynak",
+    "colUrgency": "Aciliyet",
+    "colStatus": "Durum",
+    "loadingRequests": "Talepler yükleniyor…",
+    "loadError": "Talepler yüklenemedi:",
+    "unknownError": "Bilinmeyen hata",
+    "emptyTitle": "Talep bulunamadı",
+    "emptyDescription": "Filtrelerinizi değiştirmeyi deneyin veya daha sonra tekrar kontrol edin.",
+    "tableAriaLabel": "Satın alma talepleri tablosu",
+    "previousPage": "Önceki sayfa",
+    "prev": "Önceki",
+    "pagination": "Sayfa {page} / {totalPages} · {results} sonuç",
+    "nextPage": "Sonraki sayfa",
+    "next": "Sonraki",
+    "filterPeriod": "Dönem",
+    "filterUrgency": "Aciliyet",
+    "filterStatus": "Durum",
+    "filterProduct": "Ürün",
+    "periodOpt7d": "Son 7 gün",
+    "periodOpt30d": "Son 30 gün",
+    "periodOpt90d": "Son 90 gün",
+    "periodOptAll": "Tüm zamanlar",
+    "urgencyOptAll": "Tüm aciliyetler",
+    "urgencyOptHigh": "Yüksek",
+    "urgencyOptMedium": "Orta",
+    "urgencyOptLow": "Düşük",
+    "statusOptAll": "Tüm durumlar",
+    "statusOptNew": "Yeni",
+    "statusOptViewed": "Görüntülendi",
+    "statusOptInProgress": "İşlemde",
+    "statusOptOfferSent": "Teklif Gönderildi",
+    "statusOptMatched": "Eşleşti",
+    "statusOptClosed": "Kapatıldı",
+    "statusOptCancelled": "İptal Edildi",
+    "moreFilters": "Daha Fazla Filtre",
+    "clearFilters": "Filtreleri temizle",
+    "removeFilter": "{label} filtresini kaldır",
+    "detailLoadError": "Talep detayları yüklenemedi.",
+    "closeDetailPanel": "Detay panelini kapat",
+    "productFallback": "Ürün #{id}",
+    "sectionRequestDetails": "Talep Detayları",
+    "sectionSourceInformation": "Kaynak Bilgileri",
+    "sectionAiAnalysis": "Yapay Zeka Analizi",
+    "sectionFiles": "Dosyalar ({count})",
+    "sectionActions": "İşlemler",
+    "fieldVolume": "Hacim",
+    "fieldTargetPrice": "Hedef Fiyat",
+    "fieldDeliveryTerms": "Teslimat Koşulları",
+    "fieldDestination": "Varış Yeri",
+    "fieldRequiredDate": "İstenen Tarih",
+    "fieldValidityDays": "Geçerlilik (gün)",
+    "fieldAdditionalInfo": "Ek Bilgi",
+    "fieldPosted": "Yayınlandı",
+    "fieldUpdated": "Güncellendi",
+    "matchScore": "Eşleşme Puanı",
+    "priceAnalysis": "Fiyat Analizi",
+    "marketAvg": "Piyasa ort.",
+    "noPriceData": "Fiyat verisi mevcut değil",
+    "demandLevel": "Talep Düzeyi",
+    "demandLevelPending": "Beklemede (Aşama 5)",
+    "recommendation": "Öneri",
+    "recommendationPending": "Yapay zeka analizi Aşama 5'ten sonra kullanılabilir",
+    "demandLevelLow": "Düşük",
+    "demandLevelMedium": "Orta",
+    "demandLevelHigh": "Yüksek",
+    "runAnalysis": "Yapay zeka analizini çalıştır",
+    "rerunAnalysis": "Yapay zeka analizini yenile",
+    "analyzing": "Analiz ediliyor…",
+    "analysisFailed": "Yapay zeka analizi tamamlanamadı. Tekrar deneyin.",
+    "errorStatusChange": "Durum değişikliği başarısız oldu. Sayfayı yenileyip tekrar deneyin.",
+    "errorNoteSave": "Not kaydedilemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+    "dismiss": "Kapat",
+    "contactBuyer": "Alıcıyla İletişime Geç",
+    "noTelegramId": "Kayıtlı Telegram ID yok",
+    "addNote": "Not Ekle",
+    "notePlaceholder": "Ekip notu girin (müşteriye görünmez)…",
+    "saveNote": "Notu Kaydet",
+    "cancel": "İptal",
+    "statusLabel": "Durum",
+    "cancelDialogTitle": "Bu talep iptal edilsin mi?",
+    "cancelDialogDescription": "Bu talep iptal edilsin mi? Bu işlem geri alınamaz. Alıcı otomatik olarak bilgilendirilmeyecek.",
+    "confirm": "Onayla",
+    "assignOwner": "Sorumlu Ata",
+    "unassigned": "Atanmamış",
+    "markAsProcessed": "İşlendi Olarak İşaretle",
+    "exportError": "Dışa aktarma başarısız oldu. Tekrar deneyin veya sorun devam ederse destek ile iletişime geçin.",
+    "exportAriaLabel": "Talepleri CSV olarak dışa aktar"
+  },
+  "sources": {
+    "title": "Kaynaklar",
+    "subtitle": "Veri kaynaklarını yönetin ve toplama durumlarını izleyin",
+    "addSource": "Kaynak Ekle",
+    "loadError": "Kaynaklar yüklenemedi. Lütfen sayfayı yenileyin.",
+    "never": "Hiçbir zaman",
+    "columns": {
+      "nameType": "Ad / Tür",
+      "status": "Durum",
+      "lastFetch": "Son Çekme",
+      "failures": "Hatalar",
+      "test": "Test",
+      "enable": "Etkinleştir"
+    },
+    "status": {
+      "pending": "Etkinleştirme bekleniyor (Aşama 5)",
+      "enabled": "Etkin",
+      "disabled": "Devre Dışı"
+    },
+    "empty": {
+      "title": "Yapılandırılmış kaynak yok",
+      "description": "Sinyal toplamaya başlamak için ilk veri kaynağınızı ekleyin."
+    },
+    "adapterLabels": {
+      "html_table": "HTML Tablo",
+      "rss": "RSS Akışı",
+      "telegram_channel": "Telegram Kanalı",
+      "llm_page": "LLM Sayfası",
+      "uzex_offers": "UZEX Teklifler",
+      "uzex_contracts": "UZEX Sözleşmeler",
+      "uzex_deals": "UZEX İşlemler",
+      "cbu_rates": "MB Kurları"
+    },
+    "testResult": {
+      "running": "Test çalışıyor…",
+      "requestFailed": "Test isteği başarısız oldu. Bağlantınızı kontrol edin.",
+      "passed": "Test başarılı — {count} kayıt çıkarıldı",
+      "failed": "Test başarısız: {error}",
+      "unknownError": "Bilinmeyen hata"
+    },
+    "disableDialog": {
+      "title": "Kaynağı Devre Dışı Bırak",
+      "description": "Bu kaynak devre dışı bırakılsın mı? Yeniden etkinleştirilene kadar veri toplamayı durduracaktır.",
+      "cancel": "İptal",
+      "confirm": "Devre Dışı Bırak"
+    },
+    "test": {
+      "button": "Test",
+      "unavailableAria": "Bekleyen kaynak için test kullanılamıyor",
+      "availableAfterPhase5": "Aşama 5'ten sonra kullanılabilir",
+      "intro": "Kaynağın verileri doğru şekilde çıkardığını doğrulamak için canlı bir test çalıştırın. En fazla 10 normalleştirilmiş önizleme satırı gösterilir.",
+      "fetching": "Kaynak alınıyor…",
+      "failedTitle": "Test başarısız",
+      "failedBody": "Bu kaynaktan veri çıkarılamadı. URL ve seçicileri kontrol edip tekrar deneyin.",
+      "passedTitle": "Test başarılı",
+      "passedBody": "{count} kayıt çıkarıldı. Önizlemeyi inceleyip kaynağı etkinleştirin.",
+      "running": "Çalışıyor…",
+      "runButton": "Testi Çalıştır",
+      "runError": "Test çalıştırılamadı. Bağlantınızı kontrol edip tekrar deneyin."
+    },
+    "enable": {
+      "unavailableAria": "Bekleyen kaynak için etkinleştirme kullanılamıyor",
+      "disableAria": "Kaynağı devre dışı bırak",
+      "enableAria": "Kaynağı etkinleştir",
+      "mustTestFirst": "Kaynak etkinleştirilmeden önce bir testten geçmelidir"
+    },
+    "dialogTitle": "Veri Kaynağı Ekle",
+    "stepLabel": "Adım {step}: {label}",
+    "steps": {
+      "pickType": "Tür Seç",
+      "configure": "Yapılandır",
+      "test": "Test",
+      "enable": "Etkinleştir"
+    },
+    "typeLabels": {
+      "html_table": "HTML Tablo",
+      "rss": "RSS Akışı",
+      "telegram_channel": "Telegram Kanalı",
+      "llm_page": "LLM Sayfası"
+    },
+    "typeDescriptions": {
+      "html_table": "Herkese açık bir web sayfasındaki HTML tablodan veri çekin",
+      "rss": "Bir RSS veya Atom akışına abone olun",
+      "telegram_channel": "Herkese açık bir Telegram kanalını izleyin",
+      "llm_page": "Yapay zeka kullanarak bir web sayfasından yapılandırılmış veri çıkarın"
+    },
+    "phase5Badge": "Aşama 5",
+    "pendingWarning": "<strong>{type}</strong> Aşama 5 özelliklerini gerektirir. Yapılandırmayı şimdi bekleyen olarak kaydedebilirsiniz — Aşama 5 kullanılabilir olduğunda etkinleşecektir.",
+    "continue": "Devam",
+    "sourceName": "Kaynak Adı",
+    "sourceNamePlaceholder": "{type} kaynağım",
+    "sourceNameRequired": "Lütfen bir kaynak adı girin.",
+    "pendingTypeNotice": "Bu kaynak türü Aşama 5'te kullanılabilir. Yapılandırmanız kaydedilecek ancak kaynak o zamana kadar bekleyen durumda kalacaktır.",
+    "saveConfiguration": "Yapılandırmayı Kaydet",
+    "continueToTest": "Teste Devam Et",
+    "saveConfigError": "Yapılandırma kaydedilemedi. Lütfen tekrar deneyin.",
+    "back": "Geri",
+    "pendingSaved": {
+      "title": "Yapılandırma kaydedildi — etkinleştirme bekleniyor (Aşama 5)",
+      "body": "Bu kaynak kaydedildi. Aşama 5 özellikleri kullanılabilir olduğunda otomatik olarak etkinleşecektir."
+    },
+    "readyToEnable": {
+      "title": "Test başarılı — kaynak etkinleştirilmeye hazır",
+      "body": "Bu kaynaktan veri toplamaya başlamak için kaynağı etkinleştirin."
+    },
+    "enableError": "Kaynak etkinleştirilemedi. Testin geçtiğini doğrulayıp tekrar deneyin.",
+    "enabling": "Etkinleştiriliyor…",
+    "enableSource": "Kaynağı Etkinleştir",
+    "done": "Tamam",
+    "saveAsPending": "Bekleyen Olarak Kaydet",
+    "form": {
+      "continue": "Devam",
+      "back": "Geri",
+      "required": "{label} gereklidir",
+      "noConfig": "Bu kaynak türü için yapılandırma gerekmez.",
+      "publicUrlsOnly": "Yalnızca herkese açık URL'ler.",
+      "selectPlaceholder": "{label} seçin…",
+      "enterPlaceholder": "{label} girin…"
+    }
+  },
+  "alerts": {
+    "pageTitle": "Uyarılar",
+    "pageSubtitle": "Tetiklenen uyarılar ve teslimat kuralları",
+    "recentAlerts": "Son Uyarılar",
+    "loadError": "Uyarılar yüklenemedi. Lütfen sayfayı yenileyin.",
+    "ruleRef": "Kural #{id}",
+    "severity": {
+      "info": "Bilgi",
+      "warning": "Uyarı",
+      "critical": "Kritik"
+    },
+    "empty": {
+      "title": "Henüz uyarı tetiklenmedi",
+      "description": "Uyarı almaya başlamak için bir kural yapılandırın."
+    },
+    "table": {
+      "severity": "Önem Derecesi",
+      "message": "Mesaj",
+      "rule": "Kural",
+      "triggeredAt": "Tetiklenme Zamanı"
+    },
+    "predicate": {
+      "kind": "tür: {value}",
+      "product": "ürün #{id}",
+      "volume": "hacim ≥ {value} ton",
+      "urgency": "aciliyet: {value}",
+      "source": "kaynak: {value}",
+      "any": "Herhangi bir sinyal"
+    },
+    "deleteDialog": {
+      "title": "Uyarı Kuralını Sil",
+      "description": "Bu kural silinsin mi? Bu kuralı kullanan aktif teslimatlar derhal duracaktır.",
+      "cancel": "İptal",
+      "confirm": "Sil"
+    },
+    "kindOptions": {
+      "buy_request": "Alım Talebi",
+      "sell_offer": "Satış Teklifi",
+      "deal": "Anlaşma",
+      "price_quote": "Fiyat Teklifi"
+    },
+    "urgencyOptions": {
+      "high": "Yüksek",
+      "medium": "Orta",
+      "low": "Düşük"
+    },
+    "sourceKindOptions": {
+      "html_table": "HTML Tablo",
+      "rss": "RSS Akışı",
+      "telegram_channel": "Telegram Kanalı",
+      "llm_page": "LLM Sayfası",
+      "uzex_offers": "UZEX Teklifleri",
+      "uzex_contracts": "UZEX Sözleşmeleri",
+      "uzex_deals": "UZEX Anlaşmaları",
+      "webapp": "Web Uygulaması"
+    },
+    "form": {
+      "nameLabel": "Kural Adı",
+      "namePlaceholder": "Örn. Büyük PP alım talepleri",
+      "nameRequired": "Kural adı zorunludur",
+      "signalKindLabel": "Sinyal Türü",
+      "productLabel": "Ürün",
+      "allProducts": "Tüm Ürünler",
+      "volumeLabel": "Hacim ≥ (ton)",
+      "volumePlaceholder": "örn. 100",
+      "urgencyLabel": "Aciliyet",
+      "sourceKindLabel": "Kaynak Türü",
+      "leadScoreLabel": "Müşteri Adayı Puanı ≥",
+      "leadScoreBadge": "Faz 5 AI ile etkinleşir",
+      "leadScorePlaceholder": "0.0 – 1.0",
+      "leadScoreTooltip": "Faz 5'ten sonra kullanılabilir",
+      "chatIdsLabel": "Teslimat Telegram Sohbet Kimlikleri",
+      "chatIdsHelp": "Telegram sohbet kimliklerini girin (örn. gruplar için -1001234567890). DM: kişisel sohbet kimliğiniz. Her satıra bir tane.",
+      "urgencyChannelLabel": "Aciliyet Kanalı",
+      "channelDm": "DM",
+      "channelGroup": "Grup",
+      "cancel": "İptal",
+      "save": "Kuralı Kaydet",
+      "saving": "Kaydediliyor…"
+    },
+    "saveError": "Kural kaydedilemedi. Girdilerinizi kontrol edip tekrar deneyin.",
+    "rulesTitle": "Uyarı Kuralları",
+    "createRule": "Kural Oluştur",
+    "newRule": "Yeni Uyarı Kuralı",
+    "emptyRules": "Henüz uyarı kuralı yapılandırılmadı.",
+    "createFirstRule": "İlk kuralınızı oluşturun",
+    "deliveryTargets": "{count, plural, one {# teslimat hedefi} other {# teslimat hedefi}}",
+    "statusActive": "Aktif",
+    "statusPaused": "Duraklatıldı",
+    "deleteRuleAria": "{name} kuralını sil"
+  },
+  "admin": {
+    "pageTitle": "Yönetici Kullanıcılar",
+    "pageSubtitle": "Personel kullanıcı hesapları ve rol atamaları",
+    "loadError": "Kullanıcılar yüklenemedi. Lütfen sayfayı yenileyin.",
+    "empty": "Personel kullanıcısı bulunamadı.",
+    "statusActive": "Aktif",
+    "statusInactive": "Pasif",
+    "table": {
+      "email": "E-posta",
+      "role": "Rol",
+      "status": "Durum",
+      "createdAt": "Oluşturulma"
+    },
+    "roles": {
+      "admin": "Yönetici",
+      "analyst": "Analist",
+      "trader": "Tüccar",
+      "viewer": "İzleyici"
+    }
+  }
+}

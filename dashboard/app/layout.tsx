@@ -1,25 +1,10 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
-export const metadata: Metadata = {
-  title: "Polymer Intelligence",
-  description: "Market intelligence platform for the domestic polymer market",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="ru" className={cn("dark", "font-sans", geist.variable)}>
-      <body className="min-h-screen bg-background text-foreground antialiased">
-        {children}
-      </body>
-    </html>
-  );
+/**
+ * Required root layout for the next-intl /[locale]/ setup. It only passes
+ * children through — the real <html>/<body>, fonts, and providers live in
+ * app/[locale]/layout.tsx (which is the effective root for every route).
+ */
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return children;
 }

@@ -7,28 +7,30 @@
  */
 
 import { useCallback } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/navigation";
 
 const PERIOD_OPTIONS = [
-  { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Last 30 days" },
-  { value: "90d", label: "Last 90 days" },
+  { value: "7d", labelKey: "7d" },
+  { value: "30d", labelKey: "30d" },
+  { value: "90d", labelKey: "90d" },
 ];
 
 const KIND_OPTIONS = [
-  { value: "", label: "All Kinds" },
-  { value: "buy_request", label: "Buy Request" },
-  { value: "sell_offer", label: "Sell Offer" },
-  { value: "deal", label: "Deal" },
-  { value: "price_quote", label: "Price Quote" },
-  { value: "news", label: "News" },
+  { value: "", labelKey: "all" },
+  { value: "buy_request", labelKey: "buy_request" },
+  { value: "sell_offer", labelKey: "sell_offer" },
+  { value: "deal", labelKey: "deal" },
+  { value: "price_quote", labelKey: "price_quote" },
+  { value: "news", labelKey: "news" },
 ];
 
 const URGENCY_OPTIONS = [
-  { value: "", label: "All Urgencies" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
+  { value: "", labelKey: "all" },
+  { value: "high", labelKey: "high" },
+  { value: "medium", labelKey: "medium" },
+  { value: "low", labelKey: "low" },
 ];
 
 export interface FeedFilterValues {
@@ -46,6 +48,7 @@ interface FeedFiltersProps {
 }
 
 export function FeedFilters({ className = "", compact = false }: FeedFiltersProps) {
+  const t = useTranslations("feed");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -80,11 +83,11 @@ export function FeedFilters({ className = "", compact = false }: FeedFiltersProp
           value={period}
           onChange={(e) => updateParam("period", e.target.value)}
           className={selectClass}
-          aria-label="Filter by period"
+          aria-label={t("filters.periodLabel")}
         >
           {PERIOD_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`period.${o.labelKey}`)}
             </option>
           ))}
         </select>
@@ -92,11 +95,11 @@ export function FeedFilters({ className = "", compact = false }: FeedFiltersProp
           value={kind}
           onChange={(e) => updateParam("kind", e.target.value)}
           className={selectClass}
-          aria-label="Filter by kind"
+          aria-label={t("filters.kindLabel")}
         >
           {KIND_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`kind.${o.labelKey}`)}
             </option>
           ))}
         </select>
@@ -104,11 +107,11 @@ export function FeedFilters({ className = "", compact = false }: FeedFiltersProp
           value={urgency}
           onChange={(e) => updateParam("urgency", e.target.value)}
           className={selectClass}
-          aria-label="Filter by urgency"
+          aria-label={t("filters.urgencyLabel")}
         >
           {URGENCY_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`urgency.${o.labelKey}`)}
             </option>
           ))}
         </select>
@@ -120,64 +123,64 @@ export function FeedFilters({ className = "", compact = false }: FeedFiltersProp
     <div className={`flex flex-wrap items-center gap-3 ${className}`}>
       <div className="flex items-center gap-2">
         <label className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-          Period
+          {t("filters.period")}
         </label>
         <select
           value={period}
           onChange={(e) => updateParam("period", e.target.value)}
           className={selectClass}
-          aria-label="Filter by period"
+          aria-label={t("filters.periodLabel")}
         >
           {PERIOD_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`period.${o.labelKey}`)}
             </option>
           ))}
         </select>
       </div>
       <div className="flex items-center gap-2">
         <label className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-          Kind
+          {t("filters.kind")}
         </label>
         <select
           value={kind}
           onChange={(e) => updateParam("kind", e.target.value)}
           className={selectClass}
-          aria-label="Filter by kind"
+          aria-label={t("filters.kindLabel")}
         >
           {KIND_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`kind.${o.labelKey}`)}
             </option>
           ))}
         </select>
       </div>
       <div className="flex items-center gap-2">
         <label className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-          Source
+          {t("filters.source")}
         </label>
         <input
           type="text"
           value={source}
           onChange={(e) => updateParam("source", e.target.value)}
-          placeholder="All sources"
+          placeholder={t("filters.sourcePlaceholder")}
           className={`${selectClass} min-w-[120px]`}
-          aria-label="Filter by source"
+          aria-label={t("filters.sourceLabel")}
         />
       </div>
       <div className="flex items-center gap-2">
         <label className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
-          Urgency
+          {t("filters.urgency")}
         </label>
         <select
           value={urgency}
           onChange={(e) => updateParam("urgency", e.target.value)}
           className={selectClass}
-          aria-label="Filter by urgency"
+          aria-label={t("filters.urgencyLabel")}
         >
           {URGENCY_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`urgency.${o.labelKey}`)}
             </option>
           ))}
         </select>

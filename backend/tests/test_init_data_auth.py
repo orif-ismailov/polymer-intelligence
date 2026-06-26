@@ -250,6 +250,22 @@ def test_get_or_create_client_unknown_language_defaults_to_ru() -> None:
     assert result is not None
 
 
+def test_normalize_language_supported_and_fallback() -> None:
+    """app.core.languages.normalize_language keeps supported codes, falls back to ru."""
+    from app.core.languages import (
+        DEFAULT_LANGUAGE,
+        SUPPORTED_LANGUAGES,
+        normalize_language,
+    )
+
+    assert "tr" in SUPPORTED_LANGUAGES
+    assert DEFAULT_LANGUAGE == "ru"
+    for code in ("ru", "uz", "tr"):
+        assert normalize_language(code) == code
+    for code in ("en", "de", "", None):
+        assert normalize_language(code) == "ru"
+
+
 # ── Integration: get_current_client via FastAPI dep ───────────────────────────
 
 def _make_client_fixture(

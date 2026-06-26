@@ -10,13 +10,14 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
 import ru from "./ru.json";
+import tr from "./tr.json";
 import uz from "./uz.json";
 
 /** Detect language from Telegram SDK or window.Telegram.WebApp, fallback to 'ru'. */
 function detectLanguage(): string {
   // 1. Prefer localStorage (user's explicit or persisted choice)
   const stored = localStorage.getItem("pi_language");
-  if (stored === "ru" || stored === "uz") return stored;
+  if (stored === "ru" || stored === "uz" || stored === "tr") return stored;
 
   // 2. Telegram language_code from legacy window.Telegram.WebApp
   try {
@@ -24,6 +25,7 @@ function detectLanguage(): string {
       .Telegram?.WebApp;
     const langCode = tg?.initDataUnsafe?.user?.language_code ?? "";
     if (langCode.startsWith("uz")) return "uz";
+    if (langCode.startsWith("tr")) return "tr";
   } catch {
     // fall through
   }
@@ -39,6 +41,7 @@ i18n
     resources: {
       ru: { translation: ru },
       uz: { translation: uz },
+      tr: { translation: tr },
     },
     lng: detectedLang,
     fallbackLng: "ru",

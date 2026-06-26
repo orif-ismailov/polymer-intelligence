@@ -15,6 +15,7 @@
  */
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -93,10 +94,13 @@ export function JsonSchemaForm({
   schema,
   initialValues = {},
   onSubmit,
-  submitLabel = "Continue",
+  submitLabel,
   onBack,
-  backLabel = "Back",
+  backLabel,
 }: JsonSchemaFormProps) {
+  const t = useTranslations("sources");
+  const resolvedSubmitLabel = submitLabel ?? t("form.continue");
+  const resolvedBackLabel = backLabel ?? t("form.back");
   const properties = schema.properties ?? {};
   const requiredSet = new Set(schema.required ?? []);
 
@@ -138,7 +142,7 @@ export function JsonSchemaForm({
       if (val === "" || val === null || val === undefined) {
         const rawProp = properties[key];
         const label = rawProp?.title ?? key;
-        newErrors[key] = `${label} is required`;
+        newErrors[key] = t("form.required", { label });
       }
     }
     setErrors(newErrors);
@@ -157,7 +161,7 @@ export function JsonSchemaForm({
     return (
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <p className="text-sm text-foreground-muted">
-          No configuration required for this source type.
+          {t("form.noConfig")}
         </p>
         <div className="flex gap-3 justify-end">
           {onBack && (
@@ -166,14 +170,14 @@ export function JsonSchemaForm({
               onClick={onBack}
               className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary transition-colors"
             >
-              {backLabel}
+              {resolvedBackLabel}
             </button>
           )}
           <button
             type="submit"
             className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark transition-colors"
           >
-            {submitLabel}
+            {resolvedSubmitLabel}
           </button>
         </div>
       </form>
@@ -192,7 +196,7 @@ export function JsonSchemaForm({
         // URL field — SSRF hint
         if (prop.format === "uri") {
           return (
-            <FieldWrapper key={key} label={label} name={fieldId} required={isRequired} hint="Public URLs only.">
+            <FieldWrapper key={key} label={label} name={fieldId} required={isRequired} hint={t("form.publicUrlsOnly")}>
               <input
                 id={fieldId}
                 name={key}
@@ -220,7 +224,7 @@ export function JsonSchemaForm({
                 required={isRequired}
                 className={`rounded-md border ${errorMsg ? "border-urgency-high" : "border-border"} bg-background-tertiary px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-background-secondary`}
               >
-                <option value="">Select {label}…</option>
+                <option value="">{t("form.selectPlaceholder", { label })}</option>
                 {prop.enum.map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
@@ -279,7 +283,7 @@ export function JsonSchemaForm({
               value={(values[key] as string) ?? ""}
               onChange={(e) => setValue(key, e.target.value)}
               required={isRequired}
-              placeholder={prop.description ?? `Enter ${label}…`}
+              placeholder={prop.description ?? t("form.enterPlaceholder", { label })}
               className={`rounded-md border ${errorMsg ? "border-urgency-high" : "border-border"} bg-background-tertiary px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-background-secondary`}
             />
             {errorMsg && <p className="text-xs text-urgency-high">{errorMsg}</p>}
@@ -294,14 +298,14 @@ export function JsonSchemaForm({
             onClick={onBack}
             className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary transition-colors"
           >
-            {backLabel}
+            {resolvedBackLabel}
           </button>
         )}
         <button
           type="submit"
           className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background-secondary"
         >
-          {submitLabel}
+          {resolvedSubmitLabel}
         </button>
       </div>
     </form>

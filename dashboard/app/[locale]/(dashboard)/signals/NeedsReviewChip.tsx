@@ -6,12 +6,15 @@
  * Previously: disabled stub "Available after Phase 5 AI" (Phase 4 placeholder removed).
  */
 
+import { useTranslations } from "next-intl";
+
 interface NeedsReviewChipProps {
   active: boolean;
   onToggle: () => void;
 }
 
 export function NeedsReviewChip({ active, onToggle }: NeedsReviewChipProps) {
+  const t = useTranslations("common");
   return (
     <button
       type="button"
@@ -24,7 +27,7 @@ export function NeedsReviewChip({ active, onToggle }: NeedsReviewChipProps) {
           : "border-border bg-background-secondary text-foreground-subtle hover:border-accent hover:text-foreground",
       ].join(" ")}
     >
-      Needs Review
+      {t("needsReview")}
     </button>
   );
 }

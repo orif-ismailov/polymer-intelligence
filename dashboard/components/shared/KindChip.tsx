@@ -5,6 +5,8 @@
  * Uses kind token classes only (no hardcoded hex). UI-SPEC §Color / Kind tokens.
  */
 
+import { useTranslations } from "next-intl";
+
 const KIND_CLASSES: Record<string, string> = {
   buy_request: "text-kind-buy-request border-kind-buy-request",
   sell_offer: "text-kind-sell-offer border-kind-sell-offer",
@@ -13,12 +15,12 @@ const KIND_CLASSES: Record<string, string> = {
   news: "text-kind-news border-kind-news",
 };
 
-const KIND_LABELS: Record<string, string> = {
-  buy_request: "BUYER",
-  sell_offer: "SELLER",
-  deal: "DEAL",
-  price_quote: "PRICE",
-  news: "NEWS",
+const KIND_KEYS: Record<string, string> = {
+  buy_request: "kind.buy_request",
+  sell_offer: "kind.sell_offer",
+  deal: "kind.deal",
+  price_quote: "kind.price_quote",
+  news: "kind.news",
 };
 
 interface KindChipProps {
@@ -27,8 +29,10 @@ interface KindChipProps {
 }
 
 export function KindChip({ kind, className = "" }: KindChipProps) {
+  const t = useTranslations("common");
   const colorClasses = KIND_CLASSES[kind] ?? "text-foreground-muted border-foreground-muted";
-  const label = KIND_LABELS[kind] ?? kind.toUpperCase();
+  const labelKey = KIND_KEYS[kind];
+  const label = labelKey ? t(labelKey) : kind.toUpperCase();
 
   return (
     <span

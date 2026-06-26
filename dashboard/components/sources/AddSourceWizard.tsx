@@ -13,6 +13,7 @@
  */
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Globe, Rss, MessageSquare, FileText, CheckCircle, XCircle, ChevronRight } from "lucide-react";
 import {
@@ -111,6 +112,7 @@ function Step1PickType({
   onSelect: (type: string) => void;
   onNext: () => void;
 }) {
+  const t = useTranslations("sources");
   const [pendingWarning, setPendingWarning] = useState<string | null>(null);
 
   function handleSelect(typeName: string) {
@@ -130,8 +132,12 @@ function Step1PickType({
         {noCodeTypes.map((sourceType) => {
           const isPending = PENDING_ADAPTERS.has(sourceType.type_name);
           const isSelected = selected === sourceType.type_name;
-          const label = TYPE_LABELS[sourceType.type_name] ?? sourceType.type_name;
-          const description = TYPE_DESCRIPTIONS[sourceType.type_name] ?? "";
+          const label = TYPE_LABELS[sourceType.type_name]
+            ? t(`typeLabels.${sourceType.type_name}`)
+            : sourceType.type_name;
+          const description = TYPE_DESCRIPTIONS[sourceType.type_name]
+            ? t(`typeDescriptions.${sourceType.type_name}`)
+            : "";
 
           return (
             <button
@@ -147,7 +153,7 @@ function Step1PickType({
             >
               {isPending && (
                 <span className="absolute top-2 right-2 rounded px-1.5 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                  Phase 5
+                  {t("phase5Badge")}
                 </span>
               )}
               {TYPE_ICONS[sourceType.type_name] ?? <Globe size={32} className="text-foreground-muted" />}
@@ -162,8 +168,10 @@ function Step1PickType({
 
       {pendingWarning && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-400">
-          <strong>{TYPE_LABELS[pendingWarning]}</strong> requires Phase 5 features. You can save
-          the configuration now as pending — it will activate when Phase 5 is available.
+          {t.rich("pendingWarning", {
+            type: TYPE_LABELS[pendingWarning] ? t(`typeLabels.${pendingWarning}`) : pendingWarning,
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </div>
       )}
 
@@ -174,7 +182,7 @@ function Step1PickType({
           disabled={!selected}
           className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Continue <ChevronRight size={16} />
+          {t("continue")} <ChevronRight size={16} />
         </button>
       </div>
     </div>
@@ -224,6 +232,7 @@ interface AddSourceWizardProps {
 }
 
 export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
+  const t = useTranslations("sources");
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<WizardStep>(1);
@@ -302,7 +311,7 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
         setStep(4);
       }
     } catch {
-      setTestError("Could not run test. Check your connection and try again.");
+      setTestError(t("test.runError"));
     } finally {
       setIsTesting(false);
     }
@@ -320,7 +329,7 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
       queryClient.invalidateQueries({ queryKey: ["sources"] });
       handleClose();
     } catch {
-      setFinalError("Failed to enable source. Verify the test passed and try again.");
+      setFinalError(t("enableError"));
       setIsEnabling(false);
     }
   }
@@ -331,14 +340,19 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
     handleClose();
   }
 
-  const stepLabels = ["Pick Type", "Configure", "Test", "Enable"];
+  const stepLabels = [
+    t("steps.pickType"),
+    t("steps.configure"),
+    t("steps.test"),
+    t("steps.enable"),
+  ];
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
       <DialogContent className="max-w-[560px] bg-background-secondary rounded-xl shadow-2xl border-border">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-foreground">
-            Add Data Source
+            {t("dialogTitle")}
           </DialogTitle>
         </DialogHeader>
 
@@ -346,7 +360,7 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
           <StepIndicator current={step} total={4} />
 
           <div className="text-sm font-semibold text-foreground-muted uppercase tracking-wider text-xs">
-            Step {step}: {stepLabels[step - 1]}
+            {t("stepLabel", { step, label: stepLabels[step - 1] ?? "" })}
           </div>
 
           {/* Step 1: Pick type */}
@@ -365,22 +379,23 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
               {/* Source name */}
               <div className="flex flex-col gap-1">
                 <label htmlFor="source-name" className="text-xs font-semibold text-foreground-muted">
-                  Source Name <span className="text-urgency-high">*</span>
+                  {t("sourceName")} <span className="text-urgency-high">*</span>
                 </label>
                 <input
                   id="source-name"
                   type="text"
                   value={sourceName}
                   onChange={(e) => setSourceName(e.target.value)}
-                  placeholder={`My ${TYPE_LABELS[selectedType!] ?? selectedType} source`}
+                  placeholder={t("sourceNamePlaceholder", {
+                    type: TYPE_LABELS[selectedType!] ? t(`typeLabels.${selectedType!}`) : (selectedType ?? ""),
+                  })}
                   className="rounded-md border border-border bg-background-tertiary px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-background-secondary"
                 />
               </div>
 
               {isPendingType && (
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-400">
-                  This source type is available in Phase 5. Your configuration will be saved
-                  but the source will remain in pending state until then.
+                  {t("pendingTypeNotice")}
                 </div>
               )}
 
@@ -388,7 +403,7 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
                 schema={selectedSchemaType.config_schema as Parameters<typeof JsonSchemaForm>[0]["schema"]}
                 onSubmit={async (values) => {
                   if (!sourceName.trim()) {
-                    alert("Please enter a source name.");
+                    alert(t("sourceNameRequired"));
                     return;
                   }
                   if (isPendingType) {
@@ -409,12 +424,12 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
                   }
                 }}
                 onBack={() => setStep(1)}
-                submitLabel={isPendingType ? "Save Configuration" : "Continue to Test"}
+                submitLabel={isPendingType ? t("saveConfiguration") : t("continueToTest")}
               />
 
               {createSource.error && (
                 <div className="rounded-md border border-urgency-high/30 bg-urgency-high/10 p-3 text-sm text-urgency-high">
-                  Failed to save configuration. Please try again.
+                  {t("saveConfigError")}
                 </div>
               )}
             </div>
@@ -425,25 +440,24 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
             <div className="flex flex-col gap-4">
               {!testResult && !isTesting && (
                 <div className="text-sm text-foreground-muted">
-                  Run a live test to verify the source extracts data correctly.
-                  Up to 10 normalized preview rows will be shown.
+                  {t("test.intro")}
                 </div>
               )}
 
               {isTesting && (
                 <div className="flex items-center gap-3 text-sm text-foreground-muted py-4">
                   <div className="h-4 w-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-                  Fetching source…
+                  {t("test.fetching")}
                 </div>
               )}
 
               {testError && (
                 <div className="flex flex-col gap-2 rounded-lg border border-urgency-high/30 bg-urgency-high/10 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-urgency-high">
-                    <XCircle size={16} /> Test failed
+                    <XCircle size={16} /> {t("test.failedTitle")}
                   </div>
                   <p className="text-sm text-foreground-muted">
-                    Could not extract data from this source. Check the URL and selectors, then try again.
+                    {t("test.failedBody")}
                   </p>
                 </div>
               )}
@@ -451,10 +465,10 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
               {testResult && !testResult.ok && (
                 <div className="flex flex-col gap-2 rounded-lg border border-urgency-high/30 bg-urgency-high/10 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-urgency-high">
-                    <XCircle size={16} /> Test failed
+                    <XCircle size={16} /> {t("test.failedTitle")}
                   </div>
                   <p className="text-sm text-foreground-muted">
-                    {testResult.error ?? "Could not extract data from this source. Check the URL and selectors, then try again."}
+                    {testResult.error ?? t("test.failedBody")}
                   </p>
                 </div>
               )}
@@ -462,10 +476,10 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
               {testResult && testResult.ok && (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2 text-sm font-semibold text-accent">
-                    <CheckCircle size={16} /> Test passed
+                    <CheckCircle size={16} /> {t("test.passedTitle")}
                   </div>
                   <p className="text-sm text-foreground-muted">
-                    {testResult.sample_rows.length} records extracted. Review the preview and enable the source.
+                    {t("test.passedBody", { count: testResult.sample_rows.length })}
                   </p>
                   <PreviewTable rows={testResult.sample_rows} />
                 </div>
@@ -477,7 +491,7 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
                   onClick={() => setStep(2)}
                   className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary transition-colors"
                 >
-                  Back
+                  {t("back")}
                 </button>
                 <button
                   type="button"
@@ -488,10 +502,10 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
                   {isTesting ? (
                     <>
                       <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                      Running…
+                      {t("test.running")}
                     </>
                   ) : (
-                    "Run Test"
+                    t("test.runButton")
                   )}
                 </button>
               </div>
@@ -504,20 +518,19 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
               {isPendingType ? (
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
                   <p className="text-sm text-amber-400 font-semibold mb-1">
-                    Configuration saved — Pending activation (Phase 5)
+                    {t("pendingSaved.title")}
                   </p>
                   <p className="text-sm text-foreground-muted">
-                    This source has been saved. It will activate automatically when Phase 5
-                    features are available.
+                    {t("pendingSaved.body")}
                   </p>
                 </div>
               ) : (
                 <div className="rounded-lg border border-accent/30 bg-accent/10 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-accent mb-1">
-                    <CheckCircle size={16} /> Test passed — source is ready to enable
+                    <CheckCircle size={16} /> {t("readyToEnable.title")}
                   </div>
                   <p className="text-sm text-foreground-muted">
-                    Enable the source to begin collecting data from it.
+                    {t("readyToEnable.body")}
                   </p>
                 </div>
               )}
@@ -536,7 +549,7 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
                     disabled={isEnabling}
                     className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark disabled:opacity-50 transition-colors"
                   >
-                    {isEnabling ? "Enabling…" : "Enable Source"}
+                    {isEnabling ? t("enabling") : t("enableSource")}
                   </button>
                 )}
                 <button
@@ -544,7 +557,7 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
                   onClick={handleSaveAsPending}
                   className="w-full rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary transition-colors"
                 >
-                  {isPendingType ? "Done" : "Save as Pending"}
+                  {isPendingType ? t("done") : t("saveAsPending")}
                 </button>
               </div>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import {
   Activity,
   BarChart3,
@@ -14,11 +14,14 @@ import {
   Tag,
   Users,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface NavItem {
-  label: string;
+  /** Translation key under nav.items.* */
+  key: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   /** Role required to see this item. Undefined = visible to all roles. */
@@ -26,38 +29,39 @@ interface NavItem {
 }
 
 interface NavGroup {
-  label: string;
+  /** Translation key under nav.groups.* */
+  key: string;
   items: NavItem[];
 }
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "MAIN",
+    key: "main",
     items: [
-      { label: "Dashboard", href: "/", icon: Home },
-      { label: "Live Feed", href: "/signals", icon: Activity },
+      { key: "dashboard", href: "/", icon: Home },
+      { key: "liveFeed", href: "/signals", icon: Activity },
     ],
   },
   {
-    label: "REQUESTS",
+    key: "requests",
     items: [
-      { label: "Purchase Requests", href: "/requests", icon: ShoppingCart },
-      { label: "Offers", href: "/offers", icon: Tag },
+      { key: "purchaseRequests", href: "/requests", icon: ShoppingCart },
+      { key: "offers", href: "/offers", icon: Tag },
     ],
   },
   {
-    label: "SOURCES",
+    key: "sources",
     items: [
-      { label: "Sources", href: "/sources", icon: Database },
-      { label: "Alerts", href: "/alerts", icon: Bell },
+      { key: "sources", href: "/sources", icon: Database },
+      { key: "alerts", href: "/alerts", icon: Bell },
     ],
   },
   {
-    label: "SETTINGS",
+    key: "settings",
     items: [
-      { label: "Prices", href: "/prices", icon: BarChart3 },
+      { key: "prices", href: "/prices", icon: BarChart3 },
       {
-        label: "Admin Users",
+        key: "adminUsers",
         href: "/admin/users",
         icon: Users,
         minRole: "admin",
@@ -104,6 +108,7 @@ const ROLE_BADGE_CLASSES: Record<string, string> = {
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const t = useTranslations("nav");
 
   const role = user?.role ?? "viewer";
 
@@ -133,10 +138,10 @@ export function Sidebar() {
           );
           if (visibleItems.length === 0) return null;
           return (
-            <div key={group.label} className="mb-6">
+            <div key={group.key} className="mb-6">
               {/* Group label */}
               <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                {group.label}
+                {t(`groups.${group.key}`)}
               </p>
               <ul role="list" className="space-y-0.5">
                 {visibleItems.map((item) => {
@@ -162,7 +167,7 @@ export function Sidebar() {
                           )}
                           aria-hidden="true"
                         />
-                        {item.label}
+                        {t(`items.${item.key}`)}
                       </Link>
                     </li>
                   );
@@ -175,6 +180,9 @@ export function Sidebar() {
 
       {/* User footer */}
       <div className="border-t border-border px-4 py-4">
+        <div className="mb-3">
+          <LanguageSwitcher />
+        </div>
         <div className="flex items-center gap-3">
           {/* Initials avatar */}
           <div
@@ -187,7 +195,7 @@ export function Sidebar() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-foreground">
-              {user?.email ?? "Guest"}
+              {user?.email ?? t("guest")}
             </p>
             <span
               className={cn(

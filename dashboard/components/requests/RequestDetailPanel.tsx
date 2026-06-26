@@ -17,7 +17,9 @@
  */
 
 import { useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 
@@ -72,6 +74,7 @@ export interface RequestDetail {
 }
 
 export function RequestDetailPanel() {
+  const t = useTranslations("requests");
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("id");
@@ -108,7 +111,7 @@ export function RequestDetailPanel() {
         {isError && (
           <div className="p-4">
             <p className="text-sm text-urgency-high">
-              Failed to load request details.
+              {t("detailLoadError")}
             </p>
           </div>
         )}
@@ -123,7 +126,7 @@ export function RequestDetailPanel() {
                   type="button"
                   onClick={handleClose}
                   className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-foreground-muted hover:bg-background-tertiary hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  aria-label="Close detail panel"
+                  aria-label={t("closeDetailPanel")}
                 >
                   <X size={16} aria-hidden="true" />
                 </button>
@@ -136,7 +139,7 @@ export function RequestDetailPanel() {
                   {data.number}
                 </p>
                 <h2 className="text-xl font-semibold text-foreground mt-1">
-                  {data.grade_text ?? `Product #${data.product_id}`}
+                  {data.grade_text ?? t("productFallback", { id: data.product_id })}
                 </h2>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   {data.polymer_type && (
@@ -154,18 +157,18 @@ export function RequestDetailPanel() {
               {/* Request Details section */}
               <section className="p-4 border-b border-border">
                 <h3 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">
-                  Request Details
+                  {t("sectionRequestDetails")}
                 </h3>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div>
-                    <dt className="text-xs text-foreground-muted">Volume</dt>
+                    <dt className="text-xs text-foreground-muted">{t("fieldVolume")}</dt>
                     <dd className="text-sm font-mono text-foreground">
                       {data.volume} {data.volume_unit}
                     </dd>
                   </div>
                   <div>
                     <dt className="text-xs text-foreground-muted">
-                      Target Price
+                      {t("fieldTargetPrice")}
                     </dt>
                     <dd className="text-sm font-mono text-foreground">
                       {data.target_price != null
@@ -175,7 +178,7 @@ export function RequestDetailPanel() {
                   </div>
                   <div>
                     <dt className="text-xs text-foreground-muted">
-                      Delivery Terms
+                      {t("fieldDeliveryTerms")}
                     </dt>
                     <dd className="text-sm text-foreground">
                       {data.incoterms.toUpperCase()}
@@ -183,7 +186,7 @@ export function RequestDetailPanel() {
                   </div>
                   <div>
                     <dt className="text-xs text-foreground-muted">
-                      Destination
+                      {t("fieldDestination")}
                     </dt>
                     <dd className="text-sm text-foreground">
                       {data.destination_country}
@@ -193,7 +196,7 @@ export function RequestDetailPanel() {
                   {data.desired_date && (
                     <div>
                       <dt className="text-xs text-foreground-muted">
-                        Required Date
+                        {t("fieldRequiredDate")}
                       </dt>
                       <dd className="text-sm text-foreground">
                         {data.desired_date}
@@ -202,7 +205,7 @@ export function RequestDetailPanel() {
                   )}
                   <div>
                     <dt className="text-xs text-foreground-muted">
-                      Validity (days)
+                      {t("fieldValidityDays")}
                     </dt>
                     <dd className="text-sm text-foreground">
                       {data.validity_days}
@@ -211,7 +214,7 @@ export function RequestDetailPanel() {
                   {data.comment && (
                     <div className="col-span-2">
                       <dt className="text-xs text-foreground-muted">
-                        Additional Info
+                        {t("fieldAdditionalInfo")}
                       </dt>
                       <dd className="text-sm text-foreground">{data.comment}</dd>
                     </div>
@@ -222,11 +225,11 @@ export function RequestDetailPanel() {
               {/* Source Information section */}
               <section className="p-4 border-b border-border">
                 <h3 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">
-                  Source Information
+                  {t("sectionSourceInformation")}
                 </h3>
                 <dl className="flex flex-col gap-2">
                   <div>
-                    <dt className="text-xs text-foreground-muted">Posted</dt>
+                    <dt className="text-xs text-foreground-muted">{t("fieldPosted")}</dt>
                     <dd className="text-sm text-foreground">
                       <time dateTime={data.created_at}>
                         {new Date(data.created_at).toLocaleString("ru-RU", {
@@ -236,7 +239,7 @@ export function RequestDetailPanel() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-foreground-muted">Updated</dt>
+                    <dt className="text-xs text-foreground-muted">{t("fieldUpdated")}</dt>
                     <dd className="text-sm text-foreground">
                       <time dateTime={data.updated_at}>
                         {new Date(data.updated_at).toLocaleString("ru-RU", {
@@ -251,9 +254,10 @@ export function RequestDetailPanel() {
               {/* AI Analysis section */}
               <section className="p-4 border-b border-border">
                 <h3 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">
-                  AI Analysis
+                  {t("sectionAiAnalysis")}
                 </h3>
                 <AiAnalysisBlock
+                  requestId={data.id}
                   ai={data.ai}
                   priceAnalysis={data.price_analysis}
                 />
@@ -263,7 +267,7 @@ export function RequestDetailPanel() {
               {data.files.length > 0 && (
                 <section className="p-4 border-b border-border">
                   <h3 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">
-                    Files ({data.files.length})
+                    {t("sectionFiles", { count: data.files.length })}
                   </h3>
                   <ul className="flex flex-col gap-2">
                     {data.files.map((file) => (
@@ -285,7 +289,7 @@ export function RequestDetailPanel() {
               {/* Actions section */}
               <section className="p-4">
                 <h3 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">
-                  Actions
+                  {t("sectionActions")}
                 </h3>
                 <RequestActions
                   requestId={data.id}

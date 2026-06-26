@@ -17,6 +17,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { useTranslations } from "next-intl";
 import {
   FileText,
   Download,
@@ -35,26 +36,27 @@ import { ExportCsvButton } from "@/components/requests/ExportCsvButton";
 
 // Spinner fallback for Suspense boundaries
 function TableLoadingFallback() {
+  const t = useTranslations("requests");
   return (
     <div className="flex items-center justify-center py-12">
       <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-      <span className="ml-3 text-sm text-foreground-muted">Loading…</span>
+      <span className="ml-3 text-sm text-foreground-muted">{t("loading")}</span>
     </div>
   );
 }
 
 export default function RequestsPage() {
+  const t = useTranslations("requests");
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            Purchase Requests
+            {t("pageTitle")}
           </h1>
           <p className="mt-1 text-sm text-foreground-muted">
-            Real-time buyer requests collected from exchanges, websites and
-            channels
+            {t("pageSubtitle")}
           </p>
         </div>
 
@@ -64,8 +66,8 @@ export default function RequestsPage() {
           <div className="relative hidden sm:block">
             <input
               type="search"
-              placeholder="Search requests…"
-              aria-label="Search requests"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchAriaLabel")}
               className="h-8 w-[280px] rounded-lg border border-border bg-background-secondary pl-3 pr-3 text-sm text-foreground placeholder-foreground-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:bg-background-tertiary"
             />
           </div>
@@ -78,7 +80,7 @@ export default function RequestsPage() {
                 disabled
               >
                 <Download size={14} aria-hidden="true" />
-                Export CSV
+                {t("exportCsv")}
               </button>
             }
           >
@@ -89,7 +91,7 @@ export default function RequestsPage() {
           <button
             type="button"
             className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-background-secondary text-foreground-muted hover:bg-background-tertiary hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            aria-label="Table settings"
+            aria-label={t("tableSettings")}
           >
             <Settings size={16} aria-hidden="true" />
           </button>
@@ -100,7 +102,7 @@ export default function RequestsPage() {
               className="inline-block h-2 w-2 rounded-full bg-accent animate-pulse"
               aria-hidden="true"
             />
-            <span className="text-xs text-accent font-semibold">Live Data</span>
+            <span className="text-xs text-accent font-semibold">{t("liveData")}</span>
           </div>
         </div>
       </div>
@@ -109,38 +111,38 @@ export default function RequestsPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <KpiCard
           icon={FileText}
-          label="Total Requests"
+          label={t("kpiTotalRequests")}
           value="—"
           delta={undefined}
         />
         <KpiCard
           icon={BarChart2}
-          label="Total Volume"
+          label={t("kpiTotalVolume")}
           value="—"
           delta={undefined}
         />
         <KpiCard
           icon={Database}
-          label="Avg Target Price"
+          label={t("kpiAvgTargetPrice")}
           value="—"
           delta={undefined}
         />
         <KpiCard
           icon={Flame}
-          label="Hot Requests"
+          label={t("kpiHotRequests")}
           value="—"
           delta="urgency=high"
           deltaSentiment="negative"
         />
         <KpiCard
           icon={Database}
-          label="Sources"
+          label={t("kpiSources")}
           value="—"
           delta={undefined}
         />
         <KpiCard
           icon={Clock}
-          label="Updated"
+          label={t("kpiUpdated")}
           value="—"
           delta={undefined}
         />

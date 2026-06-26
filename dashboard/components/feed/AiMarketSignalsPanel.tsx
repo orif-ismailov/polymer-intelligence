@@ -12,7 +12,9 @@
  */
 
 import { Bot } from "lucide-react";
+import { useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/navigation";
 import { relativeTime } from "@/lib/tz";
 import type { DashboardAiSignal } from "@/hooks/useDashboardSummary";
 
@@ -49,33 +51,34 @@ export function AiMarketSignalsPanel({
   isLoading = false,
   className = "",
 }: AiMarketSignalsPanelProps) {
+  const t = useTranslations("home");
   return (
     <div
       className={`rounded-lg bg-background-secondary border border-border ${className}`}
-      aria-label="AI Market Signals panel"
+      aria-label={t("aiMarketSignalsAria")}
     >
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="flex items-center gap-2">
           <Bot size={20} className="text-foreground-muted" aria-hidden="true" />
-          <h2 className="text-base font-semibold text-foreground">AI Market Signals</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("aiMarketSignals")}</h2>
         </div>
-        <a
+        <Link
           href="/signals?needs_review=true"
           className="text-sm text-accent hover:text-accent-light transition-colors"
         >
-          View all
-        </a>
+          {t("viewAll")}
+        </Link>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-          <span className="ml-3 text-sm text-foreground-muted">Loading signals…</span>
+          <span className="ml-3 text-sm text-foreground-muted">{t("loadingSignals")}</span>
         </div>
       ) : !signals?.length ? (
         <div className="flex flex-col items-center justify-center gap-2 py-10">
           <Bot size={28} className="text-foreground-muted" aria-hidden="true" />
-          <p className="text-sm text-foreground-muted">No AI signals yet</p>
+          <p className="text-sm text-foreground-muted">{t("noSignals")}</p>
         </div>
       ) : (
         <ul className="divide-y divide-border">
@@ -106,7 +109,9 @@ export function AiMarketSignalsPanel({
               </div>
               <div className="flex items-center gap-4">
                 <span className="whitespace-nowrap text-sm font-mono text-foreground">
-                  {signal.lead_score != null ? `${signal.lead_score} pts` : "—"}
+                  {signal.lead_score != null
+                    ? t("leadScore", { score: signal.lead_score })
+                    : "—"}
                 </span>
                 <ClassificationBadge classification={signal.classification} />
               </div>
