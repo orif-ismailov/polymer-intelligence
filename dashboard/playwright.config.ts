@@ -66,7 +66,9 @@ export default defineConfig({
 
   webServer: {
     command: `npm run dev -- --port ${PORT}`,
-    url: `${BASE_URL}/login`,
+    // Hit the locale-prefixed login route directly (bare /login 308-redirects to it
+    // via the next-intl middleware).
+    url: `${BASE_URL}/ru/login`,
     timeout: 180_000,
     reuseExistingServer: false,
     env: { BACKEND_ORIGIN },

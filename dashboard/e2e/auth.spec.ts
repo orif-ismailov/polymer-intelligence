@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ADMIN } from "./helpers";
+import { ADMIN, p, M } from "./helpers";
 
 /**
  * Login-form behavior (anonymous project — no stored auth).
@@ -7,25 +7,26 @@ import { ADMIN } from "./helpers";
  */
 test.describe("staff login", () => {
   test("rejects invalid credentials and stays on /login", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto(p("/login"));
     await page.locator('input[type="email"]').fill(ADMIN.email);
     await page.locator('input[type="password"]').fill("wrong-password");
-    await page.getByRole("button", { name: /sign in/i }).click();
+    await page.getByRole("button", { name: M.login.signIn }).click();
 
     // Generic 401 surfaces as an inline error; user is not navigated away.
     await expect(page.getByRole("alert")).toBeVisible();
+    // Stays on the (locale-prefixed) login page.
     await expect(page).toHaveURL(/\/login$/);
   });
 
   test("logs in with seeded admin and lands on the dashboard", async ({ page }) => {
-    await page.goto("/login");
+    await page.goto(p("/login"));
     await page.locator('input[type="email"]').fill(ADMIN.email);
     await page.locator('input[type="password"]').fill(ADMIN.password);
-    await page.getByRole("button", { name: /sign in/i }).click();
+    await page.getByRole("button", { name: M.login.signIn }).click();
 
-    await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 15_000 });
+    await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
     // Protected chrome is now reachable.
-    await page.goto("/requests");
-    await expect(page.getByText(/purchase requests/i).first()).toBeVisible();
+    await page.goto(p("/requests"));
+    await expect(page.getByText(M.requests.pageTitle).first()).toBeVisible();
   });
 });
