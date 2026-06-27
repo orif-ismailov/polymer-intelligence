@@ -15,6 +15,18 @@ The build is feature-complete through Phase 6 (acceptance/handover). Design hist
 requirements (`TZ`), and per-phase plans/summaries live under `.planning/` and `docs/`;
 read those for the *why* behind a decision before changing load-bearing behavior.
 
+## Component guides
+
+Each major component has its own scoped `CLAUDE.md` with directory-local commands, layout, and
+gotchas. **Read the relevant one before working inside that directory:**
+
+- [`backend/CLAUDE.md`](backend/CLAUDE.md) — FastAPI + Celery + SQLAlchemy core (API, ingest, tasks, LLM parsing).
+- [`dashboard/CLAUDE.md`](dashboard/CLAUDE.md) — Next.js internal team dashboard.
+- [`webapp/CLAUDE.md`](webapp/CLAUDE.md) — Vite Telegram Web App (client request submission).
+- [`telegram/CLAUDE.md`](telegram/CLAUDE.md) — aiogram 3 bot (webhook + templates).
+- [`userbot/CLAUDE.md`](userbot/CLAUDE.md) — Telethon MTProto channel monitor.
+- [`deploy/CLAUDE.md`](deploy/CLAUDE.md) — docker-compose, nginx, backup.
+
 ## Monorepo layout
 
 | Path | Stack | Notes |
