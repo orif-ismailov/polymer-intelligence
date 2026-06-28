@@ -106,7 +106,20 @@
     "title": "Market",
     "all": "Hammasi",
     "searchPlaceholder": "Mahsulot, marka, sotuvchi bo'yicha qidirish",
-    "soon": "Takliflar katalogi shu yerda paydo bo'ladi"
+    "soon": "Takliflar katalogi shu yerda paydo bo'ladi",
+    "empty": "Hozircha takliflar yo'q",
+    "error": "Katalogni yuklab bo'lmadi"
+  },
+  "offer": {
+    "seller": "Sotuvchi",
+    "inStock": "Mavjud",
+    "minOrder": "Min. partiya",
+    "supply": "Yetkazib berish shartlari",
+    "location": "Joylashuv",
+    "verified": "Tasdiqlangan sotuvchi",
+    "call": "Qo'ng'iroq",
+    "requestOffer": "Taklif so'rash",
+    "notFound": "Taklif topilmadi"
   },
   "news": {
     "title": "Yangiliklar",

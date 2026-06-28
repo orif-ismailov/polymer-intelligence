@@ -10,12 +10,16 @@
 
 import { getInitData } from "../telegram";
 import type {
+  CatalogOffer,
+  CategoryCount,
   ClientProfile,
   ClientProfilePatch,
   RequestCreate,
   RequestDetail,
   RequestFileMeta,
   RequestOut,
+  SellerOfferCreate,
+  SellerOfferOut,
 } from "../types";
 
 const BASE_URL = "/api/v1";
@@ -112,5 +116,41 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(body),
     });
+  },
+
+  // ── Marketplace: public catalog ─────────────────────────────────────────────
+
+  /** GET /webapp/market/offers — approved catalog offers (optional product/text filter). */
+  getCatalogOffers(params: { product_id?: number; q?: string } = {}): Promise<CatalogOffer[]> {
+    const qs = new URLSearchParams();
+    if (params.product_id != null) qs.set("product_id", String(params.product_id));
+    if (params.q) qs.set("q", params.q);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<CatalogOffer[]>(`/webapp/market/offers${suffix}`);
+  },
+
+  /** GET /webapp/market/offers/{id} — a single approved offer. */
+  getCatalogOffer(id: number): Promise<CatalogOffer> {
+    return apiFetch<CatalogOffer>(`/webapp/market/offers/${id}`);
+  },
+
+  /** GET /webapp/market/categories — category chips with approved-offer counts. */
+  getCategories(): Promise<CategoryCount[]> {
+    return apiFetch<CategoryCount[]>("/webapp/market/categories");
+  },
+
+  // ── Marketplace: seller side ────────────────────────────────────────────────
+
+  /** POST /webapp/seller/offers — publish an offer (→ moderation). */
+  createSellerOffer(body: SellerOfferCreate): Promise<SellerOfferOut> {
+    return apiFetch<SellerOfferOut>("/webapp/seller/offers", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+
+  /** GET /webapp/seller/offers — the caller's own offers (any status). */
+  getMyOffers(): Promise<SellerOfferOut[]> {
+    return apiFetch<SellerOfferOut[]>("/webapp/seller/offers");
   },
 };

@@ -106,7 +106,20 @@
     "title": "Market",
     "all": "Tümü",
     "searchPlaceholder": "Ürün, marka, satıcıya göre ara",
-    "soon": "Teklif kataloğu burada görünecek"
+    "soon": "Teklif kataloğu burada görünecek",
+    "empty": "Henüz teklif yok",
+    "error": "Katalog yüklenemedi"
+  },
+  "offer": {
+    "seller": "Satıcı",
+    "inStock": "Stokta",
+    "minOrder": "Min. sipariş",
+    "supply": "Teslimat koşulları",
+    "location": "Konum",
+    "verified": "Onaylı satıcı",
+    "call": "Ara",
+    "requestOffer": "Teklif iste",
+    "notFound": "Teklif bulunamadı"
   },
   "news": {
     "title": "Haberler",

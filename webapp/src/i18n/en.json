@@ -106,7 +106,20 @@
     "title": "Market",
     "all": "All",
     "searchPlaceholder": "Search by product, grade, seller",
-    "soon": "The offer catalog will appear here"
+    "soon": "The offer catalog will appear here",
+    "empty": "No offers yet",
+    "error": "Couldn't load the catalog"
+  },
+  "offer": {
+    "seller": "Seller",
+    "inStock": "In stock",
+    "minOrder": "Min. order",
+    "supply": "Delivery terms",
+    "location": "Location",
+    "verified": "Verified seller",
+    "call": "Call",
+    "requestOffer": "Request an offer",
+    "notFound": "Offer not found"
   },
   "news": {
     "title": "News",

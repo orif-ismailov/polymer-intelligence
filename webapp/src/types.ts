@@ -125,3 +125,84 @@ export interface ClientProfilePatch {
   company_name?: string;
   contact_name?: string;
 }
+
+// ── Marketplace (Phase 2) ──────────────────────────────────────────────────────
+
+export type SellerOfferStatus =
+  | "draft"
+  | "pending_moderation"
+  | "approved"
+  | "rejected"
+  | "archived";
+
+export interface CatalogSeller {
+  company_name: string | null;
+  contact_name: string | null;
+  phone: string | null;
+  telegram_username: string | null;
+  is_verified: boolean;
+}
+
+export interface CatalogOffer {
+  id: number;
+  product_id: number | null;
+  product_text: string | null;
+  grade_text: string | null;
+  polymer_type: string | null;
+  qty_available: number;
+  qty_unit: string;
+  price: number;
+  currency: string;
+  incoterms: PriceBasis;
+  warehouse_city: string | null;
+  country: string | null;
+  min_order_qty: number | null;
+  description: string | null;
+  published_at: string | null;
+  seller: CatalogSeller;
+}
+
+export interface CategoryCount {
+  code: string;
+  count: number;
+}
+
+export interface SellerOfferCreate {
+  product_id?: number | null;
+  product_text?: string | null;
+  grade_text?: string | null;
+  polymer_type?: string | null;
+  qty_available: number;
+  qty_unit?: string;
+  price: number;
+  currency?: string;
+  incoterms?: PriceBasis;
+  warehouse_city?: string | null;
+  country?: string | null;
+  min_order_qty?: number | null;
+  description?: string | null;
+  company_name?: string | null;
+  contact_name?: string | null;
+  phone?: string | null;
+  telegram_username?: string | null;
+}
+
+export interface SellerOfferOut {
+  id: number;
+  status: SellerOfferStatus;
+  product_id: number | null;
+  product_text: string | null;
+  grade_text: string | null;
+  polymer_type: string | null;
+  qty_available: number;
+  qty_unit: string;
+  price: number;
+  currency: string;
+  incoterms: PriceBasis;
+  warehouse_city: string | null;
+  country: string | null;
+  min_order_qty: number | null;
+  description: string | null;
+  moderation_note: string | null;
+  created_at: string;
+}

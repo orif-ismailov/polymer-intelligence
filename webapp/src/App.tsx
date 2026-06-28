@@ -85,6 +85,7 @@ export const styles = {
 
 // Tab destinations (unified shell — IMG_0046)
 const Market = lazy(() => import("./pages/Market"));
+const OfferDetail = lazy(() => import("./pages/OfferDetail"));
 const News = lazy(() => import("./pages/News"));
 const Sell = lazy(() => import("./pages/Sell"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -148,6 +149,7 @@ export default function App() {
           <Route path="/profile" element={<AppShell><Profile /></AppShell>} />
 
           {/* Full-screen flows (no tab bar) */}
+          <Route path="/market/:id" element={<OfferDetail />} />
           <Route path="/request/step/1" element={<Step1 />} />
           <Route path="/request/step/2" element={<Step2 />} />
           <Route path="/request/step/3" element={<Step3 />} />

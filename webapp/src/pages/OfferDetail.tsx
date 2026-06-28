@@ -1,0 +1,147 @@
+/**
+ * Offer detail (IMG_0043 ③) — full-screen public product card.
+ *
+ * Shows an approved catalog offer with the seller's contact actions (phone /
+ * Telegram) and a "request offer" CTA that opens the buyer wizard. BackButton → Маркет.
+ */
+
+import { useEffect, useState, type CSSProperties } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { BadgeCheck } from "lucide-react";
+
+import { api } from "../api/client";
+import { backButton, mainButton } from "../telegram";
+import type { CatalogOffer } from "../types";
+
+const rowLabel: CSSProperties = { fontSize: "13px", color: "var(--text-muted)" };
+const rowValue: CSSProperties = { fontSize: "13px", color: "var(--text)", fontWeight: 600, textAlign: "right" };
+
+export default function OfferDetail() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [offer, setOffer] = useState<CatalogOffer | null>(null);
+  const [state, setState] = useState<"loading" | "ok" | "error">("loading");
+
+  useEffect(() => {
+    backButton.show();
+    const cleanup = backButton.onClick(() => navigate("/market"));
+    mainButton.hide();
+    return () => {
+      cleanup();
+      backButton.hide();
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setState("loading");
+    api
+      .getCatalogOffer(Number(id))
+      .then((o) => {
+        if (!cancelled) {
+          setOffer(o);
+          setState("ok");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (state !== "ok" || !offer) {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text-muted)", padding: "32px 16px", textAlign: "center" }}>
+        {state === "error" ? t("offer.notFound") : "…"}
+      </div>
+    );
+  }
+
+  const Row = ({ label, value }: { label: string; value: string }) => (
+    <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
+      <span style={rowLabel}>{label}</span>
+      <span style={rowValue}>{value}</span>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
+      <h1 style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 700 }}>
+        {offer.grade_text || offer.product_text || "—"}
+      </h1>
+      {offer.polymer_type && (
+        <p style={{ margin: "0 0 12px", fontSize: "13px", color: "var(--text-muted)" }}>{offer.polymer_type}</p>
+      )}
+
+      <div style={{ fontSize: "26px", fontWeight: 700, color: "var(--green)", marginBottom: "16px" }}>
+        {offer.price.toLocaleString()} <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{offer.currency}/{offer.qty_unit}</span>
+      </div>
+
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "4px 14px", marginBottom: "16px" }}>
+        <Row label={t("offer.inStock")} value={`${offer.qty_available.toLocaleString()} ${offer.qty_unit}`} />
+        {offer.min_order_qty != null && <Row label={t("offer.minOrder")} value={`${offer.min_order_qty.toLocaleString()} ${offer.qty_unit}`} />}
+        <Row label={t("offer.supply")} value={String(offer.incoterms)} />
+        {offer.warehouse_city && <Row label={t("offer.location")} value={offer.warehouse_city} />}
+        <Row label={t("offer.seller")} value={offer.seller.company_name || "—"} />
+      </div>
+
+      {offer.description && (
+        <p style={{ fontSize: "14px", color: "var(--text)", lineHeight: 1.5, marginBottom: "16px" }}>{offer.description}</p>
+      )}
+
+      {offer.seller.is_verified && (
+        <p style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "var(--green)", marginBottom: "12px" }}>
+          <BadgeCheck size={16} /> {t("offer.verified")}
+        </p>
+      )}
+
+      <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+        {offer.seller.phone && (
+          <a href={`tel:${offer.seller.phone}`} style={contactBtn("var(--green)")}>{t("offer.call")}</a>
+        )}
+        {offer.seller.telegram_username && (
+          <a href={`https://t.me/${offer.seller.telegram_username}`} target="_blank" rel="noreferrer" style={contactBtn("var(--blue)")}>
+            Telegram
+          </a>
+        )}
+      </div>
+
+      <button type="button" onClick={() => navigate("/request/step/1")} style={primaryBtn}>
+        {t("offer.requestOffer")}
+      </button>
+    </div>
+  );
+}
+
+function contactBtn(color: string): CSSProperties {
+  return {
+    flex: 1,
+    textAlign: "center",
+    padding: "12px",
+    borderRadius: "var(--r-md)",
+    border: `1px solid ${color}`,
+    color,
+    fontSize: "14px",
+    fontWeight: 600,
+    textDecoration: "none",
+  };
+}
+
+const primaryBtn: CSSProperties = {
+  display: "block",
+  width: "100%",
+  minHeight: "48px",
+  padding: "12px 20px",
+  borderRadius: "var(--r-md)",
+  background: "var(--green)",
+  color: "var(--green-on)",
+  border: "none",
+  fontSize: "16px",
+  fontWeight: 600,
+  cursor: "pointer",
+};
