@@ -149,6 +149,11 @@
   },
   "sellForm": {
     "title": "Taklif joylashtirish",
+    "step1": "Asosiy ma'lumot",
+    "step2": "Miqdor va narx",
+    "step3": "Rasm va hujjatlar",
+    "step4": "Aloqa va tavsif",
+    "back": "Orqaga",
     "sectionProduct": "Mahsulot",
     "sectionPrice": "Miqdor va narx",
     "sectionContact": "Aloqa",

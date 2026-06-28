@@ -149,6 +149,11 @@
   },
   "sellForm": {
     "title": "Post an offer",
+    "step1": "Basic info",
+    "step2": "Quantity & price",
+    "step3": "Photos & documents",
+    "step4": "Contacts & description",
+    "back": "Back",
     "sectionProduct": "Product",
     "sectionPrice": "Quantity & price",
     "sectionContact": "Contact",

@@ -149,6 +149,11 @@
   },
   "sellForm": {
     "title": "Teklif yayınla",
+    "step1": "Temel bilgiler",
+    "step2": "Miktar ve fiyat",
+    "step3": "Fotoğraf ve belgeler",
+    "step4": "İletişim ve açıklama",
+    "back": "Geri",
     "sectionProduct": "Ürün",
     "sectionPrice": "Miktar ve fiyat",
     "sectionContact": "İletişim",
