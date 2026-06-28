@@ -29,3 +29,53 @@ def generate_daily_report() -> int | None:
             logger.exception("generate_daily_report.failed")
             db.rollback()
             return None
+
+
+@celery_app.task(name="publish_report_to_channel", queue="notify")
+def publish_report_to_channel(report_id: int) -> dict[str, object]:
+    """Post a published report's body to the Telegram news channel (best-effort).
+
+    No-op (logged) when NEWS_CHANNEL_ID is empty so dev/test never call Telegram.
+    Never raises — returns a status dict so the worker stays alive (T-03-13 pattern).
+    The content_md is sent as Telegram Markdown; a single URL button opens the Mini App.
+    """
+    import asyncio  # noqa: PLC0415
+
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.config import settings as _settings  # noqa: PLC0415
+
+    if not _settings.NEWS_CHANNEL_ID:
+        logger.info("publish_report_to_channel.skipped_no_channel", extra={"report_id": report_id})
+        return {"status": "skipped", "error": None}
+
+    with SessionLocal() as db:
+        report = report_service.get_report(db, report_id)
+        if report is None:
+            return {"status": "error", "error": f"Report {report_id} not found"}
+        content = report.content_md
+
+    try:
+        reply_markup = None
+        if _settings.PUBLIC_WEBAPP_URL:
+            from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+            reply_markup = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="Открыть приложение", url=f"{_settings.PUBLIC_WEBAPP_URL}/webapp/")]
+                ]
+            )
+        asyncio.run(
+            bot.send_message(
+                chat_id=_settings.NEWS_CHANNEL_ID,
+                text=content,
+                parse_mode="Markdown",
+                reply_markup=reply_markup,
+            )
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.error("publish_report_to_channel.error", extra={"report_id": report_id, "error": str(exc)})
+        return {"status": "error", "error": str(exc)}
+
+    logger.info("publish_report_to_channel.done", extra={"report_id": report_id})
+    return {"status": "ok", "error": None}

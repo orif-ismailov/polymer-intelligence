@@ -97,6 +97,10 @@ class Settings(BaseSettings):
     # buttons and to compute the webhook URL. Empty default keeps the test suite
     # green (no live infrastructure needed); set in .env for production.
     PUBLIC_WEBAPP_URL: str = ""
+    # Telegram news channel id (e.g. "@petroai_news" or a numeric -100… chat id) the
+    # approved daily report is posted to. Empty → channel publishing is a no-op
+    # (dev/test never call Telegram). Phase 3 news engine.
+    NEWS_CHANNEL_ID: str = ""
     # 24-hour TTL for initData HMAC verification (dev-spec §3.2, T-03-02).
     # initData older than this number of seconds is rejected as potentially replayed.
     TELEGRAM_INIT_DATA_TTL_SECONDS: int = 86400

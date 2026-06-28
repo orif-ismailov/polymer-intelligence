@@ -8,6 +8,8 @@ channel delivery is a separate task). Generate-now is provided for convenience.
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -17,6 +19,8 @@ from app.models.reports import Report
 from app.models.staff import StaffUser
 from app.schemas.reports import ReportAdminOut
 from app.services import report_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/reports", tags=["reports"])
 
@@ -65,6 +69,13 @@ def publish(
 ) -> ReportAdminOut:
     report = report_service.publish_report(db, _get(db, report_id))
     db.commit()
+    # Post to the news channel — best-effort; an outage must not fail the publish.
+    try:
+        from app.tasks.reports import publish_report_to_channel  # noqa: PLC0415
+
+        publish_report_to_channel.apply_async(args=[report.id], queue="notify", retry=False)
+    except Exception:  # noqa: BLE001
+        logger.warning("reports.publish.enqueue_failed", extra={"report_id": report.id})
     return report  # type: ignore[return-value]
 
 
