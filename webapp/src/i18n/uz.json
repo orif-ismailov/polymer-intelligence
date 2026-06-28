@@ -75,6 +75,43 @@
       "body": "Bu yerda arizalaringiz holati o'zgarishi haqida bildirishnomalar paydo bo'ladi"
     }
   },
+  "nav": {
+    "market": "Market",
+    "requests": "Arizalar",
+    "sell": "Sotish",
+    "news": "Yangiliklar",
+    "profile": "Profil"
+  },
+  "market": {
+    "title": "Market",
+    "all": "Hammasi",
+    "searchPlaceholder": "Mahsulot, marka, sotuvchi bo'yicha qidirish",
+    "soon": "Takliflar katalogi shu yerda paydo bo'ladi"
+  },
+  "news": {
+    "title": "Yangiliklar",
+    "soon": "Kunlik bozor tahlili shu yerda paydo bo'ladi"
+  },
+  "sell": {
+    "title": "Taklif joylashtirish",
+    "soon": "Mahsulot joylashtirish formasi shu yerda paydo bo'ladi"
+  },
+  "profile": {
+    "title": "Profil",
+    "role": "Men xohlayman",
+    "roleOpt": {
+      "buyer": "Sotib olish",
+      "seller": "Sotish"
+    }
+  },
+  "roleHint": {
+    "title": "Nima bilan shug'ullanasiz?",
+    "subtitle": "Kerakli narsani ko'rsatishimiz uchun tanlang. Hammasi baribir mavjud.",
+    "buyer": "Men xaridorman",
+    "buyerDesc": "Ariza qoldiring — AI eng yaxshi takliflarni topadi",
+    "seller": "Men sotuvchiman",
+    "sellerDesc": "Minglab xaridorlar uchun mahsulot joylang"
+  },
   "settings": {
     "title": "Til va profil",
     "language": "Interfeys tili",

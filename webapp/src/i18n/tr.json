@@ -75,6 +75,43 @@
       "body": "Taleplerinizin durum değişikliğiyle ilgili bildirimler burada görünür"
     }
   },
+  "nav": {
+    "market": "Market",
+    "requests": "Talepler",
+    "sell": "Sat",
+    "news": "Haberler",
+    "profile": "Profil"
+  },
+  "market": {
+    "title": "Market",
+    "all": "Tümü",
+    "searchPlaceholder": "Ürün, marka, satıcıya göre ara",
+    "soon": "Teklif kataloğu burada görünecek"
+  },
+  "news": {
+    "title": "Haberler",
+    "soon": "Günlük pazar analizi burada görünecek"
+  },
+  "sell": {
+    "title": "Teklif yayınla",
+    "soon": "Ürün yayınlama formu burada görünecek"
+  },
+  "profile": {
+    "title": "Profil",
+    "role": "İstiyorum",
+    "roleOpt": {
+      "buyer": "Satın almak",
+      "seller": "Satmak"
+    }
+  },
+  "roleHint": {
+    "title": "Ne iş yapıyorsunuz?",
+    "subtitle": "Doğru şeyleri gösterelim diye seçin. Her şey yine de erişilebilir.",
+    "buyer": "Alıcıyım",
+    "buyerDesc": "Talep bırakın — AI en iyi teklifleri bulur",
+    "seller": "Satıcıyım",
+    "sellerDesc": "Binlerce alıcı için ürün yayınlayın"
+  },
   "settings": {
     "title": "Dil ve profil",
     "language": "Arayüz dili",

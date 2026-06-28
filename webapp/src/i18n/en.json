@@ -75,6 +75,43 @@
       "body": "Status updates for your requests will appear here"
     }
   },
+  "nav": {
+    "market": "Market",
+    "requests": "Requests",
+    "sell": "Sell",
+    "news": "News",
+    "profile": "Profile"
+  },
+  "market": {
+    "title": "Market",
+    "all": "All",
+    "searchPlaceholder": "Search by product, grade, seller",
+    "soon": "The offer catalog will appear here"
+  },
+  "news": {
+    "title": "News",
+    "soon": "Daily market analytics will appear here"
+  },
+  "sell": {
+    "title": "Post an offer",
+    "soon": "The listing form will appear here"
+  },
+  "profile": {
+    "title": "Profile",
+    "role": "I want to",
+    "roleOpt": {
+      "buyer": "Buy",
+      "seller": "Sell"
+    }
+  },
+  "roleHint": {
+    "title": "What do you do?",
+    "subtitle": "Pick one so we show the right things. Everything stays available.",
+    "buyer": "I'm a buyer",
+    "buyerDesc": "Submit requests — AI finds the best offers",
+    "seller": "I'm a seller",
+    "sellerDesc": "List products for thousands of buyers"
+  },
   "settings": {
     "title": "Language & profile",
     "language": "Interface language",

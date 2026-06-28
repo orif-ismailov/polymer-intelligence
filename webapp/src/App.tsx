@@ -10,7 +10,10 @@
  */
 
 import { lazy, Suspense, CSSProperties } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+
+import AppShell from "./components/AppShell";
+import RoleHintModal from "./components/RoleHintModal";
 
 // ── Shared style tokens (canonical source — reused by page components) ─────────
 
@@ -80,7 +83,12 @@ export const styles = {
 
 // ── Lazy-loaded routes (code-split by route) ───────────────────────────────────
 
-const Home = lazy(() => import("./pages/Home"));
+// Tab destinations (unified shell — IMG_0046)
+const Market = lazy(() => import("./pages/Market"));
+const News = lazy(() => import("./pages/News"));
+const Sell = lazy(() => import("./pages/Sell"));
+const Profile = lazy(() => import("./pages/Profile"));
+
 const Step1 = lazy(() => import("./pages/wizard/Step1"));
 const Step2 = lazy(() => import("./pages/wizard/Step2"));
 const Step3 = lazy(() => import("./pages/wizard/Step3"));
@@ -125,14 +133,24 @@ function PageLoader() {
 export default function App() {
   return (
     <div style={styles.app}>
+      <RoleHintModal />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Default → Маркет tab */}
+          <Route path="/" element={<Navigate to="/market" replace />} />
+
+          {/* Tab destinations (with bottom tab bar) */}
+          <Route path="/market" element={<AppShell><Market /></AppShell>} />
+          <Route path="/requests" element={<AppShell><MyRequests /></AppShell>} />
+          <Route path="/sell" element={<AppShell><Sell /></AppShell>} />
+          <Route path="/news" element={<AppShell><News /></AppShell>} />
+          <Route path="/profile" element={<AppShell><Profile /></AppShell>} />
+
+          {/* Full-screen flows (no tab bar) */}
           <Route path="/request/step/1" element={<Step1 />} />
           <Route path="/request/step/2" element={<Step2 />} />
           <Route path="/request/step/3" element={<Step3 />} />
           <Route path="/request/confirm" element={<Confirm />} />
-          <Route path="/requests" element={<MyRequests />} />
           <Route path="/requests/:id" element={<RequestDetailPage />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<SettingsPage />} />
