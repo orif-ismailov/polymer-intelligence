@@ -32,6 +32,8 @@ import secrets
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.enums import OfferFileKind
+from app.models.marketplace import SellerOfferFile
 from app.models.requests import RequestFile
 
 logger = logging.getLogger(__name__)
@@ -59,6 +61,9 @@ MAX_SIZE_BYTES: int = 10 * 1024 * 1024
 #: Maximum number of files per request (D-08). Enforced by the router before
 #: calling upload_request_file; exposed here as the authoritative constant.
 MAX_FILES: int = 5
+
+#: Maximum number of files (images + docs) per seller offer (Phase 2 marketplace).
+MAX_OFFER_FILES: int = 10
 
 
 # ── Core validation ────────────────────────────────────────────────────────────
@@ -188,3 +193,48 @@ def upload_request_file(
         },
     )
     return rf
+
+
+def upload_offer_file(
+    db: Session,
+    offer_id: int,
+    content: bytes,
+    filename: str,
+    kind: OfferFileKind,
+) -> SellerOfferFile:
+    """Validate content, stream to MinIO, insert a seller_offer_files row.
+
+    Same traversal-safe key pattern as upload_request_file (offers/{offer_id}/…) and
+    the same magic-byte/size validation. Does NOT commit — caller commits.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415 — deferred to avoid socket at import
+
+    mime = validate_upload(content, filename)
+
+    sanitized_basename = os.path.basename(filename) or "upload"
+    sanitized_basename = sanitized_basename.replace("/", "_").replace("\\", "_").replace("..", "__")
+    random_token = secrets.token_hex(8)
+    key = f"offers/{offer_id}/{random_token}-{sanitized_basename}"
+
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET,
+        Key=key,
+        Body=content,
+        ContentType=mime,
+    )
+
+    f = SellerOfferFile(
+        offer_id=offer_id,
+        kind=kind,
+        file_name=os.path.basename(filename) or "upload",
+        mime_type=mime,
+        size_bytes=len(content),
+        storage_path=key,
+    )
+    db.add(f)
+    db.flush()
+    logger.info(
+        "storage_service.upload_offer_file.done",
+        extra={"offer_id": offer_id, "key": key, "mime": mime, "kind": kind.value},
+    )
+    return f

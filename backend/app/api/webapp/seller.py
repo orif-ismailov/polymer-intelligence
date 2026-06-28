@@ -7,15 +7,17 @@ Open self-serve: the Seller is upserted from the verified initData identity
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.marketplace import Seller
+from app.models.enums import OfferFileKind
+from app.models.marketplace import Seller, SellerOffer, SellerOfferFile
 from app.models.requests import Client
-from app.schemas.marketplace import SellerOfferCreate, SellerOfferOut
-from app.services import offer_service
+from app.schemas.marketplace import OfferFileRef, SellerOfferCreate, SellerOfferOut
+from app.services import offer_service, storage_service
+from app.services.storage_service import MAX_OFFER_FILES
 
 router = APIRouter(prefix="/webapp/seller", tags=["webapp-seller"])
 
@@ -66,3 +68,51 @@ def list_my_offers(
     if seller is None:
         return []
     return offer_service.list_seller_offers(db, seller.id)  # type: ignore[return-value]
+
+
+@router.post(
+    "/offers/{offer_id}/files",
+    response_model=OfferFileRef,
+    status_code=status.HTTP_201_CREATED,
+    summary="Attach an image / TDS / certificate to one's own offer",
+)
+async def upload_offer_file(
+    offer_id: int,
+    file: UploadFile = File(...),
+    kind: str = Query(default="image"),
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> OfferFileRef:
+    """POST /webapp/seller/offers/{id}/files — upload a file to the caller's own offer."""
+    seller = db.query(Seller).filter(Seller.telegram_user_id == client.telegram_user_id).first()
+    if seller is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+    offer = (
+        db.query(SellerOffer)
+        .filter(SellerOffer.id == offer_id, SellerOffer.seller_id == seller.id)
+        .first()
+    )
+    if offer is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+
+    existing = db.query(SellerOfferFile).filter(SellerOfferFile.offer_id == offer_id).count()
+    if existing >= MAX_OFFER_FILES:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="too_many_files")
+
+    try:
+        file_kind = OfferFileKind(kind)
+    except ValueError:
+        file_kind = OfferFileKind.other
+
+    content = await file.read()
+    try:
+        f = storage_service.upload_offer_file(
+            db, offer_id, content, file.filename or "upload", file_kind
+        )
+        db.commit()
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+
+    return OfferFileRef(id=f.id, kind=f.kind, file_name=f.file_name)

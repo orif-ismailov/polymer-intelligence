@@ -156,6 +156,21 @@ export const api = {
     return apiFetch<SellerOfferOut[]>("/webapp/seller/offers");
   },
 
+  /** POST /webapp/seller/offers/{id}/files — attach an image/TDS/cert to an offer. */
+  uploadOfferFile(offerId: number, file: File, kind = "image"): Promise<{ id: number }> {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiFetch<{ id: number }>(`/webapp/seller/offers/${offerId}/files?kind=${kind}`, {
+      method: "POST",
+      body: fd,
+    });
+  },
+
+  /** Public URL for an approved offer's file (usable directly in <img src>). */
+  offerImageUrl(offerId: number, fileId: number): string {
+    return `${BASE_URL}/webapp/market/offers/${offerId}/images/${fileId}`;
+  },
+
   // ── News (published reports) ────────────────────────────────────────────────
 
   /** GET /webapp/news — published market reports (newest first). */

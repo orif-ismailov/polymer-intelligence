@@ -70,6 +70,7 @@ export default function SellOffer() {
   const [contact, setContact] = useState("");
   const [phone, setPhone] = useState("");
 
+  const [photos, setPhotos] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -111,7 +112,15 @@ export default function SellOffer() {
       phone: phone.trim() || null,
     };
     try {
-      await api.createSellerOffer(body);
+      const created = await api.createSellerOffer(body);
+      // Upload staged photos sequentially (best-effort — the offer is already created).
+      for (const f of photos) {
+        try {
+          await api.uploadOfferFile(created.id, f, "image");
+        } catch {
+          /* keep the offer even if one image fails */
+        }
+      }
       notifySuccess();
       setDone(true);
     } catch {
@@ -186,6 +195,22 @@ export default function SellOffer() {
       </FieldGroup>
       <FieldGroup htmlFor="s_desc" label={t("sellForm.description")}>
         <textarea id="s_desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ ...fieldStyle, minHeight: "80px", resize: "vertical" }} />
+      </FieldGroup>
+
+      <FieldGroup htmlFor="s_photos" label={t("sellForm.photos")}>
+        <input
+          id="s_photos"
+          type="file"
+          accept="image/jpeg"
+          multiple
+          onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
+          style={fieldStyle}
+        />
+        {photos.length > 0 && (
+          <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
+            {photos.length} {t("sellForm.photosCount")}
+          </p>
+        )}
       </FieldGroup>
 
       <p style={sectionTitle}>{t("sellForm.sectionContact")}</p>

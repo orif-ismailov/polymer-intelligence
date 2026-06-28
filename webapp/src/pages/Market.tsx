@@ -115,56 +115,71 @@ export default function Market() {
       )}
 
       {state === "ok" &&
-        offers.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            onClick={() => navigate(`/market/${o.id}`)}
-            style={{
-              display: "block",
-              width: "100%",
-              textAlign: "left",
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: "var(--r-md)",
-              boxShadow: "var(--shadow)",
-              padding: "14px",
-              marginBottom: "12px",
-              cursor: "pointer",
-              color: "var(--text)",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-              <div>
-                <div style={{ fontSize: "15px", fontWeight: 600 }}>{o.grade_text || o.product_text || "—"}</div>
-                {o.polymer_type && (
-                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>{o.polymer_type}</div>
-                )}
-              </div>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--green)", whiteSpace: "nowrap" }}>
-                {o.price.toLocaleString()} <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{o.currency}/{o.qty_unit}</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
-              <span>{o.qty_available.toLocaleString()} {o.qty_unit}</span>
-              {o.warehouse_city && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
-                  <MapPin size={13} /> {o.warehouse_city}
-                </span>
+        offers.map((o) => {
+          const img = o.files?.find((f) => f.kind === "image");
+          return (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => navigate(`/market/${o.id}`)}
+              style={{
+                display: "flex",
+                gap: "12px",
+                width: "100%",
+                textAlign: "left",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r-md)",
+                boxShadow: "var(--shadow)",
+                padding: "14px",
+                marginBottom: "12px",
+                cursor: "pointer",
+                color: "var(--text)",
+              }}
+            >
+              {img ? (
+                <img
+                  src={api.offerImageUrl(o.id, img.id)}
+                  alt=""
+                  style={{ width: "64px", height: "64px", flex: "0 0 auto", borderRadius: "var(--r-sm)", objectFit: "cover", background: "var(--surface-2)" }}
+                />
+              ) : (
+                <span style={{ width: "64px", height: "64px", flex: "0 0 auto", borderRadius: "var(--r-sm)", background: "var(--surface-2)" }} />
               )}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "var(--text)" }}>
-                {o.seller.company_name || t("offer.seller")}
-                {o.seller.is_verified && <BadgeCheck size={14} color="var(--green)" />}
-              </span>
-              <span style={{ display: "inline-flex", gap: "10px", color: "var(--text-muted)" }}>
-                {o.seller.phone && <Phone size={16} color="var(--green)" />}
-                {o.seller.telegram_username && <Send size={16} color="var(--blue)" />}
-              </span>
-            </div>
-          </button>
-        ))}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
+                  <div>
+                    <div style={{ fontSize: "15px", fontWeight: 600 }}>{o.grade_text || o.product_text || "—"}</div>
+                    {o.polymer_type && (
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>{o.polymer_type}</div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--green)", whiteSpace: "nowrap" }}>
+                    {o.price.toLocaleString()} <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{o.currency}/{o.qty_unit}</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
+                  <span>{o.qty_available.toLocaleString()} {o.qty_unit}</span>
+                  {o.warehouse_city && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                      <MapPin size={13} /> {o.warehouse_city}
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "var(--text)" }}>
+                    {o.seller.company_name || t("offer.seller")}
+                    {o.seller.is_verified && <BadgeCheck size={14} color="var(--green)" />}
+                  </span>
+                  <span style={{ display: "inline-flex", gap: "10px", color: "var(--text-muted)" }}>
+                    {o.seller.phone && <Phone size={16} color="var(--green)" />}
+                    {o.seller.telegram_username && <Send size={16} color="var(--blue)" />}
+                  </span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
     </div>
   );
 }

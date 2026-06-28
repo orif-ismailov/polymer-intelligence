@@ -57,6 +57,7 @@ def _mock_offer(id: int = 11, status: str = "approved") -> MagicMock:
     o.min_order_qty = decimal.Decimal("20")
     o.description = "HDPE for extrusion"
     o.moderation_note = None
+    o.files = []
     o.published_at = datetime.datetime(2026, 6, 20, tzinfo=datetime.UTC)
     o.created_at = datetime.datetime(2026, 6, 19, tzinfo=datetime.UTC)
     o.seller = _mock_seller()

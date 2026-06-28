@@ -69,6 +69,9 @@ export default function OfferDetail() {
     </div>
   );
 
+  const images = offer.files?.filter((f) => f.kind === "image") ?? [];
+  const docs = offer.files?.filter((f) => f.kind !== "image") ?? [];
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <h1 style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 700 }}>
@@ -76,6 +79,19 @@ export default function OfferDetail() {
       </h1>
       {offer.polymer_type && (
         <p style={{ margin: "0 0 12px", fontSize: "13px", color: "var(--text-muted)" }}>{offer.polymer_type}</p>
+      )}
+
+      {images.length > 0 && (
+        <div style={{ display: "flex", gap: "8px", overflowX: "auto", marginBottom: "16px" }}>
+          {images.map((img) => (
+            <img
+              key={img.id}
+              src={api.offerImageUrl(offer.id, img.id)}
+              alt=""
+              style={{ width: "200px", height: "150px", flex: "0 0 auto", borderRadius: "var(--r-md)", objectFit: "cover", background: "var(--surface-2)" }}
+            />
+          ))}
+        </div>
       )}
 
       <div style={{ fontSize: "26px", fontWeight: 700, color: "var(--green)", marginBottom: "16px" }}>
@@ -92,6 +108,22 @@ export default function OfferDetail() {
 
       {offer.description && (
         <p style={{ fontSize: "14px", color: "var(--text)", lineHeight: 1.5, marginBottom: "16px" }}>{offer.description}</p>
+      )}
+
+      {docs.length > 0 && (
+        <div style={{ marginBottom: "16px", display: "flex", flexDirection: "column", gap: "6px" }}>
+          {docs.map((d) => (
+            <a
+              key={d.id}
+              href={api.offerImageUrl(offer.id, d.id)}
+              target="_blank"
+              rel="noreferrer"
+              style={{ fontSize: "13px", color: "var(--blue)", textDecoration: "none" }}
+            >
+              📄 {d.file_name}
+            </a>
+          ))}
+        </div>
       )}
 
       {offer.seller.is_verified && (

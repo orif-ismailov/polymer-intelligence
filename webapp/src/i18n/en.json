@@ -150,6 +150,8 @@
     "warehouseCity": "City / Warehouse",
     "minOrder": "Minimum order",
     "description": "Description",
+    "photos": "Product photos",
+    "photosCount": "photo(s) selected",
     "submit": "Submit for moderation",
     "success": "Submitted for moderation",
     "successBody": "Once approved it will appear in the catalog",

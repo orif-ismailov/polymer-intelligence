@@ -150,6 +150,8 @@
     "warehouseCity": "Shahar / Ombor",
     "minOrder": "Minimal hajm",
     "description": "Tavsif",
+    "photos": "Mahsulot rasmlari",
+    "photosCount": "ta rasm tanlandi",
     "submit": "Moderatsiyaga yuborish",
     "success": "Moderatsiyaga yuborildi",
     "successBody": "Tekshiruvdan so'ng katalogda paydo bo'ladi",

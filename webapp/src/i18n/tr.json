@@ -150,6 +150,8 @@
     "warehouseCity": "Şehir / Depo",
     "minOrder": "Minimum sipariş",
     "description": "Açıklama",
+    "photos": "Ürün fotoğrafları",
+    "photosCount": "fotoğraf seçildi",
     "submit": "Moderasyona gönder",
     "success": "Moderasyona gönderildi",
     "successBody": "Onaylandıktan sonra katalogda görünecek",

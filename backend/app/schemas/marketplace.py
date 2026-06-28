@@ -17,7 +17,7 @@ import decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.models.enums import PriceBasis, SellerOfferStatus
+from app.models.enums import OfferFileKind, PriceBasis, SellerOfferStatus
 
 # ── Create ──────────────────────────────────────────────────────────────────────
 
@@ -72,6 +72,16 @@ class SellerOfferCreate(BaseModel):
 
 # ── Read-side ───────────────────────────────────────────────────────────────────
 
+class OfferFileRef(BaseModel):
+    """Reference to an offer file (image / TDS / certificate) for client-side URLs."""
+
+    id: int
+    kind: OfferFileKind
+    file_name: str
+
+    model_config = {"from_attributes": True}
+
+
 class CatalogSeller(BaseModel):
     """Seller contact block shown on a public catalog offer."""
 
@@ -103,6 +113,7 @@ class SellerOfferOut(BaseModel):
     min_order_qty: decimal.Decimal | None
     description: str | None
     moderation_note: str | None
+    files: list[OfferFileRef] = []
     created_at: datetime.datetime
 
     model_config = {"from_attributes": True}
@@ -126,6 +137,7 @@ class CatalogOfferOut(BaseModel):
     min_order_qty: decimal.Decimal | None
     description: str | None
     published_at: datetime.datetime | None
+    files: list[OfferFileRef] = []
     seller: CatalogSeller
 
     model_config = {"from_attributes": True}

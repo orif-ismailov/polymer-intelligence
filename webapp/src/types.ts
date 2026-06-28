@@ -135,6 +135,14 @@ export type SellerOfferStatus =
   | "rejected"
   | "archived";
 
+export type OfferFileKind = "image" | "tds" | "certificate" | "other";
+
+export interface OfferFileRef {
+  id: number;
+  kind: OfferFileKind;
+  file_name: string;
+}
+
 export interface CatalogSeller {
   company_name: string | null;
   contact_name: string | null;
@@ -159,6 +167,7 @@ export interface CatalogOffer {
   min_order_qty: number | null;
   description: string | null;
   published_at: string | null;
+  files: OfferFileRef[];
   seller: CatalogSeller;
 }
 
@@ -216,5 +225,6 @@ export interface SellerOfferOut {
   min_order_qty: number | null;
   description: string | null;
   moderation_note: string | null;
+  files: OfferFileRef[];
   created_at: string;
 }
