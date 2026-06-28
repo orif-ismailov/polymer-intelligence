@@ -38,6 +38,7 @@ from app.models.enums import (  # noqa: F401
     Urgency,
 )
 from app.models.marketplace import Seller, SellerOffer, SellerOfferFile  # noqa: F401
+from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401
 from app.models.reference import (  # noqa: F401
     FxRate,
@@ -105,4 +106,8 @@ __all__ = [
     "Seller",
     "SellerOffer",
     "SellerOfferFile",
+    # Sourcing (Phase 4)
+    "InventoryItem",
+    "PartnerSupplier",
+    "SourcingRun",
 ]
