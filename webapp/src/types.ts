@@ -187,6 +187,18 @@ export interface SellerOfferCreate {
   telegram_username?: string | null;
 }
 
+export interface NewsSummary {
+  id: number;
+  title: string;
+  period_start: string;
+  period_end: string;
+  published_at: string | null;
+}
+
+export interface NewsItem extends NewsSummary {
+  content_md: string;
+}
+
 export interface SellerOfferOut {
   id: number;
   status: SellerOfferStatus;

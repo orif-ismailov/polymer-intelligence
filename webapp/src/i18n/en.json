@@ -123,7 +123,9 @@
   },
   "news": {
     "title": "News",
-    "soon": "Daily market analytics will appear here"
+    "soon": "Daily market analytics will appear here",
+    "empty": "No publications yet",
+    "error": "Couldn't load the news"
   },
   "sell": {
     "title": "Post an offer",

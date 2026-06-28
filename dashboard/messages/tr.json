@@ -14,6 +14,7 @@
       "moderation": "Moderasyon",
       "sources": "Kaynaklar",
       "alerts": "Uyarılar",
+      "reports": "Raporlar",
       "prices": "Fiyatlar",
       "adminUsers": "Kullanıcılar"
     },
@@ -277,6 +278,23 @@
     "markAsProcessed": "İşlendi Olarak İşaretle",
     "exportError": "Dışa aktarma başarısız oldu. Tekrar deneyin veya sorun devam ederse destek ile iletişime geçin.",
     "exportAriaLabel": "Talepleri CSV olarak dışa aktar"
+  },
+  "reports": {
+    "title": "Pazar raporları",
+    "subtitle": "Günlük pazar özetini inceleyin ve yayınlayın",
+    "generate": "Oluştur",
+    "approve": "Onayla",
+    "publish": "Yayınla",
+    "reject": "Reddet",
+    "empty": "Henüz rapor yok",
+    "error": "Raporlar yüklenemedi",
+    "status": {
+      "draft": "Taslak",
+      "pending_approval": "Onay bekliyor",
+      "approved": "Onaylandı",
+      "published": "Yayınlandı",
+      "rejected": "Reddedildi"
+    }
   },
   "moderation": {
     "title": "Teklif moderasyonu",

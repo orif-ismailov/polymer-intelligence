@@ -14,6 +14,7 @@
       "moderation": "Moderatsiya",
       "sources": "Manbalar",
       "alerts": "Ogohlantirishlar",
+      "reports": "Hisobotlar",
       "prices": "Narxlar",
       "adminUsers": "Foydalanuvchilar"
     },
@@ -277,6 +278,23 @@
     "markAsProcessed": "Qayta ishlangan deb belgilash",
     "exportError": "Eksport amalga oshmadi. Qayta urinib ko'ring yoki muammo davom etsa qo'llab-quvvatlash xizmatiga murojaat qiling.",
     "exportAriaLabel": "So'rovlarni CSV sifatida eksport qilish"
+  },
+  "reports": {
+    "title": "Bozor hisobotlari",
+    "subtitle": "Kunlik bozor sharhini tekshiring va chop eting",
+    "generate": "Yaratish",
+    "approve": "Tasdiqlash",
+    "publish": "Chop etish",
+    "reject": "Rad etish",
+    "empty": "Hozircha hisobotlar yo'q",
+    "error": "Hisobotlarni yuklab bo'lmadi",
+    "status": {
+      "draft": "Qoralama",
+      "pending_approval": "Kelishuvda",
+      "approved": "Tasdiqlangan",
+      "published": "Chop etilgan",
+      "rejected": "Rad etilgan"
+    }
   },
   "moderation": {
     "title": "Takliflar moderatsiyasi",

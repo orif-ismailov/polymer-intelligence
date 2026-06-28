@@ -123,7 +123,9 @@
   },
   "news": {
     "title": "Yangiliklar",
-    "soon": "Kunlik bozor tahlili shu yerda paydo bo'ladi"
+    "soon": "Kunlik bozor tahlili shu yerda paydo bo'ladi",
+    "empty": "Hozircha nashrlar yo'q",
+    "error": "Yangiliklarni yuklab bo'lmadi"
   },
   "sell": {
     "title": "Taklif joylashtirish",

@@ -87,6 +87,7 @@ export const styles = {
 const Market = lazy(() => import("./pages/Market"));
 const OfferDetail = lazy(() => import("./pages/OfferDetail"));
 const News = lazy(() => import("./pages/News"));
+const NewsDetail = lazy(() => import("./pages/NewsDetail"));
 const Sell = lazy(() => import("./pages/Sell"));
 const SellOffer = lazy(() => import("./pages/SellOffer"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -152,6 +153,7 @@ export default function App() {
           {/* Full-screen flows (no tab bar) */}
           <Route path="/market/:id" element={<OfferDetail />} />
           <Route path="/sell/new" element={<SellOffer />} />
+          <Route path="/news/:id" element={<NewsDetail />} />
           <Route path="/request/step/1" element={<Step1 />} />
           <Route path="/request/step/2" element={<Step2 />} />
           <Route path="/request/step/3" element={<Step3 />} />

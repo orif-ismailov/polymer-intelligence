@@ -14,6 +14,8 @@ import type {
   CategoryCount,
   ClientProfile,
   ClientProfilePatch,
+  NewsItem,
+  NewsSummary,
   RequestCreate,
   RequestDetail,
   RequestFileMeta,
@@ -152,5 +154,17 @@ export const api = {
   /** GET /webapp/seller/offers — the caller's own offers (any status). */
   getMyOffers(): Promise<SellerOfferOut[]> {
     return apiFetch<SellerOfferOut[]>("/webapp/seller/offers");
+  },
+
+  // ── News (published reports) ────────────────────────────────────────────────
+
+  /** GET /webapp/news — published market reports (newest first). */
+  getNews(): Promise<NewsSummary[]> {
+    return apiFetch<NewsSummary[]>("/webapp/news");
+  },
+
+  /** GET /webapp/news/{id} — a single published report (with content). */
+  getNewsItem(id: number): Promise<NewsItem> {
+    return apiFetch<NewsItem>(`/webapp/news/${id}`);
   },
 };

@@ -123,7 +123,9 @@
   },
   "news": {
     "title": "Haberler",
-    "soon": "Günlük pazar analizi burada görünecek"
+    "soon": "Günlük pazar analizi burada görünecek",
+    "empty": "Henüz yayın yok",
+    "error": "Haberler yüklenemedi"
   },
   "sell": {
     "title": "Teklif yayınla",
