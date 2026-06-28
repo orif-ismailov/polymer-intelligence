@@ -11,6 +11,7 @@
       "liveFeed": "Jonli tasma",
       "purchaseRequests": "Xarid arizalari",
       "offers": "Takliflar",
+      "moderation": "Moderatsiya",
       "sources": "Manbalar",
       "alerts": "Ogohlantirishlar",
       "prices": "Narxlar",
@@ -276,6 +277,16 @@
     "markAsProcessed": "Qayta ishlangan deb belgilash",
     "exportError": "Eksport amalga oshmadi. Qayta urinib ko'ring yoki muammo davom etsa qo'llab-quvvatlash xizmatiga murojaat qiling.",
     "exportAriaLabel": "So'rovlarni CSV sifatida eksport qilish"
+  },
+  "moderation": {
+    "title": "Takliflar moderatsiyasi",
+    "subtitle": "Chop etishdan oldin sotuvchi takliflarini tekshiring",
+    "empty": "Moderatsiyada takliflar yo'q",
+    "error": "Navbatni yuklab bo'lmadi",
+    "seller": "Sotuvchi",
+    "approve": "Tasdiqlash",
+    "reject": "Rad etish",
+    "notePlaceholder": "Sotuvchi uchun izoh (ixtiyoriy)"
   },
   "sources": {
     "title": "Manbalar",

@@ -10,6 +10,7 @@ import {
   Flame,
   Globe,
   Home,
+  ShieldCheck,
   ShoppingCart,
   Tag,
   Users,
@@ -47,6 +48,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { key: "purchaseRequests", href: "/requests", icon: ShoppingCart },
       { key: "offers", href: "/offers", icon: Tag },
+      { key: "moderation", href: "/moderation", icon: ShieldCheck, minRole: "analyst" },
     ],
   },
   {

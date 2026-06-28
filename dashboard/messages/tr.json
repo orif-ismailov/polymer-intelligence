@@ -11,6 +11,7 @@
       "liveFeed": "Canlı akış",
       "purchaseRequests": "Satın alma talepleri",
       "offers": "Teklifler",
+      "moderation": "Moderasyon",
       "sources": "Kaynaklar",
       "alerts": "Uyarılar",
       "prices": "Fiyatlar",
@@ -276,6 +277,16 @@
     "markAsProcessed": "İşlendi Olarak İşaretle",
     "exportError": "Dışa aktarma başarısız oldu. Tekrar deneyin veya sorun devam ederse destek ile iletişime geçin.",
     "exportAriaLabel": "Talepleri CSV olarak dışa aktar"
+  },
+  "moderation": {
+    "title": "Teklif moderasyonu",
+    "subtitle": "Yayınlamadan önce satıcı tekliflerini inceleyin",
+    "empty": "Moderasyonda teklif yok",
+    "error": "Kuyruk yüklenemedi",
+    "seller": "Satıcı",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "notePlaceholder": "Satıcı için not (isteğe bağlı)"
   },
   "sources": {
     "title": "Kaynaklar",
