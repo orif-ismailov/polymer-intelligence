@@ -38,7 +38,6 @@ from app.models.enums import (  # noqa: F401
     Urgency,
 )
 from app.models.marketplace import Seller, SellerOffer, SellerOfferFile  # noqa: F401
-from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401
 from app.models.reference import (  # noqa: F401
     FxRate,
@@ -51,6 +50,7 @@ from app.models.reports import Report  # noqa: F401
 from app.models.requests import Client, Request, RequestFile, RequestStatusHistory  # noqa: F401
 from app.models.signals import Signal  # noqa: F401
 from app.models.sources import ParseRun, RawItem, Source  # noqa: F401
+from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun  # noqa: F401
 from app.models.staff import AuditLog, StaffUser  # noqa: F401
 
 __all__ = [

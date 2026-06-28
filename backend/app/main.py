@@ -49,6 +49,7 @@ from app.api.moderation import router as moderation_router
 from app.api.prices import router as prices_router
 from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
+from app.api.sourcing import router as sourcing_router
 from app.api.telegram_webhook import router as telegram_webhook_router
 from app.api.webapp.files import router as webapp_files_router
 from app.api.webapp.market import router as webapp_market_router
@@ -175,6 +176,8 @@ def create_app() -> FastAPI:
     # ── news engine (Phase 3): published reports + dashboard review ───────────
     application.include_router(webapp_news_router, prefix="/api/v1")
     application.include_router(reports_router, prefix="/api/v1")
+    # ── AI broker dashboard (Phase 4): inventory/partners/sourcing/intel ─────
+    application.include_router(sourcing_router, prefix="/api/v1")
     # ── telegram bot webhook (dev-spec §4.1: webhook inside api container) ────
     application.include_router(telegram_webhook_router, prefix="/api/v1")
 
