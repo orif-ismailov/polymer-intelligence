@@ -86,9 +86,12 @@ class Request(Base):
     client_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("clients.id"), nullable=False
     )
-    product_id: Mapped[int] = mapped_column(
-        SmallInteger, ForeignKey("products.id"), nullable=False
+    # Nullable: a buyer may type a product not in our catalog (product_text holds
+    # the free-typed name). product_id OR product_text is required at the schema layer.
+    product_id: Mapped[int | None] = mapped_column(
+        SmallInteger, ForeignKey("products.id"), nullable=True
     )
+    product_text: Mapped[str | None] = mapped_column(Text, nullable=True)         # free-typed product (not in catalog)
     grade_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     polymer_type: Mapped[str | None] = mapped_column(Text, nullable=True)        # additional form field
     volume: Mapped[decimal.Decimal] = mapped_column(Numeric(14, 3), nullable=False)
@@ -120,6 +123,12 @@ class Request(Base):
         server_default="medium",
     )
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Contact snapshot — captured at submit time from the wizard's contact step so the
+    # request record is self-contained even if the client profile later changes.
+    company_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    contact_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    phone: Mapped[str | None] = mapped_column(Text, nullable=True)
+    legal_address: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[RequestStatus] = mapped_column(
         PgEnum(RequestStatus, name="request_status", create_type=False),
         nullable=False,

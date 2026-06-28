@@ -63,6 +63,7 @@ def _make_mock_request(id: int = 42, client_id: int = 1, number: str = "REQ-2026
     req.status = RequestStatus.new
     req.created_at = datetime.datetime(2026, 6, 16, 10, 0, 0, tzinfo=datetime.UTC)
     req.product_id = 1
+    req.product_text = None
     req.grade_text = "HDPE 2420D"
     req.polymer_type = None
     req.volume = decimal.Decimal("100")
@@ -76,6 +77,10 @@ def _make_mock_request(id: int = 42, client_id: int = 1, number: str = "REQ-2026
     req.validity_days = 30
     req.urgency = Urgency.medium
     req.comment = None
+    req.company_name = None
+    req.contact_name = None
+    req.phone = None
+    req.legal_address = None
     req.files = []
     req.status_history = []
     return req
@@ -383,9 +388,15 @@ class TestClientProfile:
         assert resp.status_code == 200, resp.text
         assert "language" in resp.json()
 
-    def test_patch_me_invalid_language_returns_422(self, webapp_client: TestClient):
-        """PATCH /webapp/me {language:'en'} → 422 (en is not a supported language)."""
+    def test_patch_me_language_en_returns_200(self, webapp_client: TestClient):
+        """PATCH /webapp/me {language:'en'} → 200 (English is now a supported language)."""
         resp = webapp_client.patch("/api/v1/webapp/me", json={"language": "en"})
+        assert resp.status_code == 200, resp.text
+        assert "language" in resp.json()
+
+    def test_patch_me_invalid_language_returns_422(self, webapp_client: TestClient):
+        """PATCH /webapp/me {language:'de'} → 422 (German is not a supported language)."""
+        resp = webapp_client.patch("/api/v1/webapp/me", json={"language": "de"})
         assert resp.status_code == 422, resp.text
 
     def test_patch_me_no_auth_returns_401(self, no_auth_client: TestClient):

@@ -228,6 +228,7 @@ def create_request(
         client_id=client.id,  # type: ignore[attr-defined]
         status=RequestStatus.new,
         product_id=data.product_id,
+        product_text=data.product_text,
         grade_text=data.grade_text,
         polymer_type=data.polymer_type,
         volume=data.volume,
@@ -241,6 +242,10 @@ def create_request(
         validity_days=data.validity_days,
         urgency=data.urgency,
         comment=data.comment,
+        company_name=data.company_name,
+        contact_name=data.contact_name,
+        phone=data.phone,
+        legal_address=data.legal_address,
     )
     db.add(req)
     db.flush()  # populate req.id before history row

@@ -65,37 +65,65 @@ def _build_market_context(db: Session, request: Request) -> dict[str, object]:
     Read-only: recent comparable seller offers for the product + the D-02 price
     comparison against the local market average. No db writes.
     """
-    product_row = db.execute(
-        sa.text("SELECT code, name_ru FROM products WHERE id = :pid"),
-        {"pid": request.product_id},
-    ).fetchone()
-    product_code = product_row[0] if product_row else None
-    product_name = product_row[1] if product_row else None
-
-    # Recent seller offers for this product (last 30 days) — supply liquidity signal.
-    offers = db.execute(
-        sa.text(
-            """
-            SELECT count(*)                      AS n,
-                   avg(price)                     AS avg_price,
-                   min(price)                     AS min_price,
-                   max(price)                     AS max_price,
-                   max(event_at)                  AS latest_at
-            FROM signals
-            WHERE product_id = :pid
-              AND kind = 'sell_offer'
-              AND event_at >= now() - interval '30 days'
-            """
-        ),
-        {"pid": request.product_id},
-    ).mappings().one()
-
     def _f(v: decimal.Decimal | float | int | None) -> float | None:
         return float(v) if v is not None else None
 
-    price_analysis = price_analysis_service.compute_price_analysis(
-        db, request.product_id, request.target_price, request.currency
-    )
+    # A free-typed product (product_id is NULL) has no catalog row, comparable offer
+    # set, or price series — analyse it on its text fields alone (no market block).
+    pid = request.product_id
+    product_code: str | None = None
+    product_name: str | None = None
+    market: dict[str, object] = {
+        "recent_offer_count_30d": 0,
+        "offer_avg_price": None,
+        "offer_min_price": None,
+        "offer_max_price": None,
+        "latest_offer_at": None,
+    }
+    price_analysis: dict[str, float | str] | None = None
+
+    if pid is not None:
+        product_row = db.execute(
+            sa.text("SELECT code, name_ru FROM products WHERE id = :pid"),
+            {"pid": pid},
+        ).fetchone()
+        product_code = product_row[0] if product_row else None
+        product_name = product_row[1] if product_row else None
+
+        # Recent seller offers for this product (last 30 days) — supply liquidity signal.
+        offers = (
+            db.execute(
+                sa.text(
+                    """
+                    SELECT count(*)                      AS n,
+                           avg(price)                     AS avg_price,
+                           min(price)                     AS min_price,
+                           max(price)                     AS max_price,
+                           max(event_at)                  AS latest_at
+                    FROM signals
+                    WHERE product_id = :pid
+                      AND kind = 'sell_offer'
+                      AND event_at >= now() - interval '30 days'
+                    """
+                ),
+                {"pid": pid},
+            )
+            .mappings()
+            .one()
+        )
+        market = {
+            "recent_offer_count_30d": int(offers["n"] or 0),
+            "offer_avg_price": _f(offers["avg_price"]),
+            "offer_min_price": _f(offers["min_price"]),
+            "offer_max_price": _f(offers["max_price"]),
+            "latest_offer_at": (
+                offers["latest_at"].isoformat() if offers["latest_at"] else None
+            ),
+        }
+
+        price_analysis = price_analysis_service.compute_price_analysis(
+            db, pid, request.target_price, request.currency
+        )
 
     return {
         "request": {
@@ -112,15 +140,7 @@ def _build_market_context(db: Session, request: Request) -> dict[str, object]:
             "port_or_city": request.port_or_city,
             "comment": request.comment,
         },
-        "market": {
-            "recent_offer_count_30d": int(offers["n"] or 0),
-            "offer_avg_price": _f(offers["avg_price"]),
-            "offer_min_price": _f(offers["min_price"]),
-            "offer_max_price": _f(offers["max_price"]),
-            "latest_offer_at": (
-                offers["latest_at"].isoformat() if offers["latest_at"] else None
-            ),
-        },
+        "market": market,
         "price_analysis": price_analysis,
     }
 

@@ -131,6 +131,7 @@ def get_request(
         status=req.status,
         created_at=req.created_at,
         product_id=req.product_id,
+        product_text=req.product_text,
         grade_text=req.grade_text,
         polymer_type=req.polymer_type,
         volume=req.volume,
@@ -144,6 +145,10 @@ def get_request(
         validity_days=req.validity_days,
         urgency=req.urgency,
         comment=req.comment,
+        company_name=req.company_name,
+        contact_name=req.contact_name,
+        phone=req.phone,
+        legal_address=req.legal_address,
         files=req.files,
         history=history,
     )

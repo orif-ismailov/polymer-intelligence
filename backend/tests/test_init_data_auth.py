@@ -260,9 +260,9 @@ def test_normalize_language_supported_and_fallback() -> None:
 
     assert "tr" in SUPPORTED_LANGUAGES
     assert DEFAULT_LANGUAGE == "ru"
-    for code in ("ru", "uz", "tr"):
+    for code in ("ru", "en", "uz", "tr"):
         assert normalize_language(code) == code
-    for code in ("en", "de", "", None):
+    for code in ("de", "", None):
         assert normalize_language(code) == "ru"
 
 

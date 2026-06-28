@@ -90,7 +90,8 @@ class RequestListOut(BaseModel):
     id: int
     number: str
     status: str                             # RequestStatus value as string
-    product_id: int
+    product_id: int | None                  # None for a free-typed product (product_text)
+    product_text: str | None = None
     grade_text: str | None
     polymer_type: str | None
     volume: decimal.Decimal
@@ -119,7 +120,8 @@ class RequestDetailOut(BaseModel):
     id: int
     number: str
     status: str
-    product_id: int
+    product_id: int | None                  # None for a free-typed product (product_text)
+    product_text: str | None = None
     grade_text: str | None
     polymer_type: str | None
     volume: decimal.Decimal

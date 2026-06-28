@@ -28,8 +28,8 @@ from app.models.enums import PriceBasis, RequestStatus, Urgency
 class RequestCreate(BaseModel):
     """Body for POST /webapp/requests.
 
-    Enforces the D-02 minimum-to-submit rule:
-      - product_id (required)
+    Enforces the minimum-to-submit rule:
+      - product_id OR product_text (a free-typed product not in our catalog)
       - volume > 0 (required)
       - at least one of grade_text / polymer_type must be non-empty
 
@@ -37,7 +37,8 @@ class RequestCreate(BaseModel):
     No identity fields — client identity comes from get_current_client dep (T-03-06).
     """
 
-    product_id: int
+    product_id: int | None = None
+    product_text: str | None = Field(default=None, max_length=200)
     grade_text: str | None = Field(default=None, max_length=500)
     polymer_type: str | None = Field(default=None, max_length=500)
     volume: decimal.Decimal
@@ -51,6 +52,11 @@ class RequestCreate(BaseModel):
     validity_days: int = 30
     urgency: Urgency = Urgency.medium
     comment: str | None = Field(default=None, max_length=2000)
+    # Contact step (IMG_0046) — snapshot onto the request.
+    company_name: str | None = Field(default=None, max_length=300)
+    contact_name: str | None = Field(default=None, max_length=200)
+    phone: str | None = Field(default=None, max_length=50)
+    legal_address: str | None = Field(default=None, max_length=500)
 
     @field_validator("volume")
     @classmethod
@@ -61,13 +67,21 @@ class RequestCreate(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def _d02_minimum_to_submit(self) -> RequestCreate:
-        """At least one of grade_text or polymer_type must be provided (D-02).
+    def _minimum_to_submit(self) -> RequestCreate:
+        """Enforce the minimum-to-submit rule at the schema layer.
 
-        The wizard Step 1 collects product + volume + (grade_text or polymer_type).
-        A request with neither is considered incomplete and is rejected here at the
-        schema layer rather than leaking through to the service.
+        The wizard Step 1 collects a product (catalog selection OR a free-typed
+        name) + volume + (grade_text or polymer_type). A request missing the product
+        identifier, or with neither grade nor polymer, is rejected here rather than
+        leaking through to the service.
         """
+        product_present = self.product_id is not None or (
+            self.product_text is not None and self.product_text.strip() != ""
+        )
+        if not product_present:
+            raise ValueError(
+                "Either 'product_id' or 'product_text' must be provided (D-02)"
+            )
         grade_present = self.grade_text is not None and self.grade_text.strip() != ""
         polymer_present = self.polymer_type is not None and self.polymer_type.strip() != ""
         if not (grade_present or polymer_present):
@@ -120,7 +134,8 @@ class RequestDetailOut(RequestOut):
     desired_date, validity_days, urgency, comment).
     """
 
-    product_id: int
+    product_id: int | None
+    product_text: str | None = None
     grade_text: str | None
     polymer_type: str | None
     volume: decimal.Decimal
@@ -134,6 +149,10 @@ class RequestDetailOut(RequestOut):
     validity_days: int
     urgency: Urgency
     comment: str | None
+    company_name: str | None = None
+    contact_name: str | None = None
+    phone: str | None = None
+    legal_address: str | None = None
     files: list[RequestFileOut]
     history: list[StatusHistoryOut]
 
