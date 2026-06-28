@@ -49,6 +49,7 @@
     "legalAddress": "Yasal adres",
     "legalAddressPlaceholder": "Yasal adres (isteğe bağlı)",
     "telegramAuto": "Telegram profilinizden otomatik alınır",
+    "summary": "Talebiniz",
     "next": "İleri",
     "submit": "Gönder",
     "product": "Ürün",
@@ -76,8 +77,9 @@
     "volumeUnit_KG": "KG (kilogram)"
   },
   "confirm": {
-    "heading": "Talep gönderildi!",
+    "heading": "Talep alındı!",
     "subheading": "Talebiniz alındı ve uzmanlara iletildi",
+    "aiNote": "AI fiyatları, tedarikçileri ve stoğu analiz edip en iyi teklifi bulmak için iç tedarik turu yapar. Yöneticimiz telefon veya Telegram ile iletişime geçecek.",
     "cta": {
       "myRequests": "Taleplerim",
       "another": "Yeni talep oluştur"

@@ -262,6 +262,19 @@ export default function Confirm() {
         {t("confirm.subheading")}
       </p>
 
+      {/* AI-tender note (IMG_0044 "Заявка принята") */}
+      <p
+        style={{
+          margin: "0 0 16px",
+          fontSize: "13px",
+          color: "var(--text-muted)",
+          textAlign: "center",
+          lineHeight: 1.5,
+        }}
+      >
+        {t("confirm.aiNote")}
+      </p>
+
       {/* REQ number — 15px/600 per UI-SPEC §Typography */}
       <p
         style={{

@@ -49,6 +49,7 @@
     "legalAddress": "Yuridik manzil",
     "legalAddressPlaceholder": "Yuridik manzil (ixtiyoriy)",
     "telegramAuto": "Telegram profilingizdan avtomatik olinadi",
+    "summary": "Sizning arizangiz",
     "next": "Keyingi",
     "submit": "Yuborish",
     "product": "Mahsulot",
@@ -76,8 +77,9 @@
     "volumeUnit_KG": "KG (kilogramm)"
   },
   "confirm": {
-    "heading": "Ariza yuborildi!",
+    "heading": "Ariza qabul qilindi!",
     "subheading": "Sizning arizangiz qabul qilindi va mutaxassislarga topshirildi",
+    "aiNote": "AI narxlar, yetkazib beruvchilar va mavjudlikni tahlil qiladi va eng yaxshi taklifni topish uchun ichki tender o'tkazadi. Menejer telefon yoki Telegram orqali bog'lanadi.",
     "cta": {
       "myRequests": "Mening arizalarim",
       "another": "Yangi ariza yaratish"

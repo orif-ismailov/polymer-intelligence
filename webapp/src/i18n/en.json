@@ -49,6 +49,7 @@
     "legalAddress": "Legal address",
     "legalAddressPlaceholder": "Legal address (optional)",
     "telegramAuto": "Telegram is filled automatically from your profile",
+    "summary": "Your request",
     "next": "Next",
     "submit": "Submit",
     "product": "Product",
@@ -76,8 +77,9 @@
     "volumeUnit_KG": "KG (kilograms)"
   },
   "confirm": {
-    "heading": "Request submitted!",
+    "heading": "Request accepted!",
     "subheading": "Your request has been received and passed to our specialists",
+    "aiNote": "Our AI will analyze prices, suppliers and stock and run an internal supplier tender to find the best offer. Our manager will contact you by phone or Telegram.",
     "cta": {
       "myRequests": "My requests",
       "another": "Create another"

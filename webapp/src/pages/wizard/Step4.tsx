@@ -108,6 +108,24 @@ export default function Step4() {
         {t("wizard.step4.title")}
       </h2>
 
+      {/* "Ваша заявка" recap (IMG_0044 step 4 summary box) */}
+      <div style={{ background: "var(--surface-2)", borderRadius: "var(--r-md)", padding: "12px 14px", marginBottom: "20px" }}>
+        <p style={{ margin: "0 0 8px", fontSize: "13px", fontWeight: 700, color: "var(--text-muted)" }}>
+          {t("wizard.summary")}
+        </p>
+        {[
+          [t("wizard.product"), store.grade_text || store.product_text || "—"],
+          [t("wizard.volume"), `${store.volume || "—"} ${store.volume_unit}`],
+          [t("wizard.deliveryCity"), store.port_or_city || "—"],
+          [t("wizard.urgency"), store.urgency ? t(`wizard.urgencyOpt.${store.urgency}`) : "—"],
+        ].map(([k, v]) => (
+          <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: "12px", padding: "3px 0", fontSize: "13px" }}>
+            <span style={{ color: "var(--text-muted)" }}>{k}</span>
+            <span style={{ color: "var(--text)", fontWeight: 600, textAlign: "right" }}>{v}</span>
+          </div>
+        ))}
+      </div>
+
       <form onSubmit={(e) => e.preventDefault()}>
         <FieldGroup htmlFor="target_price" label={t("wizard.targetPrice")}>
           <input id="target_price" type="number" inputMode="decimal" min="0" step="any" placeholder={t("wizard.pricePlaceholder")} style={fieldStyle} {...register("target_price")} />
