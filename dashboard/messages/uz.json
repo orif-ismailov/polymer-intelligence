@@ -3,6 +3,7 @@
     "groups": {
       "main": "ASOSIY",
       "requests": "ARIZALAR",
+      "broker": "BROKER",
       "sources": "MANBALAR",
       "settings": "SOZLAMALAR"
     },
@@ -12,6 +13,10 @@
       "purchaseRequests": "Xarid arizalari",
       "offers": "Takliflar",
       "moderation": "Moderatsiya",
+      "sourcing": "AI-tanlov",
+      "inventory": "Ombor",
+      "partners": "Hamkorlar",
+      "intel": "Tahlil",
       "sources": "Manbalar",
       "alerts": "Ogohlantirishlar",
       "reports": "Hisobotlar",
@@ -278,6 +283,65 @@
     "markAsProcessed": "Qayta ishlangan deb belgilash",
     "exportError": "Eksport amalga oshmadi. Qayta urinib ko'ring yoki muammo davom etsa qo'llab-quvvatlash xizmatiga murojaat qiling.",
     "exportAriaLabel": "So'rovlarni CSV sifatida eksport qilish"
+  },
+  "broker": {
+    "intel": {
+      "title": "Bozor tahlili",
+      "subtitle": "Mahsulotlar bo'yicha talab, taklif va spred",
+      "product": "Mahsulot",
+      "buyers": "Xaridorlar",
+      "sellers": "Sotuvchilar",
+      "avgSeller": "O'rt. sotuv narxi",
+      "avgBuyer": "O'rt. xarid maqsadi",
+      "spread": "Spred",
+      "empty": "Ma'lumot yo'q",
+      "error": "Yuklab bo'lmadi"
+    },
+    "inventory": {
+      "title": "Ombor",
+      "subtitle": "Bizning qoldiqlar (ustuvorlik №1)",
+      "product": "Mahsulot ID",
+      "grade": "Marka",
+      "qty": "Hajm",
+      "cost": "Tannarx",
+      "city": "Shahar",
+      "add": "Qo'shish",
+      "delete": "O'chirish",
+      "empty": "Ombor bo'sh",
+      "error": "Yuklab bo'lmadi"
+    },
+    "partners": {
+      "title": "Hamkor yetkazib beruvchilar",
+      "subtitle": "Hamkorlar (ustuvorlik №2)",
+      "name": "Nomi",
+      "product": "Mahsulot ID",
+      "price": "Narx",
+      "lead": "Muddat, kun",
+      "add": "Qo'shish",
+      "delete": "O'chirish",
+      "empty": "Hamkorlar yo'q",
+      "error": "Yuklab bo'lmadi"
+    },
+    "sourcing": {
+      "title": "AI-tanlov",
+      "subtitle": "Ariza bo'yicha eng yaxshi variantni tanlash",
+      "requestId": "Ariza ID",
+      "run": "Ishga tushirish",
+      "recommended": "Tavsiya",
+      "market": "Bozor",
+      "label": "Variant",
+      "price": "Narx",
+      "leadTime": "Muddat, kun",
+      "empty": "Variant topilmadi",
+      "error": "Tanlovni bajarib bo'lmadi",
+      "source": {
+        "header": "Manba",
+        "inventory": "Bizning ombor",
+        "partner": "Hamkor",
+        "marketplace": "Marketplace",
+        "import": "Import"
+      }
+    }
   },
   "reports": {
     "title": "Bozor hisobotlari",

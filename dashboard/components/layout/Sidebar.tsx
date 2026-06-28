@@ -6,15 +6,18 @@ import {
   Activity,
   BarChart3,
   Bell,
+  Boxes,
   Database,
   Flame,
   Globe,
+  Handshake,
   Home,
   Newspaper,
   ShieldCheck,
   ShoppingCart,
   Tag,
   Users,
+  Workflow,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -50,6 +53,15 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "purchaseRequests", href: "/requests", icon: ShoppingCart },
       { key: "offers", href: "/offers", icon: Tag },
       { key: "moderation", href: "/moderation", icon: ShieldCheck, minRole: "analyst" },
+    ],
+  },
+  {
+    key: "broker",
+    items: [
+      { key: "sourcing", href: "/sourcing", icon: Workflow, minRole: "analyst" },
+      { key: "inventory", href: "/inventory", icon: Boxes, minRole: "analyst" },
+      { key: "partners", href: "/partners", icon: Handshake, minRole: "analyst" },
+      { key: "intel", href: "/intel", icon: BarChart3, minRole: "analyst" },
     ],
   },
   {

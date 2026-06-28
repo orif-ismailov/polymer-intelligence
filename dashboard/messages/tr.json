@@ -3,6 +3,7 @@
     "groups": {
       "main": "ANA",
       "requests": "TALEPLER",
+      "broker": "BROKER",
       "sources": "KAYNAKLAR",
       "settings": "AYARLAR"
     },
@@ -12,6 +13,10 @@
       "purchaseRequests": "Satın alma talepleri",
       "offers": "Teklifler",
       "moderation": "Moderasyon",
+      "sourcing": "AI tedarik",
+      "inventory": "Stok",
+      "partners": "Partnerler",
+      "intel": "Analiz",
       "sources": "Kaynaklar",
       "alerts": "Uyarılar",
       "reports": "Raporlar",
@@ -278,6 +283,65 @@
     "markAsProcessed": "İşlendi Olarak İşaretle",
     "exportError": "Dışa aktarma başarısız oldu. Tekrar deneyin veya sorun devam ederse destek ile iletişime geçin.",
     "exportAriaLabel": "Talepleri CSV olarak dışa aktar"
+  },
+  "broker": {
+    "intel": {
+      "title": "Pazar analizi",
+      "subtitle": "Ürünlere göre talep, arz ve spread",
+      "product": "Ürün",
+      "buyers": "Alıcılar",
+      "sellers": "Satıcılar",
+      "avgSeller": "Ort. satış fiyatı",
+      "avgBuyer": "Ort. alış hedefi",
+      "spread": "Spread",
+      "empty": "Veri yok",
+      "error": "Yüklenemedi"
+    },
+    "inventory": {
+      "title": "Stok",
+      "subtitle": "Kendi stoğumuz (öncelik №1)",
+      "product": "Ürün ID",
+      "grade": "Marka",
+      "qty": "Miktar",
+      "cost": "Maliyet",
+      "city": "Şehir",
+      "add": "Ekle",
+      "delete": "Sil",
+      "empty": "Stok boş",
+      "error": "Yüklenemedi"
+    },
+    "partners": {
+      "title": "Partner tedarikçiler",
+      "subtitle": "Partner tedarikçiler (öncelik №2)",
+      "name": "Ad",
+      "product": "Ürün ID",
+      "price": "Fiyat",
+      "lead": "Süre, gün",
+      "add": "Ekle",
+      "delete": "Sil",
+      "empty": "Partner yok",
+      "error": "Yüklenemedi"
+    },
+    "sourcing": {
+      "title": "AI tedarik",
+      "subtitle": "Talep için en iyi seçeneği bulma",
+      "requestId": "Talep ID",
+      "run": "Çalıştır",
+      "recommended": "Öneri",
+      "market": "Pazar",
+      "label": "Seçenek",
+      "price": "Fiyat",
+      "leadTime": "Süre, gün",
+      "empty": "Seçenek bulunamadı",
+      "error": "Tedarik çalıştırılamadı",
+      "source": {
+        "header": "Kaynak",
+        "inventory": "Kendi stok",
+        "partner": "Partner",
+        "marketplace": "Marketplace",
+        "import": "İthalat"
+      }
+    }
   },
   "reports": {
     "title": "Pazar raporları",
