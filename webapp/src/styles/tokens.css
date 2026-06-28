@@ -1,0 +1,106 @@
+/*
+ * PetroAI design tokens — the visual contract from docs/design-system.md.
+ *
+ * Fixed brand values (NOT inherited from Telegram's --tg-theme-* vars) so the app
+ * looks pixel-identical to the approved mockups. Only the dark/light SCHEME follows
+ * Telegram's colorScheme (or the Профиль override) — ThemeProvider sets
+ * <html data-theme="light|dark">. Components reference var(--token), never raw hex.
+ */
+
+:root {
+  /* ── Neutrals (dark, default brand look) ─────────────────────────────── */
+  --bg: #0a0e14;
+  --surface: #121826;
+  --surface-2: #1a2130;
+  --border: #1e2533;
+  --text: #f5f7fa;
+  --text-muted: #8a93a6;
+  --overlay: rgba(0, 0, 0, 0.6);
+  --shadow: none;
+
+  /* ── Semantic accents ────────────────────────────────────────────────── */
+  --green: #22c55e;        /* market + primary CTA + prices */
+  --green-on: #062d17;     /* text/icon on green fill */
+  --blue: #2f6bff;         /* buyer info + Telegram + open-mini-app */
+  --orange: #f5851f;       /* seller flow + Продать tab */
+  --purple: #8b5cf6;       /* news + Новости tab */
+  --danger: #ef4444;       /* required *, negative deltas, destructive */
+
+  /* ── Status chips (bg / fg pairs) ────────────────────────────────────── */
+  --chip-ok-bg: rgba(34, 197, 94, 0.16);
+  --chip-ok-fg: #22c55e;
+  --chip-warn-bg: rgba(245, 133, 31, 0.16);
+  --chip-warn-fg: #f5851f;
+  --chip-down-bg: rgba(239, 68, 68, 0.16);
+  --chip-down-fg: #ef4444;
+  --chip-neutral-bg: rgba(138, 147, 166, 0.16);
+  --chip-neutral-fg: #8a93a6;
+
+  /* ── Radius ──────────────────────────────────────────────────────────── */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-full: 999px;
+
+  /* ── Spacing scale ───────────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  /* ── Neutrals (light) ────────────────────────────────────────────────── */
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --surface-2: #eef2f7;
+  --border: #e6eaf0;
+  --text: #0e1422;
+  --text-muted: #5b6678;
+  --overlay: rgba(16, 20, 34, 0.4);
+  --shadow: 0 1px 2px rgba(16, 20, 34, 0.06), 0 4px 12px rgba(16, 20, 34, 0.08);
+
+  /* ── Accents — deepened one step for AA contrast on white ─────────────── */
+  --green: #16a34a;
+  --green-on: #ffffff;
+  --blue: #2557e6;
+  --orange: #e0700c;
+  --purple: #7c3aed;
+  --danger: #dc2626;
+
+  /* ── Status chips — tinted bg + dark fg (not glowing fills) ───────────── */
+  --chip-ok-bg: #e9f8ef;
+  --chip-ok-fg: #15803d;
+  --chip-warn-bg: #fef1e3;
+  --chip-warn-fg: #b45309;
+  --chip-down-bg: #fdecec;
+  --chip-down-fg: #b91c1c;
+  --chip-neutral-bg: #eef2f7;
+  --chip-neutral-fg: #5b6678;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

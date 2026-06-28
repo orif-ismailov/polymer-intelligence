@@ -80,8 +80,15 @@
     "language": "Interfeys tili",
     "lang": {
       "ru": "Русский",
+      "en": "English",
       "uz": "O'zbek",
       "tr": "Türkçe"
+    },
+    "theme": "Ko'rinish mavzusi",
+    "themeOpt": {
+      "system": "Tizim bo'yicha",
+      "light": "Yorug'",
+      "dark": "Qorong'i"
     }
   },
   "status": {

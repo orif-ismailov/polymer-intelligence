@@ -80,8 +80,15 @@
     "language": "Arayüz dili",
     "lang": {
       "ru": "Русский",
+      "en": "English",
       "uz": "O'zbek",
       "tr": "Türkçe"
+    },
+    "theme": "Görünüm teması",
+    "themeOpt": {
+      "system": "Sistem",
+      "light": "Açık",
+      "dark": "Koyu"
     }
   },
   "status": {

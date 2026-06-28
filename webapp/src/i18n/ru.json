@@ -80,8 +80,15 @@
     "language": "Язык интерфейса",
     "lang": {
       "ru": "Русский",
+      "en": "English",
       "uz": "O'zbek",
       "tr": "Türkçe"
+    },
+    "theme": "Тема оформления",
+    "themeOpt": {
+      "system": "Системная",
+      "light": "Светлая",
+      "dark": "Тёмная"
     }
   },
   "status": {

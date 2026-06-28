@@ -1,0 +1,120 @@
+{
+  "home": {
+    "heading": "Welcome!",
+    "subheading": "Submit a polymer request — we'll find the best offer",
+    "prop": {
+      "fast": "Fast",
+      "convenient": "Convenient",
+      "reliable": "Reliable"
+    },
+    "cta": {
+      "submit": "Submit a request",
+      "myRequests": "My requests"
+    }
+  },
+  "wizard": {
+    "step1": {
+      "title": "Product information"
+    },
+    "step2": {
+      "title": "Delivery terms"
+    },
+    "step3": {
+      "title": "Additional information"
+    },
+    "next": "Next",
+    "submit": "Submit",
+    "product": "Product",
+    "grade": "Grade / Type",
+    "polymerType": "Polymer type",
+    "volume": "Volume",
+    "volumeUnit": "Volume unit",
+    "targetPrice": "Target price",
+    "currency": "Currency",
+    "incoterms": "Delivery terms (Incoterms)",
+    "destinationCountry": "Destination country",
+    "portOrCity": "Port / City",
+    "desiredDate": "Desired date",
+    "validityDays": "Validity (days)",
+    "comment": "Comment",
+    "productPlaceholder": "Select a product",
+    "gradePlaceholder": "E.g. T30S or H030 SG",
+    "polymerTypePlaceholder": "E.g. homopolymer",
+    "volumePlaceholder": "E.g. 100",
+    "pricePlaceholder": "E.g. 1200",
+    "portPlaceholder": "E.g. Tashkent",
+    "commentPlaceholder": "Any additional requirements",
+    "incotermsNone": "Not selected",
+    "volumeUnit_MT": "MT (tonnes)",
+    "volumeUnit_KG": "KG (kilograms)"
+  },
+  "confirm": {
+    "heading": "Request submitted!",
+    "subheading": "Your request has been received and passed to our specialists",
+    "cta": {
+      "myRequests": "My requests",
+      "another": "Create another"
+    }
+  },
+  "myRequests": {
+    "title": "My requests",
+    "empty": {
+      "heading": "No requests yet",
+      "body": "Submit your first request — it takes less than a minute",
+      "cta": "Submit a request"
+    }
+  },
+  "requestDetail": {
+    "title": "Request details",
+    "history": "Status history"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": {
+      "heading": "No notifications yet",
+      "body": "Status updates for your requests will appear here"
+    }
+  },
+  "settings": {
+    "title": "Language & profile",
+    "language": "Interface language",
+    "lang": {
+      "ru": "Русский",
+      "en": "English",
+      "uz": "O'zbek",
+      "tr": "Türkçe"
+    },
+    "theme": "Appearance",
+    "themeOpt": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
+  "status": {
+    "new": "New request",
+    "viewed": "Under review",
+    "in_progress": "Under review",
+    "offer_sent": "Offer received",
+    "matched": "Matched",
+    "closed": "Closed",
+    "cancelled": "Cancelled"
+  },
+  "error": {
+    "submitFailed": "Couldn't submit the request. Check your connection and try again",
+    "fileFailed": "Couldn't upload the file \"{{name}}\". Try again",
+    "fileTooLarge": "The file exceeds 10 MB. Choose a smaller file",
+    "tooManyFiles": "You can attach at most 5 files",
+    "fileType": "Unsupported format. PDF, Excel, JPG are allowed",
+    "loadFailed": "Couldn't load data. Pull down to refresh",
+    "authFailed": "Authorization error. Reopen the app from the bot",
+    "required": "Required field",
+    "volumePositive": "Volume must be greater than 0",
+    "gradeOrPolymer": "Enter a grade or polymer type"
+  },
+  "fileUploader": {
+    "remove": "Remove file {{name}}",
+    "attach": "Attach files",
+    "hint": "PDF, Excel, JPG — up to 5 files, each up to 10 MB"
+  }
+}

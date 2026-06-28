@@ -248,3 +248,57 @@ export function notifyWarning(): void {
     }
   } catch {/* dev env */}
 }
+
+// ── Color scheme (theme) ─────────────────────────────────────────────────────
+// Detection uses the legacy window.Telegram.WebApp global (injected by the
+// telegram-web-app.js script in index.html) for colorScheme + the themeChanged
+// event — the most reliable signal inside the Mini App — and falls back to the
+// browser's prefers-color-scheme outside Telegram (dev / dashboard parity).
+
+type ColorScheme = "light" | "dark";
+
+interface LegacyWebApp {
+  colorScheme?: ColorScheme;
+  onEvent?: (event: string, handler: () => void) => void;
+  offEvent?: (event: string, handler: () => void) => void;
+}
+
+function _legacyWebApp(): LegacyWebApp | undefined {
+  return (window as unknown as { Telegram?: { WebApp?: LegacyWebApp } }).Telegram?.WebApp;
+}
+
+/** Current platform color scheme. Telegram first, then prefers-color-scheme, then dark. */
+export function getColorScheme(): ColorScheme {
+  try {
+    const cs = _legacyWebApp()?.colorScheme;
+    if (cs === "light" || cs === "dark") return cs;
+  } catch {/* ignore */}
+  try {
+    if (window.matchMedia?.("(prefers-color-scheme: light)").matches) return "light";
+  } catch {/* ignore */}
+  return "dark";
+}
+
+/** Subscribe to platform color-scheme changes. Returns a cleanup function. */
+export function onColorSchemeChange(cb: (scheme: ColorScheme) => void): () => void {
+  const handler = () => cb(getColorScheme());
+  const cleanups: Array<() => void> = [];
+
+  try {
+    const wa = _legacyWebApp();
+    if (wa?.onEvent && wa?.offEvent) {
+      wa.onEvent("themeChanged", handler);
+      cleanups.push(() => wa.offEvent?.("themeChanged", handler));
+    }
+  } catch {/* ignore */}
+
+  try {
+    const mq = window.matchMedia?.("(prefers-color-scheme: light)");
+    if (mq?.addEventListener) {
+      mq.addEventListener("change", handler);
+      cleanups.push(() => mq.removeEventListener("change", handler));
+    }
+  } catch {/* ignore */}
+
+  return () => cleanups.forEach((c) => c());
+}
