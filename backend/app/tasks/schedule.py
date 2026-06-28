@@ -67,4 +67,11 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "nightly_llm_catchup",
         "schedule": crontab(minute=0, hour=2),
     },
+    # ── Daily market report: 08:00 Tashkent ──────────────────────────────────
+    # Builds the morning report as a draft; staff approve + publish on the
+    # dashboard (human-in-the-loop — no auto-publish). Phase 3 news engine.
+    "generate_daily_report": {
+        "task": "generate_daily_report",
+        "schedule": crontab(minute=0, hour=8),
+    },
 }

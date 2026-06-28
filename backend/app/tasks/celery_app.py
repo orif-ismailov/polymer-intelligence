@@ -46,6 +46,7 @@ _TASK_MODULES = [
     "app.tasks.userbot_health",
     "app.tasks.nightly_catchup",
     "app.tasks.rescore",
+    "app.tasks.reports",
 ]
 
 # ── Celery application instance ───────────────────────────────────────────────
@@ -109,6 +110,7 @@ celery_app.conf.update(
         "parse_telegram_item": {"queue": "parse"},
         "nightly_llm_catchup": {"queue": "parse"},
         "analyze_request_ai": {"queue": "parse"},
+        "generate_daily_report": {"queue": "parse"},
         "app.tasks.notify.*": {"queue": "notify"},
     },
 )
