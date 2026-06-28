@@ -127,7 +127,31 @@
   },
   "sell": {
     "title": "Taklif joylashtirish",
-    "soon": "Mahsulot joylashtirish formasi shu yerda paydo bo'ladi"
+    "myOffers": "Mening takliflarim",
+    "newOffer": "Taklif joylashtirish",
+    "empty": "Sizda hali takliflar yo'q"
+  },
+  "offerStatus": {
+    "draft": "Qoralama",
+    "pending_moderation": "Moderatsiyada",
+    "approved": "Chop etilgan",
+    "rejected": "Rad etilgan",
+    "archived": "Arxivda"
+  },
+  "sellForm": {
+    "title": "Taklif joylashtirish",
+    "sectionProduct": "Mahsulot",
+    "sectionPrice": "Miqdor va narx",
+    "sectionContact": "Aloqa",
+    "qtyAvailable": "Mavjud hajm",
+    "price": "Birlik narxi",
+    "warehouseCity": "Shahar / Ombor",
+    "minOrder": "Minimal hajm",
+    "description": "Tavsif",
+    "submit": "Moderatsiyaga yuborish",
+    "success": "Moderatsiyaga yuborildi",
+    "successBody": "Tekshiruvdan so'ng katalogda paydo bo'ladi",
+    "backToOffers": "Mening takliflarimga"
   },
   "profile": {
     "title": "Profil",

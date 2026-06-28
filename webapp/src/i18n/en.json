@@ -127,7 +127,31 @@
   },
   "sell": {
     "title": "Post an offer",
-    "soon": "The listing form will appear here"
+    "myOffers": "My offers",
+    "newOffer": "Post an offer",
+    "empty": "You have no offers yet"
+  },
+  "offerStatus": {
+    "draft": "Draft",
+    "pending_moderation": "On moderation",
+    "approved": "Published",
+    "rejected": "Rejected",
+    "archived": "Archived"
+  },
+  "sellForm": {
+    "title": "Post an offer",
+    "sectionProduct": "Product",
+    "sectionPrice": "Quantity & price",
+    "sectionContact": "Contact",
+    "qtyAvailable": "Quantity available",
+    "price": "Unit price",
+    "warehouseCity": "City / Warehouse",
+    "minOrder": "Minimum order",
+    "description": "Description",
+    "submit": "Submit for moderation",
+    "success": "Submitted for moderation",
+    "successBody": "Once approved it will appear in the catalog",
+    "backToOffers": "Back to my offers"
   },
   "profile": {
     "title": "Profile",

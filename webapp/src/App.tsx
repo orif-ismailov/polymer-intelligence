@@ -88,6 +88,7 @@ const Market = lazy(() => import("./pages/Market"));
 const OfferDetail = lazy(() => import("./pages/OfferDetail"));
 const News = lazy(() => import("./pages/News"));
 const Sell = lazy(() => import("./pages/Sell"));
+const SellOffer = lazy(() => import("./pages/SellOffer"));
 const Profile = lazy(() => import("./pages/Profile"));
 
 const Step1 = lazy(() => import("./pages/wizard/Step1"));
@@ -150,6 +151,7 @@ export default function App() {
 
           {/* Full-screen flows (no tab bar) */}
           <Route path="/market/:id" element={<OfferDetail />} />
+          <Route path="/sell/new" element={<SellOffer />} />
           <Route path="/request/step/1" element={<Step1 />} />
           <Route path="/request/step/2" element={<Step2 />} />
           <Route path="/request/step/3" element={<Step3 />} />

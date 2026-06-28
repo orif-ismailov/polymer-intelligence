@@ -127,7 +127,31 @@
   },
   "sell": {
     "title": "Teklif yayınla",
-    "soon": "Ürün yayınlama formu burada görünecek"
+    "myOffers": "Tekliflerim",
+    "newOffer": "Teklif yayınla",
+    "empty": "Henüz teklifiniz yok"
+  },
+  "offerStatus": {
+    "draft": "Taslak",
+    "pending_moderation": "Moderasyonda",
+    "approved": "Yayınlandı",
+    "rejected": "Reddedildi",
+    "archived": "Arşivde"
+  },
+  "sellForm": {
+    "title": "Teklif yayınla",
+    "sectionProduct": "Ürün",
+    "sectionPrice": "Miktar ve fiyat",
+    "sectionContact": "İletişim",
+    "qtyAvailable": "Mevcut miktar",
+    "price": "Birim fiyat",
+    "warehouseCity": "Şehir / Depo",
+    "minOrder": "Minimum sipariş",
+    "description": "Açıklama",
+    "submit": "Moderasyona gönder",
+    "success": "Moderasyona gönderildi",
+    "successBody": "Onaylandıktan sonra katalogda görünecek",
+    "backToOffers": "Tekliflerime dön"
   },
   "profile": {
     "title": "Profil",
