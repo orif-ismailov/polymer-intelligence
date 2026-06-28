@@ -153,3 +153,26 @@ class StaffRole(enum.StrEnum):
     analyst = "analyst"
     trader = "trader"
     viewer = "viewer"
+
+
+class SellerOfferStatus(enum.StrEnum):
+    """Moderation lifecycle of a seller-published marketplace offer (Phase 2).
+
+    draft → pending_moderation → {approved, rejected}; approved → archived.
+    Only `approved` offers appear in the public catalog (per-offer moderation).
+    """
+
+    draft = "draft"
+    pending_moderation = "pending_moderation"
+    approved = "approved"
+    rejected = "rejected"
+    archived = "archived"
+
+
+class OfferFileKind(enum.StrEnum):
+    """Type of file attached to a seller offer (Phase 2)."""
+
+    image = "image"
+    tds = "tds"
+    certificate = "certificate"
+    other = "other"

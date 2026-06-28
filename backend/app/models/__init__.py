@@ -24,17 +24,20 @@ from app.models.enums import (  # noqa: F401
     CounterpartyRole,
     DeliveryChannel,
     DeliveryStatus,
+    OfferFileKind,
     ParseStatus,
     PriceBasis,
     PricePointKind,
     ReportKind,
     ReportStatus,
     RequestStatus,
+    SellerOfferStatus,
     SignalKind,
     SourceKind,
     StaffRole,
     Urgency,
 )
+from app.models.marketplace import Seller, SellerOffer, SellerOfferFile  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401
 from app.models.reference import (  # noqa: F401
     FxRate,
@@ -65,6 +68,8 @@ __all__ = [
     "ReportKind",
     "ReportStatus",
     "StaffRole",
+    "SellerOfferStatus",
+    "OfferFileKind",
     # Reference
     "Product",
     "ProductGrade",
@@ -96,4 +101,8 @@ __all__ = [
     "Delivery",
     # Reports
     "Report",
+    # Marketplace (Phase 2)
+    "Seller",
+    "SellerOffer",
+    "SellerOfferFile",
 ]
