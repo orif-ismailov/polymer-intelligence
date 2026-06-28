@@ -92,6 +92,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Step1 = lazy(() => import("./pages/wizard/Step1"));
 const Step2 = lazy(() => import("./pages/wizard/Step2"));
 const Step3 = lazy(() => import("./pages/wizard/Step3"));
+const Step4 = lazy(() => import("./pages/wizard/Step4"));
 const Confirm = lazy(() => import("./pages/wizard/Confirm"));
 
 // 03-05 screens — registered routes with placeholder components
@@ -150,6 +151,7 @@ export default function App() {
           <Route path="/request/step/1" element={<Step1 />} />
           <Route path="/request/step/2" element={<Step2 />} />
           <Route path="/request/step/3" element={<Step3 />} />
+          <Route path="/request/step/4" element={<Step4 />} />
           <Route path="/request/confirm" element={<Confirm />} />
           <Route path="/requests/:id" element={<RequestDetailPage />} />
           <Route path="/notifications" element={<Notifications />} />

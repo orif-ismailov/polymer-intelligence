@@ -20,8 +20,28 @@
       "title": "Teslimat koşulları"
     },
     "step3": {
+      "title": "İletişim bilgileri"
+    },
+    "step4": {
       "title": "Ek bilgiler"
     },
+    "productText": "Veya ürünü elle girin",
+    "productTextPlaceholder": "Örn. EVA, polikarbonat…",
+    "deliveryCity": "Teslimat şehri",
+    "urgency": "Ne zaman gerekli?",
+    "urgencyOpt": {
+      "high": "Acil (1–3 gün)",
+      "medium": "Bir hafta/ay içinde",
+      "low": "Sipariş üzerine (14–25 gün)"
+    },
+    "companyName": "Şirket adı",
+    "companyPlaceholder": "Şirketinizin adı",
+    "contactName": "İlgili kişi",
+    "contactPlaceholder": "Ad soyad",
+    "phone": "Telefon",
+    "legalAddress": "Yasal adres",
+    "legalAddressPlaceholder": "Yasal adres (isteğe bağlı)",
+    "telegramAuto": "Telegram profilinizden otomatik alınır",
     "next": "İleri",
     "submit": "Gönder",
     "product": "Ürün",
@@ -147,7 +167,8 @@
     "authFailed": "Yetkilendirme hatası. Uygulamayı bottan tekrar açın",
     "required": "Zorunlu alan",
     "volumePositive": "Hacim 0'dan büyük olmalı",
-    "gradeOrPolymer": "Marka veya polimer türünü girin"
+    "gradeOrPolymer": "Marka veya polimer türünü girin",
+    "productRequired": "Bir ürün seçin veya adını yazın"
   },
   "fileUploader": {
     "remove": "{{name}} dosyasını sil",

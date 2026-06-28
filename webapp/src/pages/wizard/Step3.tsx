@@ -1,10 +1,10 @@
 /**
- * C-04 — Step 3: Additional information + file attachment.
+ * C-04 — Step 3: Contact information (of 4).
  *
- * MainButton label changes to "Отправить" on this step.
- * BackButton → Step 2 (state preserved).
- * Submit triggers Confirm.tsx (via navigate to /request/confirm with state).
- * Focus moves to step heading on mount (accessibility).
+ * Company, contact person, phone (required), legal address (IMG_0046
+ * "Контактная информация"). Telegram is taken automatically from initData, so it
+ * is shown as a read-only note rather than a field. Phone is the one required field.
+ * BackButton → Step 2, MainButton "Далее" → Step 4 (enabled once phone is filled).
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -13,23 +13,20 @@ import { useTranslation } from "react-i18next";
 
 import StepIndicator from "../../components/StepIndicator";
 import FieldGroup from "../../components/FieldGroup";
-import FileUploader from "../../components/FileUploader";
-import { mainButton, backButton } from "../../telegram";
+import { mainButton, backButton, impactLight } from "../../telegram";
 import { useWizardStore } from "../../store/wizardStore";
 
 const fieldStyle = {
   display: "block",
   width: "100%",
+  minHeight: "44px",
   padding: "10px 12px",
-  borderRadius: "8px",
-  backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
-  color: "var(--tg-theme-text-color, #f8fafc)",
-  border: "1px solid var(--tg-theme-secondary-bg-color, #334155)",
+  borderRadius: "var(--r-md)",
+  backgroundColor: "var(--surface)",
+  color: "var(--text)",
+  border: "1px solid var(--border)",
   fontSize: "14px",
-  fontFamily: "system-ui, sans-serif",
   boxSizing: "border-box" as const,
-  resize: "vertical" as const,
-  minHeight: "100px",
 };
 
 export default function Step3() {
@@ -37,50 +34,62 @@ export default function Step3() {
   const navigate = useNavigate();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const store = useWizardStore();
-  const [comment, setComment] = useState(store.comment);
 
-  // Focus heading on mount
+  const [companyName, setCompanyName] = useState(store.company_name);
+  const [contactName, setContactName] = useState(store.contact_name);
+  const [phone, setPhone] = useState(store.phone);
+  const [legalAddress, setLegalAddress] = useState(store.legal_address);
+
+  const phoneValid = phone.trim() !== "";
+
   useEffect(() => {
     headingRef.current?.focus();
   }, []);
 
-  // BackButton → Step 2 (save comment)
+  function saveToStore() {
+    store.setField("company_name", companyName);
+    store.setField("contact_name", contactName);
+    store.setField("phone", phone);
+    store.setField("legal_address", legalAddress);
+  }
+
   useEffect(() => {
     backButton.show();
     const cleanupBack = backButton.onClick(() => {
-      store.setField("comment", comment);
+      saveToStore();
       navigate("/request/step/2");
     });
-    return () => { cleanupBack(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, comment]);
+    return () => {
+      cleanupBack();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, companyName, contactName, phone, legalAddress]);
 
-  // MainButton shows "Отправить" on step 3
   useEffect(() => {
-    mainButton.setText(t("wizard.submit"));
+    mainButton.setText(t("wizard.next"));
     mainButton.show();
-    mainButton.enable();
-  }, [t]);
+    if (phoneValid) {
+      mainButton.enable();
+    } else {
+      mainButton.disable();
+    }
+  }, [t, phoneValid]);
 
-  // MainButton click → save comment + navigate to confirm
   useEffect(() => {
     const cleanupMain = mainButton.onClick(() => {
-      store.setField("comment", comment);
-      navigate("/request/confirm");
+      if (!phoneValid) return;
+      saveToStore();
+      impactLight();
+      navigate("/request/step/4");
     });
-    return () => { cleanupMain(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, comment]);
+    return () => {
+      cleanupMain();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, phoneValid, companyName, contactName, phone, legalAddress]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "var(--tg-theme-bg-color, #1e293b)",
-        color: "var(--tg-theme-text-color, #f8fafc)",
-        padding: "16px",
-      }}
-    >
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <div style={{ marginBottom: "24px" }}>
         <StepIndicator current={3} total={4} />
       </div>
@@ -88,59 +97,56 @@ export default function Step3() {
       <h2
         ref={headingRef}
         tabIndex={-1}
-        style={{
-          margin: "0 0 24px",
-          fontSize: "18px",
-          fontWeight: 600,
-          color: "var(--tg-theme-text-color, #f8fafc)",
-          outline: "none",
-        }}
+        style={{ margin: "0 0 24px", fontSize: "18px", fontWeight: 600, color: "var(--text)", outline: "none" }}
       >
         {t("wizard.step3.title")}
       </h2>
 
       <form onSubmit={(e) => e.preventDefault()}>
-        {/* Comment */}
-        <FieldGroup htmlFor="comment" label={t("wizard.comment")}>
-          <textarea
-            id="comment"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder={t("wizard.commentPlaceholder")}
-            rows={4}
-            style={fieldStyle}
-          />
+        <FieldGroup htmlFor="company_name" label={t("wizard.companyName")}>
+          <input id="company_name" type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder={t("wizard.companyPlaceholder")} style={fieldStyle} />
         </FieldGroup>
 
-        {/* File attachment */}
-        <FieldGroup htmlFor="file-uploader-input" label={t("fileUploader.attach")}>
-          <FileUploader />
+        <FieldGroup htmlFor="contact_name" label={t("wizard.contactName")}>
+          <input id="contact_name" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder={t("wizard.contactPlaceholder")} style={fieldStyle} />
         </FieldGroup>
 
-        {/* Fallback button for non-Telegram (dev) */}
+        <FieldGroup htmlFor="phone" label={`${t("wizard.phone")} *`} error={phoneValid ? undefined : t("error.required")}>
+          <input id="phone" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+998 __ ___ __ __" style={fieldStyle} />
+        </FieldGroup>
+
+        <FieldGroup htmlFor="legal_address" label={t("wizard.legalAddress")}>
+          <input id="legal_address" type="text" value={legalAddress} onChange={(e) => setLegalAddress(e.target.value)} placeholder={t("wizard.legalAddressPlaceholder")} style={fieldStyle} />
+        </FieldGroup>
+
+        <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "-4px" }}>{t("wizard.telegramAuto")}</p>
+
         <button
           type="button"
+          disabled={!phoneValid}
           onClick={() => {
-            store.setField("comment", comment);
-            navigate("/request/confirm");
+            if (!phoneValid) return;
+            saveToStore();
+            impactLight();
+            navigate("/request/step/4");
           }}
           style={{
             display: "block",
             width: "100%",
             minHeight: "44px",
             padding: "12px 20px",
-            borderRadius: "8px",
-            backgroundColor: "var(--tg-theme-button-color, #10b981)",
-            color: "var(--tg-theme-button-text-color, #ffffff)",
+            borderRadius: "var(--r-md)",
+            backgroundColor: phoneValid ? "var(--green)" : "var(--chip-neutral-bg)",
+            color: phoneValid ? "var(--green-on)" : "var(--text-muted)",
             border: "none",
-            fontSize: "14px",
+            fontSize: "16px",
             fontWeight: 600,
-            cursor: "pointer",
+            cursor: phoneValid ? "pointer" : "not-allowed",
             boxSizing: "border-box",
-            marginTop: "8px",
+            marginTop: "12px",
           }}
         >
-          {t("wizard.submit")}
+          {t("wizard.next")}
         </button>
       </form>
     </div>

@@ -37,7 +37,8 @@ export type Urgency = "low" | "medium" | "high";
 // ── Request creation (mirrors RequestCreate) ───────────────────────────────────
 
 export interface RequestCreate {
-  product_id: number;
+  product_id?: number | null;       // null when a free-typed product is used
+  product_text?: string | null;     // free-typed product name (not in catalog)
   grade_text?: string | null;
   polymer_type?: string | null;
   volume: number;
@@ -51,6 +52,11 @@ export interface RequestCreate {
   validity_days?: number;
   urgency?: Urgency;
   comment?: string | null;
+  // Contact step (IMG_0046) — snapshot onto the request
+  company_name?: string | null;
+  contact_name?: string | null;
+  phone?: string | null;
+  legal_address?: string | null;
 }
 
 // ── Request read-side (mirrors RequestOut) ─────────────────────────────────────
@@ -82,7 +88,8 @@ export interface StatusHistory {
 // ── Request detail (mirrors RequestDetailOut) ──────────────────────────────────
 
 export interface RequestDetail extends RequestOut {
-  product_id: number;
+  product_id: number | null;
+  product_text: string | null;
   grade_text: string | null;
   polymer_type: string | null;
   volume: number;
@@ -96,6 +103,10 @@ export interface RequestDetail extends RequestOut {
   validity_days: number;
   urgency: Urgency;
   comment: string | null;
+  company_name: string | null;
+  contact_name: string | null;
+  phone: string | null;
+  legal_address: string | null;
   files: RequestFileMeta[];
   history: StatusHistory[];
 }

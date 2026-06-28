@@ -20,8 +20,28 @@
       "title": "Yetkazib berish shartlari"
     },
     "step3": {
+      "title": "Aloqa ma'lumotlari"
+    },
+    "step4": {
       "title": "Qo'shimcha ma'lumot"
     },
+    "productText": "Yoki mahsulotni qo'lda kiriting",
+    "productTextPlaceholder": "Masalan, EVA, polikarbonat…",
+    "deliveryCity": "Yetkazib berish shahri",
+    "urgency": "Tovar qachon kerak?",
+    "urgencyOpt": {
+      "high": "Shoshilinch (1–3 kun)",
+      "medium": "Bir hafta/oy ichida",
+      "low": "Buyurtma asosida (14–25 kun)"
+    },
+    "companyName": "Kompaniya nomi",
+    "companyPlaceholder": "Kompaniyangiz nomi",
+    "contactName": "Aloqa shaxsi",
+    "contactPlaceholder": "F.I.Sh.",
+    "phone": "Telefon",
+    "legalAddress": "Yuridik manzil",
+    "legalAddressPlaceholder": "Yuridik manzil (ixtiyoriy)",
+    "telegramAuto": "Telegram profilingizdan avtomatik olinadi",
     "next": "Keyingi",
     "submit": "Yuborish",
     "product": "Mahsulot",
@@ -147,7 +167,8 @@
     "authFailed": "Avtorizatsiya xatosi. Botdan ilovani qayta oching",
     "required": "Majburiy maydon",
     "volumePositive": "Hajm 0 dan katta bo'lishi kerak",
-    "gradeOrPolymer": "Marka yoki polimer turini kiriting"
+    "gradeOrPolymer": "Marka yoki polimer turini kiriting",
+    "productRequired": "Mahsulotni tanlang yoki nomini kiriting"
   },
   "fileUploader": {
     "remove": "{{name}} faylini o'chirish",

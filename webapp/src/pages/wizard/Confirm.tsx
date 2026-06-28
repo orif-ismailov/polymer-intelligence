@@ -52,7 +52,8 @@ export default function Confirm() {
 
     // Build RequestCreate from wizard store
     const body: RequestCreate = {
-      product_id: store.product_id ?? 0,
+      product_id: store.product_id ?? null,
+      product_text: store.product_text || null,
       grade_text: store.grade_text || null,
       polymer_type: store.polymer_type || null,
       volume: Number(store.volume),
@@ -64,7 +65,12 @@ export default function Confirm() {
       port_or_city: store.port_or_city || null,
       desired_date: store.desired_date || null,
       validity_days: Number(store.validity_days) || 30,
+      urgency: store.urgency as RequestCreate["urgency"],
       comment: store.comment || null,
+      company_name: store.company_name || null,
+      contact_name: store.contact_name || null,
+      phone: store.phone || null,
+      legal_address: store.legal_address || null,
     };
 
     try {

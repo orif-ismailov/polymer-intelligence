@@ -1,11 +1,12 @@
 /**
- * C-03 — Step 2: Delivery terms (of 4).
+ * C-05 — Step 4: Additional information (of 4).
  *
- * City + desired date + urgency (IMG_0046 "Условия поставки"). All optional —
- * advancing is always permitted. BackButton → Step 1, MainButton "Далее" → Step 3.
+ * Desired price (+currency), comment, and file attachments / TDS (IMG_0046
+ * "Дополнительная информация"). All optional. MainButton label is "Отправить" and
+ * navigates to Confirm, which performs the POST. BackButton → Step 3.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
@@ -13,15 +14,20 @@ import { useForm } from "react-hook-form";
 import StepIndicator from "../../components/StepIndicator";
 import FieldGroup from "../../components/FieldGroup";
 import SelectField from "../../components/SelectField";
-import { mainButton, backButton, impactLight } from "../../telegram";
+import FileUploader from "../../components/FileUploader";
+import { mainButton, backButton } from "../../telegram";
 import { useWizardStore } from "../../store/wizardStore";
 
-const URGENCY_VALUES = ["high", "medium", "low"] as const;
+const CURRENCY_OPTIONS = [
+  { value: "USD", label: "USD" },
+  { value: "EUR", label: "EUR" },
+  { value: "UZS", label: "UZS" },
+  { value: "RUB", label: "RUB" },
+];
 
-interface Step2Fields {
-  port_or_city: string;
-  desired_date: string;
-  urgency: string;
+interface Step4Fields {
+  target_price: string;
+  currency: string;
 }
 
 const fieldStyle = {
@@ -37,18 +43,15 @@ const fieldStyle = {
   boxSizing: "border-box" as const,
 };
 
-export default function Step2() {
+export default function Step4() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const store = useWizardStore();
+  const [comment, setComment] = useState(store.comment);
 
-  const { register, getValues } = useForm<Step2Fields>({
-    defaultValues: {
-      port_or_city: store.port_or_city,
-      desired_date: store.desired_date,
-      urgency: store.urgency,
-    },
+  const { register, getValues } = useForm<Step4Fields>({
+    defaultValues: { target_price: store.target_price, currency: store.currency },
   });
 
   useEffect(() => {
@@ -57,25 +60,25 @@ export default function Step2() {
 
   function saveToStore() {
     const data = getValues();
-    store.setField("port_or_city", data.port_or_city);
-    store.setField("desired_date", data.desired_date);
-    store.setField("urgency", data.urgency);
+    store.setField("target_price", data.target_price);
+    store.setField("currency", data.currency);
+    store.setField("comment", comment);
   }
 
   useEffect(() => {
     backButton.show();
     const cleanupBack = backButton.onClick(() => {
       saveToStore();
-      navigate("/request/step/1");
+      navigate("/request/step/3");
     });
     return () => {
       cleanupBack();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+  }, [navigate, comment]);
 
   useEffect(() => {
-    mainButton.setText(t("wizard.next"));
+    mainButton.setText(t("wizard.submit"));
     mainButton.show();
     mainButton.enable();
   }, [t]);
@@ -83,19 +86,18 @@ export default function Step2() {
   useEffect(() => {
     const cleanupMain = mainButton.onClick(() => {
       saveToStore();
-      impactLight();
-      navigate("/request/step/3");
+      navigate("/request/confirm");
     });
     return () => {
       cleanupMain();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+  }, [navigate, comment]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <div style={{ marginBottom: "24px" }}>
-        <StepIndicator current={2} total={4} />
+        <StepIndicator current={4} total={4} />
       </div>
 
       <h2
@@ -103,33 +105,38 @@ export default function Step2() {
         tabIndex={-1}
         style={{ margin: "0 0 24px", fontSize: "18px", fontWeight: 600, color: "var(--text)", outline: "none" }}
       >
-        {t("wizard.step2.title")}
+        {t("wizard.step4.title")}
       </h2>
 
       <form onSubmit={(e) => e.preventDefault()}>
-        <FieldGroup htmlFor="port_or_city" label={t("wizard.deliveryCity")}>
-          <input id="port_or_city" type="text" placeholder={t("wizard.portPlaceholder")} style={fieldStyle} {...register("port_or_city")} />
+        <FieldGroup htmlFor="target_price" label={t("wizard.targetPrice")}>
+          <input id="target_price" type="number" inputMode="decimal" min="0" step="any" placeholder={t("wizard.pricePlaceholder")} style={fieldStyle} {...register("target_price")} />
         </FieldGroup>
 
-        <FieldGroup htmlFor="urgency" label={t("wizard.urgency")}>
-          <SelectField
-            id="urgency"
-            options={URGENCY_VALUES.map((u) => ({ value: u, label: t(`wizard.urgencyOpt.${u}`) }))}
-            defaultValue={store.urgency}
-            {...register("urgency")}
+        <FieldGroup htmlFor="currency" label={t("wizard.currency")}>
+          <SelectField id="currency" options={CURRENCY_OPTIONS} defaultValue={store.currency} {...register("currency")} />
+        </FieldGroup>
+
+        <FieldGroup htmlFor="comment" label={t("wizard.comment")}>
+          <textarea
+            id="comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={t("wizard.commentPlaceholder")}
+            rows={4}
+            style={{ ...fieldStyle, minHeight: "100px", resize: "vertical" }}
           />
         </FieldGroup>
 
-        <FieldGroup htmlFor="desired_date" label={t("wizard.desiredDate")}>
-          <input id="desired_date" type="date" style={fieldStyle} {...register("desired_date")} />
+        <FieldGroup htmlFor="file-uploader-input" label={t("fileUploader.attach")}>
+          <FileUploader />
         </FieldGroup>
 
         <button
           type="button"
           onClick={() => {
             saveToStore();
-            impactLight();
-            navigate("/request/step/3");
+            navigate("/request/confirm");
           }}
           style={{
             display: "block",
@@ -147,7 +154,7 @@ export default function Step2() {
             marginTop: "8px",
           }}
         >
-          {t("wizard.next")}
+          {t("wizard.submit")}
         </button>
       </form>
     </div>

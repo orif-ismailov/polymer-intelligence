@@ -1,15 +1,12 @@
 /**
- * C-02 — Step 1: Product information.
+ * C-02 — Step 1: Product information (of 4).
  *
- * D-02 minimum-to-submit: product_id (required) + volume > 0 (required)
- * + at least one of grade_text OR polymer_type (required).
+ * Minimum-to-submit: (product_id selected OR product_text typed) + volume > 0 +
+ * (grade_text OR polymer_type). The buyer may type a product that is not in our
+ * catalog (product_text) — IMG_0046 "не нашли? введите вручную".
  *
- * On mount: BackButton shown (→ Home), MainButton text="Далее", enabled only
- * when the step is valid. Validation is per-step blocking (D-03).
- * Focus moves to the step heading on mount (accessibility, UI-SPEC §Accessibility).
- *
- * Product list: static localized constant matching seeded polymers (no GET /products
- * endpoint yet, per 03-04 plan note). IDs 1–8 match seed_reference.py order.
+ * Product list: static localized constant matching seeded polymers. IDs 1–8 match
+ * seed_reference.py order.
  */
 
 import { useEffect, useRef } from "react";
@@ -24,8 +21,6 @@ import FieldGroup from "../../components/FieldGroup";
 import SelectField from "../../components/SelectField";
 import { mainButton, backButton, impactLight } from "../../telegram";
 import { useWizardStore } from "../../store/wizardStore";
-
-// ── Static product list (mirrors seed_reference.py seeded polymers) ────────────
 
 const PRODUCTS_RU = [
   { value: 1, label: "Полипропилен (PP)" },
@@ -49,14 +44,12 @@ const PRODUCTS_UZ = [
   { value: 8, label: "ABS (Akrilonitril-butadien-stirol)" },
 ];
 
-// Volume unit options — labels come from i18n keys wizard.volumeUnit_MT / wizard.volumeUnit_KG
 const VOLUME_UNIT_VALUES = ["MT", "KG"] as const;
-
-// ── Zod schema (D-02 minimum-to-submit) ───────────────────────────────────────
 
 const step1Schema = z
   .object({
-    product_id: z.coerce.number({ invalid_type_error: "required" }).min(1, "required"),
+    product_id: z.string().optional(),
+    product_text: z.string().optional(),
     grade_text: z.string().optional(),
     polymer_type: z.string().optional(),
     volume: z.coerce
@@ -65,34 +58,44 @@ const step1Schema = z
     volume_unit: z.string().min(1),
   })
   .refine(
+    (d) =>
+      (d.product_id != null && d.product_id !== "") ||
+      (d.product_text != null && d.product_text.trim() !== ""),
+    { message: "productRequired", path: ["product_id"] },
+  )
+  .refine(
     (d) => {
       const gradeOk = d.grade_text != null && d.grade_text.trim() !== "";
       const polymerOk = d.polymer_type != null && d.polymer_type.trim() !== "";
       return gradeOk || polymerOk;
     },
-    {
-      message: "gradeOrPolymer",
-      path: ["grade_text"], // attach to grade_text field
-    },
+    { message: "gradeOrPolymer", path: ["grade_text"] },
   );
 
 type Step1Fields = z.infer<typeof step1Schema>;
-
-// ── Component ──────────────────────────────────────────────────────────────────
 
 const fieldStyle = {
   display: "block",
   width: "100%",
   minHeight: "44px",
   padding: "10px 12px",
-  borderRadius: "8px",
-  backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
-  color: "var(--tg-theme-text-color, #f8fafc)",
-  border: "1px solid var(--tg-theme-secondary-bg-color, #334155)",
+  borderRadius: "var(--r-md)",
+  backgroundColor: "var(--surface)",
+  color: "var(--text)",
+  border: "1px solid var(--border)",
   fontSize: "14px",
-  fontFamily: "system-ui, sans-serif",
   boxSizing: "border-box" as const,
 };
+
+function persist(store: ReturnType<typeof useWizardStore.getState>, data: Step1Fields) {
+  const pid = data.product_id && data.product_id !== "" ? Number(data.product_id) : null;
+  store.setField("product_id", pid);
+  store.setField("product_text", data.product_text?.trim() ?? "");
+  store.setField("grade_text", data.grade_text ?? "");
+  store.setField("polymer_type", data.polymer_type ?? "");
+  store.setField("volume", String(data.volume));
+  store.setField("volume_unit", data.volume_unit);
+}
 
 export default function Step1() {
   const { t, i18n } = useTranslation();
@@ -111,7 +114,8 @@ export default function Step1() {
     resolver: zodResolver(step1Schema),
     mode: "onChange",
     defaultValues: {
-      product_id: store.product_id ?? undefined,
+      product_id: store.product_id != null ? String(store.product_id) : "",
+      product_text: store.product_text,
       grade_text: store.grade_text,
       polymer_type: store.polymer_type,
       volume: store.volume ? Number(store.volume) : undefined,
@@ -119,24 +123,20 @@ export default function Step1() {
     },
   });
 
-  // Watch for validity to sync MainButton enabled state
   const formValues = watch();
 
-  // Focus heading on mount (accessibility)
   useEffect(() => {
     headingRef.current?.focus();
   }, []);
 
-  // Wire BackButton → Home
   useEffect(() => {
     backButton.show();
-    const cleanupBack = backButton.onClick(() => navigate("/"));
+    const cleanupBack = backButton.onClick(() => navigate("/requests"));
     return () => {
       cleanupBack();
     };
   }, [navigate]);
 
-  // Wire MainButton
   useEffect(() => {
     mainButton.setText(t("wizard.next"));
     mainButton.show();
@@ -147,70 +147,43 @@ export default function Step1() {
     }
   }, [isValid, t, formValues]);
 
-  // Register MainButton click → validate + store + navigate
   useEffect(() => {
     const cleanupMain = mainButton.onClick(() => {
       void handleSubmit((data) => {
-        store.setField("product_id", data.product_id);
-        store.setField("grade_text", data.grade_text ?? "");
-        store.setField("polymer_type", data.polymer_type ?? "");
-        store.setField("volume", String(data.volume));
-        store.setField("volume_unit", data.volume_unit);
+        persist(store, data);
         impactLight();
         navigate("/request/step/2");
       })();
     });
-    return () => { cleanupMain(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cleanupMain();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
-  const gradeError = errors.grade_text?.message;
-  const gradeOrPolymerError = gradeError === "gradeOrPolymer"
-    ? t("error.gradeOrPolymer")
-    : gradeError
-      ? t(`error.${gradeError}`, gradeError)
-      : undefined;
+  const productError = errors.product_id?.message
+    ? t(`error.${errors.product_id.message}`, errors.product_id.message)
+    : undefined;
+  const gradeError = errors.grade_text?.message
+    ? t(`error.${errors.grade_text.message}`, errors.grade_text.message)
+    : undefined;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "var(--tg-theme-bg-color, #1e293b)",
-        color: "var(--tg-theme-text-color, #f8fafc)",
-        padding: "16px",
-      }}
-    >
-      {/* Step indicator */}
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <div style={{ marginBottom: "24px" }}>
         <StepIndicator current={1} total={4} />
       </div>
 
-      {/* Screen heading — tabIndex for focus management */}
       <h2
         ref={headingRef}
         tabIndex={-1}
-        style={{
-          margin: "0 0 24px",
-          fontSize: "18px",
-          fontWeight: 600,
-          color: "var(--tg-theme-text-color, #f8fafc)",
-          outline: "none",
-        }}
+        style={{ margin: "0 0 24px", fontSize: "18px", fontWeight: 600, color: "var(--text)", outline: "none" }}
       >
         {t("wizard.step1.title")}
       </h2>
 
       <form onSubmit={(e) => e.preventDefault()}>
-        {/* Product select */}
-        <FieldGroup
-          htmlFor="product_id"
-          label={t("wizard.product")}
-          error={
-            errors.product_id?.message
-              ? t(`error.${errors.product_id.message}`, errors.product_id.message)
-              : undefined
-          }
-        >
+        <FieldGroup htmlFor="product_id" label={t("wizard.product")} error={productError}>
           <SelectField
             id="product_id"
             options={products.map((p) => ({ value: p.value, label: p.label }))}
@@ -220,83 +193,46 @@ export default function Step1() {
           />
         </FieldGroup>
 
-        {/* Grade text */}
-        <FieldGroup
-          htmlFor="grade_text"
-          label={t("wizard.grade")}
-          error={gradeOrPolymerError}
-        >
+        <FieldGroup htmlFor="product_text" label={t("wizard.productText")}>
           <input
-            id="grade_text"
+            id="product_text"
             type="text"
-            placeholder={t("wizard.gradePlaceholder")}
+            placeholder={t("wizard.productTextPlaceholder")}
             style={fieldStyle}
-            {...register("grade_text")}
+            {...register("product_text")}
           />
         </FieldGroup>
 
-        {/* Polymer type */}
-        <FieldGroup
-          htmlFor="polymer_type"
-          label={t("wizard.polymerType")}
-        >
-          <input
-            id="polymer_type"
-            type="text"
-            placeholder={t("wizard.polymerTypePlaceholder")}
-            style={fieldStyle}
-            {...register("polymer_type")}
-          />
+        <FieldGroup htmlFor="grade_text" label={t("wizard.grade")} error={gradeError}>
+          <input id="grade_text" type="text" placeholder={t("wizard.gradePlaceholder")} style={fieldStyle} {...register("grade_text")} />
         </FieldGroup>
 
-        {/* Volume */}
+        <FieldGroup htmlFor="polymer_type" label={t("wizard.polymerType")}>
+          <input id="polymer_type" type="text" placeholder={t("wizard.polymerTypePlaceholder")} style={fieldStyle} {...register("polymer_type")} />
+        </FieldGroup>
+
         <FieldGroup
           htmlFor="volume"
           label={t("wizard.volume")}
-          error={
-            errors.volume?.message
-              ? t(`error.${errors.volume.message}`, errors.volume.message)
-              : undefined
-          }
+          error={errors.volume?.message ? t(`error.${errors.volume.message}`, errors.volume.message) : undefined}
         >
-          <input
-            id="volume"
-            type="number"
-            inputMode="decimal"
-            min="0.01"
-            step="any"
-            placeholder={t("wizard.volumePlaceholder")}
-            style={fieldStyle}
-            {...register("volume")}
-          />
+          <input id="volume" type="number" inputMode="decimal" min="0.01" step="any" placeholder={t("wizard.volumePlaceholder")} style={fieldStyle} {...register("volume")} />
         </FieldGroup>
 
-        {/* Volume unit */}
-        <FieldGroup
-          htmlFor="volume_unit"
-          label={t("wizard.volumeUnit")}
-        >
+        <FieldGroup htmlFor="volume_unit" label={t("wizard.volumeUnit")}>
           <SelectField
             id="volume_unit"
-            options={VOLUME_UNIT_VALUES.map((v) => ({
-              value: v,
-              label: t(`wizard.volumeUnit_${v}`, v),
-            }))}
+            options={VOLUME_UNIT_VALUES.map((v) => ({ value: v, label: t(`wizard.volumeUnit_${v}`, v) }))}
             defaultValue={store.volume_unit}
             {...register("volume_unit")}
           />
         </FieldGroup>
 
-        {/* Fallback submit for non-Telegram contexts (dev) */}
         <button
           type="button"
           onClick={() =>
             void handleSubmit((data) => {
-              store.setField("product_id", data.product_id);
-              store.setField("grade_text", data.grade_text ?? "");
-              store.setField("polymer_type", data.polymer_type ?? "");
-              store.setField("volume", String(data.volume));
-              store.setField("volume_unit", data.volume_unit);
+              persist(store, data);
               impactLight();
               navigate("/request/step/2");
             })()
@@ -306,11 +242,11 @@ export default function Step1() {
             width: "100%",
             minHeight: "44px",
             padding: "12px 20px",
-            borderRadius: "8px",
-            backgroundColor: "var(--tg-theme-button-color, #10b981)",
-            color: "var(--tg-theme-button-text-color, #ffffff)",
+            borderRadius: "var(--r-md)",
+            backgroundColor: "var(--green)",
+            color: "var(--green-on)",
             border: "none",
-            fontSize: "14px",
+            fontSize: "16px",
             fontWeight: 600,
             cursor: "pointer",
             boxSizing: "border-box",
