@@ -31,6 +31,7 @@ export interface WizardState {
   port_or_city: string;
   desired_date: string; // ISO date string or ""
   urgency: string;      // "low" | "medium" | "high"
+  availability: string; // "tashkent" | "uzbekistan" | "import" | "any"
   // carried with defaults (not collected in the UI) but still submitted
   target_price: string; // string for input, convert on submit
   currency: string;
@@ -79,6 +80,7 @@ const INITIAL_STATE = {
   port_or_city: "",
   desired_date: "",
   urgency: "medium",
+  availability: "any",
   target_price: "",
   currency: "USD",
   incoterms: "unknown",

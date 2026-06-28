@@ -34,6 +34,13 @@
       "medium": "Bir hafta/oy ichida",
       "low": "Buyurtma asosida (14–25 kun)"
     },
+    "availability": "Tovar qayerda bo'lishi kerak?",
+    "availabilityOpt": {
+      "tashkent": "Toshkentda mavjud",
+      "uzbekistan": "O'zbekistonda mavjud",
+      "import": "Buyurtma asosida import",
+      "any": "Farqi yo'q"
+    },
     "companyName": "Kompaniya nomi",
     "companyPlaceholder": "Kompaniyangiz nomi",
     "contactName": "Aloqa shaxsi",

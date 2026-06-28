@@ -34,6 +34,13 @@
       "medium": "Bir hafta/ay içinde",
       "low": "Sipariş üzerine (14–25 gün)"
     },
+    "availability": "Ürün nerede olmalı?",
+    "availabilityOpt": {
+      "tashkent": "Taşkent'te stokta",
+      "uzbekistan": "Özbekistan'da stokta",
+      "import": "Sipariş üzerine ithalat",
+      "any": "Fark etmez"
+    },
     "companyName": "Şirket adı",
     "companyPlaceholder": "Şirketinizin adı",
     "contactName": "İlgili kişi",

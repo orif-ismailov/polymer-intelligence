@@ -34,6 +34,13 @@
       "medium": "Within a week/month",
       "low": "To order (14–25 days)"
     },
+    "availability": "Where should the goods be?",
+    "availabilityOpt": {
+      "tashkent": "In stock in Tashkent",
+      "uzbekistan": "In stock in Uzbekistan",
+      "import": "Import to order",
+      "any": "No preference"
+    },
     "companyName": "Company name",
     "companyPlaceholder": "Your company name",
     "contactName": "Contact person",

@@ -1,28 +1,23 @@
 /**
  * C-03 — Step 2: Delivery terms (of 4).
  *
- * City + desired date + urgency (IMG_0046 "Условия поставки"). All optional —
- * advancing is always permitted. BackButton → Step 1, MainButton "Далее" → Step 3.
+ * Availability + urgency as tappable radio cards (IMG_0044 "Условия поставки"),
+ * plus delivery city and desired date. All optional — advancing is always allowed.
+ * BackButton → Step 1, MainButton "Далее" → Step 3.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useForm } from "react-hook-form";
 
 import StepIndicator from "../../components/StepIndicator";
 import FieldGroup from "../../components/FieldGroup";
-import SelectField from "../../components/SelectField";
+import RadioCard from "../../components/RadioCard";
 import { mainButton, backButton, impactLight } from "../../telegram";
 import { useWizardStore } from "../../store/wizardStore";
 
-const URGENCY_VALUES = ["high", "medium", "low"] as const;
-
-interface Step2Fields {
-  port_or_city: string;
-  desired_date: string;
-  urgency: string;
-}
+const AVAILABILITY = ["tashkent", "uzbekistan", "import", "any"] as const;
+const URGENCY = ["high", "medium", "low"] as const;
 
 const fieldStyle = {
   display: "block",
@@ -36,6 +31,13 @@ const fieldStyle = {
   fontSize: "14px",
   boxSizing: "border-box" as const,
 };
+const groupLabel = {
+  display: "block",
+  margin: "0 0 10px",
+  fontSize: "13px",
+  fontWeight: 600,
+  color: "var(--text-muted)",
+} as const;
 
 export default function Step2() {
   const { t } = useTranslation();
@@ -43,23 +45,20 @@ export default function Step2() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const store = useWizardStore();
 
-  const { register, getValues } = useForm<Step2Fields>({
-    defaultValues: {
-      port_or_city: store.port_or_city,
-      desired_date: store.desired_date,
-      urgency: store.urgency,
-    },
-  });
+  const [availability, setAvailability] = useState(store.availability);
+  const [urgency, setUrgency] = useState(store.urgency);
+  const [city, setCity] = useState(store.port_or_city);
+  const [date, setDate] = useState(store.desired_date);
 
   useEffect(() => {
     headingRef.current?.focus();
   }, []);
 
   function saveToStore() {
-    const data = getValues();
-    store.setField("port_or_city", data.port_or_city);
-    store.setField("desired_date", data.desired_date);
-    store.setField("urgency", data.urgency);
+    store.setField("availability", availability);
+    store.setField("urgency", urgency);
+    store.setField("port_or_city", city);
+    store.setField("desired_date", date);
   }
 
   useEffect(() => {
@@ -72,7 +71,7 @@ export default function Step2() {
       cleanupBack();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+  }, [navigate, availability, urgency, city, date]);
 
   useEffect(() => {
     mainButton.setText(t("wizard.next"));
@@ -90,7 +89,7 @@ export default function Step2() {
       cleanupMain();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+  }, [navigate, availability, urgency, city, date]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
@@ -107,21 +106,36 @@ export default function Step2() {
       </h2>
 
       <form onSubmit={(e) => e.preventDefault()}>
-        <FieldGroup htmlFor="port_or_city" label={t("wizard.deliveryCity")}>
-          <input id="port_or_city" type="text" placeholder={t("wizard.portPlaceholder")} style={fieldStyle} {...register("port_or_city")} />
-        </FieldGroup>
+        <div style={{ marginBottom: "20px" }}>
+          <span style={groupLabel}>{t("wizard.availability")}</span>
+          {AVAILABILITY.map((a) => (
+            <RadioCard
+              key={a}
+              selected={availability === a}
+              label={t(`wizard.availabilityOpt.${a}`)}
+              onClick={() => setAvailability(a)}
+            />
+          ))}
+        </div>
 
-        <FieldGroup htmlFor="urgency" label={t("wizard.urgency")}>
-          <SelectField
-            id="urgency"
-            options={URGENCY_VALUES.map((u) => ({ value: u, label: t(`wizard.urgencyOpt.${u}`) }))}
-            defaultValue={store.urgency}
-            {...register("urgency")}
-          />
+        <div style={{ marginBottom: "20px" }}>
+          <span style={groupLabel}>{t("wizard.urgency")}</span>
+          {URGENCY.map((u) => (
+            <RadioCard
+              key={u}
+              selected={urgency === u}
+              label={t(`wizard.urgencyOpt.${u}`)}
+              onClick={() => setUrgency(u)}
+            />
+          ))}
+        </div>
+
+        <FieldGroup htmlFor="port_or_city" label={t("wizard.deliveryCity")}>
+          <input id="port_or_city" type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("wizard.portPlaceholder")} style={fieldStyle} />
         </FieldGroup>
 
         <FieldGroup htmlFor="desired_date" label={t("wizard.desiredDate")}>
-          <input id="desired_date" type="date" style={fieldStyle} {...register("desired_date")} />
+          <input id="desired_date" type="date" value={date} onChange={(e) => setDate(e.target.value)} style={fieldStyle} />
         </FieldGroup>
 
         <button

@@ -50,6 +50,19 @@ export default function Confirm() {
   const doSubmit = useCallback(async () => {
     setSubmitState("submitting");
 
+    // Fold the availability preference (IMG_0044 radio cards) into the comment so
+    // the sales team sees it — it has no dedicated column.
+    const availLabels: Record<string, string> = {
+      tashkent: "В наличии в Ташкенте",
+      uzbekistan: "В Узбекистане",
+      import: "Импорт",
+      any: "",
+    };
+    const availLine = availLabels[store.availability]
+      ? `Наличие: ${availLabels[store.availability]}`
+      : "";
+    const fullComment = [availLine, store.comment].filter(Boolean).join("\n") || null;
+
     // Build RequestCreate from wizard store
     const body: RequestCreate = {
       product_id: store.product_id ?? null,
@@ -66,7 +79,7 @@ export default function Confirm() {
       desired_date: store.desired_date || null,
       validity_days: Number(store.validity_days) || 30,
       urgency: store.urgency as RequestCreate["urgency"],
-      comment: store.comment || null,
+      comment: fullComment,
       company_name: store.company_name || null,
       contact_name: store.contact_name || null,
       phone: store.phone || null,
