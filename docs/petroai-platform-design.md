@@ -55,7 +55,7 @@ Per IMG_0046 the Mini App is one app with a **bottom tab bar**:
 - **Заявки (Requests):** the buyer's own purchase requests (private) + the submit wizard.
 - **Продать (Sell):** the seller listing wizard (5 steps → moderation).
 - **Новости (News):** daily AI market reports rendered in-app (same content as the channel).
-- **Профиль (Profile):** company/contact info, language (ru/uz/en), role preference.
+- **Профиль (Profile):** company/contact info, language (ru/en/tr/uz, default ru), role preference.
 
 **Reconciling "choose user type on the first screen":** first run shows a lightweight
 **role hint** (Buyer / Seller) that sets the default landing tab and what we surface first.
@@ -199,7 +199,8 @@ zustand + i18next). New route stacks under the tab shell:
 - `AppShell`: bottom tab bar + first-run role hint modal.
 
 State: extend `wizardStore` (buyer) + add `sellWizardStore`; persist `role_pref` locally.
-i18n: add ru/uz/**en** strings (spec adds English to the existing ru/uz/tr set).
+i18n: **four locales — `ru` (default), `en`, `tr`, `uz`.** Add `en` to the existing ru/uz/tr
+message sets across `webapp/`, `dashboard/`, and `telegram/templates/`.
 
 ## 9. Internal dashboard screens (Next.js)
 
@@ -242,7 +243,7 @@ buyer target, spread, supply-demand gap, popular products, opportunities. Powers
 ## 11. Telegram bot / channel flow (EXTEND telegram/)
 
 - **Channel:** `publish_report` posts approved reports in the branded format (HTML templates in
-  `telegram/templates/{ru,uz,en}/report.txt`) with inline buttons: *Цены на сырьё*, *Аналитика
+  `telegram/templates/{ru,en,tr,uz}/report.txt`) with inline buttons: *Цены на сырьё*, *Аналитика
   рынка*, *Оставить заявку*, *Открыть Mini App* (deep-link, per IMG_0046 right panel).
 - **Bot:** `/start` → subscribe to daily intel + WebApp menu button (exists). New: subscription
   prefs, "Открыть Mini App" → Market/Requests deep-link. Outbound buyer status-change DMs already
@@ -263,16 +264,22 @@ follows repo conventions (immutable raw pipeline, versioned prompts, UTC-store/T
 secrets-from-env). New Celery tasks must be added to `_TASK_MODULES`; new adapters imported in
 both `app/main.py` and `app/tasks/ingest.py`.
 
-## 13. Open decisions (need product input)
+## 13. Decisions log
 
-1. **Seller identity & trust** — self-serve open registration vs. verified-only (`is_verified`
-   gate before a seller can publish)?
-2. **Buyer↔seller contact** — does the buyer wizard's "Запросить предложение" stay fully
+**Resolved**
+- **Languages:** `ru` (default), `en`, `tr`, `uz` — four locales across webapp/dashboard/bot.
+  Adds `en` to the existing ru/uz/tr.
+- **Seller registration: open self-serve (for now).** Anyone registers and lists immediately;
+  **every offer is still moderated before going public** (per-offer moderation). `sellers.is_verified`
+  is a manually-granted **trust badge** ("✓ Проверен"), NOT a publish gate. The schema is identical
+  to verified-only, so tightening to an account-verification gate later is a logic change, not a
+  migration. Revisit as the seller base grows.
+
+**Still open (need product input)**
+1. **Buyer↔seller contact** — does the buyer wizard's "Запросить предложение" stay fully
    AI-brokered (private), or also allow direct contact from a public offer card? (Spec says
    requests are private but offer contacts are public — both can coexist.)
-3. **English vs Turkish** — spec lists ru/uz/**en**; current stack is ru/uz/**tr**. Add `en`,
-   keep `tr`, or replace?
-4. **Inventory source of truth** — manual entry in dashboard, or import from an external ERP/1C?
-5. **Tracked products list** — the 15–30 products for daily reports: config file or DB-managed?
-6. **Channel cadence/format** — one daily report, or also intraday (the `ReportKind` enum already
+2. **Inventory source of truth** — manual entry in dashboard, or import from an external ERP/1C?
+3. **Tracked products list** — the 15–30 products for daily reports: config file or DB-managed?
+4. **Channel cadence/format** — one daily report, or also intraday (the `ReportKind` enum already
    has `morning/intraday/weekly`)?
