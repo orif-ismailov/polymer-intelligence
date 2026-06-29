@@ -35,8 +35,9 @@ export default function Home() {
       style={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "calc(100vh - 64px - env(safe-area-inset-bottom))",
-        padding: "24px 16px 16px",
+        // viewport minus the AppShell header (56px) and bottom tab bar (64px)
+        minHeight: "calc(100vh - 120px - env(safe-area-inset-bottom))",
+        padding: "8px 16px 16px",
       }}
     >
       {/* Brand wordmark */}
