@@ -1,16 +1,16 @@
 /**
- * Polymer Intelligence — Telegram Web App router shell.
+ * PetroAI — Telegram Web App router shell.
  *
- * Honors Telegram theme CSS variables (var(--tg-theme-*)) per 03-UI-SPEC.md.
- * NO hardcoded dark colors — the Telegram client injects its own theme vars.
- * Sole exception: #ef4444 (destructive, per UI-SPEC §Color).
+ * Colors come from the PetroAI design tokens (src/styles/tokens.css), NOT
+ * Telegram's --tg-theme-* vars, so the app is pixel-identical to the approved
+ * mockups in both dark and light themes (design-system.md §2).
  *
  * Routes use React.lazy + Suspense for route-level code-splitting
  * (REQ-nfr-performance: ≤300 KB gzip bundle).
  */
 
 import { lazy, Suspense, CSSProperties } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
 import RoleHintModal from "./components/RoleHintModal";
@@ -25,56 +25,58 @@ import RoleHintModal from "./components/RoleHintModal";
 export const styles = {
   app: {
     minHeight: "100vh",
-    backgroundColor: "var(--tg-theme-bg-color, #1e293b)",
-    color: "var(--tg-theme-text-color, #f8fafc)",
-    fontFamily: "system-ui, sans-serif",
+    backgroundColor: "var(--bg)",
+    color: "var(--text)",
+    fontFamily: "inherit",
   } as CSSProperties,
   header: {
     padding: "16px",
-    borderBottom: "1px solid var(--tg-theme-secondary-bg-color, #334155)",
-    backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
+    borderBottom: "1px solid var(--border)",
+    backgroundColor: "var(--surface)",
   } as CSSProperties,
   headerTitle: {
     margin: 0,
-    fontSize: "18px",
-    fontWeight: 600,
-    color: "var(--tg-theme-text-color, #f8fafc)",
+    fontSize: "20px",
+    fontWeight: 700,
+    color: "var(--text)",
   } as CSSProperties,
   headerSubtitle: {
     margin: "4px 0 0",
     fontSize: "13px",
-    color: "var(--tg-theme-hint-color, #94a3b8)",
+    color: "var(--text-muted)",
   } as CSSProperties,
   main: {
     padding: "16px",
   } as CSSProperties,
   card: {
-    borderRadius: "12px",
+    borderRadius: "var(--r-md)",
     padding: "16px",
-    backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
+    backgroundColor: "var(--surface)",
+    border: "1px solid var(--border)",
+    boxShadow: "var(--shadow)",
     marginBottom: "12px",
   } as CSSProperties,
   cardTitle: {
     margin: "0 0 8px",
     fontSize: "15px",
     fontWeight: 600,
-    color: "var(--tg-theme-text-color, #f8fafc)",
+    color: "var(--text)",
   } as CSSProperties,
   cardText: {
     margin: 0,
     fontSize: "13px",
-    color: "var(--tg-theme-hint-color, #94a3b8)",
+    color: "var(--text-muted)",
   } as CSSProperties,
   accentButton: {
     display: "block",
     width: "100%",
-    minHeight: "44px",
+    minHeight: "48px",
     padding: "12px 20px",
-    borderRadius: "8px",
-    backgroundColor: "var(--tg-theme-button-color, #10b981)",
-    color: "var(--tg-theme-button-text-color, #ffffff)",
+    borderRadius: "var(--r-md)",
+    backgroundColor: "var(--green)",
+    color: "var(--green-on)",
     border: "none",
-    fontSize: "14px",
+    fontSize: "16px",
     fontWeight: 600,
     cursor: "pointer",
     boxSizing: "border-box" as const,
@@ -83,7 +85,10 @@ export const styles = {
 
 // ── Lazy-loaded routes (code-split by route) ───────────────────────────────────
 
-// Tab destinations (unified shell — IMG_0046)
+// Landing + tab destinations (unified shell — IMG_0046)
+const Home = lazy(() => import("./pages/Home"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const Support = lazy(() => import("./pages/Support"));
 const Market = lazy(() => import("./pages/Market"));
 const OfferDetail = lazy(() => import("./pages/OfferDetail"));
 const News = lazy(() => import("./pages/News"));
@@ -111,7 +116,7 @@ function PageLoader() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "var(--tg-theme-bg-color, #1e293b)",
+        backgroundColor: "var(--bg)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -122,8 +127,8 @@ function PageLoader() {
           width: "32px",
           height: "32px",
           borderRadius: "50%",
-          border: "3px solid var(--tg-theme-secondary-bg-color, #334155)",
-          borderTopColor: "var(--tg-theme-button-color, #10b981)",
+          border: "3px solid var(--border)",
+          borderTopColor: "var(--green)",
           animation: "spin 0.8s linear infinite",
         }}
       />
@@ -140,8 +145,8 @@ export default function App() {
       <RoleHintModal />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          {/* Default → Маркет tab */}
-          <Route path="/" element={<Navigate to="/market" replace />} />
+          {/* Launch screen — the Главный экран landing (design_2 buyer ①) */}
+          <Route path="/" element={<AppShell><Home /></AppShell>} />
 
           {/* Tab destinations (with bottom tab bar) */}
           <Route path="/market" element={<AppShell><Market /></AppShell>} />
@@ -151,6 +156,8 @@ export default function App() {
           <Route path="/profile" element={<AppShell><Profile /></AppShell>} />
 
           {/* Full-screen flows (no tab bar) */}
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/support" element={<Support />} />
           <Route path="/market/:id" element={<OfferDetail />} />
           <Route path="/sell/new" element={<SellOffer />} />
           <Route path="/news/:id" element={<NewsDetail />} />

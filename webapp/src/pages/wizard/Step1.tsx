@@ -19,6 +19,7 @@ import { z } from "zod";
 import StepIndicator from "../../components/StepIndicator";
 import FieldGroup from "../../components/FieldGroup";
 import SelectField from "../../components/SelectField";
+import HintBanner from "../../components/HintBanner";
 import { mainButton, backButton, impactLight } from "../../telegram";
 import { useWizardStore } from "../../store/wizardStore";
 
@@ -171,19 +172,21 @@ export default function Step1() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <div style={{ marginBottom: "24px" }}>
-        <StepIndicator current={1} total={4} />
+        <StepIndicator current={1} total={4} subtitle={t("wizard.stepOf", { current: 1, total: 4 })} />
       </div>
 
       <h2
         ref={headingRef}
         tabIndex={-1}
-        style={{ margin: "0 0 24px", fontSize: "18px", fontWeight: 600, color: "var(--text)", outline: "none" }}
+        style={{ margin: "0 0 16px", fontSize: "17px", fontWeight: 600, color: "var(--text)", outline: "none" }}
       >
         {t("wizard.step1.title")}
       </h2>
 
+      <HintBanner>{t("wizard.hintGrade")}</HintBanner>
+
       <form onSubmit={(e) => e.preventDefault()}>
-        <FieldGroup htmlFor="product_id" label={t("wizard.product")} error={productError}>
+        <FieldGroup htmlFor="product_id" label={t("wizard.product")} required error={productError}>
           <SelectField
             id="product_id"
             options={products.map((p) => ({ value: p.value, label: p.label }))}

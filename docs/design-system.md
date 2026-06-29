@@ -170,3 +170,21 @@ tolerate longer DE/EN/TR strings (no fixed-width labels). Numbers/prices: thin-s
 - Tailwind `theme.extend.colors` references the CSS vars so utility classes resolve per-theme.
 - Acceptance for any new screen: renders pixel-faithful to its mockup in **both** themes, AA
   contrast on text/controls, and uses only `var(--token)` colors (lint rule: no raw hex in components).
+
+## 12. Reconciliation (`docs/design.jpeg` ↔ `docs/design_2.jpeg`)
+
+Two approved mockup sheets exist. `design.jpeg` (= IMG_0043/0044/0046, dark-navy) is the
+canonical base; `design_2.jpeg` is a later green-primary variant with refreshed copy and two new
+surfaces. The Mini App implements **design_2's copy + screen set on design.jpeg's documented
+accent semantics** (§4). Where the two sheets disagree, the resolution and the flag:
+
+| Conflict | design.jpeg | design_2.jpeg | Implemented | Flag |
+|---|---|---|---|---|
+| Buyer primary CTA color | blue "Купить сырьё" | green | **green** (§4 "primary CTA = green everywhere") | ⚠️ design.jpeg's blue not used |
+| Seller publish CTA color | — | green | **orange** (§4 seller-domain) | ⚠️ design_2's green not used |
+| Главный экран | Market catalog | intro landing (AI Marketplace, stats, bullets, dual CTA) | new **Home** landing at `/` (`pages/Home.tsx`); Market keeps the catalog | — |
+| Bottom navigation | ＋FAB (Маркет·Заявки·**＋Продать**·Новости·Профиль) | flat Главная·Заявки·Маркет·Новости·Профиль | **flat design_2 nav** (Главная·Заявки·Маркет·Новости·Профиль, no FAB); selling is reached from Home's "Продать сырьё" CTA | ⚠️ supersedes the IMG_0046 FAB layout in §7 |
+| Buyer wizard length | catalog→single form | **4 steps** (Продукт→Условия→Контакты→Доп.) | 4 steps + success | — (supersedes the earlier "5 steps" note in §9) |
+| New surfaces | — | "Как это работает?", "Чат-поддержка", seller "Проверка и публикация", "Общий чат" | `pages/HowItWorks.tsx`, `pages/Support.tsx`, seller wizard step 4 review; "Общий чат" listing feed = the Маркет catalog | — |
+
+Copy is verbatim from the sheets, in `webapp/src/i18n/{ru,uz,tr,en}.json` (ru = source of truth).

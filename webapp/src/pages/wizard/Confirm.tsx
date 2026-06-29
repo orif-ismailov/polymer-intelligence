@@ -22,8 +22,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2 } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 
+import Button from "../../components/Button";
 import StatusChip from "../../components/StatusChip";
 import { mainButton, backButton, notifySuccess, notifyError } from "../../telegram";
 import { useWizardStore } from "../../store/wizardStore";
@@ -136,7 +137,7 @@ export default function Confirm() {
       <div
         style={{
           minHeight: "100vh",
-          backgroundColor: "var(--tg-theme-bg-color, #1e293b)",
+          background: "var(--bg)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -151,42 +152,28 @@ export default function Confirm() {
             width: "40px",
             height: "40px",
             borderRadius: "50%",
-            border: "3px solid var(--tg-theme-secondary-bg-color, #334155)",
-            borderTopColor: "var(--tg-theme-button-color, #10b981)",
+            border: "3px solid var(--border)",
+            borderTopColor: "var(--green)",
             animation: "spin 0.8s linear infinite",
           }}
         />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <p
-          style={{
-            fontSize: "14px",
-            color: "var(--tg-theme-hint-color, #94a3b8)",
-            margin: 0,
-          }}
-        >
-          {t("confirm.subheading")}
-        </p>
+        <p style={{ fontSize: "14px", color: "var(--text-muted)", margin: 0 }}>{t("confirm.subheading")}</p>
       </div>
     );
   }
 
   if (submitState === "error") {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "var(--tg-theme-bg-color, #1e293b)",
-          padding: "16px",
-        }}
-      >
+      <div style={{ minHeight: "100vh", background: "var(--bg)", padding: "16px" }}>
         {/* Error banner */}
         <div
           role="alert"
           style={{
             padding: "12px 16px",
-            borderRadius: "8px",
-            backgroundColor: "rgba(239, 68, 68, 0.1)",
-            color: "#ef4444",
+            borderRadius: "var(--r-md)",
+            backgroundColor: "var(--chip-down-bg)",
+            color: "var(--chip-down-fg)",
             fontSize: "14px",
             marginBottom: "16px",
           }}
@@ -195,26 +182,9 @@ export default function Confirm() {
         </div>
 
         {/* Retry button */}
-        <button
-          type="button"
-          onClick={() => void doSubmit()}
-          style={{
-            display: "block",
-            width: "100%",
-            minHeight: "44px",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            backgroundColor: "var(--tg-theme-button-color, #10b981)",
-            color: "var(--tg-theme-button-text-color, #ffffff)",
-            border: "none",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-            boxSizing: "border-box",
-          }}
-        >
-          {t("wizard.submit")}
-        </button>
+        <Button variant="primary" onClick={() => void doSubmit()}>
+          {t("wizard.submitRequest")}
+        </Button>
       </div>
     );
   }
@@ -224,113 +194,100 @@ export default function Confirm() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "var(--tg-theme-bg-color, #1e293b)",
+        background: "var(--bg)",
+        color: "var(--text)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "48px 16px 32px",
+        padding: "56px 24px 32px",
       }}
     >
-      {/* Success check icon — accent fill */}
-      <CheckCircle2
-        size={64}
-        color="var(--tg-theme-button-color, #10b981)"
-        aria-hidden="true"
-        style={{ marginBottom: "24px" }}
-      />
-
-      <h1
+      {/* Green check in ring, with a subtle AI glow (design "Заявка принята!") */}
+      <div
         style={{
-          margin: "0 0 8px",
-          fontSize: "18px",
-          fontWeight: 600,
-          color: "var(--tg-theme-text-color, #f8fafc)",
-          textAlign: "center",
+          position: "relative",
+          width: "104px",
+          height: "104px",
+          marginBottom: "28px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
+        <span
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "var(--r-full)",
+            background: "var(--chip-ok-bg)",
+          }}
+        />
+        <span
+          style={{
+            position: "relative",
+            width: "72px",
+            height: "72px",
+            borderRadius: "var(--r-full)",
+            background: "var(--green)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 8px 24px rgba(34,197,94,.35)",
+          }}
+        >
+          <Check size={38} color="var(--green-on)" strokeWidth={3} />
+        </span>
+        <Sparkles
+          size={20}
+          color="var(--green)"
+          style={{ position: "absolute", top: "2px", right: "6px" }}
+          aria-hidden="true"
+        />
+      </div>
+
+      <h1 style={{ margin: "0 0 12px", fontSize: "22px", fontWeight: 700, textAlign: "center" }}>
         {t("confirm.heading")}
       </h1>
 
+      {/* AI-tender note (design "Заявка принята") */}
       <p
         style={{
-          margin: "0 0 16px",
+          margin: "0 0 20px",
           fontSize: "14px",
-          color: "var(--tg-theme-hint-color, #94a3b8)",
-          textAlign: "center",
-        }}
-      >
-        {t("confirm.subheading")}
-      </p>
-
-      {/* AI-tender note (IMG_0044 "Заявка принята") */}
-      <p
-        style={{
-          margin: "0 0 16px",
-          fontSize: "13px",
           color: "var(--text-muted)",
           textAlign: "center",
           lineHeight: 1.5,
+          maxWidth: "320px",
         }}
       >
         {t("confirm.aiNote")}
       </p>
 
-      {/* REQ number — 15px/600 per UI-SPEC §Typography */}
-      <p
-        style={{
-          margin: "0 0 12px",
-          fontSize: "15px",
-          fontWeight: 600,
-          color: "var(--tg-theme-text-color, #f8fafc)",
-        }}
-      >
-        {reqNumber}
-      </p>
-
-      {/* Status chip — "Новая заявка" */}
+      {/* REQ number + status chip */}
+      <p style={{ margin: "0 0 10px", fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>{reqNumber}</p>
       <div style={{ marginBottom: "32px" }}>
         <StatusChip status="new" />
       </div>
 
       {/* CTAs */}
-      <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
-        <button
-          type="button"
-          onClick={() => navigate("/requests")}
-          style={{
-            display: "block",
-            width: "100%",
-            minHeight: "44px",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            backgroundColor: "var(--tg-theme-button-color, #10b981)",
-            color: "var(--tg-theme-button-text-color, #ffffff)",
-            border: "none",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-            boxSizing: "border-box",
-          }}
-        >
+      <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <Button variant="primary" onClick={() => navigate("/requests")}>
           {t("confirm.cta.myRequests")}
-        </button>
-
+        </Button>
+        <Button variant="secondary" onClick={() => navigate("/")}>
+          {t("confirm.cta.home")}
+        </Button>
         <button
           type="button"
           onClick={handleAnother}
           style={{
-            display: "block",
-            width: "100%",
-            minHeight: "44px",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            backgroundColor: "transparent",
-            color: "var(--tg-theme-link-color, #38bdf8)",
-            border: "1px solid var(--tg-theme-secondary-bg-color, #334155)",
+            background: "transparent",
+            border: "none",
+            color: "var(--text-muted)",
             fontSize: "14px",
-            fontWeight: 400,
+            fontWeight: 600,
             cursor: "pointer",
-            boxSizing: "border-box",
+            padding: "8px",
           }}
         >
           {t("confirm.cta.another")}

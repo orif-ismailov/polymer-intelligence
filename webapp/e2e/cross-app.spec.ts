@@ -25,15 +25,17 @@ test("§6.1.1: a Web App purchase request appears in the dashboard", async ({ br
   const webappCtx = await browser.newContext();
   const webappPage = await webappCtx.newPage();
   await openApp(webappPage, "/");
-  await webappPage.getByRole("button", { name: "Оставить заявку" }).click();
+  await webappPage.getByRole("button", { name: "Купить сырьё" }).click();
   await webappPage.locator("#product_id").selectOption("1"); // PP
   await webappPage.locator("#grade_text").fill(marker);
   await webappPage.locator("#volume").fill("250");
-  await webappPage.getByRole("button", { name: "Далее" }).click();
-  await webappPage.getByRole("button", { name: "Далее" }).click();
-  await webappPage.getByRole("button", { name: "Отправить" }).click();
+  await webappPage.getByRole("button", { name: "Далее" }).click(); // step 1 → 2
+  await webappPage.getByRole("button", { name: "Далее" }).click(); // step 2 → 3
+  await webappPage.locator("#phone").fill("+998 90 123 45 67"); // step 3 requires phone
+  await webappPage.getByRole("button", { name: "Далее" }).click(); // step 3 → 4
+  await webappPage.getByRole("button", { name: "Отправить заявку" }).click();
 
-  await expect(webappPage.getByRole("heading", { name: /заявка отправлена/i })).toBeVisible();
+  await expect(webappPage.getByRole("heading", { name: /заявка принята/i })).toBeVisible();
   const reqNumber = (
     await webappPage.getByText(/^REQ-\d{4}-\d{2}-\d{2}-\d+$/).first().textContent()
   )?.trim();

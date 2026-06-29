@@ -1,8 +1,9 @@
 /**
- * SelectField — native <select> styled with tg-theme vars.
+ * SelectField — native <select> styled with PetroAI tokens.
  *
- * Uses native <select> to avoid custom dropdown bundle weight (UI-SPEC §Registry Safety).
- * All colors via var(--tg-theme-*); no hardcoded hex.
+ * Native <select> avoids custom-dropdown bundle weight (UI-SPEC §Registry Safety).
+ * --surface fill, 1px --border, --r-md, 48px, muted placeholder, trailing chevron
+ * (design-system §7 "Text input / select"). Colors via var(--token) only.
  */
 
 import { SelectHTMLAttributes, forwardRef } from "react";
@@ -18,6 +19,10 @@ interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string;
 }
 
+// Inline chevron (muted neutral; works on both themes) drawn as a background SVG.
+const CHEVRON =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a93a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")";
+
 const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
   ({ id, options, placeholder, style, ...rest }, ref) => {
     return (
@@ -27,15 +32,18 @@ const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
         style={{
           display: "block",
           width: "100%",
-          minHeight: "44px", // touch target WCAG 2.5.5
-          padding: "10px 12px",
-          borderRadius: "8px",
-          backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
-          color: "var(--tg-theme-text-color, #f8fafc)",
-          border: "1px solid var(--tg-theme-secondary-bg-color, #334155)",
+          minHeight: "48px", // touch target WCAG 2.5.5
+          padding: "12px 38px 12px 12px",
+          borderRadius: "var(--r-md)",
+          backgroundColor: "var(--surface)",
+          color: "var(--text)",
+          border: "1px solid var(--border)",
           fontSize: "14px",
-          fontFamily: "system-ui, sans-serif",
+          fontFamily: "inherit",
           appearance: "none",
+          backgroundImage: CHEVRON,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 12px center",
           boxSizing: "border-box",
           ...style,
         }}

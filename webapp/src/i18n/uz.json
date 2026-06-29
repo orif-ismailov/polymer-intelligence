@@ -1,16 +1,24 @@
 {
   "home": {
-    "heading": "Xush kelibsiz!",
-    "subheading": "Polimerlar uchun ariza qoldiring — biz eng yaxshi taklifni topamiz",
-    "prop": {
-      "fast": "Tez",
-      "convenient": "Qulay",
-      "reliable": "Ishonchli"
+    "brandTag": "AI MARKETPLACE",
+    "headline": "Neftkimyo xomashyosi AI Marketplace'i",
+    "lead": "AI bozorni tahlil qiladi va biznesingiz uchun eng yaxshi takliflarni topadi",
+    "stats": {
+      "buyers": { "value": "1 500+", "label": "xaridor" },
+      "suppliers": { "value": "200+", "label": "yetkazib beruvchi" },
+      "catalog": { "value": "10 000+", "label": "katalogda" }
+    },
+    "bullets": {
+      "verified": "Faqat tasdiqlangan sotuvchilar va haqiqiy qoldiqlar",
+      "contacts": "Yetkazib beruvchilarning to'liq aloqalari",
+      "prices": "Bozordagi eng yaxshi narxlar",
+      "fast": "Tez va qulay"
     },
     "cta": {
-      "submit": "Ariza qoldirish",
-      "myRequests": "Mening arizalarim"
-    }
+      "buy": "Xomashyo sotib olish",
+      "sell": "Xomashyo sotish"
+    },
+    "howItWorks": "Bu qanday ishlaydi?"
   },
   "wizard": {
     "step1": {
@@ -41,6 +49,15 @@
       "import": "Buyurtma asosida import",
       "any": "Farqi yo'q"
     },
+    "availabilityDesc": {
+      "import": "Yetkazib berish 15–30 kun"
+    },
+    "stepOf": "Qadam {{current}} / {{total}}",
+    "hintGrade": "Aniq markani bilmaysizmi? Tovarni o'z so'zlaringiz bilan tasvirlang — AI mos variantlarni tanlaydi.",
+    "dataProtected": "Ma'lumotlaringiz himoyalangan. Aloqalar faqat PetroAI'ning tasdiqlangan menejerlariga ko'rinadi.",
+    "desiredPrice": "Istalgan narx (ixtiyoriy)",
+    "attachTds": "TDS / spetsifikatsiyani biriktirish",
+    "submitRequest": "Ariza yuborish",
     "companyName": "Kompaniya nomi",
     "companyPlaceholder": "Kompaniyangiz nomi",
     "contactName": "Aloqa shaxsi",
@@ -77,11 +94,12 @@
     "volumeUnit_KG": "KG (kilogramm)"
   },
   "confirm": {
-    "heading": "Ariza qabul qilindi!",
+    "heading": "Arizangiz qabul qilindi!",
     "subheading": "Sizning arizangiz qabul qilindi va mutaxassislarga topshirildi",
-    "aiNote": "AI narxlar, yetkazib beruvchilar va mavjudlikni tahlil qiladi va eng yaxshi taklifni topish uchun ichki tender o'tkazadi. Menejer telefon yoki Telegram orqali bog'lanadi.",
+    "aiNote": "Sun'iy intellekt bozorni tahlil qildi va ichki tender o'tkazadi. Yaqin orada menejer telefon yoki Telegram orqali siz bilan bog'lanib, eng yaxshi takliflarni yuboradi.",
     "cta": {
       "myRequests": "Mening arizalarim",
+      "home": "Bosh sahifaga",
       "another": "Yangi ariza yaratish"
     }
   },
@@ -105,6 +123,7 @@
     }
   },
   "nav": {
+    "home": "Bosh sahifa",
     "market": "Market",
     "requests": "Arizalar",
     "sell": "Sotish",
@@ -114,6 +133,7 @@
   "market": {
     "title": "Market",
     "all": "Hammasi",
+    "popular": "Ommabop tovarlar",
     "searchPlaceholder": "Mahsulot, marka, sotuvchi bo'yicha qidirish",
     "soon": "Takliflar katalogi shu yerda paydo bo'ladi",
     "empty": "Hozircha takliflar yo'q",
@@ -127,6 +147,7 @@
     "location": "Joylashuv",
     "verified": "Tasdiqlangan sotuvchi",
     "call": "Qo'ng'iroq",
+    "writeTelegram": "Telegram'da yozish",
     "requestOffer": "Taklif so'rash",
     "notFound": "Taklif topilmadi"
   },
@@ -154,7 +175,7 @@
     "step1": "Asosiy ma'lumot",
     "step2": "Miqdor va narx",
     "step3": "Rasm va hujjatlar",
-    "step4": "Aloqa va tavsif",
+    "step4": "Tekshirish va e'lon qilish",
     "back": "Orqaga",
     "sectionProduct": "Mahsulot",
     "sectionPrice": "Miqdor va narx",
@@ -166,10 +187,33 @@
     "description": "Tavsif",
     "photos": "Mahsulot rasmlari",
     "photosCount": "ta rasm tanlandi",
+    "addPhoto": "Rasm qo'shish",
+    "docsHint": "JPG — har bir rasm uchun 10 MB gacha. Hujjatlarni (TDS, spetsifikatsiya) keyinroq qo'shish mumkin.",
+    "publish": "Taklifni e'lon qilish",
     "submit": "Moderatsiyaga yuborish",
-    "success": "Moderatsiyaga yuborildi",
-    "successBody": "Tekshiruvdan so'ng katalogda paydo bo'ladi",
-    "backToOffers": "Mening takliflarimga"
+    "success": "Taklif moderatsiyaga yuborildi",
+    "successBody": "Tekshiruvdan so'ng taklif katalogda va umumiy chatda e'lon qilinadi. Xaridorlar tovaringizni ko'radi va siz bilan bog'lana oladi.",
+    "backToOffers": "Mening tovarlarim"
+  },
+  "howItWorks": {
+    "title": "Bu qanday ishlaydi?",
+    "steps": {
+      "s1": "Siz ariza qoldirasiz",
+      "s2": "AI bozor, birja va yetkazib beruvchilarni tahlil qiladi",
+      "s3": "Biz eng yaxshi takliflarni tanlaymiz",
+      "s4": "Menejer siz bilan bog'lanib, tafsilotlarni aniqlaydi"
+    },
+    "dataProtected": {
+      "title": "Ma'lumotlaringiz himoyalangan",
+      "body": "Aloqalar faqat PetroAI'ning tasdiqlangan menejerlariga ko'rinadi."
+    },
+    "questions": "Savollaringiz bormi?",
+    "openChat": "Chatni ochish"
+  },
+  "support": {
+    "title": "Chat-qo'llab-quvvatlash",
+    "body": "Bizga yozing — PetroAI menejeri Telegram'da javob beradi va ariza bo'yicha yordam beradi.",
+    "cta": "Telegram'da chatni ochish"
   },
   "profile": {
     "title": "Profil",

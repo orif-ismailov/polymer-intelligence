@@ -32,7 +32,7 @@ export default function StatusTimeline({ history }: StatusTimelineProps) {
           margin: "0 0 12px",
           fontSize: "15px",
           fontWeight: 600,
-          color: "var(--tg-theme-text-color, #f8fafc)",
+          color: "var(--text)",
         } as CSSProperties}
       >
         {t("requestDetail.history")}
@@ -45,7 +45,8 @@ export default function StatusTimeline({ history }: StatusTimelineProps) {
             style={{
               padding: "10px 12px",
               borderRadius: "8px",
-              backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--border)",
             } as CSSProperties}
           >
             {/* Status transition */}
@@ -62,7 +63,7 @@ export default function StatusTimeline({ history }: StatusTimelineProps) {
                   <span
                     style={{
                       fontSize: "13px",
-                      color: "var(--tg-theme-hint-color, #94a3b8)",
+                      color: "var(--text-muted)",
                     } as CSSProperties}
                   >
                     {statusLabel(t, row.from_status)}
@@ -70,7 +71,7 @@ export default function StatusTimeline({ history }: StatusTimelineProps) {
                   <span
                     style={{
                       fontSize: "13px",
-                      color: "var(--tg-theme-hint-color, #94a3b8)",
+                      color: "var(--text-muted)",
                     } as CSSProperties}
                   >
                     →
@@ -81,7 +82,7 @@ export default function StatusTimeline({ history }: StatusTimelineProps) {
                 style={{
                   fontSize: "13px",
                   fontWeight: 600,
-                  color: "var(--tg-theme-text-color, #f8fafc)",
+                  color: "var(--text)",
                 } as CSSProperties}
               >
                 {statusLabel(t, row.to_status)}
@@ -92,7 +93,7 @@ export default function StatusTimeline({ history }: StatusTimelineProps) {
             <span
               style={{
                 fontSize: "12px",
-                color: "var(--tg-theme-hint-color, #94a3b8)",
+                color: "var(--text-muted)",
               } as CSSProperties}
             >
               {formatTashkent(row.created_at)}

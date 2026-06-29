@@ -24,8 +24,9 @@ import type { RequestOut } from "../types";
 
 const SKELETON_STYLE: CSSProperties = {
   height: "72px",
-  borderRadius: "12px",
-  backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
+  borderRadius: "var(--r-md)",
+  backgroundColor: "var(--surface)",
+  border: "1px solid var(--border)",
   marginBottom: "12px",
   animation: "pulse 1.4s ease-in-out infinite",
 };

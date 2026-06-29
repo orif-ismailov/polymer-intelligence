@@ -1,16 +1,24 @@
 {
   "home": {
-    "heading": "Hoş geldiniz!",
-    "subheading": "Polimerler için talep bırakın — en iyi teklifi biz buluruz",
-    "prop": {
-      "fast": "Hızlı",
-      "convenient": "Kullanışlı",
-      "reliable": "Güvenilir"
+    "brandTag": "AI MARKETPLACE",
+    "headline": "Petrokimya hammaddeleri için AI Marketplace",
+    "lead": "AI piyasayı analiz eder ve işletmeniz için en iyi teklifleri bulur",
+    "stats": {
+      "buyers": { "value": "1 500+", "label": "alıcı" },
+      "suppliers": { "value": "200+", "label": "tedarikçi" },
+      "catalog": { "value": "10 000+", "label": "katalogda" }
+    },
+    "bullets": {
+      "verified": "Yalnızca doğrulanmış satıcılar ve gerçek stoklar",
+      "contacts": "Tedarikçilerin tam iletişim bilgileri",
+      "prices": "Piyasanın en iyi fiyatları",
+      "fast": "Hızlı ve kullanışlı"
     },
     "cta": {
-      "submit": "Talep bırak",
-      "myRequests": "Taleplerim"
-    }
+      "buy": "Hammadde al",
+      "sell": "Hammadde sat"
+    },
+    "howItWorks": "Nasıl çalışır?"
   },
   "wizard": {
     "step1": {
@@ -41,6 +49,15 @@
       "import": "Sipariş üzerine ithalat",
       "any": "Fark etmez"
     },
+    "availabilityDesc": {
+      "import": "Teslimat 15–30 gün"
+    },
+    "stepOf": "Adım {{current}} / {{total}}",
+    "hintGrade": "Kesin markayı bilmiyor musunuz? Ürünü kendi kelimelerinizle tarif edin — AI uygun seçenekleri belirler.",
+    "dataProtected": "Verileriniz korunmaktadır. İletişim bilgileri yalnızca doğrulanmış PetroAI yöneticilerine görünür.",
+    "desiredPrice": "İstenen fiyat (isteğe bağlı)",
+    "attachTds": "TDS / spesifikasyon ekle",
+    "submitRequest": "Talebi gönder",
     "companyName": "Şirket adı",
     "companyPlaceholder": "Şirketinizin adı",
     "contactName": "İlgili kişi",
@@ -77,11 +94,12 @@
     "volumeUnit_KG": "KG (kilogram)"
   },
   "confirm": {
-    "heading": "Talep alındı!",
+    "heading": "Talebiniz alındı!",
     "subheading": "Talebiniz alındı ve uzmanlara iletildi",
-    "aiNote": "AI fiyatları, tedarikçileri ve stoğu analiz edip en iyi teklifi bulmak için iç tedarik turu yapar. Yöneticimiz telefon veya Telegram ile iletişime geçecek.",
+    "aiNote": "Yapay zeka piyasayı analiz etti ve bir iç ihale yürütecek. En kısa sürede bir yönetici telefon veya Telegram üzerinden sizinle iletişime geçecek ve en iyi teklifleri gönderecek.",
     "cta": {
       "myRequests": "Taleplerim",
+      "home": "Ana sayfaya",
       "another": "Yeni talep oluştur"
     }
   },
@@ -105,6 +123,7 @@
     }
   },
   "nav": {
+    "home": "Ana sayfa",
     "market": "Market",
     "requests": "Talepler",
     "sell": "Sat",
@@ -114,6 +133,7 @@
   "market": {
     "title": "Market",
     "all": "Tümü",
+    "popular": "Popüler ürünler",
     "searchPlaceholder": "Ürün, marka, satıcıya göre ara",
     "soon": "Teklif kataloğu burada görünecek",
     "empty": "Henüz teklif yok",
@@ -127,6 +147,7 @@
     "location": "Konum",
     "verified": "Onaylı satıcı",
     "call": "Ara",
+    "writeTelegram": "Telegram'dan yaz",
     "requestOffer": "Teklif iste",
     "notFound": "Teklif bulunamadı"
   },
@@ -154,7 +175,7 @@
     "step1": "Temel bilgiler",
     "step2": "Miktar ve fiyat",
     "step3": "Fotoğraf ve belgeler",
-    "step4": "İletişim ve açıklama",
+    "step4": "Kontrol ve yayınlama",
     "back": "Geri",
     "sectionProduct": "Ürün",
     "sectionPrice": "Miktar ve fiyat",
@@ -166,10 +187,33 @@
     "description": "Açıklama",
     "photos": "Ürün fotoğrafları",
     "photosCount": "fotoğraf seçildi",
+    "addPhoto": "Fotoğraf ekle",
+    "docsHint": "JPG — fotoğraf başına 10 MB'a kadar. Belgeler (TDS, spesifikasyon) daha sonra eklenebilir.",
+    "publish": "Teklifi yayınla",
     "submit": "Moderasyona gönder",
-    "success": "Moderasyona gönderildi",
-    "successBody": "Onaylandıktan sonra katalogda görünecek",
-    "backToOffers": "Tekliflerime dön"
+    "success": "Teklif moderasyona gönderildi",
+    "successBody": "Onaylandıktan sonra teklif katalogda ve ortak sohbette yayınlanır. Alıcılar ürününüzü görecek ve sizinle iletişime geçebilecek.",
+    "backToOffers": "Ürünlerim"
+  },
+  "howItWorks": {
+    "title": "Nasıl çalışır?",
+    "steps": {
+      "s1": "Bir talep bırakırsınız",
+      "s2": "AI piyasayı, borsayı ve tedarikçileri analiz eder",
+      "s3": "En iyi teklifleri biz belirleriz",
+      "s4": "Bir yönetici sizinle iletişime geçer ve ayrıntıları netleştirir"
+    },
+    "dataProtected": {
+      "title": "Verileriniz korunmaktadır",
+      "body": "İletişim bilgileri yalnızca doğrulanmış PetroAI yöneticilerine görünür."
+    },
+    "questions": "Sorularınız mı var?",
+    "openChat": "Sohbeti aç"
+  },
+  "support": {
+    "title": "Sohbet desteği",
+    "body": "Bize yazın — bir PetroAI yöneticisi Telegram üzerinden yanıt verecek ve talebinizde size yardımcı olacak.",
+    "cta": "Telegram'da sohbeti aç"
   },
   "profile": {
     "title": "Profil",

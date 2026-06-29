@@ -1,15 +1,15 @@
 /**
- * Bottom tab bar — the unified navigation from IMG_0046.
+ * Bottom tab bar — flat 5-tab navigation per docs/design_2.jpeg.
  *
- * Маркет · Заявки · [＋ Продать] · Новости · Профиль. The center "Продать" is a
- * raised circular FAB (orange); Заявки carries a live count badge of the user's
- * requests. Each tab's active state uses its domain accent.
+ * Главная · Заявки · Маркет · Новости · Профиль. No center FAB: selling is reached
+ * from the Home screen's "Продать сырьё" CTA (→ the Продать hub). Заявки carries a
+ * live count badge; each tab's active state uses its domain accent (design-system §4).
  */
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FileText, Newspaper, Plus, Store, User, type LucideIcon } from "lucide-react";
+import { FileText, Home, Newspaper, Store, User, type LucideIcon } from "lucide-react";
 
 import { api } from "../api/client";
 
@@ -21,9 +21,9 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { key: "market", path: "/market", color: "var(--green)", Icon: Store },
+  { key: "home", path: "/", color: "var(--green)", Icon: Home },
   { key: "requests", path: "/requests", color: "var(--blue)", Icon: FileText },
-  { key: "sell", path: "/sell", color: "var(--orange)", Icon: Plus },
+  { key: "market", path: "/market", color: "var(--green)", Icon: Store },
   { key: "news", path: "/news", color: "var(--purple)", Icon: Newspaper },
   { key: "profile", path: "/profile", color: "var(--text)", Icon: User },
 ];
@@ -55,7 +55,7 @@ export default function BottomTabBar() {
     right: 0,
     bottom: 0,
     display: "flex",
-    alignItems: "flex-end",
+    alignItems: "stretch",
     justifyContent: "space-around",
     height: "64px",
     paddingBottom: "env(safe-area-inset-bottom)",
@@ -67,50 +67,29 @@ export default function BottomTabBar() {
   return (
     <nav style={bar} aria-label="Main">
       {TABS.map(({ key, path, color, Icon }) => {
-        const active = pathname === path || pathname.startsWith(`${path}/`);
+        const active = path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
         const tint = active ? color : "var(--text-muted)";
-
-        // Center "Продать" — raised circular FAB.
-        if (key === "sell") {
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => navigate(path)}
-              aria-current={active ? "page" : undefined}
-              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px", background: "transparent", border: "none", cursor: "pointer", padding: "0 0 6px" }}
-            >
-              <span
-                style={{
-                  width: "44px",
-                  height: "44px",
-                  marginTop: "-18px",
-                  borderRadius: "var(--r-full)",
-                  background: "var(--orange)",
-                  color: "#ffffff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(245,133,31,.4)",
-                }}
-              >
-                <Plus size={24} color="#ffffff" />
-              </span>
-              <span style={{ fontSize: "11px", fontWeight: 500, color: active ? color : "var(--text-muted)" }}>
-                {t(`nav.${key}`)}
-              </span>
-            </button>
-          );
-        }
-
         const showBadge = key === "requests" && requestCount > 0;
+
         return (
           <button
             key={key}
             type="button"
             onClick={() => navigate(path)}
             aria-current={active ? "page" : undefined}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "3px", background: "transparent", border: "none", cursor: "pointer", padding: "6px 0", color: tint }}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "4px",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px 0",
+              color: tint,
+            }}
           >
             <span style={{ position: "relative" }}>
               <Icon size={24} color={tint} />

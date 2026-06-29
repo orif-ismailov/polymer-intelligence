@@ -1,63 +1,86 @@
 /**
- * StepIndicator — 4-dot progress indicator for the wizard steps.
+ * StepIndicator — numbered circles (1…N) joined by 2px connectors, with a
+ * "Шаг N из M" subtitle (design-system §7, mockups IMG_0044/IMG_0046 top row).
  *
- * Visual states:
- *   - active step: accent fill (--tg-theme-button-color)
- *   - past steps:  accent outline (border: 1px solid accent, transparent fill)
- *   - future steps: hint fill (--tg-theme-hint-color)
+ * Visual states (token-driven, both themes):
+ *   - done / active: flow-accent fill + --green-on glyph, connector before it filled
+ *   - upcoming:      --surface fill + --border ring + --text-muted number
  *
- * Read-only visual — tapping dots does NOT navigate (one-way wizard, UI-SPEC).
+ * Read-only — tapping a circle does NOT navigate (one-way wizard, UI-SPEC).
+ * `accent` lets the seller wizard tint with --orange while the buyer keeps --green.
  */
 
-const DOT_SIZE = 8; // px — UI-SPEC: 8px diameter
-const DOT_GAP = 4;  // px — xs spacing token
+import { Check } from "lucide-react";
+import type { CSSProperties } from "react";
 
 interface StepIndicatorProps {
   /** Current step (1-based). */
   current: number;
   /** Total number of steps. */
   total?: number;
+  /** Flow accent for done/active circles. Defaults to the green primary. */
+  accent?: string;
+  /** Localized "Шаг N из M" subtitle (caller passes it for i18n). */
+  subtitle?: string;
 }
 
-export default function StepIndicator({ current, total = 4 }: StepIndicatorProps) {
-  return (
-    <div
-      aria-label={`Шаг ${current} из ${total}`}
-      role="status"
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: `${DOT_GAP}px`,
-      }}
-    >
-      {Array.from({ length: total }, (_, i) => {
-        const step = i + 1;
-        const isPast = step < current;
-        const isActive = step === current;
-        // future: step > current
+const CIRCLE = 28; // px
 
-        return (
-          <div
-            key={step}
-            aria-current={isActive ? "step" : undefined}
-            style={{
-              width: `${DOT_SIZE}px`,
-              height: `${DOT_SIZE}px`,
-              borderRadius: "50%",
-              backgroundColor: isActive
-                ? "var(--tg-theme-button-color, #10b981)"
-                : isPast
-                  ? "transparent"
-                  : "var(--tg-theme-hint-color, #94a3b8)",
-              border: isPast
-                ? "1.5px solid var(--tg-theme-button-color, #10b981)"
-                : "none",
-              flexShrink: 0,
-            }}
-          />
-        );
-      })}
+export default function StepIndicator({
+  current,
+  total = 4,
+  accent = "var(--green)",
+  subtitle,
+}: StepIndicatorProps) {
+  return (
+    <div>
+      <div
+        role="status"
+        aria-label={subtitle ?? `Шаг ${current} из ${total}`}
+        style={{ display: "flex", alignItems: "center" }}
+      >
+        {Array.from({ length: total }, (_, i) => {
+          const step = i + 1;
+          const isPast = step < current;
+          const isActive = step === current;
+          const filled = isPast || isActive;
+
+          const circle: CSSProperties = {
+            flex: "0 0 auto",
+            width: `${CIRCLE}px`,
+            height: `${CIRCLE}px`,
+            borderRadius: "var(--r-full)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "13px",
+            fontWeight: 700,
+            background: filled ? accent : "var(--surface)",
+            color: filled ? "var(--green-on)" : "var(--text-muted)",
+            border: filled ? "none" : "1px solid var(--border)",
+          };
+          const connector: CSSProperties = {
+            flex: 1,
+            height: "2px",
+            background: isPast ? accent : "var(--border)",
+          };
+
+          return (
+            <div key={step} style={{ display: "contents" }}>
+              {i > 0 && <span style={connector} aria-hidden="true" />}
+              <span style={circle} aria-current={isActive ? "step" : undefined}>
+                {isPast ? <Check size={15} color="var(--green-on)" /> : step}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {subtitle && (
+        <p style={{ margin: "10px 0 0", fontSize: "12px", color: "var(--text-muted)" }}>
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 }

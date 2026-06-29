@@ -1,16 +1,24 @@
 {
   "home": {
-    "heading": "Welcome!",
-    "subheading": "Submit a polymer request — we'll find the best offer",
-    "prop": {
-      "fast": "Fast",
-      "convenient": "Convenient",
-      "reliable": "Reliable"
+    "brandTag": "AI MARKETPLACE",
+    "headline": "AI Marketplace for petrochemical feedstock",
+    "lead": "AI analyzes the market and finds the best offers for your business",
+    "stats": {
+      "buyers": { "value": "1 500+", "label": "buyers" },
+      "suppliers": { "value": "200+", "label": "suppliers" },
+      "catalog": { "value": "10 000+", "label": "in catalog" }
+    },
+    "bullets": {
+      "verified": "Only verified sellers with real stock",
+      "contacts": "Full supplier contacts",
+      "prices": "Best prices on the market",
+      "fast": "Fast and convenient"
     },
     "cta": {
-      "submit": "Submit a request",
-      "myRequests": "My requests"
-    }
+      "buy": "Buy feedstock",
+      "sell": "Sell feedstock"
+    },
+    "howItWorks": "How it works?"
   },
   "wizard": {
     "step1": {
@@ -41,6 +49,15 @@
       "import": "Import to order",
       "any": "No preference"
     },
+    "availabilityDesc": {
+      "import": "Delivery in 15–30 days"
+    },
+    "stepOf": "Step {{current}} of {{total}}",
+    "hintGrade": "Not sure of the exact grade? Describe the product in your own words — AI will suggest matching options.",
+    "dataProtected": "Your data is protected. Contacts are visible only to verified PetroAI managers.",
+    "desiredPrice": "Desired price (optional)",
+    "attachTds": "Attach TDS / specification",
+    "submitRequest": "Submit request",
     "companyName": "Company name",
     "companyPlaceholder": "Your company name",
     "contactName": "Contact person",
@@ -77,11 +94,12 @@
     "volumeUnit_KG": "KG (kilograms)"
   },
   "confirm": {
-    "heading": "Request accepted!",
+    "heading": "Your request has been accepted!",
     "subheading": "Your request has been received and passed to our specialists",
-    "aiNote": "Our AI will analyze prices, suppliers and stock and run an internal supplier tender to find the best offer. Our manager will contact you by phone or Telegram.",
+    "aiNote": "Our AI has analyzed the market and will run an internal tender. A manager will contact you shortly by phone or Telegram with the best offers.",
     "cta": {
       "myRequests": "My requests",
+      "home": "Home",
       "another": "Create another"
     }
   },
@@ -105,6 +123,7 @@
     }
   },
   "nav": {
+    "home": "Home",
     "market": "Market",
     "requests": "Requests",
     "sell": "Sell",
@@ -114,6 +133,7 @@
   "market": {
     "title": "Market",
     "all": "All",
+    "popular": "Popular products",
     "searchPlaceholder": "Search by product, grade, seller",
     "soon": "The offer catalog will appear here",
     "empty": "No offers yet",
@@ -127,6 +147,7 @@
     "location": "Location",
     "verified": "Verified seller",
     "call": "Call",
+    "writeTelegram": "Message on Telegram",
     "requestOffer": "Request an offer",
     "notFound": "Offer not found"
   },
@@ -154,7 +175,7 @@
     "step1": "Basic info",
     "step2": "Quantity & price",
     "step3": "Photos & documents",
-    "step4": "Contacts & description",
+    "step4": "Review & publish",
     "back": "Back",
     "sectionProduct": "Product",
     "sectionPrice": "Quantity & price",
@@ -166,10 +187,33 @@
     "description": "Description",
     "photos": "Product photos",
     "photosCount": "photo(s) selected",
+    "addPhoto": "Add photo",
+    "docsHint": "JPG — up to 10 MB per photo. Documents (TDS, specification) can be added later.",
+    "publish": "Publish offer",
     "submit": "Submit for moderation",
-    "success": "Submitted for moderation",
-    "successBody": "Once approved it will appear in the catalog",
-    "backToOffers": "Back to my offers"
+    "success": "Offer submitted for moderation",
+    "successBody": "After review your offer will be published in the catalog and the shared chat. Buyers will see your product and can contact you.",
+    "backToOffers": "My offers"
+  },
+  "howItWorks": {
+    "title": "How it works?",
+    "steps": {
+      "s1": "You submit a request",
+      "s2": "AI analyzes the market, the exchange and suppliers",
+      "s3": "We match the best offers",
+      "s4": "A manager contacts you and clarifies the details"
+    },
+    "dataProtected": {
+      "title": "Your data is protected",
+      "body": "Contacts are visible only to verified PetroAI managers."
+    },
+    "questions": "Have questions?",
+    "openChat": "Open chat"
+  },
+  "support": {
+    "title": "Support chat",
+    "body": "Message us — a PetroAI manager will reply on Telegram and help with your request.",
+    "cta": "Open chat on Telegram"
   },
   "profile": {
     "title": "Profile",

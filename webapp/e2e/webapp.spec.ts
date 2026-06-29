@@ -14,11 +14,11 @@ test("launches from the Telegram hash without blanking (HashRouter fix)", async 
   // Telegram opens the Mini App with #tgWebAppData=... — HashRouter would treat that
   // as a route and render blank. The app must capture initData + clean the hash.
   await openViaLaunchHash(page);
-  // Home rendered (not blank) and the launch hash was cleaned to the home route.
-  await expect(page.getByRole("button", { name: "Оставить заявку" })).toBeVisible();
+  // Home (Главный экран) rendered (not blank); the launch hash was cleaned to "/".
+  await expect(page.getByRole("button", { name: "Купить сырьё" })).toBeVisible();
   await expect(page).toHaveURL(/#\/$/);
   // initData was captured from the hash → an authed call works.
-  await page.getByRole("button", { name: "Мои заявки" }).click();
+  await page.getByRole("button", { name: "Заявки" }).click();
   await expect(page.getByRole("heading", { name: /мои заявки/i })).toBeVisible();
   await expect(page.getByText(/не удалось загрузить/i)).toHaveCount(0);
 });
@@ -30,11 +30,11 @@ test("My Requests loads for an authenticated buyer (initData auth)", async ({ pa
   await expect(page.getByText(/не удалось загрузить/i)).toHaveCount(0);
 });
 
-test("submits a purchase request through the 3-step wizard", async ({ page }) => {
+test("submits a purchase request through the 4-step wizard", async ({ page }) => {
   await openApp(page, "/");
 
-  // Home → wizard
-  await page.getByRole("button", { name: "Оставить заявку" }).click();
+  // Home → buyer wizard
+  await page.getByRole("button", { name: "Купить сырьё" }).click();
   await expect(page).toHaveURL(/\/request\/step\/1$/);
 
   // Step 1 — product (required) + grade + volume (required)
@@ -44,16 +44,21 @@ test("submits a purchase request through the 3-step wizard", async ({ page }) =>
   await page.getByRole("button", { name: "Далее" }).click();
   await expect(page).toHaveURL(/\/request\/step\/2$/);
 
-  // Step 2 — commercial terms all optional
+  // Step 2 — delivery terms all optional
   await page.getByRole("button", { name: "Далее" }).click();
   await expect(page).toHaveURL(/\/request\/step\/3$/);
 
-  // Step 3 — comment optional; "Отправить" → confirm (auto-submits on mount)
-  await page.getByRole("button", { name: "Отправить" }).click();
+  // Step 3 — phone is the one required field before advancing
+  await page.locator("#phone").fill("+998 90 123 45 67");
+  await page.getByRole("button", { name: "Далее" }).click();
+  await expect(page).toHaveURL(/\/request\/step\/4$/);
+
+  // Step 4 — extras optional; "Отправить заявку" → confirm (auto-submits on mount)
+  await page.getByRole("button", { name: "Отправить заявку" }).click();
   await expect(page).toHaveURL(/\/request\/confirm$/);
 
   // Success screen with the backend-assigned REQ number.
-  await expect(page.getByRole("heading", { name: /заявка отправлена/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /заявка принята/i })).toBeVisible();
   const reqNumber = page.getByText(/^REQ-\d{4}-\d{2}-\d{2}-\d+$/);
   await expect(reqNumber).toBeVisible();
 

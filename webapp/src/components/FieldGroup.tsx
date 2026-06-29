@@ -1,7 +1,8 @@
 /**
  * FieldGroup — label + input/select/textarea + inline zod error.
  *
- * Typography: label at 13px/400 hint color; error at 13px #ef4444.
+ * Typography (design-system §5): label 13/500 --text-muted; a trailing red `*`
+ * when `required`; error 13px --danger.
  * Accessibility: label.htmlFor wired to input id; error referenced via aria-describedby.
  */
 
@@ -11,12 +12,14 @@ interface FieldGroupProps {
   /** Matches the id of the child input/select/textarea. */
   htmlFor: string;
   label: string;
+  /** Append a red `*` to the label (design-system §5). */
+  required?: boolean;
   /** The error message string (from react-hook-form fieldState.error.message). */
   error?: string;
   children: ReactNode;
 }
 
-export default function FieldGroup({ htmlFor, label, error, children }: FieldGroupProps) {
+export default function FieldGroup({ htmlFor, label, required, error, children }: FieldGroupProps) {
   const errorId = error ? `${htmlFor}-error` : undefined;
 
   return (
@@ -26,20 +29,17 @@ export default function FieldGroup({ htmlFor, label, error, children }: FieldGro
         style={{
           display: "block",
           fontSize: "13px",
-          fontWeight: 400,
-          color: "var(--tg-theme-hint-color, #94a3b8)",
-          marginBottom: "4px",
+          fontWeight: 500,
+          color: "var(--text-muted)",
+          marginBottom: "6px",
         }}
       >
         {label}
+        {required && <span style={{ color: "var(--danger)", marginLeft: "2px" }}>*</span>}
       </label>
 
       {/* Clone children with aria-describedby pointing at the error span */}
-      <div
-        aria-describedby={errorId}
-      >
-        {children}
-      </div>
+      <div aria-describedby={errorId}>{children}</div>
 
       {error && (
         <span
@@ -48,7 +48,7 @@ export default function FieldGroup({ htmlFor, label, error, children }: FieldGro
           style={{
             display: "block",
             fontSize: "13px",
-            color: "#ef4444",
+            color: "var(--danger)",
             marginTop: "4px",
           }}
         >

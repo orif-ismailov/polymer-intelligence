@@ -43,7 +43,7 @@ function DetailRow({ label, value }: { label: string; value: string | null | und
         style={{
           display: "block",
           fontSize: "12px",
-          color: "var(--tg-theme-hint-color, #94a3b8)",
+          color: "var(--text-muted)",
           marginBottom: "2px",
         } as CSSProperties}
       >
@@ -52,7 +52,7 @@ function DetailRow({ label, value }: { label: string; value: string | null | und
       <span
         style={{
           fontSize: "14px",
-          color: "var(--tg-theme-text-color, #f8fafc)",
+          color: "var(--text)",
         } as CSSProperties}
       >
         {value}
@@ -77,8 +77,9 @@ function DetailSkeleton() {
           key={i}
           style={{
             height: `${h}px`,
-            borderRadius: "8px",
-            backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
+            borderRadius: "var(--r-md)",
+            backgroundColor: "var(--surface)",
+            border: "1px solid var(--border)",
             marginBottom: "12px",
             animation: "pulse-detail 1.4s ease-in-out infinite",
           } as CSSProperties}
@@ -164,7 +165,7 @@ export default function RequestDetailPage() {
                   style={{
                     fontSize: "15px",
                     fontWeight: 600,
-                    color: "var(--tg-theme-text-color, #f8fafc)",
+                    color: "var(--text)",
                   } as CSSProperties}
                 >
                   {detail.number}
@@ -226,7 +227,7 @@ export default function RequestDetailPage() {
                     margin: "0 0 10px",
                     fontSize: "14px",
                     fontWeight: 600,
-                    color: "var(--tg-theme-text-color, #f8fafc)",
+                    color: "var(--text)",
                   } as CSSProperties}
                 >
                   Файлы
@@ -240,14 +241,13 @@ export default function RequestDetailPage() {
                       alignItems: "center",
                       paddingBottom: "6px",
                       marginBottom: "6px",
-                      borderBottom:
-                        "1px solid var(--tg-theme-secondary-bg-color, #334155)",
+                      borderBottom: "1px solid var(--border)",
                     } as CSSProperties}
                   >
                     <span
                       style={{
                         fontSize: "13px",
-                        color: "var(--tg-theme-text-color, #f8fafc)",
+                        color: "var(--text)",
                         maxWidth: "70%",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -259,7 +259,7 @@ export default function RequestDetailPage() {
                     <span
                       style={{
                         fontSize: "12px",
-                        color: "var(--tg-theme-hint-color, #94a3b8)",
+                        color: "var(--text-muted)",
                       } as CSSProperties}
                     >
                       {formatBytes(file.size_bytes)}

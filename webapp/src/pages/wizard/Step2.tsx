@@ -94,13 +94,13 @@ export default function Step2() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <div style={{ marginBottom: "24px" }}>
-        <StepIndicator current={2} total={4} />
+        <StepIndicator current={2} total={4} subtitle={t("wizard.stepOf", { current: 2, total: 4 })} />
       </div>
 
       <h2
         ref={headingRef}
         tabIndex={-1}
-        style={{ margin: "0 0 24px", fontSize: "18px", fontWeight: 600, color: "var(--text)", outline: "none" }}
+        style={{ margin: "0 0 20px", fontSize: "17px", fontWeight: 600, color: "var(--text)", outline: "none" }}
       >
         {t("wizard.step2.title")}
       </h2>
@@ -113,6 +113,7 @@ export default function Step2() {
               key={a}
               selected={availability === a}
               label={t(`wizard.availabilityOpt.${a}`)}
+              description={t(`wizard.availabilityDesc.${a}`, { defaultValue: "" }) || undefined}
               onClick={() => setAvailability(a)}
             />
           ))}

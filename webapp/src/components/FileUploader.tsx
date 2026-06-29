@@ -101,8 +101,8 @@ export default function FileUploader() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "8px 12px",
-                borderRadius: "8px",
-                backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
+                borderRadius: "var(--r-sm)",
+                backgroundColor: "var(--surface-2)",
                 marginBottom: "6px",
               }}
             >
@@ -111,7 +111,7 @@ export default function FileUploader() {
                   style={{
                     display: "block",
                     fontSize: "14px",
-                    color: "var(--tg-theme-text-color, #f8fafc)",
+                    color: "var(--text)",
                   }}
                 >
                   {truncateName(file.name)}
@@ -119,7 +119,7 @@ export default function FileUploader() {
                 <span
                   style={{
                     fontSize: "12px",
-                    color: "var(--tg-theme-hint-color, #94a3b8)",
+                    color: "var(--text-muted)",
                   }}
                 >
                   {formatFileSize(file.size)}
@@ -138,7 +138,7 @@ export default function FileUploader() {
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--tg-theme-hint-color, #94a3b8)",
+                  color: "var(--text-muted)",
                   padding: "8px",
                   flexShrink: 0,
                 }}
@@ -158,13 +158,15 @@ export default function FileUploader() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: "44px",
-            padding: "10px 16px",
-            borderRadius: "8px",
-            border: "1.5px dashed var(--tg-theme-hint-color, #94a3b8)",
+            minHeight: "52px",
+            padding: "14px 16px",
+            borderRadius: "var(--r-md)",
+            border: "1.5px dashed var(--border)",
+            background: "var(--surface)",
             cursor: "pointer",
             fontSize: "14px",
-            color: "var(--tg-theme-hint-color, #94a3b8)",
+            fontWeight: 600,
+            color: "var(--text-muted)",
             gap: "8px",
           }}
         >
@@ -184,7 +186,7 @@ export default function FileUploader() {
       <p
         style={{
           fontSize: "12px",
-          color: "var(--tg-theme-hint-color, #94a3b8)",
+          color: "var(--text-muted)",
           margin: "6px 0 0",
         }}
       >
@@ -198,7 +200,7 @@ export default function FileUploader() {
           style={{
             display: "block",
             fontSize: "13px",
-            color: "#ef4444",
+            color: "var(--danger)",
             marginTop: "6px",
           }}
         >

@@ -2,8 +2,8 @@
  * Theme preference store (zustand).
  *
  * `pref` is the user's choice persisted in localStorage and (Phase 1+) on the
- * client profile: 'system' (default — follow Telegram's colorScheme), 'light', or
- * 'dark'. `systemScheme` is the live platform scheme kept up to date by
+ * client profile: 'dark' (default — the brand look), 'system' (follow Telegram's
+ * colorScheme), or 'light'. `systemScheme` is the live platform scheme kept up to date by
  * ThemeProvider. The resolved scheme = pref === 'system' ? systemScheme : pref.
  */
 
@@ -21,7 +21,9 @@ function loadPref(): ThemePref {
   } catch {
     /* ignore — private mode / no storage */
   }
-  return "system";
+  // Default to dark (the brand look) until the user explicitly picks System/Light
+  // in Профиль. design-system.md §2 dark-first.
+  return "dark";
 }
 
 interface ThemeStore {

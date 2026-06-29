@@ -28,10 +28,11 @@ export default function RequestCard({ request, onClick }: RequestCardProps) {
         flexDirection: "column",
         width: "100%",
         minHeight: "44px",
-        padding: "12px 16px",
-        borderRadius: "12px",
-        backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
-        border: "none",
+        padding: "14px 16px",
+        borderRadius: "var(--r-md)",
+        backgroundColor: "var(--surface)",
+        border: "1px solid var(--border)",
+        boxShadow: "var(--shadow)",
         cursor: "pointer",
         textAlign: "left",
         marginBottom: "12px",
@@ -53,7 +54,7 @@ export default function RequestCard({ request, onClick }: RequestCardProps) {
           style={{
             fontSize: "15px",
             fontWeight: 600,
-            color: "var(--tg-theme-text-color, #f8fafc)",
+            color: "var(--text)",
           } as CSSProperties}
         >
           {request.number}
@@ -65,7 +66,7 @@ export default function RequestCard({ request, onClick }: RequestCardProps) {
       <span
         style={{
           fontSize: "13px",
-          color: "var(--tg-theme-hint-color, #94a3b8)",
+          color: "var(--text-muted)",
         } as CSSProperties}
       >
         {dateStr}

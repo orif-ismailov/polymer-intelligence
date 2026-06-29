@@ -8,7 +8,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Phone, Send } from "lucide-react";
 
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
@@ -132,48 +132,48 @@ export default function OfferDetail() {
         </p>
       )}
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-        {offer.seller.phone && (
-          <a href={`tel:${offer.seller.phone}`} style={contactBtn("var(--green)")}>{t("offer.call")}</a>
-        )}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {offer.seller.telegram_username && (
-          <a href={`https://t.me/${offer.seller.telegram_username}`} target="_blank" rel="noreferrer" style={contactBtn("var(--blue)")}>
-            Telegram
+          <a
+            href={`https://t.me/${offer.seller.telegram_username}`}
+            target="_blank"
+            rel="noreferrer"
+            style={fullBtn("var(--blue)", "#ffffff")}
+          >
+            <Send size={18} /> {t("offer.writeTelegram")}
+          </a>
+        )}
+
+        <button type="button" onClick={() => navigate("/request/step/1")} style={{ ...fullBtn("var(--green)", "var(--green-on)"), cursor: "pointer" }}>
+          {t("offer.requestOffer")}
+        </button>
+
+        {offer.seller.phone && (
+          <a href={`tel:${offer.seller.phone}`} style={fullBtn("var(--surface)", "var(--text)", true)}>
+            <Phone size={18} color="var(--green)" /> {t("offer.call")}
           </a>
         )}
       </div>
-
-      <button type="button" onClick={() => navigate("/request/step/1")} style={primaryBtn}>
-        {t("offer.requestOffer")}
-      </button>
     </div>
   );
 }
 
-function contactBtn(color: string): CSSProperties {
+function fullBtn(bg: string, fg: string, bordered = false): CSSProperties {
   return {
-    flex: 1,
-    textAlign: "center",
-    padding: "12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    width: "100%",
+    minHeight: "48px",
+    padding: "12px 20px",
     borderRadius: "var(--r-md)",
-    border: `1px solid ${color}`,
-    color,
-    fontSize: "14px",
+    background: bg,
+    color: fg,
+    border: bordered ? "1px solid var(--border)" : "none",
+    fontSize: "16px",
     fontWeight: 600,
     textDecoration: "none",
+    boxSizing: "border-box",
   };
 }
-
-const primaryBtn: CSSProperties = {
-  display: "block",
-  width: "100%",
-  minHeight: "48px",
-  padding: "12px 20px",
-  borderRadius: "var(--r-md)",
-  background: "var(--green)",
-  color: "var(--green-on)",
-  border: "none",
-  fontSize: "16px",
-  fontWeight: 600,
-  cursor: "pointer",
-};

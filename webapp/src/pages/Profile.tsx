@@ -7,12 +7,15 @@
  */
 
 import { useEffect, useState, type CSSProperties } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Send } from "lucide-react";
 
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
 import ErrorBanner from "../components/ErrorBanner";
 import Segmented from "../components/Segmented";
+import Button from "../components/Button";
 import { useTheme, type ThemePref } from "../theme/themeStore";
 import { useRoleStore, type Role } from "../store/roleStore";
 import { SUPPORTED_LANGS, type Lang } from "../i18n";
@@ -26,6 +29,7 @@ const sectionLabel: CSSProperties = {
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { pref, setPref } = useTheme();
   const role = useRoleStore((s) => s.role);
   const setRole = useRoleStore((s) => s.setRole);
@@ -90,7 +94,7 @@ export default function Profile() {
         />
       </section>
 
-      <section>
+      <section style={{ marginBottom: "24px" }}>
         <p style={sectionLabel}>{t("profile.role")}</p>
         <Segmented<string>
           value={role ?? ""}
@@ -98,6 +102,15 @@ export default function Profile() {
           onChange={(r) => setRole(r as Role)}
           ariaLabel={t("profile.role")}
         />
+      </section>
+
+      <section>
+        <p style={sectionLabel}>{t("support.title")}</p>
+        <Button variant="telegram" onClick={() => navigate("/support")}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            <Send size={18} /> {t("support.cta")}
+          </span>
+        </Button>
       </section>
     </div>
   );

@@ -33,7 +33,7 @@ export default function EmptyState({ heading, body, cta, onCta }: EmptyStateProp
           margin: "0 0 8px",
           fontSize: "15px",
           fontWeight: 600,
-          color: "var(--tg-theme-text-color, #f8fafc)",
+          color: "var(--text)",
         } as CSSProperties}
       >
         {heading}
@@ -43,7 +43,7 @@ export default function EmptyState({ heading, body, cta, onCta }: EmptyStateProp
           style={{
             margin: "0 0 24px",
             fontSize: "13px",
-            color: "var(--tg-theme-hint-color, #94a3b8)",
+            color: "var(--text-muted)",
             lineHeight: 1.4,
           } as CSSProperties}
         >
@@ -56,13 +56,13 @@ export default function EmptyState({ heading, body, cta, onCta }: EmptyStateProp
           onClick={onCta}
           style={{
             display: "inline-block",
-            minHeight: "44px",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            backgroundColor: "var(--tg-theme-button-color, #10b981)",
-            color: "var(--tg-theme-button-text-color, #ffffff)",
+            minHeight: "48px",
+            padding: "12px 24px",
+            borderRadius: "var(--r-md)",
+            backgroundColor: "var(--green)",
+            color: "var(--green-on)",
             border: "none",
-            fontSize: "14px",
+            fontSize: "16px",
             fontWeight: 600,
             cursor: "pointer",
             boxSizing: "border-box" as const,

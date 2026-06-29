@@ -15,6 +15,7 @@ import StepIndicator from "../../components/StepIndicator";
 import FieldGroup from "../../components/FieldGroup";
 import SelectField from "../../components/SelectField";
 import FileUploader from "../../components/FileUploader";
+import HintBanner from "../../components/HintBanner";
 import { mainButton, backButton } from "../../telegram";
 import { useWizardStore } from "../../store/wizardStore";
 
@@ -78,7 +79,7 @@ export default function Step4() {
   }, [navigate, comment]);
 
   useEffect(() => {
-    mainButton.setText(t("wizard.submit"));
+    mainButton.setText(t("wizard.submitRequest"));
     mainButton.show();
     mainButton.enable();
   }, [t]);
@@ -97,13 +98,13 @@ export default function Step4() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <div style={{ marginBottom: "24px" }}>
-        <StepIndicator current={4} total={4} />
+        <StepIndicator current={4} total={4} subtitle={t("wizard.stepOf", { current: 4, total: 4 })} />
       </div>
 
       <h2
         ref={headingRef}
         tabIndex={-1}
-        style={{ margin: "0 0 24px", fontSize: "18px", fontWeight: 600, color: "var(--text)", outline: "none" }}
+        style={{ margin: "0 0 20px", fontSize: "17px", fontWeight: 600, color: "var(--text)", outline: "none" }}
       >
         {t("wizard.step4.title")}
       </h2>
@@ -127,7 +128,7 @@ export default function Step4() {
       </div>
 
       <form onSubmit={(e) => e.preventDefault()}>
-        <FieldGroup htmlFor="target_price" label={t("wizard.targetPrice")}>
+        <FieldGroup htmlFor="target_price" label={t("wizard.desiredPrice")}>
           <input id="target_price" type="number" inputMode="decimal" min="0" step="any" placeholder={t("wizard.pricePlaceholder")} style={fieldStyle} {...register("target_price")} />
         </FieldGroup>
 
@@ -146,9 +147,11 @@ export default function Step4() {
           />
         </FieldGroup>
 
-        <FieldGroup htmlFor="file-uploader-input" label={t("fileUploader.attach")}>
+        <FieldGroup htmlFor="file-uploader-input" label={t("wizard.attachTds")}>
           <FileUploader />
         </FieldGroup>
+
+        <HintBanner tone="ok">{t("wizard.dataProtected")}</HintBanner>
 
         <button
           type="button"
@@ -159,7 +162,7 @@ export default function Step4() {
           style={{
             display: "block",
             width: "100%",
-            minHeight: "44px",
+            minHeight: "48px",
             padding: "12px 20px",
             borderRadius: "var(--r-md)",
             backgroundColor: "var(--green)",
@@ -172,7 +175,7 @@ export default function Step4() {
             marginTop: "8px",
           }}
         >
-          {t("wizard.submit")}
+          {t("wizard.submitRequest")}
         </button>
       </form>
     </div>

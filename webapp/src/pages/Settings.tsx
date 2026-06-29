@@ -76,14 +76,14 @@ export default function Settings() {
 
   const activeSegment: CSSProperties = {
     ...segmentBase,
-    backgroundColor: "var(--tg-theme-button-color, #10b981)",
-    color: "var(--tg-theme-button-text-color, #ffffff)",
+    backgroundColor: "var(--green)",
+    color: "var(--green-on)",
   };
 
   const inactiveSegment: CSSProperties = {
     ...segmentBase,
-    backgroundColor: "var(--tg-theme-secondary-bg-color, #0f172a)",
-    color: "var(--tg-theme-hint-color, #94a3b8)",
+    backgroundColor: "var(--surface)",
+    color: "var(--text-muted)",
   };
 
   return (
@@ -103,7 +103,7 @@ export default function Settings() {
             style={{
               margin: "0 0 12px",
               fontSize: "13px",
-              color: "var(--tg-theme-hint-color, #94a3b8)",
+              color: "var(--text-muted)",
             } as CSSProperties}
           >
             {t("settings.language")}
@@ -115,9 +115,9 @@ export default function Settings() {
             aria-label={t("settings.language")}
             style={{
               display: "flex",
-              borderRadius: "8px",
+              borderRadius: "var(--r-md)",
               overflow: "hidden",
-              border: "1px solid var(--tg-theme-secondary-bg-color, #334155)",
+              border: "1px solid var(--border)",
             } as CSSProperties}
           >
             <button

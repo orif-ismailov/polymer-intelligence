@@ -114,6 +114,12 @@ export default function Market() {
         </p>
       )}
 
+      {state === "ok" && offers.length > 0 && (
+        <h2 style={{ margin: "0 0 12px", fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>
+          {t("market.popular")}
+        </h2>
+      )}
+
       {state === "ok" &&
         offers.map((o) => {
           const img = o.files?.find((f) => f.kind === "image");

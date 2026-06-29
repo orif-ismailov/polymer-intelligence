@@ -1,19 +1,26 @@
 /**
- * Seller listing wizard (/sell/new) — IMG_0046 ③ / IMG_0043 bottom.
+ * Seller listing wizard (/sell/new) — design_2 seller flow + IMG_0046 ③.
  *
- * Four stepped screens with a progress indicator (Основная информация → Количество
- * и цена → Фото и документы → Контакты и описание) → "Отправить на модерацию". On
- * submit it POSTs the offer, uploads staged photos, then shows the moderation
- * confirmation. Open self-serve: the seller is upserted from the contact + initData.
+ * Four stepped screens with a progress indicator:
+ *   1 Основная информация  · 2 Количество и цена · 3 Фото и документы · 4 Проверка и публикация
+ * Step 4 is a review summary + description/contact + publish; on submit it POSTs the
+ * offer, uploads staged photos, then shows the moderation confirmation (Telegram glyph).
+ * Open self-serve: the seller is upserted from the contact + initData.
+ *
+ * Reconciliation note: the publish CTA is ORANGE (documented seller-domain primary);
+ * design_2 drew it green — see docs/design-system.md §Reconciliation.
  */
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ImagePlus, Send, X } from "lucide-react";
 
 import StepIndicator from "../components/StepIndicator";
 import FieldGroup from "../components/FieldGroup";
 import SelectField from "../components/SelectField";
+import Segmented from "../components/Segmented";
+import Button from "../components/Button";
 import { api } from "../api/client";
 import { backButton, mainButton, notifySuccess, notifyError } from "../telegram";
 import type { PriceBasis, SellerOfferCreate } from "../types";
@@ -28,15 +35,15 @@ const PRODUCTS = [
   { value: 7, label: "PS" },
   { value: 8, label: "ABS" },
 ];
-const CURRENCY = ["USD", "EUR", "UZS", "RUB"];
-const INCOTERMS = ["unknown", "EXW", "FCA", "FOB", "CIF", "CPT", "DAP", "DDP"];
+const CURRENCY = ["USD", "UZS", "EUR", "RUB"];
+const INCOTERMS = ["EXW", "FCA", "FOB", "CIF", "CPT", "DAP", "DDP"];
 const UNITS = ["MT", "KG"];
 
 const fieldStyle: CSSProperties = {
   display: "block",
   width: "100%",
-  minHeight: "44px",
-  padding: "10px 12px",
+  minHeight: "48px",
+  padding: "12px",
   borderRadius: "var(--r-md)",
   background: "var(--surface)",
   color: "var(--text)",
@@ -45,20 +52,13 @@ const fieldStyle: CSSProperties = {
   boxSizing: "border-box",
 };
 
-function primaryBtn(bg: string): CSSProperties {
-  return {
-    flex: 1,
-    minHeight: "48px",
-    padding: "12px 20px",
-    borderRadius: "var(--r-md)",
-    background: bg,
-    color: "#ffffff",
-    border: "none",
-    fontSize: "16px",
-    fontWeight: 600,
-    cursor: "pointer",
-  };
-}
+const groupLabel: CSSProperties = {
+  display: "block",
+  margin: "0 0 6px",
+  fontSize: "13px",
+  fontWeight: 500,
+  color: "var(--text-muted)",
+};
 
 export default function SellOffer() {
   const { t } = useTranslation();
@@ -74,7 +74,7 @@ export default function SellOffer() {
   const [qtyUnit, setQtyUnit] = useState("MT");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
-  const [incoterms, setIncoterms] = useState("unknown");
+  const [incoterms, setIncoterms] = useState("FCA");
   const [warehouseCity, setWarehouseCity] = useState("");
   const [minOrder, setMinOrder] = useState("");
   const [description, setDescription] = useState("");
@@ -87,8 +87,12 @@ export default function SellOffer() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  const step1Valid = productId !== "" || productText.trim() !== "";
+  const productLabel = productId ? PRODUCTS.find((p) => String(p.value) === productId)?.label : productText;
+  const step1Valid = (productId !== "" || productText.trim() !== "") && warehouseCity.trim() !== "";
   const step2Valid = Number(qty) > 0 && Number(price) > 0;
+
+  const thumbs = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
+  useEffect(() => () => thumbs.forEach((u) => URL.revokeObjectURL(u)), [thumbs]);
 
   useEffect(() => {
     backButton.show();
@@ -143,33 +147,79 @@ export default function SellOffer() {
     }
   }
 
+  // ── Moderation confirmation (design.jpeg seller ⑤ — Telegram glyph) ──────────
   if (done) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "48px 16px", textAlign: "center" }}>
-        <h1 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "8px" }}>{t("sellForm.success")}</h1>
-        <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px" }}>{t("sellForm.successBody")}</p>
-        <button type="button" onClick={() => navigate("/sell")} style={{ ...primaryBtn("var(--green)"), color: "var(--green-on)" }}>
-          {t("sellForm.backToOffers")}
-        </button>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "var(--bg)",
+          color: "var(--text)",
+          padding: "56px 24px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+        }}
+      >
+        <span
+          style={{
+            width: "84px",
+            height: "84px",
+            borderRadius: "var(--r-full)",
+            background: "var(--chip-warn-bg)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "24px",
+          }}
+        >
+          <Send size={38} color="var(--blue)" />
+        </span>
+        <h1 style={{ fontSize: "22px", fontWeight: 700, margin: "0 0 12px" }}>{t("sellForm.success")}</h1>
+        <p style={{ fontSize: "15px", lineHeight: 1.5, color: "var(--text-muted)", margin: "0 0 32px", maxWidth: "320px" }}>
+          {t("sellForm.successBody")}
+        </p>
+        <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          <Button variant="seller" onClick={() => navigate("/sell")}>
+            {t("sellForm.backToOffers")}
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/")}>
+            {t("confirm.cta.home")}
+          </Button>
+        </div>
       </div>
     );
   }
 
   const canAdvance = step === 1 ? step1Valid : step === 2 ? step2Valid : true;
 
+  const summaryRows: [string, string][] = [
+    [t("wizard.product"), [productLabel, grade].filter(Boolean).join(" · ") || "—"],
+    [t("sellForm.qtyAvailable"), qty ? `${Number(qty).toLocaleString()} ${qtyUnit}` : "—"],
+    [t("sellForm.price"), price ? `${Number(price).toLocaleString()} ${currency}/${qtyUnit}` : "—"],
+    [t("sellForm.warehouseCity"), warehouseCity || "—"],
+    [t("wizard.incoterms"), incoterms],
+  ];
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <div style={{ marginBottom: "24px" }}>
-        <StepIndicator current={step} total={4} />
+        <StepIndicator
+          current={step}
+          total={4}
+          accent="var(--orange)"
+          subtitle={t("wizard.stepOf", { current: step, total: 4 })}
+        />
       </div>
 
-      <h1 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: 600 }}>{t(`sellForm.step${step}`)}</h1>
+      <h1 style={{ margin: "0 0 20px", fontSize: "17px", fontWeight: 600 }}>{t(`sellForm.step${step}`)}</h1>
 
       {error && <p role="alert" style={{ color: "var(--danger)", fontSize: "14px", marginBottom: "8px" }}>{error}</p>}
 
       {step === 1 && (
         <>
-          <FieldGroup htmlFor="s_product" label={t("wizard.product")}>
+          <FieldGroup htmlFor="s_product" label={t("wizard.product")} required>
             <SelectField id="s_product" options={PRODUCTS} placeholder={t("wizard.productPlaceholder")} value={productId} onChange={(e) => setProductId(e.target.value)} />
           </FieldGroup>
           <FieldGroup htmlFor="s_ptext" label={t("wizard.productText")}>
@@ -181,48 +231,100 @@ export default function SellOffer() {
           <FieldGroup htmlFor="s_ptype" label={t("wizard.polymerType")}>
             <input id="s_ptype" type="text" value={polymerType} onChange={(e) => setPolymerType(e.target.value)} placeholder={t("wizard.polymerTypePlaceholder")} style={fieldStyle} />
           </FieldGroup>
+          <FieldGroup htmlFor="s_city" label={t("sellForm.warehouseCity")} required>
+            <input id="s_city" type="text" value={warehouseCity} onChange={(e) => setWarehouseCity(e.target.value)} placeholder={t("wizard.portPlaceholder")} style={fieldStyle} />
+          </FieldGroup>
         </>
       )}
 
       {step === 2 && (
         <>
-          <FieldGroup htmlFor="s_qty" label={`${t("sellForm.qtyAvailable")} *`}>
+          <FieldGroup htmlFor="s_qty" label={t("sellForm.qtyAvailable")} required>
             <input id="s_qty" type="number" inputMode="decimal" min="0.01" step="any" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="100" style={fieldStyle} />
           </FieldGroup>
           <FieldGroup htmlFor="s_unit" label={t("wizard.volumeUnit")}>
             <SelectField id="s_unit" options={UNITS.map((u) => ({ value: u, label: t(`wizard.volumeUnit_${u}`, u) }))} value={qtyUnit} onChange={(e) => setQtyUnit(e.target.value)} />
           </FieldGroup>
-          <FieldGroup htmlFor="s_price" label={`${t("sellForm.price")} *`}>
-            <input id="s_price" type="number" inputMode="decimal" min="0.01" step="any" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="1200" style={fieldStyle} />
-          </FieldGroup>
-          <FieldGroup htmlFor="s_curr" label={t("wizard.currency")}>
-            <SelectField id="s_curr" options={CURRENCY.map((c) => ({ value: c, label: c }))} value={currency} onChange={(e) => setCurrency(e.target.value)} />
-          </FieldGroup>
-          <FieldGroup htmlFor="s_inco" label={t("wizard.incoterms")}>
-            <SelectField id="s_inco" options={INCOTERMS.map((i) => ({ value: i, label: i === "unknown" ? t("wizard.incotermsNone") : i }))} value={incoterms} onChange={(e) => setIncoterms(e.target.value)} />
-          </FieldGroup>
-          <FieldGroup htmlFor="s_city" label={t("sellForm.warehouseCity")}>
-            <input id="s_city" type="text" value={warehouseCity} onChange={(e) => setWarehouseCity(e.target.value)} placeholder={t("wizard.portPlaceholder")} style={fieldStyle} />
-          </FieldGroup>
           <FieldGroup htmlFor="s_min" label={t("sellForm.minOrder")}>
             <input id="s_min" type="number" inputMode="decimal" min="0" step="any" value={minOrder} onChange={(e) => setMinOrder(e.target.value)} placeholder="20" style={fieldStyle} />
           </FieldGroup>
+          <FieldGroup htmlFor="s_price" label={t("sellForm.price")} required>
+            <input id="s_price" type="number" inputMode="decimal" min="0.01" step="any" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="1200" style={fieldStyle} />
+          </FieldGroup>
+          <div style={{ marginBottom: "16px" }}>
+            <span style={groupLabel}>{t("wizard.currency")}</span>
+            <Segmented<string> value={currency} options={CURRENCY.map((c) => ({ value: c, label: c }))} onChange={setCurrency} ariaLabel={t("wizard.currency")} />
+          </div>
+          <div style={{ marginBottom: "16px" }}>
+            <span style={groupLabel}>{t("wizard.incoterms")}</span>
+            <Segmented<string> value={incoterms} options={INCOTERMS.map((i) => ({ value: i, label: i }))} onChange={setIncoterms} ariaLabel={t("wizard.incoterms")} />
+          </div>
         </>
       )}
 
       {step === 3 && (
-        <FieldGroup htmlFor="s_photos" label={t("sellForm.photos")}>
-          <input id="s_photos" type="file" accept="image/jpeg" multiple onChange={(e) => setPhotos(Array.from(e.target.files ?? []))} style={fieldStyle} />
-          {photos.length > 0 && (
-            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
-              {photos.length} {t("sellForm.photosCount")}
-            </p>
-          )}
-        </FieldGroup>
+        <>
+          <span style={groupLabel}>{t("sellForm.photos")}</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+            {photos.map((f, i) => (
+              <span key={`${f.name}-${i}`} style={{ position: "relative", width: "84px", height: "84px" }}>
+                <img src={thumbs[i]} alt="" style={{ width: "84px", height: "84px", objectFit: "cover", borderRadius: "var(--r-sm)", border: "1px solid var(--border)" }} />
+                <button
+                  type="button"
+                  aria-label={t("fileUploader.remove", { name: f.name })}
+                  onClick={() => setPhotos(photos.filter((_, j) => j !== i))}
+                  style={{ position: "absolute", top: "-6px", right: "-6px", width: "22px", height: "22px", borderRadius: "var(--r-full)", background: "var(--danger)", color: "#ffffff", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+            <label
+              htmlFor="s_photos"
+              style={{
+                width: "84px",
+                height: "84px",
+                borderRadius: "var(--r-sm)",
+                border: "1.5px dashed var(--border)",
+                background: "var(--surface)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                cursor: "pointer",
+                color: "var(--text-muted)",
+                fontSize: "11px",
+                fontWeight: 600,
+                textAlign: "center",
+              }}
+            >
+              <ImagePlus size={20} />
+              {t("sellForm.addPhoto")}
+              <input
+                id="s_photos"
+                type="file"
+                accept="image/jpeg"
+                multiple
+                onChange={(e) => setPhotos([...photos, ...Array.from(e.target.files ?? [])])}
+                style={{ display: "none" }}
+              />
+            </label>
+          </div>
+          <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>{t("sellForm.docsHint")}</p>
+        </>
       )}
 
       {step === 4 && (
         <>
+          <div style={{ background: "var(--surface-2)", borderRadius: "var(--r-md)", padding: "4px 14px", marginBottom: "20px" }}>
+            {summaryRows.map(([k, v]) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: "12px", padding: "10px 0", borderBottom: "1px solid var(--border)", fontSize: "13px" }}>
+                <span style={{ color: "var(--text-muted)" }}>{k}</span>
+                <span style={{ color: "var(--text)", fontWeight: 600, textAlign: "right" }}>{v}</span>
+              </div>
+            ))}
+          </div>
           <FieldGroup htmlFor="s_desc" label={t("sellForm.description")}>
             <textarea id="s_desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ ...fieldStyle, minHeight: "80px", resize: "vertical" }} />
           </FieldGroup>
@@ -240,28 +342,18 @@ export default function SellOffer() {
 
       <div style={{ display: "flex", gap: "8px", marginTop: "20px" }}>
         {step > 1 && (
-          <button type="button" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3 | 4)} style={{ ...primaryBtn("var(--surface)"), color: "var(--text)", border: "1px solid var(--border)" }}>
+          <Button variant="secondary" style={{ flex: 1 }} onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3 | 4)}>
             {t("sellForm.back")}
-          </button>
+          </Button>
         )}
         {step < 4 ? (
-          <button
-            type="button"
-            disabled={!canAdvance}
-            onClick={() => canAdvance && setStep((s) => (s + 1) as 1 | 2 | 3 | 4)}
-            style={{ ...primaryBtn(canAdvance ? "var(--orange)" : "var(--chip-neutral-bg)"), color: canAdvance ? "#ffffff" : "var(--text-muted)", cursor: canAdvance ? "pointer" : "not-allowed" }}
-          >
+          <Button variant="seller" style={{ flex: 1 }} disabled={!canAdvance} onClick={() => canAdvance && setStep((s) => (s + 1) as 1 | 2 | 3 | 4)}>
             {t("wizard.next")}
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={() => void submit()}
-            style={{ ...primaryBtn("var(--orange)"), opacity: submitting ? 0.6 : 1 }}
-          >
-            {t("sellForm.submit")}
-          </button>
+          <Button variant="seller" style={{ flex: 1, opacity: submitting ? 0.6 : 1 }} disabled={submitting} onClick={() => void submit()}>
+            {t("sellForm.publish")}
+          </Button>
         )}
       </div>
     </div>

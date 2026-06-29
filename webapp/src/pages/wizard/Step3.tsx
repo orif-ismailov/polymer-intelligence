@@ -91,13 +91,13 @@ export default function Step3() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <div style={{ marginBottom: "24px" }}>
-        <StepIndicator current={3} total={4} />
+        <StepIndicator current={3} total={4} subtitle={t("wizard.stepOf", { current: 3, total: 4 })} />
       </div>
 
       <h2
         ref={headingRef}
         tabIndex={-1}
-        style={{ margin: "0 0 24px", fontSize: "18px", fontWeight: 600, color: "var(--text)", outline: "none" }}
+        style={{ margin: "0 0 20px", fontSize: "17px", fontWeight: 600, color: "var(--text)", outline: "none" }}
       >
         {t("wizard.step3.title")}
       </h2>
@@ -111,7 +111,7 @@ export default function Step3() {
           <input id="contact_name" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder={t("wizard.contactPlaceholder")} style={fieldStyle} />
         </FieldGroup>
 
-        <FieldGroup htmlFor="phone" label={`${t("wizard.phone")} *`} error={phoneValid ? undefined : t("error.required")}>
+        <FieldGroup htmlFor="phone" label={t("wizard.phone")} required error={phoneValid ? undefined : t("error.required")}>
           <input id="phone" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+998 __ ___ __ __" style={fieldStyle} />
         </FieldGroup>
 
