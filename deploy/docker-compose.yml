@@ -94,6 +94,32 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── MinIO bucket init (one-shot) ──────────────────────────────────────────
+  # Creates S3_BUCKET in MinIO before the api serves uploads. Without it a fresh
+  # MinIO has no bucket and the first file upload 500s (NoSuchBucket). The MinIO
+  # root creds ARE S3_ACCESS_KEY/S3_SECRET_KEY (see the minio service above), so the
+  # root alias can create exactly the bucket the api/worker read/write. Idempotent
+  # (mc mb --ignore-existing); exits 0, and the api waits for it to complete.
+  minio-init:
+    # mc client pinned to the same era as the minio server (RELEASE.2023-01-12) — NOT
+    # :latest. Recent minio/mc builds require x86-64-v2 and crash on older CPUs, the
+    # same reason MINIO_IMAGE is pinned. Override via .env (MC_IMAGE=...) on newer hosts.
+    image: ${MC_IMAGE:-minio/mc:RELEASE.2023-01-11T03-14-16Z}
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET:-polymer-files}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${S3_ACCESS_KEY} $${S3_SECRET_KEY} &&
+      mc mb --ignore-existing local/$${S3_BUCKET} &&
+      echo \"minio-init: bucket $${S3_BUCKET} ready\"
+      "
+
   # ── API (FastAPI + uvicorn; also serves the aiogram webhook) ───────────────
   api:
     build:
@@ -121,6 +147,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     # Migrate + seed (reference, staff, sources) BEFORE serving — idempotent
     # pre-start steps so a fresh deploy comes up fully provisioned with no manual
     # step. NO --reload in production (immutable image, no bind-mount watcher).
@@ -157,6 +185,10 @@ services:
       # `telegram` package (notify/send via the bot) is a repo-root package, not in
       # the image — mount it read-only.
       - ../telegram:/app/telegram:ro
+      # `userbot` package — the check_userbot_health task (queue `ingest`, which this
+      # worker consumes) lazily imports userbot.heartbeat. Repo-root package, not in
+      # the image, so mount it read-only at /app/userbot (WORKDIR is /app) too.
+      - ../userbot:/app/userbot:ro
     command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default
     # No host ports.
 
