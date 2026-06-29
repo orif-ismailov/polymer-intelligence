@@ -104,3 +104,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/*
+ * iOS Safari zooms the viewport when a focused form control has font-size < 16px.
+ * Keep every text control at ≥16px so focusing never triggers the zoom-in jump.
+ * (Components also set 16px inline; this is the safety net for any that don't.)
+ */
+input,
+select,
+textarea {
+  font-size: 16px;
+}

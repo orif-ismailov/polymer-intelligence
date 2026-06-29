@@ -84,7 +84,7 @@ const fieldStyle = {
   backgroundColor: "var(--surface)",
   color: "var(--text)",
   border: "1px solid var(--border)",
-  fontSize: "14px",
+  fontSize: "16px",
   boxSizing: "border-box" as const,
 };
 

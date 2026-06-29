@@ -38,7 +38,7 @@ const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
           backgroundColor: "var(--surface)",
           color: "var(--text)",
           border: "1px solid var(--border)",
-          fontSize: "14px",
+          fontSize: "16px",
           fontFamily: "inherit",
           appearance: "none",
           backgroundImage: CHEVRON,

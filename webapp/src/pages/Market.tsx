@@ -88,7 +88,7 @@ export default function Market() {
           border: "1px solid var(--border)",
           background: "var(--surface)",
           color: "var(--text)",
-          fontSize: "14px",
+          fontSize: "16px",
           boxSizing: "border-box",
           marginBottom: "12px",
         }}
