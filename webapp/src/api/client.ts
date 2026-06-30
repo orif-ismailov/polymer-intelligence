@@ -106,6 +106,19 @@ export const api = {
     });
   },
 
+  /**
+   * GET /webapp/requests/{id}/files/{fileId} — owner-only file bytes (image/PDF/…).
+   * Returned as a Blob so the caller can render an image inline or open/download it.
+   * Uses a raw fetch (not apiFetch) because the response is binary, not JSON.
+   */
+  async getRequestFile(requestId: number, fileId: number): Promise<Blob> {
+    const res = await fetch(`${BASE_URL}/webapp/requests/${requestId}/files/${fileId}`, {
+      headers: { "X-Telegram-Init-Data": getInitData() },
+    });
+    if (!res.ok) throw new ApiError(res.status, "file fetch failed");
+    return res.blob();
+  },
+
   // ── Profile ───────────────────────────────────────────────────────────────
 
   /** GET /webapp/me — authenticated client's profile. */

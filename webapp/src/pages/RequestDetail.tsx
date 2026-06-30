@@ -17,13 +17,90 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Download, FileText } from "lucide-react";
 import { styles } from "../App";
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
 import StatusChip from "../components/StatusChip";
 import StatusTimeline from "../components/StatusTimeline";
 import ErrorBanner from "../components/ErrorBanner";
-import type { RequestDetail } from "../types";
+import type { RequestDetail, RequestFileMeta } from "../types";
+
+// ── Attached file row: inline image preview, or an openable/downloadable file ──
+
+function RequestFileRow({ requestId, file }: { requestId: number; file: RequestFileMeta }) {
+  const isImage = (file.mime_type ?? "").startsWith("image/");
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+
+  // Image files: fetch the (owner-only) bytes with the initData header and show inline.
+  useEffect(() => {
+    if (!isImage) return;
+    let url: string | null = null;
+    let cancelled = false;
+    api
+      .getRequestFile(requestId, file.id)
+      .then((blob) => {
+        if (cancelled) return;
+        url = URL.createObjectURL(blob);
+        setImgUrl(url);
+      })
+      .catch(() => {
+        /* leave without a preview */
+      });
+    return () => {
+      cancelled = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [isImage, requestId, file.id]);
+
+  // Tap → open the file in a new tab (PDF/image render; other types download).
+  async function openFile() {
+    try {
+      const blob = await api.getRequestFile(requestId, file.id);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (isImage) {
+    return (
+      <button
+        type="button"
+        onClick={() => void openFile()}
+        style={{ display: "block", width: "100%", padding: 0, marginBottom: "10px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+      >
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt={file.file_name}
+            style={{ width: "100%", maxHeight: "240px", objectFit: "cover", borderRadius: "var(--r-sm)", border: "1px solid var(--border)", background: "var(--surface-2)" }}
+          />
+        ) : (
+          <span style={{ display: "block", width: "100%", height: "120px", borderRadius: "var(--r-sm)", background: "var(--surface-2)" }} />
+        )}
+        <span style={{ display: "block", fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>{file.file_name}</span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void openFile()}
+      style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", padding: "10px 0", background: "none", border: "none", borderBottom: "1px solid var(--border)", cursor: "pointer", textAlign: "left" }}
+    >
+      <FileText size={18} color="var(--blue)" style={{ flex: "0 0 auto" }} />
+      <span style={{ flex: 1, minWidth: 0, fontSize: "13px", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {file.file_name}
+      </span>
+      <span style={{ fontSize: "12px", color: "var(--text-muted)", flex: "0 0 auto" }}>{formatBytes(file.size_bytes)}</span>
+      <Download size={16} color="var(--text-muted)" style={{ flex: "0 0 auto" }} />
+    </button>
+  );
+}
 
 // ── Size formatting ────────────────────────────────────────────────────────────
 
@@ -230,41 +307,10 @@ export default function RequestDetailPage() {
                     color: "var(--text)",
                   } as CSSProperties}
                 >
-                  Файлы
+                  {t("requestDetail.files")}
                 </h3>
                 {detail.files.map((file) => (
-                  <div
-                    key={file.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      paddingBottom: "6px",
-                      marginBottom: "6px",
-                      borderBottom: "1px solid var(--border)",
-                    } as CSSProperties}
-                  >
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        color: "var(--text)",
-                        maxWidth: "70%",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      } as CSSProperties}
-                    >
-                      {file.file_name}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--text-muted)",
-                      } as CSSProperties}
-                    >
-                      {formatBytes(file.size_bytes)}
-                    </span>
-                  </div>
+                  <RequestFileRow key={file.id} requestId={detail.id} file={file} />
                 ))}
               </div>
             )}

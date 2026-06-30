@@ -115,7 +115,8 @@
   },
   "requestDetail": {
     "title": "Talep ayrıntıları",
-    "history": "Durum geçmişi"
+    "history": "Durum geçmişi",
+    "files": "Dosyalar"
   },
   "notifications": {
     "title": "Bildirimler",

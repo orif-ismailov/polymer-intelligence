@@ -115,7 +115,8 @@
   },
   "requestDetail": {
     "title": "Request details",
-    "history": "Status history"
+    "history": "Status history",
+    "files": "Files"
   },
   "notifications": {
     "title": "Notifications",

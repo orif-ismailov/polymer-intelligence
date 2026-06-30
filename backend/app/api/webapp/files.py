@@ -14,7 +14,7 @@ Security:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
@@ -104,4 +104,48 @@ async def upload_request_file(
         file_name=rf.file_name,
         mime_type=rf.mime_type,
         size_bytes=rf.size_bytes,
+    )
+
+
+@router.get(
+    "/requests/{request_id}/files/{file_id}",
+    summary="Stream/download a request file (owner-only)",
+)
+def get_request_file(
+    request_id: int,
+    file_id: int,
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> Response:
+    """GET /webapp/requests/{id}/files/{file_id} — the file's bytes, inline.
+
+    Owner-scoped (T-03-07): the request must belong to the calling client, else 404.
+    Returns the stored bytes with the original mime type so the client can render
+    images inline or open/download other types.
+    """
+    req: Request | None = (
+        db.query(Request)
+        .filter(Request.id == request_id, Request.client_id == client.id)
+        .first()
+    )
+    if req is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Request not found")
+
+    f: RequestFile | None = (
+        db.query(RequestFile)
+        .filter(RequestFile.id == file_id, RequestFile.request_id == request_id)
+        .first()
+    )
+    if f is None or f.storage_path is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+    from app.core.config import settings  # noqa: PLC0415
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=f.storage_path)  # type: ignore[attr-defined]
+    body: bytes = obj["Body"].read()
+    return Response(
+        content=body,
+        media_type=f.mime_type or "application/octet-stream",
+        headers={"Content-Disposition": f'inline; filename="{f.file_name}"'},
     )

@@ -115,7 +115,8 @@
   },
   "requestDetail": {
     "title": "Ariza tafsilotlari",
-    "history": "Holat tarixi"
+    "history": "Holat tarixi",
+    "files": "Fayllar"
   },
   "notifications": {
     "title": "Bildirishnomalar",

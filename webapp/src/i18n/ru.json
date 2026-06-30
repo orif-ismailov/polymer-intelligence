@@ -115,7 +115,8 @@
   },
   "requestDetail": {
     "title": "Детали заявки",
-    "history": "История статусов"
+    "history": "История статусов",
+    "files": "Файлы"
   },
   "notifications": {
     "title": "Уведомления",
