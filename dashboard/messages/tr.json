@@ -21,6 +21,7 @@
       "alerts": "Uyarılar",
       "reports": "Raporlar",
       "prices": "Fiyatlar",
+      "adminProducts": "Ürünler",
       "adminUsers": "Kullanıcılar"
     },
     "guest": "Misafir"
@@ -599,6 +600,38 @@
       "analyst": "Analist",
       "trader": "Tüccar",
       "viewer": "İzleyici"
+    }
+  },
+  "adminProducts": {
+    "pageTitle": "Ürünler",
+    "pageSubtitle": "Uygulama için ürün listesi. Buraya eklenen ürünler seçicilerde görünür.",
+    "loadError": "Ürünler yüklenemedi. Lütfen sayfayı yenileyin.",
+    "empty": "Ürün bulunamadı.",
+    "add": "Ürün ekle",
+    "saving": "Kaydediliyor…",
+    "statusActive": "Aktif",
+    "statusInactive": "Gizli",
+    "show": "Göster",
+    "hide": "Gizle",
+    "createError": "Ürün kaydedilemedi",
+    "duplicateCode": "Bu koda sahip bir ürün zaten var",
+    "table": {
+      "code": "Kod",
+      "nameRu": "Ad (RU)",
+      "nameUz": "Ad (UZ)",
+      "sortOrder": "Sıra",
+      "status": "Durum",
+      "actions": "İşlemler"
+    },
+    "form": {
+      "code": "Kod",
+      "codePlaceholder": "örn. EVA",
+      "nameRu": "Ad (Rusça)",
+      "nameRuPlaceholder": "örn. Etilen vinil asetat",
+      "nameUz": "Ad (Özbekçe)",
+      "sortOrder": "Sıralama düzeni",
+      "submit": "Ekle",
+      "cancel": "İptal"
     }
   }
 }

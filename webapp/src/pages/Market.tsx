@@ -12,21 +12,17 @@ import { MapPin, BadgeCheck, Phone, Send } from "lucide-react";
 
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
+import { useProducts } from "../hooks/useProducts";
 import type { CatalogOffer } from "../types";
-
-// Category chip → product_id (matches seed_reference order; null = all).
-const CATEGORIES: { code: string; product_id: number | null }[] = [
-  { code: "all", product_id: null },
-  { code: "HDPE", product_id: 2 },
-  { code: "PP", product_id: 1 },
-  { code: "LDPE", product_id: 3 },
-  { code: "PVC", product_id: 5 },
-  { code: "PET", product_id: 6 },
-];
 
 export default function Market() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { products } = useProducts();
+  const categories: { code: string; id: number | null }[] = [
+    { code: "all", id: null },
+    ...products.map((p) => ({ code: p.code, id: p.id })),
+  ];
   const [active, setActive] = useState<string>("all");
   const [query, setQuery] = useState("");
   const [offers, setOffers] = useState<CatalogOffer[]>([]);
@@ -40,7 +36,7 @@ export default function Market() {
   useEffect(() => {
     let cancelled = false;
     setState("loading");
-    const product_id = CATEGORIES.find((c) => c.code === active)?.product_id ?? undefined;
+    const product_id = active === "all" ? undefined : products.find((p) => p.code === active)?.id;
     api
       .getCatalogOffers({ product_id, q: query.trim() || undefined })
       .then((data) => {
@@ -55,7 +51,7 @@ export default function Market() {
     return () => {
       cancelled = true;
     };
-  }, [active, query]);
+  }, [active, query, products]);
 
   const chip = (selected: boolean): CSSProperties => ({
     flex: "0 0 auto",
@@ -95,7 +91,7 @@ export default function Market() {
       />
 
       <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px", marginBottom: "16px" }}>
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button key={c.code} type="button" onClick={() => setActive(c.code)} style={chip(active === c.code)}>
             {c.code === "all" ? t("market.all") : c.code}
           </button>

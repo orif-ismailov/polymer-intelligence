@@ -23,18 +23,9 @@ import Segmented from "../components/Segmented";
 import Button from "../components/Button";
 import { api } from "../api/client";
 import { backButton, mainButton, notifySuccess, notifyError } from "../telegram";
+import { useProducts } from "../hooks/useProducts";
 import type { PriceBasis, SellerOfferCreate } from "../types";
 
-const PRODUCTS = [
-  { value: 1, label: "PP" },
-  { value: 2, label: "HDPE" },
-  { value: 3, label: "LDPE" },
-  { value: 4, label: "LLDPE" },
-  { value: 5, label: "PVC" },
-  { value: 6, label: "PET" },
-  { value: 7, label: "PS" },
-  { value: 8, label: "ABS" },
-];
 const CURRENCY = ["USD", "UZS", "EUR", "RUB"];
 const INCOTERMS = ["EXW", "FCA", "FOB", "CIF", "CPT", "DAP", "DDP"];
 const UNITS = ["MT", "KG"];
@@ -87,8 +78,9 @@ export default function SellOffer() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  const { products } = useProducts();
   const isOtherProduct = productId === "other";
-  const productLabel = productId && !isOtherProduct ? PRODUCTS.find((p) => String(p.value) === productId)?.label : productText;
+  const productLabel = productId && !isOtherProduct ? products.find((p) => String(p.id) === productId)?.code : productText;
   const step1Valid = (isOtherProduct ? productText.trim() !== "" : productId !== "") && warehouseCity.trim() !== "";
   const step2Valid = Number(qty) > 0 && Number(price) > 0;
 
@@ -223,7 +215,7 @@ export default function SellOffer() {
           <FieldGroup htmlFor="s_product" label={t("wizard.product")} required>
             <SelectField
               id="s_product"
-              options={[...PRODUCTS, { value: "other", label: t("wizard.productOther") }]}
+              options={[...products.map((p) => ({ value: p.id, label: p.code })), { value: "other", label: t("wizard.productOther") }]}
               placeholder={t("wizard.productPlaceholder")}
               value={productId}
               onChange={(e) => setProductId(e.target.value)}

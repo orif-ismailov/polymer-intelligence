@@ -12,20 +12,8 @@ import { useTranslation } from "react-i18next";
 
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
+import { useProducts } from "../hooks/useProducts";
 import type { SellerOfferOut, SellerOfferStatus } from "../types";
-
-// product_id → polymer code (matches the seller wizard's Продукт options), shown as
-// a prefix before the grade in the offer title, e.g. "LLDPE PP Raffia J340".
-const PRODUCT_LABELS: Record<number, string> = {
-  1: "PP",
-  2: "HDPE",
-  3: "LDPE",
-  4: "LLDPE",
-  5: "PVC",
-  6: "PET",
-  7: "PS",
-  8: "ABS",
-};
 
 const STATUS_CHIP: Record<SellerOfferStatus, { bg: string; fg: string }> = {
   draft: { bg: "var(--chip-neutral-bg)", fg: "var(--chip-neutral-fg)" },
@@ -38,6 +26,7 @@ const STATUS_CHIP: Record<SellerOfferStatus, { bg: string; fg: string }> = {
 export default function Sell() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { products } = useProducts();
   const [offers, setOffers] = useState<SellerOfferOut[]>([]);
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
 
@@ -123,7 +112,7 @@ export default function Sell() {
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
             <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>
-              {[o.product_id ? PRODUCT_LABELS[o.product_id] : null, o.grade_text || o.product_text]
+              {[o.product_id ? products.find((p) => p.id === o.product_id)?.code : null, o.grade_text || o.product_text]
                 .filter(Boolean)
                 .join(" ") || "—"}
             </span>

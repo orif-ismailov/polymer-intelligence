@@ -34,6 +34,18 @@ export type PriceBasis =
 
 export type Urgency = "low" | "medium" | "high";
 
+// ── Reference data (mirrors ProductOut) ────────────────────────────────────────
+
+export interface Product {
+  id: number;
+  code: string;
+  name_ru: string;
+  name_uz: string | null;
+  category: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
 // ── Request creation (mirrors RequestCreate) ───────────────────────────────────
 
 export interface RequestCreate {

@@ -16,6 +16,7 @@ import type {
   ClientProfilePatch,
   NewsItem,
   NewsSummary,
+  Product,
   RequestCreate,
   RequestDetail,
   RequestFileMeta,
@@ -118,6 +119,11 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(body),
     });
+  },
+
+  /** GET /webapp/reference/products — active polymer products for the selectors. */
+  getProducts(): Promise<Product[]> {
+    return apiFetch<Product[]>("/webapp/reference/products");
   },
 
   // ── Marketplace: public catalog ─────────────────────────────────────────────

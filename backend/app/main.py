@@ -35,6 +35,7 @@ import app.ingest.llm_page  # noqa: E402, F401 — registers llm_page adapter
 import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
+from app.api.admin_products import router as admin_products_router
 from app.api.admin_sources import router as admin_sources_router
 from app.api.admin_users import router as admin_users_router
 from app.api.alert_rules import alerts_router
@@ -55,6 +56,7 @@ from app.api.webapp.files import router as webapp_files_router
 from app.api.webapp.market import router as webapp_market_router
 from app.api.webapp.me import router as webapp_me_router
 from app.api.webapp.news import router as webapp_news_router
+from app.api.webapp.reference import router as webapp_reference_router
 from app.api.webapp.requests import router as webapp_requests_router
 from app.api.webapp.seller import router as webapp_seller_router
 from app.core.config import settings
@@ -158,6 +160,7 @@ def create_app() -> FastAPI:
     application.include_router(dashboard_router, prefix="/api/v1")
     application.include_router(dashboard_requests_router, prefix="/api/v1")
     application.include_router(admin_users_router, prefix="/api/v1")
+    application.include_router(admin_products_router, prefix="/api/v1")
     # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─
     application.include_router(sources_router, prefix="/api/v1")
     # ── alerts engine routers (Phase 4, Plan 07 — alert rules CRUD + alerts feed) ─
@@ -172,6 +175,7 @@ def create_app() -> FastAPI:
     # ── marketplace (Phase 2): seller offers + public catalog + moderation ───
     application.include_router(webapp_seller_router, prefix="/api/v1")
     application.include_router(webapp_market_router, prefix="/api/v1")
+    application.include_router(webapp_reference_router, prefix="/api/v1")
     application.include_router(moderation_router, prefix="/api/v1")
     # ── news engine (Phase 3): published reports + dashboard review ───────────
     application.include_router(webapp_news_router, prefix="/api/v1")

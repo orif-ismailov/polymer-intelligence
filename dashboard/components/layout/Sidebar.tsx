@@ -13,6 +13,7 @@ import {
   Handshake,
   Home,
   Newspaper,
+  Package,
   ShieldCheck,
   ShoppingCart,
   Tag,
@@ -76,6 +77,12 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { key: "reports", href: "/reports", icon: Newspaper, minRole: "analyst" },
       { key: "prices", href: "/prices", icon: BarChart3 },
+      {
+        key: "adminProducts",
+        href: "/admin/products",
+        icon: Package,
+        minRole: "admin",
+      },
       {
         key: "adminUsers",
         href: "/admin/users",

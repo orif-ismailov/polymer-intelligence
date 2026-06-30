@@ -22,28 +22,7 @@ import SelectField from "../../components/SelectField";
 import HintBanner from "../../components/HintBanner";
 import { mainButton, backButton, impactLight } from "../../telegram";
 import { useWizardStore } from "../../store/wizardStore";
-
-const PRODUCTS_RU = [
-  { value: 1, label: "Полипропилен (PP)" },
-  { value: 2, label: "HDPE (Полиэтилен высокой плотности)" },
-  { value: 3, label: "LDPE (Полиэтилен низкой плотности)" },
-  { value: 4, label: "LLDPE (Линейный LDPE)" },
-  { value: 5, label: "ПВХ (Поливинилхлорид)" },
-  { value: 6, label: "ПЭТ (Полиэтилентерефталат)" },
-  { value: 7, label: "ПС (Полистирол)" },
-  { value: 8, label: "АБС (Акрилонитрил-бутадиен-стирол)" },
-];
-
-const PRODUCTS_UZ = [
-  { value: 1, label: "Polipropilen (PP)" },
-  { value: 2, label: "HDPE (Yuqori zichlikli polietilen)" },
-  { value: 3, label: "LDPE (Past zichlikli polietilen)" },
-  { value: 4, label: "LLDPE (Chiziqli LDPE)" },
-  { value: 5, label: "PVC (Polivinilxlorid)" },
-  { value: 6, label: "PET (Polietilentereftalat)" },
-  { value: 7, label: "PS (Polistirol)" },
-  { value: 8, label: "ABS (Akrilonitril-butadien-stirol)" },
-];
+import { useProducts, productName } from "../../hooks/useProducts";
 
 const VOLUME_UNIT_VALUES = ["MT", "KG"] as const;
 
@@ -107,7 +86,7 @@ export default function Step1() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const store = useWizardStore();
 
-  const products = i18n.language === "uz" ? PRODUCTS_UZ : PRODUCTS_RU;
+  const { products } = useProducts();
 
   const {
     register,
@@ -193,7 +172,7 @@ export default function Step1() {
           <SelectField
             id="product_id"
             options={[
-              ...products.map((p) => ({ value: p.value, label: p.label })),
+              ...products.map((p) => ({ value: p.id, label: `${productName(p, i18n.language)} (${p.code})` })),
               { value: "other", label: t("wizard.productOther") },
             ]}
             placeholder={t("wizard.productPlaceholder")}

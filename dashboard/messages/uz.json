@@ -21,6 +21,7 @@
       "alerts": "Ogohlantirishlar",
       "reports": "Hisobotlar",
       "prices": "Narxlar",
+      "adminProducts": "Mahsulotlar",
       "adminUsers": "Foydalanuvchilar"
     },
     "guest": "Mehmon"
@@ -599,6 +600,38 @@
       "analyst": "Tahlilchi",
       "trader": "Treyder",
       "viewer": "Kuzatuvchi"
+    }
+  },
+  "adminProducts": {
+    "pageTitle": "Mahsulotlar",
+    "pageSubtitle": "Ilova uchun mahsulotlar ro'yxati. Bu yerda qo'shilgan mahsulotlar selektorlarda ko'rinadi.",
+    "loadError": "Mahsulotlarni yuklab bo'lmadi. Sahifani yangilang.",
+    "empty": "Mahsulotlar topilmadi.",
+    "add": "Mahsulot qo'shish",
+    "saving": "Saqlanmoqda…",
+    "statusActive": "Faol",
+    "statusInactive": "Yashirilgan",
+    "show": "Ko'rsatish",
+    "hide": "Yashirish",
+    "createError": "Mahsulotni saqlab bo'lmadi",
+    "duplicateCode": "Bunday kodli mahsulot allaqachon mavjud",
+    "table": {
+      "code": "Kod",
+      "nameRu": "Nomi (RU)",
+      "nameUz": "Nomi (UZ)",
+      "sortOrder": "Tartib",
+      "status": "Holati",
+      "actions": "Amallar"
+    },
+    "form": {
+      "code": "Kod",
+      "codePlaceholder": "masalan, EVA",
+      "nameRu": "Nomi (rus)",
+      "nameRuPlaceholder": "masalan, Etilenvinilatsetat",
+      "nameUz": "Nomi (o'zb)",
+      "sortOrder": "Saralash tartibi",
+      "submit": "Qo'shish",
+      "cancel": "Bekor qilish"
     }
   }
 }
