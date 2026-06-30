@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     # dashboard request-detail "AI-анализ" panel. Off → the panel keeps honest
     # placeholders. Budget-gated like the extractor (spends Anthropic tokens per request).
     REQUEST_AI_ANALYSIS_ENABLED: bool = True
+    # Telegram group/chat that receives a notification for each new buyer request.
+    # Numeric chat id (e.g. -1001234567890 for a supergroup) — NOT an invite link;
+    # the bot must be a member of the group. Unset (None) → notifications disabled.
+    REQUEST_NOTIFY_CHAT_ID: int | None = None
     REQUEST_AI_ANALYSIS_MODEL: str = "claude-haiku-4-5"
     REQUEST_AI_ANALYSIS_PROMPT_VERSION: str = "v1"
     # Conservative per-request token reservation for the budget guard.
@@ -144,6 +148,16 @@ class Settings(BaseSettings):
         """
         if len(v) < 32:
             raise ValueError("JWT_SECRET must be at least 32 characters")
+        return v
+
+    @field_validator("REQUEST_NOTIFY_CHAT_ID", mode="before")
+    @classmethod
+    def _empty_chat_id_to_none(cls, v: object) -> object:
+        """Treat an empty/whitespace env value as unset (None) so a blank
+        REQUEST_NOTIFY_CHAT_ID= in .env disables notifications instead of failing
+        int coercion at startup."""
+        if v is None or (isinstance(v, str) and v.strip() == ""):
+            return None
         return v
 
     @field_validator("CORS_ALLOWED_ORIGINS", mode="before")

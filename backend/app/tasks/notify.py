@@ -401,3 +401,88 @@ def send_delivery(alert_id: int) -> dict[str, Any]:
 
     logger.info("notify.send_delivery.done", extra={"alert_id": alert_id, "sent": sent_count})
     return {"status": "ok", "sent": sent_count, "error": None}
+
+
+# ── New-request team notification (sales group) ───────────────────────────────
+
+_URGENCY_RU: dict[str, str] = {
+    "high": "Срочно (1–3 дня)",
+    "medium": "В течение недели/месяца",
+    "low": "Под заказ (14–25 дней)",
+}
+
+
+@celery_app.task(name="send_request_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_request_to_group(request_id: int) -> dict[str, Any]:
+    """Post a new buyer request to the team Telegram group (REQUEST_NOTIFY_CHAT_ID).
+
+    Best-effort, read-only. No-ops (status="skipped") when the chat id is unset.
+    Never raises — broker/bot/network failures are logged and returned as an error
+    dict so request creation is never affected.
+    """
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.config import settings as _settings  # noqa: PLC0415
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.reference import Product  # noqa: PLC0415
+    from app.models.requests import Request  # noqa: PLC0415
+
+    chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
+    if chat_id is None:
+        return {"status": "skipped", "error": "REQUEST_NOTIFY_CHAT_ID not set"}
+
+    logger.info("notify.request_to_group.start", extra={"request_id": request_id})
+
+    try:
+        with Session(engine) as session:
+            request = session.get(Request, request_id)
+            if request is None:
+                return {"status": "error", "error": f"Request {request_id} not found"}
+
+            product_name: str | None = None
+            if request.product_id is not None:
+                product = session.get(Product, request.product_id)
+                product_name = product.name_ru if product else None
+            product_label = product_name or request.product_text or "—"
+
+            lines: list[str] = [f"🆕 Новая заявка {request.number}", ""]
+            grade = f" · {request.grade_text}" if request.grade_text else ""
+            lines.append(f"📦 Продукт: {product_label}{grade}")
+            if request.volume is not None:
+                lines.append(f"📊 Объём: {request.volume} {request.volume_unit}")
+            if request.target_price is not None:
+                lines.append(f"💰 Целевая цена: {request.target_price} {request.currency}")
+            if request.port_or_city:
+                lines.append(f"📍 Город: {request.port_or_city}")
+            if request.urgency is not None:
+                urgency_key = getattr(request.urgency, "value", str(request.urgency))
+                lines.append(f"⏱ Срочность: {_URGENCY_RU.get(urgency_key, urgency_key)}")
+
+            contact: list[str] = []
+            if request.company_name:
+                contact.append(f"🏢 {request.company_name}")
+            if request.contact_name:
+                contact.append(f"👤 {request.contact_name}")
+            if request.phone:
+                contact.append(f"📞 {request.phone}")
+            if contact:
+                lines.append("")
+                lines.extend(contact)
+            if request.comment:
+                lines.append("")
+                lines.append(f"💬 {request.comment}")
+
+            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)))
+            logger.info(
+                "notify.request_to_group.sent",
+                extra={"request_id": request_id, "chat_id": chat_id, "number": request.number},
+            )
+    except Exception as exc:
+        logger.error(
+            "notify.request_to_group.error",
+            extra={"request_id": request_id, "error": str(exc)},
+        )
+        return {"status": "error", "error": str(exc)}
+
+    return {"status": "ok", "error": None}

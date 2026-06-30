@@ -65,6 +65,27 @@ def _enqueue_notify_soft(request_id: int) -> None:
         )
 
 
+def _enqueue_group_notify_soft(request_id: int) -> None:
+    """Enqueue the team-group notification for a new request, fail-soft.
+
+    Posts the request's details to REQUEST_NOTIFY_CHAT_ID. Skips entirely when the
+    chat id is unset; a broker outage must never break request creation.
+    """
+    if settings.REQUEST_NOTIFY_CHAT_ID is None:
+        return
+    from app.tasks.notify import send_request_to_group  # noqa: PLC0415
+
+    try:
+        send_request_to_group.apply_async(args=[request_id], queue="notify", retry=False)
+    except Exception as exc:
+        logger.warning(
+            "group-notify enqueue failed (broker unavailable); request %s committed "
+            "without a team notification: %s",
+            request_id,
+            exc,
+        )
+
+
 def _enqueue_analysis_soft(request_id: int) -> None:
     """Enqueue the LLM request-analysis task, fail-soft.
 
@@ -263,6 +284,9 @@ def create_request(
 
     # 4. Enqueue the notify task (best-effort — must not fail request creation)
     _enqueue_notify_soft(req.id)
+
+    # 4b. Notify the sales team group of the new request (best-effort).
+    _enqueue_group_notify_soft(req.id)
 
     # 5. Enqueue the LLM analysis (best-effort — fills requests.ai for the dashboard
     #    AI-анализ panel; a broker outage or disabled flag just leaves placeholders)
