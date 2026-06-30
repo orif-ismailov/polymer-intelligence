@@ -133,6 +133,10 @@ services:
       DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD}@postgres:5432/polymer_intelligence
       REDIS_URL: redis://redis:6379/0
       S3_ENDPOINT: http://minio:9000
+      # /app on the path so the mounted repo-root packages (telegram, userbot) are
+      # importable by the Celery worker — `celery`/console scripts don't add CWD to
+      # sys.path the way uvicorn/`python -c` do (notify + userbot_health tasks).
+      PYTHONPATH: /app
       # Production env — gates the Secure flag on the refresh cookie (TLS behind nginx).
       APP_ENV: production
     volumes:
@@ -176,6 +180,10 @@ services:
       DATABASE_URL: postgresql+psycopg://pi_user:${POSTGRES_PASSWORD}@postgres:5432/polymer_intelligence
       REDIS_URL: redis://redis:6379/0
       S3_ENDPOINT: http://minio:9000
+      # /app on the path so the mounted repo-root packages (telegram, userbot) are
+      # importable by the Celery worker — `celery`/console scripts don't add CWD to
+      # sys.path the way uvicorn/`python -c` do (notify + userbot_health tasks).
+      PYTHONPATH: /app
     depends_on:
       postgres:
         condition: service_healthy
