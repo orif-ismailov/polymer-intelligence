@@ -166,10 +166,12 @@ def _create_bot() -> "Bot":
 def _create_dispatcher() -> "Dispatcher":
     """Construct the aiogram Dispatcher and wire up all routers."""
     from aiogram import Dispatcher as _Dispatcher  # noqa: PLC0415
+    from telegram.handlers.chatid import chatid_router  # noqa: PLC0415
     from telegram.handlers.start import start_router  # noqa: PLC0415
 
     _dp = _Dispatcher()
     _dp.include_router(start_router)
+    _dp.include_router(chatid_router)
     return _dp
 
 
