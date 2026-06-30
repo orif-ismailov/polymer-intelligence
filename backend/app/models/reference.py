@@ -44,6 +44,8 @@ class Product(Base):
     code: Mapped[str] = mapped_column(Text, nullable=False, unique=True)         # 'PP', 'HDPE'
     name_ru: Mapped[str] = mapped_column(Text, nullable=False)                   # 'Полипропилен'
     name_uz: Mapped[str | None] = mapped_column(Text, nullable=True)
+    name_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    name_tr: Mapped[str | None] = mapped_column(Text, nullable=True)
     category: Mapped[str] = mapped_column(Text, nullable=False, default="polymer")
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

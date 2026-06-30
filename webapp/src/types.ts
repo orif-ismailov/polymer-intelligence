@@ -41,6 +41,8 @@ export interface Product {
   code: string;
   name_ru: string;
   name_uz: string | null;
+  name_en: string | null;
+  name_tr: string | null;
   category: string;
   sort_order: number;
   is_active: boolean;

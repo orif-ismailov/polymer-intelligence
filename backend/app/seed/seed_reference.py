@@ -57,8 +57,8 @@ def seed_products(session: Session) -> int:
         result = session.execute(
             text(
                 """
-                INSERT INTO products (code, name_ru, name_uz, category, sort_order, is_active)
-                VALUES (:code, :name_ru, :name_uz, :category, :sort_order, true)
+                INSERT INTO products (code, name_ru, name_uz, name_en, name_tr, category, sort_order, is_active)
+                VALUES (:code, :name_ru, :name_uz, :name_en, :name_tr, :category, :sort_order, true)
                 ON CONFLICT (code) DO NOTHING
                 """
             ),
@@ -66,6 +66,8 @@ def seed_products(session: Session) -> int:
                 "code": p["code"],
                 "name_ru": p["name_ru"],
                 "name_uz": p.get("name_uz"),
+                "name_en": p.get("name_en"),
+                "name_tr": p.get("name_tr"),
                 "category": p.get("category", "polymer"),
                 "sort_order": p.get("sort_order", 0),
             },

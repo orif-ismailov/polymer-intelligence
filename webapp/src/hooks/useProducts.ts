@@ -51,7 +51,10 @@ export function useProducts(): { products: Product[]; loading: boolean } {
   return { products, loading };
 }
 
-/** Localized product name (falls back to RU when the UZ name is absent). */
+/** Localized product name for the active language, falling back to RU. */
 export function productName(p: Product, lang: string): string {
-  return lang === "uz" && p.name_uz ? p.name_uz : p.name_ru;
+  if (lang === "uz" && p.name_uz) return p.name_uz;
+  if (lang === "en" && p.name_en) return p.name_en;
+  if (lang === "tr" && p.name_tr) return p.name_tr;
+  return p.name_ru;
 }

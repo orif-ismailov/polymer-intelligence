@@ -15,6 +15,8 @@ class ProductOut(BaseModel):
     code: str
     name_ru: str
     name_uz: str | None = None
+    name_en: str | None = None
+    name_tr: str | None = None
     category: str
     sort_order: int
     is_active: bool
@@ -28,6 +30,8 @@ class ProductCreate(BaseModel):
     code: str = Field(min_length=1, max_length=50)
     name_ru: str = Field(min_length=1, max_length=200)
     name_uz: str | None = Field(default=None, max_length=200)
+    name_en: str | None = Field(default=None, max_length=200)
+    name_tr: str | None = Field(default=None, max_length=200)
     category: str = Field(default="polymer", min_length=1, max_length=50)
     sort_order: int = Field(default=0, ge=0)
 
@@ -37,6 +41,8 @@ class ProductUpdate(BaseModel):
 
     name_ru: str | None = Field(default=None, min_length=1, max_length=200)
     name_uz: str | None = Field(default=None, max_length=200)
+    name_en: str | None = Field(default=None, max_length=200)
+    name_tr: str | None = Field(default=None, max_length=200)
     category: str | None = Field(default=None, min_length=1, max_length=50)
     sort_order: int | None = Field(default=None, ge=0)
     is_active: bool | None = None

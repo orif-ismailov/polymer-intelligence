@@ -24,6 +24,8 @@ interface Product {
   code: string;
   name_ru: string;
   name_uz: string | null;
+  name_en: string | null;
+  name_tr: string | null;
   category: string;
   sort_order: number;
   is_active: boolean;
@@ -38,6 +40,8 @@ function AddProductForm() {
   const [code, setCode] = useState("");
   const [nameRu, setNameRu] = useState("");
   const [nameUz, setNameUz] = useState("");
+  const [nameEn, setNameEn] = useState("");
+  const [nameTr, setNameTr] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +53,8 @@ function AddProductForm() {
           code: code.trim(),
           name_ru: nameRu.trim(),
           name_uz: nameUz.trim() || null,
+          name_en: nameEn.trim() || null,
+          name_tr: nameTr.trim() || null,
           sort_order: sortOrder ? Number(sortOrder) : 0,
         }),
       }),
@@ -57,6 +63,8 @@ function AddProductForm() {
       setCode("");
       setNameRu("");
       setNameUz("");
+      setNameEn("");
+      setNameTr("");
       setSortOrder("");
       setError(null);
       setOpen(false);
@@ -106,6 +114,14 @@ function AddProductForm() {
         <label className="flex flex-col gap-1 text-xs font-semibold text-foreground-muted">
           {t("form.nameUz")}
           <input className={inputCls} value={nameUz} onChange={(e) => setNameUz(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-semibold text-foreground-muted">
+          {t("form.nameEn")}
+          <input className={inputCls} value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-semibold text-foreground-muted">
+          {t("form.nameTr")}
+          <input className={inputCls} value={nameTr} onChange={(e) => setNameTr(e.target.value)} />
         </label>
       </div>
 

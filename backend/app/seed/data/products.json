@@ -3,6 +3,8 @@
     "code": "PP",
     "name_ru": "Полипропилен",
     "name_uz": "Polipropilen",
+    "name_en": "Polypropylene",
+    "name_tr": "Polipropilen",
     "category": "polymer",
     "sort_order": 1
   },
@@ -10,6 +12,8 @@
     "code": "HDPE",
     "name_ru": "Полиэтилен высокой плотности",
     "name_uz": "Yuqori zichlikdagi polietilen",
+    "name_en": "High-density polyethylene",
+    "name_tr": "Yüksek yoğunluklu polietilen",
     "category": "polymer",
     "sort_order": 2
   },
@@ -17,6 +21,8 @@
     "code": "LDPE",
     "name_ru": "Полиэтилен низкой плотности",
     "name_uz": "Past zichlikdagi polietilen",
+    "name_en": "Low-density polyethylene",
+    "name_tr": "Alçak yoğunluklu polietilen",
     "category": "polymer",
     "sort_order": 3
   },
@@ -24,6 +30,8 @@
     "code": "LLDPE",
     "name_ru": "Линейный полиэтилен низкой плотности",
     "name_uz": "Chiziqli past zichlikdagi polietilen",
+    "name_en": "Linear low-density polyethylene",
+    "name_tr": "Doğrusal alçak yoğunluklu polietilen",
     "category": "polymer",
     "sort_order": 4
   },
@@ -31,6 +39,8 @@
     "code": "PVC",
     "name_ru": "Поливинилхлорид",
     "name_uz": "Polivinilxlorid",
+    "name_en": "Polyvinyl chloride",
+    "name_tr": "Polivinil klorür",
     "category": "polymer",
     "sort_order": 5
   },
@@ -38,6 +48,8 @@
     "code": "PET",
     "name_ru": "Полиэтилентерефталат",
     "name_uz": "Polietilentereftalat",
+    "name_en": "Polyethylene terephthalate",
+    "name_tr": "Polietilen tereftalat",
     "category": "polymer",
     "sort_order": 6
   },
@@ -45,6 +57,8 @@
     "code": "PS",
     "name_ru": "Полистирол",
     "name_uz": "Polistirol",
+    "name_en": "Polystyrene",
+    "name_tr": "Polistiren",
     "category": "polymer",
     "sort_order": 7
   },
@@ -52,6 +66,8 @@
     "code": "ABS",
     "name_ru": "АБС-пластик",
     "name_uz": "ABS-plastik",
+    "name_en": "Acrylonitrile butadiene styrene",
+    "name_tr": "Akrilonitril bütadien stiren",
     "category": "polymer",
     "sort_order": 8
   }

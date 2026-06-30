@@ -39,6 +39,8 @@ def create(db: Session, data: ProductCreate) -> Product:
         code=data.code.strip(),
         name_ru=data.name_ru.strip(),
         name_uz=data.name_uz.strip() if data.name_uz else None,
+        name_en=data.name_en.strip() if data.name_en else None,
+        name_tr=data.name_tr.strip() if data.name_tr else None,
         category=data.category,
         sort_order=data.sort_order,
         is_active=True,
@@ -55,6 +57,10 @@ def update(db: Session, product: Product, data: ProductUpdate) -> Product:
         product.name_ru = data.name_ru.strip()
     if data.name_uz is not None:
         product.name_uz = data.name_uz.strip() or None
+    if data.name_en is not None:
+        product.name_en = data.name_en.strip() or None
+    if data.name_tr is not None:
+        product.name_tr = data.name_tr.strip() or None
     if data.category is not None:
         product.category = data.category
     if data.sort_order is not None:
