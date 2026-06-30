@@ -13,6 +13,7 @@ import { lazy, Suspense, CSSProperties } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
+import BottomTabBar from "./components/BottomTabBar";
 import RoleHintModal from "./components/RoleHintModal";
 
 // ── Shared style tokens (canonical source — reused by page components) ─────────
@@ -143,8 +144,10 @@ export default function App() {
   return (
     <div style={styles.app}>
       <RoleHintModal />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
+      {/* Reserve space for the fixed BottomTabBar (rendered globally below). */}
+      <div style={{ paddingBottom: "calc(72px + env(safe-area-inset-bottom))" }}>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           {/* Launch screen — the Главный экран landing (design_2 buyer ①) */}
           <Route path="/" element={<AppShell><Home /></AppShell>} />
 
@@ -170,7 +173,9 @@ export default function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
-      </Suspense>
+        </Suspense>
+      </div>
+      <BottomTabBar />
     </div>
   );
 }

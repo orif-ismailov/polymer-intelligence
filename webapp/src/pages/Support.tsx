@@ -14,8 +14,8 @@ import { Send } from "lucide-react";
 
 import { backButton, mainButton } from "../telegram";
 
-// Public PetroAI support chat — replace with the production handle when available.
-const SUPPORT_URL = "https://t.me/petroai_support";
+// PetroAI support group (Telegram invite link).
+const SUPPORT_URL = "https://t.me/+Bx90bauleYY0NTFi";
 
 export default function Support() {
   const { t } = useTranslation();
