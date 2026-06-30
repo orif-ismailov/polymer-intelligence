@@ -87,8 +87,9 @@ export default function SellOffer() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  const productLabel = productId ? PRODUCTS.find((p) => String(p.value) === productId)?.label : productText;
-  const step1Valid = (productId !== "" || productText.trim() !== "") && warehouseCity.trim() !== "";
+  const isOtherProduct = productId === "other";
+  const productLabel = productId && !isOtherProduct ? PRODUCTS.find((p) => String(p.value) === productId)?.label : productText;
+  const step1Valid = (isOtherProduct ? productText.trim() !== "" : productId !== "") && warehouseCity.trim() !== "";
   const step2Valid = Number(qty) > 0 && Number(price) > 0;
 
   const thumbs = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
@@ -112,8 +113,8 @@ export default function SellOffer() {
     setSubmitting(true);
     setError(null);
     const body: SellerOfferCreate = {
-      product_id: productId !== "" ? Number(productId) : null,
-      product_text: productText.trim() || null,
+      product_id: productId !== "" && !isOtherProduct ? Number(productId) : null,
+      product_text: isOtherProduct ? productText.trim() || null : null,
       grade_text: grade.trim() || null,
       polymer_type: polymerType.trim() || null,
       qty_available: Number(qty),
@@ -220,11 +221,19 @@ export default function SellOffer() {
       {step === 1 && (
         <>
           <FieldGroup htmlFor="s_product" label={t("wizard.product")} required>
-            <SelectField id="s_product" options={PRODUCTS} placeholder={t("wizard.productPlaceholder")} value={productId} onChange={(e) => setProductId(e.target.value)} />
+            <SelectField
+              id="s_product"
+              options={[...PRODUCTS, { value: "other", label: t("wizard.productOther") }]}
+              placeholder={t("wizard.productPlaceholder")}
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+            />
           </FieldGroup>
-          <FieldGroup htmlFor="s_ptext" label={t("wizard.productText")}>
-            <input id="s_ptext" type="text" value={productText} onChange={(e) => setProductText(e.target.value)} placeholder={t("wizard.productTextPlaceholder")} style={fieldStyle} />
-          </FieldGroup>
+          {isOtherProduct && (
+            <FieldGroup htmlFor="s_ptext" label={t("wizard.productManual")} required>
+              <input id="s_ptext" type="text" value={productText} onChange={(e) => setProductText(e.target.value)} placeholder={t("wizard.productTextPlaceholder")} style={fieldStyle} />
+            </FieldGroup>
+          )}
           <FieldGroup htmlFor="s_grade" label={t("wizard.grade")}>
             <input id="s_grade" type="text" value={grade} onChange={(e) => setGrade(e.target.value)} placeholder={t("wizard.gradePlaceholder")} style={fieldStyle} />
           </FieldGroup>

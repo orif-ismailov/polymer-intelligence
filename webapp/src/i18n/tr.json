@@ -34,6 +34,8 @@
       "title": "Ek bilgiler"
     },
     "productText": "Veya ürünü elle girin",
+    "productOther": "Diğer",
+    "productManual": "Ürün adı",
     "productTextPlaceholder": "Örn. EVA, polikarbonat…",
     "deliveryCity": "Teslimat şehri",
     "urgency": "Ne zaman gerekli?",
@@ -128,7 +130,7 @@
     "requests": "Talepler",
     "sell": "Sat",
     "news": "Haberler",
-    "profile": "Profil"
+    "profile": "Ayarlar"
   },
   "market": {
     "title": "Market",
@@ -216,7 +218,7 @@
     "cta": "Telegram'da sohbeti aç"
   },
   "profile": {
-    "title": "Profil",
+    "title": "Ayarlar",
     "role": "İstiyorum",
     "roleOpt": {
       "buyer": "Satın almak",

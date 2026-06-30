@@ -59,9 +59,11 @@ const step1Schema = z
     volume_unit: z.string().min(1),
   })
   .refine(
-    (d) =>
-      (d.product_id != null && d.product_id !== "") ||
-      (d.product_text != null && d.product_text.trim() !== ""),
+    (d) => {
+      // "Другое" (other) requires the manual product name; any real product is enough.
+      if (d.product_id === "other") return d.product_text != null && d.product_text.trim() !== "";
+      return d.product_id != null && d.product_id !== "";
+    },
     { message: "productRequired", path: ["product_id"] },
   )
   .refine(
@@ -89,9 +91,10 @@ const fieldStyle = {
 };
 
 function persist(store: ReturnType<typeof useWizardStore.getState>, data: Step1Fields) {
-  const pid = data.product_id && data.product_id !== "" ? Number(data.product_id) : null;
+  const isOther = data.product_id === "other";
+  const pid = !isOther && data.product_id && data.product_id !== "" ? Number(data.product_id) : null;
   store.setField("product_id", pid);
-  store.setField("product_text", data.product_text?.trim() ?? "");
+  store.setField("product_text", isOther ? data.product_text?.trim() ?? "" : "");
   store.setField("grade_text", data.grade_text ?? "");
   store.setField("polymer_type", data.polymer_type ?? "");
   store.setField("volume", String(data.volume));
@@ -115,7 +118,7 @@ export default function Step1() {
     resolver: zodResolver(step1Schema),
     mode: "onChange",
     defaultValues: {
-      product_id: store.product_id != null ? String(store.product_id) : "",
+      product_id: store.product_id != null ? String(store.product_id) : store.product_text ? "other" : "",
       product_text: store.product_text,
       grade_text: store.grade_text,
       polymer_type: store.polymer_type,
@@ -189,22 +192,26 @@ export default function Step1() {
         <FieldGroup htmlFor="product_id" label={t("wizard.product")} required error={productError}>
           <SelectField
             id="product_id"
-            options={products.map((p) => ({ value: p.value, label: p.label }))}
+            options={[
+              ...products.map((p) => ({ value: p.value, label: p.label })),
+              { value: "other", label: t("wizard.productOther") },
+            ]}
             placeholder={t("wizard.productPlaceholder")}
-            defaultValue={store.product_id ?? ""}
             {...register("product_id")}
           />
         </FieldGroup>
 
-        <FieldGroup htmlFor="product_text" label={t("wizard.productText")}>
-          <input
-            id="product_text"
-            type="text"
-            placeholder={t("wizard.productTextPlaceholder")}
-            style={fieldStyle}
-            {...register("product_text")}
-          />
-        </FieldGroup>
+        {formValues.product_id === "other" && (
+          <FieldGroup htmlFor="product_text" label={t("wizard.productManual")} required>
+            <input
+              id="product_text"
+              type="text"
+              placeholder={t("wizard.productTextPlaceholder")}
+              style={fieldStyle}
+              {...register("product_text")}
+            />
+          </FieldGroup>
+        )}
 
         <FieldGroup htmlFor="grade_text" label={t("wizard.grade")} error={gradeError}>
           <input id="grade_text" type="text" placeholder={t("wizard.gradePlaceholder")} style={fieldStyle} {...register("grade_text")} />

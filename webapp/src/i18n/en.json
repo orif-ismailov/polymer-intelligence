@@ -34,6 +34,8 @@
       "title": "Additional information"
     },
     "productText": "Or enter a product manually",
+    "productOther": "Other",
+    "productManual": "Product name",
     "productTextPlaceholder": "E.g. EVA, polycarbonate…",
     "deliveryCity": "Delivery city",
     "urgency": "When do you need it?",
@@ -128,7 +130,7 @@
     "requests": "Requests",
     "sell": "Sell",
     "news": "News",
-    "profile": "Profile"
+    "profile": "Settings"
   },
   "market": {
     "title": "Market",
@@ -216,7 +218,7 @@
     "cta": "Open chat on Telegram"
   },
   "profile": {
-    "title": "Profile",
+    "title": "Settings",
     "role": "I want to",
     "roleOpt": {
       "buyer": "Buy",

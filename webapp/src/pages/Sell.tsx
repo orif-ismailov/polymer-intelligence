@@ -14,6 +14,19 @@ import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
 import type { SellerOfferOut, SellerOfferStatus } from "../types";
 
+// product_id → polymer code (matches the seller wizard's Продукт options), shown as
+// a prefix before the grade in the offer title, e.g. "LLDPE PP Raffia J340".
+const PRODUCT_LABELS: Record<number, string> = {
+  1: "PP",
+  2: "HDPE",
+  3: "LDPE",
+  4: "LLDPE",
+  5: "PVC",
+  6: "PET",
+  7: "PS",
+  8: "ABS",
+};
+
 const STATUS_CHIP: Record<SellerOfferStatus, { bg: string; fg: string }> = {
   draft: { bg: "var(--chip-neutral-bg)", fg: "var(--chip-neutral-fg)" },
   pending_moderation: { bg: "var(--chip-warn-bg)", fg: "var(--chip-warn-fg)" },
@@ -110,7 +123,9 @@ export default function Sell() {
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
             <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>
-              {o.grade_text || o.product_text || "—"}
+              {[o.product_id ? PRODUCT_LABELS[o.product_id] : null, o.grade_text || o.product_text]
+                .filter(Boolean)
+                .join(" ") || "—"}
             </span>
             <span style={badge(o.status)}>{t(`offerStatus.${o.status}`)}</span>
           </div>

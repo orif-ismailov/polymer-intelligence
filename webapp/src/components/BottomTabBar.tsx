@@ -9,7 +9,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FileText, Home, Newspaper, Store, User, type LucideIcon } from "lucide-react";
+import { FileText, Home, Newspaper, Settings, Store, type LucideIcon } from "lucide-react";
 
 import { api } from "../api/client";
 
@@ -25,7 +25,7 @@ const TABS: Tab[] = [
   { key: "requests", path: "/requests", color: "var(--blue)", Icon: FileText },
   { key: "market", path: "/market", color: "var(--green)", Icon: Store },
   { key: "news", path: "/news", color: "var(--purple)", Icon: Newspaper },
-  { key: "profile", path: "/profile", color: "var(--text)", Icon: User },
+  { key: "profile", path: "/profile", color: "var(--text)", Icon: Settings },
 ];
 
 export default function BottomTabBar() {

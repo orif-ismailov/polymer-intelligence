@@ -34,6 +34,8 @@
       "title": "Дополнительная информация"
     },
     "productText": "Или введите продукт вручную",
+    "productOther": "Другое",
+    "productManual": "Название продукта",
     "productTextPlaceholder": "Например, EVA, поликарбонат…",
     "deliveryCity": "Город поставки",
     "urgency": "Когда нужен товар?",
@@ -128,7 +130,7 @@
     "requests": "Заявки",
     "sell": "Продать",
     "news": "Новости",
-    "profile": "Профиль"
+    "profile": "Настройки"
   },
   "market": {
     "title": "Маркет",
@@ -216,7 +218,7 @@
     "cta": "Открыть чат в Telegram"
   },
   "profile": {
-    "title": "Профиль",
+    "title": "Настройки",
     "role": "Я хочу",
     "roleOpt": {
       "buyer": "Покупать",

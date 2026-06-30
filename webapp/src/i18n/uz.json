@@ -34,6 +34,8 @@
       "title": "Qo'shimcha ma'lumot"
     },
     "productText": "Yoki mahsulotni qo'lda kiriting",
+    "productOther": "Boshqa",
+    "productManual": "Mahsulot nomi",
     "productTextPlaceholder": "Masalan, EVA, polikarbonat…",
     "deliveryCity": "Yetkazib berish shahri",
     "urgency": "Tovar qachon kerak?",
@@ -128,7 +130,7 @@
     "requests": "Arizalar",
     "sell": "Sotish",
     "news": "Yangiliklar",
-    "profile": "Profil"
+    "profile": "Sozlamalar"
   },
   "market": {
     "title": "Market",
@@ -216,7 +218,7 @@
     "cta": "Telegram'da chatni ochish"
   },
   "profile": {
-    "title": "Profil",
+    "title": "Sozlamalar",
     "role": "Men xohlayman",
     "roleOpt": {
       "buyer": "Sotib olish",
