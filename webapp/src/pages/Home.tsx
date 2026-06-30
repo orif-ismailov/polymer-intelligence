@@ -13,7 +13,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Sparkles, CheckCircle2, ShoppingCart, Store, HelpCircle } from "lucide-react";
+import { CheckCircle2, ShoppingCart, Store, HelpCircle } from "lucide-react";
 
 import Button from "../components/Button";
 import { backButton, mainButton } from "../telegram";
@@ -40,34 +40,8 @@ export default function Home() {
         padding: "8px 16px 16px",
       }}
     >
-      {/* Brand wordmark */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-        <span
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "var(--r-sm)",
-            background: "var(--green)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: "0 0 auto",
-          }}
-        >
-          <Sparkles size={18} color="var(--green-on)" />
-        </span>
-        <span>
-          <span style={{ display: "block", fontSize: "17px", fontWeight: 700, color: "var(--text)", lineHeight: 1 }}>
-            PetroAI
-          </span>
-          <span style={{ display: "block", fontSize: "10px", fontWeight: 600, letterSpacing: "0.08em", color: "var(--text-muted)", marginTop: "3px" }}>
-            {t("home.brandTag")}
-          </span>
-        </span>
-      </div>
-
       {/* Headline + lead */}
-      <h1 style={{ margin: "0 0 10px", fontSize: "26px", fontWeight: 700, lineHeight: 1.2, color: "var(--text)" }}>
+      <h1 style={{ margin: "16px 0 10px", fontSize: "26px", fontWeight: 700, lineHeight: 1.2, color: "var(--text)" }}>
         {t("home.headline")}
       </h1>
       <p style={{ margin: "0 0 20px", fontSize: "15px", lineHeight: 1.5, color: "var(--text-muted)" }}>
