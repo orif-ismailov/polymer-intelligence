@@ -12,7 +12,6 @@
 import { useEffect, useState, useCallback, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { styles } from "../App";
 import { api } from "../api/client";
 import { backButton, mainButton, impactLight } from "../telegram";
 import RequestCard from "../components/RequestCard";
@@ -136,38 +135,35 @@ export default function MyRequests() {
   }
 
   return (
-    <div style={{ ...styles.app, padding: "16px" }}>
-      {/* Screen header */}
-      <div style={styles.header as CSSProperties}>
-        <h1 style={styles.headerTitle}>{t("myRequests.title")}</h1>
-      </div>
+    <div style={{ padding: "16px" }}>
+      <h1 style={{ margin: "0 0 16px", fontSize: "20px", fontWeight: 700, color: "var(--text)" }}>
+        {t("myRequests.title")}
+      </h1>
 
-      <div style={{ padding: "16px" }}>
-        {/* Error banner */}
-        {error && <ErrorBanner message={error} />}
+      {/* Error banner */}
+      {error && <ErrorBanner message={error} />}
 
-        {/* Loading skeleton */}
-        {loading && <Skeleton />}
+      {/* Loading skeleton */}
+      {loading && <Skeleton />}
 
-        {/* Request list */}
-        {!loading && !error && requests.length > 0 && (
-          <div>
-            {requests.map((req) => (
-              <RequestCard key={req.id} request={req} onClick={handleCardClick} />
-            ))}
-          </div>
-        )}
+      {/* Request list */}
+      {!loading && !error && requests.length > 0 && (
+        <div>
+          {requests.map((req) => (
+            <RequestCard key={req.id} request={req} onClick={handleCardClick} />
+          ))}
+        </div>
+      )}
 
-        {/* Empty state */}
-        {!loading && !error && requests.length === 0 && (
-          <EmptyState
-            heading={t("myRequests.empty.heading")}
-            body={t("myRequests.empty.body")}
-            cta={t("myRequests.empty.cta")}
-            onCta={() => navigate("/")}
-          />
-        )}
-      </div>
+      {/* Empty state */}
+      {!loading && !error && requests.length === 0 && (
+        <EmptyState
+          heading={t("myRequests.empty.heading")}
+          body={t("myRequests.empty.body")}
+          cta={t("myRequests.empty.cta")}
+          onCta={() => navigate("/")}
+        />
+      )}
     </div>
   );
 }
