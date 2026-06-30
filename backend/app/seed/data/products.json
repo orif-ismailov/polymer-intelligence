@@ -8,14 +8,14 @@
   },
   {
     "code": "HDPE",
-    "name_ru": "Полиэтилен высокого давления",
+    "name_ru": "Полиэтилен высокой плотности",
     "name_uz": "Yuqori zichlikdagi polietilen",
     "category": "polymer",
     "sort_order": 2
   },
   {
     "code": "LDPE",
-    "name_ru": "Полиэтилен низкого давления",
+    "name_ru": "Полиэтилен низкой плотности",
     "name_uz": "Past zichlikdagi polietilen",
     "category": "polymer",
     "sort_order": 3
