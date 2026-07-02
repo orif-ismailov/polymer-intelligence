@@ -111,3 +111,55 @@ def clear_refresh_cookie(response: Response) -> None:
 def get_refresh_cookie_name() -> str:
     """Return the refresh cookie name (for use in endpoint cookie extraction)."""
     return _REFRESH_COOKIE_NAME
+
+
+# ── Browser client session (Telegram Login Widget) ─────────────────────────────
+# A separate cookie from the staff refresh_token: different name, scoped to the
+# webapp API surface only. Holds a client_session JWT (create_client_session_token)
+# so browser visitors authed via the Login Widget stay signed in without initData.
+
+_CLIENT_SESSION_COOKIE_NAME = "client_session"
+_CLIENT_SESSION_COOKIE_PATH = "/api/v1/webapp"
+
+
+def set_client_session_cookie(response: Response, telegram_user_id: int) -> None:
+    """Set the httpOnly client-session cookie after a successful Login Widget auth.
+
+    Mirrors the staff refresh-cookie security shape (HttpOnly + Secure-in-prod +
+    SameSite=lax) but is scoped to /api/v1/webapp so it only rides along with the
+    webapp API the browser client actually calls. Same-origin behind nginx, so
+    SameSite=lax is correct and sufficient.
+
+    Args:
+        response: The FastAPI Response to set the cookie on.
+        telegram_user_id: The verified client's telegram_user_id (JWT sub).
+    """
+    from app.core.config import settings  # noqa: PLC0415
+    from app.core.security import create_client_session_token  # noqa: PLC0415
+
+    token = create_client_session_token(subject=str(telegram_user_id))
+    response.set_cookie(
+        key=_CLIENT_SESSION_COOKIE_NAME,
+        value=token,
+        httponly=True,
+        secure=_COOKIE_SECURE,
+        samesite="lax",
+        max_age=settings.CLIENT_SESSION_TTL_SECONDS,
+        path=_CLIENT_SESSION_COOKIE_PATH,
+    )
+
+
+def clear_client_session_cookie(response: Response) -> None:
+    """Clear the httpOnly client-session cookie (browser logout)."""
+    response.delete_cookie(
+        key=_CLIENT_SESSION_COOKIE_NAME,
+        httponly=True,
+        secure=_COOKIE_SECURE,
+        samesite="lax",
+        path=_CLIENT_SESSION_COOKIE_PATH,
+    )
+
+
+def get_client_session_cookie_name() -> str:
+    """Return the client-session cookie name (for endpoint cookie extraction)."""
+    return _CLIENT_SESSION_COOKIE_NAME

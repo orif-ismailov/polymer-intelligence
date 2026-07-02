@@ -32,8 +32,21 @@ npm run e2e        # Playwright
 
 ## Notes specific to this package
 
-- **Auth is Telegram initData**: the client sends `X-Telegram-Init-Data`; the backend
-  (`app/api/webapp/`) verifies the HMAC with a TTL. There is no JWT/cookie here.
+- **Dual-context**: runs both inside Telegram (Mini App) and in a plain browser.
+  `telegram.isMiniApp()` (`isTMA('simple')`) is the signal. `store/authStore.ts` resolves
+  auth at boot: Mini App → always authed (initData); browser → probes `GET /webapp/me`.
+- **Auth**: Mini App sends `X-Telegram-Init-Data` (HMAC + TTL). Browser signs in via the
+  **Telegram Login Widget** (`components/TelegramLoginGate.tsx`) → `POST /webapp/auth/telegram`
+  sets an httpOnly `client_session` cookie; `api/client.ts` sends `credentials:"include"` and
+  omits the empty initData header so the backend falls through to the cookie. Backend
+  `get_current_client` accepts either. Browser login needs `BOT_USERNAME` + BotFather `/setdomain`.
+- **Routing/chrome**: `/` is the public IMEX AI marketing landing (`pages/Landing.tsx`,
+  `styles/landing.css`), full-bleed with its own header/footer — shown in both contexts.
+  All other routes live under the `AppLayout` layout route (`App.tsx`) behind `RequireAuth`;
+  responsive chrome switches mobile `BottomTabBar` ↔ desktop `TopNav` via `hooks/useIsDesktop`.
+- **Landing** uses scoped CSS (`.imex-landing`, neon `#5CFF6E` on `#05070A`) + a tiny
+  IntersectionObserver reveal (`hooks/useScrollReveal.ts`) — no Tailwind/Framer Motion (bundle budget).
+  Marketplace cards come from the **public** `GET /webapp/market/featured` (no seller contacts).
 - Built as a **static bundle** and served by nginx at `/webapp/`. Build + load into the
   `webapp_static` volume from the repo root with `make webapp-bundle`
   (`deploy/Dockerfile.webapp`). The bot's WebApp button points at `${PUBLIC_WEBAPP_URL}/webapp/`.

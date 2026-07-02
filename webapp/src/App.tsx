@@ -1,7 +1,7 @@
 /**
- * PetroAI — Telegram Web App router shell.
+ * IMEX AI — Telegram Web App router shell.
  *
- * Colors come from the PetroAI design tokens (src/styles/tokens.css), NOT
+ * Colors come from the IMEX AI design tokens (src/styles/tokens.css), NOT
  * Telegram's --tg-theme-* vars, so the app is pixel-identical to the approved
  * mockups in both dark and light themes (design-system.md §2).
  *
@@ -9,12 +9,16 @@
  * (REQ-nfr-performance: ≤300 KB gzip bundle).
  */
 
-import { lazy, Suspense, CSSProperties } from "react";
-import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense, useEffect, CSSProperties } from "react";
+import { Routes, Route, Outlet } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
 import BottomTabBar from "./components/BottomTabBar";
+import RequireAuth from "./components/RequireAuth";
 import RoleHintModal from "./components/RoleHintModal";
+import TopNav from "./components/TopNav";
+import { useIsDesktop } from "./hooks/useIsDesktop";
+import { useAuthStore } from "./store/authStore";
 
 // ── Shared style tokens (canonical source — reused by page components) ─────────
 
@@ -86,8 +90,9 @@ export const styles = {
 
 // ── Lazy-loaded routes (code-split by route) ───────────────────────────────────
 
-// Landing + tab destinations (unified shell — IMG_0046)
-const Home = lazy(() => import("./pages/Home"));
+// Public marketing landing (IMEX AI) — rendered at "/" outside the app chrome.
+const Landing = lazy(() => import("./pages/Landing"));
+// Tab destinations + flows
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Support = lazy(() => import("./pages/Support"));
 const Market = lazy(() => import("./pages/Market"));
@@ -138,44 +143,81 @@ function PageLoader() {
   );
 }
 
-// ── App route table ────────────────────────────────────────────────────────────
+// ── App layout for the functional (non-landing) routes ─────────────────────────
+// Owns the responsive chrome: desktop TopNav ↔ mobile BottomTabBar, a centered
+// max-width container on desktop, and the browser auth gate (RequireAuth). Mini App
+// is always authed so the gate is a no-op there.
 
-export default function App() {
+function AppLayout() {
+  const isDesktop = useIsDesktop();
+  const authed = useAuthStore((s) => s.status === "authed");
+
   return (
     <div style={styles.app}>
       <RoleHintModal />
-      {/* Reserve space for the fixed BottomTabBar (rendered globally below). */}
-      <div style={{ paddingBottom: "calc(72px + env(safe-area-inset-bottom))" }}>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-          {/* Launch screen — the Главный экран landing (design_2 buyer ①) */}
-          <Route path="/" element={<AppShell><Home /></AppShell>} />
-
-          {/* Tab destinations (with bottom tab bar) */}
-          <Route path="/market" element={<AppShell><Market /></AppShell>} />
-          <Route path="/requests" element={<AppShell><MyRequests /></AppShell>} />
-          <Route path="/sell" element={<AppShell><Sell /></AppShell>} />
-          <Route path="/news" element={<AppShell><News /></AppShell>} />
-          <Route path="/profile" element={<AppShell><Profile /></AppShell>} />
-
-          {/* Full-screen flows (no tab bar) */}
-          <Route path="/how-it-works" element={<HowItWorks />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/market/:id" element={<OfferDetail />} />
-          <Route path="/sell/new" element={<SellOffer />} />
-          <Route path="/news/:id" element={<NewsDetail />} />
-          <Route path="/request/step/1" element={<Step1 />} />
-          <Route path="/request/step/2" element={<Step2 />} />
-          <Route path="/request/step/3" element={<Step3 />} />
-          <Route path="/request/step/4" element={<Step4 />} />
-          <Route path="/request/confirm" element={<Confirm />} />
-          <Route path="/requests/:id" element={<RequestDetailPage />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
-        </Suspense>
+      {isDesktop && authed && <TopNav />}
+      <div
+        className={isDesktop ? "imex-app-container" : undefined}
+        style={{
+          // Reserve space for the fixed mobile BottomTabBar (only shown on mobile+authed).
+          paddingBottom: !isDesktop && authed ? "calc(72px + env(safe-area-inset-bottom))" : undefined,
+        }}
+      >
+        <RequireAuth>
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
+        </RequireAuth>
       </div>
-      <BottomTabBar />
+      {!isDesktop && authed && <BottomTabBar />}
     </div>
+  );
+}
+
+// ── App route table ────────────────────────────────────────────────────────────
+
+export default function App() {
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+  useEffect(() => {
+    void bootstrap();
+  }, [bootstrap]);
+
+  return (
+    <Routes>
+      {/* Public marketing landing — full-bleed, its own chrome, no auth gate. */}
+      <Route
+        path="/"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <Landing />
+          </Suspense>
+        }
+      />
+
+      {/* Functional app — behind the responsive chrome + browser auth gate. */}
+      <Route element={<AppLayout />}>
+        {/* Tab destinations (mobile compact header via AppShell) */}
+        <Route path="/market" element={<AppShell><Market /></AppShell>} />
+        <Route path="/requests" element={<AppShell><MyRequests /></AppShell>} />
+        <Route path="/sell" element={<AppShell><Sell /></AppShell>} />
+        <Route path="/news" element={<AppShell><News /></AppShell>} />
+        <Route path="/profile" element={<AppShell><Profile /></AppShell>} />
+
+        {/* Full-screen flows */}
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/market/:id" element={<OfferDetail />} />
+        <Route path="/sell/new" element={<SellOffer />} />
+        <Route path="/news/:id" element={<NewsDetail />} />
+        <Route path="/request/step/1" element={<Step1 />} />
+        <Route path="/request/step/2" element={<Step2 />} />
+        <Route path="/request/step/3" element={<Step3 />} />
+        <Route path="/request/step/4" element={<Step4 />} />
+        <Route path="/request/confirm" element={<Confirm />} />
+        <Route path="/requests/:id" element={<RequestDetailPage />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Route>
+    </Routes>
   );
 }

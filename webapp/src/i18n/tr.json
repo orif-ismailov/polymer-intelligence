@@ -4,9 +4,18 @@
     "headline": "Petrokimya hammaddeleri için AI Marketplace",
     "lead": "AI piyasayı analiz eder ve işletmeniz için en iyi teklifleri bulur",
     "stats": {
-      "buyers": { "value": "1 500+", "label": "alıcı" },
-      "suppliers": { "value": "200+", "label": "tedarikçi" },
-      "catalog": { "value": "10 000+", "label": "katalogda" }
+      "buyers": {
+        "value": "1 500+",
+        "label": "alıcı"
+      },
+      "suppliers": {
+        "value": "200+",
+        "label": "tedarikçi"
+      },
+      "catalog": {
+        "value": "10 000+",
+        "label": "katalogda"
+      }
     },
     "bullets": {
       "verified": "Yalnızca doğrulanmış satıcılar ve gerçek stoklar",
@@ -56,7 +65,7 @@
     },
     "stepOf": "Adım {{current}} / {{total}}",
     "hintGrade": "Kesin markayı bilmiyor musunuz? Ürünü kendi kelimelerinizle tarif edin — AI uygun seçenekleri belirler.",
-    "dataProtected": "Verileriniz korunmaktadır. İletişim bilgileri yalnızca doğrulanmış PetroAI yöneticilerine görünür.",
+    "dataProtected": "Verileriniz korunmaktadır. İletişim bilgileri yalnızca doğrulanmış IMEX AI yöneticilerine görünür.",
     "desiredPrice": "İstenen fiyat (isteğe bağlı)",
     "attachTds": "TDS / spesifikasyon ekle",
     "submitRequest": "Talebi gönder",
@@ -208,14 +217,14 @@
     },
     "dataProtected": {
       "title": "Verileriniz korunmaktadır",
-      "body": "İletişim bilgileri yalnızca doğrulanmış PetroAI yöneticilerine görünür."
+      "body": "İletişim bilgileri yalnızca doğrulanmış IMEX AI yöneticilerine görünür."
     },
     "questions": "Sorularınız mı var?",
     "openChat": "Sohbeti aç"
   },
   "support": {
     "title": "Sohbet desteği",
-    "body": "Bize yazın — bir PetroAI yöneticisi Telegram üzerinden yanıt verecek ve talebinizde size yardımcı olacak.",
+    "body": "Bize yazın — bir IMEX AI yöneticisi Telegram üzerinden yanıt verecek ve talebinizde size yardımcı olacak.",
     "cta": "Telegram'da sohbeti aç"
   },
   "profile": {
@@ -276,5 +285,92 @@
     "remove": "{{name}} dosyasını sil",
     "attach": "Dosya ekle",
     "hint": "PDF, Excel, JPG — en fazla 5 dosya, her biri 10 MB'a kadar"
+  },
+  "landing": {
+    "nav": {
+      "about": "Platform",
+      "how": "Nasıl çalışır",
+      "why": "Avantajlar",
+      "partners": "İş ortakları",
+      "contacts": "İletişim"
+    },
+    "cta": {
+      "buy": "Hammadde Al",
+      "sell": "Hammadde Sat"
+    },
+    "hero": {
+      "badge": "AI MARKETPLACE",
+      "title": "Petrokimya Hammaddeleri için AI Marketplace",
+      "para": "Doğrulanmış satıcılar ve alıcıları buluşturan, pazarı analiz eden ve en iyi anlaşmaları yapmanıza yardımcı olan akıllı bir platform.",
+      "f1": "Doğrulanmış satıcılar ve alıcılar",
+      "f2": "Fabrikalar ve rafinerilerle doğrudan sözleşmeler",
+      "f3": "AI pazar analizi ve en iyi teklif eşleştirme",
+      "f4": "Hızlı ve kullanışlı",
+      "trust": "Güvenli işlemler ve tam gizlilik",
+      "node": {
+        "suppliers": "Tedarikçiler (fabrikalar, rafineriler)",
+        "buyers": "Alıcılar (fabrikalar, tesisler)",
+        "analysis": "Gerçek zamanlı pazar analizi",
+        "deals": "En iyi şartlar ve anlaşmalar"
+      }
+    },
+    "how": {
+      "tag": "NASIL ÇALIŞIR",
+      "title": "Kârlı anlaşmalar için basit bir süreç",
+      "s1": {
+        "title": "Talep oluşturun",
+        "desc": "Hangi hammaddeyi almak veya satmak istediğinizi belirtin"
+      },
+      "s2": {
+        "title": "AI pazarı analiz eder",
+        "desc": "Sistem teklifleri tarar ve fiyat ile şartlara göre en iyisini bulur"
+      },
+      "s3": {
+        "title": "En iyi teklifleri alın",
+        "desc": "Yalnızca doğrulanmış ortaklardan en avantajlı teklifleri alırsınız"
+      },
+      "s4": {
+        "title": "Anlaşmayı kapatın",
+        "desc": "Tedarikçiyle iletişime geçin ve anlaşmayı hızlı ve güvenli kapatın"
+      }
+    },
+    "partners": {
+      "tag": "İŞ ORTAKLARIMIZ",
+      "title": "40'tan fazla fabrika ve rafineri ile doğrudan özel sözleşmeler",
+      "iran": "İran rafinerileri ve tesisleri",
+      "other": "… ve diğer iş ortakları"
+    },
+    "features": {
+      "count": "1.000+",
+      "f1": "alıcı (fabrikalar, tesisler, şirketler)",
+      "f2": "Yalnızca doğrulanmış tedarikçiler ve güvenilir ortaklar",
+      "f3": "Yapay zeka pazarı 7/24 analiz eder",
+      "f4": "Güvenli işlemler ve verilerinizin korunması",
+      "f5": "Anlaşmanın her aşamasında destek"
+    },
+    "final": {
+      "title": "Kârlı anlaşmalara başlamaya hazır mısınız?",
+      "subtitle": "IMEX AI'ye katılın ve en iyi teklifleri ilk siz alın."
+    },
+    "footer": {
+      "tagline": "Petrokimya hammaddeleri için AI Marketplace. Teknoloji ve güvenilir ortaklarla işletmeniz için fırsatlar yaratıyoruz.",
+      "colPlatform": "Platform",
+      "colCompany": "Şirket",
+      "colSupport": "Destek",
+      "faq": "SSS",
+      "support24": "7/24 Destek",
+      "rights": "© IMEX AI 2026. Tüm hakları saklıdır.",
+      "privacy": "Gizlilik Politikası",
+      "terms": "Kullanım Koşulları"
+    }
+  },
+  "auth": {
+    "title": "Telegram ile giriş yap",
+    "subtitle": "Talep göndermek ve tedarikçi iletişimlerini görmek için Telegram ile giriş yapın.",
+    "loading": "Yükleniyor…",
+    "unavailable": "Tarayıcı girişi geçici olarak kullanılamıyor. Uygulamayı Telegram'da açın.",
+    "signing": "Giriş yapılıyor…",
+    "error": "Giriş başarısız. Lütfen tekrar deneyin.",
+    "logout": "Çıkış yap"
   }
 }

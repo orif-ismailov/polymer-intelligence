@@ -105,6 +105,19 @@ export function initTelegram(): void {
   }
 }
 
+/**
+ * True when running inside the Telegram Mini App (identity available via initData),
+ * false in a plain browser. Drives the dual auth model: Mini App = no login gate;
+ * browser = Telegram Login Widget + client_session cookie.
+ */
+export function isMiniApp(): boolean {
+  try {
+    return isTMA("simple");
+  } catch {
+    return false;
+  }
+}
+
 // ── initData string ────────────────────────────────────────────────────────────
 
 export function getInitData(): string {

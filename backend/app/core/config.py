@@ -62,6 +62,16 @@ class Settings(BaseSettings):
     # ── Telegram bot ──────────────────────────────────────────────────────────
     BOT_TOKEN: str
     WEBHOOK_SECRET: str
+    # Public bot @handle (WITHOUT the leading @), e.g. "imex_ai_bot". Needed by the
+    # browser Telegram Login Widget (data-telegram-login) so the webapp can
+    # authenticate visitors who open it outside Telegram. Delivered to the static
+    # bundle at runtime via GET /webapp/auth/config. Empty → browser login disabled.
+    # NOTE: the bot's domain must also be registered via BotFather /setdomain.
+    BOT_USERNAME: str = ""
+    # Lifetime of the browser client-session cookie issued after a successful Login
+    # Widget authentication (seconds). Default 30 days. There is no refresh flow for
+    # low-privilege client sessions; they simply re-auth via the widget on expiry.
+    CLIENT_SESSION_TTL_SECONDS: int = 2_592_000
 
     # ── Telegram userbot ──────────────────────────────────────────────────────
     TG_API_ID: int

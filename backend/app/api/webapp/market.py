@@ -14,10 +14,31 @@ from app.api.deps import get_current_client
 from app.core.db import get_db
 from app.models.marketplace import SellerOfferFile
 from app.models.requests import Client
-from app.schemas.marketplace import CatalogOfferOut, CategoryCount
+from app.schemas.marketplace import CatalogOfferOut, CategoryCount, PublicFeaturedOffer
 from app.services import offer_service
 
 router = APIRouter(prefix="/webapp/market", tags=["webapp-market"])
+
+
+@router.get(
+    "/featured",
+    response_model=list[PublicFeaturedOffer],
+    summary="Public featured offers for the marketing landing (NO auth, NO seller contact)",
+)
+def list_featured(
+    limit: int = Query(default=6, ge=1, le=24),
+    db: Session = Depends(get_db),
+) -> list[PublicFeaturedOffer]:
+    """GET /webapp/market/featured — a few approved offers for the anonymous landing.
+
+    PUBLIC (no get_current_client): the IMEX AI landing is served to unauthenticated
+    browser visitors. Reuses the approved-only catalog query but maps to
+    PublicFeaturedOffer, which OMITS the seller contact block — supplier contacts stay
+    behind Telegram auth in the /market screen. Images render via the already-public
+    /webapp/market/offers/{id}/images/{file_id} route.
+    """
+    offers = offer_service.list_catalog(db, limit=limit, offset=0)
+    return [PublicFeaturedOffer.model_validate(o) for o in offers]
 
 
 @router.get(

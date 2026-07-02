@@ -4,9 +4,18 @@
     "headline": "AI Marketplace for petrochemical feedstock",
     "lead": "AI analyzes the market and finds the best offers for your business",
     "stats": {
-      "buyers": { "value": "1 500+", "label": "buyers" },
-      "suppliers": { "value": "200+", "label": "suppliers" },
-      "catalog": { "value": "10 000+", "label": "in catalog" }
+      "buyers": {
+        "value": "1 500+",
+        "label": "buyers"
+      },
+      "suppliers": {
+        "value": "200+",
+        "label": "suppliers"
+      },
+      "catalog": {
+        "value": "10 000+",
+        "label": "in catalog"
+      }
     },
     "bullets": {
       "verified": "Only verified sellers with real stock",
@@ -56,7 +65,7 @@
     },
     "stepOf": "Step {{current}} of {{total}}",
     "hintGrade": "Not sure of the exact grade? Describe the product in your own words — AI will suggest matching options.",
-    "dataProtected": "Your data is protected. Contacts are visible only to verified PetroAI managers.",
+    "dataProtected": "Your data is protected. Contacts are visible only to verified IMEX AI managers.",
     "desiredPrice": "Desired price (optional)",
     "attachTds": "Attach TDS / specification",
     "submitRequest": "Submit request",
@@ -208,14 +217,14 @@
     },
     "dataProtected": {
       "title": "Your data is protected",
-      "body": "Contacts are visible only to verified PetroAI managers."
+      "body": "Contacts are visible only to verified IMEX AI managers."
     },
     "questions": "Have questions?",
     "openChat": "Open chat"
   },
   "support": {
     "title": "Support chat",
-    "body": "Message us — a PetroAI manager will reply on Telegram and help with your request.",
+    "body": "Message us — a IMEX AI manager will reply on Telegram and help with your request.",
     "cta": "Open chat on Telegram"
   },
   "profile": {
@@ -276,5 +285,92 @@
     "remove": "Remove file {{name}}",
     "attach": "Attach files",
     "hint": "PDF, Excel, JPG — up to 5 files, each up to 10 MB"
+  },
+  "landing": {
+    "nav": {
+      "about": "About",
+      "how": "How it works",
+      "why": "Advantages",
+      "partners": "Partners",
+      "contacts": "Contacts"
+    },
+    "cta": {
+      "buy": "Buy Raw Materials",
+      "sell": "Sell Raw Materials"
+    },
+    "hero": {
+      "badge": "AI MARKETPLACE",
+      "title": "AI Marketplace for Petrochemical Raw Materials",
+      "para": "An intelligent platform that connects verified sellers and buyers, analyzes the market and helps you close the best deals.",
+      "f1": "Verified sellers and buyers",
+      "f2": "Direct contracts with factories and refineries",
+      "f3": "AI market analysis and best-offer matching",
+      "f4": "Fast and convenient",
+      "trust": "Secure deals and full confidentiality",
+      "node": {
+        "suppliers": "Suppliers (factories, refineries)",
+        "buyers": "Buyers (factories, plants)",
+        "analysis": "Real-time market analysis",
+        "deals": "Best terms and deals"
+      }
+    },
+    "how": {
+      "tag": "HOW IT WORKS",
+      "title": "A simple process for profitable deals",
+      "s1": {
+        "title": "Create a request",
+        "desc": "Specify what raw material you need to buy or sell"
+      },
+      "s2": {
+        "title": "AI analyzes the market",
+        "desc": "The system scans offers and finds the best options by price and terms"
+      },
+      "s3": {
+        "title": "Get the best offers",
+        "desc": "You receive only the most favorable offers from verified partners"
+      },
+      "s4": {
+        "title": "Close the deal",
+        "desc": "Contact the supplier and close the deal quickly and securely"
+      }
+    },
+    "partners": {
+      "tag": "OUR PARTNERS",
+      "title": "Exclusive direct contracts with more than 40 factories and refineries",
+      "iran": "Iranian refineries and plants",
+      "other": "… and other partners"
+    },
+    "features": {
+      "count": "1,000+",
+      "f1": "buyers (factories, plants, companies)",
+      "f2": "Only verified suppliers and reliable partners",
+      "f3": "Artificial Intelligence analyzes the market 24/7",
+      "f4": "Secure deals and protection of your data",
+      "f5": "Support at every stage of the deal"
+    },
+    "final": {
+      "title": "Ready to start profitable deals?",
+      "subtitle": "Join IMEX AI and get the best offers first."
+    },
+    "footer": {
+      "tagline": "AI Marketplace for petrochemical raw materials. We create opportunities for your business with technology and reliable partners.",
+      "colPlatform": "Platform",
+      "colCompany": "Company",
+      "colSupport": "Support",
+      "faq": "FAQ",
+      "support24": "Support 24/7",
+      "rights": "© IMEX AI 2026. All rights reserved.",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Use"
+    }
+  },
+  "auth": {
+    "title": "Sign in with Telegram",
+    "subtitle": "Sign in with Telegram to submit requests and see supplier contacts.",
+    "loading": "Loading…",
+    "unavailable": "Browser sign-in is temporarily unavailable. Open the app in Telegram.",
+    "signing": "Signing in…",
+    "error": "Sign-in failed. Please try again.",
+    "logout": "Log out"
   }
 }
