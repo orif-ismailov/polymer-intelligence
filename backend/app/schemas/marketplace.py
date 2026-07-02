@@ -143,6 +143,34 @@ class CatalogOfferOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PublicFeaturedOffer(BaseModel):
+    """A public (approved) catalog offer for the ANONYMOUS marketing landing.
+
+    Deliberately OMITS the seller contact block (company/contact/phone/telegram):
+    the landing is served to unauthenticated browser visitors, and supplier contact
+    details must stay behind Telegram auth (contact reveal happens in the
+    authenticated /market screen). Only product/commercial fields + image refs are
+    exposed here.
+    """
+
+    id: int
+    product_id: int | None
+    product_text: str | None
+    grade_text: str | None
+    polymer_type: str | None
+    qty_available: decimal.Decimal
+    qty_unit: str
+    price: decimal.Decimal
+    currency: str
+    incoterms: PriceBasis
+    warehouse_city: str | None
+    country: str | None
+    published_at: datetime.datetime | None
+    files: list[OfferFileRef] = []
+
+    model_config = {"from_attributes": True}
+
+
 class ModerationOfferOut(CatalogOfferOut):
     """A pending offer for the dashboard moderation queue (adds status/created_at)."""
 

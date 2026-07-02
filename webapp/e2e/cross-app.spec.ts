@@ -25,7 +25,7 @@ test("§6.1.1: a Web App purchase request appears in the dashboard", async ({ br
   const webappCtx = await browser.newContext();
   const webappPage = await webappCtx.newPage();
   await openApp(webappPage, "/");
-  await webappPage.getByRole("button", { name: "Купить сырьё" }).click();
+  await webappPage.getByRole("button", { name: "Купить сырьё" }).first().click();
   await webappPage.locator("#product_id").selectOption("1"); // PP
   await webappPage.locator("#grade_text").fill(marker);
   await webappPage.locator("#volume").fill("250");

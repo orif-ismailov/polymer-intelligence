@@ -1,5 +1,5 @@
 /**
- * AppShell — the sticky top header for the five tab destinations: the PetroAI
+ * AppShell — the sticky top header for the five tab destinations: the IMEX AI
  * wordmark on the left, the language switcher on the right (one line). The bottom
  * tab bar is rendered once globally in App (shows on every screen), so AppShell
  * only owns the header.
@@ -8,11 +8,17 @@
 import type { ReactNode } from "react";
 import { Sparkles } from "lucide-react";
 
+import { useIsDesktop } from "../hooks/useIsDesktop";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const HEADER_HEIGHT = 56; // px — kept in sync with full-height pages (e.g. Home)
 
 export default function AppShell({ children }: { children: ReactNode }) {
+  // On desktop the persistent TopNav (rendered by AppLayout) replaces this compact
+  // mobile header — render children only to avoid a duplicate top bar.
+  const isDesktop = useIsDesktop();
+  if (isDesktop) return <>{children}</>;
+
   return (
     <>
       <header
@@ -46,8 +52,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <Sparkles size={16} color="var(--green-on)" />
           </span>
           <span style={{ lineHeight: 1 }}>
-            <span style={{ display: "block", fontSize: "15px", fontWeight: 700, color: "var(--text)", lineHeight: 1 }}>
-              PetroAI
+            <span style={{ display: "block", fontSize: "15px", fontWeight: 800, color: "var(--text)", lineHeight: 1 }}>
+              IMEX <span style={{ color: "var(--green)" }}>AI</span>
             </span>
             <span
               style={{

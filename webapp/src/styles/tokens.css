@@ -1,5 +1,5 @@
 /*
- * PetroAI design tokens — the visual contract from docs/design-system.md.
+ * IMEX AI design tokens — the visual contract from docs/design-system.md.
  *
  * Fixed brand values (NOT inherited from Telegram's --tg-theme-* vars) so the app
  * looks pixel-identical to the approved mockups. Only the dark/light SCHEME follows
@@ -114,4 +114,15 @@ input,
 select,
 textarea {
   font-size: 16px;
+}
+
+/*
+ * Desktop content container — centers the mobile-first pages in a readable column on
+ * wide viewports (applied by AppLayout only when useIsDesktop() is true). Mobile keeps
+ * the full-bleed layout (the class is not applied there).
+ */
+.imex-app-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
 }

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from fastapi import Depends, Header, HTTPException, Query, status
+from fastapi import Cookie, Depends, Header, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -175,71 +175,110 @@ require_admin = require_role(StaffRole.admin)
 require_analyst_or_admin = require_role(StaffRole.analyst, StaffRole.admin)
 
 
+def _client_from_session_cookie(db: Session, token: str) -> Client | None:
+    """Resolve a Client from a browser ``client_session`` JWT cookie.
+
+    Returns the Client if the token is a valid, unexpired client_session whose
+    subject maps to an existing clients row; None on any failure (bad signature,
+    wrong type, expired, unknown client). Callers translate None into the generic
+    401 so no failure detail leaks (T-03-03).
+    """
+    try:
+        payload = decode_token(token, expected_type="client_session")
+    except JWTError:
+        return None
+    try:
+        telegram_user_id = int(payload["sub"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    client: Client | None = (
+        db.query(Client).filter(Client.telegram_user_id == telegram_user_id).first()
+    )
+    return client
+
+
 def get_current_client(
     x_telegram_init_data: str | None = Header(default=None, alias="X-Telegram-Init-Data"),
+    client_session: str | None = Cookie(default=None),
     db: Session = Depends(get_db),
 ) -> Client:
-    """Validate Telegram initData HMAC, upsert clients row, return Client.
+    """Authenticate a webapp client via Telegram initData (Mini App) OR a browser session.
 
-    Dev-spec §3.2: header X-Telegram-Init-Data, HMAC per bot token, TTL 24h.
+    Two independent verified identity paths — the first that succeeds wins:
+
+    Path A — Telegram Mini App: the ``X-Telegram-Init-Data`` header (initData HMAC,
+    dev-spec §3.2). Behaviour is unchanged from the initData-only implementation: a
+    present-but-invalid header still yields the generic 401 (it does NOT fall through
+    to the cookie). An empty/absent header falls through to Path B.
+
+    Path B — Browser (Telegram Login Widget): the httpOnly ``client_session`` cookie
+    issued by POST /webapp/auth/telegram. Verified via decode_token(..., "client_session").
 
     T-03-01: HMAC verified via hmac.compare_digest (constant-time).
-    T-03-02: auth_date TTL enforced; identity read only from verified payload.
+    T-03-02: auth_date TTL enforced; identity read only from the verified payload/token.
     T-03-03: generic 401 "Authentication required" for every failure path —
              never reveals which check failed.
-    T-03-06 equivalent: identity derived from verified initData, never request body.
-             The function signature has no request-body parameter.
+    T-03-06 equivalent: identity derived from verified initData/JWT, never request body.
 
     Raises:
-        HTTPException 401: with detail "Authentication required" on any failure
-            (missing header, bad HMAC, expired TTL, malformed input).
+        HTTPException 401: "Authentication required" when neither path authenticates.
 
     Returns:
-        The authenticated Client ORM object (existing or newly created row).
+        The authenticated Client ORM object.
     """
-    if x_telegram_init_data is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
+    # ── Path A: Telegram Mini App initData (unchanged behaviour) ───────────────
+    # A truthy header selects this path; an empty string (sent by the browser client)
+    # is treated as absent so it falls through to the cookie path.
+    if x_telegram_init_data:
+        from app.services.client_service import (  # noqa: PLC0415
+            InvalidInitData,
+            get_or_create_client,  # noqa: PLC0415
+            verify_init_data,
         )
 
-    from app.services.client_service import (  # noqa: PLC0415
-        InvalidInitData,
-        get_or_create_client,  # noqa: PLC0415
-        verify_init_data,
-    )
+        try:
+            payload = verify_init_data(x_telegram_init_data)
+        except (InvalidInitData, ValueError):
+            # Generic 401 — never reveal which check failed (T-03-03)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+            ) from None
 
-    try:
-        payload = verify_init_data(x_telegram_init_data)
-    except (InvalidInitData, ValueError):
-        # Generic 401 — never reveal which check failed (T-03-03)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-        ) from None
+        # Extract identity from verified payload ONLY (T-03-06 equivalent)
+        user_info = payload.get("user")
+        if not isinstance(user_info, dict):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+            )
 
-    # Extract identity from verified payload ONLY (T-03-06 equivalent)
-    user_info = payload.get("user")
-    if not isinstance(user_info, dict):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
+        try:
+            telegram_user_id = int(user_info["id"])
+        except (KeyError, ValueError, TypeError):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+            ) from None
+
+        language_code: str = str(user_info.get("language_code", "ru"))
+
+        client = get_or_create_client(
+            db=db,
+            telegram_user_id=telegram_user_id,
+            language=language_code,
         )
+        db.commit()  # The dependency owns the upsert transaction
+        return client
 
-    try:
-        telegram_user_id = int(user_info["id"])
-    except (KeyError, ValueError, TypeError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-        ) from None
+    # ── Path B: browser client-session cookie (Telegram Login Widget) ──────────
+    if client_session:
+        client = _client_from_session_cookie(db, client_session)
+        if client is not None:
+            return client
 
-    language_code: str = str(user_info.get("language_code", "ru"))
-
-    client = get_or_create_client(
-        db=db,
-        telegram_user_id=telegram_user_id,
-        language=language_code,
+    # Neither path authenticated → generic 401 (T-03-03)
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authentication required",
     )
-    db.commit()  # The dependency owns the upsert transaction
-    return client

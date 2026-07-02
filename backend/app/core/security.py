@@ -161,6 +161,35 @@ def create_refresh_token(subject: str) -> str:
     return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 
 
+def create_client_session_token(subject: str) -> str:
+    """Create a browser client-session JWT for a Telegram-Login-Widget-authed client.
+
+    Distinct from staff tokens: carries type='client_session' and role='client' so it
+    can NEVER be replayed against staff endpoints (which decode with expected_type
+    'access'/'refresh'). The subject is the client's telegram_user_id (as a string) —
+    the same identity the Mini App initData path yields — so both auth paths resolve
+    to the same Client row.
+
+    Lifetime is settings.CLIENT_SESSION_TTL_SECONDS (default 30 days); low-privilege
+    clients re-authenticate via the widget on expiry (no refresh flow).
+
+    Args:
+        subject: The client's telegram_user_id as a string (JWT sub claim).
+
+    Returns:
+        A signed JWT client-session token string.
+    """
+    now = datetime.now(UTC)
+    payload = {
+        "sub": subject,
+        "role": "client",
+        "type": "client_session",
+        "iat": now,
+        "exp": now + timedelta(seconds=settings.CLIENT_SESSION_TTL_SECONDS),
+    }
+    return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
+
+
 def decode_token(token: str, expected_type: str) -> dict[str, Any]:
     """Decode and validate a JWT token.
 

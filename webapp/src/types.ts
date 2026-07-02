@@ -210,6 +210,43 @@ export interface SellerOfferCreate {
   telegram_username?: string | null;
 }
 
+// ── Browser auth (Telegram Login Widget) ───────────────────────────────────────
+
+export interface AuthConfig {
+  bot_username: string;
+  login_ttl: number;
+}
+
+/** Payload produced by the Telegram Login Widget JS callback (window.Telegram.Login). */
+export interface TelegramLoginPayload {
+  id: number;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  auth_date: number;
+  hash: string;
+  [key: string]: unknown;
+}
+
+/** Public landing offer — mirrors backend PublicFeaturedOffer (NO seller contact). */
+export interface FeaturedOffer {
+  id: number;
+  product_id: number | null;
+  product_text: string | null;
+  grade_text: string | null;
+  polymer_type: string | null;
+  qty_available: number;
+  qty_unit: string;
+  price: number;
+  currency: string;
+  incoterms: PriceBasis;
+  warehouse_city: string | null;
+  country: string | null;
+  published_at: string | null;
+  files: OfferFileRef[];
+}
+
 export interface NewsSummary {
   id: number;
   title: string;

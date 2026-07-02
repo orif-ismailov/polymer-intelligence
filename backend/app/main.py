@@ -52,6 +52,7 @@ from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
 from app.api.sourcing import router as sourcing_router
 from app.api.telegram_webhook import router as telegram_webhook_router
+from app.api.webapp.auth import router as webapp_auth_router
 from app.api.webapp.files import router as webapp_files_router
 from app.api.webapp.market import router as webapp_market_router
 from app.api.webapp.me import router as webapp_me_router
@@ -169,6 +170,7 @@ def create_app() -> FastAPI:
     # ── prices router (Phase 4, Plan 07 — price series endpoint) ─────────────
     application.include_router(prices_router, prefix="/api/v1")
     # ── webapp routers (Telegram Web App client surface) ─────────────────────
+    application.include_router(webapp_auth_router, prefix="/api/v1")
     application.include_router(webapp_requests_router, prefix="/api/v1")
     application.include_router(webapp_me_router, prefix="/api/v1")
     application.include_router(webapp_files_router, prefix="/api/v1")

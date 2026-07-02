@@ -10,10 +10,12 @@
 
 import { getInitData } from "../telegram";
 import type {
+  AuthConfig,
   CatalogOffer,
   CategoryCount,
   ClientProfile,
   ClientProfilePatch,
+  FeaturedOffer,
   NewsItem,
   NewsSummary,
   Product,
@@ -23,6 +25,7 @@ import type {
   RequestOut,
   SellerOfferCreate,
   SellerOfferOut,
+  TelegramLoginPayload,
 } from "../types";
 
 const BASE_URL = "/api/v1";
@@ -45,11 +48,16 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   // Do NOT set Content-Type for multipart/FormData — the browser must set it
   // together with the multipart boundary. JSON requests keep the default.
   const isFormData = options.body instanceof FormData;
+  // Mini App: send the initData HMAC header. Browser: initData is "" — omit the header
+  // so the backend falls through to the httpOnly client_session cookie instead.
+  const initData = getInitData();
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
+    // Send the client_session cookie on the browser auth path (same-origin behind nginx).
+    credentials: "include",
     headers: {
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      "X-Telegram-Init-Data": getInitData(),
+      ...(initData ? { "X-Telegram-Init-Data": initData } : {}),
       // Spread caller headers last so callers can still override if needed
       ...options.headers,
     },
@@ -66,6 +74,31 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 // ── API surface ────────────────────────────────────────────────────────────────
 
 export const api = {
+  // ── Browser auth (Telegram Login Widget) ────────────────────────────────────
+
+  /** GET /webapp/auth/config — public: the bot @handle for the Login Widget. */
+  getAuthConfig(): Promise<AuthConfig> {
+    return apiFetch<AuthConfig>("/webapp/auth/config");
+  },
+
+  /** POST /webapp/auth/telegram — verify a widget payload; sets the session cookie. */
+  loginTelegram(payload: TelegramLoginPayload): Promise<{ ok: boolean }> {
+    return apiFetch<{ ok: boolean }>("/webapp/auth/telegram", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /** POST /webapp/auth/logout — clear the browser session cookie. */
+  logout(): Promise<{ ok: boolean }> {
+    return apiFetch<{ ok: boolean }>("/webapp/auth/logout", { method: "POST" });
+  },
+
+  /** GET /webapp/market/featured — public featured offers for the landing (no contacts). */
+  getFeaturedOffers(): Promise<FeaturedOffer[]> {
+    return apiFetch<FeaturedOffer[]>("/webapp/market/featured");
+  },
+
   // ── Requests ──────────────────────────────────────────────────────────────
 
   /** POST /webapp/requests — create a new purchase request. Returns RequestOut with REQ number. */
@@ -112,8 +145,10 @@ export const api = {
    * Uses a raw fetch (not apiFetch) because the response is binary, not JSON.
    */
   async getRequestFile(requestId: number, fileId: number): Promise<Blob> {
+    const initData = getInitData();
     const res = await fetch(`${BASE_URL}/webapp/requests/${requestId}/files/${fileId}`, {
-      headers: { "X-Telegram-Init-Data": getInitData() },
+      credentials: "include",
+      headers: initData ? { "X-Telegram-Init-Data": initData } : {},
     });
     if (!res.ok) throw new ApiError(res.status, "file fetch failed");
     return res.blob();

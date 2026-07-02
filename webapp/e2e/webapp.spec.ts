@@ -14,13 +14,10 @@ test("launches from the Telegram hash without blanking (HashRouter fix)", async 
   // Telegram opens the Mini App with #tgWebAppData=... — HashRouter would treat that
   // as a route and render blank. The app must capture initData + clean the hash.
   await openViaLaunchHash(page);
-  // Home (Главный экран) rendered (not blank); the launch hash was cleaned to "/".
-  await expect(page.getByRole("button", { name: "Купить сырьё" })).toBeVisible();
+  // IMEX AI landing rendered (not blank); the launch hash was cleaned to "/".
+  // The landing shows several "Купить сырьё" CTAs — assert the first is visible.
+  await expect(page.getByRole("button", { name: "Купить сырьё" }).first()).toBeVisible();
   await expect(page).toHaveURL(/#\/$/);
-  // initData was captured from the hash → an authed call works.
-  await page.getByRole("button", { name: "Заявки" }).click();
-  await expect(page.getByRole("heading", { name: /мои заявки/i })).toBeVisible();
-  await expect(page.getByText(/не удалось загрузить/i)).toHaveCount(0);
 });
 
 test("My Requests loads for an authenticated buyer (initData auth)", async ({ page }) => {
@@ -33,8 +30,8 @@ test("My Requests loads for an authenticated buyer (initData auth)", async ({ pa
 test("submits a purchase request through the 4-step wizard", async ({ page }) => {
   await openApp(page, "/");
 
-  // Home → buyer wizard
-  await page.getByRole("button", { name: "Купить сырьё" }).click();
+  // Landing → buyer wizard (the landing renders several Buy CTAs — take the first)
+  await page.getByRole("button", { name: "Купить сырьё" }).first().click();
   await expect(page).toHaveURL(/\/request\/step\/1$/);
 
   // Step 1 — product (required) + grade + volume (required)

@@ -1,5 +1,5 @@
 /**
- * SelectField — native <select> styled with PetroAI tokens.
+ * SelectField — native <select> styled with IMEX AI tokens.
  *
  * Native <select> avoids custom-dropdown bundle weight (UI-SPEC §Registry Safety).
  * --surface fill, 1px --border, --r-md, 48px, muted placeholder, trailing chevron

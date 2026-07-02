@@ -4,9 +4,18 @@
     "headline": "Neftkimyo xomashyosi AI Marketplace'i",
     "lead": "AI bozorni tahlil qiladi va biznesingiz uchun eng yaxshi takliflarni topadi",
     "stats": {
-      "buyers": { "value": "1 500+", "label": "xaridor" },
-      "suppliers": { "value": "200+", "label": "yetkazib beruvchi" },
-      "catalog": { "value": "10 000+", "label": "katalogda" }
+      "buyers": {
+        "value": "1 500+",
+        "label": "xaridor"
+      },
+      "suppliers": {
+        "value": "200+",
+        "label": "yetkazib beruvchi"
+      },
+      "catalog": {
+        "value": "10 000+",
+        "label": "katalogda"
+      }
     },
     "bullets": {
       "verified": "Faqat tasdiqlangan sotuvchilar va haqiqiy qoldiqlar",
@@ -56,7 +65,7 @@
     },
     "stepOf": "Qadam {{current}} / {{total}}",
     "hintGrade": "Aniq markani bilmaysizmi? Tovarni o'z so'zlaringiz bilan tasvirlang — AI mos variantlarni tanlaydi.",
-    "dataProtected": "Ma'lumotlaringiz himoyalangan. Aloqalar faqat PetroAI'ning tasdiqlangan menejerlariga ko'rinadi.",
+    "dataProtected": "Ma'lumotlaringiz himoyalangan. Aloqalar faqat IMEX AI'ning tasdiqlangan menejerlariga ko'rinadi.",
     "desiredPrice": "Istalgan narx (ixtiyoriy)",
     "attachTds": "TDS / spetsifikatsiyani biriktirish",
     "submitRequest": "Ariza yuborish",
@@ -208,14 +217,14 @@
     },
     "dataProtected": {
       "title": "Ma'lumotlaringiz himoyalangan",
-      "body": "Aloqalar faqat PetroAI'ning tasdiqlangan menejerlariga ko'rinadi."
+      "body": "Aloqalar faqat IMEX AI'ning tasdiqlangan menejerlariga ko'rinadi."
     },
     "questions": "Savollaringiz bormi?",
     "openChat": "Chatni ochish"
   },
   "support": {
     "title": "Chat-qo'llab-quvvatlash",
-    "body": "Bizga yozing — PetroAI menejeri Telegram'da javob beradi va ariza bo'yicha yordam beradi.",
+    "body": "Bizga yozing — IMEX AI menejeri Telegram'da javob beradi va ariza bo'yicha yordam beradi.",
     "cta": "Telegram'da chatni ochish"
   },
   "profile": {
@@ -276,5 +285,92 @@
     "remove": "{{name}} faylini o'chirish",
     "attach": "Fayllarni biriktirish",
     "hint": "PDF, Excel, JPG — 5 tagacha fayl, har biri 10 MB gacha"
+  },
+  "landing": {
+    "nav": {
+      "about": "Platforma",
+      "how": "Qanday ishlaydi",
+      "why": "Afzalliklar",
+      "partners": "Hamkorlar",
+      "contacts": "Aloqa"
+    },
+    "cta": {
+      "buy": "Xomashyo sotib olish",
+      "sell": "Xomashyo sotish"
+    },
+    "hero": {
+      "badge": "AI MARKETPLACE",
+      "title": "Neftkimyo xomashyosi uchun AI Marketplace",
+      "para": "Tekshirilgan sotuvchilar va xaridorlarni bog'laydigan, bozorni tahlil qiladigan va eng yaxshi bitimlarni tuzishga yordam beradigan aqlli platforma.",
+      "f1": "Tekshirilgan sotuvchilar va xaridorlar",
+      "f2": "Zavodlar va NPZ bilan to'g'ridan-to'g'ri shartnomalar",
+      "f3": "AI bozor tahlili va eng yaxshi takliflarni tanlash",
+      "f4": "Tez va qulay",
+      "trust": "Xavfsiz bitimlar va to'liq maxfiylik",
+      "node": {
+        "suppliers": "Ta'minotchilar (zavodlar, NPZ)",
+        "buyers": "Xaridorlar (zavodlar, fabrikalar)",
+        "analysis": "Real vaqtda bozor tahlili",
+        "deals": "Eng yaxshi shartlar va bitimlar"
+      }
+    },
+    "how": {
+      "tag": "QANDAY ISHLAYDI",
+      "title": "Foydali bitimlar uchun oddiy jarayon",
+      "s1": {
+        "title": "Ariza yarating",
+        "desc": "Qanday xomashyo sotib olish yoki sotishni ko'rsating"
+      },
+      "s2": {
+        "title": "AI bozorni tahlil qiladi",
+        "desc": "Tizim takliflarni skanerlab, narx va shartlar bo'yicha eng yaxshisini topadi"
+      },
+      "s3": {
+        "title": "Eng yaxshi takliflarni oling",
+        "desc": "Faqat tekshirilgan hamkorlardan eng foydali takliflarni olasiz"
+      },
+      "s4": {
+        "title": "Bitimni yakunlang",
+        "desc": "Ta'minotchi bilan bog'laning va bitimni tez va xavfsiz yakunlang"
+      }
+    },
+    "partners": {
+      "tag": "HAMKORLARIMIZ",
+      "title": "40 dan ortiq zavod va NPZ bilan to'g'ridan-to'g'ri eksklyuziv shartnomalar",
+      "iran": "Eron NPZ va zavodlari",
+      "other": "… va boshqa hamkorlar"
+    },
+    "features": {
+      "count": "1 000+",
+      "f1": "xaridorlar (zavodlar, fabrikalar, kompaniyalar)",
+      "f2": "Faqat tekshirilgan ta'minotchilar va ishonchli hamkorlar",
+      "f3": "Sun'iy intellekt bozorni 24/7 tahlil qiladi",
+      "f4": "Xavfsiz bitimlar va ma'lumotlaringiz himoyasi",
+      "f5": "Bitimning har bir bosqichida qo'llab-quvvatlash"
+    },
+    "final": {
+      "title": "Foydali bitimlarni boshlashga tayyormisiz?",
+      "subtitle": "IMEX AI ga qo'shiling va eng yaxshi takliflarni birinchi bo'lib oling."
+    },
+    "footer": {
+      "tagline": "Neftkimyo xomashyosi uchun AI Marketplace. Texnologiya va ishonchli hamkorlar bilan biznesingiz uchun imkoniyatlar yaratamiz.",
+      "colPlatform": "Platforma",
+      "colCompany": "Kompaniya",
+      "colSupport": "Qo'llab-quvvatlash",
+      "faq": "FAQ",
+      "support24": "24/7 qo'llab-quvvatlash",
+      "rights": "© IMEX AI 2026. Barcha huquqlar himoyalangan.",
+      "privacy": "Maxfiylik siyosati",
+      "terms": "Foydalanish shartlari"
+    }
+  },
+  "auth": {
+    "title": "Telegram orqali kirish",
+    "subtitle": "Ariza qoldirish va ta'minotchi kontaktlarini ko'rish uchun Telegram orqali kiring.",
+    "loading": "Yuklanmoqda…",
+    "unavailable": "Brauzer orqali kirish vaqtincha mavjud emas. Ilovani Telegramda oching.",
+    "signing": "Kirilyapti…",
+    "error": "Kirib bo'lmadi. Qayta urinib ko'ring.",
+    "logout": "Chiqish"
   }
 }

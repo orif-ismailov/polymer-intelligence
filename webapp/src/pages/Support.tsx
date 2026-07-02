@@ -1,7 +1,7 @@
 /**
  * Support — the "Чат-поддержка" screen (design_2 buyer ⑤).
  *
- * A centered Telegram glyph + reassurance copy + a blue CTA that opens the PetroAI
+ * A centered Telegram glyph + reassurance copy + a blue CTA that opens the IMEX AI
  * support chat in Telegram. Full-screen; BackButton returns to the previous screen.
  *
  * The support handle is a build-time constant; swap SUPPORT_URL for the real one.
@@ -14,7 +14,7 @@ import { Send } from "lucide-react";
 
 import { backButton, mainButton } from "../telegram";
 
-// PetroAI support group (Telegram invite link).
+// IMEX AI support group (Telegram invite link).
 const SUPPORT_URL = "https://t.me/+Bx90bauleYY0NTFi";
 
 export default function Support() {
