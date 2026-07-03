@@ -1,0 +1,76 @@
+# Host nginx vhost for the ai-imex.com split — place on the SERVER, not in a container.
+# ============================================================================
+# This is the shared HOST nginx front-door config (sibling to keira.uz.conf).
+# It terminates TLS for the three public domains and forwards plain HTTP by Host
+# to the compose stack's inner nginx on 127.0.0.1:8080, which routes each Host to
+# the right upstream (dashboard / api / static webapp).
+#
+# Install:
+#   sudo cp deploy/nginx/host-vhost.ai-imex.conf.example \
+#           /etc/nginx/sites-enabled/ai-imex.conf
+#   sudo nginx -t && sudo systemctl reload nginx
+#   sudo certbot --nginx -d ai-imex.com -d www.ai-imex.com \
+#                        -d admin.ai-imex.com -d api.ai-imex.com
+#   # certbot rewrites these blocks in place: adds `listen 443 ssl`, the cert
+#   # paths, and an 80→443 redirect. Then: sudo systemctl reload nginx
+# ============================================================================
+
+# SSE (dashboard live feed + /api streams) needs buffering off + a long read
+# timeout; uploads need the 12 MB cap to match the API / inner nginx.
+
+server {
+    listen 80;
+    server_name api.ai-imex.com;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Connection "";
+        proxy_set_header   Host $host;                # inner nginx routes by Host
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme; # inner passes this through as https
+        proxy_buffering    off;                       # SSE
+        proxy_read_timeout 3600s;                      # SSE long-lived streams
+    }
+}
+
+server {
+    listen 80;
+    server_name admin.ai-imex.com;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Connection "";
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_buffering    off;
+        proxy_read_timeout 3600s;
+    }
+}
+
+server {
+    listen 80;
+    server_name ai-imex.com www.ai-imex.com;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Connection "";
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_buffering    off;
+        proxy_read_timeout 3600s;
+    }
+}
