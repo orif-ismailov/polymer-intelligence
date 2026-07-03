@@ -29,8 +29,9 @@ on startup when `PUBLIC_WEBAPP_URL` is set.
   importing `telegram.bot` under pytest does not hit the network. Network I/O only happens in
   `setup_webhook()` / send calls.
 - `setup_webhook()` **no-ops when `PUBLIC_WEBAPP_URL` is empty** so dev/CI never call Telegram.
-  Webhook URL = `${PUBLIC_WEBAPP_URL}/api/v1/telegram/webhook/${WEBHOOK_SECRET}`; the WebApp button
-  points at `${PUBLIC_WEBAPP_URL}/webapp/`.
+  Webhook URL = `${PUBLIC_API_URL or PUBLIC_WEBAPP_URL}/api/v1/telegram/webhook/${WEBHOOK_SECRET}`
+  (the webhook lives on the API domain, `api.ai-imex.com`); the WebApp button points at
+  `${PUBLIC_WEBAPP_URL}/` (the Web App is served at the root of `ai-imex.com`).
 - **Never log `WEBHOOK_SECRET`** — `setup_webhook` logs a masked URL only (CR-03).
 - **Templates**: `load_template(lang, name)` falls back to `ru` when a lang dir is missing. Add new
   templates to all of `ru`/`uz`/`tr`.

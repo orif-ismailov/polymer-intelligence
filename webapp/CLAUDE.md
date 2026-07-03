@@ -47,9 +47,10 @@ npm run e2e        # Playwright
 - **Landing** uses scoped CSS (`.imex-landing`, neon `#5CFF6E` on `#05070A`) + a tiny
   IntersectionObserver reveal (`hooks/useScrollReveal.ts`) — no Tailwind/Framer Motion (bundle budget).
   Marketplace cards come from the **public** `GET /webapp/market/featured` (no seller contacts).
-- Built as a **static bundle** and served by nginx at `/webapp/`. Build + load into the
-  `webapp_static` volume from the repo root with `make webapp-bundle`
-  (`deploy/Dockerfile.webapp`). The bot's WebApp button points at `${PUBLIC_WEBAPP_URL}/webapp/`.
+- Built as a **static bundle** and served by nginx at the **root of `ai-imex.com`** (Vite
+  `base: "/"`). Build + load into the `webapp_static` volume from the repo root with
+  `make webapp-bundle` (`deploy/Dockerfile.webapp`). The bot's WebApp button points at
+  `${PUBLIC_WEBAPP_URL}/`.
 - **Locales** `ru`/`uz`/`tr` (ru primary) via i18next — keep all three in sync.
 - Forms use react-hook-form + zod. Wizard state lives in zustand, not URL/router state.
 - Separate eslint/tsconfig from `dashboard/` — this is a plain Vite app, not Next.

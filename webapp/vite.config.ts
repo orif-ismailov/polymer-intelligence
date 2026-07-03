@@ -2,11 +2,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => ({
-  // In production the Web App is served under /webapp/ by nginx, so assets must be
-  // referenced as /webapp/assets/*. Dev (vite dev, used by the e2e suite) stays at
-  // the root so HashRouter paths and the e2e harness are unaffected.
-  base: command === "build" ? "/webapp/" : "/",
+export default defineConfig(() => ({
+  // The Web App is served at the root of ai-imex.com by nginx, so assets are
+  // referenced as /assets/*. HashRouter keeps app routes under the "#" fragment.
+  base: "/",
   plugins: [react()],
   build: {
     // Target modern browsers to keep bundle lean

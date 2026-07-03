@@ -3,10 +3,10 @@
 # Usage (one-shot, via compose): see the `webapp-build` service in
 #   deploy/docker-compose.yml (profile: build) and `make webapp-bundle`.
 #
-# The webapp calls the API at the relative path /api/v1 (proxied by nginx in prod),
-# so the build needs no environment or secrets. The final stage carries only the
-# built bundle; the compose service copies /dist into the shared webapp_static
-# volume that nginx serves at /webapp/.
+# The webapp calls the API at the relative path /api/v1 (proxied same-origin by
+# nginx in prod), so the build needs no environment or secrets. The final stage
+# carries only the built bundle; the compose service copies /dist into the shared
+# webapp_static volume that nginx serves at the root of ai-imex.com.
 
 FROM node:20-alpine AS build
 

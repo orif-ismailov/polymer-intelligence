@@ -73,11 +73,11 @@ def load_template(lang: str, name: str) -> str:
 def _webapp_url() -> str:
     """URL of the buyer Telegram Web App (request wizard).
 
-    PUBLIC_WEBAPP_URL is the deployment root (and the webhook base); the Mini App
-    itself is served at /webapp/ by nginx, while the dashboard sits at the root.
+    PUBLIC_WEBAPP_URL is the Web App's own domain (ai-imex.com); the Mini App is
+    served at that domain's root by nginx.
     """
     base = (settings.PUBLIC_WEBAPP_URL or "https://example.com").rstrip("/")
-    return f"{base}/webapp/"
+    return f"{base}/"
 
 
 def web_app_keyboard(lang: str) -> "InlineKeyboardMarkup":
@@ -121,12 +121,15 @@ async def setup_webhook() -> None:
 
     from aiogram.types import BotCommandScopeDefault, MenuButtonWebApp, WebAppInfo  # noqa: PLC0415
 
+    # Webhook lives on the API domain (api.ai-imex.com). Fall back to the Web App
+    # base for single-domain deployments where PUBLIC_API_URL is unset.
+    webhook_base = (settings.PUBLIC_API_URL or settings.PUBLIC_WEBAPP_URL).rstrip("/")
     webhook_url = (
-        f"{settings.PUBLIC_WEBAPP_URL}/api/v1/telegram/webhook/{settings.WEBHOOK_SECRET}"
+        f"{webhook_base}/api/v1/telegram/webhook/{settings.WEBHOOK_SECRET}"
     )
 
     # Log only the public base URL — never log the secret token (CR-03).
-    safe_url = f"{settings.PUBLIC_WEBAPP_URL}/api/v1/telegram/webhook/***"
+    safe_url = f"{webhook_base}/api/v1/telegram/webhook/***"
     logger.info("setup_webhook.start", extra={"webhook_url": safe_url})
 
     await bot.set_webhook(
