@@ -211,7 +211,7 @@
 .imex-h2 {
   margin: 0 0 8px;
   text-align: center;
-  font-size: 26px;
+  font-size: clamp(22px, 5.6vw, 26px);
   line-height: 1.18;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -238,14 +238,14 @@
 }
 .imex-hero__wordmark {
   margin: 0 0 4px;
-  font-size: 46px;
+  font-size: clamp(36px, 12vw, 46px);
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1;
 }
 .imex-hero__title {
   margin: 0 0 16px;
-  font-size: 26px;
+  font-size: clamp(21px, 6vw, 26px);
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.01em;
@@ -428,7 +428,7 @@
   display: block;
   border: 1px solid var(--l-border);
 }
-.imex-final__title { margin: 0 0 8px; font-size: 24px; font-weight: 800; line-height: 1.15; }
+.imex-final__title { margin: 0 0 8px; font-size: clamp(21px, 5.4vw, 24px); font-weight: 800; line-height: 1.15; }
 .imex-final__sub { margin: 0 0 18px; color: var(--l-muted); font-size: 15px; line-height: 1.55; }
 .imex-final__ctas { display: flex; flex-wrap: wrap; gap: 12px; }
 
@@ -519,6 +519,34 @@
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
   .imex-viz__core { animation: none !important; }
+}
+
+/* ── Small phones (≤560px): tighten spacing + shrink the hero globe ───────── */
+
+@media (max-width: 560px) {
+  /* Kill any residual sideways scroll from full-bleed decoration/positioned nodes. */
+  .imex-landing { overflow-x: clip; }
+  .imex-wrap { padding: 0 16px; }
+  .imex-section { padding: 26px 0; }
+  .imex-panel { padding: 24px 16px; border-radius: 18px; }
+
+  .imex-hero { padding: 22px 0 10px; }
+  .imex-hero__grid { gap: 20px; }
+  .imex-hero__cards { gap: 8px; }
+  .imex-hero__para { margin-bottom: 18px; }
+
+  /* Hero network-globe: shrink its footprint so the four node labels stop
+     clipping the screen edges and no longer collide with the "AI" core.
+     (Node left/top come from inline styles in Landing.tsx; width/badge/label
+     sizes here are what actually cause the overflow, so we scale those.) */
+  .imex-viz { max-width: 300px; }
+  .imex-node { width: 82px; gap: 4px; }
+  .imex-node__badge { width: 40px; height: 40px; }
+  .imex-node__label { font-size: 10px; }
+  .imex-viz__core { width: 60px; height: 60px; font-size: 20px; border-radius: 15px; }
+
+  /* Give the sticky Buy/Sell bar enough clearance to never cover footer content. */
+  .imex-landing { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
 }
 
 /* ── Desktop upgrades ────────────────────────────────────────────────────── */
