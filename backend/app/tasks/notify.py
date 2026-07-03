@@ -205,10 +205,10 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
                 WebAppInfo,
             )
 
-            # The Mini App is served under /webapp/ (the root is the dashboard); the
-            # webapp uses HashRouter, so the request detail is /webapp/#/requests/{id}.
+            # The Mini App is served at the root of ai-imex.com; it uses HashRouter,
+            # so the request detail is at /#/requests/{id}.
             deep_link_url = (
-                f"{_settings.PUBLIC_WEBAPP_URL.rstrip('/')}/webapp/#/requests/{request.id}"
+                f"{_settings.PUBLIC_WEBAPP_URL.rstrip('/')}/#/requests/{request.id}"
             )
             open_label = "Открыть заявку" if lang == "ru" else "Arizani ochish"
             keyboard = InlineKeyboardMarkup(

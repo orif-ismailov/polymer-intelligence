@@ -107,10 +107,14 @@ class Settings(BaseSettings):
     S3_BUCKET: str = "polymer-files"
 
     # ── Telegram Web App ──────────────────────────────────────────────────────
-    # Externally reachable Web App base URL used to build status-push deep-link
-    # buttons and to compute the webhook URL. Empty default keeps the test suite
-    # green (no live infrastructure needed); set in .env for production.
+    # Externally reachable Web App base URL (ai-imex.com) used to build status-push
+    # deep-link buttons and the WebApp launch button. Empty default keeps the test
+    # suite green (no live infrastructure needed); set in .env for production.
     PUBLIC_WEBAPP_URL: str = ""
+    # Externally reachable API base URL (api.ai-imex.com) used to register the
+    # Telegram webhook. Falls back to PUBLIC_WEBAPP_URL when empty (single-domain
+    # deployments); set in .env once the API has its own domain.
+    PUBLIC_API_URL: str = ""
     # Telegram news channel id (e.g. "@petroai_news" or a numeric -100… chat id) the
     # approved daily report is posted to. Empty → channel publishing is a no-op
     # (dev/test never call Telegram). Phase 3 news engine.

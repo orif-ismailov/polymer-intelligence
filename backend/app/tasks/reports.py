@@ -62,7 +62,7 @@ def publish_report_to_channel(report_id: int) -> dict[str, object]:
 
             reply_markup = InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [InlineKeyboardButton(text="Открыть приложение", url=f"{_settings.PUBLIC_WEBAPP_URL}/webapp/")]
+                    [InlineKeyboardButton(text="Открыть приложение", url=f"{_settings.PUBLIC_WEBAPP_URL.rstrip('/')}/")]
                 ]
             )
         asyncio.run(

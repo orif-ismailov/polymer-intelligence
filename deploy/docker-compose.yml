@@ -290,33 +290,53 @@ services:
       - api
 
   # ── nginx reverse proxy (ONLY externally-exposed service) ──────────────────
-  # Mounts the TLS prod config (nginx.conf): 443 ssl + 80→443 redirect + the
-  # dashboard upstream + the /api proxy + letsencrypt cert paths (T-06-11). The
-  # dev HTTP-only nginx.dev.conf is intentionally NOT used here.
+  # Mounts the TLS prod config (nginx.conf): 443 ssl + 80→443 redirect, split
+  # across three vhosts — admin.ai-imex.com (dashboard), api.ai-imex.com (api),
+  # ai-imex.com (static Web App) — each also proxying /api → api:8000 (T-06-11).
+  # The dev HTTP-only nginx.dev.conf is intentionally NOT used here.
   nginx:
     image: nginx:stable
     restart: unless-stopped
-    # Behind a TLS-terminating front-door (host nginx owns 80/443 + the keira.uz
-    # cert): publish HTTP only, bound to localhost. The host's reverse proxy
-    # forwards plain HTTP here. Change the host port if 8080 is taken.
-    # To run this stack STANDALONE on 80/443 instead, swap the config back to
-    # ./nginx/nginx.conf, re-add the letsencrypt/certbot_www volumes, and publish
-    # "80:80"/"443:443".
+    # Owns TLS directly (certbot): publish 80/443. The :80 vhost serves the ACME
+    # HTTP-01 challenge from certbot_www and redirects everything else to HTTPS.
+    # See docs/deployment-guide.md for the one-time cert bootstrap.
     ports:
-      - "127.0.0.1:8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
-      # HTTP-only config for running behind a TLS-terminating proxy.
-      - ./nginx/nginx.behind-proxy.conf:/etc/nginx/nginx.conf:ro
-      # Built static Telegram Web App served directly by nginx (/webapp/).
-      # Populate it with `make webapp-bundle`. See docs/deployment-guide.md §4a.
+      # 3-vhost TLS config (admin./api./ai-imex.com), shared SAN cert.
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # TLS certs (certbot) + ACME HTTP-01 webroot.
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+      # Built static Telegram Web App served directly by nginx at the root of
+      # ai-imex.com. Populate it with `make webapp-bundle`. See deployment-guide §4a.
       - webapp_static:/var/www/webapp:ro
     depends_on:
       - api
       - dashboard
 
+  # ── certbot (Let's Encrypt) — issuance + renewal sidecar ──────────────────────
+  # Shares the letsencrypt + certbot_www volumes with nginx. On `up` it loops,
+  # renewing every 12h; nginx picks up new certs on its own reload cycle. The
+  # one-time initial issuance is a manual `run` (see docs/deployment-guide.md):
+  #   docker compose -f deploy/docker-compose.yml run --rm --entrypoint "\
+  #     certbot certonly --webroot -w /var/www/certbot \
+  #       -d ai-imex.com -d www.ai-imex.com -d admin.ai-imex.com -d api.ai-imex.com \
+  #       --email you@ai-imex.com --agree-tos --no-eff-email" certbot
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: >-
+      sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot;
+      sleep 12h & wait $${!}; done"
+
   # ── Web App bundle builder (one-shot; profile-gated, never runs on `up`) ──────
   # Builds the Telegram Web App (Vite) and loads the static bundle into the shared
-  # webapp_static volume that nginx serves at /webapp/. Run at deploy time and on
+  # webapp_static volume that nginx serves at the root of ai-imex.com. Run at deploy time and on
   # every webapp change:
   #   docker compose -f deploy/docker-compose.yml --profile build run --rm --build webapp-build
   #   (or: make webapp-bundle)
