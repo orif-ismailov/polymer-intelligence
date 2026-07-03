@@ -56,6 +56,16 @@
   padding: 0 20px;
 }
 
+/* Structural container around the body (everything between the full-bleed header
+   and footer). Constrains + centers the content column; no border/background so
+   the look is unchanged — the inner sections keep their own .imex-wrap gutters. */
+.imex-main {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 /* ── Header ──────────────────────────────────────────────────────────────── */
 
 .imex-lh {

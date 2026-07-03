@@ -102,6 +102,7 @@ export default function Landing() {
     <div className="imex-landing" ref={reveal}>
       <LandingHeader />
 
+      <main className="imex-main">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="imex-wrap imex-hero">
         <div className="imex-hero__grid">
@@ -222,6 +223,7 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      </main>
 
       <LandingFooter />
 
