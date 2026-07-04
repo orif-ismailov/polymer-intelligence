@@ -6,11 +6,15 @@
  * a 4-column footer. Rendered in both contexts; Buy/Sell navigate into the app (the
  * RequireAuth gate prompts Telegram sign-in for anonymous browser visitors).
  *
- * Scoped to landing.css. Illustrations (globe, barrels) are CSS/SVG approximations;
- * partner tiles are styled brand names — drop in real logo assets for exact fidelity.
+ * Styled entirely with Tailwind utilities wired to the shared design tokens
+ * (src/styles/tokens.css → tailwind.config.ts): `bg-bg`, `bg-surface`, `text-green`,
+ * etc. follow the dark/light theme. The only inline styles left are the genuinely
+ * dynamic globe-node positions (percentages come from JS). Illustrations (globe,
+ * barrels) are CSS/SVG approximations; partner tiles are styled brand names — drop in
+ * real logo assets for exact fidelity.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -24,19 +28,46 @@ import {
   Handshake,
   Headphones,
   Lock,
+  Menu,
   MessageCircle,
   Mail,
+  Moon,
   ShieldCheck,
   ShoppingCart,
   Store,
+  Sun,
   Target,
   Users,
+  X,
   Zap,
 } from "lucide-react";
 
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import { SUPPORTED_LANGS, type Lang } from "../i18n";
-import "../styles/landing.css";
+import { useTheme } from "../theme/themeStore";
+
+// ── Shared Tailwind class recipes (token-backed) ─────────────────────────────────
+const WRAP = "relative z-[1] mx-auto max-w-[1200px] px-5 phone:px-4 desk:px-8";
+const SECTION = "py-[34px] phone:py-[26px] desk:py-[46px]";
+const PANEL =
+  "rounded-[22px] border border-border bg-gradient-to-b from-surface to-surface-2 p-[32px_22px] phone:rounded-[18px] phone:p-[24px_16px] desk:p-[44px_40px]";
+const TAG = "mb-2.5 block text-center text-xs font-extrabold uppercase tracking-[0.16em] text-green";
+const H2 =
+  "mb-2 text-center text-[clamp(22px,5.6vw,26px)] font-extrabold leading-[1.18] tracking-[-0.02em] desk:text-[30px]";
+// Scroll reveal: starts hidden, revealed when useScrollReveal sets data-visible.
+const REVEAL =
+  "translate-y-4 opacity-0 transition-[opacity,transform] duration-500 data-[visible=true]:translate-y-0 data-[visible=true]:opacity-100 motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none";
+const BTN =
+  "inline-flex cursor-pointer items-center justify-center gap-[9px] whitespace-nowrap rounded-xl border border-transparent px-[22px] py-3 text-[15px] font-bold transition-[transform,box-shadow,background] duration-150 active:translate-y-px";
+const BTN_PRIMARY =
+  "bg-green text-green-on hover:shadow-[0_10px_34px_color-mix(in_srgb,var(--green)_32%,transparent)]";
+const BTN_GHOST = "border-border bg-surface text-text hover:bg-surface-2";
+const BTN_LG = "px-[26px] py-[15px] text-base";
+const FOOTER_LINK =
+  "block cursor-pointer py-1.5 text-left text-[13px] text-text-muted transition-colors hover:text-text";
+// Partner tile (also reused by the Iran + "…и другие" cells).
+const PARTNER_TILE =
+  "flex min-h-[66px] items-center justify-center gap-2 rounded-[14px] border border-border bg-bg px-4 py-3 text-center text-[14px] font-extrabold tracking-[0.02em] text-text";
 
 const HERO_CARDS = [
   { key: "f1", Icon: Users },
@@ -98,139 +129,214 @@ export default function Landing() {
   const goBuy = () => navigate("/request/step/1");
   const goSell = () => navigate("/sell");
 
+  // Scroll-aware sticky CTA: hidden until the hero CTAs scroll out of view, and
+  // re-hidden once the footer is on screen (so it never covers the footer links).
+  const heroCtasRef = useRef<HTMLDivElement>(null);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  useEffect(() => {
+    const heroEl = heroCtasRef.current;
+    const footerEl = document.getElementById("footer");
+    if (!heroEl) return;
+    let heroPassed = false;
+    let footerVisible = false;
+    const update = () => setStickyVisible(heroPassed && !footerVisible);
+    const heroObs = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (!e) return;
+        heroPassed = !e.isIntersecting;
+        update();
+      },
+      { threshold: 0 },
+    );
+    heroObs.observe(heroEl);
+    let footerObs: IntersectionObserver | undefined;
+    if (footerEl) {
+      footerObs = new IntersectionObserver(
+        (entries) => {
+          const e = entries[0];
+          if (!e) return;
+          footerVisible = e.isIntersecting;
+          update();
+        },
+        { threshold: 0 },
+      );
+      footerObs.observe(footerEl);
+    }
+    return () => {
+      heroObs.disconnect();
+      footerObs?.disconnect();
+    };
+  }, []);
+
   return (
-    <div className="imex-landing" ref={reveal}>
+    <div
+      ref={reveal}
+      className="relative min-h-screen overflow-x-hidden bg-bg text-text antialiased pb-[calc(72px+env(safe-area-inset-bottom))] phone:overflow-x-clip phone:pb-[calc(84px+env(safe-area-inset-bottom))] desk:pb-0 before:pointer-events-none before:absolute before:z-0 before:-top-[140px] before:-right-20 before:h-[620px] before:w-[620px] before:rounded-full before:bg-[radial-gradient(circle,color-mix(in_srgb,var(--green)_16%,transparent),transparent_70%)] before:blur-[110px] before:content-['']"
+    >
       <LandingHeader />
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="imex-wrap imex-hero">
-        <div className="imex-hero__grid">
-          <div data-reveal className="reveal">
-            <span className="imex-hero__badge">
-              <Cpu size={13} /> {t("landing.hero.badge")}
-            </span>
-            <div className="imex-hero__wordmark">
-              IMEX <span className="imex-accent">AI</span>
-            </div>
-            <h1 className="imex-hero__title">{t("landing.hero.title")}</h1>
-            <p className="imex-hero__para">{t("landing.hero.para")}</p>
+      <main className="relative z-[1] mx-auto max-w-[1200px]  phone:overflow-hidden phone:rounded-[20px] phone:py-1">
+        {/* ── Hero ─────────────────────────────────────────────────────────── */}
+        <section
+          className={`${WRAP} pt-[34px] pb-5 phone:pt-[22px] phone:pb-2.5 desk:pt-[56px] desk:pb-[30px]`}
+          id="hero"
+        >
+          <div className="grid grid-cols-1 items-center gap-[30px] phone:gap-5 desk:grid-cols-[1.05fr_0.95fr] desk:gap-10">
+            <div data-reveal className={REVEAL}>
+              <span className="mb-[18px] inline-flex items-center gap-2 rounded-full border border-green-line bg-green-soft px-3 py-1.5 text-[11px] font-extrabold tracking-[0.12em] text-green">
+                <Cpu size={13} /> {t("landing.hero.badge")}
+              </span>
+              <div className="mb-1 text-[clamp(36px,12vw,46px)] font-black leading-none tracking-[-0.03em] desk:text-[68px]">
+                IMEX <span className="text-green">AI</span>
+              </div>
+              <h1 className="mb-4 text-[clamp(21px,6vw,26px)] font-extrabold leading-[1.15] tracking-[-0.01em] desk:text-[34px]">
+                {t("landing.hero.title")}
+              </h1>
+              <p className="mb-[22px] max-w-[520px] text-[15px] leading-[1.6] text-text-muted phone:mb-[18px]">
+                {t("landing.hero.para")}
+              </p>
 
-            <div className="imex-hero__cards">
-              {HERO_CARDS.map(({ key, Icon }) => (
-                <div key={key} className="imex-fcard">
-                  <span className="imex-fcard__icon">
-                    <Icon size={17} />
+              <div className="mb-[22px] grid grid-cols-2 gap-2.5 phone:grid-cols-1 phone:gap-2">
+                {HERO_CARDS.map(({ key, Icon }) => (
+                  <div
+                    key={key}
+                    className="flex items-center gap-2.5 rounded-xl border border-border bg-black/[0.03] p-3 dark:bg-white/[0.025]"
+                  >
+                    <span className="inline-flex h-[30px] w-[30px] flex-none items-center justify-center rounded-lg bg-green-soft text-green">
+                      <Icon size={17} />
+                    </span>
+                    <span className="text-[15px] font-semibold leading-[1.35] text-text">
+                      {t(`landing.hero.${key}`)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mb-4 flex flex-wrap gap-3 phone:flex-col" ref={heroCtasRef}>
+                <button className={`${BTN} ${BTN_PRIMARY} ${BTN_LG} phone:w-full`} onClick={goBuy}>
+                  <ShoppingCart size={18} /> {t("landing.cta.buy")}
+                </button>
+                <button className={`${BTN} ${BTN_GHOST} ${BTN_LG} phone:w-full`} onClick={goSell}>
+                  <Store size={18} /> {t("landing.cta.sell")}
+                </button>
+              </div>
+              <span className="inline-flex items-center gap-2 text-[13px] text-text-muted [&_svg]:text-green">
+                <ShieldCheck size={15} /> {t("landing.hero.trust")}
+              </span>
+            </div>
+
+            <div data-reveal className={REVEAL}>
+              <AiVisual />
+            </div>
+          </div>
+        </section>
+
+        {/* ── How it works ─────────────────────────────────────────────────── */}
+        <section className={`${WRAP} ${SECTION}`} id="how">
+          <div className={PANEL} data-reveal>
+            <span className={TAG}>{t("landing.how.tag")}</span>
+            <h2 className={H2}>{t("landing.how.title")}</h2>
+            <div className="mt-[26px] grid grid-cols-1 gap-[22px] desk:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] desk:items-start desk:gap-2">
+              {STEPS.map(({ key, Icon }, i) => (
+                <StepWithArrow key={key} last={i === STEPS.length - 1} num={i + 1} Icon={Icon} keyName={key} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Partners ─────────────────────────────────────────────────────── */}
+        <section className={`${WRAP} ${SECTION}`} id="partners">
+          <div className={PANEL} data-reveal>
+            <span className={TAG}>{t("landing.partners.tag")}</span>
+            <h2 className={H2}>{t("landing.partners.title")}</h2>
+            <div className="mt-6 grid grid-cols-2 gap-3 desk:grid-cols-5">
+              {PARTNERS.map((p) => (
+                <PartnerTile key={p.name} name={p.name} logo={p.logo} />
+              ))}
+              <span className={PARTNER_TILE}>
+                <span className="flex-none text-[18px] leading-none" aria-hidden="true">
+                  🇮🇷
+                </span>{" "}
+                {t("landing.partners.iran")}
+              </span>
+              <span className={`${PARTNER_TILE} col-[1/-1] text-xs font-semibold text-text-muted`}>
+                {t("landing.partners.other")}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Feature strip ────────────────────────────────────────────────── */}
+        <section className={`${WRAP} ${SECTION}`} id="why">
+          <div className={PANEL} data-reveal>
+            <div className="grid grid-cols-1 gap-5 desk:grid-cols-5 desk:gap-2">
+              <div className="flex items-center gap-3 text-left desk:flex-col desk:gap-2.5 desk:border-l desk:border-border desk:px-3.5 desk:text-center desk:first:border-l-0">
+                <span className="inline-flex h-[44px] w-[44px] flex-none items-center justify-center rounded-xl bg-green-soft text-green">
+                  <Users size={20} />
+                </span>
+                <span className="whitespace-nowrap text-[22px] font-black leading-none text-green">
+                  {t("landing.features.count")}
+                </span>
+                <span className="text-[13px] font-semibold leading-[1.4] text-text desk:text-center">
+                  {t("landing.features.f1")}
+                </span>
+              </div>
+              {FEATURES.map(({ key, Icon }) => (
+                <div
+                  key={key}
+                  className="flex items-center gap-3 text-left desk:flex-col desk:gap-2.5 desk:border-l desk:border-border desk:px-3.5 desk:text-center desk:first:border-l-0"
+                >
+                  <span className="inline-flex h-[44px] w-[44px] flex-none items-center justify-center rounded-xl bg-green-soft text-green">
+                    <Icon size={20} />
                   </span>
-                  <span className="imex-fcard__text">{t(`landing.hero.${key}`)}</span>
+                  <span className="text-[13px] font-semibold leading-[1.4] text-text desk:text-center">
+                    {t(`landing.features.${key}`)}
+                  </span>
                 </div>
               ))}
             </div>
+          </div>
+        </section>
 
-            <div className="imex-hero__ctas">
-              <button className="imex-btn imex-btn--primary imex-btn--lg" onClick={goBuy}>
-                <ShoppingCart size={18} /> {t("landing.cta.buy")}
-              </button>
-              <button className="imex-btn imex-btn--ghost imex-btn--lg" onClick={goSell}>
-                <Store size={18} /> {t("landing.cta.sell")}
-              </button>
+        {/* ── Final CTA ────────────────────────────────────────────────────── */}
+        <section className={`${WRAP} ${SECTION}`}>
+          <div className={`${PANEL} grid grid-cols-1 items-center gap-6 desk:grid-cols-[0.8fr_1.2fr]`} data-reveal>
+            <div className="flex min-h-[150px] items-center justify-center">
+              <CtaArt />
             </div>
-            <span className="imex-hero__trust">
-              <ShieldCheck size={15} /> {t("landing.hero.trust")}
-            </span>
-          </div>
-
-          <div data-reveal className="reveal">
-            <AiVisual />
-          </div>
-        </div>
-      </section>
-
-      {/* ── How it works ─────────────────────────────────────────────────── */}
-      <section className="imex-wrap imex-section" id="how">
-        <div className="imex-panel" data-reveal>
-          <span className="imex-tag">{t("landing.how.tag")}</span>
-          <h2 className="imex-h2">{t("landing.how.title")}</h2>
-          <div className="imex-steps">
-            {STEPS.map(({ key, Icon }, i) => (
-              <StepWithArrow key={key} last={i === STEPS.length - 1} num={i + 1} Icon={Icon} keyName={key} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Partners ─────────────────────────────────────────────────────── */}
-      <section className="imex-wrap imex-section" id="partners">
-        <div className="imex-panel" data-reveal>
-          <span className="imex-tag">{t("landing.partners.tag")}</span>
-          <h2 className="imex-h2">{t("landing.partners.title")}</h2>
-          <div className="imex-partners">
-            {PARTNERS.map((p) => (
-              <PartnerTile key={p.name} name={p.name} logo={p.logo} />
-            ))}
-            <span className="imex-partner">
-              <span className="imex-partner__flag" aria-hidden="true">🇮🇷</span> {t("landing.partners.iran")}
-            </span>
-            <span className="imex-partner imex-partner--muted" style={{ gridColumn: "1 / -1" }}>
-              {t("landing.partners.other")}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Feature strip ────────────────────────────────────────────────── */}
-      <section className="imex-wrap imex-section" id="why">
-        <div className="imex-panel" data-reveal>
-          <div className="imex-strip">
-            <div className="imex-feat">
-              <span className="imex-feat__icon">
-                <Users size={20} />
-              </span>
-              <span className="imex-feat__count">{t("landing.features.count")}</span>
-              <span className="imex-feat__text">{t("landing.features.f1")}</span>
-            </div>
-            {FEATURES.map(({ key, Icon }) => (
-              <div key={key} className="imex-feat">
-                <span className="imex-feat__icon">
-                  <Icon size={20} />
-                </span>
-                <span className="imex-feat__text">{t(`landing.features.${key}`)}</span>
+            <div className="desk:flex desk:flex-wrap desk:items-center desk:justify-between desk:gap-6">
+              <div>
+                <h2 className="mb-2 text-[clamp(21px,5.4vw,24px)] font-extrabold leading-[1.15]">
+                  {t("landing.final.title")}
+                </h2>
+                <p className="mb-[18px] text-[15px] leading-[1.55] text-text-muted">{t("landing.final.subtitle")}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Final CTA ────────────────────────────────────────────────────── */}
-      <section className="imex-wrap imex-section">
-        <div className="imex-panel imex-final" data-reveal>
-          <div className="imex-final__art">
-            <CtaArt />
-          </div>
-          <div className="imex-final__body">
-            <div>
-              <h2 className="imex-final__title">{t("landing.final.title")}</h2>
-              <p className="imex-final__sub">{t("landing.final.subtitle")}</p>
-            </div>
-            <div className="imex-final__ctas">
-              <button className="imex-btn imex-btn--primary imex-btn--lg" onClick={goBuy}>
-                <ShoppingCart size={18} /> {t("landing.cta.buy")}
-              </button>
-              <button className="imex-btn imex-btn--ghost imex-btn--lg" onClick={goSell}>
-                <Store size={18} /> {t("landing.cta.sell")}
-              </button>
+              <div className="flex flex-wrap gap-3 phone:flex-col desk:flex-shrink-0">
+                <button className={`${BTN} ${BTN_PRIMARY} ${BTN_LG} phone:w-full`} onClick={goBuy}>
+                  <ShoppingCart size={18} /> {t("landing.cta.buy")}
+                </button>
+                <button className={`${BTN} ${BTN_GHOST} ${BTN_LG} phone:w-full`} onClick={goSell}>
+                  <Store size={18} /> {t("landing.cta.sell")}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <LandingFooter />
 
-      {/* Sticky mobile CTA */}
-      <div className="imex-sticky-cta">
-        <button className="imex-btn imex-btn--primary" onClick={goBuy}>
+      {/* Sticky mobile CTA — shown only after the hero CTAs scroll off (see effect) */}
+      <div
+        className={`fixed inset-x-0 bottom-0 z-[60] flex gap-2.5 border-t border-border bg-[color-mix(in_srgb,var(--bg)_90%,transparent)] px-4 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom))] backdrop-blur-[12px] transition-transform duration-300 will-change-transform motion-reduce:transition-none desk:hidden ${
+          stickyVisible ? "translate-y-0" : "translate-y-[120%]"
+        }`}
+      >
+        <button className={`${BTN} ${BTN_PRIMARY} flex-1`} onClick={goBuy}>
           <ShoppingCart size={17} /> {t("landing.cta.buy")}
         </button>
-        <button className="imex-btn imex-btn--ghost" onClick={goSell}>
+        <button className={`${BTN} ${BTN_GHOST} flex-1`} onClick={goSell}>
           <Store size={17} /> {t("landing.cta.sell")}
         </button>
       </div>
@@ -242,43 +348,84 @@ export default function Landing() {
 
 function LandingHeader() {
   const { t } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // "about" → hero (page top): it and "how" previously both pointed at #how.
   const NAV = [
-    { key: "about", id: "how" },
+    { key: "about", id: "hero" },
     { key: "how", id: "how" },
     { key: "why", id: "why" },
     { key: "partners", id: "partners" },
     { key: "contacts", id: "footer" },
   ];
+  const go = (id: string) => {
+    setMenuOpen(false);
+    scrollTo(id);
+  };
   return (
-    <header className="imex-lh">
-      <div className="imex-lh__row">
-        <button className="imex-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-          <LogoMark className="imex-brand__logo" />
-          IMEX <span className="imex-accent">AI</span>
+    <header className="sticky top-0 z-50 border-b border-border bg-[color-mix(in_srgb,var(--bg)_80%,transparent)] backdrop-blur-[14px]">
+      <div className="mx-auto flex h-[68px] max-w-[1200px] items-center gap-3.5 px-5">
+        <button
+          className="inline-flex flex-none cursor-pointer items-center gap-2.5 p-0 text-xl font-extrabold tracking-[-0.01em] text-text"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          <LogoMark className="h-[30px] w-[30px] text-green drop-shadow-[0_0_8px_color-mix(in_srgb,var(--green)_50%,transparent)]" />
+          IMEX <span className="text-green">AI</span>
         </button>
-        <nav className="imex-lh__nav">
+        <nav className="mx-auto hidden items-center gap-0.5 desk:flex">
           {NAV.map((n) => (
-            <button key={n.key} className="imex-lh__link" onClick={() => scrollTo(n.id)}>
+            <button
+              key={n.key}
+              className="cursor-pointer rounded-lg px-3 py-2 text-sm font-medium text-text-muted transition-colors hover:text-text"
+              onClick={() => scrollTo(n.id)}
+            >
               {t(`landing.nav.${n.key}`)}
             </button>
           ))}
         </nav>
-        <div className="imex-lh__actions">
+        <div className="ml-auto flex items-center gap-2.5">
+          <ThemeToggle />
           <LangMenu />
+          <button
+            className="inline-flex h-[38px] w-[38px] cursor-pointer items-center justify-center rounded-[10px] border border-border bg-surface text-text desk:hidden"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Menu"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
+      {menuOpen && (
+        <>
+          <div className="fixed inset-0 z-[54] desk:hidden" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+          <nav
+            className="absolute inset-x-0 top-full z-[55] flex flex-col gap-0.5 border-b border-border bg-surface-2 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.5)] desk:hidden"
+            role="menu"
+          >
+            {NAV.map((n) => (
+              <button
+                key={n.key}
+                role="menuitem"
+                className="cursor-pointer rounded-[10px] p-3 text-left text-[15px] font-medium text-text-muted transition-colors hover:bg-black/5 hover:text-text dark:hover:bg-white/5"
+                onClick={() => go(n.id)}
+              >
+                {t(`landing.nav.${n.key}`)}
+              </button>
+            ))}
+          </nav>
+        </>
+      )}
     </header>
   );
 }
 
-// Final-CTA image. Currently a free-licensed Unsplash photo (Unsplash License:
-// commercial use, no attribution required) of polymer granules — on brand. Swap it by
-// pasting another URL, or self-host: drop a file at webapp/public/cta/deal.jpg and set
-// CTA_IMAGE = "cta/deal.jpg". While the source is missing the CSS barrels are shown.
-// Source: https://unsplash.com/photos/colored-granular-substance-is-scattered-on-a-surface-yB5BPsckr-s
-const CTA_IMAGE =
-  "https://images.unsplash.com/photo-1751629663077-67876b0fb818?auto=format&fit=crop&w=1200&q=70";
+// Final-CTA image. Self-hosted polymer photo from webapp/public/ (resolved via
+// import.meta.env.BASE_URL below). Swap it by dropping another file into public/ and
+// updating this name, or paste a full https URL. If the source is missing the CSS
+// barrels illustration is shown instead.
+const CTA_IMAGE = "polymer_image.jpeg";
 
 function CtaArt() {
   const [broken, setBroken] = useState(false);
@@ -291,7 +438,7 @@ function CtaArt() {
   if (src && !broken) {
     return (
       <img
-        className="imex-final__img"
+        className="block max-h-[240px] w-full rounded-2xl border border-border object-cover"
         src={src}
         alt=""
         loading="lazy"
@@ -301,14 +448,17 @@ function CtaArt() {
     );
   }
 
-  // Fallback: CSS barrels illustration (approximates the reference render).
+  // Fallback: CSS barrels illustration (approximates the reference render). Barrel
+  // greys are decorative (not brand tokens); the neon hoop lines use the token green.
+  const barrel =
+    "relative w-[44px] rounded-[8px/14px] border border-white/[0.08] bg-[linear-gradient(90deg,#0c1016_0%,#1a2230_45%,#0c1016_100%)] shadow-[0_10px_24px_rgba(0,0,0,0.5)] before:absolute before:inset-x-0 before:top-[22px] before:h-[3px] before:bg-green before:opacity-55 before:shadow-[0_0_8px_color-mix(in_srgb,var(--green)_60%,transparent)] before:content-[''] after:absolute after:inset-x-0 after:bottom-[22px] after:h-[3px] after:bg-green after:opacity-55 after:shadow-[0_0_8px_color-mix(in_srgb,var(--green)_60%,transparent)] after:content-['']";
   return (
-    <div className="imex-barrels" aria-hidden="true">
-      <span className="imex-barrel" />
-      <span className="imex-barrel imex-barrel--tall" />
-      <span className="imex-barrel" />
-      <span className="imex-barrel imex-barrel--tall" />
-      <span className="imex-barrel" />
+    <div className="flex h-[120px] items-end gap-2" aria-hidden="true">
+      <span className={`${barrel} h-[84px]`} />
+      <span className={`${barrel} h-[104px]`} />
+      <span className={`${barrel} h-[84px]`} />
+      <span className={`${barrel} h-[104px]`} />
+      <span className={`${barrel} h-[84px]`} />
     </div>
   );
 }
@@ -319,14 +469,14 @@ function PartnerTile({ name, logo }: { name: string; logo: string }) {
   const src = /^https?:\/\//.test(logo) ? logo : logo ? `${import.meta.env.BASE_URL}partners/${logo}` : "";
   const showText = broken || !src;
   return (
-    <span className="imex-partner" title={name}>
+    <span className={`${PARTNER_TILE} [&_svg]:flex-none [&_svg]:text-green`} title={name}>
       {showText ? (
         <>
           <Factory size={15} /> {name}
         </>
       ) : (
         <img
-          className="imex-partner__logo"
+          className="block max-h-[36px] max-w-[86%] object-contain"
           src={src}
           alt={name}
           loading="lazy"
@@ -335,6 +485,23 @@ function PartnerTile({ name, logo }: { name: string; logo: string }) {
         />
       )}
     </span>
+  );
+}
+
+// Light/dark toggle for the public landing (Profile's theme switch is behind auth).
+// Flips the resolved scheme; the choice persists via the shared theme store.
+function ThemeToggle() {
+  const { t } = useTranslation();
+  const { scheme, setPref } = useTheme();
+  const isDark = scheme === "dark";
+  return (
+    <button
+      className="inline-flex h-[38px] w-[38px] cursor-pointer items-center justify-center rounded-[10px] border border-border bg-surface text-text"
+      onClick={() => setPref(isDark ? "light" : "dark")}
+      aria-label={isDark ? t("settings.themeOpt.light") : t("settings.themeOpt.dark")}
+    >
+      {isDark ? <Sun size={18} /> : <Moon size={18} />}
+    </button>
   );
 }
 
@@ -347,17 +514,27 @@ function LangMenu() {
     if (lang !== current) void i18n.changeLanguage(lang);
   };
   return (
-    <div className="imex-lang">
-      <button className="imex-lang__btn" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open}>
+    <div className="relative">
+      <button
+        className="inline-flex h-[38px] cursor-pointer items-center gap-[7px] rounded-[10px] border border-border bg-surface px-3 text-[13px] font-semibold text-text"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
         <Globe size={15} /> {current.toUpperCase()}
       </button>
       {open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 60 }} aria-hidden="true" />
-          <ul className="imex-lang__menu" role="listbox">
+          <div onClick={() => setOpen(false)} className="fixed inset-0 z-[60]" aria-hidden="true" />
+          <ul className="absolute right-0 top-[calc(100%+8px)] z-[61] m-0 min-w-[150px] list-none rounded-xl border border-border bg-surface-2 p-1.5">
             {SUPPORTED_LANGS.map((l) => (
               <li key={l}>
-                <button className="imex-lang__opt" role="option" aria-selected={l === current} onClick={() => choose(l)}>
+                <button
+                  className="block w-full cursor-pointer rounded-lg px-2.5 py-[9px] text-left text-sm text-text aria-selected:bg-black/[0.06] aria-selected:font-bold dark:aria-selected:bg-white/[0.06]"
+                  role="option"
+                  aria-selected={l === current}
+                  onClick={() => choose(l)}
+                >
                   {t(`settings.lang.${l}`)}
                 </button>
               </li>
@@ -385,17 +562,22 @@ function StepWithArrow({
   const { t } = useTranslation();
   return (
     <>
-      <div className="imex-step" data-reveal>
-        <span className="imex-step__icon">
+      <div className={`relative text-center ${REVEAL}`} data-reveal>
+        <span className="mb-3.5 inline-flex h-[66px] w-[66px] items-center justify-center rounded-full border border-green-line bg-green-soft text-green">
           <Icon size={26} />
         </span>
-        <h3 className="imex-step__title">
-          <b>{num}.</b> {t(`landing.how.${keyName}.title`)}
+        <h3 className="mb-2 text-[15px] font-bold">
+          <b className="font-extrabold text-green">{num}.</b> {t(`landing.how.${keyName}.title`)}
         </h3>
-        <p className="imex-step__desc">{t(`landing.how.${keyName}.desc`)}</p>
+        <p className="mx-auto max-w-[min(320px,82%)] text-[13px] leading-[1.5] text-text-muted">
+          {t(`landing.how.${keyName}.desc`)}
+        </p>
       </div>
       {!last && (
-        <div className="imex-step__arrow" aria-hidden="true">
+        <div
+          className="hidden text-green desk:flex desk:items-center desk:justify-center desk:pt-[22px]"
+          aria-hidden="true"
+        >
           <ArrowGlyph />
         </div>
       )}
@@ -423,24 +605,24 @@ function AiVisual() {
   ] as const;
 
   return (
-    <div className="imex-viz" aria-hidden="true">
-      <svg className="imex-viz__svg" viewBox="0 0 400 400" fill="none">
+    <div className="relative mx-auto aspect-square w-full max-w-[460px] phone:max-w-[300px]" aria-hidden="true">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 400 400" fill="none">
         <defs>
           <radialGradient id="imexSphere" cx="50%" cy="45%" r="55%">
-            <stop offset="0%" stopColor="rgba(92,255,110,0.22)" />
-            <stop offset="60%" stopColor="rgba(92,255,110,0.05)" />
-            <stop offset="100%" stopColor="rgba(92,255,110,0)" />
+            <stop offset="0%" stopColor="var(--green)" stopOpacity={0.22} />
+            <stop offset="60%" stopColor="var(--green)" stopOpacity={0.05} />
+            <stop offset="100%" stopColor="var(--green)" stopOpacity={0} />
           </radialGradient>
           <radialGradient id="imexBase" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(92,255,110,0.5)" />
-            <stop offset="100%" stopColor="rgba(92,255,110,0)" />
+            <stop offset="0%" stopColor="var(--green)" stopOpacity={0.5} />
+            <stop offset="100%" stopColor="var(--green)" stopOpacity={0} />
           </radialGradient>
         </defs>
         {/* sphere */}
         <circle cx="200" cy="205" r="120" fill="url(#imexSphere)" />
-        <circle cx="200" cy="205" r="120" stroke="rgba(92,255,110,0.18)" strokeWidth="1" />
-        <ellipse cx="200" cy="205" rx="120" ry="46" stroke="rgba(92,255,110,0.14)" strokeWidth="1" />
-        <ellipse cx="200" cy="205" rx="60" ry="120" stroke="rgba(92,255,110,0.1)" strokeWidth="1" />
+        <circle cx="200" cy="205" r="120" stroke="var(--green)" strokeOpacity={0.18} strokeWidth="1" />
+        <ellipse cx="200" cy="205" rx="120" ry="46" stroke="var(--green)" strokeOpacity={0.14} strokeWidth="1" />
+        <ellipse cx="200" cy="205" rx="60" ry="120" stroke="var(--green)" strokeOpacity={0.1} strokeWidth="1" />
         {/* connecting lines from center to nodes */}
         {[
           [108, 92],
@@ -449,8 +631,8 @@ function AiVisual() {
           [328, 252],
         ].map(([x, y], i) => (
           <g key={i}>
-            <line x1="200" y1="205" x2={x} y2={y} stroke="rgba(92,255,110,0.35)" strokeWidth="1.2" />
-            <circle cx={x} cy={y} r="3.5" fill="#5cff6e" />
+            <line x1="200" y1="205" x2={x} y2={y} stroke="var(--green)" strokeOpacity={0.35} strokeWidth="1.2" />
+            <circle cx={x} cy={y} r="3.5" fill="var(--green)" />
           </g>
         ))}
         {/* glowing base */}
@@ -458,15 +640,23 @@ function AiVisual() {
       </svg>
 
       {nodes.map(({ key, Icon, left, top }) => (
-        <div key={key} className="imex-node" style={{ left, top }}>
-          <span className="imex-node__badge">
+        <div
+          key={key}
+          className="absolute flex w-[118px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 text-center phone:w-[88px] phone:gap-1"
+          style={{ left, top }}
+        >
+          <span className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-full border border-green-line bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] text-green shadow-[0_0_22px_color-mix(in_srgb,var(--green)_25%,transparent)] phone:h-[40px] phone:w-[40px]">
             <Icon size={20} />
           </span>
-          <span className="imex-node__label">{t(`landing.hero.node.${key}`)}</span>
+          <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-semibold leading-[1.25] text-text-muted">
+            {t(`landing.hero.node.${key}`)}
+          </span>
         </div>
       ))}
 
-      <div className="imex-viz__core">AI</div>
+      <div className="absolute left-1/2 top-1/2 flex h-[74px] w-[74px] -translate-x-1/2 -translate-y-1/2 animate-pulse-glow items-center justify-center rounded-[18px] bg-green text-2xl font-black text-green-on shadow-[0_0_46px_color-mix(in_srgb,var(--green)_60%,transparent)] motion-reduce:animate-none phone:h-[60px] phone:w-[60px] phone:rounded-[15px] phone:text-xl">
+        AI
+      </div>
     </div>
   );
 }
@@ -477,44 +667,67 @@ function LandingFooter() {
   const { t } = useTranslation();
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return (
-    <footer className="imex-footer" id="footer">
-      <div className="imex-wrap">
-        <div className="imex-footer__grid">
+    <footer className="mt-[28px] border-t border-border pt-[34px]" id="footer">
+      <div className={WRAP}>
+        <div className="grid grid-cols-1 gap-[26px] desk:grid-cols-[1.6fr_1fr_1fr_1.2fr] desk:gap-8">
           <div>
-            <span className="imex-footer__brand">
-              <LogoMark className="imex-brand__logo" />
-              IMEX <span className="imex-accent">AI</span>
+            <span className="inline-flex items-center gap-2 text-[18px] font-extrabold">
+              <LogoMark className="h-[30px] w-[30px] text-green drop-shadow-[0_0_8px_color-mix(in_srgb,var(--green)_50%,transparent)]" />
+              IMEX <span className="text-green">AI</span>
             </span>
-            <p className="imex-footer__tag">{t("landing.footer.tagline")}</p>
+            <p className="mt-3 max-w-[320px] text-[13px] leading-[1.55] text-text-muted">
+              {t("landing.footer.tagline")}
+            </p>
           </div>
-          <div className="imex-footer__col">
-            <h4>{t("landing.footer.colPlatform")}</h4>
-            <button onClick={() => scrollTo("how")}>{t("landing.nav.about")}</button>
-            <button onClick={() => scrollTo("how")}>{t("landing.nav.how")}</button>
-            <button onClick={() => scrollTo("why")}>{t("landing.nav.why")}</button>
+          <div>
+            <h4 className="mb-3 text-[13px] font-bold text-text">{t("landing.footer.colPlatform")}</h4>
+            <button className={FOOTER_LINK} onClick={() => scrollTo("how")}>
+              {t("landing.nav.about")}
+            </button>
+            <button className={FOOTER_LINK} onClick={() => scrollTo("how")}>
+              {t("landing.nav.how")}
+            </button>
+            <button className={FOOTER_LINK} onClick={() => scrollTo("why")}>
+              {t("landing.nav.why")}
+            </button>
           </div>
-          <div className="imex-footer__col">
-            <h4>{t("landing.footer.colCompany")}</h4>
-            <button onClick={() => scrollTo("partners")}>{t("landing.nav.partners")}</button>
-            <button onClick={() => scrollTo("footer")}>{t("landing.nav.contacts")}</button>
+          <div>
+            <h4 className="mb-3 text-[13px] font-bold text-text">{t("landing.footer.colCompany")}</h4>
+            <button className={FOOTER_LINK} onClick={() => scrollTo("partners")}>
+              {t("landing.nav.partners")}
+            </button>
+            <button className={FOOTER_LINK} onClick={() => scrollTo("footer")}>
+              {t("landing.nav.contacts")}
+            </button>
           </div>
-          <div className="imex-footer__col">
-            <h4>{t("landing.footer.colSupport")}</h4>
-            <span className="imex-footer__contact">
+          <div>
+            <h4 className="mb-3 text-[13px] font-bold text-text">{t("landing.footer.colSupport")}</h4>
+            <span className="flex items-center gap-2 py-1.5 text-[13px] text-text-muted [&_svg]:text-green">
               <Mail size={15} /> info@imex-ai.com
             </span>
-            <span className="imex-footer__contact">
+            <span className="flex items-center gap-2 py-1.5 text-[13px] text-text-muted [&_svg]:text-green">
               <MessageCircle size={15} /> @imex_ai_support
             </span>
-            <button>{t("landing.footer.faq")}</button>
-            <button>{t("landing.footer.support24")}</button>
+            <button className={FOOTER_LINK} onClick={() => scrollTo("how")}>
+              {t("landing.footer.faq")}
+            </button>
+            <button
+              className={FOOTER_LINK}
+              onClick={() => window.open("https://t.me/imex_ai_support", "_blank", "noopener")}
+            >
+              {t("landing.footer.support24")}
+            </button>
           </div>
         </div>
-        <div className="imex-footer__bar">
+        <div className="mt-[26px] flex flex-col gap-2 border-t border-border py-5 text-xs text-text-muted desk:flex-row desk:items-center desk:justify-between">
           <span>{t("landing.footer.rights")}</span>
-          <div className="imex-footer__legal">
-            <button>{t("landing.footer.privacy")}</button>
-            <button>{t("landing.footer.terms")}</button>
+          <div className="flex flex-wrap gap-[18px]">
+            <button className="cursor-pointer p-0 text-xs text-text-muted transition-colors hover:text-text">
+              {t("landing.footer.privacy")}
+            </button>
+            <button className="cursor-pointer p-0 text-xs text-text-muted transition-colors hover:text-text">
+              {t("landing.footer.terms")}
+            </button>
           </div>
         </div>
       </div>

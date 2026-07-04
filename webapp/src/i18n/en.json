@@ -308,10 +308,10 @@
       "f4": "Fast and convenient",
       "trust": "Secure deals and full confidentiality",
       "node": {
-        "suppliers": "Suppliers (factories, refineries)",
-        "buyers": "Buyers (factories, plants)",
-        "analysis": "Real-time market analysis",
-        "deals": "Best terms and deals"
+        "suppliers": "Suppliers",
+        "buyers": "Buyers",
+        "analysis": "Analysis",
+        "deals": "Deals"
       }
     },
     "how": {

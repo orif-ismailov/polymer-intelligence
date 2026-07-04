@@ -2,9 +2,9 @@
  * useScrollReveal — lightweight IntersectionObserver scroll-reveal (no animation deps).
  *
  * Attach the returned ref to a container; every descendant marked `data-reveal`
- * gets the `is-visible` class the first time it scrolls into view. Reduced-motion
+ * gets `data-visible="true"` the first time it scrolls into view. Reduced-motion
  * users and browsers without IntersectionObserver get everything revealed up front.
- * Pairs with the `.reveal` / `.is-visible` rules in landing.css.
+ * Pairs with the Tailwind `data-[visible=true]:` reveal utilities in Landing.tsx.
  */
 
 import { useEffect, useRef } from "react";
@@ -23,7 +23,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>() {
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     if (prefersReduced || typeof IntersectionObserver === "undefined") {
-      els.forEach((el) => el.classList.add("is-visible"));
+      els.forEach((el) => (el.dataset.visible = "true"));
       return;
     }
 
@@ -31,7 +31,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
+            (entry.target as HTMLElement).dataset.visible = "true";
             io.unobserve(entry.target);
           }
         });

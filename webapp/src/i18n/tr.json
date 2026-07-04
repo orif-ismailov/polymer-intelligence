@@ -308,10 +308,10 @@
       "f4": "Hızlı ve kullanışlı",
       "trust": "Güvenli işlemler ve tam gizlilik",
       "node": {
-        "suppliers": "Tedarikçiler (fabrikalar, rafineriler)",
-        "buyers": "Alıcılar (fabrikalar, tesisler)",
-        "analysis": "Gerçek zamanlı pazar analizi",
-        "deals": "En iyi şartlar ve anlaşmalar"
+        "suppliers": "Tedarikçiler",
+        "buyers": "Alıcılar",
+        "analysis": "Analiz",
+        "deals": "Anlaşmalar"
       }
     },
     "how": {
