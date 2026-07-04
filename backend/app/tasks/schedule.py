@@ -45,6 +45,14 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "fetch_cbu_rates",
         "schedule": crontab(minute=0, hour=7),
     },
+    # ── HTML table extraction: hourly at minute 15 ───────────────────────────
+    # Fetches enabled html_table sources; structured rows route to the rule-based
+    # parser (parse_raw_item) — product matching against the synonym dictionary,
+    # no LLM cost. Offset from the minute-0 UZEX/CBU tasks to spread worker load.
+    "html_table_fetch": {
+        "task": "html_table_fetch",
+        "schedule": crontab(minute=15),
+    },
     # ── LLM page extraction: hourly at minute 30 ─────────────────────────────
     # Fetches enabled llm_page sources; each new page version is enqueued for
     # LLM extraction (parse_telegram_item), gated by the daily token budget.
@@ -52,6 +60,13 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
     "llm_page_fetch": {
         "task": "llm_page_fetch",
         "schedule": crontab(minute=30),
+    },
+    # ── RSS feed extraction: hourly at minute 45 ─────────────────────────────
+    # Fetches enabled rss sources; unstructured headline/summary text routes to
+    # the LLM extractor (parse_telegram_item), gated by the daily token budget.
+    "rss_fetch": {
+        "task": "rss_fetch",
+        "schedule": crontab(minute=45),
     },
     # ── Source health check: every 5 minutes ─────────────────────────────────
     "check_source_health": {

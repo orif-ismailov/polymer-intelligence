@@ -35,8 +35,10 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "uzex_fetch_contracts",
         "uzex_fetch_deals",
         "fetch_cbu_rates",
-        # Phase 6: hourly llm_page extraction fetch
+        # Phase 6: hourly no-code adapter fetch drivers
+        "html_table_fetch",
         "llm_page_fetch",
+        "rss_fetch",
         "check_source_health",
         # Phase 5 (05-02): userbot heartbeat health check — ROADMAP SC#1 liveness
         "check_userbot_health",

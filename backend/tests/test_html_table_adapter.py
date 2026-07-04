@@ -14,6 +14,7 @@ Security: T-04-19 — is_safe_url() called before any HTTP fetch.
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -175,3 +176,52 @@ def test_html_table_type_name():
 
     adapter = HtmlTableAdapter()
     assert adapter.type_name == "html_table"
+
+
+# ── fetch() drafts ────────────────────────────────────────────────────────────
+
+
+def _run_fetch(adapter, source, html):
+    """Helper: run adapter.fetch(source) with SSRF + fetch_url patched."""
+    mock_response = MagicMock()
+    mock_response.text = html
+
+    async def run():
+        with (
+            patch("app.ingest.html_table.adapter.is_safe_url", return_value=True),
+            patch(
+                "app.ingest.html_table.adapter.fetch_url",
+                new=AsyncMock(return_value=mock_response),
+            ),
+        ):
+            return await adapter.fetch(source)
+
+    return asyncio.run(run())
+
+
+def test_html_table_fetch_adds_product_text_for_rule_parser():
+    """fetch() drafts carry payload['product_text'] so parse_raw_item can match."""
+    from app.ingest.html_table.adapter import HtmlTableAdapter  # noqa: PLC0415
+
+    adapter = HtmlTableAdapter()
+    source = SimpleNamespace(id=1, config={"url": "https://example.com/data"})
+
+    drafts = _run_fetch(adapter, source, _HTML_TABLE_FIXTURE)
+
+    assert len(drafts) == 3
+    first = drafts[0]
+    assert first.payload is not None
+    # product_text = product + grade (e.g. "PP Raffia H030GP")
+    assert first.payload["product_text"] == "PP Raffia H030GP"
+
+
+def test_html_table_fetch_not_capped_at_preview_limit():
+    """fetch() ingests all rows (>10), not just the 10-row test preview cap."""
+    from app.ingest.html_table.adapter import HtmlTableAdapter  # noqa: PLC0415
+
+    adapter = HtmlTableAdapter()
+    source = SimpleNamespace(id=2, config={"url": "https://example.com/data"})
+
+    drafts = _run_fetch(adapter, source, _HTML_15_ROWS)
+
+    assert len(drafts) == 15
