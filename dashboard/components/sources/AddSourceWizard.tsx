@@ -3,10 +3,10 @@
 /**
  * AddSourceWizard — 4-step wizard for adding a new data source.
  *
- * Step 1: Pick type (HTML Table, RSS Feed, Telegram Channel [Phase 5], LLM Page [Phase 5])
+ * Step 1: Pick type (HTML Table, RSS Feed, Telegram Channel, LLM Page [Phase 5])
  * Step 2: Configure (auto-form from GET /admin/source-types config_schema → JsonSchemaForm)
- * Step 3: Test (html_table/rss only) — POST /sources → POST /sources/{id}/test
- *          telegram_channel/llm_page skip test and save as pending
+ * Step 3: Test (html_table/rss/telegram_channel) — POST /sources → POST /sources/{id}/test
+ *          llm_page skips test and saves as pending
  * Step 4: Enable / Save as Pending
  *
  * D-04/D-05/D-06 contracts. No hardcoded hex.
@@ -43,8 +43,8 @@ interface SourceTestResult {
 
 type WizardStep = 1 | 2 | 3 | 4;
 
-// Adapter types that are pending (Phase 5)
-const PENDING_ADAPTERS = new Set(["telegram_channel", "llm_page"]);
+// Adapter types still pending — backend adapter is a stub (llm_page test() returns ok=false)
+const PENDING_ADAPTERS = new Set(["llm_page"]);
 
 const TYPE_LABELS: Record<string, string> = {
   html_table: "HTML Table",

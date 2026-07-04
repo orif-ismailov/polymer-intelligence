@@ -7,7 +7,7 @@
  * - Last Fetch, Consecutive Failures (red urgency-high if > 0)
  * - Enable/Disable toggle (PATCH /sources/{id})
  * - Test button
- * - Pending types (telegram_channel/llm_page with last_test_ok_at=null): amber badge,
+ * - Pending types (llm_page with last_test_ok_at=null): amber badge,
  *   disabled Test/Enable (D-05)
  *
  * No hardcoded hex. All colors via Tailwind token classes.
@@ -51,8 +51,8 @@ interface SourceTestResult {
   error: string | null;
 }
 
-// Pending adapter types (Phase 5 only)
-const PENDING_ADAPTERS = new Set(["telegram_channel", "llm_page"]);
+// Pending adapter types — backend adapter is a stub (llm_page)
+const PENDING_ADAPTERS = new Set(["llm_page"]);
 
 const ADAPTER_LABELS: Record<string, string> = {
   html_table: "HTML Table",
