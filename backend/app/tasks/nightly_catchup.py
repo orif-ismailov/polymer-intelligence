@@ -2,9 +2,9 @@
 nightly_llm_catchup — Celery beat task: reprocess budget-deferred Telegram items.
 
 Runs at UTC 02:00 each day (after the daily Redis budget key resets at UTC midnight).
-Selects raw_items in 'budget_deferred' state from telegram_channel sources and
-re-enqueues each for parse_telegram_item, in bounded batches to respect the
-freshly-reset daily budget.
+Selects raw_items in 'budget_deferred' state from the LLM-extracted source types
+(telegram_channel and llm_page) and re-enqueues each for parse_telegram_item, in
+bounded batches to respect the freshly-reset daily budget.
 
 Design (AI-SPEC §6 G4):
   - Items marked 'budget_deferred' are items where BudgetExceeded was raised during
@@ -71,11 +71,11 @@ def check_and_reserve_tokens(estimated: int) -> None:
 
 @celery_app.task(name="nightly_llm_catchup")  # type: ignore[untyped-decorator]
 def nightly_llm_catchup() -> dict[str, Any]:
-    """Reprocess budget-deferred Telegram raw_items with LLM extraction.
+    """Reprocess budget-deferred LLM-extracted raw_items with LLM extraction.
 
     Selects up to _CATCHUP_BATCH_LIMIT raw_items in 'budget_deferred' state
-    from telegram_channel sources. Resets each item's parse_status to 'pending'
-    and dispatches parse_telegram_item for each.
+    from telegram_channel and llm_page sources. Resets each item's parse_status
+    to 'pending' and dispatches parse_telegram_item for each.
 
     The task completes synchronously (it dispatches; it does not wait for results).
     Each parse_telegram_item handles its own budget check — if the budget is already
@@ -93,7 +93,7 @@ def nightly_llm_catchup() -> dict[str, Any]:
                 FROM raw_items ri
                 JOIN sources s ON s.id = ri.source_id
                 WHERE ri.parse_status = 'budget_deferred'
-                  AND s.adapter = 'telegram_channel'
+                  AND s.adapter IN ('telegram_channel', 'llm_page')
                 ORDER BY ri.fetched_at ASC
                 LIMIT :limit
                 """

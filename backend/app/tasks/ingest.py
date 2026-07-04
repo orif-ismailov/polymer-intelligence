@@ -65,7 +65,12 @@ def _run_fetch_for_source(adapter: Any, source: Any) -> list[Any]:
     return asyncio.run(adapter.fetch(source))
 
 
-def run_source_fetch_isolated(session: Any, source: Any, adapter: Any) -> int:
+def run_source_fetch_isolated(
+    session: Any,
+    source: Any,
+    adapter: Any,
+    parse_task_name: str = "parse_raw_item",
+) -> int:
     """Fetch a single source's data with full failure isolation and health recording.
 
     Wraps the per-source fetch + save in try/except so that a failure in one
@@ -75,7 +80,7 @@ def run_source_fetch_isolated(session: Any, source: Any, adapter: Any) -> int:
     On success:
       - Persists returned drafts via save_raw_items (dedup + immutable).
       - Calls record_fetch_success (sets last_fetch_at, last_success_at, resets counter).
-      - Enqueues parse_raw_item for each newly inserted raw_item.
+      - Enqueues ``parse_task_name`` for each newly inserted raw_item.
 
     On any exception:
       - Logs the error structured.
@@ -87,6 +92,9 @@ def run_source_fetch_isolated(session: Any, source: Any, adapter: Any) -> int:
         session: Active SQLAlchemy session.
         source: Source ORM object (or row-like) with .id and adapter fields.
         adapter: SourceAdapter instance whose fetch() is called.
+        parse_task_name: Celery task to enqueue for each new raw_item. Defaults to
+            the UZEX rule parser ('parse_raw_item'); llm_page passes
+            'parse_telegram_item' (the generic content→signal LLM extractor).
 
     Returns:
         The number of raw_items inserted (0 on failure or no new items).
@@ -108,7 +116,7 @@ def run_source_fetch_isolated(session: Any, source: Any, adapter: Any) -> int:
         session.commit()
 
         if inserted > 0:
-            _enqueue_parse_tasks(inserted_ids)
+            _enqueue_parse_tasks(inserted_ids, parse_task_name)
 
         return inserted
 
@@ -199,8 +207,10 @@ def _execute_uzex_fetch(adapter_name: str) -> dict[str, Any]:
     }
 
 
-def _enqueue_parse_tasks(inserted_ids: list[int]) -> None:
-    """Enqueue parse_raw_item tasks for the given raw_item IDs.
+def _enqueue_parse_tasks(
+    inserted_ids: list[int], task_name: str = "parse_raw_item"
+) -> None:
+    """Enqueue parse tasks for the given raw_item IDs.
 
     CR-04: uses the exact IDs returned by save_raw_items (via RETURNING id)
     instead of re-querying by fetched_at DESC LIMIT, which could select rows
@@ -208,13 +218,15 @@ def _enqueue_parse_tasks(inserted_ids: list[int]) -> None:
 
     Args:
         inserted_ids: Exact raw_items.id values just inserted by save_raw_items.
+        task_name: Celery task name to dispatch per item. Defaults to the UZEX
+            rule parser ('parse_raw_item'); the LLM path uses 'parse_telegram_item'.
     """
     for raw_item_id in inserted_ids:
-        celery_app.send_task("parse_raw_item", args=[raw_item_id], queue="parse")
+        celery_app.send_task(task_name, args=[raw_item_id], queue="parse")
 
     logger.debug(
         "uzex_fetch.enqueue_parse",
-        extra={"enqueued": len(inserted_ids)},
+        extra={"enqueued": len(inserted_ids), "task": task_name},
     )
 
 

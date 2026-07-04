@@ -40,6 +40,7 @@ from app.core.config import settings
 _TASK_MODULES = [
     "app.tasks.ingest",
     "app.tasks.ingest_cbu",
+    "app.tasks.ingest_llm_page",
     "app.tasks.parse",
     "app.tasks.parse_telegram",
     "app.tasks.notify",
@@ -103,6 +104,7 @@ celery_app.conf.update(
         "uzex_fetch_contracts": {"queue": "ingest"},
         "uzex_fetch_deals": {"queue": "ingest"},
         "fetch_cbu_rates": {"queue": "ingest"},
+        "llm_page_fetch": {"queue": "ingest"},
         "check_source_health": {"queue": "ingest"},
         "check_userbot_health": {"queue": "ingest"},
         "app.tasks.parse.*": {"queue": "parse"},
