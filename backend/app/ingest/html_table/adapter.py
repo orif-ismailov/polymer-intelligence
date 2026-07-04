@@ -101,8 +101,15 @@ class HtmlTableConfig(BaseModel):
 # ── Signal-draft field names for normalized rows (D-06) ───────────────────────
 _SIGNAL_DRAFT_FIELDS = ("product", "grade", "volume", "price", "currency", "section", "event_at")
 
+# Default preview cap (test button). The scheduled fetch uses _FETCH_MAX_ROWS so
+# a real table is not silently truncated to the 10-row preview size.
+_PREVIEW_MAX_ROWS = 10
+_FETCH_MAX_ROWS = 200
 
-def _parse_html_table(html: str, config: dict) -> list[dict[str, object]]:
+
+def _parse_html_table(
+    html: str, config: dict, max_rows: int = _PREVIEW_MAX_ROWS
+) -> list[dict[str, object]]:
     """Parse an HTML table into normalized signal-draft rows using selectolax.
 
     Tries to map table columns to signal-draft fields using:
@@ -184,7 +191,7 @@ def _parse_html_table(html: str, config: dict) -> list[dict[str, object]]:
 
         rows_out.append(row_dict)
 
-        if len(rows_out) >= 10:
+        if len(rows_out) >= max_rows:
             break
 
     return rows_out
@@ -220,18 +227,25 @@ class HtmlTableAdapter:
 
         try:
             response = await fetch_url(url)
-            rows = _parse_html_table(response.text, cfg)
+            rows = _parse_html_table(response.text, cfg, max_rows=_FETCH_MAX_ROWS)
         except Exception as exc:
             logger.error("html_table.fetch_error", extra={"url": url, "error": str(exc)})
             return []
 
         drafts: list[RawItemDraft] = []
         for idx, row in enumerate(rows):
+            # parse_raw_item matches products on payload['product_text']; the
+            # column-mapped structured row has 'product'/'grade' instead, so derive
+            # product_text here (product + grade) to drive rule-based matching.
+            product = str(row.get("product") or "").strip()
+            grade = str(row.get("grade") or "").strip()
+            product_text = " ".join(p for p in (product, grade) if p)
+            payload = {**row, "product_text": product_text}
             drafts.append(
                 RawItemDraft(
                     external_id=f"html_table_row_{idx}",
                     content="; ".join(f"{k}:{v}" for k, v in row.items() if v),
-                    payload=row,
+                    payload=payload,
                     event_at=None,
                 )
             )
