@@ -10,7 +10,7 @@
  * partner tiles are styled brand names — drop in real logo assets for exact fidelity.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -24,6 +24,7 @@ import {
   Handshake,
   Headphones,
   Lock,
+  Menu,
   MessageCircle,
   Mail,
   ShieldCheck,
@@ -31,6 +32,7 @@ import {
   Store,
   Target,
   Users,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -98,13 +100,53 @@ export default function Landing() {
   const goBuy = () => navigate("/request/step/1");
   const goSell = () => navigate("/sell");
 
+  // Scroll-aware sticky CTA: hidden until the hero CTAs scroll out of view, and
+  // re-hidden once the footer is on screen (so it never covers the footer links).
+  const heroCtasRef = useRef<HTMLDivElement>(null);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  useEffect(() => {
+    const heroEl = heroCtasRef.current;
+    const footerEl = document.getElementById("footer");
+    if (!heroEl) return;
+    let heroPassed = false;
+    let footerVisible = false;
+    const update = () => setStickyVisible(heroPassed && !footerVisible);
+    const heroObs = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (!e) return;
+        heroPassed = !e.isIntersecting;
+        update();
+      },
+      { threshold: 0 },
+    );
+    heroObs.observe(heroEl);
+    let footerObs: IntersectionObserver | undefined;
+    if (footerEl) {
+      footerObs = new IntersectionObserver(
+        (entries) => {
+          const e = entries[0];
+          if (!e) return;
+          footerVisible = e.isIntersecting;
+          update();
+        },
+        { threshold: 0 },
+      );
+      footerObs.observe(footerEl);
+    }
+    return () => {
+      heroObs.disconnect();
+      footerObs?.disconnect();
+    };
+  }, []);
+
   return (
     <div className="imex-landing" ref={reveal}>
       <LandingHeader />
 
       <main className="imex-main">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="imex-wrap imex-hero">
+      <section className="imex-wrap imex-hero" id="hero">
         <div className="imex-hero__grid">
           <div data-reveal className="reveal">
             <span className="imex-hero__badge">
@@ -127,7 +169,7 @@ export default function Landing() {
               ))}
             </div>
 
-            <div className="imex-hero__ctas">
+            <div className="imex-hero__ctas" ref={heroCtasRef}>
               <button className="imex-btn imex-btn--primary imex-btn--lg" onClick={goBuy}>
                 <ShoppingCart size={18} /> {t("landing.cta.buy")}
               </button>
@@ -227,8 +269,8 @@ export default function Landing() {
 
       <LandingFooter />
 
-      {/* Sticky mobile CTA */}
-      <div className="imex-sticky-cta">
+      {/* Sticky mobile CTA — shown only after the hero CTAs scroll off (see effect) */}
+      <div className={`imex-sticky-cta${stickyVisible ? " is-visible" : ""}`}>
         <button className="imex-btn imex-btn--primary" onClick={goBuy}>
           <ShoppingCart size={17} /> {t("landing.cta.buy")}
         </button>
@@ -244,14 +286,20 @@ export default function Landing() {
 
 function LandingHeader() {
   const { t } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // "about" → hero (page top): it and "how" previously both pointed at #how.
   const NAV = [
-    { key: "about", id: "how" },
+    { key: "about", id: "hero" },
     { key: "how", id: "how" },
     { key: "why", id: "why" },
     { key: "partners", id: "partners" },
     { key: "contacts", id: "footer" },
   ];
+  const go = (id: string) => {
+    setMenuOpen(false);
+    scrollTo(id);
+  };
   return (
     <header className="imex-lh">
       <div className="imex-lh__row">
@@ -268,8 +316,29 @@ function LandingHeader() {
         </nav>
         <div className="imex-lh__actions">
           <LangMenu />
+          <button
+            className="imex-lh__burger"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Menu"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
+      {menuOpen && (
+        <>
+          <div className="imex-lh__backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+          <nav className="imex-lh__drawer" role="menu">
+            {NAV.map((n) => (
+              <button key={n.key} role="menuitem" className="imex-lh__link" onClick={() => go(n.id)}>
+                {t(`landing.nav.${n.key}`)}
+              </button>
+            ))}
+          </nav>
+        </>
+      )}
     </header>
   );
 }
@@ -508,8 +577,10 @@ function LandingFooter() {
             <span className="imex-footer__contact">
               <MessageCircle size={15} /> @imex_ai_support
             </span>
-            <button>{t("landing.footer.faq")}</button>
-            <button>{t("landing.footer.support24")}</button>
+            <button onClick={() => scrollTo("how")}>{t("landing.footer.faq")}</button>
+            <button onClick={() => window.open("https://t.me/imex_ai_support", "_blank", "noopener")}>
+              {t("landing.footer.support24")}
+            </button>
           </div>
         </div>
         <div className="imex-footer__bar">

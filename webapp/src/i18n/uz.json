@@ -308,10 +308,10 @@
       "f4": "Tez va qulay",
       "trust": "Xavfsiz bitimlar va to'liq maxfiylik",
       "node": {
-        "suppliers": "Ta'minotchilar (zavodlar, NPZ)",
-        "buyers": "Xaridorlar (zavodlar, fabrikalar)",
-        "analysis": "Real vaqtda bozor tahlili",
-        "deals": "Eng yaxshi shartlar va bitimlar"
+        "suppliers": "Ta'minotchilar",
+        "buyers": "Xaridorlar",
+        "analysis": "Tahlil",
+        "deals": "Bitimlar"
       }
     },
     "how": {

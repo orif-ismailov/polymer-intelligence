@@ -121,8 +121,39 @@
 }
 .imex-lh__link:hover { color: var(--l-text); }
 
-.imex-lh__actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.imex-lh__actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .imex-lh__ctas { display: none; }
+
+/* Mobile nav: a burger toggles a full-width drawer under the header (hidden ≥980px). */
+.imex-lh__burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--l-border);
+  background: var(--l-panel);
+  color: var(--l-text);
+  cursor: pointer;
+}
+.imex-lh__backdrop { position: fixed; inset: 0; z-index: 54; }
+.imex-lh__drawer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  background: var(--l-panel-2);
+  border-bottom: 1px solid var(--l-border);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+.imex-lh__drawer .imex-lh__link { text-align: left; padding: 12px; font-size: 15px; border-radius: 10px; }
+.imex-lh__drawer .imex-lh__link:hover { background: rgba(255, 255, 255, 0.05); color: var(--l-text); }
 
 /* Language pill */
 .imex-lang { position: relative; }
@@ -288,7 +319,7 @@
   background: var(--l-green-soft);
   color: var(--l-green);
 }
-.imex-fcard__text { font-size: 12.5px; line-height: 1.35; font-weight: 600; color: var(--l-text); }
+.imex-fcard__text { font-size: 13px; line-height: 1.35; font-weight: 600; color: var(--l-text); }
 
 .imex-hero__ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
 .imex-hero__trust {
@@ -350,7 +381,16 @@
   color: var(--l-green);
   box-shadow: 0 0 22px rgba(92, 255, 110, 0.25);
 }
-.imex-node__label { font-size: 11px; line-height: 1.25; color: var(--l-muted); font-weight: 600; }
+.imex-node__label {
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--l-muted);
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 @keyframes imex-pulse {
   0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 40px rgba(92, 255, 110, 0.45); }
@@ -375,7 +415,7 @@
 }
 .imex-step__title { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
 .imex-step__title b { color: var(--l-green); font-weight: 800; }
-.imex-step__desc { margin: 0 auto; max-width: 220px; color: var(--l-muted); font-size: 13px; line-height: 1.5; }
+.imex-step__desc { margin: 0 auto; max-width: min(320px, 82%); color: var(--l-muted); font-size: 13px; line-height: 1.5; }
 .imex-step__arrow { display: none; color: var(--l-green-2); }
 
 /* ── Partners ────────────────────────────────────────────────────────────── */
@@ -519,8 +559,17 @@
   background: color-mix(in srgb, var(--l-bg) 90%, transparent);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--l-border);
+  /* Scroll-aware: hidden until the hero CTAs scroll off, and re-hidden over the
+     footer. Landing.tsx toggles .is-visible via IntersectionObserver. */
+  transform: translateY(120%);
+  transition: transform 0.28s ease;
+  will-change: transform;
 }
+.imex-sticky-cta.is-visible { transform: none; }
 .imex-sticky-cta .imex-btn { flex: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .imex-sticky-cta { transition: none; }
+}
 
 /* ── Scroll reveal ───────────────────────────────────────────────────────── */
 
@@ -550,9 +599,9 @@
      (Node left/top come from inline styles in Landing.tsx; width/badge/label
      sizes here are what actually cause the overflow, so we scale those.) */
   .imex-viz { max-width: 300px; }
-  .imex-node { width: 82px; gap: 4px; }
+  .imex-node { width: 88px; gap: 4px; }
   .imex-node__badge { width: 40px; height: 40px; }
-  .imex-node__label { font-size: 10px; }
+  .imex-node__label { font-size: 11px; }
   .imex-viz__core { width: 60px; height: 60px; font-size: 20px; border-radius: 15px; }
 
   /* Give the sticky Buy/Sell bar enough clearance to never cover footer content. */
@@ -568,6 +617,7 @@
 
   .imex-lh__nav { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
   .imex-lh__ctas { display: flex; flex-direction: column; gap: 8px; }
+  .imex-lh__burger, .imex-lh__drawer, .imex-lh__backdrop { display: none; }
   .imex-lh__ctas .imex-btn { padding: 9px 18px; }
 
   .imex-section { padding: 46px 0; }
