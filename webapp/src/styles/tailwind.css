@@ -1,0 +1,5 @@
+/* Tailwind entry — see tailwind.config.ts. Colors resolve to the CSS-variable
+   design tokens declared in tokens.css (imported alongside this in main.tsx). */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
