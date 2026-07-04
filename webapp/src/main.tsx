@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { I18nextProvider } from "react-i18next";
+import "./styles/tailwind.css";
 import "./styles/tokens.css";
 import i18n from "./i18n";
 import { initTelegram } from "./telegram";
