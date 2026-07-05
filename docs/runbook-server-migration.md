@@ -167,6 +167,18 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
+> **Troubleshooting — `could not build server_names_hash, you should increase
+> server_names_hash_bucket_size: 32`.** Adding these four `server_name`s (plus any
+> existing vhosts) overflows nginx's default name-hash bucket (32 bytes on many CPUs).
+> Fix in the **`http { }` block of `/etc/nginx/nginx.conf`** (the main config, not the
+> vhost) — Ubuntu ships the directive commented out, so uncomment it and reload:
+> ```bash
+> sudo sed -i 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 64;/' /etc/nginx/nginx.conf
+> sudo nginx -t && sudo systemctl reload nginx
+> ```
+> If the commented line isn't present, add `server_names_hash_bucket_size 64;` inside
+> `http { }` by hand. Bump to `128` only if a longer hostname overflows 64.
+
 Certs are **not** issued yet — `certbot --nginx` uses an HTTP-01 challenge that needs
 the domain resolving to *this* box, which only happens after the DNS flip in Phase 5.
 
@@ -197,9 +209,14 @@ docker compose -f deploy/docker-compose.yml down
 **3. On the NEW server — enable Telegram and start the userbot:**
 
 ```bash
-# Set the real public base URL in /opt/polymer/.env — reuse the OLD value verbatim:
+# Set the public base URLs in /opt/polymer/.env to THIS deployment's domains
+# (they drive the /start WebApp button, the chat menu button, status-push deep
+# links, and the webhook registration — see telegram/bot.py):
 #   PUBLIC_WEBAPP_URL=https://ai-imex.com
-# Then re-create api (re-registers the webhook) and start the userbot for the first time:
+#   PUBLIC_API_URL=https://api.ai-imex.com
+# ⚠ Do NOT copy an old/different domain here — if this differs from the running
+#   value, the bot's buttons keep opening the old site until the api restarts.
+# Then re-create api (re-registers the webhook + menu button) and start the userbot:
 cd /opt/polymer/polymer-intelligence
 docker compose -f deploy/docker-compose.yml up -d api userbot
 ```
@@ -301,7 +318,8 @@ data-plane secrets can be freshly generated because the data itself is fresh.
 
 | Variable | Same domain / fresh data | Why |
 |----------|--------------------------|-----|
-| `PUBLIC_WEBAPP_URL` | **Reuse verbatim** | Webhook URL + Web App button must stay identical. |
+| `PUBLIC_WEBAPP_URL` | **Set to THIS deployment's web domain** (`https://ai-imex.com`) | Drives the `/start` WebApp button, chat menu button, and status-push deep links (`telegram/bot.py`, `notify.py`). If the old server used a different domain (e.g. `keira.uz`), do NOT reuse it — set the new one. |
+| `PUBLIC_API_URL` | **Set to the API domain** (`https://api.ai-imex.com`) | Where the Telegram webhook registers. Falls back to `PUBLIC_WEBAPP_URL` if blank. |
 | `BOT_TOKEN` | **Reuse** | Same Telegram bot. |
 | `WEBHOOK_SECRET` | Reuse (rotation optional) | If you rotate it the webhook still re-registers on startup — just keep URL path + header in sync. |
 | `TG_API_ID` / `TG_API_HASH` | **Reuse** | Same userbot Telegram app. |

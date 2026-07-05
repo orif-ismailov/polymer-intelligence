@@ -1,7 +1,7 @@
 {
   "home": {
-    "brandTag": "AI MARKETPLACE",
-    "headline": "Petrokimya hammaddeleri için AI Marketplace",
+    "brandTag": "AI B2B PLATFORM",
+    "headline": "Petrokimya, kimyasal hammaddeler ve katkı maddeleri için AI B2B platformu",
     "lead": "AI piyasayı analiz eder ve işletmeniz için en iyi teklifleri bulur",
     "stats": {
       "buyers": {
@@ -64,7 +64,7 @@
       "import": "Teslimat 15–30 gün"
     },
     "stepOf": "Adım {{current}} / {{total}}",
-    "hintGrade": "Kesin markayı bilmiyor musunuz? Ürünü kendi kelimelerinizle tarif edin — AI uygun seçenekleri belirler.",
+    "hintGrade": "İhtiyacınız olan marka listede yoksa, hammadde adını kendi kelimelerinizle yazın — yapay zeka piyasaları ve tedarikçileri analiz eder.",
     "dataProtected": "Verileriniz korunmaktadır. İletişim bilgileri yalnızca doğrulanmış IMEX AI yöneticilerine görünür.",
     "desiredPrice": "İstenen fiyat (isteğe bağlı)",
     "attachTds": "TDS / spesifikasyon ekle",
@@ -299,8 +299,8 @@
       "sell": "Hammadde Sat"
     },
     "hero": {
-      "badge": "AI MARKETPLACE",
-      "title": "Petrokimya Hammaddeleri için AI Marketplace",
+      "badge": "AI B2B PLATFORM",
+      "title": "Petrokimya, Kimyasal Hammaddeler ve Katkı Maddeleri için AI B2B Platformu",
       "para": "Doğrulanmış satıcılar ve alıcıları buluşturan, pazarı analiz eden ve en iyi anlaşmaları yapmanıza yardımcı olan akıllı bir platform.",
       "f1": "Doğrulanmış satıcılar ve alıcılar",
       "f2": "Fabrikalar ve rafinerilerle doğrudan sözleşmeler",
@@ -341,7 +341,7 @@
       "other": "… ve diğer iş ortakları"
     },
     "features": {
-      "count": "1.000+",
+      "count": "10 000+",
       "f1": "alıcı (fabrikalar, tesisler, şirketler)",
       "f2": "Yalnızca doğrulanmış tedarikçiler ve güvenilir ortaklar",
       "f3": "Yapay zeka pazarı 7/24 analiz eder",
@@ -353,7 +353,7 @@
       "subtitle": "IMEX AI'ye katılın ve en iyi teklifleri ilk siz alın."
     },
     "footer": {
-      "tagline": "Petrokimya hammaddeleri için AI Marketplace. Teknoloji ve güvenilir ortaklarla işletmeniz için fırsatlar yaratıyoruz.",
+      "tagline": "Petrokimya, kimyasal hammaddeler ve katkı maddeleri için AI B2B platformu. Teknoloji ve güvenilir ortaklarla işletmeniz için fırsatlar yaratıyoruz.",
       "colPlatform": "Platform",
       "colCompany": "Şirket",
       "colSupport": "Destek",

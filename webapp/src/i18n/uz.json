@@ -1,7 +1,7 @@
 {
   "home": {
-    "brandTag": "AI MARKETPLACE",
-    "headline": "Neftkimyo xomashyosi AI Marketplace'i",
+    "brandTag": "AI B2B PLATFORM",
+    "headline": "Neft-kimyo mahsulotlari, kimyoviy xomashyo va qo'shimchalar uchun AI B2B platforma",
     "lead": "AI bozorni tahlil qiladi va biznesingiz uchun eng yaxshi takliflarni topadi",
     "stats": {
       "buyers": {
@@ -64,7 +64,7 @@
       "import": "Yetkazib berish 15–30 kun"
     },
     "stepOf": "Qadam {{current}} / {{total}}",
-    "hintGrade": "Aniq markani bilmaysizmi? Tovarni o'z so'zlaringiz bilan tasvirlang — AI mos variantlarni tanlaydi.",
+    "hintGrade": "Kerakli marka ro'yxatda bo'lmasa, xomashyo nomini o'z so'zlaringiz bilan yozing — sun'iy intellekt bozor va yetkazib beruvchilarni tahlil qiladi.",
     "dataProtected": "Ma'lumotlaringiz himoyalangan. Aloqalar faqat IMEX AI'ning tasdiqlangan menejerlariga ko'rinadi.",
     "desiredPrice": "Istalgan narx (ixtiyoriy)",
     "attachTds": "TDS / spetsifikatsiyani biriktirish",
@@ -299,8 +299,8 @@
       "sell": "Xomashyo sotish"
     },
     "hero": {
-      "badge": "AI MARKETPLACE",
-      "title": "Neftkimyo xomashyosi uchun AI Marketplace",
+      "badge": "AI B2B PLATFORM",
+      "title": "Neft-kimyo mahsulotlari, kimyoviy xomashyo va qo'shimchalar uchun AI B2B platforma",
       "para": "Tekshirilgan sotuvchilar va xaridorlarni bog'laydigan, bozorni tahlil qiladigan va eng yaxshi bitimlarni tuzishga yordam beradigan aqlli platforma.",
       "f1": "Tekshirilgan sotuvchilar va xaridorlar",
       "f2": "Zavodlar va NPZ bilan to'g'ridan-to'g'ri shartnomalar",
@@ -341,7 +341,7 @@
       "other": "… va boshqa hamkorlar"
     },
     "features": {
-      "count": "1 000+",
+      "count": "10 000+",
       "f1": "xaridorlar (zavodlar, fabrikalar, kompaniyalar)",
       "f2": "Faqat tekshirilgan ta'minotchilar va ishonchli hamkorlar",
       "f3": "Sun'iy intellekt bozorni 24/7 tahlil qiladi",
@@ -353,7 +353,7 @@
       "subtitle": "IMEX AI ga qo'shiling va eng yaxshi takliflarni birinchi bo'lib oling."
     },
     "footer": {
-      "tagline": "Neftkimyo xomashyosi uchun AI Marketplace. Texnologiya va ishonchli hamkorlar bilan biznesingiz uchun imkoniyatlar yaratamiz.",
+      "tagline": "Neft-kimyo mahsulotlari, kimyoviy xomashyo va qo'shimchalar uchun AI B2B platforma. Texnologiya va ishonchli hamkorlar bilan biznesingiz uchun imkoniyatlar yaratamiz.",
       "colPlatform": "Platforma",
       "colCompany": "Kompaniya",
       "colSupport": "Qo'llab-quvvatlash",
