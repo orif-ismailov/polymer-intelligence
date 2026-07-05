@@ -1,7 +1,7 @@
 {
   "home": {
-    "brandTag": "AI MARKETPLACE",
-    "headline": "AI Marketplace for petrochemical feedstock",
+    "brandTag": "AI B2B PLATFORM",
+    "headline": "AI B2B Platform for Petrochemicals, Chemical Raw Materials & Additives",
     "lead": "AI analyzes the market and finds the best offers for your business",
     "stats": {
       "buyers": {
@@ -64,7 +64,7 @@
       "import": "Delivery in 15–30 days"
     },
     "stepOf": "Step {{current}} of {{total}}",
-    "hintGrade": "Not sure of the exact grade? Describe the product in your own words — AI will suggest matching options.",
+    "hintGrade": "If the grade you need isn't in the list, write the raw material name in your own words — AI will analyze markets and suppliers.",
     "dataProtected": "Your data is protected. Contacts are visible only to verified IMEX AI managers.",
     "desiredPrice": "Desired price (optional)",
     "attachTds": "Attach TDS / specification",
@@ -299,8 +299,8 @@
       "sell": "Sell Raw Materials"
     },
     "hero": {
-      "badge": "AI MARKETPLACE",
-      "title": "AI Marketplace for Petrochemical Raw Materials",
+      "badge": "AI B2B PLATFORM",
+      "title": "AI B2B Platform for Petrochemicals, Chemical Raw Materials & Additives",
       "para": "An intelligent platform that connects verified sellers and buyers, analyzes the market and helps you close the best deals.",
       "f1": "Verified sellers and buyers",
       "f2": "Direct contracts with factories and refineries",
@@ -341,7 +341,7 @@
       "other": "… and other partners"
     },
     "features": {
-      "count": "1,000+",
+      "count": "10 000+",
       "f1": "buyers (factories, plants, companies)",
       "f2": "Only verified suppliers and reliable partners",
       "f3": "Artificial Intelligence analyzes the market 24/7",
@@ -353,7 +353,7 @@
       "subtitle": "Join IMEX AI and get the best offers first."
     },
     "footer": {
-      "tagline": "AI Marketplace for petrochemical raw materials. We create opportunities for your business with technology and reliable partners.",
+      "tagline": "AI B2B platform for petrochemicals, chemical raw materials and additives. We create opportunities for your business with technology and reliable partners.",
       "colPlatform": "Platform",
       "colCompany": "Company",
       "colSupport": "Support",
