@@ -128,6 +128,28 @@ def offer_moderation_keyboard(offer_id: int) -> "InlineKeyboardMarkup":
     )
 
 
+def offer_request_moderation_keyboard(offer_request_id: int) -> "InlineKeyboardMarkup":
+    """Inline keyboard for a pending buyer inquiry posted to the team group.
+
+    ✅ Одобрить (approve → forward the inquiry to the seller) / ❌ Отклонить (reject).
+    callback_data format: "offreq:<action>:<id>" (parsed in handlers/moderation.py).
+    """
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Одобрить", callback_data=f"offreq:approve:{offer_request_id}"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отклонить", callback_data=f"offreq:reject:{offer_request_id}"
+                ),
+            ]
+        ]
+    )
+
+
 # ── Webhook setup ─────────────────────────────────────────────────────────────
 
 async def setup_webhook() -> None:

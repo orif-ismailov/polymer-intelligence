@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime
 import decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -30,7 +31,15 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.core.db import Base
-from app.models.enums import OfferFileKind, PriceBasis, SellerOfferStatus
+from app.models.enums import (
+    OfferFileKind,
+    OfferRequestStatus,
+    PriceBasis,
+    SellerOfferStatus,
+)
+
+if TYPE_CHECKING:
+    from app.models.requests import Client
 
 
 class Seller(Base):
@@ -157,3 +166,54 @@ class SellerOfferFile(Base):
     )
 
     offer: Mapped[SellerOffer] = relationship("SellerOffer", back_populates="files")
+
+
+class OfferRequest(Base):
+    """A buyer's inquiry against a specific approved seller offer ("Request an offer").
+
+    Admin-gated brokerage: the buyer submits qty/target price/message; the inquiry
+    lands in `pending` for staff review. On approval it is forwarded to the seller by
+    bot DM (WITHOUT the buyer's contact — the team stays the intermediary). Neither
+    side sees the other's contact directly.
+    """
+
+    __tablename__ = "offer_requests"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    offer_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("seller_offers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    client_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    quantity: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
+    qty_unit: Mapped[str] = mapped_column(String(8), nullable=False, default="MT", server_default="MT")
+    target_price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
+    currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[OfferRequestStatus] = mapped_column(
+        PgEnum(OfferRequestStatus, name="offer_request_status", native_enum=True),
+        nullable=False,
+        default=OfferRequestStatus.pending,
+        server_default=OfferRequestStatus.pending.value,
+        index=True,
+    )
+    moderated_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("staff_users.id"), nullable=True
+    )
+    moderation_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reviewed_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    forwarded_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    offer: Mapped[SellerOffer] = relationship("SellerOffer")
+    client: Mapped[Client] = relationship("Client")

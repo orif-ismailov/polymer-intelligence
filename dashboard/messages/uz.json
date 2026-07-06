@@ -22,7 +22,8 @@
       "reports": "Hisobotlar",
       "prices": "Narxlar",
       "adminProducts": "Mahsulotlar",
-      "adminUsers": "Foydalanuvchilar"
+      "adminUsers": "Foydalanuvchilar",
+      "offerRequests": "Taklif so'rovlari"
     },
     "guest": "Mehmon"
   },
@@ -635,5 +636,19 @@
       "submit": "Qo'shish",
       "cancel": "Bekor qilish"
     }
+  },
+  "offerRequests": {
+    "title": "Taklif so'rovlari",
+    "subtitle": "Xaridorlarning takliflarga so'rovlari — sotuvchiga yuborishdan oldin tekshiring",
+    "empty": "Ko'rib chiqiladigan so'rovlar yo'q",
+    "error": "So'rovlarni yuklab bo'lmadi",
+    "listedPrice": "E'lon narxi",
+    "wantsQty": "Kerak",
+    "targetPrice": "Istalgan narx",
+    "buyer": "Xaridor",
+    "seller": "Sotuvchi",
+    "approve": "Tasdiqlash va sotuvchiga yuborish",
+    "reject": "Rad etish",
+    "notePlaceholder": "Izoh (ixtiyoriy)"
   }
 }

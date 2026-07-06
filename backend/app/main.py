@@ -47,6 +47,7 @@ from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
 from app.api.health import router as health_router
 from app.api.moderation import router as moderation_router
+from app.api.offer_requests import router as offer_requests_router
 from app.api.prices import router as prices_router
 from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
@@ -179,6 +180,7 @@ def create_app() -> FastAPI:
     application.include_router(webapp_market_router, prefix="/api/v1")
     application.include_router(webapp_reference_router, prefix="/api/v1")
     application.include_router(moderation_router, prefix="/api/v1")
+    application.include_router(offer_requests_router, prefix="/api/v1")
     # ── news engine (Phase 3): published reports + dashboard review ───────────
     application.include_router(webapp_news_router, prefix="/api/v1")
     application.include_router(reports_router, prefix="/api/v1")

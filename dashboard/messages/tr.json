@@ -22,7 +22,8 @@
       "reports": "Raporlar",
       "prices": "Fiyatlar",
       "adminProducts": "Ürünler",
-      "adminUsers": "Kullanıcılar"
+      "adminUsers": "Kullanıcılar",
+      "offerRequests": "Teklif talepleri"
     },
     "guest": "Misafir"
   },
@@ -635,5 +636,19 @@
       "submit": "Ekle",
       "cancel": "İptal"
     }
+  },
+  "offerRequests": {
+    "title": "Teklif talepleri",
+    "subtitle": "Alıcıların teklif talepleri — satıcıya iletmeden önce inceleyin",
+    "empty": "İncelenecek talep yok",
+    "error": "Talepler yüklenemedi",
+    "listedPrice": "İlan fiyatı",
+    "wantsQty": "İstenen",
+    "targetPrice": "Hedef fiyat",
+    "buyer": "Alıcı",
+    "seller": "Satıcı",
+    "approve": "Onayla ve satıcıya gönder",
+    "reject": "Reddet",
+    "notePlaceholder": "Not (isteğe bağlı)"
   }
 }

@@ -159,10 +159,40 @@ export interface OfferFileRef {
 
 export interface CatalogSeller {
   company_name: string | null;
-  contact_name: string | null;
-  phone: string | null;
-  telegram_username: string | null;
   is_verified: boolean;
+}
+
+export interface OfferRequestCreate {
+  quantity?: number | null;
+  qty_unit?: string;
+  target_price?: number | null;
+  currency?: string | null;
+  message?: string | null;
+}
+
+export interface OfferRequestOffer {
+  id: number;
+  product_id: number | null;
+  product_text: string | null;
+  grade_text: string | null;
+  price: number;
+  currency: string;
+  qty_unit: string;
+}
+
+export type OfferRequestStatus = "pending" | "approved" | "rejected";
+
+export interface OfferRequestOut {
+  id: number;
+  offer_id: number;
+  status: OfferRequestStatus;
+  quantity: number | null;
+  qty_unit: string;
+  target_price: number | null;
+  currency: string | null;
+  message: string | null;
+  created_at: string;
+  offer: OfferRequestOffer;
 }
 
 export interface CatalogOffer {

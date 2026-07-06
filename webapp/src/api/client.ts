@@ -18,6 +18,8 @@ import type {
   FeaturedOffer,
   NewsItem,
   NewsSummary,
+  OfferRequestCreate,
+  OfferRequestOut,
   Product,
   RequestCreate,
   RequestDetail,
@@ -193,6 +195,22 @@ export const api = {
   /** GET /webapp/market/categories — category chips with approved-offer counts. */
   getCategories(): Promise<CategoryCount[]> {
     return apiFetch<CategoryCount[]>("/webapp/market/categories");
+  },
+
+  /**
+   * POST /webapp/market/offers/{id}/request — "Request an offer": a buyer inquiry
+   * that goes to admin review, then (if approved) to the seller.
+   */
+  requestOffer(offerId: number, body: OfferRequestCreate): Promise<OfferRequestOut> {
+    return apiFetch<OfferRequestOut>(`/webapp/market/offers/${offerId}/request`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+
+  /** GET /webapp/market/my-requests — the buyer's own inquiries with status. */
+  getMyOfferRequests(): Promise<OfferRequestOut[]> {
+    return apiFetch<OfferRequestOut[]>("/webapp/market/my-requests");
   },
 
   // ── Marketplace: seller side ────────────────────────────────────────────────
