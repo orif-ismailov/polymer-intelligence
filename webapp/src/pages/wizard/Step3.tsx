@@ -66,27 +66,8 @@ export default function Step3() {
   }, [navigate, companyName, contactName, phone, legalAddress]);
 
   useEffect(() => {
-    mainButton.setText(t("wizard.next"));
-    mainButton.show();
-    if (phoneValid) {
-      mainButton.enable();
-    } else {
-      mainButton.disable();
-    }
-  }, [t, phoneValid]);
-
-  useEffect(() => {
-    const cleanupMain = mainButton.onClick(() => {
-      if (!phoneValid) return;
-      saveToStore();
-      impactLight();
-      navigate("/request/step/4");
-    });
-    return () => {
-      cleanupMain();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, phoneValid, companyName, contactName, phone, legalAddress]);
+    mainButton.hide();
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>

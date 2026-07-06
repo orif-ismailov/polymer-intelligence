@@ -74,22 +74,8 @@ export default function Step2() {
   }, [navigate, availability, urgency, city, date]);
 
   useEffect(() => {
-    mainButton.setText(t("wizard.next"));
-    mainButton.show();
-    mainButton.enable();
-  }, [t]);
-
-  useEffect(() => {
-    const cleanupMain = mainButton.onClick(() => {
-      saveToStore();
-      impactLight();
-      navigate("/request/step/3");
-    });
-    return () => {
-      cleanupMain();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, availability, urgency, city, date]);
+    mainButton.hide();
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>

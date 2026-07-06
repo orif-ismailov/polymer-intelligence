@@ -92,7 +92,7 @@ export default function Step1() {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<Step1Fields>({
     resolver: zodResolver(step1Schema),
     mode: "onChange",
@@ -121,28 +121,8 @@ export default function Step1() {
   }, [navigate]);
 
   useEffect(() => {
-    mainButton.setText(t("wizard.next"));
-    mainButton.show();
-    if (isValid) {
-      mainButton.enable();
-    } else {
-      mainButton.disable();
-    }
-  }, [isValid, t, formValues]);
-
-  useEffect(() => {
-    const cleanupMain = mainButton.onClick(() => {
-      void handleSubmit((data) => {
-        persist(store, data);
-        impactLight();
-        navigate("/request/step/2");
-      })();
-    });
-    return () => {
-      cleanupMain();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
+    mainButton.hide();
+  }, []);
 
   const productError = errors.product_id?.message
     ? t(`error.${errors.product_id.message}`, errors.product_id.message)

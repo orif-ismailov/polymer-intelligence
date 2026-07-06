@@ -79,21 +79,8 @@ export default function Step4() {
   }, [navigate, comment]);
 
   useEffect(() => {
-    mainButton.setText(t("wizard.submitRequest"));
-    mainButton.show();
-    mainButton.enable();
-  }, [t]);
-
-  useEffect(() => {
-    const cleanupMain = mainButton.onClick(() => {
-      saveToStore();
-      navigate("/request/confirm");
-    });
-    return () => {
-      cleanupMain();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, comment]);
+    mainButton.hide();
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
