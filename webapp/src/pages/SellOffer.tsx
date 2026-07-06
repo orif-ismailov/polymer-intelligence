@@ -130,6 +130,12 @@ export default function SellOffer() {
           /* keep the offer even if one image fails */
         }
       }
+      // Finalize once uploads are done → team group gets the offer (with image) to moderate.
+      try {
+        await api.submitSellerOffer(created.id);
+      } catch {
+        /* best-effort — the offer is already saved and will appear in the queue */
+      }
       notifySuccess();
       setDone(true);
     } catch {

@@ -17,7 +17,12 @@ import decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.models.enums import OfferFileKind, PriceBasis, SellerOfferStatus
+from app.models.enums import (
+    OfferFileKind,
+    OfferRequestStatus,
+    PriceBasis,
+    SellerOfferStatus,
+)
 
 # ── Create ──────────────────────────────────────────────────────────────────────
 
@@ -83,7 +88,21 @@ class OfferFileRef(BaseModel):
 
 
 class CatalogSeller(BaseModel):
-    """Seller contact block shown on a public catalog offer."""
+    """Public seller block on a catalog offer — company name + trust badge only.
+
+    Contact details (phone/telegram) are intentionally OMITTED: buyer→seller contact
+    goes through the admin-gated "Request an offer" flow, never directly. Staff see the
+    full contact via ModerationSeller in the review queues.
+    """
+
+    company_name: str | None
+    is_verified: bool
+
+    model_config = {"from_attributes": True}
+
+
+class ModerationSeller(BaseModel):
+    """Full seller contact block — staff-only (dashboard moderation queue)."""
 
     company_name: str | None
     contact_name: str | None
@@ -172,10 +191,11 @@ class PublicFeaturedOffer(BaseModel):
 
 
 class ModerationOfferOut(CatalogOfferOut):
-    """A pending offer for the dashboard moderation queue (adds status/created_at)."""
+    """A pending offer for the dashboard moderation queue (adds status + full seller contact)."""
 
     status: SellerOfferStatus
     created_at: datetime.datetime
+    seller: ModerationSeller
 
 
 class CategoryCount(BaseModel):
@@ -189,3 +209,91 @@ class ModerationDecision(BaseModel):
     """Approve/reject body (an optional note for the seller)."""
 
     note: str | None = Field(default=None, max_length=1000)
+
+
+# ── Offer requests ("Request an offer" — admin-gated buyer→seller inquiry) ─────
+
+
+class OfferRequestCreate(BaseModel):
+    """Buyer inquiry against a specific offer. Identity comes from the verified dep."""
+
+    quantity: decimal.Decimal | None = Field(default=None, gt=0)
+    qty_unit: str = Field(default="MT", max_length=8)
+    target_price: decimal.Decimal | None = Field(default=None, gt=0)
+    currency: str | None = Field(default=None, max_length=3)
+    message: str | None = Field(default=None, max_length=2000)
+
+    @model_validator(mode="after")
+    def _not_empty(self) -> OfferRequestCreate:
+        """Require at least a quantity or a message so an inquiry carries some intent."""
+        if self.quantity is None and not (self.message and self.message.strip()):
+            raise ValueError("Provide a quantity or a message")
+        return self
+
+
+class OfferBrief(BaseModel):
+    """A minimal offer summary embedded in an inquiry (buyer + admin views)."""
+
+    id: int
+    product_id: int | None
+    product_text: str | None
+    grade_text: str | None
+    price: decimal.Decimal
+    currency: str
+    qty_unit: str
+
+    model_config = {"from_attributes": True}
+
+
+class OfferRequestOut(BaseModel):
+    """A buyer's own inquiry with its moderation status (buyer-facing)."""
+
+    id: int
+    offer_id: int
+    status: OfferRequestStatus
+    quantity: decimal.Decimal | None
+    qty_unit: str
+    target_price: decimal.Decimal | None
+    currency: str | None
+    message: str | None
+    created_at: datetime.datetime
+    offer: OfferBrief
+
+    model_config = {"from_attributes": True}
+
+
+class AdminOfferRequestBuyer(BaseModel):
+    """Buyer contact block — shown ONLY to staff in the review queue (never to sellers)."""
+
+    contact_name: str | None
+    company_name: str | None
+    phone: str | None
+    telegram_user_id: int | None
+
+    model_config = {"from_attributes": True}
+
+
+class AdminOfferRequestSeller(BaseModel):
+    """Seller contact block for the review queue (so staff can coordinate the deal)."""
+
+    company_name: str | None
+    phone: str | None
+    telegram_username: str | None
+
+    model_config = {"from_attributes": True}
+
+
+class AdminOfferRequestOut(BaseModel):
+    """A pending inquiry for the dashboard review queue (both parties' contacts)."""
+
+    id: int
+    status: OfferRequestStatus
+    quantity: decimal.Decimal | None
+    qty_unit: str
+    target_price: decimal.Decimal | None
+    currency: str | None
+    message: str | None
+    created_at: datetime.datetime
+    offer: OfferBrief
+    buyer: AdminOfferRequestBuyer
+    seller: AdminOfferRequestSeller

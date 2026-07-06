@@ -18,6 +18,8 @@ import type {
   FeaturedOffer,
   NewsItem,
   NewsSummary,
+  OfferRequestCreate,
+  OfferRequestOut,
   Product,
   RequestCreate,
   RequestDetail,
@@ -195,6 +197,22 @@ export const api = {
     return apiFetch<CategoryCount[]>("/webapp/market/categories");
   },
 
+  /**
+   * POST /webapp/market/offers/{id}/request — "Request an offer": a buyer inquiry
+   * that goes to admin review, then (if approved) to the seller.
+   */
+  requestOffer(offerId: number, body: OfferRequestCreate): Promise<OfferRequestOut> {
+    return apiFetch<OfferRequestOut>(`/webapp/market/offers/${offerId}/request`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+
+  /** GET /webapp/market/my-requests — the buyer's own inquiries with status. */
+  getMyOfferRequests(): Promise<OfferRequestOut[]> {
+    return apiFetch<OfferRequestOut[]>("/webapp/market/my-requests");
+  },
+
   // ── Marketplace: seller side ────────────────────────────────────────────────
 
   /** POST /webapp/seller/offers — publish an offer (→ moderation). */
@@ -217,6 +235,16 @@ export const api = {
     return apiFetch<{ id: number }>(`/webapp/seller/offers/${offerId}/files?kind=${kind}`, {
       method: "POST",
       body: fd,
+    });
+  },
+
+  /**
+   * POST /webapp/seller/offers/{id}/submit — finalize after uploads: posts the offer
+   * (image + seller details + Confirm button) to the team group for moderation.
+   */
+  submitSellerOffer(offerId: number): Promise<{ ok: boolean }> {
+    return apiFetch<{ ok: boolean }>(`/webapp/seller/offers/${offerId}/submit`, {
+      method: "POST",
     });
   },
 

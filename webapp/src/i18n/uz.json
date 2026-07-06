@@ -163,6 +163,18 @@
     "requestOffer": "Taklif so'rash",
     "notFound": "Taklif topilmadi"
   },
+  "requestOffer": {
+    "title": "Taklif so'rash",
+    "hint": "So'rov qoldiring — tekshiruvdan so'ng sizni sotuvchi bilan bog'laymiz",
+    "qty": "Kerakli hajm",
+    "targetPrice": "Istalgan narx",
+    "messagePlaceholder": "Sotuvchiga xabar (ixtiyoriy)",
+    "needQtyOrMessage": "Hajm yoki xabar kiriting",
+    "error": "So'rovni yuborib bo'lmadi. Qayta urinib ko'ring",
+    "sentTitle": "So'rov yuborildi!",
+    "sentBody": "Jamoamiz tekshirgach, so'rovingiz sotuvchiga yuboriladi. Siz bilan bog'lanamiz.",
+    "backToMarket": "Marketga qaytish"
+  },
   "news": {
     "title": "Yangiliklar",
     "soon": "Kunlik bozor tahlili shu yerda paydo bo'ladi",

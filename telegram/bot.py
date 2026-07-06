@@ -102,6 +102,54 @@ def web_app_keyboard(lang: str) -> "InlineKeyboardMarkup":
     return InlineKeyboardMarkup(inline_keyboard=[[button]])
 
 
+# ── Offer-moderation keyboard (team group) ────────────────────────────────────
+# callback_data is parsed by telegram/handlers/moderation.py. Format: "offer:<action>:<id>".
+# Kept well under Telegram's 64-byte callback_data limit.
+
+def offer_moderation_keyboard(offer_id: int) -> "InlineKeyboardMarkup":
+    """Inline keyboard for a pending offer posted to the team group.
+
+    Two buttons — ✅ Подтвердить (approve → make public) and ❌ Отклонить (reject).
+    A group admin taps one to moderate the offer without leaving Telegram.
+    """
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Подтвердить", callback_data=f"offer:approve:{offer_id}"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отклонить", callback_data=f"offer:reject:{offer_id}"
+                ),
+            ]
+        ]
+    )
+
+
+def offer_request_moderation_keyboard(offer_request_id: int) -> "InlineKeyboardMarkup":
+    """Inline keyboard for a pending buyer inquiry posted to the team group.
+
+    ✅ Одобрить (approve → forward the inquiry to the seller) / ❌ Отклонить (reject).
+    callback_data format: "offreq:<action>:<id>" (parsed in handlers/moderation.py).
+    """
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Одобрить", callback_data=f"offreq:approve:{offer_request_id}"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отклонить", callback_data=f"offreq:reject:{offer_request_id}"
+                ),
+            ]
+        ]
+    )
+
+
 # ── Webhook setup ─────────────────────────────────────────────────────────────
 
 async def setup_webhook() -> None:
@@ -170,11 +218,13 @@ def _create_dispatcher() -> "Dispatcher":
     """Construct the aiogram Dispatcher and wire up all routers."""
     from aiogram import Dispatcher as _Dispatcher  # noqa: PLC0415
     from telegram.handlers.chatid import chatid_router  # noqa: PLC0415
+    from telegram.handlers.moderation import offer_moderation_router  # noqa: PLC0415
     from telegram.handlers.start import start_router  # noqa: PLC0415
 
     _dp = _Dispatcher()
     _dp.include_router(start_router)
     _dp.include_router(chatid_router)
+    _dp.include_router(offer_moderation_router)
     return _dp
 
 

@@ -12,6 +12,7 @@ import {
   Globe,
   Handshake,
   Home,
+  Inbox,
   Newspaper,
   Package,
   ShieldCheck,
@@ -54,6 +55,7 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "purchaseRequests", href: "/requests", icon: ShoppingCart },
       { key: "offers", href: "/offers", icon: Tag },
       { key: "moderation", href: "/moderation", icon: ShieldCheck, minRole: "analyst" },
+      { key: "offerRequests", href: "/offer-requests", icon: Inbox, minRole: "analyst" },
     ],
   },
   {

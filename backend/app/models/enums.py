@@ -176,3 +176,16 @@ class OfferFileKind(enum.StrEnum):
     tds = "tds"
     certificate = "certificate"
     other = "other"
+
+
+class OfferRequestStatus(enum.StrEnum):
+    """Moderation lifecycle of a buyer's inquiry against a seller offer.
+
+    A buyer taps "Request an offer" → `pending` (admin review gate). The admin
+    approves → `approved` (the inquiry is forwarded to the seller by bot DM) or
+    rejects → `rejected`. The buyer sees this status on their inquiry.
+    """
+
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"

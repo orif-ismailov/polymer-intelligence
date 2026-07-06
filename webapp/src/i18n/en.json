@@ -163,6 +163,18 @@
     "requestOffer": "Request an offer",
     "notFound": "Offer not found"
   },
+  "requestOffer": {
+    "title": "Request an offer",
+    "hint": "Send an inquiry — after review we'll connect you with the seller",
+    "qty": "Quantity needed",
+    "targetPrice": "Target price",
+    "messagePlaceholder": "Message to the seller (optional)",
+    "needQtyOrMessage": "Enter a quantity or a message",
+    "error": "Couldn't send the request. Try again",
+    "sentTitle": "Request sent!",
+    "sentBody": "After our team reviews it, your inquiry is forwarded to the seller. We'll get in touch with you.",
+    "backToMarket": "Back to Market"
+  },
   "news": {
     "title": "News",
     "soon": "Daily market analytics will appear here",

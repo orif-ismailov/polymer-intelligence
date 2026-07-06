@@ -14,8 +14,14 @@ from app.api.deps import get_current_client
 from app.core.db import get_db
 from app.models.marketplace import SellerOfferFile
 from app.models.requests import Client
-from app.schemas.marketplace import CatalogOfferOut, CategoryCount, PublicFeaturedOffer
-from app.services import offer_service
+from app.schemas.marketplace import (
+    CatalogOfferOut,
+    CategoryCount,
+    OfferRequestCreate,
+    OfferRequestOut,
+    PublicFeaturedOffer,
+)
+from app.services import offer_request_service, offer_service
 
 router = APIRouter(prefix="/webapp/market", tags=["webapp-market"])
 
@@ -118,3 +124,48 @@ def get_offer_image(
     obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=f.storage_path)  # type: ignore[attr-defined]
     body: bytes = obj["Body"].read()
     return Response(content=body, media_type=f.mime_type or "application/octet-stream")
+
+
+@router.post(
+    "/offers/{offer_id}/request",
+    response_model=OfferRequestOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Request an offer (buyer inquiry → admin review → seller)",
+)
+def request_offer(
+    offer_id: int,
+    body: OfferRequestCreate,
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> OfferRequestOut:
+    """POST /webapp/market/offers/{id}/request — create a `pending` inquiry.
+
+    The inquiry is reviewed by staff (dashboard queue + team group) and, once
+    approved, forwarded to the seller by bot DM. Identity is the verified client;
+    there is no buyer-contact field in the body.
+
+    Raises:
+        HTTP 404/422: offer missing or not public → ValueError → 422.
+    """
+    try:
+        req = offer_request_service.create_offer_request(db, client, offer_id, body)
+        db.commit()
+        offer_request_service.enqueue_offer_request_to_group(req.id)
+        return req  # type: ignore[return-value]
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+
+
+@router.get(
+    "/my-requests",
+    response_model=list[OfferRequestOut],
+    summary="List the authenticated buyer's own offer inquiries",
+)
+def list_my_offer_requests(
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> list[OfferRequestOut]:
+    """GET /webapp/market/my-requests — the caller's inquiries with status, newest first."""
+    return offer_request_service.list_for_client(db, client.id)  # type: ignore[return-value]

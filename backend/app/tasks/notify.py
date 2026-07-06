@@ -490,3 +490,294 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
         return {"status": "error", "error": str(exc)}
 
     return {"status": "ok", "error": None}
+
+
+# ── New-offer team notification (marketplace moderation) ──────────────────────
+
+
+@celery_app.task(name="send_offer_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_offer_to_group(offer_id: int) -> dict[str, Any]:
+    """Post a newly-submitted seller offer to the team Telegram group for moderation.
+
+    The message carries the product info, the seller's own contact details, and (when
+    present) the offer's first image as a photo. An inline keyboard with
+    ✅ Подтвердить / ❌ Отклонить lets a group admin approve or reject the offer from
+    Telegram (telegram/handlers/moderation.py applies the same decision the dashboard
+    moderation queue does).
+
+    Best-effort and read-only: no-ops (status="skipped") when the chat id is unset;
+    never raises — bot/broker/storage failures are logged and returned as an error dict
+    so nothing upstream is affected.
+    """
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot, offer_moderation_keyboard  # noqa: PLC0415
+
+    from app.core.config import settings as _settings  # noqa: PLC0415
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.enums import OfferFileKind  # noqa: PLC0415
+    from app.models.marketplace import SellerOffer  # noqa: PLC0415
+    from app.models.reference import Product  # noqa: PLC0415
+
+    chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
+    if chat_id is None:
+        return {"status": "skipped", "error": "REQUEST_NOTIFY_CHAT_ID not set"}
+
+    logger.info("notify.offer_to_group.start", extra={"offer_id": offer_id})
+
+    try:
+        with Session(engine) as session:
+            offer = session.get(SellerOffer, offer_id)
+            if offer is None:
+                return {"status": "error", "error": f"Offer {offer_id} not found"}
+
+            seller = offer.seller
+
+            product_name: str | None = None
+            if offer.product_id is not None:
+                product = session.get(Product, offer.product_id)
+                product_name = product.name_ru if product else None
+            product_label = product_name or offer.product_text or "—"
+
+            lines: list[str] = ["🆕 Новое предложение на модерацию", ""]
+            grade = f" · {offer.grade_text}" if offer.grade_text else ""
+            lines.append(f"📦 Продукт: {product_label}{grade}")
+            if offer.polymer_type:
+                lines.append(f"🧪 Тип: {offer.polymer_type}")
+            lines.append(f"📊 В наличии: {offer.qty_available} {offer.qty_unit}")
+            incoterms = getattr(offer.incoterms, "value", str(offer.incoterms))
+            lines.append(f"💰 Цена: {offer.price} {offer.currency} ({incoterms})")
+            if offer.min_order_qty is not None:
+                lines.append(f"📦 Мин. партия: {offer.min_order_qty} {offer.qty_unit}")
+            if offer.warehouse_city:
+                lines.append(f"📍 Склад: {offer.warehouse_city}")
+            if offer.description:
+                lines.append("")
+                lines.append(f"💬 {offer.description}")
+
+            # Seller (who created it) — the detail the team needs to vet the listing.
+            contact: list[str] = []
+            if seller is not None:
+                if seller.company_name:
+                    contact.append(f"🏢 {seller.company_name}")
+                if seller.contact_name:
+                    contact.append(f"👤 {seller.contact_name}")
+                if seller.phone:
+                    contact.append(f"📞 {seller.phone}")
+                if seller.telegram_username:
+                    contact.append(f"✈️ @{seller.telegram_username}")
+                if seller.telegram_user_id is not None:
+                    contact.append(f"🆔 {seller.telegram_user_id}")
+            if contact:
+                lines.append("")
+                lines.append("Продавец:")
+                lines.extend(contact)
+
+            text = "\n".join(lines)
+            keyboard = offer_moderation_keyboard(offer.id)
+
+            # First image file, if any → send as a photo with the text as caption.
+            image = next(
+                (f for f in offer.files if f.kind == OfferFileKind.image and f.storage_path),
+                None,
+            )
+            image_bytes: bytes | None = None
+            if image is not None and image.storage_path:
+                try:
+                    from app.core.storage import s3_client  # noqa: PLC0415
+
+                    obj = s3_client.get_object(  # type: ignore[attr-defined]
+                        Bucket=_settings.S3_BUCKET, Key=image.storage_path
+                    )
+                    image_bytes = obj["Body"].read()
+                except Exception as exc:  # noqa: BLE001 — fall back to a text-only message
+                    logger.warning(
+                        "notify.offer_to_group.image_fetch_failed",
+                        extra={"offer_id": offer_id, "error": str(exc)},
+                    )
+
+            if image_bytes is not None:
+                from aiogram.types import BufferedInputFile  # noqa: PLC0415
+
+                photo = BufferedInputFile(
+                    image_bytes, filename=(image.file_name if image else None) or "offer.jpg"
+                )
+                # Photo captions are capped at 1024 chars by Telegram.
+                asyncio.run(
+                    bot.send_photo(
+                        chat_id=chat_id,
+                        photo=photo,
+                        caption=text[:1024],
+                        reply_markup=keyboard,
+                    )
+                )
+            else:
+                asyncio.run(
+                    bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+                )
+
+            logger.info(
+                "notify.offer_to_group.sent",
+                extra={"offer_id": offer_id, "chat_id": chat_id, "with_image": image_bytes is not None},
+            )
+    except Exception as exc:
+        logger.error(
+            "notify.offer_to_group.error",
+            extra={"offer_id": offer_id, "error": str(exc)},
+        )
+        return {"status": "error", "error": str(exc)}
+
+    return {"status": "ok", "error": None}
+
+
+# ── Offer-request ("Request an offer") notifications ──────────────────────────
+
+
+def _offer_product_label(session: object, offer: Any) -> str:
+    """Resolve a human product label for an offer (product name, else free text)."""
+    from app.models.reference import Product  # noqa: PLC0415
+
+    if offer.product_id is not None:
+        product = session.get(Product, offer.product_id)  # type: ignore[attr-defined]
+        if product is not None:
+            return str(product.name_ru)
+    return offer.product_text or "—"
+
+
+@celery_app.task(name="send_offer_request_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
+    """Post a new buyer inquiry to the team group for review, with ✅/❌ buttons.
+
+    Shows the inquiry (product, requested qty, target price, message), the buyer's
+    contact (staff-only), and which offer/seller it targets. A group admin approves
+    (→ forward to seller) or rejects from chat. Best-effort; never raises.
+    """
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot, offer_request_moderation_keyboard  # noqa: PLC0415
+
+    from app.core.config import settings as _settings  # noqa: PLC0415
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.marketplace import OfferRequest  # noqa: PLC0415
+
+    chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
+    if chat_id is None:
+        return {"status": "skipped", "error": "REQUEST_NOTIFY_CHAT_ID not set"}
+
+    logger.info("notify.offer_request_to_group.start", extra={"offer_request_id": offer_request_id})
+
+    try:
+        with Session(engine) as session:
+            req = session.get(OfferRequest, offer_request_id)
+            if req is None:
+                return {"status": "error", "error": f"OfferRequest {offer_request_id} not found"}
+
+            offer = req.offer
+            product_label = _offer_product_label(session, offer)
+            grade = f" · {offer.grade_text}" if offer.grade_text else ""
+
+            lines: list[str] = ["🛒 Новый запрос предложения", ""]
+            lines.append(f"📦 Товар: {product_label}{grade}")
+            lines.append(f"💵 Цена в объявлении: {offer.price} {offer.currency}")
+            if req.quantity is not None:
+                lines.append(f"📊 Нужный объём: {req.quantity} {req.qty_unit}")
+            if req.target_price is not None:
+                cur = req.currency or offer.currency
+                lines.append(f"🎯 Желаемая цена: {req.target_price} {cur}")
+            if req.message:
+                lines.append("")
+                lines.append(f"💬 {req.message}")
+
+            client = req.client
+            buyer: list[str] = []
+            if client is not None:
+                if client.company_name:
+                    buyer.append(f"🏢 {client.company_name}")
+                if client.contact_name:
+                    buyer.append(f"👤 {client.contact_name}")
+                if client.phone:
+                    buyer.append(f"📞 {client.phone}")
+                if client.telegram_user_id is not None:
+                    buyer.append(f"🆔 {client.telegram_user_id}")
+            if buyer:
+                lines.append("")
+                lines.append("Покупатель:")
+                lines.extend(buyer)
+
+            keyboard = offer_request_moderation_keyboard(req.id)
+            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines), reply_markup=keyboard))
+            logger.info(
+                "notify.offer_request_to_group.sent",
+                extra={"offer_request_id": offer_request_id, "chat_id": chat_id},
+            )
+    except Exception as exc:
+        logger.error(
+            "notify.offer_request_to_group.error",
+            extra={"offer_request_id": offer_request_id, "error": str(exc)},
+        )
+        return {"status": "error", "error": str(exc)}
+
+    return {"status": "ok", "error": None}
+
+
+@celery_app.task(name="send_offer_request_to_seller", queue="notify")  # type: ignore[untyped-decorator]
+def send_offer_request_to_seller(offer_request_id: int) -> dict[str, Any]:
+    """DM an APPROVED inquiry to the seller — WITHOUT the buyer's contact.
+
+    The team stays the intermediary (3B): the seller learns a buyer is interested and
+    the commercial terms, then coordinates with the team. Best-effort; never raises.
+    Skips (status="skipped") when the seller has no telegram_user_id.
+    """
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.marketplace import OfferRequest  # noqa: PLC0415
+
+    logger.info("notify.offer_request_to_seller.start", extra={"offer_request_id": offer_request_id})
+
+    try:
+        with Session(engine) as session:
+            req = session.get(OfferRequest, offer_request_id)
+            if req is None:
+                return {"status": "error", "error": f"OfferRequest {offer_request_id} not found"}
+
+            offer = req.offer
+            seller = offer.seller
+            if seller is None or seller.telegram_user_id is None:
+                logger.warning(
+                    "notify.offer_request_to_seller.no_seller_tg",
+                    extra={"offer_request_id": offer_request_id},
+                )
+                return {"status": "skipped", "error": "seller has no telegram_user_id"}
+
+            product_label = _offer_product_label(session, offer)
+            grade = f" · {offer.grade_text}" if offer.grade_text else ""
+
+            lines: list[str] = [
+                "📩 Новый запрос на ваше предложение!",
+                "",
+                f"📦 Товар: {product_label}{grade}",
+            ]
+            if req.quantity is not None:
+                lines.append(f"📊 Нужный объём: {req.quantity} {req.qty_unit}")
+            if req.target_price is not None:
+                cur = req.currency or offer.currency
+                lines.append(f"🎯 Желаемая цена: {req.target_price} {cur}")
+            if req.message:
+                lines.append("")
+                lines.append(f"💬 {req.message}")
+            lines.append("")
+            lines.append("С вами свяжется наш менеджер для деталей.")
+
+            asyncio.run(bot.send_message(chat_id=seller.telegram_user_id, text="\n".join(lines)))
+            logger.info(
+                "notify.offer_request_to_seller.sent",
+                extra={"offer_request_id": offer_request_id, "seller_tg": seller.telegram_user_id},
+            )
+    except Exception as exc:
+        logger.error(
+            "notify.offer_request_to_seller.error",
+            extra={"offer_request_id": offer_request_id, "error": str(exc)},
+        )
+        return {"status": "error", "error": str(exc)}
+
+    return {"status": "ok", "error": None}

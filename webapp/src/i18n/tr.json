@@ -163,6 +163,18 @@
     "requestOffer": "Teklif iste",
     "notFound": "Teklif bulunamadı"
   },
+  "requestOffer": {
+    "title": "Teklif iste",
+    "hint": "Bir talep bırakın — inceleme sonrası sizi satıcıyla bağlarız",
+    "qty": "Gerekli miktar",
+    "targetPrice": "Hedef fiyat",
+    "messagePlaceholder": "Satıcıya mesaj (isteğe bağlı)",
+    "needQtyOrMessage": "Bir miktar veya mesaj girin",
+    "error": "Talep gönderilemedi. Tekrar deneyin",
+    "sentTitle": "Talep gönderildi!",
+    "sentBody": "Ekibimiz inceledikten sonra talebiniz satıcıya iletilir. Sizinle iletişime geçeceğiz.",
+    "backToMarket": "Market'e dön"
+  },
   "news": {
     "title": "Haberler",
     "soon": "Günlük pazar analizi burada görünecek",
