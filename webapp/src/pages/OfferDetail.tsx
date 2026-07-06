@@ -8,7 +8,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { BadgeCheck, Phone, Send } from "lucide-react";
+import { BadgeCheck, Send } from "lucide-react";
 
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
@@ -147,12 +147,6 @@ export default function OfferDetail() {
         <button type="button" onClick={() => navigate("/request/step/1")} style={{ ...fullBtn("var(--green)", "var(--green-on)"), cursor: "pointer" }}>
           {t("offer.requestOffer")}
         </button>
-
-        {offer.seller.phone && (
-          <a href={`tel:${offer.seller.phone}`} style={fullBtn("var(--surface)", "var(--text)", true)}>
-            <Phone size={18} color="var(--green)" /> {t("offer.call")}
-          </a>
-        )}
       </div>
     </div>
   );

@@ -8,7 +8,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { MapPin, BadgeCheck, Phone, Send } from "lucide-react";
+import { MapPin, BadgeCheck, Send } from "lucide-react";
 
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
@@ -168,14 +168,43 @@ export default function Market() {
                     </span>
                   )}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "var(--text)" }}>
-                    {o.seller.company_name || t("offer.seller")}
-                    {o.seller.is_verified && <BadgeCheck size={14} color="var(--green)" />}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "8px" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "var(--text)", minWidth: 0 }}>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {o.seller.company_name || t("offer.seller")}
+                    </span>
+                    {o.seller.is_verified && <BadgeCheck size={14} color="var(--green)" style={{ flex: "0 0 auto" }} />}
                   </span>
-                  <span style={{ display: "inline-flex", gap: "10px", color: "var(--text-muted)" }}>
-                    {o.seller.phone && <Phone size={16} color="var(--green)" />}
-                    {o.seller.telegram_username && <Send size={16} color="var(--blue)" />}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate("/request/step/1");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate("/request/step/1");
+                      }
+                    }}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      flex: "0 0 auto",
+                      padding: "6px 12px",
+                      borderRadius: "var(--r-full)",
+                      background: "var(--green)",
+                      color: "var(--green-on)",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Send size={14} /> {t("offer.requestOffer")}
                   </span>
                 </div>
               </div>
