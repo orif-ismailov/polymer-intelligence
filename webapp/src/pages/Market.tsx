@@ -178,6 +178,8 @@ export default function Market() {
                   <span
                     role="button"
                     tabIndex={0}
+                    aria-label={t("offer.requestOffer")}
+                    title={t("offer.requestOffer")}
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate("/request/step/1");
@@ -192,19 +194,17 @@ export default function Market() {
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "6px",
+                      justifyContent: "center",
                       flex: "0 0 auto",
-                      padding: "6px 12px",
+                      width: "36px",
+                      height: "36px",
                       borderRadius: "var(--r-full)",
                       background: "var(--green)",
                       color: "var(--green-on)",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      whiteSpace: "nowrap",
                       cursor: "pointer",
                     }}
                   >
-                    <Send size={14} /> {t("offer.requestOffer")}
+                    <Send size={16} />
                   </span>
                 </div>
               </div>
