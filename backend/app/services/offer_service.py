@@ -190,3 +190,67 @@ def moderate_offer(
         extra={"offer_id": offer.id, "approve": approve, "staff_user_id": staff_user_id},
     )
     return offer
+
+
+def moderate_offer_via_telegram(
+    db: Session,
+    offer: SellerOffer,
+    telegram_user_id: int,
+    *,
+    approve: bool,
+    note: str | None = None,
+) -> SellerOffer:
+    """Approve/reject an offer from the team Telegram group. Does NOT commit.
+
+    Same effect as :func:`moderate_offer` but the actor is a Telegram user (a group
+    admin), not a StaffUser — so ``moderated_by`` stays NULL and the acting Telegram
+    id is recorded in the audit ``details`` instead. Authorization (must be a group
+    admin) is enforced by the caller in the bot handler, not here.
+    """
+    if approve:
+        offer.status = SellerOfferStatus.approved
+        offer.published_at = utcnow()
+    else:
+        offer.status = SellerOfferStatus.rejected
+    offer.moderation_note = note
+    db.flush()
+
+    details: dict[str, object] = {"via": "telegram", "telegram_user_id": telegram_user_id}
+    if note:
+        details["note"] = note
+    write_audit(
+        db=db,
+        staff_user_id=None,
+        action="offer.approve" if approve else "offer.reject",
+        entity="seller_offers",
+        entity_id=str(offer.id),
+        details=details,
+    )
+    logger.info(
+        "offer_service.moderate_via_telegram",
+        extra={"offer_id": offer.id, "approve": approve, "telegram_user_id": telegram_user_id},
+    )
+    return offer
+
+
+def enqueue_offer_group_notify(offer_id: int) -> None:
+    """Post a newly-submitted offer to the team Telegram group, fail-soft.
+
+    Skips entirely when REQUEST_NOTIFY_CHAT_ID is unset; a broker outage must never
+    break offer creation (mirror of request_service._enqueue_group_notify_soft).
+    """
+    from app.core.config import settings  # noqa: PLC0415
+
+    if settings.REQUEST_NOTIFY_CHAT_ID is None:
+        return
+    from app.tasks.notify import send_offer_to_group  # noqa: PLC0415
+
+    try:
+        send_offer_to_group.apply_async(args=[offer_id], queue="notify", retry=False)
+    except Exception as exc:  # noqa: BLE001 — broker outage must not break creation
+        logger.warning(
+            "offer group-notify enqueue failed (broker unavailable); offer %s committed "
+            "without a team notification: %s",
+            offer_id,
+            exc,
+        )

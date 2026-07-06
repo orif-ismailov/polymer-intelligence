@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.enums import OfferFileKind
+from app.models.enums import OfferFileKind, SellerOfferStatus
 from app.models.marketplace import Seller, SellerOffer, SellerOfferFile
 from app.models.requests import Client
 from app.schemas.marketplace import OfferFileRef, SellerOfferCreate, SellerOfferOut
@@ -68,6 +68,38 @@ def list_my_offers(
     if seller is None:
         return []
     return offer_service.list_seller_offers(db, seller.id)  # type: ignore[return-value]
+
+
+@router.post(
+    "/offers/{offer_id}/submit",
+    summary="Finalize an offer (uploads done) → notify the team group",
+)
+def submit_offer(
+    offer_id: int,
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> dict[str, bool]:
+    """POST /webapp/seller/offers/{id}/submit — called by the webapp once the offer's
+    files have finished uploading. Posts the offer (with its image + seller details +
+    Confirm button) to the team Telegram group so an admin can approve it from chat.
+
+    Best-effort: enqueues only while the offer is still awaiting moderation, so a
+    duplicate call (or one after a dashboard decision) does not re-notify.
+    """
+    seller = db.query(Seller).filter(Seller.telegram_user_id == client.telegram_user_id).first()
+    if seller is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+    offer = (
+        db.query(SellerOffer)
+        .filter(SellerOffer.id == offer_id, SellerOffer.seller_id == seller.id)
+        .first()
+    )
+    if offer is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+
+    if offer.status == SellerOfferStatus.pending_moderation:
+        offer_service.enqueue_offer_group_notify(offer.id)
+    return {"ok": True}
 
 
 @router.post(

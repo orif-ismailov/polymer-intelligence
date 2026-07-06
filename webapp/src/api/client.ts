@@ -220,6 +220,16 @@ export const api = {
     });
   },
 
+  /**
+   * POST /webapp/seller/offers/{id}/submit — finalize after uploads: posts the offer
+   * (image + seller details + Confirm button) to the team group for moderation.
+   */
+  submitSellerOffer(offerId: number): Promise<{ ok: boolean }> {
+    return apiFetch<{ ok: boolean }>(`/webapp/seller/offers/${offerId}/submit`, {
+      method: "POST",
+    });
+  },
+
   /** Public URL for an approved offer's file (usable directly in <img src>). */
   offerImageUrl(offerId: number, fileId: number): string {
     return `${BASE_URL}/webapp/market/offers/${offerId}/images/${fileId}`;
