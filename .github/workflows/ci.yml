@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, dev]
   pull_request:
-    branches: [main, develop]
+    branches: [main, dev]
 
 env:
   PYTHON_VERSION: "3.12"
@@ -284,7 +284,7 @@ jobs:
 
   # ── Deploy: only on push to main, and only after CI passes ─────────────────
   # Gated by `needs` (won't run if any listed job fails) and `if` (push-to-main
-  # only — never on PRs or develop). Requires the DEPLOY_* secrets. To also gate on
+  # only — never on PRs or dev). Requires the DEPLOY_* secrets. To also gate on
   # the Playwright e2e, add `dashboard-e2e` to `needs`.
   deploy:
     name: Deploy to server
@@ -317,7 +317,7 @@ jobs:
             $COMPOSE restart nginx
             $COMPOSE ps
 
-  # ── Deploy to DEV: only on push to develop, and only after CI passes ───────
+  # ── Deploy to DEV: only on push to dev, and only after CI passes ───────
   # Mirrors the prod `deploy` job but targets the DEV environment on the SAME
   # server: a separate compose project (`-p polymer-dev` → isolated volumes/
   # containers/network), a separate checkout (DEV_DEPLOY_PATH), a separate
@@ -329,7 +329,7 @@ jobs:
     name: Deploy to dev server
     runs-on: ubuntu-latest
     needs: [backend, dashboard, webapp, build-images]
-    if: ${{ github.ref == 'refs/heads/develop' && github.event_name == 'push' }}
+    if: ${{ github.ref == 'refs/heads/dev' && github.event_name == 'push' }}
     concurrency:
       group: deploy-dev
       cancel-in-progress: false
@@ -350,7 +350,7 @@ jobs:
             REPO="${{ secrets.DEV_DEPLOY_PATH }}"
             cd "${REPO:-/opt/polymer-dev/polymer-intelligence}"
             git fetch origin
-            git reset --hard origin/develop
+            git reset --hard origin/dev
             # -p polymer-dev isolates the stack from prod; the dev repo-root .env
             # supplies the dev secrets + INNER_NGINX_PORT=8081 + INNER_NGINX_CONF
             # (nginx.dev-server.behind-proxy.conf) for interpolation.

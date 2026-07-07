@@ -13,7 +13,7 @@ production. Nothing here touches the live prod stack, volumes, bot, or userbot.
 | Docker volumes | `polymer-intelligence_*` | `polymer-dev_*` (separate DB, MinIO, redis, webapp) |
 | Repo checkout | `/opt/polymer/polymer-intelligence` | `/opt/polymer-dev/polymer-intelligence` |
 | `.env` (repo root) | `…/polymer-intelligence/.env` | `…/polymer-dev/polymer-intelligence/.env` |
-| Deployed branch | `main` (prod CI job) | `develop` (dev CI job) |
+| Deployed branch | `main` (prod CI job) | `dev` (dev CI job) |
 | Inner nginx port | `127.0.0.1:8080` | `127.0.0.1:8081` (`INNER_NGINX_PORT`) |
 | Inner nginx conf | `nginx.behind-proxy.conf` | `nginx.dev-server.behind-proxy.conf` (`INNER_NGINX_CONF`) |
 | Public domains | `ai-imex.com` / `admin.` / `api.` | `dev.ai-imex.com` / `dev-admin.` / `dev-api.` |
@@ -75,7 +75,7 @@ sudo mkdir -p /opt/polymer-dev && sudo chown "$USER":"$USER" /opt/polymer-dev
 cd /opt/polymer-dev
 git clone <YOUR_REPO_URL> polymer-intelligence
 cd polymer-intelligence
-git checkout develop        # the branch the dev environment tracks (see "Auto-deploy" below)
+git checkout dev        # the branch the dev environment tracks (see "Auto-deploy" below)
 
 # Dev .env lives at the DEV REPO ROOT. Verified: both the compose per-service
 # `env_file: ../.env` (relative to deploy/ → repo root) and `--env-file .env`
@@ -229,28 +229,28 @@ this affects prod's webhook or prod's userbot session.
 
 ---
 
-## Auto-deploy from `develop` (CI)
+## Auto-deploy from `dev` (CI)
 
 Once the one-time setup below is done, the flow is:
 
 ```
-push/merge → develop ─▶ CI gates (backend·dashboard·webapp·build-images) ─▶ deploy-dev job ─▶ DEV server
-merge develop → main  ─▶ CI gates                                         ─▶ deploy job     ─▶ PROD server
+push/merge → dev ─▶ CI gates (backend·dashboard·webapp·build-images) ─▶ deploy-dev job ─▶ DEV server
+merge dev → main  ─▶ CI gates                                         ─▶ deploy job     ─▶ PROD server
 ```
 
 The `deploy-dev` job (in `.github/workflows/ci.yml`) mirrors the prod `deploy` job:
-it only runs on **push to `develop`**, only **after the gates pass**, then SSHes to the
-**same server** and, in the **dev** checkout, runs `git reset --hard origin/develop` +
+it only runs on **push to `dev`**, only **after the gates pass**, then SSHes to the
+**same server** and, in the **dev** checkout, runs `git reset --hard origin/dev` +
 `dev-compose.sh up -d --build` + rebuilds the webapp bundle + restarts the dev nginx.
 
 **One-time setup to enable it:**
 
-1. **Create the `develop` branch** (CI already triggers on it):
+1. **Create the `dev` branch** (CI already triggers on it):
    ```bash
-   git checkout -b develop && git push -u origin develop
+   git checkout -b dev && git push -u origin dev
    ```
 2. **The dev checkout must be a clean git repo** at `DEV_DEPLOY_PATH` on the server
-   (Phase 2 did this) — the job does `git reset --hard origin/develop`, so keep no
+   (Phase 2 did this) — the job does `git reset --hard origin/dev`, so keep no
    uncommitted changes there. `.env` is gitignored, so it survives the reset.
 3. **Add the one new GitHub Actions secret** (Settings → Secrets and variables →
    Actions). The job reuses all the prod `DEPLOY_*` secrets (same server), and adds:
@@ -263,14 +263,14 @@ it only runs on **push to `develop`**, only **after the gates pass**, then SSHes
    `DEPLOY_SSH_PASSPHRASE`, `DEPLOY_PORT`.
 
 4. Complete the **first** dev bring-up manually (Phases 3–5) so `.env`, TLS, the dev
-   bot webhook, and the userbot session exist. After that, `develop` pushes redeploy
+   bot webhook, and the userbot session exist. After that, `dev` pushes redeploy
    the code automatically; the job never edits `.env` or re-issues certs.
 
-**Day-to-day:** branch off `develop`, open a PR (CI gates run), merge to `develop` →
+**Day-to-day:** branch off `dev`, open a PR (CI gates run), merge to `dev` →
 dev redeploys within a couple of minutes → verify on the `dev.*` domains → when happy,
-open `develop → main` and merge → prod redeploys via the existing `deploy` job.
+open `dev → main` and merge → prod redeploys via the existing `deploy` job.
 
-**Manual override** (deploy a branch to dev without going through `develop`):
+**Manual override** (deploy a branch to dev without going through `dev`):
 
 ```bash
 cd /opt/polymer-dev/polymer-intelligence
@@ -287,7 +287,7 @@ Notes:
   migration is applied to the dev DB automatically on each deploy — exactly the
   rehearsal you want before it hits prod.
 - The `deploy-dev` and prod `deploy` jobs are gated on separate branches and use
-  separate compose projects/paths, so a `develop` deploy never touches prod.
+  separate compose projects/paths, so a `dev` deploy never touches prod.
 
 ---
 
