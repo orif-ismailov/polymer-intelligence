@@ -300,11 +300,17 @@ services:
     # HTTP only, bound to localhost — the host front-door forwards to :8080.
     # The host vhosts (admin./api./ai-imex.com) proxy_pass http://127.0.0.1:8080
     # with the Host header preserved. Change the host port if 8080 is taken.
+    #
+    # INNER_NGINX_PORT / INNER_NGINX_CONF default to the prod values, so a plain
+    # prod `up` is unchanged. A SECOND isolated stack (the dev-server environment)
+    # overrides them via its own .env: INNER_NGINX_PORT=8081 +
+    # INNER_NGINX_CONF=nginx.dev-server.behind-proxy.conf. See
+    # docs/runbook-dev-environment.md.
     ports:
-      - "127.0.0.1:8080:80"
+      - "127.0.0.1:${INNER_NGINX_PORT:-8080}:80"
     volumes:
       # Host-aware HTTP-only config (routes by the forwarded Host header).
-      - ./nginx/nginx.behind-proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/${INNER_NGINX_CONF:-nginx.behind-proxy.conf}:/etc/nginx/nginx.conf:ro
       # Built static Telegram Web App served directly by nginx at the root of
       # ai-imex.com. Populate it with `make webapp-bundle`. See deployment-guide §4a.
       - webapp_static:/var/www/webapp:ro
