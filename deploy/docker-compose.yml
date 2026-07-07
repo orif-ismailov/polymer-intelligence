@@ -237,6 +237,12 @@ services:
   #   2. Generate TG_SESSION_STRING once via userbot/session.py (interactive)
   #   3. Add all three to .env (see deploy/.env.example [SECRET] markers)
   userbot:
+    # Opt-in only (DEC): the userbot does NOT start on a plain `up`/deploy. Bring it
+    # up explicitly with `--profile userbot` once a DEDICATED session string exists.
+    # Off by default in BOTH prod and dev so two processes can never share one
+    # TG_SESSION_STRING — that triggers AuthKeyDuplicated and permanently kills the
+    # session. Re-enable: `docker compose … --profile userbot up -d userbot`.
+    profiles: ["userbot"]
     build:
       context: ../backend
       dockerfile: Dockerfile
