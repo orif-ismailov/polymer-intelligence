@@ -1,0 +1,81 @@
+# Host nginx vhost for the DEV split — place on the SERVER, next to ai-imex.conf.
+# ============================================================================
+# Shared HOST nginx front-door config for the DEV environment. It terminates TLS
+# for the three DEV domains and forwards plain HTTP by Host to the dev-server
+# compose stack's inner nginx on 127.0.0.1:8081 (prod uses :8080).
+#
+#   dev.ai-imex.com       → dev-server stack webapp static
+#   dev-admin.ai-imex.com → dev-server stack dashboard
+#   dev-api.ai-imex.com   → dev-server stack api  (+ Telegram webhook for the DEV bot)
+#
+# Install (alongside — NOT replacing — the prod ai-imex.conf):
+#   sudo cp deploy/nginx/host-vhost.ai-imex-dev.conf.example \
+#           /etc/nginx/sites-available/ai-imex-dev.conf
+#   sudo ln -sf /etc/nginx/sites-available/ai-imex-dev.conf \
+#               /etc/nginx/sites-enabled/ai-imex-dev.conf
+#   sudo nginx -t && sudo systemctl reload nginx
+#   sudo certbot --nginx -d dev.ai-imex.com -d dev-admin.ai-imex.com -d dev-api.ai-imex.com
+#   # certbot rewrites these blocks in place: adds `listen 443 ssl`, the cert
+#   # paths, and an 80→443 redirect. Then: sudo systemctl reload nginx
+#
+# Requires the same server_names_hash_bucket_size 64 bump in the main
+# /etc/nginx/nginx.conf that the prod front-door needs (adding these hostnames
+# can overflow the default 32-byte bucket).
+# ============================================================================
+
+server {
+    listen 80;
+    server_name dev-api.ai-imex.com;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8081;
+        proxy_http_version 1.1;
+        proxy_set_header   Connection "";
+        proxy_set_header   Host $host;                # inner nginx routes by Host
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme; # inner passes this through as https
+        proxy_buffering    off;                       # SSE
+        proxy_read_timeout 3600s;                      # SSE long-lived streams
+    }
+}
+
+server {
+    listen 80;
+    server_name dev-admin.ai-imex.com;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8081;
+        proxy_http_version 1.1;
+        proxy_set_header   Connection "";
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_buffering    off;
+        proxy_read_timeout 3600s;
+    }
+}
+
+server {
+    listen 80;
+    server_name dev.ai-imex.com;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8081;
+        proxy_http_version 1.1;
+        proxy_set_header   Connection "";
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_buffering    off;
+        proxy_read_timeout 3600s;
+    }
+}

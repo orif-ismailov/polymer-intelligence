@@ -16,6 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
@@ -27,7 +28,11 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    offer_request_status = sa.Enum(
+    # Create the ENUM type explicitly (idempotent), then reference it in the
+    # column with create_type=False so op.create_table does NOT try to CREATE
+    # TYPE a second time — that double-create fails on a fresh DB with
+    # DuplicateObject. Mirrors the correct pattern in 0007_marketplace.py.
+    offer_request_status = postgresql.ENUM(
         "pending", "approved", "rejected", name="offer_request_status"
     )
     offer_request_status.create(op.get_bind(), checkfirst=True)
@@ -54,7 +59,7 @@ def upgrade() -> None:
         sa.Column("message", sa.Text(), nullable=True),
         sa.Column(
             "status",
-            offer_request_status,
+            postgresql.ENUM(name="offer_request_status", create_type=False),
             nullable=False,
             server_default="pending",
         ),

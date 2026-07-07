@@ -237,6 +237,12 @@ services:
   #   2. Generate TG_SESSION_STRING once via userbot/session.py (interactive)
   #   3. Add all three to .env (see deploy/.env.example [SECRET] markers)
   userbot:
+    # Opt-in only (DEC): the userbot does NOT start on a plain `up`/deploy. Bring it
+    # up explicitly with `--profile userbot` once a DEDICATED session string exists.
+    # Off by default in BOTH prod and dev so two processes can never share one
+    # TG_SESSION_STRING — that triggers AuthKeyDuplicated and permanently kills the
+    # session. Re-enable: `docker compose … --profile userbot up -d userbot`.
+    profiles: ["userbot"]
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -300,11 +306,17 @@ services:
     # HTTP only, bound to localhost — the host front-door forwards to :8080.
     # The host vhosts (admin./api./ai-imex.com) proxy_pass http://127.0.0.1:8080
     # with the Host header preserved. Change the host port if 8080 is taken.
+    #
+    # INNER_NGINX_PORT / INNER_NGINX_CONF default to the prod values, so a plain
+    # prod `up` is unchanged. A SECOND isolated stack (the dev-server environment)
+    # overrides them via its own .env: INNER_NGINX_PORT=8081 +
+    # INNER_NGINX_CONF=nginx.dev-server.behind-proxy.conf. See
+    # docs/runbook-dev-environment.md.
     ports:
-      - "127.0.0.1:8080:80"
+      - "127.0.0.1:${INNER_NGINX_PORT:-8080}:80"
     volumes:
       # Host-aware HTTP-only config (routes by the forwarded Host header).
-      - ./nginx/nginx.behind-proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/${INNER_NGINX_CONF:-nginx.behind-proxy.conf}:/etc/nginx/nginx.conf:ro
       # Built static Telegram Web App served directly by nginx at the root of
       # ai-imex.com. Populate it with `make webapp-bundle`. See deployment-guide §4a.
       - webapp_static:/var/www/webapp:ro
