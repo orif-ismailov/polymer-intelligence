@@ -368,6 +368,8 @@
     "empty": "Moderatsiyada takliflar yo'q",
     "error": "Navbatni yuklab bo'lmadi",
     "seller": "Sotuvchi",
+    "availInStock": "Sotuvda mavjud",
+    "availOnOrder": "Buyurtma asosida",
     "approve": "Tasdiqlash",
     "reject": "Rad etish",
     "notePlaceholder": "Sotuvchi uchun izoh (ixtiyoriy)"

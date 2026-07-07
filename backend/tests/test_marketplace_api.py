@@ -38,7 +38,7 @@ def _mock_seller(id: int = 7) -> MagicMock:
 
 
 def _mock_offer(id: int = 11, status: str = "approved") -> MagicMock:
-    from app.models.enums import PriceBasis, SellerOfferStatus  # noqa: PLC0415
+    from app.models.enums import OfferAvailability, PriceBasis, SellerOfferStatus  # noqa: PLC0415
 
     o = MagicMock()
     o.id = id
@@ -47,6 +47,7 @@ def _mock_offer(id: int = 11, status: str = "approved") -> MagicMock:
     o.product_text = None
     o.grade_text = "HDPE 5502"
     o.polymer_type = "HDPE"
+    o.availability = OfferAvailability.in_stock
     o.qty_available = decimal.Decimal("100")
     o.qty_unit = "MT"
     o.price = decimal.Decimal("1200")
@@ -149,7 +150,58 @@ class TestSellerOffers:
                 },
             )
         assert resp.status_code == 201, resp.text
-        assert resp.json()["status"] == "pending_moderation"
+        body = resp.json()
+        assert body["status"] == "pending_moderation"
+        # Read side surfaces availability; the mock offer defaults to in_stock.
+        assert body["availability"] == "in_stock"
+
+    def test_create_offer_availability_defaults_in_stock(self, market_client: TestClient):
+        """Omitting availability parses to the in_stock default in the create schema."""
+        from app.models.enums import OfferAvailability  # noqa: PLC0415
+
+        with patch("app.api.webapp.seller.offer_service") as svc:
+            svc.get_or_create_seller.return_value = _mock_seller()
+            svc.create_offer.return_value = _mock_offer(status="pending_moderation")
+            resp = market_client.post(
+                "/api/v1/webapp/seller/offers",
+                json={"product_id": 2, "qty_available": "100", "price": "1200"},
+            )
+        assert resp.status_code == 201, resp.text
+        # data is the 3rd positional arg of create_offer(db, seller, data)
+        data = svc.create_offer.call_args.args[2]
+        assert data.availability == OfferAvailability.in_stock
+
+    def test_create_offer_availability_on_order(self, market_client: TestClient):
+        """availability='on_order' is accepted and forwarded to the service verbatim."""
+        from app.models.enums import OfferAvailability  # noqa: PLC0415
+
+        with patch("app.api.webapp.seller.offer_service") as svc:
+            svc.get_or_create_seller.return_value = _mock_seller()
+            svc.create_offer.return_value = _mock_offer(status="pending_moderation")
+            resp = market_client.post(
+                "/api/v1/webapp/seller/offers",
+                json={
+                    "product_id": 2,
+                    "availability": "on_order",
+                    "qty_available": "100",
+                    "price": "1200",
+                },
+            )
+        assert resp.status_code == 201, resp.text
+        data = svc.create_offer.call_args.args[2]
+        assert data.availability == OfferAvailability.on_order
+
+    def test_create_offer_invalid_availability_422(self, market_client: TestClient):
+        resp = market_client.post(
+            "/api/v1/webapp/seller/offers",
+            json={
+                "product_id": 2,
+                "availability": "maybe",
+                "qty_available": "100",
+                "price": "1200",
+            },
+        )
+        assert resp.status_code == 422, resp.text
 
     def test_create_offer_missing_product_422(self, market_client: TestClient):
         resp = market_client.post(

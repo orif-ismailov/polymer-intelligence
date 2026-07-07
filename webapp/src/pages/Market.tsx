@@ -161,6 +161,7 @@ export default function Market() {
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
+                  <span>{t(`availability.${o.availability}`)}</span>
                   <span>{o.qty_available.toLocaleString()} {o.qty_unit}</span>
                   {o.warehouse_city && (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>

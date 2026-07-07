@@ -271,6 +271,7 @@ def _fake_offer(offer_id: int) -> SimpleNamespace:
         product_text="HDPE film grade",
         grade_text="F0863",
         polymer_type="HDPE",
+        availability="in_stock",
         qty_available="25.000",
         qty_unit="MT",
         price="1180.00",

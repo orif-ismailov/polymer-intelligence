@@ -66,6 +66,7 @@ def create_offer(db: Session, seller: Seller, data: SellerOfferCreate) -> Seller
         product_text=data.product_text,
         grade_text=data.grade_text,
         polymer_type=data.polymer_type,
+        availability=data.availability,
         qty_available=data.qty_available,
         qty_unit=data.qty_unit,
         price=data.price,

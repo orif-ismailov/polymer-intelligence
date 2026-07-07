@@ -1,4 +1,9 @@
 {
+  "availability": {
+    "label": "Availability",
+    "in_stock": "In stock",
+    "on_order": "On order"
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "AI B2B Platform for Petrochemicals, Chemical Raw Materials & Additives",

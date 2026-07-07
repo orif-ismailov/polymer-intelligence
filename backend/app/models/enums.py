@@ -178,6 +178,16 @@ class OfferFileKind(enum.StrEnum):
     other = "other"
 
 
+class OfferAvailability(enum.StrEnum):
+    """Whether a seller offer is on hand or produced/sourced on demand (Phase 2).
+
+    in_stock — «в наличии» (ready to ship); on_order — «под заказ» (made/sourced on demand).
+    """
+
+    in_stock = "in_stock"
+    on_order = "on_order"
+
+
 class OfferRequestStatus(enum.StrEnum):
     """Moderation lifecycle of a buyer's inquiry against a seller offer.
 

@@ -32,6 +32,7 @@ from sqlalchemy.sql import func
 
 from app.core.db import Base
 from app.models.enums import (
+    OfferAvailability,
     OfferFileKind,
     OfferRequestStatus,
     PriceBasis,
@@ -95,6 +96,12 @@ class SellerOffer(Base):
     product_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     grade_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     polymer_type: Mapped[str | None] = mapped_column(Text, nullable=True)
+    availability: Mapped[OfferAvailability] = mapped_column(
+        PgEnum(OfferAvailability, name="offer_availability", create_type=False),
+        nullable=False,
+        default=OfferAvailability.in_stock,
+        server_default="in_stock",
+    )
     qty_available: Mapped[decimal.Decimal] = mapped_column(Numeric(14, 3), nullable=False)
     qty_unit: Mapped[str] = mapped_column(
         Text, nullable=False, default="MT", server_default="MT"
