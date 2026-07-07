@@ -138,8 +138,15 @@ class SellerOfferOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class CatalogOfferOut(BaseModel):
-    """A public (approved) catalog offer with the seller's contact block."""
+class _CatalogOfferFields(BaseModel):
+    """Shared catalog-offer fields WITHOUT the seller block.
+
+    The `seller` block differs by audience — public `CatalogSeller` vs staff
+    `ModerationSeller` — so it is declared on each concrete subclass instead of
+    here. Overriding an inherited field with a narrower type trips mypy's field
+    invariance (Incompatible types in assignment); a shared base that omits the
+    field keeps both audiences mypy-clean and explicit.
+    """
 
     id: int
     product_id: int | None
@@ -157,9 +164,14 @@ class CatalogOfferOut(BaseModel):
     description: str | None
     published_at: datetime.datetime | None
     files: list[OfferFileRef] = []
-    seller: CatalogSeller
 
     model_config = {"from_attributes": True}
+
+
+class CatalogOfferOut(_CatalogOfferFields):
+    """A public (approved) catalog offer with the seller's contact block."""
+
+    seller: CatalogSeller
 
 
 class PublicFeaturedOffer(BaseModel):
@@ -190,7 +202,7 @@ class PublicFeaturedOffer(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class ModerationOfferOut(CatalogOfferOut):
+class ModerationOfferOut(_CatalogOfferFields):
     """A pending offer for the dashboard moderation queue (adds status + full seller contact)."""
 
     status: SellerOfferStatus
