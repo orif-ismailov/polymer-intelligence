@@ -19,6 +19,7 @@ interface ModerationOffer {
   grade_text: string | null;
   product_text: string | null;
   polymer_type: string | null;
+  availability: "in_stock" | "on_order";
   qty_available: number;
   qty_unit: string;
   price: number;
@@ -84,6 +85,8 @@ export default function ModerationPage() {
                   )}
                 </p>
                 <p className="text-sm text-foreground-muted mt-1">
+                  {o.availability === "on_order" ? t("availOnOrder") : t("availInStock")}
+                  {" · "}
                   {o.qty_available.toLocaleString()} {o.qty_unit}
                   {o.warehouse_city ? ` · ${o.warehouse_city}` : ""}
                 </p>

@@ -24,7 +24,7 @@ import Button from "../components/Button";
 import { api } from "../api/client";
 import { backButton, mainButton, notifySuccess, notifyError } from "../telegram";
 import { useProducts } from "../hooks/useProducts";
-import type { PriceBasis, SellerOfferCreate } from "../types";
+import type { OfferAvailability, PriceBasis, SellerOfferCreate } from "../types";
 
 const CURRENCY = ["USD", "UZS", "EUR", "RUB"];
 const INCOTERMS = ["EXW", "FCA", "FOB", "CIF", "CPT", "DAP", "DDP"];
@@ -61,6 +61,7 @@ export default function SellOffer() {
   const [productText, setProductText] = useState("");
   const [grade, setGrade] = useState("");
   const [polymerType, setPolymerType] = useState("");
+  const [availability, setAvailability] = useState<OfferAvailability>("in_stock");
   const [qty, setQty] = useState("");
   const [qtyUnit, setQtyUnit] = useState("MT");
   const [price, setPrice] = useState("");
@@ -109,6 +110,7 @@ export default function SellOffer() {
       product_text: isOtherProduct ? productText.trim() || null : null,
       grade_text: grade.trim() || null,
       polymer_type: polymerType.trim() || null,
+      availability,
       qty_available: Number(qty),
       qty_unit: qtyUnit,
       price: Number(price),
@@ -195,6 +197,7 @@ export default function SellOffer() {
 
   const summaryRows: [string, string][] = [
     [t("wizard.product"), [productLabel, grade].filter(Boolean).join(" · ") || "—"],
+    [t("availability.label"), t(`availability.${availability}`)],
     [t("sellForm.qtyAvailable"), qty ? `${Number(qty).toLocaleString()} ${qtyUnit}` : "—"],
     [t("sellForm.price"), price ? `${Number(price).toLocaleString()} ${currency}/${qtyUnit}` : "—"],
     [t("sellForm.warehouseCity"), warehouseCity || "—"],
@@ -238,6 +241,18 @@ export default function SellOffer() {
           <FieldGroup htmlFor="s_ptype" label={t("wizard.polymerType")}>
             <input id="s_ptype" type="text" value={polymerType} onChange={(e) => setPolymerType(e.target.value)} placeholder={t("wizard.polymerTypePlaceholder")} style={fieldStyle} />
           </FieldGroup>
+          <div style={{ marginBottom: "16px" }}>
+            <span style={groupLabel}>{t("availability.label")}</span>
+            <Segmented<OfferAvailability>
+              value={availability}
+              options={[
+                { value: "in_stock", label: t("availability.in_stock") },
+                { value: "on_order", label: t("availability.on_order") },
+              ]}
+              onChange={setAvailability}
+              ariaLabel={t("availability.label")}
+            />
+          </div>
           <FieldGroup htmlFor="s_city" label={t("sellForm.warehouseCity")} required>
             <input id="s_city" type="text" value={warehouseCity} onChange={(e) => setWarehouseCity(e.target.value)} placeholder={t("wizard.portPlaceholder")} style={fieldStyle} />
           </FieldGroup>

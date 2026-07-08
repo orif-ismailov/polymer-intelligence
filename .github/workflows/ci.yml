@@ -261,11 +261,28 @@ jobs:
       - name: Type-check (tsc --noEmit)
         run: npx tsc --noEmit
 
-  # ── Container image build (gated on backend + frontend passing) ────────────
+  # ── Container image build + push (gated on backend + frontend passing) ─────
+  # On a branch push (dev/main) this builds AND pushes the three runtime images to
+  # GHCR so the server can PULL them instead of compiling on a 2-core box. On PRs it
+  # still builds (validates the Dockerfiles — WR-02) but pushes nothing.
+  #
+  # Images (one package per component, tagged by branch + commit SHA):
+  #   ghcr.io/<owner>/<repo>-backend    (backend/Dockerfile — api, worker, beat)
+  #   ghcr.io/<owner>/<repo>-dashboard  (deploy/Dockerfile.dashboard)
+  #   ghcr.io/<owner>/<repo>-webapp     (deploy/Dockerfile.webapp — Vite bundle)
   build-images:
-    name: Build container images
+    name: Build & push container images
     runs-on: ubuntu-latest
     needs: [backend, dashboard, webapp]
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      # ghcr.io/orif-ismailov/polymer-intelligence  (lowercased below for GHCR).
+      IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+      # Push only on a real branch push; PRs (incl. forks) build without pushing.
+      PUSH: ${{ github.event_name == 'push' }}
 
     steps:
       - name: Checkout
@@ -274,13 +291,55 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build backend image
-        # WR-02: build the SAME Dockerfile that deploy/docker-compose.dev.yml resolves
-        # (backend/Dockerfile) so any change to the runtime image is validated by CI.
-        run: docker build -t pi-backend:ci backend/
+      # GHCR requires a lowercase image path; the owner may contain uppercase.
+      - name: Compute lowercase image prefix
+        id: img
+        run: echo "prefix=${IMAGE_PREFIX,,}" >> "$GITHUB_OUTPUT"
 
-      - name: Build dashboard image
-        run: docker build -f deploy/Dockerfile.dashboard -t pi-dashboard:ci dashboard/
+      - name: Log in to GHCR
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend
+        # WR-02: build the SAME Dockerfile the compose stack resolves (backend/Dockerfile).
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/Dockerfile
+          push: ${{ env.PUSH }}
+          tags: |
+            ${{ steps.img.outputs.prefix }}-backend:${{ github.ref_name }}
+            ${{ steps.img.outputs.prefix }}-backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: Build & push dashboard
+        uses: docker/build-push-action@v6
+        with:
+          context: dashboard
+          file: deploy/Dockerfile.dashboard
+          push: ${{ env.PUSH }}
+          tags: |
+            ${{ steps.img.outputs.prefix }}-dashboard:${{ github.ref_name }}
+            ${{ steps.img.outputs.prefix }}-dashboard:${{ github.sha }}
+          cache-from: type=gha,scope=dashboard
+          cache-to: type=gha,scope=dashboard,mode=max
+
+      - name: Build & push webapp bundle
+        uses: docker/build-push-action@v6
+        with:
+          context: webapp
+          file: deploy/Dockerfile.webapp
+          push: ${{ env.PUSH }}
+          tags: |
+            ${{ steps.img.outputs.prefix }}-webapp:${{ github.ref_name }}
+            ${{ steps.img.outputs.prefix }}-webapp:${{ github.sha }}
+          cache-from: type=gha,scope=webapp
+          cache-to: type=gha,scope=webapp,mode=max
 
   # ── Deploy: only on push to main, and only after CI passes ─────────────────
   # Gated by `needs` (won't run if any listed job fails) and `if` (push-to-main
@@ -291,12 +350,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend, dashboard, webapp, build-images]
     if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+    permissions:
+      contents: read
+      packages: read            # pull the GHCR images published by build-images
     concurrency:
       group: deploy-main
       cancel-in-progress: false
     steps:
       - name: Pull + redeploy on the server over SSH
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          # Ephemeral workflow token (packages: read) + the actor, forwarded to the
+          # server so it can `docker login ghcr.io` and PULL the prebuilt images
+          # instead of compiling them on a 2-core box. The token expires when this job
+          # ends, so any leftover login on the server is inert.
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
@@ -304,6 +373,7 @@ jobs:
           passphrase: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}   # for a passphrase-protected key
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           command_timeout: 30m
+          envs: GHCR_TOKEN,GHCR_USER
           script: |
             set -eu
             # Repo path on the server. Override with the DEPLOY_PATH secret if it moves.
@@ -311,11 +381,20 @@ jobs:
             cd "${REPO:-/var/www/polymer-intelligence}"
             git fetch origin
             git reset --hard origin/main
+            # Prod runs the images tagged `main` (built + pushed by the build-images job).
+            export IMAGE_TAG=main
             COMPOSE="docker compose --env-file .env -f deploy/docker-compose.yml"
-            $COMPOSE up -d --build
-            $COMPOSE --profile build run --rm --build webapp-build
+            # Log in to GHCR (private packages), then PULL — no more compiling on the box.
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            $COMPOSE pull
+            $COMPOSE up -d
+            # Webapp bundle: pull the prebuilt image and run the one-shot copy into the
+            # nginx-served webapp_static volume (no --build → nothing compiles on the box).
+            $COMPOSE --profile build pull webapp-build
+            $COMPOSE --profile build run --rm webapp-build
             $COMPOSE restart nginx
             $COMPOSE ps
+            docker logout ghcr.io || true
 
   # ── Deploy to DEV: only on push to dev, and only after CI passes ───────
   # Mirrors the prod `deploy` job but targets the DEV environment on the SAME
@@ -330,12 +409,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend, dashboard, webapp, build-images]
     if: ${{ github.ref == 'refs/heads/dev' && github.event_name == 'push' }}
+    permissions:
+      contents: read
+      packages: read            # pull the GHCR images published by build-images
     concurrency:
       group: deploy-dev
       cancel-in-progress: false
     steps:
       - name: Pull + redeploy the dev stack on the server over SSH
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          # Ephemeral workflow token (packages: read) + the actor, forwarded so the
+          # server can `docker login ghcr.io` and PULL the prebuilt dev images instead
+          # of compiling. Token expires with this job — leftover login is inert.
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
@@ -343,6 +431,7 @@ jobs:
           passphrase: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}   # for a passphrase-protected key
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           command_timeout: 30m
+          envs: GHCR_TOKEN,GHCR_USER
           script: |
             set -eu
             # Dev checkout path on the server (own directory tree, separate from prod).
@@ -351,11 +440,20 @@ jobs:
             cd "${REPO:-/opt/polymer-dev/polymer-intelligence}"
             git fetch origin
             git reset --hard origin/dev
+            # Dev runs the images tagged `dev` (built + pushed by the build-images job).
+            export IMAGE_TAG=dev
             # -p polymer-dev isolates the stack from prod; the dev repo-root .env
             # supplies the dev secrets + INNER_NGINX_PORT=8081 + INNER_NGINX_CONF
             # (nginx.dev-server.behind-proxy.conf) for interpolation.
             COMPOSE="docker compose --env-file .env -p polymer-dev -f deploy/docker-compose.yml"
-            $COMPOSE up -d --build
-            $COMPOSE --profile build run --rm --build webapp-build
+            # Log in to GHCR (private packages), then PULL — no more compiling on the box.
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            $COMPOSE pull
+            $COMPOSE up -d
+            # Webapp bundle: pull the prebuilt image and run the one-shot copy into the
+            # nginx-served webapp_static volume (no --build → nothing compiles on the box).
+            $COMPOSE --profile build pull webapp-build
+            $COMPOSE --profile build run --rm webapp-build
             $COMPOSE restart nginx
             $COMPOSE ps
+            docker logout ghcr.io || true

@@ -149,6 +149,9 @@ export type SellerOfferStatus =
   | "rejected"
   | "archived";
 
+/** Availability of a seller offer — «в наличии» (ready) vs «под заказ» (on demand). */
+export type OfferAvailability = "in_stock" | "on_order";
+
 export type OfferFileKind = "image" | "tds" | "certificate" | "other";
 
 export interface OfferFileRef {
@@ -201,6 +204,7 @@ export interface CatalogOffer {
   product_text: string | null;
   grade_text: string | null;
   polymer_type: string | null;
+  availability: OfferAvailability;
   qty_available: number;
   qty_unit: string;
   price: number;
@@ -225,6 +229,7 @@ export interface SellerOfferCreate {
   product_text?: string | null;
   grade_text?: string | null;
   polymer_type?: string | null;
+  availability?: OfferAvailability;
   qty_available: number;
   qty_unit?: string;
   price: number;
@@ -266,6 +271,7 @@ export interface FeaturedOffer {
   product_text: string | null;
   grade_text: string | null;
   polymer_type: string | null;
+  availability: OfferAvailability;
   qty_available: number;
   qty_unit: string;
   price: number;
@@ -296,6 +302,7 @@ export interface SellerOfferOut {
   product_text: string | null;
   grade_text: string | null;
   polymer_type: string | null;
+  availability: OfferAvailability;
   qty_available: number;
   qty_unit: string;
   price: number;

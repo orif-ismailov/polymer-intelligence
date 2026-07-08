@@ -1,4 +1,9 @@
 {
+  "availability": {
+    "label": "Bulunurluk",
+    "in_stock": "Stokta mevcut",
+    "on_order": "Sipariş üzerine"
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "Petrokimya, kimyasal hammaddeler ve katkı maddeleri için AI B2B platformu",

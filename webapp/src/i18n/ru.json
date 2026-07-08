@@ -1,4 +1,9 @@
 {
+  "availability": {
+    "label": "Наличие",
+    "in_stock": "В наличии",
+    "on_order": "Под заказ"
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "AI B2B-платформа для нефтехимии, химического сырья и добавок",

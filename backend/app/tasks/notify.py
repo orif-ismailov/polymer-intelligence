@@ -494,6 +494,11 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
 
 # ── New-offer team notification (marketplace moderation) ──────────────────────
 
+_AVAILABILITY_RU: dict[str, str] = {
+    "in_stock": "В наличии",
+    "on_order": "Под заказ",
+}
+
 
 @celery_app.task(name="send_offer_to_group", queue="notify")  # type: ignore[untyped-decorator]
 def send_offer_to_group(offer_id: int) -> dict[str, Any]:
@@ -543,7 +548,9 @@ def send_offer_to_group(offer_id: int) -> dict[str, Any]:
             lines.append(f"📦 Продукт: {product_label}{grade}")
             if offer.polymer_type:
                 lines.append(f"🧪 Тип: {offer.polymer_type}")
-            lines.append(f"📊 В наличии: {offer.qty_available} {offer.qty_unit}")
+            availability_key = getattr(offer.availability, "value", str(offer.availability))
+            lines.append(f"🔖 {_AVAILABILITY_RU.get(availability_key, availability_key)}")
+            lines.append(f"📊 Объём: {offer.qty_available} {offer.qty_unit}")
             incoterms = getattr(offer.incoterms, "value", str(offer.incoterms))
             lines.append(f"💰 Цена: {offer.price} {offer.currency} ({incoterms})")
             if offer.min_order_qty is not None:

@@ -368,6 +368,8 @@
     "empty": "Moderasyonda teklif yok",
     "error": "Kuyruk yüklenemedi",
     "seller": "Satıcı",
+    "availInStock": "Stokta mevcut",
+    "availOnOrder": "Sipariş üzerine",
     "approve": "Onayla",
     "reject": "Reddet",
     "notePlaceholder": "Satıcı için not (isteğe bağlı)"

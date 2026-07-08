@@ -18,6 +18,7 @@ import decimal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.enums import (
+    OfferAvailability,
     OfferFileKind,
     OfferRequestStatus,
     PriceBasis,
@@ -37,6 +38,7 @@ class SellerOfferCreate(BaseModel):
     product_text: str | None = Field(default=None, max_length=200)
     grade_text: str | None = Field(default=None, max_length=500)
     polymer_type: str | None = Field(default=None, max_length=200)
+    availability: OfferAvailability = OfferAvailability.in_stock
     qty_available: decimal.Decimal
     qty_unit: str = "MT"
     price: decimal.Decimal
@@ -122,6 +124,7 @@ class SellerOfferOut(BaseModel):
     product_text: str | None
     grade_text: str | None
     polymer_type: str | None
+    availability: OfferAvailability
     qty_available: decimal.Decimal
     qty_unit: str
     price: decimal.Decimal
@@ -153,6 +156,7 @@ class _CatalogOfferFields(BaseModel):
     product_text: str | None
     grade_text: str | None
     polymer_type: str | None
+    availability: OfferAvailability
     qty_available: decimal.Decimal
     qty_unit: str
     price: decimal.Decimal
@@ -189,6 +193,7 @@ class PublicFeaturedOffer(BaseModel):
     product_text: str | None
     grade_text: str | None
     polymer_type: str | None
+    availability: OfferAvailability
     qty_available: decimal.Decimal
     qty_unit: str
     price: decimal.Decimal

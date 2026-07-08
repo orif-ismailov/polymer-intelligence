@@ -1,4 +1,9 @@
 {
+  "availability": {
+    "label": "Mavjudligi",
+    "in_stock": "Sotuvda mavjud",
+    "on_order": "Buyurtma asosida"
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "Neft-kimyo mahsulotlari, kimyoviy xomashyo va qo'shimchalar uchun AI B2B platforma",

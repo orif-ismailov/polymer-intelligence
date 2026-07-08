@@ -119,7 +119,9 @@ sellers
 
 seller_offers                                   -- moderated public listings
   id, seller_id FK→sellers, product_id FK→products NULL, product_text NULL,
-  grade_text, polymer_type, qty_available NUMERIC, qty_unit,
+  grade_text, polymer_type,
+  availability ENUM(in_stock,on_order) NOT NULL DEFAULT in_stock,  -- «в наличии» / «под заказ»
+  qty_available NUMERIC, qty_unit,
   price NUMERIC, currency CHAR(3), incoterms price_basis, warehouse_city, country CHAR(2),
   min_order_qty NUMERIC NULL, description TEXT NULL,
   status ENUM(draft,pending_moderation,approved,rejected,archived),
