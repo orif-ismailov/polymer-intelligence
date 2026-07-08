@@ -122,6 +122,11 @@ services:
 
   # ── API (FastAPI + uvicorn; also serves the aiogram webhook) ───────────────
   api:
+    # Prebuilt image pulled from GHCR (CI `build-images` job). IMAGE_TAG selects the
+    # environment's tag (main / dev) and is exported by the deploy job; IMAGE_PREFIX is
+    # overridable via .env. The `build:` block stays as a local/dev fallback so
+    # `docker compose up --build` (make smoke, docker-compose.dev.yml) still works.
+    image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-backend:${IMAGE_TAG:-main}
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -167,6 +172,8 @@ services:
 
   # ── Celery Worker ─────────────────────────────────────────────────────────
   worker:
+    # Same backend image as api (shared Dockerfile) — one pull serves api/worker/beat.
+    image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-backend:${IMAGE_TAG:-main}
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -202,6 +209,8 @@ services:
 
   # ── Celery Beat (scheduler) ───────────────────────────────────────────────
   beat:
+    # Same backend image as api/worker.
+    image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-backend:${IMAGE_TAG:-main}
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -243,6 +252,8 @@ services:
     # TG_SESSION_STRING — that triggers AuthKeyDuplicated and permanently kills the
     # session. Re-enable: `docker compose … --profile userbot up -d userbot`.
     profiles: ["userbot"]
+    # Same backend image as api/worker/beat.
+    image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-backend:${IMAGE_TAG:-main}
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -283,6 +294,7 @@ services:
   # Built from deploy/Dockerfile.dashboard (next.config: output: "standalone").
   # Listens on :3000 internally; nginx proxies /dashboard/ → http://dashboard:3000/.
   dashboard:
+    image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-dashboard:${IMAGE_TAG:-main}
     build:
       context: ../dashboard
       dockerfile: ../deploy/Dockerfile.dashboard
@@ -334,6 +346,7 @@ services:
   # resolved automatically — no need to guess the COMPOSE_PROJECT_NAME prefix.
   webapp-build:
     profiles: ["build"]
+    image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-webapp:${IMAGE_TAG:-main}
     build:
       context: ../webapp
       dockerfile: ../deploy/Dockerfile.webapp
