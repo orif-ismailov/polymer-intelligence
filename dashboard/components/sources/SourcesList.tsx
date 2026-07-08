@@ -111,7 +111,7 @@ function TestResultBanner({ sourceId, onClose }: { sourceId: number; onClose: ()
     return (
       <div className="flex items-center justify-between rounded-md border border-urgency-high/30 bg-urgency-high/10 p-2 text-sm text-urgency-high">
         {error}
-        <button onClick={onClose} className="text-foreground-muted hover:text-foreground ml-2">✕</button>
+        <button onClick={onClose} className="text-foreground-muted hover:text-foreground ms-2">✕</button>
       </div>
     );
   }
@@ -125,7 +125,7 @@ function TestResultBanner({ sourceId, onClose }: { sourceId: number; onClose: ()
           ? t("testResult.passed", { count: result.sample_rows.length })
           : t("testResult.failed", { error: result.error ?? t("testResult.unknownError") })}
       </span>
-      <button onClick={onClose} className="text-foreground-muted hover:text-foreground ml-2">✕</button>
+      <button onClick={onClose} className="text-foreground-muted hover:text-foreground ms-2">✕</button>
     </div>
   );
 }

@@ -201,12 +201,12 @@ function ProductsTable() {
       <table className="w-full text-sm">
         <thead className="bg-background-tertiary">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.code")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.nameRu")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.nameUz")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.sortOrder")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.status")}</th>
-            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.actions")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.code")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.nameRu")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.nameUz")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.sortOrder")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.status")}</th>
+            <th className="px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-foreground-muted">{t("table.actions")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -227,7 +227,7 @@ function ProductsTable() {
                   </span>
                 )}
               </td>
-              <td className="px-4 py-3 text-right">
+              <td className="px-4 py-3 text-end">
                 <button
                   type="button"
                   onClick={() => toggle.mutate(p)}

@@ -81,7 +81,7 @@ export default function ModerationPage() {
                 <p className="text-base font-semibold text-foreground">
                   {o.grade_text || o.product_text || "—"}
                   {o.polymer_type && (
-                    <span className="ml-2 text-sm font-normal text-foreground-muted">{o.polymer_type}</span>
+                    <span className="ms-2 text-sm font-normal text-foreground-muted">{o.polymer_type}</span>
                   )}
                 </p>
                 <p className="text-sm text-foreground-muted mt-1">

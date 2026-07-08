@@ -73,7 +73,7 @@ export function AiMarketSignalsPanel({
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-          <span className="ml-3 text-sm text-foreground-muted">{t("loadingSignals")}</span>
+          <span className="ms-3 text-sm text-foreground-muted">{t("loadingSignals")}</span>
         </div>
       ) : !signals?.length ? (
         <div className="flex flex-col items-center justify-center gap-2 py-10">

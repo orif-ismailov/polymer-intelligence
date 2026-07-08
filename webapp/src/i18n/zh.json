@@ -1,0 +1,395 @@
+{
+  "availability": {
+    "label": "供货情况",
+    "in_stock": "现货",
+    "on_order": "可订购"
+  },
+  "home": {
+    "brandTag": "AI B2B 平台",
+    "headline": "面向石化产品、化工原料及助剂的 AI B2B 平台",
+    "lead": "AI 分析市场，为您的业务找到最优报价",
+    "stats": {
+      "buyers": {
+        "value": "1 500+",
+        "label": "采购商"
+      },
+      "suppliers": {
+        "value": "200+",
+        "label": "供应商"
+      },
+      "catalog": {
+        "value": "10 000+",
+        "label": "在售商品"
+      }
+    },
+    "bullets": {
+      "verified": "仅限有真实现货的认证卖家",
+      "contacts": "完整的供应商联系方式",
+      "prices": "市场最优价格",
+      "fast": "快捷方便"
+    },
+    "cta": {
+      "buy": "采购原料",
+      "sell": "出售原料"
+    },
+    "howItWorks": "如何运作？"
+  },
+  "wizard": {
+    "step1": {
+      "title": "产品信息"
+    },
+    "step2": {
+      "title": "交货条款"
+    },
+    "step3": {
+      "title": "联系信息"
+    },
+    "step4": {
+      "title": "补充信息"
+    },
+    "productText": "或手动输入产品",
+    "productOther": "其他",
+    "productManual": "产品名称",
+    "productTextPlaceholder": "例如 EVA、聚碳酸酯……",
+    "deliveryCity": "交货城市",
+    "urgency": "您何时需要？",
+    "urgencyOpt": {
+      "high": "紧急（1–3 天）",
+      "medium": "一周/一个月内",
+      "low": "订购（14–25 天）"
+    },
+    "availability": "货物应存放在何处？",
+    "availabilityOpt": {
+      "tashkent": "塔什干现货",
+      "uzbekistan": "乌兹别克斯坦现货",
+      "import": "订购进口",
+      "any": "无偏好"
+    },
+    "availabilityDesc": {
+      "import": "15–30 天内交货"
+    },
+    "stepOf": "第 {{current}} 步，共 {{total}} 步",
+    "hintGrade": "如果列表中没有您需要的牌号，请用自己的话写下原料名称——AI 将分析市场和供应商。",
+    "dataProtected": "您的数据受到保护。联系方式仅对经认证的 IMEX AI 经理可见。",
+    "desiredPrice": "期望价格（选填）",
+    "attachTds": "附上 TDS / 规格书",
+    "submitRequest": "提交需求",
+    "companyName": "公司名称",
+    "companyPlaceholder": "您的公司名称",
+    "contactName": "联系人",
+    "contactPlaceholder": "您的全名",
+    "phone": "电话",
+    "legalAddress": "注册地址",
+    "legalAddressPlaceholder": "注册地址（选填）",
+    "telegramAuto": "Telegram 将根据您的资料自动填写",
+    "summary": "您的需求",
+    "next": "下一步",
+    "submit": "提交",
+    "product": "产品",
+    "grade": "牌号 / 类型",
+    "polymerType": "聚合物类型",
+    "volume": "数量",
+    "volumeUnit": "数量单位",
+    "targetPrice": "目标价格",
+    "currency": "货币",
+    "incoterms": "交货条款（Incoterms）",
+    "destinationCountry": "目的国",
+    "portOrCity": "港口 / 城市",
+    "desiredDate": "期望日期",
+    "validityDays": "有效期（天）",
+    "comment": "备注",
+    "productPlaceholder": "选择产品",
+    "gradePlaceholder": "例如 T30S 或 H030 SG",
+    "polymerTypePlaceholder": "例如均聚物",
+    "volumePlaceholder": "例如 100",
+    "pricePlaceholder": "例如 1200",
+    "portPlaceholder": "例如塔什干",
+    "commentPlaceholder": "任何补充要求",
+    "incotermsNone": "未选择",
+    "volumeUnit_MT": "MT（吨）",
+    "volumeUnit_KG": "KG（千克）"
+  },
+  "confirm": {
+    "heading": "您的需求已接收！",
+    "subheading": "您的需求已收到并转交给我们的专员",
+    "aiNote": "我们的 AI 已分析市场并将开展内部招标。经理将很快通过电话或 Telegram 联系您，提供最优报价。",
+    "cta": {
+      "myRequests": "我的需求",
+      "home": "首页",
+      "another": "再创建一个"
+    }
+  },
+  "myRequests": {
+    "title": "我的需求",
+    "empty": {
+      "heading": "暂无需求",
+      "body": "提交您的第一条需求——不到一分钟即可完成",
+      "cta": "提交需求"
+    }
+  },
+  "requestDetail": {
+    "title": "需求详情",
+    "history": "状态历史",
+    "files": "文件"
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": {
+      "heading": "暂无通知",
+      "body": "您需求的状态更新将显示在此处"
+    }
+  },
+  "nav": {
+    "home": "首页",
+    "market": "市场",
+    "requests": "需求",
+    "sell": "出售",
+    "news": "资讯",
+    "profile": "设置"
+  },
+  "market": {
+    "title": "市场",
+    "all": "全部",
+    "popular": "热门产品",
+    "searchPlaceholder": "按产品、牌号、卖家搜索",
+    "soon": "报价目录将显示在此处",
+    "empty": "暂无报价",
+    "error": "无法加载目录"
+  },
+  "offer": {
+    "seller": "卖家",
+    "inStock": "现货",
+    "minOrder": "最小订单量",
+    "supply": "交货条款",
+    "location": "所在地",
+    "verified": "认证卖家",
+    "call": "拨打电话",
+    "writeTelegram": "在 Telegram 上留言",
+    "requestOffer": "索取报价",
+    "notFound": "未找到报价"
+  },
+  "requestOffer": {
+    "title": "索取报价",
+    "hint": "发送询价——审核后我们将为您对接卖家",
+    "qty": "所需数量",
+    "targetPrice": "目标价格",
+    "messagePlaceholder": "给卖家的留言（选填）",
+    "needQtyOrMessage": "请输入数量或留言",
+    "error": "无法发送需求。请重试",
+    "sentTitle": "需求已发送！",
+    "sentBody": "经我们团队审核后，您的询价将转发给卖家。我们将与您联系。",
+    "backToMarket": "返回市场"
+  },
+  "news": {
+    "title": "资讯",
+    "soon": "每日市场分析将显示在此处",
+    "empty": "暂无发布内容",
+    "error": "无法加载资讯"
+  },
+  "sell": {
+    "title": "发布报价",
+    "myOffers": "我的报价",
+    "newOffer": "发布报价",
+    "empty": "您暂无报价"
+  },
+  "offerStatus": {
+    "draft": "草稿",
+    "pending_moderation": "审核中",
+    "approved": "已发布",
+    "rejected": "已拒绝",
+    "archived": "已归档"
+  },
+  "sellForm": {
+    "title": "发布报价",
+    "step1": "基本信息",
+    "step2": "数量与价格",
+    "step3": "照片与文档",
+    "step4": "核对并发布",
+    "back": "返回",
+    "sectionProduct": "产品",
+    "sectionPrice": "数量与价格",
+    "sectionContact": "联系方式",
+    "qtyAvailable": "可供数量",
+    "price": "单价",
+    "warehouseCity": "城市 / 仓库",
+    "minOrder": "最小订单量",
+    "description": "描述",
+    "photos": "产品照片",
+    "photosCount": "已选照片",
+    "addPhoto": "添加照片",
+    "docsHint": "JPG——每张照片最大 10 MB。文档（TDS、规格书）可稍后添加。",
+    "publish": "发布报价",
+    "submit": "提交审核",
+    "success": "报价已提交审核",
+    "successBody": "审核通过后，您的报价将发布到目录和共享群聊中。采购商将看到您的产品并可与您联系。",
+    "backToOffers": "我的报价"
+  },
+  "howItWorks": {
+    "title": "如何运作？",
+    "steps": {
+      "s1": "您提交一条需求",
+      "s2": "AI 分析市场、交易所和供应商",
+      "s3": "我们匹配最优报价",
+      "s4": "经理与您联系并确认细节"
+    },
+    "dataProtected": {
+      "title": "您的数据受到保护",
+      "body": "联系方式仅对经认证的 IMEX AI 经理可见。"
+    },
+    "questions": "有疑问？",
+    "openChat": "打开聊天"
+  },
+  "support": {
+    "title": "支持聊天",
+    "body": "给我们留言——IMEX AI 经理将在 Telegram 上回复并协助处理您的需求。",
+    "cta": "在 Telegram 上打开聊天"
+  },
+  "profile": {
+    "title": "设置",
+    "role": "我想要",
+    "roleOpt": {
+      "buyer": "采购",
+      "seller": "出售"
+    }
+  },
+  "roleHint": {
+    "title": "您从事什么业务？",
+    "subtitle": "选择一项，以便我们展示合适的内容。所有功能均保持可用。",
+    "buyer": "我是采购商",
+    "buyerDesc": "提交需求——AI 为您找到最优报价",
+    "seller": "我是卖家",
+    "sellerDesc": "向数千名采购商展示产品"
+  },
+  "settings": {
+    "title": "语言与资料",
+    "language": "界面语言",
+    "lang": {
+      "ru": "Русский",
+      "en": "English",
+      "uz": "O'zbek",
+      "tr": "Türkçe",
+      "fa": "فارسی",
+      "zh": "中文"
+    },
+    "theme": "外观",
+    "themeOpt": {
+      "system": "跟随系统",
+      "light": "浅色",
+      "dark": "深色"
+    }
+  },
+  "status": {
+    "new": "新需求",
+    "viewed": "审核中",
+    "in_progress": "审核中",
+    "offer_sent": "已收到报价",
+    "matched": "已匹配",
+    "closed": "已关闭",
+    "cancelled": "已取消"
+  },
+  "error": {
+    "submitFailed": "无法提交需求。请检查网络连接后重试",
+    "fileFailed": "无法上传文件“{{name}}”。请重试",
+    "fileTooLarge": "文件超过 10 MB。请选择较小的文件",
+    "tooManyFiles": "最多可附加 5 个文件",
+    "fileType": "不支持的格式。仅允许 PDF、Excel、JPG",
+    "loadFailed": "无法加载数据。下拉刷新",
+    "authFailed": "授权错误。请从机器人重新打开应用",
+    "required": "必填字段",
+    "volumePositive": "数量必须大于 0",
+    "gradeOrPolymer": "请输入牌号或聚合物类型",
+    "productRequired": "请选择产品或输入其名称"
+  },
+  "fileUploader": {
+    "remove": "移除文件 {{name}}",
+    "attach": "附加文件",
+    "hint": "PDF、Excel、JPG——最多 5 个文件，每个最大 10 MB"
+  },
+  "landing": {
+    "nav": {
+      "about": "关于",
+      "how": "运作方式",
+      "why": "优势",
+      "partners": "合作伙伴",
+      "contacts": "联系方式"
+    },
+    "cta": {
+      "buy": "采购原料",
+      "sell": "出售原料"
+    },
+    "hero": {
+      "badge": "AI B2B 平台",
+      "title": "面向石化产品、化工原料及助剂的 AI B2B 平台",
+      "para": "一个智能平台，连接经认证的卖家与买家，分析市场，助您达成最优交易。",
+      "f1": "经认证的卖家与买家",
+      "f2": "与工厂和炼油厂直接签约",
+      "f3": "AI 市场分析与最优报价匹配",
+      "f4": "快捷方便",
+      "trust": "安全交易与全面保密",
+      "node": {
+        "suppliers": "供应商",
+        "buyers": "采购商",
+        "analysis": "分析",
+        "deals": "交易"
+      }
+    },
+    "how": {
+      "tag": "运作方式",
+      "title": "达成盈利交易的简单流程",
+      "s1": {
+        "title": "创建需求",
+        "desc": "指明您需要采购或出售的原料"
+      },
+      "s2": {
+        "title": "AI 分析市场",
+        "desc": "系统扫描报价，按价格和条款找到最优选项"
+      },
+      "s3": {
+        "title": "获取最优报价",
+        "desc": "您只会收到来自认证合作伙伴的最有利报价"
+      },
+      "s4": {
+        "title": "达成交易",
+        "desc": "联系供应商，快速安全地完成交易"
+      }
+    },
+    "partners": {
+      "tag": "我们的合作伙伴",
+      "title": "与 40 多家工厂和炼油厂独家直接签约",
+      "iran": "伊朗炼油厂与工厂",
+      "other": "……以及其他合作伙伴"
+    },
+    "features": {
+      "count": "10 000+",
+      "f1": "采购商（工厂、企业、公司）",
+      "f2": "仅限经认证的供应商和可靠的合作伙伴",
+      "f3": "人工智能全天候分析市场",
+      "f4": "安全交易与数据保护",
+      "f5": "交易各阶段的全程支持"
+    },
+    "final": {
+      "title": "准备好开启盈利交易了吗？",
+      "subtitle": "加入 IMEX AI，抢先获取最优报价。"
+    },
+    "footer": {
+      "tagline": "面向石化产品、化工原料及助剂的 AI B2B 平台。我们以技术和可靠的合作伙伴为您的业务创造机遇。",
+      "colPlatform": "平台",
+      "colCompany": "公司",
+      "colSupport": "支持",
+      "faq": "常见问题",
+      "support24": "全天候支持",
+      "rights": "© IMEX AI 2026。保留所有权利。",
+      "privacy": "隐私政策",
+      "terms": "使用条款"
+    }
+  },
+  "auth": {
+    "title": "使用 Telegram 登录",
+    "subtitle": "使用 Telegram 登录以提交需求并查看供应商联系方式。",
+    "loading": "加载中……",
+    "unavailable": "浏览器登录暂时不可用。请在 Telegram 中打开应用。",
+    "signing": "登录中……",
+    "error": "登录失败。请重试。",
+    "logout": "退出登录"
+  }
+}

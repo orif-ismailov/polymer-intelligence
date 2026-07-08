@@ -105,10 +105,10 @@ export function AlertFeed() {
       <table className="w-full text-sm">
         <thead className="bg-background-tertiary">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.severity")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.message")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.rule")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.triggeredAt")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.severity")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.message")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.rule")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.triggeredAt")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">

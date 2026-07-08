@@ -80,7 +80,7 @@ function FieldWrapper({ label, name, required, hint, children }: FieldWrapperPro
     <div className="flex flex-col gap-1">
       <label htmlFor={name} className="text-xs font-semibold text-foreground-muted">
         {label}
-        {required && <span className="ml-0.5 text-urgency-high" aria-label="required">*</span>}
+        {required && <span className="ms-0.5 text-urgency-high" aria-label="required">*</span>}
       </label>
       {children}
       {hint && <p className="text-xs text-foreground-subtle">{hint}</p>}
@@ -267,7 +267,7 @@ export function JsonSchemaForm({
               />
               <label htmlFor={fieldId} className="text-sm text-foreground">
                 {label}
-                {isRequired && <span className="ml-0.5 text-urgency-high" aria-label="required">*</span>}
+                {isRequired && <span className="ms-0.5 text-urgency-high" aria-label="required">*</span>}
               </label>
             </div>
           );

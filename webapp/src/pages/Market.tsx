@@ -128,7 +128,7 @@ export default function Market() {
                 display: "flex",
                 gap: "12px",
                 width: "100%",
-                textAlign: "left",
+                textAlign: "start",
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 borderRadius: "var(--r-md)",

@@ -73,7 +73,7 @@ export default function LanguageSwitcher() {
             style={{
               position: "absolute",
               top: "calc(100% + 6px)",
-              right: 0,
+              insetInlineEnd: 0,
               zIndex: 61,
               listStyle: "none",
               margin: 0,
@@ -106,7 +106,7 @@ export default function LanguageSwitcher() {
                     fontWeight: l === current ? 600 : 400,
                     cursor: "pointer",
                     borderRadius: "var(--r-sm)",
-                    textAlign: "left",
+                    textAlign: "start",
                   }}
                 >
                   {t(`settings.lang.${l}`)}

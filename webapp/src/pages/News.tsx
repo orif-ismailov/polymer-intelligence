@@ -65,7 +65,7 @@ export default function News() {
           style={{
             display: "flex",
             width: "100%",
-            textAlign: "left",
+            textAlign: "start",
             alignItems: "center",
             gap: "12px",
             background: "var(--surface)",

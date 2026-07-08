@@ -17,7 +17,7 @@ import { backButton, mainButton } from "../telegram";
 import type { CatalogOffer } from "../types";
 
 const rowLabel: CSSProperties = { fontSize: "13px", color: "var(--text-muted)" };
-const rowValue: CSSProperties = { fontSize: "13px", color: "var(--text)", fontWeight: 600, textAlign: "right" };
+const rowValue: CSSProperties = { fontSize: "13px", color: "var(--text)", fontWeight: 600, textAlign: "end" };
 
 export default function OfferDetail() {
   const { t } = useTranslation();

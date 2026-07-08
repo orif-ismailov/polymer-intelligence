@@ -49,23 +49,23 @@ export default function IntelPage() {
           <table className="w-full text-sm">
             <thead className="bg-background-secondary text-foreground-muted">
               <tr>
-                <th className="px-4 py-2 text-left font-medium">{t("product")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("buyers")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("sellers")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("avgSeller")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("avgBuyer")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("spread")}</th>
+                <th className="px-4 py-2 text-start font-medium">{t("product")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("buyers")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("sellers")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("avgSeller")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("avgBuyer")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("spread")}</th>
               </tr>
             </thead>
             <tbody>
               {data.map((r) => (
                 <tr key={r.code} className="border-t border-border">
                   <td className="px-4 py-2 font-medium text-foreground">{r.code}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{r.buyers}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{r.sellers}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{fmt(r.avg_seller_price)}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{fmt(r.avg_buyer_target)}</td>
-                  <td className="px-4 py-2 text-right font-semibold text-accent">{fmt(r.spread)}</td>
+                  <td className="px-4 py-2 text-end text-foreground">{r.buyers}</td>
+                  <td className="px-4 py-2 text-end text-foreground">{r.sellers}</td>
+                  <td className="px-4 py-2 text-end text-foreground">{fmt(r.avg_seller_price)}</td>
+                  <td className="px-4 py-2 text-end text-foreground">{fmt(r.avg_buyer_target)}</td>
+                  <td className="px-4 py-2 text-end font-semibold text-accent">{fmt(r.spread)}</td>
                 </tr>
               ))}
             </tbody>

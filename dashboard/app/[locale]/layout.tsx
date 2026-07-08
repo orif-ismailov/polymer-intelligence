@@ -35,8 +35,11 @@ export default async function LocaleLayout({
   // Enable static rendering for this locale.
   setRequestLocale(locale);
 
+  // Persian is right-to-left; every other supported locale is left-to-right.
+  const dir = locale === "fa" ? "rtl" : "ltr";
+
   return (
-    <html lang={locale} className={cn("dark", "font-sans", geist.variable)}>
+    <html lang={locale} dir={dir} className={cn("dark", "font-sans", geist.variable)}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>

@@ -267,7 +267,9 @@
       "ru": "Русский",
       "en": "English",
       "uz": "O'zbek",
-      "tr": "Türkçe"
+      "tr": "Türkçe",
+      "fa": "فارسی",
+      "zh": "中文"
     },
     "theme": "Görünüm teması",
     "themeOpt": {

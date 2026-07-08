@@ -144,7 +144,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className="flex h-screen w-60 flex-shrink-0 flex-col bg-background-secondary border-r border-border"
+      className="flex h-screen w-60 flex-shrink-0 flex-col bg-background-secondary border-e border-border"
       aria-label="Main navigation"
     >
       {/* Logo + wordmark */}
@@ -180,8 +180,8 @@ export function Sidebar() {
                           "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                           active
-                            ? "border-l-2 border-accent bg-background-tertiary text-foreground font-medium"
-                            : "border-l-2 border-transparent text-foreground-muted hover:bg-background-tertiary hover:text-foreground",
+                            ? "border-s-2 border-accent bg-background-tertiary text-foreground font-medium"
+                            : "border-s-2 border-transparent text-foreground-muted hover:bg-background-tertiary hover:text-foreground",
                         )}
                         aria-current={active ? "page" : undefined}
                       >

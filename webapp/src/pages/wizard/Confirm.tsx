@@ -240,7 +240,7 @@ export default function Confirm() {
         <Sparkles
           size={20}
           color="var(--green)"
-          style={{ position: "absolute", top: "2px", right: "6px" }}
+          style={{ position: "absolute", top: "2px", insetInlineEnd: "6px" }}
           aria-hidden="true"
         />
       </div>

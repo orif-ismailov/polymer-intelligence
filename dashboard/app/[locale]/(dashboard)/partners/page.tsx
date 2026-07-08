@@ -85,10 +85,10 @@ export default function PartnersPage() {
           <table className="w-full text-sm">
             <thead className="bg-background-secondary text-foreground-muted">
               <tr>
-                <th className="px-4 py-2 text-left font-medium">{t("name")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("product")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("price")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("lead")}</th>
+                <th className="px-4 py-2 text-start font-medium">{t("name")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("product")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("price")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("lead")}</th>
                 <th className="px-4 py-2" />
               </tr>
             </thead>
@@ -96,10 +96,10 @@ export default function PartnersPage() {
               {data.map((p) => (
                 <tr key={p.id} className="border-t border-border">
                   <td className="px-4 py-2 font-medium text-foreground">{p.name}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{p.product_id ?? "—"}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{p.indicative_price == null ? "—" : `${p.indicative_price.toLocaleString()} ${p.currency}`}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{p.lead_time_days ?? "—"}</td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-4 py-2 text-end text-foreground">{p.product_id ?? "—"}</td>
+                  <td className="px-4 py-2 text-end text-foreground">{p.indicative_price == null ? "—" : `${p.indicative_price.toLocaleString()} ${p.currency}`}</td>
+                  <td className="px-4 py-2 text-end text-foreground">{p.lead_time_days ?? "—"}</td>
+                  <td className="px-4 py-2 text-end">
                     <button type="button" onClick={() => remove.mutate(p.id)} className="text-foreground-muted hover:text-red-400" aria-label={t("delete")}>
                       <Trash2 size={16} />
                     </button>

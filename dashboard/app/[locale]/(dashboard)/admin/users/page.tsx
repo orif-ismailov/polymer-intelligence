@@ -102,10 +102,10 @@ function UsersTable() {
       <table className="w-full text-sm">
         <thead className="bg-background-tertiary">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.email")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.role")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.status")}</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.createdAt")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.email")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.role")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.status")}</th>
+            <th className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider">{t("table.createdAt")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">

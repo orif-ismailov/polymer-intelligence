@@ -45,7 +45,9 @@
     "label": "Язык",
     "ru": "Русский",
     "uz": "O'zbek",
-    "tr": "Türkçe"
+    "tr": "Türkçe",
+    "fa": "فارسی",
+    "zh": "中文"
   },
   "common": {
     "status": {

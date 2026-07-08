@@ -90,11 +90,11 @@ export default function InventoryPage() {
           <table className="w-full text-sm">
             <thead className="bg-background-secondary text-foreground-muted">
               <tr>
-                <th className="px-4 py-2 text-left font-medium">{t("product")}</th>
-                <th className="px-4 py-2 text-left font-medium">{t("grade")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("qty")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("cost")}</th>
-                <th className="px-4 py-2 text-left font-medium">{t("city")}</th>
+                <th className="px-4 py-2 text-start font-medium">{t("product")}</th>
+                <th className="px-4 py-2 text-start font-medium">{t("grade")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("qty")}</th>
+                <th className="px-4 py-2 text-end font-medium">{t("cost")}</th>
+                <th className="px-4 py-2 text-start font-medium">{t("city")}</th>
                 <th className="px-4 py-2" />
               </tr>
             </thead>
@@ -103,10 +103,10 @@ export default function InventoryPage() {
                 <tr key={i.id} className="border-t border-border">
                   <td className="px-4 py-2 text-foreground">{i.product_id}</td>
                   <td className="px-4 py-2 text-foreground">{i.grade_text ?? "—"}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{i.qty_on_hand.toLocaleString()} {i.qty_unit}</td>
-                  <td className="px-4 py-2 text-right text-foreground">{i.cost_price == null ? "—" : `${i.cost_price.toLocaleString()} ${i.currency}`}</td>
+                  <td className="px-4 py-2 text-end text-foreground">{i.qty_on_hand.toLocaleString()} {i.qty_unit}</td>
+                  <td className="px-4 py-2 text-end text-foreground">{i.cost_price == null ? "—" : `${i.cost_price.toLocaleString()} ${i.currency}`}</td>
                   <td className="px-4 py-2 text-foreground">{i.warehouse_city ?? "—"}</td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-4 py-2 text-end">
                     <button type="button" onClick={() => remove.mutate(i.id)} className="text-foreground-muted hover:text-red-400" aria-label={t("delete")}>
                       <Trash2 size={16} />
                     </button>
