@@ -13,6 +13,7 @@ NEVER commit — the router/handler owns the transaction and post-commit dispatc
 
 from __future__ import annotations
 
+import decimal
 import logging
 
 from sqlalchemy.orm import Session
@@ -27,10 +28,14 @@ from app.schemas.marketplace import (
     AdminOfferRequestSeller,
     OfferBrief,
     OfferRequestCreate,
+    OfferRequestUpdate,
 )
 from app.services.audit_service import write_audit
 
 logger = logging.getLogger(__name__)
+
+# Logical fields shown in the buyer-edit diff (rendered in the group + seller messages).
+_DIFF_FIELDS = ("quantity", "target_price", "message")
 
 
 def create_offer_request(
@@ -87,6 +92,125 @@ def list_for_client(db: Session, client_id: int) -> list[OfferRequest]:
         .order_by(OfferRequest.created_at.desc())
         .all()
     )
+
+
+def _fmt_num(value: decimal.Decimal | None) -> str | None:
+    """Format a Decimal without insignificant trailing zeros (100.000 -> '100')."""
+    if value is None:
+        return None
+    s = f"{value:f}"
+    if "." in s:
+        s = s.rstrip("0").rstrip(".")
+    return s
+
+
+def _field_displays(
+    quantity: decimal.Decimal | None,
+    qty_unit: str,
+    target_price: decimal.Decimal | None,
+    currency: str | None,
+    message: str | None,
+) -> dict[str, str | None]:
+    """Human-readable display strings for the diffable inquiry fields."""
+    qty = f"{_fmt_num(quantity)} {qty_unit}" if quantity is not None else None
+    price = (
+        f"{_fmt_num(target_price)} {currency or ''}".strip()
+        if target_price is not None
+        else None
+    )
+    msg = (message or "").strip() or None
+    return {"quantity": qty, "target_price": price, "message": msg}
+
+
+def update_offer_request(
+    db: Session, req: OfferRequest, data: OfferRequestUpdate
+) -> tuple[OfferRequest, list[dict[str, str | None]]]:
+    """Apply a buyer's revision to their own inquiry. Does NOT commit.
+
+    - A rejected inquiry cannot be edited (ValueError).
+    - A no-op edit (nothing actually changed) leaves the row untouched and returns [].
+    - Otherwise records the edit (edited_at) and accumulates a diff into
+      last_change_summary — the net change since the seller last saw the inquiry, so
+      several edits before re-approval still show one coherent old->new per field.
+    - Editing an already-forwarded (approved) inquiry resets it to `pending` so the
+      team re-approves before the seller is shown the new version (re-review policy).
+
+    Returns (req, changes) where `changes` is the accumulated diff (empty on no-op).
+    """
+    if req.status == OfferRequestStatus.rejected:
+        raise ValueError("A rejected inquiry cannot be edited")
+
+    new_message = data.message.strip() if data.message else None
+
+    # Detect real changes on raw values (Decimal equality ignores trailing zeros).
+    changed = {
+        "quantity": req.quantity != data.quantity or req.qty_unit != data.qty_unit,
+        "target_price": req.target_price != data.target_price
+        or (req.currency or None) != (data.currency or None),
+        "message": (req.message or None) != new_message,
+    }
+    if not any(changed.values()):
+        return req, []
+
+    before = _field_displays(
+        req.quantity, req.qty_unit, req.target_price, req.currency, req.message
+    )
+
+    req.quantity = data.quantity
+    req.qty_unit = data.qty_unit
+    req.target_price = data.target_price
+    req.currency = data.currency
+    req.message = new_message
+
+    after = _field_displays(
+        req.quantity, req.qty_unit, req.target_price, req.currency, req.message
+    )
+
+    # Accumulate the net diff vs. the last version the seller saw. `old` is preserved
+    # from the earliest un-notified edit; a field reverting to its `old` drops out.
+    by_field: dict[str, dict[str, str | None]] = {}
+    for c in req.last_change_summary or []:
+        key = c.get("field")
+        if isinstance(key, str):
+            by_field[key] = c
+    for field in _DIFF_FIELDS:
+        if not changed[field]:
+            continue
+        baseline_old = by_field[field]["old"] if field in by_field else before[field]
+        if baseline_old == after[field]:
+            by_field.pop(field, None)  # reverted to the last-seen value
+        else:
+            by_field[field] = {"field": field, "old": baseline_old, "new": after[field]}
+    summary = [by_field[f] for f in _DIFF_FIELDS if f in by_field]
+
+    req.edited_at = utcnow()
+    req.last_change_summary = summary or None
+
+    # An edit to an already-forwarded inquiry re-enters moderation (re-review policy).
+    if req.status == OfferRequestStatus.approved:
+        req.status = OfferRequestStatus.pending
+        req.reviewed_at = None
+        req.moderated_by = None
+        req.moderation_note = None
+
+    db.flush()
+    write_audit(
+        db=db,
+        staff_user_id=None,
+        action="offer_request.edit",
+        entity="offer_requests",
+        entity_id=str(req.id),
+        details={"via": "buyer", "client_id": req.client_id, "changes": summary},
+    )
+    logger.info(
+        "offer_request_service.update",
+        extra={
+            "offer_request_id": req.id,
+            "client_id": req.client_id,
+            "fields": [c["field"] for c in summary],
+        },
+    )
+    return req, summary
 
 
 def _apply_decision(req: OfferRequest, *, approve: bool, note: str | None) -> None:

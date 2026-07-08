@@ -173,6 +173,9 @@ export interface OfferRequestCreate {
   message?: string | null;
 }
 
+/** Buyer's edit to an existing inquiry — same full-replacement shape as create. */
+export type OfferRequestUpdate = OfferRequestCreate;
+
 export interface OfferRequestOffer {
   id: number;
   product_id: number | null;
@@ -195,6 +198,7 @@ export interface OfferRequestOut {
   currency: string | null;
   message: string | null;
   created_at: string;
+  edited_at: string | null;
   offer: OfferRequestOffer;
 }
 

@@ -263,3 +263,70 @@ class TestModeration:
 
         assert resp.status_code == 200, resp.text
         assert resp.json()["status"] == "approved"
+
+
+# ── Buyer edits their own inquiry (PATCH /webapp/market/my-requests/{id}) ───────
+
+
+def _mock_own_inquiry(client_id: int = 1) -> MagicMock:
+    """An OfferRequest stand-in that serialises as OfferRequestOut (buyer=client 1)."""
+    from app.models.enums import OfferRequestStatus  # noqa: PLC0415
+
+    offer = MagicMock()
+    offer.id = 2
+    offer.product_id = None
+    offer.product_text = "EVA"
+    offer.grade_text = "A"
+    offer.price = decimal.Decimal("1200")
+    offer.currency = "USD"
+    offer.qty_unit = "MT"
+
+    o = MagicMock()
+    o.id = 5
+    o.client_id = client_id
+    o.offer_id = 2
+    o.status = OfferRequestStatus.pending
+    o.quantity = decimal.Decimal("20")
+    o.qty_unit = "MT"
+    o.target_price = None
+    o.currency = None
+    o.message = None
+    o.created_at = datetime.datetime(2026, 7, 1, tzinfo=datetime.UTC)
+    o.edited_at = None
+    o.offer = offer
+    return o
+
+
+class TestEditInquiry:
+    def test_patch_foreign_inquiry_404(self, market_client: TestClient):
+        """A buyer cannot edit an inquiry that isn't theirs (IDOR → 404)."""
+        with patch("app.api.webapp.market.offer_request_service") as svc:
+            svc.get_offer_request.return_value = _mock_own_inquiry(client_id=999)
+            resp = market_client.patch(
+                "/api/v1/webapp/market/my-requests/5", json={"quantity": "10"}
+            )
+        assert resp.status_code == 404, resp.text
+        svc.update_offer_request.assert_not_called()
+
+    def test_patch_own_inquiry_200_and_reposts(self, market_client: TestClient):
+        """Editing one's own inquiry returns 200 and re-posts to the team group."""
+        own = _mock_own_inquiry(client_id=1)  # market_client's caller is id=1
+        with patch("app.api.webapp.market.offer_request_service") as svc:
+            svc.get_offer_request.return_value = own
+            svc.update_offer_request.return_value = (
+                own,
+                [{"field": "quantity", "old": "20 MT", "new": "40 MT"}],
+            )
+            resp = market_client.patch(
+                "/api/v1/webapp/market/my-requests/5", json={"quantity": "40"}
+            )
+        assert resp.status_code == 200, resp.text
+        svc.enqueue_offer_request_to_group.assert_called_once_with(5)
+
+    def test_patch_missing_inquiry_404(self, market_client: TestClient):
+        with patch("app.api.webapp.market.offer_request_service") as svc:
+            svc.get_offer_request.return_value = None
+            resp = market_client.patch(
+                "/api/v1/webapp/market/my-requests/999", json={"message": "hi"}
+            )
+        assert resp.status_code == 404, resp.text

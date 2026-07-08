@@ -27,6 +27,7 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy import Enum as PgEnum
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -215,6 +216,20 @@ class OfferRequest(Base):
     forwarded_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # ── Buyer-edit tracking ───────────────────────────────────────────────────
+    # A buyer may revise a submitted inquiry. Editing an already-forwarded
+    # (approved) inquiry re-enters moderation (status→pending) and, on re-approval,
+    # re-notifies the seller. `last_change_summary` carries the diff since the seller
+    # last saw the inquiry so the seller DM can show exactly what changed.
+    edited_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )                                                                             # last buyer edit (records that it was modified)
+    last_change_summary: Mapped[list[dict[str, str | None]] | None] = mapped_column(
+        JSONB, nullable=True
+    )                                                                             # [{"field","old","new"}] since the seller last saw it
+    seller_notified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )                                                                             # True once the seller has been DM'd at least once
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

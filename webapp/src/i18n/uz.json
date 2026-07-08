@@ -4,6 +4,31 @@
     "in_stock": "Sotuvda mavjud",
     "on_order": "Buyurtma asosida"
   },
+  "inquiries": {
+    "title": "Mening so'rovlarim",
+    "viewMine": "Mening so'rovlarim",
+    "edited": "O'zgartirilgan",
+    "empty": {
+      "heading": "Hozircha so'rovlar yo'q",
+      "body": "Bozordagi sotuvchilarga yuborgan so'rovlaringiz shu yerda ko'rinadi.",
+      "cta": "Bozorga o'tish"
+    },
+    "status": {
+      "pending": "Ko'rib chiqilmoqda",
+      "approved": "Sotuvchiga yuborilgan",
+      "rejected": "Rad etilgan"
+    },
+    "qty": "Kerakli hajm",
+    "targetPrice": "Maqsadli narx",
+    "message": "Izoh",
+    "saveChanges": "O'zgarishlarni saqlash",
+    "saveError": "O'zgarishlarni saqlab bo'lmadi",
+    "savedTitle": "O'zgarishlar saqlandi",
+    "savedBody": "Sotuvchi eng so'nggi shartlarni ko'rishi uchun uni o'zgarishlar haqida xabardor qilamiz.",
+    "backToList": "So'rovlarimga qaytish",
+    "rejectedNote": "Bu so'rov rad etilgan va o'zgartirib bo'lmaydi.",
+    "editApprovedHint": "O'zgartirilgandan so'ng so'rov qayta ko'rib chiqiladi, so'ng sotuvchi yangilangan shartlarni oladi."
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "Neft-kimyo mahsulotlari, kimyoviy xomashyo va qo'shimchalar uchun AI B2B platforma",

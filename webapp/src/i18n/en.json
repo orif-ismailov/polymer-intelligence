@@ -4,6 +4,31 @@
     "in_stock": "In stock",
     "on_order": "On order"
   },
+  "inquiries": {
+    "title": "My requests",
+    "viewMine": "My requests",
+    "edited": "Edited",
+    "empty": {
+      "heading": "No requests yet",
+      "body": "Your requests to sellers from the Market will appear here.",
+      "cta": "Go to Market"
+    },
+    "status": {
+      "pending": "Under review",
+      "approved": "Sent to seller",
+      "rejected": "Rejected"
+    },
+    "qty": "Required volume",
+    "targetPrice": "Target price",
+    "message": "Comment",
+    "saveChanges": "Save changes",
+    "saveError": "Could not save changes",
+    "savedTitle": "Changes saved",
+    "savedBody": "We'll notify the seller of your changes so they see the latest terms.",
+    "backToList": "Back to my requests",
+    "rejectedNote": "This request was rejected and can't be edited.",
+    "editApprovedHint": "After editing, the request is reviewed again, then the seller receives the updated terms."
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "AI B2B Platform for Petrochemicals, Chemical Raw Materials & Additives",

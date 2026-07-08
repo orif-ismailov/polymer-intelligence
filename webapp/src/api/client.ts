@@ -20,6 +20,7 @@ import type {
   NewsSummary,
   OfferRequestCreate,
   OfferRequestOut,
+  OfferRequestUpdate,
   Product,
   RequestCreate,
   RequestDetail,
@@ -211,6 +212,22 @@ export const api = {
   /** GET /webapp/market/my-requests — the buyer's own inquiries with status. */
   getMyOfferRequests(): Promise<OfferRequestOut[]> {
     return apiFetch<OfferRequestOut[]>("/webapp/market/my-requests");
+  },
+
+  /** GET /webapp/market/my-requests/{id} — one of the buyer's own inquiries. */
+  getMyOfferRequest(id: number): Promise<OfferRequestOut> {
+    return apiFetch<OfferRequestOut>(`/webapp/market/my-requests/${id}`);
+  },
+
+  /**
+   * PATCH /webapp/market/my-requests/{id} — edit one's own inquiry (full-replacement
+   * body). Records the edit, re-enters review, and notifies the seller of the changes.
+   */
+  updateOfferRequest(id: number, body: OfferRequestUpdate): Promise<OfferRequestOut> {
+    return apiFetch<OfferRequestOut>(`/webapp/market/my-requests/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
   },
 
   // ── Marketplace: seller side ────────────────────────────────────────────────

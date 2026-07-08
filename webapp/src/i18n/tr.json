@@ -4,6 +4,31 @@
     "in_stock": "Stokta mevcut",
     "on_order": "Sipariş üzerine"
   },
+  "inquiries": {
+    "title": "Taleplerim",
+    "viewMine": "Taleplerim",
+    "edited": "Düzenlendi",
+    "empty": {
+      "heading": "Henüz talep yok",
+      "body": "Marketteki satıcılara gönderdiğiniz talepler burada görünür.",
+      "cta": "Markete git"
+    },
+    "status": {
+      "pending": "İnceleniyor",
+      "approved": "Satıcıya gönderildi",
+      "rejected": "Reddedildi"
+    },
+    "qty": "Gerekli hacim",
+    "targetPrice": "Hedef fiyat",
+    "message": "Yorum",
+    "saveChanges": "Değişiklikleri kaydet",
+    "saveError": "Değişiklikler kaydedilemedi",
+    "savedTitle": "Değişiklikler kaydedildi",
+    "savedBody": "Satıcının en güncel koşulları görmesi için değişikliklerinizi ona bildireceğiz.",
+    "backToList": "Taleplerime dön",
+    "rejectedNote": "Bu talep reddedildi ve düzenlenemez.",
+    "editApprovedHint": "Düzenlemeden sonra talep yeniden incelenir, ardından satıcı güncellenmiş koşulları alır."
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "Petrokimya, kimyasal hammaddeler ve katkı maddeleri için AI B2B platformu",

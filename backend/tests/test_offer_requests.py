@@ -141,6 +141,10 @@ def _make_offer_request() -> MagicMock:
     req.target_price = 1150
     req.currency = "USD"
     req.message = "Нужно срочно"
+    # Edit-tracking defaults (a fresh, never-edited, not-yet-forwarded inquiry).
+    req.edited_at = None
+    req.seller_notified = False
+    req.last_change_summary = None
     req.offer = SimpleNamespace(
         product_id=None,
         product_text="EVA",
@@ -250,3 +254,195 @@ def test_send_offer_request_to_seller_skipped_without_seller_tg() -> None:
         result = send_offer_request_to_seller(offer_request_id=7)
 
     assert result["status"] == "skipped"
+
+
+# ── Buyer edit: service ───────────────────────────────────────────────────────
+
+
+def _editable_req(status: object, **overrides: object) -> SimpleNamespace:
+    """A minimal editable OfferRequest stand-in for update_offer_request tests."""
+    import decimal  # noqa: PLC0415
+
+    base: dict[str, object] = {
+        "id": 7,
+        "client_id": 1,
+        "status": status,
+        "quantity": decimal.Decimal("100"),
+        "qty_unit": "MT",
+        "target_price": decimal.Decimal("1200"),
+        "currency": "USD",
+        "message": "Старое сообщение",
+        "last_change_summary": None,
+        "edited_at": None,
+        "reviewed_at": "set",
+        "moderated_by": 9,
+        "moderation_note": "note",
+        "forwarded_at": "set",
+    }
+    base.update(overrides)
+    return SimpleNamespace(**base)
+
+
+def test_offer_request_update_inherits_qty_or_message_rule() -> None:
+    from pydantic import ValidationError  # noqa: PLC0415
+
+    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
+
+    with pytest.raises(ValidationError):
+        OfferRequestUpdate()  # neither quantity nor message
+    assert OfferRequestUpdate(quantity=5).qty_unit == "MT"
+
+
+def test_update_offer_request_records_edit_and_builds_diff() -> None:
+    import decimal  # noqa: PLC0415
+
+    from app.models.enums import OfferRequestStatus  # noqa: PLC0415
+    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
+    from app.services import offer_request_service as svc  # noqa: PLC0415
+
+    req = _editable_req(OfferRequestStatus.pending)
+    db = MagicMock()
+    # Full-replacement edit: resend the current values, change only the quantity.
+    with patch("app.services.offer_request_service.write_audit") as mock_audit:
+        _, changes = svc.update_offer_request(
+            db,
+            req,
+            OfferRequestUpdate(
+                quantity=decimal.Decimal("150"),
+                qty_unit="MT",
+                target_price=decimal.Decimal("1200"),
+                currency="USD",
+                message="Старое сообщение",
+            ),
+        )
+
+    assert req.edited_at is not None
+    assert req.quantity == decimal.Decimal("150")
+    # only the quantity changed → one diff entry with normalized display values
+    assert changes == [{"field": "quantity", "old": "100 MT", "new": "150 MT"}]
+    assert req.last_change_summary == changes
+    _, kwargs = mock_audit.call_args
+    assert kwargs["action"] == "offer_request.edit"
+    assert kwargs["details"]["via"] == "buyer"
+
+
+def test_update_offer_request_approved_resets_to_pending() -> None:
+    from app.models.enums import OfferRequestStatus  # noqa: PLC0415
+    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
+    from app.services import offer_request_service as svc  # noqa: PLC0415
+
+    req = _editable_req(OfferRequestStatus.approved)
+    db = MagicMock()
+    with patch("app.services.offer_request_service.write_audit"):
+        svc.update_offer_request(db, req, OfferRequestUpdate(message="Новое сообщение"))
+
+    assert req.status == OfferRequestStatus.pending  # re-review policy
+    assert req.reviewed_at is None
+    assert req.moderated_by is None
+    assert req.moderation_note is None
+
+
+def test_update_offer_request_rejected_raises() -> None:
+    from app.models.enums import OfferRequestStatus  # noqa: PLC0415
+    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
+    from app.services import offer_request_service as svc  # noqa: PLC0415
+
+    req = _editable_req(OfferRequestStatus.rejected)
+    with pytest.raises(ValueError, match="rejected"):
+        svc.update_offer_request(MagicMock(), req, OfferRequestUpdate(message="x"))
+
+
+def test_update_offer_request_noop_returns_empty() -> None:
+    import decimal  # noqa: PLC0415
+
+    from app.models.enums import OfferRequestStatus  # noqa: PLC0415
+    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
+    from app.services import offer_request_service as svc  # noqa: PLC0415
+
+    req = _editable_req(OfferRequestStatus.pending)
+    with patch("app.services.offer_request_service.write_audit") as mock_audit:
+        _, changes = svc.update_offer_request(
+            MagicMock(),
+            req,
+            OfferRequestUpdate(
+                quantity=decimal.Decimal("100"),
+                qty_unit="MT",
+                target_price=decimal.Decimal("1200"),
+                currency="USD",
+                message="Старое сообщение",
+            ),
+        )
+    assert changes == []
+    assert req.edited_at is None  # no-op left untouched
+    mock_audit.assert_not_called()
+
+
+# ── Buyer edit: seller/group notification framing ─────────────────────────────
+
+
+def test_send_offer_request_to_seller_frames_update_and_clears_diff() -> None:
+    sent: list[str] = []
+
+    async def _capture(chat_id: int, text: str, **kwargs: object) -> None:
+        sent.append(text)
+
+    req = _make_offer_request()
+    req.seller_notified = True  # seller has seen a prior version → this DM is an update
+    req.last_change_summary = [{"field": "quantity", "old": "100 MT", "new": "150 MT"}]
+
+    with (
+        patch("sqlalchemy.orm.Session") as mock_session_cls,
+        patch("app.core.db.engine"),
+        patch("telegram.bot.bot") as mock_bot,
+    ):
+        mock_session = MagicMock()
+        mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
+        mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
+        mock_session.get.return_value = req
+        mock_bot.send_message = _capture
+
+        from app.tasks.notify import send_offer_request_to_seller  # noqa: PLC0415
+
+        result = send_offer_request_to_seller(offer_request_id=7)
+
+    assert result == {"status": "ok", "error": None}
+    text = sent[0]
+    assert "обновил" in text  # framed as an update, not a new request
+    assert "Объём: 100 MT → 150 MT" in text  # shows exactly what changed
+    assert "устаревшими" in text  # nudge to review latest
+    assert req.last_change_summary is None  # consumed diff cleared
+    mock_session.commit.assert_called()
+
+
+def test_send_offer_request_to_group_edited_shows_diff() -> None:
+    sent: list[str] = []
+
+    async def _capture(chat_id: int, text: str, **kwargs: object) -> None:
+        sent.append(text)
+
+    from app.core.config import settings  # noqa: PLC0415
+
+    req = _make_offer_request()
+    req.edited_at = "2026-07-08T00:00:00Z"  # marks it as an edited re-post
+    req.last_change_summary = [{"field": "target_price", "old": "1200 USD", "new": "1100 USD"}]
+
+    with (
+        patch.object(settings, "REQUEST_NOTIFY_CHAT_ID", -100),
+        patch("sqlalchemy.orm.Session") as mock_session_cls,
+        patch("app.core.db.engine"),
+        patch("telegram.bot.bot") as mock_bot,
+    ):
+        mock_session = MagicMock()
+        mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
+        mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
+        mock_session.get.return_value = req
+        mock_bot.send_message = _capture
+
+        from app.tasks.notify import send_offer_request_to_group  # noqa: PLC0415
+
+        result = send_offer_request_to_group(offer_request_id=7)
+
+    assert result == {"status": "ok", "error": None}
+    text = sent[0]
+    assert "Обновлённый запрос" in text  # edited header
+    assert "Желаемая цена: 1200 USD → 1100 USD" in text

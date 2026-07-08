@@ -97,6 +97,8 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Support = lazy(() => import("./pages/Support"));
 const Market = lazy(() => import("./pages/Market"));
 const OfferDetail = lazy(() => import("./pages/OfferDetail"));
+const MyInquiries = lazy(() => import("./pages/MyInquiries"));
+const InquiryDetail = lazy(() => import("./pages/InquiryDetail"));
 const News = lazy(() => import("./pages/News"));
 const NewsDetail = lazy(() => import("./pages/NewsDetail"));
 const Sell = lazy(() => import("./pages/Sell"));
@@ -207,6 +209,8 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/support" element={<Support />} />
         <Route path="/market/:id" element={<OfferDetail />} />
+        <Route path="/inquiries" element={<AppShell><MyInquiries /></AppShell>} />
+        <Route path="/inquiries/:id" element={<InquiryDetail />} />
         <Route path="/sell/new" element={<SellOffer />} />
         <Route path="/news/:id" element={<NewsDetail />} />
         <Route path="/request/step/1" element={<Step1 />} />

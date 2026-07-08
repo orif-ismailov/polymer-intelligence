@@ -650,6 +650,30 @@ def _offer_product_label(session: object, offer: Any) -> str:
     return offer.product_text or "—"
 
 
+_OFFER_REQUEST_FIELD_RU: dict[str, str] = {
+    "quantity": "Объём",
+    "target_price": "Желаемая цена",
+    "message": "Сообщение",
+}
+
+
+def _render_offer_request_changes(summary: Any) -> list[str]:
+    """Render a buyer-edit diff (offer_request.last_change_summary) as bullet lines.
+
+    Returns [] when there is no summary. Each entry becomes "• Label: old → new".
+    """
+    lines: list[str] = []
+    for change in summary or []:
+        if not isinstance(change, dict):
+            continue
+        field = change.get("field", "")
+        label = _OFFER_REQUEST_FIELD_RU.get(field, field or "—")
+        old = change.get("old") or "—"
+        new = change.get("new") or "—"
+        lines.append(f"• {label}: {old} → {new}")
+    return lines
+
+
 @celery_app.task(name="send_offer_request_to_group", queue="notify")  # type: ignore[untyped-decorator]
 def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
     """Post a new buyer inquiry to the team group for review, with ✅/❌ buttons.
@@ -681,7 +705,10 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
             product_label = _offer_product_label(session, offer)
             grade = f" · {offer.grade_text}" if offer.grade_text else ""
 
-            lines: list[str] = ["🛒 Новый запрос предложения", ""]
+            # An edited inquiry (edited_at set) is re-posted for re-review with a diff.
+            edited = getattr(req, "edited_at", None) is not None
+            header = "✏️ Обновлённый запрос предложения" if edited else "🛒 Новый запрос предложения"
+            lines: list[str] = [header, ""]
             lines.append(f"📦 Товар: {product_label}{grade}")
             lines.append(f"💵 Цена в объявлении: {offer.price} {offer.currency}")
             if req.quantity is not None:
@@ -692,6 +719,13 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
             if req.message:
                 lines.append("")
                 lines.append(f"💬 {req.message}")
+
+            if edited:
+                changes = _render_offer_request_changes(req.last_change_summary)
+                if changes:
+                    lines.append("")
+                    lines.append("Что изменилось:")
+                    lines.extend(changes)
 
             client = req.client
             buyer: list[str] = []
@@ -759,11 +793,19 @@ def send_offer_request_to_seller(offer_request_id: int) -> dict[str, Any]:
             product_label = _offer_product_label(session, offer)
             grade = f" · {offer.grade_text}" if offer.grade_text else ""
 
-            lines: list[str] = [
-                "📩 Новый запрос на ваше предложение!",
-                "",
-                f"📦 Товар: {product_label}{grade}",
-            ]
+            # If the seller has already seen this inquiry, frame this DM as an UPDATE
+            # (the buyer revised it) and show exactly what changed.
+            is_update = bool(getattr(req, "seller_notified", False))
+            if is_update:
+                lines = ["✏️ Покупатель обновил свой запрос!", "", f"📦 Товар: {product_label}{grade}"]
+                changes = _render_offer_request_changes(getattr(req, "last_change_summary", None))
+                if changes:
+                    lines.append("")
+                    lines.append("Что изменилось:")
+                    lines.extend(changes)
+            else:
+                lines = ["📩 Новый запрос на ваше предложение!", "", f"📦 Товар: {product_label}{grade}"]
+
             if req.quantity is not None:
                 lines.append(f"📊 Нужный объём: {req.quantity} {req.qty_unit}")
             if req.target_price is not None:
@@ -773,12 +815,29 @@ def send_offer_request_to_seller(offer_request_id: int) -> dict[str, Any]:
                 lines.append("")
                 lines.append(f"💬 {req.message}")
             lines.append("")
-            lines.append("С вами свяжется наш менеджер для деталей.")
+            if is_update:
+                lines.append(
+                    "Пожалуйста, ознакомьтесь с обновлёнными условиями, чтобы не работать "
+                    "с устаревшими данными."
+                )
+            else:
+                lines.append("С вами свяжется наш менеджер для деталей.")
 
             asyncio.run(bot.send_message(chat_id=seller.telegram_user_id, text="\n".join(lines)))
+
+            # Record the seller has now seen it (so a later edit is framed as an update)
+            # and clear the consumed diff.
+            req.seller_notified = True
+            req.last_change_summary = None
+            session.commit()
+
             logger.info(
                 "notify.offer_request_to_seller.sent",
-                extra={"offer_request_id": offer_request_id, "seller_tg": seller.telegram_user_id},
+                extra={
+                    "offer_request_id": offer_request_id,
+                    "seller_tg": seller.telegram_user_id,
+                    "update": is_update,
+                },
             )
     except Exception as exc:
         logger.error(

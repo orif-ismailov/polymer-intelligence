@@ -188,8 +188,15 @@ export default function OfferDetail() {
           </p>
           <button
             type="button"
+            onClick={() => navigate("/inquiries")}
+            className="mt-2 box-border min-h-[48px] w-full cursor-pointer rounded-[var(--r-md)] border-none bg-green px-5 py-3 text-base font-semibold text-green-on"
+          >
+            {t("inquiries.viewMine")}
+          </button>
+          <button
+            type="button"
             onClick={() => navigate("/market")}
-            style={{ ...fullBtn("var(--green)", "var(--green-on)"), cursor: "pointer", marginTop: "8px" }}
+            className="box-border min-h-[48px] w-full cursor-pointer rounded-[var(--r-md)] border border-border bg-surface px-5 py-3 text-base font-semibold text-text"
           >
             {t("requestOffer.backToMarket")}
           </button>

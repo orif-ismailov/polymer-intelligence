@@ -4,6 +4,31 @@
     "in_stock": "现货",
     "on_order": "可订购"
   },
+  "inquiries": {
+    "title": "我的询价",
+    "viewMine": "我的询价",
+    "edited": "已修改",
+    "empty": {
+      "heading": "暂无询价",
+      "body": "您向市场卖家发出的询价将显示在此处。",
+      "cta": "前往市场"
+    },
+    "status": {
+      "pending": "审核中",
+      "approved": "已发送给卖家",
+      "rejected": "已拒绝"
+    },
+    "qty": "所需数量",
+    "targetPrice": "目标价格",
+    "message": "备注",
+    "saveChanges": "保存修改",
+    "saveError": "无法保存修改",
+    "savedTitle": "修改已保存",
+    "savedBody": "我们会将您的修改通知卖家，以便其了解最新条件。",
+    "backToList": "返回我的询价",
+    "rejectedNote": "该询价已被拒绝，无法修改。",
+    "editApprovedHint": "修改后，询价将重新审核，随后卖家会收到更新后的条件。"
+  },
   "home": {
     "brandTag": "AI B2B 平台",
     "headline": "面向石化产品、化工原料及助剂的 AI B2B 平台",

@@ -248,6 +248,14 @@ class OfferRequestCreate(BaseModel):
         return self
 
 
+class OfferRequestUpdate(OfferRequestCreate):
+    """A buyer's revised inquiry — same shape + validation as create (full replacement).
+
+    Editing an already-forwarded inquiry re-enters moderation and re-notifies the
+    seller with the diff; a rejected inquiry cannot be edited (enforced in the service).
+    """
+
+
 class OfferBrief(BaseModel):
     """A minimal offer summary embedded in an inquiry (buyer + admin views)."""
 
@@ -274,6 +282,7 @@ class OfferRequestOut(BaseModel):
     currency: str | None
     message: str | None
     created_at: datetime.datetime
+    edited_at: datetime.datetime | None = None
     offer: OfferBrief
 
     model_config = {"from_attributes": True}
