@@ -1,5 +1,5 @@
 """
-DB-backed tests for cross-language catalog search (offer_service.list_catalog).
+Tests for cross-language catalog search (offer_service.list_catalog + matching_product_ids).
 
 The bug this guards against: an offer listed under the Latin product code "PP" was
 invisible when a buyer searched with the Cyrillic abbreviation "ПП" — the search only
@@ -7,8 +7,10 @@ looked at the offer's own free-text columns, never the linked Product's localize
 or the product_synonyms dictionary. list_catalog now resolves the query to product ids
 via matching_product_ids, so a search in any supported language returns the linked offers.
 
-Requires a live PostgreSQL test DB (same skip guard as test_relevance_service.py); runs
-in CI where the Postgres service is available, skips locally otherwise.
+Two layers:
+  - TestMatchingProductIds — DB-free unit tests of the resolver control flow (run in CI).
+  - TestCrossLanguageCatalogSearch — end-to-end SQL against a real localhost "test_polymer"
+    DB (same skip guard as test_relevance_service.py; skips in CI and when unconfigured).
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ import contextlib
 import decimal
 import os
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 import sqlalchemy as sa
@@ -27,13 +30,12 @@ from alembic import command as alembic_command
 BACKEND_DIR = Path(__file__).parent.parent
 
 _DB_URL = os.environ.get("DATABASE_URL", "")
-# Runs against a throwaway localhost test DB only. Accepts both the documented dev name
-# ("test_polymer") and the CI service database ("polymer_intelligence_test") so this
-# actually executes in CI's Postgres, while never touching a real/prod DB (the module
-# fixture downgrades to base). Safe: prod URLs are not on localhost.
-_IS_REAL_DB = bool(_DB_URL) and "localhost" in _DB_URL and (
-    "test_polymer" in _DB_URL or "polymer_intelligence_test" in _DB_URL
-)
+# Same skip guard as test_relevance_service: a developer-provisioned localhost DB named
+# "test_polymer". Intentionally NOT satisfied in CI (whose DB is polymer_intelligence_test
+# AND whose conftest patch_env swaps DATABASE_URL for a placeholder), so this
+# self-migrating fixture never runs against the CI/prod DB. The fix's control flow is
+# covered DB-free by TestMatchingProductIds, which runs everywhere.
+_IS_REAL_DB = bool(_DB_URL) and "localhost" in _DB_URL and "test_polymer" in _DB_URL
 
 _requires_real_db = pytest.mark.skipif(
     not _IS_REAL_DB,
@@ -42,6 +44,68 @@ _requires_real_db = pytest.mark.skipif(
         "Set DATABASE_URL=postgresql+psycopg://user:pass@localhost/test_polymer"
     ),
 )
+
+
+# ── DB-free unit tests for the resolver logic (run everywhere, incl. CI) ────────
+
+
+def _fake_db(product_rows, synonym_rows=None):
+    """A MagicMock session whose two .query(...).filter(...) calls yield canned rows.
+
+    matching_product_ids issues at most two queries — Product first, ProductSynonym
+    second (only when the normalized term is >= 2 chars). Each returns an iterable of
+    single-column rows, matching how the real ORM query is iterated as ``for (pid,) in``.
+    """
+    db = MagicMock()
+    q_product = MagicMock()
+    q_product.filter.return_value = product_rows
+    queries = [q_product]
+    if synonym_rows is not None:
+        q_synonym = MagicMock()
+        q_synonym.filter.return_value = synonym_rows
+        queries.append(q_synonym)
+    db.query.side_effect = queries
+    return db
+
+
+class TestMatchingProductIds:
+    """offer_service.matching_product_ids control flow — no DB required."""
+
+    def test_unions_and_dedups_product_and_synonym_hits(self) -> None:
+        from app.services import offer_service  # noqa: PLC0415
+
+        db = _fake_db([(1,), (2,)], [(2,), (3,)])  # 2 is a shared hit
+        ids = offer_service.matching_product_ids(db, "полипропилен")
+        assert sorted(ids) == [1, 2, 3]
+        assert db.query.call_count == 2  # Product + ProductSynonym
+
+    def test_empty_term_short_circuits_without_querying(self) -> None:
+        from app.services import offer_service  # noqa: PLC0415
+
+        db = MagicMock()
+        assert offer_service.matching_product_ids(db, "   ") == []
+        db.query.assert_not_called()
+
+    def test_single_char_term_skips_synonym_query(self) -> None:
+        """A 1-char term is too noisy for the synonym dictionary — only Product is queried."""
+        from app.services import offer_service  # noqa: PLC0415
+
+        db = _fake_db([(5,)])  # only the Product query is provided
+        ids = offer_service.matching_product_ids(db, "п")
+        assert ids == [5]
+        assert db.query.call_count == 1  # synonym branch skipped (len(norm) < 2)
+
+    def test_two_char_abbreviation_resolves_via_synonyms(self) -> None:
+        """The reported case: "ПП" matches nothing by product name but resolves via synonyms."""
+        from app.services import offer_service  # noqa: PLC0415
+
+        db = _fake_db([], [(7,)])  # no name hit; synonym dictionary resolves it
+        ids = offer_service.matching_product_ids(db, "ПП")
+        assert ids == [7]
+        assert db.query.call_count == 2
+
+
+# ── End-to-end SQL against a real localhost test DB (dev-only; skips in CI) ──────
 
 
 @pytest.fixture(scope="module")
