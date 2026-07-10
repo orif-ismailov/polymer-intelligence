@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     # Numeric chat id (e.g. -1001234567890 for a supergroup) — NOT an invite link;
     # the bot must be a member of the group. Unset (None) → notifications disabled.
     REQUEST_NOTIFY_CHAT_ID: int | None = None
+    # Optional forum-topic (message_thread_id) routing inside REQUEST_NOTIFY_CHAT_ID.
+    # When the notify group is a Telegram forum (topics enabled), buyer-side
+    # notifications (new purchase requests + offer inquiries) go to NOTIFY_TOPIC_BUYERS
+    # and seller-side notifications (new/edited offers) go to NOTIFY_TOPIC_SELLERS.
+    # Unset (None) → posts to the group's General topic (no thread). If a configured
+    # topic is invalid/closed, delivery falls back to General instead of being dropped.
+    NOTIFY_TOPIC_BUYERS: int | None = None
+    NOTIFY_TOPIC_SELLERS: int | None = None
     REQUEST_AI_ANALYSIS_MODEL: str = "claude-haiku-4-5"
     REQUEST_AI_ANALYSIS_PROMPT_VERSION: str = "v1"
     # Conservative per-request token reservation for the budget guard.
@@ -164,12 +172,17 @@ class Settings(BaseSettings):
             raise ValueError("JWT_SECRET must be at least 32 characters")
         return v
 
-    @field_validator("REQUEST_NOTIFY_CHAT_ID", mode="before")
+    @field_validator(
+        "REQUEST_NOTIFY_CHAT_ID",
+        "NOTIFY_TOPIC_BUYERS",
+        "NOTIFY_TOPIC_SELLERS",
+        mode="before",
+    )
     @classmethod
     def _empty_chat_id_to_none(cls, v: object) -> object:
         """Treat an empty/whitespace env value as unset (None) so a blank
-        REQUEST_NOTIFY_CHAT_ID= in .env disables notifications instead of failing
-        int coercion at startup."""
+        REQUEST_NOTIFY_CHAT_ID= / NOTIFY_TOPIC_* in .env disables that routing
+        instead of failing int coercion at startup."""
         if v is None or (isinstance(v, str) and v.strip() == ""):
             return None
         return v
