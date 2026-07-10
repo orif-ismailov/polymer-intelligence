@@ -131,7 +131,7 @@ export function RequestsFilterBar() {
             id="filter-period"
             value={period}
             onChange={(e) => setParam("period", e.target.value)}
-            className="h-8 rounded-lg border border-border bg-background-secondary px-2.5 pr-8 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="h-8 rounded-lg border border-border bg-background-secondary px-2.5 pe-8 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {PERIOD_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -141,7 +141,7 @@ export function RequestsFilterBar() {
           </select>
           <ChevronDown
             size={14}
-            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted"
+            className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 text-foreground-muted"
             aria-hidden="true"
           />
         </div>
@@ -155,7 +155,7 @@ export function RequestsFilterBar() {
             id="filter-urgency"
             value={urgency}
             onChange={(e) => setParam("urgency", e.target.value)}
-            className="h-8 rounded-lg border border-border bg-background-secondary px-2.5 pr-8 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="h-8 rounded-lg border border-border bg-background-secondary px-2.5 pe-8 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {URGENCY_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -165,7 +165,7 @@ export function RequestsFilterBar() {
           </select>
           <ChevronDown
             size={14}
-            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted"
+            className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 text-foreground-muted"
             aria-hidden="true"
           />
         </div>
@@ -179,7 +179,7 @@ export function RequestsFilterBar() {
             id="filter-status"
             value={status}
             onChange={(e) => setParam("status", e.target.value)}
-            className="h-8 rounded-lg border border-border bg-background-secondary px-2.5 pr-8 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="h-8 rounded-lg border border-border bg-background-secondary px-2.5 pe-8 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -189,7 +189,7 @@ export function RequestsFilterBar() {
           </select>
           <ChevronDown
             size={14}
-            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted"
+            className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 text-foreground-muted"
             aria-hidden="true"
           />
         </div>
@@ -228,7 +228,7 @@ export function RequestsFilterBar() {
               <button
                 type="button"
                 onClick={() => removeFilter(f.key)}
-                className="ml-0.5 rounded-full text-foreground-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="ms-0.5 rounded-full text-foreground-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={t("removeFilter", { label: f.label })}
               >
                 <X size={10} aria-hidden="true" />

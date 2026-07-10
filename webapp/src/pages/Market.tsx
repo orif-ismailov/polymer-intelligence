@@ -67,9 +67,16 @@ export default function Market() {
 
   return (
     <div style={{ padding: "16px" }}>
-      <h1 style={{ margin: "0 0 16px", fontSize: "20px", fontWeight: 700, color: "var(--text)" }}>
-        {t("market.title")}
-      </h1>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-text">{t("market.title")}</h1>
+        <button
+          type="button"
+          onClick={() => navigate("/inquiries")}
+          className="flex-none cursor-pointer whitespace-nowrap border-none bg-transparent p-0 text-[13px] font-semibold text-green"
+        >
+          {t("inquiries.viewMine")}
+        </button>
+      </div>
 
       <input
         type="search"
@@ -128,7 +135,7 @@ export default function Market() {
                 display: "flex",
                 gap: "12px",
                 width: "100%",
-                textAlign: "left",
+                textAlign: "start",
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
                 borderRadius: "var(--r-md)",

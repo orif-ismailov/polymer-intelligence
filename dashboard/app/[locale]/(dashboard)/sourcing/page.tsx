@@ -91,10 +91,10 @@ export default function SourcingPage() {
               <table className="w-full text-sm">
                 <thead className="bg-background-secondary text-foreground-muted">
                   <tr>
-                    <th className="px-4 py-2 text-left font-medium">{t("source.header")}</th>
-                    <th className="px-4 py-2 text-left font-medium">{t("label")}</th>
-                    <th className="px-4 py-2 text-right font-medium">{t("price")}</th>
-                    <th className="px-4 py-2 text-right font-medium">{t("leadTime")}</th>
+                    <th className="px-4 py-2 text-start font-medium">{t("source.header")}</th>
+                    <th className="px-4 py-2 text-start font-medium">{t("label")}</th>
+                    <th className="px-4 py-2 text-end font-medium">{t("price")}</th>
+                    <th className="px-4 py-2 text-end font-medium">{t("leadTime")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -105,10 +105,10 @@ export default function SourcingPage() {
                       <tr key={idx} className="border-t border-border">
                         <td className="px-4 py-2 text-foreground">{t(`source.${o.source}`)}</td>
                         <td className="px-4 py-2 text-foreground">{o.label}</td>
-                        <td className="px-4 py-2 text-right text-foreground">
+                        <td className="px-4 py-2 text-end text-foreground">
                           {o.price == null ? "—" : `${o.price.toLocaleString()} ${o.currency}`}
                         </td>
-                        <td className="px-4 py-2 text-right text-foreground">{o.lead_time_days ?? "—"}</td>
+                        <td className="px-4 py-2 text-end text-foreground">{o.lead_time_days ?? "—"}</td>
                       </tr>
                     ))}
                 </tbody>

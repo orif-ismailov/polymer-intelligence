@@ -38,6 +38,8 @@ _WEB_APP_BUTTON_LABELS: dict[str, str] = {
     "ru": "Открыть приложение",
     "uz": "Ilovani ochish",
     "tr": "Uygulamayı aç",
+    "fa": "باز کردن برنامه",
+    "zh": "打开应用",
 }
 
 

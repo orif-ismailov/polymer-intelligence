@@ -244,7 +244,7 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
     return (
       <div className={`flex items-center justify-center py-12 ${className}`}>
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        <span className="ml-3 text-sm text-foreground-muted">{t("loading")}</span>
+        <span className="ms-3 text-sm text-foreground-muted">{t("loading")}</span>
       </div>
     );
   }
@@ -283,7 +283,7 @@ export function LiveFeedTable({ defaultKind, compact = false, className = "", ne
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider"
+                    className="px-4 py-3 text-start text-xs font-semibold text-foreground-muted uppercase tracking-wider"
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>

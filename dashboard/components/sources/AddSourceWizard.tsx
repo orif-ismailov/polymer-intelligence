@@ -145,7 +145,7 @@ function Step1PickType({
               key={sourceType.type_name}
               type="button"
               onClick={() => handleSelect(sourceType.type_name)}
-              className={`relative flex flex-col items-center gap-2 rounded-lg border p-4 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background-secondary ${
+              className={`relative flex flex-col items-center gap-2 rounded-lg border p-4 text-start transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background-secondary ${
                 isSelected
                   ? "border-accent bg-accent/10"
                   : "border-border bg-background-tertiary hover:border-accent/50"
@@ -153,7 +153,7 @@ function Step1PickType({
               style={{ minHeight: "100px" }}
             >
               {isPending && (
-                <span className="absolute top-2 right-2 rounded px-1.5 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <span className="absolute top-2 end-2 rounded px-1.5 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">
                   {t("phase5Badge")}
                 </span>
               )}
@@ -203,7 +203,7 @@ function PreviewTable({ rows }: { rows: Array<Record<string, unknown>> }) {
         <thead className="bg-background-tertiary">
           <tr>
             {PREVIEW_COLUMNS.map((col) => (
-              <th key={col} className="px-3 py-2 text-left font-semibold text-foreground-muted capitalize">
+              <th key={col} className="px-3 py-2 text-start font-semibold text-foreground-muted capitalize">
                 {col.replace("_", " ")}
               </th>
             ))}

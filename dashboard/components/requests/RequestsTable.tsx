@@ -288,7 +288,7 @@ export function RequestsTable() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        <span className="ml-3 text-sm text-foreground-muted">
+        <span className="ms-3 text-sm text-foreground-muted">
           {t("loadingRequests")}
         </span>
       </div>
@@ -344,7 +344,7 @@ export function RequestsTable() {
                   <th
                     key={header.id}
                     style={{ width: header.column.columnDef.size }}
-                    className="px-4 py-3 text-left"
+                    className="px-4 py-3 text-start"
                     aria-sort={
                       header.column.getIsSorted() === "asc"
                         ? "ascending"

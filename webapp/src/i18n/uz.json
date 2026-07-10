@@ -4,6 +4,31 @@
     "in_stock": "Sotuvda mavjud",
     "on_order": "Buyurtma asosida"
   },
+  "inquiries": {
+    "title": "Mening so'rovlarim",
+    "viewMine": "Mening so'rovlarim",
+    "edited": "O'zgartirilgan",
+    "empty": {
+      "heading": "Hozircha so'rovlar yo'q",
+      "body": "Bozordagi sotuvchilarga yuborgan so'rovlaringiz shu yerda ko'rinadi.",
+      "cta": "Bozorga o'tish"
+    },
+    "status": {
+      "pending": "Ko'rib chiqilmoqda",
+      "approved": "Sotuvchiga yuborilgan",
+      "rejected": "Rad etilgan"
+    },
+    "qty": "Kerakli hajm",
+    "targetPrice": "Maqsadli narx",
+    "message": "Izoh",
+    "saveChanges": "O'zgarishlarni saqlash",
+    "saveError": "O'zgarishlarni saqlab bo'lmadi",
+    "savedTitle": "O'zgarishlar saqlandi",
+    "savedBody": "Sotuvchi eng so'nggi shartlarni ko'rishi uchun uni o'zgarishlar haqida xabardor qilamiz.",
+    "backToList": "So'rovlarimga qaytish",
+    "rejectedNote": "Bu so'rov rad etilgan va o'zgartirib bo'lmaydi.",
+    "editApprovedHint": "O'zgartirilgandan so'ng so'rov qayta ko'rib chiqiladi, so'ng sotuvchi yangilangan shartlarni oladi."
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "Neft-kimyo mahsulotlari, kimyoviy xomashyo va qo'shimchalar uchun AI B2B platforma",
@@ -166,7 +191,10 @@
     "call": "Qo'ng'iroq",
     "writeTelegram": "Telegram'da yozish",
     "requestOffer": "Taklif so'rash",
-    "notFound": "Taklif topilmadi"
+    "notFound": "Taklif topilmadi",
+    "ownTitle": "Bu sizning taklifingiz",
+    "ownBody": "O'z e'loningizga so'rov yubora olmaysiz. Uni «Sotish» bo'limida tahrirlashingiz mumkin.",
+    "editAction": "Tahrirlash"
   },
   "requestOffer": {
     "title": "Taklif so'rash",
@@ -190,7 +218,8 @@
     "title": "Taklif joylashtirish",
     "myOffers": "Mening takliflarim",
     "newOffer": "Taklif joylashtirish",
-    "empty": "Sizda hali takliflar yo'q"
+    "empty": "Sizda hali takliflar yo'q",
+    "edit": "Tahrirlash"
   },
   "offerStatus": {
     "draft": "Qoralama",
@@ -267,7 +296,9 @@
       "ru": "Русский",
       "en": "English",
       "uz": "O'zbek",
-      "tr": "Türkçe"
+      "tr": "Türkçe",
+      "fa": "فارسی",
+      "zh": "中文"
     },
     "theme": "Ko'rinish mavzusi",
     "themeOpt": {
@@ -389,5 +420,15 @@
     "signing": "Kirilyapti…",
     "error": "Kirib bo'lmadi. Qayta urinib ko'ring.",
     "logout": "Chiqish"
+  },
+  "editOffer": {
+    "title": "Taklifni tahrirlash",
+    "save": "O'zgarishlarni saqlash",
+    "saveError": "O'zgarishlarni saqlab bo'lmadi",
+    "savedTitle": "O'zgarishlar saqlandi",
+    "savedBody": "O'zgarishlar saqlandi. Agar e'lon chop etilgan bo'lsa, katalogda qayta ko'rinishidan oldin u yana moderatsiyadan o'tadi.",
+    "backToOffers": "Mening takliflarimga",
+    "moderationHint": "Tahrirlashdan so'ng chop etilgan e'lon yana moderatsiyadan o'tadi.",
+    "loadError": "Taklifni yuklab bo'lmadi"
   }
 }

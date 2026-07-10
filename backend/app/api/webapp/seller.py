@@ -15,11 +15,31 @@ from app.core.db import get_db
 from app.models.enums import OfferFileKind, SellerOfferStatus
 from app.models.marketplace import Seller, SellerOffer, SellerOfferFile
 from app.models.requests import Client
-from app.schemas.marketplace import OfferFileRef, SellerOfferCreate, SellerOfferOut
+from app.schemas.marketplace import (
+    OfferFileRef,
+    SellerOfferCreate,
+    SellerOfferOut,
+    SellerOfferUpdate,
+)
 from app.services import offer_service, storage_service
 from app.services.storage_service import MAX_OFFER_FILES
 
 router = APIRouter(prefix="/webapp/seller", tags=["webapp-seller"])
+
+
+def _own_offer(db: Session, offer_id: int, client: Client) -> SellerOffer:
+    """Load the caller's own offer or 404 (owner-scoped: a foreign/absent id looks missing).
+
+    Resolves the Seller from the verified Telegram identity, then the offer scoped to that
+    seller — so only the owner can read/edit a listing (IDOR-safe; T-03-07 pattern).
+    """
+    seller = db.query(Seller).filter(Seller.telegram_user_id == client.telegram_user_id).first()
+    if seller is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+    offer = offer_service.get_own_offer(db, offer_id, seller.id)
+    if offer is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+    return offer
 
 
 @router.post(
@@ -70,6 +90,51 @@ def list_my_offers(
     return offer_service.list_seller_offers(db, seller.id)  # type: ignore[return-value]
 
 
+@router.get(
+    "/offers/{offer_id}",
+    response_model=SellerOfferOut,
+    summary="Get one of the caller's own offers (any status)",
+)
+def get_my_offer(
+    offer_id: int,
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> SellerOfferOut:
+    """GET /webapp/seller/offers/{id} — the caller's own offer (for the edit screen), or 404."""
+    return _own_offer(db, offer_id, client)  # type: ignore[return-value]
+
+
+@router.patch(
+    "/offers/{offer_id}",
+    response_model=SellerOfferOut,
+    summary="Edit one's own offer (re-enters moderation when it was already public)",
+)
+def update_my_offer(
+    offer_id: int,
+    body: SellerOfferUpdate,
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> SellerOfferOut:
+    """PATCH /webapp/seller/offers/{id} — revise one's own offer (full-replacement body).
+
+    Only the owner can edit (foreign/absent id → 404). Editing an offer that is already
+    public (approved) — or was rejected — sends it back to moderation and re-posts it to
+    the team group for re-approval; draft/pending offers are updated in place.
+    """
+    offer = _own_offer(db, offer_id, client)
+    try:
+        offer, requeued = offer_service.update_offer(db, offer, body)
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+    if requeued:
+        offer_service.enqueue_offer_group_notify(offer.id, edited=True)
+    return offer  # type: ignore[return-value]
+
+
 @router.post(
     "/offers/{offer_id}/submit",
     summary="Finalize an offer (uploads done) → notify the team group",
@@ -86,17 +151,7 @@ def submit_offer(
     Best-effort: enqueues only while the offer is still awaiting moderation, so a
     duplicate call (or one after a dashboard decision) does not re-notify.
     """
-    seller = db.query(Seller).filter(Seller.telegram_user_id == client.telegram_user_id).first()
-    if seller is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
-    offer = (
-        db.query(SellerOffer)
-        .filter(SellerOffer.id == offer_id, SellerOffer.seller_id == seller.id)
-        .first()
-    )
-    if offer is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
-
+    offer = _own_offer(db, offer_id, client)
     if offer.status == SellerOfferStatus.pending_moderation:
         offer_service.enqueue_offer_group_notify(offer.id)
     return {"ok": True}
@@ -116,16 +171,7 @@ async def upload_offer_file(
     client: Client = Depends(get_current_client),
 ) -> OfferFileRef:
     """POST /webapp/seller/offers/{id}/files — upload a file to the caller's own offer."""
-    seller = db.query(Seller).filter(Seller.telegram_user_id == client.telegram_user_id).first()
-    if seller is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
-    offer = (
-        db.query(SellerOffer)
-        .filter(SellerOffer.id == offer_id, SellerOffer.seller_id == seller.id)
-        .first()
-    )
-    if offer is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+    _own_offer(db, offer_id, client)  # owner-scoped guard (404 for foreign/absent)
 
     existing = db.query(SellerOfferFile).filter(SellerOfferFile.offer_id == offer_id).count()
     if existing >= MAX_OFFER_FILES:

@@ -173,6 +173,9 @@ export interface OfferRequestCreate {
   message?: string | null;
 }
 
+/** Buyer's edit to an existing inquiry — same full-replacement shape as create. */
+export type OfferRequestUpdate = OfferRequestCreate;
+
 export interface OfferRequestOffer {
   id: number;
   product_id: number | null;
@@ -195,6 +198,7 @@ export interface OfferRequestOut {
   currency: string | null;
   message: string | null;
   created_at: string;
+  edited_at: string | null;
   offer: OfferRequestOffer;
 }
 
@@ -217,6 +221,8 @@ export interface CatalogOffer {
   published_at: string | null;
   files: OfferFileRef[];
   seller: CatalogSeller;
+  /** True when the authenticated caller owns this offer (hides "Request an offer"). */
+  is_own: boolean;
 }
 
 export interface CategoryCount {
@@ -244,6 +250,9 @@ export interface SellerOfferCreate {
   phone?: string | null;
   telegram_username?: string | null;
 }
+
+/** Seller's edit to an existing offer — same full-replacement shape as create. */
+export type SellerOfferUpdate = SellerOfferCreate;
 
 // ── Browser auth (Telegram Login Widget) ───────────────────────────────────────
 

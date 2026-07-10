@@ -19,6 +19,7 @@ from app.schemas.marketplace import (
     CategoryCount,
     OfferRequestCreate,
     OfferRequestOut,
+    OfferRequestUpdate,
     PublicFeaturedOffer,
 )
 from app.services import offer_request_service, offer_service
@@ -58,10 +59,22 @@ def list_offers(
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
+    client: Client = Depends(get_current_client),
 ) -> list[CatalogOfferOut]:
-    """GET /webapp/market/offers — approved offers, optional product/free-text filter."""
-    offers = offer_service.list_catalog(db, product_id=product_id, q=q, limit=limit, offset=offset)
+    """GET /webapp/market/offers — approved offers, optional product/free-text filter.
+
+    Excludes the caller's own listings: a seller browsing the marketplace sees only other
+    sellers' offers (they manage their own under "My offers" and cannot inquire on them).
+    """
+    exclude_seller_id = offer_service.seller_id_for(db, client.telegram_user_id)
+    offers = offer_service.list_catalog(
+        db,
+        product_id=product_id,
+        q=q,
+        exclude_seller_id=exclude_seller_id,
+        limit=limit,
+        offset=offset,
+    )
     return offers  # type: ignore[return-value]
 
 
@@ -72,10 +85,11 @@ def list_offers(
 )
 def list_categories(
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
+    client: Client = Depends(get_current_client),
 ) -> list[CategoryCount]:
-    """GET /webapp/market/categories — per-product approved-offer counts."""
-    return offer_service.category_counts(db)
+    """GET /webapp/market/categories — per-product approved-offer counts (own excluded)."""
+    exclude_seller_id = offer_service.seller_id_for(db, client.telegram_user_id)
+    return offer_service.category_counts(db, exclude_seller_id=exclude_seller_id)
 
 
 @router.get(
@@ -86,13 +100,20 @@ def list_categories(
 def get_offer(
     offer_id: int,
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
+    client: Client = Depends(get_current_client),
 ) -> CatalogOfferOut:
-    """GET /webapp/market/offers/{id} — a single approved offer, or 404."""
+    """GET /webapp/market/offers/{id} — a single approved offer, or 404.
+
+    Sets ``is_own`` when the caller owns the offer so the client can hide the
+    "Request an offer" action (a seller can't inquire on its own listing).
+    """
     offer = offer_service.get_catalog_offer(db, offer_id)
     if offer is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
-    return offer  # type: ignore[return-value]
+    out = CatalogOfferOut.model_validate(offer)
+    my_seller_id = offer_service.seller_id_for(db, client.telegram_user_id)
+    out.is_own = my_seller_id is not None and offer.seller_id == my_seller_id
+    return out
 
 
 @router.get(
@@ -169,3 +190,58 @@ def list_my_offer_requests(
 ) -> list[OfferRequestOut]:
     """GET /webapp/market/my-requests — the caller's inquiries with status, newest first."""
     return offer_request_service.list_for_client(db, client.id)  # type: ignore[return-value]
+
+
+def _own_offer_request(db: Session, offer_request_id: int, client: Client) -> object:
+    """Load the caller's own inquiry or 404 (IDOR-safe: a foreign id looks missing)."""
+    req = offer_request_service.get_offer_request(db, offer_request_id)
+    if req is None or req.client_id != client.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    return req
+
+
+@router.get(
+    "/my-requests/{offer_request_id}",
+    response_model=OfferRequestOut,
+    summary="Get one of the buyer's own inquiries (detail)",
+)
+def get_my_offer_request(
+    offer_request_id: int,
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> OfferRequestOut:
+    """GET /webapp/market/my-requests/{id} — the caller's own inquiry, or 404."""
+    return _own_offer_request(db, offer_request_id, client)  # type: ignore[return-value]
+
+
+@router.patch(
+    "/my-requests/{offer_request_id}",
+    response_model=OfferRequestOut,
+    summary="Edit the buyer's own inquiry (re-review + notify seller of changes)",
+)
+def update_my_offer_request(
+    offer_request_id: int,
+    body: OfferRequestUpdate,
+    db: Session = Depends(get_db),
+    client: Client = Depends(get_current_client),
+) -> OfferRequestOut:
+    """PATCH /webapp/market/my-requests/{id} — revise one's own inquiry.
+
+    Saves the changes, records the edit, and (when anything actually changed) re-posts
+    the inquiry to the team group for review — marked as updated, with a diff. Editing an
+    already-approved inquiry sends it back to `pending`; on re-approval the seller is
+    DM'd that the buyer updated their request (see the notify tasks). A rejected inquiry
+    can't be edited (422).
+    """
+    req = _own_offer_request(db, offer_request_id, client)
+    try:
+        req, changes = offer_request_service.update_offer_request(db, req, body)  # type: ignore[arg-type]
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+    if changes:
+        offer_request_service.enqueue_offer_request_to_group(req.id)
+    return req  # type: ignore[return-value]

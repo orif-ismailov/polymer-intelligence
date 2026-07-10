@@ -109,7 +109,7 @@ export default function Step4() {
         ].map(([k, v]) => (
           <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: "12px", padding: "3px 0", fontSize: "13px" }}>
             <span style={{ color: "var(--text-muted)" }}>{k}</span>
-            <span style={{ color: "var(--text)", fontWeight: 600, textAlign: "right" }}>{v}</span>
+            <span style={{ color: "var(--text)", fontWeight: 600, textAlign: "end" }}>{v}</span>
           </div>
         ))}
       </div>

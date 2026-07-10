@@ -23,8 +23,7 @@ import { styles } from "../App";
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
 import ErrorBanner from "../components/ErrorBanner";
-
-type Language = "ru" | "uz" | "tr";
+import { SUPPORTED_LANGS, type Lang } from "../i18n";
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
@@ -32,8 +31,9 @@ export default function Settings() {
   const [error, setError] = useState<string | null>(null);
 
   // Current language from i18n (initialized from localStorage/TG lang_code)
-  const currentLang: Language =
-    i18n.language === "uz" ? "uz" : i18n.language === "tr" ? "tr" : "ru";
+  const currentLang: Lang = (SUPPORTED_LANGS as readonly string[]).includes(i18n.language)
+    ? (i18n.language as Lang)
+    : "ru";
 
   // Telegram BackButton → Home
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function Settings() {
     };
   }, [navigate]);
 
-  async function handleLanguageChange(lang: Language) {
+  async function handleLanguageChange(lang: Lang) {
     if (lang === currentLang) return;
 
     // Optimistic: switch UI language immediately (no reload, D-04)
@@ -64,6 +64,7 @@ export default function Settings() {
 
   const segmentBase: CSSProperties = {
     flex: 1,
+    minWidth: "80px",
     minHeight: "44px",
     padding: "10px 16px",
     border: "none",
@@ -109,41 +110,29 @@ export default function Settings() {
             {t("settings.language")}
           </p>
 
-          {/* Segmented control: RU / UZ */}
+          {/* Segmented control — one button per supported language (wraps on mobile) */}
           <div
             role="group"
             aria-label={t("settings.language")}
             style={{
               display: "flex",
+              flexWrap: "wrap",
               borderRadius: "var(--r-md)",
               overflow: "hidden",
               border: "1px solid var(--border)",
             } as CSSProperties}
           >
-            <button
-              type="button"
-              aria-pressed={currentLang === "ru"}
-              onClick={() => void handleLanguageChange("ru")}
-              style={currentLang === "ru" ? activeSegment : inactiveSegment}
-            >
-              {t("settings.lang.ru")}
-            </button>
-            <button
-              type="button"
-              aria-pressed={currentLang === "uz"}
-              onClick={() => void handleLanguageChange("uz")}
-              style={currentLang === "uz" ? activeSegment : inactiveSegment}
-            >
-              {t("settings.lang.uz")}
-            </button>
-            <button
-              type="button"
-              aria-pressed={currentLang === "tr"}
-              onClick={() => void handleLanguageChange("tr")}
-              style={currentLang === "tr" ? activeSegment : inactiveSegment}
-            >
-              {t("settings.lang.tr")}
-            </button>
+            {SUPPORTED_LANGS.map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                aria-pressed={currentLang === lang}
+                onClick={() => void handleLanguageChange(lang)}
+                style={currentLang === lang ? activeSegment : inactiveSegment}
+              >
+                {t(`settings.lang.${lang}`)}
+              </button>
+            ))}
           </div>
         </div>
       </div>

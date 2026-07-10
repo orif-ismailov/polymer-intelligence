@@ -12,8 +12,9 @@ dashboard messages/<code>.json.
 
 from __future__ import annotations
 
-# ISO 639-1 codes the product is localized into (Russian, English, Turkish, Uzbek).
-SUPPORTED_LANGUAGES: tuple[str, ...] = ("ru", "en", "tr", "uz")
+# ISO 639-1 codes the product is localized into
+# (Russian, English, Turkish, Uzbek, Persian/Farsi, Chinese).
+SUPPORTED_LANGUAGES: tuple[str, ...] = ("ru", "en", "tr", "uz", "fa", "zh")
 
 # Fallback when a code is missing/unsupported (e.g. a Telegram language_code we
 # don't localize into). Russian is the operator/primary market default.

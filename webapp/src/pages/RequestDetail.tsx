@@ -70,7 +70,7 @@ function RequestFileRow({ requestId, file }: { requestId: number; file: RequestF
       <button
         type="button"
         onClick={() => void openFile()}
-        style={{ display: "block", width: "100%", padding: 0, marginBottom: "10px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+        style={{ display: "block", width: "100%", padding: 0, marginBottom: "10px", background: "none", border: "none", cursor: "pointer", textAlign: "start" }}
       >
         {imgUrl ? (
           <img
@@ -90,7 +90,7 @@ function RequestFileRow({ requestId, file }: { requestId: number; file: RequestF
     <button
       type="button"
       onClick={() => void openFile()}
-      style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", padding: "10px 0", background: "none", border: "none", borderBottom: "1px solid var(--border)", cursor: "pointer", textAlign: "left" }}
+      style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", padding: "10px 0", background: "none", border: "none", borderBottom: "1px solid var(--border)", cursor: "pointer", textAlign: "start" }}
     >
       <FileText size={18} color="var(--blue)" style={{ flex: "0 0 auto" }} />
       <span style={{ flex: 1, minWidth: 0, fontSize: "13px", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

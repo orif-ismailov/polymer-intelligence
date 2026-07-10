@@ -35,7 +35,7 @@ export default function FieldGroup({ htmlFor, label, required, error, children }
         }}
       >
         {label}
-        {required && <span style={{ color: "var(--danger)", marginLeft: "2px" }}>*</span>}
+        {required && <span style={{ color: "var(--danger)", marginInlineStart: "2px" }}>*</span>}
       </label>
 
       {/* Clone children with aria-describedby pointing at the error span */}

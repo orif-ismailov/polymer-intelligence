@@ -34,7 +34,7 @@ export default function RequestCard({ request, onClick }: RequestCardProps) {
         border: "1px solid var(--border)",
         boxShadow: "var(--shadow)",
         cursor: "pointer",
-        textAlign: "left",
+        textAlign: "start",
         marginBottom: "12px",
         boxSizing: "border-box" as const,
         gap: "6px",

@@ -77,7 +77,7 @@ export default function TopNav() {
         </span>
       </button>
 
-      <nav style={{ display: "flex", alignItems: "center", gap: "4px", marginLeft: "8px" }} aria-label="Main">
+      <nav style={{ display: "flex", alignItems: "center", gap: "4px", marginInlineStart: "8px" }} aria-label="Main">
         <NavItem
           label={t("nav.home")}
           Icon={Home}
@@ -95,7 +95,7 @@ export default function TopNav() {
         ))}
       </nav>
 
-      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "12px" }}>
+      <div style={{ marginInlineStart: "auto", display: "flex", alignItems: "center", gap: "12px" }}>
         <LanguageSwitcher />
         {!isMiniApp && (
           <button

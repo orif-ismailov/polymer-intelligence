@@ -17,7 +17,7 @@ import { backButton, mainButton } from "../telegram";
 import type { CatalogOffer } from "../types";
 
 const rowLabel: CSSProperties = { fontSize: "13px", color: "var(--text-muted)" };
-const rowValue: CSSProperties = { fontSize: "13px", color: "var(--text)", fontWeight: 600, textAlign: "right" };
+const rowValue: CSSProperties = { fontSize: "13px", color: "var(--text)", fontWeight: 600, textAlign: "end" };
 
 export default function OfferDetail() {
   const { t } = useTranslation();
@@ -167,7 +167,19 @@ export default function OfferDetail() {
         </p>
       )}
 
-      {sent ? (
+      {offer.is_own ? (
+        <div className="flex flex-col items-center gap-2 rounded-[var(--r-md)] border border-border bg-surface p-5 text-center">
+          <h2 className="m-0 text-[17px] font-bold text-text">{t("offer.ownTitle")}</h2>
+          <p className="m-0 text-sm leading-relaxed text-text-muted">{t("offer.ownBody")}</p>
+          <button
+            type="button"
+            onClick={() => navigate(`/sell/${offer.id}/edit`)}
+            className="mt-2 box-border min-h-[48px] w-full cursor-pointer rounded-[var(--r-md)] border-none bg-orange px-5 py-3 text-base font-semibold text-white"
+          >
+            {t("offer.editAction")}
+          </button>
+        </div>
+      ) : sent ? (
         <div
           style={{
             display: "flex",
@@ -188,8 +200,15 @@ export default function OfferDetail() {
           </p>
           <button
             type="button"
+            onClick={() => navigate("/inquiries")}
+            className="mt-2 box-border min-h-[48px] w-full cursor-pointer rounded-[var(--r-md)] border-none bg-green px-5 py-3 text-base font-semibold text-green-on"
+          >
+            {t("inquiries.viewMine")}
+          </button>
+          <button
+            type="button"
             onClick={() => navigate("/market")}
-            style={{ ...fullBtn("var(--green)", "var(--green-on)"), cursor: "pointer", marginTop: "8px" }}
+            className="box-border min-h-[48px] w-full cursor-pointer rounded-[var(--r-md)] border border-border bg-surface px-5 py-3 text-base font-semibold text-text"
           >
             {t("requestOffer.backToMarket")}
           </button>

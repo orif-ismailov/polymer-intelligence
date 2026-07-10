@@ -98,7 +98,7 @@ export default function OfferRequestsPage() {
                     </>
                   )}
                   {r.target_price != null && (
-                    <span className="ml-2">
+                    <span className="ms-2">
                       · {t("targetPrice")}: {r.target_price.toLocaleString()} {r.currency || r.offer.currency}
                     </span>
                   )}

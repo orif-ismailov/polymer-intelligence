@@ -1,0 +1,658 @@
+{
+  "nav": {
+    "groups": {
+      "main": "اصلی",
+      "requests": "درخواست‌ها",
+      "broker": "کارگزار",
+      "sources": "منابع",
+      "settings": "تنظیمات"
+    },
+    "items": {
+      "dashboard": "داشبورد",
+      "liveFeed": "جریان زنده",
+      "purchaseRequests": "درخواست‌های خرید",
+      "offers": "پیشنهادها",
+      "moderation": "بررسی و تأیید",
+      "sourcing": "تأمین با هوش مصنوعی",
+      "inventory": "انبار",
+      "partners": "شرکا",
+      "intel": "تحلیل",
+      "sources": "منابع",
+      "alerts": "هشدارها",
+      "reports": "گزارش‌ها",
+      "prices": "قیمت‌ها",
+      "adminProducts": "محصولات",
+      "adminUsers": "کاربران",
+      "offerRequests": "درخواست پیشنهاد"
+    },
+    "guest": "مهمان"
+  },
+  "login": {
+    "subtitle": "به پنل مدیریت وارد شوید",
+    "email": "ایمیل",
+    "password": "رمز عبور",
+    "signIn": "ورود",
+    "signingIn": "در حال ورود…",
+    "failed": "ورود ناموفق بود. اطلاعات احراز هویت را بررسی کنید.",
+    "emailPlaceholder": "analyst@company.com"
+  },
+  "signals": {
+    "title": "جریان زنده",
+    "subtitle": "سیگنال‌های بازار به‌صورت لحظه‌ای از تمام منابع پیکربندی‌شده",
+    "loading": "در حال بارگذاری…"
+  },
+  "language": {
+    "label": "زبان",
+    "ru": "Русский",
+    "uz": "Oʻzbek",
+    "tr": "Türkçe",
+    "fa": "فارسی",
+    "zh": "中文"
+  },
+  "common": {
+    "status": {
+      "new": "جدید",
+      "viewed": "مشاهده‌شده",
+      "in_progress": "در حال انجام",
+      "offer_sent": "پیشنهاد ارسال شد",
+      "matched": "تطبیق‌یافته",
+      "closed": "بسته‌شده",
+      "cancelled": "لغوشده"
+    },
+    "kind": {
+      "buy_request": "خریدار",
+      "sell_offer": "فروشنده",
+      "deal": "معامله",
+      "price_quote": "قیمت",
+      "news": "اخبار"
+    },
+    "urgency": {
+      "high": "زیاد",
+      "medium": "متوسط",
+      "low": "کم"
+    },
+    "urgencyAriaLabel": "فوریت: {label}",
+    "needsReview": "نیازمند بررسی"
+  },
+  "home": {
+    "title": "داشبورد",
+    "subtitle": "نمای کلی بازار و خلاصه فعالیت‌ها",
+    "kpiTotalBuyers": "کل خریداران",
+    "kpiTotalSellers": "کل فروشندگان",
+    "kpiActiveRequests": "درخواست‌های فعال",
+    "kpiHotLeads": "سرنخ‌های داغ",
+    "kpiHotLeadsDelta": "اولویت بالا",
+    "kpiPriceAlerts": "هشدارهای قیمت",
+    "liveMarketFeed": "جریان زنده بازار",
+    "priceTrends": "روند قیمت‌ها",
+    "aiMarketSignals": "سیگنال‌های بازار با هوش مصنوعی",
+    "aiMarketSignalsAria": "پنل سیگنال‌های بازار با هوش مصنوعی",
+    "topSellerOffers": "برترین پیشنهادهای فروشندگان",
+    "topBuyerRequests": "برترین درخواست‌های خریداران",
+    "viewAll": "مشاهده همه",
+    "loading": "در حال بارگذاری…",
+    "loadingSignals": "در حال بارگذاری سیگنال‌ها…",
+    "noSignals": "هنوز سیگنال هوش مصنوعی وجود ندارد",
+    "noOffers": "هنوز پیشنهادی وجود ندارد",
+    "noRequests": "هنوز درخواستی وجود ندارد",
+    "leadScore": "{score} امتیاز",
+    "volumeMt": "{volume} تن",
+    "pricePerMt": "{price} {currency}/تن"
+  },
+  "feed": {
+    "loading": "در حال بارگذاری جریان…",
+    "tableLabel": "جریان زنده بازار",
+    "error": {
+      "prefix": "بارگذاری جریان ناموفق بود:",
+      "unknown": "خطای ناشناخته"
+    },
+    "empty": {
+      "title": "هنوز فعالیتی در بازار وجود ندارد",
+      "description": "با دریافت داده از منابع، سیگنال‌ها اینجا نمایش داده می‌شوند."
+    },
+    "columns": {
+      "time": "زمان",
+      "kind": "نوع",
+      "product": "محصول / گرید",
+      "volume": "حجم",
+      "price": "قیمت",
+      "region": "منطقه",
+      "urgency": "فوریت",
+      "status": "وضعیت"
+    },
+    "pagination": {
+      "prev": "قبلی",
+      "next": "بعدی",
+      "prevLabel": "صفحه قبلی",
+      "nextLabel": "صفحه بعدی",
+      "results": "{count} نتیجه"
+    },
+    "filters": {
+      "period": "بازه زمانی",
+      "kind": "نوع",
+      "source": "منبع",
+      "urgency": "فوریت",
+      "periodLabel": "فیلتر بر اساس بازه زمانی",
+      "kindLabel": "فیلتر بر اساس نوع",
+      "sourceLabel": "فیلتر بر اساس منبع",
+      "urgencyLabel": "فیلتر بر اساس فوریت",
+      "sourcePlaceholder": "همه منابع"
+    },
+    "period": {
+      "7d": "۷ روز اخیر",
+      "30d": "۳۰ روز اخیر",
+      "90d": "۹۰ روز اخیر"
+    },
+    "kind": {
+      "all": "همه انواع",
+      "buy_request": "درخواست خرید",
+      "sell_offer": "پیشنهاد فروش",
+      "deal": "معامله",
+      "price_quote": "نرخ‌دهی قیمت",
+      "news": "اخبار"
+    },
+    "urgency": {
+      "all": "هر فوریتی",
+      "high": "زیاد",
+      "medium": "متوسط",
+      "low": "کم"
+    }
+  },
+  "offers": {
+    "title": "پیشنهادهای فروشندگان",
+    "subtitle": "پیشنهادهای فروش فعال از بورس‌ها و منابع تحت پایش",
+    "loading": "در حال بارگذاری…"
+  },
+  "prices": {
+    "title": "روند قیمت‌ها",
+    "subtitle": "قیمت‌های بازار پلیمر از UZEX و بانک مرکزی ازبکستان",
+    "market": "بازار",
+    "marketAll": "همه",
+    "range": "بازه زمانی",
+    "rangePreset": "{days} روز",
+    "from": "از",
+    "to": "تا",
+    "currency": "ارز",
+    "loading": "در حال بارگذاری داده‌های قیمت…",
+    "error": "بارگذاری داده‌های قیمت ناموفق بود. صفحه را تازه‌سازی کنید.",
+    "empty": "برای فیلترهای انتخاب‌شده داده‌ای وجود ندارد. بازه تاریخ یا انتخاب محصول را تغییر دهید.",
+    "yAxisLabel": "{currency}/تن",
+    "tooltipValue": "{value} {currency}/تن"
+  },
+  "requests": {
+    "loading": "در حال بارگذاری…",
+    "pageTitle": "درخواست‌های خرید",
+    "pageSubtitle": "درخواست‌های خریداران به‌صورت لحظه‌ای، گردآوری‌شده از بورس‌ها، وب‌سایت‌ها و کانال‌ها",
+    "searchPlaceholder": "جستجوی درخواست‌ها…",
+    "searchAriaLabel": "جستجوی درخواست‌ها",
+    "exportCsv": "خروجی CSV",
+    "tableSettings": "تنظیمات جدول",
+    "liveData": "داده‌های لحظه‌ای",
+    "kpiTotalRequests": "کل درخواست‌ها",
+    "kpiTotalVolume": "حجم کل",
+    "kpiAvgTargetPrice": "میانگین قیمت هدف",
+    "kpiHotRequests": "درخواست‌های فوری",
+    "kpiSources": "منابع",
+    "kpiUpdated": "به‌روزرسانی‌شده",
+    "colTime": "زمان",
+    "colProduct": "محصول",
+    "colGradeType": "گرید / نوع",
+    "colVolume": "حجم",
+    "colTargetPrice": "قیمت هدف",
+    "colRegion": "منطقه",
+    "colSource": "منبع",
+    "colUrgency": "فوریت",
+    "colStatus": "وضعیت",
+    "loadingRequests": "در حال بارگذاری درخواست‌ها…",
+    "loadError": "بارگذاری درخواست‌ها ناموفق بود:",
+    "unknownError": "خطای ناشناخته",
+    "emptyTitle": "درخواستی یافت نشد",
+    "emptyDescription": "فیلترها را تغییر دهید یا بعداً دوباره سر بزنید.",
+    "tableAriaLabel": "جدول درخواست‌های خرید",
+    "previousPage": "صفحه قبلی",
+    "prev": "قبلی",
+    "pagination": "صفحه {page} از {totalPages} · {results} نتیجه",
+    "nextPage": "صفحه بعدی",
+    "next": "بعدی",
+    "filterPeriod": "بازه زمانی",
+    "filterUrgency": "فوریت",
+    "filterStatus": "وضعیت",
+    "filterProduct": "محصول",
+    "periodOpt7d": "۷ روز اخیر",
+    "periodOpt30d": "۳۰ روز اخیر",
+    "periodOpt90d": "۹۰ روز اخیر",
+    "periodOptAll": "کل دوره",
+    "urgencyOptAll": "هر فوریتی",
+    "urgencyOptHigh": "زیاد",
+    "urgencyOptMedium": "متوسط",
+    "urgencyOptLow": "کم",
+    "statusOptAll": "همه وضعیت‌ها",
+    "statusOptNew": "جدید",
+    "statusOptViewed": "مشاهده‌شده",
+    "statusOptInProgress": "در حال انجام",
+    "statusOptOfferSent": "پیشنهاد ارسال شد",
+    "statusOptMatched": "تطبیق‌یافته",
+    "statusOptClosed": "بسته‌شده",
+    "statusOptCancelled": "لغوشده",
+    "moreFilters": "فیلترهای بیشتر",
+    "clearFilters": "پاک کردن فیلترها",
+    "removeFilter": "حذف فیلتر {label}",
+    "detailLoadError": "بارگذاری جزئیات درخواست ناموفق بود.",
+    "closeDetailPanel": "بستن پنل جزئیات",
+    "productFallback": "محصول #{id}",
+    "sectionRequestDetails": "جزئیات درخواست",
+    "sectionSourceInformation": "اطلاعات منبع",
+    "sectionAiAnalysis": "تحلیل هوش مصنوعی",
+    "sectionFiles": "فایل‌ها ({count})",
+    "sectionActions": "اقدامات",
+    "fieldVolume": "حجم",
+    "fieldTargetPrice": "قیمت هدف",
+    "fieldDeliveryTerms": "شرایط تحویل",
+    "fieldDestination": "مقصد",
+    "fieldRequiredDate": "تاریخ موردنیاز",
+    "fieldValidityDays": "مدت اعتبار (روز)",
+    "fieldAdditionalInfo": "اطلاعات تکمیلی",
+    "fieldPosted": "منتشرشده",
+    "fieldUpdated": "به‌روزرسانی‌شده",
+    "matchScore": "امتیاز تطبیق",
+    "priceAnalysis": "تحلیل قیمت",
+    "marketAvg": "میانگین بازار",
+    "noPriceData": "داده‌ای درباره قیمت وجود ندارد",
+    "demandLevel": "سطح تقاضا",
+    "demandLevelPending": "در انتظار",
+    "recommendation": "توصیه",
+    "recommendationPending": "تحلیل هوش مصنوعی هنوز در دسترس نیست",
+    "demandLevelLow": "کم",
+    "demandLevelMedium": "متوسط",
+    "demandLevelHigh": "زیاد",
+    "runAnalysis": "اجرای تحلیل هوش مصنوعی",
+    "rerunAnalysis": "به‌روزرسانی تحلیل هوش مصنوعی",
+    "analyzing": "در حال تحلیل…",
+    "analysisFailed": "اجرای تحلیل هوش مصنوعی ناموفق بود. دوباره تلاش کنید.",
+    "errorStatusChange": "تغییر وضعیت ناموفق بود. صفحه را تازه‌سازی کرده و دوباره تلاش کنید.",
+    "errorNoteSave": "ذخیره یادداشت ناموفق بود. اتصال را بررسی کرده و دوباره تلاش کنید.",
+    "dismiss": "بستن",
+    "contactBuyer": "تماس با خریدار",
+    "noTelegramId": "شناسه Telegram در پایگاه داده وجود ندارد",
+    "addNote": "افزودن یادداشت",
+    "notePlaceholder": "یادداشت تیم را وارد کنید (برای مشتری قابل مشاهده نیست)…",
+    "saveNote": "ذخیره یادداشت",
+    "cancel": "لغو",
+    "statusLabel": "وضعیت",
+    "cancelDialogTitle": "این درخواست لغو شود؟",
+    "cancelDialogDescription": "این درخواست لغو شود؟ این اقدام قابل بازگشت نیست. خریدار به‌صورت خودکار مطلع نخواهد شد.",
+    "confirm": "تأیید",
+    "assignOwner": "تعیین مسئول",
+    "unassigned": "تعیین‌نشده",
+    "markAsProcessed": "علامت‌گذاری به‌عنوان پردازش‌شده",
+    "exportError": "اجرای خروجی‌گیری ناموفق بود. دوباره تلاش کنید یا در صورت تداوم مشکل با پشتیبانی تماس بگیرید.",
+    "exportAriaLabel": "خروجی گرفتن از درخواست‌ها به CSV"
+  },
+  "broker": {
+    "intel": {
+      "title": "تحلیل بازار",
+      "subtitle": "تقاضا، عرضه و اسپرد به تفکیک محصول",
+      "product": "محصول",
+      "buyers": "خریداران",
+      "sellers": "فروشندگان",
+      "avgSeller": "میانگین قیمت فروش",
+      "avgBuyer": "میانگین قیمت هدف خرید",
+      "spread": "اسپرد",
+      "empty": "داده‌ای وجود ندارد",
+      "error": "بارگذاری ناموفق بود"
+    },
+    "inventory": {
+      "title": "انبار",
+      "subtitle": "موجودی ما (اولویت شماره ۱)",
+      "product": "شناسه محصول",
+      "grade": "گرید",
+      "qty": "حجم",
+      "cost": "بهای تمام‌شده",
+      "city": "شهر",
+      "add": "افزودن",
+      "delete": "حذف",
+      "empty": "انبار خالی است",
+      "error": "بارگذاری ناموفق بود"
+    },
+    "partners": {
+      "title": "شرکای تأمین‌کننده",
+      "subtitle": "تأمین‌کنندگان شریک (اولویت شماره ۲)",
+      "name": "نام",
+      "product": "شناسه محصول",
+      "price": "قیمت",
+      "lead": "مهلت، روز",
+      "add": "افزودن",
+      "delete": "حذف",
+      "empty": "شریکی وجود ندارد",
+      "error": "بارگذاری ناموفق بود"
+    },
+    "sourcing": {
+      "title": "تأمین با هوش مصنوعی",
+      "subtitle": "انتخاب بهترین گزینه برای درخواست",
+      "requestId": "شناسه درخواست",
+      "run": "اجرا",
+      "recommended": "توصیه‌شده",
+      "market": "بازار",
+      "label": "گزینه",
+      "price": "قیمت",
+      "leadTime": "مهلت، روز",
+      "empty": "گزینه‌ای یافت نشد",
+      "error": "اجرای تأمین ناموفق بود",
+      "source": {
+        "header": "منبع",
+        "inventory": "انبار ما",
+        "partner": "شریک",
+        "marketplace": "بازارگاه",
+        "import": "واردات"
+      }
+    }
+  },
+  "reports": {
+    "title": "گزارش‌های بازار",
+    "subtitle": "خلاصه روزانه بازار را بررسی و منتشر کنید",
+    "generate": "تولید",
+    "approve": "تأیید",
+    "publish": "انتشار",
+    "reject": "رد",
+    "empty": "هنوز گزارشی وجود ندارد",
+    "error": "بارگذاری گزارش‌ها ناموفق بود",
+    "status": {
+      "draft": "پیش‌نویس",
+      "pending_approval": "در انتظار تأیید",
+      "approved": "تأییدشده",
+      "published": "منتشرشده",
+      "rejected": "ردشده"
+    }
+  },
+  "moderation": {
+    "title": "بررسی پیشنهادها",
+    "subtitle": "پیشنهادهای فروشندگان را پیش از انتشار بررسی کنید",
+    "empty": "پیشنهادی برای بررسی وجود ندارد",
+    "error": "بارگذاری صف ناموفق بود",
+    "seller": "فروشنده",
+    "availInStock": "موجود",
+    "availOnOrder": "به‌صورت سفارشی",
+    "approve": "تأیید",
+    "reject": "رد",
+    "notePlaceholder": "توضیح برای فروشنده (اختیاری)"
+  },
+  "sources": {
+    "title": "منابع",
+    "subtitle": "منابع داده را مدیریت کرده و وضعیت گردآوری آن‌ها را پایش کنید",
+    "addSource": "افزودن منبع",
+    "loadError": "بارگذاری منابع ناموفق بود. صفحه را تازه‌سازی کنید.",
+    "never": "هرگز",
+    "columns": {
+      "nameType": "نام / نوع",
+      "status": "وضعیت",
+      "lastFetch": "آخرین گردآوری",
+      "failures": "خطاها",
+      "test": "آزمایش",
+      "enable": "فعال‌سازی"
+    },
+    "status": {
+      "pending": "در انتظار فعال‌سازی (مرحله ۵)",
+      "enabled": "فعال",
+      "disabled": "غیرفعال"
+    },
+    "empty": {
+      "title": "هیچ منبعی پیکربندی نشده است",
+      "description": "برای شروع گردآوری سیگنال‌ها، اولین منبع داده را اضافه کنید."
+    },
+    "adapterLabels": {
+      "html_table": "جدول HTML",
+      "rss": "فید RSS",
+      "telegram_channel": "کانال Telegram",
+      "llm_page": "صفحه LLM",
+      "uzex_offers": "پیشنهادهای UZEX",
+      "uzex_contracts": "قراردادهای UZEX",
+      "uzex_deals": "معاملات UZEX",
+      "cbu_rates": "نرخ‌های بانک مرکزی ازبکستان"
+    },
+    "testResult": {
+      "running": "در حال اجرای آزمایش…",
+      "requestFailed": "اجرای آزمایش ناموفق بود. اتصال را بررسی کنید.",
+      "passed": "آزمایش موفق بود — تعداد رکوردهای استخراج‌شده: {count}",
+      "failed": "آزمایش ناموفق بود: {error}",
+      "unknownError": "خطای ناشناخته"
+    },
+    "disableDialog": {
+      "title": "غیرفعال کردن منبع",
+      "description": "این منبع غیرفعال شود؟ گردآوری داده تا فعال‌سازی مجدد متوقف خواهد شد.",
+      "cancel": "لغو",
+      "confirm": "غیرفعال کردن"
+    },
+    "test": {
+      "button": "آزمایش",
+      "unavailableAria": "آزمایش برای منبع در حالت انتظار در دسترس نیست",
+      "availableAfterPhase5": "پس از مرحله ۵ در دسترس خواهد بود",
+      "intro": "یک آزمایش زنده اجرا کنید تا صحت استخراج داده بررسی شود. تا ۱۰ ردیف نرمال‌شده به‌عنوان پیش‌نمایش نشان داده می‌شود.",
+      "fetching": "در حال دریافت منبع…",
+      "failedTitle": "آزمایش ناموفق بود",
+      "failedBody": "استخراج داده از این منبع ناموفق بود. URL و سلکتورها را بررسی کرده و دوباره تلاش کنید.",
+      "passedTitle": "آزمایش موفق بود",
+      "passedBody": "تعداد رکوردهای استخراج‌شده: {count}. پیش‌نمایش را بررسی کرده و منبع را فعال کنید.",
+      "running": "در حال اجرا…",
+      "runButton": "اجرای آزمایش",
+      "runError": "اجرای آزمایش ناموفق بود. اتصال را بررسی کرده و دوباره تلاش کنید."
+    },
+    "enable": {
+      "unavailableAria": "فعال‌سازی برای منبع در حالت انتظار در دسترس نیست",
+      "disableAria": "غیرفعال کردن منبع",
+      "enableAria": "فعال کردن منبع",
+      "mustTestFirst": "منبع باید پیش از فعال‌سازی آزمایش را با موفقیت بگذراند"
+    },
+    "dialogTitle": "افزودن منبع داده",
+    "stepLabel": "گام {step}: {label}",
+    "steps": {
+      "pickType": "انتخاب نوع",
+      "configure": "پیکربندی",
+      "test": "آزمایش",
+      "enable": "فعال‌سازی"
+    },
+    "typeLabels": {
+      "html_table": "جدول HTML",
+      "rss": "فید RSS",
+      "telegram_channel": "کانال Telegram",
+      "llm_page": "صفحه LLM"
+    },
+    "typeDescriptions": {
+      "html_table": "دریافت داده از یک جدول HTML در صفحه وب عمومی",
+      "rss": "اشتراک در فید RSS یا Atom",
+      "telegram_channel": "پایش کانال عمومی Telegram",
+      "llm_page": "استخراج داده‌های ساختاریافته از صفحه با کمک هوش مصنوعی"
+    },
+    "phase5Badge": "مرحله ۵",
+    "pendingWarning": "<strong>{type}</strong> به قابلیت‌های مرحله ۵ نیاز دارد. می‌توانید پیکربندی را اکنون به‌صورت در انتظار ذخیره کنید — با در دسترس قرار گرفتن مرحله ۵ فعال خواهد شد.",
+    "continue": "ادامه",
+    "sourceName": "نام منبع",
+    "sourceNamePlaceholder": "منبع {type} من",
+    "sourceNameRequired": "نام منبع را وارد کنید.",
+    "pendingTypeNotice": "این نوع منبع در مرحله ۵ در دسترس است. پیکربندی شما ذخیره خواهد شد، اما منبع تا آن زمان در حالت انتظار باقی می‌ماند.",
+    "saveConfiguration": "ذخیره پیکربندی",
+    "continueToTest": "رفتن به آزمایش",
+    "saveConfigError": "ذخیره پیکربندی ناموفق بود. دوباره تلاش کنید.",
+    "back": "بازگشت",
+    "pendingSaved": {
+      "title": "پیکربندی ذخیره شد — در انتظار فعال‌سازی (مرحله ۵)",
+      "body": "این منبع ذخیره شد. با در دسترس قرار گرفتن قابلیت‌های مرحله ۵، به‌صورت خودکار فعال می‌شود."
+    },
+    "readyToEnable": {
+      "title": "آزمایش موفق بود — منبع آماده فعال‌سازی است",
+      "body": "منبع را فعال کنید تا گردآوری داده از آن آغاز شود."
+    },
+    "enableError": "فعال کردن منبع ناموفق بود. از موفقیت‌آمیز بودن آزمایش مطمئن شوید و دوباره تلاش کنید.",
+    "enabling": "در حال فعال‌سازی…",
+    "enableSource": "فعال کردن منبع",
+    "done": "انجام شد",
+    "saveAsPending": "ذخیره به‌عنوان در انتظار",
+    "form": {
+      "continue": "ادامه",
+      "back": "بازگشت",
+      "required": "{label} الزامی است",
+      "noConfig": "برای این نوع منبع پیکربندی لازم نیست.",
+      "publicUrlsOnly": "فقط URLهای عمومی.",
+      "selectPlaceholder": "{label} را انتخاب کنید…",
+      "enterPlaceholder": "{label} را وارد کنید…"
+    }
+  },
+  "alerts": {
+    "pageTitle": "هشدارها",
+    "pageSubtitle": "هشدارهای فعال‌شده و قوانین تحویل",
+    "recentAlerts": "هشدارهای اخیر",
+    "loadError": "بارگذاری هشدارها ناموفق بود. صفحه را تازه‌سازی کنید.",
+    "ruleRef": "قانون #{id}",
+    "severity": {
+      "info": "اطلاعات",
+      "warning": "هشدار",
+      "critical": "بحرانی"
+    },
+    "empty": {
+      "title": "هنوز هیچ هشداری فعال نشده است",
+      "description": "برای شروع دریافت هشدارها، یک قانون تنظیم کنید."
+    },
+    "table": {
+      "severity": "شدت",
+      "message": "پیام",
+      "rule": "قانون",
+      "triggeredAt": "زمان فعال‌سازی"
+    },
+    "predicate": {
+      "kind": "نوع: {value}",
+      "product": "محصول #{id}",
+      "volume": "حجم ≥ {value} تن",
+      "urgency": "فوریت: {value}",
+      "source": "منبع: {value}",
+      "any": "هر سیگنالی"
+    },
+    "deleteDialog": {
+      "title": "حذف قانون هشدار",
+      "description": "این قانون حذف شود؟ تحویل‌های فعال بر اساس این قانون بلافاصله متوقف خواهند شد.",
+      "cancel": "لغو",
+      "confirm": "حذف"
+    },
+    "kindOptions": {
+      "buy_request": "درخواست خرید",
+      "sell_offer": "پیشنهاد فروش",
+      "deal": "معامله",
+      "price_quote": "نرخ‌دهی قیمت"
+    },
+    "urgencyOptions": {
+      "high": "زیاد",
+      "medium": "متوسط",
+      "low": "کم"
+    },
+    "sourceKindOptions": {
+      "html_table": "جدول HTML",
+      "rss": "فید RSS",
+      "telegram_channel": "کانال Telegram",
+      "llm_page": "صفحه LLM",
+      "uzex_offers": "پیشنهادهای UZEX",
+      "uzex_contracts": "قراردادهای UZEX",
+      "uzex_deals": "معاملات UZEX",
+      "webapp": "وب‌اپلیکیشن"
+    },
+    "form": {
+      "nameLabel": "نام قانون",
+      "namePlaceholder": "مثلاً درخواست‌های خرید بزرگ PP",
+      "nameRequired": "نام قانون الزامی است",
+      "signalKindLabel": "نوع سیگنال",
+      "productLabel": "محصول",
+      "allProducts": "همه محصولات",
+      "volumeLabel": "حجم ≥ (تن)",
+      "volumePlaceholder": "مثلاً 100",
+      "urgencyLabel": "فوریت",
+      "sourceKindLabel": "نوع منبع",
+      "leadScoreLabel": "امتیاز سرنخ ≥",
+      "leadScoreBadge": "امتیاز هوش مصنوعی",
+      "leadScorePlaceholder": "0.0 – 1.0",
+      "leadScoreTooltip": "پس از تحلیل هوش مصنوعی درخواست نمایش داده می‌شود",
+      "chatIdsLabel": "شناسه چت Telegram برای تحویل",
+      "chatIdsHelp": "شناسه چت Telegram را وارد کنید (مثلاً -1001234567890 برای گروه‌ها). پیام خصوصی: شناسه چت شخصی شما. هر کدام در یک خط.",
+      "urgencyChannelLabel": "کانال فوریت",
+      "channelDm": "پیام خصوصی",
+      "channelGroup": "گروه",
+      "cancel": "لغو",
+      "save": "ذخیره قانون",
+      "saving": "در حال ذخیره…"
+    },
+    "saveError": "ذخیره قانون ناموفق بود. داده‌ها را بررسی کرده و دوباره تلاش کنید.",
+    "rulesTitle": "قوانین هشدار",
+    "createRule": "ایجاد قانون",
+    "newRule": "قانون هشدار جدید",
+    "emptyRules": "هنوز هیچ قانون هشداری تنظیم نشده است.",
+    "createFirstRule": "اولین قانون خود را بسازید",
+    "deliveryTargets": "{count, plural, one {# مقصد تحویل} other {# مقصد تحویل}}",
+    "statusActive": "فعال",
+    "statusPaused": "متوقف‌شده",
+    "deleteRuleAria": "حذف قانون {name}"
+  },
+  "admin": {
+    "pageTitle": "مدیریت کاربران",
+    "pageSubtitle": "حساب‌های کارکنان و تخصیص نقش‌ها",
+    "loadError": "بارگذاری کاربران ناموفق بود. صفحه را تازه‌سازی کنید.",
+    "empty": "کارمندی یافت نشد.",
+    "statusActive": "فعال",
+    "statusInactive": "غیرفعال",
+    "table": {
+      "email": "ایمیل",
+      "role": "نقش",
+      "status": "وضعیت",
+      "createdAt": "ایجادشده"
+    },
+    "roles": {
+      "admin": "مدیر",
+      "analyst": "تحلیلگر",
+      "trader": "معامله‌گر",
+      "viewer": "بیننده"
+    }
+  },
+  "adminProducts": {
+    "pageTitle": "محصولات",
+    "pageSubtitle": "فهرست محصولات برای اپلیکیشن. محصولاتی که اینجا اضافه می‌شوند در انتخابگرها ظاهر می‌شوند.",
+    "loadError": "بارگذاری محصولات ناموفق بود. صفحه را تازه‌سازی کنید.",
+    "empty": "محصولی یافت نشد.",
+    "add": "افزودن محصول",
+    "saving": "در حال ذخیره…",
+    "statusActive": "فعال",
+    "statusInactive": "پنهان",
+    "show": "نمایش",
+    "hide": "پنهان کردن",
+    "createError": "ذخیره محصول ناموفق بود",
+    "duplicateCode": "محصولی با این کد از قبل وجود دارد",
+    "table": {
+      "code": "کد",
+      "nameRu": "نام (RU)",
+      "nameUz": "نام (UZ)",
+      "sortOrder": "ترتیب",
+      "status": "وضعیت",
+      "actions": "اقدامات"
+    },
+    "form": {
+      "code": "کد",
+      "codePlaceholder": "مثلاً EVA",
+      "nameRu": "نام (روسی)",
+      "nameRuPlaceholder": "مثلاً اتیلن‌وینیل‌استات",
+      "nameUz": "نام (ازبکی)",
+      "nameEn": "نام (انگلیسی)",
+      "nameTr": "نام (ترکی)",
+      "sortOrder": "ترتیب مرتب‌سازی",
+      "submit": "افزودن",
+      "cancel": "لغو"
+    }
+  },
+  "offerRequests": {
+    "title": "درخواست پیشنهاد",
+    "subtitle": "درخواست‌های خریداران برای پیشنهاد — پیش از ارسال به فروشنده بررسی کنید",
+    "empty": "درخواستی برای بررسی وجود ندارد",
+    "error": "بارگذاری درخواست‌ها ناموفق بود",
+    "listedPrice": "قیمت درج‌شده در آگهی",
+    "wantsQty": "موردنیاز",
+    "targetPrice": "قیمت موردنظر",
+    "buyer": "خریدار",
+    "seller": "فروشنده",
+    "approve": "تأیید و ارسال به فروشنده",
+    "reject": "رد",
+    "notePlaceholder": "توضیح (اختیاری)"
+  }
+}

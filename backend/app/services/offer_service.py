@@ -20,9 +20,10 @@ from sqlalchemy.orm import Session
 from app.core.time import utcnow
 from app.models.enums import SellerOfferStatus
 from app.models.marketplace import Seller, SellerOffer
-from app.models.reference import Product
-from app.schemas.marketplace import CategoryCount, SellerOfferCreate
+from app.models.reference import Product, ProductSynonym
+from app.schemas.marketplace import CategoryCount, SellerOfferCreate, SellerOfferUpdate
 from app.services.audit_service import write_audit
+from app.services.relevance_service import normalize_term
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,59 @@ def create_offer(db: Session, seller: Seller, data: SellerOfferCreate) -> Seller
     return offer
 
 
+def update_offer(
+    db: Session, offer: SellerOffer, data: SellerOfferUpdate
+) -> tuple[SellerOffer, bool]:
+    """Apply a seller's revision to their own offer (full-replacement). Does NOT commit.
+
+    Every editable field is replaced from ``data``. Editing an offer that is currently
+    public (approved) — or one that was rejected — sends it back to ``pending_moderation``
+    so the team re-approves before the change appears in the catalog again (the platform
+    invariant: nothing is public without moderation). Draft/pending offers are updated in
+    place and keep their status.
+
+    Returns (offer, requeued) where ``requeued`` is True when the edit moved the offer
+    back into the moderation queue — the router then re-posts it to the team group.
+    """
+    offer.product_id = data.product_id
+    offer.product_text = data.product_text
+    offer.grade_text = data.grade_text
+    offer.polymer_type = data.polymer_type
+    offer.availability = data.availability
+    offer.qty_available = data.qty_available
+    offer.qty_unit = data.qty_unit
+    offer.price = data.price
+    offer.currency = data.currency
+    offer.incoterms = data.incoterms
+    offer.warehouse_city = data.warehouse_city
+    offer.country = data.country
+    offer.min_order_qty = data.min_order_qty
+    offer.description = data.description
+
+    # An edit to a public (approved) or previously-rejected offer re-enters moderation.
+    requeued = offer.status in (SellerOfferStatus.approved, SellerOfferStatus.rejected)
+    if requeued:
+        offer.status = SellerOfferStatus.pending_moderation
+        offer.published_at = None
+        offer.moderated_by = None
+        offer.moderation_note = None
+
+    db.flush()
+    write_audit(
+        db=db,
+        staff_user_id=None,
+        action="offer.edit",
+        entity="seller_offers",
+        entity_id=str(offer.id),
+        details={"via": "seller", "requeued": requeued},
+    )
+    logger.info(
+        "offer_service.update",
+        extra={"offer_id": offer.id, "seller_id": offer.seller_id, "requeued": requeued},
+    )
+    return offer, requeued
+
+
 def list_seller_offers(db: Session, seller_id: int) -> list[SellerOffer]:
     """All of one seller's offers, newest first (any status)."""
     return (
@@ -94,27 +148,114 @@ def list_seller_offers(db: Session, seller_id: int) -> list[SellerOffer]:
     )
 
 
+def seller_id_for(db: Session, telegram_user_id: int | None) -> int | None:
+    """Return the Seller id owned by this Telegram identity, or None (cheap id lookup).
+
+    Used to exclude a seller's own offers from the catalog they browse and to flag the
+    single-offer detail as owned (``is_own``). Returns None when the caller has never
+    listed anything (no Seller row yet) or has no Telegram id.
+    """
+    if telegram_user_id is None:
+        return None
+    result: int | None = (
+        db.query(Seller.id).filter(Seller.telegram_user_id == telegram_user_id).scalar()
+    )
+    return result
+
+
+def get_own_offer(db: Session, offer_id: int, seller_id: int) -> SellerOffer | None:
+    """Load an offer only if it belongs to this seller (owner-scoped), else None."""
+    return (
+        db.query(SellerOffer)
+        .filter(SellerOffer.id == offer_id, SellerOffer.seller_id == seller_id)
+        .first()
+    )
+
+
+def matching_product_ids(db: Session, q: str) -> list[int]:
+    """Product ids whose code, any localized name, or a synonym matches ``q``.
+
+    Bridges cross-language catalog search. A seller may list an offer under the Latin
+    product code ("PP") while a buyer searches with the Cyrillic abbreviation ("ПП") or a
+    full name in any supported language. This resolves the term to product ids via:
+
+    - the ``products`` table: ``code`` + every localized name column (ru/uz/en/tr), so a
+      full or partial name in any of those languages matches; and
+    - the ``product_synonyms`` dictionary (same table the UZEX relevance filter uses), so
+      abbreviations like "ПП", "ПЭВД", "ПНД" — which are NOT substrings of the full name —
+      still resolve to the right product.
+
+    The caller ORs the result into the catalog query as ``product_id IN (...)`` alongside
+    the offer's own free-text columns, so nothing that matched before stops matching.
+    """
+    term = q.strip()
+    if not term:
+        return []
+
+    like = f"%{term}%"
+    ids: set[int] = {
+        pid
+        for (pid,) in db.query(Product.id).filter(
+            or_(
+                Product.code.ilike(like),
+                Product.name_ru.ilike(like),
+                Product.name_uz.ilike(like),
+                Product.name_en.ilike(like),
+                Product.name_tr.ilike(like),
+            )
+        )
+    }
+
+    # Synonym dictionary: normalized (case/space-insensitive) partial match so a bare
+    # abbreviation resolves. `synonym_norm` was seeded via the same normalize_term, so
+    # the normalization is symmetric. Skip 1-char terms — too noisy to be useful.
+    norm = normalize_term(term)
+    if len(norm) >= 2:
+        ids.update(
+            pid
+            for (pid,) in db.query(ProductSynonym.product_id).filter(
+                ProductSynonym.synonym_norm.ilike(f"%{norm}%")
+            )
+        )
+    return list(ids)
+
+
 def list_catalog(
     db: Session,
     *,
     product_id: int | None = None,
     q: str | None = None,
+    exclude_seller_id: int | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[SellerOffer]:
-    """Public catalog: approved offers, optionally filtered by product / free-text."""
+    """Public catalog: approved offers, optionally filtered by product / free-text.
+
+    Free-text ``q`` matches the offer's own columns (product_text/grade_text/polymer_type)
+    AND resolves through :func:`matching_product_ids`, so a search in any supported
+    language — including a Cyrillic abbreviation like "ПП" for a "PP"-coded offer — returns
+    the linked catalog offers.
+
+    When ``exclude_seller_id`` is set, that seller's own listings are omitted — a seller
+    browsing the marketplace sees only other sellers' offers (they manage their own under
+    "My offers" and cannot inquire on them).
+    """
     query = db.query(SellerOffer).filter(SellerOffer.status == SellerOfferStatus.approved)
+    if exclude_seller_id is not None:
+        query = query.filter(SellerOffer.seller_id != exclude_seller_id)
     if product_id is not None:
         query = query.filter(SellerOffer.product_id == product_id)
     if q:
         like = f"%{q.strip()}%"
-        query = query.filter(
-            or_(
-                SellerOffer.product_text.ilike(like),
-                SellerOffer.grade_text.ilike(like),
-                SellerOffer.polymer_type.ilike(like),
-            )
-        )
+        conditions = [
+            SellerOffer.product_text.ilike(like),
+            SellerOffer.grade_text.ilike(like),
+            SellerOffer.polymer_type.ilike(like),
+        ]
+        product_ids = matching_product_ids(db, q)
+        if product_ids:
+            conditions.append(SellerOffer.product_id.in_(product_ids))
+        query = query.filter(or_(*conditions))
     return (
         query.order_by(SellerOffer.published_at.desc().nullslast())
         .limit(limit)
@@ -142,13 +283,21 @@ def list_pending(db: Session) -> list[SellerOffer]:
     )
 
 
-def category_counts(db: Session) -> list[CategoryCount]:
-    """Per-product count of approved offers (catalog category chips)."""
-    rows = (
+def category_counts(db: Session, *, exclude_seller_id: int | None = None) -> list[CategoryCount]:
+    """Per-product count of approved offers (catalog category chips).
+
+    Honours the same own-offer exclusion as :func:`list_catalog` so the chip counts
+    match the offers the caller actually sees.
+    """
+    query = (
         db.query(Product.code, func.count(SellerOffer.id))
         .join(SellerOffer, SellerOffer.product_id == Product.id)
         .filter(SellerOffer.status == SellerOfferStatus.approved)
-        .group_by(Product.code)
+    )
+    if exclude_seller_id is not None:
+        query = query.filter(SellerOffer.seller_id != exclude_seller_id)
+    rows = (
+        query.group_by(Product.code)
         .order_by(func.count(SellerOffer.id).desc())
         .all()
     )
@@ -234,11 +383,13 @@ def moderate_offer_via_telegram(
     return offer
 
 
-def enqueue_offer_group_notify(offer_id: int) -> None:
-    """Post a newly-submitted offer to the team Telegram group, fail-soft.
+def enqueue_offer_group_notify(offer_id: int, *, edited: bool = False) -> None:
+    """Post an offer to the team Telegram group for moderation, fail-soft.
 
-    Skips entirely when REQUEST_NOTIFY_CHAT_ID is unset; a broker outage must never
-    break offer creation (mirror of request_service._enqueue_group_notify_soft).
+    Used both for a newly-submitted offer and for one re-entering moderation after a
+    seller edit (``edited=True`` → the group message is framed as an update). Skips
+    entirely when REQUEST_NOTIFY_CHAT_ID is unset; a broker outage must never break
+    offer creation/edit (mirror of request_service._enqueue_group_notify_soft).
     """
     from app.core.config import settings  # noqa: PLC0415
 
@@ -247,7 +398,9 @@ def enqueue_offer_group_notify(offer_id: int) -> None:
     from app.tasks.notify import send_offer_to_group  # noqa: PLC0415
 
     try:
-        send_offer_to_group.apply_async(args=[offer_id], queue="notify", retry=False)
+        send_offer_to_group.apply_async(
+            args=[offer_id], kwargs={"edited": edited}, queue="notify", retry=False
+        )
     except Exception as exc:  # noqa: BLE001 — broker outage must not break creation
         logger.warning(
             "offer group-notify enqueue failed (broker unavailable); offer %s committed "

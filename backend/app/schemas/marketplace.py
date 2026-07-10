@@ -77,6 +77,15 @@ class SellerOfferCreate(BaseModel):
         return self
 
 
+class SellerOfferUpdate(SellerOfferCreate):
+    """A seller's revision to their own offer — same shape + validation as create.
+
+    Full-replacement of the offer's fields (the client resends the current values and
+    changes what it wants). Editing an offer that is already public (approved) — or one
+    that was rejected — re-enters moderation; the service owns that transition.
+    """
+
+
 # ── Read-side ───────────────────────────────────────────────────────────────────
 
 class OfferFileRef(BaseModel):
@@ -176,6 +185,10 @@ class CatalogOfferOut(_CatalogOfferFields):
     """A public (approved) catalog offer with the seller's contact block."""
 
     seller: CatalogSeller
+    # True when the authenticated caller owns this offer. The catalog list excludes
+    # own offers, so this is only ever True on the single-offer detail — the client
+    # uses it to hide the "Request an offer" action (a seller can't buy from itself).
+    is_own: bool = False
 
 
 class PublicFeaturedOffer(BaseModel):
@@ -248,6 +261,14 @@ class OfferRequestCreate(BaseModel):
         return self
 
 
+class OfferRequestUpdate(OfferRequestCreate):
+    """A buyer's revised inquiry — same shape + validation as create (full replacement).
+
+    Editing an already-forwarded inquiry re-enters moderation and re-notifies the
+    seller with the diff; a rejected inquiry cannot be edited (enforced in the service).
+    """
+
+
 class OfferBrief(BaseModel):
     """A minimal offer summary embedded in an inquiry (buyer + admin views)."""
 
@@ -274,6 +295,7 @@ class OfferRequestOut(BaseModel):
     currency: str | None
     message: str | None
     created_at: datetime.datetime
+    edited_at: datetime.datetime | None = None
     offer: OfferBrief
 
     model_config = {"from_attributes": True}

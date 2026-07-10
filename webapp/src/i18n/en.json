@@ -4,6 +4,31 @@
     "in_stock": "In stock",
     "on_order": "On order"
   },
+  "inquiries": {
+    "title": "My requests",
+    "viewMine": "My requests",
+    "edited": "Edited",
+    "empty": {
+      "heading": "No requests yet",
+      "body": "Your requests to sellers from the Market will appear here.",
+      "cta": "Go to Market"
+    },
+    "status": {
+      "pending": "Under review",
+      "approved": "Sent to seller",
+      "rejected": "Rejected"
+    },
+    "qty": "Required volume",
+    "targetPrice": "Target price",
+    "message": "Comment",
+    "saveChanges": "Save changes",
+    "saveError": "Could not save changes",
+    "savedTitle": "Changes saved",
+    "savedBody": "We'll notify the seller of your changes so they see the latest terms.",
+    "backToList": "Back to my requests",
+    "rejectedNote": "This request was rejected and can't be edited.",
+    "editApprovedHint": "After editing, the request is reviewed again, then the seller receives the updated terms."
+  },
   "home": {
     "brandTag": "AI B2B PLATFORM",
     "headline": "AI B2B Platform for Petrochemicals, Chemical Raw Materials & Additives",
@@ -166,7 +191,10 @@
     "call": "Call",
     "writeTelegram": "Message on Telegram",
     "requestOffer": "Request an offer",
-    "notFound": "Offer not found"
+    "notFound": "Offer not found",
+    "ownTitle": "This is your offer",
+    "ownBody": "You can't send an inquiry on your own listing. You can edit it in the Sell section.",
+    "editAction": "Edit"
   },
   "requestOffer": {
     "title": "Request an offer",
@@ -190,7 +218,8 @@
     "title": "Post an offer",
     "myOffers": "My offers",
     "newOffer": "Post an offer",
-    "empty": "You have no offers yet"
+    "empty": "You have no offers yet",
+    "edit": "Edit"
   },
   "offerStatus": {
     "draft": "Draft",
@@ -267,7 +296,9 @@
       "ru": "Русский",
       "en": "English",
       "uz": "O'zbek",
-      "tr": "Türkçe"
+      "tr": "Türkçe",
+      "fa": "فارسی",
+      "zh": "中文"
     },
     "theme": "Appearance",
     "themeOpt": {
@@ -389,5 +420,15 @@
     "signing": "Signing in…",
     "error": "Sign-in failed. Please try again.",
     "logout": "Log out"
+  },
+  "editOffer": {
+    "title": "Edit offer",
+    "save": "Save changes",
+    "saveError": "Couldn't save changes",
+    "savedTitle": "Changes saved",
+    "savedBody": "Your changes are saved. If the listing was published, it will be re-reviewed before it appears in the catalog again.",
+    "backToOffers": "Back to my offers",
+    "moderationHint": "After editing, a published offer goes back to moderation.",
+    "loadError": "Couldn't load the offer"
   }
 }

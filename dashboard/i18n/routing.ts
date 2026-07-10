@@ -6,7 +6,7 @@ import { defineRouting } from "next-intl/routing";
  * Russian is the default (operator/primary market language).
  */
 export const routing = defineRouting({
-  locales: ["ru", "uz", "tr"],
+  locales: ["ru", "uz", "tr", "fa", "zh"],
   defaultLocale: "ru",
 });
 

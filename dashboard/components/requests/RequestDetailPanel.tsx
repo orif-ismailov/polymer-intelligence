@@ -98,7 +98,7 @@ export function RequestDetailPanel() {
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="w-[400px] max-w-[400px] bg-background-secondary border-l border-border overflow-y-auto p-0"
+        className="w-[400px] max-w-[400px] bg-background-secondary border-s border-border overflow-y-auto p-0"
         role="dialog"
         aria-labelledby="request-detail-heading"
       >

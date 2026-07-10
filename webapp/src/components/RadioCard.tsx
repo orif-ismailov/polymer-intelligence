@@ -17,7 +17,7 @@ export default function RadioCard({ selected, label, description, onClick }: Rad
   const style: CSSProperties = {
     display: "flex",
     width: "100%",
-    textAlign: "left",
+    textAlign: "start",
     alignItems: "center",
     justifyContent: "space-between",
     gap: "12px",

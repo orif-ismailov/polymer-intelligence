@@ -40,7 +40,7 @@ function TableLoadingFallback() {
   return (
     <div className="flex items-center justify-center py-12">
       <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-      <span className="ml-3 text-sm text-foreground-muted">{t("loading")}</span>
+      <span className="ms-3 text-sm text-foreground-muted">{t("loading")}</span>
     </div>
   );
 }
@@ -68,7 +68,7 @@ export default function RequestsPage() {
               type="search"
               placeholder={t("searchPlaceholder")}
               aria-label={t("searchAriaLabel")}
-              className="h-8 w-[280px] rounded-lg border border-border bg-background-secondary pl-3 pr-3 text-sm text-foreground placeholder-foreground-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:bg-background-tertiary"
+              className="h-8 w-[280px] rounded-lg border border-border bg-background-secondary ps-3 pe-3 text-sm text-foreground placeholder-foreground-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:bg-background-tertiary"
             />
           </div>
 

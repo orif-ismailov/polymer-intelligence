@@ -47,7 +47,7 @@ export default function RoleHintModal() {
     gap: "14px",
     alignItems: "center",
     width: "100%",
-    textAlign: "left",
+    textAlign: "start",
     padding: "16px",
     borderRadius: "var(--r-md)",
     border: "1px solid var(--border)",
