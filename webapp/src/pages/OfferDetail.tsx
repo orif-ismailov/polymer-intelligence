@@ -167,7 +167,19 @@ export default function OfferDetail() {
         </p>
       )}
 
-      {sent ? (
+      {offer.is_own ? (
+        <div className="flex flex-col items-center gap-2 rounded-[var(--r-md)] border border-border bg-surface p-5 text-center">
+          <h2 className="m-0 text-[17px] font-bold text-text">{t("offer.ownTitle")}</h2>
+          <p className="m-0 text-sm leading-relaxed text-text-muted">{t("offer.ownBody")}</p>
+          <button
+            type="button"
+            onClick={() => navigate(`/sell/${offer.id}/edit`)}
+            className="mt-2 box-border min-h-[48px] w-full cursor-pointer rounded-[var(--r-md)] border-none bg-orange px-5 py-3 text-base font-semibold text-white"
+          >
+            {t("offer.editAction")}
+          </button>
+        </div>
+      ) : sent ? (
         <div
           style={{
             display: "flex",

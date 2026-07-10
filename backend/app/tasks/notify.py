@@ -501,14 +501,18 @@ _AVAILABILITY_RU: dict[str, str] = {
 
 
 @celery_app.task(name="send_offer_to_group", queue="notify")  # type: ignore[untyped-decorator]
-def send_offer_to_group(offer_id: int) -> dict[str, Any]:
-    """Post a newly-submitted seller offer to the team Telegram group for moderation.
+def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
+    """Post a seller offer to the team Telegram group for moderation.
 
     The message carries the product info, the seller's own contact details, and (when
     present) the offer's first image as a photo. An inline keyboard with
     ✅ Подтвердить / ❌ Отклонить lets a group admin approve or reject the offer from
     Telegram (telegram/handlers/moderation.py applies the same decision the dashboard
     moderation queue does).
+
+    When ``edited`` is True the offer is re-entering moderation after a seller revised it
+    (a previously-approved/rejected listing), so the header signals a re-review rather
+    than a brand-new listing.
 
     Best-effort and read-only: no-ops (status="skipped") when the chat id is unset;
     never raises — bot/broker/storage failures are logged and returned as an error dict
@@ -543,7 +547,12 @@ def send_offer_to_group(offer_id: int) -> dict[str, Any]:
                 product_name = product.name_ru if product else None
             product_label = product_name or offer.product_text or "—"
 
-            lines: list[str] = ["🆕 Новое предложение на модерацию", ""]
+            header = (
+                "✏️ Обновлённое предложение на модерацию"
+                if edited
+                else "🆕 Новое предложение на модерацию"
+            )
+            lines: list[str] = [header, ""]
             grade = f" · {offer.grade_text}" if offer.grade_text else ""
             lines.append(f"📦 Продукт: {product_label}{grade}")
             if offer.polymer_type:

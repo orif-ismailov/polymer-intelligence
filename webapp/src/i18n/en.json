@@ -191,7 +191,10 @@
     "call": "Call",
     "writeTelegram": "Message on Telegram",
     "requestOffer": "Request an offer",
-    "notFound": "Offer not found"
+    "notFound": "Offer not found",
+    "ownTitle": "This is your offer",
+    "ownBody": "You can't send an inquiry on your own listing. You can edit it in the Sell section.",
+    "editAction": "Edit"
   },
   "requestOffer": {
     "title": "Request an offer",
@@ -215,7 +218,8 @@
     "title": "Post an offer",
     "myOffers": "My offers",
     "newOffer": "Post an offer",
-    "empty": "You have no offers yet"
+    "empty": "You have no offers yet",
+    "edit": "Edit"
   },
   "offerStatus": {
     "draft": "Draft",
@@ -416,5 +420,15 @@
     "signing": "Signing in…",
     "error": "Sign-in failed. Please try again.",
     "logout": "Log out"
+  },
+  "editOffer": {
+    "title": "Edit offer",
+    "save": "Save changes",
+    "saveError": "Couldn't save changes",
+    "savedTitle": "Changes saved",
+    "savedBody": "Your changes are saved. If the listing was published, it will be re-reviewed before it appears in the catalog again.",
+    "backToOffers": "Back to my offers",
+    "moderationHint": "After editing, a published offer goes back to moderation.",
+    "loadError": "Couldn't load the offer"
   }
 }

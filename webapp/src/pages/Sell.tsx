@@ -6,21 +6,22 @@
  * moderation before appearing in the public catalog.
  */
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ChevronRight } from "lucide-react";
 
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
 import { useProducts } from "../hooks/useProducts";
 import type { SellerOfferOut, SellerOfferStatus } from "../types";
 
-const STATUS_CHIP: Record<SellerOfferStatus, { bg: string; fg: string }> = {
-  draft: { bg: "var(--chip-neutral-bg)", fg: "var(--chip-neutral-fg)" },
-  pending_moderation: { bg: "var(--chip-warn-bg)", fg: "var(--chip-warn-fg)" },
-  approved: { bg: "var(--chip-ok-bg)", fg: "var(--chip-ok-fg)" },
-  rejected: { bg: "var(--chip-down-bg)", fg: "var(--chip-down-fg)" },
-  archived: { bg: "var(--chip-neutral-bg)", fg: "var(--chip-neutral-fg)" },
+const STATUS_CHIP: Record<SellerOfferStatus, string> = {
+  draft: "bg-[var(--chip-neutral-bg)] text-[var(--chip-neutral-fg)]",
+  pending_moderation: "bg-[var(--chip-warn-bg)] text-[var(--chip-warn-fg)]",
+  approved: "bg-[var(--chip-ok-bg)] text-[var(--chip-ok-fg)]",
+  rejected: "bg-[var(--chip-down-bg)] text-[var(--chip-down-fg)]",
+  archived: "bg-[var(--chip-neutral-bg)] text-[var(--chip-neutral-fg)]",
 };
 
 export default function Sell() {
@@ -53,78 +54,55 @@ export default function Sell() {
     };
   }, []);
 
-  const badge = (status: SellerOfferStatus): CSSProperties => ({
-    fontSize: "11px",
-    fontWeight: 600,
-    padding: "3px 8px",
-    borderRadius: "var(--r-full)",
-    background: STATUS_CHIP[status].bg,
-    color: STATUS_CHIP[status].fg,
-  });
-
   return (
-    <div style={{ padding: "16px" }}>
-      <h1 style={{ margin: "0 0 16px", fontSize: "20px", fontWeight: 700, color: "var(--text)" }}>
-        {t("sell.myOffers")}
-      </h1>
+    <div className="p-4">
+      <h1 className="mb-4 text-xl font-bold text-text">{t("sell.myOffers")}</h1>
 
       <button
         type="button"
         onClick={() => navigate("/sell/new")}
-        style={{
-          display: "block",
-          width: "100%",
-          minHeight: "48px",
-          padding: "12px 20px",
-          borderRadius: "var(--r-md)",
-          background: "var(--orange)",
-          color: "#ffffff",
-          border: "none",
-          fontSize: "16px",
-          fontWeight: 600,
-          cursor: "pointer",
-          marginBottom: "20px",
-        }}
+        className="mb-5 block min-h-[48px] w-full cursor-pointer rounded-[var(--r-md)] border-none bg-orange px-5 py-3 text-base font-semibold text-white"
       >
         {t("sell.newOffer")}
       </button>
 
       {state === "error" && (
-        <p style={{ textAlign: "center", color: "var(--danger)", fontSize: "14px" }}>{t("market.error")}</p>
+        <p className="text-center text-sm text-danger">{t("market.error")}</p>
       )}
       {state === "ok" && offers.length === 0 && (
-        <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "14px", marginTop: "8px" }}>
-          {t("sell.empty")}
-        </p>
+        <p className="mt-2 text-center text-sm text-text-muted">{t("sell.empty")}</p>
       )}
 
       {offers.map((o) => (
-        <div
+        <button
           key={o.id}
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--r-md)",
-            boxShadow: "var(--shadow)",
-            padding: "14px",
-            marginBottom: "12px",
-          }}
+          type="button"
+          onClick={() => navigate(`/sell/${o.id}/edit`)}
+          aria-label={`${t("sell.edit")} · ${o.grade_text || o.product_text || ""}`}
+          className="mb-3 block w-full cursor-pointer rounded-[var(--r-md)] border border-border bg-surface p-3.5 text-start shadow-[var(--shadow)]"
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[15px] font-semibold text-text">
               {[o.product_id ? products.find((p) => p.id === o.product_id)?.code : null, o.grade_text || o.product_text]
                 .filter(Boolean)
                 .join(" ") || "—"}
             </span>
-            <span style={badge(o.status)}>{t(`offerStatus.${o.status}`)}</span>
+            <span className={`rounded-[var(--r-full)] px-2 py-[3px] text-[11px] font-semibold ${STATUS_CHIP[o.status]}`}>
+              {t(`offerStatus.${o.status}`)}
+            </span>
           </div>
-          <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--green)", marginTop: "6px" }}>
-            {o.price.toLocaleString()} <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{o.currency}/{o.qty_unit}</span>
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <span className="text-base font-bold text-green">
+              {o.price.toLocaleString()} <span className="text-xs text-text-muted">{o.currency}/{o.qty_unit}</span>
+            </span>
+            <span className="inline-flex items-center gap-1 whitespace-nowrap text-[13px] font-semibold text-text-muted">
+              {t("sell.edit")} <ChevronRight size={15} />
+            </span>
           </div>
           {o.status === "rejected" && o.moderation_note && (
-            <p style={{ fontSize: "12px", color: "var(--chip-down-fg)", marginTop: "6px" }}>{o.moderation_note}</p>
+            <p className="mt-1.5 text-xs text-[var(--chip-down-fg)]">{o.moderation_note}</p>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );

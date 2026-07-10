@@ -191,7 +191,10 @@
     "call": "Qo'ng'iroq",
     "writeTelegram": "Telegram'da yozish",
     "requestOffer": "Taklif so'rash",
-    "notFound": "Taklif topilmadi"
+    "notFound": "Taklif topilmadi",
+    "ownTitle": "Bu sizning taklifingiz",
+    "ownBody": "O'z e'loningizga so'rov yubora olmaysiz. Uni «Sotish» bo'limida tahrirlashingiz mumkin.",
+    "editAction": "Tahrirlash"
   },
   "requestOffer": {
     "title": "Taklif so'rash",
@@ -215,7 +218,8 @@
     "title": "Taklif joylashtirish",
     "myOffers": "Mening takliflarim",
     "newOffer": "Taklif joylashtirish",
-    "empty": "Sizda hali takliflar yo'q"
+    "empty": "Sizda hali takliflar yo'q",
+    "edit": "Tahrirlash"
   },
   "offerStatus": {
     "draft": "Qoralama",
@@ -416,5 +420,15 @@
     "signing": "Kirilyapti…",
     "error": "Kirib bo'lmadi. Qayta urinib ko'ring.",
     "logout": "Chiqish"
+  },
+  "editOffer": {
+    "title": "Taklifni tahrirlash",
+    "save": "O'zgarishlarni saqlash",
+    "saveError": "O'zgarishlarni saqlab bo'lmadi",
+    "savedTitle": "O'zgarishlar saqlandi",
+    "savedBody": "O'zgarishlar saqlandi. Agar e'lon chop etilgan bo'lsa, katalogda qayta ko'rinishidan oldin u yana moderatsiyadan o'tadi.",
+    "backToOffers": "Mening takliflarimga",
+    "moderationHint": "Tahrirlashdan so'ng chop etilgan e'lon yana moderatsiyadan o'tadi.",
+    "loadError": "Taklifni yuklab bo'lmadi"
   }
 }

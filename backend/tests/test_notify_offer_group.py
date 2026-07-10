@@ -128,6 +128,37 @@ def test_sends_photo_when_image_present() -> None:
     mock_s3.get_object.assert_called_once()
 
 
+def test_edited_offer_uses_update_header() -> None:
+    """A re-review after a seller edit (edited=True) frames the post as an update."""
+    sent: list[str] = []
+
+    async def _capture(chat_id: int, text: str, **kwargs: object) -> None:
+        sent.append(text)
+
+    from app.core.config import settings  # noqa: PLC0415
+
+    with (
+        patch.object(settings, "REQUEST_NOTIFY_CHAT_ID", -100),
+        patch("sqlalchemy.orm.Session") as mock_session_cls,
+        patch("app.core.db.engine"),
+        patch("telegram.bot.bot") as mock_bot,
+    ):
+        mock_session = MagicMock()
+        mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
+        mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
+        mock_session.get.return_value = _make_offer(with_image=False)
+        mock_bot.send_message = _capture
+        mock_bot.send_photo = AsyncMock()
+
+        from app.tasks.notify import send_offer_to_group  # noqa: PLC0415
+
+        result = send_offer_to_group(offer_id=11, edited=True)
+
+    assert result == {"status": "ok", "error": None}
+    assert "Обновлённое предложение на модерацию" in sent[0]
+    assert "EVA" in sent[0]  # still carries the full offer detail for re-review
+
+
 def test_missing_offer_returns_error() -> None:
     from app.core.config import settings  # noqa: PLC0415
 

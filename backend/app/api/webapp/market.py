@@ -59,10 +59,22 @@ def list_offers(
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
+    client: Client = Depends(get_current_client),
 ) -> list[CatalogOfferOut]:
-    """GET /webapp/market/offers — approved offers, optional product/free-text filter."""
-    offers = offer_service.list_catalog(db, product_id=product_id, q=q, limit=limit, offset=offset)
+    """GET /webapp/market/offers — approved offers, optional product/free-text filter.
+
+    Excludes the caller's own listings: a seller browsing the marketplace sees only other
+    sellers' offers (they manage their own under "My offers" and cannot inquire on them).
+    """
+    exclude_seller_id = offer_service.seller_id_for(db, client.telegram_user_id)
+    offers = offer_service.list_catalog(
+        db,
+        product_id=product_id,
+        q=q,
+        exclude_seller_id=exclude_seller_id,
+        limit=limit,
+        offset=offset,
+    )
     return offers  # type: ignore[return-value]
 
 
@@ -73,10 +85,11 @@ def list_offers(
 )
 def list_categories(
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
+    client: Client = Depends(get_current_client),
 ) -> list[CategoryCount]:
-    """GET /webapp/market/categories — per-product approved-offer counts."""
-    return offer_service.category_counts(db)
+    """GET /webapp/market/categories — per-product approved-offer counts (own excluded)."""
+    exclude_seller_id = offer_service.seller_id_for(db, client.telegram_user_id)
+    return offer_service.category_counts(db, exclude_seller_id=exclude_seller_id)
 
 
 @router.get(
@@ -87,13 +100,20 @@ def list_categories(
 def get_offer(
     offer_id: int,
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
+    client: Client = Depends(get_current_client),
 ) -> CatalogOfferOut:
-    """GET /webapp/market/offers/{id} — a single approved offer, or 404."""
+    """GET /webapp/market/offers/{id} — a single approved offer, or 404.
+
+    Sets ``is_own`` when the caller owns the offer so the client can hide the
+    "Request an offer" action (a seller can't inquire on its own listing).
+    """
     offer = offer_service.get_catalog_offer(db, offer_id)
     if offer is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
-    return offer  # type: ignore[return-value]
+    out = CatalogOfferOut.model_validate(offer)
+    my_seller_id = offer_service.seller_id_for(db, client.telegram_user_id)
+    out.is_own = my_seller_id is not None and offer.seller_id == my_seller_id
+    return out
 
 
 @router.get(

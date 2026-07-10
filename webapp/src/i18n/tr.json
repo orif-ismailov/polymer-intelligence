@@ -191,7 +191,10 @@
     "call": "Ara",
     "writeTelegram": "Telegram'dan yaz",
     "requestOffer": "Teklif iste",
-    "notFound": "Teklif bulunamadı"
+    "notFound": "Teklif bulunamadı",
+    "ownTitle": "Bu sizin ilanınız",
+    "ownBody": "Kendi ilanınıza teklif gönderemezsiniz. «Satış» bölümünden düzenleyebilirsiniz.",
+    "editAction": "Düzenle"
   },
   "requestOffer": {
     "title": "Teklif iste",
@@ -215,7 +218,8 @@
     "title": "Teklif yayınla",
     "myOffers": "Tekliflerim",
     "newOffer": "Teklif yayınla",
-    "empty": "Henüz teklifiniz yok"
+    "empty": "Henüz teklifiniz yok",
+    "edit": "Düzenle"
   },
   "offerStatus": {
     "draft": "Taslak",
@@ -416,5 +420,15 @@
     "signing": "Giriş yapılıyor…",
     "error": "Giriş başarısız. Lütfen tekrar deneyin.",
     "logout": "Çıkış yap"
+  },
+  "editOffer": {
+    "title": "İlanı düzenle",
+    "save": "Değişiklikleri kaydet",
+    "saveError": "Değişiklikler kaydedilemedi",
+    "savedTitle": "Değişiklikler kaydedildi",
+    "savedBody": "Değişiklikleriniz kaydedildi. İlan yayındaysa, katalogda tekrar görünmeden önce yeniden incelenecek.",
+    "backToOffers": "İlanlarıma dön",
+    "moderationHint": "Düzenlemeden sonra yayındaki ilan yeniden moderasyona girer.",
+    "loadError": "İlan yüklenemedi"
   }
 }

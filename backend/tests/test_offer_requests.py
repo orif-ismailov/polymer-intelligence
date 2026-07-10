@@ -53,6 +53,48 @@ def test_create_offer_request_rejects_non_approved_offer() -> None:
         )
 
 
+def test_create_offer_request_blocks_own_offer() -> None:
+    """A seller cannot inquire on its own listing (buyer == seller Telegram identity)."""
+    from app.models.enums import SellerOfferStatus  # noqa: PLC0415
+    from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
+    from app.services import offer_request_service  # noqa: PLC0415
+
+    db = MagicMock()
+    offer = SimpleNamespace(
+        id=5,
+        status=SellerOfferStatus.approved,
+        seller=SimpleNamespace(telegram_user_id=555),
+    )
+    db.query.return_value.filter.return_value.first.return_value = offer
+    client = SimpleNamespace(id=1, telegram_user_id=555)  # same identity as the seller
+
+    with pytest.raises(ValueError, match="your own offer"):
+        offer_request_service.create_offer_request(
+            db, client, 5, OfferRequestCreate(quantity=10)
+        )
+    db.add.assert_not_called()
+
+
+def test_create_offer_request_allows_other_sellers_offer() -> None:
+    """An inquiry on a DIFFERENT seller's approved offer is created normally."""
+    from app.models.enums import SellerOfferStatus  # noqa: PLC0415
+    from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
+    from app.services import offer_request_service  # noqa: PLC0415
+
+    db = MagicMock()
+    offer = SimpleNamespace(
+        id=5,
+        status=SellerOfferStatus.approved,
+        seller=SimpleNamespace(telegram_user_id=999),  # a different seller
+    )
+    db.query.return_value.filter.return_value.first.return_value = offer
+    client = SimpleNamespace(id=1, telegram_user_id=555)
+
+    offer_request_service.create_offer_request(db, client, 5, OfferRequestCreate(quantity=10))
+    db.add.assert_called_once()
+    db.flush.assert_called_once()
+
+
 def test_moderate_offer_request_approve_sets_forwarded_and_audits() -> None:
     from app.models.enums import OfferRequestStatus  # noqa: PLC0415
     from app.services import offer_request_service  # noqa: PLC0415

@@ -77,6 +77,15 @@ class SellerOfferCreate(BaseModel):
         return self
 
 
+class SellerOfferUpdate(SellerOfferCreate):
+    """A seller's revision to their own offer — same shape + validation as create.
+
+    Full-replacement of the offer's fields (the client resends the current values and
+    changes what it wants). Editing an offer that is already public (approved) — or one
+    that was rejected — re-enters moderation; the service owns that transition.
+    """
+
+
 # ── Read-side ───────────────────────────────────────────────────────────────────
 
 class OfferFileRef(BaseModel):
@@ -176,6 +185,10 @@ class CatalogOfferOut(_CatalogOfferFields):
     """A public (approved) catalog offer with the seller's contact block."""
 
     seller: CatalogSeller
+    # True when the authenticated caller owns this offer. The catalog list excludes
+    # own offers, so this is only ever True on the single-offer detail — the client
+    # uses it to hide the "Request an offer" action (a seller can't buy from itself).
+    is_own: bool = False
 
 
 class PublicFeaturedOffer(BaseModel):

@@ -191,7 +191,10 @@
     "call": "拨打电话",
     "writeTelegram": "在 Telegram 上留言",
     "requestOffer": "索取报价",
-    "notFound": "未找到报价"
+    "notFound": "未找到报价",
+    "ownTitle": "这是您的报盘",
+    "ownBody": "您不能对自己的商品发送询价。您可以在“出售”板块中修改它。",
+    "editAction": "编辑"
   },
   "requestOffer": {
     "title": "索取报价",
@@ -215,7 +218,8 @@
     "title": "发布报价",
     "myOffers": "我的报价",
     "newOffer": "发布报价",
-    "empty": "您暂无报价"
+    "empty": "您暂无报价",
+    "edit": "编辑"
   },
   "offerStatus": {
     "draft": "草稿",
@@ -416,5 +420,15 @@
     "signing": "登录中……",
     "error": "登录失败。请重试。",
     "logout": "退出登录"
+  },
+  "editOffer": {
+    "title": "编辑报盘",
+    "save": "保存更改",
+    "saveError": "无法保存更改",
+    "savedTitle": "更改已保存",
+    "savedBody": "您的更改已保存。如果该商品已发布，它将在重新出现在目录前再次接受审核。",
+    "backToOffers": "返回我的报盘",
+    "moderationHint": "编辑后，已发布的报盘将重新进入审核。",
+    "loadError": "无法加载报盘"
   }
 }

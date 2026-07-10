@@ -28,6 +28,7 @@ import type {
   RequestOut,
   SellerOfferCreate,
   SellerOfferOut,
+  SellerOfferUpdate,
   TelegramLoginPayload,
 } from "../types";
 
@@ -243,6 +244,22 @@ export const api = {
   /** GET /webapp/seller/offers — the caller's own offers (any status). */
   getMyOffers(): Promise<SellerOfferOut[]> {
     return apiFetch<SellerOfferOut[]>("/webapp/seller/offers");
+  },
+
+  /** GET /webapp/seller/offers/{id} — one of the caller's own offers (for the edit screen). */
+  getMyOffer(id: number): Promise<SellerOfferOut> {
+    return apiFetch<SellerOfferOut>(`/webapp/seller/offers/${id}`);
+  },
+
+  /**
+   * PATCH /webapp/seller/offers/{id} — edit one's own offer (full-replacement body).
+   * A published (approved) offer re-enters moderation before the change goes live again.
+   */
+  updateSellerOffer(id: number, body: SellerOfferUpdate): Promise<SellerOfferOut> {
+    return apiFetch<SellerOfferOut>(`/webapp/seller/offers/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
   },
 
   /** POST /webapp/seller/offers/{id}/files — attach an image/TDS/cert to an offer. */

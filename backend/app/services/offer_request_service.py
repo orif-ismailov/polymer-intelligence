@@ -50,6 +50,13 @@ def create_offer_request(
     if offer is None or offer.status != SellerOfferStatus.approved:
         raise ValueError("Offer not found")
 
+    # A seller cannot inquire on its own listing — buyer and seller are the same Telegram
+    # identity. Enforced server-side (the UI also hides "Request an offer" via is_own).
+    seller = offer.seller
+    client_tg = client.telegram_user_id
+    if seller is not None and client_tg is not None and seller.telegram_user_id == client_tg:
+        raise ValueError("You cannot send an inquiry on your own offer")
+
     req = OfferRequest(
         offer_id=offer.id,
         client_id=client.id,

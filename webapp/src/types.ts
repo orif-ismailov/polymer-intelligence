@@ -221,6 +221,8 @@ export interface CatalogOffer {
   published_at: string | null;
   files: OfferFileRef[];
   seller: CatalogSeller;
+  /** True when the authenticated caller owns this offer (hides "Request an offer"). */
+  is_own: boolean;
 }
 
 export interface CategoryCount {
@@ -248,6 +250,9 @@ export interface SellerOfferCreate {
   phone?: string | null;
   telegram_username?: string | null;
 }
+
+/** Seller's edit to an existing offer — same full-replacement shape as create. */
+export type SellerOfferUpdate = SellerOfferCreate;
 
 // ── Browser auth (Telegram Login Widget) ───────────────────────────────────────
 
