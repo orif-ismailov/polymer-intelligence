@@ -20,9 +20,10 @@ from sqlalchemy.orm import Session
 from app.core.time import utcnow
 from app.models.enums import SellerOfferStatus
 from app.models.marketplace import Seller, SellerOffer
-from app.models.reference import Product
+from app.models.reference import Product, ProductSynonym
 from app.schemas.marketplace import CategoryCount, SellerOfferCreate, SellerOfferUpdate
 from app.services.audit_service import write_audit
+from app.services.relevance_service import normalize_term
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +172,54 @@ def get_own_offer(db: Session, offer_id: int, seller_id: int) -> SellerOffer | N
     )
 
 
+def matching_product_ids(db: Session, q: str) -> list[int]:
+    """Product ids whose code, any localized name, or a synonym matches ``q``.
+
+    Bridges cross-language catalog search. A seller may list an offer under the Latin
+    product code ("PP") while a buyer searches with the Cyrillic abbreviation ("ПП") or a
+    full name in any supported language. This resolves the term to product ids via:
+
+    - the ``products`` table: ``code`` + every localized name column (ru/uz/en/tr), so a
+      full or partial name in any of those languages matches; and
+    - the ``product_synonyms`` dictionary (same table the UZEX relevance filter uses), so
+      abbreviations like "ПП", "ПЭВД", "ПНД" — which are NOT substrings of the full name —
+      still resolve to the right product.
+
+    The caller ORs the result into the catalog query as ``product_id IN (...)`` alongside
+    the offer's own free-text columns, so nothing that matched before stops matching.
+    """
+    term = q.strip()
+    if not term:
+        return []
+
+    like = f"%{term}%"
+    ids: set[int] = {
+        pid
+        for (pid,) in db.query(Product.id).filter(
+            or_(
+                Product.code.ilike(like),
+                Product.name_ru.ilike(like),
+                Product.name_uz.ilike(like),
+                Product.name_en.ilike(like),
+                Product.name_tr.ilike(like),
+            )
+        )
+    }
+
+    # Synonym dictionary: normalized (case/space-insensitive) partial match so a bare
+    # abbreviation resolves. `synonym_norm` was seeded via the same normalize_term, so
+    # the normalization is symmetric. Skip 1-char terms — too noisy to be useful.
+    norm = normalize_term(term)
+    if len(norm) >= 2:
+        ids.update(
+            pid
+            for (pid,) in db.query(ProductSynonym.product_id).filter(
+                ProductSynonym.synonym_norm.ilike(f"%{norm}%")
+            )
+        )
+    return list(ids)
+
+
 def list_catalog(
     db: Session,
     *,
@@ -181,6 +230,11 @@ def list_catalog(
     offset: int = 0,
 ) -> list[SellerOffer]:
     """Public catalog: approved offers, optionally filtered by product / free-text.
+
+    Free-text ``q`` matches the offer's own columns (product_text/grade_text/polymer_type)
+    AND resolves through :func:`matching_product_ids`, so a search in any supported
+    language — including a Cyrillic abbreviation like "ПП" for a "PP"-coded offer — returns
+    the linked catalog offers.
 
     When ``exclude_seller_id`` is set, that seller's own listings are omitted — a seller
     browsing the marketplace sees only other sellers' offers (they manage their own under
@@ -193,13 +247,15 @@ def list_catalog(
         query = query.filter(SellerOffer.product_id == product_id)
     if q:
         like = f"%{q.strip()}%"
-        query = query.filter(
-            or_(
-                SellerOffer.product_text.ilike(like),
-                SellerOffer.grade_text.ilike(like),
-                SellerOffer.polymer_type.ilike(like),
-            )
-        )
+        conditions = [
+            SellerOffer.product_text.ilike(like),
+            SellerOffer.grade_text.ilike(like),
+            SellerOffer.polymer_type.ilike(like),
+        ]
+        product_ids = matching_product_ids(db, q)
+        if product_ids:
+            conditions.append(SellerOffer.product_id.in_(product_ids))
+        query = query.filter(or_(*conditions))
     return (
         query.order_by(SellerOffer.published_at.desc().nullslast())
         .limit(limit)
