@@ -57,12 +57,20 @@ const H2 =
 // Scroll reveal: starts hidden, revealed when useScrollReveal sets data-visible.
 const REVEAL =
   "translate-y-4 opacity-0 transition-[opacity,transform] duration-500 data-[visible=true]:translate-y-0 data-[visible=true]:opacity-100 motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:transition-none";
+// Base button: no padding/font-size here — each call site adds a size recipe
+// (BTN_MD / BTN_LG / BTN_SM) so a single element never carries two conflicting
+// padding/font utilities. Labels wrap and center rather than being forced onto one
+// no-wrap line, which overflowed narrow screens in longer languages (e.g. uz
+// "Xomashyo sotib olish", en "Buy Raw Materials").
 const BTN =
-  "inline-flex cursor-pointer items-center justify-center gap-[9px] whitespace-nowrap rounded-xl border border-transparent px-[22px] py-3 text-[15px] font-bold transition-[transform,box-shadow,background] duration-150 active:translate-y-px";
+  "inline-flex cursor-pointer items-center justify-center gap-[9px] rounded-xl border border-transparent font-bold leading-tight text-center transition-[transform,box-shadow,background] duration-150 active:translate-y-px";
 const BTN_PRIMARY =
   "bg-green text-green-on hover:shadow-[0_10px_34px_color-mix(in_srgb,var(--green)_32%,transparent)]";
 const BTN_GHOST = "border-border bg-surface text-text hover:bg-surface-2";
 const BTN_LG = "px-[26px] py-[15px] text-base";
+// Compact size for the sticky mobile bar: two buttons share a narrow row, so trimmed
+// padding + a slightly smaller font keep even the longest labels on-screen.
+const BTN_SM = "px-3 py-2.5 text-sm";
 const FOOTER_LINK =
   "block cursor-pointer py-1.5 text-left text-[13px] text-text-muted transition-colors hover:text-text";
 // Partner tile (also reused by the Iran + "…и другие" cells).
@@ -333,11 +341,11 @@ export default function Landing() {
           stickyVisible ? "translate-y-0" : "translate-y-[120%]"
         }`}
       >
-        <button className={`${BTN} ${BTN_PRIMARY} flex-1`} onClick={goBuy}>
-          <ShoppingCart size={17} /> {t("landing.cta.buy")}
+        <button className={`${BTN} ${BTN_PRIMARY} ${BTN_SM} min-w-0 flex-1`} onClick={goBuy}>
+          <ShoppingCart size={17} className="flex-none" /> {t("landing.cta.buy")}
         </button>
-        <button className={`${BTN} ${BTN_GHOST} flex-1`} onClick={goSell}>
-          <Store size={17} /> {t("landing.cta.sell")}
+        <button className={`${BTN} ${BTN_GHOST} ${BTN_SM} min-w-0 flex-1`} onClick={goSell}>
+          <Store size={17} className="flex-none" /> {t("landing.cta.sell")}
         </button>
       </div>
     </div>
