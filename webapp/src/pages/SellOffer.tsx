@@ -20,6 +20,7 @@ import StepIndicator from "../components/StepIndicator";
 import FieldGroup from "../components/FieldGroup";
 import SelectField from "../components/SelectField";
 import Segmented from "../components/Segmented";
+import IncotermsField from "../components/IncotermsField";
 import Button from "../components/Button";
 import { api } from "../api/client";
 import { backButton, mainButton, notifySuccess, notifyError } from "../telegram";
@@ -28,7 +29,6 @@ import { availabilityRequiresLocation } from "../util/offer";
 import type { OfferAvailability, PriceBasis, SellerOfferCreate } from "../types";
 
 const CURRENCY = ["USD", "UZS", "EUR", "RUB"];
-const INCOTERMS = ["EXW", "FCA", "FOB", "CIF", "CPT", "DAP", "DDP"];
 const UNITS = ["MT", "KG"];
 
 const fieldStyle: CSSProperties = {
@@ -291,10 +291,7 @@ export default function SellOffer() {
             <span style={groupLabel}>{t("wizard.currency")}</span>
             <Segmented<string> value={currency} options={CURRENCY.map((c) => ({ value: c, label: c }))} onChange={setCurrency} ariaLabel={t("wizard.currency")} />
           </div>
-          <div style={{ marginBottom: "16px" }}>
-            <span style={groupLabel}>{t("wizard.incoterms")}</span>
-            <Segmented<string> value={incoterms} options={INCOTERMS.map((i) => ({ value: i, label: i }))} onChange={setIncoterms} ariaLabel={t("wizard.incoterms")} />
-          </div>
+          <IncotermsField value={incoterms} onChange={setIncoterms} />
         </>
       )}
 

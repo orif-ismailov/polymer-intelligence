@@ -17,6 +17,7 @@ import { CheckCircle2 } from "lucide-react";
 import FieldGroup from "../components/FieldGroup";
 import SelectField from "../components/SelectField";
 import Segmented from "../components/Segmented";
+import IncotermsField from "../components/IncotermsField";
 import Button from "../components/Button";
 import { api } from "../api/client";
 import { backButton, mainButton, notifyError, notifySuccess } from "../telegram";
@@ -25,7 +26,6 @@ import { availabilityRequiresLocation } from "../util/offer";
 import type { OfferAvailability, PriceBasis, SellerOfferOut, SellerOfferUpdate } from "../types";
 
 const CURRENCY = ["USD", "UZS", "EUR", "RUB"];
-const INCOTERMS = ["EXW", "FCA", "FOB", "CIF", "CPT", "DAP", "DDP"];
 const UNITS = ["MT", "KG"];
 
 const FIELD_CLASS =
@@ -289,15 +289,7 @@ export default function EditOffer() {
           ariaLabel={t("wizard.currency")}
         />
       </div>
-      <div className="mb-4">
-        <span className="mb-1.5 block text-[13px] font-medium text-text-muted">{t("wizard.incoterms")}</span>
-        <Segmented<string>
-          value={incoterms}
-          options={INCOTERMS.map((i) => ({ value: i, label: i }))}
-          onChange={setIncoterms}
-          ariaLabel={t("wizard.incoterms")}
-        />
-      </div>
+      <IncotermsField value={incoterms} onChange={setIncoterms} />
 
       {requiresLocation ? (
         <FieldGroup htmlFor="e_city" label={t("sellForm.warehouseCity")}>

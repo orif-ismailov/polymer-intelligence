@@ -1,4 +1,38 @@
 {
+  "incotermsGuide": {
+    "trigger": "What do these mean?",
+    "title": "Delivery terms explained",
+    "subtitle": "Incoterms® 2020 — who arranges shipping, insurance and customs, and where risk passes. Here, Seller means you.",
+    "close": "Close",
+    "selected": "Selected",
+    "riskLabel": "Risk passes to buyer",
+    "party": { "you": "Seller (you)", "buyer": "Buyer" },
+    "cols": {
+      "export": "Export customs",
+      "transport": "Main transport",
+      "insurance": "Insurance / risk",
+      "import": "Import customs"
+    },
+    "risk": {
+      "premises": "At your premises, on pickup",
+      "carrier": "When handed to the carrier",
+      "onboard": "Once loaded on the ship",
+      "destination": "On arrival at the destination",
+      "destinationUnloaded": "On arrival, once unloaded"
+    },
+    "terms": {
+      "EXW": { "summary": "You just make the goods ready at your site. The buyer arranges pickup, export, shipping and everything after — the simplest, cheapest option for you." },
+      "FCA": { "summary": "You hand the goods, cleared for export, to the carrier the buyer chose. The buyer pays the main shipping and insurance." },
+      "FOB": { "summary": "For sea freight: you load the goods onto the ship and clear export. From there the buyer pays sea freight and insurance." },
+      "CFR": { "summary": "For sea freight: you pay the freight to the destination port, but the buyer's risk starts once the goods are on the ship." },
+      "CIF": { "summary": "Like CFR, but you also buy basic cargo insurance up to the destination port. Common for sea shipments." },
+      "CPT": { "summary": "You pay transport to the agreed destination, but the buyer's risk starts as soon as the first carrier takes the goods." },
+      "CIP": { "summary": "Like CPT, and you also insure the cargo up to the destination. Works for any transport mode." },
+      "DAP": { "summary": "You deliver all the way to the destination, ready for the buyer to unload. The buyer only handles import customs." },
+      "DPU": { "summary": "You deliver to the destination and unload the goods there. The buyer handles import customs." },
+      "DDP": { "summary": "You deliver to the buyer's door with import duties paid — the most you can take on, and the easiest for the buyer." }
+    }
+  },
   "availability": {
     "label": "Availability",
     "in_stock": "In stock",

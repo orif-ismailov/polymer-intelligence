@@ -1,4 +1,38 @@
 {
+  "incotermsGuide": {
+    "trigger": "Bunlar ne demek?",
+    "title": "Teslimat koşulları — basitçe",
+    "subtitle": "Incoterms 2020 — nakliyeyi, sigortayı ve gümrüğü kim ayarlar ve risk nerede geçer. Burada Satıcı sizsiniz.",
+    "close": "Kapat",
+    "selected": "Seçili",
+    "riskLabel": "Risk alıcıya geçer",
+    "party": { "you": "Satıcı (siz)", "buyer": "Alıcı" },
+    "cols": {
+      "export": "İhracat gümrüğü",
+      "transport": "Ana taşıma",
+      "insurance": "Sigorta / risk",
+      "import": "İthalat gümrüğü"
+    },
+    "risk": {
+      "premises": "Teslim alınırken sizin deponuzda",
+      "carrier": "Taşıyıcıya teslim edildiğinde",
+      "onboard": "Gemiye yüklendiğinde",
+      "destination": "Varış noktasına ulaştığında",
+      "destinationUnloaded": "Varışta, boşaltıldıktan sonra"
+    },
+    "terms": {
+      "EXW": { "summary": "Malı yalnızca kendi tesisinizde hazır edersiniz. Alıcı; teslim alma, ihracat, nakliye ve sonrasındaki her şeyi ayarlar — sizin için en basit ve en ucuz seçenek." },
+      "FCA": { "summary": "İhracat için gümrüklenmiş malı, alıcının seçtiği taşıyıcıya teslim edersiniz. Ana nakliye ve sigortayı alıcı öder." },
+      "FOB": { "summary": "Deniz taşımacılığı için: malı gemiye yükler ve ihracatı yaparsınız. Sonrasında deniz navlunu ve sigortayı alıcı öder." },
+      "CFR": { "summary": "Deniz taşımacılığı için: navlunu varış limanına kadar siz ödersiniz, ancak risk mal gemiye yüklenince alıcıya geçer." },
+      "CIF": { "summary": "CFR gibi, ama ayrıca varış limanına kadar temel kargo sigortasını da siz yaptırırsınız. Deniz sevkiyatlarında yaygındır." },
+      "CPT": { "summary": "Nakliyeyi kararlaştırılan yere kadar siz ödersiniz, ancak risk malı ilk taşıyıcı alır almaz alıcıya geçer." },
+      "CIP": { "summary": "CPT gibi, ayrıca varış yerine kadar kargoyu da sigortalarsınız. Her taşıma türü için uygundur." },
+      "DAP": { "summary": "Malı varış noktasına kadar, boşaltmaya hazır şekilde teslim edersiniz. Alıcı yalnızca ithalat gümrüğünü halleder." },
+      "DPU": { "summary": "Malı varış noktasına teslim eder ve orada boşaltırsınız. İthalat gümrüğünü alıcı halleder." },
+      "DDP": { "summary": "Malı, ithalat vergileri ödenmiş olarak alıcının kapısına teslim edersiniz — sizin için en fazla sorumluluk, alıcı için en kolay yol." }
+    }
+  },
   "availability": {
     "label": "Bulunurluk",
     "in_stock": "Stokta mevcut",
