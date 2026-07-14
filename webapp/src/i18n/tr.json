@@ -241,6 +241,7 @@
     "qtyAvailable": "Mevcut miktar",
     "price": "Birim fiyat",
     "warehouseCity": "Şehir / Depo",
+    "warehouseCityByOrderHint": "Sipariş üzerine üretilen ürünler için depo veya şehir gerekmez.",
     "minOrder": "Minimum sipariş",
     "description": "Açıklama",
     "photos": "Ürün fotoğrafları",

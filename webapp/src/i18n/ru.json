@@ -241,6 +241,7 @@
     "qtyAvailable": "Объём в наличии",
     "price": "Цена за единицу",
     "warehouseCity": "Город / Склад",
+    "warehouseCityByOrderHint": "Для товаров под заказ склад указывать не нужно.",
     "minOrder": "Минимальный объём",
     "description": "Описание",
     "photos": "Фото товара",

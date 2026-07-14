@@ -241,6 +241,7 @@
     "qtyAvailable": "可供数量",
     "price": "单价",
     "warehouseCity": "城市 / 仓库",
+    "warehouseCityByOrderHint": "预订类商品无需填写仓库或城市。",
     "minOrder": "最小订单量",
     "description": "描述",
     "photos": "产品照片",

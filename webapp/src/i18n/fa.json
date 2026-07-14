@@ -241,6 +241,7 @@
     "qtyAvailable": "مقدار موجود",
     "price": "قیمت واحد",
     "warehouseCity": "شهر / انبار",
+    "warehouseCityByOrderHint": "برای کالاهای سفارشی نیازی به انبار یا شهر نیست.",
     "minOrder": "حداقل سفارش",
     "description": "توضیحات",
     "photos": "عکس‌های محصول",

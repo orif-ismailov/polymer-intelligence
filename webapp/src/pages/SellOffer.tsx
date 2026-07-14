@@ -24,6 +24,7 @@ import Button from "../components/Button";
 import { api } from "../api/client";
 import { backButton, mainButton, notifySuccess, notifyError } from "../telegram";
 import { useProducts } from "../hooks/useProducts";
+import { availabilityRequiresLocation } from "../util/offer";
 import type { OfferAvailability, PriceBasis, SellerOfferCreate } from "../types";
 
 const CURRENCY = ["USD", "UZS", "EUR", "RUB"];
@@ -82,7 +83,11 @@ export default function SellOffer() {
   const { products } = useProducts();
   const isOtherProduct = productId === "other";
   const productLabel = productId && !isOtherProduct ? products.find((p) => String(p.id) === productId)?.code : productText;
-  const step1Valid = (isOtherProduct ? productText.trim() !== "" : productId !== "") && warehouseCity.trim() !== "";
+  // «Под заказ» (on_order) goods have no warehouse — location fields hide and lose their required rule.
+  const requiresLocation = availabilityRequiresLocation(availability);
+  const step1Valid =
+    (isOtherProduct ? productText.trim() !== "" : productId !== "") &&
+    (!requiresLocation || warehouseCity.trim() !== "");
   const step2Valid = Number(qty) > 0 && Number(price) > 0;
 
   const thumbs = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
@@ -116,7 +121,8 @@ export default function SellOffer() {
       price: Number(price),
       currency,
       incoterms: incoterms as PriceBasis,
-      warehouse_city: warehouseCity.trim() || null,
+      // Never submit a location for on-order goods, even if one was typed before switching.
+      warehouse_city: requiresLocation ? warehouseCity.trim() || null : null,
       min_order_qty: minOrder ? Number(minOrder) : null,
       description: description.trim() || null,
       company_name: company.trim() || null,
@@ -200,7 +206,9 @@ export default function SellOffer() {
     [t("availability.label"), t(`availability.${availability}`)],
     [t("sellForm.qtyAvailable"), qty ? `${Number(qty).toLocaleString()} ${qtyUnit}` : "—"],
     [t("sellForm.price"), price ? `${Number(price).toLocaleString()} ${currency}/${qtyUnit}` : "—"],
-    [t("sellForm.warehouseCity"), warehouseCity || "—"],
+    ...(requiresLocation
+      ? ([[t("sellForm.warehouseCity"), warehouseCity || "—"]] as [string, string][])
+      : []),
     [t("wizard.incoterms"), incoterms],
   ];
 
@@ -253,9 +261,15 @@ export default function SellOffer() {
               ariaLabel={t("availability.label")}
             />
           </div>
-          <FieldGroup htmlFor="s_city" label={t("sellForm.warehouseCity")} required>
-            <input id="s_city" type="text" value={warehouseCity} onChange={(e) => setWarehouseCity(e.target.value)} placeholder={t("wizard.portPlaceholder")} style={fieldStyle} />
-          </FieldGroup>
+          {requiresLocation ? (
+            <FieldGroup htmlFor="s_city" label={t("sellForm.warehouseCity")} required>
+              <input id="s_city" type="text" value={warehouseCity} onChange={(e) => setWarehouseCity(e.target.value)} placeholder={t("wizard.portPlaceholder")} style={fieldStyle} />
+            </FieldGroup>
+          ) : (
+            <p style={{ margin: "0 0 16px", fontSize: "12px", lineHeight: 1.5, color: "var(--text-muted)" }}>
+              {t("sellForm.warehouseCityByOrderHint")}
+            </p>
+          )}
         </>
       )}
 

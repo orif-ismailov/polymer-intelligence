@@ -241,6 +241,7 @@
     "qtyAvailable": "Mavjud hajm",
     "price": "Birlik narxi",
     "warehouseCity": "Shahar / Ombor",
+    "warehouseCityByOrderHint": "Buyurtma asosidagi mahsulotlar uchun ombor yoki shahar talab qilinmaydi.",
     "minOrder": "Minimal hajm",
     "description": "Tavsif",
     "photos": "Mahsulot rasmlari",

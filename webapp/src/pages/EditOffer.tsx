@@ -21,6 +21,7 @@ import Button from "../components/Button";
 import { api } from "../api/client";
 import { backButton, mainButton, notifyError, notifySuccess } from "../telegram";
 import { useProducts } from "../hooks/useProducts";
+import { availabilityRequiresLocation } from "../util/offer";
 import type { OfferAvailability, PriceBasis, SellerOfferOut, SellerOfferUpdate } from "../types";
 
 const CURRENCY = ["USD", "UZS", "EUR", "RUB"];
@@ -100,6 +101,8 @@ export default function EditOffer() {
   }, [id]);
 
   const isOtherProduct = productId === "other";
+  // «Под заказ» (on_order) goods have no warehouse — hide the location field and drop it from the payload.
+  const requiresLocation = availabilityRequiresLocation(availability);
   const valid =
     (isOtherProduct ? productText.trim() !== "" : productId !== "") &&
     Number(qty) > 0 &&
@@ -120,7 +123,7 @@ export default function EditOffer() {
       price: Number(price),
       currency,
       incoterms: incoterms as PriceBasis,
-      warehouse_city: warehouseCity.trim() || null,
+      warehouse_city: requiresLocation ? warehouseCity.trim() || null : null,
       min_order_qty: minOrder ? Number(minOrder) : null,
       description: description.trim() || null,
     };
@@ -296,16 +299,22 @@ export default function EditOffer() {
         />
       </div>
 
-      <FieldGroup htmlFor="e_city" label={t("sellForm.warehouseCity")}>
-        <input
-          id="e_city"
-          type="text"
-          value={warehouseCity}
-          onChange={(e) => setWarehouseCity(e.target.value)}
-          placeholder={t("wizard.portPlaceholder")}
-          className={FIELD_CLASS}
-        />
-      </FieldGroup>
+      {requiresLocation ? (
+        <FieldGroup htmlFor="e_city" label={t("sellForm.warehouseCity")}>
+          <input
+            id="e_city"
+            type="text"
+            value={warehouseCity}
+            onChange={(e) => setWarehouseCity(e.target.value)}
+            placeholder={t("wizard.portPlaceholder")}
+            className={FIELD_CLASS}
+          />
+        </FieldGroup>
+      ) : (
+        <p className="mb-4 text-xs leading-relaxed text-text-muted">
+          {t("sellForm.warehouseCityByOrderHint")}
+        </p>
+      )}
       <FieldGroup htmlFor="e_desc" label={t("sellForm.description")}>
         <textarea
           id="e_desc"

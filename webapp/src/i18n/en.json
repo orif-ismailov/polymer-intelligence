@@ -241,6 +241,7 @@
     "qtyAvailable": "Quantity available",
     "price": "Unit price",
     "warehouseCity": "City / Warehouse",
+    "warehouseCityByOrderHint": "No warehouse or city is needed for made-to-order goods.",
     "minOrder": "Minimum order",
     "description": "Description",
     "photos": "Product photos",
