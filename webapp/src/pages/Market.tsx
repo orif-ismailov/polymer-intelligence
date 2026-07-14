@@ -190,13 +190,13 @@ export default function Market() {
                     title={t("offer.requestOffer")}
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate("/request/step/1");
+                      navigate(`/market/${o.id}`, { state: { focusRequest: true } });
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         e.stopPropagation();
-                        navigate("/request/step/1");
+                        navigate(`/market/${o.id}`, { state: { focusRequest: true } });
                       }
                     }}
                     style={{

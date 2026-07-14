@@ -7,8 +7,8 @@
  * BackButton → Маркет.
  */
 
-import { useEffect, useState, type CSSProperties } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BadgeCheck, CheckCircle2 } from "lucide-react";
 
@@ -22,11 +22,13 @@ const rowValue: CSSProperties = { fontSize: "13px", color: "var(--text)", fontWe
 export default function OfferDetail() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const [offer, setOffer] = useState<CatalogOffer | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
 
   // "Request an offer" inquiry form
+  const qtyRef = useRef<HTMLInputElement>(null);
   const [qty, setQty] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [message, setMessage] = useState("");
@@ -87,6 +89,17 @@ export default function OfferDetail() {
       cancelled = true;
     };
   }, [id]);
+
+  // Arriving from a market card's "request" button: land on the inquiry form for
+  // this concrete offer (scroll it into view + focus the quantity field).
+  useEffect(() => {
+    const wantsRequest = (location.state as { focusRequest?: boolean } | null)?.focusRequest;
+    if (!wantsRequest || state !== "ok" || !offer || offer.is_own || sent) return;
+    const el = qtyRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+  }, [location.state, state, offer, sent]);
 
   if (state !== "ok" || !offer) {
     return (
@@ -220,6 +233,7 @@ export default function OfferDetail() {
             {t("requestOffer.hint")}
           </p>
           <input
+            ref={qtyRef}
             type="number"
             inputMode="decimal"
             value={qty}
