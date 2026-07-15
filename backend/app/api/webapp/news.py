@@ -37,4 +37,9 @@ def get_news(
     report = report_service.get_published(db, report_id)
     if report is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
-    return report  # type: ignore[return-value]
+    out = ReportPublicOut.model_validate(report)
+    # The localized AI summary/forecast lives in the snapshot, not a column.
+    snapshot = report.data_snapshot or {}
+    i18n = snapshot.get("i18n")
+    out.i18n = i18n if isinstance(i18n, dict) else None
+    return out

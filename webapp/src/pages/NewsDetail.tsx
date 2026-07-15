@@ -15,7 +15,7 @@ import { backButton, mainButton } from "../telegram";
 import type { NewsItem } from "../types";
 
 export default function NewsDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [item, setItem] = useState<NewsItem | null>(null);
@@ -61,9 +61,35 @@ export default function NewsDetail() {
 
   const body = item.content_md.replace(/[*_]/g, "");
 
+  // The digest body is Russian; for EN/UZ users show the AI summary + forecast in
+  // their language above it (when this report carries the localized digest).
+  const lang = (i18n.language || "ru").slice(0, 2);
+  const localizedSummary = lang !== "ru" ? item.i18n?.summary?.[lang] : undefined;
+  const localizedForecast = lang !== "ru" ? item.i18n?.forecast?.[lang] : undefined;
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "16px" }}>
       <h1 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: 700 }}>{item.title}</h1>
+      {(localizedSummary || localizedForecast) && (
+        <div
+          style={{
+            whiteSpace: "pre-wrap",
+            fontSize: "14px",
+            lineHeight: 1.6,
+            color: "var(--text)",
+            background: "var(--surface)",
+            border: "1px solid var(--purple)",
+            borderRadius: "var(--r-md)",
+            padding: "16px",
+            marginBottom: "12px",
+          }}
+        >
+          {localizedSummary && <p style={{ margin: 0 }}>🤖 {localizedSummary}</p>}
+          {localizedForecast && (
+            <p style={{ margin: localizedSummary ? "10px 0 0" : 0 }}>🔮 {localizedForecast}</p>
+          )}
+        </div>
+      )}
       <div
         style={{
           whiteSpace: "pre-wrap",
