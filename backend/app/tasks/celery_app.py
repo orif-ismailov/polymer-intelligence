@@ -105,6 +105,7 @@ celery_app.conf.update(
         "uzex_fetch_offers": {"queue": "ingest"},
         "uzex_fetch_contracts": {"queue": "ingest"},
         "uzex_fetch_deals": {"queue": "ingest"},
+        "xarid_fetch_tenders": {"queue": "ingest"},
         "fetch_cbu_rates": {"queue": "ingest"},
         "llm_page_fetch": {"queue": "ingest"},
         "html_table_fetch": {"queue": "ingest"},

@@ -149,6 +149,8 @@ def _is_private_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
 async def fetch_url(
     url: str,
     *,
+    method: str = "GET",
+    json_body: dict[str, object] | None = None,
     host_delay: float | None = None,
 ) -> httpx.Response:
     """Fetch a URL using the hardened httpx client.
@@ -161,6 +163,12 @@ async def fetch_url(
 
     Args:
         url: The URL to fetch. Must pass is_safe_url() check.
+        method: HTTP method (default "GET"). Pass "POST" for JSON-API sources such
+            as the xarid procurement portal. Note: retries re-issue the request, so
+            only use non-GET methods for idempotent/read-only endpoints (list/detail
+            queries), never for mutations.
+        json_body: Optional JSON body sent with the request (sets Content-Type:
+            application/json). Ignored for GET when None.
         host_delay: Minimum seconds between requests to the same host.
             Defaults to settings.INGEST_PER_HOST_DELAY_SECONDS.
 
@@ -216,7 +224,7 @@ async def fetch_url(
                 ) as client,
                 # Stream the response to enforce the body size cap without
                 # buffering the full body into memory (T-02-08)
-                client.stream("GET", url) as response,
+                client.stream(method, url, json=json_body) as response,
             ):
                     response.raise_for_status()
                     content = await _read_response_capped(response)

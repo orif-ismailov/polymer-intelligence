@@ -40,6 +40,13 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "uzex_fetch_deals",
         "schedule": crontab(minute=0),
     },
+    # ── Xarid procurement tenders: every 30 min ──────────────────────────────
+    # Buy-side demand from the public e-procurement portal (xarid.uzex.uz JSON API).
+    # Only enabled sources run; the seeded source ships disabled until Tested.
+    "xarid_fetch_tenders": {
+        "task": "xarid_fetch_tenders",
+        "schedule": crontab(minute="*/30"),
+    },
     # ── CBU FX rates: daily at 07:00 Tashkent ────────────────────────────────
     "fetch_cbu_rates": {
         "task": "fetch_cbu_rates",

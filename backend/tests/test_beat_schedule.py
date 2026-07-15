@@ -34,6 +34,8 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "uzex_fetch_offers",
         "uzex_fetch_contracts",
         "uzex_fetch_deals",
+        # Phase 6: xarid buy-side procurement tenders (every 30 min)
+        "xarid_fetch_tenders",
         "fetch_cbu_rates",
         # Phase 6: hourly no-code adapter fetch drivers
         "html_table_fetch",
