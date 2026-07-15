@@ -218,6 +218,7 @@
   "offer": {
     "seller": "Продавец",
     "inStock": "В наличии",
+    "priceOnRequest": "Цена по запросу",
     "minOrder": "Мин. партия",
     "supply": "Условия поставки",
     "location": "Локация",
@@ -275,6 +276,7 @@
     "qtyAvailable": "Объём в наличии",
     "price": "Цена за единицу",
     "warehouseCity": "Город / Склад",
+    "priceByOrderHint": "Для товаров под заказ цена указывается по запросу.",
     "warehouseCityByOrderHint": "Для товаров под заказ склад указывать не нужно.",
     "minOrder": "Минимальный объём",
     "description": "Описание",

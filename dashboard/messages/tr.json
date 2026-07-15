@@ -372,6 +372,7 @@
     "seller": "Satıcı",
     "availInStock": "Stokta mevcut",
     "availOnOrder": "Sipariş üzerine",
+    "priceOnRequest": "Fiyat talep üzerine",
     "approve": "Onayla",
     "reject": "Reddet",
     "notePlaceholder": "Satıcı için not (isteğe bağlı)"
@@ -647,6 +648,7 @@
     "empty": "İncelenecek talep yok",
     "error": "Talepler yüklenemedi",
     "listedPrice": "İlan fiyatı",
+    "priceOnRequest": "Fiyat talep üzerine",
     "wantsQty": "İstenen",
     "targetPrice": "Hedef fiyat",
     "buyer": "Alıcı",

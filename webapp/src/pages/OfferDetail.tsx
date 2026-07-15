@@ -142,12 +142,20 @@ export default function OfferDetail() {
       )}
 
       <div style={{ fontSize: "26px", fontWeight: 700, color: "var(--green)", marginBottom: "16px" }}>
-        {offer.price.toLocaleString()} <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{offer.currency}/{offer.qty_unit}</span>
+        {offer.price != null ? (
+          <>
+            {offer.price.toLocaleString()} <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{offer.currency}/{offer.qty_unit}</span>
+          </>
+        ) : (
+          <span style={{ fontSize: "18px" }}>{t("offer.priceOnRequest")}</span>
+        )}
       </div>
 
       <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "4px 14px", marginBottom: "16px" }}>
         <Row label={t("availability.label")} value={t(`availability.${offer.availability}`)} />
-        <Row label={t("offer.inStock")} value={`${offer.qty_available.toLocaleString()} ${offer.qty_unit}`} />
+        {offer.qty_available != null && (
+          <Row label={t("offer.inStock")} value={`${offer.qty_available.toLocaleString()} ${offer.qty_unit}`} />
+        )}
         {offer.min_order_qty != null && <Row label={t("offer.minOrder")} value={`${offer.min_order_qty.toLocaleString()} ${offer.qty_unit}`} />}
         <Row label={t("offer.supply")} value={String(offer.incoterms)} />
         {offer.warehouse_city && <Row label={t("offer.location")} value={offer.warehouse_city} />}

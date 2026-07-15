@@ -85,10 +85,12 @@ export default function SellOffer() {
   const productLabel = productId && !isOtherProduct ? products.find((p) => String(p.id) === productId)?.code : productText;
   // «Под заказ» (on_order) goods have no warehouse — location fields hide and lose their required rule.
   const requiresLocation = availabilityRequiresLocation(availability);
+  // «Под заказ» (on_order): no fixed stock qty and no price — price is "по запросу".
+  const onOrder = availability === "on_order";
   const step1Valid =
     (isOtherProduct ? productText.trim() !== "" : productId !== "") &&
     (!requiresLocation || warehouseCity.trim() !== "");
-  const step2Valid = Number(qty) > 0 && Number(price) > 0;
+  const step2Valid = onOrder || (Number(qty) > 0 && Number(price) > 0);
 
   const thumbs = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
   useEffect(() => () => thumbs.forEach((u) => URL.revokeObjectURL(u)), [thumbs]);
@@ -116,9 +118,10 @@ export default function SellOffer() {
       grade_text: grade.trim() || null,
       polymer_type: polymerType.trim() || null,
       availability,
-      qty_available: Number(qty),
+      // «Под заказ» → no qty/price; backend stores null (price shown as "по запросу").
+      qty_available: onOrder ? null : Number(qty),
       qty_unit: qtyUnit,
-      price: Number(price),
+      price: onOrder ? null : Number(price),
       currency,
       incoterms: incoterms as PriceBasis,
       // Never submit a location for on-order goods, even if one was typed before switching.
@@ -204,8 +207,13 @@ export default function SellOffer() {
   const summaryRows: [string, string][] = [
     [t("wizard.product"), [productLabel, grade].filter(Boolean).join(" · ") || "—"],
     [t("availability.label"), t(`availability.${availability}`)],
-    [t("sellForm.qtyAvailable"), qty ? `${Number(qty).toLocaleString()} ${qtyUnit}` : "—"],
-    [t("sellForm.price"), price ? `${Number(price).toLocaleString()} ${currency}/${qtyUnit}` : "—"],
+    ...(onOrder
+      ? []
+      : ([[t("sellForm.qtyAvailable"), qty ? `${Number(qty).toLocaleString()} ${qtyUnit}` : "—"]] as [string, string][])),
+    [
+      t("sellForm.price"),
+      onOrder ? t("offer.priceOnRequest") : price ? `${Number(price).toLocaleString()} ${currency}/${qtyUnit}` : "—",
+    ],
     ...(requiresLocation
       ? ([[t("sellForm.warehouseCity"), warehouseCity || "—"]] as [string, string][])
       : []),
@@ -275,22 +283,32 @@ export default function SellOffer() {
 
       {step === 2 && (
         <>
-          <FieldGroup htmlFor="s_qty" label={t("sellForm.qtyAvailable")} required>
-            <input id="s_qty" type="number" inputMode="decimal" min="0.01" step="any" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="100" style={fieldStyle} />
-          </FieldGroup>
+          {!onOrder && (
+            <FieldGroup htmlFor="s_qty" label={t("sellForm.qtyAvailable")} required>
+              <input id="s_qty" type="number" inputMode="decimal" min="0.01" step="any" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="100" style={fieldStyle} />
+            </FieldGroup>
+          )}
           <FieldGroup htmlFor="s_unit" label={t("wizard.volumeUnit")}>
             <SelectField id="s_unit" options={UNITS.map((u) => ({ value: u, label: t(`wizard.volumeUnit_${u}`, u) }))} value={qtyUnit} onChange={(e) => setQtyUnit(e.target.value)} />
           </FieldGroup>
           <FieldGroup htmlFor="s_min" label={t("sellForm.minOrder")}>
             <input id="s_min" type="number" inputMode="decimal" min="0" step="any" value={minOrder} onChange={(e) => setMinOrder(e.target.value)} placeholder="20" style={fieldStyle} />
           </FieldGroup>
-          <FieldGroup htmlFor="s_price" label={t("sellForm.price")} required>
-            <input id="s_price" type="number" inputMode="decimal" min="0.01" step="any" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="1200" style={fieldStyle} />
-          </FieldGroup>
-          <div style={{ marginBottom: "16px" }}>
-            <span style={groupLabel}>{t("wizard.currency")}</span>
-            <Segmented<string> value={currency} options={CURRENCY.map((c) => ({ value: c, label: c }))} onChange={setCurrency} ariaLabel={t("wizard.currency")} />
-          </div>
+          {onOrder ? (
+            <p style={{ margin: "0 0 16px", fontSize: "12px", lineHeight: 1.5, color: "var(--text-muted)" }}>
+              {t("sellForm.priceByOrderHint")}
+            </p>
+          ) : (
+            <>
+              <FieldGroup htmlFor="s_price" label={t("sellForm.price")} required>
+                <input id="s_price" type="number" inputMode="decimal" min="0.01" step="any" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="1200" style={fieldStyle} />
+              </FieldGroup>
+              <div style={{ marginBottom: "16px" }}>
+                <span style={groupLabel}>{t("wizard.currency")}</span>
+                <Segmented<string> value={currency} options={CURRENCY.map((c) => ({ value: c, label: c }))} onChange={setCurrency} ariaLabel={t("wizard.currency")} />
+              </div>
+            </>
+          )}
           <IncotermsField value={incoterms} onChange={setIncoterms} />
         </>
       )}

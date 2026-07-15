@@ -218,6 +218,7 @@
   "offer": {
     "seller": "Satıcı",
     "inStock": "Stokta",
+    "priceOnRequest": "Fiyat talep üzerine",
     "minOrder": "Min. sipariş",
     "supply": "Teslimat koşulları",
     "location": "Konum",
@@ -275,6 +276,7 @@
     "qtyAvailable": "Mevcut miktar",
     "price": "Birim fiyat",
     "warehouseCity": "Şehir / Depo",
+    "priceByOrderHint": "Sipariş üzerine ürünlerde fiyat talep üzerine belirtilir.",
     "warehouseCityByOrderHint": "Sipariş üzerine üretilen ürünler için depo veya şehir gerekmez.",
     "minOrder": "Minimum sipariş",
     "description": "Açıklama",

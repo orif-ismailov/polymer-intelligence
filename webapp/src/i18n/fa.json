@@ -218,6 +218,7 @@
   "offer": {
     "seller": "فروشنده",
     "inStock": "موجود در انبار",
+    "priceOnRequest": "قیمت با استعلام",
     "minOrder": "حداقل سفارش",
     "supply": "شرایط تحویل",
     "location": "موقعیت مکانی",
@@ -275,6 +276,7 @@
     "qtyAvailable": "مقدار موجود",
     "price": "قیمت واحد",
     "warehouseCity": "شهر / انبار",
+    "priceByOrderHint": "برای کالاهای سفارشی، قیمت با استعلام اعلام می‌شود.",
     "warehouseCityByOrderHint": "برای کالاهای سفارشی نیازی به انبار یا شهر نیست.",
     "minOrder": "حداقل سفارش",
     "description": "توضیحات",

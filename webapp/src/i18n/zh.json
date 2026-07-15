@@ -218,6 +218,7 @@
   "offer": {
     "seller": "卖家",
     "inStock": "现货",
+    "priceOnRequest": "价格面议",
     "minOrder": "最小订单量",
     "supply": "交货条款",
     "location": "所在地",
@@ -275,6 +276,7 @@
     "qtyAvailable": "可供数量",
     "price": "单价",
     "warehouseCity": "城市 / 仓库",
+    "priceByOrderHint": "预订类商品的价格为面议。",
     "warehouseCityByOrderHint": "预订类商品无需填写仓库或城市。",
     "minOrder": "最小订单量",
     "description": "描述",

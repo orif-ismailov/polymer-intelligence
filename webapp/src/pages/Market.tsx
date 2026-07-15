@@ -164,12 +164,18 @@ export default function Market() {
                     )}
                   </div>
                   <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--green)", whiteSpace: "nowrap" }}>
-                    {o.price.toLocaleString()} <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{o.currency}/{o.qty_unit}</span>
+                    {o.price != null ? (
+                      <>
+                        {o.price.toLocaleString()} <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{o.currency}/{o.qty_unit}</span>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: "13px" }}>{t("offer.priceOnRequest")}</span>
+                    )}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
                   <span>{t(`availability.${o.availability}`)}</span>
-                  <span>{o.qty_available.toLocaleString()} {o.qty_unit}</span>
+                  {o.qty_available != null && <span>{o.qty_available.toLocaleString()} {o.qty_unit}</span>}
                   {o.warehouse_city && (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
                       <MapPin size={13} /> {o.warehouse_city}

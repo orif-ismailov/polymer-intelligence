@@ -128,7 +128,10 @@ export default function InquiryDetail() {
     <div className="min-h-screen bg-bg p-4 text-text">
       <h1 className="mb-1 text-xl font-bold">{title}</h1>
       <p className="mb-4 text-[13px] text-text-muted">
-        {inq.offer.price.toLocaleString()} {inq.offer.currency}/{inq.offer.qty_unit} · {t(`inquiries.status.${inq.status}`)}
+        {inq.offer.price != null
+          ? `${inq.offer.price.toLocaleString()} ${inq.offer.currency}/${inq.offer.qty_unit}`
+          : t("offer.priceOnRequest")}{" "}
+        · {t(`inquiries.status.${inq.status}`)}
       </p>
 
       {!editable && (

@@ -608,9 +608,14 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
                 lines.append(f"🧪 Тип: {offer.polymer_type}")
             availability_key = getattr(offer.availability, "value", str(offer.availability))
             lines.append(f"🔖 {_AVAILABILITY_RU.get(availability_key, availability_key)}")
-            lines.append(f"📊 Объём: {offer.qty_available} {offer.qty_unit}")
+            # «Под заказ» offers carry no fixed qty/price — price is "по запросу".
+            if offer.qty_available is not None:
+                lines.append(f"📊 Объём: {offer.qty_available} {offer.qty_unit}")
             incoterms = getattr(offer.incoterms, "value", str(offer.incoterms))
-            lines.append(f"💰 Цена: {offer.price} {offer.currency} ({incoterms})")
+            if offer.price is not None:
+                lines.append(f"💰 Цена: {offer.price} {offer.currency} ({incoterms})")
+            else:
+                lines.append(f"💰 Цена: по запросу ({incoterms})")
             if offer.min_order_qty is not None:
                 lines.append(f"📦 Мин. партия: {offer.min_order_qty} {offer.qty_unit}")
             if offer.warehouse_city:
@@ -776,7 +781,10 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
             header = "✏️ Обновлённый запрос предложения" if edited else "🛒 Новый запрос предложения"
             lines: list[str] = [header, ""]
             lines.append(f"📦 Товар: {product_label}{grade}")
-            lines.append(f"💵 Цена в объявлении: {offer.price} {offer.currency}")
+            if offer.price is not None:
+                lines.append(f"💵 Цена в объявлении: {offer.price} {offer.currency}")
+            else:
+                lines.append("💵 Цена в объявлении: по запросу")
             if req.quantity is not None:
                 lines.append(f"📊 Нужный объём: {req.quantity} {req.qty_unit}")
             if req.target_price is not None:

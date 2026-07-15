@@ -103,10 +103,11 @@ export default function EditOffer() {
   const isOtherProduct = productId === "other";
   // «Под заказ» (on_order) goods have no warehouse — hide the location field and drop it from the payload.
   const requiresLocation = availabilityRequiresLocation(availability);
+  // «Под заказ» (on_order): no fixed stock qty and no price — price is "по запросу".
+  const onOrder = availability === "on_order";
   const valid =
     (isOtherProduct ? productText.trim() !== "" : productId !== "") &&
-    Number(qty) > 0 &&
-    Number(price) > 0;
+    (onOrder || (Number(qty) > 0 && Number(price) > 0));
 
   async function save() {
     if (!offer || submitting) return;
@@ -118,9 +119,10 @@ export default function EditOffer() {
       grade_text: grade.trim() || null,
       polymer_type: polymerType.trim() || null,
       availability,
-      qty_available: Number(qty),
+      // «Под заказ» → no qty/price; backend stores null (price shown as "по запросу").
+      qty_available: onOrder ? null : Number(qty),
       qty_unit: qtyUnit,
-      price: Number(price),
+      price: onOrder ? null : Number(price),
       currency,
       incoterms: incoterms as PriceBasis,
       warehouse_city: requiresLocation ? warehouseCity.trim() || null : null,
@@ -232,19 +234,21 @@ export default function EditOffer() {
         />
       </div>
 
-      <FieldGroup htmlFor="e_qty" label={t("sellForm.qtyAvailable")} required>
-        <input
-          id="e_qty"
-          type="number"
-          inputMode="decimal"
-          min="0.01"
-          step="any"
-          value={qty}
-          onChange={(e) => setQty(e.target.value)}
-          placeholder="100"
-          className={FIELD_CLASS}
-        />
-      </FieldGroup>
+      {!onOrder && (
+        <FieldGroup htmlFor="e_qty" label={t("sellForm.qtyAvailable")} required>
+          <input
+            id="e_qty"
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            step="any"
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
+            placeholder="100"
+            className={FIELD_CLASS}
+          />
+        </FieldGroup>
+      )}
       <FieldGroup htmlFor="e_unit" label={t("wizard.volumeUnit")}>
         <SelectField
           id="e_unit"
@@ -266,29 +270,35 @@ export default function EditOffer() {
           className={FIELD_CLASS}
         />
       </FieldGroup>
-      <FieldGroup htmlFor="e_price" label={t("sellForm.price")} required>
-        <input
-          id="e_price"
-          type="number"
-          inputMode="decimal"
-          min="0.01"
-          step="any"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="1200"
-          className={FIELD_CLASS}
-        />
-      </FieldGroup>
+      {onOrder ? (
+        <p className="mb-4 text-xs leading-relaxed text-text-muted">{t("sellForm.priceByOrderHint")}</p>
+      ) : (
+        <>
+          <FieldGroup htmlFor="e_price" label={t("sellForm.price")} required>
+            <input
+              id="e_price"
+              type="number"
+              inputMode="decimal"
+              min="0.01"
+              step="any"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="1200"
+              className={FIELD_CLASS}
+            />
+          </FieldGroup>
 
-      <div className="mb-4">
-        <span className="mb-1.5 block text-[13px] font-medium text-text-muted">{t("wizard.currency")}</span>
-        <Segmented<string>
-          value={currency}
-          options={CURRENCY.map((c) => ({ value: c, label: c }))}
-          onChange={setCurrency}
-          ariaLabel={t("wizard.currency")}
-        />
-      </div>
+          <div className="mb-4">
+            <span className="mb-1.5 block text-[13px] font-medium text-text-muted">{t("wizard.currency")}</span>
+            <Segmented<string>
+              value={currency}
+              options={CURRENCY.map((c) => ({ value: c, label: c }))}
+              onChange={setCurrency}
+              ariaLabel={t("wizard.currency")}
+            />
+          </div>
+        </>
+      )}
       <IncotermsField value={incoterms} onChange={setIncoterms} />
 
       {requiresLocation ? (

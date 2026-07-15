@@ -20,9 +20,9 @@ interface ModerationOffer {
   product_text: string | null;
   polymer_type: string | null;
   availability: "in_stock" | "on_order";
-  qty_available: number;
+  qty_available: number | null; // null for «под заказ» (on_order)
   qty_unit: string;
-  price: number;
+  price: number | null; // null for «под заказ» — shown as "price on request"
   currency: string;
   warehouse_city: string | null;
   created_at: string;
@@ -86,8 +86,7 @@ export default function ModerationPage() {
                 </p>
                 <p className="text-sm text-foreground-muted mt-1">
                   {o.availability === "on_order" ? t("availOnOrder") : t("availInStock")}
-                  {" · "}
-                  {o.qty_available.toLocaleString()} {o.qty_unit}
+                  {o.qty_available != null ? ` · ${o.qty_available.toLocaleString()} ${o.qty_unit}` : ""}
                   {o.warehouse_city ? ` · ${o.warehouse_city}` : ""}
                 </p>
                 <p className="text-sm text-foreground mt-1">
@@ -97,10 +96,16 @@ export default function ModerationPage() {
                 </p>
               </div>
               <p className="text-lg font-bold text-accent whitespace-nowrap">
-                {o.price.toLocaleString()}{" "}
-                <span className="text-xs font-normal text-foreground-muted">
-                  {o.currency}/{o.qty_unit}
-                </span>
+                {o.price != null ? (
+                  <>
+                    {o.price.toLocaleString()}{" "}
+                    <span className="text-xs font-normal text-foreground-muted">
+                      {o.currency}/{o.qty_unit}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm">{t("priceOnRequest")}</span>
+                )}
               </p>
             </div>
 

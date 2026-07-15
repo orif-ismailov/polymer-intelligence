@@ -218,6 +218,7 @@
   "offer": {
     "seller": "Seller",
     "inStock": "In stock",
+    "priceOnRequest": "Price on request",
     "minOrder": "Min. order",
     "supply": "Delivery terms",
     "location": "Location",
@@ -275,6 +276,7 @@
     "qtyAvailable": "Quantity available",
     "price": "Unit price",
     "warehouseCity": "City / Warehouse",
+    "priceByOrderHint": "For made-to-order goods the price is shown on request.",
     "warehouseCityByOrderHint": "No warehouse or city is needed for made-to-order goods.",
     "minOrder": "Minimum order",
     "description": "Description",

@@ -181,7 +181,7 @@ export interface OfferRequestOffer {
   product_id: number | null;
   product_text: string | null;
   grade_text: string | null;
-  price: number;
+  price: number | null; // null for «под заказ» — shown as "price on request"
   currency: string;
   qty_unit: string;
 }
@@ -209,9 +209,9 @@ export interface CatalogOffer {
   grade_text: string | null;
   polymer_type: string | null;
   availability: OfferAvailability;
-  qty_available: number;
+  qty_available: number | null; // null for «под заказ» (on_order)
   qty_unit: string;
-  price: number;
+  price: number | null; // null for «под заказ» — shown as "price on request"
   currency: string;
   incoterms: PriceBasis;
   warehouse_city: string | null;
@@ -236,9 +236,9 @@ export interface SellerOfferCreate {
   grade_text?: string | null;
   polymer_type?: string | null;
   availability?: OfferAvailability;
-  qty_available: number;
+  qty_available?: number | null; // null/omitted for «под заказ» (on_order)
   qty_unit?: string;
-  price: number;
+  price?: number | null; // null/omitted for «под заказ» — "price on request"
   currency?: string;
   incoterms?: PriceBasis;
   warehouse_city?: string | null;
@@ -281,9 +281,9 @@ export interface FeaturedOffer {
   grade_text: string | null;
   polymer_type: string | null;
   availability: OfferAvailability;
-  qty_available: number;
+  qty_available: number | null; // null for «под заказ» (on_order)
   qty_unit: string;
-  price: number;
+  price: number | null; // null for «под заказ» — shown as "price on request"
   currency: string;
   incoterms: PriceBasis;
   warehouse_city: string | null;
@@ -312,9 +312,9 @@ export interface SellerOfferOut {
   grade_text: string | null;
   polymer_type: string | null;
   availability: OfferAvailability;
-  qty_available: number;
+  qty_available: number | null; // null for «под заказ» (on_order)
   qty_unit: string;
-  price: number;
+  price: number | null; // null for «под заказ» — shown as "price on request"
   currency: string;
   incoterms: PriceBasis;
   warehouse_city: string | null;

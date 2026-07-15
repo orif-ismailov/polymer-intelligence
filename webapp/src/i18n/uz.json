@@ -218,6 +218,7 @@
   "offer": {
     "seller": "Sotuvchi",
     "inStock": "Mavjud",
+    "priceOnRequest": "Narx so'rov bo'yicha",
     "minOrder": "Min. partiya",
     "supply": "Yetkazib berish shartlari",
     "location": "Joylashuv",
@@ -275,6 +276,7 @@
     "qtyAvailable": "Mavjud hajm",
     "price": "Birlik narxi",
     "warehouseCity": "Shahar / Ombor",
+    "priceByOrderHint": "Buyurtma asosidagi mahsulotlar uchun narx so'rov bo'yicha ko'rsatiladi.",
     "warehouseCityByOrderHint": "Buyurtma asosidagi mahsulotlar uchun ombor yoki shahar talab qilinmaydi.",
     "minOrder": "Minimal hajm",
     "description": "Tavsif",
