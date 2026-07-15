@@ -39,9 +39,12 @@ class SellerOfferCreate(BaseModel):
     grade_text: str | None = Field(default=None, max_length=500)
     polymer_type: str | None = Field(default=None, max_length=200)
     availability: OfferAvailability = OfferAvailability.in_stock
-    qty_available: decimal.Decimal
+    # Optional: «под заказ» (on_order) offers carry no qty/price (price is "по запросу").
+    # The availability rule below forces them to null for on_order and requires them
+    # (positive) for in_stock.
+    qty_available: decimal.Decimal | None = None
     qty_unit: str = "MT"
-    price: decimal.Decimal
+    price: decimal.Decimal | None = None
     currency: str = "USD"
     incoterms: PriceBasis = PriceBasis.unknown
     warehouse_city: str | None = Field(default=None, max_length=200)
@@ -54,19 +57,28 @@ class SellerOfferCreate(BaseModel):
     phone: str | None = Field(default=None, max_length=50)
     telegram_username: str | None = Field(default=None, max_length=100)
 
-    @field_validator("qty_available")
+    @field_validator("qty_available", "price")
     @classmethod
-    def _qty_positive(cls, v: decimal.Decimal) -> decimal.Decimal:
-        if v <= 0:
-            raise ValueError("qty_available must be greater than 0")
+    def _positive_when_present(cls, v: decimal.Decimal | None) -> decimal.Decimal | None:
+        # None is allowed here (made-to-order «под заказ»); _availability_pricing below
+        # decides when a value is required. When one IS given, it must be positive.
+        if v is not None and v <= 0:
+            raise ValueError("must be greater than 0")
         return v
 
-    @field_validator("price")
-    @classmethod
-    def _price_positive(cls, v: decimal.Decimal) -> decimal.Decimal:
-        if v <= 0:
-            raise ValueError("price must be greater than 0")
-        return v
+    @model_validator(mode="after")
+    def _availability_pricing(self) -> SellerOfferCreate:
+        """«Под заказ» → no qty/price (price is "по запросу"); «в наличии» → both required."""
+        if self.availability == OfferAvailability.on_order:
+            # Never store a qty/price for made-to-order offers, even if one was sent.
+            self.qty_available = None
+            self.price = None
+        else:
+            if self.qty_available is None:
+                raise ValueError("qty_available is required for in-stock offers")
+            if self.price is None:
+                raise ValueError("price is required for in-stock offers")
+        return self
 
     @model_validator(mode="after")
     def _product_present(self) -> SellerOfferCreate:
@@ -134,9 +146,9 @@ class SellerOfferOut(BaseModel):
     grade_text: str | None
     polymer_type: str | None
     availability: OfferAvailability
-    qty_available: decimal.Decimal
+    qty_available: decimal.Decimal | None  # null for «под заказ» (on_order)
     qty_unit: str
-    price: decimal.Decimal
+    price: decimal.Decimal | None  # null for «под заказ» — shown as "по запросу"
     currency: str
     incoterms: PriceBasis
     warehouse_city: str | None
@@ -166,9 +178,9 @@ class _CatalogOfferFields(BaseModel):
     grade_text: str | None
     polymer_type: str | None
     availability: OfferAvailability
-    qty_available: decimal.Decimal
+    qty_available: decimal.Decimal | None  # null for «под заказ» (on_order)
     qty_unit: str
-    price: decimal.Decimal
+    price: decimal.Decimal | None  # null for «под заказ» — shown as "по запросу"
     currency: str
     incoterms: PriceBasis
     warehouse_city: str | None
@@ -207,9 +219,9 @@ class PublicFeaturedOffer(BaseModel):
     grade_text: str | None
     polymer_type: str | None
     availability: OfferAvailability
-    qty_available: decimal.Decimal
+    qty_available: decimal.Decimal | None  # null for «под заказ» (on_order)
     qty_unit: str
-    price: decimal.Decimal
+    price: decimal.Decimal | None  # null for «под заказ» — shown as "по запросу"
     currency: str
     incoterms: PriceBasis
     warehouse_city: str | None
@@ -276,7 +288,7 @@ class OfferBrief(BaseModel):
     product_id: int | None
     product_text: str | None
     grade_text: str | None
-    price: decimal.Decimal
+    price: decimal.Decimal | None  # null for «под заказ» — shown as "по запросу"
     currency: str
     qty_unit: str
 

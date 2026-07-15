@@ -103,11 +103,14 @@ class SellerOffer(Base):
         default=OfferAvailability.in_stock,
         server_default="in_stock",
     )
-    qty_available: Mapped[decimal.Decimal] = mapped_column(Numeric(14, 3), nullable=False)
+    # Nullable: made-to-order («под заказ») offers have no fixed stock qty and no unit
+    # price (price is "по запросу"). In-stock offers keep a positive value — enforced in
+    # the API schema (SellerOfferCreate), not the DB. See migration 0013.
+    qty_available: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
     qty_unit: Mapped[str] = mapped_column(
         Text, nullable=False, default="MT", server_default="MT"
     )
-    price: Mapped[decimal.Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
     currency: Mapped[str] = mapped_column(
         String(3), nullable=False, default="USD", server_default="USD"
     )

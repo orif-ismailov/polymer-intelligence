@@ -81,6 +81,24 @@
     }
   },
   {
+    "kind": "exchange",
+    "adapter": "xarid_tenders",
+    "name": "UZEX Xarid Tenders (auction lots)",
+    "url": "https://xarid.uzex.uz/auction/list",
+    "country": "UZ",
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "list_url": "https://xarid-api-auction.uzex.uz/Common/GetMinimizedLotsList",
+      "detail_url_template": "https://xarid-api-auction.uzex.uz/Common/GetLot/{id}",
+      "list_body": { "region_ids": [] },
+      "page_size": 20,
+      "max_pages": 200,
+      "classifier_divisions": ["19", "20", "22"],
+      "max_details": 500
+    }
+  },
+  {
     "kind": "external_index",
     "adapter": "cbu_rates",
     "name": "CBU FX Rates",

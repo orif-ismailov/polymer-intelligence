@@ -264,3 +264,58 @@ def uzex_fetch_deals() -> dict[str, Any]:
     """
     logger.info("uzex_fetch_deals.start")
     return _execute_uzex_fetch("uzex_deals")
+
+
+# ── Xarid procurement-tender fetch (buy-side demand) ──────────────────────────
+
+
+def _execute_xarid_fetch(adapter_name: str) -> dict[str, Any]:
+    """Load enabled xarid sources and fetch each with per-source failure isolation.
+
+    Same shape as _execute_uzex_fetch: fetch → save_raw_items (dedup + immutable) →
+    record health → enqueue the rule-based parser (parse_raw_item) for new rows.
+    """
+    import app.ingest.xarid  # noqa: F401, PLC0415 — triggers adapter self-registration  # isort: skip
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.ingest.registry import get_adapter  # noqa: PLC0415
+
+    adapter = get_adapter(adapter_name)
+    sources_processed = 0
+    total_inserted = 0
+
+    with Session(engine) as session:
+        sources = _load_enabled_sources(session, adapter_name)
+        for source in sources:
+            # Per-source isolation + health recording; never re-raises (T-02-17).
+            total_inserted += run_source_fetch_isolated(session, source, adapter)
+            sources_processed += 1
+
+    logger.info(
+        "xarid_fetch.done",
+        extra={
+            "adapter": adapter_name,
+            "sources": sources_processed,
+            "inserted": total_inserted,
+        },
+    )
+    return {
+        "status": "ok",
+        "adapter": adapter_name,
+        "sources_processed": sources_processed,
+        "total_inserted": total_inserted,
+        "errors": [],
+    }
+
+
+@celery_app.task(name="xarid_fetch_tenders")  # type: ignore[untyped-decorator]
+def xarid_fetch_tenders() -> dict[str, Any]:
+    """Fetch xarid.uzex.uz procurement tenders (buy-side demand) into raw_items.
+
+    Structured rows route to the rule-based parser (parse_raw_item). Scheduled by
+    beat: every 30 min. Only enabled sources run, so the seeded (disabled) source
+    is dormant until an admin Tests + enables it.
+    """
+    logger.info("xarid_fetch_tenders.start")
+    return _execute_xarid_fetch("xarid_tenders")

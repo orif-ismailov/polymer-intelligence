@@ -35,6 +35,7 @@ import app.ingest.llm_page  # noqa: E402, F401 — registers llm_page adapter
 import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
+import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
 from app.api.admin_products import router as admin_products_router
 from app.api.admin_sources import router as admin_sources_router
 from app.api.admin_users import router as admin_users_router

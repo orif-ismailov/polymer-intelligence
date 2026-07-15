@@ -372,6 +372,7 @@
     "seller": "فروشنده",
     "availInStock": "موجود",
     "availOnOrder": "به‌صورت سفارشی",
+    "priceOnRequest": "قیمت با استعلام",
     "approve": "تأیید",
     "reject": "رد",
     "notePlaceholder": "توضیح برای فروشنده (اختیاری)"
@@ -647,6 +648,7 @@
     "empty": "درخواستی برای بررسی وجود ندارد",
     "error": "بارگذاری درخواست‌ها ناموفق بود",
     "listedPrice": "قیمت درج‌شده در آگهی",
+    "priceOnRequest": "قیمت با استعلام",
     "wantsQty": "موردنیاز",
     "targetPrice": "قیمت موردنظر",
     "buyer": "خریدار",

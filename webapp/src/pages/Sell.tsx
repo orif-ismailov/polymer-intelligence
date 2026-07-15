@@ -93,7 +93,13 @@ export default function Sell() {
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-2">
             <span className="text-base font-bold text-green">
-              {o.price.toLocaleString()} <span className="text-xs text-text-muted">{o.currency}/{o.qty_unit}</span>
+              {o.price != null ? (
+                <>
+                  {o.price.toLocaleString()} <span className="text-xs text-text-muted">{o.currency}/{o.qty_unit}</span>
+                </>
+              ) : (
+                <span className="text-sm">{t("offer.priceOnRequest")}</span>
+              )}
             </span>
             <span className="inline-flex items-center gap-1 whitespace-nowrap text-[13px] font-semibold text-text-muted">
               {t("sell.edit")} <ChevronRight size={15} />

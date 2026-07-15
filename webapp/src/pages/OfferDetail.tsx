@@ -7,8 +7,8 @@
  * BackButton → Маркет.
  */
 
-import { useEffect, useState, type CSSProperties } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BadgeCheck, CheckCircle2 } from "lucide-react";
 
@@ -22,11 +22,13 @@ const rowValue: CSSProperties = { fontSize: "13px", color: "var(--text)", fontWe
 export default function OfferDetail() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const [offer, setOffer] = useState<CatalogOffer | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
 
   // "Request an offer" inquiry form
+  const qtyRef = useRef<HTMLInputElement>(null);
   const [qty, setQty] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [message, setMessage] = useState("");
@@ -88,6 +90,17 @@ export default function OfferDetail() {
     };
   }, [id]);
 
+  // Arriving from a market card's "request" button: land on the inquiry form for
+  // this concrete offer (scroll it into view + focus the quantity field).
+  useEffect(() => {
+    const wantsRequest = (location.state as { focusRequest?: boolean } | null)?.focusRequest;
+    if (!wantsRequest || state !== "ok" || !offer || offer.is_own || sent) return;
+    const el = qtyRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+  }, [location.state, state, offer, sent]);
+
   if (state !== "ok" || !offer) {
     return (
       <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text-muted)", padding: "32px 16px", textAlign: "center" }}>
@@ -129,12 +142,20 @@ export default function OfferDetail() {
       )}
 
       <div style={{ fontSize: "26px", fontWeight: 700, color: "var(--green)", marginBottom: "16px" }}>
-        {offer.price.toLocaleString()} <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{offer.currency}/{offer.qty_unit}</span>
+        {offer.price != null ? (
+          <>
+            {offer.price.toLocaleString()} <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{offer.currency}/{offer.qty_unit}</span>
+          </>
+        ) : (
+          <span style={{ fontSize: "18px" }}>{t("offer.priceOnRequest")}</span>
+        )}
       </div>
 
       <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "4px 14px", marginBottom: "16px" }}>
         <Row label={t("availability.label")} value={t(`availability.${offer.availability}`)} />
-        <Row label={t("offer.inStock")} value={`${offer.qty_available.toLocaleString()} ${offer.qty_unit}`} />
+        {offer.qty_available != null && (
+          <Row label={t("offer.inStock")} value={`${offer.qty_available.toLocaleString()} ${offer.qty_unit}`} />
+        )}
         {offer.min_order_qty != null && <Row label={t("offer.minOrder")} value={`${offer.min_order_qty.toLocaleString()} ${offer.qty_unit}`} />}
         <Row label={t("offer.supply")} value={String(offer.incoterms)} />
         {offer.warehouse_city && <Row label={t("offer.location")} value={offer.warehouse_city} />}
@@ -220,6 +241,7 @@ export default function OfferDetail() {
             {t("requestOffer.hint")}
           </p>
           <input
+            ref={qtyRef}
             type="number"
             inputMode="decimal"
             value={qty}

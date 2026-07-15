@@ -52,6 +52,51 @@ from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
+
+async def _deliver_to_group(
+    bot: Any,
+    chat_id: int,
+    thread_id: int | None,
+    *,
+    text: str | None = None,
+    photo: Any = None,
+    caption: str | None = None,
+    reply_markup: Any = None,
+) -> None:
+    """Send a group notification, optionally into a forum topic (message_thread_id).
+
+    Routes into `thread_id` when set. If the topic is invalid/closed (Telegram
+    returns a 400 — TelegramBadRequest), the message is re-sent to the group's
+    General topic instead of being silently dropped. Network/other errors propagate
+    to the caller's task-level handler (which logs + returns an error dict).
+    """
+    from aiogram.exceptions import TelegramBadRequest  # noqa: PLC0415
+
+    async def _send(with_thread: bool) -> None:
+        extra: dict[str, Any] = {}
+        if with_thread and thread_id is not None:
+            extra["message_thread_id"] = thread_id
+        if photo is not None:
+            await bot.send_photo(
+                chat_id=chat_id, photo=photo, caption=caption, reply_markup=reply_markup, **extra
+            )
+        else:
+            await bot.send_message(
+                chat_id=chat_id, text=text, reply_markup=reply_markup, **extra
+            )
+
+    try:
+        await _send(True)
+    except TelegramBadRequest as exc:
+        if thread_id is None:
+            raise
+        logger.warning(
+            "notify.topic_fallback_to_general",
+            extra={"chat_id": chat_id, "thread_id": thread_id, "error": str(exc)},
+        )
+        await _send(False)
+
+
 # ── D-10 localized client-facing status labels ────────────────────────────────
 # CLIENT_STATUS_MAP (request_service.py) maps internal RequestStatus → display key.
 # These dicts map that display key → localized human-readable label for bot pushes.
@@ -477,7 +522,11 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
                 lines.append("")
                 lines.append(f"💬 {request.comment}")
 
-            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)))
+            asyncio.run(
+                _deliver_to_group(
+                    bot, chat_id, _settings.NOTIFY_TOPIC_BUYERS, text="\n".join(lines)
+                )
+            )
             logger.info(
                 "notify.request_to_group.sent",
                 extra={"request_id": request_id, "chat_id": chat_id, "number": request.number},
@@ -559,9 +608,14 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
                 lines.append(f"🧪 Тип: {offer.polymer_type}")
             availability_key = getattr(offer.availability, "value", str(offer.availability))
             lines.append(f"🔖 {_AVAILABILITY_RU.get(availability_key, availability_key)}")
-            lines.append(f"📊 Объём: {offer.qty_available} {offer.qty_unit}")
+            # «Под заказ» offers carry no fixed qty/price — price is "по запросу".
+            if offer.qty_available is not None:
+                lines.append(f"📊 Объём: {offer.qty_available} {offer.qty_unit}")
             incoterms = getattr(offer.incoterms, "value", str(offer.incoterms))
-            lines.append(f"💰 Цена: {offer.price} {offer.currency} ({incoterms})")
+            if offer.price is not None:
+                lines.append(f"💰 Цена: {offer.price} {offer.currency} ({incoterms})")
+            else:
+                lines.append(f"💰 Цена: по запросу ({incoterms})")
             if offer.min_order_qty is not None:
                 lines.append(f"📦 Мин. партия: {offer.min_order_qty} {offer.qty_unit}")
             if offer.warehouse_city:
@@ -619,8 +673,10 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
                 )
                 # Photo captions are capped at 1024 chars by Telegram.
                 asyncio.run(
-                    bot.send_photo(
-                        chat_id=chat_id,
+                    _deliver_to_group(
+                        bot,
+                        chat_id,
+                        _settings.NOTIFY_TOPIC_SELLERS,
                         photo=photo,
                         caption=text[:1024],
                         reply_markup=keyboard,
@@ -628,7 +684,13 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
                 )
             else:
                 asyncio.run(
-                    bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+                    _deliver_to_group(
+                        bot,
+                        chat_id,
+                        _settings.NOTIFY_TOPIC_SELLERS,
+                        text=text,
+                        reply_markup=keyboard,
+                    )
                 )
 
             logger.info(
@@ -719,7 +781,10 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
             header = "✏️ Обновлённый запрос предложения" if edited else "🛒 Новый запрос предложения"
             lines: list[str] = [header, ""]
             lines.append(f"📦 Товар: {product_label}{grade}")
-            lines.append(f"💵 Цена в объявлении: {offer.price} {offer.currency}")
+            if offer.price is not None:
+                lines.append(f"💵 Цена в объявлении: {offer.price} {offer.currency}")
+            else:
+                lines.append("💵 Цена в объявлении: по запросу")
             if req.quantity is not None:
                 lines.append(f"📊 Нужный объём: {req.quantity} {req.qty_unit}")
             if req.target_price is not None:
@@ -753,7 +818,15 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
                 lines.extend(buyer)
 
             keyboard = offer_request_moderation_keyboard(req.id)
-            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines), reply_markup=keyboard))
+            asyncio.run(
+                _deliver_to_group(
+                    bot,
+                    chat_id,
+                    _settings.NOTIFY_TOPIC_BUYERS,
+                    text="\n".join(lines),
+                    reply_markup=keyboard,
+                )
+            )
             logger.info(
                 "notify.offer_request_to_group.sent",
                 extra={"offer_request_id": offer_request_id, "chat_id": chat_id},

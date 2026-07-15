@@ -19,7 +19,7 @@ interface OfferBrief {
   id: number;
   product_text: string | null;
   grade_text: string | null;
-  price: number;
+  price: number | null; // null for «под заказ» — shown as "price on request"
   currency: string;
   qty_unit: string;
 }
@@ -89,7 +89,10 @@ export default function OfferRequestsPage() {
                   {r.offer.grade_text || r.offer.product_text || "—"}
                 </p>
                 <p className="text-sm text-foreground-muted mt-1">
-                  {t("listedPrice")}: {r.offer.price.toLocaleString()} {r.offer.currency}/{r.offer.qty_unit}
+                  {t("listedPrice")}:{" "}
+                  {r.offer.price != null
+                    ? `${r.offer.price.toLocaleString()} ${r.offer.currency}/${r.offer.qty_unit}`
+                    : t("priceOnRequest")}
                 </p>
                 <p className="text-sm text-foreground mt-1">
                   {r.quantity != null && (

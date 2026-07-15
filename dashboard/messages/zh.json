@@ -372,6 +372,7 @@
     "seller": "卖方",
     "availInStock": "现货",
     "availOnOrder": "定制",
+    "priceOnRequest": "价格面议",
     "approve": "批准",
     "reject": "驳回",
     "notePlaceholder": "给卖方的备注（可选）"
@@ -647,6 +648,7 @@
     "empty": "无待处理请求",
     "error": "加载请求失败",
     "listedPrice": "挂牌价",
+    "priceOnRequest": "价格面议",
     "wantsQty": "需求量",
     "targetPrice": "期望价",
     "buyer": "买方",
