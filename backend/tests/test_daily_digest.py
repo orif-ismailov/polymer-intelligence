@@ -92,21 +92,29 @@ class TestAiDigest:
         resp.content = [block]
         return resp
 
-    def test_parses_strict_json(self) -> None:
+    def test_parses_strict_json_all_platform_languages(self) -> None:
+        from app.core.languages import SUPPORTED_LANGUAGES  # noqa: PLC0415
         from app.services import report_service  # noqa: PLC0415
 
         payload = (
-            '{"summary": {"ru": "Рынок стабилен.", "en": "Market is stable.", "uz": "Bozor barqaror."},'
-            ' "forecast": {"ru": "Рост вероятен.", "en": "Growth likely.", "uz": "O\'sish kutilmoqda."}}'
+            '{"summary": {"ru": "Рынок стабилен.", "en": "Market is stable.", "tr": "Piyasa istikrarlı.",'
+            ' "uz": "Bozor barqaror.", "fa": "بازار پایدار است.", "zh": "市场稳定。"},'
+            ' "forecast": {"ru": "Рост вероятен.", "en": "Growth likely.", "tr": "Büyüme muhtemel.",'
+            ' "uz": "O\'sish kutilmoqda.", "fa": "رشد محتمل است.", "zh": "可能上涨。"}}'
         )
         with patch.object(report_service._client, "messages") as mock_msgs:
             mock_msgs.create.return_value = self._resp(payload)
             digest = report_service._ai_digest({"date": "2026-07-15"})
         assert digest is not None
-        assert digest["summary"]["en"] == "Market is stable."
-        assert digest["forecast"]["uz"] == "O'sish kutilmoqda."
+        # Every platform language must be present in both blocks.
+        assert set(digest["summary"]) == set(SUPPORTED_LANGUAGES)
+        assert set(digest["forecast"]) == set(SUPPORTED_LANGUAGES)
+        assert digest["summary"]["zh"] == "市场稳定。"
+        assert digest["forecast"]["fa"] == "رشد محتمل است."
+        assert digest["forecast"]["tr"] == "Büyüme muhtemel."
 
     def test_tolerates_markdown_fences(self) -> None:
+        from app.core.languages import SUPPORTED_LANGUAGES  # noqa: PLC0415
         from app.services import report_service  # noqa: PLC0415
 
         payload = '```json\n{"summary": {"ru": "Ок."}, "forecast": {}}\n```'
@@ -115,7 +123,7 @@ class TestAiDigest:
             digest = report_service._ai_digest({})
         assert digest is not None
         assert digest["summary"]["ru"] == "Ок."
-        assert digest["forecast"] == {"ru": "", "en": "", "uz": ""}
+        assert digest["forecast"] == dict.fromkeys(SUPPORTED_LANGUAGES, "")
 
     def test_garbage_returns_none(self) -> None:
         from app.services import report_service  # noqa: PLC0415

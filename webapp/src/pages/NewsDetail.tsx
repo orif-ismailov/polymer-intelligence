@@ -72,6 +72,7 @@ export default function NewsDetail() {
       <h1 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: 700 }}>{item.title}</h1>
       {(localizedSummary || localizedForecast) && (
         <div
+          dir="auto"
           style={{
             whiteSpace: "pre-wrap",
             fontSize: "14px",

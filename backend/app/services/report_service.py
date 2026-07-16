@@ -25,6 +25,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.languages import SUPPORTED_LANGUAGES
 from app.core.time import to_display_tz, utcnow
 from app.models.enums import ReportKind, ReportStatus
 from app.models.reports import Report
@@ -336,13 +337,17 @@ def render_markdown(
     return "\n".join(lines)
 
 
-_DIGEST_LANGS = ("ru", "en", "uz")
+# One source of truth: the digest speaks every language the platform supports
+# (app/core/languages.py) — currently ru/en/tr/uz/fa/zh. Adding a platform language
+# extends the digest automatically (the report_v3 prompt lists them explicitly;
+# keep it in sync when SUPPORTED_LANGUAGES grows).
+_DIGEST_LANGS = SUPPORTED_LANGUAGES
 
 
 def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
-    """Best-effort multi-language digest: {"summary": {ru,en,uz}, "forecast": {ru,en,uz}}.
+    """Best-effort multi-language digest: summary + forecast in every supported language.
 
-    The report_v2 prompt asks for strict JSON. Returns None on any failure — API error,
+    The report_v3 prompt asks for strict JSON. Returns None on any failure — API error,
     non-JSON output, or a payload missing the Russian summary — so generate_report can
     degrade to the deterministic rule-based summary.
     """
@@ -352,7 +357,7 @@ def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
     try:
         resp = _client.messages.create(
             model=settings.LLM_REPORT_MODEL,
-            max_tokens=1024,
+            max_tokens=2048,
             system=prompt,
             messages=[{"role": "user", "content": json.dumps(snapshot, ensure_ascii=False)}],
         )

@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     LLM_PROMPT_VERSION: str = "v1"
     # Daily-digest prompt version (parsing/prompts/report_vN.md) — versioned separately
     # from the extractor prompt so the two can evolve independently.
-    REPORT_PROMPT_VERSION: str = "v2"
+    REPORT_PROMPT_VERSION: str = "v3"
     # When True, UZEX rows that the rule-based dictionary does NOT recognize are
     # routed through the LLM extractor (like Telegram) instead of being marked
     # irrelevant + queued for manual classification. The LLM emits canonical product
