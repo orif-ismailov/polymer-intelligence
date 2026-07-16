@@ -284,7 +284,7 @@ def render_markdown(
     tenders = snapshot.get("tenders_24h")
     if isinstance(tenders, dict) and int(tenders.get("count", 0) or 0) > 0:
         lines += ["", f"🏛 *Биржа и тендеры (24ч)* — новых позиций: {tenders['count']}"]
-        for t in tenders.get("items") or []:  # type: ignore[union-attr]
+        for t in tenders.get("items") or []:
             bits = [str(t.get("code") or "—")]
             if t.get("volume") is not None:
                 bits.append(f"{float(t['volume']):,.0f} {t.get('volume_unit', 'MT')}")
@@ -296,7 +296,7 @@ def render_markdown(
     reqs = snapshot.get("new_requests_24h")
     if isinstance(reqs, dict) and int(reqs.get("count", 0) or 0) > 0:
         lines += ["", f"🛒 *Новые заявки покупателей (24ч)*: {reqs['count']}"]
-        for r in reqs.get("items") or []:  # type: ignore[union-attr]
+        for r in reqs.get("items") or []:
             vol = (
                 f" — {float(r['volume']):,.0f} {r.get('volume_unit', 'MT')}"
                 if r.get("volume") is not None
