@@ -289,7 +289,11 @@ def _execute_xarid_fetch(adapter_name: str) -> dict[str, Any]:
         sources = _load_enabled_sources(session, adapter_name)
         for source in sources:
             # Per-source isolation + health recording; never re-raises (T-02-17).
-            total_inserted += run_source_fetch_isolated(session, source, adapter)
+            # xarid rows are structured buy-side tenders → the dedicated buy_request
+            # parser (parse_xarid_item), NOT the UZEX exchange-row parser.
+            total_inserted += run_source_fetch_isolated(
+                session, source, adapter, parse_task_name="parse_xarid_item"
+            )
             sources_processed += 1
 
     logger.info(
