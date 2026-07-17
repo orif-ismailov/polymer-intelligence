@@ -96,12 +96,29 @@ class XaridTendersConfig(BaseModel):
 
 # ── HTTP helpers ──────────────────────────────────────────────────────────────
 
+# The xarid API gateway rejects non-browser clients with a 500 JSON envelope
+# ({"status":500,"message":"Приложение : Missing User-Agent header"}) — the honest
+# crawler UA (settings.INGEST_USER_AGENT) and bare tokens like "curl/8.0" are both
+# refused; only a browser-shaped UA returns 200. We therefore present as a normal
+# browser (the same way the sibling uzex_* adapters appear, since they drive a real
+# Playwright browser). Origin/Referer mirror the Angular SPA's own requests so the
+# gateway sees a coherent, first-party call.
+_BROWSER_HEADERS: dict[str, str] = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/plain, */*",
+    "Origin": "https://xarid.uzex.uz",
+    "Referer": "https://xarid.uzex.uz/",
+}
+
 
 async def _list_page(list_url: str, body: dict[str, Any]) -> list[dict[str, Any]]:
     """POST one LIST window; return its row array ([] on error envelope / empty)."""
     from app.ingest.http_client import fetch_url  # noqa: PLC0415 (avoid Settings init at import)
 
-    response = await fetch_url(list_url, method="POST", json_body=body)
+    response = await fetch_url(list_url, method="POST", json_body=body, headers=_BROWSER_HEADERS)
     data = response.json()
     if isinstance(data, list):
         return [r for r in data if isinstance(r, dict)]
@@ -114,7 +131,7 @@ async def _detail(detail_url_template: str, lot_id: Any) -> dict[str, Any] | Non
     from app.ingest.http_client import fetch_url  # noqa: PLC0415
 
     url = detail_url_template.format(id=lot_id)
-    response = await fetch_url(url, method="GET")
+    response = await fetch_url(url, method="GET", headers=_BROWSER_HEADERS)
     data = response.json()
     return data if isinstance(data, dict) else None
 
