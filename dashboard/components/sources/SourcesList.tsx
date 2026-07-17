@@ -16,7 +16,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, FlaskConical, ToggleLeft, ToggleRight } from "lucide-react";
+import { AlertTriangle, FlaskConical, RefreshCw, ToggleLeft, ToggleRight } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +54,19 @@ interface SourceTestResult {
 // Pending adapter types (backend-stub adapters). None currently — llm_page is
 // now fully wired. Kept dormant for any future stub adapter.
 const PENDING_ADAPTERS = new Set<string>();
+
+// Adapters whose raw_items → signals parse path can be re-run (matches the backend
+// PARSE_TASK_BY_ADAPTER map). cbu_rates writes fx_rates directly, so it's excluded.
+const REPROCESSABLE_ADAPTERS = new Set<string>([
+  "uzex_offers",
+  "uzex_contracts",
+  "uzex_deals",
+  "xarid_tenders",
+  "html_table",
+  "llm_page",
+  "rss",
+  "telegram_channel",
+]);
 
 const ADAPTER_LABELS: Record<string, string> = {
   html_table: "HTML Table",
@@ -177,10 +190,24 @@ export function SourcesList() {
   const queryClient = useQueryClient();
   const [testingSourceId, setTestingSourceId] = useState<number | null>(null);
   const [disableConfirmId, setDisableConfirmId] = useState<number | null>(null);
+  const [reprocessResult, setReprocessResult] = useState<{ id: number; requeued: number } | null>(null);
 
   const { data: sources = [], isLoading, error } = useQuery<SourceHealthItem[]>({
     queryKey: ["sources"],
     queryFn: () => apiFetch<SourceHealthItem[]>("/sources"),
+  });
+
+  const reprocessMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiFetch<{ requeued: number; parse_task: string }>(`/admin/sources/${id}/reprocess`, {
+        method: "POST",
+      }),
+    onSuccess: (data, id) => {
+      setReprocessResult({ id, requeued: data.requeued });
+      // New signals will land once the worker parses the re-queued rows.
+      queryClient.invalidateQueries({ queryKey: ["sources"] });
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
+    },
   });
 
   const toggleMutation = useMutation({
@@ -250,12 +277,13 @@ export function SourcesList() {
     <TooltipProvider>
       <div className="flex flex-col gap-1">
         {/* Header */}
-        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-4 py-2 text-xs font-semibold text-foreground-muted uppercase tracking-wider">
+        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-4 py-2 text-xs font-semibold text-foreground-muted uppercase tracking-wider">
           <span>{t("columns.nameType")}</span>
           <span>{t("columns.status")}</span>
           <span>{t("columns.lastFetch")}</span>
           <span>{t("columns.failures")}</span>
           <span>{t("columns.test")}</span>
+          <span>{t("columns.reprocess")}</span>
           <span>{t("columns.enable")}</span>
         </div>
 
@@ -267,7 +295,7 @@ export function SourcesList() {
 
           return (
             <div key={source.id} className="flex flex-col gap-1">
-              <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center rounded-lg bg-background-secondary px-4 py-3 border border-border">
+              <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center rounded-lg bg-background-secondary px-4 py-3 border border-border">
                 {/* Name + Type badge */}
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="text-sm font-medium text-foreground truncate">{source.name}</span>
@@ -343,6 +371,34 @@ export function SourcesList() {
                   )}
                 </div>
 
+                {/* Reprocess button — re-parse previously-dropped raw_items */}
+                <div>
+                  {REPROCESSABLE_ADAPTERS.has(source.adapter) ? (
+                    <Tooltip>
+                      <TooltipTrigger render={
+                        <button
+                          onClick={() => reprocessMutation.mutate(source.id)}
+                          disabled={reprocessMutation.isPending && reprocessMutation.variables === source.id}
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background-tertiary transition-colors disabled:opacity-50"
+                          aria-label={t("reprocess.aria")}
+                        >
+                          <RefreshCw
+                            size={12}
+                            aria-hidden="true"
+                            className={reprocessMutation.isPending && reprocessMutation.variables === source.id ? "animate-spin" : ""}
+                          />
+                          {t("reprocess.button")}
+                        </button>
+                      } />
+                      <TooltipContent className="bg-background-tertiary text-foreground-muted text-xs border-border max-w-xs">
+                        {t("reprocess.tooltip")}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <span className="text-foreground-subtle text-xs">—</span>
+                  )}
+                </div>
+
                 {/* Enable/Disable toggle */}
                 <div>
                   {isPending ? (
@@ -385,6 +441,22 @@ export function SourcesList() {
                     sourceId={source.id}
                     onClose={() => setTestingSourceId(null)}
                   />
+                </div>
+              )}
+
+              {/* Inline reprocess result */}
+              {reprocessResult?.id === source.id && (
+                <div className="px-4 pb-2">
+                  <div className="flex items-center justify-between rounded-md border border-accent/30 bg-accent/10 p-2 text-sm text-accent">
+                    <span>{t("reprocess.result", { count: reprocessResult.requeued })}</span>
+                    <button
+                      onClick={() => setReprocessResult(null)}
+                      className="text-foreground-muted hover:text-foreground ms-2"
+                      aria-label={t("reprocess.dismissAria")}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

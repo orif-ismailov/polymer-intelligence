@@ -207,6 +207,22 @@ def _execute_uzex_fetch(adapter_name: str) -> dict[str, Any]:
     }
 
 
+# Adapter registry name → the parse task that turns its raw_items into signals.
+# Mirrors the parse_task_name each fetch task passes to run_source_fetch_isolated.
+# Used by the admin reprocess endpoint to re-enqueue the RIGHT parser per source.
+# cbu_rates is absent on purpose: it writes fx_rates directly, not raw_items → signals.
+PARSE_TASK_BY_ADAPTER: dict[str, str] = {
+    "uzex_offers": "parse_raw_item",
+    "uzex_contracts": "parse_raw_item",
+    "uzex_deals": "parse_raw_item",
+    "xarid_tenders": "parse_xarid_item",
+    "html_table": "parse_raw_item",
+    "llm_page": "parse_telegram_item",
+    "rss": "parse_telegram_item",
+    "telegram_channel": "parse_telegram_item",
+}
+
+
 def _enqueue_parse_tasks(
     inserted_ids: list[int], task_name: str = "parse_raw_item"
 ) -> None:

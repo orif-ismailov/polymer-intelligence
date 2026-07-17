@@ -396,7 +396,15 @@
       "lastFetch": "Son Çekme",
       "failures": "Hatalar",
       "test": "Test",
+      "reprocess": "Yeniden İşle",
       "enable": "Etkinleştir"
+    },
+    "reprocess": {
+      "button": "Yeniden İşle",
+      "aria": "Kaynağın daha önce atlanan kayıtlarını yeniden işle",
+      "tooltip": "Atlanan kayıtları (alakasız / hatalı) kuyruğa geri alıp yeniden ayrıştır — örneğin bir ayrıştırıcı düzeltmesinden sonra. Zaten ayrıştırılmış kayıtlara dokunulmaz.",
+      "result": "Yeniden kuyruğa alındı: {count}",
+      "dismissAria": "Kapat"
     },
     "status": {
       "pending": "Etkinleştirme bekleniyor (Aşama 5)",

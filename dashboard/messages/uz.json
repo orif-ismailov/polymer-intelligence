@@ -396,7 +396,15 @@
       "lastFetch": "Oxirgi yigʻish",
       "failures": "Xatoliklar",
       "test": "Test",
+      "reprocess": "Qayta ishlash",
       "enable": "Yoqish"
+    },
+    "reprocess": {
+      "button": "Qayta ishlash",
+      "aria": "Manbaning avval tashlab yuborilgan yozuvlarini qayta ishlash",
+      "tooltip": "Tashlab yuborilgan yozuvlarni (nomuvofiq / xatolik) navbatga qaytarib qayta tahlil qilish — masalan, parser tuzatilgandan keyin. Allaqachon tahlil qilingan yozuvlarga tegilmaydi.",
+      "result": "Qayta navbatga qoʻyildi: {count}",
+      "dismissAria": "Yopish"
     },
     "status": {
       "pending": "Faollashtirish kutilmoqda (5-bosqich)",

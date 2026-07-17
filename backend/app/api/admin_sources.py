@@ -21,7 +21,7 @@ from __future__ import annotations
 import datetime
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -167,3 +167,84 @@ def get_sources_health(
         )
         for row in rows
     ]
+
+
+# ── Source reprocess endpoint ─────────────────────────────────────────────────
+
+
+class ReprocessResult(BaseModel):
+    """Result of POST /admin/sources/{id}/reprocess."""
+
+    source_id: int
+    adapter: str
+    parse_task: str
+    requeued: int
+
+
+@router.post(
+    "/sources/{source_id}/reprocess",
+    response_model=ReprocessResult,
+    summary="Re-parse a source's previously-dropped raw_items",
+    description=(
+        "Resets this source's raw_items with parse_status 'irrelevant' / 'failed' / "
+        "'budget_deferred' back to 'pending' and re-enqueues the adapter's parse task. "
+        "Use after fixing a parser so previously-dropped rows become signals — raw_items "
+        "are immutable and the parser has a double-parse guard, so they never re-parse on "
+        "their own. Already-'parsed' rows are untouched. Admin-only."
+    ),
+)
+def reprocess_source(
+    source_id: int,
+    _current_user: StaffUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> ReprocessResult:
+    """Re-queue a source's previously-dropped raw_items through the correct parse task.
+
+    Raises:
+        HTTP 401/403: missing token / non-admin.
+        HTTP 404: unknown source_id.
+        HTTP 400: the source's adapter has no raw_items → signals parse path
+                  (e.g. cbu_rates, which writes fx_rates directly).
+    """
+    from app.tasks.celery_app import celery_app  # noqa: PLC0415
+    from app.tasks.ingest import PARSE_TASK_BY_ADAPTER  # noqa: PLC0415
+
+    row = db.execute(
+        sa.text("SELECT id, adapter FROM sources WHERE id = :sid"),
+        {"sid": source_id},
+    ).first()
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
+
+    adapter = str(row[1])
+    parse_task = PARSE_TASK_BY_ADAPTER.get(adapter)
+    if parse_task is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Reprocess is not supported for adapter '{adapter}'",
+        )
+
+    # Reset the previously-dropped rows to pending and collect their ids. The raw_item
+    # CONTENT is immutable — only parse_status flips so the double-parse guard re-runs.
+    ids = list(
+        db.execute(
+            sa.text(
+                """
+                UPDATE raw_items
+                SET parse_status = 'pending'
+                WHERE source_id = :sid
+                  AND parse_status::text IN ('irrelevant', 'failed', 'budget_deferred')
+                RETURNING id
+                """
+            ),
+            {"sid": source_id},
+        ).scalars()
+    )
+    db.commit()
+
+    for raw_item_id in ids:
+        celery_app.send_task(parse_task, args=[raw_item_id], queue="parse")
+
+    return ReprocessResult(
+        source_id=source_id, adapter=adapter, parse_task=parse_task, requeued=len(ids)
+    )
