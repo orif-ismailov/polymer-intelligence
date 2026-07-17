@@ -28,9 +28,14 @@ class ReportPublicSummary(BaseModel):
 
 
 class ReportPublicOut(ReportPublicSummary):
-    """Full published report for the News detail view."""
+    """Full published report for the News detail view.
+
+    `i18n` carries the AI summary + forecast in ru/en/uz (from data_snapshot) so the
+    webapp can show the digest in the client's language; None for pre-digest reports.
+    """
 
     content_md: str
+    i18n: dict[str, Any] | None = None
 
 
 class ReportAdminOut(BaseModel):

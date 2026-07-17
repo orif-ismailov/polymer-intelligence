@@ -302,6 +302,11 @@ export interface NewsSummary {
 
 export interface NewsItem extends NewsSummary {
   content_md: string;
+  /** AI summary + forecast in ru/en/uz (digest reports); null for older reports. */
+  i18n?: {
+    summary?: Record<string, string>;
+    forecast?: Record<string, string>;
+  } | null;
 }
 
 export interface SellerOfferOut {
