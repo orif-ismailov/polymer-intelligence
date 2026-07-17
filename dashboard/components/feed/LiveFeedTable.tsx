@@ -21,7 +21,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
+import { Activity, ChevronLeft, ChevronRight, Phone, Mail, ExternalLink } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
 import { useSSE } from "@/hooks/useSSE";
@@ -44,6 +44,77 @@ interface FeedItem {
   urgency: string | null;
   status: string | null;
   event_at: string;
+  // Seller / counterparty contact (signals only; null on buyer-request rows).
+  seller: string | null;
+  source_name: string | null;
+  source_url: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+}
+
+/** Only render http(s) links — ingested payload URLs are untrusted (no javascript:). */
+function safeHttpUrl(url: string | null): string | null {
+  return url && /^https?:\/\//i.test(url) ? url : null;
+}
+
+/** Seller name + contact affordances (call / email / open source) for a feed row. */
+function SellerContactCell({
+  item,
+  t,
+}: {
+  item: FeedItem;
+  t: (key: string) => string;
+}) {
+  const url = safeHttpUrl(item.source_url);
+  const { seller, source_name, contact_phone, contact_email } = item;
+  const hasContact = !!(url || contact_phone || contact_email);
+
+  if (!seller && !hasContact) {
+    return <span className="text-foreground-subtle">—</span>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-sm text-foreground" title={source_name ?? undefined}>
+        {seller ?? t("seller.unknown")}
+      </span>
+      {hasContact && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {contact_phone && (
+            <a
+              href={`tel:${contact_phone}`}
+              className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+              title={contact_phone}
+            >
+              <Phone size={12} aria-hidden="true" />
+              {t("seller.call")}
+            </a>
+          )}
+          {contact_email && (
+            <a
+              href={`mailto:${contact_email}`}
+              className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+              title={contact_email}
+            >
+              <Mail size={12} aria-hidden="true" />
+              {t("seller.email")}
+            </a>
+          )}
+          {url && (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+            >
+              <ExternalLink size={12} aria-hidden="true" />
+              {t("seller.source")}
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface FeedPage {
@@ -145,6 +216,11 @@ function buildColumns(t: (key: string) => string) {
         const status = info.getValue();
         return status ? <StatusChip status={status} /> : <span className="text-foreground-subtle">—</span>;
       },
+    }),
+    columnHelper.display({
+      id: "seller",
+      header: t("columns.seller"),
+      cell: (info) => <SellerContactCell item={info.row.original} t={t} />,
     }),
   ];
 }

@@ -118,7 +118,14 @@
       "price": "Narx",
       "region": "Hudud",
       "urgency": "Shoshilinchlik",
-      "status": "Holat"
+      "status": "Holat",
+      "seller": "Sotuvchi / Aloqa"
+    },
+    "seller": {
+      "unknown": "Sotuvchi ko‘rsatilmagan",
+      "call": "Qo‘ng‘iroq",
+      "email": "Email",
+      "source": "Manba"
     },
     "pagination": {
       "prev": "Orqaga",

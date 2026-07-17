@@ -44,6 +44,15 @@ class FeedItem(BaseModel):
     status: str | None
     event_at: datetime.datetime
     needs_review: bool               # Phase 5: True when ai->>'needs_review'='true'
+    # Seller / counterparty contact — lets staff reach the seller from the live feed.
+    # Signals only (None for buy_request rows, which are buyers). Populated from
+    # signals.counterparty_text + sources.name + raw_items.payload; richness varies by
+    # source (exchange rows give a name only; xarid/Telegram carry phone/email/a link).
+    seller: str | None = None
+    source_name: str | None = None
+    source_url: str | None = None
+    contact_phone: str | None = None
+    contact_email: str | None = None
 
 
 class FeedPage(BaseModel):

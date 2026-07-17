@@ -118,7 +118,14 @@
       "price": "Fiyat",
       "region": "Bölge",
       "urgency": "Aciliyet",
-      "status": "Durum"
+      "status": "Durum",
+      "seller": "Satıcı / İletişim"
+    },
+    "seller": {
+      "unknown": "Satıcı belirtilmemiş",
+      "call": "Ara",
+      "email": "E-posta",
+      "source": "Kaynak"
     },
     "pagination": {
       "prev": "Önceki",

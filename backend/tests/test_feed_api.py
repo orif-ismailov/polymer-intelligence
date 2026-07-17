@@ -64,6 +64,11 @@ def _make_feed_row(
     urgency: str | None = "medium",
     status: str | None = "new",
     event_at: datetime.datetime | None = None,
+    seller: str | None = None,
+    source_name: str | None = None,
+    source_url: str | None = None,
+    contact_phone: str | None = None,
+    contact_email: str | None = None,
 ) -> MagicMock:
     """Return a MagicMock that quacks like a v_live_feed row."""
     row = MagicMock()
@@ -79,6 +84,13 @@ def _make_feed_row(
     row.urgency = urgency
     row.status = status
     row.event_at = event_at or datetime.datetime(2026, 6, 17, 12, 0, 0, tzinfo=datetime.UTC)
+    # Seller / contact columns (signals + sources + raw_items join). Default None so
+    # existing rows stay unchanged; a dedicated test sets them to real values.
+    row.seller = seller
+    row.source_name = source_name
+    row.source_url = source_url
+    row.contact_phone = contact_phone
+    row.contact_email = contact_email
     return row
 
 
@@ -141,6 +153,41 @@ class TestFeedList:
         data = resp.json()
         assert "items" in data
         assert isinstance(data["items"], list)
+
+    def test_seller_contact_fields_surfaced(self) -> None:
+        """Seller name + source + contact (phone/email/link) reach the response so
+        staff can contact the seller from the live feed."""
+        contactable = _make_feed_row(
+            id=42,
+            kind="sell_offer",
+            seller="UGCC Trading LLC",
+            source_name="xarid.uzex.uz",
+            source_url="https://xarid.uzex.uz/auction/detail/42",
+            contact_phone="998901112233",
+            contact_email="sales@ugcc.uz",
+        )
+        exchange_only = _make_feed_row(id=41, kind="deal", seller="Shurtan GCC")
+        client = _make_feed_client(rows=[contactable, exchange_only])
+
+        with patch("app.api.health._check_redis", return_value="ok"):
+            resp = client.get("/api/v1/feed", headers=_auth_headers())
+
+        assert resp.status_code == 200, resp.text
+        items = {i["id"]: i for i in resp.json()["items"]}
+
+        rich = items[42]
+        assert rich["seller"] == "UGCC Trading LLC"
+        assert rich["source_name"] == "xarid.uzex.uz"
+        assert rich["source_url"] == "https://xarid.uzex.uz/auction/detail/42"
+        assert rich["contact_phone"] == "998901112233"
+        assert rich["contact_email"] == "sales@ugcc.uz"
+
+        # Exchange rows carry a name but no direct contact — fields stay null, not absent.
+        lean = items[41]
+        assert lean["seller"] == "Shurtan GCC"
+        assert lean["source_url"] is None
+        assert lean["contact_phone"] is None
+        assert lean["contact_email"] is None
 
     def test_cursor_fields_in_response(self) -> None:
         """Response includes next_cursor_event_at and next_cursor_id."""
