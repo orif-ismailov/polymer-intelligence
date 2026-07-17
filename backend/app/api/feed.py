@@ -222,7 +222,11 @@ def get_feed(
                        THEN 'https://t.me/' || ltrim(ri.payload->>'username', '@')
                             || '/' || ri.external_id
                        ELSE NULL
-                   END
+                   END,
+                   -- Fallback: the source's own listing page (e.g. the UZEX trade board).
+                   -- Exchange rows carry no per-lot deep link, so at least link to where
+                   -- the offer/deal lives on the exchange. Only http(s) is rendered client-side.
+                   src.url
                ) AS source_url,
                COALESCE(ri.payload->>'phone', ri.payload->>'contact_phone') AS contact_phone,
                COALESCE(ri.payload->>'email', ri.payload->>'contact_email') AS contact_email

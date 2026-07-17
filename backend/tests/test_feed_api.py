@@ -166,7 +166,11 @@ class TestFeedList:
             contact_phone="998901112233",
             contact_email="sales@ugcc.uz",
         )
-        exchange_only = _make_feed_row(id=41, kind="deal", seller="Shurtan GCC")
+        # Anonymized exchange row: no seller/phone/email, but source_url falls back
+        # (in SQL) to the exchange's listing page so staff can still open the board.
+        exchange_only = _make_feed_row(
+            id=41, kind="deal", seller=None, source_url="https://uzex.uz/Trade/List"
+        )
         client = _make_feed_client(rows=[contactable, exchange_only])
 
         with patch("app.api.health._check_redis", return_value="ok"):
@@ -182,10 +186,10 @@ class TestFeedList:
         assert rich["contact_phone"] == "998901112233"
         assert rich["contact_email"] == "sales@ugcc.uz"
 
-        # Exchange rows carry a name but no direct contact — fields stay null, not absent.
+        # Exchange row: at minimum a link to the board; no name/phone/email.
         lean = items[41]
-        assert lean["seller"] == "Shurtan GCC"
-        assert lean["source_url"] is None
+        assert lean["seller"] is None
+        assert lean["source_url"] == "https://uzex.uz/Trade/List"
         assert lean["contact_phone"] is None
         assert lean["contact_email"] is None
 
