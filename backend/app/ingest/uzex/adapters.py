@@ -33,6 +33,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -206,6 +207,58 @@ def _row_content(row: dict[str, object]) -> str:
     return "; ".join(parts)
 
 
+# Volume-unit tokens → normalized to metric tonnes (MT). UZEX quotes qty in kg or tonnes.
+_KG_UNITS: frozenset[str] = frozenset(
+    {"кг", "килограмм", "килограммов", "kg", "kilogram", "kilogramm"}
+)
+_TON_UNITS: frozenset[str] = frozenset(
+    {"т", "тн", "тон", "тонна", "тонн", "тонны", "мт", "mt", "ton", "tonne", "tonnes"}
+)
+
+
+def _normalize_price_to_per_mt(payload: dict[str, object]) -> None:
+    """In place: turn UZEX's TOTAL contract value + raw qty into a per-MT unit price.
+
+    UZEX ``Mahsulot narxi`` / ``Bazis narxi`` / per-contract price columns hold the TOTAL
+    value of the deal (verified live: e.g. urea 361,444,888 for 68 t = 5.3M/t; the same
+    urea priced in kg gives the same 5.16M/t). Quantity is in kg or tonnes. Downstream —
+    ``signals.price`` and the feed's ``… /MT`` display — expects a per-TONNE unit price,
+    so we compute ``total ÷ qty(MT)`` and set volume to MT. Without this, price mixes
+    per-tonne, per-kg and whole-contract-total values in one column.
+
+    Raw total is preserved under ``contract_total`` for audit. Rows with a non-mass unit
+    (литр, шт…) or an unusable quantity are left untouched (can't derive a per-MT figure).
+    """
+    unit = str(payload.get("volume_unit") or "").strip().lower()
+
+    def _dec(value: object) -> Decimal | None:
+        try:
+            s = str(value).strip().replace(" ", "").replace(",", ".")
+            return Decimal(s) if s else None
+        except (InvalidOperation, ValueError):
+            return None
+
+    qty = _dec(payload.get("volume"))
+    total = _dec(payload.get("price"))
+    if qty is None or qty <= 0:
+        return
+
+    if unit in _KG_UNITS:
+        vol_mt = qty / Decimal(1000)
+    elif unit in _TON_UNITS or unit == "":
+        vol_mt = qty
+    else:
+        return  # unknown/non-mass unit — leave the row as-is
+
+    if vol_mt <= 0:
+        return
+    if total is not None:
+        payload["contract_total"] = str(total)
+        payload["price"] = str((total / vol_mt).quantize(Decimal("0.01")))
+    payload["volume"] = str(vol_mt)
+    payload["volume_unit"] = "MT"
+
+
 async def _fetch_and_parse(
     source_urls: list[str],
     config: dict[str, object],
@@ -268,6 +321,9 @@ async def _fetch_and_parse(
                 if section_label:
                     payload["section"] = section_label
                 payload["currency"] = currency
+                # UZEX prices are the TOTAL contract value + qty in kg/tonnes → convert to
+                # a per-MT unit price so signals.price is consistent (feed shows … /MT).
+                _normalize_price_to_per_mt(payload)
 
                 drafts.append(
                     RawItemDraft(
