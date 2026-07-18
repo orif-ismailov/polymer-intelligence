@@ -118,6 +118,7 @@ def build_snapshot(db: Session) -> dict[str, object]:
         "tenders_24h": _snapshot_tenders(db),
         "new_requests_24h": _snapshot_new_requests(db),
         "new_offers_24h": _snapshot_new_offers(db),
+        "top_news": _snapshot_top_news(db),
         "news_uz": _snapshot_news(db, uz=True),
         "news_world": _snapshot_news(db, uz=False),
     }
@@ -239,6 +240,77 @@ def _snapshot_news(db: Session, *, uz: bool) -> list[dict[str, object]]:
     ]
 
 
+# Importance rank + which categories roll up into each themed report section.
+_IMPORTANCE_RANK: dict[str, int] = {"high": 3, "medium": 2, "low": 1}
+_NEWS_THEMES: tuple[tuple[str, str, frozenset[str]], ...] = (
+    ("shutdowns", "🛑 *Остановки и ремонты*", frozenset({"plant_shutdown", "maintenance"})),
+    ("projects", "🏭 *Заводы, проекты, инвестиции*",
+     frozenset({"factories", "new_projects", "investment", "production"})),
+    ("energy", "⛽ *Нефть и газ*", frozenset({"oil", "natural_gas", "energy", "refineries"})),
+    ("logistics", "🚚 *Логистика и торговля*",
+     frozenset({"logistics", "ports", "railways", "customs", "import", "export", "trade"})),
+)
+
+
+def _snapshot_top_news(db: Session, limit: int = 10) -> dict[str, object]:
+    """Ranked news (last 24h) from kind='news' signals, reading the ai.news block.
+
+    Ranked by importance then recency. Output is JSON-safe (no datetimes) so it can go
+    straight into the LLM snapshot. Themed buckets group the top items by category.
+    """
+    rows = (
+        db.execute(
+            sa.text(
+                """
+                SELECT s.event_at, s.ai, src.name AS source_name, src.country AS country
+                FROM signals s
+                JOIN sources src ON src.id = s.source_id
+                WHERE s.kind = 'news'
+                  AND s.event_at >= now() - INTERVAL '24 hours'
+                  AND s.ai -> 'news' IS NOT NULL
+                ORDER BY s.event_at DESC
+                LIMIT 200
+                """
+            )
+        )
+        .mappings()
+        .all()
+    )
+
+    articles: list[dict[str, object]] = []
+    for r in rows:
+        ai = r["ai"] if isinstance(r["ai"], dict) else {}
+        news = ai.get("news") if isinstance(ai.get("news"), dict) else None
+        if not news or not news.get("headline"):
+            continue
+        articles.append(
+            {
+                "headline": str(news.get("headline")),
+                "category": news.get("category"),
+                "importance": news.get("importance"),
+                "market_impact": news.get("market_impact"),
+                "summary": news.get("summary"),
+                "companies": news.get("companies") or [],
+                "country": news.get("country") or r["country"],
+                "source": str(r["source_name"]),
+                "_rank": (_IMPORTANCE_RANK.get(str(news.get("importance")), 0), r["event_at"]),
+            }
+        )
+
+    articles.sort(key=lambda a: a["_rank"], reverse=True)  # type: ignore[arg-type,return-value]
+    for a in articles:
+        a.pop("_rank", None)  # drop the non-JSON-safe sort key
+    top = articles[:limit]
+
+    themes: dict[str, list[str]] = {}
+    for a in top:
+        cat = str(a.get("category") or "")
+        for key, _label, cats in _NEWS_THEMES:
+            if cat in cats:
+                themes.setdefault(key, []).append(str(a["headline"]))
+    return {"count": len(articles), "top": top, "themes": themes}
+
+
 # ── Rendering ────────────────────────────────────────────────────────────────────
 
 def _rule_based_summary(snapshot: dict[str, object]) -> str:
@@ -309,7 +381,26 @@ def render_markdown(
     if isinstance(offers, dict) and int(offers.get("count", 0) or 0) > 0:
         lines += ["", f"📦 *Новые предложения на маркете (24ч)*: {offers['count']}"]
 
-    # ── Новости ──────────────────────────────────────────────────────────────
+    # ── Топ новостей (24ч) — ranked + themed from ai.news ────────────────────
+    top_news = snapshot.get("top_news")
+    if isinstance(top_news, dict) and (top_news.get("top") or []):
+        _imp = {"high": "🔴", "medium": "🟡", "low": "⚪"}
+        _impact = {"positive": "📈", "negative": "📉", "neutral": "➖"}
+        top = list(top_news.get("top") or [])
+        lines += ["", f"📰 *Топ новостей (24ч)* — всего: {top_news.get('count', len(top))}"]
+        for n in top[:8]:
+            if not isinstance(n, dict):
+                continue
+            mark = _imp.get(str(n.get("importance")), "⚪") + _impact.get(str(n.get("market_impact")), "")
+            lines.append(f"{mark} {str(n.get('headline') or '').strip()} — _{n.get('source', '—')}_")
+        themes = top_news.get("themes") if isinstance(top_news.get("themes"), dict) else {}
+        for key, label, _cats in _NEWS_THEMES:
+            heads = themes.get(key) if isinstance(themes, dict) else None
+            if isinstance(heads, list) and heads:
+                lines += ["", label]
+                lines += [f"• {h}" for h in heads[:4]]
+
+    # ── Новости (excerpt fallback for un-classified items) ───────────────────
     def _news_block(title: str, items: object) -> None:
         if isinstance(items, list) and items:
             lines.append("")
