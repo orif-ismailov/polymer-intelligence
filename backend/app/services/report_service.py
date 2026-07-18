@@ -428,6 +428,110 @@ def render_markdown(
     return "\n".join(lines)
 
 
+# ── Telegram channel digest (Phase 7e) ─────────────────────────────────────────────
+# The full render_markdown() body is the archival report shown in the dashboard/webapp.
+# The Telegram channel wants a compact, news-forward push that fits comfortably in one
+# message and carries the brand footer. Telegram hard-limits a text message at 4096
+# chars; we self-impose 1500 so the digest stays skimmable on a phone.
+
+TELEGRAM_DIGEST_LIMIT = 1500
+_POWERED_BY = "🤖 Powered by IMEX AI"
+_TG_IMPORTANCE = {"high": "🔴", "medium": "🟡", "low": "⚪"}
+_TG_IMPACT = {"positive": "📈", "negative": "📉", "neutral": "➖"}
+
+
+def _digest_summary_ru(snapshot: dict[str, object]) -> str:
+    """The Russian AI summary if the report carried one, else the rule-based line."""
+    i18n = snapshot.get("i18n")
+    if isinstance(i18n, dict):
+        summary = i18n.get("summary")
+        if isinstance(summary, dict):
+            ru = str(summary.get("ru") or "").strip()
+            if ru:
+                return ru
+    return _rule_based_summary(snapshot)
+
+
+def _truncate(text: str, limit: int) -> str:
+    text = text.strip()
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def render_telegram_digest(
+    snapshot: dict[str, object], *, limit: int = TELEGRAM_DIGEST_LIMIT
+) -> str:
+    """Compact, news-forward Telegram push (≤ `limit` chars, brand footer).
+
+    Priority order under the char budget: title → AI summary → ranked top news →
+    themed one-liners → a UZ-price movers line. Lower-priority sections are dropped
+    (not truncated mid-item) when the budget is tight; the whole body is hard-capped
+    as a final guard. The "Powered by IMEX AI" footer is always present.
+    """
+    footer = f"\n\n—\n{_POWERED_BY}"
+    budget = limit - len(footer)
+
+    def _fits(candidate: list[str]) -> bool:
+        return len("\n".join(candidate)) <= budget
+
+    lines: list[str] = [f"📰 *Обзор рынка — {snapshot.get('date', '')}*"]
+
+    summary = _digest_summary_ru(snapshot)
+    if summary:
+        block = [*lines, "", _truncate(summary, 350)]
+        if _fits(block):
+            lines = block
+
+    # Ranked top news — append items one at a time while they fit.
+    top_news = snapshot.get("top_news")
+    top = list(top_news.get("top") or []) if isinstance(top_news, dict) else []
+    if top:
+        header = [*lines, "", "*Главные новости:*"]
+        if _fits(header):
+            lines = header
+            for n in top:
+                if not isinstance(n, dict):
+                    continue
+                mark = _TG_IMPORTANCE.get(str(n.get("importance")), "⚪") + _TG_IMPACT.get(
+                    str(n.get("market_impact")), ""
+                )
+                head = str(n.get("headline") or "").strip()
+                if not head:
+                    continue
+                candidate = [*lines, f"{mark} {head} — _{n.get('source', '—')}_"]
+                if not _fits(candidate):
+                    break
+                lines = candidate
+
+    # Themed one-liners (compact: "label: h1; h2").
+    themes = top_news.get("themes") if isinstance(top_news, dict) else None
+    if isinstance(themes, dict):
+        for key, label, _cats in _NEWS_THEMES:
+            heads = themes.get(key)
+            if isinstance(heads, list) and heads:
+                candidate = [*lines, f"{label}: " + "; ".join(str(h) for h in heads[:2])]
+                if not _fits(candidate):
+                    break
+                lines = candidate
+
+    # UZ price movers — one line, biggest absolute moves first.
+    products = snapshot.get("products")
+    if isinstance(products, list) and products:
+        movers = sorted(products, key=lambda p: abs(float(p.get("delta", 0) or 0)), reverse=True)
+        bits = []
+        for p in movers[:3]:
+            delta = float(p.get("delta", 0) or 0)
+            sign = "+" if delta >= 0 else ""
+            bits.append(f"{p.get('code')} {float(p['price']):,.0f}{p.get('currency', '')} ({sign}{delta:.0f})")
+        candidate = [*lines, "", "💱 " + " · ".join(bits)]
+        if _fits(candidate):
+            lines = candidate
+
+    body = "\n".join(lines)
+    if len(body) > budget:  # final hard guard (should not trigger given the checks above)
+        body = body[: budget - 1].rstrip() + "…"
+    return body + footer
+
+
 # One source of truth: the digest speaks every language the platform supports
 # (app/core/languages.py) — currently ru/en/tr/uz/fa/zh. Adding a platform language
 # extends the digest automatically (the report prompt lists them explicitly;
