@@ -339,7 +339,7 @@ def render_markdown(
 
 # One source of truth: the digest speaks every language the platform supports
 # (app/core/languages.py) — currently ru/en/tr/uz/fa/zh. Adding a platform language
-# extends the digest automatically (the report_v3 prompt lists them explicitly;
+# extends the digest automatically (the report prompt lists them explicitly;
 # keep it in sync when SUPPORTED_LANGUAGES grows).
 _DIGEST_LANGS = SUPPORTED_LANGUAGES
 
@@ -347,7 +347,7 @@ _DIGEST_LANGS = SUPPORTED_LANGUAGES
 def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
     """Best-effort multi-language digest: summary + forecast in every supported language.
 
-    The report_v3 prompt asks for strict JSON. Returns None on any failure — API error,
+    The report prompt asks for strict JSON. Returns None on any failure — API error,
     non-JSON output, or a payload missing the Russian summary — so generate_report can
     degrade to the deterministic rule-based summary.
     """
