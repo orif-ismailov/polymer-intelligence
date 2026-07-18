@@ -211,14 +211,20 @@ def reprocess_source(
     from app.tasks.ingest import PARSE_TASK_BY_ADAPTER  # noqa: PLC0415
 
     row = db.execute(
-        sa.text("SELECT id, adapter FROM sources WHERE id = :sid"),
+        sa.text("SELECT id, adapter, config FROM sources WHERE id = :sid"),
         {"sid": source_id},
     ).first()
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
 
     adapter = str(row[1])
-    parse_task = PARSE_TASK_BY_ADAPTER.get(adapter)
+    config = row[2] if isinstance(row[2], dict) else {}
+    # News-flagged sources use the news classifier regardless of adapter (matches the
+    # fetch-time routing in run_source_fetch_isolated).
+    if config.get("content_kind") == "news":
+        parse_task: str | None = "parse_news_item"
+    else:
+        parse_task = PARSE_TASK_BY_ADAPTER.get(adapter)
     if parse_task is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

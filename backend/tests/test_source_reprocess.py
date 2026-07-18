@@ -46,7 +46,7 @@ class TestReprocessSource:
     def test_requeues_dropped_rows_and_dispatches_correct_task(self) -> None:
         """xarid source → resets 3 rows and enqueues parse_xarid_item for each."""
         with patch("app.tasks.celery_app.celery_app.send_task") as mock_send:
-            client, _ = _client((5, "xarid_tenders"), updated_ids=[10, 11, 12])
+            client, _ = _client((5, "xarid_tenders", {}), updated_ids=[10, 11, 12])
             resp = client.post("/api/v1/admin/sources/5/reprocess")
 
         assert resp.status_code == 200, resp.text
@@ -65,16 +65,26 @@ class TestReprocessSource:
 
     def test_uzex_source_routes_to_rule_parser(self) -> None:
         with patch("app.tasks.celery_app.celery_app.send_task") as mock_send:
-            client, _ = _client((1, "uzex_deals"), updated_ids=[7])
+            client, _ = _client((1, "uzex_deals", {}), updated_ids=[7])
             resp = client.post("/api/v1/admin/sources/1/reprocess")
 
         assert resp.status_code == 200, resp.text
         assert resp.json()["parse_task"] == "parse_raw_item"
         assert mock_send.call_args.args[0] == "parse_raw_item"
 
+    def test_news_source_routes_to_news_parser(self) -> None:
+        """A content_kind='news' source re-parses via parse_news_item regardless of adapter."""
+        with patch("app.tasks.celery_app.celery_app.send_task") as mock_send:
+            client, _ = _client((9, "rss", {"content_kind": "news"}), updated_ids=[88])
+            resp = client.post("/api/v1/admin/sources/9/reprocess")
+
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["parse_task"] == "parse_news_item"
+        assert mock_send.call_args.args[0] == "parse_news_item"
+
     def test_no_dropped_rows_requeues_zero(self) -> None:
         with patch("app.tasks.celery_app.celery_app.send_task") as mock_send:
-            client, _ = _client((5, "xarid_tenders"), updated_ids=[])
+            client, _ = _client((5, "xarid_tenders", {}), updated_ids=[])
             resp = client.post("/api/v1/admin/sources/5/reprocess")
 
         assert resp.status_code == 200, resp.text
@@ -92,7 +102,7 @@ class TestReprocessSource:
     def test_unsupported_adapter_returns_400(self) -> None:
         """cbu_rates writes fx_rates directly (no raw_items→signals) → 400, no dispatch."""
         with patch("app.tasks.celery_app.celery_app.send_task") as mock_send:
-            client, _ = _client((4, "cbu_rates"))
+            client, _ = _client((4, "cbu_rates", {}))
             resp = client.post("/api/v1/admin/sources/4/reprocess")
 
         assert resp.status_code == 400

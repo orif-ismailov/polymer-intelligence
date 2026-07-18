@@ -115,6 +115,12 @@ def run_source_fetch_isolated(
         record_fetch_success(session, source.id)
         session.commit()
 
+        # News sources (config content_kind='news') route to the news classifier
+        # regardless of adapter — a Telegram channel or RSS feed can carry either
+        # market signals or news; the admin marks which via the source config.
+        if (getattr(source, "config", None) or {}).get("content_kind") == "news":
+            parse_task_name = "parse_news_item"
+
         if inserted > 0:
             _enqueue_parse_tasks(inserted_ids, parse_task_name)
 
