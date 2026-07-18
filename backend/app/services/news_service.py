@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.models.enums import PriceBasis, SignalKind
 from app.models.signals import Signal
+from app.services.news_dedup import cluster_articles
 from app.services.relevance_service import match_product
 
 if TYPE_CHECKING:
@@ -120,9 +121,14 @@ def _article_card(row: sa.engine.RowMapping) -> dict[str, object]:
     }
 
 
-def list_news_articles(session: Session, *, limit: int = 30, days: int = 7) -> list[dict[str, object]]:
-    """Ranked news cards from the last `days` (importance, then recency)."""
-    rows = (
+# Fetch a generous window of recent news so clustering has enough to merge against;
+# callers then keep only as many representative stories as they need.
+_CLUSTER_ROW_CAP = 200
+
+
+def _recent_article_rows(session: Session, *, days: int, cap: int = _CLUSTER_ROW_CAP) -> list[sa.engine.RowMapping]:
+    """Recent kind='news' rows, ranked importance→recency (for card mapping + clustering)."""
+    return list(
         session.execute(
             sa.text(
                 """
@@ -138,19 +144,52 @@ def list_news_articles(session: Session, *, limit: int = 30, days: int = 7) -> l
                         WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0
                     END
                 ) DESC, s.event_at DESC
-                LIMIT :limit
+                LIMIT :cap
                 """
             ),
-            {"days": days, "limit": limit},
+            {"days": days, "cap": cap},
         )
         .mappings()
         .all()
     )
-    return [_article_card(r) for r in rows if r["ai"] and isinstance(r["ai"], dict)]
+
+
+def _source_refs(members: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Source references for a cluster, original (earliest published) first."""
+    refs: list[dict[str, object]] = [
+        {"id": m["id"], "name": m.get("source_name"), "published_at": m.get("published_at")}
+        for m in members
+    ]
+    refs.sort(key=lambda r: (r["published_at"] is None, str(r["published_at"] or "")))
+    return refs
+
+
+def _merge_cluster(members: list[dict[str, object]]) -> dict[str, object]:
+    """Collapse a same-story cluster into its representative card + merged sources."""
+    rep = dict(members[0])
+    rep["sources"] = _source_refs(members)
+    rep["merged_count"] = len(members)
+    return rep
+
+
+def list_news_articles(session: Session, *, limit: int = 30, days: int = 7) -> list[dict[str, object]]:
+    """Ranked, cross-source-deduped news cards from the last `days`.
+
+    Same-story items from multiple sources collapse into one representative card; the
+    others are attached under `sources` (with `merged_count`). At most `limit` stories.
+    """
+    rows = _recent_article_rows(session, days=days)
+    cards = [_article_card(r) for r in rows if r["ai"] and isinstance(r["ai"], dict)]
+    clusters = cluster_articles(cards)
+    return [_merge_cluster(members) for members in clusters[:limit]]
 
 
 def get_news_article(session: Session, signal_id: int) -> dict[str, object] | None:
-    """A single news card plus its detail fields (original body + source link)."""
+    """A single news card plus its detail fields (original body + source link).
+
+    The article's cluster siblings (the same story reported elsewhere) are attached
+    under `sources`, so the detail view can cite every source and the original.
+    """
     row = (
         session.execute(
             sa.text(
@@ -182,4 +221,16 @@ def get_news_article(session: Session, signal_id: int) -> dict[str, object] | No
     body = row["body"]
     card["body"] = str(body).strip() if body else None
     card["source_url"] = str(row["source_url"]) if row["source_url"] else None
+
+    # Find this article's cluster among recent news to list every reporting source.
+    sib_rows = _recent_article_rows(session, days=14, cap=300)
+    sib_cards = [_article_card(r) for r in sib_rows if r["ai"] and isinstance(r["ai"], dict)]
+    if all(c["id"] != signal_id for c in sib_cards):  # target older than the window
+        sib_cards.append(_article_card(row))
+    members = next(
+        (cl for cl in cluster_articles(sib_cards) if any(m["id"] == signal_id for m in cl)),
+        [_article_card(row)],
+    )
+    card["sources"] = _source_refs(members)
+    card["merged_count"] = len(members)
     return card

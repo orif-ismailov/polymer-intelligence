@@ -29,6 +29,7 @@ from app.core.languages import SUPPORTED_LANGUAGES
 from app.core.time import to_display_tz, utcnow
 from app.models.enums import ReportKind, ReportStatus
 from app.models.reports import Report
+from app.services.news_dedup import cluster_articles
 
 logger = logging.getLogger(__name__)
 
@@ -300,7 +301,16 @@ def _snapshot_top_news(db: Session, limit: int = 10) -> dict[str, object]:
     articles.sort(key=lambda a: a["_rank"], reverse=True)  # type: ignore[arg-type,return-value]
     for a in articles:
         a.pop("_rank", None)  # drop the non-JSON-safe sort key
-    top = articles[:limit]
+
+    # Cross-source dedup (Phase 7f): collapse same-story items so the digest doesn't
+    # repeat one event N times; the representative carries a merged source count.
+    clusters = cluster_articles(articles)
+    reps: list[dict[str, object]] = []
+    for members in clusters:
+        rep = members[0]
+        rep["merged_count"] = len(members)
+        reps.append(rep)
+    top = reps[:limit]
 
     themes: dict[str, list[str]] = {}
     for a in top:
@@ -308,10 +318,19 @@ def _snapshot_top_news(db: Session, limit: int = 10) -> dict[str, object]:
         for key, _label, cats in _NEWS_THEMES:
             if cat in cats:
                 themes.setdefault(key, []).append(str(a["headline"]))
-    return {"count": len(articles), "top": top, "themes": themes}
+    return {"count": len(reps), "top": top, "themes": themes}
 
 
 # ── Rendering ────────────────────────────────────────────────────────────────────
+
+def _merged_suffix(article: object) -> str:
+    """" (+N)" when a story was reported by more than one source (Phase 7f), else ""."""
+    if isinstance(article, dict):
+        count = article.get("merged_count")
+        if isinstance(count, int) and count > 1:
+            return f" (+{count - 1})"
+    return ""
+
 
 def _rule_based_summary(snapshot: dict[str, object]) -> str:
     products = snapshot.get("products") or []
@@ -392,7 +411,10 @@ def render_markdown(
             if not isinstance(n, dict):
                 continue
             mark = _imp.get(str(n.get("importance")), "⚪") + _impact.get(str(n.get("market_impact")), "")
-            lines.append(f"{mark} {str(n.get('headline') or '').strip()} — _{n.get('source', '—')}_")
+            lines.append(
+                f"{mark} {str(n.get('headline') or '').strip()} — "
+                f"_{n.get('source', '—')}_{_merged_suffix(n)}"
+            )
         themes = top_news.get("themes") if isinstance(top_news.get("themes"), dict) else {}
         for key, label, _cats in _NEWS_THEMES:
             heads = themes.get(key) if isinstance(themes, dict) else None
@@ -497,7 +519,7 @@ def render_telegram_digest(
                 head = str(n.get("headline") or "").strip()
                 if not head:
                     continue
-                candidate = [*lines, f"{mark} {head} — _{n.get('source', '—')}_"]
+                candidate = [*lines, f"{mark} {head} — _{n.get('source', '—')}_{_merged_suffix(n)}"]
                 if not _fits(candidate):
                     break
                 lines = candidate

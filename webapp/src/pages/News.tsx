@@ -150,6 +150,11 @@ export default function News() {
             }}
           >
             {a.source_name && <span>{a.source_name}</span>}
+            {a.merged_count > 1 && (
+              <span style={{ color: "var(--purple)", fontWeight: 600 }}>
+                +{a.merged_count - 1} {t("news.sourcesLabel")}
+              </span>
+            )}
             {a.published_at && <span>· {a.published_at.slice(0, 10)}</span>}
             {a.related_products.slice(0, 3).map((p) => (
               <span

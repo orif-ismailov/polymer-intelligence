@@ -251,7 +251,9 @@
     "digest": "Сводка дня",
     "relatedProducts": "Товары",
     "companies": "Компании",
-    "readSource": "Читать в источнике"
+    "readSource": "Читать в источнике",
+    "sourcesLabel": "Источники",
+    "original": "первоисточник"
   },
   "sell": {
     "title": "Разместить предложение",

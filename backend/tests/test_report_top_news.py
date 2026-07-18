@@ -55,6 +55,21 @@ def test_top_news_ranked_by_importance_then_recency() -> None:
     assert all("_rank" not in a for a in out["top"])
 
 
+def test_top_news_merges_cross_source_duplicates() -> None:
+    from app.services.report_service import _snapshot_top_news
+
+    rows = [
+        _news_row("Shurtan останавливает PP-линию на ремонт", "high", "plant_shutdown", "negative", when=10, source="TG-A"),
+        _news_row("Shurtan останавливает PP-линию на ремонт", "high", "plant_shutdown", "negative", when=20, source="TG-B"),
+        _news_row("Новый завод метанола в Навои", "medium", "new_projects", "positive", when=30, source="Gov"),
+    ]
+    out = _snapshot_top_news(_db_returning(rows))
+
+    assert out["count"] == 2  # 3 signals collapse to 2 distinct stories
+    merged = next(a for a in out["top"] if str(a["headline"]).startswith("Shurtan"))
+    assert merged["merged_count"] == 2
+
+
 def test_top_news_themes_grouping() -> None:
     from app.services.report_service import _snapshot_top_news
 

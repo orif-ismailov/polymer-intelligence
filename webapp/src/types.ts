@@ -309,6 +309,13 @@ export interface NewsItem extends NewsSummary {
   } | null;
 }
 
+/** One reporting source of a (possibly cross-source-merged) news article. */
+export interface NewsSourceRef {
+  id: number;
+  name: string | null;
+  published_at: string | null;
+}
+
 /** A single classified news article (Phase 7e) — the Mini-App news card. */
 export interface NewsArticleCard {
   id: number;
@@ -323,6 +330,10 @@ export interface NewsArticleCard {
   source_name: string | null;
   published_at: string | null;
   image_url: string | null;
+  /** Every source that reported this story (original first); Phase 7f cross-source merge. */
+  sources: NewsSourceRef[];
+  /** Number of reporting sources (1 = single-source). */
+  merged_count: number;
 }
 
 export interface NewsArticleDetail extends NewsArticleCard {

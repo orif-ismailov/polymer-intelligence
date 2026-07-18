@@ -251,7 +251,9 @@
     "digest": "Kun xulosasi",
     "relatedProducts": "Mahsulotlar",
     "companies": "Kompaniyalar",
-    "readSource": "Manbada o‘qish"
+    "readSource": "Manbada o‘qish",
+    "sourcesLabel": "Manbalar",
+    "original": "asl manba"
   },
   "sell": {
     "title": "Taklif joylashtirish",

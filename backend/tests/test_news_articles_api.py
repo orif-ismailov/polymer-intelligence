@@ -68,6 +68,24 @@ class TestNewsArticlesApi:
         mock_list.assert_called_once()
         mock_report.assert_not_called()
 
+    def test_list_articles_passes_merged_sources(self) -> None:
+        """Phase 7f: a cross-source-merged card round-trips its sources + merged_count."""
+        merged = {
+            **_CARD,
+            "merged_count": 3,
+            "sources": [
+                {"id": 40, "name": "TG-A", "published_at": "2026-07-18T07:00:00+00:00"},
+                {"id": 41, "name": "TG-B", "published_at": "2026-07-18T07:30:00+00:00"},
+                {"id": 42, "name": "PetroTG", "published_at": "2026-07-18T08:00:00+00:00"},
+            ],
+        }
+        with patch("app.services.news_service.list_news_articles", return_value=[merged]):
+            resp = _client().get("/api/v1/webapp/news/articles")
+        assert resp.status_code == 200, resp.text
+        body = resp.json()[0]
+        assert body["merged_count"] == 3
+        assert [s["name"] for s in body["sources"]] == ["TG-A", "TG-B", "PetroTG"]
+
     def test_get_article_detail(self) -> None:
         detail = {**_CARD, "body": "Полный текст новости…", "source_url": "https://t.me/petro/1"}
         with patch("app.services.news_service.get_news_article", return_value=detail):

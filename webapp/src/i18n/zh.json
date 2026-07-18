@@ -251,7 +251,9 @@
     "digest": "每日摘要",
     "relatedProducts": "相关产品",
     "companies": "公司",
-    "readSource": "阅读原文"
+    "readSource": "阅读原文",
+    "sourcesLabel": "来源",
+    "original": "原始来源"
   },
   "sell": {
     "title": "发布报价",

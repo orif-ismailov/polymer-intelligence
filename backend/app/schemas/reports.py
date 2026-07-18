@@ -38,11 +38,23 @@ class ReportPublicOut(ReportPublicSummary):
     i18n: dict[str, Any] | None = None
 
 
+class NewsSourceRef(BaseModel):
+    """One reporting source for a (possibly cross-source-merged) news article."""
+
+    id: int
+    name: str | None = None
+    published_at: str | None = None
+
+
 class NewsArticleCard(BaseModel):
     """A single classified news article for the webapp News cards (Phase 7e).
 
     Sourced from a kind='news' signal's ai.news block (not a report). `image_url` is
     reserved (no image extracted yet); the card degrades to a category icon.
+
+    When the same story is reported by several sources (Phase 7f), they are merged into
+    one representative card: `sources` lists every reporting source (original first) and
+    `merged_count` is the source count (1 = single-source).
     """
 
     id: int
@@ -57,6 +69,8 @@ class NewsArticleCard(BaseModel):
     source_name: str | None = None
     published_at: str | None = None
     image_url: str | None = None
+    sources: list[NewsSourceRef] = []
+    merged_count: int = 1
 
 
 class NewsArticleDetail(NewsArticleCard):

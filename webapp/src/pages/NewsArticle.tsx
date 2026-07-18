@@ -143,6 +143,23 @@ export default function NewsArticle() {
       <Chips label={t("news.relatedProducts")} items={item.related_products} accent="var(--purple)" />
       <Chips label={t("news.companies")} items={item.companies} accent="var(--text)" />
 
+      {item.sources.length > 1 && (
+        <div style={{ marginTop: "12px" }}>
+          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "4px" }}>
+            {t("news.sourcesLabel")}
+          </div>
+          {item.sources.map((s, i) => (
+            <div key={s.id} style={{ fontSize: "13px", color: "var(--text)", marginBottom: "3px" }}>
+              • {s.name || "—"}
+              {s.published_at ? ` · ${s.published_at.slice(0, 10)}` : ""}
+              {i === 0 && (
+                <span style={{ color: "var(--text-muted)" }}> — {t("news.original")}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {item.source_url && (
         <a
           href={item.source_url}

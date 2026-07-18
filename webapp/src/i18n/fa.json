@@ -251,7 +251,9 @@
     "digest": "خلاصه روز",
     "relatedProducts": "محصولات",
     "companies": "شرکت‌ها",
-    "readSource": "خواندن در منبع"
+    "readSource": "خواندن در منبع",
+    "sourcesLabel": "منابع",
+    "original": "منبع اصلی"
   },
   "sell": {
     "title": "ثبت پیشنهاد",

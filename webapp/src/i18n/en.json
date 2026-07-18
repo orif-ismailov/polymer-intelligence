@@ -251,7 +251,9 @@
     "digest": "Daily digest",
     "relatedProducts": "Products",
     "companies": "Companies",
-    "readSource": "Read at source"
+    "readSource": "Read at source",
+    "sourcesLabel": "Sources",
+    "original": "original"
   },
   "sell": {
     "title": "Post an offer",

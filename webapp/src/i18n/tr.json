@@ -251,7 +251,9 @@
     "digest": "Günün özeti",
     "relatedProducts": "Ürünler",
     "companies": "Şirketler",
-    "readSource": "Kaynakta oku"
+    "readSource": "Kaynakta oku",
+    "sourcesLabel": "Kaynaklar",
+    "original": "orijinal kaynak"
   },
   "sell": {
     "title": "Teklif yayınla",
