@@ -24,12 +24,13 @@ at 20 — the value the portal itself uses) until we pass ``total_count`` or a w
 yields no NEW ids — the same "walk until no new rows + MAX_PAGES bound" contract as
 the uzex adapters. All requests go through the SSRF-guarded ``http_client``.
 
-Stage-A relevance filter (cheap, deterministic, no LLM): a lot is kept only if any
-line item's national-classifier ``product_code`` division is in
-``classifier_divisions`` (19 = coke & refined petroleum, 20 = chemicals incl. 20.16
-plastics-in-primary-forms, 22 = rubber & plastic) OR a ``keyword`` matches the
-product name / description. Everything else is dropped before it reaches the parse
-or LLM stage (respecting the daily token budget).
+Stage-A relevance filter (cheap, deterministic, no LLM): a lot is kept only if any line
+item's national-classifier ``product_code`` starts with a kept ``classifier_prefixes``
+entry (20.16 = plastics in primary forms, 22.2 = plastics products) OR a ``keyword``
+matches the product name / description. The prefixes are deliberately narrow — matching
+the whole chemicals division "20" also swept in salt/urea/disinfectants, which are not
+polymer and burned LLM budget at the parse step. Everything else is dropped before it
+reaches the parse or LLM stage (respecting the daily token budget).
 
 Security:
   - All fetches via http_client.fetch_url (SSRF guard + 25 MB cap + retry+backoff).
@@ -60,10 +61,15 @@ _DEFAULT_PAGE_SIZE = 20
 # far above the observed few-hundred live lots per feed).
 _DEFAULT_MAX_PAGES = 200
 
-# National goods-classifier divisions (leading 2 digits of product_code) in our
-# domain. 19 = coke & refined petroleum, 20 = chemicals (incl. 20.16 plastics in
-# primary forms — raw PP/HDPE/PVC), 22 = rubber & plastic products.
-_DEFAULT_DIVISIONS = ["19", "20", "22"]
+# National goods-classifier PREFIXES matched (via startswith) against each line item's
+# product_code. Kept NARROW on purpose: matching the whole chemicals division "20" also
+# swept in salt, urea, disinfectants, lab instruments, etc. — none of them polymer — and
+# each junk row cost an LLM call at the parse step (parse_xarid_item). Precise prefixes:
+#   20.16 = plastics in PRIMARY forms (raw PP/HDPE/PVC/PET/PS granules) — the core feedstock.
+#   22.2  = plastics PRODUCTS (pipes, fittings, film, sheet…).
+# Rubber (каучук) and petrochemical feedstock (метанол/пропилен/этилен/стирол…) are caught
+# by the keyword backstop below, so they need no broad division prefix here.
+_DEFAULT_CLASSIFIER_PREFIXES = ["20.16", "22.2"]
 
 # RU/UZ/EN keyword belt for polymer/petrochemical products — a backstop to the
 # classifier when a lot is mis-coded or coded coarsely.
@@ -88,7 +94,13 @@ class XaridTendersConfig(BaseModel):
     list_body: dict[str, Any] = Field(default_factory=lambda: {"region_ids": []})
     page_size: int = _DEFAULT_PAGE_SIZE
     max_pages: int = _DEFAULT_MAX_PAGES
-    classifier_divisions: list[str] = Field(default_factory=lambda: list(_DEFAULT_DIVISIONS))
+    # Classifier-code prefixes that KEEP a lot (startswith match on each line item's
+    # product_code). Narrow by default (plastics only) to keep non-polymer chemical noise
+    # out of the parse/LLM stage. Renamed from the old broad-division "classifier_divisions"
+    # (extra="ignore" drops that stale key, so seeded sources adopt the tighter default).
+    classifier_prefixes: list[str] = Field(
+        default_factory=lambda: list(_DEFAULT_CLASSIFIER_PREFIXES)
+    )
     keywords: list[str] = Field(default_factory=lambda: list(_DEFAULT_KEYWORDS))
     # Cap detail fetches per run (each id = one GET). None = walk everything.
     max_details: int | None = 500
@@ -153,17 +165,17 @@ def _line_items(detail: dict[str, Any]) -> list[dict[str, Any]]:
     return []
 
 
-def _is_relevant(detail: dict[str, Any], divisions: list[str], keywords: list[str]) -> bool:
-    """Stage-A filter: keep only polymer/petrochemical lots (classifier OR keyword)."""
+def _is_relevant(detail: dict[str, Any], prefixes: list[str], keywords: list[str]) -> bool:
+    """Stage-A filter: keep only polymer lots — a line item's classifier code starts with
+    a kept prefix (e.g. 20.16 primary-form plastics) OR a keyword matches the text."""
     items = _line_items(detail)
     hay_parts: list[str] = [
         str(detail.get("category_name") or ""),
         str(detail.get("description") or ""),
     ]
     for it in items:
-        code = str(it.get("product_code") or "")
-        division = code.split(".", 1)[0].strip()
-        if division in divisions:
+        code = str(it.get("product_code") or "").strip()
+        if code and any(code.startswith(p) for p in prefixes):
             return True
         hay_parts.append(str(it.get("product_name") or ""))
         hay_parts.append(str(it.get("description") or ""))
@@ -289,7 +301,7 @@ async def _fetch(cfg: XaridTendersConfig) -> list[RawItemDraft]:
             continue
         if detail is None:
             continue
-        if not _is_relevant(detail, cfg.classifier_divisions, cfg.keywords):
+        if not _is_relevant(detail, cfg.classifier_prefixes, cfg.keywords):
             continue
         drafts.append(_to_draft(detail, lot_id))
 

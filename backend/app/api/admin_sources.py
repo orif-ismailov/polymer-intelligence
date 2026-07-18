@@ -21,11 +21,12 @@ from __future__ import annotations
 import datetime
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
+from app.core.config import settings
 from app.core.db import get_db
 from app.ingest.registry import list_adapters
 from app.models.staff import StaffUser
@@ -247,4 +248,129 @@ def reprocess_source(
 
     return ReprocessResult(
         source_id=source_id, adapter=adapter, parse_task=parse_task, requeued=len(ids)
+    )
+
+
+# ── LLM spend endpoint (cost visibility) ──────────────────────────────────────
+
+# Approximate list prices, USD per 1M tokens. These are ESTIMATES for a rough $/day
+# figure — the response echoes them under `assumed_rates_usd_per_mtok` so they can be
+# corrected. Token/call counts below them are exact (journaled in parse_runs).
+_RATE_USD_PER_MTOK: dict[str, dict[str, float]] = {
+    "claude-haiku-4-5": {"in": 1.0, "out": 5.0},
+    "claude-sonnet-4-5": {"in": 3.0, "out": 15.0},
+}
+_DEFAULT_RATE: dict[str, float] = {"in": 3.0, "out": 15.0}
+
+
+def _rate_for(model: str) -> dict[str, float]:
+    """Best-effort rate lookup: exact, then longest known prefix, else the default."""
+    if model in _RATE_USD_PER_MTOK:
+        return _RATE_USD_PER_MTOK[model]
+    for key, rate in _RATE_USD_PER_MTOK.items():
+        if model.startswith(key):
+            return rate
+    return _DEFAULT_RATE
+
+
+def _est_cost(tokens_in: int, tokens_out: int, model: str) -> float:
+    rate = _rate_for(model)
+    return round(tokens_in / 1_000_000 * rate["in"] + tokens_out / 1_000_000 * rate["out"], 4)
+
+
+class LlmModelSpend(BaseModel):
+    """Per-model spend over the window (token/call counts are exact; cost is estimated)."""
+
+    model: str
+    calls: int
+    tokens_in: int
+    tokens_out: int
+    est_cost_usd: float
+
+
+class LlmSpendResponse(BaseModel):
+    """LLM spend: today's live budget + a per-model breakdown over the window."""
+
+    today_tokens: int
+    daily_limit_tokens: int
+    remaining_tokens: int
+    pct_used: float
+    window_days: int
+    total_calls: int
+    total_tokens_in: int
+    total_tokens_out: int
+    est_cost_usd: float
+    est_cost_usd_per_day: float
+    by_model: list[LlmModelSpend]
+    assumed_rates_usd_per_mtok: dict[str, dict[str, float]]
+
+
+@router.get(
+    "/llm-spend",
+    response_model=LlmSpendResponse,
+    summary="LLM token spend: today's budget + per-model breakdown",
+    description=(
+        "Today's live token spend vs the daily budget (from the Redis counter) plus a "
+        "per-model breakdown over the last `days` days from parse_runs. Token and call "
+        "counts are exact; est_cost_usd uses the approximate rates echoed in the response. "
+        "Admin-only."
+    ),
+)
+def get_llm_spend(
+    days: int = Query(default=7, ge=1, le=90),
+    _current_user: StaffUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> LlmSpendResponse:
+    """Return today's budget usage and a windowed per-model LLM spend breakdown."""
+    from parsing.budget import daily_spend  # noqa: PLC0415
+
+    today = daily_spend()
+    limit = int(settings.LLM_DAILY_TOKEN_LIMIT)
+    remaining = max(0, limit - today)
+    pct = round(today / limit * 100, 1) if limit > 0 else 0.0
+
+    rows = db.execute(
+        sa.text(
+            """
+            SELECT model,
+                   COUNT(*)                        AS calls,
+                   COALESCE(SUM(tokens_in), 0)     AS tokens_in,
+                   COALESCE(SUM(tokens_out), 0)    AS tokens_out
+            FROM parse_runs
+            WHERE created_at >= now() - make_interval(days => :days)
+              AND model IS NOT NULL
+            GROUP BY model
+            ORDER BY (COALESCE(SUM(tokens_in), 0) + COALESCE(SUM(tokens_out), 0)) DESC
+            """
+        ),
+        {"days": days},
+    ).fetchall()
+
+    by_model: list[LlmModelSpend] = []
+    total_calls = total_in = total_out = 0
+    total_cost = 0.0
+    for r in rows:
+        model, calls, t_in, t_out = str(r[0]), int(r[1]), int(r[2]), int(r[3])
+        cost = _est_cost(t_in, t_out, model)
+        by_model.append(
+            LlmModelSpend(model=model, calls=calls, tokens_in=t_in, tokens_out=t_out, est_cost_usd=cost)
+        )
+        total_calls += calls
+        total_in += t_in
+        total_out += t_out
+        total_cost += cost
+
+    return LlmSpendResponse(
+        today_tokens=today,
+        daily_limit_tokens=limit,
+        remaining_tokens=remaining,
+        pct_used=pct,
+        window_days=days,
+        total_calls=total_calls,
+        total_tokens_in=total_in,
+        total_tokens_out=total_out,
+        est_cost_usd=round(total_cost, 4),
+        est_cost_usd_per_day=round(total_cost / days, 4) if days > 0 else 0.0,
+        by_model=by_model,
+        assumed_rates_usd_per_mtok=_RATE_USD_PER_MTOK,
     )

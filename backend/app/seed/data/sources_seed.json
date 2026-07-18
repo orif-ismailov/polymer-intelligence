@@ -94,7 +94,7 @@
       "list_body": { "region_ids": [] },
       "page_size": 20,
       "max_pages": 200,
-      "classifier_divisions": ["19", "20", "22"],
+      "classifier_prefixes": ["20.16", "22.2"],
       "max_details": 500
     }
   },
