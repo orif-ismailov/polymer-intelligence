@@ -309,6 +309,27 @@ export interface NewsItem extends NewsSummary {
   } | null;
 }
 
+/** A single classified news article (Phase 7e) — the Mini-App news card. */
+export interface NewsArticleCard {
+  id: number;
+  headline: string;
+  category: string | null;
+  importance: "high" | "medium" | "low" | null;
+  market_impact: "positive" | "negative" | "neutral" | null;
+  summary: string | null;
+  country: string | null;
+  companies: string[];
+  related_products: string[];
+  source_name: string | null;
+  published_at: string | null;
+  image_url: string | null;
+}
+
+export interface NewsArticleDetail extends NewsArticleCard {
+  body: string | null;
+  source_url: string | null;
+}
+
 export interface SellerOfferOut {
   id: number;
   status: SellerOfferStatus;

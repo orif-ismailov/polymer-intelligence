@@ -247,7 +247,11 @@
     "title": "Yangiliklar",
     "soon": "Kunlik bozor tahlili shu yerda paydo bo'ladi",
     "empty": "Hozircha nashrlar yo'q",
-    "error": "Yangiliklarni yuklab bo'lmadi"
+    "error": "Yangiliklarni yuklab bo'lmadi",
+    "digest": "Kun xulosasi",
+    "relatedProducts": "Mahsulotlar",
+    "companies": "Kompaniyalar",
+    "readSource": "Manbada o‘qish"
   },
   "sell": {
     "title": "Taklif joylashtirish",

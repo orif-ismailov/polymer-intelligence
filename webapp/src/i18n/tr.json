@@ -247,7 +247,11 @@
     "title": "Haberler",
     "soon": "Günlük pazar analizi burada görünecek",
     "empty": "Henüz yayın yok",
-    "error": "Haberler yüklenemedi"
+    "error": "Haberler yüklenemedi",
+    "digest": "Günün özeti",
+    "relatedProducts": "Ürünler",
+    "companies": "Şirketler",
+    "readSource": "Kaynakta oku"
   },
   "sell": {
     "title": "Teklif yayınla",

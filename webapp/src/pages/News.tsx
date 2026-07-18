@@ -1,23 +1,28 @@
 /**
- * Новости tab — published daily market reports (IMG_0046 ④).
+ * Новости tab — classified market-news cards (Phase 7e) + the daily digest.
  *
- * Lists published reports from /webapp/news; tapping one opens the full report
- * (/news/:id). The branded report body is produced by the backend news engine.
+ * Primary content is individual news article cards from /webapp/news/articles
+ * (ranked importance→recency). A compact "Сводка дня" banner at the top links to
+ * the latest published daily report (/news/:id). Cards open /news/article/:id.
  */
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Newspaper } from "lucide-react";
+import { FileText, Newspaper } from "lucide-react";
 
 import { api } from "../api/client";
 import { backButton, mainButton } from "../telegram";
-import type { NewsSummary } from "../types";
+import type { NewsArticleCard, NewsSummary } from "../types";
+
+const IMPORTANCE_DOT: Record<string, string> = { high: "🔴", medium: "🟡", low: "⚪" };
+const IMPACT_ARROW: Record<string, string> = { positive: "📈", negative: "📉", neutral: "➖" };
 
 export default function News() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [items, setItems] = useState<NewsSummary[]>([]);
+  const [articles, setArticles] = useState<NewsArticleCard[]>([]);
+  const [latestReport, setLatestReport] = useState<NewsSummary | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
 
   useEffect(() => {
@@ -27,16 +32,15 @@ export default function News() {
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .getNews()
-      .then((data) => {
-        if (!cancelled) {
-          setItems(data);
-          setState("ok");
+    Promise.allSettled([api.getNewsArticles(), api.getNews()])
+      .then(([arts, reports]) => {
+        if (cancelled) return;
+        if (arts.status === "fulfilled") setArticles(arts.value);
+        if (reports.status === "fulfilled" && reports.value.length > 0) {
+          setLatestReport(reports.value[0] ?? null);
         }
-      })
-      .catch(() => {
-        if (!cancelled) setState("error");
+        // Error only when BOTH surfaces failed — otherwise show what we have.
+        setState(arts.status === "rejected" && reports.status === "rejected" ? "error" : "ok");
       });
     return () => {
       cancelled = true;
@@ -51,23 +55,52 @@ export default function News() {
 
       {state === "loading" && <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>…</p>}
       {state === "error" && <p style={{ color: "var(--danger)", fontSize: "14px" }}>{t("news.error")}</p>}
-      {state === "ok" && items.length === 0 && (
-        <p style={{ color: "var(--text-muted)", fontSize: "14px", textAlign: "center", marginTop: "24px" }}>
-          {t("news.empty")}
-        </p>
-      )}
 
-      {items.map((n) => (
+      {/* Сводка дня — latest published daily report */}
+      {latestReport && (
         <button
-          key={n.id}
           type="button"
-          onClick={() => navigate(`/news/${n.id}`)}
+          onClick={() => navigate(`/news/${latestReport.id}`)}
           style={{
             display: "flex",
             width: "100%",
             textAlign: "start",
             alignItems: "center",
             gap: "12px",
+            background: "var(--chip-neutral-bg)",
+            border: "1px solid var(--purple)",
+            borderRadius: "var(--r-md)",
+            padding: "14px",
+            marginBottom: "16px",
+            cursor: "pointer",
+            color: "var(--text)",
+          }}
+        >
+          <FileText size={20} color="var(--purple)" style={{ flex: "0 0 auto" }} />
+          <span>
+            <span style={{ display: "block", fontSize: "15px", fontWeight: 600 }}>{t("news.digest")}</span>
+            <span style={{ display: "block", fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+              {latestReport.title}
+            </span>
+          </span>
+        </button>
+      )}
+
+      {state === "ok" && articles.length === 0 && !latestReport && (
+        <p style={{ color: "var(--text-muted)", fontSize: "14px", textAlign: "center", marginTop: "24px" }}>
+          {t("news.empty")}
+        </p>
+      )}
+
+      {articles.map((a) => (
+        <button
+          key={a.id}
+          type="button"
+          onClick={() => navigate(`/news/article/${a.id}`)}
+          style={{
+            display: "block",
+            width: "100%",
+            textAlign: "start",
             background: "var(--surface)",
             border: "1px solid var(--border)",
             borderRadius: "var(--r-md)",
@@ -78,26 +111,60 @@ export default function News() {
             color: "var(--text)",
           }}
         >
+          <span style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+            <span style={{ flex: "0 0 auto", fontSize: "14px", lineHeight: "20px" }}>
+              {(a.importance && IMPORTANCE_DOT[a.importance]) || <Newspaper size={16} />}
+              {a.market_impact ? IMPACT_ARROW[a.market_impact] : ""}
+            </span>
+            <span style={{ display: "block", fontSize: "15px", fontWeight: 600, lineHeight: 1.35 }}>
+              {a.headline}
+            </span>
+          </span>
+
+          {a.summary && (
+            <span
+              style={{
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                fontSize: "13px",
+                color: "var(--text-muted)",
+                marginTop: "6px",
+                lineHeight: 1.45,
+              }}
+            >
+              {a.summary}
+            </span>
+          )}
+
           <span
             style={{
-              flex: "0 0 auto",
-              width: "40px",
-              height: "40px",
-              borderRadius: "var(--r-md)",
-              background: "var(--chip-neutral-bg)",
-              color: "var(--purple)",
               display: "flex",
+              flexWrap: "wrap",
+              gap: "6px",
               alignItems: "center",
-              justifyContent: "center",
+              marginTop: "10px",
+              fontSize: "11px",
+              color: "var(--text-muted)",
             }}
           >
-            <Newspaper size={20} />
-          </span>
-          <span>
-            <span style={{ display: "block", fontSize: "15px", fontWeight: 600 }}>{n.title}</span>
-            <span style={{ display: "block", fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
-              {(n.published_at ?? n.period_start).slice(0, 10)}
-            </span>
+            {a.source_name && <span>{a.source_name}</span>}
+            {a.published_at && <span>· {a.published_at.slice(0, 10)}</span>}
+            {a.related_products.slice(0, 3).map((p) => (
+              <span
+                key={p}
+                style={{
+                  padding: "1px 7px",
+                  borderRadius: "999px",
+                  background: "var(--chip-neutral-bg)",
+                  color: "var(--purple)",
+                  fontWeight: 600,
+                }}
+              >
+                {p}
+              </span>
+            ))}
           </span>
         </button>
       ))}

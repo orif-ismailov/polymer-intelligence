@@ -16,6 +16,8 @@ import type {
   ClientProfile,
   ClientProfilePatch,
   FeaturedOffer,
+  NewsArticleCard,
+  NewsArticleDetail,
   NewsItem,
   NewsSummary,
   OfferRequestCreate,
@@ -297,5 +299,17 @@ export const api = {
   /** GET /webapp/news/{id} — a single published report (with content). */
   getNewsItem(id: number): Promise<NewsItem> {
     return apiFetch<NewsItem>(`/webapp/news/${id}`);
+  },
+
+  // ── News articles (Phase 7e cards) ──────────────────────────────────────────
+
+  /** GET /webapp/news/articles — classified news cards, ranked (importance→recency). */
+  getNewsArticles(): Promise<NewsArticleCard[]> {
+    return apiFetch<NewsArticleCard[]>("/webapp/news/articles");
+  },
+
+  /** GET /webapp/news/articles/{id} — a single article with body + source link. */
+  getNewsArticle(id: number): Promise<NewsArticleDetail> {
+    return apiFetch<NewsArticleDetail>(`/webapp/news/articles/${id}`);
   },
 };

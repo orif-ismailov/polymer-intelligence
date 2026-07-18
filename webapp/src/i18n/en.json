@@ -247,7 +247,11 @@
     "title": "News",
     "soon": "Daily market analytics will appear here",
     "empty": "No publications yet",
-    "error": "Couldn't load the news"
+    "error": "Couldn't load the news",
+    "digest": "Daily digest",
+    "relatedProducts": "Products",
+    "companies": "Companies",
+    "readSource": "Read at source"
   },
   "sell": {
     "title": "Post an offer",
