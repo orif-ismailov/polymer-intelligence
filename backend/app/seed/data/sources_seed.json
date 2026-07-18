@@ -110,5 +110,47 @@
       "endpoint": "https://cbu.uz/en/arkhiv-kursov-valyut/json/",
       "base_currency": "UZS"
     }
+  },
+  {
+    "kind": "rss",
+    "adapter": "rss",
+    "name": "World Petrochemical News (Google News)",
+    "url": "https://news.google.com/rss/search?q=polypropylene%20OR%20polyethylene%20OR%20petrochemical%20price&hl=en-US&gl=US&ceid=US:en",
+    "country": null,
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "url": "https://news.google.com/rss/search?q=polypropylene%20OR%20polyethylene%20OR%20petrochemical%20price&hl=en-US&gl=US&ceid=US:en",
+      "content_kind": "news",
+      "currency_default": "USD"
+    }
+  },
+  {
+    "kind": "rss",
+    "adapter": "rss",
+    "name": "Uzbekistan Petrochemical News (Google News)",
+    "url": "https://news.google.com/rss/search?q=Uzbekistan%20(polymer%20OR%20polypropylene%20OR%20polyethylene%20OR%20petrochemical%20OR%20%22gas%20chemical%22)&hl=en-US&gl=US&ceid=US:en",
+    "country": "UZ",
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "url": "https://news.google.com/rss/search?q=Uzbekistan%20(polymer%20OR%20polypropylene%20OR%20polyethylene%20OR%20petrochemical%20OR%20%22gas%20chemical%22)&hl=en-US&gl=US&ceid=US:en",
+      "content_kind": "news",
+      "currency_default": "USD"
+    }
+  },
+  {
+    "kind": "rss",
+    "adapter": "rss",
+    "name": "Oil & Gas World (OilPrice)",
+    "url": "https://oilprice.com/rss/main",
+    "country": null,
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "url": "https://oilprice.com/rss/main",
+      "content_kind": "news",
+      "currency_default": "USD"
+    }
   }
 ]

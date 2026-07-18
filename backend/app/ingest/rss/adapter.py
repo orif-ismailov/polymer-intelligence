@@ -21,7 +21,9 @@ Self-registers at import time via register_adapter().
 
 from __future__ import annotations
 
+import html as _html
 import logging
+import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -86,6 +88,18 @@ class RssConfig(BaseModel):
 _RSS_NS: dict[str, str] = {}  # RSS 2.0 has no namespace by default
 _ATOM_NS = "http://www.w3.org/2005/Atom"
 _MEDIA_NS = "http://search.yahoo.com/mrss/"
+
+_TAG_RE = re.compile(r"<[^>]+>")
+_WS_RE = re.compile(r"\s+")
+
+
+def _strip_html(text: str) -> str:
+    """Flatten an HTML/entity-laden RSS description to clean single-spaced text.
+
+    Feed descriptions (Google News in particular) carry HTML markup; the news
+    classifier and the generic LLM extractor want plain prose, not tags.
+    """
+    return _WS_RE.sub(" ", _html.unescape(_TAG_RE.sub(" ", text or ""))).strip()
 
 
 def _parse_feed(content: bytes, config: dict) -> list[dict[str, object]]:
@@ -152,9 +166,11 @@ def _rss_item_to_row(
     description = (item.findtext("description") or "").strip()
     pub_date = (item.findtext("pubDate") or "").strip()
     category = (item.findtext("category") or "").strip()
+    link = (item.findtext("link") or "").strip()
 
+    summary = _strip_html(description)
     # Use title as product text (most human-readable summary)
-    product = title or description or None
+    product = title or summary or None
     # Use category or section_default as section
     section = category or section_default or None
     # event_at from pubDate (raw string — Phase-5 will parse to datetime)
@@ -168,6 +184,8 @@ def _rss_item_to_row(
         "currency": currency_default,
         "section": section,
         "event_at": event_at,
+        "link": link or None,       # article URL → news card "read at source"
+        "summary": summary or None,  # article body → richer news classification
     }
 
 
@@ -180,15 +198,26 @@ def _atom_entry_to_row(
     """Convert an Atom 1.0 <entry> element to a normalized signal-draft row."""
     title_el = entry.find(f"{atom_ns}title") or entry.find("title")
     summary_el = entry.find(f"{atom_ns}summary") or entry.find("summary")
+    content_el = entry.find(f"{atom_ns}content") or entry.find("content")
     updated_el = entry.find(f"{atom_ns}updated") or entry.find("updated")
     category_el = entry.find(f"{atom_ns}category") or entry.find("category")
+    link_el = entry.find(f"{atom_ns}link") or entry.find("link")
 
     title = (title_el.text or "").strip() if title_el is not None else ""
-    summary = (summary_el.text or "").strip() if summary_el is not None else ""
+    raw_summary = ""
+    if summary_el is not None and summary_el.text:
+        raw_summary = summary_el.text
+    elif content_el is not None and content_el.text:
+        raw_summary = content_el.text
+    summary = _strip_html(raw_summary)
     updated = (updated_el.text or "").strip() if updated_el is not None else ""
     category = ""
     if category_el is not None:
         category = category_el.get("term", "") or category_el.get("label", "")
+    # Atom links carry the URL in the href attribute (fall back to element text).
+    link = ""
+    if link_el is not None:
+        link = (link_el.get("href") or link_el.text or "").strip()
 
     product = title or summary or None
     section = category or section_default or None
@@ -202,6 +231,8 @@ def _atom_entry_to_row(
         "currency": currency_default,
         "section": section,
         "event_at": event_at,
+        "link": link or None,
+        "summary": summary or None,
     }
 
 
@@ -242,10 +273,17 @@ class RssAdapter:
 
         drafts: list[RawItemDraft] = []
         for idx, row in enumerate(rows):
+            # Content = headline + article body so the news classifier / LLM extractor
+            # sees real prose, not just the title. external_id prefers the article link
+            # so re-fetches of the same feed dedup on the article, not the row index.
+            title = str(row.get("product") or "")
+            summary = str(row.get("summary") or "")
+            content = f"{title}\n\n{summary}".strip() if summary else title
+            link = str(row.get("link") or "")
             drafts.append(
                 RawItemDraft(
-                    external_id=f"rss_item_{idx}",
-                    content=str(row.get("product") or ""),
+                    external_id=link or f"rss_item_{idx}",
+                    content=content,
                     payload=row,
                     event_at=None,
                 )
