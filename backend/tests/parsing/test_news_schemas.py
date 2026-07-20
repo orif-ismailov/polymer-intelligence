@@ -54,13 +54,64 @@ def test_irrelevant_article_is_emptied() -> None:
     assert a.summary is None
 
 
-def test_summary_capped_at_150_words() -> None:
+def test_summary_capped_at_120_words() -> None:
     from parsing.news_schemas import NewsArticle
 
     long_summary = " ".join(f"word{i}" for i in range(300))
     a = NewsArticle(is_relevant=True, summary=long_summary, confidence=0.5)
     assert a.summary is not None
-    assert len(a.summary.split()) == 150
+    assert len(a.summary.split()) == 120
+
+
+def test_analysis_and_recommendation_capped() -> None:
+    from parsing.news_schemas import NewsArticle
+
+    a = NewsArticle(
+        is_relevant=True,
+        analysis=" ".join(f"w{i}" for i in range(400)),
+        recommendation=" ".join(f"r{i}" for i in range(100)),
+        confidence=0.5,
+    )
+    assert a.analysis is not None and len(a.analysis.split()) == 160
+    assert a.recommendation is not None and len(a.recommendation.split()) == 40
+
+
+def test_translations_and_new_fields_kept_when_relevant() -> None:
+    from parsing.news_schemas import NewsArticle, NewsI18n, NewsLocalized
+
+    a = NewsArticle(
+        is_relevant=True,
+        headline="Shurtan raises PP",
+        countries=["Uzbekistan", "Kazakhstan"],
+        language="en",
+        analysis="What happened…",
+        recommendation="Monitor PP prices.",
+        i18n=NewsI18n(uz=NewsLocalized(headline="Shurtan PP narxini oshirdi")),
+        confidence=0.9,
+    )
+    assert a.countries == ["Uzbekistan", "Kazakhstan"]
+    assert a.language == "en"
+    assert a.i18n is not None and a.i18n.uz is not None
+    assert a.i18n.uz.headline == "Shurtan PP narxini oshirdi"
+
+
+def test_irrelevant_clears_new_fields() -> None:
+    from parsing.news_schemas import NewsArticle, NewsI18n, NewsLocalized
+
+    a = NewsArticle(
+        is_relevant=False,
+        countries=["Russia"],
+        language="ru",
+        analysis="x",
+        recommendation="y",
+        i18n=NewsI18n(ru=NewsLocalized(headline="z")),
+        confidence=0.8,
+    )
+    assert a.countries == []
+    assert a.language is None
+    assert a.analysis is None
+    assert a.recommendation is None
+    assert a.i18n is None
 
 
 def test_confidence_out_of_range_rejected() -> None:

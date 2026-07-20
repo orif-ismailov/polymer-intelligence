@@ -297,7 +297,10 @@
       "products": "Ürünler",
       "country": "Ülke",
       "company": "Şirket"
-    }
+    },
+    "analysis": "AI piyasa analizi",
+    "recommendation": "Öneri",
+    "countries": "Ülkeler"
   },
   "sell": {
     "title": "Teklif yayınla",

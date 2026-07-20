@@ -63,7 +63,11 @@ class NewsArticleCard(BaseModel):
     importance: str | None = None
     market_impact: str | None = None
     summary: str | None = None
+    analysis: str | None = None
+    recommendation: str | None = None
+    language: str | None = None
     country: str | None = None
+    countries: list[str] = []
     companies: list[str] = []
     related_products: list[str] = []
     source_name: str | None = None

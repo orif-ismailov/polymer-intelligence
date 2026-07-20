@@ -25,8 +25,11 @@ from app.core.config import settings
 from parsing.news_schemas import NewsArticle
 
 NEWS_PARSER = "news_extract_tools"
-NEWS_PROMPT_VERSION = "v1"
+NEWS_PROMPT_VERSION = "v2"
 DEFAULT_MODEL: str = settings.LLM_EXTRACT_MODEL
+# v2 emits analysis + recommendation + ru/uz/en translations, so the completion is
+# larger than the v1 classification-only output.
+NEWS_MAX_TOKENS = 3500
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 
@@ -61,7 +64,7 @@ def extract_news(
     t0 = time.monotonic()
     result, completion = _client.messages.create_with_completion(
         model=model,
-        max_tokens=1024,
+        max_tokens=NEWS_MAX_TOKENS,
         temperature=0,
         system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
         messages=[{"role": "user", "content": text}],

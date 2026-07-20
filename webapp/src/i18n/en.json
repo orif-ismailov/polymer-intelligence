@@ -297,7 +297,10 @@
       "products": "Products",
       "country": "Country",
       "company": "Company"
-    }
+    },
+    "analysis": "AI market analysis",
+    "recommendation": "Recommendation",
+    "countries": "Countries"
   },
   "sell": {
     "title": "Post an offer",

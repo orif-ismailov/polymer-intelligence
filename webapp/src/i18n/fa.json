@@ -297,7 +297,10 @@
       "products": "محصولات",
       "country": "کشور",
       "company": "شرکت"
-    }
+    },
+    "analysis": "تحلیل بازار هوش مصنوعی",
+    "recommendation": "توصیه",
+    "countries": "کشورها"
   },
   "sell": {
     "title": "ثبت پیشنهاد",

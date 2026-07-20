@@ -30,7 +30,7 @@ const SCOPES: NewsScope[] = ["all", "uzbekistan", "global", "producers"];
 const SORTS: NewsSort[] = ["importance", "newest", "category", "products", "country", "company"];
 
 export default function News() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const [articles, setArticles] = useState<NewsArticleCard[]>([]);
@@ -86,6 +86,7 @@ export default function News() {
         category: category ?? undefined,
         country: country ?? undefined,
         product: product ?? undefined,
+        lang: i18n.language,
       })
       .then((rows) => {
         if (cancelled) return;
@@ -98,7 +99,7 @@ export default function News() {
     return () => {
       cancelled = true;
     };
-  }, [scope, sort, debouncedSearch, category, country, product]);
+  }, [scope, sort, debouncedSearch, category, country, product, i18n.language]);
 
   const hasActiveFilters = Boolean(category || country || product || debouncedSearch);
   const facetCount = useMemo(

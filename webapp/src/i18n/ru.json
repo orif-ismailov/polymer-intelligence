@@ -297,7 +297,10 @@
       "products": "Товары",
       "country": "Страна",
       "company": "Компания"
-    }
+    },
+    "analysis": "AI-анализ рынка",
+    "recommendation": "Рекомендация",
+    "countries": "Страны"
   },
   "sell": {
     "title": "Разместить предложение",

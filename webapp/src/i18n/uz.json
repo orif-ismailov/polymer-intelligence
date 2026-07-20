@@ -297,7 +297,10 @@
       "products": "Mahsulotlar",
       "country": "Davlat",
       "company": "Kompaniya"
-    }
+    },
+    "analysis": "AI bozor tahlili",
+    "recommendation": "Tavsiya",
+    "countries": "Davlatlar"
   },
   "sell": {
     "title": "Taklif joylashtirish",

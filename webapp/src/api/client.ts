@@ -327,8 +327,9 @@ export const api = {
     return apiFetch<NewsFilterOptions>(`/webapp/news/articles/filters${suffix}`);
   },
 
-  /** GET /webapp/news/articles/{id} — a single article with body + source link. */
-  getNewsArticle(id: number): Promise<NewsArticleDetail> {
-    return apiFetch<NewsArticleDetail>(`/webapp/news/articles/${id}`);
+  /** GET /webapp/news/articles/{id} — a single article with body + source link (localized to `lang`). */
+  getNewsArticle(id: number, lang?: string): Promise<NewsArticleDetail> {
+    const suffix = lang ? `?lang=${encodeURIComponent(lang)}` : "";
+    return apiFetch<NewsArticleDetail>(`/webapp/news/articles/${id}${suffix}`);
   },
 };

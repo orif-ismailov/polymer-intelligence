@@ -324,7 +324,15 @@ export interface NewsArticleCard {
   importance: "high" | "medium" | "low" | null;
   market_impact: "positive" | "negative" | "neutral" | null;
   summary: string | null;
+  /** AI market analysis (localized to the request `lang` when available). */
+  analysis: string | null;
+  /** One professional business recommendation. */
+  recommendation: string | null;
+  /** Detected source language (ru/uz/en/other). */
+  language: string | null;
   country: string | null;
+  /** Every affected country (primary first). */
+  countries: string[];
   companies: string[];
   related_products: string[];
   source_name: string | null;
@@ -357,6 +365,8 @@ export interface NewsArticlesQuery {
   product?: string;
   importance?: "high" | "medium" | "low";
   sort?: NewsSort;
+  /** Localize display fields to this language (ru/uz/en). */
+  lang?: string;
   limit?: number;
   days?: number;
 }

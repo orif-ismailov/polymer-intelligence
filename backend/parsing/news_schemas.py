@@ -38,6 +38,14 @@ NEWS_CATEGORIES: tuple[str, ...] = (
 )
 
 
+def _cap_words(value: str | None, limit: int) -> str | None:
+    """Soft-cap a text field at `limit` words; never fail extraction."""
+    if value is None:
+        return None
+    words = value.split()
+    return " ".join(words[:limit]) if len(words) > limit else value
+
+
 class NewsImportance(str, Enum):
     """How much a buyer/supplier/trader should care."""
 
@@ -54,6 +62,23 @@ class NewsMarketImpact(str, Enum):
     NEUTRAL = "neutral"
 
 
+class NewsLocalized(BaseModel):
+    """The display fields of one article rendered in a single language (ru/uz/en)."""
+
+    headline: str | None = Field(default=None, description="Localized headline.")
+    summary: str | None = Field(default=None, description="Localized short summary.")
+    analysis: str | None = Field(default=None, description="Localized AI market analysis.")
+    recommendation: str | None = Field(default=None, description="Localized business recommendation.")
+
+
+class NewsI18n(BaseModel):
+    """Localized variants of the article for the three primary UI languages."""
+
+    ru: NewsLocalized | None = Field(default=None, description="Russian variant.")
+    uz: NewsLocalized | None = Field(default=None, description="Uzbek variant.")
+    en: NewsLocalized | None = Field(default=None, description="English variant.")
+
+
 class NewsArticle(BaseModel):
     """One classified news article (STEP 3 of the IMEX AI news spec)."""
 
@@ -68,6 +93,10 @@ class NewsArticle(BaseModel):
     category: str | None = Field(default=None, description="Primary theme, from the allowed category list.")
     tags: list[str] = Field(default_factory=list, description="All applicable category labels.")
     country: str | None = Field(default=None, description="Primary country (e.g. Uzbekistan, Russia, China).")
+    countries: list[str] = Field(
+        default_factory=list,
+        description="All affected countries mentioned (primary first). [] if global/unclear.",
+    )
     related_products: list[str] = Field(
         default_factory=list,
         description="Canonical product codes touched by the news (e.g. PP, HDPE, PVC, PET, methanol).",
@@ -79,18 +108,44 @@ class NewsArticle(BaseModel):
     )
     summary: str | None = Field(
         default=None,
-        description="≤150 words explaining why this matters for buyers, suppliers and traders.",
+        description="≤120 words explaining why this matters for buyers, suppliers and traders.",
+    )
+    analysis: str | None = Field(
+        default=None,
+        description=(
+            "≤160 words of AI market analysis covering: what happened, why it matters, the "
+            "effect on the petrochemical market, on Uzbekistan, on buyers, and on suppliers."
+        ),
+    )
+    recommendation: str | None = Field(
+        default=None,
+        description="ONE concise, professional business recommendation (≤40 words).",
+    )
+    language: str | None = Field(
+        default=None,
+        description="Detected language of the source article as an ISO code: ru, uz, en, or other.",
+    )
+    i18n: NewsI18n | None = Field(
+        default=None,
+        description="headline/summary/analysis/recommendation localized into ru, uz and en.",
     )
     confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Model confidence in the classification.")
 
     @field_validator("summary")
     @classmethod
     def _cap_summary_words(cls, v: str | None) -> str | None:
-        """Soft-cap the summary at 150 words (the spec limit); never fail extraction."""
-        if v is None:
-            return None
-        words = v.split()
-        return " ".join(words[:150]) if len(words) > 150 else v
+        """Soft-cap the summary at 120 words (the spec limit); never fail extraction."""
+        return _cap_words(v, 120)
+
+    @field_validator("analysis")
+    @classmethod
+    def _cap_analysis_words(cls, v: str | None) -> str | None:
+        return _cap_words(v, 160)
+
+    @field_validator("recommendation")
+    @classmethod
+    def _cap_recommendation_words(cls, v: str | None) -> str | None:
+        return _cap_words(v, 40)
 
     @model_validator(mode="after")
     def _irrelevant_is_empty(self) -> NewsArticle:
@@ -100,11 +155,16 @@ class NewsArticle(BaseModel):
             self.category = None
             self.tags = []
             self.country = None
+            self.countries = []
             self.related_products = []
             self.companies = []
             self.importance = None
             self.market_impact = None
             self.summary = None
+            self.analysis = None
+            self.recommendation = None
+            self.language = None
+            self.i18n = None
         return self
 
 

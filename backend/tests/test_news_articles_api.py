@@ -56,11 +56,11 @@ class TestNewsArticlesApi:
         assert body[0]["id"] == 42
         assert body[0]["headline"].startswith("Shurtan")
         assert body[0]["related_products"] == ["PP"]
-        # default query params forwarded (filters all None, no scope/sort)
+        # default query params forwarded (filters all None, no scope/sort/lang)
         assert mock_list.call_args.kwargs == {
             "limit": 30, "days": 7, "q": None, "scope": None, "category": None,
             "country": None, "company": None, "product": None, "importance": None,
-            "source_id": None, "sort": None,
+            "source_id": None, "sort": None, "lang": None,
         }
 
     def test_list_articles_forwards_filters(self) -> None:
@@ -72,7 +72,7 @@ class TestNewsArticlesApi:
                     "q": "shurtan", "scope": "producers", "category": "plant_shutdown",
                     "country": "UZ", "company": "Shurtan", "product": "PP",
                     "importance": "high", "source_id": 5, "sort": "newest",
-                    "limit": 10, "days": 14,
+                    "lang": "uz", "limit": 10, "days": 14,
                 },
             )
         assert resp.status_code == 200, resp.text
@@ -80,6 +80,7 @@ class TestNewsArticlesApi:
             "limit": 10, "days": 14, "q": "shurtan", "scope": "producers",
             "category": "plant_shutdown", "country": "UZ", "company": "Shurtan",
             "product": "PP", "importance": "high", "source_id": 5, "sort": "newest",
+            "lang": "uz",
         }
 
     def test_scope_all_becomes_no_filter(self) -> None:
@@ -272,3 +273,37 @@ class TestSortCards:
 
         out = _sort_cards(self._cards(), "company")
         assert [c["companies"] for c in out] == [["Alpha"], ["Zeta"]]
+
+
+class TestLocalize:
+    def _card(self) -> dict[str, object]:
+        return {
+            "headline": "Shurtan halts PP line", "summary": "EN summary",
+            "analysis": "EN analysis", "recommendation": "EN rec",
+            "i18n": {
+                "uz": {"headline": "Shurtan PP liniyasini to'xtatdi", "summary": "UZ xulosa",
+                       "analysis": "UZ tahlil", "recommendation": "UZ tavsiya"},
+                "ru": {"headline": "Shurtan остановил PP"},  # partial translation
+            },
+        }
+
+    def test_localizes_all_present_fields(self) -> None:
+        from app.services.news_service import _localize  # noqa: PLC0415
+
+        out = _localize(self._card(), "uz")
+        assert out["headline"] == "Shurtan PP liniyasini to'xtatdi"
+        assert out["analysis"] == "UZ tahlil"
+        assert out["recommendation"] == "UZ tavsiya"
+
+    def test_missing_fields_fall_back_to_canonical(self) -> None:
+        from app.services.news_service import _localize  # noqa: PLC0415
+
+        out = _localize(self._card(), "ru")
+        assert out["headline"] == "Shurtan остановил PP"
+        assert out["summary"] == "EN summary"  # ru variant had no summary → canonical
+
+    def test_no_lang_or_missing_lang_is_noop(self) -> None:
+        from app.services.news_service import _localize  # noqa: PLC0415
+
+        assert _localize(self._card(), None)["headline"] == "Shurtan halts PP line"
+        assert _localize(self._card(), "fa")["headline"] == "Shurtan halts PP line"

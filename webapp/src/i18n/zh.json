@@ -297,7 +297,10 @@
       "products": "产品",
       "country": "国家",
       "company": "公司"
-    }
+    },
+    "analysis": "AI市场分析",
+    "recommendation": "建议",
+    "countries": "国家"
   },
   "sell": {
     "title": "发布报价",

@@ -69,6 +69,35 @@ class TestCreateNewsSignal:
         assert news["companies"] == ["Shurtan GCC"]
         assert sig.ai["needs_review"] is False
 
+    def test_stores_analysis_recommendation_and_i18n(self) -> None:
+        """Phase 8b/8f: the news block carries analysis/recommendation/language + ru/uz/en."""
+        from app.services.news_service import create_news_signal_from_article
+        from parsing.news_schemas import NewsI18n, NewsLocalized
+
+        article = _article(
+            analysis="What happened: prices rose. Why it matters: tighter supply.",
+            recommendation="Monitor PP prices; expect firmer asks.",
+            countries=["Uzbekistan"],
+            language="en",
+            i18n=NewsI18n(
+                ru=NewsLocalized(headline="Shurtan поднял цены на PP", recommendation="Следите за ценами PP."),
+                uz=NewsLocalized(headline="Shurtan PP narxini oshirdi"),
+            ),
+        )
+        with patch("app.services.news_service.match_product", return_value=None):
+            sig = create_news_signal_from_article(
+                MagicMock(), _raw_item(), article, {"model": "haiku", "prompt_version": "v2"},
+                needs_review=False,
+            )
+        news = sig.ai["news"]
+        assert news["analysis"].startswith("What happened")
+        assert news["recommendation"] == "Monitor PP prices; expect firmer asks."
+        assert news["countries"] == ["Uzbekistan"]
+        assert news["language"] == "en"
+        assert news["i18n"]["ru"]["headline"] == "Shurtan поднял цены на PP"
+        assert news["i18n"]["uz"]["headline"] == "Shurtan PP narxini oshirdi"
+        assert "recommendation" not in news["i18n"]["uz"]  # exclude_none drops empty fields
+
 
 # ── Task routing ──────────────────────────────────────────────────────────────
 

@@ -43,18 +43,25 @@ _requires_real_db = pytest.mark.skipif(
 
 def _news_ai(headline: str, *, category: str, country: str | None,
              importance: str, companies: list[str], products: list[str],
-             summary: str, tags: list[str] | None = None) -> dict[str, object]:
+             summary: str, tags: list[str] | None = None,
+             analysis: str | None = None, recommendation: str | None = None,
+             language: str | None = None, i18n: dict[str, object] | None = None) -> dict[str, object]:
     return {
         "news": {
             "headline": headline,
             "category": category,
             "tags": tags if tags is not None else [category],
             "country": country,
+            "countries": [country] if country else [],
             "related_products": products,
             "companies": companies,
             "importance": importance,
             "market_impact": "negative",
             "summary": summary,
+            "analysis": analysis,
+            "recommendation": recommendation,
+            "language": language,
+            "i18n": i18n,
         },
         "confidence": 0.9,
     }
@@ -112,7 +119,13 @@ def seeded_news(engine: sa.Engine):  # noqa: ANN201 — module fixture
                 "Shurtan останавливает PP-линию на ремонт", category="plant_shutdown",
                 country="Uzbekistan", importance="high", companies=["Shurtan GCC"],
                 products=["PP"], summary="Плановый ремонт сократит выпуск PP.",
-                tags=["plant_shutdown", "production"]), 10),
+                tags=["plant_shutdown", "production"], language="ru",
+                analysis="Ремонт сократит предложение PP на внутреннем рынке.",
+                recommendation="Следите за ценами PP.",
+                i18n={"uz": {"headline": "Shurtan PP liniyasini ta'mirlash uchun to'xtatadi",
+                             "summary": "Rejali ta'mir PP ishlab chiqarishni kamaytiradi.",
+                             "recommendation": "PP narxlarini kuzating."},
+                      "en": {"headline": "Shurtan halts PP line for maintenance"}}), 10),
             _sig(901, _news_ai(
                 "Обзор рынка полимеров Узбекистана", category="market_analysis",
                 country="Uzbekistan", importance="low", companies=[],
@@ -218,6 +231,21 @@ class TestNewsFilterSqlDb:
             cards = news_service.list_news_articles(s, days=1, sort="newest")
         # inserted 10/20/30/40 min ago → newest first is the 10-min shutdown
         assert cards[0]["headline"] == "Shurtan останавливает PP-линию на ремонт"
+
+    def test_localizes_display_fields_to_lang(self, seeded_news: sa.Engine) -> None:
+        from app.services import news_service  # noqa: PLC0415
+
+        with self._session(seeded_news) as s:
+            uz = news_service.list_news_articles(s, days=1, q="shurtan", lang="uz")
+            canonical = news_service.list_news_articles(s, days=1, q="shurtan")
+            detail_uz = news_service.get_news_article(s, int(uz[0]["id"]), lang="uz")
+        assert uz[0]["headline"] == "Shurtan PP liniyasini ta'mirlash uchun to'xtatadi"
+        assert uz[0]["recommendation"] == "PP narxlarini kuzating."
+        # analysis had no uz translation → falls back to the canonical (ru) text
+        assert uz[0]["analysis"] == "Ремонт сократит предложение PP на внутреннем рынке."
+        assert canonical[0]["headline"] == "Shurtan останавливает PP-линию на ремонт"
+        assert detail_uz is not None
+        assert detail_uz["headline"] == "Shurtan PP liniyasini ta'mirlash uchun to'xtatadi"
 
     def test_filter_options_facets(self, seeded_news: sa.Engine) -> None:
         from app.services import news_service  # noqa: PLC0415

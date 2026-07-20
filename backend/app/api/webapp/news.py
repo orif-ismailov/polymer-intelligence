@@ -52,6 +52,7 @@ def list_articles(
     importance: NewsImportanceFilter | None = Query(default=None),
     source_id: int | None = Query(default=None, ge=1),
     sort: NewsSort | None = Query(default=None, description="Default: importance→recency."),
+    lang: str | None = Query(default=None, max_length=8, description="Localize display fields (ru/uz/en)."),
     db: Session = Depends(get_db),
     _client: Client = Depends(get_current_client),
 ) -> list[NewsArticleCard]:
@@ -68,6 +69,7 @@ def list_articles(
         importance=importance,
         source_id=source_id,
         sort=sort,
+        lang=lang,
     )
     return [NewsArticleCard.model_validate(a) for a in articles]
 
@@ -84,10 +86,11 @@ def article_filters(
 @router.get("/articles/{signal_id}", response_model=NewsArticleDetail, summary="Get a news article")
 def get_article(
     signal_id: int,
+    lang: str | None = Query(default=None, max_length=8, description="Localize display fields (ru/uz/en)."),
     db: Session = Depends(get_db),
     _client: Client = Depends(get_current_client),
 ) -> NewsArticleDetail:
-    article = news_service.get_news_article(db, signal_id)
+    article = news_service.get_news_article(db, signal_id, lang=lang)
     if article is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found")
     return NewsArticleDetail.model_validate(article)

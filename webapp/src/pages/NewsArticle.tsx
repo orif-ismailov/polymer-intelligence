@@ -45,7 +45,7 @@ function Chips({ label, items, accent }: { label: string; items: string[]; accen
 }
 
 export default function NewsArticle() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [item, setItem] = useState<NewsArticleDetail | null>(null);
@@ -66,7 +66,7 @@ export default function NewsArticle() {
     let cancelled = false;
     setState("loading");
     api
-      .getNewsArticle(Number(id))
+      .getNewsArticle(Number(id), i18n.language)
       .then((n) => {
         if (!cancelled) {
           setItem(n);
@@ -79,7 +79,7 @@ export default function NewsArticle() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, i18n.language]);
 
   if (state !== "ok" || !item) {
     return (
@@ -121,6 +121,56 @@ export default function NewsArticle() {
         </div>
       )}
 
+      {item.analysis && (
+        <div style={{ marginTop: "12px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--purple)", marginBottom: "4px" }}>
+            {t("news.analysis")}
+          </div>
+          <div
+            dir="auto"
+            style={{
+              whiteSpace: "pre-wrap",
+              fontSize: "14px",
+              lineHeight: 1.6,
+              color: "var(--text)",
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--r-md)",
+              padding: "14px",
+            }}
+          >
+            {item.analysis}
+          </div>
+        </div>
+      )}
+
+      {item.recommendation && (
+        <div
+          dir="auto"
+          style={{
+            display: "flex",
+            gap: "8px",
+            fontSize: "14px",
+            fontWeight: 600,
+            lineHeight: 1.5,
+            color: "var(--text)",
+            background: "var(--chip-neutral-bg)",
+            border: "1px solid var(--purple)",
+            borderRadius: "var(--r-md)",
+            padding: "14px",
+            marginTop: "12px",
+          }}
+        >
+          <span style={{ flex: "0 0 auto" }}>💡</span>
+          <span>
+            <span style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--purple)", marginBottom: "2px" }}>
+              {t("news.recommendation")}
+            </span>
+            {item.recommendation}
+          </span>
+        </div>
+      )}
+
       {item.body && (
         <div
           dir="auto"
@@ -141,6 +191,7 @@ export default function NewsArticle() {
       )}
 
       <Chips label={t("news.relatedProducts")} items={item.related_products} accent="var(--purple)" />
+      <Chips label={t("news.countries")} items={item.countries} accent="var(--text)" />
       <Chips label={t("news.companies")} items={item.companies} accent="var(--text)" />
 
       {item.sources.length > 1 && (

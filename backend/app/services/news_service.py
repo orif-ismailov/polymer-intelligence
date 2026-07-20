@@ -58,11 +58,16 @@ def create_news_signal_from_article(
             "category": article.category,
             "tags": article.tags,
             "country": article.country,
+            "countries": article.countries,
             "related_products": article.related_products,
             "companies": article.companies,
             "importance": article.importance.value if article.importance else None,
             "market_impact": article.market_impact.value if article.market_impact else None,
             "summary": article.summary,
+            "analysis": article.analysis,
+            "recommendation": article.recommendation,
+            "language": article.language,
+            "i18n": article.i18n.model_dump(exclude_none=True) if article.i18n else None,
         },
         "confidence": article.confidence,
         "needs_review": needs_review,
@@ -105,6 +110,7 @@ def _article_card(row: sa.engine.RowMapping) -> dict[str, object]:
     news_raw = ai.get("news")
     news = news_raw if isinstance(news_raw, dict) else {}
     event_at = row["event_at"]
+    i18n = news.get("i18n")
     return {
         "id": int(row["id"]),
         "headline": str(news.get("headline") or ""),
@@ -112,13 +118,42 @@ def _article_card(row: sa.engine.RowMapping) -> dict[str, object]:
         "importance": news.get("importance"),
         "market_impact": news.get("market_impact"),
         "summary": news.get("summary"),
+        "analysis": news.get("analysis"),
+        "recommendation": news.get("recommendation"),
+        "language": news.get("language"),
         "country": news.get("country") or row["country"],
+        "countries": [str(c) for c in (news.get("countries") or [])],
         "companies": [str(c) for c in (news.get("companies") or [])],
         "related_products": [str(p) for p in (news.get("related_products") or [])],
         "source_name": str(row["source_name"]) if row["source_name"] else None,
         "published_at": event_at.isoformat() if event_at is not None else None,
         "image_url": None,  # reserved — no image extracted yet
+        # Raw ru/uz/en variants; consumed by _localize, then dropped by the schema.
+        "i18n": i18n if isinstance(i18n, dict) else None,
     }
+
+
+# ── Per-language localization (Phase 8b/8f) ─────────────────────────────────────────
+# News is classified once and translated at ingest into ru/uz/en (ai.news.i18n). Cards
+# are localized to the caller's language just before display; clustering/sorting run on
+# the canonical (source-language) fields, so localization never affects dedup order.
+
+_LOCALIZED_FIELDS = ("headline", "summary", "analysis", "recommendation")
+
+
+def _localize(card: dict[str, object], lang: str | None) -> dict[str, object]:
+    """Override display fields from ai.news.i18n[lang] when a translation exists."""
+    i18n = card.get("i18n")
+    if not lang or not isinstance(i18n, dict):
+        return card
+    loc = i18n.get(lang)
+    if not isinstance(loc, dict):
+        return card
+    for field in _LOCALIZED_FIELDS:
+        value = loc.get(field)
+        if value:
+            card[field] = value
+    return card
 
 
 # Fetch a generous window of recent news so clustering has enough to merge against;
@@ -306,13 +341,14 @@ def list_news_articles(
     importance: str | None = None,
     source_id: int | None = None,
     sort: str | None = None,
+    lang: str | None = None,
 ) -> list[dict[str, object]]:
     """Ranked, cross-source-deduped news cards from the last `days`, with filters.
 
     Same-story items from multiple sources collapse into one representative card; the
     others are attached under `sources` (with `merged_count`). Filters (search/scope/
     category/country/company/product/importance/source) apply in SQL before clustering;
-    the merged cards are then ordered by `sort`. At most `limit` stories.
+    the merged cards are then ordered by `sort` and localized to `lang`. ≤`limit` stories.
     """
     clauses, params = _news_filter_sql(
         q=q, scope=scope, category=category, country=country,
@@ -322,14 +358,17 @@ def list_news_articles(
     cards = [_article_card(r) for r in rows if r["ai"] and isinstance(r["ai"], dict)]
     clusters = cluster_articles(cards)
     merged = [_merge_cluster(members) for members in clusters]
-    return _sort_cards(merged, sort)[:limit]
+    return [_localize(c, lang) for c in _sort_cards(merged, sort)[:limit]]
 
 
-def get_news_article(session: Session, signal_id: int) -> dict[str, object] | None:
+def get_news_article(
+    session: Session, signal_id: int, *, lang: str | None = None
+) -> dict[str, object] | None:
     """A single news card plus its detail fields (original body + source link).
 
     The article's cluster siblings (the same story reported elsewhere) are attached
     under `sources`, so the detail view can cite every source and the original.
+    Display fields are localized to `lang` when a translation exists.
     """
     row = (
         session.execute(
@@ -374,7 +413,7 @@ def get_news_article(session: Session, signal_id: int) -> dict[str, object] | No
     )
     card["sources"] = _source_refs(members)
     card["merged_count"] = len(members)
-    return card
+    return _localize(card, lang)
 
 
 # ── Filter options (Phase 8a) ──────────────────────────────────────────────────────
