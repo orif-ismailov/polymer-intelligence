@@ -56,8 +56,66 @@ class TestNewsArticlesApi:
         assert body[0]["id"] == 42
         assert body[0]["headline"].startswith("Shurtan")
         assert body[0]["related_products"] == ["PP"]
-        # default query params forwarded
-        assert mock_list.call_args.kwargs == {"limit": 30, "days": 7}
+        # default query params forwarded (filters all None, no scope/sort)
+        assert mock_list.call_args.kwargs == {
+            "limit": 30, "days": 7, "q": None, "scope": None, "category": None,
+            "country": None, "company": None, "product": None, "importance": None,
+            "source_id": None, "sort": None,
+        }
+
+    def test_list_articles_forwards_filters(self) -> None:
+        """Search/scope/sort/facet query params reach the service verbatim."""
+        with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+            resp = _client().get(
+                "/api/v1/webapp/news/articles",
+                params={
+                    "q": "shurtan", "scope": "producers", "category": "plant_shutdown",
+                    "country": "UZ", "company": "Shurtan", "product": "PP",
+                    "importance": "high", "source_id": 5, "sort": "newest",
+                    "limit": 10, "days": 14,
+                },
+            )
+        assert resp.status_code == 200, resp.text
+        assert mock_list.call_args.kwargs == {
+            "limit": 10, "days": 14, "q": "shurtan", "scope": "producers",
+            "category": "plant_shutdown", "country": "UZ", "company": "Shurtan",
+            "product": "PP", "importance": "high", "source_id": 5, "sort": "newest",
+        }
+
+    def test_scope_all_becomes_no_filter(self) -> None:
+        """scope=all is the unfiltered default — the service receives scope=None."""
+        with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+            resp = _client().get("/api/v1/webapp/news/articles", params={"scope": "all"})
+        assert resp.status_code == 200
+        assert mock_list.call_args.kwargs["scope"] is None
+
+    def test_invalid_scope_rejected(self) -> None:
+        resp = _client().get("/api/v1/webapp/news/articles", params={"scope": "mars"})
+        assert resp.status_code == 422
+
+    def test_filters_endpoint_returns_facets(self) -> None:
+        options = {
+            "categories": [{"value": "plant_shutdown", "count": 4}],
+            "countries": [{"value": "UZ", "count": 9}],
+            "companies": [{"value": "Shurtan GCC", "count": 3}],
+            "products": [{"value": "PP", "count": 6}],
+        }
+        with patch("app.services.news_service.list_news_filter_options", return_value=options) as mock_opts:
+            resp = _client().get("/api/v1/webapp/news/articles/filters")
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body["categories"][0] == {"value": "plant_shutdown", "count": 4}
+        assert body["products"][0]["value"] == "PP"
+        assert mock_opts.call_args.kwargs == {"days": 30}
+
+    def test_filters_route_not_swallowed_by_article_id(self) -> None:
+        """/articles/filters resolves to the facets route, not GET /articles/{id}."""
+        with patch("app.services.news_service.list_news_filter_options", return_value={}) as mock_opts, \
+             patch("app.services.news_service.get_news_article") as mock_get:
+            resp = _client().get("/api/v1/webapp/news/articles/filters")
+        assert resp.status_code == 200
+        mock_opts.assert_called_once()
+        mock_get.assert_not_called()
 
     def test_articles_route_not_swallowed_by_report_id(self) -> None:
         """The /articles path resolves to list_articles, not GET /{report_id}."""
@@ -132,3 +190,85 @@ class TestArticleCardMapping:
         assert card["companies"] == ["OPEC"]
         assert card["published_at"] == "2026-07-18T06:00:00+00:00"
         assert card["image_url"] is None
+
+
+class TestNewsFilterSql:
+    """The WHERE-clause builder keeps every user value in bound params (injection-safe)."""
+
+    def test_no_filters_is_empty(self) -> None:
+        from app.services.news_service import _news_filter_sql  # noqa: PLC0415
+
+        clauses, params = _news_filter_sql(
+            q=None, scope=None, category=None, country=None,
+            company=None, product=None, importance=None, source_id=None,
+        )
+        assert clauses == []
+        assert params == {}
+
+    def test_search_binds_wildcarded_param(self) -> None:
+        from app.services.news_service import _news_filter_sql  # noqa: PLC0415
+
+        clauses, params = _news_filter_sql(
+            q="shurtan", scope=None, category=None, country=None,
+            company=None, product=None, importance=None, source_id=None,
+        )
+        assert params == {"q": "%shurtan%"}
+        assert all(":q" in c or "ILIKE" in c for c in clauses)
+        assert "shurtan" not in " ".join(clauses)  # value never inlined into SQL
+
+    def test_scope_producers_uses_static_category_list(self) -> None:
+        from app.services.news_service import _news_filter_sql  # noqa: PLC0415
+
+        clauses, params = _news_filter_sql(
+            q=None, scope="producers", category=None, country=None,
+            company=None, product=None, importance=None, source_id=None,
+        )
+        assert params == {}  # producer categories are static constants, not user input
+        assert "plant_shutdown" in clauses[0]
+
+    def test_all_facets_bind(self) -> None:
+        from app.services.news_service import _news_filter_sql  # noqa: PLC0415
+
+        _, params = _news_filter_sql(
+            q=None, scope="global", category="oil", country="UZ",
+            company="SIBUR", product="PP", importance="high", source_id=7,
+        )
+        assert params == {
+            "category": "oil", "country": "UZ", "company": "%SIBUR%",
+            "product": "%PP%", "importance": "high", "source_id": 7,
+        }
+
+
+class TestSortCards:
+    def _cards(self) -> list[dict[str, object]]:
+        return [
+            {"importance": "low", "published_at": "2026-07-20", "category": "oil",
+             "country": "RU", "companies": ["Zeta"], "related_products": ["PVC"]},
+            {"importance": "high", "published_at": "2026-07-18", "category": "abs",
+             "country": "UZ", "companies": ["Alpha"], "related_products": ["HDPE"]},
+        ]
+
+    def test_default_keeps_sql_order(self) -> None:
+        from app.services.news_service import _sort_cards  # noqa: PLC0415
+
+        cards = self._cards()
+        assert _sort_cards(cards, None) == cards
+        assert _sort_cards(cards, "importance") == cards
+
+    def test_newest_orders_by_published_desc(self) -> None:
+        from app.services.news_service import _sort_cards  # noqa: PLC0415
+
+        out = _sort_cards(self._cards(), "newest")
+        assert [c["published_at"] for c in out] == ["2026-07-20", "2026-07-18"]
+
+    def test_category_sorts_alphabetically(self) -> None:
+        from app.services.news_service import _sort_cards  # noqa: PLC0415
+
+        out = _sort_cards(self._cards(), "category")
+        assert [c["category"] for c in out] == ["abs", "oil"]
+
+    def test_company_sorts_by_first_company(self) -> None:
+        from app.services.news_service import _sort_cards  # noqa: PLC0415
+
+        out = _sort_cards(self._cards(), "company")
+        assert [c["companies"] for c in out] == [["Alpha"], ["Zeta"]]

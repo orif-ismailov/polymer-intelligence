@@ -341,6 +341,40 @@ export interface NewsArticleDetail extends NewsArticleCard {
   source_url: string | null;
 }
 
+/** Top-nav tabs for the News page. */
+export type NewsScope = "all" | "uzbekistan" | "global" | "producers";
+
+/** Sort options exposed by the News list. */
+export type NewsSort = "newest" | "importance" | "category" | "products" | "country" | "company";
+
+/** Query for the news-article list (all fields optional). */
+export interface NewsArticlesQuery {
+  q?: string;
+  scope?: NewsScope;
+  category?: string;
+  country?: string;
+  company?: string;
+  product?: string;
+  importance?: "high" | "medium" | "low";
+  sort?: NewsSort;
+  limit?: number;
+  days?: number;
+}
+
+/** One filterable value + how often it occurs in recent news. */
+export interface NewsFacet {
+  value: string;
+  count: number;
+}
+
+/** Live facets for the News filter UI (only values present in recent news). */
+export interface NewsFilterOptions {
+  categories: NewsFacet[];
+  countries: NewsFacet[];
+  companies: NewsFacet[];
+  products: NewsFacet[];
+}
+
 export interface SellerOfferOut {
   id: number;
   status: SellerOfferStatus;

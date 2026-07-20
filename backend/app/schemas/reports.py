@@ -80,6 +80,22 @@ class NewsArticleDetail(NewsArticleCard):
     source_url: str | None = None
 
 
+class NewsFacet(BaseModel):
+    """One filterable value (category/country/company/product) + how often it occurs."""
+
+    value: str
+    count: int
+
+
+class NewsFilterOptions(BaseModel):
+    """Live facets for the News filter UI — only values present in recent news."""
+
+    categories: list[NewsFacet] = []
+    countries: list[NewsFacet] = []
+    companies: list[NewsFacet] = []
+    products: list[NewsFacet] = []
+
+
 class ReportAdminOut(BaseModel):
     """Dashboard review representation (any non-rejected status)."""
 

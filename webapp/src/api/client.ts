@@ -18,6 +18,8 @@ import type {
   FeaturedOffer,
   NewsArticleCard,
   NewsArticleDetail,
+  NewsArticlesQuery,
+  NewsFilterOptions,
   NewsItem,
   NewsSummary,
   OfferRequestCreate,
@@ -303,9 +305,26 @@ export const api = {
 
   // ── News articles (Phase 7e cards) ──────────────────────────────────────────
 
-  /** GET /webapp/news/articles — classified news cards, ranked (importance→recency). */
-  getNewsArticles(): Promise<NewsArticleCard[]> {
-    return apiFetch<NewsArticleCard[]>("/webapp/news/articles");
+  /**
+   * GET /webapp/news/articles — classified news cards.
+   * Supports search (`q`), the top-nav `scope`, per-facet filters, and `sort`
+   * (default: importance→recency). `scope: "all"` is omitted (the unfiltered default).
+   */
+  getNewsArticles(params: NewsArticlesQuery = {}): Promise<NewsArticleCard[]> {
+    const qs = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined || value === null || value === "") continue;
+      if (key === "scope" && value === "all") continue;
+      qs.set(key, String(value));
+    }
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<NewsArticleCard[]>(`/webapp/news/articles${suffix}`);
+  },
+
+  /** GET /webapp/news/articles/filters — live facets (categories/countries/companies/products). */
+  getNewsFilters(days?: number): Promise<NewsFilterOptions> {
+    const suffix = days ? `?days=${days}` : "";
+    return apiFetch<NewsFilterOptions>(`/webapp/news/articles/filters${suffix}`);
   },
 
   /** GET /webapp/news/articles/{id} — a single article with body + source link. */

@@ -126,32 +126,44 @@ def _article_card(row: sa.engine.RowMapping) -> dict[str, object]:
 _CLUSTER_ROW_CAP = 200
 
 
-def _recent_article_rows(session: Session, *, days: int, cap: int = _CLUSTER_ROW_CAP) -> list[sa.engine.RowMapping]:
-    """Recent kind='news' rows, ranked importance→recency (for card mapping + clustering)."""
-    return list(
-        session.execute(
-            sa.text(
-                """
-                SELECT s.id AS id, s.event_at AS event_at, s.ai AS ai,
-                       src.name AS source_name, src.country AS country
-                FROM signals s
-                JOIN sources src ON src.id = s.source_id
-                WHERE s.kind = 'news'
-                  AND s.ai -> 'news' IS NOT NULL
-                  AND s.event_at >= now() - make_interval(days => :days)
-                ORDER BY (
-                    CASE s.ai->'news'->>'importance'
-                        WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0
-                    END
-                ) DESC, s.event_at DESC
-                LIMIT :cap
-                """
-            ),
-            {"days": days, "cap": cap},
-        )
-        .mappings()
-        .all()
-    )
+def _recent_article_rows(
+    session: Session,
+    *,
+    days: int,
+    cap: int = _CLUSTER_ROW_CAP,
+    extra_where: list[str] | None = None,
+    extra_params: dict[str, object] | None = None,
+) -> list[sa.engine.RowMapping]:
+    """Recent kind='news' rows, ranked importance→recency (for card mapping + clustering).
+
+    `extra_where`/`extra_params` append filter clauses (search/scope/category/…). The
+    clause strings are built from static SQL only (see `_news_filter_sql`); every user
+    value travels as a bound param, so the f-string interpolation is injection-safe.
+    """
+    where = [
+        "s.kind = 'news'",
+        "s.ai -> 'news' IS NOT NULL",
+        "s.event_at >= now() - make_interval(days => :days)",
+    ]
+    params: dict[str, object] = {"days": days, "cap": cap}
+    if extra_where:
+        where.extend(extra_where)
+    if extra_params:
+        params.update(extra_params)
+    sql = f"""
+        SELECT s.id AS id, s.event_at AS event_at, s.ai AS ai,
+               src.name AS source_name, src.country AS country
+        FROM signals s
+        JOIN sources src ON src.id = s.source_id
+        WHERE {" AND ".join(where)}
+        ORDER BY (
+            CASE s.ai->'news'->>'importance'
+                WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0
+            END
+        ) DESC, s.event_at DESC
+        LIMIT :cap
+    """
+    return list(session.execute(sa.text(sql), params).mappings().all())
 
 
 def _source_refs(members: list[dict[str, object]]) -> list[dict[str, object]]:
@@ -172,16 +184,145 @@ def _merge_cluster(members: list[dict[str, object]]) -> dict[str, object]:
     return rep
 
 
-def list_news_articles(session: Session, *, limit: int = 30, days: int = 7) -> list[dict[str, object]]:
-    """Ranked, cross-source-deduped news cards from the last `days`.
+# ── Filtering / search / sort (Phase 8a) ───────────────────────────────────────────
+# The webapp News tab drives All/Uzbekistan/Global/Producers tabs, a search box, per-
+# facet filters, and a sort selector. Filters push into SQL (so the row cap applies to
+# the matching set); the final sort is applied to the merged representative cards.
+
+# "Producers" = news that names a company/plant, or sits in a producer-side category.
+_PRODUCER_CATEGORIES: tuple[str, ...] = (
+    "production", "plant_shutdown", "maintenance", "refineries",
+    "factories", "new_projects", "investment", "petrochemicals",
+)
+_PRODUCER_CATEGORIES_SQL = ", ".join(f"'{c}'" for c in _PRODUCER_CATEGORIES)
+_UZ_COUNTRY_VALUES = "('uzbekistan', 'uz', 'узбекистан')"
+_UZ_MATCH = f"lower(coalesce(nullif(s.ai->'news'->>'country', ''), src.country, '')) IN {_UZ_COUNTRY_VALUES}"
+
+
+def _news_filter_sql(
+    *,
+    q: str | None,
+    scope: str | None,
+    category: str | None,
+    country: str | None,
+    company: str | None,
+    product: str | None,
+    importance: str | None,
+    source_id: int | None,
+) -> tuple[list[str], dict[str, object]]:
+    """Build (where-clauses, bound-params) for the news card query. All values bound."""
+    clauses: list[str] = []
+    params: dict[str, object] = {}
+    if q:
+        params["q"] = f"%{q}%"
+        clauses.append(
+            "(s.ai->'news'->>'headline' ILIKE :q"
+            " OR s.ai->'news'->>'summary' ILIKE :q"
+            " OR s.ai->'news'->>'category' ILIKE :q"
+            " OR (s.ai->'news'->'companies')::text ILIKE :q"
+            " OR (s.ai->'news'->'related_products')::text ILIKE :q)"
+        )
+    if scope == "uzbekistan":
+        clauses.append(_UZ_MATCH)
+    elif scope == "global":
+        clauses.append(f"NOT ({_UZ_MATCH})")
+    elif scope == "producers":
+        clauses.append(
+            "((jsonb_typeof(s.ai->'news'->'companies') = 'array'"
+            " AND jsonb_array_length(s.ai->'news'->'companies') > 0)"
+            f" OR s.ai->'news'->>'category' IN ({_PRODUCER_CATEGORIES_SQL}))"
+        )
+    if category:
+        params["category"] = category
+        clauses.append(
+            "(s.ai->'news'->>'category' = :category"
+            " OR jsonb_exists(s.ai->'news'->'tags', :category))"
+        )
+    if country:
+        params["country"] = country
+        clauses.append(
+            "(lower(s.ai->'news'->>'country') = lower(:country)"
+            " OR lower(src.country) = lower(:country))"
+        )
+    if company:
+        params["company"] = f"%{company}%"
+        clauses.append("(s.ai->'news'->'companies')::text ILIKE :company")
+    if product:
+        params["product"] = f"%{product}%"
+        clauses.append("(s.ai->'news'->'related_products')::text ILIKE :product")
+    if importance:
+        params["importance"] = importance
+        clauses.append("s.ai->'news'->>'importance' = :importance")
+    if source_id is not None:
+        params["source_id"] = source_id
+        clauses.append("s.source_id = :source_id")
+    return clauses, params
+
+
+_IMPORTANCE_RANK: dict[str, int] = {"high": 3, "medium": 2, "low": 1}
+_SORT_LAST = "￿"  # sorts after any real value, so empties land last on asc sorts
+
+
+def _rank(card: dict[str, object]) -> int:
+    return _IMPORTANCE_RANK.get(str(card.get("importance") or ""), 0)
+
+
+def _first_lower(value: object) -> str:
+    if isinstance(value, list) and value:
+        return str(value[0]).lower()
+    return _SORT_LAST
+
+
+def _text_lower(value: object) -> str:
+    return str(value).lower() if value else _SORT_LAST
+
+
+def _sort_cards(cards: list[dict[str, object]], sort: str | None) -> list[dict[str, object]]:
+    """Order merged cards by the requested key. Default (importance) keeps SQL order."""
+    if sort == "newest":
+        return sorted(cards, key=lambda c: str(c.get("published_at") or ""), reverse=True)
+    if sort == "category":
+        return sorted(cards, key=lambda c: (_text_lower(c.get("category")), -_rank(c)))
+    if sort == "country":
+        return sorted(cards, key=lambda c: (_text_lower(c.get("country")), -_rank(c)))
+    if sort == "company":
+        return sorted(cards, key=lambda c: (_first_lower(c.get("companies")), -_rank(c)))
+    if sort == "products":
+        return sorted(cards, key=lambda c: (_first_lower(c.get("related_products")), -_rank(c)))
+    return cards  # None / "importance" — already importance→recency from SQL
+
+
+def list_news_articles(
+    session: Session,
+    *,
+    limit: int = 30,
+    days: int = 7,
+    q: str | None = None,
+    scope: str | None = None,
+    category: str | None = None,
+    country: str | None = None,
+    company: str | None = None,
+    product: str | None = None,
+    importance: str | None = None,
+    source_id: int | None = None,
+    sort: str | None = None,
+) -> list[dict[str, object]]:
+    """Ranked, cross-source-deduped news cards from the last `days`, with filters.
 
     Same-story items from multiple sources collapse into one representative card; the
-    others are attached under `sources` (with `merged_count`). At most `limit` stories.
+    others are attached under `sources` (with `merged_count`). Filters (search/scope/
+    category/country/company/product/importance/source) apply in SQL before clustering;
+    the merged cards are then ordered by `sort`. At most `limit` stories.
     """
-    rows = _recent_article_rows(session, days=days)
+    clauses, params = _news_filter_sql(
+        q=q, scope=scope, category=category, country=country,
+        company=company, product=product, importance=importance, source_id=source_id,
+    )
+    rows = _recent_article_rows(session, days=days, extra_where=clauses, extra_params=params)
     cards = [_article_card(r) for r in rows if r["ai"] and isinstance(r["ai"], dict)]
     clusters = cluster_articles(cards)
-    return [_merge_cluster(members) for members in clusters[:limit]]
+    merged = [_merge_cluster(members) for members in clusters]
+    return _sort_cards(merged, sort)[:limit]
 
 
 def get_news_article(session: Session, signal_id: int) -> dict[str, object] | None:
@@ -234,3 +375,63 @@ def get_news_article(session: Session, signal_id: int) -> dict[str, object] | No
     card["sources"] = _source_refs(members)
     card["merged_count"] = len(members)
     return card
+
+
+# ── Filter options (Phase 8a) ──────────────────────────────────────────────────────
+# Powers the webapp filter selectors: which categories/countries/companies/products
+# actually occur in recent news, with counts, so the UI only offers live facets.
+
+
+def _facet_rows(session: Session, sql: str, days: int) -> list[dict[str, object]]:
+    rows = session.execute(sa.text(sql), {"days": days}).mappings().all()
+    return [{"value": str(r["value"]), "count": int(r["count"])} for r in rows]
+
+
+def list_news_filter_options(session: Session, *, days: int = 30) -> dict[str, object]:
+    """Distinct categories/countries/companies/products in recent news, with counts."""
+    scalar_base = (
+        "FROM signals s JOIN sources src ON src.id = s.source_id "
+        "WHERE s.kind = 'news' AND s.ai -> 'news' IS NOT NULL "
+        "AND s.event_at >= now() - make_interval(days => :days)"
+    )
+    categories = _facet_rows(
+        session,
+        "SELECT s.ai->'news'->>'category' AS value, count(*) AS count "
+        f"{scalar_base} AND coalesce(s.ai->'news'->>'category', '') <> '' "
+        "GROUP BY 1 ORDER BY count DESC, value ASC LIMIT 60",
+        days,
+    )
+    countries = _facet_rows(
+        session,
+        "SELECT coalesce(nullif(s.ai->'news'->>'country', ''), src.country) AS value, count(*) AS count "
+        f"{scalar_base} AND coalesce(nullif(s.ai->'news'->>'country', ''), src.country) IS NOT NULL "
+        "GROUP BY 1 ORDER BY count DESC, value ASC LIMIT 60",
+        days,
+    )
+    # Companies/products live in JSONB arrays — unnest with LATERAL (WHERE before it).
+    array_where = (
+        "WHERE s.kind = 'news' AND s.ai -> 'news' IS NOT NULL "
+        "AND s.event_at >= now() - make_interval(days => :days)"
+    )
+    companies = _facet_rows(
+        session,
+        "SELECT elem AS value, count(*) AS count FROM signals s "
+        "CROSS JOIN LATERAL jsonb_array_elements_text(s.ai->'news'->'companies') AS elem "
+        f"{array_where} AND jsonb_typeof(s.ai->'news'->'companies') = 'array' "
+        "GROUP BY 1 ORDER BY count DESC, value ASC LIMIT 50",
+        days,
+    )
+    products = _facet_rows(
+        session,
+        "SELECT elem AS value, count(*) AS count FROM signals s "
+        "CROSS JOIN LATERAL jsonb_array_elements_text(s.ai->'news'->'related_products') AS elem "
+        f"{array_where} AND jsonb_typeof(s.ai->'news'->'related_products') = 'array' "
+        "GROUP BY 1 ORDER BY count DESC, value ASC LIMIT 50",
+        days,
+    )
+    return {
+        "categories": categories,
+        "countries": countries,
+        "companies": companies,
+        "products": products,
+    }

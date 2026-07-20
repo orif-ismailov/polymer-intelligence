@@ -6,7 +6,10 @@
     "close": "Yopish",
     "selected": "Tanlangan",
     "riskLabel": "Xavf xaridorga o'tadi",
-    "party": { "you": "Sotuvchi (siz)", "buyer": "Xaridor" },
+    "party": {
+      "you": "Sotuvchi (siz)",
+      "buyer": "Xaridor"
+    },
     "cols": {
       "export": "Eksport bojxonasi",
       "transport": "Asosiy tashish",
@@ -21,16 +24,36 @@
       "destinationUnloaded": "Yetib kelib, tushirilgandan so'ng"
     },
     "terms": {
-      "EXW": { "summary": "Siz tovarni faqat o'z omboringizda tayyor qilasiz. Xaridor olib ketish, eksport, yetkazish va qolgan hammasini o'zi tashkil qiladi — siz uchun eng oddiy va arzon variant." },
-      "FCA": { "summary": "Eksportga rasmiylashtirilgan tovarni xaridor tanlagan tashuvchiga topshirasiz. Asosiy yetkazish va sug'urtani xaridor to'laydi." },
-      "FOB": { "summary": "Dengiz tashuvi uchun: tovarni kemaga yuklaysiz va eksportni rasmiylashtirasiz. Keyin dengiz navli va sug'urtani xaridor to'laydi." },
-      "CFR": { "summary": "Dengiz tashuvi uchun: navlni manzil portigacha siz to'laysiz, lekin xavf tovar kemaga yuklanishi bilanoq xaridorga o'tadi." },
-      "CIF": { "summary": "CFR kabi, lekin manzil portigacha tovarni asosiy sug'urta bilan ham ta'minlaysiz. Dengiz yetkazishlarida keng tarqalgan." },
-      "CPT": { "summary": "Tashishni kelishilgan joygacha siz to'laysiz, lekin xavf tovarni birinchi tashuvchi olishi bilanoq xaridorga o'tadi." },
-      "CIP": { "summary": "CPT kabi, va manzilgacha tovarni sug'urta ham qilasiz. Har qanday transport turi uchun mos." },
-      "DAP": { "summary": "Tovarni manzilga, tushirishga tayyor holda yetkazasiz. Xaridor faqat import bojxonasini rasmiylashtiradi." },
-      "DPU": { "summary": "Tovarni manzilga yetkazasiz va o'sha yerda tushirasiz. Import bojxonasini xaridor rasmiylashtiradi." },
-      "DDP": { "summary": "Tovarni import bojlari to'langan holda xaridor eshigigacha yetkazasiz — siz uchun eng ko'p mas'uliyat, xaridor uchun eng qulay yo'l." }
+      "EXW": {
+        "summary": "Siz tovarni faqat o'z omboringizda tayyor qilasiz. Xaridor olib ketish, eksport, yetkazish va qolgan hammasini o'zi tashkil qiladi — siz uchun eng oddiy va arzon variant."
+      },
+      "FCA": {
+        "summary": "Eksportga rasmiylashtirilgan tovarni xaridor tanlagan tashuvchiga topshirasiz. Asosiy yetkazish va sug'urtani xaridor to'laydi."
+      },
+      "FOB": {
+        "summary": "Dengiz tashuvi uchun: tovarni kemaga yuklaysiz va eksportni rasmiylashtirasiz. Keyin dengiz navli va sug'urtani xaridor to'laydi."
+      },
+      "CFR": {
+        "summary": "Dengiz tashuvi uchun: navlni manzil portigacha siz to'laysiz, lekin xavf tovar kemaga yuklanishi bilanoq xaridorga o'tadi."
+      },
+      "CIF": {
+        "summary": "CFR kabi, lekin manzil portigacha tovarni asosiy sug'urta bilan ham ta'minlaysiz. Dengiz yetkazishlarida keng tarqalgan."
+      },
+      "CPT": {
+        "summary": "Tashishni kelishilgan joygacha siz to'laysiz, lekin xavf tovarni birinchi tashuvchi olishi bilanoq xaridorga o'tadi."
+      },
+      "CIP": {
+        "summary": "CPT kabi, va manzilgacha tovarni sug'urta ham qilasiz. Har qanday transport turi uchun mos."
+      },
+      "DAP": {
+        "summary": "Tovarni manzilga, tushirishga tayyor holda yetkazasiz. Xaridor faqat import bojxonasini rasmiylashtiradi."
+      },
+      "DPU": {
+        "summary": "Tovarni manzilga yetkazasiz va o'sha yerda tushirasiz. Import bojxonasini xaridor rasmiylashtiradi."
+      },
+      "DDP": {
+        "summary": "Tovarni import bojlari to'langan holda xaridor eshigigacha yetkazasiz — siz uchun eng ko'p mas'uliyat, xaridor uchun eng qulay yo'l."
+      }
     }
   },
   "availability": {
@@ -253,7 +276,28 @@
     "companies": "Kompaniyalar",
     "readSource": "Manbada o‘qish",
     "sourcesLabel": "Manbalar",
-    "original": "asl manba"
+    "original": "asl manba",
+    "search": "Yangiliklar qidirish",
+    "filters": "Filtrlar",
+    "reset": "Tozalash",
+    "noResults": "Hech narsa topilmadi",
+    "filterCategory": "Turkum",
+    "filterCountry": "Davlat",
+    "scope": {
+      "all": "Barchasi",
+      "uzbekistan": "Oʻzbekiston",
+      "global": "Dunyo",
+      "producers": "Ishlab chiqaruvchilar"
+    },
+    "sort": {
+      "label": "Saralash",
+      "newest": "Yangi",
+      "importance": "Muhimlik",
+      "category": "Turkum",
+      "products": "Mahsulotlar",
+      "country": "Davlat",
+      "company": "Kompaniya"
+    }
   },
   "sell": {
     "title": "Taklif joylashtirish",

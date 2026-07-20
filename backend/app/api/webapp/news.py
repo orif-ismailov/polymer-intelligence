@@ -12,6 +12,8 @@ Authenticated via initData like the rest of the webapp surface.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -21,12 +23,17 @@ from app.models.requests import Client
 from app.schemas.reports import (
     NewsArticleCard,
     NewsArticleDetail,
+    NewsFilterOptions,
     ReportPublicOut,
     ReportPublicSummary,
 )
 from app.services import news_service, report_service
 
 router = APIRouter(prefix="/webapp/news", tags=["webapp-news"])
+
+NewsScope = Literal["all", "uzbekistan", "global", "producers"]
+NewsSort = Literal["newest", "importance", "category", "products", "country", "company"]
+NewsImportanceFilter = Literal["high", "medium", "low"]
 
 
 # ── News article cards (Phase 7e) ──────────────────────────────────────────────────
@@ -36,11 +43,42 @@ router = APIRouter(prefix="/webapp/news", tags=["webapp-news"])
 def list_articles(
     limit: int = Query(default=30, ge=1, le=100),
     days: int = Query(default=7, ge=1, le=30),
+    q: str | None = Query(default=None, max_length=100, description="Full-text search over headline/summary/etc."),
+    scope: NewsScope | None = Query(default=None, description="Top-nav tab: all/uzbekistan/global/producers."),
+    category: str | None = Query(default=None, max_length=60),
+    country: str | None = Query(default=None, max_length=60),
+    company: str | None = Query(default=None, max_length=80),
+    product: str | None = Query(default=None, max_length=40),
+    importance: NewsImportanceFilter | None = Query(default=None),
+    source_id: int | None = Query(default=None, ge=1),
+    sort: NewsSort | None = Query(default=None, description="Default: importance→recency."),
     db: Session = Depends(get_db),
     _client: Client = Depends(get_current_client),
 ) -> list[NewsArticleCard]:
-    articles = news_service.list_news_articles(db, limit=limit, days=days)
+    articles = news_service.list_news_articles(
+        db,
+        limit=limit,
+        days=days,
+        q=q,
+        scope=None if scope == "all" else scope,
+        category=category,
+        country=country,
+        company=company,
+        product=product,
+        importance=importance,
+        source_id=source_id,
+        sort=sort,
+    )
     return [NewsArticleCard.model_validate(a) for a in articles]
+
+
+@router.get("/articles/filters", response_model=NewsFilterOptions, summary="News filter facets")
+def article_filters(
+    days: int = Query(default=30, ge=1, le=90),
+    db: Session = Depends(get_db),
+    _client: Client = Depends(get_current_client),
+) -> NewsFilterOptions:
+    return NewsFilterOptions.model_validate(news_service.list_news_filter_options(db, days=days))
 
 
 @router.get("/articles/{signal_id}", response_model=NewsArticleDetail, summary="Get a news article")
