@@ -656,16 +656,19 @@ def parse_news_item(raw_item_id: int) -> dict[str, Any]:
                 int(journal.get("tokens_in", 0)) + int(journal.get("tokens_out", 0)),
             )
         except BudgetExceeded:
-            # Degrade: mark irrelevant (reprocessable later when budget frees up).
-            logger.warning("parse_news_item.budget_exceeded", extra={"raw_item_id": raw_item_id})
+            # Defer for the nightly LLM catch-up — must NOT drop as 'irrelevant', or real
+            # news is lost forever and mislabeled (Phase 8g fix). budget_deferred is
+            # reprocessed once the daily budget resets (nightly_llm_catchup routes news
+            # items back to parse_news_item).
+            logger.warning("parse_news_item.budget_deferred", extra={"raw_item_id": raw_item_id})
             write_parse_run(
                 session, raw_item_id, parser="news_extract_tools", model=None,
                 prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
                 result={"note": "budget_exceeded"}, status="ok", error=None,
             )
-            raw_item.parse_status = "irrelevant"
+            raw_item.parse_status = "budget_deferred"
             session.commit()
-            return {"status": "irrelevant", "raw_item_id": raw_item_id, "reason": "budget_exceeded"}
+            return {"status": "budget_deferred", "raw_item_id": raw_item_id, "reason": "budget_exceeded"}
         except InstructorRetryException as exc:
             release_reserved_tokens(NEWS_TOKEN_ESTIMATE)  # refund leaked reservation (Phase 8g)
             logger.error("parse_news_item.dead_letter", extra={"raw_item_id": raw_item_id, "error": str(exc)})

@@ -131,6 +131,25 @@ class TestParseNewsItem:
         mock_create.assert_called_once()
         assert raw_item.parse_status == "parsed"
 
+    def test_budget_exceeded_defers_not_drops(self) -> None:
+        """Phase 8g fix: budget exhaustion → 'budget_deferred' (retryable), not 'irrelevant'."""
+        from app.tasks.parse import parse_news_item
+        from parsing.budget import BudgetExceeded
+
+        raw_item = _raw_item()
+        with (
+            patch("app.tasks.parse.get_session") as mock_gs,
+            patch("app.tasks.parse.check_and_reserve_tokens", side_effect=BudgetExceeded("no budget")),
+            patch("app.tasks.parse.write_parse_run"),
+            patch("app.services.news_service.create_news_signal_from_article") as mock_create,
+        ):
+            _patch_session(mock_gs, raw_item)
+            result = parse_news_item(501)
+
+        assert result["status"] == "budget_deferred"
+        assert raw_item.parse_status == "budget_deferred"
+        mock_create.assert_not_called()
+
     def test_irrelevant_makes_no_signal(self) -> None:
         from app.tasks.parse import parse_news_item
 
