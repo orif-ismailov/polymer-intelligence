@@ -25,7 +25,7 @@ from app.core.config import settings
 from parsing.news_schemas import NewsArticle
 
 NEWS_PARSER = "news_extract_tools"
-NEWS_PROMPT_VERSION = "v2"
+NEWS_PROMPT_VERSION = "v3"
 DEFAULT_MODEL: str = settings.LLM_EXTRACT_MODEL
 # v2 emits analysis + recommendation + ru/uz/en translations, so the completion is
 # larger than the v1 classification-only output.

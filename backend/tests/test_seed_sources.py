@@ -53,10 +53,10 @@ class TestSourcesSeedDataFile:
         assert isinstance(data, list), "sources_seed.json must be a JSON array"
 
     def test_has_expected_source_count(self) -> None:
-        """sources_seed.json must contain exactly 8 source rows (5 markets + 3 news)."""
+        """sources_seed.json must contain 9 source rows (5 markets + 4 petrochemical news)."""
         data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
-        assert len(data) == 8, (
-            f"Expected 8 source rows, got {len(data)}: "
+        assert len(data) == 9, (
+            f"Expected 9 source rows, got {len(data)}: "
             f"{[s.get('adapter') for s in data]}"
         )
 
@@ -73,7 +73,7 @@ class TestSourcesSeedDataFile:
         """Every rss source is a news source (config.content_kind='news' + config.url)."""
         data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
         news = [s for s in data if s["adapter"] == "rss"]
-        assert len(news) == 3, f"Expected 3 news (rss) sources, got {len(news)}"
+        assert len(news) == 4, f"Expected 4 news (rss) sources, got {len(news)}"
         for src in news:
             config = src.get("config", {})
             assert config.get("content_kind") == "news", (
@@ -156,12 +156,12 @@ class TestSourcesSeedDataFile:
 class TestSeedSourcesUnit:
     """seed_sources function: unit tests with a mock session."""
 
-    def _make_mock_session(self, rowcount_first: int = 8) -> MagicMock:
-        """Build a mock Session that simulates inserts (8 seeded sources)."""
+    def _make_mock_session(self, rowcount_first: int = 9) -> MagicMock:
+        """Build a mock Session that simulates inserts (9 seeded sources)."""
         session = MagicMock()
         # Each execute() returns a mock result with rowcount
         results = []
-        for i in range(8):
+        for i in range(9):
             r = MagicMock()
             r.rowcount = 1 if i < rowcount_first else 0
             results.append(r)
@@ -172,9 +172,9 @@ class TestSeedSourcesUnit:
         """seed_sources returns the number of rows inserted."""
         from app.seed.seed_sources import seed_sources  # noqa: PLC0415
 
-        session = self._make_mock_session(rowcount_first=8)
+        session = self._make_mock_session(rowcount_first=9)
         count = seed_sources(session)
-        assert count == 8, f"Expected 8 inserted, got {count}"
+        assert count == 9, f"Expected 9 inserted, got {count}"
         session.flush.assert_called_once()
 
     def test_seed_sources_idempotent_second_run_inserts_zero(self) -> None:
@@ -228,9 +228,9 @@ class TestSeedSourcesUnit:
         session.execute.return_value = result
 
         seed_sources(session)
-        # Should be called once per source (8 sources in the seed file)
-        assert session.execute.call_count == 8, (
-            f"Expected 8 execute() calls, got {session.execute.call_count}"
+        # Should be called once per source (9 sources in the seed file)
+        assert session.execute.call_count == 9, (
+            f"Expected 9 execute() calls, got {session.execute.call_count}"
         )
 
 

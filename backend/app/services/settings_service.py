@@ -31,7 +31,7 @@ SettingValue = bool | str | int
 
 # News extraction prompt version default — kept in sync with parsing.news_extractor
 # (imported lazily to avoid building the Anthropic client at settings-import time).
-_DEFAULT_NEWS_PROMPT_VERSION = "v2"
+_DEFAULT_NEWS_PROMPT_VERSION = "v3"
 
 
 @dataclass(frozen=True)
