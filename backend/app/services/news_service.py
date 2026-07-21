@@ -45,8 +45,14 @@ def create_news_signal_from_article(
     journal: dict[str, object],
     *,
     needs_review: bool,
+    approved: bool = True,
 ) -> Signal:
-    """Build a kind='news' Signal from a classified NewsArticle. Does NOT commit."""
+    """Build a kind='news' Signal from a classified NewsArticle. Does NOT commit.
+
+    `approved` reflects the news_require_approval setting: when approval is required a new
+    article is created 'pending' (hidden from the public feed until an analyst approves);
+    otherwise it is 'approved' and shows immediately.
+    """
     now_iso = datetime.datetime.now(tz=datetime.UTC).isoformat()
     event_at = raw_item.event_at or datetime.datetime.now(tz=datetime.UTC)
 
@@ -68,6 +74,7 @@ def create_news_signal_from_article(
             "recommendation": article.recommendation,
             "language": article.language,
             "i18n": article.i18n.model_dump(exclude_none=True) if article.i18n else None,
+            "approval": "approved" if approved else "pending",
         },
         "confidence": article.confidence,
         "needs_review": needs_review,
@@ -178,6 +185,9 @@ def _recent_article_rows(
     where = [
         "s.kind = 'news'",
         "s.ai -> 'news' IS NOT NULL",
+        # Approval gate (Phase 8e): hide items held for review or rejected. Legacy rows
+        # (no approval key) coalesce to 'approved' so pre-8e news stays visible.
+        "coalesce(s.ai->'news'->>'approval', 'approved') NOT IN ('pending', 'rejected')",
         "s.event_at >= now() - make_interval(days => :days)",
     ]
     params: dict[str, object] = {"days": days, "cap": cap}
@@ -388,6 +398,7 @@ def get_news_article(
                 WHERE s.id = :signal_id
                   AND s.kind = 'news'
                   AND s.ai -> 'news' IS NOT NULL
+                  AND coalesce(s.ai->'news'->>'approval', 'approved') NOT IN ('pending', 'rejected')
                 """
             ),
             {"signal_id": signal_id},
@@ -424,6 +435,52 @@ def get_news_article(
 def _facet_rows(session: Session, sql: str, days: int) -> list[dict[str, object]]:
     rows = session.execute(sa.text(sql), {"days": days}).mappings().all()
     return [{"value": str(r["value"]), "count": int(r["count"])} for r in rows]
+
+
+# ── Per-article approval (Phase 8e) ────────────────────────────────────────────────
+# When news_require_approval is on, new articles are created 'pending' and hidden from
+# the public feed until an analyst approves them on the dashboard.
+
+_APPROVAL_STATES = ("approved", "rejected")
+
+
+def list_pending_news(session: Session, *, limit: int = 100) -> list[dict[str, object]]:
+    """News articles awaiting approval (newest first), for the dashboard review queue."""
+    rows = (
+        session.execute(
+            sa.text(
+                """
+                SELECT s.id AS id, s.event_at AS event_at, s.ai AS ai,
+                       src.name AS source_name, src.country AS country
+                FROM signals s
+                JOIN sources src ON src.id = s.source_id
+                WHERE s.kind = 'news'
+                  AND s.ai -> 'news' IS NOT NULL
+                  AND s.ai->'news'->>'approval' = 'pending'
+                ORDER BY s.event_at DESC
+                LIMIT :limit
+                """
+            ),
+            {"limit": limit},
+        )
+        .mappings()
+        .all()
+    )
+    return [_article_card(r) for r in rows if isinstance(r["ai"], dict)]
+
+
+def set_news_approval(session: Session, signal_id: int, *, approved: bool) -> bool:
+    """Approve or reject one pending news article. Returns True if a row was updated."""
+    state = "approved" if approved else "rejected"
+    result = session.execute(
+        sa.text(
+            "UPDATE signals "
+            "SET ai = jsonb_set(ai, '{news,approval}', to_jsonb(CAST(:state AS text))) "
+            "WHERE id = :signal_id AND kind = 'news' AND ai -> 'news' IS NOT NULL"
+        ),
+        {"state": state, "signal_id": signal_id},
+    )
+    return bool(getattr(result, "rowcount", 0))
 
 
 def list_news_filter_options(session: Session, *, days: int = 30) -> dict[str, object]:

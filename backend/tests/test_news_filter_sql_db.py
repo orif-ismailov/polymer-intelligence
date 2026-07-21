@@ -287,6 +287,88 @@ class TestReportSectionsDb:
 
 
 @_requires_real_db
+class TestSettingsDb:
+    def test_defaults_then_override(self, seeded_news: sa.Engine) -> None:
+        from app.services import settings_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            assert settings_service.get(s, "news_ai_enabled") is True  # default
+            assert settings_service.get(s, "news_require_approval") is False
+            settings_service.set_many(s, {"news_require_approval": True}, staff_user_id=None)
+            s.commit()
+        with _open(seeded_news) as s:
+            assert settings_service.get(s, "news_require_approval") is True  # persisted
+            allsettings = {r["key"]: r for r in settings_service.get_all(s)}
+            assert allsettings["news_require_approval"]["is_overridden"] is True
+            assert allsettings["news_ai_enabled"]["is_overridden"] is False
+            # reset so other tests see the default
+            settings_service.set_many(s, {"news_require_approval": False}, staff_user_id=None)
+            s.commit()
+
+    def test_unknown_key_raises(self, seeded_news: sa.Engine) -> None:
+        import pytest as _pytest  # noqa: PLC0415
+
+        from app.services import settings_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s, _pytest.raises(KeyError):
+            settings_service.get(s, "does_not_exist")
+
+
+@_requires_real_db
+class TestApprovalDb:
+    def _insert_pending(self, engine: sa.Engine) -> int:
+        import datetime as _dt  # noqa: PLC0415
+
+        from app.models.enums import PriceBasis, SignalKind  # noqa: PLC0415
+        from app.models.signals import Signal  # noqa: PLC0415
+
+        with _open(engine) as s:
+            sig = Signal(
+                kind=SignalKind.news, source_id=901, price_basis=PriceBasis.unknown,
+                grade_text="Pending: Uzbek PP capacity add", region="Uzbekistan",
+                status="new", event_at=_dt.datetime.now(tz=_dt.UTC),
+                ai={"news": {"headline": "Pending: Uzbek PP capacity add", "category": "new_projects",
+                             "importance": "high", "country": "Uzbekistan", "companies": ["NewCo"],
+                             "related_products": ["PP"], "summary": "Awaiting approval.",
+                             "approval": "pending"}},
+            )
+            s.add(sig)
+            s.commit()
+            return int(sig.id)
+
+    def test_pending_hidden_until_approved(self, seeded_news: sa.Engine) -> None:
+        from app.services import news_service  # noqa: PLC0415
+
+        sig_id = self._insert_pending(seeded_news)
+        with _open(seeded_news) as s:
+            visible = news_service.list_news_articles(s, days=1, q="capacity add")
+            pending = news_service.list_pending_news(s)
+            assert not any(c["id"] == sig_id for c in visible)  # hidden from public feed
+            assert any(c["id"] == sig_id for c in pending)       # shown in the review queue
+            assert news_service.get_news_article(s, sig_id) is None  # detail 404s while pending
+
+            news_service.set_news_approval(s, sig_id, approved=True)
+            s.commit()
+
+        with _open(seeded_news) as s:
+            visible2 = news_service.list_news_articles(s, days=1, q="capacity add")
+            assert any(c["id"] == sig_id for c in visible2)       # now public
+            assert news_service.get_news_article(s, sig_id) is not None
+
+    def test_reject_hides_permanently(self, seeded_news: sa.Engine) -> None:
+        from app.services import news_service  # noqa: PLC0415
+
+        sig_id = self._insert_pending(seeded_news)
+        with _open(seeded_news) as s:
+            news_service.set_news_approval(s, sig_id, approved=False)
+            s.commit()
+        with _open(seeded_news) as s:
+            visible = news_service.list_news_articles(s, days=1, q="capacity add")
+            assert not any(c["id"] == sig_id for c in visible)
+            assert not any(c["id"] == sig_id for c in news_service.list_pending_news(s))
+
+
+@_requires_real_db
 class TestBreakingNewsDb:
     def test_pending_then_mark_excludes(self, seeded_news: sa.Engine) -> None:
         from app.services import report_service  # noqa: PLC0415

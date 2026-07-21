@@ -29,11 +29,28 @@ def generate_evening_report() -> int | None:
 
 
 def _generate_report(session: str) -> int | None:
+    from app.services import settings_service  # noqa: PLC0415
+
     with SessionLocal() as db:
         try:
-            report = report_service.generate_report(db, session=session)
+            use_llm = bool(settings_service.get(db, "news_ai_enabled"))
+            auto_publish = bool(settings_service.get(db, "report_auto_publish"))
+            report = report_service.generate_report(db, use_llm=use_llm, session=session)
+            if auto_publish:
+                report_service.publish_report(db, report)
             db.commit()
-            logger.info("generate_report.done", extra={"report_id": report.id, "session": session})
+            logger.info(
+                "generate_report.done",
+                extra={"report_id": report.id, "session": session, "auto_publish": auto_publish},
+            )
+            if auto_publish:
+                # Deliver to the channel best-effort — an outage must not fail generation.
+                try:
+                    publish_report_to_channel.apply_async(
+                        args=[report.id], queue="notify", retry=False
+                    )
+                except Exception:  # noqa: BLE001
+                    logger.warning("generate_report.enqueue_failed", extra={"report_id": report.id})
             return report.id
         except Exception:
             logger.exception("generate_report.failed", extra={"session": session})

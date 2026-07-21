@@ -791,6 +791,7 @@ def pending_breaking_news(
                 JOIN sources src ON src.id = s.source_id
                 WHERE s.kind = 'news'
                   AND s.ai -> 'news' ->> 'importance' = 'high'
+                  AND COALESCE(s.ai->'news'->>'approval', 'approved') NOT IN ('pending', 'rejected')
                   AND s.event_at >= now() - make_interval(mins => :minutes)
                   AND COALESCE((s.extra ->> 'breaking_pushed')::boolean, false) = false
                 ORDER BY s.event_at DESC
@@ -900,3 +901,42 @@ def reject_report(db: Session, report: Report) -> Report:
     report.status = ReportStatus.rejected
     db.flush()
     return report
+
+
+# ── Admin news-ops stats (Phase 8d) ─────────────────────────────────────────────────
+
+def news_admin_stats(db: Session, *, ai_enabled: bool) -> dict[str, object]:
+    """One-row snapshot for the dashboard admin panel: sources, scans, pending AI, etc."""
+    row = (
+        db.execute(
+            sa.text(
+                """
+                SELECT
+                  (SELECT count(*) FROM sources) AS total_sources,
+                  (SELECT count(*) FROM sources WHERE is_enabled) AS active_sources,
+                  (SELECT count(*) FROM sources WHERE consecutive_failures > 0) AS failed_sources,
+                  (SELECT max(last_fetch_at) FROM sources) AS last_scan,
+                  (SELECT max(published_at) FROM reports WHERE status = 'published')
+                    AS last_published_report,
+                  (SELECT count(*) FROM raw_items ri JOIN sources s2 ON s2.id = ri.source_id
+                     WHERE s2.config ->> 'content_kind' = 'news'
+                       AND ri.parse_status IN ('pending', 'budget_deferred')) AS pending_ai_analysis,
+                  (SELECT count(*) FROM signals
+                     WHERE kind = 'news' AND event_at >= date_trunc('day', now())) AS today_published_news
+                """
+            )
+        )
+        .mappings()
+        .one()
+    )
+    return {
+        "total_sources": int(row["total_sources"] or 0),
+        "active_sources": int(row["active_sources"] or 0),
+        "failed_sources": int(row["failed_sources"] or 0),
+        "last_scan": row["last_scan"],
+        "last_published_report": row["last_published_report"],
+        "pending_ai_analysis": int(row["pending_ai_analysis"] or 0),
+        "today_published_news": int(row["today_published_news"] or 0),
+        "ai_enabled": ai_enabled,
+        "ai_status": "on" if ai_enabled else "off",
+    }

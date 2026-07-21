@@ -113,11 +113,18 @@ def llm_extract_signal(prepared_text: str) -> tuple[Any, dict]:
 NEWS_TOKEN_ESTIMATE = 1200
 
 
-def news_extract_signal(prepared_text: str) -> tuple[Any, dict]:
-    """Wrapper: call parsing.news_extractor.extract_news."""
+def news_extract_signal(
+    prepared_text: str, *, model: str | None = None, prompt_version: str | None = None
+) -> tuple[Any, dict]:
+    """Wrapper: call parsing.news_extractor.extract_news with optional runtime overrides."""
+    from parsing.news_extractor import DEFAULT_MODEL, NEWS_PROMPT_VERSION  # noqa: PLC0415
     from parsing.news_extractor import extract_news as _extract  # noqa: PLC0415
 
-    return _extract(prepared_text)
+    return _extract(
+        prepared_text,
+        model=model or DEFAULT_MODEL,
+        prompt_version=prompt_version or NEWS_PROMPT_VERSION,
+    )
 
 
 def check_and_reserve_tokens(estimated: int) -> None:
@@ -621,9 +628,18 @@ def parse_news_item(raw_item_id: int) -> dict[str, Any]:
             session.commit()
             return {"status": "irrelevant", "raw_item_id": raw_item_id, "reason": "blank_content"}
 
+        # Runtime overrides (Phase 8d): model + prompt version + approval requirement.
+        from app.services import settings_service  # noqa: PLC0415
+
+        news_model = settings_service.get(session, "llm_extract_model")
+        news_prompt = settings_service.get(session, "news_prompt_version")
+        require_approval = settings_service.get(session, "news_require_approval")
+
         try:
             check_and_reserve_tokens(NEWS_TOKEN_ESTIMATE)
-            article, journal = news_extract_signal(prepared)
+            article, journal = news_extract_signal(
+                prepared, model=news_model, prompt_version=news_prompt
+            )
             record_actual_tokens(
                 NEWS_TOKEN_ESTIMATE,
                 int(journal.get("tokens_in", 0)) + int(journal.get("tokens_out", 0)),
@@ -663,7 +679,8 @@ def parse_news_item(raw_item_id: int) -> dict[str, Any]:
         if article.is_relevant:
             needs_review = article.confidence < NEWS_CONFIDENCE_REVIEW_THRESHOLD
             signal = create_news_signal_from_article(
-                session, raw_item, article, journal, needs_review=needs_review
+                session, raw_item, article, journal,
+                needs_review=needs_review, approved=not require_approval,
             )
             session.add(signal)
             session.flush()
