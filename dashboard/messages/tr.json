@@ -705,6 +705,11 @@
       "empty": "Onay bekleyen haber yok",
       "approve": "Onayla",
       "reject": "Reddet"
+    },
+    "groups": {
+      "title": "Kaynak grupları",
+      "ungrouped": "Grupsuz",
+      "disabled": "kapalı"
     }
   }
 }

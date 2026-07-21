@@ -128,3 +128,34 @@ class TestNewsOpsApi:
         assert resp.status_code == 200, resp.text
         assert resp.json()["enqueued"] == ["rss_fetch"]
         mock_send.assert_called_once()
+
+
+class TestSourceGroupsApi:
+    def test_list_groups(self) -> None:
+        groups = [{"group": "Uzbek news", "total": 3, "active": 2}, {"group": None, "total": 1, "active": 0}]
+        with patch("app.api.admin_sources.source_service.list_source_groups", return_value=groups):
+            resp = _client().get("/api/v1/admin/source-groups")
+        assert resp.status_code == 200, resp.text
+        assert resp.json()[0] == {"group": "Uzbek news", "total": 3, "active": 2}
+
+    def test_sources_brief(self) -> None:
+        brief = [{"id": 5, "name": "UzPetro", "adapter": "rss", "country": "UZ",
+                  "group_name": "Uzbek news", "is_enabled": True}]
+        with patch("app.api.admin_sources.source_service.list_sources_brief", return_value=brief):
+            resp = _client().get("/api/v1/admin/sources/brief")
+        assert resp.status_code == 200, resp.text
+        assert resp.json()[0]["group_name"] == "Uzbek news"
+
+    def test_set_group(self) -> None:
+        updated = {"id": 5, "name": "UzPetro", "adapter": "rss", "country": "UZ",
+                   "group_name": "Global news", "is_enabled": True}
+        with patch("app.api.admin_sources.source_service.set_source_group", return_value=True), \
+             patch("app.api.admin_sources.source_service.list_sources_brief", return_value=[updated]):
+            resp = _client().put("/api/v1/admin/sources/5/group", json={"group": "Global news"})
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["group_name"] == "Global news"
+
+    def test_set_group_404(self) -> None:
+        with patch("app.api.admin_sources.source_service.set_source_group", return_value=False):
+            resp = _client().put("/api/v1/admin/sources/999/group", json={"group": "X"})
+        assert resp.status_code == 404

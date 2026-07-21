@@ -18,11 +18,26 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface SettingItem {
   key: string;
-  type: "bool" | "str";
+  type: "bool" | "str" | "int";
   label: string;
-  value: boolean | string;
-  default: boolean | string;
+  value: boolean | string | number;
+  default: boolean | string | number;
   is_overridden: boolean;
+}
+
+interface SourceBrief {
+  id: number;
+  name: string;
+  adapter: string;
+  country: string | null;
+  group_name: string | null;
+  is_enabled: boolean;
+}
+
+interface SourceGroup {
+  group: string | null;
+  total: number;
+  active: number;
 }
 
 interface NewsStats {
@@ -73,12 +88,24 @@ export default function NewsAdminPage() {
     queryFn: () => apiFetch<SettingItem[]>("/admin/settings"),
     enabled: isAdmin, // GET /admin/settings is admin-only; don't 401 analysts
   });
+  const groups = useQuery<SourceGroup[]>({
+    queryKey: ["source-groups"],
+    queryFn: () => apiFetch<SourceGroup[]>("/admin/source-groups"),
+    enabled: isAdmin,
+  });
+  const sources = useQuery<SourceBrief[]>({
+    queryKey: ["sources-brief"],
+    queryFn: () => apiFetch<SourceBrief[]>("/admin/sources/brief"),
+    enabled: isAdmin,
+  });
 
-  // ── Local edit buffer for settings ──────────────────────────────────────
-  const [edits, setEdits] = useState<Record<string, boolean | string>>({});
-  const valueOf = (s: SettingItem): boolean | string =>
+  // ── Local edit buffers ──────────────────────────────────────────────────
+  const [edits, setEdits] = useState<Record<string, boolean | string | number>>({});
+  const valueOf = (s: SettingItem): boolean | string | number =>
     s.key in edits ? edits[s.key]! : s.value;
   const dirty = useMemo(() => Object.keys(edits).length > 0, [edits]);
+
+  const [groupEdits, setGroupEdits] = useState<Record<number, string>>({});
 
   // ── Mutations ────────────────────────────────────────────────────────────
   const invalidate = (keys: string[]) =>
@@ -103,6 +130,18 @@ export default function NewsAdminPage() {
     mutationFn: ({ id, action }: { id: number; action: "approve" | "reject" }) =>
       apiFetch(`/admin/news/${id}/${action}`, { method: "POST" }),
     onSuccess: () => invalidate(["news-pending", "news-stats"]),
+  });
+  const setGroup = useMutation({
+    mutationFn: ({ id, group }: { id: number; group: string }) =>
+      apiFetch(`/admin/sources/${id}/group`, { method: "PUT", body: JSON.stringify({ group }) }),
+    onSuccess: (_data, vars) => {
+      setGroupEdits((e) => {
+        const next = { ...e };
+        delete next[vars.id];
+        return next;
+      });
+      invalidate(["source-groups", "sources-brief"]);
+    },
   });
 
   const s = stats.data;
@@ -196,6 +235,7 @@ export default function NewsAdminPage() {
                   />
                 ) : (
                   <input
+                    type={item.type === "int" ? "number" : "text"}
                     value={String(valueOf(item))}
                     onChange={(e) => setEdits((prev) => ({ ...prev, [item.key]: e.target.value }))}
                     className="w-56 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
@@ -203,6 +243,66 @@ export default function NewsAdminPage() {
                 )}
               </li>
             ))}
+          </ul>
+        </section>
+      )}
+
+      {/* ── Source groups (admin only) ─────────────────────────────────────── */}
+      {isAdmin && (
+        <section className="rounded-lg border border-border bg-background-secondary p-4">
+          <h2 className="mb-3 text-base font-semibold text-foreground">{t("groups.title")}</h2>
+          {/* Group summary chips */}
+          <div className="mb-4 flex flex-wrap gap-2">
+            {groups.data?.map((g) => (
+              <span
+                key={g.group ?? "__none"}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs text-foreground"
+              >
+                <span className="font-medium">{g.group ?? t("groups.ungrouped")}</span>
+                <span className="text-foreground-muted">
+                  {g.active}/{g.total}
+                </span>
+              </span>
+            ))}
+          </div>
+          {/* Per-source group assignment */}
+          <ul className="flex flex-col divide-y divide-border">
+            {sources.data?.map((src) => {
+              const current = src.group_name ?? "";
+              const draft = src.id in groupEdits ? groupEdits[src.id]! : current;
+              const changed = draft !== current;
+              return (
+                <li key={src.id} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm text-foreground">
+                      {src.name}
+                      {!src.is_enabled && (
+                        <span className="ms-2 text-xs text-foreground-muted">({t("groups.disabled")})</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-foreground-muted">{src.adapter}</p>
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-2">
+                    <input
+                      value={draft}
+                      placeholder={t("groups.ungrouped")}
+                      onChange={(e) =>
+                        setGroupEdits((prev) => ({ ...prev, [src.id]: e.target.value }))
+                      }
+                      className="w-44 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                    <button
+                      type="button"
+                      disabled={!changed || setGroup.isPending}
+                      onClick={() => setGroup.mutate({ id: src.id, group: draft })}
+                      className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-dark disabled:opacity-30"
+                    >
+                      {t("actions.save")}
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

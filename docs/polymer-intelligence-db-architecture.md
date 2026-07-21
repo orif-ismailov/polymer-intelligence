@@ -79,6 +79,7 @@ CREATE TABLE sources (
     config          jsonb NOT NULL DEFAULT '{}',   -- валидируется config_schema адаптера:
                                                    -- селекторы, маппинг колонок, расписание
     country         char(2),                       -- 'UZ', 'CN', 'RU'
+    group_name      text,                          -- операторская группа источников (миграция 0016, Фаза 8f-2)
     is_enabled      boolean NOT NULL DEFAULT true,
     last_test_ok_at timestamptz,                   -- конструктор: включение запрещено,
                                                    -- пока NULL (тест ни разу не прошёл)

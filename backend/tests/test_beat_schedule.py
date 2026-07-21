@@ -40,7 +40,8 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         # Phase 6: hourly no-code adapter fetch drivers
         "html_table_fetch",
         "llm_page_fetch",
-        "rss_fetch",
+        # Phase 8f-2: RSS is now dispatched dynamically at a configurable interval
+        "news_fetch_dispatch",
         "check_source_health",
         # Phase 5 (05-02): userbot heartbeat health check — ROADMAP SC#1 liveness
         "check_userbot_health",

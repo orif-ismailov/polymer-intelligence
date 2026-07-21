@@ -690,6 +690,11 @@
       "empty": "没有待审核的新闻",
       "approve": "批准",
       "reject": "拒绝"
+    },
+    "groups": {
+      "title": "来源分组",
+      "ungrouped": "未分组",
+      "disabled": "已禁用"
     }
   }
 }

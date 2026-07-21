@@ -705,6 +705,11 @@
       "empty": "Moderatsiyada yangilik yo‘q",
       "approve": "Tasdiqlash",
       "reject": "Rad etish"
+    },
+    "groups": {
+      "title": "Manba guruhlari",
+      "ungrouped": "Guruhsiz",
+      "disabled": "o‘chirilgan"
     }
   }
 }

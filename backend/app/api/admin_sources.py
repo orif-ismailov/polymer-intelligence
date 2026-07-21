@@ -25,11 +25,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin
+from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.config import settings
 from app.core.db import get_db
 from app.ingest.registry import list_adapters
 from app.models.staff import StaffUser
+from app.schemas.admin_settings import SourceBrief, SourceGroup, SourceGroupUpdate
+from app.services import source_service
 from parsing.budget import per_source_spend
 
 router = APIRouter(prefix="/admin", tags=["admin-sources"])
@@ -380,3 +382,37 @@ def get_llm_spend(
         by_model=by_model,
         assumed_rates_usd_per_mtok=_RATE_USD_PER_MTOK,
     )
+
+
+# ── Source groups (Phase 8f-2) ─────────────────────────────────────────────────────
+# Operators organize sources into named groups from the dashboard admin panel.
+
+
+@router.get("/source-groups", response_model=list[SourceGroup], summary="List source groups")
+def list_source_groups(
+    db: Session = Depends(get_db),
+    _user: StaffUser = Depends(require_analyst_or_admin),
+) -> list[SourceGroup]:
+    return [SourceGroup.model_validate(g) for g in source_service.list_source_groups(db)]
+
+
+@router.get("/sources/brief", response_model=list[SourceBrief], summary="List sources (identity + group)")
+def list_sources_brief(
+    db: Session = Depends(get_db),
+    _user: StaffUser = Depends(require_analyst_or_admin),
+) -> list[SourceBrief]:
+    return [SourceBrief.model_validate(s) for s in source_service.list_sources_brief(db)]
+
+
+@router.put("/sources/{source_id}/group", response_model=SourceBrief, summary="Assign a source's group")
+def set_source_group(
+    source_id: int,
+    body: SourceGroupUpdate,
+    db: Session = Depends(get_db),
+    _user: StaffUser = Depends(require_admin),
+) -> SourceBrief:
+    if not source_service.set_source_group(db, source_id, body.group):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
+    db.commit()
+    source = next((s for s in source_service.list_sources_brief(db) if s["id"] == source_id), None)
+    return SourceBrief.model_validate(source)

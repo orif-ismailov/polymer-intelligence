@@ -68,12 +68,14 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "llm_page_fetch",
         "schedule": crontab(minute=30),
     },
-    # ── RSS feed extraction: hourly at minute 45 ─────────────────────────────
-    # Fetches enabled rss sources; unstructured headline/summary text routes to
-    # the LLM extractor (parse_telegram_item), gated by the daily token budget.
-    "rss_fetch": {
-        "task": "rss_fetch",
-        "schedule": crontab(minute=45),
+    # ── News RSS refresh dispatcher: every minute ────────────────────────────
+    # Enqueues rss_fetch only when the operator-configurable news_refresh_interval_minutes
+    # (app_settings, default 60) has elapsed since the freshest enabled-RSS last_fetch_at.
+    # Replaces the old fixed hourly rss_fetch entry so the scan cadence is runtime-tunable
+    # from the dashboard admin panel (Phase 8f-2).
+    "news_fetch_dispatch": {
+        "task": "news_fetch_dispatch",
+        "schedule": crontab(minute="*"),
     },
     # ── Source health check: every 5 minutes ─────────────────────────────────
     "check_source_health": {

@@ -313,6 +313,21 @@ class TestSettingsDb:
         with _open(seeded_news) as s, _pytest.raises(KeyError):
             settings_service.get(s, "does_not_exist")
 
+    def test_int_setting_clamped(self, seeded_news: sa.Engine) -> None:
+        from app.services import settings_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            assert settings_service.get(s, "news_refresh_interval_minutes") == 60  # default
+            settings_service.set_many(s, {"news_refresh_interval_minutes": 3}, staff_user_id=None)
+            s.commit()
+            assert settings_service.get(s, "news_refresh_interval_minutes") == 5  # clamped to min
+            settings_service.set_many(s, {"news_refresh_interval_minutes": "120"}, staff_user_id=None)
+            s.commit()
+            assert settings_service.get(s, "news_refresh_interval_minutes") == 120  # string coerced
+            # reset for isolation
+            settings_service.set_many(s, {"news_refresh_interval_minutes": 60}, staff_user_id=None)
+            s.commit()
+
 
 @_requires_real_db
 class TestApprovalDb:
@@ -385,3 +400,54 @@ class TestBreakingNewsDb:
 
             again = report_service.pending_breaking_news(s, minutes=180)
         assert not any("Shurtan" in str(p["card"]["headline"]) for p in again)  # type: ignore[index]
+
+
+@_requires_real_db
+class TestRssFetchDueDb:
+    def test_due_when_never_fetched_then_respects_interval(self, seeded_news: sa.Engine) -> None:
+        import datetime as _dt  # noqa: PLC0415
+
+        from app.tasks.ingest_rss import rss_fetch_due  # noqa: PLC0415
+
+        # seeded rss sources 901/902 start with last_fetch_at = NULL → always due
+        with _open(seeded_news) as s:
+            assert rss_fetch_due(s, 60) is True
+
+            now = _dt.datetime.now(tz=_dt.UTC)
+            s.execute(sa.text("UPDATE sources SET last_fetch_at = :t WHERE id IN (901, 902)"), {"t": now})
+            s.commit()
+            assert rss_fetch_due(s, 60) is False  # fetched just now → not due
+
+            stale = now - _dt.timedelta(minutes=90)
+            s.execute(sa.text("UPDATE sources SET last_fetch_at = :t WHERE id IN (901, 902)"), {"t": stale})
+            s.commit()
+            assert rss_fetch_due(s, 60) is True  # 90 min old, interval 60 → due
+            assert rss_fetch_due(s, 120) is False  # interval 120 → not yet
+
+
+@_requires_real_db
+class TestSourceGroupsDb:
+    def test_assign_list_and_clear(self, seeded_news: sa.Engine) -> None:
+        from app.services import source_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            assert source_service.set_source_group(s, 901, "Uzbek news") is True
+            assert source_service.set_source_group(s, 902, "Global news") is True
+            s.commit()
+
+            groups = {g["group"]: g for g in source_service.list_source_groups(s)}
+            assert groups["Uzbek news"]["total"] == 1
+            assert groups["Global news"]["active"] == 1
+
+            brief = {b["id"]: b for b in source_service.list_sources_brief(s)}
+            assert brief[901]["group_name"] == "Uzbek news"
+
+            assert source_service.set_source_group(s, 901, "  ") is True  # blank clears
+            s.commit()
+            assert next(b for b in source_service.list_sources_brief(s) if b["id"] == 901)["group_name"] is None
+
+    def test_missing_source_returns_false(self, seeded_news: sa.Engine) -> None:
+        from app.services import source_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            assert source_service.set_source_group(s, 99999, "X") is False

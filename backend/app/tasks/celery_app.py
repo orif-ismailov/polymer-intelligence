@@ -110,6 +110,7 @@ celery_app.conf.update(
         "llm_page_fetch": {"queue": "ingest"},
         "html_table_fetch": {"queue": "ingest"},
         "rss_fetch": {"queue": "ingest"},
+        "news_fetch_dispatch": {"queue": "ingest"},
         "check_source_health": {"queue": "ingest"},
         "check_userbot_health": {"queue": "ingest"},
         "app.tasks.parse.*": {"queue": "parse"},

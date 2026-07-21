@@ -43,3 +43,28 @@ class PendingNewsItem(BaseModel):
     country: str | None = None
     source_name: str | None = None
     published_at: str | None = None
+
+
+class SourceGroup(BaseModel):
+    """A named source group with its member counts (Phase 8f-2)."""
+
+    group: str | None = None  # None = ungrouped
+    total: int
+    active: int
+
+
+class SourceBrief(BaseModel):
+    """Identity + group for a source (group-assignment UI)."""
+
+    id: int
+    name: str
+    adapter: str
+    country: str | None = None
+    group_name: str | None = None
+    is_enabled: bool
+
+
+class SourceGroupUpdate(BaseModel):
+    """Assign or clear a source's group."""
+
+    group: str | None = None

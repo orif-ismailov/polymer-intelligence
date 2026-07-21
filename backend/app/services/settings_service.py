@@ -26,8 +26,8 @@ from app.core.config import settings as _config
 from app.core.time import utcnow
 from app.models.app_settings import AppSetting
 
-# A setting value is always a bool or a string in the current spec set.
-SettingValue = bool | str
+# A setting value is a bool, string, or integer in the current spec set.
+SettingValue = bool | str | int
 
 # News extraction prompt version default — kept in sync with parsing.news_extractor
 # (imported lazily to avoid building the Anthropic client at settings-import time).
@@ -37,9 +37,11 @@ _DEFAULT_NEWS_PROMPT_VERSION = "v2"
 @dataclass(frozen=True)
 class SettingSpec:
     key: str
-    type: str  # "bool" | "str"
+    type: str  # "bool" | "str" | "int"
     default: SettingValue
     label: str
+    min: int | None = None
+    max: int | None = None
 
 
 def _specs() -> tuple[SettingSpec, ...]:
@@ -49,6 +51,10 @@ def _specs() -> tuple[SettingSpec, ...]:
         SettingSpec("report_auto_publish", "bool", False, "Auto-publish generated reports"),
         SettingSpec("llm_extract_model", "str", _config.LLM_EXTRACT_MODEL, "News AI model"),
         SettingSpec("news_prompt_version", "str", _DEFAULT_NEWS_PROMPT_VERSION, "News prompt version"),
+        SettingSpec(
+            "news_refresh_interval_minutes", "int", 60, "News refresh interval (minutes)",
+            min=5, max=1440,
+        ),
     )
 
 
@@ -63,6 +69,16 @@ def _coerce(spec: SettingSpec, value: object) -> SettingValue:
         if isinstance(value, str):
             return value.strip().lower() in {"1", "true", "yes", "on"}
         return bool(value)
+    if spec.type == "int":
+        try:
+            number = round(float(str(value).strip()))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{spec.key} must be an integer") from exc
+        if spec.min is not None:
+            number = max(number, spec.min)
+        if spec.max is not None:
+            number = min(number, spec.max)
+        return number
     # str
     text = str(value).strip()
     if not text:
