@@ -23,7 +23,8 @@
       "prices": "قیمت‌ها",
       "adminProducts": "محصولات",
       "adminUsers": "کاربران",
-      "offerRequests": "درخواست پیشنهاد"
+      "offerRequests": "درخواست پیشنهاد",
+      "newsAdmin": "اخبار (مدیریت)"
     },
     "guest": "مهمان"
   },
@@ -656,5 +657,39 @@
     "approve": "تأیید و ارسال به فروشنده",
     "reject": "رد",
     "notePlaceholder": "توضیح (اختیاری)"
+  },
+  "newsAdmin": {
+    "title": "مدیریت اخبار",
+    "subtitle": "آمار، تنظیمات هوش مصنوعی و نظارت بر اخبار",
+    "error": "بارگیری نشد",
+    "loading": "در حال بارگذاری…",
+    "stats": {
+      "totalSources": "کل منابع",
+      "activeSources": "فعال",
+      "failedSources": "دارای خطا",
+      "lastScan": "آخرین اسکن",
+      "lastPublished": "آخرین گزارش",
+      "pendingAi": "در انتظار هوش مصنوعی",
+      "todayNews": "اخبار امروز",
+      "aiStatus": "وضعیت هوش مصنوعی",
+      "on": "روشن",
+      "off": "خاموش",
+      "never": "—"
+    },
+    "actions": {
+      "runParser": "اجرای پارسر",
+      "generateReport": "ایجاد گزارش",
+      "save": "ذخیره"
+    },
+    "settings": {
+      "title": "تنظیمات",
+      "default": "پیش‌فرض"
+    },
+    "approval": {
+      "title": "اخبار در انتظار تأیید",
+      "empty": "خبری برای تأیید نیست",
+      "approve": "تأیید",
+      "reject": "رد"
+    }
   }
 }

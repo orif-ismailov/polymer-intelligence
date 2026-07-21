@@ -23,7 +23,8 @@
       "prices": "Fiyatlar",
       "adminProducts": "Ürünler",
       "adminUsers": "Kullanıcılar",
-      "offerRequests": "Teklif talepleri"
+      "offerRequests": "Teklif talepleri",
+      "newsAdmin": "Haberler (yönetici)"
     },
     "guest": "Misafir"
   },
@@ -671,5 +672,39 @@
     "approve": "Onayla ve satıcıya gönder",
     "reject": "Reddet",
     "notePlaceholder": "Not (isteğe bağlı)"
+  },
+  "newsAdmin": {
+    "title": "Haber Yönetimi",
+    "subtitle": "İstatistikler, AI ayarları ve haber moderasyonu",
+    "error": "Yüklenemedi",
+    "loading": "Yükleniyor…",
+    "stats": {
+      "totalSources": "Toplam kaynak",
+      "activeSources": "Aktif",
+      "failedSources": "Hatalı",
+      "lastScan": "Son tarama",
+      "lastPublished": "Son rapor",
+      "pendingAi": "AI bekliyor",
+      "todayNews": "Bugünkü haberler",
+      "aiStatus": "AI durumu",
+      "on": "Açık",
+      "off": "Kapalı",
+      "never": "—"
+    },
+    "actions": {
+      "runParser": "Ayrıştırıcıyı çalıştır",
+      "generateReport": "Rapor oluştur",
+      "save": "Kaydet"
+    },
+    "settings": {
+      "title": "Ayarlar",
+      "default": "varsayılan"
+    },
+    "approval": {
+      "title": "Onay bekleyen haberler",
+      "empty": "Onay bekleyen haber yok",
+      "approve": "Onayla",
+      "reject": "Reddet"
+    }
   }
 }

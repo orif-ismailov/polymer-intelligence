@@ -23,7 +23,8 @@
       "prices": "Narxlar",
       "adminProducts": "Mahsulotlar",
       "adminUsers": "Foydalanuvchilar",
-      "offerRequests": "Taklif so'rovlari"
+      "offerRequests": "Taklif so'rovlari",
+      "newsAdmin": "Yangiliklar (admin)"
     },
     "guest": "Mehmon"
   },
@@ -671,5 +672,39 @@
     "approve": "Tasdiqlash va sotuvchiga yuborish",
     "reject": "Rad etish",
     "notePlaceholder": "Izoh (ixtiyoriy)"
+  },
+  "newsAdmin": {
+    "title": "Yangiliklar boshqaruvi",
+    "subtitle": "Statistika, AI sozlamalari va yangiliklar moderatsiyasi",
+    "error": "Yuklab bo‘lmadi",
+    "loading": "Yuklanmoqda…",
+    "stats": {
+      "totalSources": "Jami manbalar",
+      "activeSources": "Faol",
+      "failedSources": "Xatolik bilan",
+      "lastScan": "So‘nggi skanerlash",
+      "lastPublished": "So‘nggi hisobot",
+      "pendingAi": "AI kutmoqda",
+      "todayNews": "Bugungi yangiliklar",
+      "aiStatus": "AI holati",
+      "on": "Yoqilgan",
+      "off": "O‘chirilgan",
+      "never": "—"
+    },
+    "actions": {
+      "runParser": "Parserni ishga tushirish",
+      "generateReport": "Hisobot yaratish",
+      "save": "Saqlash"
+    },
+    "settings": {
+      "title": "Sozlamalar",
+      "default": "standart"
+    },
+    "approval": {
+      "title": "Moderatsiyadagi yangiliklar",
+      "empty": "Moderatsiyada yangilik yo‘q",
+      "approve": "Tasdiqlash",
+      "reject": "Rad etish"
+    }
   }
 }

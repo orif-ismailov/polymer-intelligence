@@ -23,7 +23,8 @@
       "prices": "价格",
       "adminProducts": "产品",
       "adminUsers": "用户",
-      "offerRequests": "报价请求"
+      "offerRequests": "报价请求",
+      "newsAdmin": "新闻（管理）"
     },
     "guest": "访客"
   },
@@ -656,5 +657,39 @@
     "approve": "批准并发送给卖方",
     "reject": "驳回",
     "notePlaceholder": "备注（可选）"
+  },
+  "newsAdmin": {
+    "title": "新闻管理",
+    "subtitle": "统计、AI 设置与新闻审核",
+    "error": "加载失败",
+    "loading": "加载中…",
+    "stats": {
+      "totalSources": "来源总数",
+      "activeSources": "活跃",
+      "failedSources": "失败",
+      "lastScan": "上次扫描",
+      "lastPublished": "最近报告",
+      "pendingAi": "待 AI 处理",
+      "todayNews": "今日新闻",
+      "aiStatus": "AI 状态",
+      "on": "已启用",
+      "off": "已禁用",
+      "never": "—"
+    },
+    "actions": {
+      "runParser": "立即运行解析",
+      "generateReport": "生成报告",
+      "save": "保存"
+    },
+    "settings": {
+      "title": "设置",
+      "default": "默认"
+    },
+    "approval": {
+      "title": "待审核新闻",
+      "empty": "没有待审核的新闻",
+      "approve": "批准",
+      "reject": "拒绝"
+    }
   }
 }
