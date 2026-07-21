@@ -459,6 +459,20 @@ def _one_line(text: str, limit: int) -> str:
     return collapsed if len(collapsed) <= limit else collapsed[: limit - 1].rstrip() + "…"
 
 
+def _render_section_briefs(sections: dict[str, object], briefs: dict[str, object]) -> list[str]:
+    """Render the AI-synthesized per-section brief — one cohesive paragraph per section
+    (🇺🇿/🏭/🌍), not a per-item list. [] when no usable brief (caller falls back to
+    compact headlines)."""
+    lines: list[str] = []
+    for key, header in _SECTION_HEADERS:
+        brief = str(briefs.get(key) or "").strip()
+        items = sections.get(key) if isinstance(sections, dict) else None
+        has_news = isinstance(items, list) and bool(items)
+        if brief and has_news:
+            lines += ["", header, brief]
+    return lines
+
+
 def _render_sections(sections: dict[str, object]) -> list[str]:
     """Balanced section rendering: per story a headline line + ONE short summary line,
     capped per section and deduped across sections. Informative but scannable — the full
@@ -648,7 +662,15 @@ def render_markdown(
         isinstance(v, list) and v for v in sections.values()
     )
     if has_sections:
-        lines += _render_sections(sections)  # type: ignore[arg-type]
+        # Prefer the AI-synthesized per-section brief (one paragraph each); fall back to
+        # compact headlines when the LLM brief is unavailable.
+        briefs = snapshot.get("briefs")
+        brief_lines = (
+            _render_section_briefs(sections, briefs)  # type: ignore[arg-type]
+            if isinstance(briefs, dict)
+            else []
+        )
+        lines += brief_lines or _render_sections(sections)  # type: ignore[arg-type]
     else:
         # Legacy path (pre-8c snapshots / tests): ranked top-news + excerpt fallback.
         top_news = snapshot.get("top_news")
@@ -861,7 +883,7 @@ def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
     try:
         resp = _client.messages.create(
             model=settings.LLM_REPORT_MODEL,
-            max_tokens=2048,
+            max_tokens=4096,  # v5 adds synthesized per-section briefs on top of summary/forecast
             system=prompt,
             messages=[{"role": "user", "content": json.dumps(snapshot, ensure_ascii=False)}],
         )
@@ -877,11 +899,14 @@ def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
         forecast = data.get("forecast") or {}
         if not isinstance(summary, dict) or not str(summary.get("ru", "")).strip():
             return None
+        briefs_raw = data.get("briefs") if isinstance(data.get("briefs"), dict) else {}
+        briefs = {k: str(briefs_raw.get(k, "")).strip() for k in ("uzbekistan", "producers", "global")}
         return {
             "summary": {k: str(summary.get(k, "")).strip() for k in _DIGEST_LANGS},
             "forecast": {k: str(forecast.get(k, "")).strip() for k in _DIGEST_LANGS}
             if isinstance(forecast, dict)
             else dict.fromkeys(_DIGEST_LANGS, ""),
+            "briefs": briefs,
         }
     except Exception:  # noqa: BLE001
         logger.warning("report_service.ai_digest_failed", exc_info=True)
@@ -919,6 +944,7 @@ def generate_report(db: Session, *, use_llm: bool = True, session: str = "mornin
         summary = digest["summary"]["ru"]
         forecast: str | None = digest["forecast"].get("ru") or None
         snapshot["i18n"] = digest
+        snapshot["briefs"] = digest.get("briefs") or {}  # per-section AI briefs for render
     else:
         summary = _rule_based_summary(snapshot)
         forecast = None

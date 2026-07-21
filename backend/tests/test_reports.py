@@ -141,6 +141,54 @@ class TestLocalMarket:
         assert "Биржа UZEX" not in out  # no exchange activity → that line is skipped
 
 
+class TestSectionBriefs:
+    def test_render_briefs_paragraph_per_section(self):
+        from app.services.report_service import _render_section_briefs
+
+        sections = {"uzbekistan": [{"headline": "x"}], "producers": [], "global": [{"headline": "y"}]}
+        briefs = {
+            "uzbekistan": "Узбекистан наращивает нефтехимические мощности.",
+            "producers": "",  # empty brief → skipped
+            "global": "Цены на смолы растут по всем маркам.",
+        }
+        out = "\n".join(_render_section_briefs(sections, briefs))
+        assert "🇺🇿 *Узбекистан*" in out and "Узбекистан наращивает" in out
+        assert "🌍 *Мировой рынок*" in out and "Цены на смолы растут" in out
+        assert "🏭" not in out  # producers: no news + empty brief → not shown
+
+    def test_render_markdown_prefers_briefs_over_item_list(self):
+        from app.services.report_service import render_markdown
+
+        snap = {
+            "date": "2026-07-21", "products": [],
+            "sections": {"uzbekistan": [{
+                "headline": "Проект полимеров из угля", "summary": "детали проекта",
+                "importance": "high", "market_impact": "positive",
+                "source_name": "Uz", "related_products": [],
+            }]},
+            "briefs": {"uzbekistan": "Синтез: Узбекистан развивает производство полимеров.",
+                       "producers": "", "global": ""},
+        }
+        md = render_markdown(snap, "Резюме.")
+        assert "Синтез: Узбекистан развивает производство полимеров." in md  # the AI brief
+        assert "Проект полимеров из угля" not in md  # per-item headline list NOT used when briefs exist
+
+    def test_render_markdown_falls_back_to_headlines_without_briefs(self):
+        from app.services.report_service import render_markdown
+
+        snap = {
+            "date": "2026-07-21", "products": [],
+            "sections": {"uzbekistan": [{
+                "headline": "Проект полимеров из угля", "summary": "детали",
+                "importance": "high", "market_impact": "positive", "source_name": "Uz",
+                "related_products": ["PP"],
+            }]},
+            # no "briefs" → compact headline fallback
+        }
+        md = render_markdown(snap, "Резюме.")
+        assert "Проект полимеров из угля" in md  # falls back to the compact headline list
+
+
 class TestSessionMeta:
     def test_morning_and_evening_map_to_kind_and_title(self):
         from app.models.enums import ReportKind
