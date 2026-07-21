@@ -88,7 +88,7 @@ interface NewsStats {
   today_published_news: number;
   ai_enabled: boolean;
   ai_status: "on" | "off" | "error";
-  ai_errors_24h: number;
+  ai_errors_recent: number;
   ai_last_error: string | null;
   budget_used_pct: number;
 }
@@ -268,7 +268,7 @@ export default function NewsAdminPage() {
         <div className="rounded-md border border-red-400/40 bg-red-500/10 px-4 py-3">
           <p className="text-sm font-semibold text-red-400">
             {t("aiError.title")}
-            {s.ai_errors_24h > 0 ? ` · ${s.ai_errors_24h} (24h)` : ""}
+            {s.ai_errors_recent > 0 ? ` · ${s.ai_errors_recent}` : ""}
           </p>
           <p className="mt-1 text-sm text-foreground-muted">{t("aiError.hint")}</p>
           {s.ai_last_error && (

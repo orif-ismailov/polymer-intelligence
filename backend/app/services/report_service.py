@@ -1081,10 +1081,10 @@ def news_admin_stats(db: Session, *, ai_enabled: bool) -> dict[str, object]:
                      WHERE kind = 'news' AND event_at >= date_trunc('day', now())) AS today_published_news,
                   (SELECT count(*) FROM parse_runs
                      WHERE status = 'error' AND parser LIKE '%extract%'
-                       AND created_at >= now() - INTERVAL '24 hours') AS ai_errors_24h,
+                       AND created_at >= now() - INTERVAL '30 minutes') AS ai_errors_recent,
                   (SELECT left(error, 300) FROM parse_runs
                      WHERE status = 'error' AND parser LIKE '%extract%'
-                       AND created_at >= now() - INTERVAL '24 hours'
+                       AND created_at >= now() - INTERVAL '30 minutes'
                      ORDER BY created_at DESC LIMIT 1) AS ai_last_error
                 """
             )
@@ -1102,7 +1102,9 @@ def news_admin_stats(db: Session, *, ai_enabled: bool) -> dict[str, object]:
     except Exception:  # noqa: BLE001
         budget_pct = 0.0
 
-    ai_errors = int(row["ai_errors_24h"] or 0)
+    # "error" = failing RIGHT NOW (recent window), not "failed at some point today".
+    # An old outage's errors age out of the window once the extractor recovers.
+    ai_errors = int(row["ai_errors_recent"] or 0)
     if not ai_enabled:
         ai_status = "off"
     elif ai_errors > 0:
@@ -1120,7 +1122,7 @@ def news_admin_stats(db: Session, *, ai_enabled: bool) -> dict[str, object]:
         "today_published_news": int(row["today_published_news"] or 0),
         "ai_enabled": ai_enabled,
         "ai_status": ai_status,
-        "ai_errors_24h": ai_errors,
+        "ai_errors_recent": ai_errors,
         "ai_last_error": row["ai_last_error"],
         "budget_used_pct": budget_pct,
     }

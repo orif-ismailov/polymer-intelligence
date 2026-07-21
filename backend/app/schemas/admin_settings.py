@@ -34,7 +34,7 @@ class NewsStats(BaseModel):
     today_published_news: int
     ai_enabled: bool
     ai_status: str  # "on" | "off" | "error"
-    ai_errors_24h: int = 0
+    ai_errors_recent: int = 0  # extractor errors in the last 30 min (currently-failing signal)
     ai_last_error: str | None = None
     budget_used_pct: float = 0.0
 
