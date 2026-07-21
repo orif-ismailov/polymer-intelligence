@@ -1,0 +1,46 @@
+# systemd unit for the standalone UZEX offer-detail backfill worker.
+#
+# Install (on the data-DB host, ONE instance only):
+#   sudo cp uzex-backfill.service.example /etc/systemd/system/uzex-backfill.service
+#   sudoedit /etc/systemd/system/uzex-backfill.service   # set the paths + DATABASE_URL
+#   sudo systemctl daemon-reload && sudo systemctl enable --now uzex-backfill
+#
+# It is completely independent of the main app's units — deploy/restart the app
+# freely without touching this.
+
+[Unit]
+Description=UZEX offer-detail archive backfill worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# A dedicated venv built from workers/uzex_backfill/requirements.txt
+WorkingDirectory=/opt/imex/workers
+ExecStart=/opt/imex/workers/.venv/bin/python -m uzex_backfill run
+# --- configuration (edit these) ---
+Environment=ENV=prod
+Environment=DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DBNAME
+Environment=WORKER_NAME=uzex_offer_detail
+Environment=RATE_LIMIT_RPS=1.0
+Environment=MIN_ID=1
+Environment=MAX_ID=400000
+Environment=USER_AGENT=IMEX-Research/1.0 (+orifismailov08@gmail.com)
+
+# Graceful stop: the worker catches SIGTERM, finishes the in-flight request,
+# commits the checkpoint, and exits 0. Give it a little time.
+KillSignal=SIGTERM
+TimeoutStopSec=60
+
+# Resilience: the worker itself never crashes on network/HTTP errors, but if the
+# process dies for any other reason, restart and resume from the checkpoint.
+Restart=on-failure
+RestartSec=30
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
