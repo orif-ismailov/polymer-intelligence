@@ -403,10 +403,14 @@ _REPORT_SECTIONS: tuple[tuple[str, str], ...] = (
     ("producers", "producers"),
 )
 _SECTION_ITEM_CAP = 10
+# Off-domain themes to keep out of the petrochemical report even if a stray item is
+# classified relevant (belt-and-suspenders on top of prompt v3's oil exclusion).
+_OFF_DOMAIN_CATEGORIES = frozenset({"oil", "natural_gas", "energy", "refineries", "fuels"})
 
 
 def _snapshot_sections(db: Session) -> dict[str, object]:
-    """Build the 🇺🇿 Uzbekistan / 🌍 Global / 🏭 Producer sections (≤10 cards each)."""
+    """Build the 🇺🇿 Uzbekistan / 🏭 Producer / 🌍 Global sections (≤10 cards each),
+    dropping any off-domain (oil/energy) items that slipped through classification."""
     from app.services import news_service  # noqa: PLC0415 — avoid import cycle at module load
 
     out: dict[str, object] = {}
@@ -414,9 +418,13 @@ def _snapshot_sections(db: Session) -> dict[str, object]:
         cards = news_service.list_news_articles(
             db, days=1, scope=scope, limit=_SECTION_ITEM_CAP, lang="ru"
         )
+        kept: list[dict[str, object]] = []
         for card in cards:
+            if str(card.get("category") or "").lower() in _OFF_DOMAIN_CATEGORIES:
+                continue
             card.pop("i18n", None)  # raw ru/uz/en variants aren't needed in the stored snapshot
-        out[key] = cards
+            kept.append(card)
+        out[key] = kept
     return out
 
 
@@ -431,41 +439,51 @@ def _merged_suffix(article: object) -> str:
     return ""
 
 
+# Dedup/display order: local first, then global producer news, then the rest of the world.
+# Ordering matters — a story is rendered in the FIRST section that claims it, so it never
+# repeats across sections.
 _SECTION_HEADERS: tuple[tuple[str, str], ...] = (
-    ("uzbekistan", "🇺🇿 *Рынок Узбекистана*"),
+    ("uzbekistan", "🇺🇿 *Узбекистан*"),
+    ("producers", "🏭 *Производители*"),
     ("global", "🌍 *Мировой рынок*"),
-    ("producers", "🏭 *Новости производителей*"),
 )
 _IMP_DOT = {"high": "🔴", "medium": "🟡", "low": "⚪"}
 _IMPACT_ARROW = {"positive": "📈", "negative": "📉", "neutral": "➖"}
+_SECTION_RENDER_CAP = 6  # headlines per section in the digest (detail is on the News card)
 
 
 def _render_sections(sections: dict[str, object]) -> list[str]:
-    """Render the three mandated report sections as markdown card blocks."""
+    """Compact section rendering: ONE line per story, capped per section, deduped across
+    sections. The full summary/analysis/recommendation live on the per-article News card;
+    the report is a scannable overview, not a wall of text."""
     lines: list[str] = []
+    seen: set[str] = set()  # dedup by normalized headline across all sections
     for key, header in _SECTION_HEADERS:
         items = sections.get(key)
-        if not isinstance(items, list) or not items:
+        if not isinstance(items, list):
             continue
-        lines += ["", header]
-        for n in items[:_SECTION_ITEM_CAP]:
+        rendered: list[str] = []
+        for n in items:
+            if len(rendered) >= _SECTION_RENDER_CAP:
+                break
             if not isinstance(n, dict):
                 continue
+            head = str(n.get("headline") or "").strip()
+            dedup_key = head.lower()[:60]
+            if not head or dedup_key in seen:
+                continue
+            seen.add(dedup_key)
             mark = _IMP_DOT.get(str(n.get("importance")), "⚪") + _IMPACT_ARROW.get(
                 str(n.get("market_impact")), ""
             )
-            head = str(n.get("headline") or "").strip()
             src = n.get("source_name") or "—"
-            lines.append(f"{mark} *{head}* — _{src}_{_merged_suffix(n)}")
-            summ = str(n.get("summary") or "").strip().replace("\n", " ")
-            if summ:
-                lines.append(summ if len(summ) <= 200 else summ[:197] + "…")
-            rec = str(n.get("recommendation") or "").strip()
-            if rec:
-                lines.append(f"💡 {rec}")
             prods = n.get("related_products")
+            tag = ""
             if isinstance(prods, list) and prods:
-                lines.append("📦 " + ", ".join(str(p) for p in prods[:6]))
+                tag = " [" + ", ".join(str(p) for p in prods[:4]) + "]"
+            rendered.append(f"{mark} {head} — _{src}_{_merged_suffix(n)}{tag}")
+        if rendered:
+            lines += ["", f"{header} ({len(rendered)})", *rendered]
     return lines
 
 
@@ -518,35 +536,40 @@ def _render_local_market(lm: dict[str, object]) -> list[str]:
     rates = _fx_rate_map(lm.get("fx"))
     if not rates and not (deals or quotes or offers):
         return []
-    lines: list[str] = ["", "🇺🇿 *Локальный рынок (UZEX / ЦБ РУз)*"]
+    lines: list[str] = ["", "🇺🇿 *Локальный рынок*"]
     bits = [f"{c} {rates[c]:,.0f}" for c in _FX_DISPLAY_CCY if c in rates]
     if bits:
-        lines.append("💱 Курс ЦБ (сум за 1): " + " · ".join(bits))
+        lines.append("💱 Курс ЦБ (сум): " + " · ".join(bits))
     if deals or quotes or offers:
         days = _as_int(lm.get("window_days")) or 7
+        # Counts only — the traded products on UZEX Deals are mostly fertilizer with noisy
+        # grade codes, off-domain for a polymer report, so we don't list them.
         lines.append(
-            f"🏛 Биржа UZEX ({days} дн.): сделок — {deals}, "
-            f"котировок — {quotes}, предложений — {offers}"
+            f"🏛 Биржа UZEX ({days} дн.): сделок — {deals} · "
+            f"котировок — {quotes} · предложений — {offers}"
         )
-        top = ex.get("top_products")
-        if isinstance(top, list):
-            for tp in top:
-                if isinstance(tp, dict):
-                    lines.append(f"• {tp.get('label', '—')} — {_as_int(tp.get('count'))}")
     return lines
 
 
 def _rule_based_summary(snapshot: dict[str, object]) -> str:
+    """Deterministic fallback summary — prices direction + news volume. Used only when the
+    LLM digest is unavailable; still useful (mentions the day's news, not just prices)."""
+    parts: list[str] = []
     products = snapshot.get("products") or []
-    if not isinstance(products, list) or not products:
-        return "Недостаточно данных для анализа за сегодня."
-    ups = sum(1 for p in products if float(p["delta"]) > 0)
-    downs = sum(1 for p in products if float(p["delta"]) < 0)
-    if ups > downs:
-        return "Цены по большинству позиций выросли за период."
-    if downs > ups:
-        return "Цены по большинству позиций снизились за период."
-    return "Цены в целом стабильны за период."
+    if isinstance(products, list) and products:
+        ups = sum(1 for p in products if float(p["delta"]) > 0)
+        downs = sum(1 for p in products if float(p["delta"]) < 0)
+        if ups > downs:
+            parts.append("Цены по большинству позиций выросли за период.")
+        elif downs > ups:
+            parts.append("Цены по большинству позиций снизились за период.")
+        else:
+            parts.append("Цены в целом стабильны за период.")
+    top_news = snapshot.get("top_news")
+    news_n = _as_int(top_news.get("count")) if isinstance(top_news, dict) else 0
+    if news_n:
+        parts.append(f"За сутки отобрано {news_n} ключевых нефтехимических новостей (см. разделы ниже).")
+    return " ".join(parts) if parts else "Недостаточно данных для анализа за сегодня."
 
 
 def render_markdown(
@@ -561,10 +584,10 @@ def render_markdown(
     lines: list[str] = [
         "📊 *Ежедневный обзор рынка*",
         f"_{snapshot.get('date', '')}_",
-        "",
-        "🇺🇿 *Цены — Узбекистан*",
     ]
+    # UZ polymer prices — only when the derived price layer has data (no "нет данных" noise).
     if isinstance(products, list) and products:
+        lines += ["", "🇺🇿 *Цены — Узбекистан*"]
         for p in products:
             delta = float(p["delta"])
             sign = "+" if delta >= 0 else ""
@@ -572,8 +595,6 @@ def render_markdown(
                 f"• {p['code']}: {float(p['price']):,.0f} {p['currency']}/{p['unit']} "
                 f"({sign}{delta:.0f})"
             )
-    else:
-        lines.append("• нет данных")
 
     # ── Локальный рынок: CBU FX + UZEX activity (Phase 8g) ────────────────────
     local_market = snapshot.get("local_market")

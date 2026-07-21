@@ -71,14 +71,27 @@ class TestRender:
             },
         }
         md = render_markdown(snap, "Резюме.")
-        assert "🇺🇿 *Рынок Узбекистана*" in md
+        assert "🇺🇿 *Узбекистан*" in md
         assert "🌍 *Мировой рынок*" in md
-        assert "🏭 *Новости производителей*" in md
+        assert "🏭 *Производители*" in md
         assert "Shurtan останавливает PP-линию" in md
-        assert "💡 Следите за ценами PP." in md  # recommendation rendered
+        assert "[PP]" in md  # products rendered inline (compact)
         assert "(+1)" in md  # merged_count=2 → +N suffix
+        # compact: the verbose per-card summary/recommendation are NOT in the digest
+        assert "Следите за ценами PP." not in md
+        assert "Ремонт сократит выпуск PP." not in md
         # legacy excerpt blocks are suppressed when sections are present
         assert "Мировая нефтехимия" not in md
+
+    def test_render_sections_dedupes_across_sections(self):
+        from app.services.report_service import _render_sections
+
+        # same story in two sections → rendered once (first section that claims it)
+        dup = self._card(headline="Салават остановлен")
+        out = "\n".join(_render_sections({
+            "uzbekistan": [dup], "producers": [dup], "global": [],
+        }))
+        assert out.count("Салават остановлен") == 1
 
     def test_render_telegram_digest_sections(self):
         from app.services.report_service import render_telegram_digest
@@ -88,7 +101,7 @@ class TestRender:
             "sections": {"uzbekistan": [self._card()], "global": [], "producers": []},
         }
         out = render_telegram_digest(snap)
-        assert "🇺🇿 *Рынок Узбекистана*" in out
+        assert "🇺🇿 *Узбекистан*" in out
         assert "Shurtan останавливает PP-линию" in out
         assert "Powered by IMEX AI" in out
 
@@ -103,17 +116,15 @@ class TestLocalMarket:
                 {"ccy": "EUR", "rate": 13670.38},
                 {"ccy": "RUB", "rate": 152.53},
             ],
-            "exchange": {
-                "deals": 42, "quotes": 376, "offers": 7,
-                "top_products": [{"label": "Карбамид Б", "count": 30}],
-            },
+            "exchange": {"deals": 42, "quotes": 376, "offers": 7, "top_products": []},
             "window_days": 7,
         }
         out = "\n".join(_render_local_market(lm))
         assert "Локальный рынок" in out
         assert "USD 11,960" in out and "EUR 13,670" in out
         assert "сделок — 42" in out and "котировок — 376" in out
-        assert "Карбамид Б — 30" in out
+        # noisy UZEX product breakdown is intentionally NOT rendered (fertilizer/off-domain)
+        assert "Карбамид" not in out
 
     def test_render_empty_when_no_data(self):
         from app.services.report_service import _render_local_market
