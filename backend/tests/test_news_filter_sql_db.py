@@ -465,3 +465,19 @@ class TestSourceGroupsDb:
 
         with _open(seeded_news) as s:
             assert source_service.set_source_group(s, 99999, "X") is False
+
+
+@_requires_real_db
+class TestNewsActivityDb:
+    def test_activity_lists_news_sources_with_yield(self, seeded_news: sa.Engine) -> None:
+        from app.services import source_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            names = source_service.enabled_rss_source_names(s)
+            activity = {a["name"]: a for a in source_service.news_source_activity(s)}
+        # the two seeded rss sources are enabled and news-relevant
+        assert {"UzPetroTG", "OilWorld"} <= set(names)
+        assert {"UzPetroTG", "OilWorld"} <= set(activity)
+        # each seeded ≥2 recent news signals → reflected in the 24h yield
+        assert int(activity["UzPetroTG"]["news_24h"]) >= 2  # type: ignore[arg-type]
+        assert int(activity["OilWorld"]["news_24h"]) >= 2  # type: ignore[arg-type]

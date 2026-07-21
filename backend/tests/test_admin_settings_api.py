@@ -137,12 +137,30 @@ class TestNewsOpsApi:
         assert resp.status_code == 200
         assert resp.json()["approval"] == "rejected"
 
-    def test_run_parser_enqueues(self) -> None:
-        with patch("app.tasks.celery_app.celery_app.send_task") as mock_send:
+    def test_run_parser_enqueues_and_lists_sources(self) -> None:
+        with patch("app.api.admin_settings.source_service.enabled_rss_source_names",
+                   return_value=["World Petro", "Uzbek Petro"]), \
+             patch("app.tasks.celery_app.celery_app.send_task") as mock_send:
             resp = _client().post("/api/v1/admin/news/run-parser")
         assert resp.status_code == 200, resp.text
-        assert resp.json()["enqueued"] == ["rss_fetch"]
+        body = resp.json()
+        assert body["enqueued"] == ["rss_fetch"]
+        assert body["sources"] == ["World Petro", "Uzbek Petro"]
+        assert body["count"] == 2
         mock_send.assert_called_once()
+
+    def test_activity(self) -> None:
+        act = [{
+            "id": 1, "name": "World Petro", "adapter": "rss", "group_name": "Global",
+            "is_enabled": True, "last_fetch_at": None, "last_success_at": None,
+            "consecutive_failures": 0, "raw_24h": 5, "news_24h": 3,
+        }]
+        with patch("app.api.admin_settings.source_service.news_source_activity", return_value=act):
+            resp = _client().get("/api/v1/admin/news/activity")
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body[0]["name"] == "World Petro"
+        assert body[0]["raw_24h"] == 5 and body[0]["news_24h"] == 3
 
 
 class TestSourceGroupsApi:

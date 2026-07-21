@@ -72,3 +72,26 @@ class SourceGroupUpdate(BaseModel):
     """Assign or clear a source's group."""
 
     group: str | None = None
+
+
+class SourceActivity(BaseModel):
+    """Per-source scan status + 24h yield for the news activity panel (Phase 8g)."""
+
+    id: int
+    name: str
+    adapter: str
+    group_name: str | None = None
+    is_enabled: bool
+    last_fetch_at: datetime.datetime | None = None
+    last_success_at: datetime.datetime | None = None
+    consecutive_failures: int
+    raw_24h: int
+    news_24h: int
+
+
+class RunParserResult(BaseModel):
+    """What a 'Run parser now' click enqueued, and which sources it will scan."""
+
+    enqueued: list[str]
+    sources: list[str]
+    count: int

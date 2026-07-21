@@ -710,6 +710,20 @@
       "title": "Manba guruhlari",
       "ungrouped": "Guruhsiz",
       "disabled": "o‘chirilgan"
+    },
+    "activity": {
+      "title": "Parsing faolligi",
+      "scanning": "Skanerlash boshlandi",
+      "noSources": "Yoqilgan RSS manbalari yo‘q",
+      "empty": "Yangilik manbalari yo‘q",
+      "refresh": "Yangilash",
+      "source": "Manba",
+      "lastScan": "Skan",
+      "lastSuccess": "Muvaffaqiyat",
+      "fails": "Xatolar",
+      "raw": "Yozuvlar 24s",
+      "news": "Yangiliklar 24s",
+      "hint": "Natijalar ishchilar qayta ishlagach paydo bo‘ladi (avtomatik yangilanadi)"
     }
   }
 }

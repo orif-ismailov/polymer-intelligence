@@ -40,6 +40,25 @@ interface SourceGroup {
   active: number;
 }
 
+interface SourceActivity {
+  id: number;
+  name: string;
+  adapter: string;
+  group_name: string | null;
+  is_enabled: boolean;
+  last_fetch_at: string | null;
+  last_success_at: string | null;
+  consecutive_failures: number;
+  raw_24h: number;
+  news_24h: number;
+}
+
+interface RunParserResult {
+  enqueued: string[];
+  sources: string[];
+  count: number;
+}
+
 interface NewsStats {
   total_sources: number;
   active_sources: number;
@@ -83,6 +102,11 @@ export default function NewsAdminPage() {
     queryKey: ["news-pending"],
     queryFn: () => apiFetch<PendingNewsItem[]>("/admin/news/pending"),
   });
+  const activity = useQuery<SourceActivity[]>({
+    queryKey: ["news-activity"],
+    queryFn: () => apiFetch<SourceActivity[]>("/admin/news/activity"),
+    refetchInterval: 10_000, // keep the "what's happening" view live as workers complete
+  });
   const settings = useQuery<SettingItem[]>({
     queryKey: ["admin-settings"],
     queryFn: () => apiFetch<SettingItem[]>("/admin/settings"),
@@ -118,9 +142,17 @@ export default function NewsAdminPage() {
       invalidate(["admin-settings", "news-stats"]);
     },
   });
+  const [runMsg, setRunMsg] = useState<string | null>(null);
   const runParser = useMutation({
-    mutationFn: () => apiFetch("/admin/news/run-parser", { method: "POST" }),
-    onSuccess: () => invalidate(["news-stats"]),
+    mutationFn: () => apiFetch<RunParserResult>("/admin/news/run-parser", { method: "POST" }),
+    onSuccess: (res) => {
+      setRunMsg(
+        res.count > 0
+          ? `${t("activity.scanning")} (${res.count}): ${res.sources.join(", ")}`
+          : t("activity.noSources"),
+      );
+      invalidate(["news-stats", "news-activity"]);
+    },
   });
   const generateReport = useMutation({
     mutationFn: () => apiFetch("/admin/reports/generate", { method: "POST" }),
@@ -202,6 +234,87 @@ export default function NewsAdminPage() {
           tone={s ? (s.ai_enabled ? "accent" : "muted") : "default"}
         />
       </div>
+
+      {/* Run-parser feedback: which sources the scan hit */}
+      {runMsg && (
+        <div className="rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm text-foreground">
+          {runMsg}
+        </div>
+      )}
+
+      {/* ── Scan activity ──────────────────────────────────────────────────── */}
+      <section className="rounded-lg border border-border bg-background-secondary p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-foreground">{t("activity.title")}</h2>
+          <button
+            type="button"
+            onClick={() => activity.refetch()}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background-tertiary"
+          >
+            <RefreshCw size={13} className={activity.isFetching ? "animate-spin" : ""} />
+            {t("activity.refresh")}
+          </button>
+        </div>
+        {activity.data && activity.data.length === 0 && (
+          <p className="text-sm text-foreground-muted">{t("activity.empty")}</p>
+        )}
+        {activity.data && activity.data.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-foreground-muted">
+                  <th className="pb-2 pe-3 font-medium">{t("activity.source")}</th>
+                  <th className="pb-2 pe-3 font-medium">{t("activity.lastScan")}</th>
+                  <th className="pb-2 pe-3 font-medium">{t("activity.lastSuccess")}</th>
+                  <th className="pb-2 pe-3 text-right font-medium">{t("activity.fails")}</th>
+                  <th className="pb-2 pe-3 text-right font-medium">{t("activity.raw")}</th>
+                  <th className="pb-2 text-right font-medium">{t("activity.news")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {activity.data.map((a) => {
+                  const dot = !a.is_enabled
+                    ? "bg-foreground-muted"
+                    : a.consecutive_failures > 0
+                      ? "bg-red-400"
+                      : a.last_success_at
+                        ? "bg-accent"
+                        : "bg-amber-400";
+                  return (
+                    <tr key={a.id} className="text-foreground">
+                      <td className="py-2 pe-3">
+                        <span className="flex items-center gap-2">
+                          <span className={`h-2 w-2 flex-shrink-0 rounded-full ${dot}`} aria-hidden="true" />
+                          <span className="min-w-0">
+                            <span className="block truncate">{a.name}</span>
+                            <span className="block text-xs text-foreground-muted">
+                              {a.adapter}
+                              {a.group_name ? ` · ${a.group_name}` : ""}
+                              {!a.is_enabled ? ` · ${t("groups.disabled")}` : ""}
+                            </span>
+                          </span>
+                        </span>
+                      </td>
+                      <td className="py-2 pe-3 text-foreground-muted">
+                        {fmtDateTime(a.last_fetch_at, t("stats.never"))}
+                      </td>
+                      <td className="py-2 pe-3 text-foreground-muted">
+                        {fmtDateTime(a.last_success_at, t("stats.never"))}
+                      </td>
+                      <td className={`py-2 pe-3 text-right ${a.consecutive_failures > 0 ? "text-red-400" : "text-foreground-muted"}`}>
+                        {a.consecutive_failures}
+                      </td>
+                      <td className="py-2 pe-3 text-right text-foreground-muted">{a.raw_24h}</td>
+                      <td className="py-2 text-right font-medium text-foreground">{a.news_24h}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p className="mt-2 text-xs text-foreground-muted">{t("activity.hint")}</p>
+          </div>
+        )}
+      </section>
 
       {/* ── Runtime settings (admin only) ──────────────────────────────────── */}
       {isAdmin && (

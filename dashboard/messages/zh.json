@@ -695,6 +695,20 @@
       "title": "来源分组",
       "ungrouped": "未分组",
       "disabled": "已禁用"
+    },
+    "activity": {
+      "title": "解析活动",
+      "scanning": "扫描已开始",
+      "noSources": "没有启用的 RSS 来源",
+      "empty": "没有新闻来源",
+      "refresh": "刷新",
+      "source": "来源",
+      "lastScan": "扫描",
+      "lastSuccess": "成功",
+      "fails": "失败",
+      "raw": "24小时条目",
+      "news": "24小时新闻",
+      "hint": "结果会随着工作进程处理各来源而出现（自动刷新）"
     }
   }
 }

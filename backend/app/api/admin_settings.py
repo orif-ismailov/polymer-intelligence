@@ -18,8 +18,14 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.db import get_db
 from app.models.staff import StaffUser
-from app.schemas.admin_settings import NewsStats, PendingNewsItem, SettingItem
-from app.services import news_service, report_service, settings_service
+from app.schemas.admin_settings import (
+    NewsStats,
+    PendingNewsItem,
+    RunParserResult,
+    SettingItem,
+    SourceActivity,
+)
+from app.services import news_service, report_service, settings_service, source_service
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +73,17 @@ def news_stats(
     return NewsStats.model_validate(report_service.news_admin_stats(db, ai_enabled=ai_enabled))
 
 
-@router.post("/news/run-parser", summary="Trigger a news scan/parse now")
+@router.post("/news/run-parser", response_model=RunParserResult, summary="Trigger a news scan/parse now")
 def run_parser(
+    db: Session = Depends(get_db),
     _user: StaffUser = Depends(require_admin),
-) -> dict[str, object]:
-    """Enqueue the RSS news fetch driver immediately (the 'Run Parser Now' button)."""
+) -> RunParserResult:
+    """Enqueue the RSS news fetch driver now (the 'Run Parser Now' button).
+
+    Returns which sources the scan will hit so the UI can show it immediately; results
+    stream into GET /admin/news/activity as the workers fetch + parse each source.
+    """
+    sources = source_service.enabled_rss_source_names(db)
     enqueued: list[str] = []
     try:
         from app.tasks.celery_app import celery_app  # noqa: PLC0415
@@ -83,7 +95,15 @@ def run_parser(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Could not enqueue the parser"
         ) from exc
-    return {"enqueued": enqueued}
+    return RunParserResult(enqueued=enqueued, sources=sources, count=len(sources))
+
+
+@router.get("/news/activity", response_model=list[SourceActivity], summary="Per-source scan activity")
+def news_activity(
+    db: Session = Depends(get_db),
+    _user: StaffUser = Depends(require_analyst_or_admin),
+) -> list[SourceActivity]:
+    return [SourceActivity.model_validate(a) for a in source_service.news_source_activity(db)]
 
 
 @router.get(
