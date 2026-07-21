@@ -93,6 +93,43 @@ class TestRender:
         assert "Powered by IMEX AI" in out
 
 
+class TestLocalMarket:
+    def test_render_fx_and_exchange(self):
+        from app.services.report_service import _render_local_market
+
+        lm = {
+            "fx": [
+                {"ccy": "USD", "rate": 11960.09},
+                {"ccy": "EUR", "rate": 13670.38},
+                {"ccy": "RUB", "rate": 152.53},
+            ],
+            "exchange": {
+                "deals": 42, "quotes": 376, "offers": 7,
+                "top_products": [{"label": "Карбамид Б", "count": 30}],
+            },
+            "window_days": 7,
+        }
+        out = "\n".join(_render_local_market(lm))
+        assert "Локальный рынок" in out
+        assert "USD 11,960" in out and "EUR 13,670" in out
+        assert "сделок — 42" in out and "котировок — 376" in out
+        assert "Карбамид Б — 30" in out
+
+    def test_render_empty_when_no_data(self):
+        from app.services.report_service import _render_local_market
+
+        assert _render_local_market(
+            {"fx": [], "exchange": {"deals": 0, "quotes": 0, "offers": 0, "top_products": []}}
+        ) == []
+
+    def test_render_fx_only(self):
+        from app.services.report_service import _render_local_market
+
+        out = "\n".join(_render_local_market({"fx": [{"ccy": "USD", "rate": 12000.0}], "exchange": {}}))
+        assert "USD 12,000" in out
+        assert "Биржа UZEX" not in out  # no exchange activity → that line is skipped
+
+
 class TestSessionMeta:
     def test_morning_and_evening_map_to_kind_and_title(self):
         from app.models.enums import ReportKind

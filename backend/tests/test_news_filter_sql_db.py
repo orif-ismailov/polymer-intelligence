@@ -468,6 +468,41 @@ class TestSourceGroupsDb:
 
 
 @_requires_real_db
+class TestLocalMarketDb:
+    def test_snapshot_local_market(self, seeded_news: sa.Engine) -> None:
+        import datetime as _dt  # noqa: PLC0415
+
+        from app.models.enums import PriceBasis, SignalKind, SourceKind  # noqa: PLC0415
+        from app.models.signals import Signal  # noqa: PLC0415
+        from app.models.sources import Source  # noqa: PLC0415
+        from app.services import report_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            s.execute(sa.text(
+                "INSERT INTO fx_rates (rate_date, ccy, rate) VALUES "
+                "(CURRENT_DATE,'USD',11960.09),(CURRENT_DATE,'EUR',13670.38) "
+                "ON CONFLICT (rate_date, ccy) DO UPDATE SET rate = EXCLUDED.rate"))
+            s.add(Source(id=903, kind=SourceKind.exchange, adapter="uzex_deals",
+                         name="UZEX Deals", country="UZ"))
+            s.flush()
+            s.add(Signal(kind=SignalKind.deal, source_id=903, price_basis=PriceBasis.unknown,
+                         status="new", grade_text="Карбамид «Б»", region="внутренний",
+                         event_at=_dt.datetime.now(tz=_dt.UTC)))
+            s.commit()
+
+            lm = report_service._snapshot_local_market(s, days=7)
+        fx_ccy = {str(f["ccy"]) for f in lm["fx"]}  # type: ignore[union-attr]
+        assert {"USD", "EUR"} <= fx_ccy
+        ex = lm["exchange"]
+        assert int(ex["deals"]) >= 1  # type: ignore[index,call-overload]
+        assert any("Карбамид" in str(t["label"]) for t in ex["top_products"])  # type: ignore[index,union-attr]
+
+        # and it renders
+        out = "\n".join(report_service._render_local_market(lm))
+        assert "USD" in out and "Биржа UZEX" in out
+
+
+@_requires_real_db
 class TestNewsActivityDb:
     def test_activity_lists_news_sources_with_yield(self, seeded_news: sa.Engine) -> None:
         from app.services import source_service  # noqa: PLC0415

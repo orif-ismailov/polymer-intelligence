@@ -124,6 +124,78 @@ def build_snapshot(db: Session) -> dict[str, object]:
         "news_world": _snapshot_news(db, uz=False),
         # The three mandated sections (Phase 8c): rich, ranked, deduped news cards.
         "sections": _snapshot_sections(db),
+        # Local Uzbekistan market intelligence (Phase 8g): CBU FX + UZEX exchange activity.
+        "local_market": _snapshot_local_market(db),
+    }
+
+
+def _snapshot_local_market(db: Session, *, days: int = 7) -> dict[str, object]:
+    """Local Uzbekistan market block: CBU FX rates + UZEX exchange activity.
+
+    FX comes from the fx_rates table (latest date); UZEX activity is aggregated from
+    kind in (deal/price_quote/sell_offer) on uzex* sources over `days`. Degrades to
+    empty structures on no data (fx_rates may be empty until the CBU fetch runs).
+    """
+    fx_rows = (
+        db.execute(
+            sa.text(
+                """
+                SELECT ccy, rate FROM fx_rates
+                WHERE rate_date = (SELECT max(rate_date) FROM fx_rates)
+                ORDER BY ccy
+                """
+            )
+        )
+        .mappings()
+        .all()
+    )
+    fx = [{"ccy": str(r["ccy"]), "rate": float(r["rate"])} for r in fx_rows]
+
+    activity = (
+        db.execute(
+            sa.text(
+                """
+                SELECT sig.kind::text AS kind, count(*) AS n
+                FROM signals sig JOIN sources src ON src.id = sig.source_id
+                WHERE src.adapter LIKE 'uzex%'
+                  AND sig.event_at >= now() - make_interval(days => :days)
+                GROUP BY 1
+                """
+            ),
+            {"days": days},
+        )
+        .mappings()
+        .all()
+    )
+    counts = {str(a["kind"]): int(a["n"]) for a in activity}
+
+    top = (
+        db.execute(
+            sa.text(
+                """
+                SELECT COALESCE(NULLIF(TRIM(sig.grade_text), ''), '—') AS label, count(*) AS n
+                FROM signals sig JOIN sources src ON src.id = sig.source_id
+                WHERE src.adapter LIKE 'uzex%' AND sig.kind = 'deal'
+                  AND sig.event_at >= now() - make_interval(days => :days)
+                GROUP BY 1 ORDER BY 2 DESC LIMIT 5
+                """
+            ),
+            {"days": days},
+        )
+        .mappings()
+        .all()
+    )
+    top_products = [{"label": str(t["label"]), "count": int(t["n"])} for t in top]
+
+    return {
+        "fx": fx,
+        "exchange": {
+            "deals": counts.get("deal", 0),
+            "quotes": counts.get("price_quote", 0),
+            "offers": counts.get("sell_offer", 0),
+            "top_products": top_products,
+        },
+        "window_days": days,
     }
 
 
@@ -397,6 +469,73 @@ def _render_sections(sections: dict[str, object]) -> list[str]:
     return lines
 
 
+_FX_DISPLAY_CCY: tuple[str, ...] = ("USD", "EUR", "RUB", "CNY", "KZT")
+
+
+def _as_int(value: object) -> int:
+    """Best-effort int from a JSONB-sourced object value (0 on anything unparseable)."""
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str):
+        text = value.strip()
+        if text.lstrip("-").isdigit():
+            return int(text)
+    return 0
+
+
+def _as_float(value: object) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value.strip())
+        except ValueError:
+            return None
+    return None
+
+
+def _fx_rate_map(fx: object) -> dict[str, float]:
+    """Build {ccy: rate} from the snapshot's fx list."""
+    out: dict[str, float] = {}
+    if isinstance(fx, list):
+        for r in fx:
+            if isinstance(r, dict):
+                rate = _as_float(r.get("rate"))
+                if rate is not None:
+                    out[str(r.get("ccy"))] = rate
+    return out
+
+
+def _render_local_market(lm: dict[str, object]) -> list[str]:
+    """Render the local Uzbekistan market block (CBU FX + UZEX activity). [] when empty."""
+    ex_raw = lm.get("exchange")
+    ex = ex_raw if isinstance(ex_raw, dict) else {}
+    deals = _as_int(ex.get("deals"))
+    quotes = _as_int(ex.get("quotes"))
+    offers = _as_int(ex.get("offers"))
+    rates = _fx_rate_map(lm.get("fx"))
+    if not rates and not (deals or quotes or offers):
+        return []
+    lines: list[str] = ["", "🇺🇿 *Локальный рынок (UZEX / ЦБ РУз)*"]
+    bits = [f"{c} {rates[c]:,.0f}" for c in _FX_DISPLAY_CCY if c in rates]
+    if bits:
+        lines.append("💱 Курс ЦБ (сум за 1): " + " · ".join(bits))
+    if deals or quotes or offers:
+        days = _as_int(lm.get("window_days")) or 7
+        lines.append(
+            f"🏛 Биржа UZEX ({days} дн.): сделок — {deals}, "
+            f"котировок — {quotes}, предложений — {offers}"
+        )
+        top = ex.get("top_products")
+        if isinstance(top, list):
+            for tp in top:
+                if isinstance(tp, dict):
+                    lines.append(f"• {tp.get('label', '—')} — {_as_int(tp.get('count'))}")
+    return lines
+
+
 def _rule_based_summary(snapshot: dict[str, object]) -> str:
     products = snapshot.get("products") or []
     if not isinstance(products, list) or not products:
@@ -435,6 +574,11 @@ def render_markdown(
             )
     else:
         lines.append("• нет данных")
+
+    # ── Локальный рынок: CBU FX + UZEX activity (Phase 8g) ────────────────────
+    local_market = snapshot.get("local_market")
+    if isinstance(local_market, dict):
+        lines += _render_local_market(local_market)
 
     # ── Биржа (UZEX, 24ч) ────────────────────────────────────────────────────
     tenders = snapshot.get("tenders_24h")
@@ -647,6 +791,16 @@ def render_telegram_digest(
         candidate = [*lines, "", "💱 " + " · ".join(bits)]
         if _fits(candidate):
             lines = candidate
+
+    # CBU FX rates — one compact line (Phase 8g local-market enrichment).
+    lm = snapshot.get("local_market")
+    rates = _fx_rate_map(lm.get("fx")) if isinstance(lm, dict) else {}
+    if rates:
+        fx_bits = [f"{c} {rates[c]:,.0f}" for c in _FX_DISPLAY_CCY if c in rates]
+        if fx_bits:
+            candidate = [*lines, "🇺🇿 ЦБ: " + " · ".join(fx_bits[:4])]
+            if _fits(candidate):
+                lines = candidate
 
     body = "\n".join(lines)
     if len(body) > budget:  # final hard guard (should not trigger given the checks above)
