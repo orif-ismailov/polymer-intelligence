@@ -929,7 +929,12 @@ def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
     try:
         resp = _client.messages.create(
             model=settings.LLM_REPORT_MODEL,
-            max_tokens=4096,  # v5 adds synthesized per-section briefs on top of summary/forecast
+            # The v6 payload — summary + forecast in 6 languages PLUS three detailed
+            # per-section briefs — runs ~6.5k Cyrillic-dense output tokens. At 4096 the
+            # JSON was truncated mid-string (stop_reason=max_tokens) → json.loads failed →
+            # silent rule-based fallback. 12000 leaves comfortable headroom; unused output
+            # tokens are not billed, so a generous ceiling has no cost.
+            max_tokens=12000,
             system=prompt,
             messages=[{"role": "user", "content": json.dumps(snapshot, ensure_ascii=False)}],
         )
