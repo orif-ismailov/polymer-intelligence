@@ -906,7 +906,9 @@ def reject_report(db: Session, report: Report) -> Report:
 # ── Admin news-ops stats (Phase 8d) ─────────────────────────────────────────────────
 
 def news_admin_stats(db: Session, *, ai_enabled: bool) -> dict[str, object]:
-    """One-row snapshot for the dashboard admin panel: sources, scans, pending AI, etc."""
+    """One-row snapshot for the dashboard admin panel: sources, scans, pending AI, and
+    AI health (recent extractor errors + daily budget usage) so a failing API surfaces
+    instead of showing silent zeros."""
     row = (
         db.execute(
             sa.text(
@@ -922,13 +924,38 @@ def news_admin_stats(db: Session, *, ai_enabled: bool) -> dict[str, object]:
                      WHERE s2.config ->> 'content_kind' = 'news'
                        AND ri.parse_status IN ('pending', 'budget_deferred')) AS pending_ai_analysis,
                   (SELECT count(*) FROM signals
-                     WHERE kind = 'news' AND event_at >= date_trunc('day', now())) AS today_published_news
+                     WHERE kind = 'news' AND event_at >= date_trunc('day', now())) AS today_published_news,
+                  (SELECT count(*) FROM parse_runs
+                     WHERE status = 'error' AND parser LIKE '%extract%'
+                       AND created_at >= now() - INTERVAL '24 hours') AS ai_errors_24h,
+                  (SELECT left(error, 300) FROM parse_runs
+                     WHERE status = 'error' AND parser LIKE '%extract%'
+                       AND created_at >= now() - INTERVAL '24 hours'
+                     ORDER BY created_at DESC LIMIT 1) AS ai_last_error
                 """
             )
         )
         .mappings()
         .one()
     )
+
+    budget_pct = 0.0
+    try:  # budget display must never 500 the panel (Redis optional)
+        from parsing.budget import DAILY_TOKEN_LIMIT, daily_spend  # noqa: PLC0415
+
+        if DAILY_TOKEN_LIMIT:
+            budget_pct = round(daily_spend() / DAILY_TOKEN_LIMIT * 100, 1)
+    except Exception:  # noqa: BLE001
+        budget_pct = 0.0
+
+    ai_errors = int(row["ai_errors_24h"] or 0)
+    if not ai_enabled:
+        ai_status = "off"
+    elif ai_errors > 0:
+        ai_status = "error"
+    else:
+        ai_status = "on"
+
     return {
         "total_sources": int(row["total_sources"] or 0),
         "active_sources": int(row["active_sources"] or 0),
@@ -938,5 +965,8 @@ def news_admin_stats(db: Session, *, ai_enabled: bool) -> dict[str, object]:
         "pending_ai_analysis": int(row["pending_ai_analysis"] or 0),
         "today_published_news": int(row["today_published_news"] or 0),
         "ai_enabled": ai_enabled,
-        "ai_status": "on" if ai_enabled else "off",
+        "ai_status": ai_status,
+        "ai_errors_24h": ai_errors,
+        "ai_last_error": row["ai_last_error"],
+        "budget_used_pct": budget_pct,
     }

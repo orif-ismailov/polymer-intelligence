@@ -141,6 +141,13 @@ def record_actual_tokens(reserved: int, actual: int) -> None:
     _record(reserved, actual)
 
 
+def release_reserved_tokens(reserved: int) -> None:
+    """Wrapper: refund a reservation whose LLM call failed (no usage produced)."""
+    from parsing.budget import release_reservation as _release  # noqa: PLC0415
+
+    _release(reserved)
+
+
 def write_parse_run(session: Any, raw_item_id: int, **kwargs: Any) -> int:
     """Wrapper: call ai_signal_service.write_parse_run."""
     from app.services.ai_signal_service import write_parse_run as _write  # noqa: PLC0415
@@ -213,6 +220,9 @@ def _parse_via_llm(session: Any, raw_item: Any, product_text: str) -> dict[str, 
         session.commit()
         return {"status": "irrelevant", "raw_item_id": raw_item.id, "reason": "budget_exceeded"}
     except InstructorRetryException as exc:
+        # The reservation was made but the call produced no usage — refund it so a
+        # failing API can't drain the daily budget (Phase 8g).
+        release_reserved_tokens(LLM_TOKEN_ESTIMATE)
         logger.error("parse_raw_item.dead_letter", extra={"raw_item_id": raw_item.id, "error": str(exc)})
         write_parse_run(
             session, raw_item.id, parser="llm_extract_tools", model=None,
@@ -505,6 +515,7 @@ def parse_xarid_item(raw_item_id: int) -> dict[str, Any]:
                             "reason": "budget_exceeded",
                         }
                     except InstructorRetryException as exc:
+                        release_reserved_tokens(LLM_TOKEN_ESTIMATE)  # refund leaked reservation
                         logger.error(
                             "parse_xarid_item.dead_letter",
                             extra={"raw_item_id": raw_item_id, "error": str(exc)},
@@ -656,6 +667,7 @@ def parse_news_item(raw_item_id: int) -> dict[str, Any]:
             session.commit()
             return {"status": "irrelevant", "raw_item_id": raw_item_id, "reason": "budget_exceeded"}
         except InstructorRetryException as exc:
+            release_reserved_tokens(NEWS_TOKEN_ESTIMATE)  # refund leaked reservation (Phase 8g)
             logger.error("parse_news_item.dead_letter", extra={"raw_item_id": raw_item_id, "error": str(exc)})
             write_parse_run(
                 session, raw_item_id, parser="news_extract_tools", model=None,

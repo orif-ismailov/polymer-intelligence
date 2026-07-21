@@ -104,6 +104,7 @@ class TestNewsOpsApi:
             "last_scan": None, "last_published_report": None,
             "pending_ai_analysis": 2, "today_published_news": 4,
             "ai_enabled": True, "ai_status": "on",
+            "ai_errors_24h": 0, "ai_last_error": None, "budget_used_pct": 12.5,
         }
         with patch("app.api.admin_settings.settings_service.get", return_value=True), \
              patch("app.api.admin_settings.report_service.news_admin_stats", return_value=stats):
@@ -111,6 +112,26 @@ class TestNewsOpsApi:
         assert resp.status_code == 200, resp.text
         body = resp.json()
         assert body["total_sources"] == 5 and body["ai_status"] == "on"
+        assert body["budget_used_pct"] == 12.5
+
+    def test_stats_surfaces_ai_error(self) -> None:
+        """When the extractor is failing, ai_status='error' and the message is returned."""
+        stats = {
+            "total_sources": 3, "active_sources": 3, "failed_sources": 0,
+            "last_scan": None, "last_published_report": None,
+            "pending_ai_analysis": 0, "today_published_news": 0,
+            "ai_enabled": True, "ai_status": "error", "ai_errors_24h": 4,
+            "ai_last_error": "Error code: 400 - credit balance too low", "budget_used_pct": 100.0,
+        }
+        with patch("app.api.admin_settings.settings_service.get", return_value=True), \
+             patch("app.api.admin_settings.report_service.news_admin_stats", return_value=stats):
+            resp = _client().get("/api/v1/admin/news/stats")
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body["ai_status"] == "error"
+        assert body["ai_errors_24h"] == 4
+        assert "credit balance" in body["ai_last_error"]
+        assert body["budget_used_pct"] == 100.0
 
     def test_pending_list(self) -> None:
         item = {"id": 7, "headline": "Pending story", "importance": "high",

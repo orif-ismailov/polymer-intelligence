@@ -689,7 +689,9 @@
       "aiStatus": "AI durumu",
       "on": "Açık",
       "off": "Kapalı",
-      "never": "—"
+      "never": "—",
+      "error": "Hata",
+      "budget": "AI bütçesi"
     },
     "actions": {
       "runParser": "Ayrıştırıcıyı çalıştır",
@@ -724,6 +726,10 @@
       "raw": "Kayıt 24s",
       "news": "Haber 24s",
       "hint": "Sonuçlar işçiler her kaynağı işledikçe görünür (otomatik yenilenir)"
+    },
+    "aiError": {
+      "title": "AI çalışmıyor",
+      "hint": "Haber sınıflandırıcı hata veriyor — Anthropic API bakiyesini/kredilerini kontrol edin."
     }
   }
 }

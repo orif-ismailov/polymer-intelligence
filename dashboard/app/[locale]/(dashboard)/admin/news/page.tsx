@@ -68,7 +68,10 @@ interface NewsStats {
   pending_ai_analysis: number;
   today_published_news: number;
   ai_enabled: boolean;
-  ai_status: string;
+  ai_status: "on" | "off" | "error";
+  ai_errors_24h: number;
+  ai_last_error: string | null;
+  budget_used_pct: number;
 }
 
 interface PendingNewsItem {
@@ -229,11 +232,32 @@ export default function NewsAdminPage() {
           value={s ? fmtDateTime(s.last_published_report, t("stats.never")) : "…"}
         />
         <StatCard
+          label={t("stats.budget")}
+          value={s ? `${s.budget_used_pct}%` : "…"}
+          tone={s ? (s.budget_used_pct >= 90 ? "danger" : "default") : "default"}
+        />
+        <StatCard
           label={t("stats.aiStatus")}
-          value={s ? t(s.ai_enabled ? "stats.on" : "stats.off") : "…"}
-          tone={s ? (s.ai_enabled ? "accent" : "muted") : "default"}
+          value={s ? t(`stats.${s.ai_status}`) : "…"}
+          tone={s ? (s.ai_status === "error" ? "danger" : s.ai_status === "on" ? "accent" : "muted") : "default"}
         />
       </div>
+
+      {/* AI failing — surface the error instead of silent zeros */}
+      {s?.ai_status === "error" && (
+        <div className="rounded-md border border-red-400/40 bg-red-500/10 px-4 py-3">
+          <p className="text-sm font-semibold text-red-400">
+            {t("aiError.title")}
+            {s.ai_errors_24h > 0 ? ` · ${s.ai_errors_24h} (24h)` : ""}
+          </p>
+          <p className="mt-1 text-sm text-foreground-muted">{t("aiError.hint")}</p>
+          {s.ai_last_error && (
+            <p className="mt-2 break-all rounded bg-background p-2 font-mono text-xs text-foreground">
+              {s.ai_last_error}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Run-parser feedback: which sources the scan hit */}
       {runMsg && (

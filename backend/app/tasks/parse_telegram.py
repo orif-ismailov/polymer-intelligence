@@ -46,6 +46,7 @@ from parsing.budget import (
     BudgetExceeded,
     check_and_reserve_tokens,
     record_actual_tokens,
+    release_reservation,
 )
 from parsing.fallback import rule_based_extract
 from parsing.schemas import CONFIDENCE_REVIEW_THRESHOLD
@@ -289,6 +290,9 @@ def parse_telegram_item(raw_item_id: int) -> dict[str, Any]:
 
         except InstructorRetryException as exc:
             # ── G3: Dead-letter — all retries failed ──────────────────────────
+            # Reservation was made but the call produced no usage — refund it so a
+            # failing API can't drain the daily budget (Phase 8g).
+            release_reservation(LLM_TOKEN_ESTIMATE)
             logger.error(
                 "parse_telegram.dead_letter",
                 extra={"raw_item_id": raw_item_id, "error": str(exc)},

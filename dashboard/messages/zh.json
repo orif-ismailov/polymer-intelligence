@@ -674,7 +674,9 @@
       "aiStatus": "AI 状态",
       "on": "已启用",
       "off": "已禁用",
-      "never": "—"
+      "never": "—",
+      "error": "错误",
+      "budget": "AI 预算"
     },
     "actions": {
       "runParser": "立即运行解析",
@@ -709,6 +711,10 @@
       "raw": "24小时条目",
       "news": "24小时新闻",
       "hint": "结果会随着工作进程处理各来源而出现（自动刷新）"
+    },
+    "aiError": {
+      "title": "AI 无法工作",
+      "hint": "新闻分类器返回错误——请检查 Anthropic API 的余额/额度。"
     }
   }
 }

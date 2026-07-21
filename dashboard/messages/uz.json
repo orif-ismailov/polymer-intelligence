@@ -689,7 +689,9 @@
       "aiStatus": "AI holati",
       "on": "Yoqilgan",
       "off": "O‘chirilgan",
-      "never": "—"
+      "never": "—",
+      "error": "Xato",
+      "budget": "AI byudjeti"
     },
     "actions": {
       "runParser": "Parserni ishga tushirish",
@@ -724,6 +726,10 @@
       "raw": "Yozuvlar 24s",
       "news": "Yangiliklar 24s",
       "hint": "Natijalar ishchilar qayta ishlagach paydo bo‘ladi (avtomatik yangilanadi)"
+    },
+    "aiError": {
+      "title": "AI ishlamayapti",
+      "hint": "Yangilik klassifikatori xato qaytarmoqda — Anthropic API balansini/kreditlarini tekshiring."
     }
   }
 }

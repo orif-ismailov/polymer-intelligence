@@ -175,3 +175,55 @@ class TestRecordActualTokens:
             call_args = mock_redis.incrby.call_args[0]
             # Should not increase the counter on a lower actual count
             assert call_args[1] <= 0
+
+
+def _eval_release(counter: dict[str, int]):
+    """Return an eval side-effect mirroring the release Lua (DECRBY clamped at 0).
+
+    Signature mirrors redis.eval(script, numkeys, key, amount).
+    """
+
+    def _side_effect(_script, _numkeys, _key, amount):  # noqa: ANN001
+        amount = int(amount)
+        if amount <= 0:
+            return counter["value"]
+        if counter["value"] <= amount:
+            counter["value"] = 0
+            return 0
+        counter["value"] -= amount
+        return counter["value"]
+
+    return _side_effect
+
+
+class TestReleaseReservation:
+    """Phase 8g: a failed LLM call refunds its reservation so a failing API can't drain the day."""
+
+    def test_release_refunds_partial(self) -> None:
+        import parsing.budget as budget_module
+
+        mock_redis = MagicMock()
+        counter = {"value": 1000}
+        mock_redis.eval.side_effect = _eval_release(counter)
+        with patch.object(budget_module, "_redis", mock_redis):
+            budget_module.release_reservation(400)
+        assert counter["value"] == 600
+        mock_redis.eval.assert_called_once()
+
+    def test_release_clamps_at_zero(self) -> None:
+        import parsing.budget as budget_module
+
+        mock_redis = MagicMock()
+        counter = {"value": 300}
+        mock_redis.eval.side_effect = _eval_release(counter)
+        with patch.object(budget_module, "_redis", mock_redis):
+            budget_module.release_reservation(500)  # more than remaining
+        assert counter["value"] == 0
+
+    def test_release_zero_is_noop(self) -> None:
+        import parsing.budget as budget_module
+
+        mock_redis = MagicMock()
+        with patch.object(budget_module, "_redis", mock_redis):
+            budget_module.release_reservation(0)
+        mock_redis.eval.assert_not_called()

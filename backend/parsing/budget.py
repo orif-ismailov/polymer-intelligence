@@ -185,6 +185,37 @@ def record_actual_tokens(reserved: int, actual: int) -> None:
     # delta == 0: no-op
 
 
+# Refund a full reservation whose LLM call produced no usage (it errored/aborted after
+# reserving). DECRBY preserves the daily EXPIREAT; DEL when the counter would go ≤0 so it
+# can never drift negative. Prevents a failing API (e.g. billing/credit errors) from
+# draining the day's budget one leaked reservation at a time.
+_RELEASE_LUA = """
+local current = tonumber(redis.call('GET', KEYS[1]) or '0')
+local amount = tonumber(ARGV[1])
+if amount <= 0 then return current end
+if current <= amount then
+    redis.call('DEL', KEYS[1])
+    return 0
+end
+return redis.call('DECRBY', KEYS[1], amount)
+"""
+
+
+def release_reservation(reserved: int) -> None:
+    """Return a full token reservation to the daily budget after a failed LLM call.
+
+    Call this ONLY when `check_and_reserve_tokens` succeeded but the subsequent LLM call
+    never produced usage (it raised). On the happy path use `record_actual_tokens`
+    instead. No-op for a non-positive amount; clamps the counter at 0.
+
+    Args:
+        reserved: The estimated_tokens value that was reserved for the failed call.
+    """
+    if reserved <= 0:
+        return
+    _redis.eval(_RELEASE_LUA, 1, key_for(date.today()), reserved)
+
+
 def daily_spend() -> int:
     """Return the current daily token spend from Redis.
 

@@ -33,7 +33,10 @@ class NewsStats(BaseModel):
     pending_ai_analysis: int
     today_published_news: int
     ai_enabled: bool
-    ai_status: str
+    ai_status: str  # "on" | "off" | "error"
+    ai_errors_24h: int = 0
+    ai_last_error: str | None = None
+    budget_used_pct: float = 0.0
 
 
 class PendingNewsItem(BaseModel):
