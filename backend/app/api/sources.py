@@ -36,6 +36,7 @@ from app.models.sources import Source
 from app.models.staff import StaffUser
 from app.schemas.dashboard import (
     SourceCreate,
+    SourceDetail,
     SourceHealthItem,
     SourcePatch,
     SourceTestOut,
@@ -94,6 +95,41 @@ def get_sources(
         )
         for row in rows
     ]
+
+
+# ── GET /sources/{source_id} (edit form — includes config) ─────────────────────
+
+
+@router.get(
+    "/{source_id}",
+    response_model=SourceDetail,
+    summary="Get a single source with config (for editing)",
+    description=(
+        "Full source view INCLUDING config, so an admin can edit the feed URL / "
+        "content_kind / selectors. Admin-only (T-04-21) — the health list still hides "
+        "config (T-04-22); this is the scoped, single-id exception used by the edit form."
+    ),
+)
+def get_source(
+    source_id: int,
+    _current_user: StaffUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> SourceDetail:
+    source = db.get(Source, source_id)
+    if source is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
+    return SourceDetail(
+        id=source.id,
+        name=source.name,
+        adapter=source.adapter,
+        kind=source.kind.value if hasattr(source.kind, "value") else str(source.kind),
+        country=source.country,
+        group_name=source.group_name,
+        url=source.url,
+        is_enabled=source.is_enabled,
+        last_test_ok_at=source.last_test_ok_at,
+        config=dict(source.config or {}),
+    )
 
 
 # ── POST /sources ──────────────────────────────────────────────────────────────
@@ -287,20 +323,52 @@ def patch_source(
             detail="Source not found",
         )
 
-    # Server-side enable-gate (T-04-20, D-04 invariant)
-    if body.is_enabled is True and source.last_test_ok_at is None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=(
-                "Source cannot be enabled until a test has passed successfully. "
-                "Run POST /sources/{id}/test first."
-            ),
-        )
+    fields = body.model_fields_set
 
-    if body.is_enabled is not None:
+    # Editing config re-validates against the adapter schema and resets the tested/enabled
+    # state — a changed feed must pass a fresh Test before it can be enabled again (D-04).
+    config_changed = False
+    if "config" in fields and body.config is not None:
+        from app.ingest.registry import get_adapter  # noqa: PLC0415
+
+        try:
+            adapter = get_adapter(source.adapter)
+        except KeyError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown adapter type: {source.adapter!r}",
+            ) from None
+        try:
+            adapter.config_schema(**body.config)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid config for adapter {source.adapter!r}: {exc}",
+            ) from exc
+        config_changed = True
+        source.config = dict(body.config)
+        source.url = body.config.get("url") or body.config.get("feed_url") or source.url
+        source.last_test_ok_at = None  # edited feed must be re-tested
+        source.is_enabled = False
+
+    # Enable-gate (T-04-20) — skipped when config was just reset (must re-test first).
+    if "is_enabled" in fields and body.is_enabled is not None and not config_changed:
+        if body.is_enabled and source.last_test_ok_at is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "Source cannot be enabled until a test has passed successfully. "
+                    "Run POST /sources/{id}/test first."
+                ),
+            )
         source.is_enabled = body.is_enabled
-    if body.name is not None:
+
+    if "name" in fields and body.name:
         source.name = body.name
+    if "country" in fields:
+        source.country = (body.country.strip() or None) if body.country else None
+    if "group_name" in fields:
+        source.group_name = (body.group_name.strip() or None) if body.group_name else None
 
     db.commit()
 

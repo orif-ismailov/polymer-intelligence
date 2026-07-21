@@ -12,7 +12,7 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Play, RefreshCw, SlidersHorizontal, X } from "lucide-react";
+import { Check, Pencil, Play, RefreshCw, SlidersHorizontal, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -57,6 +57,25 @@ interface RunParserResult {
   enqueued: string[];
   sources: string[];
   count: number;
+}
+
+interface SourceDetail {
+  id: number;
+  name: string;
+  adapter: string;
+  kind: string;
+  country: string | null;
+  group_name: string | null;
+  url: string | null;
+  is_enabled: boolean;
+  last_test_ok_at: string | null;
+  config: Record<string, unknown>;
+}
+
+interface SourceTestOut {
+  ok: boolean;
+  sample_rows: unknown[];
+  error: string | null;
 }
 
 interface NewsStats {
@@ -133,6 +152,7 @@ export default function NewsAdminPage() {
   const dirty = useMemo(() => Object.keys(edits).length > 0, [edits]);
 
   const [groupEdits, setGroupEdits] = useState<Record<number, string>>({});
+  const [editId, setEditId] = useState<number | null>(null);
 
   // ── Mutations ────────────────────────────────────────────────────────────
   const invalidate = (keys: string[]) =>
@@ -426,7 +446,7 @@ export default function NewsAdminPage() {
                       onChange={(e) =>
                         setGroupEdits((prev) => ({ ...prev, [src.id]: e.target.value }))
                       }
-                      className="w-44 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="w-40 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                     <button
                       type="button"
@@ -435,6 +455,13 @@ export default function NewsAdminPage() {
                       className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-dark disabled:opacity-30"
                     >
                       {t("actions.save")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditId(src.id)}
+                      className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background-tertiary"
+                    >
+                      <Pencil size={14} /> {t("edit.button")}
                     </button>
                   </div>
                 </li>
@@ -497,6 +524,14 @@ export default function NewsAdminPage() {
           ))}
         </div>
       </section>
+
+      {editId != null && (
+        <EditSourceDialog
+          sourceId={editId}
+          onClose={() => setEditId(null)}
+          onSaved={() => invalidate(["sources-brief", "source-groups", "news-activity"])}
+        />
+      )}
     </div>
   );
 }
@@ -523,6 +558,226 @@ function StatCard({
       <p className="text-xs text-foreground-muted">{label}</p>
       <p className={`mt-1 text-lg font-semibold ${toneClass}`}>{value}</p>
     </div>
+  );
+}
+
+interface EditForm {
+  name: string;
+  url: string;
+  contentKind: string;
+  country: string;
+  group: string;
+  enabled: boolean;
+}
+
+function EditSourceDialog({
+  sourceId,
+  onClose,
+  onSaved,
+}: {
+  sourceId: number;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = useTranslations("newsAdmin");
+  const detail = useQuery<SourceDetail>({
+    queryKey: ["source", sourceId],
+    queryFn: () => apiFetch<SourceDetail>(`/sources/${sourceId}`),
+  });
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-lg border border-border bg-background-secondary p-5 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-foreground">
+            {t("edit.title")}
+            {detail.data ? ` · ${detail.data.adapter}` : ""}
+          </h3>
+          <button type="button" onClick={onClose} className="text-foreground-muted hover:text-foreground">
+            <X size={18} />
+          </button>
+        </div>
+
+        {detail.isLoading || !detail.data ? (
+          <p className="text-sm text-foreground-muted">…</p>
+        ) : (
+          <EditSourceForm source={detail.data} onClose={onClose} onSaved={onSaved} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EditSourceForm({
+  source,
+  onClose,
+  onSaved,
+}: {
+  source: SourceDetail;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = useTranslations("newsAdmin");
+  const [form, setForm] = useState<EditForm>(() => {
+    const cfg = source.config ?? {};
+    return {
+      name: source.name ?? "",
+      url: String(cfg.url ?? cfg.feed_url ?? source.url ?? ""),
+      contentKind: String(cfg.content_kind ?? ""),
+      country: source.country ?? "",
+      group: source.group_name ?? "",
+      enabled: source.is_enabled,
+    };
+  });
+  const [testResult, setTestResult] = useState<SourceTestOut | null>(null);
+
+  const origUrl = String(source.config?.url ?? source.config?.feed_url ?? source.url ?? "");
+  const origKind = String(source.config?.content_kind ?? "");
+  const configChanged = form.url !== origUrl || form.contentKind !== origKind;
+
+  const test = useMutation({
+    mutationFn: () => apiFetch<SourceTestOut>(`/sources/${source.id}/test`, { method: "POST" }),
+    onSuccess: (r) => setTestResult(r),
+  });
+  const save = useMutation({
+    mutationFn: () => {
+      const body: Record<string, unknown> = {
+        name: form.name,
+        country: form.country,
+        group_name: form.group,
+      };
+      if (configChanged) {
+        // Editing the feed re-validates + disables server-side until re-tested.
+        const cfg: Record<string, unknown> = { ...(source.config ?? {}) };
+        cfg.url = form.url;
+        if (form.contentKind) cfg.content_kind = form.contentKind;
+        else delete cfg.content_kind;
+        body.config = cfg;
+      } else {
+        body.is_enabled = form.enabled; // enable-toggle only applies when feed unchanged
+      }
+      return apiFetch(`/sources/${source.id}`, { method: "PATCH", body: JSON.stringify(body) });
+    },
+    onSuccess: () => {
+      onSaved();
+      onClose();
+    },
+  });
+
+  return (
+    <div className="flex flex-col gap-3">
+      <Field label={t("edit.name")}>
+        <input
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+        />
+      </Field>
+      <Field label={t("edit.feedUrl")}>
+        <input
+          value={form.url}
+          onChange={(e) => setForm({ ...form, url: e.target.value })}
+          className="w-full rounded-md border border-border bg-background px-3 py-1.5 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+        />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label={t("edit.contentKind")}>
+          <select
+            value={form.contentKind}
+            onChange={(e) => setForm({ ...form, contentKind: e.target.value })}
+            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <option value="news">news</option>
+            <option value="">—</option>
+          </select>
+        </Field>
+        <Field label={t("edit.country")}>
+          <input
+            value={form.country}
+            placeholder={t("edit.countryPh")}
+            onChange={(e) => setForm({ ...form, country: e.target.value })}
+            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+        </Field>
+      </div>
+      <Field label={t("groups.title")}>
+        <input
+          value={form.group}
+          placeholder={t("groups.ungrouped")}
+          onChange={(e) => setForm({ ...form, group: e.target.value })}
+          className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+        />
+      </Field>
+
+      {!configChanged && (
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            checked={form.enabled}
+            onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
+            disabled={!source.last_test_ok_at}
+          />
+          {t("edit.enabled")}
+          {!source.last_test_ok_at && (
+            <span className="text-xs text-foreground-muted">({t("edit.needsTest")})</span>
+          )}
+        </label>
+      )}
+
+      {configChanged && (
+        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+          {t("edit.feedChangedNote")}
+        </p>
+      )}
+
+      {testResult && (
+        <p
+          className={`rounded-md px-3 py-2 text-xs ${
+            testResult.ok ? "bg-accent/10 text-accent" : "bg-red-500/10 text-red-400"
+          }`}
+        >
+          {testResult.ok
+            ? `${t("edit.testOk")} (${testResult.sample_rows.length})`
+            : `${t("edit.testFail")}: ${testResult.error ?? ""}`}
+        </p>
+      )}
+
+      <div className="mt-2 flex justify-end gap-2">
+        <button
+          type="button"
+          disabled={test.isPending}
+          onClick={() => test.mutate()}
+          className="rounded-md border border-border px-4 py-1.5 text-sm font-medium text-foreground hover:bg-background-tertiary disabled:opacity-50"
+        >
+          {test.isPending ? "…" : t("edit.test")}
+        </button>
+        <button
+          type="button"
+          disabled={save.isPending}
+          onClick={() => save.mutate()}
+          className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-dark disabled:opacity-50"
+        >
+          {save.isPending ? "…" : t("actions.save")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs text-foreground-muted">{label}</span>
+      {children}
+    </label>
   );
 }
 

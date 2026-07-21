@@ -730,6 +730,21 @@
     "aiError": {
       "title": "AI ishlamayapti",
       "hint": "Yangilik klassifikatori xato qaytarmoqda — Anthropic API balansini/kreditlarini tekshiring."
+    },
+    "edit": {
+      "button": "Tahrirlash",
+      "title": "Manbani tahrirlash",
+      "name": "Nomi",
+      "feedUrl": "Lenta URL",
+      "contentKind": "Kontent turi",
+      "country": "Davlat",
+      "countryPh": "UZ, RU…",
+      "enabled": "Yoqilgan",
+      "needsTest": "test kerak",
+      "test": "Test",
+      "testOk": "Test o‘tdi",
+      "testFail": "Test xatosi",
+      "feedChangedNote": "Lentani o‘zgartirish testni bekor qiladi — qayta test qilinmaguncha manba o‘chiriladi."
     }
   }
 }

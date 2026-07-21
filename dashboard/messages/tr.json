@@ -730,6 +730,21 @@
     "aiError": {
       "title": "AI çalışmıyor",
       "hint": "Haber sınıflandırıcı hata veriyor — Anthropic API bakiyesini/kredilerini kontrol edin."
+    },
+    "edit": {
+      "button": "Düzenle",
+      "title": "Kaynağı düzenle",
+      "name": "Ad",
+      "feedUrl": "Akış URL",
+      "contentKind": "İçerik türü",
+      "country": "Ülke",
+      "countryPh": "UZ, RU…",
+      "enabled": "Etkin",
+      "needsTest": "test gerekli",
+      "test": "Test",
+      "testOk": "Test başarılı",
+      "testFail": "Test hatası",
+      "feedChangedNote": "Akışı değiştirmek testi sıfırlar — yeniden test edilene kadar kaynak devre dışı kalır."
     }
   }
 }

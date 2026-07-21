@@ -498,3 +498,107 @@ def test_sources_router_mounted():
     assert path.startswith("/api/v1/sources"), (
         f"Expected /api/v1/sources* route, got: {path}"
     )
+
+
+# ── GET /sources/{id} detail (with config) + config edit (Phase 8g) ─────────────
+
+
+def _news_source(source_id: int, **over):
+    src = _make_mock_source(source_id=source_id, adapter="rss",
+                            config={"url": "https://feed/rss", "content_kind": "news"}, **over)
+    src.country = "UZ"
+    src.group_name = "Global"
+    src.url = "https://feed/rss"
+    return src
+
+
+def test_get_source_detail_returns_config_for_admin():
+    """GET /sources/{id} returns the config (admin-only edit view)."""
+    admin = _make_staff_user("admin", 1)
+    src = _news_source(7)
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = admin
+    db.get.return_value = src
+    client = _make_client_with_user_and_db(admin, db)
+    with patch("app.api.health._check_redis", return_value="ok"):
+        resp = client.get("/api/v1/sources/7", headers=_auth_headers(1, "admin"))
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["config"]["url"] == "https://feed/rss"
+    assert body["config"]["content_kind"] == "news"
+    assert body["group_name"] == "Global"
+
+
+def test_get_source_detail_non_admin_403():
+    analyst = _make_staff_user("analyst", 2)
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = analyst
+    client = _make_client_with_user_and_db(analyst, db)
+    with patch("app.api.health._check_redis", return_value="ok"):
+        resp = client.get("/api/v1/sources/7", headers=_auth_headers(2, "analyst"))
+    assert resp.status_code == 403
+
+
+def test_edit_config_resets_test_and_disables():
+    """Editing the feed config re-validates, clears last_test_ok_at, and disables it."""
+    admin = _make_staff_user("admin", 1)
+    src = _news_source(8, is_enabled=True,
+                       last_test_ok_at=datetime.datetime(2026, 6, 17, tzinfo=datetime.UTC))
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = admin
+    db.get.return_value = src
+    client = _make_client_with_user_and_db(admin, db)
+    with patch("app.api.health._check_redis", return_value="ok"), \
+         patch("app.ingest.registry.get_adapter") as mock_get:
+        mock_get.return_value = MagicMock()  # config_schema(**cfg) accepts it
+        resp = client.patch(
+            "/api/v1/sources/8",
+            json={"config": {"url": "https://new/rss", "content_kind": "news"}},
+            headers=_auth_headers(1, "admin"),
+        )
+    assert resp.status_code == 200, resp.text
+    assert src.config == {"url": "https://new/rss", "content_kind": "news"}
+    assert src.url == "https://new/rss"
+    assert src.last_test_ok_at is None   # reset — must re-test
+    assert src.is_enabled is False       # disabled until re-tested
+
+
+def test_edit_invalid_config_422():
+    admin = _make_staff_user("admin", 1)
+    src = _news_source(9)
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = admin
+    db.get.return_value = src
+    client = _make_client_with_user_and_db(admin, db)
+    with patch("app.api.health._check_redis", return_value="ok"), \
+         patch("app.ingest.registry.get_adapter") as mock_get:
+        bad = MagicMock()
+        bad.config_schema.side_effect = ValueError("url is required")
+        mock_get.return_value = bad
+        resp = client.patch(
+            "/api/v1/sources/9", json={"config": {"nope": 1}}, headers=_auth_headers(1, "admin")
+        )
+    assert resp.status_code == 422
+
+
+def test_edit_name_and_country_only_keeps_test_state():
+    """Editing only name/country/group must NOT reset the tested/enabled state."""
+    admin = _make_staff_user("admin", 1)
+    src = _news_source(10, is_enabled=True,
+                       last_test_ok_at=datetime.datetime(2026, 6, 17, tzinfo=datetime.UTC))
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = admin
+    db.get.return_value = src
+    client = _make_client_with_user_and_db(admin, db)
+    with patch("app.api.health._check_redis", return_value="ok"):
+        resp = client.patch(
+            "/api/v1/sources/10",
+            json={"name": "Renamed feed", "country": "RU", "group_name": "Producers"},
+            headers=_auth_headers(1, "admin"),
+        )
+    assert resp.status_code == 200, resp.text
+    assert src.name == "Renamed feed"
+    assert src.country == "RU"
+    assert src.group_name == "Producers"
+    assert src.last_test_ok_at is not None  # unchanged
+    assert src.is_enabled is True           # unchanged

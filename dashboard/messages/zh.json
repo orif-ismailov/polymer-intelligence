@@ -715,6 +715,21 @@
     "aiError": {
       "title": "AI 无法工作",
       "hint": "新闻分类器返回错误——请检查 Anthropic API 的余额/额度。"
+    },
+    "edit": {
+      "button": "编辑",
+      "title": "编辑来源",
+      "name": "名称",
+      "feedUrl": "订阅源 URL",
+      "contentKind": "内容类型",
+      "country": "国家",
+      "countryPh": "UZ、RU…",
+      "enabled": "已启用",
+      "needsTest": "需要测试",
+      "test": "测试",
+      "testOk": "测试通过",
+      "testFail": "测试失败",
+      "feedChangedNote": "更改订阅源会重置测试——重新测试前该来源将被禁用。"
     }
   }
 }

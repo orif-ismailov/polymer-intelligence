@@ -224,15 +224,39 @@ class SourceCreate(BaseModel):
     config: dict[str, Any]
 
 
+class SourceDetail(BaseModel):
+    """Full single-source view for the edit form (admin-only, includes config).
+
+    Unlike the health list (T-04-22), this deliberately returns `config` so an admin can
+    edit a source's feed URL / content_kind / selectors. Scoped to admin + a single id.
+    """
+
+    id: int
+    name: str
+    adapter: str
+    kind: str
+    country: str | None = None
+    group_name: str | None = None
+    url: str | None = None
+    is_enabled: bool
+    last_test_ok_at: datetime.datetime | None = None
+    config: dict[str, Any]
+
+
 class SourcePatch(BaseModel):
     """Body for PATCH /sources/{id}.
 
-    All fields are optional. is_enabled=True requires last_test_ok_at IS NOT NULL
-    server-side (D-04 invariant / T-04-20).
+    All fields optional (PATCH semantics — only provided fields change). is_enabled=True
+    requires last_test_ok_at IS NOT NULL server-side (D-04 invariant / T-04-20).
+    Editing `config` re-validates against the adapter schema and resets the tested/enabled
+    state, so a changed feed must pass a fresh Test before it can be re-enabled.
     """
 
     is_enabled: bool | None = None
     name: str | None = None
+    country: str | None = None
+    group_name: str | None = None
+    config: dict[str, Any] | None = None
 
 
 class SourceTestOut(BaseModel):
