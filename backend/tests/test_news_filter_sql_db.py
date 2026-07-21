@@ -260,3 +260,46 @@ class TestNewsFilterSqlDb:
         assert {"Uzbekistan", "Russia"} <= countries
         assert {"Shurtan GCC", "SIBUR"} <= companies
         assert {"PP", "HDPE", "ethylene"} <= products
+
+
+def _open(engine: sa.Engine):  # noqa: ANN202
+    from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
+
+    return sessionmaker(bind=engine)()
+
+
+@_requires_real_db
+class TestReportSectionsDb:
+    def test_three_section_bucketing(self, seeded_news: sa.Engine) -> None:
+        from app.services import report_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            sections = report_service._snapshot_sections(s)
+        uz = _headlines(list(sections["uzbekistan"]))  # type: ignore[arg-type]
+        gl = _headlines(list(sections["global"]))  # type: ignore[arg-type]
+        pr = _headlines(list(sections["producers"]))  # type: ignore[arg-type]
+        assert any("Shurtan" in h for h in uz)
+        assert any("SIBUR" in h for h in gl)
+        assert not any("SIBUR" in h for h in uz)  # Russia story not in the UZ section
+        assert any("Shurtan" in h for h in pr) and any("SIBUR" in h for h in pr)  # both name a company
+        # sections are localized to ru and carry no raw i18n block
+        assert all("i18n" not in c for c in sections["uzbekistan"])  # type: ignore[union-attr]
+
+
+@_requires_real_db
+class TestBreakingNewsDb:
+    def test_pending_then_mark_excludes(self, seeded_news: sa.Engine) -> None:
+        from app.services import report_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            pending = report_service.pending_breaking_news(s, minutes=180)
+            heads = [str(p["card"]["headline"]) for p in pending]  # type: ignore[index]
+            assert any("Shurtan" in h for h in heads)  # the only 'high' story
+            assert not any("SIBUR" in h for h in heads)  # medium importance → not breaking
+
+            ids = [i for p in pending for i in p["ids"]]  # type: ignore[union-attr]
+            report_service.mark_breaking_pushed(s, ids)
+            s.commit()
+
+            again = report_service.pending_breaking_news(s, minutes=180)
+        assert not any("Shurtan" in str(p["card"]["headline"]) for p in again)  # type: ignore[index]

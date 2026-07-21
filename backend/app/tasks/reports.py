@@ -18,17 +18,67 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task(name="generate_daily_report")
 def generate_daily_report() -> int | None:
-    """Generate today's report (draft). Returns the new report id, or None on failure."""
+    """Generate the morning report (draft). Returns the new report id, or None on failure."""
+    return _generate_report("morning")
+
+
+@celery_app.task(name="generate_evening_report")
+def generate_evening_report() -> int | None:
+    """Generate the evening report (draft). Returns the new report id, or None on failure."""
+    return _generate_report("evening")
+
+
+def _generate_report(session: str) -> int | None:
     with SessionLocal() as db:
         try:
-            report = report_service.generate_report(db)
+            report = report_service.generate_report(db, session=session)
             db.commit()
-            logger.info("generate_daily_report.done", extra={"report_id": report.id})
+            logger.info("generate_report.done", extra={"report_id": report.id, "session": session})
             return report.id
         except Exception:
-            logger.exception("generate_daily_report.failed")
+            logger.exception("generate_report.failed", extra={"session": session})
             db.rollback()
             return None
+
+
+@celery_app.task(name="publish_breaking_news", queue="notify")
+def publish_breaking_news() -> dict[str, object]:
+    """Push newly-detected high-importance news to the channel immediately (Phase 8c).
+
+    Polls for high-importance kind='news' signals not yet pushed, merges same-story
+    items, sends one compact alert per story, and marks the cluster so it is not
+    re-sent. No-op (logged) when NEWS_CHANNEL_ID is empty. Never raises — returns a
+    status dict so the beat worker stays alive (T-03-13 pattern).
+    """
+    import asyncio  # noqa: PLC0415
+
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.config import settings as _settings  # noqa: PLC0415
+
+    if not _settings.NEWS_CHANNEL_ID:
+        return {"status": "skipped", "pushed": 0}
+
+    pushed = 0
+    with SessionLocal() as db:
+        items = report_service.pending_breaking_news(db)
+        for item in items:
+            text = report_service.render_breaking_alert(item["card"])  # type: ignore[arg-type]
+            try:
+                asyncio.run(
+                    bot.send_message(
+                        chat_id=_settings.NEWS_CHANNEL_ID, text=text, parse_mode="Markdown"
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.error("publish_breaking_news.error", extra={"error": str(exc)})
+                continue
+            report_service.mark_breaking_pushed(db, item["ids"])  # type: ignore[arg-type]
+            pushed += 1
+        db.commit()
+
+    logger.info("publish_breaking_news.done", extra={"pushed": pushed})
+    return {"status": "ok", "pushed": pushed}
 
 
 @celery_app.task(name="publish_report_to_channel", queue="notify")

@@ -372,7 +372,8 @@ CREATE INDEX ON deliveries (status) WHERE status = 'queued';
 ## 8. Отчёты (новостной движок)
 
 ```sql
-CREATE TYPE report_kind AS ENUM ('morning', 'intraday', 'weekly', 'custom');
+CREATE TYPE report_kind AS ENUM ('morning', 'evening', 'intraday', 'weekly', 'custom');
+-- 'evening' added in migration 0014 (Phase 8c — Evening Market Brief at 18:00 Tashkent).
 CREATE TYPE report_status AS ENUM ('draft', 'pending_approval', 'approved', 'published', 'rejected');
 
 CREATE TABLE reports (

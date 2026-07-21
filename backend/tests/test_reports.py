@@ -49,6 +49,87 @@ class TestRender:
         assert "Тестовое резюме." in md
         assert "запросы — 14" in md
 
+    def _card(self, **over: Any) -> dict[str, Any]:
+        base = {
+            "id": 1, "headline": "Shurtan останавливает PP-линию", "importance": "high",
+            "market_impact": "negative", "summary": "Ремонт сократит выпуск PP.",
+            "recommendation": "Следите за ценами PP.", "related_products": ["PP"],
+            "source_name": "UzPetro", "merged_count": 2,
+        }
+        base.update(over)
+        return base
+
+    def test_render_markdown_three_sections(self):
+        from app.services.report_service import render_markdown
+
+        snap = {
+            **self._snapshot(),
+            "sections": {
+                "uzbekistan": [self._card()],
+                "global": [self._card(headline="SIBUR expands ethylene", importance="medium")],
+                "producers": [self._card(headline="Shurtan announcement")],
+            },
+        }
+        md = render_markdown(snap, "Резюме.")
+        assert "🇺🇿 *Рынок Узбекистана*" in md
+        assert "🌍 *Мировой рынок*" in md
+        assert "🏭 *Новости производителей*" in md
+        assert "Shurtan останавливает PP-линию" in md
+        assert "💡 Следите за ценами PP." in md  # recommendation rendered
+        assert "(+1)" in md  # merged_count=2 → +N suffix
+        # legacy excerpt blocks are suppressed when sections are present
+        assert "Мировая нефтехимия" not in md
+
+    def test_render_telegram_digest_sections(self):
+        from app.services.report_service import render_telegram_digest
+
+        snap = {
+            "date": "2026-07-21",
+            "sections": {"uzbekistan": [self._card()], "global": [], "producers": []},
+        }
+        out = render_telegram_digest(snap)
+        assert "🇺🇿 *Рынок Узбекистана*" in out
+        assert "Shurtan останавливает PP-линию" in out
+        assert "Powered by IMEX AI" in out
+
+
+class TestSessionMeta:
+    def test_morning_and_evening_map_to_kind_and_title(self):
+        from app.models.enums import ReportKind
+        from app.services.report_service import _session_meta
+
+        assert _session_meta("morning", "2026-07-21") == (
+            ReportKind.morning, "Утренний обзор рынка — 2026-07-21")
+        assert _session_meta("evening", "2026-07-21") == (
+            ReportKind.evening, "Вечерний обзор рынка — 2026-07-21")
+
+    def test_unknown_session_defaults_to_morning(self):
+        from app.models.enums import ReportKind
+        from app.services.report_service import _session_meta
+
+        kind, title = _session_meta("weird", "2026-07-21")
+        assert kind is ReportKind.morning
+        assert title.startswith("Утренний")
+
+
+class TestBreakingAlert:
+    def test_renders_breaking_story(self):
+        from app.services.report_service import render_breaking_alert
+
+        card = {
+            "headline": "Взрыв на заводе SIBUR", "market_impact": "negative",
+            "summary": "Пожар остановил производство этилена.",
+            "recommendation": "Ожидайте рост цен на этилен.",
+            "source_name": "OilTG", "merged_count": 3,
+        }
+        out = render_breaking_alert(card)
+        assert "СРОЧНО" in out
+        assert "🔴📉" in out
+        assert "Взрыв на заводе SIBUR" in out
+        assert "💡 Ожидайте рост цен на этилен." in out
+        assert "(+2)" in out  # merged_count=3
+        assert "Powered by IMEX AI" in out
+
 
 # ── API (mocked) ─────────────────────────────────────────────────────────────────
 

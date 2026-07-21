@@ -97,11 +97,25 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "nightly_llm_catchup",
         "schedule": crontab(minute=0, hour=2),
     },
-    # ── Daily market report: 08:00 Tashkent ──────────────────────────────────
-    # Builds the morning report as a draft; staff approve + publish on the
+    # ── Morning market report: 08:00 Tashkent ────────────────────────────────
+    # Builds the morning brief as a draft; staff approve + publish on the
     # dashboard (human-in-the-loop — no auto-publish). Phase 3 news engine.
     "generate_daily_report": {
         "task": "generate_daily_report",
         "schedule": crontab(minute=0, hour=8),
+    },
+    # ── Evening market report: 18:00 Tashkent ────────────────────────────────
+    # The second scheduled brief of the day (Phase 8c). Same 3-section structure,
+    # tagged kind='evening'; also a draft for human-in-the-loop approval.
+    "generate_evening_report": {
+        "task": "generate_evening_report",
+        "schedule": crontab(minute=0, hour=18),
+    },
+    # ── Breaking-news publisher: every 10 minutes ────────────────────────────
+    # Pushes newly-detected high-importance news to the channel immediately, without
+    # waiting for the next scheduled brief (Phase 8c). Deduped via signals.extra.
+    "publish_breaking_news": {
+        "task": "publish_breaking_news",
+        "schedule": crontab(minute="*/10"),
     },
 }

@@ -46,7 +46,10 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "check_userbot_health",
         # Phase 5 (05-04): nightly LLM catch-up for budget-deferred items — ROADMAP SC#4
         "nightly_llm_catchup",
-        "generate_daily_report"
+        "generate_daily_report",
+        # Phase 8c: evening brief (18:00) + immediate breaking-news publisher
+        "generate_evening_report",
+        "publish_breaking_news",
     }
     assert set(beat_schedule.keys()) == required_keys, (
         f"Beat schedule keys mismatch: {set(beat_schedule.keys())!r}"

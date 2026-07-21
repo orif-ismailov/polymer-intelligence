@@ -131,6 +131,7 @@ class ReportKind(enum.StrEnum):
     """Type of market report."""
 
     morning = "morning"
+    evening = "evening"
     intraday = "intraday"
     weekly = "weekly"
     custom = "custom"

@@ -120,8 +120,10 @@ celery_app.conf.update(
         "nightly_llm_catchup": {"queue": "parse"},
         "analyze_request_ai": {"queue": "parse"},
         "generate_daily_report": {"queue": "parse"},
+        "generate_evening_report": {"queue": "parse"},
         "app.tasks.notify.*": {"queue": "notify"},
         "publish_report_to_channel": {"queue": "notify"},
+        "publish_breaking_news": {"queue": "notify"},
     },
 )
 

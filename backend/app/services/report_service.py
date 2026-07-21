@@ -122,6 +122,8 @@ def build_snapshot(db: Session) -> dict[str, object]:
         "top_news": _snapshot_top_news(db),
         "news_uz": _snapshot_news(db, uz=True),
         "news_world": _snapshot_news(db, uz=False),
+        # The three mandated sections (Phase 8c): rich, ranked, deduped news cards.
+        "sections": _snapshot_sections(db),
     }
 
 
@@ -321,6 +323,31 @@ def _snapshot_top_news(db: Session, limit: int = 10) -> dict[str, object]:
     return {"count": len(reps), "top": top, "themes": themes}
 
 
+# The three mandated report sections (Phase 8c). Each is a scope over the last 24h of
+# classified news, ranked + cross-source-deduped + localized to ru, capped at 10 items.
+_REPORT_SECTIONS: tuple[tuple[str, str], ...] = (
+    ("uzbekistan", "uzbekistan"),
+    ("global", "global"),
+    ("producers", "producers"),
+)
+_SECTION_ITEM_CAP = 10
+
+
+def _snapshot_sections(db: Session) -> dict[str, object]:
+    """Build the 🇺🇿 Uzbekistan / 🌍 Global / 🏭 Producer sections (≤10 cards each)."""
+    from app.services import news_service  # noqa: PLC0415 — avoid import cycle at module load
+
+    out: dict[str, object] = {}
+    for key, scope in _REPORT_SECTIONS:
+        cards = news_service.list_news_articles(
+            db, days=1, scope=scope, limit=_SECTION_ITEM_CAP, lang="ru"
+        )
+        for card in cards:
+            card.pop("i18n", None)  # raw ru/uz/en variants aren't needed in the stored snapshot
+        out[key] = cards
+    return out
+
+
 # ── Rendering ────────────────────────────────────────────────────────────────────
 
 def _merged_suffix(article: object) -> str:
@@ -330,6 +357,44 @@ def _merged_suffix(article: object) -> str:
         if isinstance(count, int) and count > 1:
             return f" (+{count - 1})"
     return ""
+
+
+_SECTION_HEADERS: tuple[tuple[str, str], ...] = (
+    ("uzbekistan", "🇺🇿 *Рынок Узбекистана*"),
+    ("global", "🌍 *Мировой рынок*"),
+    ("producers", "🏭 *Новости производителей*"),
+)
+_IMP_DOT = {"high": "🔴", "medium": "🟡", "low": "⚪"}
+_IMPACT_ARROW = {"positive": "📈", "negative": "📉", "neutral": "➖"}
+
+
+def _render_sections(sections: dict[str, object]) -> list[str]:
+    """Render the three mandated report sections as markdown card blocks."""
+    lines: list[str] = []
+    for key, header in _SECTION_HEADERS:
+        items = sections.get(key)
+        if not isinstance(items, list) or not items:
+            continue
+        lines += ["", header]
+        for n in items[:_SECTION_ITEM_CAP]:
+            if not isinstance(n, dict):
+                continue
+            mark = _IMP_DOT.get(str(n.get("importance")), "⚪") + _IMPACT_ARROW.get(
+                str(n.get("market_impact")), ""
+            )
+            head = str(n.get("headline") or "").strip()
+            src = n.get("source_name") or "—"
+            lines.append(f"{mark} *{head}* — _{src}_{_merged_suffix(n)}")
+            summ = str(n.get("summary") or "").strip().replace("\n", " ")
+            if summ:
+                lines.append(summ if len(summ) <= 200 else summ[:197] + "…")
+            rec = str(n.get("recommendation") or "").strip()
+            if rec:
+                lines.append(f"💡 {rec}")
+            prods = n.get("related_products")
+            if isinstance(prods, list) and prods:
+                lines.append("📦 " + ", ".join(str(p) for p in prods[:6]))
+    return lines
 
 
 def _rule_based_summary(snapshot: dict[str, object]) -> str:
@@ -400,42 +465,49 @@ def render_markdown(
     if isinstance(offers, dict) and int(offers.get("count", 0) or 0) > 0:
         lines += ["", f"📦 *Новые предложения на маркете (24ч)*: {offers['count']}"]
 
-    # ── Топ новостей (24ч) — ranked + themed from ai.news ────────────────────
-    top_news = snapshot.get("top_news")
-    if isinstance(top_news, dict) and (top_news.get("top") or []):
-        _imp = {"high": "🔴", "medium": "🟡", "low": "⚪"}
-        _impact = {"positive": "📈", "negative": "📉", "neutral": "➖"}
-        top = list(top_news.get("top") or [])
-        lines += ["", f"📰 *Топ новостей (24ч)* — всего: {top_news.get('count', len(top))}"]
-        for n in top[:8]:
-            if not isinstance(n, dict):
-                continue
-            mark = _imp.get(str(n.get("importance")), "⚪") + _impact.get(str(n.get("market_impact")), "")
-            lines.append(
-                f"{mark} {str(n.get('headline') or '').strip()} — "
-                f"_{n.get('source', '—')}_{_merged_suffix(n)}"
-            )
-        themes = top_news.get("themes") if isinstance(top_news.get("themes"), dict) else {}
-        for key, label, _cats in _NEWS_THEMES:
-            heads = themes.get(key) if isinstance(themes, dict) else None
-            if isinstance(heads, list) and heads:
-                lines += ["", label]
-                lines += [f"• {h}" for h in heads[:4]]
+    # ── Three mandated sections (Phase 8c): 🇺🇿 UZ / 🌍 Global / 🏭 Producers ──
+    sections = snapshot.get("sections")
+    has_sections = isinstance(sections, dict) and any(
+        isinstance(v, list) and v for v in sections.values()
+    )
+    if has_sections:
+        lines += _render_sections(sections)  # type: ignore[arg-type]
+    else:
+        # Legacy path (pre-8c snapshots / tests): ranked top-news + excerpt fallback.
+        top_news = snapshot.get("top_news")
+        if isinstance(top_news, dict) and (top_news.get("top") or []):
+            top = list(top_news.get("top") or [])
+            lines += ["", f"📰 *Топ новостей (24ч)* — всего: {top_news.get('count', len(top))}"]
+            for n in top[:8]:
+                if not isinstance(n, dict):
+                    continue
+                mark = _IMP_DOT.get(str(n.get("importance")), "⚪") + _IMPACT_ARROW.get(
+                    str(n.get("market_impact")), ""
+                )
+                lines.append(
+                    f"{mark} {str(n.get('headline') or '').strip()} — "
+                    f"_{n.get('source', '—')}_{_merged_suffix(n)}"
+                )
+            themes = top_news.get("themes") if isinstance(top_news.get("themes"), dict) else {}
+            for key, label, _cats in _NEWS_THEMES:
+                heads = themes.get(key) if isinstance(themes, dict) else None
+                if isinstance(heads, list) and heads:
+                    lines += ["", label]
+                    lines += [f"• {h}" for h in heads[:4]]
 
-    # ── Новости (excerpt fallback for un-classified items) ───────────────────
-    def _news_block(title: str, items: object) -> None:
-        if isinstance(items, list) and items:
-            lines.append("")
-            lines.append(title)
-            for n in items[:4]:
-                excerpt = str(n.get("excerpt") or "").strip().replace("\n", " ")
-                if len(excerpt) > 160:
-                    excerpt = excerpt[:157] + "…"
-                if excerpt:
-                    lines.append(f"• [{n.get('source', '—')}] {excerpt}")
+        def _news_block(title: str, items: object) -> None:
+            if isinstance(items, list) and items:
+                lines.append("")
+                lines.append(title)
+                for n in items[:4]:
+                    excerpt = str(n.get("excerpt") or "").strip().replace("\n", " ")
+                    if len(excerpt) > 160:
+                        excerpt = excerpt[:157] + "…"
+                    if excerpt:
+                        lines.append(f"• [{n.get('source', '—')}] {excerpt}")
 
-    _news_block("🇺🇿 *Новости Узбекистана*", snapshot.get("news_uz"))
-    _news_block("🌍 *Мировая нефтехимия*", snapshot.get("news_world"))
+        _news_block("🇺🇿 *Новости Узбекистана*", snapshot.get("news_uz"))
+        _news_block("🌍 *Мировая нефтехимия*", snapshot.get("news_world"))
 
     lines += [
         "",
@@ -503,14 +575,21 @@ def render_telegram_digest(
         if _fits(block):
             lines = block
 
-    # Ranked top news — append items one at a time while they fit.
-    top_news = snapshot.get("top_news")
-    top = list(top_news.get("top") or []) if isinstance(top_news, dict) else []
-    if top:
-        header = [*lines, "", "*Главные новости:*"]
-        if _fits(header):
-            lines = header
-            for n in top:
+    # Three mandated sections (Phase 8c) — compact: header + top headlines each.
+    sections = snapshot.get("sections")
+    has_sections = isinstance(sections, dict) and any(
+        isinstance(v, list) and v for v in sections.values()
+    )
+    if has_sections:
+        for key, sec_header in _SECTION_HEADERS:
+            items = sections.get(key) if isinstance(sections, dict) else None
+            if not isinstance(items, list) or not items:
+                continue
+            block_header = [*lines, "", sec_header]
+            if not _fits(block_header):
+                break
+            lines = block_header
+            for n in items[:5]:
                 if not isinstance(n, dict):
                     continue
                 mark = _TG_IMPORTANCE.get(str(n.get("importance")), "⚪") + _TG_IMPACT.get(
@@ -519,21 +598,42 @@ def render_telegram_digest(
                 head = str(n.get("headline") or "").strip()
                 if not head:
                     continue
-                candidate = [*lines, f"{mark} {head} — _{n.get('source', '—')}_{_merged_suffix(n)}"]
+                src = n.get("source_name") or n.get("source") or "—"
+                candidate = [*lines, f"{mark} {head} — _{src}_{_merged_suffix(n)}"]
                 if not _fits(candidate):
                     break
                 lines = candidate
+    else:
+        # Legacy path (pre-8c snapshots): ranked top news + themed one-liners.
+        top_news = snapshot.get("top_news")
+        top = list(top_news.get("top") or []) if isinstance(top_news, dict) else []
+        if top:
+            header = [*lines, "", "*Главные новости:*"]
+            if _fits(header):
+                lines = header
+                for n in top:
+                    if not isinstance(n, dict):
+                        continue
+                    mark = _TG_IMPORTANCE.get(str(n.get("importance")), "⚪") + _TG_IMPACT.get(
+                        str(n.get("market_impact")), ""
+                    )
+                    head = str(n.get("headline") or "").strip()
+                    if not head:
+                        continue
+                    candidate = [*lines, f"{mark} {head} — _{n.get('source', '—')}_{_merged_suffix(n)}"]
+                    if not _fits(candidate):
+                        break
+                    lines = candidate
 
-    # Themed one-liners (compact: "label: h1; h2").
-    themes = top_news.get("themes") if isinstance(top_news, dict) else None
-    if isinstance(themes, dict):
-        for key, label, _cats in _NEWS_THEMES:
-            heads = themes.get(key)
-            if isinstance(heads, list) and heads:
-                candidate = [*lines, f"{label}: " + "; ".join(str(h) for h in heads[:2])]
-                if not _fits(candidate):
-                    break
-                lines = candidate
+        themes = top_news.get("themes") if isinstance(top_news, dict) else None
+        if isinstance(themes, dict):
+            for key, label, _cats in _NEWS_THEMES:
+                heads = themes.get(key)
+                if isinstance(heads, list) and heads:
+                    candidate = [*lines, f"{label}: " + "; ".join(str(h) for h in heads[:2])]
+                    if not _fits(candidate):
+                        break
+                    lines = candidate
 
     # UZ price movers — one line, biggest absolute moves first.
     products = snapshot.get("products")
@@ -603,14 +703,28 @@ def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
 
 # ── Generation ───────────────────────────────────────────────────────────────────
 
-def generate_report(db: Session, *, use_llm: bool = True) -> Report:
-    """Build today's digest and persist it as a draft. Does NOT commit.
+# Morning vs evening brief (Phase 8c). Same builder, different schedule + label.
+_SESSION_META: dict[str, tuple[ReportKind, str]] = {
+    "morning": (ReportKind.morning, "Утренний обзор рынка"),
+    "evening": (ReportKind.evening, "Вечерний обзор рынка"),
+}
+
+
+def _session_meta(session: str, date_iso: str) -> tuple[ReportKind, str]:
+    """Map a session label to its (ReportKind, title). Unknown → morning."""
+    kind, prefix = _SESSION_META.get(session, _SESSION_META["morning"])
+    return kind, f"{prefix} — {date_iso}"
+
+
+def generate_report(db: Session, *, use_llm: bool = True, session: str = "morning") -> Report:
+    """Build a market digest (morning or evening) and persist it as a draft. No commit.
 
     The AI part (summary + forecast in ru/en/uz) is best-effort: on any LLM failure the
     report degrades to the deterministic rule-based Russian summary with no forecast.
     Localized texts are journaled in data_snapshot["i18n"] for the API/webapp.
     """
     snapshot = build_snapshot(db)
+    snapshot["session"] = session
     digest = _ai_digest(snapshot) if use_llm else None
     used_llm = digest is not None
 
@@ -625,11 +739,12 @@ def generate_report(db: Session, *, use_llm: bool = True) -> Report:
     content_md = render_markdown(snapshot, summary, forecast)
 
     today = to_display_tz(utcnow(), settings.TZ_DISPLAY).date()
+    kind, title = _session_meta(session, today.isoformat())
     report = Report(
-        kind=ReportKind.morning,
+        kind=kind,
         period_start=today,
         period_end=today,
-        title=f"Обзор рынка — {today.isoformat()}",
+        title=title,
         content_md=content_md,
         data_snapshot=snapshot,
         status=ReportStatus.draft,
@@ -641,8 +756,91 @@ def generate_report(db: Session, *, use_llm: bool = True) -> Report:
     )
     db.add(report)
     db.flush()
-    logger.info("report_service.generate", extra={"report_id": report.id, "llm": used_llm})
+    logger.info(
+        "report_service.generate",
+        extra={"report_id": report.id, "llm": used_llm, "session": session},
+    )
     return report
+
+
+# ── Breaking news (Phase 8c) ────────────────────────────────────────────────────────
+# High-importance news is pushed to the channel immediately instead of waiting for the
+# next scheduled brief. Each pushed story is marked (signals.extra.breaking_pushed) so a
+# beat task can poll without re-sending. Same-story items merge into one alert.
+
+_BREAKING_HEADER = "🚨 *СРОЧНО — важная новость*"
+
+
+def pending_breaking_news(
+    db: Session, *, minutes: int = 120, limit: int = 20
+) -> list[dict[str, object]]:
+    """Recent high-importance news not yet pushed, merged per story.
+
+    Returns a list of {"card": <ru-localized card>, "ids": [signal ids in the cluster]}.
+    Marking every id in the cluster prevents re-pushing the same event from a second source.
+    """
+    from app.services import news_service  # noqa: PLC0415 — avoid import cycle at module load
+
+    rows = (
+        db.execute(
+            sa.text(
+                """
+                SELECT s.id AS id, s.event_at AS event_at, s.ai AS ai,
+                       src.name AS source_name, src.country AS country
+                FROM signals s
+                JOIN sources src ON src.id = s.source_id
+                WHERE s.kind = 'news'
+                  AND s.ai -> 'news' ->> 'importance' = 'high'
+                  AND s.event_at >= now() - make_interval(mins => :minutes)
+                  AND COALESCE((s.extra ->> 'breaking_pushed')::boolean, false) = false
+                ORDER BY s.event_at DESC
+                LIMIT :limit
+                """
+            ),
+            {"minutes": minutes, "limit": limit},
+        )
+        .mappings()
+        .all()
+    )
+    cards = [news_service._article_card(r) for r in rows if isinstance(r["ai"], dict)]
+    out: list[dict[str, object]] = []
+    for members in cluster_articles(cards):
+        rep = news_service._localize(dict(members[0]), "ru")
+        rep.pop("i18n", None)
+        out.append({"card": rep, "ids": [int(str(m["id"])) for m in members]})
+    return out
+
+
+def mark_breaking_pushed(db: Session, ids: list[int]) -> None:
+    """Flag signals as already pushed as breaking news (idempotent)."""
+    if not ids:
+        return
+    db.execute(
+        sa.text(
+            "UPDATE signals "
+            "SET extra = COALESCE(extra, '{}'::jsonb) "
+            "         || jsonb_build_object('breaking_pushed', true, 'breaking_pushed_at', CAST(:ts AS text)) "
+            "WHERE id = ANY(CAST(:ids AS bigint[]))"
+        ),
+        {"ts": utcnow().isoformat(), "ids": ids},
+    )
+
+
+def render_breaking_alert(card: dict[str, object]) -> str:
+    """Compact single-story breaking-news push for the Telegram channel."""
+    head = str(card.get("headline") or "").strip()
+    mark = "🔴" + _IMPACT_ARROW.get(str(card.get("market_impact")), "")
+    lines = [_BREAKING_HEADER, "", f"{mark} *{head}*"]
+    summary = str(card.get("summary") or "").strip()
+    if summary:
+        lines += ["", _truncate(summary, 400)]
+    rec = str(card.get("recommendation") or "").strip()
+    if rec:
+        lines += ["", f"💡 {rec}"]
+    src = card.get("source_name")
+    if src:
+        lines += ["", f"_{src}_{_merged_suffix(card)}"]
+    return "\n".join(lines) + f"\n\n—\n{_POWERED_BY}"
 
 
 # ── Reads ────────────────────────────────────────────────────────────────────────
