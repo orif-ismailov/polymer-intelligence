@@ -77,9 +77,9 @@ class TestRender:
         assert "Shurtan останавливает PP-линию" in md
         assert "[PP]" in md  # products rendered inline (compact)
         assert "(+1)" in md  # merged_count=2 → +N suffix
-        # compact: the verbose per-card summary/recommendation are NOT in the digest
+        assert "Ремонт сократит выпуск PP." in md  # short one-line summary IS rendered
+        # but the verbose 3-sentence recommendation is NOT (that's on the News card)
         assert "Следите за ценами PP." not in md
-        assert "Ремонт сократит выпуск PP." not in md
         # legacy excerpt blocks are suppressed when sections are present
         assert "Мировая нефтехимия" not in md
 

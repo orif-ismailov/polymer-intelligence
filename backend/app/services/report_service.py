@@ -449,22 +449,30 @@ _SECTION_HEADERS: tuple[tuple[str, str], ...] = (
 )
 _IMP_DOT = {"high": "🔴", "medium": "🟡", "low": "⚪"}
 _IMPACT_ARROW = {"positive": "📈", "negative": "📉", "neutral": "➖"}
-_SECTION_RENDER_CAP = 6  # headlines per section in the digest (detail is on the News card)
+_SECTION_RENDER_CAP = 6  # stories per section (each = headline line + a short summary line)
+_SUMMARY_MAX = 180       # one-line summary cap under each headline
+
+
+def _one_line(text: str, limit: int) -> str:
+    """Collapse whitespace and truncate to a single skimmable line."""
+    collapsed = " ".join(text.split())
+    return collapsed if len(collapsed) <= limit else collapsed[: limit - 1].rstrip() + "…"
 
 
 def _render_sections(sections: dict[str, object]) -> list[str]:
-    """Compact section rendering: ONE line per story, capped per section, deduped across
-    sections. The full summary/analysis/recommendation live on the per-article News card;
-    the report is a scannable overview, not a wall of text."""
+    """Balanced section rendering: per story a headline line + ONE short summary line,
+    capped per section and deduped across sections. Informative but scannable — the full
+    analysis + recommendation live on the per-article News card."""
     lines: list[str] = []
     seen: set[str] = set()  # dedup by normalized headline across all sections
     for key, header in _SECTION_HEADERS:
         items = sections.get(key)
         if not isinstance(items, list):
             continue
-        rendered: list[str] = []
+        block: list[str] = []
+        count = 0
         for n in items:
-            if len(rendered) >= _SECTION_RENDER_CAP:
+            if count >= _SECTION_RENDER_CAP:
                 break
             if not isinstance(n, dict):
                 continue
@@ -473,6 +481,7 @@ def _render_sections(sections: dict[str, object]) -> list[str]:
             if not head or dedup_key in seen:
                 continue
             seen.add(dedup_key)
+            count += 1
             mark = _IMP_DOT.get(str(n.get("importance")), "⚪") + _IMPACT_ARROW.get(
                 str(n.get("market_impact")), ""
             )
@@ -481,9 +490,12 @@ def _render_sections(sections: dict[str, object]) -> list[str]:
             tag = ""
             if isinstance(prods, list) and prods:
                 tag = " [" + ", ".join(str(p) for p in prods[:4]) + "]"
-            rendered.append(f"{mark} {head} — _{src}_{_merged_suffix(n)}{tag}")
-        if rendered:
-            lines += ["", f"{header} ({len(rendered)})", *rendered]
+            block.append(f"{mark} *{head}* — _{src}_{_merged_suffix(n)}{tag}")
+            summ = str(n.get("summary") or "").strip()
+            if summ:
+                block.append(_one_line(summ, _SUMMARY_MAX))
+        if block:
+            lines += ["", f"{header} ({count})", *block]
     return lines
 
 
