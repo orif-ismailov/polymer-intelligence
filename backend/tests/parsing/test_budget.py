@@ -227,3 +227,17 @@ class TestReleaseReservation:
         with patch.object(budget_module, "_redis", mock_redis):
             budget_module.release_reservation(0)
         mock_redis.eval.assert_not_called()
+
+
+class TestReleaseIsBestEffort:
+    """Phase 8g: a refund runs on an error/dead-letter path, so a Redis failure during
+    release must be swallowed (never crash the caller)."""
+
+    def test_release_swallows_redis_error(self) -> None:
+        import parsing.budget as budget_module
+
+        mock_redis = MagicMock()
+        mock_redis.eval.side_effect = ConnectionError("Error 111 connecting to localhost:6379")
+        with patch.object(budget_module, "_redis", mock_redis):
+            budget_module.release_reservation(1200)  # must NOT raise
+        mock_redis.eval.assert_called_once()

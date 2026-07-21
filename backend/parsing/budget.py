@@ -36,12 +36,15 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, date, datetime
 
 import redis as redis_lib
 
 from app.core.config import settings
 from parsing.schemas import BudgetExceeded
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -210,10 +213,17 @@ def release_reservation(reserved: int) -> None:
 
     Args:
         reserved: The estimated_tokens value that was reserved for the failed call.
+
+    Best-effort: the caller is already on an error/dead-letter path, so a refund failure
+    (e.g. Redis unavailable) must never propagate and crash it. The daily UTC-midnight
+    reset clears the counter regardless.
     """
     if reserved <= 0:
         return
-    _redis.eval(_RELEASE_LUA, 1, key_for(date.today()), reserved)
+    try:
+        _redis.eval(_RELEASE_LUA, 1, key_for(date.today()), reserved)
+    except Exception:  # noqa: BLE001 — best-effort refund; never crash the error path
+        logger.warning("budget.release_reservation_failed", exc_info=True)
 
 
 def daily_spend() -> int:
