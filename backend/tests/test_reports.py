@@ -38,6 +38,31 @@ class TestRender:
         assert "снизились" in _rule_based_summary(down)
         assert "Недостаточно" in _rule_based_summary({"products": []})
 
+    def test_rule_based_summary_weaves_local_market_and_sections(self):
+        """Fallback (LLM down) still reports UZEX activity + which sections carry news."""
+        from app.services.report_service import _rule_based_summary
+
+        snap = {
+            "products": [{"delta": 5.0}, {"delta": 2.0}],
+            "local_market": {"exchange": {"deals": 42, "quotes": 376, "offers": 7}},
+            "news_explored_count": 63,
+            "sections": {
+                "uzbekistan": [{"headline": "x"}], "producers": [], "global": [{"headline": "y"}],
+            },
+        }
+        out = _rule_based_summary(snap)
+        assert "выросли" in out
+        assert "UZEX" in out and "сделок — 42" in out
+        assert "Обработано 63" in out
+        assert "Узбекистан" in out and "мировой рынок" in out
+        assert "производители" not in out  # empty producers section not listed
+
+    def test_report_prompt_v6_ships(self):
+        from app.services.report_service import _load_prompt
+
+        prompt = _load_prompt("v6")
+        assert prompt and "summary" in prompt and "briefs" in prompt
+
     def test_render_markdown_contains_products_and_summary(self):
         from app.services.report_service import render_markdown
 
@@ -48,6 +73,22 @@ class TestRender:
         assert "(-10)" in md
         assert "Тестовое резюме." in md
         assert "запросы — 14" in md
+
+    def test_render_markdown_shows_explored_count_above_summary(self):
+        from app.services.report_service import render_markdown
+
+        snap = {**self._snapshot(), "news_explored_count": 63}
+        md = render_markdown(snap, "Резюме.")
+        assert "🤖 *AI Summary*" in md
+        assert "обработано новостей: 63" in md
+        # the count line sits above the summary paragraph
+        assert md.index("обработано новостей: 63") < md.index("Резюме.")
+
+    def test_render_markdown_omits_count_line_when_absent(self):
+        from app.services.report_service import render_markdown
+
+        md = render_markdown(self._snapshot(), "Резюме.")  # no news_explored_count
+        assert "обработано новостей" not in md
 
     def _card(self, **over: Any) -> dict[str, Any]:
         base = {

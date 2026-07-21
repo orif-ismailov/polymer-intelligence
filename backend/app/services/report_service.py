@@ -110,6 +110,7 @@ def build_snapshot(db: Session) -> dict[str, object]:
     activity_map = {str(a["kind"]): int(a["n"]) for a in activity}
 
     today = to_display_tz(utcnow(), settings.TZ_DISPLAY).date()
+    top_news = _snapshot_top_news(db)
     return {
         "date": today.isoformat(),
         "products": products,
@@ -119,7 +120,10 @@ def build_snapshot(db: Session) -> dict[str, object]:
         "tenders_24h": _snapshot_tenders(db),
         "new_requests_24h": _snapshot_new_requests(db),
         "new_offers_24h": _snapshot_new_offers(db),
-        "top_news": _snapshot_top_news(db),
+        "top_news": top_news,
+        # Distinct petrochemical news stories reviewed in the last 24h (post-dedup). Shared
+        # by the LLM summary (prompt v6 opens with it) and the deterministic count line.
+        "news_explored_count": _as_int(top_news.get("count")),
         "news_uz": _snapshot_news(db, uz=True),
         "news_world": _snapshot_news(db, uz=False),
         # The three mandated sections (Phase 8c): rich, ranked, deduped news cards.
@@ -577,24 +581,61 @@ def _render_local_market(lm: dict[str, object]) -> list[str]:
     return lines
 
 
+_SECTION_LABELS_RU: tuple[tuple[str, str], ...] = (
+    ("uzbekistan", "Узбекистан"),
+    ("producers", "производители"),
+    ("global", "мировой рынок"),
+)
+
+
 def _rule_based_summary(snapshot: dict[str, object]) -> str:
-    """Deterministic fallback summary — prices direction + news volume. Used only when the
-    LLM digest is unavailable; still useful (mentions the day's news, not just prices)."""
+    """Deterministic fallback summary — used only when the LLM digest is unavailable.
+    Still professional: price direction + local UZEX activity + which news sections carry
+    data, so a degraded report is more than a bare count."""
     parts: list[str] = []
+
     products = snapshot.get("products") or []
     if isinstance(products, list) and products:
-        ups = sum(1 for p in products if float(p["delta"]) > 0)
-        downs = sum(1 for p in products if float(p["delta"]) < 0)
+        ups = sum(1 for p in products if isinstance(p, dict) and (_as_float(p.get("delta")) or 0) > 0)
+        downs = sum(1 for p in products if isinstance(p, dict) and (_as_float(p.get("delta")) or 0) < 0)
         if ups > downs:
             parts.append("Цены по большинству позиций выросли за период.")
         elif downs > ups:
             parts.append("Цены по большинству позиций снизились за период.")
         else:
             parts.append("Цены в целом стабильны за период.")
-    top_news = snapshot.get("top_news")
-    news_n = _as_int(top_news.get("count")) if isinstance(top_news, dict) else 0
-    if news_n:
-        parts.append(f"За сутки отобрано {news_n} ключевых нефтехимических новостей (см. разделы ниже).")
+
+    # Local Uzbekistan market: UZEX exchange activity (FX shows on its own line).
+    lm = snapshot.get("local_market")
+    if isinstance(lm, dict):
+        ex_raw = lm.get("exchange")
+        ex = ex_raw if isinstance(ex_raw, dict) else {}
+        deals, quotes, offers = _as_int(ex.get("deals")), _as_int(ex.get("quotes")), _as_int(ex.get("offers"))
+        if deals or quotes or offers:
+            parts.append(
+                f"Биржа UZEX: сделок — {deals}, котировок — {quotes}, предложений — {offers}."
+            )
+
+    # News: how many stories, and which sections carry data today.
+    explored = _as_int(snapshot.get("news_explored_count"))
+    if not explored:
+        top_news = snapshot.get("top_news")
+        explored = _as_int(top_news.get("count")) if isinstance(top_news, dict) else 0
+    if explored:
+        sections = snapshot.get("sections")
+        labels = [
+            label
+            for key, label in _SECTION_LABELS_RU
+            if isinstance(sections, dict) and isinstance(sections.get(key), list) and sections.get(key)
+        ]
+        if labels:
+            parts.append(
+                f"Обработано {explored} нефтехимических новостей по разделам: "
+                + ", ".join(labels) + "."
+            )
+        else:
+            parts.append(f"Обработано {explored} нефтехимических новостей за сутки.")
+
     return " ".join(parts) if parts else "Недостаточно данных для анализа за сегодня."
 
 
@@ -714,8 +755,13 @@ def render_markdown(
         f"предложения — {snapshot.get('sell_offers_7d', 0)}",
         "",
         "🤖 *AI Summary*",
-        summary,
     ]
+    # Always show how many stories were reviewed — accurate regardless of the LLM summary
+    # text (it may or may not mention the count). Rendered only when there were any.
+    explored = _as_int(snapshot.get("news_explored_count"))
+    if explored > 0:
+        lines.append(f"📈 За 24 часа обработано новостей: {explored}")
+    lines.append(summary)
     if forecast:
         lines += ["", "🔮 *Прогноз*", forecast]
     return "\n".join(lines)
