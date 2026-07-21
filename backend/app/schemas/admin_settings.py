@@ -8,13 +8,17 @@ from pydantic import BaseModel
 
 
 class SettingItem(BaseModel):
-    """One runtime setting with its resolved value, default, and override flag."""
+    """One runtime setting with its resolved value, default, and override flag.
+
+    `value`/`default` cover bool, str, and int settings (e.g. the refresh interval).
+    Order matters: bool before int so True/False don't validate as 1/0.
+    """
 
     key: str
     type: str
     label: str
-    value: bool | str
-    default: bool | str
+    value: bool | int | str
+    default: bool | int | str
     is_overridden: bool
 
 

@@ -81,6 +81,21 @@ class TestSettingsApi:
         assert resp.status_code == 400
         assert "Unknown setting" in resp.json()["detail"]
 
+    def test_setting_item_accepts_int_bool_str(self) -> None:
+        """Regression: int settings (refresh interval) must serialize — value is bool|int|str."""
+        from app.schemas.admin_settings import SettingItem  # noqa: PLC0415
+
+        i = SettingItem.model_validate(
+            {"key": "news_refresh_interval_minutes", "type": "int", "label": "x",
+             "value": 60, "default": 60, "is_overridden": False}
+        )
+        assert i.value == 60 and isinstance(i.value, int)
+        b = SettingItem.model_validate(
+            {"key": "news_ai_enabled", "type": "bool", "label": "x",
+             "value": True, "default": True, "is_overridden": False}
+        )
+        assert b.value is True  # bool stays bool, not coerced to 1
+
 
 class TestNewsOpsApi:
     def test_stats(self) -> None:

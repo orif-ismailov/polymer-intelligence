@@ -313,6 +313,20 @@ class TestSettingsDb:
         with _open(seeded_news) as s, _pytest.raises(KeyError):
             settings_service.get(s, "does_not_exist")
 
+    def test_get_all_serializes_through_response_schema(self, seeded_news: sa.Engine) -> None:
+        """Regression for the /admin/settings 500: every spec's get_all() output must
+        validate through SettingItem (the int refresh-interval broke a bool|str union)."""
+        from app.schemas.admin_settings import SettingItem  # noqa: PLC0415
+        from app.services import settings_service  # noqa: PLC0415
+
+        with _open(seeded_news) as s:
+            by_key = {
+                i.key: i for i in (SettingItem.model_validate(r) for r in settings_service.get_all(s))
+            }
+        assert isinstance(by_key["news_refresh_interval_minutes"].value, int)
+        assert isinstance(by_key["news_ai_enabled"].value, bool)
+        assert isinstance(by_key["llm_extract_model"].value, str)
+
     def test_int_setting_clamped(self, seeded_news: sa.Engine) -> None:
         from app.services import settings_service  # noqa: PLC0415
 
