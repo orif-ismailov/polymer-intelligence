@@ -79,7 +79,7 @@ _TRANSITIONS: dict[CompanyStatus, set[CompanyStatus]] = {
         CompanyStatus.draft,  # case cancelled → back to draft
     },
     CompanyStatus.verified: {CompanyStatus.suspended},
-    CompanyStatus.rejected: {CompanyStatus.pending_verification},  # re-open a case
+    CompanyStatus.rejected: {CompanyStatus.draft},  # re-open → back to draft for editing
     CompanyStatus.suspended: {CompanyStatus.verified},  # reinstate
     CompanyStatus.liquidated: set(),
 }

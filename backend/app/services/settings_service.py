@@ -55,6 +55,10 @@ def _specs() -> tuple[SettingSpec, ...]:
             "news_refresh_interval_minutes", "int", 60, "News refresh interval (minutes)",
             min=5, max=1440,
         ),
+        SettingSpec(
+            "verification_auto_approve", "bool", False,
+            "Auto-approve verification cases when all automated checks pass",
+        ),
     )
 
 

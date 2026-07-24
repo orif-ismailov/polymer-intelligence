@@ -38,7 +38,9 @@ _TABLES = [
     "company_members",
     "companies",
     "sms_send_log",
+    "staff_users",
     "user_accounts",
+    "app_settings",  # reset operator overrides (e.g. verification_auto_approve) per test
 ]
 
 
@@ -77,3 +79,15 @@ def make_account(db: Session, phone: str):  # noqa: ANN202
     db.add(account)
     db.flush()
     return account
+
+
+def make_staff(db: Session, email: str = "staff@example.com"):  # noqa: ANN202
+    from app.models.enums import StaffRole  # noqa: PLC0415
+    from app.models.staff import StaffUser  # noqa: PLC0415
+
+    staff = StaffUser(
+        email=email, full_name="Test Staff", role=StaffRole.admin, password_hash="x"
+    )
+    db.add(staff)
+    db.flush()
+    return staff

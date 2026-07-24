@@ -30,7 +30,7 @@ _LEGAL = {
     ("pending_verification", "rejected"),
     ("pending_verification", "draft"),
     ("verified", "suspended"),
-    ("rejected", "pending_verification"),
+    ("rejected", "draft"),
     ("suspended", "verified"),
 }
 
