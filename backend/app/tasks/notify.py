@@ -929,3 +929,62 @@ def send_offer_request_to_seller(offer_request_id: int) -> dict[str, Any]:
         return {"status": "error", "error": str(exc)}
 
     return {"status": "ok", "error": None}
+
+
+# ── OTP / portal SMS delivery (R1 W3) ─────────────────────────────────────────
+
+
+def _write_sms_log(
+    phone: str,
+    purpose: str,
+    provider: str,
+    provider_msg_id: str | None,
+    status: str,
+) -> None:
+    """Record one SMS attempt in `sms_send_log` (separate short transaction).
+
+    Codes are NEVER written here — only the fact/outcome of a send, for cost
+    tracking + OTP-abuse forensics. Best-effort: a logging failure must not fail
+    the send task.
+    """
+    from app.core.db import SessionLocal  # noqa: PLC0415
+    from app.models.accounts import SmsSendLog  # noqa: PLC0415
+
+    try:
+        with SessionLocal() as db:
+            db.add(
+                SmsSendLog(
+                    phone=phone,
+                    purpose=purpose,
+                    provider=provider,
+                    provider_msg_id=provider_msg_id,
+                    status=status,
+                )
+            )
+            db.commit()
+    except Exception as exc:  # noqa: BLE001 — forensic log must not break delivery
+        logger.warning("sms_log.error", extra={"error": str(exc)})
+
+
+@celery_app.task(name="send_sms", queue="notify")  # type: ignore[untyped-decorator]
+def send_sms(phone: str, text: str, purpose: str = "otp") -> dict[str, Any]:
+    """Deliver an SMS via the configured provider and log the attempt.
+
+    Never raises (T-03-13 pattern): returns a status dict so the worker stays
+    alive on any provider/DB failure. The OTP code lives in `text` and is NEVER
+    logged here — only the console driver prints it (dev/CI, gated by
+    SMS_PROVIDER=console).
+    """
+    from app.integrations.sms import get_sms_provider  # noqa: PLC0415
+
+    provider = get_sms_provider()
+    try:
+        result = asyncio.run(provider.send(phone, text))
+    except Exception as exc:  # noqa: BLE001 — dead provider must not kill the worker
+        logger.warning("send_sms.error", extra={"phone": phone, "error": str(exc)})
+        _write_sms_log(phone, purpose, provider.provider_name, None, "error")
+        return {"status": "error", "error": str(exc)}
+
+    outcome = "ok" if result.ok else "error"
+    _write_sms_log(phone, purpose, provider.provider_name, result.provider_msg_id, outcome)
+    return {"status": outcome, "provider_msg_id": result.provider_msg_id, "error": result.error}
