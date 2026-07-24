@@ -128,7 +128,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default
+    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default,verify
     volumes:
       - ../backend:/app
 

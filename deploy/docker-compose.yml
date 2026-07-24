@@ -204,7 +204,7 @@ services:
       # worker consumes) lazily imports userbot.heartbeat. Repo-root package, not in
       # the image, so mount it read-only at /app/userbot (WORKDIR is /app) too.
       - ../userbot:/app/userbot:ro
-    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default
+    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default,verify
     # No host ports.
 
   # ── Celery Beat (scheduler) ───────────────────────────────────────────────

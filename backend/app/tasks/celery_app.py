@@ -14,8 +14,10 @@ Design notes:
   hostile broker message cannot execute arbitrary objects on deserialization.
 - task_acks_late=True + worker_prefetch_multiplier=1 (T-02-02 / REQ-nfr-reliability):
   a crashed worker re-queues rather than silently dropping the in-flight fetch.
-- Four queues exactly match the existing compose `-Q ingest,parse,notify,default`
-  flag in deploy/docker-compose.dev.yml.
+- Five queues exactly match the existing compose
+  `-Q ingest,parse,notify,default,verify` flag in deploy/docker-compose.dev.yml.
+  The `verify` queue (R1 company verification) isolates provider/check tasks so a
+  slow or dead external provider can't starve ingest/parse/notify.
 - beat_schedule is imported from app.tasks.schedule (Task 2) and attached to
   celery_app.conf so changing the schedule does not require editing this file.
 """
@@ -89,13 +91,16 @@ celery_app.conf.update(
     # ── Startup ───────────────────────────────────────────────────────────────
     broker_connection_retry_on_startup=True,
     # ── Queue topology ────────────────────────────────────────────────────────
-    # Four named queues exactly matching the compose `-Q ingest,parse,notify,default`
-    # flag. Each queue uses the default direct exchange (kombu.Queue default).
+    # Five named queues exactly matching the compose
+    # `-Q ingest,parse,notify,default,verify` flag. Each queue uses the default
+    # direct exchange (kombu.Queue default). `verify` (R1) isolates company
+    # verification checks/provider calls from the signal + news pipelines.
     task_queues=[
         Queue("ingest"),
         Queue("parse"),
         Queue("notify"),
         Queue("default"),
+        Queue("verify"),
     ],
     task_default_queue="default",
     # ── Routing ───────────────────────────────────────────────────────────────
@@ -126,6 +131,11 @@ celery_app.conf.update(
         "app.tasks.notify.*": {"queue": "notify"},
         "publish_report_to_channel": {"queue": "notify"},
         "publish_breaking_news": {"queue": "notify"},
+        # Company verification (R1): checks + external-provider calls run on the
+        # isolated `verify` queue (see verify Queue above). The dispatcher itself
+        # (app.tasks.events.*) is intentionally NOT routed here — it falls through
+        # to `default` and only fans out; consumers land on their own queues.
+        "app.tasks.verification.*": {"queue": "verify"},
     },
 )
 
