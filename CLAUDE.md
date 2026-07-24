@@ -28,6 +28,7 @@ gotchas. **Read the relevant one before working inside that directory:**
 - [`backend/CLAUDE.md`](backend/CLAUDE.md) — FastAPI + Celery + SQLAlchemy core (API, ingest, tasks, LLM parsing).
 - [`dashboard/CLAUDE.md`](dashboard/CLAUDE.md) — Next.js internal team dashboard.
 - [`webapp/CLAUDE.md`](webapp/CLAUDE.md) — Vite Telegram Web App (client request submission).
+- [`portal/CLAUDE.md`](portal/CLAUDE.md) — Vite/React client cabinet (phone-OTP accounts, company verification, offers).
 - [`telegram/CLAUDE.md`](telegram/CLAUDE.md) — aiogram 3 bot (webhook + templates).
 - [`userbot/CLAUDE.md`](userbot/CLAUDE.md) — Telethon MTProto channel monitor.
 - [`deploy/CLAUDE.md`](deploy/CLAUDE.md) — docker-compose, nginx, backup.
@@ -39,6 +40,7 @@ gotchas. **Read the relevant one before working inside that directory:**
 | `backend/` | FastAPI + Celery + SQLAlchemy 2, Python 3.12, **uv**-managed | The core. API, ingest adapters, Celery tasks, LLM parsing. |
 | `dashboard/` | Next.js 16 (App Router), React 18, TanStack Query, Tailwind, shadcn | Internal team dashboard. |
 | `webapp/` | React 18 + Vite, react-router, i18next, zustand | Telegram Web App / Mini App: client request submission **+ two-sided marketplace (buyer inquiries / seller offers) + news reader**. Also runs standalone in a plain browser. |
+| `portal/` | React 18 + Vite, react-router v7, TanStack Query, zustand, i18next, **Feature-Sliced Design** | Client cabinet (R1): phone-OTP `user_accounts`, company registration + verification, offer publishing. Served at the root of `cabinet.ai-imex.com`. |
 | `telegram/` | aiogram 3 | Bot handlers + webhook + message templates. **Repo-root package**, not inside `backend/` — mounted read-only into containers. |
 | `userbot/` | Telethon (MTProto) | Long-lived process monitoring Telegram channels. **Repo-root package**, separate from Celery worker/beat. |
 | `workers/` | standalone Python | `uzex_backfill/` — isolated crawler that walks the uzex.uz offer-detail ID space into its **own** Postgres tables. No app imports, own DB schema + entrypoint + requirements, own process (systemd/tmux) — **never Celery**. |

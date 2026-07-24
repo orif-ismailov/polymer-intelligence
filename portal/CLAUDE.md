@@ -1,0 +1,73 @@
+# CLAUDE.md — portal/
+
+Scoped guidance for `portal/` (the client cabinet SPA). See the repo-root `CLAUDE.md`
+for the cross-cutting big picture.
+
+## What this is
+
+The **client cabinet** (R1): a person logs in by phone OTP, registers companies, submits
+them for verification, and publishes offers — the browser counterpart to the staff
+`dashboard/` and the Telegram `webapp/`. It is a **separate top-level app** served at the
+root of `cabinet.ai-imex.com`. Distinct identity world from `webapp/` (Telegram `clients`/
+`sellers`, frozen): the portal authenticates `user_accounts` (phone, passwordless OTP).
+
+## Stack & tooling
+
+Vite + React 18 + TypeScript (strict) · Tailwind · TanStack Query v5 · react-router-dom v7 ·
+zustand · i18next (`react-i18next`). Run from `portal/`.
+
+```bash
+npm ci                 # install exact locked deps
+npm run dev            # vite dev server (proxies /api → http://localhost:8000)
+npm run lint           # eslint . --max-warnings 0
+npm run typecheck      # tsc --noEmit
+npm run build          # tsc -b tsconfig.build.json && vite build → dist/
+npm run e2e            # playwright (needs a live API on :8000 + DEBUG=true console SMS)
+```
+
+**Lockfile:** regenerate with `npx npm@10 install` — npm-11 lockfiles break Docker `npm ci`
+in this repo (same constraint as `webapp/`/`dashboard/`).
+
+## Layout — Feature-Sliced Design (`src/`)
+
+| Layer | Role |
+|------|------|
+| `app/` | providers (QueryClient, i18n, router, theme), route tree, guards (`RequireAuth`, `RedirectIfAuthed`). |
+| `pages/` | login, otp, home, companies, company-create (wizard), company-view, verification-status, offers, offer-edit, settings. |
+| `widgets/` | `app-shell` (topbar + company switcher), `case-status-panel` (per-check chips + needs_info deep-links). |
+| `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form. |
+| `entities/` | account, company, verification, offer — types + api hooks + zustand models. |
+| `shared/` | `api` (fetch client + auth bridge), `ui` (Tailwind primitives), `lib` (phone mask, formatters), `config`, `i18n`. |
+
+FSD import rule: a layer may import only from layers below it (`shared ⇐ entities ⇐ features
+⇐ widgets ⇐ pages ⇐ app`). Never `shared → entities`.
+
+## Notes specific to this package
+
+- **Fetch client** (`shared/api/client.ts`): baseURL `/api/v1`, `credentials: "include"` (the
+  httpOnly refresh cookie, path `/api/v1/portal`), attaches `Authorization: Bearer` from the
+  in-memory token. Single-flight **401 → POST /portal/auth/refresh → retry-once**; a failed
+  refresh clears auth + hard-redirects to `/login`. It stays business-agnostic via
+  `shared/api/authBridge.ts` — the account store registers `getToken/setToken/clear` at boot,
+  so `shared` never imports `entities`.
+- **Access token in memory only** (never localStorage — XSS). Session continuity is the refresh
+  cookie + a boot-time refresh; a full reload re-mints from the cookie.
+- **Active company** id is persisted in localStorage (`entities/company/model/activeCompanyStore`);
+  the topbar switcher scopes all company-scoped data. Selection self-heals if the id disappears.
+- **build** is `tsc -b tsconfig.build.json && vite build` — a bare `tsc -b` on a `noEmit`
+  composite hits TS6310, so the composite build has its own project (`tsconfig.build.json`);
+  `tsconfig.json` is the plain app config for `tsc --noEmit` (typecheck).
+- **i18n** locales `ru`/`uz`/`en` (ru primary) under `shared/i18n/locales/` — keep the key trees
+  identical across all three (a missing key is a runtime error). No fa/zh here (portal launch set).
+- **API base is relative** (`/api/v1`): dev = vite proxy → :8000; prod = nginx same-origin at
+  `cabinet.ai-imex.com` (no CORS). Don't hardcode absolute API URLs.
+- **Enforcement is badge-only in R1**: publishing requires a *verified* company (backend 403
+  `company_not_verified`), surfaced as a locked offer form. No other gates are flipped.
+
+## Deploy
+
+Static bundle → `portal_static` volume via `make portal-bundle` (= the profile-`build`
+`portal-build` compose service, `deploy/Dockerfile.portal`). nginx serves it at the root of
+`cabinet.ai-imex.com` + proxies `/api/` → `api:8000` same-origin. Prod TLS terminates on the
+host front door (behind-proxy topology — see `deploy/CLAUDE.md`); DNS `cabinet.*` + cert are
+ops steps. CI: the `portal` job (npm ci → lint → typecheck → build).

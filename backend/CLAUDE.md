@@ -27,10 +27,10 @@ alembic upgrade head                 # apply migrations (or app/entrypoint.py, a
 | `app/core/` | `config.py` (`settings` singleton), `db.py`, `logging.py` (structlog), `security.py`, `time.py`, `feed_bus.py` (SSE). |
 | `app/ingest/` | Source adapters (`<type>/adapter.py`: `uzex`, `cbu_rates`, `xarid`, `html_table`, `llm_page`, `rss`, `telegram_channel`) + `registry.py` + `base.py` Protocol + `http_client.py` (SSRF-guarded). |
 | `app/tasks/` | Celery app (`celery_app.py`), beat schedule (`schedule.py`), task modules (ingest*/parse*/notify/reports/nightly_catchup/rescore/userbot_health/request_analysis). |
-| `app/services/` | Business logic — **mypy-strict**, keep typed. Includes `news_service`, `news_dedup`, `report_service`, `settings_service`, `offer*/sourcing/request*` services. |
+| `app/services/` | Business logic — **mypy-strict**, keep typed. Includes `news_service`, `news_dedup`, `report_service`, `settings_service`, `offer*/sourcing/request*`, and the R1 verification/portal set: `event_service`+`event_types` (transactional outbox), `otp_service`, `company_service`, `verification_service`+`verification_checks`, `rate_limit`, `crypto`. |
 | `app/schemas/` | Pydantic request/response models — **mypy-strict**. |
 | `app/models/` | SQLAlchemy 2 ORM; `__init__.py` imports all in FK order for `Base.metadata`. Domains: signals, sources, requests, marketplace, sourcing, reports, app_settings, prices, alerts, reference, counterparties, staff. |
-| `app/api/` | Routers; `app/api/webapp/` is the Telegram Web App surface (incl. `webapp/news.py`); `admin_settings.py`/`reports.py`/`moderation.py` back the news + marketplace admin; `deps.py` holds RBAC guards. |
+| `app/api/` | Routers; `app/api/webapp/` is the Telegram Web App surface (incl. `webapp/news.py`); `app/api/portal/` is the R1 **client cabinet** (`auth` phone-OTP, `companies`, `offers` — auth via `deps.get_current_account`); `admin_verification.py` backs the staff verification queue; `admin_settings.py`/`reports.py`/`moderation.py` back the news + marketplace admin; `deps.py` holds RBAC guards. |
 | `app/seed/` | Idempotent seeders (`seed_reference/staff/sources/demo`) + JSON in `data/`. |
 | `parsing/` | LLM extractors (`extractor.py`, `news_extractor.py` + `news_schemas.py`), prompts (`prompts/{extract,news_extract,report,analyze_request}_vN.md`), budget guard, rule-based fallback, eval CLI. |
 | `alembic/versions/` | Migration chain `0001`→`0016`. |

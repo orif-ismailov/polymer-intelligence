@@ -12,6 +12,7 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
 | `dev-compose.sh`, `env.dev-server.example` | Helper + env contract for the shared **dev-server** deployment (auto-pulls the `dev` branch; behind the host TLS front door on its own `dev.*` hostnames). |
 | `Dockerfile.dashboard` | Next.js standalone image (built from `../dashboard`). |
 | `Dockerfile.webapp` | Vite build image for the Telegram Web App bundle. |
+| `Dockerfile.portal` | Vite build image for the client-cabinet portal bundle (R1). |
 | `nginx/nginx.conf` | Prod TLS (443 + 80→443, letsencrypt). `nginx.behind-proxy.conf` | prod HTTP-only behind a TLS-terminating front door. `nginx.dev-server.behind-proxy.conf` | dev-server variant (`dev.*` hosts). `nginx.dev.conf` | local dev HTTP-only. `host-vhost.ai-imex{,-dev}.conf.example` | example host-side nginx vhosts for the behind-proxy topology. |
 | `backup/pg_backup.sh` | pg_dump backup sidecar (14-daily/8-weekly retention); see `backup/README.md`. |
 | `.env.example` | **Authoritative env contract** — every variable, with `[SECRET]` markers. |
@@ -50,6 +51,15 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   (`LLM_REPORT_MODEL`, `REPORT_PROMPT_VERSION`), buyer-request AI (`REQUEST_AI_ANALYSIS_*`,
   `REQUEST_NOTIFY_CHAT_ID`, `NOTIFY_TOPIC_BUYERS/SELLERS`), UZEX LLM fallback
   (`UZEX_LLM_FALLBACK_ENABLED`), and browser Web-App login (`BOT_USERNAME`, `CLIENT_SESSION_TTL_SECONDS`).
+- **Client portal (R1)** is a Vite bundle in the `portal_static` volume: `make portal-bundle`
+  (= `docker compose --profile build run --rm --build portal-build`). nginx serves it at the root
+  of **cabinet.ai-imex.com** + proxies `/api/` → `api:8000` same-origin (server block in
+  `nginx.behind-proxy.conf`). Prod needs DNS `cabinet.*` + a host cert (behind-proxy: host nginx
+  terminates TLS → docker nginx :8080). New envs (R1): `VERIFICATION_ENC_KEY` (**secret**, ≥32
+  urlsafe-b64 chars), `SMS_PROVIDER` (`console` dev / `eskiz` prod) + `ESKIZ_EMAIL`/`ESKIZ_PASSWORD`
+  (secret, required when eskiz), `VERIFICATION_NOTIFY_CHAT_ID` (optional). Enforcement app-settings
+  (`verification_auto_approve`, `bank_verification_required`, `verification_required_for_publish`)
+  default OFF — R1 ships badge-only.
 - **Web App bundle** is built separately into the `webapp_static` volume: `make webapp-bundle`
   (= `docker compose --profile build run --rm --build webapp-build`).
 
@@ -58,6 +68,7 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
 ```bash
 make smoke          # production-compose smoke test (synthetic data + placeholder env)
 make webapp-bundle  # build + load the Telegram Web App into the nginx-served volume
+make portal-bundle  # build + load the client cabinet into the portal_static volume (cabinet.*)
 ```
 Both use `docker compose --env-file .env -f deploy/docker-compose.yml` — the `--env-file .env` is
 required so Compose interpolates from the repo-root `.env`.
