@@ -23,7 +23,8 @@
       "prices": "Fiyatlar",
       "adminProducts": "Ürünler",
       "adminUsers": "Kullanıcılar",
-      "offerRequests": "Teklif talepleri"
+      "offerRequests": "Teklif talepleri",
+      "newsAdmin": "Haberler (yönetici)"
     },
     "guest": "Misafir"
   },
@@ -118,7 +119,14 @@
       "price": "Fiyat",
       "region": "Bölge",
       "urgency": "Aciliyet",
-      "status": "Durum"
+      "status": "Durum",
+      "seller": "Satıcı / İletişim"
+    },
+    "seller": {
+      "unknown": "Satıcı belirtilmemiş",
+      "call": "Ara",
+      "email": "E-posta",
+      "source": "Kaynak"
     },
     "pagination": {
       "prev": "Önceki",
@@ -389,7 +397,15 @@
       "lastFetch": "Son Çekme",
       "failures": "Hatalar",
       "test": "Test",
+      "reprocess": "Yeniden İşle",
       "enable": "Etkinleştir"
+    },
+    "reprocess": {
+      "button": "Yeniden İşle",
+      "aria": "Kaynağın daha önce atlanan kayıtlarını yeniden işle",
+      "tooltip": "Atlanan kayıtları (alakasız / hatalı) kuyruğa geri alıp yeniden ayrıştır — örneğin bir ayrıştırıcı düzeltmesinden sonra. Zaten ayrıştırılmış kayıtlara dokunulmaz.",
+      "result": "Yeniden kuyruğa alındı: {count}",
+      "dismissAria": "Kapat"
     },
     "status": {
       "pending": "Etkinleştirme bekleniyor (Aşama 5)",
@@ -656,5 +672,79 @@
     "approve": "Onayla ve satıcıya gönder",
     "reject": "Reddet",
     "notePlaceholder": "Not (isteğe bağlı)"
+  },
+  "newsAdmin": {
+    "title": "Haber Yönetimi",
+    "subtitle": "İstatistikler, AI ayarları ve haber moderasyonu",
+    "error": "Yüklenemedi",
+    "loading": "Yükleniyor…",
+    "stats": {
+      "totalSources": "Toplam kaynak",
+      "activeSources": "Aktif",
+      "failedSources": "Hatalı",
+      "lastScan": "Son tarama",
+      "lastPublished": "Son rapor",
+      "pendingAi": "AI bekliyor",
+      "todayNews": "Bugünkü haberler",
+      "aiStatus": "AI durumu",
+      "on": "Açık",
+      "off": "Kapalı",
+      "never": "—",
+      "error": "Hata",
+      "budget": "AI bütçesi"
+    },
+    "actions": {
+      "runParser": "Ayrıştırıcıyı çalıştır",
+      "generateReport": "Rapor oluştur",
+      "save": "Kaydet"
+    },
+    "settings": {
+      "title": "Ayarlar",
+      "default": "varsayılan"
+    },
+    "approval": {
+      "title": "Onay bekleyen haberler",
+      "empty": "Onay bekleyen haber yok",
+      "approve": "Onayla",
+      "reject": "Reddet"
+    },
+    "groups": {
+      "title": "Kaynak grupları",
+      "ungrouped": "Grupsuz",
+      "disabled": "kapalı"
+    },
+    "activity": {
+      "title": "Ayrıştırıcı etkinliği",
+      "scanning": "Tarama başladı",
+      "noSources": "Etkin RSS kaynağı yok",
+      "empty": "Haber kaynağı yok",
+      "refresh": "Yenile",
+      "source": "Kaynak",
+      "lastScan": "Tarama",
+      "lastSuccess": "Başarı",
+      "fails": "Hatalar",
+      "raw": "Kayıt 24s",
+      "news": "Haber 24s",
+      "hint": "Sonuçlar işçiler her kaynağı işledikçe görünür (otomatik yenilenir)"
+    },
+    "aiError": {
+      "title": "AI çalışmıyor",
+      "hint": "Haber sınıflandırıcı hata veriyor — Anthropic API bakiyesini/kredilerini kontrol edin."
+    },
+    "edit": {
+      "button": "Düzenle",
+      "title": "Kaynağı düzenle",
+      "name": "Ad",
+      "feedUrl": "Akış URL",
+      "contentKind": "İçerik türü",
+      "country": "Ülke",
+      "countryPh": "UZ, RU…",
+      "enabled": "Etkin",
+      "needsTest": "test gerekli",
+      "test": "Test",
+      "testOk": "Test başarılı",
+      "testFail": "Test hatası",
+      "feedChangedNote": "Akışı değiştirmek testi sıfırlar — yeniden test edilene kadar kaynak devre dışı kalır."
+    }
   }
 }

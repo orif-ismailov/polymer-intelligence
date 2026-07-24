@@ -1,0 +1,5 @@
+# Standalone worker dependencies — deliberately minimal and independent of the
+# main backend. Pin ranges mirror versions verified in this repo.
+httpx>=0.27,<0.29
+selectolax>=0.3.21
+psycopg[binary]>=3.1,<4

@@ -23,7 +23,8 @@
       "prices": "Narxlar",
       "adminProducts": "Mahsulotlar",
       "adminUsers": "Foydalanuvchilar",
-      "offerRequests": "Taklif so'rovlari"
+      "offerRequests": "Taklif so'rovlari",
+      "newsAdmin": "Yangiliklar (admin)"
     },
     "guest": "Mehmon"
   },
@@ -118,7 +119,14 @@
       "price": "Narx",
       "region": "Hudud",
       "urgency": "Shoshilinchlik",
-      "status": "Holat"
+      "status": "Holat",
+      "seller": "Sotuvchi / Aloqa"
+    },
+    "seller": {
+      "unknown": "Sotuvchi ko‘rsatilmagan",
+      "call": "Qo‘ng‘iroq",
+      "email": "Email",
+      "source": "Manba"
     },
     "pagination": {
       "prev": "Orqaga",
@@ -389,7 +397,15 @@
       "lastFetch": "Oxirgi yigʻish",
       "failures": "Xatoliklar",
       "test": "Test",
+      "reprocess": "Qayta ishlash",
       "enable": "Yoqish"
+    },
+    "reprocess": {
+      "button": "Qayta ishlash",
+      "aria": "Manbaning avval tashlab yuborilgan yozuvlarini qayta ishlash",
+      "tooltip": "Tashlab yuborilgan yozuvlarni (nomuvofiq / xatolik) navbatga qaytarib qayta tahlil qilish — masalan, parser tuzatilgandan keyin. Allaqachon tahlil qilingan yozuvlarga tegilmaydi.",
+      "result": "Qayta navbatga qoʻyildi: {count}",
+      "dismissAria": "Yopish"
     },
     "status": {
       "pending": "Faollashtirish kutilmoqda (5-bosqich)",
@@ -656,5 +672,79 @@
     "approve": "Tasdiqlash va sotuvchiga yuborish",
     "reject": "Rad etish",
     "notePlaceholder": "Izoh (ixtiyoriy)"
+  },
+  "newsAdmin": {
+    "title": "Yangiliklar boshqaruvi",
+    "subtitle": "Statistika, AI sozlamalari va yangiliklar moderatsiyasi",
+    "error": "Yuklab bo‘lmadi",
+    "loading": "Yuklanmoqda…",
+    "stats": {
+      "totalSources": "Jami manbalar",
+      "activeSources": "Faol",
+      "failedSources": "Xatolik bilan",
+      "lastScan": "So‘nggi skanerlash",
+      "lastPublished": "So‘nggi hisobot",
+      "pendingAi": "AI kutmoqda",
+      "todayNews": "Bugungi yangiliklar",
+      "aiStatus": "AI holati",
+      "on": "Yoqilgan",
+      "off": "O‘chirilgan",
+      "never": "—",
+      "error": "Xato",
+      "budget": "AI byudjeti"
+    },
+    "actions": {
+      "runParser": "Parserni ishga tushirish",
+      "generateReport": "Hisobot yaratish",
+      "save": "Saqlash"
+    },
+    "settings": {
+      "title": "Sozlamalar",
+      "default": "standart"
+    },
+    "approval": {
+      "title": "Moderatsiyadagi yangiliklar",
+      "empty": "Moderatsiyada yangilik yo‘q",
+      "approve": "Tasdiqlash",
+      "reject": "Rad etish"
+    },
+    "groups": {
+      "title": "Manba guruhlari",
+      "ungrouped": "Guruhsiz",
+      "disabled": "o‘chirilgan"
+    },
+    "activity": {
+      "title": "Parsing faolligi",
+      "scanning": "Skanerlash boshlandi",
+      "noSources": "Yoqilgan RSS manbalari yo‘q",
+      "empty": "Yangilik manbalari yo‘q",
+      "refresh": "Yangilash",
+      "source": "Manba",
+      "lastScan": "Skan",
+      "lastSuccess": "Muvaffaqiyat",
+      "fails": "Xatolar",
+      "raw": "Yozuvlar 24s",
+      "news": "Yangiliklar 24s",
+      "hint": "Natijalar ishchilar qayta ishlagach paydo bo‘ladi (avtomatik yangilanadi)"
+    },
+    "aiError": {
+      "title": "AI ishlamayapti",
+      "hint": "Yangilik klassifikatori xato qaytarmoqda — Anthropic API balansini/kreditlarini tekshiring."
+    },
+    "edit": {
+      "button": "Tahrirlash",
+      "title": "Manbani tahrirlash",
+      "name": "Nomi",
+      "feedUrl": "Lenta URL",
+      "contentKind": "Kontent turi",
+      "country": "Davlat",
+      "countryPh": "UZ, RU…",
+      "enabled": "Yoqilgan",
+      "needsTest": "test kerak",
+      "test": "Test",
+      "testOk": "Test o‘tdi",
+      "testFail": "Test xatosi",
+      "feedChangedNote": "Lentani o‘zgartirish testni bekor qiladi — qayta test qilinmaguncha manba o‘chiriladi."
+    }
   }
 }

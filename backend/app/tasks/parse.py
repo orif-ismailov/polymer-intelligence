@@ -109,6 +109,24 @@ def llm_extract_signal(prepared_text: str) -> tuple[Any, dict]:
     return _extract(prepared_text)
 
 
+# Per-call token reservation for the news extractor (patchable seam for tests).
+NEWS_TOKEN_ESTIMATE = 1200
+
+
+def news_extract_signal(
+    prepared_text: str, *, model: str | None = None, prompt_version: str | None = None
+) -> tuple[Any, dict]:
+    """Wrapper: call parsing.news_extractor.extract_news with optional runtime overrides."""
+    from parsing.news_extractor import DEFAULT_MODEL, NEWS_PROMPT_VERSION  # noqa: PLC0415
+    from parsing.news_extractor import extract_news as _extract  # noqa: PLC0415
+
+    return _extract(
+        prepared_text,
+        model=model or DEFAULT_MODEL,
+        prompt_version=prompt_version or NEWS_PROMPT_VERSION,
+    )
+
+
 def check_and_reserve_tokens(estimated: int) -> None:
     """Wrapper: call parsing.budget.check_and_reserve_tokens."""
     from parsing.budget import check_and_reserve_tokens as _check  # noqa: PLC0415
@@ -121,6 +139,13 @@ def record_actual_tokens(reserved: int, actual: int) -> None:
     from parsing.budget import record_actual_tokens as _record  # noqa: PLC0415
 
     _record(reserved, actual)
+
+
+def release_reserved_tokens(reserved: int) -> None:
+    """Wrapper: refund a reservation whose LLM call failed (no usage produced)."""
+    from parsing.budget import release_reservation as _release  # noqa: PLC0415
+
+    _release(reserved)
 
 
 def write_parse_run(session: Any, raw_item_id: int, **kwargs: Any) -> int:
@@ -195,6 +220,9 @@ def _parse_via_llm(session: Any, raw_item: Any, product_text: str) -> dict[str, 
         session.commit()
         return {"status": "irrelevant", "raw_item_id": raw_item.id, "reason": "budget_exceeded"}
     except InstructorRetryException as exc:
+        # The reservation was made but the call produced no usage — refund it so a
+        # failing API can't drain the daily budget (Phase 8g).
+        release_reserved_tokens(LLM_TOKEN_ESTIMATE)
         logger.error("parse_raw_item.dead_letter", extra={"raw_item_id": raw_item.id, "error": str(exc)})
         write_parse_run(
             session, raw_item.id, parser="llm_extract_tools", model=None,
@@ -401,3 +429,287 @@ def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
                 extra={"raw_item_id": raw_item_id, "error": str(exc)},
             )
             return {"status": "error", "raw_item_id": raw_item_id, "error": str(exc)}
+
+
+@celery_app.task(name="parse_xarid_item")  # type: ignore[untyped-decorator]
+def parse_xarid_item(raw_item_id: int) -> dict[str, Any]:
+    """Parse a xarid procurement raw_item into a buy_request signal.
+
+    xarid rows are STRUCTURED buy-side tenders (kind_hint='buy_request') that already
+    carry the buyer, quantity, price, location, and contact. Only the PRODUCT needs
+    resolving, and — unlike parse_raw_item (UZEX exchange rows) — a miss must NOT drop
+    the row on the exact-match dictionary alone, because procurement descriptions
+    ("Тройник полипропиленовый") rarely match it verbatim. Resolution order:
+
+      1. exact synonym dictionary (cheap) — clean polymer names,
+      2. on a miss, the budget-gated LLM extractor, whose canonical product code
+         (e.g. 'PP') resolves via the same dictionary AND doubles as the relevance
+         filter: rows it cannot map to a polymer are marked irrelevant (dropped),
+         keeping procurement noise (salt, disinfectant, instruments) out.
+
+    Kind is FORCED to buy_request; the buyer's phone/email/tender_url stay in the
+    payload and are surfaced by the live-feed contact join. Mirrors parse_raw_item's
+    guards (double-parse, budget degrade, dead-letter, per-item error isolation).
+    """
+    from instructor.core import InstructorRetryException  # noqa: PLC0415
+
+    from app.models.sources import RawItem  # noqa: PLC0415
+    from app.services.grade_service import extract_grade  # noqa: PLC0415
+    from app.services.signal_service import (  # noqa: PLC0415
+        create_buy_request_signal_from_xarid,
+    )
+    from parsing.budget import BudgetExceeded  # noqa: PLC0415
+    from parsing.text_prep import prepare_message_text  # noqa: PLC0415
+
+    with get_session() as session:
+        raw_item = session.get(RawItem, raw_item_id)
+        if raw_item is None:
+            logger.warning("parse_xarid_item.not_found", extra={"raw_item_id": raw_item_id})
+            return {"status": "not_found", "raw_item_id": raw_item_id}
+        if raw_item.parse_status != "pending":
+            logger.info(
+                "parse_xarid_item.already_parsed",
+                extra={"raw_item_id": raw_item_id, "status": raw_item.parse_status},
+            )
+            return {"status": "already_parsed", "raw_item_id": raw_item_id}
+
+        payload: dict[str, Any] = raw_item.payload or {}
+        product_text = str(payload.get("product_text", "")).strip()
+        journal: dict[str, Any] = {}
+        via = "rule_based"
+
+        try:
+            # 1. exact synonym dictionary
+            product_id = match_product(session, product_text)
+
+            # 2. LLM product resolution on a dictionary miss (budget-gated)
+            if product_id is None:
+                prepared = prepare_message_text(raw_item.content or "")
+                if prepared:
+                    try:
+                        check_and_reserve_tokens(LLM_TOKEN_ESTIMATE)
+                        result, journal = llm_extract_signal(prepared)
+                        record_actual_tokens(
+                            LLM_TOKEN_ESTIMATE,
+                            int(journal.get("tokens_in", 0)) + int(journal.get("tokens_out", 0)),
+                        )
+                        via = "llm"
+                        product_id = match_product(
+                            session, (result.product or result.grade_text or "")
+                        )
+                    except BudgetExceeded:
+                        logger.warning(
+                            "parse_xarid_item.budget_exceeded_degrade",
+                            extra={"raw_item_id": raw_item_id},
+                        )
+                        queue_for_classification(session, raw_item_id, product_text)
+                        write_parse_run(
+                            session, raw_item_id, parser="rule_based_fallback", model=None,
+                            prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
+                            result={"note": "budget_exceeded_degraded"}, status="ok", error=None,
+                        )
+                        raw_item.parse_status = "irrelevant"
+                        session.commit()
+                        return {
+                            "status": "irrelevant", "raw_item_id": raw_item_id,
+                            "reason": "budget_exceeded",
+                        }
+                    except InstructorRetryException as exc:
+                        release_reserved_tokens(LLM_TOKEN_ESTIMATE)  # refund leaked reservation
+                        logger.error(
+                            "parse_xarid_item.dead_letter",
+                            extra={"raw_item_id": raw_item_id, "error": str(exc)},
+                        )
+                        write_parse_run(
+                            session, raw_item_id, parser="llm_extract_tools", model=None,
+                            prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
+                            result={"raw": "failed_attempts"}, status="error", error=str(exc)[:1000],
+                        )
+                        raw_item.parse_status = "failed"
+                        session.commit()
+                        return {
+                            "status": "dead_lettered", "raw_item_id": raw_item_id,
+                            "error": str(exc)[:200],
+                        }
+
+            _parser = journal.get("parser", "llm_extract_tools") if via == "llm" else PARSER_NAME
+
+            # 3. product still unresolved → not polymer demand → drop (noise filter)
+            if product_id is None:
+                queue_for_classification(session, raw_item_id, product_text)
+                write_parse_run(
+                    session, raw_item_id, parser=_parser, model=journal.get("model"),
+                    prompt_version=journal.get("prompt_version"),
+                    tokens_in=int(journal.get("tokens_in", 0)),
+                    tokens_out=int(journal.get("tokens_out", 0)),
+                    latency_ms=journal.get("latency_ms", 0),
+                    result={"note": "no_product_match", "product_text": product_text[:512]},
+                    status="ok", error=None,
+                )
+                raw_item.parse_status = "irrelevant"
+                session.commit()
+                logger.info(
+                    "parse_xarid_item.unrecognized",
+                    extra={"raw_item_id": raw_item_id, "via": via},
+                )
+                return {"status": "irrelevant", "raw_item_id": raw_item_id, "via": via}
+
+            # 4. build the buy_request signal from the structured payload
+            grade_id, grade_text = extract_grade(product_text, session)
+            signal = create_buy_request_signal_from_xarid(
+                session, raw_item, product_id=product_id, grade_id=grade_id, grade_text=grade_text,
+            )
+            session.add(signal)
+            session.flush()  # get signal.id
+            raw_item.parse_status = "parsed"
+            write_parse_run(
+                session, raw_item_id, parser=_parser, model=journal.get("model"),
+                prompt_version=journal.get("prompt_version"),
+                tokens_in=int(journal.get("tokens_in", 0)),
+                tokens_out=int(journal.get("tokens_out", 0)),
+                latency_ms=journal.get("latency_ms", 0),
+                result={"signal_id": signal.id, "product_id": product_id, "kind": "buy_request", "via": via},
+                status="ok", error=None,
+            )
+            session.commit()
+            logger.info(
+                "parse_xarid_item.parsed",
+                extra={"raw_item_id": raw_item_id, "signal_id": signal.id, "via": via},
+            )
+            return {
+                "status": "parsed", "signal_id": signal.id,
+                "raw_item_id": raw_item_id, "via": via,
+            }
+
+        except Exception as exc:
+            try:
+                raw_item.parse_status = "failed"
+                write_parse_run(
+                    session, raw_item_id, parser=PARSER_NAME, model=None, prompt_version=None,
+                    tokens_in=0, tokens_out=0, latency_ms=0, result=None, status="error",
+                    error=str(exc)[:1000],
+                )
+                session.commit()
+            except Exception as inner_exc:
+                logger.error(
+                    "parse_xarid_item.journal_error",
+                    extra={"raw_item_id": raw_item_id, "error": str(inner_exc)},
+                )
+            logger.error(
+                "parse_xarid_item.error",
+                extra={"raw_item_id": raw_item_id, "error": str(exc)},
+            )
+            return {"status": "error", "raw_item_id": raw_item_id, "error": str(exc)}
+
+
+@celery_app.task(name="parse_news_item")  # type: ignore[untyped-decorator]
+def parse_news_item(raw_item_id: int) -> dict[str, Any]:
+    """Classify a news raw_item into a kind='news' signal (Phase 7 News Intelligence).
+
+    Routed here (instead of parse_telegram_item) when a source's config sets
+    content_kind='news'. Runs the budget-gated news extractor and, if relevant, stores
+    the rich classification (headline/category/importance/market_impact/summary…) under
+    signals.ai. Mirrors the Telegram LLM guards: blank-content skip, budget degrade,
+    dead-letter, per-item error isolation.
+    """
+    from instructor.core import InstructorRetryException  # noqa: PLC0415
+
+    from app.models.sources import RawItem  # noqa: PLC0415
+    from app.services.news_service import create_news_signal_from_article  # noqa: PLC0415
+    from parsing.budget import BudgetExceeded  # noqa: PLC0415
+    from parsing.news_schemas import NEWS_CONFIDENCE_REVIEW_THRESHOLD  # noqa: PLC0415
+    from parsing.text_prep import prepare_message_text  # noqa: PLC0415
+
+    with get_session() as session:
+        raw_item = session.get(RawItem, raw_item_id)
+        if raw_item is None:
+            logger.warning("parse_news_item.not_found", extra={"raw_item_id": raw_item_id})
+            return {"status": "not_found", "raw_item_id": raw_item_id}
+        if raw_item.parse_status != "pending":
+            return {"status": "already_parsed", "raw_item_id": raw_item_id}
+
+        prepared = prepare_message_text(raw_item.content or "")
+        if not prepared:
+            write_parse_run(
+                session, raw_item_id, parser="news_extract_tools", model=None,
+                prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
+                result={"note": "blank_content"}, status="ok", error=None,
+            )
+            raw_item.parse_status = "irrelevant"
+            session.commit()
+            return {"status": "irrelevant", "raw_item_id": raw_item_id, "reason": "blank_content"}
+
+        # Runtime overrides (Phase 8d): model + prompt version + approval requirement.
+        from app.services import settings_service  # noqa: PLC0415
+
+        news_model = settings_service.get(session, "llm_extract_model")
+        news_prompt = settings_service.get(session, "news_prompt_version")
+        require_approval = settings_service.get(session, "news_require_approval")
+
+        try:
+            check_and_reserve_tokens(NEWS_TOKEN_ESTIMATE)
+            article, journal = news_extract_signal(
+                prepared, model=news_model, prompt_version=news_prompt
+            )
+            record_actual_tokens(
+                NEWS_TOKEN_ESTIMATE,
+                int(journal.get("tokens_in", 0)) + int(journal.get("tokens_out", 0)),
+            )
+        except BudgetExceeded:
+            # Defer for the nightly LLM catch-up — must NOT drop as 'irrelevant', or real
+            # news is lost forever and mislabeled (Phase 8g fix). budget_deferred is
+            # reprocessed once the daily budget resets (nightly_llm_catchup routes news
+            # items back to parse_news_item).
+            logger.warning("parse_news_item.budget_deferred", extra={"raw_item_id": raw_item_id})
+            write_parse_run(
+                session, raw_item_id, parser="news_extract_tools", model=None,
+                prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
+                result={"note": "budget_exceeded"}, status="ok", error=None,
+            )
+            raw_item.parse_status = "budget_deferred"
+            session.commit()
+            return {"status": "budget_deferred", "raw_item_id": raw_item_id, "reason": "budget_exceeded"}
+        except InstructorRetryException as exc:
+            release_reserved_tokens(NEWS_TOKEN_ESTIMATE)  # refund leaked reservation (Phase 8g)
+            logger.error("parse_news_item.dead_letter", extra={"raw_item_id": raw_item_id, "error": str(exc)})
+            write_parse_run(
+                session, raw_item_id, parser="news_extract_tools", model=None,
+                prompt_version=None, tokens_in=0, tokens_out=0, latency_ms=0,
+                result={"raw": "failed_attempts"}, status="error", error=str(exc)[:1000],
+            )
+            raw_item.parse_status = "failed"
+            session.commit()
+            return {"status": "dead_lettered", "raw_item_id": raw_item_id, "error": str(exc)[:200]}
+
+        # Attribution row first (G5), then the signal.
+        write_parse_run(
+            session, raw_item_id, parser=journal.get("parser", "news_extract_tools"),
+            model=journal.get("model"), prompt_version=journal.get("prompt_version"),
+            tokens_in=int(journal.get("tokens_in", 0)), tokens_out=int(journal.get("tokens_out", 0)),
+            latency_ms=journal.get("latency_ms", 0),
+            result={"news": article.model_dump(mode="json") if hasattr(article, "model_dump") else {}},
+            status="ok", error=None,
+        )
+
+        if article.is_relevant:
+            needs_review = article.confidence < NEWS_CONFIDENCE_REVIEW_THRESHOLD
+            signal = create_news_signal_from_article(
+                session, raw_item, article, journal,
+                needs_review=needs_review, approved=not require_approval,
+            )
+            session.add(signal)
+            session.flush()
+            raw_item.parse_status = "parsed"
+            session.commit()
+            logger.info(
+                "parse_news_item.parsed",
+                extra={"raw_item_id": raw_item_id, "signal_id": signal.id, "needs_review": needs_review},
+            )
+            return {
+                "status": "parsed", "signal_id": signal.id,
+                "raw_item_id": raw_item_id, "needs_review": needs_review,
+            }
+
+        raw_item.parse_status = "irrelevant"
+        session.commit()
+        return {"status": "irrelevant", "raw_item_id": raw_item_id}

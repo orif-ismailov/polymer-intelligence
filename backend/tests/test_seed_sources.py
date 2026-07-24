@@ -2,11 +2,11 @@
 Tests for the source seed script.
 
 Verifies:
-- The sources_seed.json data file is valid and has the expected 5 rows
+- The sources_seed.json data file is valid and has the expected 8 rows
 - All seeded sources have is_enabled=false + last_test_ok_at NULL (invariant T-02-24)
 - seed_sources is idempotent (second run inserts 0 additional rows)
 - Data file has the expected adapter names (uzex_offers, uzex_contracts,
-  uzex_deals, xarid_tenders, cbu_rates)
+  uzex_deals, xarid_tenders, cbu_rates, and rss for the news sources)
 
 Live-DB tests use the standard guard (DATABASE_URL with test_polymer).
 Data-file and unit tests always run (no DB required).
@@ -52,22 +52,34 @@ class TestSourcesSeedDataFile:
         data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
         assert isinstance(data, list), "sources_seed.json must be a JSON array"
 
-    def test_has_five_sources(self) -> None:
-        """sources_seed.json must contain exactly 5 source rows."""
+    def test_has_expected_source_count(self) -> None:
+        """sources_seed.json must contain 9 source rows (5 markets + 4 petrochemical news)."""
         data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
-        assert len(data) == 5, (
-            f"Expected 5 source rows, got {len(data)}: "
+        assert len(data) == 9, (
+            f"Expected 9 source rows, got {len(data)}: "
             f"{[s.get('adapter') for s in data]}"
         )
 
     def test_expected_adapters_present(self) -> None:
-        """All five expected adapters must be present."""
+        """All expected adapters must be present (news sources use the rss adapter)."""
         data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
         adapters = {s["adapter"] for s in data}
-        expected = {"uzex_offers", "uzex_contracts", "uzex_deals", "xarid_tenders", "cbu_rates"}
+        expected = {"uzex_offers", "uzex_contracts", "uzex_deals", "xarid_tenders", "cbu_rates", "rss"}
         assert adapters == expected, (
             f"Adapter mismatch — expected {expected}, got {adapters}"
         )
+
+    def test_news_sources_are_flagged(self) -> None:
+        """Every rss source is a news source (config.content_kind='news' + config.url)."""
+        data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
+        news = [s for s in data if s["adapter"] == "rss"]
+        assert len(news) == 4, f"Expected 4 news (rss) sources, got {len(news)}"
+        for src in news:
+            config = src.get("config", {})
+            assert config.get("content_kind") == "news", (
+                f"News source '{src['name']}' must set config.content_kind='news'"
+            )
+            assert config.get("url"), f"News source '{src['name']}' must have config.url"
 
     def test_all_sources_disabled_by_default(self) -> None:
         """All seeded sources must have is_enabled=false (T-02-24 invariant)."""
@@ -144,12 +156,12 @@ class TestSourcesSeedDataFile:
 class TestSeedSourcesUnit:
     """seed_sources function: unit tests with a mock session."""
 
-    def _make_mock_session(self, rowcount_first: int = 5) -> MagicMock:
-        """Build a mock Session that simulates inserts."""
+    def _make_mock_session(self, rowcount_first: int = 9) -> MagicMock:
+        """Build a mock Session that simulates inserts (9 seeded sources)."""
         session = MagicMock()
         # Each execute() returns a mock result with rowcount
         results = []
-        for i in range(5):
+        for i in range(9):
             r = MagicMock()
             r.rowcount = 1 if i < rowcount_first else 0
             results.append(r)
@@ -160,9 +172,9 @@ class TestSeedSourcesUnit:
         """seed_sources returns the number of rows inserted."""
         from app.seed.seed_sources import seed_sources  # noqa: PLC0415
 
-        session = self._make_mock_session(rowcount_first=5)
+        session = self._make_mock_session(rowcount_first=9)
         count = seed_sources(session)
-        assert count == 5, f"Expected 5 inserted, got {count}"
+        assert count == 9, f"Expected 9 inserted, got {count}"
         session.flush.assert_called_once()
 
     def test_seed_sources_idempotent_second_run_inserts_zero(self) -> None:
@@ -206,8 +218,8 @@ class TestSeedSourcesUnit:
             "seed_sources SQL must set last_test_ok_at=NULL"
         )
 
-    def test_seed_sources_executes_five_inserts(self) -> None:
-        """seed_sources executes exactly 5 INSERT statements (one per source row)."""
+    def test_seed_sources_executes_one_insert_per_source(self) -> None:
+        """seed_sources executes exactly one INSERT statement per source row (8)."""
         from app.seed.seed_sources import seed_sources  # noqa: PLC0415
 
         session = MagicMock()
@@ -216,9 +228,9 @@ class TestSeedSourcesUnit:
         session.execute.return_value = result
 
         seed_sources(session)
-        # Should be called once per source (5 sources in the seed file)
-        assert session.execute.call_count == 5, (
-            f"Expected 5 execute() calls, got {session.execute.call_count}"
+        # Should be called once per source (9 sources in the seed file)
+        assert session.execute.call_count == 9, (
+            f"Expected 9 execute() calls, got {session.execute.call_count}"
         )
 
 
@@ -255,8 +267,8 @@ class TestSeedSourcesIntegrationDB:
         with contextlib.suppress(Exception):
             alembic_command.downgrade(alembic_cfg, "base")
 
-    def test_seed_sources_inserts_five_rows(self, migrated_db) -> None:
-        """seed_sources inserts all 5 source rows on a fresh DB."""
+    def test_seed_sources_inserts_all_rows(self, migrated_db) -> None:
+        """seed_sources inserts all 8 source rows on a fresh DB."""
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
@@ -267,14 +279,14 @@ class TestSeedSourcesIntegrationDB:
             count = seed_sources(session)
             session.commit()
 
-        assert count == 5, f"Expected 5 inserted, got {count}"
+        assert count == 8, f"Expected 8 inserted, got {count}"
 
         # Verify rows are in DB
         with sa.engine.connect(migrated_db) as conn:
             n = conn.execute(
                 sa.text("SELECT COUNT(*) FROM sources")
             ).scalar()
-        assert n == 5, f"Expected 5 rows in sources, got {n}"
+        assert n == 8, f"Expected 8 rows in sources, got {n}"
 
     def test_seed_sources_idempotent_in_db(self, migrated_db) -> None:
         """seed_sources second run inserts 0 additional rows in a live DB."""
@@ -302,11 +314,11 @@ class TestSeedSourcesIntegrationDB:
                 sa.text(
                     "SELECT adapter, name, is_enabled, last_test_ok_at "
                     "FROM sources WHERE adapter IN "
-                    "('uzex_offers','uzex_contracts','uzex_deals','xarid_tenders','cbu_rates')"
+                    "('uzex_offers','uzex_contracts','uzex_deals','xarid_tenders','cbu_rates','rss')"
                 )
             ).fetchall()
 
-        assert len(rows) == 5, f"Expected 5 seeded sources, got {len(rows)}"
+        assert len(rows) == 8, f"Expected 8 seeded sources, got {len(rows)}"
         for row in rows:
             adapter, name, is_enabled, last_test_ok_at = row
             assert is_enabled is False, (

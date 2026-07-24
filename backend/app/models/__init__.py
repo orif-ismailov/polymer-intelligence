@@ -18,6 +18,7 @@ This file must be imported by alembic/env.py so that
 """
 
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
+from app.models.app_settings import AppSetting  # noqa: F401
 from app.models.counterparties import Counterparty, CounterpartyAlias  # noqa: F401
 from app.models.enums import (  # noqa: F401
     AlertKind,
@@ -109,6 +110,8 @@ __all__ = [
     "Delivery",
     # Reports
     "Report",
+    # Runtime settings (Phase 8d)
+    "AppSetting",
     # Marketplace (Phase 2)
     "Seller",
     "SellerOffer",

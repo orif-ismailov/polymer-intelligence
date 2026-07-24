@@ -37,6 +37,7 @@ import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_ch
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
 from app.api.admin_products import router as admin_products_router
+from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
 from app.api.admin_users import router as admin_users_router
 from app.api.alert_rules import alerts_router
@@ -164,6 +165,7 @@ def create_app() -> FastAPI:
     application.include_router(dashboard_requests_router, prefix="/api/v1")
     application.include_router(admin_users_router, prefix="/api/v1")
     application.include_router(admin_products_router, prefix="/api/v1")
+    application.include_router(admin_settings_router, prefix="/api/v1")
     # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─
     application.include_router(sources_router, prefix="/api/v1")
     # ── alerts engine routers (Phase 4, Plan 07 — alert rules CRUD + alerts feed) ─

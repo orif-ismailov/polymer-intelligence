@@ -23,7 +23,8 @@
       "prices": "价格",
       "adminProducts": "产品",
       "adminUsers": "用户",
-      "offerRequests": "报价请求"
+      "offerRequests": "报价请求",
+      "newsAdmin": "新闻（管理）"
     },
     "guest": "访客"
   },
@@ -656,5 +657,79 @@
     "approve": "批准并发送给卖方",
     "reject": "驳回",
     "notePlaceholder": "备注（可选）"
+  },
+  "newsAdmin": {
+    "title": "新闻管理",
+    "subtitle": "统计、AI 设置与新闻审核",
+    "error": "加载失败",
+    "loading": "加载中…",
+    "stats": {
+      "totalSources": "来源总数",
+      "activeSources": "活跃",
+      "failedSources": "失败",
+      "lastScan": "上次扫描",
+      "lastPublished": "最近报告",
+      "pendingAi": "待 AI 处理",
+      "todayNews": "今日新闻",
+      "aiStatus": "AI 状态",
+      "on": "已启用",
+      "off": "已禁用",
+      "never": "—",
+      "error": "错误",
+      "budget": "AI 预算"
+    },
+    "actions": {
+      "runParser": "立即运行解析",
+      "generateReport": "生成报告",
+      "save": "保存"
+    },
+    "settings": {
+      "title": "设置",
+      "default": "默认"
+    },
+    "approval": {
+      "title": "待审核新闻",
+      "empty": "没有待审核的新闻",
+      "approve": "批准",
+      "reject": "拒绝"
+    },
+    "groups": {
+      "title": "来源分组",
+      "ungrouped": "未分组",
+      "disabled": "已禁用"
+    },
+    "activity": {
+      "title": "解析活动",
+      "scanning": "扫描已开始",
+      "noSources": "没有启用的 RSS 来源",
+      "empty": "没有新闻来源",
+      "refresh": "刷新",
+      "source": "来源",
+      "lastScan": "扫描",
+      "lastSuccess": "成功",
+      "fails": "失败",
+      "raw": "24小时条目",
+      "news": "24小时新闻",
+      "hint": "结果会随着工作进程处理各来源而出现（自动刷新）"
+    },
+    "aiError": {
+      "title": "AI 无法工作",
+      "hint": "新闻分类器返回错误——请检查 Anthropic API 的余额/额度。"
+    },
+    "edit": {
+      "button": "编辑",
+      "title": "编辑来源",
+      "name": "名称",
+      "feedUrl": "订阅源 URL",
+      "contentKind": "内容类型",
+      "country": "国家",
+      "countryPh": "UZ、RU…",
+      "enabled": "已启用",
+      "needsTest": "需要测试",
+      "test": "测试",
+      "testOk": "测试通过",
+      "testFail": "测试失败",
+      "feedChangedNote": "更改订阅源会重置测试——重新测试前该来源将被禁用。"
+    }
   }
 }

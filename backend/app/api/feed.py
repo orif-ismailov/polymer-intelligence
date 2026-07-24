@@ -69,6 +69,27 @@ def _resolve_period(period: str | None) -> datetime.datetime | None:
     return datetime.datetime.now(tz=datetime.UTC) - delta
 
 
+def _clean_str(value: Any) -> str | None:
+    """Return a trimmed non-empty string, or None for anything else.
+
+    Coerces away NULLs, blanks, and non-str values (e.g. a MagicMock attribute in
+    tests) so the optional seller/contact FeedItem fields stay str|None.
+    """
+    return value.strip() if isinstance(value, str) and value.strip() else None
+
+
+def _row_attr(row: Any, name: str) -> Any:
+    """Attribute access that tolerates rows lacking the column (returns None).
+
+    Real Row objects expose SELECTed columns by name; a plain tuple or a row from
+    an older query shape raises AttributeError → None.
+    """
+    try:
+        return getattr(row, name)
+    except AttributeError:
+        return None
+
+
 def _row_to_feed_item(row: Any) -> FeedItem:
     """Map a v_live_feed row to a FeedItem schema instance.
 
@@ -115,6 +136,8 @@ def _row_to_feed_item(row: Any) -> FeedItem:
     volume = decimal.Decimal(str(volume_raw)) if volume_raw is not None else None
     price = decimal.Decimal(str(price_raw)) if price_raw is not None else None
 
+    # Seller / contact — present on signal rows (joined from signals + sources +
+    # raw_items in the SELECT below); None for request rows and legacy query shapes.
     return FeedItem(
         id=id_,
         origin=origin,
@@ -129,6 +152,11 @@ def _row_to_feed_item(row: Any) -> FeedItem:
         status=status,
         event_at=event_at,
         needs_review=needs_review,
+        seller=_clean_str(_row_attr(row, "seller")),
+        source_name=_clean_str(_row_attr(row, "source_name")),
+        source_url=_clean_str(_row_attr(row, "source_url")),
+        contact_phone=_clean_str(_row_attr(row, "contact_phone")),
+        contact_email=_clean_str(_row_attr(row, "contact_email")),
     )
 
 
@@ -183,9 +211,29 @@ def get_feed(
         """
         SELECT v.id, v.origin, v.kind, v.product_id, v.grade_text, v.volume,
                v.price, v.currency, v.region, v.urgency, v.status, v.event_at,
-               COALESCE((s.ai->>'needs_review')::boolean, false) AS needs_review
+               COALESCE((s.ai->>'needs_review')::boolean, false) AS needs_review,
+               s.counterparty_text AS seller,
+               src.name AS source_name,
+               COALESCE(
+                   ri.payload->>'tender_url', ri.payload->>'source_url',
+                   ri.payload->>'message_url', ri.payload->>'url', ri.payload->>'link',
+                   CASE
+                       WHEN ri.payload->>'username' IS NOT NULL AND ri.external_id IS NOT NULL
+                       THEN 'https://t.me/' || ltrim(ri.payload->>'username', '@')
+                            || '/' || ri.external_id
+                       ELSE NULL
+                   END,
+                   -- Fallback: the source's own listing page (e.g. the UZEX trade board).
+                   -- Exchange rows carry no per-lot deep link, so at least link to where
+                   -- the offer/deal lives on the exchange. Only http(s) is rendered client-side.
+                   src.url
+               ) AS source_url,
+               COALESCE(ri.payload->>'phone', ri.payload->>'contact_phone') AS contact_phone,
+               COALESCE(ri.payload->>'email', ri.payload->>'contact_email') AS contact_email
         FROM v_live_feed v
         LEFT JOIN signals s ON s.id = v.id AND v.origin = 'signal'
+        LEFT JOIN sources src ON src.id = s.source_id
+        LEFT JOIN raw_items ri ON ri.id = s.raw_item_id
         WHERE
             (CAST(:cursor_ea AS timestamptz) IS NULL
              OR v.event_at < CAST(:cursor_ea AS timestamptz)

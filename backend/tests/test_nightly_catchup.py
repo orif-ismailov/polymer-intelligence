@@ -51,9 +51,10 @@ def test_deferred_items_are_reenqueued():
     raw_item_2.id = 20
 
     mock_session = MagicMock()
+    # (id, content_kind) — non-news → trade parser
     mock_session.execute.return_value.fetchall.return_value = [
-        (10,),
-        (20,),
+        (10, ""),
+        (20, ""),
     ]
 
     with (
@@ -72,6 +73,33 @@ def test_deferred_items_are_reenqueued():
     enqueued_ids = {c[0][0] for c in mock_enqueue.call_args_list}
     assert 10 in enqueued_ids
     assert 20 in enqueued_ids
+
+
+def test_news_items_route_to_news_parser():
+    """budget_deferred items from content_kind='news' sources go to parse_news_item."""
+    from app.tasks.nightly_catchup import nightly_llm_catchup  # noqa: PLC0415
+
+    mock_session = MagicMock()
+    # id 30 is a news item; id 40 is a plain telegram/trade item
+    mock_session.execute.return_value.fetchall.return_value = [
+        (30, "news"),
+        (40, ""),
+    ]
+
+    with (
+        patch("app.tasks.nightly_catchup.get_session") as mock_get_session,
+        patch("app.tasks.nightly_catchup.enqueue_for_telegram_parse") as mock_tg,
+        patch("app.tasks.nightly_catchup.celery_app.send_task") as mock_send,
+        patch("app.tasks.nightly_catchup.check_and_reserve_tokens"),
+    ):
+        mock_get_session.return_value.__enter__ = lambda s: mock_session
+        mock_get_session.return_value.__exit__ = MagicMock(return_value=False)
+        nightly_llm_catchup()
+
+    # News item → parse_news_item via send_task; non-news → enqueue_for_telegram_parse
+    mock_send.assert_called_once_with("parse_news_item", args=[30], queue="parse")
+    assert mock_tg.call_count == 1
+    assert mock_tg.call_args[0][0] == 40
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +137,7 @@ def test_nightly_catchup_resets_status_to_pending():
     from app.tasks.nightly_catchup import nightly_llm_catchup  # noqa: PLC0415
 
     mock_session = MagicMock()
-    mock_session.execute.return_value.fetchall.return_value = [(5,)]
+    mock_session.execute.return_value.fetchall.return_value = [(5, "")]
 
     with (
         patch("app.tasks.nightly_catchup.get_session") as mock_get_session,

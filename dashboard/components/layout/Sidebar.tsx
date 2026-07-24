@@ -17,6 +17,7 @@ import {
   Package,
   ShieldCheck,
   ShoppingCart,
+  SlidersHorizontal,
   Tag,
   Users,
   Workflow,
@@ -78,6 +79,7 @@ const NAV_GROUPS: NavGroup[] = [
     key: "settings",
     items: [
       { key: "reports", href: "/reports", icon: Newspaper, minRole: "analyst" },
+      { key: "newsAdmin", href: "/admin/news", icon: SlidersHorizontal, minRole: "analyst" },
       { key: "prices", href: "/prices", icon: BarChart3 },
       {
         key: "adminProducts",

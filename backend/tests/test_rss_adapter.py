@@ -162,6 +162,53 @@ def test_rss_10_row_cap():
     assert len(result.sample_rows) <= 10
 
 
+# ── Content-enrichment tests (news quality) ────────────────────────────────────
+
+
+def test_rss_captures_link_and_summary():
+    """Each row carries the article link + body-derived summary (for news + source_url)."""
+    from app.ingest.rss.adapter import _parse_feed  # noqa: PLC0415
+
+    rows = _parse_feed(_RSS_FIXTURE, {"currency_default": "USD"})
+    assert rows[0]["link"] == "https://example.com/1"
+    assert rows[0]["summary"] and "PP Raffia" in str(rows[0]["summary"])
+
+
+def test_rss_strips_html_from_description():
+    """HTML/entities in <description> are flattened to clean text."""
+    from app.ingest.rss.adapter import _strip_html  # noqa: PLC0415
+
+    assert _strip_html("<p>Shurtan &amp; GCC <b>halts</b> line</p>") == "Shurtan & GCC halts line"
+
+
+def test_rss_fetch_enriches_content_and_external_id():
+    """fetch() builds content=title+body and keys external_id on the article link."""
+    from app.ingest.rss.adapter import RssAdapter  # noqa: PLC0415
+
+    adapter = RssAdapter()
+    source = MagicMock()
+    source.config = {"url": "https://example.com/feed.rss", "currency_default": "USD"}
+
+    mock_response = MagicMock()
+    mock_response.content = _RSS_FIXTURE
+
+    async def run():
+        with (
+            patch("app.ingest.rss.adapter.is_safe_url", return_value=True),
+            patch("app.ingest.rss.adapter.fetch_url", new=AsyncMock(return_value=mock_response)),
+        ):
+            return await adapter.fetch(source)
+
+    drafts = asyncio.run(run())
+    assert len(drafts) == 3
+    # content carries both the headline and the article body
+    assert "PP Raffia H030GP" in drafts[0].content
+    assert "volume:20" in drafts[0].content
+    # external_id is the article link (stable dedup as feed order shifts)
+    assert drafts[0].external_id == "https://example.com/1"
+    assert drafts[0].payload["link"] == "https://example.com/1"
+
+
 # ── Adapter registration tests ────────────────────────────────────────────────
 
 

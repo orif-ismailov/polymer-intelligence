@@ -68,12 +68,14 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "llm_page_fetch",
         "schedule": crontab(minute=30),
     },
-    # ── RSS feed extraction: hourly at minute 45 ─────────────────────────────
-    # Fetches enabled rss sources; unstructured headline/summary text routes to
-    # the LLM extractor (parse_telegram_item), gated by the daily token budget.
-    "rss_fetch": {
-        "task": "rss_fetch",
-        "schedule": crontab(minute=45),
+    # ── News RSS refresh dispatcher: every minute ────────────────────────────
+    # Enqueues rss_fetch only when the operator-configurable news_refresh_interval_minutes
+    # (app_settings, default 60) has elapsed since the freshest enabled-RSS last_fetch_at.
+    # Replaces the old fixed hourly rss_fetch entry so the scan cadence is runtime-tunable
+    # from the dashboard admin panel (Phase 8f-2).
+    "news_fetch_dispatch": {
+        "task": "news_fetch_dispatch",
+        "schedule": crontab(minute="*"),
     },
     # ── Source health check: every 5 minutes ─────────────────────────────────
     "check_source_health": {
@@ -97,11 +99,25 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "nightly_llm_catchup",
         "schedule": crontab(minute=0, hour=2),
     },
-    # ── Daily market report: 08:00 Tashkent ──────────────────────────────────
-    # Builds the morning report as a draft; staff approve + publish on the
+    # ── Morning market report: 08:00 Tashkent ────────────────────────────────
+    # Builds the morning brief as a draft; staff approve + publish on the
     # dashboard (human-in-the-loop — no auto-publish). Phase 3 news engine.
     "generate_daily_report": {
         "task": "generate_daily_report",
         "schedule": crontab(minute=0, hour=8),
+    },
+    # ── Evening market report: 18:00 Tashkent ────────────────────────────────
+    # The second scheduled brief of the day (Phase 8c). Same 3-section structure,
+    # tagged kind='evening'; also a draft for human-in-the-loop approval.
+    "generate_evening_report": {
+        "task": "generate_evening_report",
+        "schedule": crontab(minute=0, hour=18),
+    },
+    # ── Breaking-news publisher: every 10 minutes ────────────────────────────
+    # Pushes newly-detected high-importance news to the channel immediately, without
+    # waiting for the next scheduled brief (Phase 8c). Deduped via signals.extra.
+    "publish_breaking_news": {
+        "task": "publish_breaking_news",
+        "schedule": crontab(minute="*/10"),
     },
 }

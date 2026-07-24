@@ -3,8 +3,9 @@ nightly_llm_catchup — Celery beat task: reprocess budget-deferred Telegram ite
 
 Runs at UTC 02:00 each day (after the daily Redis budget key resets at UTC midnight).
 Selects raw_items in 'budget_deferred' state from the LLM-extracted source types
-(telegram_channel, llm_page and rss) and re-enqueues each for parse_telegram_item,
-in bounded batches to respect the freshly-reset daily budget.
+(telegram_channel, llm_page and rss) and re-enqueues each for LLM extraction — news
+sources (config content_kind='news') route to parse_news_item, everything else to
+parse_telegram_item — in bounded batches to respect the freshly-reset daily budget.
 
 Design (AI-SPEC §6 G4):
   - Items marked 'budget_deferred' are items where BudgetExceeded was raised during
@@ -85,11 +86,11 @@ def nightly_llm_catchup() -> dict[str, Any]:
         Dict with keys: status, deferred_items_found, enqueued.
     """
     with get_session() as session:
-        # ── Find budget-deferred telegram raw_items ──────────────────────────
+        # ── Find budget-deferred LLM raw_items (with their content_kind) ──────
         rows = session.execute(
             sa.text(
                 """
-                SELECT ri.id
+                SELECT ri.id, COALESCE(s.config ->> 'content_kind', '') AS content_kind
                 FROM raw_items ri
                 JOIN sources s ON s.id = ri.source_id
                 WHERE ri.parse_status = 'budget_deferred'
@@ -106,6 +107,8 @@ def nightly_llm_catchup() -> dict[str, Any]:
             return {"status": "ok", "deferred_items_found": 0, "enqueued": 0}
 
         raw_item_ids = [row[0] for row in rows]
+        # News sources route back to parse_news_item; everything else to parse_telegram_item.
+        news_ids = {row[0] for row in rows if row[1] == "news"}
 
         # ── Reset parse_status → 'pending' (clears double-parse guard) ───────
         # Use a parameterized IN clause by building a list of :param_N binds
@@ -124,12 +127,16 @@ def nightly_llm_catchup() -> dict[str, Any]:
             extra={"count": len(raw_item_ids)},
         )
 
-    # ── Dispatch parse_telegram_item for each deferred item ──────────────────
-    # Outside the session context so we're not holding a DB connection during dispatch
+    # ── Dispatch the correct parse task for each deferred item ───────────────
+    # Outside the session context so we're not holding a DB connection during dispatch.
+    # News items (content_kind='news') go to parse_news_item; the rest to the trade parser.
     enqueued = 0
     for raw_item_id in raw_item_ids:
         try:
-            enqueue_for_telegram_parse(raw_item_id)
+            if raw_item_id in news_ids:
+                celery_app.send_task("parse_news_item", args=[raw_item_id], queue="parse")
+            else:
+                enqueue_for_telegram_parse(raw_item_id)
             enqueued += 1
         except Exception as exc:
             logger.error(

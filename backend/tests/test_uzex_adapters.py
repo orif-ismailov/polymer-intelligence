@@ -363,3 +363,44 @@ class TestAdapterFetch:
         for draft in drafts:
             assert draft.payload is not None
             assert draft.payload.get("currency") == "UZS"
+
+
+class TestNormalizePriceToPerMt:
+    """UZEX 'total contract value' + qty(kg/tonne) → per-MT unit price (verified live)."""
+
+    def _norm(self, price: str, volume: str, unit: str) -> dict[str, object]:
+        from app.ingest.uzex.adapters import _normalize_price_to_per_mt  # noqa: PLC0415
+
+        payload: dict[str, object] = {"price": price, "volume": volume, "volume_unit": unit}
+        _normalize_price_to_per_mt(payload)
+        return payload
+
+    def test_tonne_total_becomes_unit_price(self) -> None:
+        # Urea: 361,444,888 total / 68 t = 5,315,366/t
+        p = self._norm("361444888.0000", "68", "тонна")
+        assert p["price"] == "5315366.00"
+        assert p["volume"] == "68"
+        assert p["volume_unit"] == "MT"
+        assert p["contract_total"] == "361444888.0000"   # raw total preserved for audit
+
+    def test_kg_total_normalized_to_per_mt(self) -> None:
+        # Same urea priced in kg: 77,403,330 / 15,000 kg = 5,160.22/kg = 5,160,222/MT
+        p = self._norm("77403330.0000", "15000", "килограмм")
+        assert p["price"] == "5160222.00"
+        assert p["volume"] == "15"           # 15000 kg → 15 MT
+        assert p["volume_unit"] == "MT"
+
+    def test_polymer_deal_per_mt(self) -> None:
+        # PP J-370: 234,659,990 total / 13.75 t = 17,066,181.09/t
+        p = self._norm("234659990.0000", "13.750", "тонна")
+        assert p["price"] == "17066181.09"
+        assert p["volume"] == "13.750"
+
+    def test_non_mass_unit_left_untouched(self) -> None:
+        p = self._norm("98400000", "24000", "литр")
+        assert p["price"] == "98400000"      # unchanged — can't convert litres to MT
+        assert "contract_total" not in p
+
+    def test_missing_or_zero_qty_left_untouched(self) -> None:
+        assert self._norm("100", "0", "тонна")["price"] == "100"
+        assert self._norm("100", "", "тонна")["price"] == "100"

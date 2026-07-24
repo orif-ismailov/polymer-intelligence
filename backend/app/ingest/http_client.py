@@ -152,6 +152,7 @@ async def fetch_url(
     method: str = "GET",
     json_body: dict[str, object] | None = None,
     host_delay: float | None = None,
+    headers: dict[str, str] | None = None,
 ) -> httpx.Response:
     """Fetch a URL using the hardened httpx client.
 
@@ -171,6 +172,11 @@ async def fetch_url(
             application/json). Ignored for GET when None.
         host_delay: Minimum seconds between requests to the same host.
             Defaults to settings.INGEST_PER_HOST_DELAY_SECONDS.
+        headers: Optional per-request headers merged over (and overriding) the default
+            {"User-Agent": settings.INGEST_USER_AGENT}. Needed by sources whose gateway
+            gates on a browser-like User-Agent (e.g. xarid-api-auction.uzex.uz returns
+            a 500 "Missing User-Agent header" for the honest crawler UA). Keep the honest
+            default for every source that does not force this.
 
     Returns:
         An httpx.Response with the body already read (bytes in .content).
@@ -198,7 +204,9 @@ async def fetch_url(
     max_retries = settings.INGEST_HTTP_RETRIES
     user_agent = settings.INGEST_USER_AGENT
 
-    headers = {"User-Agent": user_agent}
+    request_headers = {"User-Agent": user_agent}
+    if headers:
+        request_headers.update(headers)
     last_exc: Exception | None = None
 
     for attempt in range(max_retries + 1):
@@ -220,7 +228,7 @@ async def fetch_url(
                     # because the pre-request DNS check only validates the *original* URL.
                     # Trusted data sources should always use direct (non-redirecting) URLs.
                     follow_redirects=False,
-                    headers=headers,
+                    headers=request_headers,
                 ) as client,
                 # Stream the response to enforce the body size cap without
                 # buffering the full body into memory (T-02-08)

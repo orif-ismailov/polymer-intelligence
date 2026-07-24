@@ -115,6 +115,12 @@ def run_source_fetch_isolated(
         record_fetch_success(session, source.id)
         session.commit()
 
+        # News sources (config content_kind='news') route to the news classifier
+        # regardless of adapter — a Telegram channel or RSS feed can carry either
+        # market signals or news; the admin marks which via the source config.
+        if (getattr(source, "config", None) or {}).get("content_kind") == "news":
+            parse_task_name = "parse_news_item"
+
         if inserted > 0:
             _enqueue_parse_tasks(inserted_ids, parse_task_name)
 
@@ -207,6 +213,22 @@ def _execute_uzex_fetch(adapter_name: str) -> dict[str, Any]:
     }
 
 
+# Adapter registry name → the parse task that turns its raw_items into signals.
+# Mirrors the parse_task_name each fetch task passes to run_source_fetch_isolated.
+# Used by the admin reprocess endpoint to re-enqueue the RIGHT parser per source.
+# cbu_rates is absent on purpose: it writes fx_rates directly, not raw_items → signals.
+PARSE_TASK_BY_ADAPTER: dict[str, str] = {
+    "uzex_offers": "parse_raw_item",
+    "uzex_contracts": "parse_raw_item",
+    "uzex_deals": "parse_raw_item",
+    "xarid_tenders": "parse_xarid_item",
+    "html_table": "parse_raw_item",
+    "llm_page": "parse_telegram_item",
+    "rss": "parse_telegram_item",
+    "telegram_channel": "parse_telegram_item",
+}
+
+
 def _enqueue_parse_tasks(
     inserted_ids: list[int], task_name: str = "parse_raw_item"
 ) -> None:
@@ -289,7 +311,11 @@ def _execute_xarid_fetch(adapter_name: str) -> dict[str, Any]:
         sources = _load_enabled_sources(session, adapter_name)
         for source in sources:
             # Per-source isolation + health recording; never re-raises (T-02-17).
-            total_inserted += run_source_fetch_isolated(session, source, adapter)
+            # xarid rows are structured buy-side tenders → the dedicated buy_request
+            # parser (parse_xarid_item), NOT the UZEX exchange-row parser.
+            total_inserted += run_source_fetch_isolated(
+                session, source, adapter, parse_task_name="parse_xarid_item"
+            )
             sources_processed += 1
 
     logger.info(

@@ -48,6 +48,7 @@ class Source(Base):
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
     config: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     country: Mapped[str | None] = mapped_column(Text, nullable=True)             # 'UZ', 'CN', 'RU'
+    group_name: Mapped[str | None] = mapped_column(Text, nullable=True)          # operator source group (Phase 8f-2)
     is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     last_test_ok_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

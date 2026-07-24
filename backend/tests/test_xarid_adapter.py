@@ -18,7 +18,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.ingest.xarid.adapters import XaridTendersAdapter
+from app.ingest.xarid.adapters import (
+    _DEFAULT_CLASSIFIER_PREFIXES,
+    _DEFAULT_KEYWORDS,
+    XaridTendersAdapter,
+    _is_relevant,
+)
 
 _LIST_URL = "https://xarid-api-auction.uzex.uz/Common/GetMinimizedLotsList"
 
@@ -138,6 +143,7 @@ async def _fake_fetch(
     method: str = "GET",
     json_body: dict[str, Any] | None = None,
     host_delay: float | None = None,
+    headers: dict[str, str] | None = None,
 ) -> MagicMock:
     """Route LIST (POST by from-window) and DETAIL (GET by id) to canned JSON."""
     resp = MagicMock()
@@ -210,3 +216,69 @@ async def test_test_button_ok_and_caps_sample_rows() -> None:
     assert result.ok is True, f"test() not ok: {result.error}"
     assert 0 < len(result.sample_rows) <= 10
     assert all("id" in row for row in result.sample_rows)
+
+
+def _detail_with(code: str, name: str = "", category: str = "") -> dict[str, Any]:
+    """A minimal xarid detail with one line item (only product_code/name matter here)."""
+    return {
+        "category_name": category,
+        "js_details": json.dumps([{"product_code": code, "product_name": name}]),
+    }
+
+
+class TestStageAFilterPrecision:
+    """Tightened Stage-A filter: prefix match on plastics codes, not whole divisions."""
+
+    prefixes = _DEFAULT_CLASSIFIER_PREFIXES
+    keywords = _DEFAULT_KEYWORDS
+
+    def test_primary_form_plastics_kept(self) -> None:
+        assert _is_relevant(_detail_with("20.16.10.000-001", "Полиэтилен HDPE"), self.prefixes, self.keywords)
+
+    def test_plastic_products_kept(self) -> None:
+        assert _is_relevant(_detail_with("22.21.10.000", "Труба ПВХ"), self.prefixes, self.keywords)
+
+    def test_division20_chemical_now_dropped(self) -> None:
+        """The fix: salt (division 20 but NOT 20.16, no polymer keyword) is dropped.
+        Under the old whole-division "20" filter it wrongly passed and cost an LLM call."""
+        assert not _is_relevant(_detail_with("20.13.43.000", "Натрий хлористый"), self.prefixes, self.keywords)
+
+    def test_disinfectant_now_dropped(self) -> None:
+        assert not _is_relevant(_detail_with("20.20.14.000", "Средство дезинфекционное"), self.prefixes, self.keywords)
+
+    def test_metal_dropped(self) -> None:
+        assert not _is_relevant(_detail_with("25.12.10.000-005", "Дверь алюминиевая"), self.prefixes, self.keywords)
+
+    def test_keyword_backstop_catches_miscoded_polymer(self) -> None:
+        """A mis-coded polymer (wrong classifier) is still caught by the keyword belt."""
+        assert _is_relevant(_detail_with("99.99.99.000", "Полипропилен гранула H030"), self.prefixes, self.keywords)
+
+
+@pytest.mark.asyncio
+async def test_requests_send_browser_user_agent() -> None:
+    """Regression: the xarid gateway 500s on the honest crawler UA and only accepts a
+    browser-shaped one, so every LIST/DETAIL fetch must carry a browser User-Agent
+    (with Origin/Referer mirroring the SPA). Assert the headers reach fetch_url."""
+    adapter = XaridTendersAdapter()
+    seen_headers: list[dict[str, str] | None] = []
+
+    async def _capturing_fetch(
+        url: str,
+        *,
+        method: str = "GET",
+        json_body: dict[str, Any] | None = None,
+        host_delay: float | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> MagicMock:
+        seen_headers.append(headers)
+        return await _fake_fetch(url, method=method, json_body=json_body, headers=headers)
+
+    with patch("app.ingest.http_client.fetch_url", new=_capturing_fetch):
+        await adapter.fetch(_source())
+
+    assert seen_headers, "expected at least one fetch_url call"
+    assert all(h is not None for h in seen_headers), "every xarid request must set headers"
+    for h in seen_headers:
+        assert h is not None
+        assert "Mozilla/" in h["User-Agent"], f"UA is not browser-shaped: {h['User-Agent']!r}"
+        assert h["Referer"].startswith("https://xarid.uzex.uz")

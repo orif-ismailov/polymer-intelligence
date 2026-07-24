@@ -91,10 +91,15 @@
     "config": {
       "list_url": "https://xarid-api-auction.uzex.uz/Common/GetMinimizedLotsList",
       "detail_url_template": "https://xarid-api-auction.uzex.uz/Common/GetLot/{id}",
-      "list_body": { "region_ids": [] },
+      "list_body": {
+        "region_ids": []
+      },
       "page_size": 20,
       "max_pages": 200,
-      "classifier_divisions": ["19", "20", "22"],
+      "classifier_prefixes": [
+        "20.16",
+        "22.2"
+      ],
       "max_details": 500
     }
   },
@@ -109,6 +114,62 @@
     "config": {
       "endpoint": "https://cbu.uz/en/arkhiv-kursov-valyut/json/",
       "base_currency": "UZS"
+    }
+  },
+  {
+    "kind": "rss",
+    "adapter": "rss",
+    "name": "World Petrochemical News (Google News)",
+    "url": "https://news.google.com/rss/search?q=%22polypropylene%22%20OR%20%22polyethylene%22%20OR%20%22PVC%22%20OR%20%22polystyrene%22%20OR%20%22resin%20prices%22%20OR%20%22petrochemical%20prices%22%20OR%20%22polymer%20prices%22&hl=en-US&gl=US&ceid=US:en",
+    "country": null,
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "url": "https://news.google.com/rss/search?q=%22polypropylene%22%20OR%20%22polyethylene%22%20OR%20%22PVC%22%20OR%20%22polystyrene%22%20OR%20%22resin%20prices%22%20OR%20%22petrochemical%20prices%22%20OR%20%22polymer%20prices%22&hl=en-US&gl=US&ceid=US:en",
+      "content_kind": "news",
+      "currency_default": "USD"
+    }
+  },
+  {
+    "kind": "rss",
+    "adapter": "rss",
+    "name": "Uzbekistan Petrochemical News (Google News)",
+    "url": "https://news.google.com/rss/search?q=Uzbekistan%20(polymer%20OR%20polypropylene%20OR%20polyethylene%20OR%20petrochemical%20OR%20%22gas%20chemical%22)&hl=en-US&gl=US&ceid=US:en",
+    "country": "UZ",
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "url": "https://news.google.com/rss/search?q=Uzbekistan%20(polymer%20OR%20polypropylene%20OR%20polyethylene%20OR%20petrochemical%20OR%20%22gas%20chemical%22)&hl=en-US&gl=US&ceid=US:en",
+      "content_kind": "news",
+      "currency_default": "USD"
+    }
+  },
+  {
+    "kind": "rss",
+    "adapter": "rss",
+    "name": "Global Polymer Prices (Google News)",
+    "url": "https://news.google.com/rss/search?q=%22resin%20prices%22%20OR%20%22polymer%20prices%22%20OR%20%22polypropylene%20price%22%20OR%20%22HDPE%20price%22%20OR%20%22PVC%20price%22%20OR%20%22PET%20resin%20price%22%20OR%20%22MEG%20price%22&hl=en-US&gl=US&ceid=US:en",
+    "country": null,
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "url": "https://news.google.com/rss/search?q=%22resin%20prices%22%20OR%20%22polymer%20prices%22%20OR%20%22polypropylene%20price%22%20OR%20%22HDPE%20price%22%20OR%20%22PVC%20price%22%20OR%20%22PET%20resin%20price%22%20OR%20%22MEG%20price%22&hl=en-US&gl=US&ceid=US:en",
+      "content_kind": "news",
+      "currency_default": "USD"
+    }
+  },
+  {
+    "kind": "rss",
+    "adapter": "rss",
+    "name": "Petrochemical Plants & Projects (Google News)",
+    "url": "https://news.google.com/rss/search?q=%22petrochemical%20plant%22%20OR%20%22polymer%20plant%22%20OR%20%22steam%20cracker%22%20OR%20%22gas%20chemical%20complex%22%20OR%20%22petrochemical%20project%22%20OR%20%22resin%20production%22&hl=en-US&gl=US&ceid=US:en",
+    "country": null,
+    "is_enabled": false,
+    "last_test_ok_at": null,
+    "config": {
+      "url": "https://news.google.com/rss/search?q=%22petrochemical%20plant%22%20OR%20%22polymer%20plant%22%20OR%20%22steam%20cracker%22%20OR%20%22gas%20chemical%20complex%22%20OR%20%22petrochemical%20project%22%20OR%20%22resin%20production%22&hl=en-US&gl=US&ceid=US:en",
+      "content_kind": "news",
+      "currency_default": "USD"
     }
   }
 ]

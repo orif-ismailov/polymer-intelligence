@@ -23,7 +23,8 @@
       "prices": "قیمت‌ها",
       "adminProducts": "محصولات",
       "adminUsers": "کاربران",
-      "offerRequests": "درخواست پیشنهاد"
+      "offerRequests": "درخواست پیشنهاد",
+      "newsAdmin": "اخبار (مدیریت)"
     },
     "guest": "مهمان"
   },
@@ -656,5 +657,79 @@
     "approve": "تأیید و ارسال به فروشنده",
     "reject": "رد",
     "notePlaceholder": "توضیح (اختیاری)"
+  },
+  "newsAdmin": {
+    "title": "مدیریت اخبار",
+    "subtitle": "آمار، تنظیمات هوش مصنوعی و نظارت بر اخبار",
+    "error": "بارگیری نشد",
+    "loading": "در حال بارگذاری…",
+    "stats": {
+      "totalSources": "کل منابع",
+      "activeSources": "فعال",
+      "failedSources": "دارای خطا",
+      "lastScan": "آخرین اسکن",
+      "lastPublished": "آخرین گزارش",
+      "pendingAi": "در انتظار هوش مصنوعی",
+      "todayNews": "اخبار امروز",
+      "aiStatus": "وضعیت هوش مصنوعی",
+      "on": "روشن",
+      "off": "خاموش",
+      "never": "—",
+      "error": "خطا",
+      "budget": "بودجه هوش مصنوعی"
+    },
+    "actions": {
+      "runParser": "اجرای پارسر",
+      "generateReport": "ایجاد گزارش",
+      "save": "ذخیره"
+    },
+    "settings": {
+      "title": "تنظیمات",
+      "default": "پیش‌فرض"
+    },
+    "approval": {
+      "title": "اخبار در انتظار تأیید",
+      "empty": "خبری برای تأیید نیست",
+      "approve": "تأیید",
+      "reject": "رد"
+    },
+    "groups": {
+      "title": "گروه‌های منبع",
+      "ungrouped": "بدون گروه",
+      "disabled": "غیرفعال"
+    },
+    "activity": {
+      "title": "فعالیت پارسر",
+      "scanning": "اسکن آغاز شد",
+      "noSources": "منبع RSS فعالی نیست",
+      "empty": "منبع خبری نیست",
+      "refresh": "تازه‌سازی",
+      "source": "منبع",
+      "lastScan": "اسکن",
+      "lastSuccess": "موفق",
+      "fails": "خطاها",
+      "raw": "موارد ۲۴س",
+      "news": "اخبار ۲۴س",
+      "hint": "نتایج با پردازش هر منبع توسط کارگرها ظاهر می‌شود (به‌طور خودکار تازه می‌شود)"
+    },
+    "aiError": {
+      "title": "هوش مصنوعی کار نمی‌کند",
+      "hint": "طبقه‌بند اخبار خطا برمی‌گرداند — موجودی/اعتبار Anthropic API را بررسی کنید."
+    },
+    "edit": {
+      "button": "ویرایش",
+      "title": "ویرایش منبع",
+      "name": "نام",
+      "feedUrl": "نشانی فید",
+      "contentKind": "نوع محتوا",
+      "country": "کشور",
+      "countryPh": "UZ, RU…",
+      "enabled": "فعال",
+      "needsTest": "نیاز به تست",
+      "test": "تست",
+      "testOk": "تست موفق",
+      "testFail": "خطای تست",
+      "feedChangedNote": "تغییر فید تست را بازنشانی می‌کند — منبع تا تست مجدد غیرفعال می‌شود."
+    }
   }
 }

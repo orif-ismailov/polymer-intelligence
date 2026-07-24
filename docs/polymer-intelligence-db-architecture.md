@@ -79,6 +79,7 @@ CREATE TABLE sources (
     config          jsonb NOT NULL DEFAULT '{}',   -- валидируется config_schema адаптера:
                                                    -- селекторы, маппинг колонок, расписание
     country         char(2),                       -- 'UZ', 'CN', 'RU'
+    group_name      text,                          -- операторская группа источников (миграция 0016, Фаза 8f-2)
     is_enabled      boolean NOT NULL DEFAULT true,
     last_test_ok_at timestamptz,                   -- конструктор: включение запрещено,
                                                    -- пока NULL (тест ни разу не прошёл)
@@ -372,7 +373,8 @@ CREATE INDEX ON deliveries (status) WHERE status = 'queued';
 ## 8. Отчёты (новостной движок)
 
 ```sql
-CREATE TYPE report_kind AS ENUM ('morning', 'intraday', 'weekly', 'custom');
+CREATE TYPE report_kind AS ENUM ('morning', 'evening', 'intraday', 'weekly', 'custom');
+-- 'evening' added in migration 0014 (Phase 8c — Evening Market Brief at 18:00 Tashkent).
 CREATE TYPE report_status AS ENUM ('draft', 'pending_approval', 'approved', 'published', 'rejected');
 
 CREATE TABLE reports (
@@ -416,6 +418,17 @@ CREATE TABLE audit_log (
     entity_id       text NOT NULL,
     details         jsonb NOT NULL DEFAULT '{}',
     created_at      timestamptz NOT NULL DEFAULT now()
+);
+
+-- Runtime operator-editable settings (migration 0015, Phase 8d). Only overrides are
+-- stored; unset keys fall back to code defaults in app/services/settings_service.py
+-- (news_ai_enabled, news_require_approval, report_auto_publish, llm_extract_model,
+-- news_prompt_version). Per-article approval state lives in signals.ai.news.approval.
+CREATE TABLE app_settings (
+    key         text PRIMARY KEY,
+    value       jsonb NOT NULL,
+    updated_at  timestamptz NOT NULL DEFAULT now(),
+    updated_by  int REFERENCES staff_users(id)
 );
 ```
 

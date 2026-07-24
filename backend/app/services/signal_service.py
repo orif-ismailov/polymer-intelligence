@@ -221,3 +221,92 @@ def create_signal_from_parse(
     )
 
     return signal
+
+
+def create_buy_request_signal_from_xarid(
+    session: Session,
+    raw_item: RawItem,
+    *,
+    product_id: int | None,
+    grade_id: int | None,
+    grade_text: str | None,
+) -> Signal:
+    """Build a buy_request Signal from a structured xarid procurement payload.
+
+    Unlike create_signal_from_parse (UZEX exchange table rows), xarid rows are
+    buy-side tenders: the kind is FORCED to buy_request (never inferred from a
+    ``section``, which xarid payloads do not carry), and the buyer / quantity /
+    price / location come straight from the structured payload. The product is
+    resolved upstream (synonym dictionary or LLM) and passed in — the caller drops
+    the row when product_id is None, so this always builds a polymer-relevant lead.
+
+    The buyer's phone/email/tender_url stay in raw_items.payload and are surfaced by
+    the live-feed contact join (GET /feed), so no contact fields are copied onto the
+    signal row itself. ``session`` is accepted for signature parity with the other
+    signal builders; no lookups are performed here.
+    """
+    payload: dict[str, object] = raw_item.payload or {}
+
+    volume = _safe_decimal(payload.get("quantity"))
+    price = _safe_decimal(payload.get("price"))
+
+    # xarid reports a currency NAME ("So'm" / "Сўм" / "Сум"), not an ISO code. Normalize
+    # the Uzbek som spellings to "UZS" (matching the UZEX signals); otherwise keep the
+    # first 3 chars to fit the String(3) column.
+    currency_raw = payload.get("currency")
+    currency: str | None = None
+    if currency_raw:
+        cur = str(currency_raw).strip()
+        low = cur.lower()
+        if any(alias in low for alias in ("сом", "сўм", "сум", "so'm", "som", "so‘m")):
+            currency = "UZS"
+        else:
+            currency = cur[:3]
+
+    unit_raw = payload.get("unit")
+    volume_unit = str(unit_raw).strip() if unit_raw else "MT"
+
+    region_raw = payload.get("delivery_location") or payload.get("country")
+    region: str | None = str(region_raw).strip() if region_raw else None
+
+    buyer_raw = payload.get("buyer")
+    counterparty_text: str | None = str(buyer_raw).strip() if buyer_raw else None
+
+    product_text_raw = payload.get("product_text")
+    grade_text_final = grade_text or (
+        str(product_text_raw).strip() if product_text_raw else None
+    )
+
+    # event_at from the tender's publication date (fallback: deadline, then raw_item).
+    event_payload = dict(payload)
+    event_payload.setdefault(
+        "event_at", payload.get("publication_date") or payload.get("deadline")
+    )
+    event_at = _parse_event_at(event_payload, raw_item)
+
+    signal = Signal(
+        kind=SignalKind.buy_request,
+        source_id=raw_item.source_id,
+        raw_item_id=raw_item.id,
+        product_id=product_id,
+        grade_id=grade_id,
+        grade_text=grade_text_final,
+        volume=volume,
+        volume_unit=volume_unit,
+        price=price,
+        currency=currency,
+        price_basis=PriceBasis.unknown,
+        region=region,
+        destination=None,
+        counterparty_id=None,
+        counterparty_text=counterparty_text,
+        status="new",
+        event_at=event_at,
+    )
+
+    logger.debug(
+        "signal_service.create_buy_request_from_xarid",
+        extra={"product_id": product_id, "raw_item_id": raw_item.id},
+    )
+
+    return signal

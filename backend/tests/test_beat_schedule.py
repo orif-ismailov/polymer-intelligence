@@ -40,13 +40,17 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         # Phase 6: hourly no-code adapter fetch drivers
         "html_table_fetch",
         "llm_page_fetch",
-        "rss_fetch",
+        # Phase 8f-2: RSS is now dispatched dynamically at a configurable interval
+        "news_fetch_dispatch",
         "check_source_health",
         # Phase 5 (05-02): userbot heartbeat health check — ROADMAP SC#1 liveness
         "check_userbot_health",
         # Phase 5 (05-04): nightly LLM catch-up for budget-deferred items — ROADMAP SC#4
         "nightly_llm_catchup",
-        "generate_daily_report"
+        "generate_daily_report",
+        # Phase 8c: evening brief (18:00) + immediate breaking-news publisher
+        "generate_evening_report",
+        "publish_breaking_news",
     }
     assert set(beat_schedule.keys()) == required_keys, (
         f"Beat schedule keys mismatch: {set(beat_schedule.keys())!r}"

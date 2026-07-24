@@ -7,7 +7,7 @@ Fetches the daily rate table from:
 Response is a JSON array where each element has:
     Ccy   — ISO 4217 currency code (e.g. "USD", "CNY", "RUB")
     Rate  — rate in UZS per 1 unit of Ccy (decimal string)
-    Date  — YYYY-MM-DD date string
+    Date  — DD.MM.YYYY date string (e.g. "21.07.2026"); ISO is accepted as a fallback
 
 Security:
   T-02-15: Strict Decimal parsing with try/except → skips any malformed Rate;
@@ -41,6 +41,26 @@ logger = logging.getLogger(__name__)
 
 # CBU public JSON endpoint (official, no auth required)
 _CBU_DEFAULT_URL = "https://cbu.uz/ru/arkhiv-kursov-valyut/json/"
+
+
+def _parse_cbu_date(raw_date: object) -> datetime.date | None:
+    """Parse a CBU `Date` value. CBU returns DD.MM.YYYY (e.g. '21.07.2026'); we also
+    accept ISO YYYY-MM-DD as a fallback in case the API format ever changes.
+
+    Returns None when the value can't be parsed (caller skips the row). The previous
+    code assumed ISO only, so every real CBU row was skipped and fx_rates stayed empty.
+    """
+    s = str(raw_date).strip()
+    if not s:
+        return None
+    try:
+        return datetime.datetime.strptime(s, "%d.%m.%Y").date()
+    except (ValueError, TypeError):
+        pass
+    try:
+        return datetime.date.fromisoformat(s)
+    except (ValueError, TypeError):
+        return None
 
 
 @dataclass
@@ -138,9 +158,8 @@ class CbuRatesAdapter:
                 )
                 continue
 
-            try:
-                rate_date = datetime.date.fromisoformat(str(raw_date).strip())
-            except (ValueError, TypeError):
+            rate_date = _parse_cbu_date(raw_date)
+            if rate_date is None:
                 logger.warning(
                     "cbu_rates.skip_malformed_date",
                     extra={"ccy": ccy, "raw_date": str(raw_date)},

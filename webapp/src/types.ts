@@ -309,6 +309,82 @@ export interface NewsItem extends NewsSummary {
   } | null;
 }
 
+/** One reporting source of a (possibly cross-source-merged) news article. */
+export interface NewsSourceRef {
+  id: number;
+  name: string | null;
+  published_at: string | null;
+}
+
+/** A single classified news article (Phase 7e) — the Mini-App news card. */
+export interface NewsArticleCard {
+  id: number;
+  headline: string;
+  category: string | null;
+  importance: "high" | "medium" | "low" | null;
+  market_impact: "positive" | "negative" | "neutral" | null;
+  summary: string | null;
+  /** AI market analysis (localized to the request `lang` when available). */
+  analysis: string | null;
+  /** One professional business recommendation. */
+  recommendation: string | null;
+  /** Detected source language (ru/uz/en/other). */
+  language: string | null;
+  country: string | null;
+  /** Every affected country (primary first). */
+  countries: string[];
+  companies: string[];
+  related_products: string[];
+  source_name: string | null;
+  published_at: string | null;
+  image_url: string | null;
+  /** Every source that reported this story (original first); Phase 7f cross-source merge. */
+  sources: NewsSourceRef[];
+  /** Number of reporting sources (1 = single-source). */
+  merged_count: number;
+}
+
+export interface NewsArticleDetail extends NewsArticleCard {
+  body: string | null;
+  source_url: string | null;
+}
+
+/** Top-nav tabs for the News page. */
+export type NewsScope = "all" | "uzbekistan" | "global" | "producers";
+
+/** Sort options exposed by the News list. */
+export type NewsSort = "newest" | "importance" | "category" | "products" | "country" | "company";
+
+/** Query for the news-article list (all fields optional). */
+export interface NewsArticlesQuery {
+  q?: string;
+  scope?: NewsScope;
+  category?: string;
+  country?: string;
+  company?: string;
+  product?: string;
+  importance?: "high" | "medium" | "low";
+  sort?: NewsSort;
+  /** Localize display fields to this language (ru/uz/en). */
+  lang?: string;
+  limit?: number;
+  days?: number;
+}
+
+/** One filterable value + how often it occurs in recent news. */
+export interface NewsFacet {
+  value: string;
+  count: number;
+}
+
+/** Live facets for the News filter UI (only values present in recent news). */
+export interface NewsFilterOptions {
+  categories: NewsFacet[];
+  countries: NewsFacet[];
+  companies: NewsFacet[];
+  products: NewsFacet[];
+}
+
 export interface SellerOfferOut {
   id: number;
   status: SellerOfferStatus;

@@ -6,7 +6,10 @@
     "close": "Kapat",
     "selected": "Seçili",
     "riskLabel": "Risk alıcıya geçer",
-    "party": { "you": "Satıcı (siz)", "buyer": "Alıcı" },
+    "party": {
+      "you": "Satıcı (siz)",
+      "buyer": "Alıcı"
+    },
     "cols": {
       "export": "İhracat gümrüğü",
       "transport": "Ana taşıma",
@@ -21,16 +24,36 @@
       "destinationUnloaded": "Varışta, boşaltıldıktan sonra"
     },
     "terms": {
-      "EXW": { "summary": "Malı yalnızca kendi tesisinizde hazır edersiniz. Alıcı; teslim alma, ihracat, nakliye ve sonrasındaki her şeyi ayarlar — sizin için en basit ve en ucuz seçenek." },
-      "FCA": { "summary": "İhracat için gümrüklenmiş malı, alıcının seçtiği taşıyıcıya teslim edersiniz. Ana nakliye ve sigortayı alıcı öder." },
-      "FOB": { "summary": "Deniz taşımacılığı için: malı gemiye yükler ve ihracatı yaparsınız. Sonrasında deniz navlunu ve sigortayı alıcı öder." },
-      "CFR": { "summary": "Deniz taşımacılığı için: navlunu varış limanına kadar siz ödersiniz, ancak risk mal gemiye yüklenince alıcıya geçer." },
-      "CIF": { "summary": "CFR gibi, ama ayrıca varış limanına kadar temel kargo sigortasını da siz yaptırırsınız. Deniz sevkiyatlarında yaygındır." },
-      "CPT": { "summary": "Nakliyeyi kararlaştırılan yere kadar siz ödersiniz, ancak risk malı ilk taşıyıcı alır almaz alıcıya geçer." },
-      "CIP": { "summary": "CPT gibi, ayrıca varış yerine kadar kargoyu da sigortalarsınız. Her taşıma türü için uygundur." },
-      "DAP": { "summary": "Malı varış noktasına kadar, boşaltmaya hazır şekilde teslim edersiniz. Alıcı yalnızca ithalat gümrüğünü halleder." },
-      "DPU": { "summary": "Malı varış noktasına teslim eder ve orada boşaltırsınız. İthalat gümrüğünü alıcı halleder." },
-      "DDP": { "summary": "Malı, ithalat vergileri ödenmiş olarak alıcının kapısına teslim edersiniz — sizin için en fazla sorumluluk, alıcı için en kolay yol." }
+      "EXW": {
+        "summary": "Malı yalnızca kendi tesisinizde hazır edersiniz. Alıcı; teslim alma, ihracat, nakliye ve sonrasındaki her şeyi ayarlar — sizin için en basit ve en ucuz seçenek."
+      },
+      "FCA": {
+        "summary": "İhracat için gümrüklenmiş malı, alıcının seçtiği taşıyıcıya teslim edersiniz. Ana nakliye ve sigortayı alıcı öder."
+      },
+      "FOB": {
+        "summary": "Deniz taşımacılığı için: malı gemiye yükler ve ihracatı yaparsınız. Sonrasında deniz navlunu ve sigortayı alıcı öder."
+      },
+      "CFR": {
+        "summary": "Deniz taşımacılığı için: navlunu varış limanına kadar siz ödersiniz, ancak risk mal gemiye yüklenince alıcıya geçer."
+      },
+      "CIF": {
+        "summary": "CFR gibi, ama ayrıca varış limanına kadar temel kargo sigortasını da siz yaptırırsınız. Deniz sevkiyatlarında yaygındır."
+      },
+      "CPT": {
+        "summary": "Nakliyeyi kararlaştırılan yere kadar siz ödersiniz, ancak risk malı ilk taşıyıcı alır almaz alıcıya geçer."
+      },
+      "CIP": {
+        "summary": "CPT gibi, ayrıca varış yerine kadar kargoyu da sigortalarsınız. Her taşıma türü için uygundur."
+      },
+      "DAP": {
+        "summary": "Malı varış noktasına kadar, boşaltmaya hazır şekilde teslim edersiniz. Alıcı yalnızca ithalat gümrüğünü halleder."
+      },
+      "DPU": {
+        "summary": "Malı varış noktasına teslim eder ve orada boşaltırsınız. İthalat gümrüğünü alıcı halleder."
+      },
+      "DDP": {
+        "summary": "Malı, ithalat vergileri ödenmiş olarak alıcının kapısına teslim edersiniz — sizin için en fazla sorumluluk, alıcı için en kolay yol."
+      }
     }
   },
   "availability": {
@@ -247,7 +270,37 @@
     "title": "Haberler",
     "soon": "Günlük pazar analizi burada görünecek",
     "empty": "Henüz yayın yok",
-    "error": "Haberler yüklenemedi"
+    "error": "Haberler yüklenemedi",
+    "digest": "Günün özeti",
+    "relatedProducts": "Ürünler",
+    "companies": "Şirketler",
+    "readSource": "Kaynakta oku",
+    "sourcesLabel": "Kaynaklar",
+    "original": "orijinal kaynak",
+    "search": "Haber ara",
+    "filters": "Filtreler",
+    "reset": "Sıfırla",
+    "noResults": "Hiçbir şey bulunamadı",
+    "filterCategory": "Kategori",
+    "filterCountry": "Ülke",
+    "scope": {
+      "all": "Tümü",
+      "uzbekistan": "Özbekistan",
+      "global": "Küresel",
+      "producers": "Üreticiler"
+    },
+    "sort": {
+      "label": "Sırala",
+      "newest": "En yeni",
+      "importance": "Önem",
+      "category": "Kategori",
+      "products": "Ürünler",
+      "country": "Ülke",
+      "company": "Şirket"
+    },
+    "analysis": "AI piyasa analizi",
+    "recommendation": "Öneri",
+    "countries": "Ülkeler"
   },
   "sell": {
     "title": "Teklif yayınla",

@@ -330,3 +330,23 @@ class TestUpsertFxRatesDB:
         assert count_after == 1, (
             f"Second upsert must leave 1 row (idempotent), got {count_after}"
         )
+
+
+def test_parse_cbu_json_real_ddmmyyyy_format() -> None:
+    """Regression: the live CBU API returns DD.MM.YYYY dates (not ISO). Every row was
+    being skipped as 'malformed date' → fx_rates stayed empty. Must now parse."""
+    import datetime as _dt  # noqa: PLC0415
+    import decimal as _dec  # noqa: PLC0415
+    import json as _json  # noqa: PLC0415
+
+    from app.ingest.cbu_rates.adapter import CbuRatesAdapter  # noqa: PLC0415
+
+    body = _json.dumps([
+        {"Ccy": "USD", "Rate": "11960.09", "Date": "21.07.2026"},
+        {"Ccy": "EUR", "Rate": "13670.38", "Date": "21.07.2026"},
+        {"Ccy": "RUB", "Rate": "152.53", "Date": "21.07.2026"},
+    ])
+    rows = CbuRatesAdapter()._parse_cbu_json(body)
+    assert len(rows) == 3, "DD.MM.YYYY dates must parse (were being dropped)"
+    assert rows[0].rate_date == _dt.date(2026, 7, 21)
+    assert rows[0].ccy == "USD" and rows[0].rate == _dec.Decimal("11960.09")
