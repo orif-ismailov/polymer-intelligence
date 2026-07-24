@@ -41,10 +41,13 @@ def engine() -> sa.Engine:
 @pytest.fixture
 def api(engine: sa.Engine):  # noqa: ANN201
     from app.core.db import get_db  # noqa: PLC0415
+    from app.core.redis import get_redis  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
+    from tests._fake_redis import FakeRedis  # noqa: PLC0415
 
     clean(engine)
     session = session_factory(engine)
+    fake_redis = FakeRedis()
     app = create_app()
 
     def _override_db():  # noqa: ANN202
@@ -54,7 +57,11 @@ def api(engine: sa.Engine):  # noqa: ANN201
         finally:
             db.close()
 
+    def _override_redis():  # noqa: ANN202
+        yield fake_redis
+
     app.dependency_overrides[get_db] = _override_db
+    app.dependency_overrides[get_redis] = _override_redis
     from unittest.mock import patch  # noqa: PLC0415
 
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(app) as client:

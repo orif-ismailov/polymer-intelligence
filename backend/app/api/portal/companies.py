@@ -9,12 +9,14 @@ requirements only (no reviewer identity or internals).
 
 from __future__ import annotations
 
+import redis
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
+from app.core.redis import get_redis
 from app.models.accounts import UserAccount
 from app.models.companies import Company, CompanyBankAccount
 from app.models.enums import (
@@ -37,9 +39,17 @@ from app.schemas.portal_company import (
     DocumentOut,
     RolesUpdateIn,
 )
-from app.services import company_service, storage_service, verification_service
+from app.services import company_service, rate_limit, storage_service, verification_service
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-companies"])
+
+
+def _rate_limited(exc: rate_limit.RateLimited) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail="Daily limit reached",
+        headers={"Retry-After": str(exc.retry_after)},
+    )
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -162,7 +172,14 @@ def create_company(
     body: CompanyCreateIn,
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> CompanySummaryOut:
+    try:
+        rate_limit.enforce_daily(
+            redis_client, "company_create", account.id, rate_limit.COMPANY_CREATE_PER_DAY
+        )
+    except rate_limit.RateLimited as exc:
+        raise _rate_limited(exc) from exc
     try:
         company = company_service.create_company(db, account, body.jurisdiction, body.tax_id)
         verification_service.open_case(db, company)  # auto-open a draft case
@@ -276,8 +293,15 @@ async def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> DocumentOut:
     company = _company_or_404(db, account, company_id)
+    try:
+        rate_limit.enforce_daily(
+            redis_client, "doc_upload", account.id, rate_limit.DOCUMENT_UPLOAD_PER_DAY
+        )
+    except rate_limit.RateLimited as exc:
+        raise _rate_limited(exc) from exc
     try:
         doc_kind = VerificationDocumentKind(kind)
     except ValueError as exc:

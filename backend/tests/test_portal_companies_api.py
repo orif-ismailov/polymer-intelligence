@@ -49,10 +49,13 @@ def engine() -> sa.Engine:
 @pytest.fixture
 def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     from app.core.db import get_db  # noqa: PLC0415
+    from app.core.redis import get_redis  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
+    from tests._fake_redis import FakeRedis  # noqa: PLC0415
 
     clean(engine)
     session = session_factory(engine)
+    fake_redis = FakeRedis()
     # the verify-task dispatch on submit must not hit a broker
     monkeypatch.setattr("app.services.verification_service._dispatch_checks", lambda case_id: None)
 
@@ -65,7 +68,11 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
         finally:
             db.close()
 
+    def _override_redis():  # noqa: ANN202
+        yield fake_redis
+
     app.dependency_overrides[get_db] = _override_db
+    app.dependency_overrides[get_redis] = _override_redis
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(app) as client:
         yield client, session
     clean(engine)
@@ -171,6 +178,18 @@ def test_submit_verification_runs_checks(api) -> None:  # noqa: ANN001
     # user-safe checks: no reviewer identity / internals leaked
     assert "waived_by" not in str(case)
     assert "last_error" not in str(case)
+
+
+@requires_real_db
+def test_company_create_is_rate_limited(api) -> None:  # noqa: ANN001
+    client, session = api
+    _aid, auth = _seed_account(session, "+998900000001")
+    # 5/day/account: five succeed, the sixth is 429 with Retry-After
+    for i in range(5):
+        assert client.post(_BASE, json={"tax_id": f"12345678{i}"}, headers=auth).status_code == 201
+    limited = client.post(_BASE, json={"tax_id": "999999999"}, headers=auth)
+    assert limited.status_code == 429
+    assert int(limited.headers["Retry-After"]) > 0
 
 
 @requires_real_db
