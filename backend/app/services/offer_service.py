@@ -18,14 +18,22 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
-from app.models.enums import SellerOfferStatus
+from app.models.accounts import UserAccount
+from app.models.companies import Company
+from app.models.enums import CompanyStatus, SellerOfferStatus
 from app.models.marketplace import Seller, SellerOffer
 from app.models.reference import Product, ProductSynonym
 from app.schemas.marketplace import CategoryCount, SellerOfferCreate, SellerOfferUpdate
+from app.schemas.portal_company import CompanyOfferIn
+from app.services import event_service, event_types
 from app.services.audit_service import write_audit
 from app.services.relevance_service import normalize_term
 
 logger = logging.getLogger(__name__)
+
+
+class CompanyNotVerified(Exception):
+    """A company may only publish offers once it is verified."""
 
 
 def get_or_create_seller(db: Session, *, telegram_user_id: int, data: SellerOfferCreate) -> Seller:
@@ -408,3 +416,102 @@ def enqueue_offer_group_notify(offer_id: int, *, edited: bool = False) -> None:
             offer_id,
             exc,
         )
+
+
+# ── Company-origin offers (R1 W5 — portal) ────────────────────────────────────
+
+
+def create_company_offer(
+    db: Session, company: Company, account: UserAccount, data: CompanyOfferIn
+) -> SellerOffer:
+    """Publish an offer on behalf of a VERIFIED company (seller_id NULL, company_id set).
+
+    Enters the SAME `pending_moderation` machine as seller offers — no lifecycle
+    changes. Raises CompanyNotVerified if the company isn't verified yet. Does NOT
+    commit; also emits OFFER_PUBLISHED_BY_COMPANY.
+    """
+    if company.status != CompanyStatus.verified:
+        raise CompanyNotVerified(str(company.status))
+
+    offer = SellerOffer(
+        seller_id=None,
+        company_id=company.id,
+        created_by_user_account_id=account.id,
+        product_id=data.product_id,
+        product_text=data.product_text,
+        grade_text=data.grade_text,
+        polymer_type=data.polymer_type,
+        availability=data.availability,
+        qty_available=data.qty_available,
+        qty_unit=data.qty_unit,
+        price=data.price,
+        currency=data.currency,
+        incoterms=data.incoterms,
+        warehouse_city=data.warehouse_city,
+        country=data.country,
+        min_order_qty=data.min_order_qty,
+        description=data.description,
+        status=SellerOfferStatus.pending_moderation,
+    )
+    db.add(offer)
+    db.flush()
+    event_service.emit(
+        db, event_types.OFFER_PUBLISHED_BY_COMPANY, "seller_offer", offer.id,
+        {"company_id": company.id, "account_id": account.id},
+    )
+    write_audit(
+        db, None, "offer.create", "seller_offers", str(offer.id),
+        {"via": "company", "company_id": company.id, "account_id": account.id},
+    )
+    logger.info("offer_service.create_company", extra={"offer_id": offer.id, "company_id": company.id})
+    return offer
+
+
+def update_company_offer(
+    db: Session, offer: SellerOffer, data: CompanyOfferIn
+) -> tuple[SellerOffer, bool]:
+    """Full-replacement edit of a company offer; an approved/rejected offer re-enters
+    moderation (mirror of update_offer). Returns (offer, requeued). Does NOT commit.
+    """
+    offer.product_id = data.product_id
+    offer.product_text = data.product_text
+    offer.grade_text = data.grade_text
+    offer.polymer_type = data.polymer_type
+    offer.availability = data.availability
+    offer.qty_available = data.qty_available
+    offer.qty_unit = data.qty_unit
+    offer.price = data.price
+    offer.currency = data.currency
+    offer.incoterms = data.incoterms
+    offer.warehouse_city = data.warehouse_city
+    offer.country = data.country
+    offer.min_order_qty = data.min_order_qty
+    offer.description = data.description
+
+    requeued = offer.status in (SellerOfferStatus.approved, SellerOfferStatus.rejected)
+    if requeued:
+        offer.status = SellerOfferStatus.pending_moderation
+        offer.published_at = None
+        offer.moderated_by = None
+        offer.moderation_note = None
+
+    db.flush()
+    write_audit(
+        db, None, "offer.edit", "seller_offers", str(offer.id),
+        {"via": "company", "requeued": requeued},
+    )
+    logger.info(
+        "offer_service.update_company",
+        extra={"offer_id": offer.id, "company_id": offer.company_id, "requeued": requeued},
+    )
+    return offer, requeued
+
+
+def list_company_offers(db: Session, company_id: int) -> list[SellerOffer]:
+    """All offers (any status) published by a company, newest first."""
+    return (
+        db.query(SellerOffer)
+        .filter(SellerOffer.company_id == company_id)
+        .order_by(SellerOffer.created_at.desc())
+        .all()
+    )

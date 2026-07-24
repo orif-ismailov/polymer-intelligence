@@ -31,6 +31,9 @@ _TABLES = [
     "domain_events",
     "audit_log",
     "verification_checks",
+    "seller_offer_files",
+    "offer_requests",
+    "seller_offers",
     "company_bank_accounts",
     "verification_documents",
     "verification_cases",
@@ -39,6 +42,7 @@ _TABLES = [
     "companies",
     "sms_send_log",
     "staff_users",
+    "sellers",
     "user_accounts",
     "app_settings",  # reset operator overrides (e.g. verification_auto_approve) per test
 ]

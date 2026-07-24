@@ -13,6 +13,8 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.enums import OfferAvailability, PriceBasis, SellerOfferStatus
+
 # ── Inputs ────────────────────────────────────────────────────────────────────
 
 
@@ -119,12 +121,12 @@ class CompanyOfferIn(BaseModel):
     product_text: str | None = Field(default=None, max_length=200)
     grade_text: str | None = Field(default=None, max_length=500)
     polymer_type: str | None = Field(default=None, max_length=200)
-    availability: str = "in_stock"
+    availability: OfferAvailability = OfferAvailability.in_stock
     qty_available: decimal.Decimal | None = None
     qty_unit: str = "MT"
     price: decimal.Decimal | None = None
     currency: str = "USD"
-    incoterms: str = "unknown"
+    incoterms: PriceBasis = PriceBasis.unknown
     warehouse_city: str | None = Field(default=None, max_length=200)
     country: str | None = Field(default=None, max_length=2)
     min_order_qty: decimal.Decimal | None = None
@@ -135,17 +137,17 @@ class CompanyOfferOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    status: str
+    status: SellerOfferStatus
     product_id: int | None = None
     product_text: str | None = None
     grade_text: str | None = None
     polymer_type: str | None = None
-    availability: str
+    availability: OfferAvailability
     qty_available: decimal.Decimal | None = None
     qty_unit: str
     price: decimal.Decimal | None = None
     currency: str
-    incoterms: str
+    incoterms: PriceBasis
     warehouse_city: str | None = None
     country: str | None = None
     min_order_qty: decimal.Decimal | None = None
