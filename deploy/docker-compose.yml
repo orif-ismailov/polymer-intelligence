@@ -332,6 +332,9 @@ services:
       # Built static Telegram Web App served directly by nginx at the root of
       # ai-imex.com. Populate it with `make webapp-bundle`. See deployment-guide §4a.
       - webapp_static:/var/www/webapp:ro
+      # Built client portal (Vite) served at the root of cabinet.ai-imex.com.
+      # Populate it with `make portal-bundle`.
+      - portal_static:/var/www/portal:ro
     depends_on:
       - api
       - dashboard
@@ -355,6 +358,22 @@ services:
     # Replace the bundle atomically-ish: clear, then copy the freshly built dist.
     command: sh -c "rm -rf /out/* && cp -a /dist/. /out/ && echo '[webapp-build] bundle loaded into webapp_static'"
 
+  # ── Portal bundle builder (one-shot; profile-gated, never runs on `up`) ───────
+  # Builds the client portal (Vite) and loads the static bundle into portal_static,
+  # which nginx serves at the root of cabinet.ai-imex.com. Run at deploy time and on
+  # every portal change:
+  #   docker compose -f deploy/docker-compose.yml --profile build run --rm --build portal-build
+  #   (or: make portal-bundle)
+  portal-build:
+    profiles: ["build"]
+    image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-portal:${IMAGE_TAG:-main}
+    build:
+      context: ../portal
+      dockerfile: ../deploy/Dockerfile.portal
+    volumes:
+      - portal_static:/out
+    command: sh -c "rm -rf /out/* && cp -a /dist/. /out/ && echo '[portal-build] bundle loaded into portal_static'"
+
 volumes:
   postgres_data:
   redis_data:
@@ -362,3 +381,4 @@ volumes:
   letsencrypt:
   certbot_www:
   webapp_static:
+  portal_static:

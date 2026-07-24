@@ -263,6 +263,38 @@ jobs:
       - name: Type-check (tsc --noEmit)
         run: npx tsc --noEmit
 
+  # ── Portal (client cabinet — Vite/React FSD, R1 W7) ───────────────────────────
+  portal:
+    name: Portal (eslint · tsc · build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: portal
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: portal/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Type-check (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Build (vite)
+        run: npm run build
+
   # ── Container image build + push (gated on backend + frontend passing) ─────
   # On a branch push (dev/main) this builds AND pushes the three runtime images to
   # GHCR so the server can PULL them instead of compiling on a 2-core box. On PRs it

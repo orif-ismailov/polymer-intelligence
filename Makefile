@@ -4,7 +4,7 @@
 # These are thin wrappers around scripts/compose; backend dev commands continue
 # to run from backend/ (uv-managed). Targets here orchestrate the full stack.
 # =============================================================================
-.PHONY: help smoke webapp-bundle
+.PHONY: help smoke webapp-bundle portal-bundle
 
 # --env-file .env: Compose otherwise looks for the interpolation .env next to the
 # compose file (deploy/), not the repo root — leaving ${POSTGRES_PASSWORD} etc.
@@ -20,3 +20,6 @@ smoke: ## Run the full-stack production-compose smoke (D-02, synthetic data + pl
 
 webapp-bundle: ## Build the Telegram Web App and load it into the webapp_static volume (nginx serves /webapp/)
 	$(COMPOSE) --profile build run --rm --build webapp-build
+
+portal-bundle: ## Build the client portal and load it into the portal_static volume (nginx serves cabinet.*)
+	$(COMPOSE) --profile build run --rm --build portal-build
