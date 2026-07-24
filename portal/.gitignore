@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+
+# test artifacts
+playwright-report
+test-results
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
