@@ -53,6 +53,7 @@ _TASK_MODULES = [
     "app.tasks.rescore",
     "app.tasks.reports",
     "app.tasks.events",
+    "app.tasks.verification",
 ]
 
 # ── Celery application instance ───────────────────────────────────────────────
