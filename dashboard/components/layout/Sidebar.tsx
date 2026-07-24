@@ -4,9 +4,11 @@ import { usePathname } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 import {
   Activity,
+  BadgeCheck,
   BarChart3,
   Bell,
   Boxes,
+  Building2,
   Database,
   Flame,
   Globe,
@@ -57,6 +59,8 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "offers", href: "/offers", icon: Tag },
       { key: "moderation", href: "/moderation", icon: ShieldCheck, minRole: "analyst" },
       { key: "offerRequests", href: "/offer-requests", icon: Inbox, minRole: "analyst" },
+      { key: "verification", href: "/verification", icon: BadgeCheck, minRole: "analyst" },
+      { key: "companies", href: "/companies", icon: Building2, minRole: "analyst" },
     ],
   },
   {

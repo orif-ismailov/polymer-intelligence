@@ -24,7 +24,9 @@
       "adminProducts": "Mahsulotlar",
       "adminUsers": "Foydalanuvchilar",
       "offerRequests": "Taklif so'rovlari",
-      "newsAdmin": "Yangiliklar (admin)"
+      "newsAdmin": "Yangiliklar (admin)",
+      "verification": "Tekshiruv",
+      "companies": "Kompaniyalar"
     },
     "guest": "Mehmon"
   },
@@ -745,6 +747,165 @@
       "testOk": "Test o‘tdi",
       "testFail": "Test xatosi",
       "feedChangedNote": "Lentani o‘zgartirish testni bekor qiladi — qayta test qilinmaguncha manba o‘chiriladi."
+    }
+  },
+  "verification": {
+    "title": "Tekshiruv",
+    "subtitle": "Kompaniyalarni tekshirish so'rovlari navbati",
+    "loading": "Yuklanmoqda…",
+    "error": "Ma'lumotlarni yuklab bo'lmadi",
+    "empty": "Tekshirish so'rovlari yo'q",
+    "back": "Navbatga qaytish",
+    "inn": "STIR",
+    "unnamedCompany": "Nomsiz",
+    "filter": {
+      "label": "Holat",
+      "all": "Barchasi"
+    },
+    "caseStatus": {
+      "draft": "Qoralama",
+      "submitted": "Yuborilgan",
+      "checks_running": "Tekshiruvlar bajarilmoqda",
+      "needs_info": "Ma'lumot kerak",
+      "pending_review": "Qaror kutilmoqda",
+      "approved": "Tasdiqlangan",
+      "rejected": "Rad etilgan",
+      "cancelled": "Bekor qilingan"
+    },
+    "caseType": {
+      "onboarding": "Ro'yxatdan o'tish",
+      "reverification": "Qayta tekshiruv",
+      "role_upgrade": "Rolni o'zgartirish"
+    },
+    "columns": {
+      "submittedAt": "Yuborilgan",
+      "company": "Kompaniya",
+      "caseType": "Turi",
+      "status": "Holat",
+      "checks": "Tekshiruvlar"
+    },
+    "profile": {
+      "title": "Kompaniya profili",
+      "legalName": "Yuridik nom",
+      "shortName": "Qisqa nom",
+      "publicId": "Ommaviy ID",
+      "jurisdiction": "Yurisdiksiya",
+      "legalForm": "Tashkiliy-huquqiy shakl",
+      "director": "Direktor",
+      "address": "Yuridik manzil",
+      "status": "Holat",
+      "verifiedAt": "Tekshirilgan",
+      "roles": "Rollar",
+      "bankAccounts": "Bank hisoblari",
+      "mfo": "MFO"
+    },
+    "checks": {
+      "title": "Tekshiruvlar",
+      "empty": "Tekshiruvlar yo'q",
+      "attempts": "Urinishlar",
+      "lastError": "So'nggi xato",
+      "waivedReason": "Bekor qilish sababi",
+      "missingDocuments": "Yo'q hujjatlar",
+      "reasons": "Sabablar",
+      "waive": "Tekshiruvni bekor qilish",
+      "waiveReasonPlaceholder": "Bekor qilish sababi (majburiy)",
+      "waiveConflict": "Tekshiruv allaqachon yangilangan — ma'lumotlar qayta yuklandi"
+    },
+    "checkType": {
+      "tax_id": "STIR",
+      "registry": "Reyestr",
+      "sanctions": "Sanksiyalar",
+      "bank_account": "Bank hisobi",
+      "documents": "Hujjatlar",
+      "director": "Direktor"
+    },
+    "checkStatus": {
+      "pending": "Kutilmoqda",
+      "running": "Bajarilmoqda",
+      "passed": "O'tdi",
+      "warning": "Ogohlantirish",
+      "failed": "O'tmadi",
+      "unavailable": "Mavjud emas",
+      "waived": "Bekor qilingan"
+    },
+    "documents": {
+      "title": "Hujjatlar",
+      "empty": "Hujjatlar yo'q",
+      "download": "Yuklab olish"
+    },
+    "docKind": {
+      "charter": "Ustav",
+      "registration": "Ro'yxatdan o'tish guvohnomasi",
+      "director_id": "Direktor pasporti",
+      "bank_statement": "Bank ko'chirmasi",
+      "power_of_attorney": "Ishonchnoma",
+      "other": "Boshqa"
+    },
+    "audit": {
+      "title": "Tarix",
+      "empty": "Yozuvlar yo'q",
+      "staff": "Xodim"
+    },
+    "decision": {
+      "title": "Qaror",
+      "conflict": "So'rov boshqa xodim tomonidan qayta ishlangan — ma'lumotlar qayta yuklandi",
+      "notePlaceholder": "Qaror izohi (ixtiyoriy)",
+      "approve": "Tasdiqlash",
+      "reject": "Rad etish",
+      "requestInfo": "Ma'lumot so'rash",
+      "decidedAt": "Qaror qabul qilindi"
+    }
+  },
+  "companies": {
+    "title": "Kompaniyalar",
+    "subtitle": "Kompaniyalar reyestri va ularning holatlari",
+    "loading": "Yuklanmoqda…",
+    "error": "Ma'lumotlarni yuklab bo'lmadi",
+    "empty": "Kompaniyalar topilmadi",
+    "back": "Ro'yxatga qaytish",
+    "unnamed": "Nomsiz",
+    "searchPlaceholder": "Nomi yoki STIR bo'yicha qidirish",
+    "searchButton": "Qidirish",
+    "noRoles": "Rollar yo'q",
+    "suspend": "To'xtatish",
+    "reinstate": "Tiklash",
+    "filter": {
+      "label": "Holat",
+      "all": "Barchasi"
+    },
+    "status": {
+      "draft": "Qoralama",
+      "pending_verification": "Tekshiruvda",
+      "verified": "Tekshirilgan",
+      "rejected": "Rad etilgan",
+      "suspended": "To'xtatilgan",
+      "liquidated": "Tugatilgan"
+    },
+    "columns": {
+      "name": "Nom",
+      "inn": "STIR",
+      "jurisdiction": "Yurisdiksiya",
+      "status": "Holat",
+      "verifiedAt": "Tekshirilgan"
+    },
+    "profile": {
+      "title": "Kompaniya profili",
+      "legalName": "Yuridik nom",
+      "shortName": "Qisqa nom",
+      "publicId": "Ommaviy ID",
+      "jurisdiction": "Yurisdiksiya",
+      "taxId": "STIR",
+      "legalForm": "Tashkiliy-huquqiy shakl",
+      "director": "Direktor",
+      "address": "Yuridik manzil",
+      "verifiedAt": "Tekshirilgan",
+      "reverificationDue": "Qayta tekshiruv",
+      "roles": "Rollar"
+    },
+    "role": {
+      "buyer": "Xaridor",
+      "seller": "Sotuvchi",
+      "broker": "Broker"
     }
   }
 }

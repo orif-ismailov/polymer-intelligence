@@ -24,7 +24,9 @@
       "adminProducts": "Продукты",
       "adminUsers": "Пользователи",
       "offerRequests": "Запросы предложений",
-      "newsAdmin": "Новости (админ)"
+      "newsAdmin": "Новости (админ)",
+      "verification": "Верификация",
+      "companies": "Компании"
     },
     "guest": "Гость"
   },
@@ -745,6 +747,165 @@
       "testOk": "Тест пройден",
       "testFail": "Ошибка теста",
       "feedChangedNote": "Изменение ленты сбрасывает тест — источник будет отключён до повторного теста."
+    }
+  },
+  "verification": {
+    "title": "Верификация",
+    "subtitle": "Очередь заявок на проверку компаний",
+    "loading": "Загрузка…",
+    "error": "Не удалось загрузить данные",
+    "empty": "Нет заявок на проверку",
+    "back": "Назад к очереди",
+    "inn": "ИНН",
+    "unnamedCompany": "Без названия",
+    "filter": {
+      "label": "Статус",
+      "all": "Все"
+    },
+    "caseStatus": {
+      "draft": "Черновик",
+      "submitted": "Отправлена",
+      "checks_running": "Проверки выполняются",
+      "needs_info": "Нужны данные",
+      "pending_review": "Ожидает решения",
+      "approved": "Одобрена",
+      "rejected": "Отклонена",
+      "cancelled": "Отменена"
+    },
+    "caseType": {
+      "onboarding": "Регистрация",
+      "reverification": "Повторная проверка",
+      "role_upgrade": "Смена роли"
+    },
+    "columns": {
+      "submittedAt": "Отправлена",
+      "company": "Компания",
+      "caseType": "Тип",
+      "status": "Статус",
+      "checks": "Проверки"
+    },
+    "profile": {
+      "title": "Профиль компании",
+      "legalName": "Юридическое название",
+      "shortName": "Краткое название",
+      "publicId": "Публичный ID",
+      "jurisdiction": "Юрисдикция",
+      "legalForm": "Правовая форма",
+      "director": "Директор",
+      "address": "Юридический адрес",
+      "status": "Статус",
+      "verifiedAt": "Проверена",
+      "roles": "Роли",
+      "bankAccounts": "Банковские счета",
+      "mfo": "МФО"
+    },
+    "checks": {
+      "title": "Проверки",
+      "empty": "Проверок нет",
+      "attempts": "Попыток",
+      "lastError": "Последняя ошибка",
+      "waivedReason": "Причина отмены проверки",
+      "missingDocuments": "Отсутствуют документы",
+      "reasons": "Причины",
+      "waive": "Отменить проверку",
+      "waiveReasonPlaceholder": "Причина отмены (обязательно)",
+      "waiveConflict": "Проверка уже обновлена — данные перезагружены"
+    },
+    "checkType": {
+      "tax_id": "ИНН",
+      "registry": "Реестр",
+      "sanctions": "Санкции",
+      "bank_account": "Банковский счёт",
+      "documents": "Документы",
+      "director": "Директор"
+    },
+    "checkStatus": {
+      "pending": "Ожидает",
+      "running": "Выполняется",
+      "passed": "Пройдена",
+      "warning": "Предупреждение",
+      "failed": "Не пройдена",
+      "unavailable": "Недоступна",
+      "waived": "Отменена"
+    },
+    "documents": {
+      "title": "Документы",
+      "empty": "Документов нет",
+      "download": "Скачать"
+    },
+    "docKind": {
+      "charter": "Устав",
+      "registration": "Свидетельство о регистрации",
+      "director_id": "Паспорт директора",
+      "bank_statement": "Банковская выписка",
+      "power_of_attorney": "Доверенность",
+      "other": "Другое"
+    },
+    "audit": {
+      "title": "История",
+      "empty": "Записей нет",
+      "staff": "Сотрудник"
+    },
+    "decision": {
+      "title": "Решение",
+      "conflict": "Заявка уже обработана другим сотрудником — данные перезагружены",
+      "notePlaceholder": "Комментарий к решению (необязательно)",
+      "approve": "Одобрить",
+      "reject": "Отклонить",
+      "requestInfo": "Запросить данные",
+      "decidedAt": "Решение принято"
+    }
+  },
+  "companies": {
+    "title": "Компании",
+    "subtitle": "Реестр компаний и их статусы",
+    "loading": "Загрузка…",
+    "error": "Не удалось загрузить данные",
+    "empty": "Компании не найдены",
+    "back": "Назад к списку",
+    "unnamed": "Без названия",
+    "searchPlaceholder": "Поиск по названию или ИНН",
+    "searchButton": "Найти",
+    "noRoles": "Ролей нет",
+    "suspend": "Приостановить",
+    "reinstate": "Восстановить",
+    "filter": {
+      "label": "Статус",
+      "all": "Все"
+    },
+    "status": {
+      "draft": "Черновик",
+      "pending_verification": "На проверке",
+      "verified": "Проверена",
+      "rejected": "Отклонена",
+      "suspended": "Приостановлена",
+      "liquidated": "Ликвидирована"
+    },
+    "columns": {
+      "name": "Название",
+      "inn": "ИНН",
+      "jurisdiction": "Юрисдикция",
+      "status": "Статус",
+      "verifiedAt": "Проверена"
+    },
+    "profile": {
+      "title": "Профиль компании",
+      "legalName": "Юридическое название",
+      "shortName": "Краткое название",
+      "publicId": "Публичный ID",
+      "jurisdiction": "Юрисдикция",
+      "taxId": "ИНН",
+      "legalForm": "Правовая форма",
+      "director": "Директор",
+      "address": "Юридический адрес",
+      "verifiedAt": "Проверена",
+      "reverificationDue": "Повторная проверка",
+      "roles": "Роли"
+    },
+    "role": {
+      "buyer": "Покупатель",
+      "seller": "Продавец",
+      "broker": "Брокер"
     }
   }
 }

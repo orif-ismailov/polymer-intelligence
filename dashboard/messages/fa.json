@@ -24,7 +24,9 @@
       "adminProducts": "محصولات",
       "adminUsers": "کاربران",
       "offerRequests": "درخواست پیشنهاد",
-      "newsAdmin": "اخبار (مدیریت)"
+      "newsAdmin": "اخبار (مدیریت)",
+      "verification": "احراز هویت",
+      "companies": "شرکت‌ها"
     },
     "guest": "مهمان"
   },
@@ -730,6 +732,165 @@
       "testOk": "تست موفق",
       "testFail": "خطای تست",
       "feedChangedNote": "تغییر فید تست را بازنشانی می‌کند — منبع تا تست مجدد غیرفعال می‌شود."
+    }
+  },
+  "verification": {
+    "title": "احراز هویت",
+    "subtitle": "صف درخواست‌های تأیید شرکت‌ها",
+    "loading": "در حال بارگذاری…",
+    "error": "بارگذاری داده‌ها ناموفق بود",
+    "empty": "درخواست تأییدی وجود ندارد",
+    "back": "بازگشت به صف",
+    "inn": "شناسه مالیاتی",
+    "unnamedCompany": "بدون نام",
+    "filter": {
+      "label": "وضعیت",
+      "all": "همه"
+    },
+    "caseStatus": {
+      "draft": "پیش‌نویس",
+      "submitted": "ارسال‌شده",
+      "checks_running": "بررسی‌ها در حال اجرا",
+      "needs_info": "نیاز به اطلاعات",
+      "pending_review": "در انتظار تصمیم",
+      "approved": "تأییدشده",
+      "rejected": "ردشده",
+      "cancelled": "لغوشده"
+    },
+    "caseType": {
+      "onboarding": "ثبت‌نام",
+      "reverification": "بازبینی مجدد",
+      "role_upgrade": "تغییر نقش"
+    },
+    "columns": {
+      "submittedAt": "ارسال‌شده",
+      "company": "شرکت",
+      "caseType": "نوع",
+      "status": "وضعیت",
+      "checks": "بررسی‌ها"
+    },
+    "profile": {
+      "title": "پروفایل شرکت",
+      "legalName": "نام حقوقی",
+      "shortName": "نام کوتاه",
+      "publicId": "شناسه عمومی",
+      "jurisdiction": "حوزه قضایی",
+      "legalForm": "شکل حقوقی",
+      "director": "مدیر",
+      "address": "آدرس قانونی",
+      "status": "وضعیت",
+      "verifiedAt": "تأیید‌شده",
+      "roles": "نقش‌ها",
+      "bankAccounts": "حساب‌های بانکی",
+      "mfo": "کد بانک"
+    },
+    "checks": {
+      "title": "بررسی‌ها",
+      "empty": "بررسی‌ای وجود ندارد",
+      "attempts": "تلاش‌ها",
+      "lastError": "آخرین خطا",
+      "waivedReason": "دلیل صرف‌نظر",
+      "missingDocuments": "مدارک ناقص",
+      "reasons": "دلایل",
+      "waive": "صرف‌نظر از بررسی",
+      "waiveReasonPlaceholder": "دلیل صرف‌نظر (الزامی)",
+      "waiveConflict": "بررسی قبلاً به‌روزرسانی شده — داده‌ها دوباره بارگذاری شد"
+    },
+    "checkType": {
+      "tax_id": "شناسه مالیاتی",
+      "registry": "ثبت",
+      "sanctions": "تحریم‌ها",
+      "bank_account": "حساب بانکی",
+      "documents": "مدارک",
+      "director": "مدیر"
+    },
+    "checkStatus": {
+      "pending": "در انتظار",
+      "running": "در حال اجرا",
+      "passed": "قبول",
+      "warning": "هشدار",
+      "failed": "ناموفق",
+      "unavailable": "در دسترس نیست",
+      "waived": "صرف‌نظر شد"
+    },
+    "documents": {
+      "title": "مدارک",
+      "empty": "مدرکی وجود ندارد",
+      "download": "دانلود"
+    },
+    "docKind": {
+      "charter": "اساسنامه",
+      "registration": "گواهی ثبت",
+      "director_id": "شناسه مدیر",
+      "bank_statement": "صورت‌حساب بانکی",
+      "power_of_attorney": "وکالت‌نامه",
+      "other": "سایر"
+    },
+    "audit": {
+      "title": "تاریخچه",
+      "empty": "رکوردی وجود ندارد",
+      "staff": "کارمند"
+    },
+    "decision": {
+      "title": "تصمیم",
+      "conflict": "درخواست توسط کارمند دیگری پردازش شده — داده‌ها دوباره بارگذاری شد",
+      "notePlaceholder": "یادداشت تصمیم (اختیاری)",
+      "approve": "تأیید",
+      "reject": "رد",
+      "requestInfo": "درخواست اطلاعات",
+      "decidedAt": "تصمیم گرفته شد"
+    }
+  },
+  "companies": {
+    "title": "شرکت‌ها",
+    "subtitle": "فهرست شرکت‌ها و وضعیت آن‌ها",
+    "loading": "در حال بارگذاری…",
+    "error": "بارگذاری داده‌ها ناموفق بود",
+    "empty": "شرکتی یافت نشد",
+    "back": "بازگشت به فهرست",
+    "unnamed": "بدون نام",
+    "searchPlaceholder": "جستجو بر اساس نام یا شناسه مالیاتی",
+    "searchButton": "جستجو",
+    "noRoles": "نقشی وجود ندارد",
+    "suspend": "تعلیق",
+    "reinstate": "بازگرداندن",
+    "filter": {
+      "label": "وضعیت",
+      "all": "همه"
+    },
+    "status": {
+      "draft": "پیش‌نویس",
+      "pending_verification": "در حال بررسی",
+      "verified": "تأییدشده",
+      "rejected": "ردشده",
+      "suspended": "معلق",
+      "liquidated": "منحل‌شده"
+    },
+    "columns": {
+      "name": "نام",
+      "inn": "شناسه مالیاتی",
+      "jurisdiction": "حوزه قضایی",
+      "status": "وضعیت",
+      "verifiedAt": "تأییدشده"
+    },
+    "profile": {
+      "title": "پروفایل شرکت",
+      "legalName": "نام حقوقی",
+      "shortName": "نام کوتاه",
+      "publicId": "شناسه عمومی",
+      "jurisdiction": "حوزه قضایی",
+      "taxId": "شناسه مالیاتی",
+      "legalForm": "شکل حقوقی",
+      "director": "مدیر",
+      "address": "آدرس قانونی",
+      "verifiedAt": "تأییدشده",
+      "reverificationDue": "بازبینی مجدد",
+      "roles": "نقش‌ها"
+    },
+    "role": {
+      "buyer": "خریدار",
+      "seller": "فروشنده",
+      "broker": "کارگزار"
     }
   }
 }

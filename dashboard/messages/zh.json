@@ -24,7 +24,9 @@
       "adminProducts": "产品",
       "adminUsers": "用户",
       "offerRequests": "报价请求",
-      "newsAdmin": "新闻（管理）"
+      "newsAdmin": "新闻（管理）",
+      "verification": "验证",
+      "companies": "公司"
     },
     "guest": "访客"
   },
@@ -730,6 +732,165 @@
       "testOk": "测试通过",
       "testFail": "测试失败",
       "feedChangedNote": "更改订阅源会重置测试——重新测试前该来源将被禁用。"
+    }
+  },
+  "verification": {
+    "title": "验证",
+    "subtitle": "公司验证申请队列",
+    "loading": "加载中…",
+    "error": "无法加载数据",
+    "empty": "没有验证申请",
+    "back": "返回队列",
+    "inn": "税号",
+    "unnamedCompany": "未命名",
+    "filter": {
+      "label": "状态",
+      "all": "全部"
+    },
+    "caseStatus": {
+      "draft": "草稿",
+      "submitted": "已提交",
+      "checks_running": "检查进行中",
+      "needs_info": "需要信息",
+      "pending_review": "待决定",
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "cancelled": "已取消"
+    },
+    "caseType": {
+      "onboarding": "注册",
+      "reverification": "重新验证",
+      "role_upgrade": "角色变更"
+    },
+    "columns": {
+      "submittedAt": "提交时间",
+      "company": "公司",
+      "caseType": "类型",
+      "status": "状态",
+      "checks": "检查"
+    },
+    "profile": {
+      "title": "公司资料",
+      "legalName": "法定名称",
+      "shortName": "简称",
+      "publicId": "公开 ID",
+      "jurisdiction": "管辖区",
+      "legalForm": "法律形式",
+      "director": "董事",
+      "address": "法定地址",
+      "status": "状态",
+      "verifiedAt": "已验证",
+      "roles": "角色",
+      "bankAccounts": "银行账户",
+      "mfo": "银行代码"
+    },
+    "checks": {
+      "title": "检查",
+      "empty": "没有检查",
+      "attempts": "尝试次数",
+      "lastError": "最后错误",
+      "waivedReason": "豁免原因",
+      "missingDocuments": "缺失文件",
+      "reasons": "原因",
+      "waive": "豁免检查",
+      "waiveReasonPlaceholder": "豁免原因（必填）",
+      "waiveConflict": "检查已更新——数据已重新加载"
+    },
+    "checkType": {
+      "tax_id": "税号",
+      "registry": "登记",
+      "sanctions": "制裁",
+      "bank_account": "银行账户",
+      "documents": "文件",
+      "director": "董事"
+    },
+    "checkStatus": {
+      "pending": "待处理",
+      "running": "运行中",
+      "passed": "通过",
+      "warning": "警告",
+      "failed": "未通过",
+      "unavailable": "不可用",
+      "waived": "已豁免"
+    },
+    "documents": {
+      "title": "文件",
+      "empty": "没有文件",
+      "download": "下载"
+    },
+    "docKind": {
+      "charter": "章程",
+      "registration": "注册证书",
+      "director_id": "董事证件",
+      "bank_statement": "银行对账单",
+      "power_of_attorney": "授权书",
+      "other": "其他"
+    },
+    "audit": {
+      "title": "历史",
+      "empty": "没有记录",
+      "staff": "员工"
+    },
+    "decision": {
+      "title": "决定",
+      "conflict": "申请已被其他员工处理——数据已重新加载",
+      "notePlaceholder": "决定备注（可选）",
+      "approve": "批准",
+      "reject": "拒绝",
+      "requestInfo": "请求信息",
+      "decidedAt": "已做出决定"
+    }
+  },
+  "companies": {
+    "title": "公司",
+    "subtitle": "公司注册表及其状态",
+    "loading": "加载中…",
+    "error": "无法加载数据",
+    "empty": "未找到公司",
+    "back": "返回列表",
+    "unnamed": "未命名",
+    "searchPlaceholder": "按名称或税号搜索",
+    "searchButton": "搜索",
+    "noRoles": "没有角色",
+    "suspend": "暂停",
+    "reinstate": "恢复",
+    "filter": {
+      "label": "状态",
+      "all": "全部"
+    },
+    "status": {
+      "draft": "草稿",
+      "pending_verification": "验证中",
+      "verified": "已验证",
+      "rejected": "已拒绝",
+      "suspended": "已暂停",
+      "liquidated": "已清算"
+    },
+    "columns": {
+      "name": "名称",
+      "inn": "税号",
+      "jurisdiction": "管辖区",
+      "status": "状态",
+      "verifiedAt": "已验证"
+    },
+    "profile": {
+      "title": "公司资料",
+      "legalName": "法定名称",
+      "shortName": "简称",
+      "publicId": "公开 ID",
+      "jurisdiction": "管辖区",
+      "taxId": "税号",
+      "legalForm": "法律形式",
+      "director": "董事",
+      "address": "法定地址",
+      "verifiedAt": "已验证",
+      "reverificationDue": "重新验证",
+      "roles": "角色"
+    },
+    "role": {
+      "buyer": "买方",
+      "seller": "卖方",
+      "broker": "经纪人"
     }
   }
 }

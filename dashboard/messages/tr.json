@@ -24,7 +24,9 @@
       "adminProducts": "Ürünler",
       "adminUsers": "Kullanıcılar",
       "offerRequests": "Teklif talepleri",
-      "newsAdmin": "Haberler (yönetici)"
+      "newsAdmin": "Haberler (yönetici)",
+      "verification": "Doğrulama",
+      "companies": "Şirketler"
     },
     "guest": "Misafir"
   },
@@ -745,6 +747,165 @@
       "testOk": "Test başarılı",
       "testFail": "Test hatası",
       "feedChangedNote": "Akışı değiştirmek testi sıfırlar — yeniden test edilene kadar kaynak devre dışı kalır."
+    }
+  },
+  "verification": {
+    "title": "Doğrulama",
+    "subtitle": "Şirket doğrulama başvuruları kuyruğu",
+    "loading": "Yükleniyor…",
+    "error": "Veriler yüklenemedi",
+    "empty": "Doğrulama başvurusu yok",
+    "back": "Kuyruğa dön",
+    "inn": "VKN",
+    "unnamedCompany": "İsimsiz",
+    "filter": {
+      "label": "Durum",
+      "all": "Tümü"
+    },
+    "caseStatus": {
+      "draft": "Taslak",
+      "submitted": "Gönderildi",
+      "checks_running": "Kontroller çalışıyor",
+      "needs_info": "Bilgi gerekli",
+      "pending_review": "Karar bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "cancelled": "İptal edildi"
+    },
+    "caseType": {
+      "onboarding": "Kayıt",
+      "reverification": "Yeniden doğrulama",
+      "role_upgrade": "Rol değişikliği"
+    },
+    "columns": {
+      "submittedAt": "Gönderildi",
+      "company": "Şirket",
+      "caseType": "Tür",
+      "status": "Durum",
+      "checks": "Kontroller"
+    },
+    "profile": {
+      "title": "Şirket profili",
+      "legalName": "Yasal ad",
+      "shortName": "Kısa ad",
+      "publicId": "Genel kimlik",
+      "jurisdiction": "Yargı alanı",
+      "legalForm": "Yasal biçim",
+      "director": "Müdür",
+      "address": "Yasal adres",
+      "status": "Durum",
+      "verifiedAt": "Doğrulandı",
+      "roles": "Roller",
+      "bankAccounts": "Banka hesapları",
+      "mfo": "MFO"
+    },
+    "checks": {
+      "title": "Kontroller",
+      "empty": "Kontrol yok",
+      "attempts": "Denemeler",
+      "lastError": "Son hata",
+      "waivedReason": "Muafiyet nedeni",
+      "missingDocuments": "Eksik belgeler",
+      "reasons": "Nedenler",
+      "waive": "Kontrolü atla",
+      "waiveReasonPlaceholder": "Muafiyet nedeni (zorunlu)",
+      "waiveConflict": "Kontrol zaten güncellendi — veriler yeniden yüklendi"
+    },
+    "checkType": {
+      "tax_id": "VKN",
+      "registry": "Sicil",
+      "sanctions": "Yaptırımlar",
+      "bank_account": "Banka hesabı",
+      "documents": "Belgeler",
+      "director": "Müdür"
+    },
+    "checkStatus": {
+      "pending": "Bekliyor",
+      "running": "Çalışıyor",
+      "passed": "Geçti",
+      "warning": "Uyarı",
+      "failed": "Başarısız",
+      "unavailable": "Kullanılamaz",
+      "waived": "Muaf tutuldu"
+    },
+    "documents": {
+      "title": "Belgeler",
+      "empty": "Belge yok",
+      "download": "İndir"
+    },
+    "docKind": {
+      "charter": "Tüzük",
+      "registration": "Tescil belgesi",
+      "director_id": "Müdür kimliği",
+      "bank_statement": "Banka ekstresi",
+      "power_of_attorney": "Vekaletname",
+      "other": "Diğer"
+    },
+    "audit": {
+      "title": "Geçmiş",
+      "empty": "Kayıt yok",
+      "staff": "Personel"
+    },
+    "decision": {
+      "title": "Karar",
+      "conflict": "Başvuru başka bir personel tarafından işlendi — veriler yeniden yüklendi",
+      "notePlaceholder": "Karar notu (isteğe bağlı)",
+      "approve": "Onayla",
+      "reject": "Reddet",
+      "requestInfo": "Bilgi iste",
+      "decidedAt": "Karar verildi"
+    }
+  },
+  "companies": {
+    "title": "Şirketler",
+    "subtitle": "Şirket kaydı ve durumları",
+    "loading": "Yükleniyor…",
+    "error": "Veriler yüklenemedi",
+    "empty": "Şirket bulunamadı",
+    "back": "Listeye dön",
+    "unnamed": "İsimsiz",
+    "searchPlaceholder": "Ada veya VKN'ye göre ara",
+    "searchButton": "Ara",
+    "noRoles": "Rol yok",
+    "suspend": "Askıya al",
+    "reinstate": "Geri al",
+    "filter": {
+      "label": "Durum",
+      "all": "Tümü"
+    },
+    "status": {
+      "draft": "Taslak",
+      "pending_verification": "Doğrulamada",
+      "verified": "Doğrulandı",
+      "rejected": "Reddedildi",
+      "suspended": "Askıya alındı",
+      "liquidated": "Tasfiye edildi"
+    },
+    "columns": {
+      "name": "Ad",
+      "inn": "VKN",
+      "jurisdiction": "Yargı alanı",
+      "status": "Durum",
+      "verifiedAt": "Doğrulandı"
+    },
+    "profile": {
+      "title": "Şirket profili",
+      "legalName": "Yasal ad",
+      "shortName": "Kısa ad",
+      "publicId": "Genel kimlik",
+      "jurisdiction": "Yargı alanı",
+      "taxId": "VKN",
+      "legalForm": "Yasal biçim",
+      "director": "Müdür",
+      "address": "Yasal adres",
+      "verifiedAt": "Doğrulandı",
+      "reverificationDue": "Yeniden doğrulama",
+      "roles": "Roller"
+    },
+    "role": {
+      "buyer": "Alıcı",
+      "seller": "Satıcı",
+      "broker": "Aracı"
     }
   }
 }
