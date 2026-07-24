@@ -64,7 +64,13 @@ def _fan_out(event: DomainEvent) -> bool:
     ok = True
     for consumer in consumers:
         try:
-            consumer.apply_async(kwargs={"event_id": event.id, "payload": event.payload})
+            consumer.apply_async(
+                kwargs={
+                    "event_id": event.id,
+                    "aggregate_id": event.aggregate_id,
+                    "payload": event.payload,
+                }
+            )
         except Exception:  # noqa: BLE001 — one bad consumer must not abort the batch
             ok = False
             logger.exception(

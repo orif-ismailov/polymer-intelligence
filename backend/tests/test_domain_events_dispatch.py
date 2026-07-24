@@ -48,7 +48,7 @@ def test_fan_out_dispatches_registered_consumers_with_event_id_and_payload(monke
     monkeypatch.setattr(events, "CONSUMERS", {"x.type": [task]})
 
     assert events._fan_out(_event("x.type", 5, {"a": 1})) is True
-    assert task.calls == [{"event_id": 5, "payload": {"a": 1}}]
+    assert task.calls == [{"event_id": 5, "aggregate_id": "1", "payload": {"a": 1}}]
 
 
 def test_fan_out_dispatches_to_every_consumer(monkeypatch) -> None:  # noqa: ANN001

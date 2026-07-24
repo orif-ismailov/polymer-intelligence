@@ -151,10 +151,14 @@ def run_verification_checks(case_id: int) -> dict[str, Any]:
 
 
 @celery_app.task(name="archive_company_offers")  # type: ignore[untyped-decorator]
-def archive_company_offers(event_id: int | None = None, payload: Any = None) -> dict[str, Any]:
+def archive_company_offers(
+    event_id: int | None = None, aggregate_id: str | None = None, payload: Any = None
+) -> dict[str, Any]:
     """COMPANY_SUSPENDED consumer: archive a suspended company's approved offers.
 
-    Idempotent — an offer already archived is simply not matched by the WHERE clause.
+    Uniform consumer signature (event_id, aggregate_id, payload). aggregate_id is the
+    company id; payload carries it too. Idempotent — an already-archived offer is not
+    matched by the WHERE clause.
     """
     from sqlalchemy import update
 
@@ -162,7 +166,7 @@ def archive_company_offers(event_id: int | None = None, payload: Any = None) -> 
     from app.models.enums import SellerOfferStatus
     from app.models.marketplace import SellerOffer
 
-    company_id = (payload or {}).get("company_id")
+    company_id = (payload or {}).get("company_id") or (int(aggregate_id) if aggregate_id else None)
     if company_id is None:
         return {"archived": 0}
 

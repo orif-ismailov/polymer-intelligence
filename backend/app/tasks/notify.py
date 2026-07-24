@@ -994,3 +994,117 @@ def send_sms(phone: str, text: str, purpose: str = "otp") -> dict[str, Any]:
     outcome = "ok" if result.ok else "error"
     _write_sms_log(phone, purpose, provider.provider_name, result.provider_msg_id, outcome)
     return {"status": outcome, "provider_msg_id": result.provider_msg_id, "error": result.error}
+
+
+# ── Verification case → team group card (R1 W6) ───────────────────────────────
+
+_CHECK_STATUS_EMOJI: dict[str, str] = {
+    "passed": "✅",
+    "warning": "⚠️",
+    "failed": "❌",
+    "pending": "⏳",
+    "running": "⏳",
+    "waived": "➖",
+    "unavailable": "🚫",
+}
+
+
+def _verification_notify_chat_id() -> int | None:
+    """Verification cards go to VERIFICATION_NOTIFY_CHAT_ID, else the request group."""
+    from app.core.config import settings  # noqa: PLC0415
+
+    return settings.VERIFICATION_NOTIFY_CHAT_ID or settings.REQUEST_NOTIFY_CHAT_ID
+
+
+@celery_app.task(name="send_verification_case_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_verification_case_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """Post a submitted verification case to the team group for a human decision.
+
+    Consumer of VERIFICATION_CASE_SUBMITTED (called with event_id/aggregate_id/payload;
+    aggregate_id is the case id). Skips when no group is configured. Never raises
+    (T-03-13): returns a status dict so the worker stays alive.
+    """
+    case_id_raw = aggregate_id or (payload or {}).get("case_id")
+    if case_id_raw is None:
+        return {"status": "skipped", "error": "no_case_id"}
+    case_id = int(case_id_raw)
+
+    chat_id = _verification_notify_chat_id()
+    if chat_id is None:
+        return {"status": "skipped", "error": "no_chat_id"}
+
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot, verification_moderation_keyboard  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
+
+    try:
+        with Session(engine) as session:
+            case = session.get(VerificationCase, case_id)
+            if case is None:
+                return {"status": "error", "error": f"case {case_id} not found"}
+            company = session.get(Company, case.company_id)
+            checks = (
+                session.query(VerificationCheck)
+                .filter(VerificationCheck.case_id == case_id)
+                .order_by(VerificationCheck.id)
+                .all()
+            )
+            doc_count = (
+                session.query(VerificationDocument)
+                .filter(VerificationDocument.company_id == case.company_id)
+                .count()
+            )
+
+            name = None
+            roles: list[str] = []
+            tax_id = ""
+            if company is not None:
+                name = company.short_name or company.legal_name
+                tax_id = company.tax_id
+                roles = [r.role.value for r in company.business_roles]
+
+            lines = ["🔎 Новая заявка на верификацию", ""]
+            lines.append(f"🏢 {name or ('ИНН ' + tax_id)}")
+            lines.append(f"🆔 ИНН: {tax_id}")
+            lines.append(f"📋 Роли: {', '.join(roles) if roles else '—'}")
+            lines.append(f"📎 Документы: {doc_count}")
+            if checks:
+                lines.append("")
+                lines.append("Проверки:")
+                for check in checks:
+                    status_value = check.status.value
+                    emoji = _CHECK_STATUS_EMOJI.get(status_value, "•")
+                    lines.append(f"{emoji} {check.check_type.value}: {status_value}")
+
+            asyncio.run(
+                bot.send_message(
+                    chat_id=chat_id,
+                    text="\n".join(lines)[:4096],
+                    reply_markup=verification_moderation_keyboard(case_id),
+                )
+            )
+    except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
+        logger.error("notify.verification_case.error", extra={"case_id": case_id, "error": str(exc)})
+        return {"status": "error", "error": str(exc)}
+
+    logger.info("notify.verification_case.sent", extra={"case_id": case_id, "chat_id": chat_id})
+    return {"status": "ok", "error": None}
+
+
+def _register_consumers() -> None:
+    """Wire VERIFICATION_CASE_SUBMITTED → the team group card (see events.CONSUMERS)."""
+    from app.services import event_types  # noqa: PLC0415
+    from app.tasks.events import CONSUMERS  # noqa: PLC0415
+
+    if send_verification_case_to_group not in CONSUMERS.get(event_types.VERIFICATION_CASE_SUBMITTED, []):
+        CONSUMERS[event_types.VERIFICATION_CASE_SUBMITTED].append(send_verification_case_to_group)
+
+
+_register_consumers()
