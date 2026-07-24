@@ -75,6 +75,12 @@ def _attempts_key(phone: str) -> str:
     return f"otp:att:{phone}"
 
 
+def peek_key(phone: str) -> str:
+    """Redis key holding the PLAINTEXT code — written only under the console driver in
+    DEBUG (dev/CI), read by the double-gated /portal/auth/otp/peek e2e hook."""
+    return f"otp:peek:{phone}"
+
+
 # ── Phone normalization ───────────────────────────────────────────────────────
 
 
@@ -195,6 +201,11 @@ def request_code(db: Session, redis_client: redis.Redis[str], phone: str, ip: st
     code = _generate_code()
     redis_client.setex(_code_key(normalized), settings.OTP_TTL_SECONDS, _hash_code(code))
     redis_client.delete(_attempts_key(normalized))
+
+    # Dev/CI ONLY (console driver + DEBUG): stash the plaintext so the e2e peek hook
+    # can read the code without SMS. Never written in prod (eskiz or DEBUG off).
+    if settings.DEBUG and settings.SMS_PROVIDER == "console":
+        redis_client.setex(peek_key(normalized), settings.OTP_TTL_SECONDS, code)
 
     _enqueue_sms(normalized, code)
 

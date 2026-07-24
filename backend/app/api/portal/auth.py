@@ -13,11 +13,12 @@ uniform so a caller can't distinguish known vs unknown phones.
 from __future__ import annotations
 
 import redis
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, Response, status
 from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.core.security import create_portal_access_token, decode_token
@@ -40,6 +41,8 @@ from app.services.otp_service import (
     OtpInvalid,
     OtpLocked,
     OtpRateLimited,
+    normalize_phone,
+    peek_key,
     request_code,
     verify_code,
 )
@@ -85,6 +88,25 @@ def otp_request(
             headers={"Retry-After": str(exc.retry_after)},
         ) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/auth/otp/peek")
+def otp_peek(
+    phone: str = Query(...),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> dict[str, str]:
+    """E2E test hook: return the pending OTP code. DOUBLE-GATED — 404 unless the
+    console SMS driver is active AND DEBUG is on (i.e. never in prod)."""
+    if not (settings.DEBUG and settings.SMS_PROVIDER == "console"):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    try:
+        normalized = normalize_phone(phone)
+    except InvalidPhone as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found") from exc
+    code = redis_client.get(peek_key(normalized))
+    if code is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    return {"code": code}
 
 
 @router.post("/auth/otp/verify", response_model=PortalTokenResponse)
