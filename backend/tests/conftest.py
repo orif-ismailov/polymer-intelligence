@@ -30,6 +30,7 @@ _TEST_ENV: dict[str, str] = {
     "JWT_SECRET": "test_jwt_secret_must_be_at_least_64_chars_long_for_security_xx",
     "S3_ACCESS_KEY": "minio_test_access",
     "S3_SECRET_KEY": "minio_test_secret",
+    "VERIFICATION_ENC_KEY": "cG9seW1lcl92ZXJpZmljYXRpb25fdGVzdF9rZXlfMzI=",
 }
 
 

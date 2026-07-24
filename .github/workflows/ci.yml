@@ -83,6 +83,7 @@ jobs:
           S3_SECRET_KEY: ci-s3-secret-key
           S3_BUCKET: ci-bucket
           S3_ENDPOINT: http://localhost:9000
+          VERIFICATION_ENC_KEY: cG9seW1lcl92ZXJpZmljYXRpb25fdGVzdF9rZXlfMzI=
         run: pytest tests/ -q --tb=short
 
   # ── Dashboard: eslint + tsc ────────────────────────────────────────────────
@@ -166,6 +167,7 @@ jobs:
       ANTHROPIC_API_KEY: sk-ant-ci-placeholder
       S3_ACCESS_KEY: ci-minio-access
       S3_SECRET_KEY: ci-minio-secret
+      VERIFICATION_ENC_KEY: cG9seW1lcl92ZXJpZmljYXRpb25fdGVzdF9rZXlfMzI=
       # The dashboard's next.config rewrites /api/* to this origin.
       BACKEND_ORIGIN: http://localhost:8000
       NEXT_TELEMETRY_DISABLED: "1"

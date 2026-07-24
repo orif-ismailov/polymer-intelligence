@@ -200,3 +200,158 @@ class OfferRequestStatus(enum.StrEnum):
     pending = "pending"
     approved = "approved"
     rejected = "rejected"
+
+
+# ── Company Verification & Portal (R1) ────────────────────────────────────────
+# Identity model v2 (ARCHITECTURE Amendment A1): person = user_accounts (phone
+# OTP), company membership via company_members.user_account_id. All ENUM values
+# below are verbatim from R1-PLAN §T1.1 and mapped to native PG ENUM types in
+# migration 0017. Do not change a value without a migration + DB-doc edit.
+
+
+class AccountStatus(enum.StrEnum):
+    """Portal user-account lifecycle (PG type: account_status)."""
+
+    active = "active"
+    blocked = "blocked"
+
+
+class CompanyStatus(enum.StrEnum):
+    """Company verification lifecycle (PG type: company_status).
+
+    draft → pending_verification → {verified, rejected}; verified → suspended →
+    verified (reinstate); liquidated is terminal (gov-driven, P2).
+    """
+
+    draft = "draft"
+    pending_verification = "pending_verification"
+    verified = "verified"
+    rejected = "rejected"
+    suspended = "suspended"
+    liquidated = "liquidated"
+
+
+class CompanyMemberRole(enum.StrEnum):
+    """Membership role within a company (PG type: company_member_role)."""
+
+    owner = "owner"
+    manager = "manager"
+    member = "member"
+
+
+class CompanyMemberStatus(enum.StrEnum):
+    """Membership status within a company (PG type: company_member_status)."""
+
+    active = "active"
+    invited = "invited"
+    removed = "removed"
+
+
+class CompanyBusinessRole(enum.StrEnum):
+    """Declared business role of a company (PG type: company_business_role)."""
+
+    manufacturer = "manufacturer"
+    importer = "importer"
+    trader = "trader"
+    logistics_provider = "logistics_provider"
+    distributor = "distributor"
+    laboratory = "laboratory"
+    insurance_provider = "insurance_provider"
+
+
+class BusinessRoleStatus(enum.StrEnum):
+    """Confirmation state of a declared business role (PG type: business_role_status)."""
+
+    declared = "declared"
+    confirmed = "confirmed"
+    revoked = "revoked"
+
+
+class BankAccountStatus(enum.StrEnum):
+    """Company bank-account verification state (PG type: bank_account_status)."""
+
+    unverified = "unverified"
+    pending = "pending"
+    verified = "verified"
+    failed = "failed"
+    archived = "archived"
+
+
+class BankVerificationMethod(enum.StrEnum):
+    """How a bank account was verified (PG type: bank_verification_method)."""
+
+    document = "document"
+    e_invoice_crosscheck = "e_invoice_crosscheck"
+    bank_api = "bank_api"
+    manual = "manual"
+
+
+class VerificationCaseType(enum.StrEnum):
+    """Type of a verification case (PG type: verification_case_type)."""
+
+    onboarding = "onboarding"
+    reverification = "reverification"
+    targeted = "targeted"
+
+
+class VerificationCaseStatus(enum.StrEnum):
+    """Verification-case lifecycle (PG type: verification_case_status).
+
+    draft → submitted → checks_running → {needs_info, pending_review} →
+    {approved, rejected}; cancelled is terminal.
+    """
+
+    draft = "draft"
+    submitted = "submitted"
+    checks_running = "checks_running"
+    needs_info = "needs_info"
+    pending_review = "pending_review"
+    approved = "approved"
+    rejected = "rejected"
+    cancelled = "cancelled"
+
+
+class VerificationCheckType(enum.StrEnum):
+    """Individual check within a case (PG type: verification_check_type).
+
+    R1 ships the four manual/format checks. R3 adds eimzo_signature and P2 adds
+    gov_registry/tax_status/vat_status via ALTER TYPE ADD VALUE.
+    """
+
+    tax_id_format = "tax_id_format"
+    bank_requisites = "bank_requisites"
+    documents_complete = "documents_complete"
+    manual_kyb = "manual_kyb"
+
+
+class VerificationCheckStatus(enum.StrEnum):
+    """Result state of a check (PG type: verification_check_status)."""
+
+    pending = "pending"
+    running = "running"
+    passed = "passed"
+    warning = "warning"
+    failed = "failed"
+    unavailable = "unavailable"
+    waived = "waived"
+
+
+class VerificationDocumentKind(enum.StrEnum):
+    """Kind of uploaded verification document (PG type: verification_document_kind)."""
+
+    registration_certificate = "registration_certificate"
+    director_id = "director_id"
+    bank_letter = "bank_letter"
+    license = "license"
+    permit = "permit"
+    certificate = "certificate"
+    power_of_attorney = "power_of_attorney"
+    other = "other"
+
+
+class DocumentReviewStatus(enum.StrEnum):
+    """Staff review state of a verification document (PG type: document_review_status)."""
+
+    pending_review = "pending_review"
+    accepted = "accepted"
+    rejected = "rejected"

@@ -17,14 +17,29 @@ This file must be imported by alembic/env.py so that
 `target_metadata = Base.metadata` includes all 20 tables.
 """
 
+from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
+from app.models.companies import (  # noqa: F401
+    Company,
+    CompanyBankAccount,
+    CompanyBusinessRole,
+    CompanyMember,
+)
 from app.models.counterparties import Counterparty, CounterpartyAlias  # noqa: F401
 from app.models.enums import (  # noqa: F401
+    AccountStatus,
     AlertKind,
+    BankAccountStatus,
+    BankVerificationMethod,
+    BusinessRoleStatus,
+    CompanyMemberRole,
+    CompanyMemberStatus,
+    CompanyStatus,
     CounterpartyRole,
     DeliveryChannel,
     DeliveryStatus,
+    DocumentReviewStatus,
     OfferFileKind,
     OfferRequestStatus,
     ParseStatus,
@@ -38,7 +53,16 @@ from app.models.enums import (  # noqa: F401
     SourceKind,
     StaffRole,
     Urgency,
+    VerificationCaseStatus,
+    VerificationCaseType,
+    VerificationCheckStatus,
+    VerificationCheckType,
+    VerificationDocumentKind,
 )
+from app.models.enums import (
+    CompanyBusinessRole as CompanyBusinessRoleEnum,
+)
+from app.models.events import DomainEvent  # noqa: F401
 from app.models.marketplace import (  # noqa: F401
     OfferRequest,
     Seller,
@@ -59,6 +83,11 @@ from app.models.signals import Signal  # noqa: F401
 from app.models.sources import ParseRun, RawItem, Source  # noqa: F401
 from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun  # noqa: F401
 from app.models.staff import AuditLog, StaffUser  # noqa: F401
+from app.models.verification import (  # noqa: F401
+    VerificationCase,
+    VerificationCheck,
+    VerificationDocument,
+)
 
 __all__ = [
     # Enums
@@ -79,6 +108,21 @@ __all__ = [
     "SellerOfferStatus",
     "OfferFileKind",
     "OfferRequestStatus",
+    # Company verification & portal (R1)
+    "AccountStatus",
+    "CompanyStatus",
+    "CompanyMemberRole",
+    "CompanyMemberStatus",
+    "CompanyBusinessRoleEnum",
+    "BusinessRoleStatus",
+    "BankAccountStatus",
+    "BankVerificationMethod",
+    "VerificationCaseType",
+    "VerificationCaseStatus",
+    "VerificationCheckType",
+    "VerificationCheckStatus",
+    "VerificationDocumentKind",
+    "DocumentReviewStatus",
     # Reference
     "Product",
     "ProductGrade",
@@ -121,4 +165,15 @@ __all__ = [
     "InventoryItem",
     "PartnerSupplier",
     "SourcingRun",
+    # Company verification & portal (R1)
+    "UserAccount",
+    "SmsSendLog",
+    "Company",
+    "CompanyMember",
+    "CompanyBusinessRole",
+    "CompanyBankAccount",
+    "VerificationCase",
+    "VerificationCheck",
+    "VerificationDocument",
+    "DomainEvent",
 ]

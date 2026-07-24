@@ -11,7 +11,9 @@ loaded only from an untracked .env file (see deploy/.env.example contract).
 
 from __future__ import annotations
 
-from pydantic import field_validator
+from typing import Self
+
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -101,6 +103,28 @@ class Settings(BaseSettings):
     # ── Auth ──────────────────────────────────────────────────────────────────
     JWT_SECRET: str
 
+    # ── Company verification & portal (R1) ────────────────────────────────────
+    # Fernet key (urlsafe base64, ≥32 chars) that encrypts company bank account
+    # numbers (R1) and PINFL (R3) at the app layer. Required, no default — a
+    # misconfigured key must fail fast, not silently store plaintext. Generate with
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    VERIFICATION_ENC_KEY: str
+    # SMS provider for phone-OTP auth. "console" (default) logs the code at INFO for
+    # dev/CI; "eskiz" sends real SMS via Eskiz.uz and requires ESKIZ_EMAIL/PASSWORD.
+    SMS_PROVIDER: str = "console"
+    ESKIZ_EMAIL: str = ""
+    ESKIZ_PASSWORD: str = ""
+    # OTP tunables (Redis-backed, see app/services/otp_service.py).
+    OTP_TTL_SECONDS: int = 300
+    OTP_RESEND_COOLDOWN_SECONDS: int = 60
+    OTP_MAX_SENDS_PER_DAY: int = 5
+    OTP_MAX_VERIFY_ATTEMPTS: int = 5
+    # Portal refresh-cookie lifetime (days). Short access JWT (aud=portal) rides on top.
+    PORTAL_SESSION_TTL_DAYS: int = 30
+    # Telegram group/chat that receives a verification-case card per submitted case.
+    # Falls back to REQUEST_NOTIFY_CHAT_ID when unset. None → group notify disabled.
+    VERIFICATION_NOTIFY_CHAT_ID: int | None = None
+
     # ── CORS ──────────────────────────────────────────────────────────────────
     # Explicit non-wildcard list of allowed origins for credentialed CORS requests.
     # Never default to ["*"] — wildcard with allow_credentials=True is both a
@@ -175,10 +199,24 @@ class Settings(BaseSettings):
             raise ValueError("JWT_SECRET must be at least 32 characters")
         return v
 
+    @field_validator("VERIFICATION_ENC_KEY")
+    @classmethod
+    def _enc_key_min_length(cls, v: str) -> str:
+        """Reject a verification encryption key shorter than 32 chars at startup.
+
+        A short/blank key defeats the app-layer encryption of bank account numbers
+        (§15). Fernet keys are 44-char urlsafe base64; the CI placeholder satisfies
+        this. Fail fast rather than silently storing weakly-protected PII.
+        """
+        if len(v) < 32:
+            raise ValueError("VERIFICATION_ENC_KEY must be at least 32 characters")
+        return v
+
     @field_validator(
         "REQUEST_NOTIFY_CHAT_ID",
         "NOTIFY_TOPIC_BUYERS",
         "NOTIFY_TOPIC_SELLERS",
+        "VERIFICATION_NOTIFY_CHAT_ID",
         mode="before",
     )
     @classmethod
@@ -222,6 +260,18 @@ class Settings(BaseSettings):
         except zoneinfo.ZoneInfoNotFoundError as exc:
             raise ValueError(f"Unknown timezone: {v!r}") from exc
         return v
+
+    @model_validator(mode="after")
+    def _require_eskiz_creds(self) -> Self:
+        """Require Eskiz credentials only when SMS_PROVIDER=eskiz.
+
+        The console driver (dev/CI default) needs no credentials; the real Eskiz
+        driver fails fast at startup if either credential is missing rather than at
+        the first OTP send.
+        """
+        if self.SMS_PROVIDER == "eskiz" and not (self.ESKIZ_EMAIL and self.ESKIZ_PASSWORD):
+            raise ValueError("ESKIZ_EMAIL and ESKIZ_PASSWORD are required when SMS_PROVIDER=eskiz")
+        return self
 
 
 # Single module-level accessor — import `settings` everywhere, do not call Settings() twice.

@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
@@ -67,6 +68,9 @@ class Seller(Base):
     counterparty_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("counterparties.id"), nullable=True
     )                                                                             # link to intelligence loop
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # dormant portal-company bridge (R1, A1)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -84,12 +88,23 @@ class SellerOffer(Base):
         Index("ix_seller_offers_status_created", "status", "created_at"),
         Index("ix_seller_offers_product", "product_id"),
         Index("ix_seller_offers_seller", "seller_id"),
+        # Dual-origin (R1, A1): an offer comes from a TG seller OR a portal company.
+        CheckConstraint(
+            "seller_id IS NOT NULL OR company_id IS NOT NULL", name="ck_offer_origin"
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    seller_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("sellers.id", ondelete="CASCADE"), nullable=False
+    # Nullable (R1): a portal offer originates from a company, not a TG seller.
+    seller_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("sellers.id", ondelete="CASCADE"), nullable=True
     )
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # set for portal-published offers
+    created_by_user_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=True
+    )                                                                             # portal author (A1)
     # Nullable: a seller may list a product not in our catalog (product_text).
     product_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("products.id"), nullable=True
@@ -147,7 +162,7 @@ class SellerOffer(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
-    seller: Mapped[Seller] = relationship("Seller", back_populates="offers")
+    seller: Mapped[Seller | None] = relationship("Seller", back_populates="offers")
     files: Mapped[list[SellerOfferFile]] = relationship(
         "SellerOfferFile", back_populates="offer", cascade="all, delete-orphan"
     )

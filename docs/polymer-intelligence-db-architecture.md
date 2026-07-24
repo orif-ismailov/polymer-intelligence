@@ -434,6 +434,175 @@ CREATE TABLE app_settings (
 
 ---
 
+## 10. Верификация компаний и портал (R1, миграция 0017)
+
+Модель личности v2 (ARCHITECTURE §5, поправка A1): человек = `user_accounts`
+(телефон, passwordless OTP), членство в компании — через `company_members.user_account_id`.
+Telegram-личности (`clients`/`sellers`) — отдельный «замороженный» мир; связь пока
+дремлющая (`user_accounts.telegram_user_id`, `sellers.company_id`, `clients.company_id`,
+`seller_offers.company_id` — все NULL, без логики моста в R1–R3).
+
+Бизнес-логика в `app/services/` (company/verification/otp/event сервисы, R1 wave 4+);
+шифрование PII — `app/core/crypto.py` (Fernet, ключ `VERIFICATION_ENC_KEY`);
+транзакционный outbox — `domain_events` + beat-таск `dispatch_domain_events`.
+
+```sql
+-- ── ENUM-типы (14) ────────────────────────────────────────────────────────
+CREATE TYPE account_status              AS ENUM ('active','blocked');
+CREATE TYPE company_status              AS ENUM ('draft','pending_verification','verified','rejected','suspended','liquidated');
+CREATE TYPE company_member_role         AS ENUM ('owner','manager','member');
+CREATE TYPE company_member_status       AS ENUM ('active','invited','removed');
+CREATE TYPE company_business_role       AS ENUM ('manufacturer','importer','trader','logistics_provider','distributor','laboratory','insurance_provider');
+CREATE TYPE business_role_status        AS ENUM ('declared','confirmed','revoked');
+CREATE TYPE bank_account_status         AS ENUM ('unverified','pending','verified','failed','archived');
+CREATE TYPE bank_verification_method    AS ENUM ('document','e_invoice_crosscheck','bank_api','manual');
+CREATE TYPE verification_case_type      AS ENUM ('onboarding','reverification','targeted');
+CREATE TYPE verification_case_status    AS ENUM ('draft','submitted','checks_running','needs_info','pending_review','approved','rejected','cancelled');
+CREATE TYPE verification_check_type     AS ENUM ('tax_id_format','bank_requisites','documents_complete','manual_kyb');  -- R3 +eimzo_signature; P2 +gov_registry/tax_status/vat_status
+CREATE TYPE verification_check_status   AS ENUM ('pending','running','passed','warning','failed','unavailable','waived');
+CREATE TYPE verification_document_kind  AS ENUM ('registration_certificate','director_id','bank_letter','license','permit','certificate','power_of_attorney','other');
+CREATE TYPE document_review_status      AS ENUM ('pending_review','accepted','rejected');
+
+-- ── Личности портала ──────────────────────────────────────────────────────
+CREATE TABLE user_accounts (
+    id               bigserial PRIMARY KEY,
+    phone            text NOT NULL UNIQUE,            -- E.164
+    name             text,
+    language         char(2) NOT NULL DEFAULT 'ru',
+    status           account_status NOT NULL DEFAULT 'active',
+    telegram_user_id bigint UNIQUE,                   -- дремлющий мост к Mini App (frozen)
+    created_at       timestamptz NOT NULL DEFAULT now(),
+    last_login_at    timestamptz
+);
+
+-- Лог отправок SMS — учёт стоимости + форензика OTP-абьюза. Коды НЕ хранятся.
+CREATE TABLE sms_send_log (
+    id              bigserial PRIMARY KEY,
+    phone           text NOT NULL,
+    purpose         text NOT NULL,                    -- 'otp'
+    provider        text NOT NULL,                    -- 'console' | 'eskiz'
+    provider_msg_id text,
+    status          text NOT NULL,                    -- 'ok' | 'error'
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_sms_send_log_phone_created ON sms_send_log(phone, created_at);  -- дневной лимит
+
+-- ── Реестр компаний ───────────────────────────────────────────────────────
+CREATE TABLE companies (
+    id                         bigserial PRIMARY KEY,
+    public_id                  uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),  -- стабильная внешняя ссылка
+    jurisdiction               char(2) NOT NULL DEFAULT 'UZ',
+    tax_id                     text NOT NULL,          -- STIR/INN
+    legal_name                 text, short_name text, legal_form text,
+    legal_address              text, director_name text, registration_date date,
+    registry_status            text,                   -- статус по данным гос-реестра (заполняется в P2)
+    status                     company_status NOT NULL DEFAULT 'draft',
+    verified_at                timestamptz, reverification_due_at timestamptz,
+    counterparty_id            int REFERENCES counterparties(id),
+    created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    created_at                 timestamptz NOT NULL DEFAULT now(),
+    updated_at                 timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (jurisdiction, tax_id)                      -- uq_company_jurisdiction_tax_id
+);
+
+CREATE TABLE company_members (
+    id                         bigserial PRIMARY KEY,
+    company_id                 bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    user_account_id            bigint NOT NULL REFERENCES user_accounts(id),
+    member_role                company_member_role NOT NULL DEFAULT 'member',
+    status                     company_member_status NOT NULL DEFAULT 'active',
+    invited_by_user_account_id bigint REFERENCES user_accounts(id),
+    created_at                 timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (company_id, user_account_id)               -- uq_company_member
+);
+
+CREATE TABLE company_business_roles (
+    id           bigserial PRIMARY KEY,
+    company_id   bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    role         company_business_role NOT NULL,
+    status       business_role_status NOT NULL DEFAULT 'declared',
+    confirmed_by int REFERENCES staff_users(id),
+    created_at   timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (company_id, role)                           -- uq_company_business_role
+);
+
+CREATE TABLE company_bank_accounts (
+    id                   bigserial PRIMARY KEY,
+    company_id           bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    bank_mfo             char(5) NOT NULL, bank_name text,
+    account_number_enc   bytea NOT NULL,               -- Fernet-шифртекст (app-layer, §15)
+    account_last4        char(4) NOT NULL,             -- для маскирования
+    currency             char(3) NOT NULL DEFAULT 'UZS',
+    status               bank_account_status NOT NULL DEFAULT 'unverified',
+    verification_method  bank_verification_method,
+    evidence_document_id bigint REFERENCES verification_documents(id),
+    verified_at timestamptz, verified_by int REFERENCES staff_users(id),
+    created_at           timestamptz NOT NULL DEFAULT now()
+);
+
+-- ── Верификация ───────────────────────────────────────────────────────────
+CREATE TABLE verification_cases (
+    id            bigserial PRIMARY KEY,
+    company_id    bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    case_type     verification_case_type NOT NULL DEFAULT 'onboarding',
+    status        verification_case_status NOT NULL DEFAULT 'draft',
+    submitted_at timestamptz, decided_at timestamptz,
+    decided_by    int REFERENCES staff_users(id),      -- NULL = авто/telegram-актор (детали в audit_log)
+    decision_note text,
+    created_at    timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_verification_cases_company_id ON verification_cases(company_id);
+-- Один открытый кейс на компанию — инвариант как ограничение БД, а не логика приложения (§6.1):
+CREATE UNIQUE INDEX ux_open_case ON verification_cases(company_id)
+    WHERE status NOT IN ('approved','rejected','cancelled');
+
+CREATE TABLE verification_checks (
+    id          bigserial PRIMARY KEY,
+    case_id     bigint NOT NULL REFERENCES verification_cases(id) ON DELETE CASCADE,
+    check_type  verification_check_type NOT NULL,
+    status      verification_check_status NOT NULL DEFAULT 'pending',
+    result      jsonb, attempts int NOT NULL DEFAULT 0, last_error text,
+    started_at timestamptz, finished_at timestamptz,
+    waived_by   int REFERENCES staff_users(id), waive_reason text,
+    UNIQUE (case_id, check_type)                        -- uq_verification_check
+);
+
+CREATE TABLE verification_documents (
+    id                          bigserial PRIMARY KEY,
+    company_id                  bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    case_id                     bigint REFERENCES verification_cases(id) ON DELETE SET NULL,
+    kind                        verification_document_kind NOT NULL,
+    storage_path                text NOT NULL,          -- verification/{company_id}/{token}-{name}
+    mime_type text, size_bytes int, sha256 text NOT NULL,
+    uploaded_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    status                      document_review_status NOT NULL DEFAULT 'pending_review',
+    review_note text, reviewed_by int REFERENCES staff_users(id), reviewed_at timestamptz,
+    expires_at timestamptz, created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_verification_documents_company_id ON verification_documents(company_id);
+
+-- ── Транзакционный outbox (§7) ────────────────────────────────────────────
+CREATE TABLE domain_events (
+    id             bigserial PRIMARY KEY,
+    event_type     text NOT NULL,                       -- см. app/services/event_types.py
+    aggregate_type text NOT NULL, aggregate_id text NOT NULL,
+    payload        jsonb NOT NULL DEFAULT '{}',
+    occurred_at    timestamptz NOT NULL DEFAULT now(),
+    published_at   timestamptz, attempts int NOT NULL DEFAULT 0
+);
+CREATE INDEX ix_outbox_unpublished ON domain_events(id) WHERE published_at IS NULL;
+
+-- ── Мост маркетплейса (dual-origin offers, A1) ────────────────────────────
+ALTER TABLE seller_offers ADD COLUMN company_id bigint REFERENCES companies(id);
+ALTER TABLE seller_offers ADD COLUMN created_by_user_account_id bigint REFERENCES user_accounts(id);
+ALTER TABLE seller_offers ALTER COLUMN seller_id DROP NOT NULL;   -- оффер от TG-продавца ИЛИ от компании
+ALTER TABLE seller_offers ADD CONSTRAINT ck_offer_origin CHECK (seller_id IS NOT NULL OR company_id IS NOT NULL);
+ALTER TABLE sellers ADD COLUMN company_id bigint REFERENCES companies(id);   -- дремлющий
+ALTER TABLE clients ADD COLUMN company_id bigint REFERENCES companies(id);   -- дремлющий
+```
+
+---
+
 ## Маппинг на экраны мокапов
 
 | Экран | Источник данных |
@@ -464,5 +633,6 @@ CREATE TABLE app_settings (
 
 ## История версий
 
+- v1.2 (23.07.2026): раздел 10 — верификация компаний и портал (R1, миграция 0017): 14 ENUM-типов, таблицы `user_accounts`, `sms_send_log`, `companies`, `company_members`, `company_business_roles`, `company_bank_accounts`, `verification_cases`, `verification_checks`, `verification_documents`, `domain_events`; мост маркетплейса (`seller_offers.company_id`/`created_by_user_account_id`, nullable `seller_id` + CHECK `ck_offer_origin`; дремлющие `sellers.company_id`/`clients.company_id`).
 - v1.1 (12.06.2026): `sources.adapter` + `last_test_ok_at` под конструктор источников (dev-спека §2.5); `fx_rates`; kind `rss`; вопросы 1 и 3 закрыты.
 - v1.0 (12.06.2026): первая версия.

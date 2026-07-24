@@ -56,6 +56,9 @@ class Client(Base):
     counterparty_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("counterparties.id"), nullable=True
     )                                                                             # link to intelligence loop
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # dormant portal-company bridge (R1, A1)
     is_blocked: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
