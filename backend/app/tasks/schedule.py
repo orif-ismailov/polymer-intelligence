@@ -22,9 +22,19 @@ the worker boots without "Task not registered" errors.
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from celery.schedules import crontab
 
 BEAT_SCHEDULE: dict[str, dict[str, object]] = {
+    # ── Transactional-outbox dispatcher: every 15 s ──────────────────────────
+    # Polls unpublished domain_events (FOR UPDATE SKIP LOCKED), fans out to
+    # idempotent consumers, stamps published_at. Concurrency-safe: several
+    # instances grab disjoint batches (R1 W2 — company verification outbox).
+    "app.tasks.events.dispatch_domain_events": {
+        "task": "app.tasks.events.dispatch_domain_events",
+        "schedule": timedelta(seconds=15),
+    },
     # ── UZEX offers: every 15 min, 09:00-18:00, Mon-Fri ─────────────────────
     "uzex_fetch_offers": {
         "task": "uzex_fetch_offers",

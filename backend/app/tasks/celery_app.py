@@ -50,6 +50,7 @@ _TASK_MODULES = [
     "app.tasks.nightly_catchup",
     "app.tasks.rescore",
     "app.tasks.reports",
+    "app.tasks.events",
 ]
 
 # ── Celery application instance ───────────────────────────────────────────────

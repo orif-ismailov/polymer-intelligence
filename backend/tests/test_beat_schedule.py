@@ -31,6 +31,8 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
     Phase 5 (05-04) adds nightly_llm_catchup for budget-deferred Telegram items.
     """
     required_keys = {
+        # R1 W2: transactional-outbox dispatcher (every 15 s)
+        "app.tasks.events.dispatch_domain_events",
         "uzex_fetch_offers",
         "uzex_fetch_contracts",
         "uzex_fetch_deals",
@@ -170,6 +172,17 @@ def test_check_source_health_every_5_minutes(
     assert sched.minute == expected_minutes, (
         f"Expected every-5-minute set {expected_minutes!r}, got {sched.minute!r}"
     )
+
+
+def test_dispatch_domain_events_every_15_seconds(
+    beat_schedule: dict[str, dict[str, object]],
+) -> None:
+    """The outbox dispatcher runs on a 15-second timedelta interval (R1 W2)."""
+    from datetime import timedelta  # noqa: PLC0415
+
+    entry = beat_schedule["app.tasks.events.dispatch_domain_events"]
+    assert entry["task"] == "app.tasks.events.dispatch_domain_events"
+    assert entry["schedule"] == timedelta(seconds=15)
 
 
 def test_all_task_names_match_keys(beat_schedule: dict[str, dict[str, object]]) -> None:
