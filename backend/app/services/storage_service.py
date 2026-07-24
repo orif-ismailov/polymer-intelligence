@@ -25,6 +25,7 @@ CDN). Web App uploads always go to MinIO via this pipeline, never via Telegram C
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import secrets
@@ -32,9 +33,11 @@ import secrets
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.enums import OfferFileKind
+from app.models.companies import Company
+from app.models.enums import OfferFileKind, VerificationDocumentKind
 from app.models.marketplace import SellerOfferFile
 from app.models.requests import RequestFile
+from app.models.verification import VerificationDocument
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +56,17 @@ MAGIC_BYTES: dict[bytes, str] = {
     b"%PDF": "application/pdf",
     b"PK\x03\x04": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     b"\xff\xd8\xff": "image/jpeg",
+    b"\x89PNG\r\n\x1a\n": "image/png",
 }
+
+#: Verification documents accept a stricter set than request/offer uploads
+#: (no spreadsheets): PDF scans + JPEG/PNG photos of certificates.
+VERIFICATION_MIMES: frozenset[str] = frozenset(
+    {"application/pdf", "image/jpeg", "image/png"}
+)
+
+#: Maximum verification documents per company (abuse bound).
+MAX_VERIFICATION_DOCS: int = 20
 
 #: Maximum allowed file size in bytes (10 MB, per D-08).
 MAX_SIZE_BYTES: int = 10 * 1024 * 1024
@@ -238,3 +251,73 @@ def upload_offer_file(
         extra={"offer_id": offer_id, "key": key, "mime": mime, "kind": kind.value},
     )
     return f
+
+
+# ── Verification document vault (R1 W4 — T4.3) ────────────────────────────────
+
+
+def upload_verification_document(
+    db: Session,
+    company: Company,
+    account_id: int,
+    kind: VerificationDocumentKind,
+    content: bytes,
+    filename: str,
+) -> VerificationDocument:
+    """Validate + store one verification document (PDF/JPEG/PNG, ≤10 MB, ≤20/company).
+
+    Immutable evidence: the sha256 of the bytes is stored so tampering is detectable.
+    Traversal-safe key `verification/{company_id}/{token}-{basename}`. Does NOT commit.
+    """
+    mime = validate_upload(content, filename)  # size + magic bytes
+    if mime not in VERIFICATION_MIMES:
+        raise ValueError("invalid_file_type")
+
+    existing = (
+        db.query(VerificationDocument)
+        .filter(VerificationDocument.company_id == company.id)
+        .count()
+    )
+    if existing >= MAX_VERIFICATION_DOCS:
+        raise ValueError("too_many_documents")
+
+    from app.core.storage import s3_client  # noqa: PLC0415 — deferred (no socket at import)
+
+    sanitized_basename = os.path.basename(filename) or "upload"
+    sanitized_basename = (
+        sanitized_basename.replace("/", "_").replace("\\", "_").replace("..", "__")
+    )
+    key = f"verification/{company.id}/{secrets.token_hex(8)}-{sanitized_basename}"
+
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET, Key=key, Body=content, ContentType=mime
+    )
+
+    document = VerificationDocument(
+        company_id=company.id,
+        kind=kind,
+        storage_path=key,
+        mime_type=mime,
+        size_bytes=len(content),
+        sha256=hashlib.sha256(content).hexdigest(),
+        uploaded_by_user_account_id=account_id,
+    )
+    db.add(document)
+    db.flush()
+    logger.info(
+        "storage_service.upload_verification_document.done",
+        extra={"company_id": company.id, "key": key, "mime": mime, "kind": kind.value},
+    )
+    return document
+
+
+def presign_verification_document(document: VerificationDocument, ttl: int = 600) -> str:
+    """Return a short-lived presigned GET URL for a verification document (≤600 s)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    url = s3_client.generate_presigned_url(  # type: ignore[attr-defined]
+        "get_object",
+        Params={"Bucket": settings.S3_BUCKET, "Key": document.storage_path},
+        ExpiresIn=ttl,
+    )
+    return str(url)
