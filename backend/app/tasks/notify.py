@@ -624,9 +624,15 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
                 lines.append("")
                 lines.append(f"💬 {offer.description}")
 
-            # Seller (who created it) — the detail the team needs to vet the listing.
+            # Who created it — the detail the team needs to vet the listing. Dual-origin
+            # (R1 W5): a company-origin offer (seller is None) renders the verified company
+            # instead of the Telegram seller contact block.
             contact: list[str] = []
-            if seller is not None:
+            if offer.company_id is not None:
+                if offer.display_name:
+                    contact.append(f"🏢 {offer.display_name}")
+                contact.append(f"🏛 Компания{' ✅' if offer.company_verified else ''}")
+            elif seller is not None:
                 if seller.company_name:
                     contact.append(f"🏢 {seller.company_name}")
                 if seller.contact_name:

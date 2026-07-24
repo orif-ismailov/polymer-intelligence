@@ -62,6 +62,12 @@ def _mock_offer(id: int = 11, status: str = "approved") -> MagicMock:
     o.published_at = datetime.datetime(2026, 6, 20, tzinfo=datetime.UTC)
     o.created_at = datetime.datetime(2026, 6, 19, tzinfo=datetime.UTC)
     o.seller = _mock_seller()
+    # Dual-origin (R1 W5) — seller-origin values (the model exposes these as properties).
+    o.company_id = None
+    o.company = None
+    o.origin = "seller"
+    o.display_name = "Chem Trade LLC"
+    o.company_verified = False
     return o
 
 

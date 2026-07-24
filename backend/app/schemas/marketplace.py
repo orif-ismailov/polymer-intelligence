@@ -189,14 +189,20 @@ class _CatalogOfferFields(BaseModel):
     description: str | None
     published_at: datetime.datetime | None
     files: list[OfferFileRef] = []
+    # Dual-origin (R1 W5): who is behind the offer, regardless of seller/company.
+    # Seller-origin offers keep these at their defaults (origin="seller",
+    # display_name=seller.company_name, company_verified=False).
+    origin: str = "seller"
+    display_name: str | None = None
+    company_verified: bool = False
 
     model_config = {"from_attributes": True}
 
 
 class CatalogOfferOut(_CatalogOfferFields):
-    """A public (approved) catalog offer with the seller's contact block."""
+    """A public (approved) catalog offer. Seller block present only for seller-origin."""
 
-    seller: CatalogSeller
+    seller: CatalogSeller | None = None
     # True when the authenticated caller owns this offer. The catalog list excludes
     # own offers, so this is only ever True on the single-offer detail — the client
     # uses it to hide the "Request an offer" action (a seller can't buy from itself).
@@ -228,16 +234,20 @@ class PublicFeaturedOffer(BaseModel):
     country: str | None
     published_at: datetime.datetime | None
     files: list[OfferFileRef] = []
+    # Dual-origin (R1 W5): public display + verified badge on the anonymous landing.
+    origin: str = "seller"
+    display_name: str | None = None
+    company_verified: bool = False
 
     model_config = {"from_attributes": True}
 
 
 class ModerationOfferOut(_CatalogOfferFields):
-    """A pending offer for the dashboard moderation queue (adds status + full seller contact)."""
+    """A pending offer for the dashboard moderation queue (adds status + seller/company)."""
 
     status: SellerOfferStatus
     created_at: datetime.datetime
-    seller: ModerationSeller
+    seller: ModerationSeller | None = None
 
 
 class CategoryCount(BaseModel):

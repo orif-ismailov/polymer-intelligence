@@ -42,6 +42,7 @@ from app.models.enums import (
 )
 
 if TYPE_CHECKING:
+    from app.models.companies import Company
     from app.models.requests import Client
 
 
@@ -163,9 +164,33 @@ class SellerOffer(Base):
     )
 
     seller: Mapped[Seller | None] = relationship("Seller", back_populates="offers")
+    company: Mapped[Company | None] = relationship("Company")  # dual-origin (R1 A1)
     files: Mapped[list[SellerOfferFile]] = relationship(
         "SellerOfferFile", back_populates="offer", cascade="all, delete-orphan"
     )
+
+    # ── Dual-origin display helpers (R1 W5) ───────────────────────────────────
+    # A serializer-agnostic view of "who is behind this offer" so every consumer
+    # (moderation, public market, TG card) renders seller- and company-origin
+    # offers uniformly. company_verified drives the public "verified" badge.
+
+    @property
+    def origin(self) -> str:
+        return "company" if self.company_id is not None else "seller"
+
+    @property
+    def display_name(self) -> str | None:
+        if self.company_id is not None and self.company is not None:
+            return self.company.short_name or self.company.legal_name
+        if self.seller is not None:
+            return self.seller.company_name
+        return None
+
+    @property
+    def company_verified(self) -> bool:
+        from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+        return self.company is not None and self.company.status == CompanyStatus.verified
 
 
 class SellerOfferFile(Base):
