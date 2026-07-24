@@ -40,6 +40,7 @@ from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
 from app.api.admin_users import router as admin_users_router
+from app.api.admin_verification import router as admin_verification_router
 from app.api.alert_rules import alerts_router
 from app.api.alert_rules import router as alert_rules_router
 from app.api.auth import router as auth_router
@@ -198,6 +199,7 @@ def create_app() -> FastAPI:
     application.include_router(portal_auth_router, prefix="/api/v1")
     application.include_router(portal_companies_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
+    application.include_router(admin_verification_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.

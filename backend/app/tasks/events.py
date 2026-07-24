@@ -78,7 +78,7 @@ def _fan_out(event: DomainEvent) -> bool:
     return ok
 
 
-@celery_app.task(name="app.tasks.events.dispatch_domain_events")
+@celery_app.task(name="app.tasks.events.dispatch_domain_events")  # type: ignore[untyped-decorator]
 def dispatch_domain_events() -> dict[str, int]:
     """Poll unpublished outbox rows, fan out to consumers, stamp published_at.
 

@@ -59,6 +59,14 @@ def _specs() -> tuple[SettingSpec, ...]:
             "verification_auto_approve", "bool", False,
             "Auto-approve verification cases when all automated checks pass",
         ),
+        SettingSpec(
+            "bank_verification_required", "bool", False,
+            "Require a verified bank account before a company can be approved",
+        ),
+        SettingSpec(
+            "verification_required_for_publish", "bool", False,
+            "Require company verification before publishing offers (reserved — TG path)",
+        ),
     )
 
 

@@ -364,6 +364,24 @@ def set_member_role(
     return member
 
 
+def suspend(db: Session, company: Company, staff_user_id: int | None) -> Company:
+    """Suspend a verified company (→ suspended); emit COMPANY_SUSPENDED (archives offers)."""
+    transition(db, company, CompanyStatus.suspended, staff_user_id=staff_user_id)
+    event_service.emit(
+        db, event_types.COMPANY_SUSPENDED, "company", company.id, {"company_id": company.id}
+    )
+    return company
+
+
+def reinstate(db: Session, company: Company, staff_user_id: int | None) -> Company:
+    """Reinstate a suspended company (→ verified); emit COMPANY_REINSTATED."""
+    transition(db, company, CompanyStatus.verified, staff_user_id=staff_user_id)
+    event_service.emit(
+        db, event_types.COMPANY_REINSTATED, "company", company.id, {"company_id": company.id}
+    )
+    return company
+
+
 def now_utc() -> datetime.datetime:
     """UTC now (module seam so verification_service can stamp verified_at consistently)."""
     return datetime.datetime.now(datetime.UTC)

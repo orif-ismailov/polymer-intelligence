@@ -148,3 +148,47 @@ def run_verification_checks(case_id: int) -> dict[str, Any]:
             )
 
     return {"dispatched": dispatched, "pending": len(check_ids)}
+
+
+@celery_app.task(name="archive_company_offers")  # type: ignore[untyped-decorator]
+def archive_company_offers(event_id: int | None = None, payload: Any = None) -> dict[str, Any]:
+    """COMPANY_SUSPENDED consumer: archive a suspended company's approved offers.
+
+    Idempotent — an offer already archived is simply not matched by the WHERE clause.
+    """
+    from sqlalchemy import update
+
+    from app.core.db import SessionLocal
+    from app.models.enums import SellerOfferStatus
+    from app.models.marketplace import SellerOffer
+
+    company_id = (payload or {}).get("company_id")
+    if company_id is None:
+        return {"archived": 0}
+
+    with SessionLocal() as db:
+        result = db.execute(
+            update(SellerOffer)
+            .where(
+                SellerOffer.company_id == company_id,
+                SellerOffer.status == SellerOfferStatus.approved,
+            )
+            .values(status=SellerOfferStatus.archived, published_at=None)
+        )
+        archived = result.rowcount  # type: ignore[attr-defined]
+        db.commit()
+
+    logger.info("verification.offers_archived", extra={"company_id": company_id, "count": archived})
+    return {"archived": archived}
+
+
+# Register the COMPANY_SUSPENDED → archive-offers consumer (idempotent; see events.py).
+def _register_consumers() -> None:
+    from app.services import event_types
+    from app.tasks.events import CONSUMERS
+
+    if archive_company_offers not in CONSUMERS.get(event_types.COMPANY_SUSPENDED, []):
+        CONSUMERS[event_types.COMPANY_SUSPENDED].append(archive_company_offers)
+
+
+_register_consumers()
