@@ -51,6 +51,7 @@ from app.api.health import router as health_router
 from app.api.moderation import router as moderation_router
 from app.api.offer_requests import router as offer_requests_router
 from app.api.portal.auth import router as portal_auth_router
+from app.api.portal.companies import router as portal_companies_router
 from app.api.prices import router as prices_router
 from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
@@ -194,6 +195,7 @@ def create_app() -> FastAPI:
     application.include_router(telegram_webhook_router, prefix="/api/v1")
     # ── portal (client cabinet — passwordless OTP accounts, R1 W3) ─────────────
     application.include_router(portal_auth_router, prefix="/api/v1")
+    application.include_router(portal_companies_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.
