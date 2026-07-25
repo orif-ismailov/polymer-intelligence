@@ -61,6 +61,10 @@ class ProfileNotEditable(Exception):
     """The company profile can't be edited in its current status."""
 
 
+class IdentityLocked(Exception):
+    """A requisite frozen by an E-IMZO signature (R3) cannot be edited by hand."""
+
+
 class InvalidCompanyTransition(Exception):
     """The requested company status transition is not allowed."""
 
@@ -219,6 +223,9 @@ _EDITABLE_FIELDS = frozenset(
     {"legal_name", "short_name", "legal_form", "legal_address", "director_name"}
 )
 
+# Requisites filled+frozen by an E-IMZO signature (R3): rejected once identity_locked.
+_EIMZO_LOCKED_FIELDS = frozenset({"legal_name", "director_name"})
+
 
 def _assert_profile_editable(db: Session, company: Company) -> None:
     """Editable only while draft, or while a submitted case is back in needs_info."""
@@ -241,8 +248,17 @@ def _assert_profile_editable(db: Session, company: Company) -> None:
 def update_profile(
     db: Session, company: Company, account: UserAccount, **fields: object
 ) -> Company:
-    """Patch declared profile fields (draft / needs_info only); emit COMPANY_PROFILE_UPDATED."""
+    """Patch declared profile fields (draft / needs_info only); emit COMPANY_PROFILE_UPDATED.
+
+    Requisites frozen by an E-IMZO signature (R3) reject a hand PATCH: changing
+    legal_name/director_name on an identity_locked company raises IdentityLocked.
+    """
     _assert_profile_editable(db, company)
+    if company.identity_locked:
+        for key in _EIMZO_LOCKED_FIELDS:
+            new_value = fields.get(key)
+            if new_value is not None and new_value != getattr(company, key):
+                raise IdentityLocked(key)
     changed: dict[str, object] = {}
     for key, value in fields.items():
         if key in _EDITABLE_FIELDS and value is not None:

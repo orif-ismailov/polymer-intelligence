@@ -220,6 +220,10 @@ def update_company(
         company_service.update_profile(db, company, account, **body.model_dump(exclude_none=True))
     except company_service.ProfileNotEditable as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Profile not editable now") from exc
+    except company_service.IdentityLocked as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="identity_locked"
+        ) from exc
     db.commit()
     return _detail_out(db, company)
 

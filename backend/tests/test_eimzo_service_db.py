@@ -157,6 +157,30 @@ def test_valid_signature_auto_approves(sf, monkeypatch) -> None:  # noqa: ANN001
 
 
 @requires_real_db
+def test_locked_requisites_reject_manual_patch(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.services import company_service, eimzo_service, verification_service  # noqa: PLC0415
+
+    _patch(monkeypatch, result=_result())
+    with sf() as db:
+        account, company = _company(db)
+        redis_client = FakeRedis()
+        eimzo_service.issue_challenge(redis_client, company.id, account.id)
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        # send the pending_review case back to needs_info so the profile is editable
+        verification_service.request_info(db, outcome.case, note="need more")
+        db.commit()
+
+        # legal_name / director_name are frozen by the signature even while editable
+        with pytest.raises(company_service.IdentityLocked):
+            company_service.update_profile(db, company, account, legal_name="Hacked LLC")
+        db.rollback()
+        # a non-locked field (short_name) is still editable
+        company_service.update_profile(db, company, account, short_name="Polymer")
+        db.commit()
+        assert company.short_name == "Polymer"
+
+
+@requires_real_db
 def test_valid_signature_pending_review_when_auto_approve_off(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.models.companies import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
