@@ -460,5 +460,36 @@
     "analysis": "Analysis",
     "recommendation": "Recommendation",
     "readSource": "Read at the source →"
+  },
+  "notifications": {
+    "subtitle": "Updates on your requests, inquiries, offers and verification",
+    "markAllRead": "Mark all read",
+    "viewAll": "View all",
+    "empty": "No notifications",
+    "emptyBody": "You're all caught up.",
+    "request_status": {
+      "title": "Request update",
+      "body": "Request {{number}} was updated"
+    },
+    "inquiry_approved": {
+      "title": "New inquiry",
+      "body": "An approved inquiry arrived on your offer"
+    },
+    "inquiry_reply": {
+      "title": "Inquiry update",
+      "body": "There's an update on your inquiry"
+    },
+    "verification_decided": {
+      "title": "Verification",
+      "body": "Your company's verification status changed"
+    },
+    "offer_moderated": {
+      "title": "Offer moderation",
+      "body": "Your offer's status was updated"
+    },
+    "news_breaking": {
+      "title": "Breaking news",
+      "body": "{{headline}}"
+    }
   }
 }

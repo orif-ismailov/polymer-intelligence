@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
+import { NotificationBell } from "@/features/notification-center";
 import { CompanySwitcher } from "@/features/switch-company";
 
 interface TopbarProps {
@@ -31,6 +32,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         </Link>
 
         <div className="ml-auto flex items-center gap-3">
+          <NotificationBell />
           <CompanySwitcher />
         </div>
       </div>

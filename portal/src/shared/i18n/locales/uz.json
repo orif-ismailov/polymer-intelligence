@@ -460,5 +460,36 @@
     "analysis": "Tahlil",
     "recommendation": "Tavsiya",
     "readSource": "Manbada o'qish →"
+  },
+  "notifications": {
+    "subtitle": "Arizalar, so'rovlar, takliflar va tekshiruv bo'yicha yangilanishlar",
+    "markAllRead": "Hammasini o'qilgan qilish",
+    "viewAll": "Barchasini ko'rish",
+    "empty": "Bildirishnomalar yo'q",
+    "emptyBody": "Hammasi o'qilgan.",
+    "request_status": {
+      "title": "Ariza yangilandi",
+      "body": "{{number}} arizasi yangilandi"
+    },
+    "inquiry_approved": {
+      "title": "Yangi so'rov",
+      "body": "Taklifingizga tasdiqlangan so'rov keldi"
+    },
+    "inquiry_reply": {
+      "title": "So'rov yangilandi",
+      "body": "So'rovingiz bo'yicha yangilanish bor"
+    },
+    "verification_decided": {
+      "title": "Tekshiruv",
+      "body": "Kompaniyangiz tekshiruv holati o'zgardi"
+    },
+    "offer_moderated": {
+      "title": "Taklif moderatsiyasi",
+      "body": "Taklifingiz holati yangilandi"
+    },
+    "news_breaking": {
+      "title": "Shoshilinch yangilik",
+      "body": "{{headline}}"
+    }
   }
 }
