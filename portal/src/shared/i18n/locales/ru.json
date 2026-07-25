@@ -87,7 +87,10 @@
     "quickActions": "Быстрые действия",
     "createCompany": "Создать компанию",
     "goToVerification": "К статусу верификации",
-    "publishOffer": "Опубликовать предложение"
+    "publishOffer": "Опубликовать предложение",
+    "activeRequests": "Активные заявки",
+    "unread": "Непрочитанные",
+    "latestNews": "Последние новости"
   },
   "companies": {
     "title": "Мои компании",

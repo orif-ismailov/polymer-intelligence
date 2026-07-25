@@ -87,7 +87,10 @@
     "quickActions": "Quick actions",
     "createCompany": "Create company",
     "goToVerification": "Go to verification status",
-    "publishOffer": "Publish an offer"
+    "publishOffer": "Publish an offer",
+    "activeRequests": "Active requests",
+    "unread": "Unread",
+    "latestNews": "Latest news"
   },
   "companies": {
     "title": "My companies",

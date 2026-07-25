@@ -87,7 +87,10 @@
     "quickActions": "Tezkor amallar",
     "createCompany": "Kompaniya yaratish",
     "goToVerification": "Verifikatsiya holatiga",
-    "publishOffer": "Taklif chop etish"
+    "publishOffer": "Taklif chop etish",
+    "activeRequests": "Faol arizalar",
+    "unread": "O'qilmagan",
+    "latestNews": "So'nggi yangiliklar"
   },
   "companies": {
     "title": "Mening kompaniyalarim",

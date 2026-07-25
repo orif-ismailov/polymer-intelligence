@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 
 import { useAuthStore } from "@/entities/account";
 import { CompanyStatusBadge, useActiveCompany } from "@/entities/company";
+import { useNewsArticles } from "@/entities/news";
+import { useUnreadCount } from "@/entities/notification";
+import { useRequests } from "@/entities/request";
 import { CaseStatusBadge } from "@/entities/verification";
 import {
   Card,
@@ -13,6 +16,8 @@ import {
   LinkButton,
   LoadingView,
 } from "@/shared/ui";
+
+const ACTIVE_REQUEST_STATUSES = new Set(["new", "viewed", "in_progress", "offer_sent"]);
 
 interface QuickCardProps {
   to: string;
@@ -32,10 +37,32 @@ function QuickCard({ to, title, hint }: QuickCardProps) {
   );
 }
 
+function StatCard({ to, label, value }: { to: string; label: string; value: number | string }) {
+  return (
+    <Link
+      to={to}
+      className="block rounded-lg border border-border bg-surface p-4 transition-colors hover:border-brand-line hover:bg-surface-2"
+    >
+      <p className="text-2xl font-semibold text-text">{value}</p>
+      <p className="mt-0.5 text-sm text-text-muted">{label}</p>
+    </Link>
+  );
+}
+
 export function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const account = useAuthStore((s) => s.account);
   const { activeCompany, isLoading } = useActiveCompany();
+  const companyId = activeCompany?.id ?? null;
+
+  const requests = useRequests(companyId);
+  const unread = useUnreadCount();
+  const news = useNewsArticles({ lang: i18n.language });
+
+  const activeRequests =
+    requests.data?.filter((r) => ACTIVE_REQUEST_STATUSES.has(r.status)).length ?? 0;
+  const unreadCount = unread.data?.count ?? 0;
+  const latestNews = (news.data ?? []).slice(0, 3);
 
   const greeting = account?.name
     ? t("home.welcome", { name: account.name })
@@ -48,9 +75,12 @@ export function HomePage() {
         <p className="mt-1 text-sm text-text-muted">{t("home.title")}</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <QuickCard to="/companies" title={t("home.companiesCard")} hint={t("home.companiesCardHint")} />
-        <QuickCard to="/offers" title={t("home.offersCard")} hint={t("home.offersCardHint")} />
+      {/* R2 stat cards — assembled from existing endpoints */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard to="/market" label={t("nav.market")} value="→" />
+        <StatCard to="/requests" label={t("home.activeRequests")} value={activeRequests} />
+        <StatCard to="/inquiries" label={t("nav.inquiries")} value="→" />
+        <StatCard to="/notifications" label={t("home.unread")} value={unreadCount} />
       </div>
 
       {isLoading ? (
@@ -98,6 +128,34 @@ export function HomePage() {
           action={<LinkButton to="/companies/new/1">{t("home.createCompany")}</LinkButton>}
         />
       )}
+
+      {/* Latest news */}
+      {latestNews.length > 0 ? (
+        <Card>
+          <CardHeader className="flex items-center justify-between">
+            <CardTitle>{t("home.latestNews")}</CardTitle>
+            <Link to="/news" className="text-sm text-accent hover:underline">
+              {t("notifications.viewAll")}
+            </Link>
+          </CardHeader>
+          <CardBody className="space-y-2">
+            {latestNews.map((a) => (
+              <Link
+                key={a.id}
+                to={`/news/${a.id}`}
+                className="block rounded-md border border-border px-3 py-2 text-sm hover:border-accent"
+              >
+                {a.headline}
+              </Link>
+            ))}
+          </CardBody>
+        </Card>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <QuickCard to="/companies" title={t("home.companiesCard")} hint={t("home.companiesCardHint")} />
+        <QuickCard to="/offers" title={t("home.offersCard")} hint={t("home.offersCardHint")} />
+      </div>
     </div>
   );
 }
