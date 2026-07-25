@@ -40,6 +40,7 @@ export interface CompanyDetail extends CompanySummary {
   legal_form: string | null;
   legal_address: string | null;
   director_name: string | null;
+  identity_locked: boolean;
   reverification_due_at: string | null;
   roles: CompanyRole[];
   bank_accounts: BankAccount[];

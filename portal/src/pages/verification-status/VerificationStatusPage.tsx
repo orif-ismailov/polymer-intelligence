@@ -2,8 +2,9 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 import { useCompany } from "@/entities/company";
+import { EimzoSignButton } from "@/features/eimzo-sign";
 import { CaseStatusPanel } from "@/widgets/case-status-panel";
-import { ErrorView, LinkButton, LoadingView } from "@/shared/ui";
+import { Alert, ErrorView, LinkButton, LoadingView } from "@/shared/ui";
 import { ApiError } from "@/shared/api";
 
 export function VerificationStatusPage() {
@@ -33,6 +34,9 @@ export function VerificationStatusPage() {
   if (!company) return null;
 
   const displayName = company.legal_name ?? company.short_name ?? company.tax_id;
+  const canSignEimzo =
+    !company.identity_locked &&
+    (company.status === "draft" || company.status === "pending_verification");
 
   return (
     <div className="space-y-5">
@@ -47,6 +51,30 @@ export function VerificationStatusPage() {
           {t("company.detailsTitle")}
         </LinkButton>
       </div>
+
+      {company.identity_locked ? (
+        <Alert tone="success" title={t("eimzo.confirmedBadge")}>
+          <span data-testid="eimzo-confirmed">
+            {t("eimzo.confirmedBody", {
+              name: company.director_name ?? displayName,
+            })}
+          </span>
+        </Alert>
+      ) : canSignEimzo ? (
+        <div
+          className="flex flex-col gap-2 rounded-md border border-dashed border-border bg-surface-2/40 p-4 sm:flex-row sm:items-center sm:justify-between"
+          data-testid="eimzo-offer"
+        >
+          <div>
+            <p className="text-sm font-medium text-text">{t("eimzo.offerTitle")}</p>
+            <p className="mt-0.5 text-xs text-text-muted">{t("eimzo.offerBody")}</p>
+          </div>
+          <EimzoSignButton
+            companyId={company.id}
+            onConfirmed={() => void query.refetch()}
+          />
+        </div>
+      ) : null}
 
       <CaseStatusPanel companyId={company.id} fallbackCase={company.case ?? company.active_case} />
     </div>

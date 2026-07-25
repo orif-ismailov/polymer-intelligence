@@ -105,6 +105,7 @@ class CompanyDetailOut(BaseModel):
     legal_address: str | None = None
     director_name: str | None = None
     status: str
+    identity_locked: bool = False
     verified_at: datetime.datetime | None = None
     reverification_due_at: datetime.datetime | None = None
     roles: list[BusinessRoleOut] = Field(default_factory=list)

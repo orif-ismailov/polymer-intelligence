@@ -154,6 +154,8 @@
       "subtitle": "Provide the core details of the legal entity.",
       "eimzo": "Verify via E-IMZO",
       "eimzoSoon": "soon",
+      "eimzoLead": "Verify the company via E-IMZO",
+      "eimzoHint": "Sign with your e-signature key — the requisites fill and lock automatically.",
       "taxIdHint": "Uzbekistan Tax ID — 9 digits.",
       "taxIdInvalid": "Tax ID must be 9 digits"
     },
@@ -218,12 +220,54 @@
       "tax_id_format": "Tax ID format",
       "bank_requisites": "Bank requisites",
       "documents_complete": "Documents complete",
-      "manual_kyb": "Manual review (KYB)"
+      "manual_kyb": "Manual review (KYB)",
+      "eimzo_signature": "E-IMZO signature"
     },
     "checkDetail": {
       "empty": "No additional information.",
       "reason": "Reason",
       "message": "Note"
+    }
+  },
+  "eimzo": {
+    "title": "Verify via E-IMZO",
+    "subtitle": "Sign the request with the company's e-signature key.",
+    "cta": "Verify via E-IMZO",
+    "retry": "Retry",
+    "done": "Done",
+    "selectCert": "Choose the company key:",
+    "noCerts": "No e-signature keys found. Insert the token and retry.",
+    "confirmedBadge": "Verified with E-IMZO",
+    "confirmedBody": "Identity confirmed by digital signature: {{name}}.",
+    "offerTitle": "Verify the company via E-IMZO",
+    "offerBody": "Sign — the requisites are confirmed automatically.",
+    "progress": {
+      "probing": "Checking the E-IMZO module…",
+      "listing": "Loading the key list…",
+      "signing": "Sign the request in the E-IMZO window…",
+      "verifying": "Verifying the signature…"
+    },
+    "moduleMissing": {
+      "title": "E-IMZO module not found",
+      "body": "Install E-IMZO on your computer and launch the app, then retry.",
+      "link_eimzo": "Download E-IMZO (e-imzo.uz)",
+      "link_soliq": "Instructions (my.soliq.uz)",
+      "desktopHint": "Signing is available only on a computer with the E-IMZO module installed."
+    },
+    "success": {
+      "title": "Signature accepted",
+      "body": "Company verified ({{holder}})."
+    },
+    "errors": {
+      "title": "Verification failed",
+      "unavailable": "E-IMZO service is unavailable. Submit the company for manual verification.",
+      "mismatch": "The certificate INN does not match the company Tax ID.",
+      "expired": "The request expired. Please retry.",
+      "already_registered": "A company with this Tax ID is already registered.",
+      "signature_invalid": "The signature is invalid.",
+      "cert_revoked": "The certificate is revoked.",
+      "sign_failed": "Could not create the signature in the E-IMZO module.",
+      "unknown": "Something went wrong. Please retry."
     }
   },
   "offers": {

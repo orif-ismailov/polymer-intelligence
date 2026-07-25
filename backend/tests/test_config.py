@@ -227,6 +227,10 @@ class TestEimzoSettings:
         settings = _make_settings(EIMZO_SERVER_URL="http://localhost:9090")
         assert settings.EIMZO_SERVER_URL == "http://localhost:9090"
 
+    def test_eimzo_stub_defaults_false(self) -> None:
+        settings = _make_settings()
+        assert settings.EIMZO_STUB is False
+
 
 class TestCiEnvContract:
     """Regression tests asserting the CI workflow's S3 env key matches Settings.S3_ENDPOINT.

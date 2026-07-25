@@ -135,6 +135,7 @@ def _detail_out(db: Session, company: Company) -> CompanyDetailOut:
         legal_address=company.legal_address,
         director_name=company.director_name,
         status=str(company.status),
+        identity_locked=company.identity_locked,
         verified_at=company.verified_at,
         reverification_due_at=company.reverification_due_at,
         roles=[BusinessRoleOut(role=str(r.role), status=str(r.status)) for r in company.business_roles],

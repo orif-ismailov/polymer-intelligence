@@ -383,15 +383,18 @@ def verify(
     # Record the eimzo_signature check (confidence tier: method=eimzo).
     holder_masked = _mask_pinfl(signer.pinfl)
     eimzo_check = _get_check(db, case.id, VerificationCheckType.eimzo_signature)
+    now = company_service.now_utc()
     if eimzo_check is not None:
         eimzo_check.status = VerificationCheckStatus.passed
-        eimzo_check.finished_at = company_service.now_utc()
+        eimzo_check.finished_at = now
         eimzo_check.result = {
             "method": "eimzo",
             "org_inn": _mask_inn(signer.org_inn),
             "holder": holder_masked,
+            "holder_name": signer.full_name,  # org director (shown to own members)
             "position": signer.position,
             "serial": signer.serial_number,
+            "signed_at": now.isoformat(),
         }
     db.flush()
 

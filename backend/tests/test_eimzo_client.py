@@ -115,6 +115,31 @@ def test_4xx_is_domain_failure_not_outage() -> None:
     assert breaker.is_open() is False  # a 4xx does not trip the breaker
 
 
+def test_stub_verify_roundtrip() -> None:
+    import base64 as _b64
+    import json as _json
+
+    from app.integrations.eimzo.client import _stub_verify
+
+    blob = _b64.b64encode(
+        _json.dumps({"challenge": "chal", "tin": "301234567", "name": "IVANOV"}).encode()
+    ).decode()
+    ok = _stub_verify(blob, "chal")
+    assert ok.ok is True
+    assert ok.signer is not None and ok.signer.org_inn == "301234567"
+
+    # wrong challenge → mismatch
+    assert _stub_verify(blob, "other").ok is False
+    # garbage → invalid
+    assert _stub_verify("!!not-base64!!", "chal").ok is False
+    # revoked flag honoured
+    revoked_blob = _b64.b64encode(
+        _json.dumps({"challenge": "c", "tin": "1", "revoked": True}).encode()
+    ).decode()
+    revoked = _stub_verify(revoked_blob, "c")
+    assert revoked.ok is False and revoked.revoked is True
+
+
 class _FakeSession:
     """Minimal session context manager capturing added rows + commits."""
 

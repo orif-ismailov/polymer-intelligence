@@ -20,6 +20,7 @@ export const ALWAYS_REQUIRED_DOCS: readonly DocumentKind[] = ["registration_cert
 /** Deep-link map: which wizard step a failing verification check points back to. */
 export const CHECK_TO_STEP: Record<string, number> = {
   tax_id_format: 1,
+  eimzo_signature: 1,
   bank_requisites: 3,
   documents_complete: 4,
   manual_kyb: 5,

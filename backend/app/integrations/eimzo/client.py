@@ -229,6 +229,42 @@ def get_eimzo_client() -> EimzoClient:
     return _client
 
 
+def _stub_verify(pkcs7_b64: str, challenge: str) -> EimzoVerifyResult:
+    """DEV/DEMO synthetic verification (settings.EIMZO_STUB) — no sidecar, no crypto.
+
+    The stub CAPIWS bridge signs by base64-encoding a JSON blob describing the
+    signer; here we decode it and enforce the same challenge-match / revocation
+    rules the real sidecar would, so the full flow is exercisable end-to-end.
+    """
+    import json  # noqa: PLC0415
+
+    try:
+        blob = json.loads(base64.b64decode(pkcs7_b64))
+    except (ValueError, TypeError):
+        return EimzoVerifyResult(ok=False, error="signature_invalid")
+    if not isinstance(blob, dict) or blob.get("challenge") != challenge:
+        return EimzoVerifyResult(ok=False, error="challenge_mismatch")
+    signer = EimzoSigner(
+        org_name=blob.get("org_name"),
+        org_inn=blob.get("tin"),
+        full_name=blob.get("name"),
+        pinfl=blob.get("pinfl"),
+        position=blob.get("position"),
+        serial_number=blob.get("serial"),
+    )
+    if blob.get("revoked"):
+        return EimzoVerifyResult(ok=False, signer=signer, revoked=True, error="cert_revoked")
+    return EimzoVerifyResult(ok=True, signer=signer, revoked=False)
+
+
 def verify_pkcs7(pkcs7_b64: str, challenge: str) -> EimzoVerifyResult:
-    """Module entry point (see ARCHITECTURE §12) — delegates to the singleton."""
+    """Module entry point (see ARCHITECTURE §12) — delegates to the singleton.
+
+    In EIMZO_STUB mode (dev/demo only) it returns a synthetic result instead of
+    calling the sidecar.
+    """
+    from app.core.config import settings  # noqa: PLC0415 — lazy: import-safe module
+
+    if settings.EIMZO_STUB:
+        return _stub_verify(pkcs7_b64, challenge)
     return get_eimzo_client().verify_pkcs7(pkcs7_b64, challenge)

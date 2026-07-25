@@ -133,6 +133,11 @@ class Settings(BaseSettings):
     EIMZO_SERVER_URL: str = "http://eimzo-server:8080"
     # Lifetime of a one-time signing challenge stored in Redis (single-use).
     EIMZO_CHALLENGE_TTL_SECONDS: int = 300
+    # DEV/DEMO ONLY — when true the gateway does NOT call the sidecar; it verifies a
+    # synthetic PKCS#7 (a base64 JSON blob produced by the stub CAPIWS bridge) so the
+    # full onboarding flow is exercisable without the UNICON artifact (e2e, dev stack
+    # demo). MUST stay false in production (real O'zDSt verification via the sidecar).
+    EIMZO_STUB: bool = False
 
     # ── CORS ──────────────────────────────────────────────────────────────────
     # Explicit non-wildcard list of allowed origins for credentialed CORS requests.

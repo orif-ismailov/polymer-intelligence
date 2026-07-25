@@ -33,6 +33,7 @@ export const CHECK_TYPES = [
   "bank_requisites",
   "documents_complete",
   "manual_kyb",
+  "eimzo_signature",
 ] as const;
 export type CheckType = (typeof CHECK_TYPES)[number];
 

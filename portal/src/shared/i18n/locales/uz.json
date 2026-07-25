@@ -154,6 +154,8 @@
       "subtitle": "Yuridik shaxsning asosiy ma’lumotlarini kiriting.",
       "eimzo": "E-IMZO orqali tasdiqlash",
       "eimzoSoon": "tez orada",
+      "eimzoLead": "Kompaniyani E-IMZO orqali tasdiqlash",
+      "eimzoHint": " EDS kaliti bilan imzolang — rekvizitlar avtomatik to‘ldiriladi va qulflanadi.",
       "taxIdHint": "O‘zbekiston STIR — 9 ta raqam.",
       "taxIdInvalid": "STIR 9 ta raqamdan iborat bo‘lishi kerak"
     },
@@ -218,12 +220,54 @@
       "tax_id_format": "STIR formati",
       "bank_requisites": "Bank rekvizitlari",
       "documents_complete": "Hujjatlar to‘plami",
-      "manual_kyb": "Qo‘lda tekshiruv (KYB)"
+      "manual_kyb": "Qo‘lda tekshiruv (KYB)",
+      "eimzo_signature": "E-IMZO imzosi"
     },
     "checkDetail": {
       "empty": "Qo‘shimcha ma’lumot yo‘q.",
       "reason": "Sabab",
       "message": "Izoh"
+    }
+  },
+  "eimzo": {
+    "title": "E-IMZO orqali tasdiqlash",
+    "subtitle": "So‘rovni kompaniyaning EDS kaliti bilan imzolang.",
+    "cta": "E-IMZO orqali tasdiqlash",
+    "retry": "Qayta urinish",
+    "done": "Tayyor",
+    "selectCert": "Kompaniya kalitini tanlang:",
+    "noCerts": "EDS kalitlari topilmadi. Tashuvchini ulang va qayta urinib ko‘ring.",
+    "confirmedBadge": "EDS bilan tasdiqlangan",
+    "confirmedBody": "Shaxs elektron imzo bilan tasdiqlandi: {{name}}.",
+    "offerTitle": "Kompaniyani E-IMZO orqali tasdiqlash",
+    "offerBody": "Imzolang — rekvizitlar avtomatik tasdiqlanadi.",
+    "progress": {
+      "probing": "E-IMZO moduli tekshirilmoqda…",
+      "listing": "Kalitlar ro‘yxati yuklanmoqda…",
+      "signing": "So‘rovni E-IMZO oynasida imzolang…",
+      "verifying": "Imzo tekshirilmoqda…"
+    },
+    "moduleMissing": {
+      "title": "E-IMZO moduli topilmadi",
+      "body": "E-IMZO ni kompyuterga o‘rnating va ilovani ishga tushiring, so‘ng qayta urinib ko‘ring.",
+      "link_eimzo": "E-IMZO ni yuklab olish (e-imzo.uz)",
+      "link_soliq": "Yo‘riqnoma (my.soliq.uz)",
+      "desktopHint": "Imzolash faqat E-IMZO moduli o‘rnatilgan kompyuterda mavjud."
+    },
+    "success": {
+      "title": "Imzo qabul qilindi",
+      "body": "Kompaniya tasdiqlandi ({{holder}})."
+    },
+    "errors": {
+      "title": "Tasdiqlab bo‘lmadi",
+      "unavailable": "E-IMZO xizmati mavjud emas. Kompaniyani qo‘lda verifikatsiyaga yuboring.",
+      "mismatch": "Sertifikat STIRi kompaniya STIRiga mos kelmaydi.",
+      "expired": "So‘rov muddati tugadi. Qayta urinib ko‘ring.",
+      "already_registered": "Bu STIR bilan kompaniya allaqachon ro‘yxatdan o‘tgan.",
+      "signature_invalid": "Imzo yaroqsiz.",
+      "cert_revoked": "Sertifikat bekor qilingan.",
+      "sign_failed": "E-IMZO modulida imzo yaratib bo‘lmadi.",
+      "unknown": "Xatolik yuz berdi. Qayta urinib ko‘ring."
     }
   },
   "offers": {
