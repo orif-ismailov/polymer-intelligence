@@ -9,10 +9,27 @@ stay hidden, exactly as in the Mini App.
 
 from __future__ import annotations
 
-from app.schemas.marketplace import CatalogOfferOut, OfferRequestOut
+from app.schemas.marketplace import (
+    CatalogOfferOut,
+    OfferRequestCreate,
+    OfferRequestOut,
+    OfferRequestUpdate,
+)
 
 
 class PortalMarketOfferDetail(CatalogOfferOut):
     """A market offer detail card + the caller company's inquiries on this offer."""
 
     my_inquiries: list[OfferRequestOut] = []
+
+
+class PortalInquiryCreate(OfferRequestCreate):
+    """Body for POST /portal/market/{offer_id}/inquiries — buyer acts as a company."""
+
+    company_id: int
+
+
+class PortalInquiryUpdate(OfferRequestUpdate):
+    """Body for PATCH /portal/inquiries/{id} — the sending company revises it."""
+
+    company_id: int

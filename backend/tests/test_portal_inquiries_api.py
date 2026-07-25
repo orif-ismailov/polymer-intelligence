@@ -1,0 +1,186 @@
+"""Portal inquiries API tests (R2 W3 T3.2).
+
+Route reg DB-free; the rest against test_polymer (guarded): send an inquiry
+(pending → moderation), list sent/incoming, cross-company isolation (member of A
+cannot list B's inquiries — 404), and edit-resubmit re-entering moderation.
+REQUEST_NOTIFY_CHAT_ID is unset in tests, so the group-notify enqueue no-ops.
+"""
+
+from __future__ import annotations
+
+import pytest
+import sqlalchemy as sa
+from fastapi.testclient import TestClient
+
+from tests._verification_db import (
+    clean,
+    make_account,
+    make_company,
+    make_engine,
+    make_seller_offer,
+    migrate_head,
+    requires_real_db,
+    session_factory,
+)
+
+_BASE = "/api/v1/portal"
+
+
+def test_inquiry_routes_registered() -> None:
+    from app.api.portal.inquiries import router  # noqa: PLC0415
+
+    paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
+    assert "/portal/market/{offer_id}/inquiries" in paths
+    assert "/portal/inquiries" in paths
+    assert "/portal/inquiries/incoming" in paths
+    assert "/portal/inquiries/{inquiry_id}" in paths
+
+
+@pytest.fixture(scope="module")
+def engine() -> sa.Engine:
+    migrate_head()
+    return make_engine()
+
+
+@pytest.fixture
+def api(engine: sa.Engine):  # noqa: ANN201
+    from unittest.mock import patch  # noqa: PLC0415
+
+    from app.core.db import get_db  # noqa: PLC0415
+    from app.main import create_app  # noqa: PLC0415
+
+    clean(engine)
+    session = session_factory(engine)
+    app = create_app()
+
+    def _override_db():  # noqa: ANN202
+        db = session()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = _override_db
+    with patch("app.api.health._check_redis", return_value="ok"), TestClient(app) as client:
+        yield client, session
+    clean(engine)
+
+
+def _auth(account_id: int) -> dict[str, str]:
+    from app.core.security import create_portal_access_token  # noqa: PLC0415
+
+    return {"Authorization": f"Bearer {create_portal_access_token(subject=str(account_id))}"}
+
+
+@requires_real_db
+def test_send_inquiry_creates_pending(api) -> None:  # noqa: ANN001
+    client, session = api
+    with session() as db:
+        seller_owner = make_account(db, "+998900005001")
+        selling_co = make_company(db, seller_owner, tax_id="315000001")
+        offer = make_seller_offer(db, company=selling_co)
+        buyer_owner = make_account(db, "+998900005002")
+        buyer_co = make_company(db, buyer_owner, tax_id="315000002")
+        db.commit()
+        buyer_owner_id, buyer_co_id, offer_id = buyer_owner.id, buyer_co.id, offer.id
+
+    resp = client.post(
+        f"{_BASE}/market/{offer_id}/inquiries",
+        json={"company_id": buyer_co_id, "quantity": "15.000", "message": "please advise"},
+        headers=_auth(buyer_owner_id),
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["status"] == "pending"
+    assert body["offer_id"] == offer_id
+    # buyer-facing view — no moderation internals leak
+    assert "moderation_note" not in body
+    assert "moderated_by" not in body
+
+    sent = client.get(
+        f"{_BASE}/inquiries", params={"company_id": buyer_co_id}, headers=_auth(buyer_owner_id)
+    )
+    assert sent.status_code == 200
+    assert len(sent.json()) == 1
+
+
+@requires_real_db
+def test_sent_list_cross_company_isolation(api) -> None:  # noqa: ANN001
+    client, session = api
+    with session() as db:
+        a_owner = make_account(db, "+998900005100")
+        make_company(db, a_owner, tax_id="315000100")
+        b_owner = make_account(db, "+998900005101")
+        company_b = make_company(db, b_owner, tax_id="315000101")
+        db.commit()
+        a_owner_id, company_b_id = a_owner.id, company_b.id
+
+    # A acting, claims B's id → 404 (no cross-company disclosure)
+    resp = client.get(
+        f"{_BASE}/inquiries", params={"company_id": company_b_id}, headers=_auth(a_owner_id)
+    )
+    assert resp.status_code == 404
+
+
+@requires_real_db
+def test_edit_inquiry_reenters_moderation(api) -> None:  # noqa: ANN001
+    client, session = api
+    with session() as db:
+        seller_owner = make_account(db, "+998900005200")
+        selling_co = make_company(db, seller_owner, tax_id="315000200")
+        offer = make_seller_offer(db, company=selling_co)
+        buyer_owner = make_account(db, "+998900005201")
+        buyer_co = make_company(db, buyer_owner, tax_id="315000201")
+        from app.models.enums import OfferRequestStatus  # noqa: PLC0415
+        from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
+        from app.services import offer_request_service  # noqa: PLC0415
+
+        req = offer_request_service.create_company_inquiry(
+            db, buyer_co, buyer_owner, offer, OfferRequestCreate(quantity=None, message="v1"),
+        )
+        # approve it so an edit demonstrably re-enters moderation
+        offer_request_service.moderate_offer_request(db, req, staff_user_id=None, approve=True)
+        db.commit()
+        assert req.status == OfferRequestStatus.approved
+        buyer_owner_id, buyer_co_id, inquiry_id = buyer_owner.id, buyer_co.id, req.id
+
+    resp = client.patch(
+        f"{_BASE}/inquiries/{inquiry_id}",
+        json={"company_id": buyer_co_id, "quantity": None, "message": "v2 revised"},
+        headers=_auth(buyer_owner_id),
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["status"] == "pending"  # re-entered moderation
+
+
+@requires_real_db
+def test_incoming_shows_approved_only(api) -> None:  # noqa: ANN001
+    client, session = api
+    with session() as db:
+        seller_owner = make_account(db, "+998900005300")
+        selling_co = make_company(db, seller_owner, tax_id="315000300")
+        offer = make_seller_offer(db, company=selling_co)
+        buyer_owner = make_account(db, "+998900005301")
+        buyer_co = make_company(db, buyer_owner, tax_id="315000301")
+        from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
+        from app.services import offer_request_service  # noqa: PLC0415
+
+        pending = offer_request_service.create_company_inquiry(
+            db, buyer_co, buyer_owner, offer, OfferRequestCreate(quantity=None, message="pending"),
+        )
+        approved = offer_request_service.create_company_inquiry(
+            db, buyer_co, buyer_owner, offer, OfferRequestCreate(quantity=None, message="approved"),
+        )
+        offer_request_service.moderate_offer_request(db, approved, staff_user_id=None, approve=True)
+        db.commit()
+        _ = pending
+        seller_owner_id, selling_co_id = seller_owner.id, selling_co.id
+
+    resp = client.get(
+        f"{_BASE}/inquiries/incoming",
+        params={"company_id": selling_co_id},
+        headers=_auth(seller_owner_id),
+    )
+    assert resp.status_code == 200
+    msgs = {i["message"] for i in resp.json()}
+    assert msgs == {"approved"}  # pending inquiry stays internal to staff
