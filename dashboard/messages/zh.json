@@ -26,7 +26,8 @@
       "offerRequests": "报价请求",
       "newsAdmin": "新闻（管理）",
       "verification": "验证",
-      "companies": "公司"
+      "companies": "公司",
+      "contracts": "合同"
     },
     "guest": "访客"
   },
@@ -912,6 +913,30 @@
       "distributor": "分销商",
       "laboratory": "实验室",
       "insurance_provider": "保险机构"
+    }
+  },
+  "contracts": {
+    "title": "合同",
+    "subtitle": "电子合同监督（只读）。",
+    "filterAll": "所有状态",
+    "search": "按标题或ID搜索…",
+    "colTitle": "标题",
+    "colParties": "各方",
+    "colStatus": "状态",
+    "empty": "暂无合同",
+    "selectHint": "选择一份合同以查看。",
+    "openDocument": "打开文档",
+    "signatures": "签名",
+    "noSignatures": "暂无签名",
+    "timeline": "时间线",
+    "status": {
+      "draft": "草稿",
+      "pending_counterparty": "等待对方",
+      "pending_signatures": "等待签名",
+      "active": "生效",
+      "declined": "已拒绝",
+      "cancelled": "已取消",
+      "expired": "已过期"
     }
   }
 }

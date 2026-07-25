@@ -26,7 +26,8 @@
       "offerRequests": "درخواست پیشنهاد",
       "newsAdmin": "اخبار (مدیریت)",
       "verification": "احراز هویت",
-      "companies": "شرکت‌ها"
+      "companies": "شرکت‌ها",
+      "contracts": "قراردادها"
     },
     "guest": "مهمان"
   },
@@ -912,6 +913,30 @@
       "distributor": "توزیع‌کننده",
       "laboratory": "آزمایشگاه",
       "insurance_provider": "ارائه‌دهنده بیمه"
+    }
+  },
+  "contracts": {
+    "title": "قراردادها",
+    "subtitle": "نظارت بر قراردادهای الکترونیکی (فقط خواندنی).",
+    "filterAll": "همه وضعیت‌ها",
+    "search": "جستجو بر اساس عنوان یا شناسه…",
+    "colTitle": "عنوان",
+    "colParties": "طرفین",
+    "colStatus": "وضعیت",
+    "empty": "قراردادی وجود ندارد",
+    "selectHint": "برای مشاهده یک قرارداد را انتخاب کنید.",
+    "openDocument": "باز کردن سند",
+    "signatures": "امضاها",
+    "noSignatures": "امضایی نیست",
+    "timeline": "سوابق",
+    "status": {
+      "draft": "پیش‌نویس",
+      "pending_counterparty": "در انتظار طرف مقابل",
+      "pending_signatures": "در انتظار امضا",
+      "active": "فعال",
+      "declined": "رد شده",
+      "cancelled": "لغو شده",
+      "expired": "منقضی شده"
     }
   }
 }

@@ -26,7 +26,8 @@
       "offerRequests": "Teklif talepleri",
       "newsAdmin": "Haberler (yönetici)",
       "verification": "Doğrulama",
-      "companies": "Şirketler"
+      "companies": "Şirketler",
+      "contracts": "Sözleşmeler"
     },
     "guest": "Misafir"
   },
@@ -927,6 +928,30 @@
       "distributor": "Distribütör",
       "laboratory": "Laboratuvar",
       "insurance_provider": "Sigorta sağlayıcı"
+    }
+  },
+  "contracts": {
+    "title": "Sözleşmeler",
+    "subtitle": "Elektronik sözleşme gözetimi (salt okunur).",
+    "filterAll": "Tüm durumlar",
+    "search": "Başlık veya kimliğe göre ara…",
+    "colTitle": "Başlık",
+    "colParties": "Taraflar",
+    "colStatus": "Durum",
+    "empty": "Sözleşme yok",
+    "selectHint": "Görüntülemek için bir sözleşme seçin.",
+    "openDocument": "Belgeyi aç",
+    "signatures": "İmzalar",
+    "noSignatures": "İmza yok",
+    "timeline": "Zaman çizelgesi",
+    "status": {
+      "draft": "Taslak",
+      "pending_counterparty": "Karşı taraf bekleniyor",
+      "pending_signatures": "İmzalar bekleniyor",
+      "active": "Aktif",
+      "declined": "Reddedildi",
+      "cancelled": "İptal edildi",
+      "expired": "Süresi doldu"
     }
   }
 }

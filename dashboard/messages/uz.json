@@ -26,7 +26,8 @@
       "offerRequests": "Taklif so'rovlari",
       "newsAdmin": "Yangiliklar (admin)",
       "verification": "Tekshiruv",
-      "companies": "Kompaniyalar"
+      "companies": "Kompaniyalar",
+      "contracts": "Shartnomalar"
     },
     "guest": "Mehmon"
   },
@@ -927,6 +928,30 @@
       "distributor": "Distribyutor",
       "laboratory": "Laboratoriya",
       "insurance_provider": "Sug‘urta"
+    }
+  },
+  "contracts": {
+    "title": "Shartnomalar",
+    "subtitle": "Elektron shartnomalar nazorati (faqat o‘qish).",
+    "filterAll": "Barcha holatlar",
+    "search": "Nomi yoki ID bo‘yicha qidirish…",
+    "colTitle": "Nomi",
+    "colParties": "Tomonlar",
+    "colStatus": "Holat",
+    "empty": "Shartnomalar yo‘q",
+    "selectHint": "Ko‘rish uchun shartnomani tanlang.",
+    "openDocument": "Hujjatni ochish",
+    "signatures": "Imzolar",
+    "noSignatures": "Imzolar yo‘q",
+    "timeline": "Tarix",
+    "status": {
+      "draft": "Qoralama",
+      "pending_counterparty": "Kontragent kutilmoqda",
+      "pending_signatures": "Imzolar kutilmoqda",
+      "active": "Faol",
+      "declined": "Rad etilgan",
+      "cancelled": "Bekor qilingan",
+      "expired": "Muddati o‘tgan"
     }
   }
 }

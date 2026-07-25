@@ -26,7 +26,8 @@
       "offerRequests": "Запросы предложений",
       "newsAdmin": "Новости (админ)",
       "verification": "Верификация",
-      "companies": "Компании"
+      "companies": "Компании",
+      "contracts": "Договоры"
     },
     "guest": "Гость"
   },
@@ -927,6 +928,30 @@
       "distributor": "Дистрибьютор",
       "laboratory": "Лаборатория",
       "insurance_provider": "Страхование"
+    }
+  },
+  "contracts": {
+    "title": "Договоры",
+    "subtitle": "Оверсайт электронных договоров (только чтение).",
+    "filterAll": "Все статусы",
+    "search": "Поиск по названию или ID…",
+    "colTitle": "Название",
+    "colParties": "Стороны",
+    "colStatus": "Статус",
+    "empty": "Договоров нет",
+    "selectHint": "Выберите договор для просмотра.",
+    "openDocument": "Открыть документ",
+    "signatures": "Подписи",
+    "noSignatures": "Подписей нет",
+    "timeline": "История",
+    "status": {
+      "draft": "Черновик",
+      "pending_counterparty": "Ожидает контрагента",
+      "pending_signatures": "Ожидает подписей",
+      "active": "Активен",
+      "declined": "Отклонён",
+      "cancelled": "Отменён",
+      "expired": "Истёк"
     }
   }
 }

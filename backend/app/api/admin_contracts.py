@@ -11,7 +11,7 @@ import datetime
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import Text, cast, or_, select
 from sqlalchemy.orm import Session
@@ -147,11 +147,14 @@ def get_contract(
 @router.get("/contracts/{contract_id}/document")
 def contract_document(
     contract_id: int,
+    as_: str = Query(default="redirect", alias="as"),
     db: Session = Depends(get_db),
     _staff: StaffUser = Depends(require_analyst_or_admin),
-) -> RedirectResponse:
+) -> Response:
     contract = db.get(Contract, contract_id)
     if contract is None or not contract.generated_document_path:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No document")
     url = storage_service.presign_object(contract.generated_document_path, ttl=600)
+    if as_ == "url":
+        return JSONResponse({"url": url})
     return RedirectResponse(url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)

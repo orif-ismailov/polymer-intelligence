@@ -1126,13 +1126,71 @@ def send_verification_case_to_group(
     return {"status": "ok", "error": None}
 
 
+@celery_app.task(name="send_contract_activated_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_contract_activated_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """Read-only staff awareness card when a contract is signed by both sides.
+
+    Consumer of CONTRACT_ACTIVATED (aggregate_id = contract id). No buttons — R3 has
+    no staff mutation of contracts. Trilingual (ru/uz/tr). Never raises.
+    """
+    contract_id_raw = aggregate_id or (payload or {}).get("contract_id")
+    if contract_id_raw is None:
+        return {"status": "skipped", "error": "no_contract_id"}
+    contract_id = int(contract_id_raw)
+
+    chat_id = _verification_notify_chat_id()
+    if chat_id is None:
+        return {"status": "skipped", "error": "no_chat_id"}
+
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.models.contracts import Contract  # noqa: PLC0415
+
+    def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
+        c = session.get(Company, company_id)
+        return (c.legal_name or c.short_name or c.tax_id) if c is not None else str(company_id)
+
+    try:
+        with Session(engine) as session:
+            contract = session.get(Contract, contract_id)
+            if contract is None:
+                return {"status": "error", "error": f"contract {contract_id} not found"}
+            initiator = _name(session, contract.initiator_company_id)
+            counterparty = _name(session, contract.counterparty_company_id)
+            lines = [
+                "✅ Договор подписан обеими сторонами"
+                " · Shartnoma ikkala tomon tomonidan imzolandi"
+                " · Sözleşme iki tarafça imzalandı",
+                "",
+                f"📄 {contract.title}",
+                f"🏢 {initiator} → {counterparty}",
+                f"🆔 {contract.public_id}",
+            ]
+            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+    except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
+        logger.error("notify.contract_activated.error", extra={"contract_id": contract_id, "error": str(exc)})
+        return {"status": "error", "error": str(exc)}
+
+    logger.info("notify.contract_activated.sent", extra={"contract_id": contract_id, "chat_id": chat_id})
+    return {"status": "ok", "error": None}
+
+
 def _register_consumers() -> None:
-    """Wire VERIFICATION_CASE_SUBMITTED → the team group card (see events.CONSUMERS)."""
+    """Wire outbox events → team group cards (see events.CONSUMERS)."""
     from app.services import event_types  # noqa: PLC0415
     from app.tasks.events import CONSUMERS  # noqa: PLC0415
 
     if send_verification_case_to_group not in CONSUMERS.get(event_types.VERIFICATION_CASE_SUBMITTED, []):
         CONSUMERS[event_types.VERIFICATION_CASE_SUBMITTED].append(send_verification_case_to_group)
+    if send_contract_activated_to_group not in CONSUMERS.get(event_types.CONTRACT_ACTIVATED, []):
+        CONSUMERS[event_types.CONTRACT_ACTIVATED].append(send_contract_activated_to_group)
 
 
 _register_consumers()
