@@ -322,6 +322,7 @@ class VerificationCheckType(enum.StrEnum):
     bank_requisites = "bank_requisites"
     documents_complete = "documents_complete"
     manual_kyb = "manual_kyb"
+    eimzo_signature = "eimzo_signature"  # R3 — E-IMZO digital-signature identity confirmation
 
 
 class VerificationCheckStatus(enum.StrEnum):

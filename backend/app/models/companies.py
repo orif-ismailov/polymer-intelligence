@@ -19,6 +19,7 @@ import uuid
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     Date,
     DateTime,
     ForeignKey,
@@ -87,6 +88,9 @@ class Company(Base):
     reverification_due_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    identity_locked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )                                                                             # R3: E-IMZO-confirmed requisites are frozen (reject PATCH)
     counterparty_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("counterparties.id"), nullable=True
     )                                                                             # bridge into the intelligence loop

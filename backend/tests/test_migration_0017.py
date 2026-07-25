@@ -80,11 +80,12 @@ class TestRevisionChain:
         assert callable(module.downgrade)
 
     def test_0017_in_single_head_chain(self) -> None:
-        # 0017 was the head at R1; R2 (0018 dual-origin, 0019 market index) now
-        # supersedes it. Assert a single linear head with 0017 an ancestor.
+        # 0017 was the head at R1; later migrations (0018 dual-origin, 0019 market
+        # index, 0020 e-imzo) supersede it. Assert a single linear head with 0017
+        # an ancestor.
         script = _script_dir()
-        assert script.get_heads() == ["0019"], (
-            f"expected a single head 0019, got {script.get_heads()}"
+        assert script.get_heads() == ["0020"], (
+            f"expected a single head 0020, got {script.get_heads()}"
         )
         assert script.get_revision("0018").down_revision == "0017"
 

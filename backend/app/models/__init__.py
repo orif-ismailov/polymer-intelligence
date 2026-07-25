@@ -27,6 +27,7 @@ from app.models.companies import (  # noqa: F401
     CompanyMember,
 )
 from app.models.counterparties import Counterparty, CounterpartyAlias  # noqa: F401
+from app.models.eimzo import CompanyPersonData, SignatureEvidence  # noqa: F401
 from app.models.enums import (  # noqa: F401
     AccountStatus,
     AlertKind,
@@ -63,6 +64,7 @@ from app.models.enums import (
     CompanyBusinessRole as CompanyBusinessRoleEnum,
 )
 from app.models.events import DomainEvent  # noqa: F401
+from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.marketplace import (  # noqa: F401
     OfferRequest,
     Seller,
@@ -179,4 +181,8 @@ __all__ = [
     "DomainEvent",
     # Portal notifications (R2)
     "PortalNotification",
+    # E-IMZO evidence + integration gateway (R3)
+    "SignatureEvidence",
+    "CompanyPersonData",
+    "IntegrationCallLog",
 ]
