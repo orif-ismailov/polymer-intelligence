@@ -36,6 +36,7 @@ import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
+from app.api.admin_contracts import router as admin_contracts_router
 from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
@@ -53,6 +54,7 @@ from app.api.moderation import router as moderation_router
 from app.api.offer_requests import router as offer_requests_router
 from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.companies import router as portal_companies_router
+from app.api.portal.contracts import router as portal_contracts_router
 from app.api.portal.eimzo import router as portal_eimzo_router
 from app.api.portal.inquiries import router as portal_inquiries_router
 from app.api.portal.market import router as portal_market_router
@@ -203,6 +205,9 @@ def create_app() -> FastAPI:
     application.include_router(telegram_webhook_router, prefix="/api/v1")
     # ── portal (client cabinet — passwordless OTP accounts, R1 W3) ─────────────
     application.include_router(portal_auth_router, prefix="/api/v1")
+    # Contracts router first: its literal /portal/companies/directory must win over the
+    # companies router's /portal/companies/{company_id} param route.
+    application.include_router(portal_contracts_router, prefix="/api/v1")
     application.include_router(portal_companies_router, prefix="/api/v1")
     application.include_router(portal_eimzo_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
@@ -212,6 +217,7 @@ def create_app() -> FastAPI:
     application.include_router(portal_news_router, prefix="/api/v1")
     application.include_router(portal_notifications_router, prefix="/api/v1")
     application.include_router(admin_verification_router, prefix="/api/v1")
+    application.include_router(admin_contracts_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.

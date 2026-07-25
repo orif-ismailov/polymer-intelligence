@@ -48,3 +48,25 @@ def enforce_daily(
         raw = redis_client.ttl(key)
         ttl = int(raw) if isinstance(raw, int) and raw > 0 else 86400
         raise RateLimited(ttl)
+
+
+# R3 — counterparty directory search (20/min per account).
+DIRECTORY_SEARCH_PER_MIN = 20
+
+
+def enforce_window(
+    redis_client: redis.Redis[str],
+    bucket: str,
+    subject: str | int,
+    limit: int,
+    window_seconds: int,
+) -> None:
+    """Fixed-window counter: `bucket:subject` resets every `window_seconds`."""
+    key = f"rl:{bucket}:{subject}"
+    count = int(redis_client.incr(key))
+    if count == 1:
+        redis_client.expire(key, window_seconds)
+    if count > limit:
+        raw = redis_client.ttl(key)
+        ttl = int(raw) if isinstance(raw, int) and raw > 0 else window_seconds
+        raise RateLimited(ttl)
