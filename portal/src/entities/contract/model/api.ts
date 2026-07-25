@@ -1,4 +1,4 @@
-import { api, resolveDownloadUrl } from "@/shared/api";
+import { api } from "@/shared/api";
 
 import type {
   ContractDetail,
@@ -40,9 +40,11 @@ export const contractApi = {
   sign: (id: number, pkcs7: string): Promise<ContractDetail> =>
     api.post<ContractDetail>(`/portal/contracts/${id}/sign`, { pkcs7 }),
 
+  /** Presigned PDF URL (S3, no auth needed) — safe for an <iframe> or window.open. */
   documentUrl: (id: number): Promise<string> =>
-    resolveDownloadUrl(`/portal/contracts/${id}/document`),
-  bundleUrl: (id: number): Promise<string> => resolveDownloadUrl(`/portal/contracts/${id}/bundle`),
+    api.get<{ url: string }>(`/portal/contracts/${id}/document`, { query: { as: "url" } }).then((r) => r.url),
+  /** The signed bundle is a dynamic zip — fetch it authenticated as a Blob. */
+  bundleBlob: (id: number): Promise<Blob> => api.blob(`/portal/contracts/${id}/bundle`),
 };
 
 export const contractKeys = {

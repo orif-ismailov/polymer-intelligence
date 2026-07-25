@@ -15,7 +15,7 @@ import zipfile
 
 import redis
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -429,13 +429,18 @@ def sign_contract(
 @router.get("/contracts/{contract_id}/document")
 def contract_document(
     contract_id: int,
+    as_: str = Query(default="redirect", alias="as"),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
-) -> RedirectResponse:
+) -> Response:
+    """Presigned PDF. `?as=url` returns {url} (for inline preview — an iframe can't
+    carry the Bearer token); default 307-redirects to the presigned S3 object."""
     contract, _acting, _role = _contract_and_role(db, account, contract_id)
     if not contract.generated_document_path:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No document")
     url = storage_service.presign_object(contract.generated_document_path, ttl=600)
+    if as_ == "url":
+        return JSONResponse({"url": url})
     return RedirectResponse(url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 

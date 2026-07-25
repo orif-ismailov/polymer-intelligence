@@ -219,6 +219,17 @@ export const api = {
   /** Multipart upload; the browser sets the boundary Content-Type itself. */
   upload: <T>(path: string, form: FormData): Promise<T> =>
     request<T>(path, { method: "POST", body: form }),
+
+  /** Authenticated GET returning the raw body as a Blob (dynamic downloads, e.g. zip). */
+  blob: async (path: string): Promise<Blob> => {
+    let res = await rawRequest(path, { method: "GET" });
+    if (res.status === 401) {
+      const refreshed = await refreshOnce();
+      if (refreshed) res = await rawRequest(path, { method: "GET" });
+    }
+    if (!res.ok) throw extractError(res.status, await readBody(res), res.headers);
+    return res.blob();
+  },
 };
 
 /**

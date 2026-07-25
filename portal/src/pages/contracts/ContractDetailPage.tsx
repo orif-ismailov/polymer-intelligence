@@ -72,9 +72,20 @@ export function ContractDetailPage() {
     }
   }
 
-  async function openUrl(getter: () => Promise<string>): Promise<void> {
-    const url = await getter();
-    window.open(url, "_blank", "noopener");
+  async function openPdf(): Promise<void> {
+    window.open(await contractApi.documentUrl(id), "_blank", "noopener");
+  }
+
+  async function downloadBundle(): Promise<void> {
+    const blob = await contractApi.bundleBlob(id);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `contract_${contract?.public_id ?? id}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   const signer: EimzoSigner<ContractDetail> = {
@@ -137,10 +148,10 @@ export function ContractDetailPage() {
           ) : null}
           {contract.status === "active" ? (
             <>
-              <Button onClick={() => void openUrl(() => contractApi.documentUrl(id))} data-testid="contract-download">
+              <Button onClick={() => void openPdf()} data-testid="contract-download">
                 {t("contracts.actions.downloadPdf")}
               </Button>
-              <Button variant="secondary" onClick={() => void openUrl(() => contractApi.bundleUrl(id))}>
+              <Button variant="secondary" onClick={() => void downloadBundle()}>
                 {t("contracts.actions.downloadBundle")}
               </Button>
             </>
