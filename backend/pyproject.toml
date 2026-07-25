@@ -59,6 +59,7 @@ dependencies = [
     "instructor>=1.5,<2.0",
     # telethon: pypi.org/project/telethon (LonamiWebs MTProto userbot client)
     "telethon>=1.36,<2.0",
+    "weasyprint>=69.0",
 ]
 
 [project.optional-dependencies]

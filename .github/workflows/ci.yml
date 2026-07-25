@@ -55,6 +55,16 @@ jobs:
           uv sync --frozen --extra dev
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
+      # WeasyPrint (R3 contract PDF render) needs Pango/Cairo/GDK-Pixbuf + fonts at
+      # runtime; without them the PDF render test skips. Install so it actually runs.
+      - name: Install WeasyPrint system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangocairo-1.0-0 libpangoft2-1.0-0 \
+            libharfbuzz0b libgdk-pixbuf-2.0-0 libcairo2 \
+            fonts-dejavu-core fonts-liberation
+
       # ── Lint: ruff ─────────────────────────────────────────────────────────
       - name: Lint (ruff check)
         run: ruff check .
