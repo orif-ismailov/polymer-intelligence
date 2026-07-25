@@ -231,6 +231,14 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
                 return {"status": "error", "error": f"Request {request_id} not found"}
 
             client = request.client
+            if client is None:
+                # Portal-origin request (R2, A2): no TG client to DM. W2 routes
+                # these to a portal_notification instead; nothing to send here.
+                logger.info(
+                    "notify.status_change.no_client",
+                    extra={"request_id": request_id},
+                )
+                return {"status": "ok", "error": None}
             lang = client.language if client.language in ("ru", "uz") else "ru"
 
             # Resolve D-10 display key → localized label

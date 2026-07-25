@@ -79,9 +79,14 @@ class TestRevisionChain:
         assert callable(module.upgrade)
         assert callable(module.downgrade)
 
-    def test_0017_is_head(self) -> None:
-        heads = _script_dir().get_heads()
-        assert heads == ["0017"], f"expected 0017 to be the sole head, got {heads}"
+    def test_0017_in_single_head_chain(self) -> None:
+        # 0017 was the head at R1; R2's 0018 now supersedes it. Assert the chain
+        # still has a single linear head (0018) with 0017 as its ancestor.
+        script = _script_dir()
+        assert script.get_heads() == ["0018"], (
+            f"expected a single head 0018, got {script.get_heads()}"
+        )
+        assert script.get_revision("0018").down_revision == "0017"
 
     def test_declares_all_fourteen_enums(self) -> None:
         module = _load_migration()

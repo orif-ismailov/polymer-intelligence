@@ -14,11 +14,12 @@ from __future__ import annotations
 
 import datetime
 import decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     ForeignKey,
@@ -36,6 +37,9 @@ from sqlalchemy.sql import func
 
 from app.core.db import Base
 from app.models.enums import PriceBasis, RequestStatus, Urgency
+
+if TYPE_CHECKING:
+    from app.models.companies import Company
 
 
 class Client(Base):
@@ -82,13 +86,27 @@ class Request(Base):
     __table_args__ = (
         Index("ix_requests_status_created_at", "status", "created_at"),
         Index("ix_requests_client_created_at", "client_id", "created_at"),
+        # Dual-origin (R2, A2): a request comes from a TG client OR a portal
+        # company account. The CHECK keeps the origin invariant at the DB level.
+        CheckConstraint(
+            "client_id IS NOT NULL OR created_by_user_account_id IS NOT NULL",
+            name="ck_request_origin",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     number: Mapped[str] = mapped_column(Text, nullable=False, unique=True)       # 'REQ-2026-06-12-00125'
-    client_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("clients.id"), nullable=False
+    # Nullable (R2): a portal request originates from a company account, not a
+    # TG client. Exactly one origin is guaranteed by ck_request_origin.
+    client_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("clients.id"), nullable=True
     )
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # set for portal-originated requests (A2)
+    created_by_user_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=True
+    )                                                                             # portal author (A2)
     # Nullable: a buyer may type a product not in our catalog (product_text holds
     # the free-typed name). product_id OR product_text is required at the schema layer.
     product_id: Mapped[int | None] = mapped_column(
@@ -152,13 +170,20 @@ class Request(Base):
     )
 
     # Relationships
-    client: Mapped[Client] = relationship("Client", back_populates="requests")
+    client: Mapped[Client | None] = relationship("Client", back_populates="requests")
+    company: Mapped[Company | None] = relationship("Company")  # dual-origin (R2 A2)
     files: Mapped[list[RequestFile]] = relationship(
         "RequestFile", back_populates="request", cascade="all, delete-orphan"
     )
     status_history: Mapped[list[RequestStatusHistory]] = relationship(
         "RequestStatusHistory", back_populates="request", cascade="all, delete-orphan"
     )
+
+    # ── Dual-origin display helper (R2 W1) ────────────────────────────────────
+    @property
+    def origin(self) -> str:
+        """"company" for portal-originated requests, else "client" (TG Mini App)."""
+        return "company" if self.created_by_user_account_id is not None else "client"
 
 
 class RequestFile(Base):

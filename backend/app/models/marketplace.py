@@ -229,14 +229,30 @@ class OfferRequest(Base):
     """
 
     __tablename__ = "offer_requests"
+    __table_args__ = (
+        # Dual-origin (R2, A2): an inquiry comes from a TG client OR a portal
+        # company account. The CHECK keeps the origin invariant at the DB level.
+        CheckConstraint(
+            "client_id IS NOT NULL OR created_by_user_account_id IS NOT NULL",
+            name="ck_inquiry_origin",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     offer_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("seller_offers.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    client_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True
+    # Nullable (R2): a portal inquiry originates from a company account, not a
+    # TG client. Exactly one origin is guaranteed by ck_inquiry_origin.
+    client_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=True, index=True
     )
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # set for portal-originated inquiries (A2)
+    created_by_user_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=True
+    )                                                                             # portal author (A2)
     quantity: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
     qty_unit: Mapped[str] = mapped_column(String(8), nullable=False, default="MT", server_default="MT")
     target_price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
@@ -281,4 +297,11 @@ class OfferRequest(Base):
     )
 
     offer: Mapped[SellerOffer] = relationship("SellerOffer")
-    client: Mapped[Client] = relationship("Client")
+    client: Mapped[Client | None] = relationship("Client")
+    company: Mapped[Company | None] = relationship("Company")  # dual-origin (R2 A2)
+
+    # ── Dual-origin display helper (R2 W1) ────────────────────────────────────
+    @property
+    def origin(self) -> str:
+        """"company" for portal-originated inquiries, else "client" (TG Mini App)."""
+        return "company" if self.created_by_user_account_id is not None else "client"

@@ -69,6 +69,7 @@ from app.models.marketplace import (  # noqa: F401
     SellerOffer,
     SellerOfferFile,
 )
+from app.models.notifications import PortalNotification  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401
 from app.models.reference import (  # noqa: F401
     FxRate,
@@ -176,4 +177,6 @@ __all__ = [
     "VerificationCheck",
     "VerificationDocument",
     "DomainEvent",
+    # Portal notifications (R2)
+    "PortalNotification",
 ]
