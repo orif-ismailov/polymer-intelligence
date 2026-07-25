@@ -289,7 +289,14 @@
     "unassigned": "未指定",
     "markAsProcessed": "标记为已处理",
     "exportError": "导出执行失败。请重试，如问题持续存在请联系支持。",
-    "exportAriaLabel": "将需求导出为 CSV"
+    "exportAriaLabel": "将需求导出为 CSV",
+    "originTelegram": "Telegram",
+    "originPortal": "门户",
+    "originPortalNamed": "门户：{company}",
+    "filterOrigin": "来源",
+    "originOptAll": "所有来源",
+    "originOptClient": "Telegram",
+    "originOptCompany": "门户"
   },
   "broker": {
     "intel": {

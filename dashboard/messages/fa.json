@@ -289,7 +289,14 @@
     "unassigned": "تعیین‌نشده",
     "markAsProcessed": "علامت‌گذاری به‌عنوان پردازش‌شده",
     "exportError": "اجرای خروجی‌گیری ناموفق بود. دوباره تلاش کنید یا در صورت تداوم مشکل با پشتیبانی تماس بگیرید.",
-    "exportAriaLabel": "خروجی گرفتن از درخواست‌ها به CSV"
+    "exportAriaLabel": "خروجی گرفتن از درخواست‌ها به CSV",
+    "originTelegram": "تلگرام",
+    "originPortal": "پورتال",
+    "originPortalNamed": "پورتال: {company}",
+    "filterOrigin": "منبع",
+    "originOptAll": "همه منابع",
+    "originOptClient": "تلگرام",
+    "originOptCompany": "پورتال"
   },
   "broker": {
     "intel": {

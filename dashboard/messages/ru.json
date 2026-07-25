@@ -296,7 +296,14 @@
     "unassigned": "Не назначено",
     "markAsProcessed": "Отметить как обработанную",
     "exportError": "Не удалось выполнить экспорт. Попробуйте снова или обратитесь в поддержку, если проблема сохраняется.",
-    "exportAriaLabel": "Экспортировать заявки в CSV"
+    "exportAriaLabel": "Экспортировать заявки в CSV",
+    "originTelegram": "Telegram",
+    "originPortal": "Портал",
+    "originPortalNamed": "Портал: {company}",
+    "filterOrigin": "Источник",
+    "originOptAll": "Все источники",
+    "originOptClient": "Telegram",
+    "originOptCompany": "Портал"
   },
   "broker": {
     "intel": {

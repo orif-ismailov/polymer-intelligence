@@ -296,7 +296,14 @@
     "unassigned": "Tayinlanmagan",
     "markAsProcessed": "Qayta ishlangan deb belgilash",
     "exportError": "Eksport amalga oshmadi. Qayta urinib ko'ring yoki muammo davom etsa qo'llab-quvvatlash xizmatiga murojaat qiling.",
-    "exportAriaLabel": "So'rovlarni CSV sifatida eksport qilish"
+    "exportAriaLabel": "So'rovlarni CSV sifatida eksport qilish",
+    "originTelegram": "Telegram",
+    "originPortal": "Portal",
+    "originPortalNamed": "Portal: {company}",
+    "filterOrigin": "Manba",
+    "originOptAll": "Barcha manbalar",
+    "originOptClient": "Telegram",
+    "originOptCompany": "Portal"
   },
   "broker": {
     "intel": {

@@ -296,7 +296,14 @@
     "unassigned": "Atanmamış",
     "markAsProcessed": "İşlendi Olarak İşaretle",
     "exportError": "Dışa aktarma başarısız oldu. Tekrar deneyin veya sorun devam ederse destek ile iletişime geçin.",
-    "exportAriaLabel": "Talepleri CSV olarak dışa aktar"
+    "exportAriaLabel": "Talepleri CSV olarak dışa aktar",
+    "originTelegram": "Telegram",
+    "originPortal": "Portal",
+    "originPortalNamed": "Portal: {company}",
+    "filterOrigin": "Kaynak",
+    "originOptAll": "Tüm kaynaklar",
+    "originOptClient": "Telegram",
+    "originOptCompany": "Portal"
   },
   "broker": {
     "intel": {
