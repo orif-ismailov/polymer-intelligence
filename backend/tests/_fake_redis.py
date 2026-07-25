@@ -36,6 +36,11 @@ class FakeRedis:
     def get(self, key: str) -> str | None:
         return self.store.get(key)
 
+    def getdel(self, key: str) -> str | None:
+        value = self.store.pop(key, None)
+        self.ttls.pop(key, None)
+        return value
+
     def incr(self, key: str) -> int:
         value = int(self.store.get(key, "0")) + 1
         self.store[key] = str(value)

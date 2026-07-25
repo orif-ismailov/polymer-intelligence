@@ -25,6 +25,9 @@ VERIFICATION_CASE_NEEDS_INFO = "verification.case_needs_info"
 VERIFICATION_CASE_APPROVED = "verification.case_approved"
 VERIFICATION_CASE_REJECTED = "verification.case_rejected"
 
+# ── E-IMZO identity confirmation (R3) ─────────────────────────────────────────
+COMPANY_EIMZO_CONFIRMED = "company.eimzo_confirmed"
+
 # ── Marketplace bridge ────────────────────────────────────────────────────────
 OFFER_PUBLISHED_BY_COMPANY = "offer.published_by_company"
 
@@ -43,6 +46,7 @@ ALL_EVENT_TYPES: frozenset[str] = frozenset(
         VERIFICATION_CASE_NEEDS_INFO,
         VERIFICATION_CASE_APPROVED,
         VERIFICATION_CASE_REJECTED,
+        COMPANY_EIMZO_CONFIRMED,
         OFFER_PUBLISHED_BY_COMPANY,
     }
 )

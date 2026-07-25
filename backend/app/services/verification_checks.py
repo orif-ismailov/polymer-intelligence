@@ -89,9 +89,11 @@ def check_documents_complete(
     declared_roles: Iterable[CompanyBusinessRole],
     *,
     has_bank_account: bool,
+    eimzo_passed: bool = False,
 ) -> CheckResult:
-    """registration_certificate always required; bank_letter iff a bank account exists;
-    plus per-role docs for regulated roles. Missing kinds → failed with the list.
+    """registration_certificate required (UNLESS an E-IMZO signature supersedes it,
+    R3 TA1.5); bank_letter iff a bank account exists; plus per-role docs for
+    regulated roles. Missing kinds → failed with the list.
     """
     present = {
         doc.kind
@@ -99,7 +101,11 @@ def check_documents_complete(
         if doc.status != DocumentReviewStatus.rejected
     }
 
-    required: set[VerificationDocumentKind] = {VerificationDocumentKind.registration_certificate}
+    required: set[VerificationDocumentKind] = set()
+    # A verified E-IMZO signature carries the registry-certified org identity, so it
+    # supersedes the uploaded registration certificate (bank_letter rule unchanged).
+    if not eimzo_passed:
+        required.add(VerificationDocumentKind.registration_certificate)
     if has_bank_account:
         required.add(VerificationDocumentKind.bank_letter)
     for role in declared_roles:
@@ -111,6 +117,7 @@ def check_documents_complete(
     payload: dict[str, object] = {
         "required": sorted(kind.value for kind in required),
         "missing": missing,
+        "eimzo_passed": eimzo_passed,
     }
     status = (
         VerificationCheckStatus.failed if missing else VerificationCheckStatus.passed

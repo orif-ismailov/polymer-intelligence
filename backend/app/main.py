@@ -53,6 +53,7 @@ from app.api.moderation import router as moderation_router
 from app.api.offer_requests import router as offer_requests_router
 from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.companies import router as portal_companies_router
+from app.api.portal.eimzo import router as portal_eimzo_router
 from app.api.portal.inquiries import router as portal_inquiries_router
 from app.api.portal.market import router as portal_market_router
 from app.api.portal.news import router as portal_news_router
@@ -203,6 +204,7 @@ def create_app() -> FastAPI:
     # ── portal (client cabinet — passwordless OTP accounts, R1 W3) ─────────────
     application.include_router(portal_auth_router, prefix="/api/v1")
     application.include_router(portal_companies_router, prefix="/api/v1")
+    application.include_router(portal_eimzo_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
     application.include_router(portal_market_router, prefix="/api/v1")
     application.include_router(portal_inquiries_router, prefix="/api/v1")

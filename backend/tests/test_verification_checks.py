@@ -111,6 +111,29 @@ def test_documents_reg_cert_only_passes_without_bank() -> None:
     assert result.status.value == "passed"
 
 
+def test_documents_eimzo_supersedes_registration_certificate() -> None:
+    # R3 TA1.5: a passed E-IMZO signature drops the reg-cert requirement.
+    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
+
+    result = check_documents_complete(
+        _company(), [], [], has_bank_account=False, eimzo_passed=True
+    )
+    assert result.status.value == "passed"
+    assert result.result["missing"] == []
+    assert result.result["eimzo_passed"] is True
+
+
+def test_documents_eimzo_does_not_relax_bank_letter() -> None:
+    # bank_letter rule is unchanged by E-IMZO (TA1.5).
+    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
+
+    result = check_documents_complete(
+        _company(), [], [], has_bank_account=True, eimzo_passed=True
+    )
+    assert result.status.value == "failed"
+    assert result.result["missing"] == ["bank_letter"]
+
+
 def test_documents_bank_letter_required_when_bank_present() -> None:
     from app.models.enums import VerificationDocumentKind  # noqa: PLC0415
     from app.services.verification_checks import check_documents_complete  # noqa: PLC0415

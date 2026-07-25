@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-layer glue
     """Execute the pure check function for `check`, gathering its inputs from the DB."""
     from app.models.companies import Company, CompanyBankAccount, CompanyBusinessRole
-    from app.models.enums import VerificationCheckType
-    from app.models.verification import VerificationCase, VerificationDocument
+    from app.models.enums import VerificationCheckStatus, VerificationCheckType
+    from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
     from app.services import verification_checks
 
     case = db.get(VerificationCase, check.case_id)
@@ -63,8 +63,18 @@ def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-lay
             .count()
             > 0
         )
+        eimzo_passed = (
+            db.query(VerificationCheck)
+            .filter(
+                VerificationCheck.case_id == check.case_id,
+                VerificationCheck.check_type == VerificationCheckType.eimzo_signature,
+                VerificationCheck.status == VerificationCheckStatus.passed,
+            )
+            .count()
+            > 0
+        )
         return verification_checks.check_documents_complete(
-            company, documents, roles, has_bank_account=has_bank
+            company, documents, roles, has_bank_account=has_bank, eimzo_passed=eimzo_passed
         )
 
     if check_type == VerificationCheckType.manual_kyb:

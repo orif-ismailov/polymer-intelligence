@@ -321,3 +321,37 @@ def presign_verification_document(document: VerificationDocument, ttl: int = 600
         ExpiresIn=ttl,
     )
     return str(url)
+
+
+# ── E-IMZO signature evidence (R3 TA1.4) ──────────────────────────────────────
+
+
+def store_eimzo_pkcs7(company_id: int, pkcs7_bytes: bytes) -> tuple[str, str]:
+    """Store a PKCS#7 blob as immutable evidence; return (storage_path, sha256).
+
+    Key `evidence/eimzo/{company_id}/{token}.p7s` (traversal-safe by construction —
+    no user-supplied filename). The sha256 is returned so the caller can persist it
+    on the signature_evidence row for later tamper detection. Does NOT write a DB row.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    key = f"evidence/eimzo/{company_id}/{secrets.token_hex(8)}.p7s"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET,
+        Key=key,
+        Body=pkcs7_bytes,
+        ContentType="application/pkcs7-signature",
+    )
+    return key, hashlib.sha256(pkcs7_bytes).hexdigest()
+
+
+def presign_eimzo_pkcs7(storage_path: str, ttl: int = 600) -> str:
+    """Presigned GET URL for a stored PKCS#7 evidence blob (≤600 s)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    url = s3_client.generate_presigned_url(  # type: ignore[attr-defined]
+        "get_object",
+        Params={"Bucket": settings.S3_BUCKET, "Key": storage_path},
+        ExpiresIn=ttl,
+    )
+    return str(url)
