@@ -448,5 +448,17 @@
     "comment": "Comment",
     "submit": "Submit request",
     "submitFailed": "Could not submit the request."
+  },
+  "news": {
+    "title": "News",
+    "subtitle": "Classified petrochemical market news",
+    "breaking": "Breaking",
+    "empty": "No news yet",
+    "emptyBody": "Check back soon for market updates.",
+    "notFound": "Article not found",
+    "back": "Back to news",
+    "analysis": "Analysis",
+    "recommendation": "Recommendation",
+    "readSource": "Read at the source →"
   }
 }

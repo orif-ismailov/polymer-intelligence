@@ -49,12 +49,18 @@ const DocIcon = (
     <path d="M5 3h6l4 4v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 3v4h4M7 11h6M7 14h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const NewsIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M4 4h9v12H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM13 7h3a1 1 0 0 1 1 1v7a1 1 0 0 1-2 0M6 7h5M6 10h5M6 13h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/", labelKey: "nav.home", icon: HomeIcon, end: true },
   { to: "/market", labelKey: "nav.market", icon: StoreIcon },
   { to: "/requests", labelKey: "nav.requests", icon: DocIcon },
   { to: "/inquiries", labelKey: "nav.inquiries", icon: ChatIcon },
+  { to: "/news", labelKey: "nav.news", icon: NewsIcon },
   { to: "/companies", labelKey: "nav.companies", icon: BuildingIcon },
   { to: "/offers", labelKey: "nav.offers", icon: TagIcon },
   { to: "/settings", labelKey: "nav.settings", icon: CogIcon },

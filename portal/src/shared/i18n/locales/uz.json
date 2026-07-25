@@ -448,5 +448,17 @@
     "comment": "Izoh",
     "submit": "Arizani yuborish",
     "submitFailed": "Arizani yuborib bo'lmadi."
+  },
+  "news": {
+    "title": "Yangiliklar",
+    "subtitle": "Klassifikatsiyalangan neftkimyo bozori yangiliklari",
+    "breaking": "Shoshilinch",
+    "empty": "Hozircha yangiliklar yo'q",
+    "emptyBody": "Bozor yangiliklari uchun keyinroq qayting.",
+    "notFound": "Maqola topilmadi",
+    "back": "Yangiliklarga",
+    "analysis": "Tahlil",
+    "recommendation": "Tavsiya",
+    "readSource": "Manbada o'qish →"
   }
 }

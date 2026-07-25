@@ -7,6 +7,7 @@ import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
 import { LoginPage } from "@/pages/login";
 import { MarketOfferPage, MarketPage } from "@/pages/market";
+import { NewsArticlePage, NewsPage } from "@/pages/news";
 import { OfferEditPage } from "@/pages/offer-edit";
 import { OffersPage } from "@/pages/offers";
 import { OtpPage } from "@/pages/otp";
@@ -45,6 +46,8 @@ export const router = createBrowserRouter([
           { path: "/requests", element: <RequestsPage /> },
           { path: "/requests/new", element: <RequestCreatePage /> },
           { path: "/requests/:requestId", element: <RequestDetailPage /> },
+          { path: "/news", element: <NewsPage /> },
+          { path: "/news/:signalId", element: <NewsArticlePage /> },
           { path: "/companies", element: <CompaniesPage /> },
           { path: "/companies/new", element: <Navigate to="/companies/new/1" replace /> },
           { path: "/companies/new/:step", element: <CompanyCreatePage /> },
