@@ -49,9 +49,14 @@ class TestRevisionChain:
         assert callable(module.upgrade)
         assert callable(module.downgrade)
 
-    def test_0018_is_head(self) -> None:
-        heads = _script_dir().get_heads()
-        assert heads == ["0018"], f"expected 0018 to be the sole head, got {heads}"
+    def test_0018_in_single_head_chain(self) -> None:
+        # 0019 (market list index) now supersedes 0018 as head; assert a single
+        # linear head with 0018 as its ancestor.
+        script = _script_dir()
+        assert script.get_heads() == ["0019"], (
+            f"expected a single head 0019, got {script.get_heads()}"
+        )
+        assert script.get_revision("0019").down_revision == "0018"
 
 
 class TestPortalNotificationsTable:

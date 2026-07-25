@@ -87,6 +87,9 @@ class SellerOffer(Base):
     __tablename__ = "seller_offers"
     __table_args__ = (
         Index("ix_seller_offers_status_created", "status", "created_at"),
+        # R2 W6 T6.2: backs the portal/webapp market list
+        # (WHERE status='approved' ORDER BY published_at DESC).
+        Index("ix_seller_offers_status_published", "status", "published_at"),
         Index("ix_seller_offers_product", "product_id"),
         Index("ix_seller_offers_seller", "seller_id"),
         # Dual-origin (R1, A1): an offer comes from a TG seller OR a portal company.
