@@ -178,6 +178,7 @@ def test_apply_offer_request_missing() -> None:
 def _make_offer_request() -> MagicMock:
     req = MagicMock()
     req.id = 7
+    req.company_id = None  # TG-origin (portal-origin shows a 🌐 Портал buyer line)
     req.quantity = 50
     req.qty_unit = "MT"
     req.target_price = 1150
@@ -239,7 +240,51 @@ def test_send_offer_request_to_group_includes_buyer_and_keyboard() -> None:
     assert "EVA" in text
     assert "Buyer LLC" in text  # admin sees buyer contact
     assert "Пётр" in text
+    assert "🌐 Портал" not in text  # TG-origin inquiry has no portal line (regression)
     assert sent[0]["reply_markup"] is not None  # approve/reject keyboard
+
+
+def test_send_offer_request_to_group_portal_origin_shows_company() -> None:
+    """R2 W4 T4.2 — a portal-originated inquiry card shows the buyer company + origin."""
+    sent: list[dict[str, object]] = []
+
+    async def _capture(chat_id: int, text: str, **kwargs: object) -> None:
+        sent.append({"chat_id": chat_id, "text": text})
+
+    from app.core.config import settings  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+
+    req = _make_offer_request()
+    req.company_id = 88
+    req.client = None
+    company = MagicMock()
+    company.short_name = "Buyer Portal Co"
+    company.legal_name = "OOO Buyer"
+    company.id = 88
+
+    def _get(model, _id):  # noqa: ANN001, ANN202
+        return company if model is Company else req
+
+    with (
+        patch.object(settings, "REQUEST_NOTIFY_CHAT_ID", -100),
+        patch("sqlalchemy.orm.Session") as mock_session_cls,
+        patch("app.core.db.engine"),
+        patch("telegram.bot.bot") as mock_bot,
+    ):
+        mock_session = MagicMock()
+        mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
+        mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
+        mock_session.get.side_effect = _get
+        mock_bot.send_message = _capture
+
+        from app.tasks.notify import send_offer_request_to_group  # noqa: PLC0415
+
+        result = send_offer_request_to_group(offer_request_id=7)
+
+    assert result == {"status": "ok", "error": None}
+    text = str(sent[0]["text"])
+    assert "Покупатель (Портал):" in text
+    assert "Buyer Portal Co" in text
 
 
 def test_send_offer_request_to_seller_withholds_buyer_contact() -> None:

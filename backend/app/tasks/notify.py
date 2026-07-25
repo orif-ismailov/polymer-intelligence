@@ -504,6 +504,16 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
             product_label = product_name or request.product_text or "—"
 
             lines: list[str] = [f"🆕 Новая заявка {request.number}", ""]
+            # Origin line for portal-originated requests (R2 W4 T4.2); TG requests
+            # keep the card byte-identical (no line added).
+            if request.company_id is not None:
+                from app.models.companies import Company  # noqa: PLC0415
+
+                company = session.get(Company, request.company_id)
+                if company is not None:
+                    cname = company.short_name or company.legal_name or f"#{company.id}"
+                    lines.append(f"🌐 Портал: {cname}")
+                    lines.append("")
             grade = f" · {request.grade_text}" if request.grade_text else ""
             lines.append(f"📦 Продукт: {product_label}{grade}")
             if request.volume is not None:
@@ -817,7 +827,17 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
 
             client = req.client
             buyer: list[str] = []
-            if client is not None:
+            buyer_label = "Покупатель:"
+            if req.company_id is not None:
+                # Portal-origin inquiry (R2 W4 T4.2): show the buyer company + origin.
+                from app.models.companies import Company  # noqa: PLC0415
+
+                company = session.get(Company, req.company_id)
+                if company is not None:
+                    cname = company.short_name or company.legal_name or f"#{company.id}"
+                    buyer.append(f"🌐 Портал · {cname}")
+                buyer_label = "Покупатель (Портал):"
+            elif client is not None:
                 if client.company_name:
                     buyer.append(f"🏢 {client.company_name}")
                 if client.contact_name:
@@ -828,7 +848,7 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
                     buyer.append(f"🆔 {client.telegram_user_id}")
             if buyer:
                 lines.append("")
-                lines.append("Покупатель:")
+                lines.append(buyer_label)
                 lines.extend(buyer)
 
             keyboard = offer_request_moderation_keyboard(req.id)
