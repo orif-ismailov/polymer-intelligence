@@ -36,6 +36,22 @@ from app.models.notifications import PortalNotification
 
 logger = logging.getLogger(__name__)
 
+# ── Notification kinds (plain Text by design — extensible, no enum) ───────────
+# The i18n keys are derived uniformly as ``notifications.<kind>.title|body`` so a
+# producer only picks the kind and the portal (W5.5) renders from the matching
+# ru/uz/en messages. Keep this list and the portal locale files in sync.
+KIND_REQUEST_STATUS = "request_status"
+KIND_INQUIRY_APPROVED = "inquiry_approved"
+KIND_INQUIRY_REPLY = "inquiry_reply"
+KIND_VERIFICATION_DECIDED = "verification_decided"
+KIND_OFFER_MODERATED = "offer_moderated"
+KIND_NEWS_BREAKING = "news_breaking"
+
+
+def keys_for(kind: str) -> tuple[str, str]:
+    """(title_key, body_key) for a kind — the uniform ``notifications.<kind>.*``."""
+    return f"notifications.{kind}.title", f"notifications.{kind}.body"
+
 
 def notify_account(
     db: Session,

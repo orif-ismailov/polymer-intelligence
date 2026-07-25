@@ -32,9 +32,12 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.time import to_display_tz, utcnow
+from app.models.accounts import UserAccount
+from app.models.companies import Company
 from app.models.enums import RequestStatus
 from app.models.requests import Request, RequestStatusHistory
 from app.schemas.webapp import RequestCreate
+from app.services import notification_service
 from app.services.audit_service import write_audit
 
 logger = logging.getLogger(__name__)
@@ -299,6 +302,101 @@ def create_request(
     return req
 
 
+def create_company_request(
+    db: Session,
+    company: Company,
+    account: UserAccount,
+    data: RequestCreate,
+) -> Request:
+    """Create a portal-origin purchase request on behalf of a company (R2 A2).
+
+    Same wizard payload as the Mini App path, but the request carries
+    ``company_id`` + ``created_by_user_account_id`` and ``client_id`` is NULL. It
+    enters the SAME status machine and ``request_status_history`` as TG requests —
+    the dashboard processes it identically. Does NOT commit (caller owns the tx).
+
+    The creator is NOT self-notified on creation (they just submitted it); status
+    changes by the team produce in-portal notifications via ``transition_status``.
+    The team-group card + AI analysis fire as for TG requests (fail-soft).
+    """
+    number = generate_request_number(db)
+
+    req = Request(
+        number=number,
+        client_id=None,
+        company_id=company.id,
+        created_by_user_account_id=account.id,
+        status=RequestStatus.new,
+        product_id=data.product_id,
+        product_text=data.product_text,
+        grade_text=data.grade_text,
+        polymer_type=data.polymer_type,
+        volume=data.volume,
+        volume_unit=data.volume_unit,
+        target_price=data.target_price,
+        currency=data.currency,
+        incoterms=data.incoterms,
+        destination_country=data.destination_country,
+        port_or_city=data.port_or_city,
+        desired_date=data.desired_date,
+        validity_days=data.validity_days,
+        urgency=data.urgency,
+        comment=data.comment,
+        company_name=data.company_name,
+        contact_name=data.contact_name,
+        phone=data.phone,
+        legal_address=data.legal_address,
+    )
+    db.add(req)
+    db.flush()
+
+    hist = RequestStatusHistory(
+        request_id=req.id,
+        from_status=None,
+        to_status=RequestStatus.new,
+        changed_by=None,
+        comment=None,
+    )
+    db.add(hist)
+    db.flush()
+
+    # Staff-facing side effects only (no creator self-notification on submit).
+    _enqueue_group_notify_soft(req.id)
+    _enqueue_analysis_soft(req.id)
+
+    logger.info(
+        "request_service.create_company",
+        extra={"number": number, "company_id": company.id, "account_id": account.id},
+    )
+    return req
+
+
+def _notify_portal_status_change(db: Session, request: Request) -> None:
+    """Create an in-portal notification for a portal-origin request's creator.
+
+    Flush-only (shares the transition's transaction). ``dedup=False``: each real
+    status transition is a distinct event and must not be suppressed by an earlier
+    unread status notification on the same request.
+    """
+    account_id = request.created_by_user_account_id
+    if account_id is None:  # pragma: no cover — guarded by the caller
+        return
+    title_key, body_key = notification_service.keys_for(
+        notification_service.KIND_REQUEST_STATUS
+    )
+    notification_service.notify_account(
+        db,
+        account_id,
+        kind=notification_service.KIND_REQUEST_STATUS,
+        title_key=title_key,
+        body_key=body_key,
+        params={"number": request.number, "status": client_facing_status(request.status)},
+        entity="request",
+        entity_id=str(request.id),
+        dedup=False,
+    )
+
+
 def transition_status(
     db: Session,
     request: Request,
@@ -359,8 +457,13 @@ def transition_status(
             details={"from": old_status.value, "to": to_status.value},
         )
 
-    # Enqueue the notify task (best-effort — must not fail the status transition)
-    _enqueue_notify_soft(request.id)
+    # Route the status notification by origin (R2 A2):
+    #   portal-origin → in-portal notification, written in THIS transaction;
+    #   TG-origin     → TG DM Celery task (best-effort, fail-soft) — unchanged.
+    if request.created_by_user_account_id is not None:
+        _notify_portal_status_change(db, request)
+    else:
+        _enqueue_notify_soft(request.id)
 
     logger.info(
         "request_service.transition_status",
