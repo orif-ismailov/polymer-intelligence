@@ -371,6 +371,61 @@ def create_company_request(
     return req
 
 
+#: Client-visible non-terminal states a buyer may cancel from (mirror Mini App).
+_CLIENT_CANCELLABLE: set[RequestStatus] = {
+    RequestStatus.new,
+    RequestStatus.viewed,
+    RequestStatus.in_progress,
+    RequestStatus.offer_sent,
+}
+
+
+def list_company_requests(db: Session, company_id: int) -> list[Request]:
+    """A company's purchase requests, newest first (portal-origin)."""
+    return (
+        db.query(Request)
+        .filter(Request.company_id == company_id)
+        .order_by(Request.created_at.desc())
+        .all()
+    )
+
+
+def get_company_request(db: Session, company_id: int, request_id: int) -> Request | None:
+    """One request scoped to a company (else None — opaque 404 at the router)."""
+    return (
+        db.query(Request)
+        .filter(Request.id == request_id, Request.company_id == company_id)
+        .first()
+    )
+
+
+def cancel_request(db: Session, request: Request) -> Request:
+    """Client-initiated cancellation from a client-visible non-terminal state.
+
+    Independent of the staff ``VALID_TRANSITIONS`` machine (a buyer may cancel a
+    brand-new request, which staff-side new→cancelled is not a transition). Writes a
+    history row; the buyer initiated it, so no self-notification. Does NOT commit.
+    """
+    if request.status not in _CLIENT_CANCELLABLE:
+        raise ValueError(f"cannot cancel a request in status {request.status.value}")
+    old_status = request.status
+    request.status = RequestStatus.cancelled
+    db.add(
+        RequestStatusHistory(
+            request_id=request.id,
+            from_status=old_status,
+            to_status=RequestStatus.cancelled,
+            changed_by=None,
+            comment="cancelled by client",
+        )
+    )
+    db.flush()
+    logger.info(
+        "request_service.cancel", extra={"request_id": request.id, "from": old_status.value}
+    )
+    return request
+
+
 def _notify_portal_status_change(db: Session, request: Request) -> None:
     """Create an in-portal notification for a portal-origin request's creator.
 
