@@ -19,6 +19,8 @@ import logging
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.models.accounts import UserAccount
+from app.models.companies import Company
 from app.models.enums import OfferRequestStatus, SellerOfferStatus
 from app.models.marketplace import OfferRequest, SellerOffer
 from app.models.requests import Client
@@ -30,6 +32,7 @@ from app.schemas.marketplace import (
     OfferRequestCreate,
     OfferRequestUpdate,
 )
+from app.services import notification_service
 from app.services.audit_service import write_audit
 
 logger = logging.getLogger(__name__)
@@ -72,6 +75,54 @@ def create_offer_request(
     logger.info(
         "offer_request_service.create",
         extra={"offer_request_id": req.id, "offer_id": offer.id, "client_id": client.id},
+    )
+    return req
+
+
+def create_company_inquiry(
+    db: Session,
+    company: Company,
+    account: UserAccount,
+    offer: SellerOffer,
+    data: OfferRequestCreate,
+) -> OfferRequest:
+    """Create a `pending` company-origin inquiry against an approved offer (R2 A2).
+
+    Mirrors ``create_offer_request`` but carries ``company_id`` +
+    ``created_by_user_account_id`` (``client_id`` NULL). Enters the SAME moderation
+    machine — staff review it identically to TG inquiries. Does NOT commit.
+
+    Raises ValueError if the offer is not public (approved) or if the buyer company
+    is the seller of the offer (a company cannot inquire on its own listing).
+    """
+    if offer.status != SellerOfferStatus.approved:
+        raise ValueError("Offer not found")
+
+    if offer.company_id is not None and offer.company_id == company.id:
+        raise ValueError("You cannot send an inquiry on your own offer")
+
+    req = OfferRequest(
+        offer_id=offer.id,
+        client_id=None,
+        company_id=company.id,
+        created_by_user_account_id=account.id,
+        quantity=data.quantity,
+        qty_unit=data.qty_unit,
+        target_price=data.target_price,
+        currency=data.currency,
+        message=data.message.strip() if data.message else None,
+        status=OfferRequestStatus.pending,
+    )
+    db.add(req)
+    db.flush()
+    logger.info(
+        "offer_request_service.create_company",
+        extra={
+            "offer_request_id": req.id,
+            "offer_id": offer.id,
+            "company_id": company.id,
+            "account_id": account.id,
+        },
     )
     return req
 
@@ -230,6 +281,36 @@ def _apply_decision(req: OfferRequest, *, approve: bool, note: str | None) -> No
         req.forwarded_at = now
 
 
+def _forward_on_approval(db: Session, req: OfferRequest) -> None:
+    """Notify the *selling* side that an inquiry was approved, routed by offer origin.
+
+    Company-origin offer (R1) → an in-portal notification for every active member of
+    the selling company (kind ``inquiry_approved``), written in THIS transaction —
+    contact withholding is unchanged (the notification carries only ids, not the
+    buyer's identity). TG-seller offer → no-op here; the caller enqueues the existing
+    bot-DM forward after commit.
+
+    ``dedup=False`` so a re-approval after a buyer edit always re-notifies the seller.
+    """
+    offer = req.offer
+    if offer.company_id is None:
+        return  # TG-seller offer → existing post-commit bot DM handles it
+    title_key, body_key = notification_service.keys_for(
+        notification_service.KIND_INQUIRY_APPROVED
+    )
+    notification_service.notify_company(
+        db,
+        offer.company_id,
+        kind=notification_service.KIND_INQUIRY_APPROVED,
+        title_key=title_key,
+        body_key=body_key,
+        params={"offer_id": offer.id, "inquiry_id": req.id},
+        entity="inquiry",
+        entity_id=str(req.id),
+        dedup=False,
+    )
+
+
 def moderate_offer_request(
     db: Session,
     req: OfferRequest,
@@ -245,6 +326,8 @@ def moderate_offer_request(
     _apply_decision(req, approve=approve, note=note)
     req.moderated_by = staff_user_id
     db.flush()
+    if approve:
+        _forward_on_approval(db, req)
     write_audit(
         db=db,
         staff_user_id=staff_user_id,
@@ -275,6 +358,8 @@ def moderate_offer_request_via_telegram(
     """
     _apply_decision(req, approve=approve, note=note)
     db.flush()
+    if approve:
+        _forward_on_approval(db, req)
     details: dict[str, object] = {"via": "telegram", "telegram_user_id": telegram_user_id}
     if note:
         details["note"] = note

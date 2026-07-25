@@ -141,3 +141,36 @@ def make_member(db: Session, company, account, *, status=None, role=None):  # no
     db.add(member)
     db.flush()
     return member
+
+
+def make_seller(db: Session, telegram_user_id: int | None = None, **kwargs):  # noqa: ANN003, ANN202
+    """A TG-origin marketplace seller."""
+    from app.models.marketplace import Seller  # noqa: PLC0415
+
+    seller = Seller(
+        telegram_user_id=telegram_user_id,
+        company_name=kwargs.pop("company_name", "TG Seller"),
+        **kwargs,
+    )
+    db.add(seller)
+    db.flush()
+    return seller
+
+
+def make_seller_offer(db: Session, *, company=None, seller=None, status=None, **kwargs):  # noqa: ANN001, ANN003, ANN202
+    """A seller_offers row — company-origin (pass `company`) or TG-origin (pass `seller`)."""
+    from app.models.enums import SellerOfferStatus  # noqa: PLC0415
+    from app.models.marketplace import SellerOffer  # noqa: PLC0415
+
+    offer = SellerOffer(
+        seller_id=seller.id if seller is not None else None,
+        company_id=company.id if company is not None else None,
+        created_by_user_account_id=kwargs.pop("created_by", None),
+        product_text=kwargs.pop("product_text", "HDPE film"),
+        grade_text=kwargs.pop("grade_text", "F0348"),
+        status=status or SellerOfferStatus.approved,
+        **kwargs,
+    )
+    db.add(offer)
+    db.flush()
+    return offer
