@@ -775,7 +775,7 @@
     "caseType": {
       "onboarding": "Kayıt",
       "reverification": "Yeniden doğrulama",
-      "role_upgrade": "Rol değişikliği"
+      "targeted": "Hedefli inceleme"
     },
     "columns": {
       "submittedAt": "Gönderildi",
@@ -812,12 +812,14 @@
       "waiveConflict": "Kontrol zaten güncellendi — veriler yeniden yüklendi"
     },
     "checkType": {
-      "tax_id": "VKN",
-      "registry": "Sicil",
-      "sanctions": "Yaptırımlar",
-      "bank_account": "Banka hesabı",
-      "documents": "Belgeler",
-      "director": "Müdür"
+      "tax_id_format": "Vergi no. formatı",
+      "bank_requisites": "Banka bilgileri",
+      "documents_complete": "Belgeler",
+      "manual_kyb": "Manuel doğrulama (KYB)",
+      "eimzo_signature": "E-IMZO imzası",
+      "gov_registry": "Devlet sicili",
+      "tax_status": "Vergi durumu",
+      "vat_status": "KDV durumu"
     },
     "checkStatus": {
       "pending": "Bekliyor",

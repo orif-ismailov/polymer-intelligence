@@ -760,7 +760,7 @@
     "caseType": {
       "onboarding": "注册",
       "reverification": "重新验证",
-      "role_upgrade": "角色变更"
+      "targeted": "定向审查"
     },
     "columns": {
       "submittedAt": "提交时间",
@@ -797,12 +797,14 @@
       "waiveConflict": "检查已更新——数据已重新加载"
     },
     "checkType": {
-      "tax_id": "税号",
-      "registry": "登记",
-      "sanctions": "制裁",
-      "bank_account": "银行账户",
-      "documents": "文件",
-      "director": "董事"
+      "tax_id_format": "税号格式",
+      "bank_requisites": "银行信息",
+      "documents_complete": "文件",
+      "manual_kyb": "人工审核 (KYB)",
+      "eimzo_signature": "E-IMZO 签名",
+      "gov_registry": "政府登记",
+      "tax_status": "税务状态",
+      "vat_status": "增值税状态"
     },
     "checkStatus": {
       "pending": "待处理",

@@ -773,9 +773,9 @@
       "cancelled": "Bekor qilingan"
     },
     "caseType": {
-      "onboarding": "Ro'yxatdan o'tish",
+      "onboarding": "Ro‘yxatdan o‘tish",
       "reverification": "Qayta tekshiruv",
-      "role_upgrade": "Rolni o'zgartirish"
+      "targeted": "Maqsadli tekshiruv"
     },
     "columns": {
       "submittedAt": "Yuborilgan",
@@ -812,12 +812,14 @@
       "waiveConflict": "Tekshiruv allaqachon yangilangan — ma'lumotlar qayta yuklandi"
     },
     "checkType": {
-      "tax_id": "STIR",
-      "registry": "Reyestr",
-      "sanctions": "Sanksiyalar",
-      "bank_account": "Bank hisobi",
-      "documents": "Hujjatlar",
-      "director": "Direktor"
+      "tax_id_format": "STIR formati",
+      "bank_requisites": "Bank rekvizitlari",
+      "documents_complete": "Hujjatlar",
+      "manual_kyb": "Qo‘lda tekshiruv (KYB)",
+      "eimzo_signature": "E-IMZO imzosi",
+      "gov_registry": "Davlat reestri",
+      "tax_status": "Soliq holati",
+      "vat_status": "QQS holati"
     },
     "checkStatus": {
       "pending": "Kutilmoqda",

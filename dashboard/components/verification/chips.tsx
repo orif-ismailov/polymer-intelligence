@@ -43,18 +43,13 @@ const baseChip =
 
 /**
  * Resolve a translation, falling back to the raw value when the key is missing.
- * next-intl throws in dev on a missing key; wrapping it keeps unexpected backend
- * enum values from crashing the page.
+ * next-intl returns the (namespaced) key string for a missing message rather than
+ * throwing, so a try/catch never fires — use `t.has()` so an unexpected backend
+ * enum value degrades to its raw value instead of leaking the key path.
  */
 function useSafeLabel(namespace: "verification") {
   const t = useTranslations(namespace);
-  return (key: string, fallback: string): string => {
-    try {
-      return t(key);
-    } catch {
-      return fallback;
-    }
-  };
+  return (key: string, fallback: string): string => (t.has(key) ? t(key) : fallback);
 }
 
 // ─── Components ────────────────────────────────────────────────────────────────

@@ -759,8 +759,8 @@
     },
     "caseType": {
       "onboarding": "ثبت‌نام",
-      "reverification": "بازبینی مجدد",
-      "role_upgrade": "تغییر نقش"
+      "reverification": "بازبینی",
+      "targeted": "بررسی هدفمند"
     },
     "columns": {
       "submittedAt": "ارسال‌شده",
@@ -797,12 +797,14 @@
       "waiveConflict": "بررسی قبلاً به‌روزرسانی شده — داده‌ها دوباره بارگذاری شد"
     },
     "checkType": {
-      "tax_id": "شناسه مالیاتی",
-      "registry": "ثبت",
-      "sanctions": "تحریم‌ها",
-      "bank_account": "حساب بانکی",
-      "documents": "مدارک",
-      "director": "مدیر"
+      "tax_id_format": "قالب شناسه مالیاتی",
+      "bank_requisites": "مشخصات بانکی",
+      "documents_complete": "مدارک",
+      "manual_kyb": "بررسی دستی (KYB)",
+      "eimzo_signature": "امضای E-IMZO",
+      "gov_registry": "سامانه دولتی",
+      "tax_status": "وضعیت مالیاتی",
+      "vat_status": "وضعیت مالیات بر ارزش افزوده"
     },
     "checkStatus": {
       "pending": "در انتظار",

@@ -774,8 +774,8 @@
     },
     "caseType": {
       "onboarding": "Регистрация",
-      "reverification": "Повторная проверка",
-      "role_upgrade": "Смена роли"
+      "reverification": "Переверификация",
+      "targeted": "Точечная проверка"
     },
     "columns": {
       "submittedAt": "Отправлена",
@@ -812,12 +812,14 @@
       "waiveConflict": "Проверка уже обновлена — данные перезагружены"
     },
     "checkType": {
-      "tax_id": "ИНН",
-      "registry": "Реестр",
-      "sanctions": "Санкции",
-      "bank_account": "Банковский счёт",
-      "documents": "Документы",
-      "director": "Директор"
+      "tax_id_format": "Формат ИНН",
+      "bank_requisites": "Банковские реквизиты",
+      "documents_complete": "Документы",
+      "manual_kyb": "Ручная проверка (KYB)",
+      "eimzo_signature": "Подпись E-IMZO",
+      "gov_registry": "Госреестр",
+      "tax_status": "Налоговый статус",
+      "vat_status": "Статус НДС"
     },
     "checkStatus": {
       "pending": "Ожидает",
