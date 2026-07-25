@@ -54,6 +54,7 @@ _TASK_MODULES = [
     "app.tasks.reports",
     "app.tasks.events",
     "app.tasks.verification",
+    "app.tasks.contracts",
     "app.tasks.portal_notify",
 ]
 

@@ -67,6 +67,11 @@ def _specs() -> tuple[SettingSpec, ...]:
             "verification_required_for_publish", "bool", False,
             "Require company verification before publishing offers (reserved — TG path)",
         ),
+        SettingSpec(
+            "contract_pending_ttl_days", "int", 30,
+            "Days a contract may sit awaiting the counterparty/signatures before it expires",
+            min=1, max=365,
+        ),
     )
 
 

@@ -550,6 +550,10 @@
     "contract_declined": {
       "title": "Contract declined",
       "body": "The contract “{{title}}” was declined"
+    },
+    "contract_expired": {
+      "title": "Contract expired",
+      "body": "The contract “{{title}}” expired while pending"
     }
   },
   "contracts": {

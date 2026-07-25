@@ -137,4 +137,18 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "prune_portal_notifications",
         "schedule": crontab(minute=30, hour=3),
     },
+    # ── Contract PDF integrity: daily at 03:00 UTC (R3 TB4.1) ─────────────────
+    # Recomputes stored-PDF sha256 vs document_sha256 for active contracts and
+    # alerts the admin channel on any mismatch (tamper detection).
+    "verify_contract_integrity": {
+        "task": "verify_contract_integrity",
+        "schedule": crontab(minute=0, hour=3),
+    },
+    # ── Contract expiry: daily at 04:00 UTC (R3 TB4.2) ───────────────────────
+    # Expires contracts inactive in pending_counterparty/pending_signatures beyond
+    # contract_pending_ttl_days (default 30) + notifies both parties.
+    "expire_stale_contracts": {
+        "task": "expire_stale_contracts",
+        "schedule": crontab(minute=0, hour=4),
+    },
 }

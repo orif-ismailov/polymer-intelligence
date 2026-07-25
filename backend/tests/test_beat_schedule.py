@@ -55,6 +55,9 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "publish_breaking_news",
         # R2 W2 T2.3: portal notification retention (daily)
         "prune_portal_notifications",
+        # R3 TB4.1/TB4.2: contract PDF integrity + stale-contract expiry (daily)
+        "verify_contract_integrity",
+        "expire_stale_contracts",
     }
     assert set(beat_schedule.keys()) == required_keys, (
         f"Beat schedule keys mismatch: {set(beat_schedule.keys())!r}"

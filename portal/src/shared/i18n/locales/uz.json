@@ -550,6 +550,10 @@
     "contract_declined": {
       "title": "Shartnoma rad etildi",
       "body": "«{{title}}» shartnomasi rad etildi"
+    },
+    "contract_expired": {
+      "title": "Shartnoma muddati tugadi",
+      "body": "«{{title}}» shartnomasini kutish muddati tugadi"
     }
   },
   "contracts": {

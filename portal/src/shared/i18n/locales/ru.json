@@ -550,6 +550,10 @@
     "contract_declined": {
       "title": "Договор отклонён",
       "body": "Договор «{{title}}» отклонён"
+    },
+    "contract_expired": {
+      "title": "Договор истёк",
+      "body": "Срок ожидания договора «{{title}}» истёк"
     }
   },
   "contracts": {

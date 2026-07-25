@@ -61,6 +61,7 @@ _TRANSITIONS: dict[ContractStatus, set[ContractStatus]] = {
         ContractStatus.pending_signatures,
         ContractStatus.declined,
         ContractStatus.cancelled,
+        ContractStatus.expired,
     },
     ContractStatus.pending_signatures: {
         ContractStatus.active,
@@ -513,6 +514,27 @@ def _notify_company(db: Session, company_id: int, kind: str, contract: Contract)
             entity="contract",
             entity_id=str(contract.id),
         )
+
+
+def expire(db: Session, contract: Contract) -> Contract:
+    """Expire a stale pending contract (→ expired) + notify both parties (beat, TB4.2)."""
+    _transition(db, contract, ContractStatus.expired)
+    event_service.emit(db, event_types.CONTRACT_CANCELLED, "contract", contract.id, {"expired": True})
+    _notify_company(db, contract.initiator_company_id, "contract_expired", contract)
+    _notify_company(db, contract.counterparty_company_id, "contract_expired", contract)
+    audit_service.write_audit(
+        db, None, "contract.expire", "contracts", str(contract.id), {"reason": "ttl"}
+    )
+    return contract
+
+
+def document_matches_hash(contract: Contract, pdf_bytes: bytes) -> bool:
+    """True iff the stored PDF bytes still hash to the recorded document_sha256 (TB4.1)."""
+    import hashlib  # noqa: PLC0415
+
+    if not contract.document_sha256:
+        return True
+    return hashlib.sha256(pdf_bytes).hexdigest() == contract.document_sha256
 
 
 def now_utc() -> datetime.datetime:
