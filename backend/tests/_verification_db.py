@@ -31,6 +31,7 @@ _TABLES = [
     "domain_events",
     "audit_log",
     "verification_checks",
+    "portal_notifications",
     "seller_offer_files",
     "offer_requests",
     "seller_offers",
@@ -95,3 +96,44 @@ def make_staff(db: Session, email: str = "staff@example.com"):  # noqa: ANN202
     db.add(staff)
     db.flush()
     return staff
+
+
+def make_company(db: Session, owner, tax_id: str = "301234567", **kwargs):  # noqa: ANN001, ANN202
+    """A company owned by `owner` (an active owner member is created)."""
+    from app.models.companies import Company, CompanyMember  # noqa: PLC0415
+    from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
+
+    company = Company(
+        jurisdiction=kwargs.pop("jurisdiction", "UZ"),
+        tax_id=tax_id,
+        created_by_user_account_id=owner.id,
+        **kwargs,
+    )
+    db.add(company)
+    db.flush()
+    db.add(
+        CompanyMember(
+            company_id=company.id,
+            user_account_id=owner.id,
+            member_role=CompanyMemberRole.owner,
+            status=CompanyMemberStatus.active,
+        )
+    )
+    db.flush()
+    return company
+
+
+def make_member(db: Session, company, account, *, status=None, role=None):  # noqa: ANN001, ANN202
+    """Add `account` to `company` (defaults: active member)."""
+    from app.models.companies import CompanyMember  # noqa: PLC0415
+    from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
+
+    member = CompanyMember(
+        company_id=company.id,
+        user_account_id=account.id,
+        member_role=role or CompanyMemberRole.member,
+        status=status or CompanyMemberStatus.active,
+    )
+    db.add(member)
+    db.flush()
+    return member
