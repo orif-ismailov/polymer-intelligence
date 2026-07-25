@@ -130,4 +130,11 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "publish_breaking_news",
         "schedule": crontab(minute="*/10"),
     },
+    # ── Portal notification retention: daily at 03:30 UTC ─────────────────────
+    # Deletes read notifications older than 90 d and unread older than 365 d so the
+    # portal_notifications table stays bounded (R2 W2 T2.3 / W6 T6.2).
+    "prune_portal_notifications": {
+        "task": "prune_portal_notifications",
+        "schedule": crontab(minute=30, hour=3),
+    },
 }

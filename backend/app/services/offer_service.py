@@ -25,7 +25,7 @@ from app.models.marketplace import Seller, SellerOffer
 from app.models.reference import Product, ProductSynonym
 from app.schemas.marketplace import CategoryCount, SellerOfferCreate, SellerOfferUpdate
 from app.schemas.portal_company import CompanyOfferIn
-from app.services import event_service, event_types
+from app.services import event_service, event_types, notification_service
 from app.services.audit_service import write_audit
 from app.services.relevance_service import normalize_term
 
@@ -312,6 +312,33 @@ def category_counts(db: Session, *, exclude_seller_id: int | None = None) -> lis
     return [CategoryCount(code=str(code), count=int(count)) for code, count in rows]
 
 
+def _notify_company_offer_moderated(
+    db: Session, offer: SellerOffer, *, approve: bool
+) -> None:
+    """Notify a company-origin offer's members of a moderation outcome (R2 A2).
+
+    Flush-only, in the moderation transaction. No-op for TG-seller offers (their
+    seller learns the outcome through the existing TG surface). ``dedup=False`` so a
+    re-moderation after a seller edit re-notifies.
+    """
+    if offer.company_id is None:
+        return
+    title_key, body_key = notification_service.keys_for(
+        notification_service.KIND_OFFER_MODERATED
+    )
+    notification_service.notify_company(
+        db,
+        offer.company_id,
+        kind=notification_service.KIND_OFFER_MODERATED,
+        title_key=title_key,
+        body_key=body_key,
+        params={"offer_id": offer.id, "outcome": "approved" if approve else "rejected"},
+        entity="offer",
+        entity_id=str(offer.id),
+        dedup=False,
+    )
+
+
 def moderate_offer(
     db: Session,
     offer: SellerOffer,
@@ -334,6 +361,7 @@ def moderate_offer(
     offer.moderated_by = staff_user_id
     offer.moderation_note = note
     db.flush()
+    _notify_company_offer_moderated(db, offer, approve=approve)
 
     write_audit(
         db=db,
@@ -372,6 +400,7 @@ def moderate_offer_via_telegram(
         offer.status = SellerOfferStatus.rejected
     offer.moderation_note = note
     db.flush()
+    _notify_company_offer_moderated(db, offer, approve=approve)
 
     details: dict[str, object] = {"via": "telegram", "telegram_user_id": telegram_user_id}
     if note:
