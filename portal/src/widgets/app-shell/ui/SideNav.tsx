@@ -34,9 +34,15 @@ const CogIcon = (
     <path d="M10 3v2M10 15v2M3 10h2M15 10h2M5 5l1.4 1.4M13.6 13.6L15 15M15 5l-1.4 1.4M6.4 13.6L5 15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
   </svg>
 );
+const StoreIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M3 8V6l1-3h12l1 3v2M3 8h14v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8zM3 8a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+  </svg>
+);
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/", labelKey: "nav.home", icon: HomeIcon, end: true },
+  { to: "/market", labelKey: "nav.market", icon: StoreIcon },
   { to: "/companies", labelKey: "nav.companies", icon: BuildingIcon },
   { to: "/offers", labelKey: "nav.offers", icon: TagIcon },
   { to: "/settings", labelKey: "nav.settings", icon: CogIcon },

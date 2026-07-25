@@ -25,7 +25,8 @@
     "soon": "tez orada",
     "notSpecified": "Ko‘rsatilmagan",
     "search": "Qidiruv",
-    "all": "Barchasi"
+    "all": "Barchasi",
+    "prev": "Orqaga"
   },
   "errors": {
     "generic": "Nimadir noto‘g‘ri ketdi",
@@ -64,7 +65,12 @@
     "companies": "Kompaniyalar",
     "offers": "Takliflar",
     "settings": "Sozlamalar",
-    "logout": "Chiqish"
+    "logout": "Chiqish",
+    "market": "Bozor",
+    "requests": "Arizalar",
+    "inquiries": "So'rovlar",
+    "news": "Yangiliklar",
+    "notifications": "Bildirishnomalar"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -333,5 +339,41 @@
     "ru": "Русский",
     "uz": "O‘zbekcha",
     "en": "English"
+  },
+  "inquiryStatus": {
+    "pending": "Moderatsiyada",
+    "approved": "Tasdiqlangan",
+    "rejected": "Rad etilgan"
+  },
+  "market": {
+    "title": "Bozor",
+    "subtitle": "Tasdiqlangan yetkazib beruvchi takliflari",
+    "searchPlaceholder": "Mahsulot yoki marka bo'yicha qidirish…",
+    "availability": "Mavjudligi",
+    "availabilityAll": "Barcha holatlar",
+    "country": "Davlat",
+    "price": "Narx",
+    "qty": "Hajm",
+    "onRequest": "so'rov bo'yicha",
+    "verified": "Tasdiqlangan",
+    "notVerified": "Tasdiqlanmagan",
+    "empty": "Takliflar topilmadi",
+    "emptyBody": "Filtrlarni o'zgartiring yoki keyinroq qayting.",
+    "backToMarket": "Bozorga",
+    "notFound": "Taklif topilmadi",
+    "seller": "Sotuvchi",
+    "incoterms": "Shartlar",
+    "warehouse": "Ombor",
+    "minOrder": "Min. buyurtma",
+    "description": "Tavsif",
+    "myInquiries": "Mening so'rovlarim",
+    "sendInquiry": "So'rov yuborish",
+    "quantity": "Kerakli hajm",
+    "targetPrice": "Istalgan narx",
+    "message": "Xabar",
+    "ownOffer": "Bu sizning kompaniyangiz taklifi.",
+    "selectCompanyHint": "So'rov yuborish uchun kompaniyani tanlang.",
+    "inquirySent": "So'rov moderatsiyaga yuborildi.",
+    "inquiryFailed": "So'rovni yuborib bo'lmadi."
   }
 }

@@ -25,7 +25,8 @@
     "soon": "скоро",
     "notSpecified": "Не указано",
     "search": "Поиск",
-    "all": "Все"
+    "all": "Все",
+    "prev": "Назад"
   },
   "errors": {
     "generic": "Что-то пошло не так",
@@ -64,7 +65,12 @@
     "companies": "Компании",
     "offers": "Предложения",
     "settings": "Настройки",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "market": "Рынок",
+    "requests": "Заявки",
+    "inquiries": "Запросы",
+    "news": "Новости",
+    "notifications": "Уведомления"
   },
   "home": {
     "title": "Обзор",
@@ -333,5 +339,41 @@
     "ru": "Русский",
     "uz": "O‘zbekcha",
     "en": "English"
+  },
+  "inquiryStatus": {
+    "pending": "На модерации",
+    "approved": "Одобрен",
+    "rejected": "Отклонён"
+  },
+  "market": {
+    "title": "Рынок",
+    "subtitle": "Одобренные предложения поставщиков",
+    "searchPlaceholder": "Поиск по продукту или марке…",
+    "availability": "Наличие",
+    "availabilityAll": "Любое наличие",
+    "country": "Страна",
+    "price": "Цена",
+    "qty": "Объём",
+    "onRequest": "по запросу",
+    "verified": "Проверена",
+    "notVerified": "Не проверена",
+    "empty": "Предложения не найдены",
+    "emptyBody": "Измените фильтры или зайдите позже.",
+    "backToMarket": "К рынку",
+    "notFound": "Предложение не найдено",
+    "seller": "Продавец",
+    "incoterms": "Условия",
+    "warehouse": "Склад",
+    "minOrder": "Мин. заказ",
+    "description": "Описание",
+    "myInquiries": "Мои запросы",
+    "sendInquiry": "Отправить запрос",
+    "quantity": "Нужный объём",
+    "targetPrice": "Желаемая цена",
+    "message": "Сообщение",
+    "ownOffer": "Это предложение вашей компании.",
+    "selectCompanyHint": "Выберите компанию, чтобы отправить запрос.",
+    "inquirySent": "Запрос отправлен на модерацию.",
+    "inquiryFailed": "Не удалось отправить запрос."
   }
 }

@@ -25,7 +25,8 @@
     "soon": "soon",
     "notSpecified": "Not specified",
     "search": "Search",
-    "all": "All"
+    "all": "All",
+    "prev": "Previous"
   },
   "errors": {
     "generic": "Something went wrong",
@@ -64,7 +65,12 @@
     "companies": "Companies",
     "offers": "Offers",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "market": "Market",
+    "requests": "Requests",
+    "inquiries": "Inquiries",
+    "news": "News",
+    "notifications": "Notifications"
   },
   "home": {
     "title": "Overview",
@@ -333,5 +339,41 @@
     "ru": "Русский",
     "uz": "O‘zbekcha",
     "en": "English"
+  },
+  "inquiryStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "market": {
+    "title": "Market",
+    "subtitle": "Approved supplier offers",
+    "searchPlaceholder": "Search by product or grade…",
+    "availability": "Availability",
+    "availabilityAll": "Any availability",
+    "country": "Country",
+    "price": "Price",
+    "qty": "Quantity",
+    "onRequest": "on request",
+    "verified": "Verified",
+    "notVerified": "Not verified",
+    "empty": "No offers found",
+    "emptyBody": "Adjust filters or check back later.",
+    "backToMarket": "Back to market",
+    "notFound": "Offer not found",
+    "seller": "Seller",
+    "incoterms": "Incoterms",
+    "warehouse": "Warehouse",
+    "minOrder": "Min. order",
+    "description": "Description",
+    "myInquiries": "My inquiries",
+    "sendInquiry": "Send inquiry",
+    "quantity": "Quantity",
+    "targetPrice": "Target price",
+    "message": "Message",
+    "ownOffer": "This is your company's offer.",
+    "selectCompanyHint": "Select a company to send an inquiry.",
+    "inquirySent": "Inquiry sent for moderation.",
+    "inquiryFailed": "Could not send the inquiry."
   }
 }
