@@ -83,6 +83,16 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   **NOTE (`.env.example`):** the three E-IMZO variables above must be appended to the tracked
   `deploy/.env.example` env contract; they were not added automatically here because the local
   tooling denies edits to `.env*` files.
+- **Contracts (R3 Stage B)** — the contract PDF renderer uses **WeasyPrint**, whose native libs
+  (Pango/Cairo/GDK-Pixbuf + `fonts-dejavu`/`fonts-liberation` for Cyrillic) are installed in
+  `backend/Dockerfile` and the CI backend job; without them the PDF render test skips. The api
+  startup command runs `python -m app.seed.seed_contract_templates` (idempotent) which uploads the
+  supply-contract template body to S3 and inserts the `contract_templates` row — the bundled body is
+  a **DEV placeholder**; the production text + legal sign-off are a launch blocker (see
+  `docs/contracts-legal-checklist.md`). Nightly beats `verify_contract_integrity` (PDF sha256 drift
+  → admin-channel alert) and `expire_stale_contracts` (`contract_pending_ttl_days`, default 30) run
+  on the existing `default` queue — no queue/compose change. `EIMZO_STUB=true` (dev/CI only) lets the
+  whole sign flow run without the sidecar; **must be false in production**.
 
 ## Make targets (run from repo root)
 

@@ -16,9 +16,13 @@ and degradation is graceful.
 
 The original signal pipeline shipped through Phase 6 (acceptance/handover); later work
 added the marketplace/sourcing surface (buyer↔seller inquiries, buyer-request AI analysis)
-and the News Engine (Phases 7–8). Design history, requirements (`TZ`), and per-phase
-plans/summaries live under `.planning/` and `docs/`; read those for the *why* behind a
-decision before changing load-bearing behavior.
+and the News Engine (Phases 7–8). The **company-verification & portal** track (R1–R3, under
+`.planning/company-verification/`) then added the client cabinet (`portal/`), staff
+verification, **E-IMZO digital-signature company confirmation** (UNICON `eimzo-server`
+sidecar), and the **contracts** bounded context (two verified companies e-sign a contract via
+E-IMZO — the seed of the Deal Lifecycle domain). Design history, requirements (`TZ`), and
+per-phase plans/summaries live under `.planning/` and `docs/`; read those for the *why* behind
+a decision before changing load-bearing behavior.
 
 ## Component guides
 
@@ -202,12 +206,14 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 - Domain enums (`app/models/enums.py`) are declared `(str, Enum)` (not `StrEnum`) to match the
   Postgres ENUM types verbatim; `str(member)` / f-string output is relied upon — don't switch to
   `StrEnum` (ruff `UP042` is disabled for this reason).
-- Migrations: `backend/alembic/versions/` (`0001`→`0016`; the chain grew past the original
+- Migrations: `backend/alembic/versions/` (`0001`→`0021`; the chain grew past the original
   Phase-6 `0005` with marketplace/sourcing `0007`–`0013`, `reports`/evening-report `0014`,
-  `app_settings` `0015`, source groups `0016`). Run `alembic upgrade head` (or let `app/entrypoint.py`
-  do it, advisory-locked, idempotent for concurrent workers).
-- Reference/seed data: `app/seed/` (`seed_reference`, `seed_staff`, `seed_sources`, `seed_demo`),
-  with JSON under `app/seed/data/`. Seeders are idempotent (`ON CONFLICT`).
+  `app_settings` `0015`, source groups `0016`, R1 verification/portal `0017`, R2 portal-parity
+  `0018`, market-list index `0019`, R3 E-IMZO rails `0020`, R3 contracts `0021`). Run
+  `alembic upgrade head` (or let `app/entrypoint.py` do it, advisory-locked, idempotent for
+  concurrent workers).
+- Reference/seed data: `app/seed/` (`seed_reference`, `seed_staff`, `seed_sources`, `seed_demo`,
+  `seed_contract_templates`), with JSON/HTML under `app/seed/data/`. Seeders are idempotent (`ON CONFLICT`).
 
 ### API & auth
 
