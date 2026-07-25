@@ -12,18 +12,20 @@ Company-scoped: every read/write carries ``company_id`` and membership is enforc
 
 from __future__ import annotations
 
+import redis
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404
+from app.api.portal.companies import _company_or_404, _rate_limited
 from app.core.db import get_db
+from app.core.redis import get_redis
 from app.models.accounts import UserAccount
 from app.models.enums import OfferRequestStatus, SellerOfferStatus
 from app.models.marketplace import OfferRequest, SellerOffer
 from app.schemas.marketplace import OfferRequestOut
 from app.schemas.portal_market import PortalInquiryCreate, PortalInquiryUpdate
-from app.services import offer_request_service
+from app.services import offer_request_service, rate_limit
 
 router = APIRouter(prefix="/portal", tags=["portal-inquiries"])
 
@@ -52,9 +54,16 @@ def create_inquiry(
     body: PortalInquiryCreate,
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),
 ) -> OfferRequestOut:
     """POST /portal/market/{offer_id}/inquiries — pending inquiry → staff moderation."""
     company = _company_or_404(db, account, body.company_id)
+    try:
+        rate_limit.enforce_daily(
+            redis_client, "inquiry_create", company.id, rate_limit.INQUIRY_CREATE_PER_DAY
+        )
+    except rate_limit.RateLimited as exc:
+        raise _rate_limited(exc) from exc
     offer = (
         db.query(SellerOffer)
         .filter(SellerOffer.id == offer_id, SellerOffer.status == SellerOfferStatus.approved)

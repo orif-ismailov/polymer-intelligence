@@ -47,10 +47,13 @@ def api(engine: sa.Engine):  # noqa: ANN201
     from unittest.mock import patch  # noqa: PLC0415
 
     from app.core.db import get_db  # noqa: PLC0415
+    from app.core.redis import get_redis  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
+    from tests._fake_redis import FakeRedis  # noqa: PLC0415
 
     clean(engine)
     session = session_factory(engine)
+    fake_redis = FakeRedis()
     app = create_app()
 
     def _override_db():  # noqa: ANN202
@@ -60,7 +63,11 @@ def api(engine: sa.Engine):  # noqa: ANN201
         finally:
             db.close()
 
+    def _override_redis():  # noqa: ANN202
+        yield fake_redis
+
     app.dependency_overrides[get_db] = _override_db
+    app.dependency_overrides[get_redis] = _override_redis
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(app) as client:
         yield client, session
     clean(engine)
@@ -151,6 +158,33 @@ def test_edit_inquiry_reenters_moderation(api) -> None:  # noqa: ANN001
     )
     assert resp.status_code == 200, resp.text
     assert resp.json()["status"] == "pending"  # re-entered moderation
+
+
+@requires_real_db
+def test_inquiry_daily_rate_limit(api) -> None:  # noqa: ANN001
+    """The 11th inquiry in a day for a company is rejected with 429 (R2 W6 T6.1)."""
+    client, session = api
+    with session() as db:
+        seller_owner = make_account(db, "+998900005400")
+        selling_co = make_company(db, seller_owner, tax_id="315000400")
+        offer = make_seller_offer(db, company=selling_co)
+        buyer_owner = make_account(db, "+998900005401")
+        buyer_co = make_company(db, buyer_owner, tax_id="315000401")
+        db.commit()
+        buyer_owner_id, buyer_co_id, offer_id = buyer_owner.id, buyer_co.id, offer.id
+
+    body = {"company_id": buyer_co_id, "message": "hi"}
+    for _ in range(10):
+        assert (
+            client.post(
+                f"{_BASE}/market/{offer_id}/inquiries", json=body, headers=_auth(buyer_owner_id)
+            ).status_code
+            == 201
+        )
+    over = client.post(
+        f"{_BASE}/market/{offer_id}/inquiries", json=body, headers=_auth(buyer_owner_id)
+    )
+    assert over.status_code == 429
 
 
 @requires_real_db

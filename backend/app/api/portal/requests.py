@@ -12,6 +12,7 @@ Company-scoped: every route carries company_id; membership is enforced (non-memb
 
 from __future__ import annotations
 
+import redis
 from fastapi import (
     APIRouter,
     Depends,
@@ -25,13 +26,14 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404
+from app.api.portal.companies import _company_or_404, _rate_limited
 from app.core.db import get_db
+from app.core.redis import get_redis
 from app.models.accounts import UserAccount
 from app.models.requests import Request
 from app.schemas.portal_request import PortalRequestCreate
 from app.schemas.webapp import RequestDetailOut, RequestFileOut, RequestOut
-from app.services import request_service, storage_service
+from app.services import rate_limit, request_service, storage_service
 
 router = APIRouter(prefix="/portal/requests", tags=["portal-requests"])
 
@@ -55,8 +57,15 @@ def create_request(
     body: PortalRequestCreate,
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),
 ) -> RequestOut:
     company = _company_or_404(db, account, body.company_id)
+    try:
+        rate_limit.enforce_daily(
+            redis_client, "request_create", company.id, rate_limit.REQUEST_CREATE_PER_DAY
+        )
+    except rate_limit.RateLimited as exc:
+        raise _rate_limited(exc) from exc
     req = request_service.create_company_request(db, company, account, body)
     db.commit()
     return RequestOut.model_validate(req)

@@ -16,6 +16,9 @@ import redis
 COMPANY_CREATE_PER_DAY = 5
 DOCUMENT_UPLOAD_PER_DAY = 30
 OFFER_CREATE_PER_DAY = 20
+# R2 W6 — per-company buy-side limits (notification endpoints are NOT limited).
+INQUIRY_CREATE_PER_DAY = 10
+REQUEST_CREATE_PER_DAY = 10
 
 
 class RateLimited(Exception):

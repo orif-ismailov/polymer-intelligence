@@ -55,10 +55,13 @@ def api(engine: sa.Engine):  # noqa: ANN201
     from unittest.mock import patch  # noqa: PLC0415
 
     from app.core.db import get_db  # noqa: PLC0415
+    from app.core.redis import get_redis  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
+    from tests._fake_redis import FakeRedis  # noqa: PLC0415
 
     clean(engine)
     session = session_factory(engine)
+    fake_redis = FakeRedis()
     app = create_app()
 
     def _override_db():  # noqa: ANN202
@@ -68,7 +71,11 @@ def api(engine: sa.Engine):  # noqa: ANN201
         finally:
             db.close()
 
+    def _override_redis():  # noqa: ANN202
+        yield fake_redis
+
     app.dependency_overrides[get_db] = _override_db
+    app.dependency_overrides[get_redis] = _override_redis
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(app) as client:
         yield client, session
     clean(engine)
@@ -151,3 +158,15 @@ def test_cross_company_isolation(api) -> None:  # noqa: ANN001
     # A acting, claims B → 404
     resp = client.get(_BASE, params={"company_id": company_b_id}, headers=_auth(a_owner_id))
     assert resp.status_code == 404
+
+
+@requires_real_db
+def test_request_daily_rate_limit(api) -> None:  # noqa: ANN001
+    """The 11th request in a day for a company is rejected with 429 (R2 W6 T6.1)."""
+    client, session = api
+    owner_id, company_id = _setup_company(session)
+    body = {"company_id": company_id, **_WIZARD}
+    for _ in range(10):
+        assert client.post(_BASE, json=body, headers=_auth(owner_id)).status_code == 201
+    over = client.post(_BASE, json=body, headers=_auth(owner_id))
+    assert over.status_code == 429
