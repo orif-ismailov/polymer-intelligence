@@ -39,10 +39,16 @@ const StoreIcon = (
     <path d="M3 8V6l1-3h12l1 3v2M3 8h14v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8zM3 8a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
   </svg>
 );
+const ChatIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M4 4h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H8l-4 3v-3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+  </svg>
+);
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/", labelKey: "nav.home", icon: HomeIcon, end: true },
   { to: "/market", labelKey: "nav.market", icon: StoreIcon },
+  { to: "/inquiries", labelKey: "nav.inquiries", icon: ChatIcon },
   { to: "/companies", labelKey: "nav.companies", icon: BuildingIcon },
   { to: "/offers", labelKey: "nav.offers", icon: TagIcon },
   { to: "/settings", labelKey: "nav.settings", icon: CogIcon },

@@ -375,5 +375,25 @@
     "selectCompanyHint": "So'rov yuborish uchun kompaniyani tanlang.",
     "inquirySent": "So'rov moderatsiyaga yuborildi.",
     "inquiryFailed": "So'rovni yuborib bo'lmadi."
+  },
+  "inquiries": {
+    "title": "So'rovlar",
+    "subtitle": "Sizning so'rovlaringiz va takliflaringizga kelgan so'rovlar",
+    "tab": {
+      "sent": "Yuborilgan",
+      "incoming": "Kelgan"
+    },
+    "empty": {
+      "sent": "Yuborilgan so'rovlar yo'q",
+      "incoming": "Kelgan so'rovlar yo'q"
+    },
+    "emptyBody": "Bozordan so'rov yuboring, u shu yerda ko'rinadi.",
+    "notFound": "So'rov topilmadi",
+    "back": "So'rovlarga",
+    "viewOffer": "Taklifni ko'rish",
+    "editedNotice": "Siz so'rovni o'zgartirdingiz — u qayta moderatsiyaga o'tadi.",
+    "edit": "Tahrirlash",
+    "resubmit": "Qayta yuborish",
+    "editFailed": "O'zgarishlarni saqlab bo'lmadi."
   }
 }

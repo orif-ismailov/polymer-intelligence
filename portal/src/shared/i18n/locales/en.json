@@ -375,5 +375,25 @@
     "selectCompanyHint": "Select a company to send an inquiry.",
     "inquirySent": "Inquiry sent for moderation.",
     "inquiryFailed": "Could not send the inquiry."
+  },
+  "inquiries": {
+    "title": "Inquiries",
+    "subtitle": "Your inquiries and the ones received on your offers",
+    "tab": {
+      "sent": "Sent",
+      "incoming": "Incoming"
+    },
+    "empty": {
+      "sent": "No inquiries sent",
+      "incoming": "No incoming inquiries"
+    },
+    "emptyBody": "Send an inquiry from the market to see it here.",
+    "notFound": "Inquiry not found",
+    "back": "Back to inquiries",
+    "viewOffer": "View offer",
+    "editedNotice": "You revised this inquiry — it re-enters moderation.",
+    "edit": "Edit",
+    "resubmit": "Resubmit",
+    "editFailed": "Could not save the changes."
   }
 }

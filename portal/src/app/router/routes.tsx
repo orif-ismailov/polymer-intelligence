@@ -4,6 +4,7 @@ import { CompaniesPage } from "@/pages/companies";
 import { CompanyCreatePage } from "@/pages/company-create";
 import { CompanyViewPage } from "@/pages/company-view";
 import { HomePage } from "@/pages/home";
+import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
 import { LoginPage } from "@/pages/login";
 import { MarketOfferPage, MarketPage } from "@/pages/market";
 import { OfferEditPage } from "@/pages/offer-edit";
@@ -38,6 +39,8 @@ export const router = createBrowserRouter([
           { path: "/", element: <HomePage /> },
           { path: "/market", element: <MarketPage /> },
           { path: "/market/:offerId", element: <MarketOfferPage /> },
+          { path: "/inquiries", element: <InquiriesPage /> },
+          { path: "/inquiries/:inquiryId", element: <InquiryDetailPage /> },
           { path: "/companies", element: <CompaniesPage /> },
           { path: "/companies/new", element: <Navigate to="/companies/new/1" replace /> },
           { path: "/companies/new/:step", element: <CompanyCreatePage /> },
