@@ -60,7 +60,7 @@ async function registerCompany(page: Page, taxId: string): Promise<void> {
   await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
 
   await page.waitForURL("**/companies/new/5");
-  await page.getByRole("button", { name: /submit|создать|yaratish/i }).click();
+  await page.getByTestId("wizard-submit").click();
   await page.waitForURL(/\/companies\/\d+\/verification/);
 }
 
@@ -71,7 +71,8 @@ test("buyer creates a purchase request and browses the R2 surfaces", async ({ pa
 
   // ── Purchase request through the 4-step wizard ──────────────────────────────
   await page.goto("/requests");
-  await page.getByRole("link", { name: /new request|новая заявка|yangi ariza/i }).click();
+  // Two identical CTAs render on /requests (header + empty state) — take the header one.
+  await page.getByRole("link", { name: /new request|новая заявка|yangi ariza/i }).first().click();
   await page.waitForURL("**/requests/new");
 
   // Step 1 — product + grade
@@ -91,7 +92,7 @@ test("buyer creates a purchase request and browses the R2 surfaces", async ({ pa
 
   // Lands on the request detail with a status timeline (starts at "new").
   await page.waitForURL(/\/requests\/\d+$/);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(/REQ-/);
+  await expect(page.getByRole("heading", { name: /REQ-/ })).toBeVisible();
 
   // It also appears in the list.
   await page.goto("/requests");

@@ -3,10 +3,15 @@ import { expect, test, type APIRequestContext, type BrowserContext, type Page } 
 /**
  * R3 Stage B e2e: the full contract demo with a STUBBED CAPIWS bridge.
  *
- * Prerequisites (a live dev stack): backend with EIMZO_STUB=true AND the app-setting
- * verification_auto_approve=on (so E-IMZO onboarding yields a verified company that
- * can transact), the SUPPLY_V1 template seeded, and the dev OTP peek endpoint.
- * Two browser contexts play the two companies. Valid harness; not run in CI here.
+ * Prerequisites (a live dev stack):
+ *   - backend on :8000 with DEBUG=true (dev OTP peek endpoint) and EIMZO_STUB=true
+ *   - app-setting verification_auto_approve=on, so E-IMZO onboarding yields a
+ *     verified company that can transact
+ *   - the SUPPLY_V1 contract template seeded (seed_contract_templates)
+ *   - OTP_MAX_SENDS_PER_DAY raised: the cap is enforced PER CLIENT IP as well as
+ *     per phone, so the default 5 blocks repeated runs from one machine
+ *
+ * Two browser contexts play the two companies.
  */
 
 const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
@@ -78,11 +83,22 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
 
   // Company A creates a contract with company B.
   await pageA.goto("/contracts/new");
-  await pageA.getByTestId("contracts-new").isVisible().catch(() => undefined);
-  // template select (first non-empty option) + product field
-  await pageA.locator("select").first().selectOption({ index: 1 });
-  const productInput = pageA.getByLabel(/product|товар|tovar/i).first();
-  if (await productInput.count()) await productInput.fill("HDPE film");
+  // Template select (first non-empty option), then fill EVERY field the template's
+  // variables_schema renders — the form is schema-driven, so drive it generically
+  // rather than naming fields (a template change must not silently skip a required one).
+  const varsCard = pageA.getByTestId("contract-variables");
+  await varsCard.locator("select").first().selectOption({ index: 1 });
+  await expect(varsCard.locator("input")).not.toHaveCount(0);
+
+  const selects = varsCard.locator("select");
+  for (let i = 1; i < (await selects.count()); i++) {
+    await selects.nth(i).selectOption({ index: 1 });
+  }
+  const inputs = varsCard.locator("input");
+  for (let i = 0; i < (await inputs.count()); i++) {
+    await inputs.nth(i).fill(i === 0 ? "HDPE film" : `e2e-${i}`);
+  }
+
   // counterparty search → pick B
   await pageA.getByPlaceholder(/search|поиск|qidirish/i).fill(taxB);
   await pageA.getByTestId("cp-option").first().click();
@@ -94,20 +110,27 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
   await pageA.getByTestId("contract-send").click();
   await expect(pageA.getByText(/awaiting counterparty|ожидает контрагента|kontragent kutil/i)).toBeVisible();
 
-  // B opens the same contract, accepts, signs
+  // B opens the same contract, accepts, signs.
+  // The dialog auto-signs (single stub cert) and, on success, the parent refetches —
+  // which unmounts the sign button. So assert the DURABLE outcome (the recorded
+  // signature + resulting state), not the transient success alert.
   const contractId = contractUrl.split("/").pop();
   await pageB.goto(`/contracts/${contractId}`);
   await pageB.getByTestId("contract-accept").click();
-  await pageB.getByRole("button", { name: /sign|подписать|imzolash/i }).first().click();
-  await expect(pageB.getByTestId("eimzo-success")).toBeVisible({ timeout: 15_000 });
+  await pageB.getByTestId("eimzo-open").click();
+  await expect(pageB.getByText(/awaiting the other|ожидаем подпись|ikkinchi tomon/i)).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(pageB.getByTestId("eimzo-open")).toHaveCount(0);
 
-  // A signs → active
+  // A signs → both signatures present → active
   await pageA.goto(`/contracts/${contractId}`);
-  await pageA.getByRole("button", { name: /sign|подписать|imzolash/i }).first().click();
-  await expect(pageA.getByTestId("eimzo-success")).toBeVisible({ timeout: 15_000 });
+  await pageA.getByTestId("eimzo-open").click();
+  await expect(pageA.getByTestId("contract-download")).toBeVisible({ timeout: 15_000 });
   await pageA.reload();
   await expect(pageA.getByText(/active|активен|faol/i).first()).toBeVisible();
   await expect(pageA.getByTestId("contract-download")).toBeVisible();
+  await expect(pageA.getByTestId("contract-pdf")).toBeVisible();
 
   await ctxA.close();
   await ctxB.close();

@@ -5,7 +5,11 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
  * E-IMZO module). The browser bridge is injected on `window.__EIMZO_BRIDGE__`; the
  * backend must run with EIMZO_STUB=true so its gateway verifies the synthetic
  * PKCS#7 the stub produces. Covers the happy path (sign → auto-approve/confirm)
- * and the module-missing path. Valid harness; not run in CI here (no live backend).
+ * and the module-missing path.
+ *
+ * Prerequisites: live backend on :8000 with DEBUG=true + EIMZO_STUB=true, and
+ * OTP_MAX_SENDS_PER_DAY raised (the daily cap is per client IP as well as per
+ * phone, so the default 5 blocks repeated runs from one machine).
  */
 
 const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";

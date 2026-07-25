@@ -122,7 +122,12 @@ export function StepConfirm({ onBack, onEditStep, onComplete }: StepConfirmProps
         <Button variant="ghost" onClick={onBack} disabled={isSubmitting}>
           {t("common.back")}
         </Button>
-        <Button onClick={() => void handleSubmit()} loading={isSubmitting} className="min-w-56">
+        <Button
+          onClick={() => void handleSubmit()}
+          loading={isSubmitting}
+          className="min-w-56"
+          data-testid="wizard-submit"
+        >
           {isSubmitting ? t("wizard.confirm.submitting") : t("wizard.confirm.submit")}
         </Button>
       </div>

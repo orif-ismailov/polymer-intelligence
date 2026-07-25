@@ -71,7 +71,7 @@ test("register a company and publish an offer", async ({ page, request }) => {
 
   // Step 5 — confirm + submit.
   await page.waitForURL("**/companies/new/5");
-  await page.getByRole("button", { name: /submit|создать|yaratish/i }).click();
+  await page.getByTestId("wizard-submit").click();
 
   // Lands on the verification status screen.
   await page.waitForURL(/\/companies\/\d+\/verification/);

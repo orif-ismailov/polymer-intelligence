@@ -157,6 +157,39 @@ def test_valid_signature_auto_approves(sf, monkeypatch) -> None:  # noqa: ANN001
 
 
 @requires_real_db
+def test_evidence_signed_at_is_the_signing_moment_not_cert_issuance(sf, monkeypatch) -> None:  # noqa: ANN001
+    """`signed_at` must record WHEN the signature was made.
+
+    The certificate's validity window starts whenever the cert was issued — often
+    years earlier — so recording `cert_valid_from` there misdates the evidence a
+    lawyer reads as "signed on". Contract evidence already stamps the signing
+    moment; identity evidence must match.
+    """
+    import datetime  # noqa: PLC0415
+
+    from app.models.eimzo import SignatureEvidence  # noqa: PLC0415
+    from app.services import eimzo_service  # noqa: PLC0415
+
+    issued = datetime.datetime(2019, 3, 4, tzinfo=datetime.UTC)
+    result = _result()
+    object.__setattr__(result, "cert_valid_from", issued)
+
+    _patch(monkeypatch, result=result)
+    with sf() as db:
+        account, company = _company(db)
+        redis_client = FakeRedis()
+        eimzo_service.issue_challenge(redis_client, company.id, account.id)
+        before = datetime.datetime.now(datetime.UTC)
+        eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        db.commit()
+
+        evidence = db.query(SignatureEvidence).filter_by(company_id=company.id).one()
+        assert evidence.signed_at is not None
+        assert evidence.signed_at != issued
+        assert evidence.signed_at >= before - datetime.timedelta(seconds=5)
+
+
+@requires_real_db
 def test_locked_requisites_reject_manual_patch(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.services import company_service, eimzo_service, verification_service  # noqa: PLC0415
 

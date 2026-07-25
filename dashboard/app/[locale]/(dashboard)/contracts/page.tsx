@@ -104,16 +104,16 @@ export default function ContractsPage() {
   return (
     <div className="p-6">
       <div className="mb-4 flex items-center gap-2">
-        <FileText className="h-5 w-5 text-slate-500" />
+        <FileText className="h-5 w-5 text-foreground-muted" />
         <h1 className="text-xl font-semibold">{t("title")}</h1>
       </div>
-      <p className="mb-4 text-sm text-slate-500">{t("subtitle")}</p>
+      <p className="mb-4 text-sm text-foreground-muted">{t("subtitle")}</p>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded border border-slate-300 px-2 py-1 text-sm"
+          className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
         >
           {STATUSES.map((s) => (
             <option key={s} value={s}>
@@ -125,14 +125,14 @@ export default function ContractsPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t("search")}
-          className="rounded border border-slate-300 px-2 py-1 text-sm"
+          className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-accent"
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-lg border border-slate-200">
+        <div className="overflow-hidden rounded-lg border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs text-slate-500">
+            <thead className="bg-background-secondary text-left text-xs text-foreground-muted">
               <tr>
                 <th className="px-3 py-2">{t("colTitle")}</th>
                 <th className="px-3 py-2">{t("colParties")}</th>
@@ -144,12 +144,12 @@ export default function ContractsPage() {
                 <tr
                   key={c.id}
                   onClick={() => setSelected(c.id)}
-                  className={`cursor-pointer border-t border-slate-100 hover:bg-slate-50 ${
-                    selected === c.id ? "bg-slate-50" : ""
+                  className={`cursor-pointer border-t border-border hover:bg-background-tertiary ${
+                    selected === c.id ? "bg-background-tertiary" : ""
                   }`}
                 >
                   <td className="px-3 py-2">{c.title}</td>
-                  <td className="px-3 py-2 text-xs text-slate-600">
+                  <td className="px-3 py-2 text-xs text-foreground-muted">
                     {c.initiator_name} → {c.counterparty_name}
                   </td>
                   <td className="px-3 py-2">{statusChip(c.status)}</td>
@@ -157,7 +157,7 @@ export default function ContractsPage() {
               ))}
               {listQuery.data?.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-3 py-6 text-center text-slate-400">
+                  <td colSpan={3} className="px-3 py-6 text-center text-foreground-muted">
                     {t("empty")}
                   </td>
                 </tr>
@@ -166,42 +166,44 @@ export default function ContractsPage() {
           </table>
         </div>
 
-        <div className="rounded-lg border border-slate-200 p-4">
+        <div className="rounded-lg border border-border p-4">
           {selected == null ? (
-            <p className="text-sm text-slate-400">{t("selectHint")}</p>
+            <p className="text-sm text-foreground-muted">{t("selectHint")}</p>
           ) : detailQuery.isLoading ? (
-            <p className="text-sm text-slate-400">…</p>
+            <p className="text-sm text-foreground-muted">…</p>
           ) : detailQuery.data ? (
             <div className="space-y-4 text-sm">
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold">{detailQuery.data.title}</h2>
                 {statusChip(detailQuery.data.status)}
               </div>
-              <div className="text-slate-600">
+              <div className="text-foreground-muted">
                 {detailQuery.data.initiator_name} → {detailQuery.data.counterparty_name}
               </div>
               {detailQuery.data.document_available ? (
                 <button
                   onClick={() => void openDocument(detailQuery.data!.id)}
-                  className="rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+                  className="rounded border border-border bg-background-tertiary px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background-secondary"
                 >
                   {t("openDocument")}
                 </button>
               ) : null}
               {detailQuery.data.document_sha256 ? (
-                <div className="break-all text-xs text-slate-400">sha256: {detailQuery.data.document_sha256}</div>
+                <div className="break-all text-xs text-foreground-muted">
+                  sha256: {detailQuery.data.document_sha256}
+                </div>
               ) : null}
 
               <div>
                 <h3 className="mb-1 font-medium">{t("signatures")}</h3>
                 {detailQuery.data.signatures.length === 0 ? (
-                  <p className="text-xs text-slate-400">{t("noSignatures")}</p>
+                  <p className="text-xs text-foreground-muted">{t("noSignatures")}</p>
                 ) : (
                   <ul className="space-y-1">
                     {detailQuery.data.signatures.map((s) => (
                       <li key={s.company_id} className="flex justify-between text-xs">
                         <span>{s.company_name}</span>
-                        <span className="text-slate-400">{formatTashkent(s.signed_at)}</span>
+                        <span className="text-foreground-muted">{formatTashkent(s.signed_at)}</span>
                       </li>
                     ))}
                   </ul>
@@ -213,8 +215,8 @@ export default function ContractsPage() {
                 <ul className="space-y-1">
                   {detailQuery.data.timeline.map((e, i) => (
                     <li key={i} className="flex justify-between text-xs">
-                      <span className="text-slate-600">{e.action}</span>
-                      <span className="text-slate-400">{formatTashkent(e.at)}</span>
+                      <span className="text-foreground-muted">{e.action}</span>
+                      <span className="text-foreground-muted">{formatTashkent(e.at)}</span>
                     </li>
                   ))}
                 </ul>

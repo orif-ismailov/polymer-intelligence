@@ -113,7 +113,7 @@ export function ContractCreatePage() {
       <h1 className="text-2xl font-semibold text-text">{t("contracts.create")}</h1>
 
       <Card>
-        <CardBody className="space-y-4">
+        <CardBody className="space-y-4" data-testid="contract-variables">
           <FormField label={t("contracts.template")} required>
             {({ id }) => (
               <Select

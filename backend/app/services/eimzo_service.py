@@ -256,7 +256,10 @@ def _store_evidence(
         pkcs7_storage_path=path,
         pkcs7_sha256=sha,
         cert_subject=cert_subject,
-        signed_at=result.cert_valid_from,
+        # When the signature was made — NOT result.cert_valid_from (that is the
+        # certificate's issuance/validity start, often years earlier, and would
+        # misdate the evidence). Mirrors contract_service's signing stamp.
+        signed_at=company_service.now_utc(),
     )
     db.add(evidence)
     db.flush()
