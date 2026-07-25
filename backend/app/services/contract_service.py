@@ -405,6 +405,19 @@ def sign(
 
         raise CertCompanyMismatch(_mask_inn(cert_inn), _mask_inn(company.tax_id))
 
+    # Serialize concurrent signers on the contract row BEFORE touching
+    # contract_signatures. Inserting a signature takes an FK KEY SHARE lock on this
+    # row; if both parties sign at the same moment, each would then try to upgrade
+    # to FOR UPDATE in _maybe_activate while the other holds KEY SHARE — Postgres
+    # detects the cycle and kills one transaction, losing a signature. Taking the
+    # exclusive lock up front makes the second signer queue instead. Acquired only
+    # AFTER the sidecar round-trip above, so the lock never spans a network call.
+    locked = db.execute(
+        select(Contract).where(Contract.id == contract.id).with_for_update()
+    ).scalar_one()
+    if locked.status != ContractStatus.pending_signatures:
+        raise InvalidContractTransition(str(locked.status))
+
     if (
         db.query(ContractSignature)
         .filter(

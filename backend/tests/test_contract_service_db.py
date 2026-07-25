@@ -201,6 +201,79 @@ def test_full_sign_activates(sf, monkeypatch) -> None:  # noqa: ANN001
 
 
 @requires_real_db
+def test_concurrent_final_signatures_activate_exactly_once(sf, monkeypatch) -> None:  # noqa: ANN001
+    """Both parties sign at the same moment → one activation, not two.
+
+    The real race the `SELECT … FOR UPDATE` in `_maybe_activate` guards: each
+    transaction inserts its own signature and then asks "are both present?". If
+    both read before either commits, an unguarded implementation flips the row to
+    `active` twice and emits two CONTRACT_ACTIVATED events. Two separate sessions
+    on real Postgres are required — a single session can't reproduce it.
+    """
+    import threading  # noqa: PLC0415
+
+    from app.models.contracts import Contract  # noqa: PLC0415
+    from app.models.enums import ContractStatus  # noqa: PLC0415
+    from app.models.events import DomainEvent  # noqa: PLC0415
+    from app.services import contract_service, event_types  # noqa: PLC0415
+
+    _patch(monkeypatch)
+    with sf() as db:
+        (acc_a, comp_a), (acc_b, comp_b), contract = _make_sent_pending(db, monkeypatch)
+        redis_client = FakeRedis()
+        contract_id = contract.id
+        # Issue both challenges up front so the threads only race on signing.
+        ch_a = contract_service.issue_sign_challenge(db, redis_client, contract, comp_a, acc_a)
+        ch_b = contract_service.issue_sign_challenge(db, redis_client, contract, comp_b, acc_b)
+        ids = (comp_a.id, acc_a.id, comp_a.tax_id, comp_b.id, acc_b.id, comp_b.tax_id)
+        db.commit()
+
+    comp_a_id, acc_a_id, tax_a, comp_b_id, acc_b_id, tax_b = ids
+    barrier = threading.Barrier(2)
+    errors: list[BaseException] = []
+
+    def _sign(company_id: int, account_id: int, tax: str, challenge: str) -> None:
+        from app.models.accounts import UserAccount  # noqa: PLC0415
+        from app.models.companies import Company  # noqa: PLC0415
+
+        try:
+            with sf() as s:
+                c = s.get(Contract, contract_id)
+                company = s.get(Company, company_id)
+                account = s.get(UserAccount, account_id)
+                barrier.wait(timeout=10)  # release both threads together
+                contract_service.sign(s, redis_client, c, company, account, _pkcs7(challenge, tax))
+                s.commit()
+        except BaseException as exc:  # noqa: BLE001 — surfaced below
+            errors.append(exc)
+
+    threads = [
+        threading.Thread(target=_sign, args=(comp_a_id, acc_a_id, tax_a, ch_a)),
+        threading.Thread(target=_sign, args=(comp_b_id, acc_b_id, tax_b, ch_b)),
+    ]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join(timeout=30)
+
+    assert not errors, f"concurrent signing raised: {errors}"
+
+    with sf() as db:
+        contract = db.get(Contract, contract_id)
+        assert contract.status == ContractStatus.active
+        assert contract.activated_at is not None
+        assert (
+            db.query(DomainEvent)
+            .filter(
+                DomainEvent.event_type == event_types.CONTRACT_ACTIVATED,
+                DomainEvent.aggregate_id == str(contract_id),
+            )
+            .count()
+            == 1
+        )
+
+
+@requires_real_db
 def test_sign_inn_mismatch_rejected(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.services import contract_service  # noqa: PLC0415
     from app.services.eimzo_service import CertCompanyMismatch  # noqa: PLC0415
