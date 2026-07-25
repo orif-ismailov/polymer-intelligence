@@ -90,6 +90,10 @@ def _make_mock_request(
     req.comment = None
     req.assigned_to = None
     req.ai = {}
+    # Dual-origin (R2 W4): a TG-origin request — no portal company behind it.
+    req.origin = "client"
+    req.company_id = None
+    req.company = None
     req.created_at = "2026-06-17T10:00:00Z"
     req.updated_at = "2026-06-17T10:00:00Z"
     req.files = []

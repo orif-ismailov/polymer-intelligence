@@ -344,8 +344,21 @@ class AdminOfferRequestSeller(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AdminOfferRequestCompany(BaseModel):
+    """Portal-company party block (R2 W4) — registered company + verified badge."""
+
+    id: int
+    name: str | None
+    verified: bool
+
+
 class AdminOfferRequestOut(BaseModel):
-    """A pending inquiry for the dashboard review queue (both parties' contacts)."""
+    """A pending inquiry for the dashboard review queue (both parties' contacts).
+
+    Dual-origin (R2 W4): a TG buyer fills ``buyer``; a portal buyer fills
+    ``buyer_company``. A TG seller fills ``seller``; a company-origin offer fills
+    ``seller_company``. ``origin`` is the inquiry's origin ("client"/"company").
+    """
 
     id: int
     status: OfferRequestStatus
@@ -355,6 +368,9 @@ class AdminOfferRequestOut(BaseModel):
     currency: str | None
     message: str | None
     created_at: datetime.datetime
+    origin: str = "client"
     offer: OfferBrief
-    buyer: AdminOfferRequestBuyer
-    seller: AdminOfferRequestSeller
+    buyer: AdminOfferRequestBuyer | None = None
+    buyer_company: AdminOfferRequestCompany | None = None
+    seller: AdminOfferRequestSeller | None = None
+    seller_company: AdminOfferRequestCompany | None = None

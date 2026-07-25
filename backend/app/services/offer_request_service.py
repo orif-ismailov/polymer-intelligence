@@ -26,6 +26,7 @@ from app.models.marketplace import OfferRequest, SellerOffer
 from app.models.requests import Client
 from app.schemas.marketplace import (
     AdminOfferRequestBuyer,
+    AdminOfferRequestCompany,
     AdminOfferRequestOut,
     AdminOfferRequestSeller,
     OfferBrief,
@@ -421,9 +422,27 @@ def moderate_offer_request_via_telegram(
     return req
 
 
+def _company_party(company: object | None) -> AdminOfferRequestCompany | None:
+    """A company party block (name + verified badge) for the staff queue, or None."""
+    if company is None:
+        return None
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+    return AdminOfferRequestCompany(
+        id=company.id,  # type: ignore[attr-defined]
+        name=company.short_name or company.legal_name,  # type: ignore[attr-defined]
+        verified=company.status == CompanyStatus.verified,  # type: ignore[attr-defined]
+    )
+
+
 def to_admin_out(req: OfferRequest) -> AdminOfferRequestOut:
-    """Build the staff-facing view (both parties' contacts) from a loaded inquiry."""
-    seller = req.offer.seller
+    """Build the staff-facing view (both parties' contacts) from a loaded inquiry.
+
+    Dual-origin (R2 W4): a portal buyer has no ``client`` (→ ``buyer_company``); a
+    company-origin offer has no ``seller`` (→ ``seller_company``).
+    """
+    offer = req.offer
+    seller = offer.seller
     return AdminOfferRequestOut(
         id=req.id,
         status=req.status,
@@ -433,9 +452,12 @@ def to_admin_out(req: OfferRequest) -> AdminOfferRequestOut:
         currency=req.currency,
         message=req.message,
         created_at=req.created_at,
-        offer=OfferBrief.model_validate(req.offer),
-        buyer=AdminOfferRequestBuyer.model_validate(req.client),
-        seller=AdminOfferRequestSeller.model_validate(seller),
+        origin=req.origin,
+        offer=OfferBrief.model_validate(offer),
+        buyer=AdminOfferRequestBuyer.model_validate(req.client) if req.client is not None else None,
+        buyer_company=_company_party(req.company),
+        seller=AdminOfferRequestSeller.model_validate(seller) if seller is not None else None,
+        seller_company=_company_party(offer.company),
     )
 
 

@@ -122,6 +122,9 @@ def _build_request_detail(
         urgency=req.urgency.value if hasattr(req.urgency, "value") else str(req.urgency),
         comment=req.comment,
         assigned_to=req.assigned_to,
+        origin=req.origin,
+        company_id=req.company_id,
+        company_name=_request_company_name(req),
         ai=ai_block,
         price_analysis=price_analysis,
         contact_available=contact_available,
@@ -144,6 +147,7 @@ def list_requests(
     status_filter: str | None = Query(default=None, alias="status"),
     urgency: str | None = None,
     product_id: int | None = None,
+    origin: str | None = Query(default=None, description='"client" (TG) or "company" (portal)'),
 ) -> list[RequestListOut]:
     """GET /requests — return requests ordered newest-first with optional filters.
 
@@ -165,6 +169,10 @@ def list_requests(
         query = query.filter(Request.urgency == urgency)
     if product_id is not None:
         query = query.filter(Request.product_id == product_id)
+    if origin == "company":
+        query = query.filter(Request.company_id.isnot(None))
+    elif origin == "client":
+        query = query.filter(Request.company_id.is_(None))
 
     reqs = query.all()
     return [
@@ -181,11 +189,21 @@ def list_requests(
             currency=r.currency,
             urgency=r.urgency.value if hasattr(r.urgency, "value") else str(r.urgency),
             assigned_to=r.assigned_to,
+            origin=r.origin,
+            company_id=r.company_id,
+            company_name=_request_company_name(r),
             created_at=r.created_at,
             updated_at=r.updated_at,
         )
         for r in reqs
     ]
+
+
+def _request_company_name(req: Request) -> str | None:
+    """The registered company's display name for a portal request, else None."""
+    if req.company is not None:
+        return req.company.short_name or req.company.legal_name
+    return None
 
 
 # ── GET /requests/export CSV stream ───────────────────────────────────────────
