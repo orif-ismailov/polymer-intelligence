@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate } from "react-router-dom";
 
@@ -16,10 +14,11 @@ export function OtpPage() {
   const cooldownSeconds = useAuthFlowStore((s) => s.cooldownSeconds);
   const clear = useAuthFlowStore((s) => s.clear);
 
-  // Clear the pending phone when leaving the screen.
-  useEffect(() => () => clear(), [clear]);
-
   // Guard: no pending phone (e.g. direct navigation / reload) → back to /login.
+  // NB: the pending phone is intentionally NOT cleared on unmount — a React 18
+  // StrictMode mount→cleanup→mount would null it during mount and bounce here.
+  // It's ephemeral (in-memory, gone on reload) and overwritten on the next request;
+  // we clear it explicitly on verify / change-phone below.
   if (!phone) {
     return <Navigate to="/login" replace />;
   }
@@ -31,8 +30,14 @@ export function OtpPage() {
           <OtpForm
             phone={phone}
             initialCooldown={cooldownSeconds}
-            onVerified={() => navigate("/", { replace: true })}
-            onChangePhone={() => navigate("/login", { replace: true })}
+            onVerified={() => {
+              clear();
+              void navigate("/", { replace: true });
+            }}
+            onChangePhone={() => {
+              clear();
+              void navigate("/login", { replace: true });
+            }}
           />
         </CardBody>
       </Card>
