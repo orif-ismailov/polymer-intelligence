@@ -1,0 +1,108 @@
+- generic [active] [ref=f1e1]:
+  - button "Open Next.js Dev Tools" [ref=f1e7] [cursor=pointer]
+  - alert [ref=f1e11]
+  - generic [ref=f1e12]:
+    - complementary "Main navigation" [ref=f1e13]:
+      - generic [ref=f1e14]: Polymer Intelligence
+      - navigation "Dashboard navigation" [ref=f1e19]:
+        - generic [ref=f1e20]:
+          - paragraph [ref=f1e21]: ГЛАВНОЕ
+          - list [ref=f1e22]:
+            - listitem [ref=f1e23]:
+              - link "Панель" [ref=f1e24] [cursor=pointer]:
+                - /url: /ru
+            - listitem [ref=f1e28]:
+              - link "Лента" [ref=f1e29] [cursor=pointer]:
+                - /url: /ru/signals
+        - generic [ref=f1e32]:
+          - paragraph [ref=f1e33]: ЗАЯВКИ
+          - list [ref=f1e34]:
+            - listitem [ref=f1e35]:
+              - link "Заявки на закупку" [ref=f1e36] [cursor=pointer]:
+                - /url: /ru/requests
+            - listitem [ref=f1e41]:
+              - link "Предложения" [ref=f1e42] [cursor=pointer]:
+                - /url: /ru/offers
+            - listitem [ref=f1e46]:
+              - link "Модерация" [ref=f1e47] [cursor=pointer]:
+                - /url: /ru/moderation
+            - listitem [ref=f1e51]:
+              - link "Запросы предложений" [ref=f1e52] [cursor=pointer]:
+                - /url: /ru/offer-requests
+            - listitem [ref=f1e56]:
+              - link "Верификация" [ref=f1e57] [cursor=pointer]:
+                - /url: /ru/verification
+            - listitem [ref=f1e61]:
+              - link "Компании" [ref=f1e62] [cursor=pointer]:
+                - /url: /ru/companies
+        - generic [ref=f1e67]:
+          - paragraph [ref=f1e68]: БРОКЕР
+          - list [ref=f1e69]:
+            - listitem [ref=f1e70]:
+              - link "AI-подбор" [ref=f1e71] [cursor=pointer]:
+                - /url: /ru/sourcing
+            - listitem [ref=f1e76]:
+              - link "Склад" [ref=f1e77] [cursor=pointer]:
+                - /url: /ru/inventory
+            - listitem [ref=f1e88]:
+              - link "Партнёры" [ref=f1e89] [cursor=pointer]:
+                - /url: /ru/partners
+            - listitem [ref=f1e95]:
+              - link "Аналитика" [ref=f1e96] [cursor=pointer]:
+                - /url: /ru/intel
+        - generic [ref=f1e99]:
+          - paragraph [ref=f1e100]: ИСТОЧНИКИ
+          - list [ref=f1e101]:
+            - listitem [ref=f1e102]:
+              - link "Источники" [ref=f1e103] [cursor=pointer]:
+                - /url: /ru/sources
+            - listitem [ref=f1e108]:
+              - link "Оповещения" [ref=f1e109] [cursor=pointer]:
+                - /url: /ru/alerts
+        - generic [ref=f1e113]:
+          - paragraph [ref=f1e114]: НАСТРОЙКИ
+          - list [ref=f1e115]:
+            - listitem [ref=f1e116]:
+              - link "Отчёты" [ref=f1e117] [cursor=pointer]:
+                - /url: /ru/reports
+            - listitem [ref=f1e121]:
+              - link "Новости (админ)" [ref=f1e122] [cursor=pointer]:
+                - /url: /ru/admin/news
+            - listitem [ref=f1e124]:
+              - link "Цены" [ref=f1e125] [cursor=pointer]:
+                - /url: /ru/prices
+            - listitem [ref=f1e128]:
+              - link "Продукты" [ref=f1e129] [cursor=pointer]:
+                - /url: /ru/admin/products
+            - listitem [ref=f1e134]:
+              - link "Пользователи" [ref=f1e135] [cursor=pointer]:
+                - /url: /ru/admin/users
+      - generic [ref=f1e141]:
+        - generic [ref=f1e143]:
+          - generic [ref=f1e147]: Язык
+          - combobox "Язык" [ref=f1e148]:
+            - option "Русский" [selected]
+            - option "O'zbek"
+            - option "Türkçe"
+            - option "فارسی"
+            - option "中文"
+        - generic [ref=f1e149]:
+          - generic [ref=f1e150]: "?"
+          - generic [ref=f1e151]:
+            - paragraph
+            - generic [ref=f1e152]: admin
+    - main [ref=f1e153]:
+      - generic [ref=f1e154]:
+        - generic [ref=f1e159]:
+          - heading "Верификация" [level=1] [ref=f1e160]
+          - paragraph [ref=f1e161]: Очередь заявок на проверку компаний
+        - generic [ref=f1e162]:
+          - generic [ref=f1e163]: Статус
+          - button "Все" [ref=f1e164] [cursor=pointer]
+          - button "Отправлена" [ref=f1e165] [cursor=pointer]
+          - button "Проверки выполняются" [ref=f1e166] [cursor=pointer]
+          - button "Нужны данные" [ref=f1e167] [cursor=pointer]
+          - button "Ожидает решения" [ref=f1e168] [cursor=pointer]
+          - button "Одобрена" [ref=f1e169] [cursor=pointer]
+          - button "Отклонена" [ref=f1e170] [cursor=pointer]
+        - paragraph [ref=f1e171]: Загрузка…

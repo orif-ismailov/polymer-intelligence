@@ -841,7 +841,10 @@
       "director_id": "Direktor pasporti",
       "bank_statement": "Bank ko'chirmasi",
       "power_of_attorney": "Ishonchnoma",
-      "other": "Boshqa"
+      "other": "Boshqa",
+      "registration_certificate": "Ro‘yxatdan o‘tish guvohnomasi",
+      "bank_letter": "Bank xati",
+      "license": "Litsenziya"
     },
     "audit": {
       "title": "Tarix",
@@ -907,7 +910,14 @@
     "role": {
       "buyer": "Xaridor",
       "seller": "Sotuvchi",
-      "broker": "Broker"
+      "broker": "Broker",
+      "manufacturer": "Ishlab chiqaruvchi",
+      "importer": "Importchi",
+      "trader": "Treyder",
+      "logistics_provider": "Logistika",
+      "distributor": "Distribyutor",
+      "laboratory": "Laboratoriya",
+      "insurance_provider": "Sug‘urta"
     }
   }
 }

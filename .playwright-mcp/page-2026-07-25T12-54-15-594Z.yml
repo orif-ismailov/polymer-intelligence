@@ -1,0 +1,167 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]
+  - alert [ref=e11]
+  - generic [ref=e25]:
+    - complementary "Main navigation" [ref=e26]:
+      - generic [ref=e27]: Polymer Intelligence
+      - navigation "Dashboard navigation" [ref=e32]:
+        - generic [ref=e33]:
+          - paragraph [ref=e34]: ГЛАВНОЕ
+          - list [ref=e35]:
+            - listitem [ref=e36]:
+              - link "Панель" [ref=e37] [cursor=pointer]:
+                - /url: /ru
+            - listitem [ref=e41]:
+              - link "Лента" [ref=e42] [cursor=pointer]:
+                - /url: /ru/signals
+        - generic [ref=e45]:
+          - paragraph [ref=e46]: ЗАЯВКИ
+          - list [ref=e47]:
+            - listitem [ref=e48]:
+              - link "Заявки на закупку" [ref=e49] [cursor=pointer]:
+                - /url: /ru/requests
+            - listitem [ref=e54]:
+              - link "Предложения" [ref=e55] [cursor=pointer]:
+                - /url: /ru/offers
+            - listitem [ref=e59]:
+              - link "Модерация" [ref=e60] [cursor=pointer]:
+                - /url: /ru/moderation
+            - listitem [ref=e64]:
+              - link "Запросы предложений" [ref=e65] [cursor=pointer]:
+                - /url: /ru/offer-requests
+            - listitem [ref=e69]:
+              - link "Верификация" [ref=e70] [cursor=pointer]:
+                - /url: /ru/verification
+            - listitem [ref=e74]:
+              - link "Компании" [ref=e75] [cursor=pointer]:
+                - /url: /ru/companies
+        - generic [ref=e80]:
+          - paragraph [ref=e81]: БРОКЕР
+          - list [ref=e82]:
+            - listitem [ref=e83]:
+              - link "AI-подбор" [ref=e84] [cursor=pointer]:
+                - /url: /ru/sourcing
+            - listitem [ref=e89]:
+              - link "Склад" [ref=e90] [cursor=pointer]:
+                - /url: /ru/inventory
+            - listitem [ref=e101]:
+              - link "Партнёры" [ref=e102] [cursor=pointer]:
+                - /url: /ru/partners
+            - listitem [ref=e108]:
+              - link "Аналитика" [ref=e109] [cursor=pointer]:
+                - /url: /ru/intel
+        - generic [ref=e112]:
+          - paragraph [ref=e113]: ИСТОЧНИКИ
+          - list [ref=e114]:
+            - listitem [ref=e115]:
+              - link "Источники" [ref=e116] [cursor=pointer]:
+                - /url: /ru/sources
+            - listitem [ref=e121]:
+              - link "Оповещения" [ref=e122] [cursor=pointer]:
+                - /url: /ru/alerts
+        - generic [ref=e126]:
+          - paragraph [ref=e127]: НАСТРОЙКИ
+          - list [ref=e128]:
+            - listitem [ref=e129]:
+              - link "Отчёты" [ref=e130] [cursor=pointer]:
+                - /url: /ru/reports
+            - listitem [ref=e134]:
+              - link "Новости (админ)" [ref=e135] [cursor=pointer]:
+                - /url: /ru/admin/news
+            - listitem [ref=e137]:
+              - link "Цены" [ref=e138] [cursor=pointer]:
+                - /url: /ru/prices
+            - listitem [ref=e141]:
+              - link "Продукты" [ref=e142] [cursor=pointer]:
+                - /url: /ru/admin/products
+            - listitem [ref=e147]:
+              - link "Пользователи" [ref=e148] [cursor=pointer]:
+                - /url: /ru/admin/users
+      - generic [ref=e154]:
+        - generic [ref=e156]:
+          - generic [ref=e160]: Язык
+          - combobox "Язык" [ref=e161]:
+            - option "Русский" [selected]
+            - option "O'zbek"
+            - option "Türkçe"
+            - option "فارسی"
+            - option "中文"
+        - generic [ref=e162]:
+          - generic [ref=e163]: "?"
+          - generic [ref=e164]:
+            - paragraph
+            - generic [ref=e165]: admin
+    - main [ref=e166]:
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - heading "Дашборд" [level=1] [ref=e169]
+          - paragraph [ref=e170]: Обзор рынка и сводка активности
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - generic [ref=e173]: Всего покупателей
+            - generic [ref=e180]: "0"
+          - generic [ref=e182]:
+            - generic [ref=e183]: Всего продавцов
+            - generic [ref=e188]: "0"
+          - generic [ref=e190]:
+            - generic [ref=e191]: Активные заявки
+            - generic [ref=e196]: "0"
+          - generic [ref=e198]:
+            - generic [ref=e199]: Горячие лиды
+            - generic [ref=e203]:
+              - generic [ref=e204]: "0"
+              - generic [ref=e205]: высокий приоритет
+          - generic [ref=e206]:
+            - generic [ref=e207]: Ценовые оповещения
+            - generic [ref=e212]: "0"
+        - generic [ref=e214]:
+          - generic [ref=e215]:
+            - heading "Лента рынка в реальном времени" [level=2] [ref=e216]
+            - link "Смотреть все" [ref=e217] [cursor=pointer]:
+              - /url: /ru/signals
+          - generic [ref=e218]:
+            - generic [ref=e219]:
+              - combobox "Фильтр по периоду" [ref=e220]:
+                - option "Последние 7 дней"
+                - option "Последние 30 дней" [selected]
+                - option "Последние 90 дней"
+              - combobox "Фильтр по типу" [ref=e221]:
+                - option "Все типы" [selected]
+                - option "Запрос на покупку"
+                - option "Предложение о продаже"
+                - option "Сделка"
+                - option "Котировка цены"
+                - option "Новости"
+              - combobox "Фильтр по срочности" [ref=e222]:
+                - option "Любая срочность" [selected]
+                - option "Высокая"
+                - option "Средняя"
+                - option "Низкая"
+            - generic [ref=e223]:
+              - paragraph [ref=e226]: Пока нет рыночной активности
+              - paragraph [ref=e227]: Сигналы появятся здесь по мере поступления данных от источников.
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - heading "Динамика цен" [level=2] [ref=e230]
+            - link "Смотреть все" [ref=e231] [cursor=pointer]:
+              - /url: /ru/prices
+          - paragraph [ref=e234]: Нет данных о ценах для выбранных фильтров. Измените диапазон дат или выбор продукта.
+        - generic "Панель ИИ-сигналов рынка" [ref=e235]:
+          - generic [ref=e236]:
+            - heading "ИИ-сигналы рынка" [level=2] [ref=e241]
+            - link "Смотреть все" [ref=e242] [cursor=pointer]:
+              - /url: /ru/signals?needs_review=true
+          - paragraph [ref=e247]: Пока нет ИИ-сигналов
+        - generic [ref=e248]:
+          - generic [ref=e249]:
+            - generic [ref=e250]:
+              - heading "Топ заявок покупателей" [level=2] [ref=e251]
+              - link "Смотреть все" [ref=e252] [cursor=pointer]:
+                - /url: /ru/requests
+            - paragraph [ref=e257]: Пока нет заявок
+          - generic [ref=e258]:
+            - generic [ref=e259]:
+              - heading "Топ предложений продавцов" [level=2] [ref=e260]
+              - link "Смотреть все" [ref=e261] [cursor=pointer]:
+                - /url: /ru/offers
+            - paragraph [ref=e268]: Пока нет предложений

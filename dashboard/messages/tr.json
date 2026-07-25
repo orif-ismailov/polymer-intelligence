@@ -841,7 +841,10 @@
       "director_id": "Müdür kimliği",
       "bank_statement": "Banka ekstresi",
       "power_of_attorney": "Vekaletname",
-      "other": "Diğer"
+      "other": "Diğer",
+      "registration_certificate": "Kayıt belgesi",
+      "bank_letter": "Banka mektubu",
+      "license": "Lisans"
     },
     "audit": {
       "title": "Geçmiş",
@@ -907,7 +910,14 @@
     "role": {
       "buyer": "Alıcı",
       "seller": "Satıcı",
-      "broker": "Aracı"
+      "broker": "Aracı",
+      "manufacturer": "Üretici",
+      "importer": "İthalatçı",
+      "trader": "Tüccar",
+      "logistics_provider": "Lojistik sağlayıcı",
+      "distributor": "Distribütör",
+      "laboratory": "Laboratuvar",
+      "insurance_provider": "Sigorta sağlayıcı"
     }
   }
 }

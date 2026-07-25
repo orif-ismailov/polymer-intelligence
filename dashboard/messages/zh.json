@@ -826,7 +826,10 @@
       "director_id": "董事证件",
       "bank_statement": "银行对账单",
       "power_of_attorney": "授权书",
-      "other": "其他"
+      "other": "其他",
+      "registration_certificate": "注册证书",
+      "bank_letter": "银行证明函",
+      "license": "许可证"
     },
     "audit": {
       "title": "历史",
@@ -892,7 +895,14 @@
     "role": {
       "buyer": "买方",
       "seller": "卖方",
-      "broker": "经纪人"
+      "broker": "经纪人",
+      "manufacturer": "生产商",
+      "importer": "进口商",
+      "trader": "贸易商",
+      "logistics_provider": "物流商",
+      "distributor": "分销商",
+      "laboratory": "实验室",
+      "insurance_provider": "保险机构"
     }
   }
 }

@@ -4,7 +4,9 @@
  * Company status badge — R1 W6.
  *
  * Separate from the verification chips because the company label set lives under
- * the `companies` i18n namespace. Same graceful-fallback contract.
+ * the `companies` i18n namespace. Same graceful-fallback contract: next-intl
+ * returns the key string (it does not throw) on a missing message, so we probe
+ * with `t.has()` and fall back to the raw enum value.
  */
 
 import { useTranslations } from "next-intl";
@@ -26,23 +28,15 @@ const baseChip =
 export function CompanyStatusBadge({ status }: { status: string }) {
   const t = useTranslations("companies");
   const cls = COMPANY_STATUS_CLASSES[status] ?? FALLBACK_CLASS;
-  let label = status;
-  try {
-    label = t(`status.${status}`);
-  } catch {
-    label = status;
-  }
+  const key = `status.${status}`;
+  const label = t.has(key) ? t(key) : status;
   return <span className={`${baseChip} ${cls}`}>{label}</span>;
 }
 
 export function CompanyRoleBadge({ role, status }: { role: string; status: string }) {
   const t = useTranslations("companies");
-  let roleLabel = role;
-  try {
-    roleLabel = t(`role.${role}`);
-  } catch {
-    roleLabel = role;
-  }
+  const key = `role.${role}`;
+  const roleLabel = t.has(key) ? t(key) : role;
   const active = status === "active" || status === "verified" || status === "approved";
   const cls = active
     ? "bg-accent/20 text-accent"

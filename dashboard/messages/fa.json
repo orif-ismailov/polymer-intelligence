@@ -826,7 +826,10 @@
       "director_id": "شناسه مدیر",
       "bank_statement": "صورت‌حساب بانکی",
       "power_of_attorney": "وکالت‌نامه",
-      "other": "سایر"
+      "other": "سایر",
+      "registration_certificate": "گواهی ثبت",
+      "bank_letter": "نامه بانکی",
+      "license": "مجوز"
     },
     "audit": {
       "title": "تاریخچه",
@@ -892,7 +895,14 @@
     "role": {
       "buyer": "خریدار",
       "seller": "فروشنده",
-      "broker": "کارگزار"
+      "broker": "کارگزار",
+      "manufacturer": "تولیدکننده",
+      "importer": "واردکننده",
+      "trader": "تاجر",
+      "logistics_provider": "ارائه‌دهنده لجستیک",
+      "distributor": "توزیع‌کننده",
+      "laboratory": "آزمایشگاه",
+      "insurance_provider": "ارائه‌دهنده بیمه"
     }
   }
 }

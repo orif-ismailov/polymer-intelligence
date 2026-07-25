@@ -13,7 +13,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api";
 import { formatTashkent } from "@/lib/tz";
 import {
@@ -51,6 +51,7 @@ const CASE_STATUS_FILTERS = [
 
 export default function VerificationQueuePage() {
   const t = useTranslations("verification");
+  const router = useRouter();
   const [status, setStatus] = useState<string>("");
 
   const { data, isLoading, isError } = useQuery<VerificationCaseListItem[]>({
@@ -118,7 +119,8 @@ export default function VerificationQueuePage() {
               {data.map((c) => (
                 <tr
                   key={c.id}
-                  className="bg-background-secondary hover:bg-background-tertiary transition-colors"
+                  onClick={() => router.push(`/verification/${c.id}`)}
+                  className="cursor-pointer bg-background-secondary hover:bg-background-tertiary transition-colors"
                 >
                   <td className="px-4 py-3 text-foreground-muted whitespace-nowrap">
                     {c.submitted_at ? (
@@ -132,6 +134,7 @@ export default function VerificationQueuePage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/verification/${c.id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="font-medium text-foreground hover:text-accent"
                     >
                       {c.company_name || t("unnamedCompany")}

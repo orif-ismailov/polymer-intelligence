@@ -1,0 +1,208 @@
+- generic [ref=f11e1]:
+  - generic [ref=f11e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=f11e7]
+    - generic [ref=f11e85]:
+      - button "Open issues overlay" [ref=f11e86]:
+        - generic [ref=f11e87]:
+          - generic [ref=f11e88]: "1"
+          - generic [ref=f11e89]: "2"
+        - generic [ref=f11e90]:
+          - text: Issue
+          - generic [ref=f11e91]: s
+      - button "Collapse issues badge" [ref=f11e92]
+  - alert [ref=f11e11]
+  - generic [ref=f11e95]:
+    - complementary "Main navigation" [ref=f11e96]:
+      - generic [ref=f11e97]: Polymer Intelligence
+      - navigation "Dashboard navigation" [ref=f11e102]:
+        - generic [ref=f11e103]:
+          - paragraph [ref=f11e104]: ГЛАВНОЕ
+          - list [ref=f11e105]:
+            - listitem [ref=f11e106]:
+              - link "Панель" [ref=f11e107] [cursor=pointer]:
+                - /url: /ru
+            - listitem [ref=f11e111]:
+              - link "Лента" [ref=f11e112] [cursor=pointer]:
+                - /url: /ru/signals
+        - generic [ref=f11e115]:
+          - paragraph [ref=f11e116]: ЗАЯВКИ
+          - list [ref=f11e117]:
+            - listitem [ref=f11e118]:
+              - link "Заявки на закупку" [ref=f11e119] [cursor=pointer]:
+                - /url: /ru/requests
+            - listitem [ref=f11e124]:
+              - link "Предложения" [ref=f11e125] [cursor=pointer]:
+                - /url: /ru/offers
+            - listitem [ref=f11e129]:
+              - link "Модерация" [ref=f11e130] [cursor=pointer]:
+                - /url: /ru/moderation
+            - listitem [ref=f11e134]:
+              - link "Запросы предложений" [ref=f11e135] [cursor=pointer]:
+                - /url: /ru/offer-requests
+            - listitem [ref=f11e139]:
+              - link "Верификация" [ref=f11e140] [cursor=pointer]:
+                - /url: /ru/verification
+            - listitem [ref=f11e144]:
+              - link "Компании" [ref=f11e145] [cursor=pointer]:
+                - /url: /ru/companies
+        - generic [ref=f11e150]:
+          - paragraph [ref=f11e151]: БРОКЕР
+          - list [ref=f11e152]:
+            - listitem [ref=f11e153]:
+              - link "AI-подбор" [ref=f11e154] [cursor=pointer]:
+                - /url: /ru/sourcing
+            - listitem [ref=f11e159]:
+              - link "Склад" [ref=f11e160] [cursor=pointer]:
+                - /url: /ru/inventory
+            - listitem [ref=f11e171]:
+              - link "Партнёры" [ref=f11e172] [cursor=pointer]:
+                - /url: /ru/partners
+            - listitem [ref=f11e178]:
+              - link "Аналитика" [ref=f11e179] [cursor=pointer]:
+                - /url: /ru/intel
+        - generic [ref=f11e182]:
+          - paragraph [ref=f11e183]: ИСТОЧНИКИ
+          - list [ref=f11e184]:
+            - listitem [ref=f11e185]:
+              - link "Источники" [ref=f11e186] [cursor=pointer]:
+                - /url: /ru/sources
+            - listitem [ref=f11e191]:
+              - link "Оповещения" [ref=f11e192] [cursor=pointer]:
+                - /url: /ru/alerts
+        - generic [ref=f11e196]:
+          - paragraph [ref=f11e197]: НАСТРОЙКИ
+          - list [ref=f11e198]:
+            - listitem [ref=f11e199]:
+              - link "Отчёты" [ref=f11e200] [cursor=pointer]:
+                - /url: /ru/reports
+            - listitem [ref=f11e204]:
+              - link "Новости (админ)" [ref=f11e205] [cursor=pointer]:
+                - /url: /ru/admin/news
+            - listitem [ref=f11e207]:
+              - link "Цены" [ref=f11e208] [cursor=pointer]:
+                - /url: /ru/prices
+            - listitem [ref=f11e211]:
+              - link "Продукты" [ref=f11e212] [cursor=pointer]:
+                - /url: /ru/admin/products
+            - listitem [ref=f11e217]:
+              - link "Пользователи" [ref=f11e218] [cursor=pointer]:
+                - /url: /ru/admin/users
+      - generic [ref=f11e224]:
+        - generic [ref=f11e226]:
+          - generic [ref=f11e230]: Язык
+          - combobox "Язык" [ref=f11e231]:
+            - option "Русский" [selected]
+            - option "O'zbek"
+            - option "Türkçe"
+            - option "فارسی"
+            - option "中文"
+        - generic [ref=f11e232]:
+          - generic [ref=f11e233]: "?"
+          - generic [ref=f11e234]:
+            - paragraph
+            - generic [ref=f11e235]: admin
+    - main [active] [ref=f11e12]:
+      - generic [ref=f11e236]:
+        - link "Назад к очереди" [ref=f11e237] [cursor=pointer]:
+          - /url: /ru/verification
+        - generic [ref=f11e240]:
+          - generic [ref=f11e245]:
+            - heading "Аплоуд Тест ООО" [level=1] [ref=f11e246]
+            - paragraph [ref=f11e247]: "Регистрация · ИНН: 301234567"
+          - generic [ref=f11e248]: Ожидает решения
+        - generic [ref=f11e249]:
+          - heading "Профиль компании" [level=2] [ref=f11e250]
+          - generic [ref=f11e251]:
+            - generic [ref=f11e252]:
+              - term [ref=f11e253]: Юридическое название
+              - definition [ref=f11e254]: Аплоуд Тест ООО
+            - generic [ref=f11e255]:
+              - term [ref=f11e256]: Краткое название
+              - definition [ref=f11e257]: —
+            - generic [ref=f11e258]:
+              - term [ref=f11e259]: Публичный ID
+              - definition [ref=f11e260]: a9788462-d6d8-485c-b55c-6626688350cc
+            - generic [ref=f11e261]:
+              - term [ref=f11e262]: Юрисдикция
+              - definition [ref=f11e263]: UZ
+            - generic [ref=f11e264]:
+              - term [ref=f11e265]: Правовая форма
+              - definition [ref=f11e266]: ООО
+            - generic [ref=f11e267]:
+              - term [ref=f11e268]: Директор
+              - definition [ref=f11e269]: Иван Тестов
+            - generic [ref=f11e270]:
+              - term [ref=f11e271]: Юридический адрес
+              - definition [ref=f11e272]: —
+            - generic [ref=f11e273]:
+              - term [ref=f11e274]: Статус
+              - definition [ref=f11e275]:
+                - generic [ref=f11e276]: На проверке
+            - generic [ref=f11e277]:
+              - term [ref=f11e278]: Проверена
+              - definition [ref=f11e279]: —
+          - generic [ref=f11e280]:
+            - paragraph [ref=f11e281]: Роли
+            - 'generic "companies.role.manufacturer: declared" [ref=f11e283]': companies.role.manufacturer
+        - generic [ref=f11e284]:
+          - heading "Проверки" [level=2] [ref=f11e285]
+          - generic [ref=f11e286]:
+            - generic [ref=f11e287]:
+              - generic [ref=f11e289]:
+                - generic [ref=f11e290]: Формат ИНН
+                - generic [ref=f11e291]: Пройдена
+                - generic [ref=f11e292]: "Попыток: 1"
+              - generic [ref=f11e293]: "{ \"valid\": true, \"digits\": 9, \"jurisdiction\": \"UZ\" }"
+            - generic [ref=f11e295]:
+              - generic [ref=f11e297]:
+                - generic [ref=f11e298]: Банковские реквизиты
+                - generic [ref=f11e299]: Предупреждение
+                - generic [ref=f11e300]: "Попыток: 1"
+              - generic [ref=f11e301]: "{ \"reason\": \"no_bank_account\" }"
+              - generic [ref=f11e303]:
+                - textbox "Причина отмены (обязательно)" [ref=f11e304]
+                - button "Отменить проверку" [disabled] [ref=f11e305]
+            - generic [ref=f11e310]:
+              - generic [ref=f11e312]:
+                - generic [ref=f11e313]: Документы
+                - generic [ref=f11e314]: Пройдена
+                - generic [ref=f11e315]: "Попыток: 1"
+              - generic [ref=f11e316]: "{ \"missing\": [], \"required\": [ \"registration_certificate\" ] }"
+            - generic [ref=f11e318]:
+              - generic [ref=f11e320]:
+                - generic [ref=f11e321]: Ручная проверка (KYB)
+                - generic [ref=f11e322]: Ожидает
+                - generic [ref=f11e323]: "Попыток: 1"
+              - generic [ref=f11e324]: "{ \"note\": \"awaiting_human_review\" }"
+              - generic [ref=f11e326]:
+                - textbox "Причина отмены (обязательно)" [ref=f11e327]
+                - button "Отменить проверку" [disabled] [ref=f11e328]
+        - generic [ref=f11e333]:
+          - heading "Документы" [level=2] [ref=f11e334]
+          - list [ref=f11e335]:
+            - listitem [ref=f11e336]:
+              - generic [ref=f11e341]:
+                - paragraph [ref=f11e342]: verification.docKind.registration_certificate
+                - paragraph [ref=f11e343]: image/png · 4.0 KB · pending_review
+              - link "Скачать" [ref=f11e344] [cursor=pointer]:
+                - /url: http://localhost:9000/polymer-demo/verification/3/616d8c5d6034ebff-test-doc.png?AWSAccessKeyId=minioadmin&Signature=jXZ38y2GpHTz4MMCDF5ArWNxWI0%3D&Expires=1784984335
+        - generic [ref=f11e345]:
+          - heading "История" [level=2] [ref=f11e346]
+          - list [ref=f11e351]:
+            - listitem [ref=f11e352]:
+              - paragraph [ref=f11e353]: vercase.submit
+              - paragraph [ref=f11e354]:
+                - time [ref=f11e355]: 25.07.2026, 17:40
+              - generic [ref=f11e356]: "{ \"account_id\": 2 }"
+            - listitem [ref=f11e357]:
+              - paragraph [ref=f11e358]: vercase.open
+              - paragraph [ref=f11e359]:
+                - time [ref=f11e360]: 25.07.2026, 17:39
+              - generic [ref=f11e361]: "{ \"case_type\": \"onboarding\", \"company_id\": 3 }"
+        - generic [ref=f11e362]:
+          - heading "Решение" [level=2] [ref=f11e363]
+          - textbox "Комментарий к решению (необязательно)" [ref=f11e364]
+          - generic [ref=f11e365]:
+            - button "Одобрить" [ref=f11e366] [cursor=pointer]
+            - button "Отклонить" [ref=f11e369] [cursor=pointer]
+            - button "Запросить данные" [ref=f11e373] [cursor=pointer]

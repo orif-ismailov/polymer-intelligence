@@ -841,7 +841,10 @@
       "director_id": "Паспорт директора",
       "bank_statement": "Банковская выписка",
       "power_of_attorney": "Доверенность",
-      "other": "Другое"
+      "other": "Другое",
+      "registration_certificate": "Свидетельство о регистрации",
+      "bank_letter": "Банковское письмо",
+      "license": "Лицензия"
     },
     "audit": {
       "title": "История",
@@ -907,7 +910,14 @@
     "role": {
       "buyer": "Покупатель",
       "seller": "Продавец",
-      "broker": "Брокер"
+      "broker": "Брокер",
+      "manufacturer": "Производитель",
+      "importer": "Импортёр",
+      "trader": "Трейдер",
+      "logistics_provider": "Логистика",
+      "distributor": "Дистрибьютор",
+      "laboratory": "Лаборатория",
+      "insurance_provider": "Страхование"
     }
   }
 }

@@ -569,30 +569,17 @@ function BackLink({ label }: { label: string }) {
 
 function CheckTypeLabel({ checkType }: { checkType: string }) {
   const t = useTranslations("verification");
-  const label = safeT(t, `checkType.${checkType}`, checkType);
-  return <>{label}</>;
+  const key = `checkType.${checkType}`;
+  return <>{t.has(key) ? t(key) : checkType}</>;
 }
 
 function DocKindLabel({ kind }: { kind: string }) {
   const t = useTranslations("verification");
-  const label = safeT(t, `docKind.${kind}`, kind);
-  return <>{label}</>;
+  const key = `docKind.${kind}`;
+  return <>{t.has(key) ? t(key) : kind}</>;
 }
 
 // ─── Pure utilities ────────────────────────────────────────────────────────────
-
-/**
- * Resolve a translation string, falling back to `fallback` if the key is missing.
- * Keeps unexpected backend enum values from throwing. Returns a plain string
- * (no JSX) so it can be called safely inside a try/catch.
- */
-function safeT(t: (key: string) => string, key: string, fallback: string): string {
-  try {
-    return t(key);
-  } catch {
-    return fallback;
-  }
-}
 
 function toStringList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
