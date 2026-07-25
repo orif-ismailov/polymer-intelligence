@@ -54,6 +54,11 @@ const NewsIcon = (
     <path d="M4 4h9v12H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM13 7h3a1 1 0 0 1 1 1v7a1 1 0 0 1-2 0M6 7h5M6 10h5M6 13h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const ContractIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M5 3h6l4 4v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 3v4h4M7 12l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/", labelKey: "nav.home", icon: HomeIcon, end: true },
@@ -63,6 +68,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/news", labelKey: "nav.news", icon: NewsIcon },
   { to: "/companies", labelKey: "nav.companies", icon: BuildingIcon },
   { to: "/offers", labelKey: "nav.offers", icon: TagIcon },
+  { to: "/contracts", labelKey: "nav.contracts", icon: ContractIcon },
   { to: "/settings", labelKey: "nav.settings", icon: CogIcon },
 ];
 

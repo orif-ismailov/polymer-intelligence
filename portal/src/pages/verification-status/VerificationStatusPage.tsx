@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 import { useCompany } from "@/entities/company";
-import { EimzoSignButton } from "@/features/eimzo-sign";
+import { EimzoSignButton, companyIdentitySigner } from "@/features/eimzo-sign";
 import { CaseStatusPanel } from "@/widgets/case-status-panel";
 import { Alert, ErrorView, LinkButton, LoadingView } from "@/shared/ui";
 import { ApiError } from "@/shared/api";
@@ -70,7 +70,8 @@ export function VerificationStatusPage() {
             <p className="mt-0.5 text-xs text-text-muted">{t("eimzo.offerBody")}</p>
           </div>
           <EimzoSignButton
-            companyId={company.id}
+            signer={companyIdentitySigner(company.id)}
+            holderOf={(o) => o.holder_masked}
             onConfirmed={() => void query.refetch()}
           />
         </div>

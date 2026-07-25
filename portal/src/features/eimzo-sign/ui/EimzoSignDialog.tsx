@@ -5,13 +5,15 @@ import { useTranslation } from "react-i18next";
 import { Alert, Button, Dialog, Spinner } from "@/shared/ui";
 
 import { useEimzoSign } from "../model/useEimzoSign";
-import type { EimzoVerifyOut } from "../model/api";
+import type { EimzoSigner } from "../model/useEimzoSign";
 
-interface EimzoSignDialogProps {
+interface EimzoSignDialogProps<T> {
   open: boolean;
-  companyId: number | null;
+  signer: EimzoSigner<T> | null;
   onClose: () => void;
-  onConfirmed?: (result: EimzoVerifyOut) => void;
+  onConfirmed?: (data: T) => void;
+  /** Optional extractor for a display string shown in the success message. */
+  holderOf?: (data: T) => string | null | undefined;
 }
 
 const DOWNLOAD_LINKS = [
@@ -20,20 +22,33 @@ const DOWNLOAD_LINKS = [
 ] as const;
 
 /**
- * Controlled E-IMZO signing dialog (TA2.1). Auto-starts the probe→list→sign→verify
- * flow when opened with a companyId; renders every state incl. module-missing
- * (with install links) and typed error mapping. Reused by the wizard and the
- * verification-status screen.
+ * Controlled, generic E-IMZO signing dialog (TA2.1). Auto-starts the
+ * probe→list→sign→verify flow when opened with a signer; renders every state incl.
+ * module-missing (with install links) and typed error mapping. Reused by the wizard,
+ * the verification-status screen, and contract signing.
  */
-export function EimzoSignDialog({ open, companyId, onClose, onConfirmed }: EimzoSignDialogProps) {
+export function EimzoSignDialog<T>({
+  open,
+  signer,
+  onClose,
+  onConfirmed,
+  holderOf,
+}: EimzoSignDialogProps<T>) {
   const { t } = useTranslation();
-  const { state, certs, error, result, start, pick, reset } = useEimzoSign({ onConfirmed });
+  const noop: EimzoSigner<T> = {
+    getChallenge: () => Promise.resolve(""),
+    verify: () => Promise.resolve({ ok: false, reason: null, data: null as T }),
+  };
+  const { state, certs, error, result, start, pick, reset } = useEimzoSign<T>({
+    signer: signer ?? noop,
+    onConfirmed,
+  });
 
   useEffect(() => {
-    if (open && companyId != null && state === "idle") {
-      void start(companyId);
+    if (open && signer != null && state === "idle") {
+      void start();
     }
-  }, [open, companyId, state, start]);
+  }, [open, signer, state, start]);
 
   function handleClose(): void {
     reset();
@@ -41,21 +56,15 @@ export function EimzoSignDialog({ open, companyId, onClose, onConfirmed }: Eimzo
   }
 
   function handleRetry(): void {
-    if (companyId != null) {
-      reset();
-      void start(companyId);
-    }
+    reset();
+    void start();
   }
 
   const busy = state === "probing" || state === "listing" || state === "signing" || state === "verifying";
+  const holder = result != null && holderOf ? holderOf(result) : null;
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      title={t("eimzo.title")}
-      description={t("eimzo.subtitle")}
-    >
+    <Dialog open={open} onClose={handleClose} title={t("eimzo.title")} description={t("eimzo.subtitle")}>
       <div className="space-y-4" data-testid="eimzo-dialog">
         {busy ? (
           <div className="flex items-center gap-3" data-testid={`eimzo-state-${state}`}>
@@ -72,12 +81,7 @@ export function EimzoSignDialog({ open, companyId, onClose, onConfirmed }: Eimzo
             <ul className="space-y-1 text-sm">
               {DOWNLOAD_LINKS.map((link) => (
                 <li key={link.key}>
-                  <a
-                    className="text-primary underline"
-                    href={link.href}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
+                  <a className="text-primary underline" href={link.href} target="_blank" rel="noreferrer">
                     {t(`eimzo.moduleMissing.link_${link.key}`)}
                   </a>
                 </li>
@@ -112,9 +116,7 @@ export function EimzoSignDialog({ open, companyId, onClose, onConfirmed }: Eimzo
                     data-testid="eimzo-cert-option"
                   >
                     <span className="block font-medium text-text">{cert.subjectName}</span>
-                    {cert.tin ? (
-                      <span className="block text-xs text-text-muted">{cert.tin}</span>
-                    ) : null}
+                    {cert.tin ? <span className="block text-xs text-text-muted">{cert.tin}</span> : null}
                   </button>
                 </li>
               ))}
@@ -125,7 +127,7 @@ export function EimzoSignDialog({ open, companyId, onClose, onConfirmed }: Eimzo
         {state === "success" ? (
           <Alert tone="success" title={t("eimzo.success.title")}>
             <span data-testid="eimzo-success">
-              {t("eimzo.success.body", { holder: result?.holder_masked ?? "" })}
+              {t("eimzo.success.body", { holder: holder ?? "" })}
             </span>
           </Alert>
         ) : null}

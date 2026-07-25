@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { companyApi, useActiveCompanyStore } from "@/entities/company";
-import { EimzoSignDialog } from "@/features/eimzo-sign";
+import { EimzoSignDialog, companyIdentitySigner } from "@/features/eimzo-sign";
 import { ApiError } from "@/shared/api";
 import { JURISDICTIONS } from "@/shared/config";
 import { Alert, Button, FormField, Input, Select } from "@/shared/ui";
@@ -178,7 +178,8 @@ export function StepIdentity({ onNext }: StepIdentityProps) {
 
       <EimzoSignDialog
         open={eimzoOpen}
-        companyId={eimzoOpen ? eimzoCompanyId : null}
+        signer={eimzoOpen && eimzoCompanyId != null ? companyIdentitySigner(eimzoCompanyId) : null}
+        holderOf={(o) => o.holder_masked}
         onClose={() => setEimzoOpen(false)}
         onConfirmed={() => {
           setEimzoOpen(false);

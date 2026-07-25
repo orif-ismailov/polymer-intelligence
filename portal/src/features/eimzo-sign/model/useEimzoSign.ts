@@ -1,20 +1,16 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
-
-import { verificationKeys } from "@/entities/verification";
-import { companyKeys } from "@/entities/company";
 import { ApiError } from "@/shared/api";
 import { getEimzoBridge } from "@/shared/lib/eimzo";
 import type { EimzoCertificate } from "@/shared/lib/eimzo";
-
-import { eimzoApi } from "./api";
-import type { EimzoVerifyOut } from "./api";
 
 /**
  * State machine for one E-IMZO signing attempt (TA2.1):
  *   probing → module_missing | (listing → no_certs | selecting | signing) →
  *   verifying → success | error.
+ *
+ * API-agnostic: the caller supplies a `signer` (getChallenge + verify), so the
+ * same CAPIWS flow drives both company-identity confirmation and contract signing.
  */
 export type EimzoState =
   | "idle"
@@ -39,16 +35,30 @@ export type EimzoErrorCode =
   | "sign_failed"
   | "unknown";
 
-interface UseEimzoSignArgs {
-  onConfirmed?: (result: EimzoVerifyOut) => void;
+export interface EimzoVerifyOutcome<T> {
+  ok: boolean;
+  reason: string | null;
+  data: T;
 }
 
-interface UseEimzoSign {
+export interface EimzoSigner<T> {
+  /** Issue the challenge to sign (server round-trip). */
+  getChallenge: () => Promise<string>;
+  /** Submit the PKCS#7 and return the typed outcome. */
+  verify: (pkcs7: string) => Promise<EimzoVerifyOutcome<T>>;
+}
+
+interface UseEimzoSignArgs<T> {
+  signer: EimzoSigner<T>;
+  onConfirmed?: (data: T) => void;
+}
+
+interface UseEimzoSign<T> {
   state: EimzoState;
   certs: EimzoCertificate[];
   error: EimzoErrorCode | null;
-  result: EimzoVerifyOut | null;
-  start: (companyId: number) => Promise<void>;
+  result: T | null;
+  start: () => Promise<void>;
   pick: (certId: string) => Promise<void>;
   reset: () => void;
 }
@@ -71,96 +81,84 @@ function mapResultReason(reason: string | null): EimzoErrorCode {
   return "signature_invalid";
 }
 
-export function useEimzoSign({ onConfirmed }: UseEimzoSignArgs = {}): UseEimzoSign {
-  const qc = useQueryClient();
+export function useEimzoSign<T>({ signer, onConfirmed }: UseEimzoSignArgs<T>): UseEimzoSign<T> {
   const [state, setState] = useState<EimzoState>("idle");
   const [certs, setCerts] = useState<EimzoCertificate[]>([]);
   const [error, setError] = useState<EimzoErrorCode | null>(null);
-  const [result, setResult] = useState<EimzoVerifyOut | null>(null);
-  const companyIdRef = useRef<number | null>(null);
+  const [result, setResult] = useState<T | null>(null);
 
   const reset = useCallback(() => {
     setState("idle");
     setCerts([]);
     setError(null);
     setResult(null);
-    companyIdRef.current = null;
   }, []);
 
   const runVerify = useCallback(
-    async (companyId: number, certId: string) => {
+    async (certId: string) => {
       const bridge = getEimzoBridge();
       try {
         setState("signing");
-        const { challenge } = await eimzoApi.challenge(companyId);
+        const challenge = await signer.getChallenge();
         const pkcs7 = await bridge.sign(certId, challenge);
         setState("verifying");
-        const out = await eimzoApi.verify(companyId, pkcs7);
+        const out = await signer.verify(pkcs7);
         if (!out.ok) {
           setError(mapResultReason(out.reason));
-          setResult(out);
           setState("error");
           return;
         }
-        setResult(out);
+        setResult(out.data);
         setState("success");
-        await qc.invalidateQueries({ queryKey: companyKeys.detail(companyId) });
-        qc.setQueryData(verificationKeys.detail(companyId), out.case);
-        onConfirmed?.(out);
+        onConfirmed?.(out.data);
       } catch (err) {
         setError(mapError(err));
         setState("error");
       }
     },
-    [onConfirmed, qc],
+    [signer, onConfirmed],
   );
 
-  const start = useCallback(
-    async (companyId: number) => {
-      companyIdRef.current = companyId;
-      setError(null);
-      setResult(null);
-      const bridge = getEimzoBridge();
-      setState("probing");
-      let available = false;
-      try {
-        available = await bridge.probe();
-      } catch {
-        available = false;
-      }
-      if (!available) {
-        setState("module_missing");
-        return;
-      }
-      setState("listing");
-      let list: EimzoCertificate[] = [];
-      try {
-        list = await bridge.listCertificates();
-      } catch (err) {
-        setError(mapError(err));
-        setState("error");
-        return;
-      }
-      if (list.length === 0) {
-        setState("no_certs");
-        return;
-      }
-      setCerts(list);
-      const [only] = list;
-      if (list.length === 1 && only) {
-        await runVerify(companyId, only.id);
-        return;
-      }
-      setState("selecting");
-    },
-    [runVerify],
-  );
+  const start = useCallback(async () => {
+    setError(null);
+    setResult(null);
+    const bridge = getEimzoBridge();
+    setState("probing");
+    let available = false;
+    try {
+      available = await bridge.probe();
+    } catch {
+      available = false;
+    }
+    if (!available) {
+      setState("module_missing");
+      return;
+    }
+    setState("listing");
+    let list: EimzoCertificate[] = [];
+    try {
+      list = await bridge.listCertificates();
+    } catch (err) {
+      setError(mapError(err));
+      setState("error");
+      return;
+    }
+    if (list.length === 0) {
+      setState("no_certs");
+      return;
+    }
+    setCerts(list);
+    const [only] = list;
+    if (list.length === 1 && only) {
+      await runVerify(only.id);
+      return;
+    }
+    setState("selecting");
+  }, [runVerify]);
 
   const pick = useCallback(
     async (certId: string) => {
-      const companyId = companyIdRef.current;
-      if (companyId == null) return;
-      await runVerify(companyId, certId);
+      await runVerify(certId);
     },
     [runVerify],
   );

@@ -84,6 +84,11 @@ function OfferCard({
         ) : null}
 
         <div className="flex justify-end gap-3 border-t border-border pt-3">
+          {offer.status === "approved" ? (
+            <LinkButton size="sm" variant="secondary" to={`/contracts/new?offerId=${offer.id}`}>
+              {t("contracts.create")}
+            </LinkButton>
+          ) : null}
           <Button size="sm" variant="ghost" onClick={() => onEdit(offer.id)}>
             {t("common.edit")}
           </Button>

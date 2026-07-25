@@ -64,6 +64,7 @@
     "home": "Главная",
     "companies": "Компании",
     "offers": "Предложения",
+    "contracts": "Договоры",
     "settings": "Настройки",
     "logout": "Выйти",
     "market": "Рынок",
@@ -537,6 +538,73 @@
     "news_breaking": {
       "title": "Срочные новости",
       "body": "{{headline}}"
+    },
+    "contract_incoming": {
+      "title": "Новый договор",
+      "body": "Вам направлен договор «{{title}}»"
+    },
+    "contract_accepted": {
+      "title": "Договор принят",
+      "body": "Условия договора «{{title}}» приняты"
+    },
+    "contract_declined": {
+      "title": "Договор отклонён",
+      "body": "Договор «{{title}}» отклонён"
+    }
+  },
+  "contracts": {
+    "title": "Договоры",
+    "subtitle": "Электронные договоры с верифицированными компаниями.",
+    "create": "Создать договор",
+    "createDraft": "Создать черновик",
+    "empty": "Договоров пока нет",
+    "emptyBody": "Создайте договор с верифицированной компанией.",
+    "template": "Шаблон договора",
+    "selectTemplate": "Выберите шаблон",
+    "counterparty": "Контрагент",
+    "counterpartyHint": "Только верифицированные компании.",
+    "counterpartySearch": "Поиск по названию или ИНН…",
+    "needVerifiedInitiator": "Договор может создать только верифицированная компания. Выберите верифицированную компанию в переключателе сверху.",
+    "document": "Документ",
+    "signatures": "Подписи",
+    "noSignatures": "Пока нет подписей.",
+    "awaitingOther": "Ожидаем подпись второй стороны.",
+    "declinedTitle": "Договор отклонён",
+    "declineReason": "Причина отклонения",
+    "createdAt": "Создан",
+    "sentAt": "Отправлен",
+    "activatedAt": "Активирован",
+    "tabs": {
+      "all": "Все",
+      "action": "Требуют действия",
+      "active": "Активные"
+    },
+    "role": {
+      "initiator": "Инициатор",
+      "counterparty": "Контрагент"
+    },
+    "status": {
+      "draft": "Черновик",
+      "pending_counterparty": "Ожидает контрагента",
+      "pending_signatures": "Ожидает подписей",
+      "active": "Активен",
+      "declined": "Отклонён",
+      "cancelled": "Отменён",
+      "expired": "Истёк"
+    },
+    "actions": {
+      "send": "Отправить контрагенту",
+      "accept": "Принять условия",
+      "decline": "Отклонить",
+      "confirmDecline": "Подтвердить отклонение",
+      "sign": "Подписать через E-IMZO",
+      "cancel": "Отменить",
+      "downloadPdf": "Скачать PDF",
+      "downloadBundle": "Скачать пакет (ZIP)"
+    },
+    "errors": {
+      "invalid": "Проверьте заполнение полей.",
+      "createFailed": "Не удалось создать договор."
     }
   }
 }

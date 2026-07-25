@@ -64,6 +64,7 @@
     "home": "Bosh sahifa",
     "companies": "Kompaniyalar",
     "offers": "Takliflar",
+    "contracts": "Shartnomalar",
     "settings": "Sozlamalar",
     "logout": "Chiqish",
     "market": "Bozor",
@@ -537,6 +538,73 @@
     "news_breaking": {
       "title": "Shoshilinch yangilik",
       "body": "{{headline}}"
+    },
+    "contract_incoming": {
+      "title": "Yangi shartnoma",
+      "body": "Sizga «{{title}}» shartnomasi yuborildi"
+    },
+    "contract_accepted": {
+      "title": "Shartnoma qabul qilindi",
+      "body": "«{{title}}» shartnomasi shartlari qabul qilindi"
+    },
+    "contract_declined": {
+      "title": "Shartnoma rad etildi",
+      "body": "«{{title}}» shartnomasi rad etildi"
+    }
+  },
+  "contracts": {
+    "title": "Shartnomalar",
+    "subtitle": "Verifikatsiyadan o‘tgan kompaniyalar bilan elektron shartnomalar.",
+    "create": "Shartnoma yaratish",
+    "createDraft": "Qoralama yaratish",
+    "empty": "Hozircha shartnomalar yo‘q",
+    "emptyBody": "Verifikatsiyadan o‘tgan kompaniya bilan shartnoma yarating.",
+    "template": "Shartnoma shabloni",
+    "selectTemplate": "Shablonni tanlang",
+    "counterparty": "Kontragent",
+    "counterpartyHint": "Faqat verifikatsiyadan o‘tgan kompaniyalar.",
+    "counterpartySearch": "Nomi yoki STIR bo‘yicha qidirish…",
+    "needVerifiedInitiator": "Shartnomani faqat verifikatsiyadan o‘tgan kompaniya yaratishi mumkin. Yuqoridagi almashtirgichda verifikatsiyalangan kompaniyani tanlang.",
+    "document": "Hujjat",
+    "signatures": "Imzolar",
+    "noSignatures": "Hozircha imzolar yo‘q.",
+    "awaitingOther": "Ikkinchi tomon imzosi kutilmoqda.",
+    "declinedTitle": "Shartnoma rad etildi",
+    "declineReason": "Rad etish sababi",
+    "createdAt": "Yaratilgan",
+    "sentAt": "Yuborilgan",
+    "activatedAt": "Faollashtirilgan",
+    "tabs": {
+      "all": "Barchasi",
+      "action": "Harakat talab qiladi",
+      "active": "Faol"
+    },
+    "role": {
+      "initiator": "Tashabbuskor",
+      "counterparty": "Kontragent"
+    },
+    "status": {
+      "draft": "Qoralama",
+      "pending_counterparty": "Kontragent kutilmoqda",
+      "pending_signatures": "Imzolar kutilmoqda",
+      "active": "Faol",
+      "declined": "Rad etilgan",
+      "cancelled": "Bekor qilingan",
+      "expired": "Muddati o‘tgan"
+    },
+    "actions": {
+      "send": "Kontragentga yuborish",
+      "accept": "Shartlarni qabul qilish",
+      "decline": "Rad etish",
+      "confirmDecline": "Rad etishni tasdiqlash",
+      "sign": "E-IMZO bilan imzolash",
+      "cancel": "Bekor qilish",
+      "downloadPdf": "PDF yuklab olish",
+      "downloadBundle": "To‘plamni yuklab olish (ZIP)"
+    },
+    "errors": {
+      "invalid": "Maydonlarni tekshiring.",
+      "createFailed": "Shartnoma yaratib bo‘lmadi."
     }
   }
 }

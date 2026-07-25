@@ -64,6 +64,7 @@
     "home": "Home",
     "companies": "Companies",
     "offers": "Offers",
+    "contracts": "Contracts",
     "settings": "Settings",
     "logout": "Log out",
     "market": "Market",
@@ -537,6 +538,73 @@
     "news_breaking": {
       "title": "Breaking news",
       "body": "{{headline}}"
+    },
+    "contract_incoming": {
+      "title": "New contract",
+      "body": "A contract “{{title}}” was sent to you"
+    },
+    "contract_accepted": {
+      "title": "Contract accepted",
+      "body": "The terms of “{{title}}” were accepted"
+    },
+    "contract_declined": {
+      "title": "Contract declined",
+      "body": "The contract “{{title}}” was declined"
+    }
+  },
+  "contracts": {
+    "title": "Contracts",
+    "subtitle": "Electronic contracts with verified companies.",
+    "create": "Create contract",
+    "createDraft": "Create draft",
+    "empty": "No contracts yet",
+    "emptyBody": "Create a contract with a verified company.",
+    "template": "Contract template",
+    "selectTemplate": "Select a template",
+    "counterparty": "Counterparty",
+    "counterpartyHint": "Verified companies only.",
+    "counterpartySearch": "Search by name or Tax ID…",
+    "needVerifiedInitiator": "Only a verified company can create a contract. Select a verified company in the switcher above.",
+    "document": "Document",
+    "signatures": "Signatures",
+    "noSignatures": "No signatures yet.",
+    "awaitingOther": "Awaiting the other party's signature.",
+    "declinedTitle": "Contract declined",
+    "declineReason": "Reason for declining",
+    "createdAt": "Created",
+    "sentAt": "Sent",
+    "activatedAt": "Activated",
+    "tabs": {
+      "all": "All",
+      "action": "Needs action",
+      "active": "Active"
+    },
+    "role": {
+      "initiator": "Initiator",
+      "counterparty": "Counterparty"
+    },
+    "status": {
+      "draft": "Draft",
+      "pending_counterparty": "Awaiting counterparty",
+      "pending_signatures": "Awaiting signatures",
+      "active": "Active",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "actions": {
+      "send": "Send to counterparty",
+      "accept": "Accept terms",
+      "decline": "Decline",
+      "confirmDecline": "Confirm decline",
+      "sign": "Sign with E-IMZO",
+      "cancel": "Cancel",
+      "downloadPdf": "Download PDF",
+      "downloadBundle": "Download bundle (ZIP)"
+    },
+    "errors": {
+      "invalid": "Check the form fields.",
+      "createFailed": "Failed to create the contract."
     }
   }
 }

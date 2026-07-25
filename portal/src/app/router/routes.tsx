@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { CompaniesPage } from "@/pages/companies";
 import { CompanyCreatePage } from "@/pages/company-create";
 import { CompanyViewPage } from "@/pages/company-view";
+import { ContractCreatePage, ContractDetailPage, ContractsPage } from "@/pages/contracts";
 import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
 import { LoginPage } from "@/pages/login";
@@ -58,6 +59,9 @@ export const router = createBrowserRouter([
           { path: "/offers", element: <OffersPage /> },
           { path: "/offers/new", element: <OfferEditPage /> },
           { path: "/offers/:offerId", element: <OfferEditPage /> },
+          { path: "/contracts", element: <ContractsPage /> },
+          { path: "/contracts/new", element: <ContractCreatePage /> },
+          { path: "/contracts/:contractId", element: <ContractDetailPage /> },
           { path: "/settings", element: <SettingsPage /> },
           { path: "*", element: <NotFoundPage /> },
         ],
