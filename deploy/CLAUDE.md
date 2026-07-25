@@ -62,6 +62,27 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   default OFF — R1 ships badge-only.
 - **Web App bundle** is built separately into the `webapp_static` volume: `make webapp-bundle`
   (= `docker compose --profile build run --rm --build webapp-build`).
+- **E-IMZO sidecar (R3)** — `eimzo-server` is the UNICON Java verification server that checks
+  national O'zDSt PKCS#7 signatures (stock crypto libs can't). It is **profile-gated** (`profiles:
+  ["eimzo"]`) in BOTH compose files, so a plain `docker compose up` never requires it: when it's
+  absent the gateway adapter (`backend/app/integrations/eimzo/`) opens its circuit and the API
+  returns 503 (`ProviderUnavailable`) while the manual verification path stays fully usable
+  (degradation invariant). **Operator prerequisite (hard blocker for Stage-A E-IMZO):** obtain the
+  distribution per UNICON licensing, push it to the private registry, and set `EIMZO_SERVER_IMAGE`
+  in `.env`. Bring it up with `docker compose --env-file .env -f deploy/docker-compose.yml --profile
+  eimzo up -d eimzo-server`. New envs (all non-secret, safe defaults): `EIMZO_SERVER_URL`
+  (default `http://eimzo-server:8080`), `EIMZO_CHALLENGE_TTL_SECONDS` (default `300`), plus the
+  compose-only `EIMZO_SERVER_IMAGE` (**required** to activate the `eimzo` profile).
+  **Root trust:** the sidecar verifies certificate chains against the UZ root/intermediate CA
+  bundle mounted read-only at `/opt/eimzo/truststore` from `deploy/eimzo/truststore/` (git-tracked
+  placeholder; the real production certs are supplied out of band and are **not** committed).
+  *Refresh procedure:* download the current O'zDSt root + intermediate certs from the E-IMZO / soliq
+  distribution, drop the PEM/DER files into `deploy/eimzo/truststore/` on the host, then
+  `docker compose ... --profile eimzo restart eimzo-server`. Review the bundle at least annually and
+  whenever UNICON rotates a CA.
+  **NOTE (`.env.example`):** the three E-IMZO variables above must be appended to the tracked
+  `deploy/.env.example` env contract; they were not added automatically here because the local
+  tooling denies edits to `.env*` files.
 
 ## Make targets (run from repo root)
 

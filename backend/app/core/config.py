@@ -125,6 +125,15 @@ class Settings(BaseSettings):
     # Falls back to REQUEST_NOTIFY_CHAT_ID when unset. None → group notify disabled.
     VERIFICATION_NOTIFY_CHAT_ID: int | None = None
 
+    # ── E-IMZO verification rails (R3) ────────────────────────────────────────
+    # Base URL of the UNICON e-imzo-server sidecar (internal network, no published
+    # ports). All PKCS#7 verification is delegated there — stock crypto libraries
+    # cannot verify the national O'zDSt algorithms. Non-secret (a service name);
+    # defaults to the compose service so dev/CI need no override.
+    EIMZO_SERVER_URL: str = "http://eimzo-server:8080"
+    # Lifetime of a one-time signing challenge stored in Redis (single-use).
+    EIMZO_CHALLENGE_TTL_SECONDS: int = 300
+
     # ── CORS ──────────────────────────────────────────────────────────────────
     # Explicit non-wildcard list of allowed origins for credentialed CORS requests.
     # Never default to ["*"] — wildcard with allow_credentials=True is both a

@@ -212,6 +212,22 @@ class TestSmsProviderSettings:
         assert settings.VERIFICATION_NOTIFY_CHAT_ID is None
 
 
+class TestEimzoSettings:
+    """E-IMZO sidecar settings (R3 TA1.1) — both have non-secret defaults."""
+
+    def test_eimzo_server_url_default(self) -> None:
+        settings = _make_settings()
+        assert settings.EIMZO_SERVER_URL == "http://eimzo-server:8080"
+
+    def test_eimzo_challenge_ttl_default(self) -> None:
+        settings = _make_settings()
+        assert settings.EIMZO_CHALLENGE_TTL_SECONDS == 300
+
+    def test_eimzo_server_url_reads_env(self) -> None:
+        settings = _make_settings(EIMZO_SERVER_URL="http://localhost:9090")
+        assert settings.EIMZO_SERVER_URL == "http://localhost:9090"
+
+
 class TestCiEnvContract:
     """Regression tests asserting the CI workflow's S3 env key matches Settings.S3_ENDPOINT.
 
