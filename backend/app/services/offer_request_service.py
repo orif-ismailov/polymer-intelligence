@@ -152,6 +152,49 @@ def list_for_client(db: Session, client_id: int) -> list[OfferRequest]:
     )
 
 
+def list_for_company(db: Session, company_id: int) -> list[OfferRequest]:
+    """Inquiries SENT by a company (portal-origin), newest first (any status)."""
+    return (
+        db.query(OfferRequest)
+        .filter(OfferRequest.company_id == company_id)
+        .order_by(OfferRequest.created_at.desc())
+        .all()
+    )
+
+
+def list_incoming_for_company(db: Session, company_id: int) -> list[OfferRequest]:
+    """Post-moderation inquiries RECEIVED on a company's own offers, newest first.
+
+    Only approved (forwarded) inquiries are visible to the selling company — the
+    pending/rejected moderation states stay internal to staff.
+    """
+    return (
+        db.query(OfferRequest)
+        .join(SellerOffer, OfferRequest.offer_id == SellerOffer.id)
+        .filter(
+            SellerOffer.company_id == company_id,
+            OfferRequest.status == OfferRequestStatus.approved,
+        )
+        .order_by(OfferRequest.created_at.desc())
+        .all()
+    )
+
+
+def list_company_inquiries_for_offer(
+    db: Session, company_id: int, offer_id: int
+) -> list[OfferRequest]:
+    """A company's own inquiries against one offer (the market-detail relationship block)."""
+    return (
+        db.query(OfferRequest)
+        .filter(
+            OfferRequest.company_id == company_id,
+            OfferRequest.offer_id == offer_id,
+        )
+        .order_by(OfferRequest.created_at.desc())
+        .all()
+    )
+
+
 def _fmt_num(value: decimal.Decimal | None) -> str | None:
     """Format a Decimal without insignificant trailing zeros (100.000 -> '100')."""
     if value is None:

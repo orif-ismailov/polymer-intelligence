@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 from app.core.time import utcnow
 from app.models.accounts import UserAccount
 from app.models.companies import Company
-from app.models.enums import CompanyStatus, SellerOfferStatus
+from app.models.enums import CompanyStatus, OfferAvailability, SellerOfferStatus
 from app.models.marketplace import Seller, SellerOffer
 from app.models.reference import Product, ProductSynonym
 from app.schemas.marketplace import CategoryCount, SellerOfferCreate, SellerOfferUpdate
@@ -233,7 +233,10 @@ def list_catalog(
     *,
     product_id: int | None = None,
     q: str | None = None,
+    availability: OfferAvailability | None = None,
+    country: str | None = None,
     exclude_seller_id: int | None = None,
+    exclude_company_id: int | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[SellerOffer]:
@@ -244,15 +247,29 @@ def list_catalog(
     language — including a Cyrillic abbreviation like "ПП" for a "PP"-coded offer — returns
     the linked catalog offers.
 
+    ``availability`` / ``country`` are optional equality filters (R2 portal market).
+
     When ``exclude_seller_id`` is set, that seller's own listings are omitted — a seller
     browsing the marketplace sees only other sellers' offers (they manage their own under
-    "My offers" and cannot inquire on them).
+    "My offers" and cannot inquire on them). ``exclude_company_id`` does the same for a
+    portal company browsing the market (it can't inquire on its own offers).
     """
     query = db.query(SellerOffer).filter(SellerOffer.status == SellerOfferStatus.approved)
     if exclude_seller_id is not None:
         query = query.filter(SellerOffer.seller_id != exclude_seller_id)
+    if exclude_company_id is not None:
+        query = query.filter(
+            or_(
+                SellerOffer.company_id.is_(None),
+                SellerOffer.company_id != exclude_company_id,
+            )
+        )
     if product_id is not None:
         query = query.filter(SellerOffer.product_id == product_id)
+    if availability is not None:
+        query = query.filter(SellerOffer.availability == availability)
+    if country is not None:
+        query = query.filter(SellerOffer.country == country)
     if q:
         like = f"%{q.strip()}%"
         conditions = [
