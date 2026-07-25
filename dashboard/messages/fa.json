@@ -665,7 +665,9 @@
     "seller": "فروشنده",
     "approve": "تأیید و ارسال به فروشنده",
     "reject": "رد",
-    "notePlaceholder": "توضیح (اختیاری)"
+    "notePlaceholder": "توضیح (اختیاری)",
+    "originPortal": "پورتال",
+    "verified": "تأیید‌شده"
   },
   "newsAdmin": {
     "title": "مدیریت اخبار",

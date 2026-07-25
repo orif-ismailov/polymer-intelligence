@@ -665,7 +665,9 @@
     "seller": "卖方",
     "approve": "批准并发送给卖方",
     "reject": "驳回",
-    "notePlaceholder": "备注（可选）"
+    "notePlaceholder": "备注（可选）",
+    "originPortal": "门户",
+    "verified": "已验证"
   },
   "newsAdmin": {
     "title": "新闻管理",

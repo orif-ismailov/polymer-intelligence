@@ -680,7 +680,9 @@
     "seller": "Satıcı",
     "approve": "Onayla ve satıcıya gönder",
     "reject": "Reddet",
-    "notePlaceholder": "Not (isteğe bağlı)"
+    "notePlaceholder": "Not (isteğe bağlı)",
+    "originPortal": "Portal",
+    "verified": "doğrulandı"
   },
   "newsAdmin": {
     "title": "Haber Yönetimi",

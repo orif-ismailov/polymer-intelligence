@@ -680,7 +680,9 @@
     "seller": "Sotuvchi",
     "approve": "Tasdiqlash va sotuvchiga yuborish",
     "reject": "Rad etish",
-    "notePlaceholder": "Izoh (ixtiyoriy)"
+    "notePlaceholder": "Izoh (ixtiyoriy)",
+    "originPortal": "Portal",
+    "verified": "tasdiqlangan"
   },
   "newsAdmin": {
     "title": "Yangiliklar boshqaruvi",

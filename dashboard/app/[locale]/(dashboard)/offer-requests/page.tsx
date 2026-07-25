@@ -34,17 +34,27 @@ interface OfferRequest {
   message: string | null;
   created_at: string;
   offer: OfferBrief;
+  // Dual-origin (R2): "client" (TG) fills buyer; "company" (portal) fills buyer_company.
+  origin: string;
   buyer: {
     contact_name: string | null;
     company_name: string | null;
     phone: string | null;
     telegram_user_id: number | null;
-  };
+  } | null;
+  buyer_company: OfferRequestCompany | null;
   seller: {
     company_name: string | null;
     phone: string | null;
     telegram_username: string | null;
-  };
+  } | null;
+  seller_company: OfferRequestCompany | null;
+}
+
+interface OfferRequestCompany {
+  id: number;
+  name: string | null;
+  verified: boolean;
 }
 
 export default function OfferRequestsPage() {
@@ -113,22 +123,54 @@ export default function OfferRequestsPage() {
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="rounded-md border border-border bg-background p-3">
                 <p className="text-xs font-medium uppercase text-foreground-muted">{t("buyer")}</p>
-                <p className="text-sm text-foreground mt-1">
-                  {r.buyer.company_name || "—"}
-                  {r.buyer.contact_name ? ` · ${r.buyer.contact_name}` : ""}
-                </p>
-                <p className="text-sm text-foreground-muted">
-                  {r.buyer.phone || ""}
-                  {r.buyer.telegram_user_id ? ` · id ${r.buyer.telegram_user_id}` : ""}
-                </p>
+                {r.buyer_company ? (
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-foreground">
+                    <span className="rounded-md bg-accent/10 px-1.5 py-0.5 text-xs font-medium text-accent">
+                      {t("originPortal")}
+                    </span>
+                    {r.buyer_company.name || "—"}
+                    {r.buyer_company.verified ? (
+                      <span className="rounded-md bg-urgency-low/15 px-1.5 py-0.5 text-xs font-medium text-urgency-low">
+                        {t("verified")}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-foreground mt-1">
+                      {r.buyer?.company_name || "—"}
+                      {r.buyer?.contact_name ? ` · ${r.buyer.contact_name}` : ""}
+                    </p>
+                    <p className="text-sm text-foreground-muted">
+                      {r.buyer?.phone || ""}
+                      {r.buyer?.telegram_user_id ? ` · id ${r.buyer.telegram_user_id}` : ""}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="rounded-md border border-border bg-background p-3">
                 <p className="text-xs font-medium uppercase text-foreground-muted">{t("seller")}</p>
-                <p className="text-sm text-foreground mt-1">{r.seller.company_name || "—"}</p>
-                <p className="text-sm text-foreground-muted">
-                  {r.seller.phone || ""}
-                  {r.seller.telegram_username ? ` · @${r.seller.telegram_username}` : ""}
-                </p>
+                {r.seller_company ? (
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-foreground">
+                    <span className="rounded-md bg-accent/10 px-1.5 py-0.5 text-xs font-medium text-accent">
+                      {t("originPortal")}
+                    </span>
+                    {r.seller_company.name || "—"}
+                    {r.seller_company.verified ? (
+                      <span className="rounded-md bg-urgency-low/15 px-1.5 py-0.5 text-xs font-medium text-urgency-low">
+                        {t("verified")}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-foreground mt-1">{r.seller?.company_name || "—"}</p>
+                    <p className="text-sm text-foreground-muted">
+                      {r.seller?.phone || ""}
+                      {r.seller?.telegram_username ? ` · @${r.seller.telegram_username}` : ""}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
