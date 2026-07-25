@@ -55,6 +55,7 @@ from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.companies import router as portal_companies_router
 from app.api.portal.inquiries import router as portal_inquiries_router
 from app.api.portal.market import router as portal_market_router
+from app.api.portal.news import router as portal_news_router
 from app.api.portal.offers import router as portal_offers_router
 from app.api.portal.requests import router as portal_requests_router
 from app.api.prices import router as prices_router
@@ -205,6 +206,7 @@ def create_app() -> FastAPI:
     application.include_router(portal_market_router, prefix="/api/v1")
     application.include_router(portal_inquiries_router, prefix="/api/v1")
     application.include_router(portal_requests_router, prefix="/api/v1")
+    application.include_router(portal_news_router, prefix="/api/v1")
     application.include_router(admin_verification_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
