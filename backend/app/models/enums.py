@@ -356,3 +356,22 @@ class DocumentReviewStatus(enum.StrEnum):
     pending_review = "pending_review"
     accepted = "accepted"
     rejected = "rejected"
+
+
+# ── Contracts (R3 Stage B — Deal Lifecycle seed) ──────────────────────────────
+
+
+class ContractStatus(enum.StrEnum):
+    """Contract lifecycle (PG type: contract_status).
+
+    draft → pending_counterparty → pending_signatures → active; declined /
+    cancelled / expired are terminal.
+    """
+
+    draft = "draft"
+    pending_counterparty = "pending_counterparty"
+    pending_signatures = "pending_signatures"
+    active = "active"
+    declined = "declined"
+    cancelled = "cancelled"
+    expired = "expired"

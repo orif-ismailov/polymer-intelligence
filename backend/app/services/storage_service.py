@@ -355,3 +355,56 @@ def presign_eimzo_pkcs7(storage_path: str, ttl: int = 600) -> str:
         ExpiresIn=ttl,
     )
     return str(url)
+
+
+# ── Contracts (R3 Stage B) ────────────────────────────────────────────────────
+
+
+def store_contract_template(code: str, version: int, html: str) -> str:
+    """Upload a contract template body to S3; return its key (idempotent overwrite)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    key = f"contracts/templates/{code}_v{version}.html"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET, Key=key, Body=html.encode("utf-8"), ContentType="text/html"
+    )
+    return key
+
+
+def get_object_text(key: str) -> str:
+    """Fetch an S3 object and decode it as UTF-8 text (contract template bodies)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=key)  # type: ignore[attr-defined]
+    return str(obj["Body"].read().decode("utf-8"))
+
+
+def store_contract_pdf(contract_public_id: str, version_n: int, pdf_bytes: bytes) -> tuple[str, str]:
+    """Store a rendered contract PDF; return (storage_path, sha256)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    key = f"contracts/{contract_public_id}/contract_v{version_n}.pdf"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET, Key=key, Body=pdf_bytes, ContentType="application/pdf"
+    )
+    return key, hashlib.sha256(pdf_bytes).hexdigest()
+
+
+def get_object_bytes(key: str) -> bytes:
+    """Fetch an S3 object's raw bytes (contract PDF integrity checks)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=key)  # type: ignore[attr-defined]
+    return bytes(obj["Body"].read())
+
+
+def presign_object(key: str, ttl: int = 600) -> str:
+    """Generic short-lived presigned GET URL for any stored object (≤600 s)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    url = s3_client.generate_presigned_url(  # type: ignore[attr-defined]
+        "get_object",
+        Params={"Bucket": settings.S3_BUCKET, "Key": key},
+        ExpiresIn=ttl,
+    )
+    return str(url)

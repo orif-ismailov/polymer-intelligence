@@ -26,6 +26,11 @@ from app.models.companies import (  # noqa: F401
     CompanyBusinessRole,
     CompanyMember,
 )
+from app.models.contracts import (  # noqa: F401
+    Contract,
+    ContractSignature,
+    ContractTemplate,
+)
 from app.models.counterparties import Counterparty, CounterpartyAlias  # noqa: F401
 from app.models.eimzo import CompanyPersonData, SignatureEvidence  # noqa: F401
 from app.models.enums import (  # noqa: F401
@@ -185,4 +190,8 @@ __all__ = [
     "SignatureEvidence",
     "CompanyPersonData",
     "IntegrationCallLog",
+    # Contracts (R3 Stage B)
+    "ContractTemplate",
+    "Contract",
+    "ContractSignature",
 ]

@@ -52,8 +52,8 @@ class TestRevisionChain:
 
     def test_0020_is_single_head(self) -> None:
         script = _script_dir()
-        assert script.get_heads() == ["0020"], (
-            f"expected a single head 0020, got {script.get_heads()}"
+        assert script.get_heads() == ["0021"], (
+            f"expected a single head 0021, got {script.get_heads()}"
         )
         assert script.get_revision("0020").down_revision == "0019"
 

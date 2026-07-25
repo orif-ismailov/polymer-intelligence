@@ -28,6 +28,14 @@ VERIFICATION_CASE_REJECTED = "verification.case_rejected"
 # ── E-IMZO identity confirmation (R3) ─────────────────────────────────────────
 COMPANY_EIMZO_CONFIRMED = "company.eimzo_confirmed"
 
+# ── Contracts (R3 Stage B) ────────────────────────────────────────────────────
+CONTRACT_CREATED = "contract.created"
+CONTRACT_SENT = "contract.sent"
+CONTRACT_SIGNED = "contract.signed"
+CONTRACT_ACTIVATED = "contract.activated"
+CONTRACT_DECLINED = "contract.declined"
+CONTRACT_CANCELLED = "contract.cancelled"
+
 # ── Marketplace bridge ────────────────────────────────────────────────────────
 OFFER_PUBLISHED_BY_COMPANY = "offer.published_by_company"
 
@@ -47,6 +55,12 @@ ALL_EVENT_TYPES: frozenset[str] = frozenset(
         VERIFICATION_CASE_APPROVED,
         VERIFICATION_CASE_REJECTED,
         COMPANY_EIMZO_CONFIRMED,
+        CONTRACT_CREATED,
+        CONTRACT_SENT,
+        CONTRACT_SIGNED,
+        CONTRACT_ACTIVATED,
+        CONTRACT_DECLINED,
+        CONTRACT_CANCELLED,
         OFFER_PUBLISHED_BY_COMPANY,
     }
 )

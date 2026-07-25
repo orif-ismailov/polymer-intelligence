@@ -197,7 +197,7 @@ services:
     # Migrate + seed (reference, staff, sources) BEFORE serving — idempotent
     # pre-start steps so a fresh deploy comes up fully provisioned with no manual
     # step. NO --reload in production (immutable image, no bind-mount watcher).
-    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_sources && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_sources && python -m app.seed.seed_contract_templates && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     # No host ports — only nginx reaches the api over the docker network (T-06-10).
     # No source bind-mount — the image is the single source of truth in prod.
     healthcheck:

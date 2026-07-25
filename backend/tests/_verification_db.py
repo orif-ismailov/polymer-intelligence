@@ -30,6 +30,9 @@ requires_real_db = pytest.mark.skipif(
 _TABLES = [
     "domain_events",
     "audit_log",
+    "contract_signatures",
+    "contracts",
+    "contract_templates",
     "integration_call_log",
     "signature_evidence",
     "company_person_data",
