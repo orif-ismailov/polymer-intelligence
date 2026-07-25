@@ -10,6 +10,7 @@ import { MarketOfferPage, MarketPage } from "@/pages/market";
 import { OfferEditPage } from "@/pages/offer-edit";
 import { OffersPage } from "@/pages/offers";
 import { OtpPage } from "@/pages/otp";
+import { RequestCreatePage, RequestDetailPage, RequestsPage } from "@/pages/requests";
 import { SettingsPage } from "@/pages/settings";
 import { VerificationStatusPage } from "@/pages/verification-status";
 import { AppShell } from "@/widgets/app-shell";
@@ -41,6 +42,9 @@ export const router = createBrowserRouter([
           { path: "/market/:offerId", element: <MarketOfferPage /> },
           { path: "/inquiries", element: <InquiriesPage /> },
           { path: "/inquiries/:inquiryId", element: <InquiryDetailPage /> },
+          { path: "/requests", element: <RequestsPage /> },
+          { path: "/requests/new", element: <RequestCreatePage /> },
+          { path: "/requests/:requestId", element: <RequestDetailPage /> },
           { path: "/companies", element: <CompaniesPage /> },
           { path: "/companies/new", element: <Navigate to="/companies/new/1" replace /> },
           { path: "/companies/new/:step", element: <CompanyCreatePage /> },

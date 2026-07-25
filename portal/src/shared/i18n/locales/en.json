@@ -395,5 +395,58 @@
     "edit": "Edit",
     "resubmit": "Resubmit",
     "editFailed": "Could not save the changes."
+  },
+  "requests": {
+    "title": "Purchase requests",
+    "subtitle": "Requests you've submitted for your company",
+    "create": "New request",
+    "forCompany": "On behalf of {{company}}",
+    "empty": "No requests yet",
+    "emptyBody": "Create a purchase request to get started.",
+    "notFound": "Request not found",
+    "back": "Back to requests",
+    "timeline": "Status timeline",
+    "cancel": "Cancel request"
+  },
+  "requestStatus": {
+    "new": "New",
+    "in_review": "In review",
+    "offer_received": "Offer received",
+    "matched": "Matched",
+    "closed": "Closed",
+    "cancelled": "Cancelled"
+  },
+  "requestWizard": {
+    "step": {
+      "product": "Product",
+      "specs": "Specs",
+      "delivery": "Delivery",
+      "contacts": "Contacts"
+    },
+    "product": "Product",
+    "grade": "Grade",
+    "polymer": "Polymer type",
+    "volume": "Volume",
+    "unit": "Unit",
+    "targetPrice": "Target price",
+    "currency": "Currency",
+    "incoterms": "Incoterms",
+    "country": "Country",
+    "city": "City / port",
+    "desiredDate": "Desired date",
+    "validityDays": "Valid for (days)",
+    "urgency": "Urgency",
+    "urgencyOpt": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "companyName": "Company name",
+    "contactName": "Contact name",
+    "phone": "Phone",
+    "legalAddress": "Legal address",
+    "comment": "Comment",
+    "submit": "Submit request",
+    "submitFailed": "Could not submit the request."
   }
 }

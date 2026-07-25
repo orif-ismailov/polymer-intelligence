@@ -395,5 +395,58 @@
     "edit": "Tahrirlash",
     "resubmit": "Qayta yuborish",
     "editFailed": "O'zgarishlarni saqlab bo'lmadi."
+  },
+  "requests": {
+    "title": "Xarid arizalari",
+    "subtitle": "Kompaniyangiz nomidan yuborilgan arizalar",
+    "create": "Yangi ariza",
+    "forCompany": "{{company}} nomidan",
+    "empty": "Hozircha arizalar yo'q",
+    "emptyBody": "Boshlash uchun xarid arizasini yarating.",
+    "notFound": "Ariza topilmadi",
+    "back": "Arizalarga",
+    "timeline": "Holat tarixi",
+    "cancel": "Arizani bekor qilish"
+  },
+  "requestStatus": {
+    "new": "Yangi",
+    "in_review": "Ko'rib chiqilmoqda",
+    "offer_received": "Taklif olindi",
+    "matched": "Moslashtirildi",
+    "closed": "Yopilgan",
+    "cancelled": "Bekor qilingan"
+  },
+  "requestWizard": {
+    "step": {
+      "product": "Mahsulot",
+      "specs": "Parametrlar",
+      "delivery": "Yetkazish",
+      "contacts": "Kontaktlar"
+    },
+    "product": "Mahsulot",
+    "grade": "Marka",
+    "polymer": "Polimer turi",
+    "volume": "Hajm",
+    "unit": "Birlik",
+    "targetPrice": "Maqsad narx",
+    "currency": "Valyuta",
+    "incoterms": "Shartlar",
+    "country": "Davlat",
+    "city": "Shahar / port",
+    "desiredDate": "Istalgan sana",
+    "validityDays": "Amal qilish (kun)",
+    "urgency": "Shoshilinchlik",
+    "urgencyOpt": {
+      "low": "Past",
+      "medium": "O'rta",
+      "high": "Yuqori"
+    },
+    "companyName": "Kompaniya nomi",
+    "contactName": "Kontakt shaxs",
+    "phone": "Telefon",
+    "legalAddress": "Yuridik manzil",
+    "comment": "Izoh",
+    "submit": "Arizani yuborish",
+    "submitFailed": "Arizani yuborib bo'lmadi."
   }
 }

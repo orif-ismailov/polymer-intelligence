@@ -44,10 +44,16 @@ const ChatIcon = (
     <path d="M4 4h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H8l-4 3v-3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
   </svg>
 );
+const DocIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M5 3h6l4 4v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 3v4h4M7 11h6M7 14h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/", labelKey: "nav.home", icon: HomeIcon, end: true },
   { to: "/market", labelKey: "nav.market", icon: StoreIcon },
+  { to: "/requests", labelKey: "nav.requests", icon: DocIcon },
   { to: "/inquiries", labelKey: "nav.inquiries", icon: ChatIcon },
   { to: "/companies", labelKey: "nav.companies", icon: BuildingIcon },
   { to: "/offers", labelKey: "nav.offers", icon: TagIcon },
