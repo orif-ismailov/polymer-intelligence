@@ -113,7 +113,7 @@ export function StepConfirm({ onBack, onEditStep, onComplete }: StepConfirmProps
       </div>
 
       {error ? (
-        <Alert tone="danger" title={t(error.messageKey)}>
+        <Alert tone="danger" title={t(error.messageKey, error.messageValues ?? {})}>
           {error.detail}
         </Alert>
       ) : null}

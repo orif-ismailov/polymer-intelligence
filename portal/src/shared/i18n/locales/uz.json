@@ -178,11 +178,12 @@
       "subtitle": "Verifikatsiya uchun ta’sis hujjatlarini yuklang.",
       "registrationRequired": "Ro‘yxatdan o‘tish guvohnomasi majburiy.",
       "bankLetterRequired": "Hisob qo‘shilgan bo‘lsa, bank xati majburiy.",
-      "dropHint": "Fayl tanlash uchun bosing (PDF, JPG, PNG 20 MB gacha)",
+      "dropHint": "Fayl tanlash uchun bosing (PDF, JPG, PNG {{mb}} MB gacha)",
       "uploaded": "Yuklandi",
       "uploading": "Yuklanmoqda…",
-      "tooLarge": "Fayl 20 MB dan oshib ketdi",
-      "replace": "Almashtirish"
+      "tooLarge": "Fayl {{mb}} MB dan oshib ketdi",
+      "replace": "Almashtirish",
+      "invalidType": "Fayl formati qo‘llab-quvvatlanmaydi. PDF, JPG yoki PNG yuklang."
     },
     "confirm": {
       "title": "Tekshiring va tasdiqlang",
@@ -199,8 +200,9 @@
     "errors": {
       "duplicate": "Bunday STIR bilan kompaniya allaqachon mavjud.",
       "createFailed": "Kompaniyani yaratib bo‘lmadi.",
-      "submitFailed": "Verifikatsiyaga yuborib bo‘lmadi.",
-      "missingRequiredDocs": "Majburiy hujjatlarni yuklang."
+      "submitFailed": "Kompaniya yaratildi, lekin uni verifikatsiyaga yuborib bo‘lmadi. Qayta urinib ko‘ring.",
+      "missingRequiredDocs": "Majburiy hujjatlarni yuklang.",
+      "documentFailed": "Hujjatlarni yuklab bo‘lmadi. Kompaniya yaratildi — faylni to‘g‘rilab, qayta urinib ko‘ring."
     }
   },
   "verification": {

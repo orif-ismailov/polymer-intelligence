@@ -2,7 +2,7 @@ import { type ChangeEvent, useId, useRef, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
-import { MAX_UPLOAD_BYTES } from "@/shared/config";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from "@/shared/config";
 import { useEnumLabels } from "@/shared/i18n";
 import { formatBytes } from "@/shared/lib";
 import { cn } from "@/shared/lib";
@@ -49,7 +49,7 @@ export function DocumentDropzone({
     e.target.value = "";
     if (!chosen) return;
     if (chosen.size > MAX_UPLOAD_BYTES) {
-      setError(t("wizard.documents.tooLarge"));
+      setError(t("wizard.documents.tooLarge", { mb: MAX_UPLOAD_MB }));
       return;
     }
     setError(null);
@@ -114,7 +114,9 @@ export function DocumentDropzone({
           )}
         >
           <span className="text-sm font-medium text-text">{t("company.uploadDocument")}</span>
-          <span className="text-xs text-text-muted">{t("wizard.documents.dropHint")}</span>
+          <span className="text-xs text-text-muted">
+            {t("wizard.documents.dropHint", { mb: MAX_UPLOAD_MB })}
+          </span>
         </button>
       )}
 

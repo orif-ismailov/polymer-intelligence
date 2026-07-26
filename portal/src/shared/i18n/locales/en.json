@@ -178,11 +178,12 @@
       "subtitle": "Upload the founding documents for verification.",
       "registrationRequired": "The registration certificate is required.",
       "bankLetterRequired": "A bank letter is required if a bank account was added.",
-      "dropHint": "Click to choose a file (PDF, JPG, PNG up to 20 MB)",
+      "dropHint": "Click to choose a file (PDF, JPG, PNG up to {{mb}} MB)",
       "uploaded": "Uploaded",
       "uploading": "Uploading…",
-      "tooLarge": "The file exceeds 20 MB",
-      "replace": "Replace"
+      "tooLarge": "The file exceeds {{mb}} MB",
+      "replace": "Replace",
+      "invalidType": "Unsupported file format. Upload a PDF, JPG or PNG."
     },
     "confirm": {
       "title": "Review and confirm",
@@ -199,8 +200,9 @@
     "errors": {
       "duplicate": "A company with this Tax ID already exists.",
       "createFailed": "Failed to create the company.",
-      "submitFailed": "Failed to submit for verification.",
-      "missingRequiredDocs": "Upload the required documents."
+      "submitFailed": "The company was created but could not be submitted for verification. Please retry.",
+      "missingRequiredDocs": "Upload the required documents.",
+      "documentFailed": "Failed to upload the documents. The company was created — fix the file and retry."
     }
   },
   "verification": {

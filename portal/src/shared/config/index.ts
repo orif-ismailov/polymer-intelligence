@@ -21,5 +21,13 @@ export const UZ_TAX_ID_LENGTH = 9;
 /** Bank MFO must be exactly 5 digits. */
 export const BANK_MFO_LENGTH = 5;
 
-/** Max upload size accepted client-side (mirror server; 20 MB). */
-export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+/**
+ * Max upload size accepted client-side. MUST mirror the server's
+ * `storage_service.MAX_SIZE_BYTES` (10 MB) — when this was larger, oversized
+ * files passed the client check, the wizard created the company, and only then
+ * did the upload 422 with `file_too_large`, leaving an orphaned draft company.
+ */
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+/** Human-readable form of {@link MAX_UPLOAD_BYTES}, interpolated into hints/errors. */
+export const MAX_UPLOAD_MB = MAX_UPLOAD_BYTES / (1024 * 1024);
