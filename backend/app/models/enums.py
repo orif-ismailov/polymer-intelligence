@@ -449,3 +449,21 @@ class RfqVisibility(enum.StrEnum):
     verified_only = "verified_only"
     all = "all"
     selected = "selected"
+
+
+class EscrowStatus(enum.StrEnum):
+    """Escrow payment state (PG type: escrow_status).
+
+    Deliberately shorter than the deal's own machine: escrow only answers "where
+    is the money". `pending` — the buyer has been given an invoice; `funded` —
+    the bank confirms the money arrived; `released` — it was paid out to the
+    seller; `refunded` — it went back to the buyer. The last two are terminal.
+
+    Each state change drags the deal with it (`escrow_service.mark`), which is
+    why a deal can never reach `paid_escrow` or `completed` by hand.
+    """
+
+    pending = "pending"
+    funded = "funded"
+    released = "released"
+    refunded = "refunded"

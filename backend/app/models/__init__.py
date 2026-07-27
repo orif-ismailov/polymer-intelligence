@@ -56,6 +56,7 @@ from app.models.enums import (  # noqa: F401
     DeliveryChannel,
     DeliveryStatus,
     DocumentReviewStatus,
+    EscrowStatus,
     OfferFileKind,
     OfferRequestStatus,
     ParseStatus,
@@ -89,6 +90,7 @@ from app.models.marketplace import (  # noqa: F401
     SellerOfferFile,
 )
 from app.models.notifications import PortalNotification  # noqa: F401
+from app.models.payments import EscrowPayment, ProviderEvent  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401
 from app.models.reference import (  # noqa: F401
     FxRate,
@@ -217,4 +219,8 @@ __all__ = [
     "DealMessage",
     "DealDocument",
     "RfqResponse",
+    # Payments / escrow (R4 / P3)
+    "EscrowStatus",
+    "EscrowPayment",
+    "ProviderEvent",
 ]

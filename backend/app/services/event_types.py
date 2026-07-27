@@ -45,6 +45,12 @@ RFQ_RESPONSE_SUBMITTED = "rfq_response.submitted"
 RFQ_RESPONSE_ACCEPTED = "rfq_response.accepted"
 RFQ_RESPONSE_NOT_SELECTED = "rfq_response.not_selected"
 
+# ── Escrow payments (R4 / P3) ─────────────────────────────────────────────────
+ESCROW_OPENED = "escrow.opened"
+ESCROW_FUNDED = "escrow.funded"
+ESCROW_RELEASED = "escrow.released"
+ESCROW_REFUNDED = "escrow.refunded"
+
 # ── Marketplace bridge ────────────────────────────────────────────────────────
 OFFER_PUBLISHED_BY_COMPANY = "offer.published_by_company"
 
@@ -77,6 +83,10 @@ ALL_EVENT_TYPES: frozenset[str] = frozenset(
         RFQ_RESPONSE_SUBMITTED,
         RFQ_RESPONSE_ACCEPTED,
         RFQ_RESPONSE_NOT_SELECTED,
+        ESCROW_OPENED,
+        ESCROW_FUNDED,
+        ESCROW_RELEASED,
+        ESCROW_REFUNDED,
         OFFER_PUBLISHED_BY_COMPANY,
     }
 )

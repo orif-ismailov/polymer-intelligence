@@ -53,8 +53,8 @@ class TestRevisionChain:
         # Later migrations (0019 market list index, 0020 e-imzo) now supersede 0018
         # as head; assert a single linear head with 0018 as an ancestor.
         script = _script_dir()
-        assert script.get_heads() == ["0023"], (
-            f"expected a single head 0023, got {script.get_heads()}"
+        assert script.get_heads() == ["0024"], (
+            f"expected a single head 0024, got {script.get_heads()}"
         )
         assert script.get_revision("0019").down_revision == "0018"
 
