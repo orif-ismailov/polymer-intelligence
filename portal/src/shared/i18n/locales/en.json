@@ -604,6 +604,14 @@
     "deal_document": {
       "title": "New document",
       "body": "A document was added to deal {{number}}"
+    },
+    "escrow_opened": {
+      "title": "Payment invoice",
+      "body": "An invoice for {{amount}} {{currency}} was issued for deal {{number}}"
+    },
+    "escrow_status": {
+      "title": "Payment status",
+      "body": "Deal {{number}}: {{amount}} {{currency}} — the payment status changed"
     }
   },
   "contracts": {

@@ -604,6 +604,14 @@
     "deal_document": {
       "title": "Новый документ",
       "body": "В сделку {{number}} добавлен документ"
+    },
+    "escrow_opened": {
+      "title": "Счёт на оплату",
+      "body": "По сделке {{number}} выставлен счёт на {{amount}} {{currency}}"
+    },
+    "escrow_status": {
+      "title": "Статус оплаты",
+      "body": "Сделка {{number}}: {{amount}} {{currency}} — статус оплаты изменён"
     }
   },
   "contracts": {

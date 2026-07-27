@@ -1272,10 +1272,41 @@ def send_deal_status_to_group(
     )
 
 
+@celery_app.task(name="send_escrow_funded_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_escrow_funded_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """ESCROW_FUNDED consumer — money ARRIVED, which is what operators act on.
+
+    Only this one of the four escrow events carries a card: raising an invoice
+    and paying out are routine, but funds landing is the moment the seller can
+    be told to ship and the operator's reconciliation is on the clock.
+
+    `aggregate_id` is the payment id, so the deal comes from the payload.
+    Never raises (ru/uz/tr, fail-soft like the other cards).
+    """
+    data = payload or {}
+    amount = f"{data.get('amount', '—')} {data.get('currency', '')}".strip()
+    note = data.get("note")
+    extra = [f"💵 {amount}"]
+    if note:
+        extra.append(f"📝 {note}")
+    return _deal_card(
+        data.get("deal_id"),
+        "💰 Escrow пополнен · Escrow to‘ldirildi · Escrow'a para geldi",
+        extra,
+    )
+
+
 def _register_consumers() -> None:
     """Wire outbox events → team group cards (see events.CONSUMERS)."""
     from app.services import event_types  # noqa: PLC0415
     from app.tasks.events import CONSUMERS  # noqa: PLC0415
+
+    if send_escrow_funded_to_group not in CONSUMERS.get(event_types.ESCROW_FUNDED, []):
+        CONSUMERS[event_types.ESCROW_FUNDED].append(send_escrow_funded_to_group)
 
     if send_deal_opened_to_group not in CONSUMERS.get(event_types.DEAL_OPENED, []):
         CONSUMERS[event_types.DEAL_OPENED].append(send_deal_opened_to_group)

@@ -54,6 +54,11 @@ KIND_DEAL_OPENED = "deal_opened"
 KIND_DEAL_STATUS = "deal_status"
 KIND_DEAL_MESSAGE = "deal_message"
 KIND_DEAL_DOCUMENT = "deal_document"
+# Escrow (R4 / P3). Never deduped by their producer: two distinct movements on
+# one deal are not duplicates, and swallowing the second would mean a party is
+# never told their money was released.
+KIND_ESCROW_OPENED = "escrow_opened"
+KIND_ESCROW_STATUS = "escrow_status"
 
 
 def keys_for(kind: str) -> tuple[str, str]:

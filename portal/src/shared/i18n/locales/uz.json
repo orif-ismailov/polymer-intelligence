@@ -604,6 +604,14 @@
     "deal_document": {
       "title": "Yangi hujjat",
       "body": "{{number}} bitimiga hujjat qo‘shildi"
+    },
+    "escrow_opened": {
+      "title": "To‘lov hisobi",
+      "body": "{{number}} bitimi bo‘yicha {{amount}} {{currency}} hisob-faktura chiqarildi"
+    },
+    "escrow_status": {
+      "title": "To‘lov holati",
+      "body": "{{number}} bitimi: {{amount}} {{currency}} — to‘lov holati o‘zgardi"
     }
   },
   "contracts": {

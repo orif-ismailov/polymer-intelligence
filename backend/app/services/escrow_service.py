@@ -44,7 +44,13 @@ from app.models.deals import Deal
 from app.models.enums import DealActorKind, DealStatus, EscrowStatus
 from app.models.payments import ESCROW_MODE_STUB, EscrowPayment, ProviderEvent
 from app.models.staff import StaffUser
-from app.services import audit_service, deal_service, event_service, event_types
+from app.services import (
+    audit_service,
+    deal_service,
+    event_service,
+    event_types,
+    notification_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +188,7 @@ def open_for_deal(
         {"deal_id": deal.id, "amount": str(payment.amount), "currency": payment.currency,
          "mode": payment.mode},
     )
+    _notify_both(db, deal, payment, notification_service.KIND_ESCROW_OPENED)
     logger.info(
         "escrow_service.open",
         extra={"payment_id": payment.id, "deal_id": deal.id, "mode": payment.mode},
@@ -257,6 +264,9 @@ def mark(
         db, staff_user.id, "escrow.mark", "escrow_payments", str(locked.id),
         {"deal_id": deal.id, "from": frm.value, "to": to_status.value, "note": clean_note},
     )
+    _notify_both(
+        db, deal, locked, notification_service.KIND_ESCROW_STATUS, status=to_status.value
+    )
     logger.info(
         "escrow_service.mark",
         extra={"payment_id": locked.id, "deal_id": deal.id, "to": to_status.value},
@@ -301,6 +311,41 @@ _EVENT_FOR: dict[EscrowStatus, str] = {
     EscrowStatus.released: event_types.ESCROW_RELEASED,
     EscrowStatus.refunded: event_types.ESCROW_REFUNDED,
 }
+
+
+def _notify_both(
+    db: Session, deal: Deal, payment: EscrowPayment, kind: str, **extra: object
+) -> None:
+    """Ring both parties' bells about the money.
+
+    Written inline rather than through the outbox, like the rest of the deals
+    notifications: a rolled-back mark must not leave a bell claiming money moved.
+
+    `dedup=False` on purpose. The default suppresses an identical UNREAD
+    notification, which is right for "you have a new message" and wrong here —
+    "your money arrived" and "your money was paid out" are different sentences
+    about the same deal, and the second must not be swallowed.
+    """
+    title_key, body_key = notification_service.keys_for(kind)
+    params: dict[str, object] = {
+        "number": deal.number,
+        "deal_id": deal.id,
+        "amount": f"{payment.amount:.2f}",
+        "currency": payment.currency,
+    }
+    params.update(extra)
+    for company_id in (deal.buyer_company_id, deal.seller_company_id):
+        notification_service.notify_company(
+            db,
+            company_id,
+            kind=kind,
+            title_key=title_key,
+            body_key=body_key,
+            params=params,
+            entity="deal",
+            entity_id=str(deal.id),
+            dedup=False,
+        )
 
 
 def _payload(
