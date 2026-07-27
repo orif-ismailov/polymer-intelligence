@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 
 from sqlalchemy import func, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.time import utcnow
 from app.models.accounts import UserAccount
@@ -259,7 +259,17 @@ def list_catalog(
     "My offers" and cannot inquire on them). ``exclude_company_id`` does the same for a
     portal company browsing the market (it can't inquire on its own offers).
     """
-    query = db.query(SellerOffer).filter(SellerOffer.status == SellerOfferStatus.approved)
+    # Eager-load the company AND its roles: the card renders both, and the market
+    # list is the busiest screen in the portal — a lazy relationship here is one
+    # SELECT per card.
+    query = (
+        db.query(SellerOffer)
+        .options(
+            joinedload(SellerOffer.company).selectinload(Company.business_roles),
+            selectinload(SellerOffer.files),
+        )
+        .filter(SellerOffer.status == SellerOfferStatus.approved)
+    )
     if exclude_seller_id is not None:
         query = query.filter(SellerOffer.seller_id != exclude_seller_id)
     if exclude_company_id is not None:

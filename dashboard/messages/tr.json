@@ -903,7 +903,8 @@
       "inn": "VKN",
       "jurisdiction": "Yargı alanı",
       "status": "Durum",
-      "verifiedAt": "Doğrulandı"
+      "verifiedAt": "Doğrulandı",
+      "roles": "Roller"
     },
     "profile": {
       "title": "Şirket profili",
@@ -930,6 +931,15 @@
       "distributor": "Distribütör",
       "laboratory": "Laboratuvar",
       "insurance_provider": "Sigorta sağlayıcı"
+    },
+    "roles": {
+      "manufacturer": "Üretici",
+      "importer": "İthalatçı",
+      "trader": "Tüccar",
+      "logistics_provider": "Lojistik",
+      "distributor": "Distribütör",
+      "laboratory": "Laboratuvar",
+      "insurance_provider": "Sigorta"
     }
   },
   "contracts": {

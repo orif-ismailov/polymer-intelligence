@@ -903,7 +903,8 @@
       "inn": "ИНН",
       "jurisdiction": "Юрисдикция",
       "status": "Статус",
-      "verifiedAt": "Проверена"
+      "verifiedAt": "Проверена",
+      "roles": "Роли"
     },
     "profile": {
       "title": "Профиль компании",
@@ -923,6 +924,15 @@
       "buyer": "Покупатель",
       "seller": "Продавец",
       "broker": "Брокер",
+      "manufacturer": "Производитель",
+      "importer": "Импортёр",
+      "trader": "Трейдер",
+      "logistics_provider": "Логистика",
+      "distributor": "Дистрибьютор",
+      "laboratory": "Лаборатория",
+      "insurance_provider": "Страхование"
+    },
+    "roles": {
       "manufacturer": "Производитель",
       "importer": "Импортёр",
       "trader": "Трейдер",

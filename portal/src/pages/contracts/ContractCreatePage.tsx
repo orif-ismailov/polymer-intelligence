@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useActiveCompany } from "@/entities/company";
 import { contractApi, useContractTemplates } from "@/entities/contract";
 import type { ContractTemplate, DirectoryCompany } from "@/entities/contract";
+import { BusinessRoleBadges } from "@/entities/market";
 import { ApiError } from "@/shared/api";
 import { Alert, Button, Card, CardBody, FormField, Input, LoadingView, Select } from "@/shared/ui";
 
@@ -198,6 +199,9 @@ export function ContractCreatePage() {
                     >
                       {c.legal_name ?? c.tax_id}{" "}
                       <span className="text-text-muted">({c.tax_id})</span>
+                      {/* Confirmed roles only — this picker chooses who to sign a
+                          contract with, so the badge has to mean something. */}
+                      <BusinessRoleBadges roles={c.roles} className="mt-1.5" max={3} />
                     </button>
                   </li>
                 ))}

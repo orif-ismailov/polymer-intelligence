@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import {
+  BusinessRoleBadges,
   FavoriteButton,
   OfferReadinessBadges,
   offerImageUrl,
@@ -112,6 +113,9 @@ function MarketCard({ offer, onOpen }: { offer: MarketOffer; onOpen: () => void 
             ) : null}
           </div>
 
+          {/* Two badge rows, and they say different things: what the SELLER is
+              (confirmed roles) and what they are ready to DO. */}
+          <BusinessRoleBadges roles={offer.business_roles} max={2} />
           <OfferReadinessBadges offer={offer} />
 
           <div className="mt-auto flex items-end justify-between gap-2 border-t border-border pt-3">

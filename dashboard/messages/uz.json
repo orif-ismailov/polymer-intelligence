@@ -903,7 +903,8 @@
       "inn": "STIR",
       "jurisdiction": "Yurisdiksiya",
       "status": "Holat",
-      "verifiedAt": "Tekshirilgan"
+      "verifiedAt": "Tekshirilgan",
+      "roles": "Rollar"
     },
     "profile": {
       "title": "Kompaniya profili",
@@ -928,6 +929,15 @@
       "trader": "Treyder",
       "logistics_provider": "Logistika",
       "distributor": "Distribyutor",
+      "laboratory": "Laboratoriya",
+      "insurance_provider": "Sug‘urta"
+    },
+    "roles": {
+      "manufacturer": "Ishlab chiqaruvchi",
+      "importer": "Importchi",
+      "trader": "Treyder",
+      "logistics_provider": "Logistika",
+      "distributor": "Distributor",
       "laboratory": "Laboratoriya",
       "insurance_provider": "Sug‘urta"
     }

@@ -143,6 +143,7 @@ export default function CompaniesPage() {
                 <th className={thCls}>{t("columns.name")}</th>
                 <th className={thCls}>{t("columns.inn")}</th>
                 <th className={thCls}>{t("columns.jurisdiction")}</th>
+                <th className={thCls}>{t("columns.roles")}</th>
                 <th className={thCls}>{t("columns.status")}</th>
                 <th className={thCls}>{t("columns.verifiedAt")}</th>
               </tr>
@@ -166,6 +167,26 @@ export default function CompaniesPage() {
                   </td>
                   <td className="px-4 py-3 text-foreground-muted">
                     {company.jurisdiction || "—"}
+                  </td>
+                  {/* Confirmed roles only: a declared role is a claim the company
+                      made about itself, and staff read this column to check claims. */}
+                  <td className="px-4 py-3 text-foreground-muted">
+                    {(() => {
+                      const confirmed = company.roles.filter((r) => r.status === "confirmed");
+                      if (confirmed.length === 0) return "—";
+                      return (
+                        <span className="flex flex-wrap gap-1">
+                          {confirmed.map((r) => (
+                            <span
+                              key={r.role}
+                              className="rounded bg-background-tertiary px-1.5 py-0.5 text-xs"
+                            >
+                              {t(`roles.${r.role}`)}
+                            </span>
+                          ))}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3">
                     <CompanyStatusBadge status={company.status} />

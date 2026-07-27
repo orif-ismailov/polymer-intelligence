@@ -17,7 +17,7 @@ import redis
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from sqlalchemy import or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
@@ -27,7 +27,7 @@ from app.models.accounts import UserAccount
 from app.models.companies import Company
 from app.models.contracts import Contract, ContractSignature, ContractTemplate
 from app.models.eimzo import SignatureEvidence
-from app.models.enums import CompanyStatus, ContractStatus
+from app.models.enums import BusinessRoleStatus, CompanyStatus, ContractStatus
 from app.schemas.portal_contract import (
     ContractCreateIn,
     ContractDetailOut,
@@ -167,7 +167,12 @@ def company_directory(
             detail="Too many searches",
             headers={"Retry-After": str(exc.retry_after)},
         ) from exc
-    query = db.query(Company).filter(Company.status == CompanyStatus.verified)
+    query = (
+        db.query(Company)
+        # Eager-load the roles: 20 rows would otherwise be 20 extra SELECTs.
+        .options(selectinload(Company.business_roles))
+        .filter(Company.status == CompanyStatus.verified)
+    )
     term = q.strip()
     if term:
         like = f"%{term}%"
@@ -176,7 +181,15 @@ def company_directory(
     return [
         DirectoryCompanyOut(
             id=c.id, public_id=c.public_id, legal_name=c.legal_name, tax_id=c.tax_id,
-            roles=[str(r.role) for r in c.business_roles], verified=True,
+            # CONFIRMED only (P4 W2): this picker chooses a contract counterparty,
+            # and a self-declared "manufacturer" is exactly the claim the reader is
+            # using the badge to check.
+            roles=[
+                str(r.role)
+                for r in c.business_roles
+                if r.status == BusinessRoleStatus.confirmed
+            ],
+            verified=True,
         )
         for c in rows
     ]

@@ -34,6 +34,9 @@ class PortalMarketOfferOut(CatalogOfferOut):
     accepts_contract: bool = False
     accepts_escrow: bool = False
     is_favorite: bool = False
+    #: CONFIRMED business roles of the company behind the offer (P4 W2). Empty for
+    #: seller-origin offers — there is no portal company to have confirmed any.
+    business_roles: list[str] = []
 
 
 class PortalMarketOfferDetail(PortalMarketOfferOut):

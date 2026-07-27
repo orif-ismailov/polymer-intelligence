@@ -888,7 +888,8 @@
       "inn": "税号",
       "jurisdiction": "管辖区",
       "status": "状态",
-      "verifiedAt": "已验证"
+      "verifiedAt": "已验证",
+      "roles": "角色"
     },
     "profile": {
       "title": "公司资料",
@@ -915,6 +916,15 @@
       "distributor": "分销商",
       "laboratory": "实验室",
       "insurance_provider": "保险机构"
+    },
+    "roles": {
+      "manufacturer": "生产商",
+      "importer": "进口商",
+      "trader": "贸易商",
+      "logistics_provider": "物流",
+      "distributor": "分销商",
+      "laboratory": "实验室",
+      "insurance_provider": "保险"
     }
   },
   "contracts": {

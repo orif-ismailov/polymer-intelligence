@@ -5,7 +5,13 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { useCreateInquiry } from "@/entities/inquiry";
-import { offerImageUrl, offerPhotos, useMarketOffer } from "@/entities/market";
+import {
+  BusinessRoleBadges,
+  OfferReadinessBadges,
+  offerImageUrl,
+  offerPhotos,
+  useMarketOffer,
+} from "@/entities/market";
 import { cn } from "@/shared/lib";
 import {
   Alert,
@@ -216,6 +222,15 @@ export function MarketOfferPage() {
               ) : (
                 <span className="text-text-muted">{t("market.notVerified")}</span>
               )}
+              {/* No `max` here: the detail page has room, and a buyer choosing a
+                  counterparty wants the whole picture. */}
+              <BusinessRoleBadges roles={offer.business_roles} />
+              <OfferReadinessBadges offer={offer} />
+              {offer.lead_time_days != null ? (
+                <p className="num text-text-muted">
+                  {t("market.leadTime", { count: offer.lead_time_days })}
+                </p>
+              ) : null}
             </CardBody>
           </Card>
 

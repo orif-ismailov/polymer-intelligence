@@ -233,6 +233,28 @@ class SellerOffer(Base):
 
         return self.company is not None and self.company.status == CompanyStatus.verified
 
+    @property
+    def business_roles(self) -> list[str]:
+        """CONFIRMED business roles of the company behind this offer (P4 W2).
+
+        Confirmed only, deliberately. A company declares its roles when it
+        registers and staff confirm them during verification; showing a declared
+        role as a badge would let anyone self-award "manufacturer" — which is
+        exactly the claim a buyer is using the badge to check.
+
+        Empty for seller-origin (Telegram) offers: there is no portal company
+        behind them, so there is nothing to have confirmed.
+        """
+        from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
+
+        if self.company is None:
+            return []
+        return [
+            str(role.role)
+            for role in self.company.business_roles
+            if role.status == BusinessRoleStatus.confirmed
+        ]
+
 
 class SellerOfferFile(Base):
     """A file (image / TDS / certificate) attached to a seller offer."""

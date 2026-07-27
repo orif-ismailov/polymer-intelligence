@@ -888,7 +888,8 @@
       "inn": "شناسه مالیاتی",
       "jurisdiction": "حوزه قضایی",
       "status": "وضعیت",
-      "verifiedAt": "تأییدشده"
+      "verifiedAt": "تأییدشده",
+      "roles": "نقش‌ها"
     },
     "profile": {
       "title": "پروفایل شرکت",
@@ -915,6 +916,15 @@
       "distributor": "توزیع‌کننده",
       "laboratory": "آزمایشگاه",
       "insurance_provider": "ارائه‌دهنده بیمه"
+    },
+    "roles": {
+      "manufacturer": "تولیدکننده",
+      "importer": "واردکننده",
+      "trader": "بازرگان",
+      "logistics_provider": "لجستیک",
+      "distributor": "توزیع‌کننده",
+      "laboratory": "آزمایشگاه",
+      "insurance_provider": "بیمه"
     }
   },
   "contracts": {

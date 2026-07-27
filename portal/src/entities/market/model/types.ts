@@ -52,6 +52,9 @@ export interface MarketOffer {
   /** Per-ACCOUNT (not per-company): resolved server-side so the heart is correct
    *  on first paint rather than after a second round trip. */
   is_favorite: boolean;
+  /** CONFIRMED business roles of the company behind the offer. Empty for
+   *  seller-origin (Telegram) offers — no portal company, nothing confirmed. */
+  business_roles: string[];
 }
 
 /** Offer detail + the caller company's own inquiries on it (PortalMarketOfferDetail). */
