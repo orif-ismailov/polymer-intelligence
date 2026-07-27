@@ -581,13 +581,9 @@
     "needVerifiedInitiator": "Only a verified company can create a contract. Select a verified company in the switcher above.",
     "document": "Document",
     "signatures": "Signatures",
-    "noSignatures": "No signatures yet.",
     "awaitingOther": "Awaiting the other party's signature.",
     "declinedTitle": "Contract declined",
     "declineReason": "Reason for declining",
-    "createdAt": "Created",
-    "sentAt": "Sent",
-    "activatedAt": "Activated",
     "tabs": {
       "all": "All",
       "action": "Needs action",
@@ -619,6 +615,14 @@
     "errors": {
       "invalid": "Check the form fields.",
       "createFailed": "Failed to create the contract."
+    },
+    "timeline": {
+      "created": "Draft created",
+      "sent": "Sent for approval",
+      "signedBy": "Signed by {{company}}",
+      "awaitingSignature": "Awaiting signature from {{company}}",
+      "active": "Signed by both parties",
+      "awaiting": "Awaiting"
     }
   }
 }

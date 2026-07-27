@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 /**
  * P0 W2 — the shared/ui kit contract, exercised against the DEV-only gallery at
@@ -9,6 +9,29 @@ import { expect, test, type Page } from "@playwright/test";
  */
 
 const GALLERY = "/dev/ui";
+const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
+
+function uniquePhone(): string {
+  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
+  return `+998${suffix}`;
+}
+
+/** OTP login — only needed by the shell test, which must render the real cabinet. */
+async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
+  await page.unrouteAll();
+  await page.goto("/login");
+  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
+  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
+
+  await page.waitForURL("**/login/code");
+  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
+  expect(res.ok()).toBeTruthy();
+  const { code } = (await res.json()) as { code: string };
+  await page.getByLabel(/code|код|kod/i).fill(code);
+  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
+
+  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+}
 
 /** Resolve a CSS custom property to the value the browser computed. */
 async function token(page: Page, name: string): Promise<string> {
@@ -189,4 +212,28 @@ test("bottom nav marks the active route and surfaces unread counts", async ({ pa
   // Exactly one destination is current, and the badge count is announced.
   await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
   await expect(nav.getByTestId("ui-bottom-nav-badge")).toHaveText("3");
+});
+
+// ── The cabinet shell actually uses the bar on phones (P0 definition of done) ──
+
+test("the authenticated shell shows the bottom bar on phones only", async ({ page, request }) => {
+  await login(page, request, uniquePhone());
+
+  await page.setViewportSize({ width: 375, height: 780 });
+  const nav = page.getByTestId("ui-bottom-nav");
+  await expect(nav).toBeVisible();
+
+  // The bar is fixed, so the end of the content must still clear it once the
+  // page is scrolled all the way down — otherwise the last row hides behind it.
+  await page.evaluate(() => {
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+  const [barTop, mainBottom] = await Promise.all([
+    nav.evaluate((el) => el.getBoundingClientRect().top),
+    page.locator("main").evaluate((el) => el.getBoundingClientRect().bottom),
+  ]);
+  expect(mainBottom).toBeLessThanOrEqual(barTop);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(nav).toBeHidden();
 });

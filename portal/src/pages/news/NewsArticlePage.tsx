@@ -87,7 +87,7 @@ export function NewsArticlePage() {
           href={a.source_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block text-sm text-accent hover:underline"
+          className="inline-block text-sm text-brand hover:underline"
         >
           {t("news.readSource")}
         </a>

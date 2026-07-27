@@ -581,13 +581,9 @@
     "needVerifiedInitiator": "Shartnomani faqat verifikatsiyadan o‘tgan kompaniya yaratishi mumkin. Yuqoridagi almashtirgichda verifikatsiyalangan kompaniyani tanlang.",
     "document": "Hujjat",
     "signatures": "Imzolar",
-    "noSignatures": "Hozircha imzolar yo‘q.",
     "awaitingOther": "Ikkinchi tomon imzosi kutilmoqda.",
     "declinedTitle": "Shartnoma rad etildi",
     "declineReason": "Rad etish sababi",
-    "createdAt": "Yaratilgan",
-    "sentAt": "Yuborilgan",
-    "activatedAt": "Faollashtirilgan",
     "tabs": {
       "all": "Barchasi",
       "action": "Harakat talab qiladi",
@@ -619,6 +615,14 @@
     "errors": {
       "invalid": "Maydonlarni tekshiring.",
       "createFailed": "Shartnoma yaratib bo‘lmadi."
+    },
+    "timeline": {
+      "created": "Loyiha yaratildi",
+      "sent": "Kelishuvga yuborildi",
+      "signedBy": "Imzolandi: {{company}}",
+      "awaitingSignature": "Imzo kutilmoqda: {{company}}",
+      "active": "Shartnoma ikki tomon tomonidan imzolandi",
+      "awaiting": "Kutilmoqda"
     }
   }
 }

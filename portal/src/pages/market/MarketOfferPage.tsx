@@ -12,6 +12,7 @@ import {
   Button,
   Card,
   CardBody,
+  CardDescription,
   CardHeader,
   CardTitle,
   FormField,
@@ -55,8 +56,8 @@ export function MarketOfferPage() {
   }
 
   const offer = offerQuery.data;
-  const product = offer.grade_text ?? offer.product_text ?? "—";
-  const priceText = offer.price == null ? t("market.onRequest") : `${offer.price} ${offer.currency}`;
+  const product = offer.product_text ?? offer.grade_text ?? "—";
+  const grade = offer.product_text && offer.grade_text ? offer.grade_text : null;
   const canInquire = companyId != null && !offer.is_own;
 
   function submit() {
@@ -91,12 +92,31 @@ export function MarketOfferPage() {
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader className="flex items-start justify-between gap-3">
-              <CardTitle>{product}</CardTitle>
-              <Badge tone={offer.availability === "in_stock" ? "success" : "neutral"}>
+              <div className="min-w-0">
+                <CardTitle>{product}</CardTitle>
+                {grade ? <CardDescription>{grade}</CardDescription> : null}
+              </div>
+              <Badge variant={offer.availability === "in_stock" ? "in-stock" : "on-order"}>
                 {t(`availability.${offer.availability}`)}
               </Badge>
             </CardHeader>
-            <CardBody className="space-y-3">
+            <CardBody className="space-y-4">
+              {/* The price is the hero figure on the mockup product page. */}
+              <div>
+                {offer.price == null ? (
+                  <p className="text-2xl font-semibold text-text-muted">
+                    {t("market.onRequest")}
+                  </p>
+                ) : (
+                  <p className="num text-2xl font-semibold leading-tight text-brand">
+                    {offer.price}{" "}
+                    <span className="text-base font-medium text-text-muted">
+                      {offer.currency}
+                      {offer.qty_unit ? `/${offer.qty_unit}` : ""}
+                    </span>
+                  </p>
+                )}
+              </div>
               {offer.files.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {offer.files
@@ -113,7 +133,6 @@ export function MarketOfferPage() {
                 </div>
               ) : null}
               <dl className="grid grid-cols-2 gap-3 text-sm">
-                <Spec label={t("market.price")} value={priceText} />
                 <Spec
                   label={t("market.qty")}
                   value={offer.qty_available != null ? `${offer.qty_available} ${offer.qty_unit}` : "—"}
@@ -143,7 +162,7 @@ export function MarketOfferPage() {
                     key={inq.id}
                     type="button"
                     onClick={() => navigate(`/inquiries/${inq.id}`)}
-                    className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2 text-left text-sm hover:border-accent"
+                    className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2 text-left text-sm hover:border-brand"
                   >
                     <span className="text-text-muted">
                       {inq.message ?? `#${inq.id}`}
@@ -166,7 +185,7 @@ export function MarketOfferPage() {
             <CardBody className="space-y-2 text-sm">
               <div className="font-medium text-text">{offer.display_name ?? "—"}</div>
               {offer.company_verified ? (
-                <Badge tone="success">{t("market.verified")}</Badge>
+                <Badge variant="verified">{t("market.verified")}</Badge>
               ) : (
                 <span className="text-text-muted">{t("market.notVerified")}</span>
               )}

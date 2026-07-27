@@ -4,12 +4,14 @@ import { Outlet } from "react-router-dom";
 
 import { cn } from "@/shared/lib";
 
+import { MobileNav } from "./MobileNav";
 import { SideNav } from "./SideNav";
 import { Topbar } from "./Topbar";
 
 /**
  * Authenticated app layout: sticky topbar (with company switcher), a persistent
- * sidebar on desktop and a slide-over drawer on mobile, and the routed content.
+ * sidebar on desktop, and on phones the mockups' bottom bar for the primary
+ * destinations plus a slide-over drawer for the rest of the nav.
  */
 export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -18,7 +20,8 @@ export function AppShell() {
     <div className="min-h-screen bg-bg text-text">
       <Topbar onOpenMenu={() => setDrawerOpen(true)} />
 
-      <div className="mx-auto flex max-w-5xl gap-8 px-4 py-6">
+      {/* `pb-24` on phones keeps the last row clear of the fixed bottom bar. */}
+      <div className="mx-auto flex max-w-6xl gap-8 px-4 pb-24 pt-6 md:pb-6">
         <aside className="hidden w-52 shrink-0 md:block">
           <div className="sticky top-20">
             <SideNav />
@@ -29,6 +32,8 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+
+      <MobileNav />
 
       {/* Mobile drawer */}
       {drawerOpen ? (

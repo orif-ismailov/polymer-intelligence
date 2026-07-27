@@ -70,7 +70,7 @@ export function NotificationBell() {
                 <button
                   type="button"
                   onClick={() => markRead.mutate({ all: true })}
-                  className="text-xs text-accent hover:underline"
+                  className="text-xs text-brand hover:underline"
                 >
                   {t("notifications.markAllRead")}
                 </button>
@@ -116,7 +116,7 @@ export function NotificationBell() {
                   setOpen(false);
                   void navigate("/notifications");
                 }}
-                className="text-sm text-accent hover:underline"
+                className="text-sm text-brand hover:underline"
               >
                 {t("notifications.viewAll")}
               </button>

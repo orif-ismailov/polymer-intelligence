@@ -52,7 +52,9 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        // `whitespace-nowrap`: a badge is a chip — letting "В наличии" wrap to two
+        // lines inside the pill breaks every card header it sits in.
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium",
         tones[preset ? preset.tone : tone],
         className,
       )}

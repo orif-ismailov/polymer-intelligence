@@ -20,8 +20,10 @@ import {
   ErrorView,
   LinkButton,
   LoadingView,
+  StatusStepper,
   Textarea,
 } from "@/shared/ui";
+import type { StatusStep } from "@/shared/ui";
 
 export function ContractDetailPage() {
   const { t } = useTranslation();
@@ -95,6 +97,63 @@ export function ContractDetailPage() {
 
   const isInitiator = contract.role === "initiator";
   const isCounterparty = contract.role === "counterparty";
+
+  /**
+   * The signing process as a timeline: draft → sent → each party's signature →
+   * active. Derived purely from the timestamps the API already returns, so a step
+   * is `done` once its timestamp exists, `current` for the one being waited on,
+   * and `pending` beyond that.
+   */
+  const signedAtFor = (companyId: number): string | null =>
+    contract.signatures.find((s) => s.company_id === companyId)?.signed_at ?? null;
+
+  const partySteps: StatusStep[] = [
+    { id: "initiator", companyId: contract.initiator_company_id, name: contract.initiator_name },
+    {
+      id: "counterparty",
+      companyId: contract.counterparty_company_id,
+      name: contract.counterparty_name,
+    },
+  ].map(({ id, companyId, name }) => {
+    const at = signedAtFor(companyId);
+    const company = name ?? `#${companyId}`;
+    return {
+      id: `signed-${id}`,
+      // Wording follows the state — an unsigned step must not read "signed by".
+      label: at
+        ? t("contracts.timeline.signedBy", { company })
+        : t("contracts.timeline.awaitingSignature", { company }),
+      hint: at ? formatDateTime(at, lang) : t("contracts.timeline.awaiting"),
+      // Only meaningful to "await" a signature once the contract is out for signing.
+      state: at ? "done" : contract.status === "pending_signatures" ? "current" : "pending",
+    };
+  });
+
+  const signingSteps: StatusStep[] = [
+    {
+      id: "created",
+      label: t("contracts.timeline.created"),
+      hint: formatDateTime(contract.created_at, lang),
+      state: "done",
+    },
+    {
+      id: "sent",
+      label: t("contracts.timeline.sent"),
+      hint: contract.sent_at
+        ? formatDateTime(contract.sent_at, lang)
+        : t("contracts.timeline.awaiting"),
+      state: contract.sent_at ? "done" : "current",
+    },
+    ...partySteps,
+    {
+      id: "active",
+      label: t("contracts.timeline.active"),
+      hint: contract.activated_at
+        ? formatDateTime(contract.activated_at, lang)
+        : t("contracts.timeline.awaiting"),
+      state: contract.activated_at ? "done" : "pending",
+    },
+  ];
 
   return (
     <div className="space-y-5">
@@ -202,42 +261,14 @@ export function ContractDetailPage() {
         </Card>
       ) : null}
 
-      {/* Signatures + timeline */}
+      {/* Signing timeline (mockup sheet 7) — same data as the old flat list,
+          read as the progress of the signing process. */}
       <Card>
         <CardHeader>
           <CardTitle>{t("contracts.signatures")}</CardTitle>
         </CardHeader>
-        <CardBody className="space-y-3">
-          {contract.signatures.length === 0 ? (
-            <p className="text-sm text-text-muted">{t("contracts.noSignatures")}</p>
-          ) : (
-            <ul className="space-y-2">
-              {contract.signatures.map((s) => (
-                <li key={s.company_id} className="flex items-center justify-between text-sm">
-                  <span className="text-text">{s.company_name}</span>
-                  <span className="text-text-muted">{formatDateTime(s.signed_at, lang)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <dl className="grid grid-cols-2 gap-3 border-t border-border pt-3 text-sm">
-            <div>
-              <dt className="text-text-muted">{t("contracts.createdAt")}</dt>
-              <dd className="text-text">{formatDateTime(contract.created_at, lang)}</dd>
-            </div>
-            {contract.sent_at ? (
-              <div>
-                <dt className="text-text-muted">{t("contracts.sentAt")}</dt>
-                <dd className="text-text">{formatDateTime(contract.sent_at, lang)}</dd>
-              </div>
-            ) : null}
-            {contract.activated_at ? (
-              <div>
-                <dt className="text-text-muted">{t("contracts.activatedAt")}</dt>
-                <dd className="text-text">{formatDateTime(contract.activated_at, lang)}</dd>
-              </div>
-            ) : null}
-          </dl>
+        <CardBody>
+          <StatusStepper steps={signingSteps} />
         </CardBody>
       </Card>
     </div>

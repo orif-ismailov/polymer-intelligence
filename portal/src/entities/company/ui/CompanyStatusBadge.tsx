@@ -8,5 +8,9 @@ interface CompanyStatusBadgeProps {
 
 export function CompanyStatusBadge({ status }: CompanyStatusBadgeProps) {
   const label = useEnumLabels();
+  // `verified` is the mockups' signature badge — green with a tick.
+  if (status === "verified") {
+    return <Badge variant="verified">{label("companyStatus", status)}</Badge>;
+  }
   return <Badge tone={toneFor(COMPANY_STATUS_TONE, status)}>{label("companyStatus", status)}</Badge>;
 }

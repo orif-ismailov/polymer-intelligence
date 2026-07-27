@@ -66,7 +66,7 @@ export function NotificationsPage() {
             return (
               <Card
                 key={n.id}
-                className={cn("transition-colors", to && "cursor-pointer hover:border-accent")}
+                className={cn("transition-colors", to && "cursor-pointer hover:border-brand")}
                 role={to ? "button" : undefined}
                 tabIndex={to ? 0 : undefined}
                 onClick={() => openItem(n)}

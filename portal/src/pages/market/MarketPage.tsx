@@ -20,49 +20,67 @@ import {
 
 const PAGE_SIZE = 24;
 
-function priceLabel(offer: MarketOffer, onRequest: string): string {
-  if (offer.price == null) return onRequest;
-  return `${offer.price} ${offer.currency}`;
-}
-
 function MarketCard({ offer, onOpen }: { offer: MarketOffer; onOpen: () => void }) {
   const { t } = useTranslation();
-  const product = offer.grade_text ?? offer.product_text ?? "—";
+  // Mockup hierarchy: the product name is the headline, the grade its subtitle.
+  const title = offer.product_text ?? offer.grade_text ?? "—";
+  const subtitle = offer.product_text && offer.grade_text ? offer.grade_text : null;
+  const location = [offer.warehouse_city, offer.country].filter(Boolean).join(", ");
+
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg"
+      className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
-      <Card className="h-full transition-colors hover:border-accent">
-      <CardBody className="space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <span className="font-semibold text-text">{product}</span>
-          <Badge tone={offer.availability === "in_stock" ? "success" : "neutral"}>
-            {t(`availability.${offer.availability}`)}
-          </Badge>
-        </div>
-        <div className="text-sm text-text-muted">
-          {t("market.price")}:{" "}
-          <span className="font-medium text-text">
-            {priceLabel(offer, t("market.onRequest"))}
-          </span>
-        </div>
-        {offer.qty_available != null ? (
-          <div className="text-sm text-text-muted">
-            {t("market.qty")}: {offer.qty_available} {offer.qty_unit}
+      <Card className="flex h-full flex-col transition-colors hover:border-brand-line">
+        <CardBody className="flex flex-1 flex-col gap-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-text">{title}</p>
+              {subtitle ? (
+                <p className="truncate text-xs text-text-muted">{subtitle}</p>
+              ) : null}
+            </div>
+            <Badge variant={offer.availability === "in_stock" ? "in-stock" : "on-order"}>
+              {t(`availability.${offer.availability}`)}
+            </Badge>
           </div>
-        ) : null}
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <span className="truncate text-sm text-text-muted">
-            {offer.display_name ?? "—"}
-            {offer.country ? ` · ${offer.country}` : ""}
-          </span>
-          {offer.company_verified ? (
-            <Badge tone="success">{t("market.verified")}</Badge>
-          ) : null}
-        </div>
-      </CardBody>
+
+          {/* The price is the card's focal point in the mockups. */}
+          <div>
+            {offer.price == null ? (
+              <p className="text-lg font-semibold text-text-muted">{t("market.onRequest")}</p>
+            ) : (
+              <p className="num text-lg font-semibold leading-tight text-brand">
+                {offer.price}{" "}
+                <span className="text-sm font-medium text-text-muted">
+                  {offer.currency}
+                  {offer.qty_unit ? `/${offer.qty_unit}` : ""}
+                </span>
+              </p>
+            )}
+            {offer.qty_available != null ? (
+              <p className="num mt-0.5 text-xs text-text-muted">
+                {t("market.qty")}: {offer.qty_available} {offer.qty_unit}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="mt-auto flex items-end justify-between gap-2 border-t border-border pt-3">
+            <span className="min-w-0 text-sm text-text-muted">
+              <span className="block truncate">{offer.display_name ?? "—"}</span>
+              {location ? (
+                <span className="block truncate text-xs text-text-subtle">{location}</span>
+              ) : null}
+            </span>
+            {offer.company_verified ? (
+              <Badge variant="verified" className="shrink-0">
+                {t("market.verified")}
+              </Badge>
+            ) : null}
+          </div>
+        </CardBody>
       </Card>
     </button>
   );
@@ -98,18 +116,17 @@ export function MarketPage() {
         <p className="mt-1 text-sm text-text-muted">{t("market.subtitle")}</p>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="min-w-48 flex-1">
-          <Input
-            placeholder={t("market.searchPlaceholder")}
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setOffset(0);
-            }}
-            aria-label={t("market.searchPlaceholder")}
-          />
-        </div>
+      {/* Search takes the row; the two filters sit beside it once there's width. */}
+      <div className="grid gap-3 sm:grid-cols-[1fr_11rem_7rem]">
+        <Input
+          placeholder={t("market.searchPlaceholder")}
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setOffset(0);
+          }}
+          aria-label={t("market.searchPlaceholder")}
+        />
         <Select
           value={availability}
           onChange={(e) => {
@@ -123,7 +140,6 @@ export function MarketPage() {
           ]}
         />
         <Input
-          className="w-28"
           placeholder={t("market.country")}
           value={country}
           onChange={(e) => {
@@ -136,7 +152,7 @@ export function MarketPage() {
       </div>
 
       {marketQuery.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Skeleton className="h-40 w-full" />
           <Skeleton className="h-40 w-full" />
           <Skeleton className="h-40 w-full" />
@@ -149,7 +165,7 @@ export function MarketPage() {
         />
       ) : offers.length > 0 ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {offers.map((offer) => (
               <MarketCard
                 key={offer.id}

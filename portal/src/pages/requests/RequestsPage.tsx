@@ -22,9 +22,9 @@ function RequestRow({ request, onOpen }: { request: RequestSummary; onOpen: () =
     <button
       type="button"
       onClick={onOpen}
-      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg"
+      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
     >
-      <Card className="transition-colors hover:border-accent">
+      <Card className="transition-colors hover:border-brand">
         <CardBody className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="font-medium text-text">{request.number}</div>

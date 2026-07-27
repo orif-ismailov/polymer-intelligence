@@ -23,9 +23,9 @@ function InquiryRow({ inquiry, onOpen }: { inquiry: Inquiry; onOpen: () => void 
     <button
       type="button"
       onClick={onOpen}
-      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg"
+      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
     >
-      <Card className="transition-colors hover:border-accent">
+      <Card className="transition-colors hover:border-brand">
         <CardBody className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="font-medium text-text">{product}</div>
@@ -76,7 +76,7 @@ export function InquiriesPage() {
             className={cn(
               "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
               tab === key
-                ? "border-accent text-text"
+                ? "border-brand text-text"
                 : "border-transparent text-text-muted hover:text-text",
             )}
           >

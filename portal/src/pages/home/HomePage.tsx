@@ -7,6 +7,7 @@ import { useNewsArticles } from "@/entities/news";
 import { useUnreadCount } from "@/entities/notification";
 import { useRequests } from "@/entities/request";
 import { CaseStatusBadge } from "@/entities/verification";
+import { cn } from "@/shared/lib";
 import {
   Card,
   CardBody,
@@ -29,7 +30,7 @@ function QuickCard({ to, title, hint }: QuickCardProps) {
   return (
     <Link
       to={to}
-      className="block rounded-lg border border-border bg-surface p-5 transition-colors hover:border-brand-line hover:bg-surface-2"
+      className="block rounded-lg border border-brand-line bg-surface p-5 transition-colors hover:bg-surface-2 hover:shadow-glow"
     >
       <p className="text-base font-semibold text-text">{title}</p>
       <p className="mt-1 text-sm text-text-muted">{hint}</p>
@@ -38,12 +39,21 @@ function QuickCard({ to, title, hint }: QuickCardProps) {
 }
 
 function StatCard({ to, label, value }: { to: string; label: string; value: number | string }) {
+  // A count reads as a metric (brand, tabular); a bare "→" is just an affordance.
+  const isCount = typeof value === "number";
   return (
     <Link
       to={to}
       className="block rounded-lg border border-border bg-surface p-4 transition-colors hover:border-brand-line hover:bg-surface-2"
     >
-      <p className="text-2xl font-semibold text-text">{value}</p>
+      <p
+        className={cn(
+          "text-2xl font-semibold leading-tight",
+          isCount ? "num text-brand" : "text-text-muted",
+        )}
+      >
+        {value}
+      </p>
       <p className="mt-0.5 text-sm text-text-muted">{label}</p>
     </Link>
   );
@@ -134,7 +144,7 @@ export function HomePage() {
         <Card>
           <CardHeader className="flex items-center justify-between">
             <CardTitle>{t("home.latestNews")}</CardTitle>
-            <Link to="/news" className="text-sm text-accent hover:underline">
+            <Link to="/news" className="text-sm text-brand hover:underline">
               {t("notifications.viewAll")}
             </Link>
           </CardHeader>
@@ -143,7 +153,7 @@ export function HomePage() {
               <Link
                 key={a.id}
                 to={`/news/${a.id}`}
-                className="block rounded-md border border-border px-3 py-2 text-sm hover:border-accent"
+                className="block rounded-md border border-border px-3 py-2 text-sm hover:border-brand"
               >
                 {a.headline}
               </Link>

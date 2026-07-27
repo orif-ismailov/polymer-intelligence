@@ -12,9 +12,9 @@ function ArticleCard({ article, onOpen }: { article: NewsArticle; onOpen: () => 
     <button
       type="button"
       onClick={onOpen}
-      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg"
+      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
     >
-      <Card className="transition-colors hover:border-accent">
+      <Card className="transition-colors hover:border-brand">
         <CardBody className="space-y-2">
           <div className="flex items-start justify-between gap-2">
             <span className="font-semibold text-text">{article.headline}</span>
