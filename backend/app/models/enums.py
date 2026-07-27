@@ -375,3 +375,77 @@ class ContractStatus(enum.StrEnum):
     declined = "declined"
     cancelled = "cancelled"
     expired = "expired"
+
+
+# ── Deals (R4 / P2 — Deal Lifecycle core) ─────────────────────────────────────
+
+
+class DealStatus(enum.StrEnum):
+    """Deal lifecycle (PG type: deal_status).
+
+    negotiation → contract_pending → contract_signed → payment_pending →
+    paid_escrow → shipped → delivered → completed. `disputed` is reachable from
+    every in-flight state and only staff can leave it; `completed`/`cancelled`
+    are terminal. The transition table itself lives in
+    `app/services/deal_service.py::VALID_TRANSITIONS` — declaration order here is
+    the happy path, not the rule.
+    """
+
+    negotiation = "negotiation"
+    contract_pending = "contract_pending"
+    contract_signed = "contract_signed"
+    payment_pending = "payment_pending"
+    paid_escrow = "paid_escrow"
+    shipped = "shipped"
+    delivered = "delivered"
+    completed = "completed"
+    cancelled = "cancelled"
+    disputed = "disputed"
+
+
+class DealActorKind(enum.StrEnum):
+    """Who drove a deal transition (PG type: deal_actor_kind).
+
+    `system` is reserved for event-driven transitions (contract activation, and
+    later the escrow callbacks) — no HTTP handler may pass it.
+    """
+
+    buyer = "buyer"
+    seller = "seller"
+    staff = "staff"
+    system = "system"
+
+
+class DealDocumentKind(enum.StrEnum):
+    """Kind of document attached to a deal (PG type: deal_document_kind)."""
+
+    contract = "contract"
+    invoice = "invoice"
+    lab_passport = "lab_passport"
+    transport = "transport"
+    other = "other"
+
+
+class RfqResponseStatus(enum.StrEnum):
+    """Supplier response to a buyer RFQ (PG type: rfq_response_status).
+
+    Accepting one response moves the rest of that RFQ's submitted responses to
+    `not_selected`. `withdrawn` frees the slot so the supplier may respond again.
+    """
+
+    submitted = "submitted"
+    accepted = "accepted"
+    not_selected = "not_selected"
+    withdrawn = "withdrawn"
+
+
+class RfqVisibility(enum.StrEnum):
+    """Who may see a buyer's RFQ (PG type: rfq_visibility).
+
+    Default `verified_only` — an RFQ carries commercial intent, so it is never
+    widened to unverified companies unless the buyer chooses to.
+    """
+
+    verified_only = "verified_only"
+    all = "all"
+    selected = "selected"

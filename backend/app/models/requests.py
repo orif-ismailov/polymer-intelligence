@@ -36,7 +36,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.core.db import Base
-from app.models.enums import PriceBasis, RequestStatus, Urgency
+from app.models.enums import PriceBasis, RequestStatus, RfqVisibility, Urgency
 
 if TYPE_CHECKING:
     from app.models.companies import Company
@@ -156,6 +156,20 @@ class Request(Base):
         default=RequestStatus.new,
         server_default="new",
     )
+    # ── RFQ extensions (R4 / P2, FR-D10) ──────────────────────────────────────
+    # Documents the buyer requires of a responding supplier (list of codes, see
+    # app/models/deals.py::REQUIRED_DOC_CODES). NULL = nothing required.
+    required_docs: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    # Who may see this RFQ in the supplier-facing market list. Defaults to the
+    # narrow option — widening is the buyer's explicit choice.
+    visibility: Mapped[RfqVisibility] = mapped_column(
+        PgEnum(RfqVisibility, name="rfq_visibility", create_type=False),
+        nullable=False,
+        default=RfqVisibility.verified_only,
+        server_default="verified_only",
+    )
+    # Company ids allowed to see it when visibility='selected'.
+    visible_company_ids: Mapped[list[int] | None] = mapped_column(JSONB, nullable=True)
     assigned_to: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )                                                                             # REFERENCES staff_users(id)

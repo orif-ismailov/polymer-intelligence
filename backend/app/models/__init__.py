@@ -32,6 +32,13 @@ from app.models.contracts import (  # noqa: F401
     ContractTemplate,
 )
 from app.models.counterparties import Counterparty, CounterpartyAlias  # noqa: F401
+from app.models.deals import (  # noqa: F401
+    Deal,
+    DealDocument,
+    DealMessage,
+    DealStatusHistory,
+    RfqResponse,
+)
 from app.models.eimzo import CompanyPersonData, SignatureEvidence  # noqa: F401
 from app.models.enums import (  # noqa: F401
     AccountStatus,
@@ -43,6 +50,9 @@ from app.models.enums import (  # noqa: F401
     CompanyMemberStatus,
     CompanyStatus,
     CounterpartyRole,
+    DealActorKind,
+    DealDocumentKind,
+    DealStatus,
     DeliveryChannel,
     DeliveryStatus,
     DocumentReviewStatus,
@@ -54,6 +64,8 @@ from app.models.enums import (  # noqa: F401
     ReportKind,
     ReportStatus,
     RequestStatus,
+    RfqResponseStatus,
+    RfqVisibility,
     SellerOfferStatus,
     SignalKind,
     SourceKind,
@@ -194,4 +206,15 @@ __all__ = [
     "ContractTemplate",
     "Contract",
     "ContractSignature",
+    # Deals (R4 / P2 — Deal Lifecycle core)
+    "DealStatus",
+    "DealActorKind",
+    "DealDocumentKind",
+    "RfqResponseStatus",
+    "RfqVisibility",
+    "Deal",
+    "DealStatusHistory",
+    "DealMessage",
+    "DealDocument",
+    "RfqResponse",
 ]
