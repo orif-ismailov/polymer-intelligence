@@ -37,6 +37,7 @@ import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_ch
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
 from app.api.admin_contracts import router as admin_contracts_router
+from app.api.admin_deals import router as admin_deals_router
 from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
@@ -222,6 +223,7 @@ def create_app() -> FastAPI:
     application.include_router(portal_notifications_router, prefix="/api/v1")
     application.include_router(admin_verification_router, prefix="/api/v1")
     application.include_router(admin_contracts_router, prefix="/api/v1")
+    application.include_router(admin_deals_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.
