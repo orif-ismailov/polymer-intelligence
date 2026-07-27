@@ -189,6 +189,20 @@ class OfferAvailability(enum.StrEnum):
     on_order = "on_order"
 
 
+class OfferSaleMode(enum.StrEnum):
+    """How a seller trades this offer (PG type: offer_sale_mode).
+
+    Orthogonal to `OfferAvailability`, which says whether the goods exist right
+    now. A `from_stock` offer can still be `on_order` availability (the seller
+    restocks to fill it), and a `recurring_contract` seller is advertising terms
+    rather than a lot.
+    """
+
+    from_stock = "from_stock"
+    made_to_order = "made_to_order"
+    recurring_contract = "recurring_contract"
+
+
 class OfferRequestStatus(enum.StrEnum):
     """Moderation lifecycle of a buyer's inquiry against a seller offer.
 

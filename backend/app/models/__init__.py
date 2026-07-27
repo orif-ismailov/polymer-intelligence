@@ -59,6 +59,7 @@ from app.models.enums import (  # noqa: F401
     EscrowStatus,
     OfferFileKind,
     OfferRequestStatus,
+    OfferSaleMode,
     ParseStatus,
     PriceBasis,
     PricePointKind,
@@ -84,6 +85,7 @@ from app.models.enums import (
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.marketplace import (  # noqa: F401
+    OfferFavorite,
     OfferRequest,
     Seller,
     SellerOffer,
@@ -183,6 +185,8 @@ __all__ = [
     "SellerOffer",
     "SellerOfferFile",
     "OfferRequest",
+    "OfferFavorite",
+    "OfferSaleMode",
     # Sourcing (Phase 4)
     "InventoryItem",
     "PartnerSupplier",

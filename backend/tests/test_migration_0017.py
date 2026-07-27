@@ -84,8 +84,8 @@ class TestRevisionChain:
         # index, 0020 e-imzo) supersede it. Assert a single linear head with 0017
         # an ancestor.
         script = _script_dir()
-        assert script.get_heads() == ["0024"], (
-            f"expected a single head 0024, got {script.get_heads()}"
+        assert script.get_heads() == ["0025"], (
+            f"expected a single head 0025, got {script.get_heads()}"
         )
         assert script.get_revision("0018").down_revision == "0017"
 

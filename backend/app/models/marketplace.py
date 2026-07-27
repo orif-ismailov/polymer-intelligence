@@ -26,6 +26,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB
@@ -37,6 +38,7 @@ from app.models.enums import (
     OfferAvailability,
     OfferFileKind,
     OfferRequestStatus,
+    OfferSaleMode,
     PriceBasis,
     SellerOfferStatus,
 )
@@ -143,6 +145,26 @@ class SellerOffer(Base):
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
     min_order_qty: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # ── How the seller trades this offer (P4 W1) ──────────────────────────────
+    # Production/sourcing lead time. Required by the API schema for made-to-order
+    # offers, optional here: the column cannot see `availability` to enforce it,
+    # and existing rows predate the field.
+    lead_time_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    sale_mode: Mapped[OfferSaleMode | None] = mapped_column(
+        PgEnum(OfferSaleMode, name="offer_sale_mode", create_type=False), nullable=True
+    )
+    # "Ready to deal" flags → badges on the market card. Answering an RFQ costs a
+    # seller nothing, so it is opt-OUT; signing a contract and holding money in
+    # escrow are commitments, so they are opt-in.
+    accepts_rfq: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    accepts_contract: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    accepts_escrow: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     status: Mapped[SellerOfferStatus] = mapped_column(
         PgEnum(SellerOfferStatus, name="seller_offer_status", create_type=False),
         nullable=False,
@@ -236,6 +258,32 @@ class SellerOfferFile(Base):
     )
 
     offer: Mapped[SellerOffer] = relationship("SellerOffer", back_populates="files")
+
+
+class OfferFavorite(Base):
+    """A person's bookmarked offer (P4 W1).
+
+    Keyed to the ACCOUNT, not the company: a shortlist is personal, and someone
+    switching company hats in the portal should keep their own list. That is also
+    why there is no company_id to scope it by.
+    """
+
+    __tablename__ = "offer_favorites"
+    __table_args__ = (
+        UniqueConstraint("user_account_id", "offer_id", name="uq_offer_favorite"),
+        Index("ix_offer_favorites_account", "user_account_id", "id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    user_account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False
+    )
+    offer_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("seller_offers.id", ondelete="CASCADE"), nullable=False
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
 
 class OfferRequest(Base):
