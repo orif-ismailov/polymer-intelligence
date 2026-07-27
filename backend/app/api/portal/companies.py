@@ -10,7 +10,7 @@ requirements only (no reviewer identity or internals).
 from __future__ import annotations
 
 import redis
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -39,7 +39,13 @@ from app.schemas.portal_company import (
     DocumentOut,
     RolesUpdateIn,
 )
-from app.services import company_service, rate_limit, storage_service, verification_service
+from app.services import (
+    audit_service,
+    company_service,
+    rate_limit,
+    storage_service,
+    verification_service,
+)
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-companies"])
 
@@ -60,6 +66,18 @@ def _company_or_404(db: Session, account: UserAccount, company_id: int) -> Compa
         return company_service.get_company_for(db, account, company_id)
     except company_service.CompanyNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found") from exc
+
+
+def _require_company_admin(db: Session, account: UserAccount, company_id: int) -> None:
+    """Owner/manager only. Call AFTER `_company_or_404` so outsiders still get 404."""
+    try:
+        company_service.require_company_role(
+            db, account, company_id, company_service.COMPANY_ADMIN_ROLES
+        )
+    except company_service.InsufficientCompanyRole as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="insufficient_company_role"
+        ) from exc
 
 
 def _check_out(check: VerificationCheck) -> CheckOut:
@@ -105,6 +123,7 @@ def _summary_out(db: Session, company: Company) -> CompanySummaryOut:
         short_name=company.short_name,
         status=str(company.status),
         verified_at=company.verified_at,
+        logo_url=storage_service.presign_company_logo(company),
         active_case=_case_out(db, active),
     )
 
@@ -138,6 +157,7 @@ def _detail_out(db: Session, company: Company) -> CompanyDetailOut:
         identity_locked=company.identity_locked,
         verified_at=company.verified_at,
         reverification_due_at=company.reverification_due_at,
+        logo_url=storage_service.presign_company_logo(company),
         roles=[BusinessRoleOut(role=str(r.role), status=str(r.status)) for r in company.business_roles],
         bank_accounts=[
             BankAccountOut(
@@ -289,6 +309,71 @@ def archive_bank_account(
 
 
 # ── documents ─────────────────────────────────────────────────────────────────
+
+
+# ── Company logo (P1 W1 — T1.3) ───────────────────────────────────────────────
+
+
+@router.post(
+    "/{company_id}/logo",
+    response_model=CompanyDetailOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload or replace the company logo",
+)
+async def upload_logo(
+    company_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> CompanyDetailOut:
+    """JPEG/PNG ≤ 5 MB (FR-M1). Replacing deletes the previous object."""
+    company = _company_or_404(db, account, company_id)
+    _require_company_admin(db, account, company_id)
+
+    content = await file.read()
+    try:
+        key = storage_service.upload_company_logo(db, company, content, file.filename or "logo")
+    except ValueError as exc:
+        # `file_too_large` / `invalid_file_type` — typed, so the portal can localise.
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+
+    audit_service.write_audit(
+        db,
+        None,
+        "company.logo_upload",
+        "company",
+        str(company.id),
+        {"actor_account_id": account.id, "key": key},
+    )
+    db.commit()
+    return _detail_out(db, company)
+
+
+@router.delete(
+    "/{company_id}/logo",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove the company logo",
+)
+def delete_logo(
+    company_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> Response:
+    """Idempotent — removing an absent logo is a 204, not a 404."""
+    company = _company_or_404(db, account, company_id)
+    _require_company_admin(db, account, company_id)
+
+    had_logo = bool(company.logo_storage_path)
+    storage_service.delete_company_logo(db, company)
+    if had_logo:
+        audit_service.write_audit(
+            db, None, "company.logo_delete", "company", str(company.id),
+            {"actor_account_id": account.id},
+        )
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/{company_id}/documents", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)

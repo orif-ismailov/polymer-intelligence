@@ -78,6 +78,15 @@ MAX_FILES: int = 5
 #: Maximum number of files (images + docs) per seller offer (Phase 2 marketplace).
 MAX_OFFER_FILES: int = 10
 
+#: A company logo is a picture, never a document — stricter than VERIFICATION_MIMES.
+LOGO_MIMES: frozenset[str] = frozenset({"image/jpeg", "image/png"})
+
+#: Logos are small by nature; 5 MB (FR-M1) rather than the generic 10 MB.
+MAX_LOGO_SIZE_BYTES: int = 5 * 1024 * 1024
+
+#: Object-key extension per accepted logo MIME.
+_LOGO_EXTENSIONS: dict[str, str] = {"image/jpeg": "jpg", "image/png": "png"}
+
 
 # ── Core validation ────────────────────────────────────────────────────────────
 
@@ -253,6 +262,90 @@ def upload_offer_file(
     return f
 
 
+# ── Company logo (P1 W1 — T1.2) ───────────────────────────────────────────────
+
+
+def _discard_object(key: str, *, context: str) -> None:
+    """Best-effort S3 delete.
+
+    Deliberately fail-soft: a leftover object costs storage, but letting the error
+    escape would fail the user's upload (or leave `logo_storage_path` pointing at a
+    logo they asked us to remove). Logged so the leak is visible.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415 — deferred (no socket at import)
+
+    try:
+        s3_client.delete_object(Bucket=settings.S3_BUCKET, Key=key)  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001 — cleanup must never break the caller
+        logger.warning("storage_service.discard_object.failed", extra={"key": key, "ctx": context})
+
+
+def upload_company_logo(
+    db: Session,
+    company: Company,
+    content: bytes,
+    filename: str,
+) -> str:
+    """Validate + store a company logo, returning the new object key.
+
+    Stricter than the generic upload: JPEG/PNG only and 5 MB (FR-M1). The key is
+    built from a random token and the detected MIME, so the client's filename never
+    reaches the object store at all. Replacing a logo deletes the previous object
+    (fail-soft). Sets `company.logo_storage_path`; does NOT commit — caller commits.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415 — deferred (no socket at import)
+
+    if len(content) > MAX_LOGO_SIZE_BYTES:
+        logger.debug(
+            "storage_service.upload_company_logo.too_large",
+            extra={"size": len(content), "limit": MAX_LOGO_SIZE_BYTES},
+        )
+        raise ValueError("file_too_large")
+
+    # validate_upload also enforces the generic 10 MB cap; the 5 MB check above
+    # runs first so an oversized logo reports the limit that actually applies.
+    mime = validate_upload(content, filename)
+    if mime not in LOGO_MIMES:
+        logger.debug("storage_service.upload_company_logo.bad_mime", extra={"mime": mime})
+        raise ValueError("invalid_file_type")
+
+    previous_key = company.logo_storage_path
+    key = f"companies/{company.id}/logo/{secrets.token_hex(8)}.{_LOGO_EXTENSIONS[mime]}"
+
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET,
+        Key=key,
+        Body=content,
+        ContentType=mime,
+    )
+    company.logo_storage_path = key
+    db.flush()
+
+    if previous_key and previous_key != key:
+        _discard_object(previous_key, context="logo_replace")
+
+    logger.info(
+        "storage_service.upload_company_logo.done",
+        extra={"company_id": company.id, "key": key, "mime": mime, "replaced": bool(previous_key)},
+    )
+    return key
+
+
+def delete_company_logo(db: Session, company: Company) -> None:
+    """Remove the company logo. No-op when there isn't one (idempotent)."""
+    key = company.logo_storage_path
+    if not key:
+        return
+
+    company.logo_storage_path = None
+    db.flush()
+    _discard_object(key, context="logo_delete")
+    logger.info(
+        "storage_service.delete_company_logo.done",
+        extra={"company_id": company.id, "key": key},
+    )
+
+
 # ── Verification document vault (R1 W4 — T4.3) ────────────────────────────────
 
 
@@ -309,6 +402,25 @@ def upload_verification_document(
         extra={"company_id": company.id, "key": key, "mime": mime, "kind": kind.value},
     )
     return document
+
+
+def presign_company_logo(company: Company, ttl: int = 600) -> str | None:
+    """Short-lived presigned GET URL for a company logo, or None if it has none.
+
+    Media has no permanent public URL (FR-M4) — every response mints a fresh link,
+    the same way contract documents are served.
+    """
+    if not company.logo_storage_path:
+        return None
+
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    url = s3_client.generate_presigned_url(  # type: ignore[attr-defined]
+        "get_object",
+        Params={"Bucket": settings.S3_BUCKET, "Key": company.logo_storage_path},
+        ExpiresIn=ttl,
+    )
+    return str(url)
 
 
 def presign_verification_document(document: VerificationDocument, ttl: int = 600) -> str:

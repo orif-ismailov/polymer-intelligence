@@ -73,6 +73,10 @@ class LastOwnerRemoval(Exception):
     """Refusing to remove/demote the last active owner of a company."""
 
 
+class InsufficientCompanyRole(Exception):
+    """The member is active but their role does not permit this action."""
+
+
 # ── Company status machine (data, per ARCHITECTURE §6) ────────────────────────
 
 _TRANSITIONS: dict[CompanyStatus, set[CompanyStatus]] = {
@@ -332,6 +336,38 @@ def add_bank_account(
 
 
 # ── Membership guards (owner protection) ──────────────────────────────────────
+
+
+#: Roles allowed to change company-wide settings such as branding (FR-M1).
+COMPANY_ADMIN_ROLES: frozenset[CompanyMemberRole] = frozenset(
+    {CompanyMemberRole.owner, CompanyMemberRole.manager}
+)
+
+
+def require_company_role(
+    db: Session,
+    account: UserAccount,
+    company_id: int,
+    allowed: frozenset[CompanyMemberRole],
+) -> None:
+    """Raise InsufficientCompanyRole unless `account`'s active role is in `allowed`.
+
+    Membership itself is checked separately (`get_company_for`, which 404s for
+    outsiders so company existence never leaks). This is the second, narrower gate:
+    the caller is a member, but not every member may act. Keep that order — checking
+    the role first would turn a non-member's 404 into a 403 and leak existence.
+    """
+    member = (
+        db.query(CompanyMember)
+        .filter(
+            CompanyMember.company_id == company_id,
+            CompanyMember.user_account_id == account.id,
+            CompanyMember.status == CompanyMemberStatus.active,
+        )
+        .first()
+    )
+    if member is None or member.member_role not in allowed:
+        raise InsufficientCompanyRole(str(company_id))
 
 
 def _active_owner_count(db: Session, company_id: int) -> int:

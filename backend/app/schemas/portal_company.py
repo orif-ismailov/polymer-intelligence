@@ -91,6 +91,10 @@ class CompanySummaryOut(BaseModel):
     short_name: str | None = None
     status: str
     verified_at: datetime.datetime | None = None
+    #: Short-lived presigned GET URL (TTL ≤ 600 s) — there is no permanent public
+    #: URL for media (FR-M4), so this is minted per response and is None when the
+    #: company has no logo.
+    logo_url: str | None = None
     active_case: CaseOut | None = None
 
 
@@ -108,6 +112,8 @@ class CompanyDetailOut(BaseModel):
     identity_locked: bool = False
     verified_at: datetime.datetime | None = None
     reverification_due_at: datetime.datetime | None = None
+    #: See CompanySummaryOut.logo_url — presigned per response, never stored.
+    logo_url: str | None = None
     roles: list[BusinessRoleOut] = Field(default_factory=list)
     bank_accounts: list[BankAccountOut] = Field(default_factory=list)
     documents: list[DocumentOut] = Field(default_factory=list)

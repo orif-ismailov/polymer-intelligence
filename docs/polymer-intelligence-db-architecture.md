@@ -793,8 +793,23 @@ CREATE TABLE contract_signatures (
 3. ~~Курсы валют~~ — РЕШЕНО: таблица `fx_rates` добавлена в схему (см. раздел 1), источник — ЦБ РУз.
 4. **Retention сырых данных:** `raw_items` растёт быстрее всех; решить, через сколько месяцев архивировать content (хэш и метаданные остаются).
 
+### R4 / P1 — Медиа: логотип компании (migration 0022_company_logo)
+
+Блок F ТЗ deal-lifecycle (FR-M1, FR-M4). У компании появляется логотип. Хранится
+**только ключ объекта** — постоянных публичных URL нет, API отдаёт короткоживущую presigned
+ссылку на каждый запрос (TTL ≤ 600 с, как у документов контрактов R3). Замена логотипа
+удаляет старый объект из S3 (fail-soft: ошибка удаления логируется, запрос не падает).
+Фото офферов схему НЕ меняют — используется существующая `seller_offer_files`
+(`kind='image'`).
+
+```sql
+-- NULL = логотипа нет (нормальное состояние, не ошибка)
+ALTER TABLE companies ADD COLUMN logo_storage_path text;
+```
+
 ## История версий
 
+- v1.6 (27.07.2026): R4/P1 — медиа (миграция 0022_company_logo): `companies.logo_storage_path` (nullable, только S3-ключ; выдача — presigned TTL ≤ 600 с). Фото офферов — без изменений схемы (существующая `seller_offer_files`, `kind='image'`).
 - v1.5 (26.07.2026): R3 Stage B — Контракты (миграция 0021_contracts): enum `contract_status`, таблицы `contract_templates`, `contracts` (CHECK `initiator <> counterparty`), `contract_signatures` (UNIQUE(contract_id, company_id), FK на `signature_evidence`). Зерно домена Deal Lifecycle.
 - v1.4 (26.07.2026): R3 Stage A — E-IMZO рельсы (миграция 0020_eimzo): enum-значение `verification_check_type += 'eimzo_signature'`, `companies.identity_locked`, таблицы `signature_evidence` (неизменяемое доказательство подписи), `company_person_data` (шифрованные PINFL/ФИО, §6.2), `integration_call_log` (журнал шлюза, прун 90д).
 - v1.2 (23.07.2026): раздел 10 — верификация компаний и портал (R1, миграция 0017): 14 ENUM-типов, таблицы `user_accounts`, `sms_send_log`, `companies`, `company_members`, `company_business_roles`, `company_bank_accounts`, `verification_cases`, `verification_checks`, `verification_documents`, `domain_events`; мост маркетплейса (`seller_offers.company_id`/`created_by_user_account_id`, nullable `seller_id` + CHECK `ck_offer_origin`; дремлющие `sellers.company_id`/`clients.company_id`).
