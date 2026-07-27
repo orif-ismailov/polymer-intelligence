@@ -1,9 +1,11 @@
+import { useState } from "react";
+
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
-import { useOffer } from "@/entities/offer";
-import { OfferForm } from "@/features/offer-form";
+import { useOffer, type CompanyOffer } from "@/entities/offer";
+import { OfferForm, OfferPhotos } from "@/features/offer-form";
 import { OffersLocked } from "@/pages/offers";
 import { Card, CardBody, CardHeader, CardTitle, ErrorView, LinkButton, LoadingView } from "@/shared/ui";
 
@@ -18,6 +20,9 @@ export function OfferEditPage() {
   const companyId = activeCompany?.id ?? null;
 
   const offerQuery = useOffer(companyId, offerId);
+  // Photo changes return the updated offer; hold it locally so the gallery and the
+  // moderation-status banner reflect the change without a refetch round-trip.
+  const [photoOffer, setPhotoOffer] = useState<CompanyOffer | null>(null);
 
   if (companyLoading) return <LoadingView label={t("common.loading")} />;
 
@@ -47,7 +52,7 @@ export function OfferEditPage() {
     );
   }
 
-  const offer = isCreate ? null : offerQuery.data ?? null;
+  const offer = isCreate ? null : photoOffer ?? offerQuery.data ?? null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -66,7 +71,12 @@ export function OfferEditPage() {
           <OfferForm
             companyId={activeCompany.id}
             offer={offer}
-            onSaved={() => navigate("/offers")}
+            onSaved={(saved) =>
+              // Photos attach to an offer id, so a brand-new offer lands on its own
+              // edit screen where the photo section is available, rather than
+              // bouncing straight back to the list.
+              navigate(isCreate ? `/offers/${saved.id}` : "/offers", { replace: isCreate })
+            }
             onCancel={() => navigate("/offers")}
             onNotVerified={() =>
               navigate(`/companies/${activeCompany.id}/verification`, { replace: true })
@@ -74,6 +84,14 @@ export function OfferEditPage() {
           />
         </CardBody>
       </Card>
+
+      {offer ? (
+        <OfferPhotos
+          companyId={activeCompany.id}
+          offer={offer}
+          onChanged={setPhotoOffer}
+        />
+      ) : null}
     </div>
   );
 }

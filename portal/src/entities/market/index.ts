@@ -5,5 +5,5 @@ export type {
   MarketOfferDetail,
   OfferFileRef,
 } from "./model/types";
-export { marketApi, marketKeys, offerImageUrl } from "./model/api";
+export { marketApi, marketKeys, offerImageUrl, offerPhotos } from "./model/api";
 export { useMarket, useMarketOffer } from "./model/hooks";

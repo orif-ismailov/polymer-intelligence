@@ -1,7 +1,7 @@
 import { api } from "@/shared/api";
 import { API_BASE } from "@/shared/config";
 
-import type { MarketFilters, MarketOffer, MarketOfferDetail } from "./types";
+import type { MarketFilters, MarketOffer, MarketOfferDetail, OfferFileRef } from "./types";
 
 export const marketApi = {
   list: (
@@ -36,4 +36,15 @@ export const marketKeys = {
 /** Public <img src> URL for an offer file (the webapp image endpoint is public). */
 export function offerImageUrl(offerId: number, fileId: number): string {
   return `${API_BASE}/webapp/market/offers/${offerId}/images/${fileId}`;
+}
+
+/**
+ * Photos of a catalog offer in display order (upload order, cover first).
+ *
+ * Derived here rather than served as a `cover_file_id` field: the catalog card shape
+ * is byte-parity-pinned with the Mini App by a backend contract test, so adding a
+ * field to it would break that pin for no gain.
+ */
+export function offerPhotos(files: readonly OfferFileRef[]): OfferFileRef[] {
+  return files.filter((f) => f.kind === "image");
 }

@@ -306,7 +306,18 @@
     "productTextRequired": "Enter the product name",
     "qtyUnitRequired": "Choose a unit",
     "attachments": "Images",
-    "addImage": "Add image"
+    "addImage": "Add image",
+    "photos": {
+      "title": "Product photos",
+      "hint": "Up to {{max}} photos, JPEG or PNG. The first one is the cover in the market list.",
+      "add": "Add photos",
+      "cover": "Cover",
+      "remove": "Remove photo",
+      "tooMany": "You can upload at most {{max}} photos.",
+      "tooLarge": "File is too large — 10 MB max.",
+      "badType": "Only JPEG and PNG are supported.",
+      "requeueWarning": "Changing photos sends the offer back for moderation."
+    }
   },
   "settings": {
     "title": "Settings",

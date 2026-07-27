@@ -4,7 +4,13 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
-import { useMarket, type MarketFilters, type MarketOffer } from "@/entities/market";
+import {
+  offerImageUrl,
+  offerPhotos,
+  useMarket,
+  type MarketFilters,
+  type MarketOffer,
+} from "@/entities/market";
 import { AVAILABILITY } from "@/shared/config";
 import {
   Badge,
@@ -26,6 +32,7 @@ function MarketCard({ offer, onOpen }: { offer: MarketOffer; onOpen: () => void 
   const title = offer.product_text ?? offer.grade_text ?? "—";
   const subtitle = offer.product_text && offer.grade_text ? offer.grade_text : null;
   const location = [offer.warehouse_city, offer.country].filter(Boolean).join(", ");
+  const cover = offerPhotos(offer.files)[0] ?? null;
 
   return (
     <button
@@ -33,7 +40,31 @@ function MarketCard({ offer, onOpen }: { offer: MarketOffer; onOpen: () => void 
       onClick={onOpen}
       className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
-      <Card className="flex h-full flex-col transition-colors hover:border-brand-line">
+      <Card className="flex h-full flex-col overflow-hidden transition-colors hover:border-brand-line">
+        {/* Cover photo, or a neutral placeholder so a photo-less offer doesn't
+            collapse the card and break the grid (FR-M3). */}
+        <div className="aspect-[4/3] w-full border-b border-border bg-surface-inset">
+          {cover ? (
+            <img
+              src={offerImageUrl(offer.id, cover.id)}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-text-subtle">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M3.5 6.5h17v11h-17zM3.5 15l4.5-4 3.5 3 3-2.5 6 5"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinejoin="round"
+                />
+                <circle cx="9" cy="10" r="1.3" fill="currentColor" />
+              </svg>
+            </div>
+          )}
+        </div>
         <CardBody className="flex flex-1 flex-col gap-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">

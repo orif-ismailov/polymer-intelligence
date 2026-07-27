@@ -29,6 +29,22 @@ export const offerApi = {
     form.append("file", file);
     return api.upload<CompanyOffer>(`/portal/companies/${companyId}/offers/${offerId}/files`, form);
   },
+
+  deleteFile: (companyId: number, offerId: number, fileId: number): Promise<CompanyOffer> =>
+    api.del<CompanyOffer>(
+      `/portal/companies/${companyId}/offers/${offerId}/files/${fileId}`,
+    ),
+
+  /**
+   * Photo bytes for one of the company's OWN offers, at any status.
+   *
+   * Fetched as a Blob rather than pointed at by `<img src>`: the access token lives
+   * in memory only, so a bare img request carries no Authorization header and 401s.
+   * The public catalog image URL can't stand in here either — it only serves files
+   * of *approved* offers, and this is exactly the draft-preview case.
+   */
+  fileBlob: (companyId: number, offerId: number, fileId: number): Promise<Blob> =>
+    api.blob(`/portal/companies/${companyId}/offers/${offerId}/files/${fileId}`),
 };
 
 export const offerKeys = {

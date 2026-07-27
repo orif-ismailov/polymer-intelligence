@@ -1,5 +1,12 @@
 import type { Availability, OfferStatus } from "@/shared/config";
 
+/** A file attached to an offer — photo (`image`) or document. */
+export interface OfferFile {
+  id: number;
+  kind: "image" | "tds" | "certificate" | "other";
+  file_name: string;
+}
+
 export interface OfferPayload {
   product_id?: number | null;
   product_text?: string | null;
@@ -23,4 +30,8 @@ export interface CompanyOffer extends OfferPayload {
   status: OfferStatus;
   moderation_note: string | null;
   created_at: string;
+  /** Attached files in upload order. */
+  files: OfferFile[];
+  /** The first photo; null when the offer has none. */
+  cover_file_id: number | null;
 }

@@ -306,7 +306,18 @@
     "productTextRequired": "Mahsulot nomini kiriting",
     "qtyUnitRequired": "O‘lchov birligini tanlang",
     "attachments": "Rasmlar",
-    "addImage": "Rasm qo‘shish"
+    "addImage": "Rasm qo‘shish",
+    "photos": {
+      "title": "Mahsulot suratlari",
+      "hint": "{{max}} tagacha surat, JPEG yoki PNG. Birinchi surat — bozor ro‘yxatidagi muqova.",
+      "add": "Surat qo‘shish",
+      "cover": "Muqova",
+      "remove": "Suratni o‘chirish",
+      "tooMany": "{{max}} tadan ortiq surat yuklab bo‘lmaydi.",
+      "tooLarge": "Fayl juda katta — 10 MB gacha.",
+      "badType": "Faqat JPEG va PNG qo‘llab-quvvatlanadi.",
+      "requeueWarning": "Suratlarni o‘zgartirish taklifni qayta moderatsiyaga yuboradi."
+    }
   },
   "settings": {
     "title": "Sozlamalar",

@@ -5,7 +5,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { useCreateInquiry } from "@/entities/inquiry";
-import { offerImageUrl, useMarketOffer } from "@/entities/market";
+import { offerImageUrl, offerPhotos, useMarketOffer } from "@/entities/market";
+import { cn } from "@/shared/lib";
 import {
   Alert,
   Badge,
@@ -42,6 +43,7 @@ export function MarketOfferPage() {
   const [quantity, setQuantity] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [message, setMessage] = useState("");
+  const [activePhoto, setActivePhoto] = useState(0);
 
   if (offerQuery.isLoading) return <LoadingView label={t("common.loading")} />;
   if (offerQuery.isError || !offerQuery.data) {
@@ -57,6 +59,8 @@ export function MarketOfferPage() {
 
   const offer = offerQuery.data;
   const product = offer.product_text ?? offer.grade_text ?? "—";
+  const photos = offerPhotos(offer.files);
+  const active = photos[activePhoto] ?? photos[0] ?? null;
   const grade = offer.product_text && offer.grade_text ? offer.grade_text : null;
   const canInquire = companyId != null && !offer.is_own;
 
@@ -117,19 +121,42 @@ export function MarketOfferPage() {
                   </p>
                 )}
               </div>
-              {offer.files.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {offer.files
-                    .filter((f) => f.kind === "image")
-                    .map((f) => (
-                      <img
-                        key={f.id}
-                        src={offerImageUrl(offer.id, f.id)}
-                        alt={f.file_name}
-                        className="h-28 w-28 rounded-md border border-border object-cover"
-                        loading="lazy"
-                      />
-                    ))}
+              {active ? (
+                <div className="space-y-2">
+                  {/* Main frame + thumbnail strip (mockup sheet 4). */}
+                  <div className="overflow-hidden rounded-md border border-border bg-surface-inset">
+                    <img
+                      src={offerImageUrl(offer.id, active.id)}
+                      alt={active.file_name}
+                      className="max-h-96 w-full object-contain"
+                    />
+                  </div>
+                  {photos.length > 1 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {photos.map((f, index) => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setActivePhoto(index)}
+                          aria-label={f.file_name}
+                          aria-current={index === activePhoto}
+                          className={cn(
+                            "h-20 w-20 overflow-hidden rounded-md border transition-colors",
+                            index === activePhoto
+                              ? "border-brand"
+                              : "border-border hover:border-brand-line",
+                          )}
+                        >
+                          <img
+                            src={offerImageUrl(offer.id, f.id)}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
               <dl className="grid grid-cols-2 gap-3 text-sm">
