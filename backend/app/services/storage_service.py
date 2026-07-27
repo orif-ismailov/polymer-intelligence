@@ -510,6 +510,58 @@ def store_contract_pdf(contract_public_id: str, version_n: int, pdf_bytes: bytes
     return key, hashlib.sha256(pdf_bytes).hexdigest()
 
 
+# ── Deal room files (P2 W1 — T1.2) ────────────────────────────────────────────
+
+#: Attachments in a Trade Room: contracts and invoices (PDF), price sheets
+#: (XLSX), photos of documents or cargo (JPEG/PNG). Named explicitly rather than
+#: reusing ALLOWED_MIMES, which omits PNG even though validate_upload detects it.
+DEAL_FILE_MIMES: frozenset[str] = frozenset(
+    {
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image/jpeg",
+        "image/png",
+    }
+)
+
+
+def store_deal_file(
+    deal_id: int, section: str, content: bytes, filename: str
+) -> tuple[str, str, str]:
+    """Validate + store a Trade Room attachment; return (key, mime, sha256).
+
+    `section` is 'chat' or 'documents' — a fixed caller-supplied literal, never
+    user input, so it cannot escape the deal's prefix. The client's filename is
+    sanitized into the key exactly as for request/offer uploads (traversal-safe)
+    and kept separately for display.
+
+    Validation happens BEFORE the write, so a rejected file leaves nothing
+    behind in the bucket.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415 — deferred (no socket at import)
+
+    mime = validate_upload(content, filename)
+    if mime not in DEAL_FILE_MIMES:
+        logger.debug("storage_service.store_deal_file.bad_mime", extra={"mime": mime})
+        raise ValueError("invalid_file_type")
+
+    basename = os.path.basename(filename) or "upload"
+    safe = basename.replace("/", "_").replace("\\", "_").replace("..", "__")
+    key = f"deals/{deal_id}/{section}/{secrets.token_hex(8)}-{safe}"
+
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET,
+        Key=key,
+        Body=content,
+        ContentType=mime,
+    )
+    logger.info(
+        "storage_service.store_deal_file.done",
+        extra={"deal_id": deal_id, "section": section, "key": key, "mime": mime},
+    )
+    return key, mime, hashlib.sha256(content).hexdigest()
+
+
 def get_object_bytes(key: str) -> bytes:
     """Fetch an S3 object's raw bytes (contract PDF integrity checks)."""
     from app.core.storage import s3_client  # noqa: PLC0415

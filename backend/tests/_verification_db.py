@@ -30,6 +30,12 @@ requires_real_db = pytest.mark.skipif(
 _TABLES = [
     "domain_events",
     "audit_log",
+    # Deals before contracts/requests/offers — deals.contract_id references them.
+    "rfq_responses",
+    "deal_documents",
+    "deal_messages",
+    "deal_status_history",
+    "deals",
     "contract_signatures",
     "contracts",
     "contract_templates",
@@ -180,3 +186,22 @@ def make_seller_offer(db: Session, *, company=None, seller=None, status=None, **
     db.add(offer)
     db.flush()
     return offer
+
+
+def make_request(db: Session, *, company=None, account=None, **kwargs):  # noqa: ANN001, ANN003, ANN202
+    """A portal-origin (company) purchase request — the RFQ suppliers respond to."""
+    import decimal  # noqa: PLC0415
+
+    from app.models.requests import Request  # noqa: PLC0415
+
+    request = Request(
+        number=kwargs.pop("number", f"REQ-TEST-{id(db) % 100000}-{kwargs.pop('n', 1)}"),
+        company_id=company.id if company is not None else None,
+        created_by_user_account_id=account.id if account is not None else None,
+        product_text=kwargs.pop("product_text", "HDPE film"),
+        volume=kwargs.pop("volume", decimal.Decimal("20")),
+        **kwargs,
+    )
+    db.add(request)
+    db.flush()
+    return request
