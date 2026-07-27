@@ -65,6 +65,27 @@ class DealMessagePageOut(BaseModel):
     last_id: int | None = None
 
 
+class DealEscrowOut(BaseModel):
+    """The money side of a deal, as both parties see it.
+
+    Deliberately status + dates only. The buyer pays an invoice issued by the
+    partner bank, so there is nothing here to act on and no account details to
+    leak; the labels are rendered by the portal from `status`, never sent as
+    prose from the server.
+    """
+
+    status: str
+    amount: decimal.Decimal
+    currency: str
+    funded_at: datetime.datetime | None = None
+    released_at: datetime.datetime | None = None
+    refunded_at: datetime.datetime | None = None
+
+    @field_serializer("amount")
+    def _amount(self, value: decimal.Decimal) -> str:
+        return f"{value:.2f}"
+
+
 class DealSummaryOut(BaseModel):
     id: int
     public_id: uuid.UUID
@@ -110,9 +131,9 @@ class DealDetailOut(DealSummaryOut):
     #: Statuses THIS side may move to right now — the action bar reads this
     #: rather than re-deriving the state machine in TypeScript.
     available_transitions: list[str] = Field(default_factory=list)
-    #: Filled by P3. Present (as null) from the start so the UI can branch on it
-    #: without a version check.
-    escrow: dict[str, object] | None = None
+    #: Null until the contract is signed and the invoice is raised — a deal in
+    #: negotiation has no payment behind it yet.
+    escrow: DealEscrowOut | None = None
 
 
 class TransitionIn(BaseModel):

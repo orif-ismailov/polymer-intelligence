@@ -39,6 +39,7 @@ from app.schemas.portal_deal import (
     DealCountersOut,
     DealDetailOut,
     DealDocumentOut,
+    DealEscrowOut,
     DealListOut,
     DealMessageOut,
     DealMessagePageOut,
@@ -53,7 +54,13 @@ from app.schemas.portal_deal import (
     TimelineEntryOut,
     TransitionIn,
 )
-from app.services import company_service, deal_service, rfq_response_service, storage_service
+from app.services import (
+    company_service,
+    deal_service,
+    escrow_service,
+    rfq_response_service,
+    storage_service,
+)
 
 router = APIRouter(prefix="/portal", tags=["portal-deals"])
 
@@ -150,6 +157,22 @@ def _detail(db: Session, deal: Deal, company_id: int) -> DealDetailOut:
         contract = db.get(Contract, deal.contract_id)
         contract_status = str(contract.status) if contract is not None else None
 
+    # Both sides see the same escrow block: the whole point of escrow is that
+    # each party can see where the money is without asking the other.
+    payment = escrow_service.for_deal(db, deal.id)
+    escrow = (
+        None
+        if payment is None
+        else DealEscrowOut(
+            status=str(payment.status),
+            amount=payment.amount,
+            currency=payment.currency,
+            funded_at=payment.funded_at,
+            released_at=payment.released_at,
+            refunded_at=payment.refunded_at,
+        )
+    )
+
     return DealDetailOut(
         **base.model_dump(),
         buyer=_party(db, deal.buyer_company_id),
@@ -173,7 +196,7 @@ def _detail(db: Session, deal: Deal, company_id: int) -> DealDetailOut:
         available_transitions=[
             str(s) for s in deal_service.available_transitions(deal, actor)
         ],
-        escrow=None,  # P3
+        escrow=escrow,
     )
 
 

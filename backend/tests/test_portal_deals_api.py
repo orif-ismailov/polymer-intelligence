@@ -26,6 +26,7 @@ from tests._verification_db import (
     make_account,
     make_engine,
     make_request,
+    make_staff,
     migrate_head,
     session_factory,
 )
@@ -196,7 +197,7 @@ def test_detail_carries_both_parties_and_the_timeline(api) -> None:  # noqa: ANN
     assert body["seller"]["company_id"] == s["seller_co"]
     assert body["seller"]["verified"] is True
     assert len(body["timeline"]) == 1
-    assert body["escrow"] is None, "escrow arrives in P3; the field exists so the UI can branch"
+    assert body["escrow"] is None, "a deal in negotiation has no invoice yet"
 
 
 @requires_real_db
@@ -680,3 +681,94 @@ def test_market_rfq_list_flags_my_existing_response(api) -> None:  # noqa: ANN00
         f"{_P}/market/requests?company_id={s['seller_co']}", headers=s["seller_h"]
     ).json()
     assert body["items"] == [] or body["items"][0]["my_response_status"] == "accepted"
+
+
+# ── escrow block (P3 T2.1) ────────────────────────────────────────────────────
+
+
+def _open_escrow(session, deal_id):  # noqa: ANN001, ANN202
+    """Walk the deal to contract_signed and raise its escrow, as the event would."""
+    from app.models.deals import Deal  # noqa: PLC0415
+    from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
+    from app.services import deal_service, escrow_service  # noqa: PLC0415
+
+    with session() as db:
+        deal = db.get(Deal, deal_id)
+        deal.amount = decimal.Decimal("25000.00")
+        db.flush()
+        for status_ in (DealStatus.contract_pending, DealStatus.contract_signed):
+            deal_service.transition(db, deal, status_, actor_kind=DealActorKind.system)
+        payment = escrow_service.open_for_deal(db, deal)
+        db.commit()
+        return payment.id
+
+
+@requires_real_db
+def test_both_sides_see_the_same_escrow_block(api) -> None:  # noqa: ANN001
+    """Payment status is not private between the parties — the whole point of
+    escrow is that both can see where the money is."""
+    client, session = api
+    s = _scene(session)
+    _open_escrow(session, s["deal_id"])
+
+    for company_id, headers in (
+        (s["buyer_co"], s["buyer_h"]),
+        (s["seller_co"], s["seller_h"]),
+    ):
+        body = client.get(
+            f"{_P}/companies/{company_id}/deals/{s['deal_id']}", headers=headers
+        ).json()
+        escrow = body["escrow"]
+        assert escrow is not None
+        assert escrow["status"] == "pending"
+        assert escrow["amount"] == "25000.00", "money is a string on the wire"
+        assert escrow["currency"] == "USD"
+        assert escrow["funded_at"] is None
+        assert escrow["released_at"] is None
+
+
+@requires_real_db
+def test_the_escrow_block_follows_the_payment(api) -> None:  # noqa: ANN001
+    client, session = api
+    s = _scene(session)
+    payment_id = _open_escrow(session, s["deal_id"])
+
+    from app.models.enums import EscrowStatus  # noqa: PLC0415
+    from app.models.payments import EscrowPayment  # noqa: PLC0415
+    from app.services import escrow_service  # noqa: PLC0415
+
+    with session() as db:
+        staff = make_staff(db, "ops@example.com")
+        escrow_service.mark(
+            db, db.get(EscrowPayment, payment_id), EscrowStatus.funded,
+            staff_user=staff, note="MT103 44821",
+        )
+        db.commit()
+
+    body = client.get(
+        f"{_P}/companies/{s['buyer_co']}/deals/{s['deal_id']}", headers=s["buyer_h"]
+    ).json()
+    assert body["escrow"]["status"] == "funded"
+    assert body["escrow"]["funded_at"] is not None
+    assert body["status"] == "paid_escrow"
+
+
+@requires_real_db
+def test_the_parties_have_no_way_to_move_the_money(api) -> None:  # noqa: ANN001
+    """Escrow is moved by the bank/operator alone. There must be no portal
+    mutation at all — not a forbidden one, none."""
+    from app.api.portal.deals import router  # noqa: PLC0415
+
+    for route in router.routes:  # type: ignore[attr-defined]
+        assert "escrow" not in route.path, f"{route.path} exposes escrow to a party"
+
+    client, session = api
+    s = _scene(session)
+    _open_escrow(session, s["deal_id"])
+    # And the deal's own transition endpoint still refuses the money statuses.
+    response = client.post(
+        f"{_P}/companies/{s['buyer_co']}/deals/{s['deal_id']}/transition",
+        json={"to_status": "paid_escrow"},
+        headers=s["buyer_h"],
+    )
+    assert response.status_code in (403, 409)
