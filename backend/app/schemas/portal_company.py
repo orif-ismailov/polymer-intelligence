@@ -14,6 +14,7 @@ import uuid
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.enums import OfferAvailability, PriceBasis, SellerOfferStatus
+from app.schemas.marketplace import OfferFileRef
 
 # ── Inputs ────────────────────────────────────────────────────────────────────
 
@@ -161,3 +162,8 @@ class CompanyOfferOut(BaseModel):
     description: str | None = None
     moderation_note: str | None = None
     created_at: datetime.datetime
+    #: Attached files in upload order (photos + documents), so the seller's own
+    #: screens can render previews on a draft too — not just the public catalog.
+    files: list[OfferFileRef] = Field(default_factory=list)
+    #: The first photo. None when the offer has no photos (renders a placeholder).
+    cover_file_id: int | None = None

@@ -78,6 +78,14 @@ MAX_FILES: int = 5
 #: Maximum number of files (images + docs) per seller offer (Phase 2 marketplace).
 MAX_OFFER_FILES: int = 10
 
+#: Maximum PHOTOS per offer (FR-M2). Counted over kind='image' only, so a TDS or
+#: certificate never consumes a photo slot. Independent of MAX_OFFER_FILES.
+MAX_OFFER_IMAGES: int = 8
+
+#: `kind='image'` must actually be an image — the generic allow-list also permits
+#: PDFs and spreadsheets, which are fine as documents but not as product photos.
+IMAGE_MIMES: frozenset[str] = frozenset({"image/jpeg", "image/png"})
+
 #: A company logo is a picture, never a document — stricter than VERIFICATION_MIMES.
 LOGO_MIMES: frozenset[str] = frozenset({"image/jpeg", "image/png"})
 
@@ -265,7 +273,7 @@ def upload_offer_file(
 # ── Company logo (P1 W1 — T1.2) ───────────────────────────────────────────────
 
 
-def _discard_object(key: str, *, context: str) -> None:
+def discard_object(key: str, *, context: str) -> None:
     """Best-effort S3 delete.
 
     Deliberately fail-soft: a leftover object costs storage, but letting the error
@@ -322,7 +330,7 @@ def upload_company_logo(
     db.flush()
 
     if previous_key and previous_key != key:
-        _discard_object(previous_key, context="logo_replace")
+        discard_object(previous_key, context="logo_replace")
 
     logger.info(
         "storage_service.upload_company_logo.done",
@@ -339,7 +347,7 @@ def delete_company_logo(db: Session, company: Company) -> None:
 
     company.logo_storage_path = None
     db.flush()
-    _discard_object(key, context="logo_delete")
+    discard_object(key, context="logo_delete")
     logger.info(
         "storage_service.delete_company_logo.done",
         extra={"company_id": company.id, "key": key},

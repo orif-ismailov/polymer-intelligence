@@ -169,8 +169,24 @@ class SellerOffer(Base):
     seller: Mapped[Seller | None] = relationship("Seller", back_populates="offers")
     company: Mapped[Company | None] = relationship("Company")  # dual-origin (R1 A1)
     files: Mapped[list[SellerOfferFile]] = relationship(
-        "SellerOfferFile", back_populates="offer", cascade="all, delete-orphan"
+        "SellerOfferFile",
+        back_populates="offer",
+        cascade="all, delete-orphan",
+        # Upload order is display order, and the first photo is the cover (FR-M2),
+        # so the relationship must not come back in arbitrary order.
+        order_by="SellerOfferFile.id",
     )
+
+    @property
+    def photos(self) -> list[SellerOfferFile]:
+        """Attached photos in display order (documents excluded)."""
+        return [f for f in self.files if f.kind == OfferFileKind.image]
+
+    @property
+    def cover_file_id(self) -> int | None:
+        """Id of the cover photo — the first one uploaded (FR-M2), or None."""
+        photos = self.photos
+        return photos[0].id if photos else None
 
     # ── Dual-origin display helpers (R1 W5) ───────────────────────────────────
     # A serializer-agnostic view of "who is behind this offer" so every consumer

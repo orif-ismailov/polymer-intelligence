@@ -9,7 +9,7 @@ company → 403 with a typed `{code: "company_not_verified"}` body.
 from __future__ import annotations
 
 import redis
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
@@ -18,7 +18,7 @@ from app.core.db import get_db
 from app.core.redis import get_redis
 from app.models.accounts import UserAccount
 from app.models.enums import OfferFileKind, SellerOfferStatus
-from app.models.marketplace import SellerOffer
+from app.models.marketplace import SellerOffer, SellerOfferFile
 from app.schemas.portal_company import CompanyOfferIn, CompanyOfferOut
 from app.services import offer_service, rate_limit, storage_service
 
@@ -124,16 +124,127 @@ async def upload_offer_file(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> SellerOffer:
+    """Attach a photo (or document) to an offer.
+
+    Photos: ≤ 8 per offer, JPEG/PNG, ≤ 10 MB (FR-M2). Adding one to a live offer
+    re-enters moderation, since photos are part of what was approved.
+    """
     company = _company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
     try:
         file_kind = OfferFileKind(kind)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unknown file kind") from exc
+
+    # The photo cap counts images only — a TDS never consumes a photo slot.
+    if (
+        file_kind == OfferFileKind.image
+        and offer_service.count_offer_images(db, offer.id) >= storage_service.MAX_OFFER_IMAGES
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="too_many_files"
+        )
+
     content = await file.read()
+
+    # Detect the type BEFORE writing anything: `kind=image` must really be an image
+    # (the generic allow-list also passes PDFs and spreadsheets, which are valid
+    # documents but not product photos). Checking after the upload would leave an
+    # orphaned object in S3 for every rejected file.
     try:
-        storage_service.upload_offer_file(db, offer.id, content, file.filename or "upload", file_kind)
+        mime = storage_service.validate_upload(content, file.filename or "upload")
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+    if file_kind == OfferFileKind.image and mime not in storage_service.IMAGE_MIMES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="invalid_file_type"
+        )
+
+    try:
+        storage_service.upload_offer_file(
+            db, offer.id, content, file.filename or "upload", file_kind
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+
+    requeued = False
+    if file_kind == OfferFileKind.image:
+        requeued = offer_service.requeue_for_photo_change(db, offer)
     db.commit()
+    db.refresh(offer)
+    if requeued:
+        offer_service.enqueue_offer_group_notify(offer.id, edited=True)
+    return offer
+
+
+@router.get(
+    "/{company_id}/offers/{offer_id}/files/{file_id}",
+    summary="Offer file bytes (owner-scoped)",
+)
+def get_offer_file(
+    company_id: int,
+    offer_id: int,
+    file_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> Response:
+    """Serve an offer file to its own company, at ANY offer status.
+
+    The public catalog endpoint only serves files of *approved* offers, so without
+    this a seller could not see the photos on their own draft. Company-scoped, and
+    404 (not 403) for everyone else — consistent with the rest of the portal.
+    """
+    company = _company_or_404(db, account, company_id)
+    offer = _offer_or_404(db, company.id, offer_id)
+    f = (
+        db.query(SellerOfferFile)
+        .filter(SellerOfferFile.id == file_id, SellerOfferFile.offer_id == offer.id)
+        .first()
+    )
+    if f is None or f.storage_path is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+    from app.core.config import settings  # noqa: PLC0415
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=f.storage_path)  # type: ignore[attr-defined]
+    body: bytes = obj["Body"].read()
+    return Response(content=body, media_type=f.mime_type or "application/octet-stream")
+
+
+@router.delete("/{company_id}/offers/{offer_id}/files/{file_id}", response_model=CompanyOfferOut)
+def delete_offer_file(
+    company_id: int,
+    offer_id: int,
+    file_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> SellerOffer:
+    """Detach a file. Removing a photo from a live offer re-enters moderation.
+
+    Returns the updated offer so the client re-renders the gallery (and the promoted
+    cover) from one response.
+    """
+    company = _company_or_404(db, account, company_id)
+    offer = _offer_or_404(db, company.id, offer_id)
+    f = (
+        db.query(SellerOfferFile)
+        .filter(SellerOfferFile.id == file_id, SellerOfferFile.offer_id == offer.id)
+        .first()
+    )
+    if f is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+    was_image = f.kind == OfferFileKind.image
+    storage_path = f.storage_path
+    db.delete(f)
+    db.flush()
+
+    requeued = offer_service.requeue_for_photo_change(db, offer) if was_image else False
+    db.commit()
+    if storage_path:
+        storage_service.discard_object(storage_path, context="offer_file_delete")
+    db.refresh(offer)
+    if requeued:
+        offer_service.enqueue_offer_group_notify(offer.id, edited=True)
     return offer

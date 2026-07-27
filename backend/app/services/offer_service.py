@@ -20,8 +20,13 @@ from sqlalchemy.orm import Session
 from app.core.time import utcnow
 from app.models.accounts import UserAccount
 from app.models.companies import Company
-from app.models.enums import CompanyStatus, OfferAvailability, SellerOfferStatus
-from app.models.marketplace import Seller, SellerOffer
+from app.models.enums import (
+    CompanyStatus,
+    OfferAvailability,
+    OfferFileKind,
+    SellerOfferStatus,
+)
+from app.models.marketplace import Seller, SellerOffer, SellerOfferFile
 from app.models.reference import Product, ProductSynonym
 from app.schemas.marketplace import CategoryCount, SellerOfferCreate, SellerOfferUpdate
 from app.schemas.portal_company import CompanyOfferIn
@@ -551,6 +556,78 @@ def update_company_offer(
         extra={"offer_id": offer.id, "company_id": offer.company_id, "requeued": requeued},
     )
     return offer, requeued
+
+
+# ── Offer photos (P1 W3 — T3.1) ───────────────────────────────────────────────
+
+
+class TooManyPhotos(Exception):
+    """The offer already holds MAX_OFFER_IMAGES photos."""
+
+
+def count_offer_images(db: Session, offer_id: int) -> int:
+    """Photos currently attached to the offer (documents don't count)."""
+    return int(
+        db.query(SellerOfferFile)
+        .filter(
+            SellerOfferFile.offer_id == offer_id,
+            SellerOfferFile.kind == OfferFileKind.image,
+        )
+        .count()
+    )
+
+
+def offer_images(db: Session, offer_id: int) -> list[SellerOfferFile]:
+    """Photos in display order — upload order (id ASC); the first one is the cover."""
+    return (
+        db.query(SellerOfferFile)
+        .filter(
+            SellerOfferFile.offer_id == offer_id,
+            SellerOfferFile.kind == OfferFileKind.image,
+        )
+        .order_by(SellerOfferFile.id)
+        .all()
+    )
+
+
+def cover_file_id(db: Session, offer_id: int) -> int | None:
+    """Id of the cover photo (the first uploaded), or None when there are none."""
+    first = (
+        db.query(SellerOfferFile.id)
+        .filter(
+            SellerOfferFile.offer_id == offer_id,
+            SellerOfferFile.kind == OfferFileKind.image,
+        )
+        .order_by(SellerOfferFile.id)
+        .first()
+    )
+    return int(first[0]) if first else None
+
+
+def requeue_for_photo_change(db: Session, offer: SellerOffer) -> bool:
+    """Send a live offer back to moderation because its photos changed (FR-M2).
+
+    Photos are part of what moderation approved, so changing them on an approved (or
+    rejected) offer re-enters the queue — the same rule `update_company_offer` applies
+    to field edits. A draft or already-pending offer is untouched. Does NOT commit.
+    """
+    if offer.status not in (SellerOfferStatus.approved, SellerOfferStatus.rejected):
+        return False
+
+    offer.status = SellerOfferStatus.pending_moderation
+    offer.published_at = None
+    offer.moderated_by = None
+    offer.moderation_note = None
+    db.flush()
+    write_audit(
+        db, None, "offer.photos_changed", "seller_offers", str(offer.id),
+        {"via": "company", "requeued": True},
+    )
+    logger.info(
+        "offer_service.requeue_for_photo_change",
+        extra={"offer_id": offer.id, "company_id": offer.company_id},
+    )
+    return True
 
 
 def list_company_offers(db: Session, company_id: int) -> list[SellerOffer]:
