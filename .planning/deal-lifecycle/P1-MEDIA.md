@@ -102,4 +102,42 @@ cover в payload; portal e2e — публикация оффера с 3 фото
 - Никаких изменений схемы `seller_offer_files` не требуется.
 
 ## Progress
-- [ ] T1.1 … T3.3 (заполнять при реализации: `[x] T1.1 — <commit>`)
+
+Ветка `redesign-architecture`. P0 (дизайн-система) сдан — экраны W2/W3 строить из его
+примитивов (`docs/design-system.md` Part II, правила в `portal/CLAUDE.md`).
+
+- [x] **W1** — логотип компании, backend · `b3e8c12`
+  - T1.1 миграция `0022_company_logo` (`companies.logo_storage_path text NULL`);
+    проверено upgrade → downgrade → re-upgrade на отдельной БД; DB-doc в том же коммите
+    (раздел «R4 / P1» + запись v1.6).
+  - T1.2 `storage_service.upload_company_logo` / `delete_company_logo`:
+    только JPEG/PNG (строже `VERIFICATION_MIMES`), 5 МБ (`MAX_LOGO_SIZE_BYTES`), ключ
+    `companies/{id}/logo/{token}.{ext}` из **определённого** MIME — имя файла клиента
+    в S3 не попадает вообще. Замена и удаление — fail-soft (`_discard_object`).
+  - T1.3 `POST`/`DELETE /portal/companies/{id}/logo`, `logo_url` (presigned, TTL ≤ 600 с)
+    в summary+detail, аудит на оба пути.
+    **Добавлено сверх плана:** до сих пор все portal-эндпоинты авторизовали только по
+    факту членства — роли owner/manager не проверялись нигде. Появился
+    `company_service.require_company_role` + `COMPANY_ADMIN_ROLES`. Порядок проверок
+    важен: сначала membership-404, потом роль-403, иначе для чужака 404 превратится
+    в 403 и утечёт факт существования компании.
+  - 28 тестов (сначала красные): миграция, правила стораджа (включая PDF под именем
+    `.jpg`, границы 5 МБ, оба fail-soft пути, traversal), API (presigned+TTL,
+    replace→delete, идемпотентный delete, типизированные 422, manager можно /
+    member 403 / не-член 404, аудит).
+  - Головной ассерт «единственный head» в тестах 0017/0018/0020/0021 переведён на 0022
+    (так же поступил коммит 0021 со своими предшественниками).
+  - Гейты: ruff · mypy (services+schemas) · `pytest tests/ -q` → **1349 passed**.
+- [ ] W2 — логотип, frontend (portal + dashboard)
+- [ ] W3 — фото офферов (backend-доводка + dropzone + галерея + модерация)
+
+### Замечания для следующих сессий
+- Новые API-тесты — в guarded real-DB семье: запускать с
+  `DATABASE_URL=postgresql+psycopg://pi_user:devpassword@localhost:5432/test_polymer`
+  (см. память `real-db-tests-via-test-polymer`).
+- **Осторожно:** при выставленном `DATABASE_URL=…/test_polymer` активируются ДВЕ разные
+  семьи DB-тестов на одной базе, и старая (`test_seed_sources`, `test_synonyms_migration`,
+  `test_source_failure_alert`) конфликтует — она сама гоняет alembic-downgrade. Это
+  **не регресс P1**: проверено на родительском коммите в отдельном worktree (те же ошибки).
+  В CI не проявляется — там имя БД `polymer_intelligence_test`, гейт `test_polymer`
+  не срабатывает. Общий прогон делать без `DATABASE_URL` (как в CI).
