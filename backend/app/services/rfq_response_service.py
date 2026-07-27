@@ -33,7 +33,7 @@ from app.models.enums import (
     RfqVisibility,
 )
 from app.models.requests import Request
-from app.services import audit_service, event_service, event_types
+from app.services import audit_service, event_service, event_types, notification_service
 from app.services.deal_service import CompanyNotVerified, ResponseNotOpen
 
 logger = logging.getLogger(__name__)
@@ -202,6 +202,20 @@ def submit(
         db, None, "rfq_response.submit", "rfq_responses", str(response.id),
         {"account_id": account.id, "request_id": request.id, "company_id": company.id},
     )
+    if request.company_id is not None:
+        title_key, body_key = notification_service.keys_for(
+            notification_service.KIND_RFQ_RESPONSE_NEW
+        )
+        notification_service.notify_company(
+            db,
+            request.company_id,
+            kind=notification_service.KIND_RFQ_RESPONSE_NEW,
+            title_key=title_key,
+            body_key=body_key,
+            params={"request_id": request.id, "number": request.number},
+            entity="request",
+            entity_id=str(request.id),
+        )
     logger.info(
         "rfq_response_service.submit",
         extra={"response_id": response.id, "request_id": request.id, "company_id": company.id},

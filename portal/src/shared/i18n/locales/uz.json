@@ -575,6 +575,34 @@
     "contract_expired": {
       "title": "Shartnoma muddati tugadi",
       "body": "«{{title}}» shartnomasini kutish muddati tugadi"
+    },
+    "rfq_response_new": {
+      "title": "Yangi taklif",
+      "body": "{{number}} so‘roviga taklif keldi"
+    },
+    "rfq_response_accepted": {
+      "title": "Taklif qabul qilindi",
+      "body": "Taklifingiz qabul qilindi, {{number}} bitimi ochildi"
+    },
+    "rfq_response_not_selected": {
+      "title": "Taklif tanlanmadi",
+      "body": "Ushbu so‘rov bo‘yicha boshqa taklif tanlandi"
+    },
+    "deal_opened": {
+      "title": "Bitim ochildi",
+      "body": "{{number}} bitimi ochildi"
+    },
+    "deal_status": {
+      "title": "Bitim holati",
+      "body": "{{number}} bitimi: yangi holat"
+    },
+    "deal_message": {
+      "title": "Yangi xabar",
+      "body": "{{number}} bitimida yangi xabarlar"
+    },
+    "deal_document": {
+      "title": "Yangi hujjat",
+      "body": "{{number}} bitimiga hujjat qo‘shildi"
     }
   },
   "contracts": {

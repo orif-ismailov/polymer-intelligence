@@ -53,7 +53,13 @@ from app.models.enums import (
 )
 from app.models.marketplace import OfferRequest, SellerOffer
 from app.models.requests import Request
-from app.services import audit_service, event_service, event_types, storage_service
+from app.services import (
+    audit_service,
+    event_service,
+    event_types,
+    notification_service,
+    storage_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +71,10 @@ DEAL_ACTOR_ROLES: frozenset[CompanyMemberRole] = frozenset(
 
 #: Chat/document attachments cap (the generic upload limit).
 MAX_DEAL_FILE_BYTES: int = storage_service.MAX_SIZE_BYTES
+
+#: How long one chat notification silences the next for the same deal. A busy
+#: Trade Room would otherwise ring the counterparty's bell on every line typed.
+CHAT_NOTIFY_COOLDOWN_SECONDS: int = 600
 
 
 # ── State machine (data) ──────────────────────────────────────────────────────
@@ -276,6 +286,44 @@ def is_participant_account(db: Session, deal: Deal, account: UserAccount) -> boo
     )
 
 
+# ── Notifications (in-transaction; the bell shares the deal's fate) ───────────
+
+
+def _notify(
+    db: Session,
+    company_id: int,
+    kind: str,
+    deal: Deal,
+    *,
+    extra: dict[str, object] | None = None,
+    cooldown_seconds: int | None = None,
+    exclude_account_id: int | None = None,
+) -> None:
+    """Ring a company's bell about a deal.
+
+    Written inline rather than through the outbox: this is the deals context
+    notifying its own participants, so it belongs in the same transaction — a
+    rolled-back deal must not leave a notification about a deal that is not
+    there. (The outbox is for genuinely cross-context effects; see
+    `app/tasks/portal_notify.py`.)
+    """
+    title_key, body_key = notification_service.keys_for(kind)
+    params: dict[str, object] = {"number": deal.number, "deal_id": deal.id}
+    params.update(extra or {})
+    notification_service.notify_company(
+        db,
+        company_id,
+        kind=kind,
+        title_key=title_key,
+        body_key=body_key,
+        params=params,
+        entity="deal",
+        entity_id=str(deal.id),
+        cooldown_seconds=cooldown_seconds,
+        exclude_account_id=exclude_account_id,
+    )
+
+
 # ── Opening a deal ────────────────────────────────────────────────────────────
 
 
@@ -348,6 +396,8 @@ def _open(
         db, None, "deal.open", "deals", str(deal.id),
         {"account_id": account.id, "buyer": buyer.id, "seller": seller.id, "number": deal.number},
     )
+    for company_id in (buyer.id, seller.id):
+        _notify(db, company_id, notification_service.KIND_DEAL_OPENED, deal)
     logger.info(
         "deal_service.open", extra={"deal_id": deal.id, "number": deal.number}
     )
@@ -406,6 +456,7 @@ def open_deal_from_response(
         db, event_types.RFQ_RESPONSE_ACCEPTED, "rfq_response", response.id,
         {"request_id": request.id, "company_id": response.company_id, "deal_id": deal.id},
     )
+    _notify(db, response.company_id, notification_service.KIND_RFQ_RESPONSE_ACCEPTED, deal)
 
     losers = (
         db.query(RfqResponse)
@@ -421,6 +472,21 @@ def open_deal_from_response(
         event_service.emit(
             db, event_types.RFQ_RESPONSE_NOT_SELECTED, "rfq_response", loser.id,
             {"request_id": request.id, "company_id": loser.company_id},
+        )
+        # Deliberately keyed to the RFQ, not the deal: a supplier who lost has no
+        # business following a deal they are not part of.
+        title_key, body_key = notification_service.keys_for(
+            notification_service.KIND_RFQ_RESPONSE_NOT_SELECTED
+        )
+        notification_service.notify_company(
+            db,
+            loser.company_id,
+            kind=notification_service.KIND_RFQ_RESPONSE_NOT_SELECTED,
+            title_key=title_key,
+            body_key=body_key,
+            params={"request_id": request.id},
+            entity="request",
+            entity_id=str(request.id),
         )
     db.flush()
 
@@ -635,6 +701,7 @@ def transition(
             "from": frm.value,
             "to": to_status.value,
             "actor_kind": actor_kind.value,
+            "reason": clean_reason,
             "buyer_company_id": locked.buyer_company_id,
             "seller_company_id": locked.seller_company_id,
         },
@@ -644,6 +711,24 @@ def transition(
         {"from": frm.value, "to": to_status.value, "actor_kind": actor_kind.value,
          "actor_id": actor_id, "reason": clean_reason},
     )
+
+    # Tell whoever does not already know. A party that clicked the button needs no
+    # bell; a system or staff move surprises both sides.
+    if actor_kind == DealActorKind.buyer:
+        recipients = [locked.seller_company_id]
+    elif actor_kind == DealActorKind.seller:
+        recipients = [locked.buyer_company_id]
+    else:
+        recipients = [locked.buyer_company_id, locked.seller_company_id]
+    for company_id in recipients:
+        _notify(
+            db,
+            company_id,
+            notification_service.KIND_DEAL_STATUS,
+            locked,
+            extra={"status": to_status.value},
+        )
+
     if locked is not deal:
         db.refresh(deal)
     return deal
@@ -747,6 +832,18 @@ def post_message(
             "seller_company_id": deal.seller_company_id,
         },
     )
+    other = (
+        deal.seller_company_id
+        if company.id == deal.buyer_company_id
+        else deal.buyer_company_id
+    )
+    _notify(
+        db,
+        other,
+        notification_service.KIND_DEAL_MESSAGE,
+        deal,
+        cooldown_seconds=CHAT_NOTIFY_COOLDOWN_SECONDS,
+    )
     return message
 
 
@@ -805,6 +902,18 @@ def add_document(
     audit_service.write_audit(
         db, None, "deal.add_document", "deal_documents", str(document.id),
         {"account_id": account.id, "deal_id": deal.id, "kind": kind.value, "sha256": sha},
+    )
+    other = (
+        deal.seller_company_id
+        if company.id == deal.buyer_company_id
+        else deal.buyer_company_id
+    )
+    _notify(
+        db,
+        other,
+        notification_service.KIND_DEAL_DOCUMENT,
+        deal,
+        extra={"kind": kind.value, "file_name": document.file_name},
     )
     return document
 

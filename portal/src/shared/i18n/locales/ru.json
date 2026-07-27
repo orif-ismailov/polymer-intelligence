@@ -575,6 +575,34 @@
     "contract_expired": {
       "title": "Договор истёк",
       "body": "Срок ожидания договора «{{title}}» истёк"
+    },
+    "rfq_response_new": {
+      "title": "Новый отклик",
+      "body": "На заявку {{number}} поступило предложение"
+    },
+    "rfq_response_accepted": {
+      "title": "Отклик принят",
+      "body": "Ваше предложение принято, открыта сделка {{number}}"
+    },
+    "rfq_response_not_selected": {
+      "title": "Отклик не выбран",
+      "body": "По этой заявке выбрано другое предложение"
+    },
+    "deal_opened": {
+      "title": "Открыта сделка",
+      "body": "Сделка {{number}} открыта"
+    },
+    "deal_status": {
+      "title": "Статус сделки",
+      "body": "Сделка {{number}}: новый статус"
+    },
+    "deal_message": {
+      "title": "Новое сообщение",
+      "body": "Новые сообщения в сделке {{number}}"
+    },
+    "deal_document": {
+      "title": "Новый документ",
+      "body": "В сделку {{number}} добавлен документ"
     }
   },
   "contracts": {

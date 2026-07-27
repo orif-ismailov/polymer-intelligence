@@ -1182,10 +1182,105 @@ def send_contract_activated_to_group(
     return {"status": "ok", "error": None}
 
 
+def _deal_card(deal_id_raw: str | None, headline: str, extra: list[str] | None = None) -> dict[str, Any]:
+    """Send a read-only deal card to the staff group. Never raises."""
+    if deal_id_raw is None:
+        return {"status": "skipped", "error": "no_deal_id"}
+    try:
+        deal_id = int(deal_id_raw)
+    except (TypeError, ValueError):
+        return {"status": "skipped", "error": "bad_deal_id"}
+
+    chat_id = _verification_notify_chat_id()
+    if chat_id is None:
+        return {"status": "skipped", "error": "no_chat_id"}
+
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.models.deals import Deal  # noqa: PLC0415
+
+    def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
+        company = session.get(Company, company_id)
+        return (
+            (company.legal_name or company.short_name or company.tax_id)
+            if company is not None
+            else str(company_id)
+        )
+
+    try:
+        with Session(engine) as session:
+            deal = session.get(Deal, deal_id)
+            if deal is None:
+                return {"status": "error", "error": f"deal {deal_id} not found"}
+            amount = f"{deal.amount:.2f} {deal.currency}" if deal.amount is not None else "—"
+            lines = [
+                headline,
+                "",
+                f"🆔 {deal.number}",
+                f"🏢 {_name(session, deal.buyer_company_id)}"
+                f" → {_name(session, deal.seller_company_id)}",
+                f"💰 {amount}",
+                f"📊 {deal.status}",
+                *(extra or []),
+            ]
+            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+    except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
+        logger.error("notify.deal_card.error", extra={"deal_id": deal_id, "error": str(exc)})
+        return {"status": "error", "error": str(exc)}
+
+    logger.info("notify.deal_card.sent", extra={"deal_id": deal_id, "chat_id": chat_id})
+    return {"status": "ok", "error": None}
+
+
+@celery_app.task(name="send_deal_opened_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_deal_opened_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """DEAL_OPENED consumer — read-only staff awareness card (ru/uz/tr). Never raises."""
+    return _deal_card(
+        aggregate_id or (payload or {}).get("deal_id"),
+        "🤝 Открыта сделка · Bitim ochildi · İşlem açıldı",
+    )
+
+
+@celery_app.task(name="send_deal_status_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_deal_status_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """DEAL_STATUS_CHANGED consumer — cards ONLY for disputes.
+
+    Every transition emits this event; the staff group only wants the ones that
+    need a human, so anything but `disputed` is skipped rather than filtered at
+    the dispatcher (which routes by type, not payload).
+    """
+    data = payload or {}
+    if data.get("to") != "disputed":
+        return {"status": "skipped", "error": None}
+    reason = data.get("reason")
+    extra = [f"⚠️ {reason}"] if reason else []
+    return _deal_card(
+        aggregate_id or data.get("deal_id"),
+        "🚩 Спор по сделке · Bitim bo‘yicha nizo · İşlem anlaşmazlığı",
+        extra,
+    )
+
+
 def _register_consumers() -> None:
     """Wire outbox events → team group cards (see events.CONSUMERS)."""
     from app.services import event_types  # noqa: PLC0415
     from app.tasks.events import CONSUMERS  # noqa: PLC0415
+
+    if send_deal_opened_to_group not in CONSUMERS.get(event_types.DEAL_OPENED, []):
+        CONSUMERS[event_types.DEAL_OPENED].append(send_deal_opened_to_group)
+    if send_deal_status_to_group not in CONSUMERS.get(event_types.DEAL_STATUS_CHANGED, []):
+        CONSUMERS[event_types.DEAL_STATUS_CHANGED].append(send_deal_status_to_group)
 
     if send_verification_case_to_group not in CONSUMERS.get(event_types.VERIFICATION_CASE_SUBMITTED, []):
         CONSUMERS[event_types.VERIFICATION_CASE_SUBMITTED].append(send_verification_case_to_group)

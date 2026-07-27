@@ -575,6 +575,34 @@
     "contract_expired": {
       "title": "Contract expired",
       "body": "The contract “{{title}}” expired while pending"
+    },
+    "rfq_response_new": {
+      "title": "New quote",
+      "body": "A supplier quoted on request {{number}}"
+    },
+    "rfq_response_accepted": {
+      "title": "Quote accepted",
+      "body": "Your quote was accepted — deal {{number}} is open"
+    },
+    "rfq_response_not_selected": {
+      "title": "Quote not selected",
+      "body": "Another quote was chosen for this request"
+    },
+    "deal_opened": {
+      "title": "Deal opened",
+      "body": "Deal {{number}} is open"
+    },
+    "deal_status": {
+      "title": "Deal status",
+      "body": "Deal {{number}}: status changed"
+    },
+    "deal_message": {
+      "title": "New message",
+      "body": "New messages in deal {{number}}"
+    },
+    "deal_document": {
+      "title": "New document",
+      "body": "A document was added to deal {{number}}"
     }
   },
   "contracts": {

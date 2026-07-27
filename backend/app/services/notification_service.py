@@ -46,6 +46,14 @@ KIND_INQUIRY_REPLY = "inquiry_reply"
 KIND_VERIFICATION_DECIDED = "verification_decided"
 KIND_OFFER_MODERATED = "offer_moderated"
 KIND_NEWS_BREAKING = "news_breaking"
+# Deals (R4 / P2)
+KIND_RFQ_RESPONSE_NEW = "rfq_response_new"
+KIND_RFQ_RESPONSE_ACCEPTED = "rfq_response_accepted"
+KIND_RFQ_RESPONSE_NOT_SELECTED = "rfq_response_not_selected"
+KIND_DEAL_OPENED = "deal_opened"
+KIND_DEAL_STATUS = "deal_status"
+KIND_DEAL_MESSAGE = "deal_message"
+KIND_DEAL_DOCUMENT = "deal_document"
 
 
 def keys_for(kind: str) -> tuple[str, str]:
@@ -64,9 +72,10 @@ def notify_account(
     entity: str | None = None,
     entity_id: str | None = None,
     dedup: bool = True,
+    cooldown_seconds: int | None = None,
 ) -> PortalNotification | None:
     """Insert a notification for one account (flush-only). Returns the row, or
-    ``None`` when kind-level dedup suppresses an identical unread duplicate.
+    ``None`` when dedup or the cooldown suppresses it.
 
     Args:
         db: Active session (caller commits).
@@ -77,10 +86,22 @@ def notify_account(
         entity/entity_id: Optional deep-link target for the click-through.
         dedup: When True (default), skip if an identical *unread* (account, kind,
             entity, entity_id) row already exists.
+        cooldown_seconds: When set, also skip if a matching row was created
+            within this window REGARDLESS of whether it was read. Unread-dedup
+            alone is not enough for a chat: the moment the reader opens the bell
+            the next line typed would ring it again.
     """
     if dedup and _has_unread_duplicate(db, account_id, kind, entity, entity_id):
         logger.info(
             "notification.dedup_skip",
+            extra={"account_id": account_id, "kind": kind, "entity_id": entity_id},
+        )
+        return None
+    if cooldown_seconds is not None and _within_cooldown(
+        db, account_id, kind, entity, entity_id, cooldown_seconds
+    ):
+        logger.info(
+            "notification.cooldown_skip",
             extra={"account_id": account_id, "kind": kind, "entity_id": entity_id},
         )
         return None
@@ -114,11 +135,19 @@ def notify_company(
     entity: str | None = None,
     entity_id: str | None = None,
     dedup: bool = True,
+    cooldown_seconds: int | None = None,
+    exclude_account_id: int | None = None,
 ) -> list[PortalNotification]:
     """Notify every *active* member of a company. Flush-only. Returns the rows
-    actually created (deduped recipients are skipped)."""
+    actually created (deduped recipients are skipped).
+
+    `exclude_account_id` drops the person who caused the event — nobody needs a
+    bell for their own action.
+    """
     created: list[PortalNotification] = []
     for account_id in active_member_account_ids(db, company_id):
+        if account_id == exclude_account_id:
+            continue
         notif = notify_account(
             db,
             account_id,
@@ -129,6 +158,7 @@ def notify_company(
             entity=entity,
             entity_id=entity_id,
             dedup=dedup,
+            cooldown_seconds=cooldown_seconds,
         )
         if notif is not None:
             created.append(notif)
@@ -214,6 +244,36 @@ def list_notifications(
         .limit(max(1, min(limit, 100)))
         .all()
     )
+
+
+def _within_cooldown(
+    db: Session,
+    account_id: int,
+    kind: str,
+    entity: str | None,
+    entity_id: str | None,
+    seconds: int,
+) -> bool:
+    """True if a matching row (read or not) was created within `seconds`."""
+    import datetime  # noqa: PLC0415
+
+    since = utcnow() - datetime.timedelta(seconds=seconds)
+    query = db.query(PortalNotification.id).filter(
+        PortalNotification.user_account_id == account_id,
+        PortalNotification.kind == kind,
+        PortalNotification.created_at >= since,
+    )
+    query = query.filter(
+        PortalNotification.entity.is_(None)
+        if entity is None
+        else PortalNotification.entity == entity
+    )
+    query = query.filter(
+        PortalNotification.entity_id.is_(None)
+        if entity_id is None
+        else PortalNotification.entity_id == entity_id
+    )
+    return db.query(query.exists()).scalar() or False
 
 
 def _has_unread_duplicate(
