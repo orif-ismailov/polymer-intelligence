@@ -4,6 +4,7 @@ import { CompaniesPage } from "@/pages/companies";
 import { CompanyCreatePage } from "@/pages/company-create";
 import { CompanyViewPage } from "@/pages/company-view";
 import { ContractCreatePage, ContractDetailPage, ContractsPage } from "@/pages/contracts";
+import { UiKitPage } from "@/pages/dev-ui";
 import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
 import { LoginPage } from "@/pages/login";
@@ -25,8 +26,12 @@ import { RequireAuth } from "./RequireAuth";
 /**
  * Route tree. Auth screens sit behind `RedirectIfAuthed`; every cabinet page
  * sits behind `RequireAuth` and renders inside the `AppShell` layout.
+ *
+ * `/dev/ui` (the design-system gallery) is mounted only in dev builds and
+ * deliberately sits outside both guards — it renders primitives, no account data.
  */
 export const router = createBrowserRouter([
+  ...(import.meta.env.DEV ? [{ path: "/dev/ui", element: <UiKitPage /> }] : []),
   {
     element: <RedirectIfAuthed />,
     children: [

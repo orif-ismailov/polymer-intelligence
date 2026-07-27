@@ -2,10 +2,26 @@ import { type HTMLAttributes } from "react";
 
 import { cn } from "@/shared/lib";
 
-export function Card({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
+export type CardVariant = "default" | "accent";
+
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  /** `accent` draws the thin brand outline the mockups use on module cards. */
+  variant?: CardVariant;
+}
+
+const cardVariants: Record<CardVariant, string> = {
+  default: "border-border",
+  accent: "border-brand-line",
+};
+
+export function Card({ variant = "default", className, ...rest }: CardProps) {
   return (
     <div
-      className={cn("rounded-lg border border-border bg-surface shadow-sm", className)}
+      className={cn(
+        "rounded-lg border bg-surface shadow-sm",
+        cardVariants[variant],
+        className,
+      )}
       {...rest}
     />
   );

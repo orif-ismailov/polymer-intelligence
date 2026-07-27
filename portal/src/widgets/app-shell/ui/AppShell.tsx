@@ -36,7 +36,7 @@ export function AppShell() {
           <button
             type="button"
             aria-label="Close menu"
-            className="absolute inset-0 bg-black/50 animate-fade-in"
+            className="absolute inset-0 bg-overlay animate-fade-in"
             onClick={() => setDrawerOpen(false)}
           />
           <div

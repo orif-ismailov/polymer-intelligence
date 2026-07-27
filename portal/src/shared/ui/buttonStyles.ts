@@ -4,16 +4,29 @@ export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "dan
 export type ButtonSize = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors " +
+  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-all " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 " +
-  "focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 select-none";
+  "focus-visible:ring-offset-bg disabled:pointer-events-none select-none";
+
+/*
+ * Disabled is a *neutral* treatment rather than an opacity fade: the brand fill
+ * carries a dark label (--brand-fg), and fading that pair over a dark page turned
+ * the label into dark-on-dark mud. Dropping to the raised surface with subtle
+ * text keeps a disabled CTA readable in both themes.
+ */
+const disabledState =
+  "disabled:bg-surface-2 disabled:text-text-subtle disabled:border-border disabled:shadow-none " +
+  "disabled:brightness-100";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-brand text-brand-fg hover:bg-brand/90 active:bg-brand/95",
+  // The mockups' hero CTA: solid neon green, dark label, lighting up on hover.
+  primary: "bg-brand text-brand-fg hover:brightness-110 hover:shadow-glow active:brightness-95",
   secondary: "bg-surface-2 text-text hover:bg-surface-2/70 border border-border",
-  outline: "border border-border-strong bg-transparent text-text hover:bg-surface-2",
+  // Sits next to `primary` throughout the mockups ("Связаться с продавцом").
+  outline:
+    "border border-border-strong bg-transparent text-text hover:border-brand-line hover:bg-brand-soft",
   ghost: "bg-transparent text-text hover:bg-surface-2",
-  danger: "bg-danger text-white hover:bg-danger/90",
+  danger: "bg-danger text-danger-fg hover:brightness-110",
 };
 
 const sizes: Record<ButtonSize, string> = {
@@ -32,5 +45,5 @@ export function buttonClasses(
   } = {},
 ): string {
   const { variant = "primary", size = "md", fullWidth = false, className } = options;
-  return cn(base, variants[variant], sizes[size], fullWidth && "w-full", className);
+  return cn(base, variants[variant], disabledState, sizes[size], fullWidth && "w-full", className);
 }

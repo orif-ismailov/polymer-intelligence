@@ -52,7 +52,7 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
       <button
         type="button"
         aria-label="Close"
-        className="absolute inset-0 bg-black/50 animate-fade-in"
+        className="absolute inset-0 bg-overlay animate-fade-in"
         onClick={onClose}
         tabIndex={-1}
       />

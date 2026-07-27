@@ -45,7 +45,11 @@
   --success: #22c55e;
   --warning: #eab308;
   --danger: #f05252;
+  --danger-fg: #2b0505;
   --info: #58b8f0;
+
+  /* Scrim behind modals and the mobile drawer. */
+  --overlay: rgb(0 0 0 / 0.62);
 
   /* Accent glow behind brand CTAs / active nav — mockups light the green up. */
   --brand-glow: 0 0 24px color-mix(in srgb, var(--brand) 35%, transparent);
@@ -78,7 +82,10 @@
   --success: #157f3c;
   --warning: #8a6100;
   --danger: #b91c1c;
+  --danger-fg: #ffffff;
   --info: #1d6fa5;
+
+  --overlay: rgb(9 14 11 / 0.45);
 
   --brand-glow: 0 0 20px color-mix(in srgb, var(--brand) 22%, transparent);
 

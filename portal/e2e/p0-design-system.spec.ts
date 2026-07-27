@@ -80,6 +80,8 @@ const THEME_TOKENS = [
   "--brand-fg",
   "--accent-gold",
   "--accent-gold-fg",
+  "--danger",
+  "--danger-fg",
 ] as const;
 
 // ── T1.2 — dark is the default theme ─────────────────────────────────────────
@@ -176,15 +178,16 @@ test("token colour pairs meet WCAG AA in both themes", async ({ page }) => {
       }
     }
 
-    // Button label on the filled brand button, and on the gold badge.
-    expect(
-      contrastRatio(tk["--brand-fg"], tk["--brand"]),
-      `${theme}: --brand-fg on --brand`,
-    ).toBeGreaterThanOrEqual(4.5);
-    expect(
-      contrastRatio(tk["--accent-gold-fg"], tk["--accent-gold"]),
-      `${theme}: --accent-gold-fg on --accent-gold`,
-    ).toBeGreaterThanOrEqual(4.5);
+    // Every filled-surface / on-fill-label pair in the system.
+    for (const [fg, fill] of [
+      ["--brand-fg", "--brand"],
+      ["--accent-gold-fg", "--accent-gold"],
+      ["--danger-fg", "--danger"],
+    ] as const) {
+      expect(contrastRatio(tk[fg], tk[fill]), `${theme}: ${fg} on ${fill}`).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
 
     // Brand used as *text*/icon colour on the page background (links, prices).
     expect(

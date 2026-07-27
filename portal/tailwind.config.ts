@@ -40,8 +40,12 @@ const config: Config = {
         },
         success: "var(--success)",
         warning: "var(--warning)",
-        danger: "var(--danger)",
+        danger: {
+          DEFAULT: "var(--danger)",
+          fg: "var(--danger-fg)",
+        },
         info: "var(--info)",
+        overlay: "var(--overlay)",
       },
       boxShadow: {
         glow: "var(--brand-glow)",

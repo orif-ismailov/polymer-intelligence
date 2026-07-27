@@ -7,7 +7,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const inputBase =
-  "h-10 w-full rounded-md border bg-surface px-3 text-sm text-text placeholder:text-text-subtle " +
+  "h-10 w-full rounded-md border bg-surface-inset px-3 text-sm text-text placeholder:text-text-subtle " +
   "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand " +
   "focus-visible:ring-offset-1 focus-visible:ring-offset-bg disabled:cursor-not-allowed disabled:opacity-60";
 
