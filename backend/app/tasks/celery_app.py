@@ -56,6 +56,7 @@ _TASK_MODULES = [
     "app.tasks.verification",
     "app.tasks.contracts",
     "app.tasks.deals",
+    "app.tasks.payments",
     "app.tasks.portal_notify",
 ]
 
