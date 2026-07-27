@@ -61,3 +61,8 @@ export const HandshakeIcon = (
     />
   </svg>
 );
+export const HeartIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M10 16.6l-1.2-1.1C4.5 11.6 2 9.1 2 6.2 2 3.9 3.8 2 6.1 2c1.3 0 2.6.6 3.4 1.6.8-1 2.1-1.6 3.4-1.6C15.2 2 17 3.9 17 6.2c0 2.9-2.5 5.4-6.8 9.3L10 16.6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+  </svg>
+);

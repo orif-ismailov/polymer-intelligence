@@ -11,9 +11,14 @@ import datetime
 import decimal
 import uuid
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models.enums import OfferAvailability, PriceBasis, SellerOfferStatus
+from app.models.enums import (
+    OfferAvailability,
+    OfferSaleMode,
+    PriceBasis,
+    SellerOfferStatus,
+)
 from app.schemas.marketplace import OfferFileRef
 
 # ── Inputs ────────────────────────────────────────────────────────────────────
@@ -139,6 +144,27 @@ class CompanyOfferIn(BaseModel):
     country: str | None = Field(default=None, max_length=2)
     min_order_qty: decimal.Decimal | None = None
     description: str | None = Field(default=None, max_length=2000)
+    # ── How this company trades the offer (P4 W1) ─────────────────────────────
+    lead_time_days: int | None = Field(default=None, ge=0, le=3650)
+    sale_mode: OfferSaleMode | None = None
+    #: Deal-readiness badges. RFQ is opt-out (answering costs nothing); a contract
+    #: and escrow are commitments, so they are opt-in.
+    accepts_rfq: bool = True
+    accepts_contract: bool = False
+    accepts_escrow: bool = False
+
+    @model_validator(mode="after")
+    def _made_to_order_states_a_lead_time(self) -> CompanyOfferIn:
+        """«Под заказ» carries no price (it is "по запросу"), so without a lead
+        time the card tells a buyer nothing they can plan around.
+
+        Deliberately NOT added to the Mini App's `SellerOfferCreate`: `webapp/` is
+        frozen and cannot send the field, so requiring it there would break offer
+        creation from Telegram.
+        """
+        if self.availability == OfferAvailability.on_order and self.lead_time_days is None:
+            raise ValueError("lead_time_days is required for made-to-order offers")
+        return self
 
 
 class CompanyOfferOut(BaseModel):
@@ -160,6 +186,11 @@ class CompanyOfferOut(BaseModel):
     country: str | None = None
     min_order_qty: decimal.Decimal | None = None
     description: str | None = None
+    lead_time_days: int | None = None
+    sale_mode: OfferSaleMode | None = None
+    accepts_rfq: bool = True
+    accepts_contract: bool = False
+    accepts_escrow: bool = False
     moderation_note: str | None = None
     created_at: datetime.datetime
     #: Attached files in upload order (photos + documents), so the seller's own

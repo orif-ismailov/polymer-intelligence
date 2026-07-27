@@ -24,6 +24,15 @@ export const marketApi = {
     api.get<MarketOfferDetail>(`/portal/market/${offerId}`, {
       query: { company_id: companyId ?? undefined },
     }),
+
+  /** The account's own shortlist — not scoped to the active company. */
+  favorites: (): Promise<MarketOffer[]> => api.get<MarketOffer[]>("/portal/market/favorites"),
+
+  star: (offerId: number): Promise<{ is_favorite: boolean }> =>
+    api.post<{ is_favorite: boolean }>(`/portal/market/offers/${offerId}/favorite`),
+
+  unstar: (offerId: number): Promise<void> =>
+    api.del<void>(`/portal/market/offers/${offerId}/favorite`),
 };
 
 export const marketKeys = {
@@ -31,6 +40,7 @@ export const marketKeys = {
     ["market", filters, companyId, offset] as const,
   detail: (offerId: number, companyId: number | null) =>
     ["market", "detail", offerId, companyId] as const,
+  favorites: () => ["market", "favorites"] as const,
 };
 
 /** Public <img src> URL for an offer file (the webapp image endpoint is public). */

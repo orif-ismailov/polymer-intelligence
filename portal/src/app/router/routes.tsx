@@ -9,7 +9,12 @@ import { UiKitPage } from "@/pages/dev-ui";
 import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
 import { LoginPage } from "@/pages/login";
-import { MarketOfferPage, MarketPage, MarketRequestsPage } from "@/pages/market";
+import {
+  FavoritesPage,
+  MarketOfferPage,
+  MarketPage,
+  MarketRequestsPage,
+} from "@/pages/market";
 import { NewsArticlePage, NewsPage } from "@/pages/news";
 import { NotificationsPage } from "@/pages/notifications";
 import { OfferEditPage } from "@/pages/offer-edit";
@@ -49,6 +54,8 @@ export const router = createBrowserRouter([
           { path: "/", element: <HomePage /> },
           { path: "/market", element: <MarketPage /> },
           { path: "/market/requests", element: <MarketRequestsPage /> },
+          // Literal before the :offerId param route, or "favorites" is read as an id.
+          { path: "/market/favorites", element: <FavoritesPage /> },
           { path: "/market/:offerId", element: <MarketOfferPage /> },
           { path: "/deals", element: <DealsPage /> },
           { path: "/deals/:dealId", element: <DealDetailPage /> },

@@ -102,6 +102,13 @@ export type OfferStatus = (typeof OFFER_STATUSES)[number];
 export const AVAILABILITY = ["in_stock", "on_order"] as const;
 export type Availability = (typeof AVAILABILITY)[number];
 
+/**
+ * How a seller trades an offer (backend `OfferSaleMode`). Orthogonal to
+ * `AVAILABILITY`, which says whether the goods exist right now.
+ */
+export const SALE_MODES = ["from_stock", "made_to_order", "recurring_contract"] as const;
+export type SaleMode = (typeof SALE_MODES)[number];
+
 export const QTY_UNITS = ["kg", "t", "pcs"] as const;
 export type QtyUnit = (typeof QTY_UNITS)[number];
 

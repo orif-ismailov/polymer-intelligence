@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import {
+  FavoriteButton,
+  OfferReadinessBadges,
   offerImageUrl,
   offerPhotos,
   useMarket,
@@ -43,7 +45,12 @@ function MarketCard({ offer, onOpen }: { offer: MarketOffer; onOpen: () => void 
       <Card className="flex h-full flex-col overflow-hidden transition-colors hover:border-brand-line">
         {/* Cover photo, or a neutral placeholder so a photo-less offer doesn't
             collapse the card and break the grid (FR-M3). */}
-        <div className="aspect-[4/3] w-full border-b border-border bg-surface-inset">
+        <div className="relative aspect-[4/3] w-full border-b border-border bg-surface-inset">
+          <FavoriteButton
+            offerId={offer.id}
+            isFavorite={offer.is_favorite}
+            className="absolute right-2 top-2 z-10"
+          />
           {cover ? (
             <img
               src={offerImageUrl(offer.id, cover.id)}
@@ -96,7 +103,16 @@ function MarketCard({ offer, onOpen }: { offer: MarketOffer; onOpen: () => void 
                 {t("market.qty")}: {offer.qty_available} {offer.qty_unit}
               </p>
             ) : null}
+            {/* For a made-to-order offer this is the only number a buyer can plan
+                around — the price is "on request". */}
+            {offer.lead_time_days != null ? (
+              <p className="num mt-0.5 text-xs text-text-muted">
+                {t("market.leadTime", { count: offer.lead_time_days })}
+              </p>
+            ) : null}
           </div>
+
+          <OfferReadinessBadges offer={offer} />
 
           <div className="mt-auto flex items-end justify-between gap-2 border-t border-border pt-3">
             <span className="min-w-0 text-sm text-text-muted">

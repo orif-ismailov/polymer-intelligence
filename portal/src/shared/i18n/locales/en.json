@@ -72,7 +72,8 @@
     "inquiries": "Inquiries",
     "news": "News",
     "notifications": "Notifications",
-    "deals": "Deals"
+    "deals": "Deals",
+    "favorites": "Favorites"
   },
   "home": {
     "title": "Overview",
@@ -318,7 +319,22 @@
       "tooLarge": "File is too large — 10 MB max.",
       "badType": "Only JPEG and PNG are supported.",
       "requeueWarning": "Changing photos sends the offer back for moderation."
-    }
+    },
+    "leadTimeDays": "Lead time, days",
+    "leadTimeHint": "Required for made-to-order offers — they carry no price.",
+    "leadTimeRequired": "State a lead time for a made-to-order offer",
+    "saleModeLabel": "Sale mode",
+    "saleModeUnset": "Not stated",
+    "saleMode": {
+      "from_stock": "From stock",
+      "made_to_order": "Made to order",
+      "recurring_contract": "Recurring contract"
+    },
+    "readinessTitle": "Ready to deal",
+    "readinessHint": "What you tick shows as badges on your market card.",
+    "acceptsRfq": "I answer requests (RFQ)",
+    "acceptsContract": "Ready to sign a contract on the platform",
+    "acceptsEscrow": "Ready to work through escrow"
   },
   "settings": {
     "title": "Settings",
@@ -444,7 +460,19 @@
     "ownOffer": "This is your company's offer.",
     "selectCompanyHint": "Select a company to send an inquiry.",
     "inquirySent": "Inquiry sent for moderation.",
-    "inquiryFailed": "Could not send the inquiry."
+    "inquiryFailed": "Could not send the inquiry.",
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
+    "favorites": "Favorites",
+    "favoritesHint": "A personal list — switching company does not change it.",
+    "favoritesEmpty": "No favorites yet",
+    "favoritesEmptyBody": "Tap the heart on an offer card and it will show up here.",
+    "leadTime": "Lead time: {{count}} days",
+    "readiness": {
+      "rfq": "RFQ",
+      "contract": "Contract",
+      "escrow": "Escrow"
+    }
   },
   "inquiries": {
     "title": "Inquiries",

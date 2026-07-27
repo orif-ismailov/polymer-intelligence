@@ -3,9 +3,9 @@ import { type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { CompanyOffer } from "@/entities/offer";
-import { AVAILABILITY, CURRENCIES, INCOTERMS, QTY_UNITS } from "@/shared/config";
+import { AVAILABILITY, CURRENCIES, INCOTERMS, QTY_UNITS, SALE_MODES } from "@/shared/config";
 import { useEnumLabels } from "@/shared/i18n";
-import { Alert, Button, FormField, Input, Select, Textarea } from "@/shared/ui";
+import { Alert, Button, Checkbox, FormField, Input, Select, Textarea } from "@/shared/ui";
 import type { SelectOption } from "@/shared/ui";
 
 import {
@@ -42,6 +42,10 @@ export function OfferForm({ companyId, offer, onSaved, onCancel, onNotVerified }
     value: v,
     label: label("availability", v),
   }));
+  const saleModeOptions: SelectOption[] = [
+    { value: "", label: t("offers.saleModeUnset") },
+    ...SALE_MODES.map((v) => ({ value: v, label: t(`offers.saleMode.${v}`) })),
+  ];
 
   function handleSubmit(e: FormEvent<HTMLFormElement>): void {
     e.preventDefault();
@@ -187,6 +191,61 @@ export function OfferForm({ companyId, offer, onSaved, onCancel, onNotVerified }
           )}
         </FormField>
       </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Required for «под заказ»: that offer carries no price, so the lead time
+            is the only thing a buyer can plan around. */}
+        <FormField
+          label={t("offers.leadTimeDays")}
+          required={state.availability === "on_order"}
+          hint={t("offers.leadTimeHint")}
+          error={errors.lead_time_days ? t(errors.lead_time_days) : null}
+        >
+          {({ id, invalid, describedBy }) => (
+            <Input
+              id={id}
+              inputMode="numeric"
+              invalid={invalid}
+              aria-describedby={describedBy}
+              value={state.lead_time_days}
+              onChange={(e) => setField("lead_time_days", e.target.value)}
+            />
+          )}
+        </FormField>
+        <FormField label={t("offers.saleModeLabel")}>
+          {({ id }) => (
+            <Select
+              id={id}
+              options={saleModeOptions}
+              value={state.sale_mode}
+              onChange={(e) => setField("sale_mode", e.target.value)}
+            />
+          )}
+        </FormField>
+      </div>
+
+      {/* Deal readiness → the badges a buyer scans the market card for. */}
+      <fieldset className="space-y-2 rounded-lg border border-border p-4">
+        <legend className="px-1 text-sm font-medium text-text">
+          {t("offers.readinessTitle")}
+        </legend>
+        <p className="text-xs text-text-muted">{t("offers.readinessHint")}</p>
+        <Checkbox
+          checked={state.accepts_rfq}
+          onChange={(e) => setField("accepts_rfq", e.target.checked)}
+          label={t("offers.acceptsRfq")}
+        />
+        <Checkbox
+          checked={state.accepts_contract}
+          onChange={(e) => setField("accepts_contract", e.target.checked)}
+          label={t("offers.acceptsContract")}
+        />
+        <Checkbox
+          checked={state.accepts_escrow}
+          onChange={(e) => setField("accepts_escrow", e.target.checked)}
+          label={t("offers.acceptsEscrow")}
+        />
+      </fieldset>
 
       <FormField label={t("offers.description")}>
         {({ id }) => (

@@ -1,4 +1,4 @@
-import type { Availability, OfferStatus } from "@/shared/config";
+import type { Availability, OfferStatus, SaleMode } from "@/shared/config";
 
 /** A file attached to an offer — photo (`image`) or document. */
 export interface OfferFile {
@@ -23,6 +23,13 @@ export interface OfferPayload {
   country?: string | null;
   min_order_qty?: string | number | null;
   description?: string | null;
+  /** Production/sourcing lead time. Required by the API for made-to-order offers. */
+  lead_time_days?: number | null;
+  sale_mode?: SaleMode | null;
+  /** Deal-readiness flags → badges on the market card. */
+  accepts_rfq: boolean;
+  accepts_contract: boolean;
+  accepts_escrow: boolean;
 }
 
 export interface CompanyOffer extends OfferPayload {

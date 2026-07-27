@@ -26,7 +26,7 @@ from app.models.enums import (
     OfferFileKind,
     SellerOfferStatus,
 )
-from app.models.marketplace import Seller, SellerOffer, SellerOfferFile
+from app.models.marketplace import OfferFavorite, Seller, SellerOffer, SellerOfferFile
 from app.models.reference import Product, ProductSynonym
 from app.schemas.marketplace import CategoryCount, SellerOfferCreate, SellerOfferUpdate
 from app.schemas.portal_company import CompanyOfferIn
@@ -502,6 +502,11 @@ def create_company_offer(
         country=data.country,
         min_order_qty=data.min_order_qty,
         description=data.description,
+        lead_time_days=data.lead_time_days,
+        sale_mode=data.sale_mode,
+        accepts_rfq=data.accepts_rfq,
+        accepts_contract=data.accepts_contract,
+        accepts_escrow=data.accepts_escrow,
         status=SellerOfferStatus.pending_moderation,
     )
     db.add(offer)
@@ -538,6 +543,11 @@ def update_company_offer(
     offer.country = data.country
     offer.min_order_qty = data.min_order_qty
     offer.description = data.description
+    offer.lead_time_days = data.lead_time_days
+    offer.sale_mode = data.sale_mode
+    offer.accepts_rfq = data.accepts_rfq
+    offer.accepts_contract = data.accepts_contract
+    offer.accepts_escrow = data.accepts_escrow
 
     requeued = offer.status in (SellerOfferStatus.approved, SellerOfferStatus.rejected)
     if requeued:
@@ -636,5 +646,92 @@ def list_company_offers(db: Session, company_id: int) -> list[SellerOffer]:
         db.query(SellerOffer)
         .filter(SellerOffer.company_id == company_id)
         .order_by(SellerOffer.created_at.desc())
+        .all()
+    )
+
+
+# ── Favorites (P4 W1 — T1.2) ──────────────────────────────────────────────────
+#
+# A shortlist is personal: it hangs off the ACCOUNT, not the company, so someone
+# switching company hats in the portal keeps their own list.
+
+
+def add_favorite(db: Session, account_id: int, offer_id: int) -> bool:
+    """Star an offer. Returns True when a row was created, False when it was
+    already starred. Does NOT commit.
+
+    Idempotent by design — a double tap on the heart, or a retried request, must
+    not 500 on the unique constraint. The INSERT runs inside a SAVEPOINT so a
+    losing race raises IntegrityError without poisoning the caller's transaction.
+    """
+    from sqlalchemy.exc import IntegrityError  # noqa: PLC0415
+
+    existing = (
+        db.query(OfferFavorite.id)
+        .filter(
+            OfferFavorite.user_account_id == account_id,
+            OfferFavorite.offer_id == offer_id,
+        )
+        .first()
+    )
+    if existing is not None:
+        return False
+    try:
+        with db.begin_nested():
+            db.add(OfferFavorite(user_account_id=account_id, offer_id=offer_id))
+            db.flush()
+    except IntegrityError:
+        return False
+    return True
+
+
+def remove_favorite(db: Session, account_id: int, offer_id: int) -> bool:
+    """Unstar an offer. Returns True when a row was deleted. Does NOT commit.
+
+    Removing something that was never starred is a no-op, not an error: the
+    client's intent ("this should not be in my list") is already satisfied.
+    """
+    deleted = (
+        db.query(OfferFavorite)
+        .filter(
+            OfferFavorite.user_account_id == account_id,
+            OfferFavorite.offer_id == offer_id,
+        )
+        .delete(synchronize_session=False)
+    )
+    db.flush()
+    return bool(deleted)
+
+
+def favorite_offer_ids(db: Session, account_id: int, offer_ids: list[int]) -> set[int]:
+    """Which of `offer_ids` this account has starred — one query for a whole page.
+
+    Resolved server-side so the heart is filled on first paint; the alternative is
+    a second round trip per card.
+    """
+    if not offer_ids:
+        return set()
+    rows = db.query(OfferFavorite.offer_id).filter(
+        OfferFavorite.user_account_id == account_id,
+        OfferFavorite.offer_id.in_(offer_ids),
+    )
+    return {offer_id for (offer_id,) in rows}
+
+
+def list_favorites(db: Session, account_id: int) -> list[SellerOffer]:
+    """The account's starred offers, most recently starred first.
+
+    Only APPROVED offers come back: an offer pulled from the catalog (archived,
+    or sent back to moderation after an edit) must not resurface here as if it
+    were still on sale.
+    """
+    return (
+        db.query(SellerOffer)
+        .join(OfferFavorite, OfferFavorite.offer_id == SellerOffer.id)
+        .filter(
+            OfferFavorite.user_account_id == account_id,
+            SellerOffer.status == SellerOfferStatus.approved,
+        )
+        .order_by(OfferFavorite.id.desc())
         .all()
     )
