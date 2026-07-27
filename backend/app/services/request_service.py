@@ -89,6 +89,28 @@ def _enqueue_group_notify_soft(request_id: int) -> None:
         )
 
 
+def _enqueue_supplier_push_soft(request_id: int) -> None:
+    """Enqueue the matched-supplier push for a company RFQ, fail-soft (P4 W3).
+
+    Like the notify/analysis enqueues: a broker outage must never break request
+    creation. The task itself re-checks the `rfq_supplier_push_enabled` gate, so
+    there is nothing to look up here.
+    """
+    from app.tasks.rfq_push import notify_matched_suppliers  # noqa: PLC0415
+
+    try:
+        notify_matched_suppliers.apply_async(
+            args=[request_id], queue="notify", retry=False
+        )
+    except Exception as exc:  # noqa: BLE001 — broker outage must not break creation
+        logger.warning(
+            "supplier-push enqueue failed (broker unavailable); request %s "
+            "committed without notifying suppliers: %s",
+            request_id,
+            exc,
+        )
+
+
 def _enqueue_analysis_soft(request_id: int) -> None:
     """Enqueue the LLM request-analysis task, fail-soft.
 
@@ -363,6 +385,10 @@ def create_company_request(
     # Staff-facing side effects only (no creator self-notification on submit).
     _enqueue_group_notify_soft(req.id)
     _enqueue_analysis_soft(req.id)
+    # A company RFQ is live for suppliers the moment it is filed — there is no
+    # separate "published" state in RequestStatus (see rfq_response_service
+    # .OPEN_STATUSES), so this is the publication point.
+    _enqueue_supplier_push_soft(req.id)
 
     logger.info(
         "request_service.create_company",

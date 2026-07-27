@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { useOpenRfqs } from "@/entities/deal";
@@ -29,17 +30,28 @@ function RequestCard({
   request,
   companyId,
   onResponded,
+  highlighted,
 }: {
   request: MarketRequest;
   companyId: number;
   onResponded: () => void;
+  /** Arrived here from the "new RFQ for you" bell — open and scroll to it. */
+  highlighted?: boolean;
 }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(Boolean(highlighted) && request.my_response_id == null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const responded = request.my_response_id != null;
 
+  useEffect(() => {
+    if (highlighted) cardRef.current?.scrollIntoView({ block: "center" });
+  }, [highlighted]);
+
   return (
-    <Card>
+    // A wrapper div carries the ref: Card is a plain function component, and
+    // making a shared primitive forwardRef for one scroll target is not worth it.
+    <div ref={cardRef}>
+    <Card className={highlighted ? "border-brand" : undefined}>
       <CardBody className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
@@ -110,6 +122,7 @@ function RequestCard({
         )}
       </CardBody>
     </Card>
+    </div>
   );
 }
 
@@ -118,6 +131,9 @@ export function MarketRequestsPage() {
   const { activeCompany } = useActiveCompany();
   const companyId = activeCompany?.id ?? null;
   const query = useOpenRfqs(companyId);
+  // Set by the "new RFQ for you" bell (notificationLink → ?rfq=<id>).
+  const [searchParams] = useSearchParams();
+  const highlightedId = Number(searchParams.get("rfq")) || null;
 
   if (!activeCompany) {
     return (
@@ -155,6 +171,7 @@ export function MarketRequestsPage() {
               request={request}
               companyId={activeCompany.id}
               onResponded={() => void query.refetch()}
+              highlighted={request.id === highlightedId}
             />
           ))}
         </div>

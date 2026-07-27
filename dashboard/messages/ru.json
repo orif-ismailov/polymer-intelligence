@@ -306,7 +306,9 @@
     "filterOrigin": "Источник",
     "originOptAll": "Все источники",
     "originOptClient": "Telegram",
-    "originOptCompany": "Портал"
+    "originOptCompany": "Портал",
+    "sectionPushedSuppliers": "Уведомлённые поставщики",
+    "pushedScoreHint": "Оценка соответствия на момент рассылки"
   },
   "broker": {
     "intel": {

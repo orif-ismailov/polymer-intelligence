@@ -640,6 +640,10 @@
     "escrow_status": {
       "title": "To‘lov holati",
       "body": "{{number}} bitimi: {{amount}} {{currency}} — to‘lov holati o‘zgardi"
+    },
+    "rfq_match": {
+      "title": "Profilingizga mos yangi so‘rov",
+      "body": "{{product}} — {{volume}} {{volume_unit}}. Ariza {{number}}"
     }
   },
   "contracts": {

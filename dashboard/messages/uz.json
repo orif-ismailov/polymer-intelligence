@@ -306,7 +306,9 @@
     "filterOrigin": "Manba",
     "originOptAll": "Barcha manbalar",
     "originOptClient": "Telegram",
-    "originOptCompany": "Portal"
+    "originOptCompany": "Portal",
+    "sectionPushedSuppliers": "Xabardor qilingan yetkazib beruvchilar",
+    "pushedScoreHint": "Rassilka paytidagi moslik bahosi"
   },
   "broker": {
     "intel": {

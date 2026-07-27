@@ -15,6 +15,10 @@ export function notificationLink(
   switch (entity) {
     case "request":
       return `/requests/${entityId}`;
+    // A supplier's view of someone else's RFQ. Deliberately NOT `/requests/{id}`:
+    // that page is the BUYER's, company-scoped, and a supplier cannot open it.
+    case "rfq":
+      return `/market/requests?rfq=${entityId}`;
     case "inquiry":
       return `/inquiries/${entityId}`;
     case "offer":

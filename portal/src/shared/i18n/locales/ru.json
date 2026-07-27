@@ -640,6 +640,10 @@
     "escrow_status": {
       "title": "Статус оплаты",
       "body": "Сделка {{number}}: {{amount}} {{currency}} — статус оплаты изменён"
+    },
+    "rfq_match": {
+      "title": "Новый запрос по вашему профилю",
+      "body": "{{product}} — {{volume}} {{volume_unit}}. Заявка {{number}}"
     }
   },
   "contracts": {

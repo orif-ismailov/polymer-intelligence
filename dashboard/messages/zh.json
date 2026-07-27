@@ -299,7 +299,9 @@
     "filterOrigin": "来源",
     "originOptAll": "所有来源",
     "originOptClient": "Telegram",
-    "originOptCompany": "门户"
+    "originOptCompany": "门户",
+    "sectionPushedSuppliers": "已通知的供应商",
+    "pushedScoreHint": "推送时的匹配评分"
   },
   "broker": {
     "intel": {

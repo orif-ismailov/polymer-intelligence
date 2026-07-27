@@ -306,7 +306,9 @@
     "filterOrigin": "Kaynak",
     "originOptAll": "Tüm kaynaklar",
     "originOptClient": "Telegram",
-    "originOptCompany": "Portal"
+    "originOptCompany": "Portal",
+    "sectionPushedSuppliers": "Bilgilendirilen tedarikçiler",
+    "pushedScoreHint": "Gönderim anındaki eşleşme puanı"
   },
   "broker": {
     "intel": {

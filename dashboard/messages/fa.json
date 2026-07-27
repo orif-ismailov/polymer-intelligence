@@ -299,7 +299,9 @@
     "filterOrigin": "منبع",
     "originOptAll": "همه منابع",
     "originOptClient": "تلگرام",
-    "originOptCompany": "پورتال"
+    "originOptCompany": "پورتال",
+    "sectionPushedSuppliers": "تأمین‌کنندگان مطلع‌شده",
+    "pushedScoreHint": "امتیاز تطابق در زمان ارسال"
   },
   "broker": {
     "intel": {

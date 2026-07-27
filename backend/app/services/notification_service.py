@@ -59,6 +59,10 @@ KIND_DEAL_DOCUMENT = "deal_document"
 # never told their money was released.
 KIND_ESCROW_OPENED = "escrow_opened"
 KIND_ESCROW_STATUS = "escrow_status"
+# Supplier push (R4 / P4): a buyer published an RFQ matching this supplier's
+# catalogue. Deep-links to `rfq`, not `request` — the buyer's request page is
+# company-scoped and a supplier cannot open it.
+KIND_RFQ_MATCH = "rfq_match"
 
 
 def keys_for(kind: str) -> tuple[str, str]:
