@@ -27,7 +27,8 @@
       "newsAdmin": "Haberler (yönetici)",
       "verification": "Doğrulama",
       "companies": "Şirketler",
-      "contracts": "Sözleşmeler"
+      "contracts": "Sözleşmeler",
+      "deals": "İşlemler"
     },
     "guest": "Misafir"
   },
@@ -952,6 +953,58 @@
       "declined": "Reddedildi",
       "cancelled": "İptal edildi",
       "expired": "Süresi doldu"
+    }
+  },
+  "deals": {
+    "title": "İşlemler",
+    "subtitle": "İşlem denetimi: zaman çizelgesi, belgeler, sohbet (salt okunur), uyuşmazlık çözümü.",
+    "filterAll": "Tüm durumlar",
+    "search": "Numaraya göre ara…",
+    "empty": "İşlem bulunamadı",
+    "selectHint": "Listeden bir işlem seçin.",
+    "total": "Toplam: {count}",
+    "colNumber": "Numara",
+    "colParties": "Taraflar",
+    "colAmount": "Tutar",
+    "colStatus": "Durum",
+    "timeline": "Zaman çizelgesi",
+    "documents": "Belgeler",
+    "noDocuments": "Belge yok",
+    "chat": "İşlem sohbeti",
+    "chatReadOnly": "salt okunur",
+    "noMessages": "Mesaj yok",
+    "cancelledReason": "İptal nedeni",
+    "status": {
+      "negotiation": "Müzakere",
+      "contract_pending": "Sözleşme bekleniyor",
+      "contract_signed": "Sözleşme imzalandı",
+      "payment_pending": "Ödeme bekleniyor",
+      "paid_escrow": "Ödendi (emanet)",
+      "shipped": "Sevk edildi",
+      "delivered": "Teslim alındı",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi",
+      "disputed": "Uyuşmazlık"
+    },
+    "actor": {
+      "buyer": "alıcı",
+      "seller": "satıcı",
+      "staff": "ekip",
+      "system": "sistem"
+    },
+    "docKind": {
+      "contract": "Sözleşme",
+      "invoice": "Fatura",
+      "lab_passport": "Kalite pasaportu",
+      "transport": "Taşıma",
+      "other": "Diğer"
+    },
+    "resolve": {
+      "title": "Uyuşmazlık çözümü",
+      "comment": "Açıklama (zorunlu)",
+      "restore": "Duruma geri al",
+      "cancel": "İşlemi iptal et",
+      "adminOnly": "Uyuşmazlığı yalnızca yönetici çözebilir."
     }
   }
 }

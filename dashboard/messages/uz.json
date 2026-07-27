@@ -27,7 +27,8 @@
       "newsAdmin": "Yangiliklar (admin)",
       "verification": "Tekshiruv",
       "companies": "Kompaniyalar",
-      "contracts": "Shartnomalar"
+      "contracts": "Shartnomalar",
+      "deals": "Bitimlar"
     },
     "guest": "Mehmon"
   },
@@ -952,6 +953,58 @@
       "declined": "Rad etilgan",
       "cancelled": "Bekor qilingan",
       "expired": "Muddati o‘tgan"
+    }
+  },
+  "deals": {
+    "title": "Bitimlar",
+    "subtitle": "Bitimlar nazorati: xronologiya, hujjatlar, chat (faqat o‘qish), nizolarni hal qilish.",
+    "filterAll": "Barcha holatlar",
+    "search": "Raqam bo‘yicha qidirish…",
+    "empty": "Bitimlar topilmadi",
+    "selectHint": "Ro‘yxatdan bitim tanlang.",
+    "total": "Jami: {count}",
+    "colNumber": "Raqam",
+    "colParties": "Tomonlar",
+    "colAmount": "Summa",
+    "colStatus": "Holat",
+    "timeline": "Xronologiya",
+    "documents": "Hujjatlar",
+    "noDocuments": "Hujjatlar yo‘q",
+    "chat": "Bitim chati",
+    "chatReadOnly": "faqat o‘qish",
+    "noMessages": "Xabarlar yo‘q",
+    "cancelledReason": "Bekor qilish sababi",
+    "status": {
+      "negotiation": "Muzokara",
+      "contract_pending": "Shartnoma kutilmoqda",
+      "contract_signed": "Shartnoma imzolandi",
+      "payment_pending": "To‘lov kutilmoqda",
+      "paid_escrow": "To‘landi (eskrou)",
+      "shipped": "Jo‘natildi",
+      "delivered": "Qabul qilindi",
+      "completed": "Yakunlandi",
+      "cancelled": "Bekor qilindi",
+      "disputed": "Nizo"
+    },
+    "actor": {
+      "buyer": "xaridor",
+      "seller": "sotuvchi",
+      "staff": "jamoa",
+      "system": "tizim"
+    },
+    "docKind": {
+      "contract": "Shartnoma",
+      "invoice": "Hisob-faktura",
+      "lab_passport": "Sifat pasporti",
+      "transport": "Transport",
+      "other": "Boshqa"
+    },
+    "resolve": {
+      "title": "Nizoni hal qilish",
+      "comment": "Izoh (majburiy)",
+      "restore": "Holatga qaytarish",
+      "cancel": "Bitimni bekor qilish",
+      "adminOnly": "Nizoni faqat administrator hal qila oladi."
     }
   }
 }

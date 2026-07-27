@@ -27,7 +27,8 @@
       "newsAdmin": "اخبار (مدیریت)",
       "verification": "احراز هویت",
       "companies": "شرکت‌ها",
-      "contracts": "قراردادها"
+      "contracts": "قراردادها",
+      "deals": "معاملات"
     },
     "guest": "مهمان"
   },
@@ -937,6 +938,58 @@
       "declined": "رد شده",
       "cancelled": "لغو شده",
       "expired": "منقضی شده"
+    }
+  },
+  "deals": {
+    "title": "معاملات",
+    "subtitle": "نظارت بر معاملات: خط زمانی، اسناد، گفتگو (فقط خواندنی)، حل اختلاف.",
+    "filterAll": "همه وضعیت‌ها",
+    "search": "جستجو بر اساس شماره…",
+    "empty": "معامله‌ای یافت نشد",
+    "selectHint": "یک معامله از فهرست انتخاب کنید.",
+    "total": "مجموع: {count}",
+    "colNumber": "شماره",
+    "colParties": "طرفین",
+    "colAmount": "مبلغ",
+    "colStatus": "وضعیت",
+    "timeline": "خط زمانی",
+    "documents": "اسناد",
+    "noDocuments": "سندی نیست",
+    "chat": "گفتگوی معامله",
+    "chatReadOnly": "فقط خواندنی",
+    "noMessages": "پیامی نیست",
+    "cancelledReason": "دلیل لغو",
+    "status": {
+      "negotiation": "مذاکره",
+      "contract_pending": "در انتظار قرارداد",
+      "contract_signed": "قرارداد امضا شد",
+      "payment_pending": "در انتظار پرداخت",
+      "paid_escrow": "پرداخت شد (امانی)",
+      "shipped": "ارسال شد",
+      "delivered": "تحویل شد",
+      "completed": "تکمیل شد",
+      "cancelled": "لغو شد",
+      "disputed": "اختلاف"
+    },
+    "actor": {
+      "buyer": "خریدار",
+      "seller": "فروشنده",
+      "staff": "تیم",
+      "system": "سامانه"
+    },
+    "docKind": {
+      "contract": "قرارداد",
+      "invoice": "فاکتور",
+      "lab_passport": "گواهی کیفیت",
+      "transport": "حمل",
+      "other": "سایر"
+    },
+    "resolve": {
+      "title": "حل اختلاف",
+      "comment": "توضیح (الزامی)",
+      "restore": "بازگرداندن به وضعیت",
+      "cancel": "لغو معامله",
+      "adminOnly": "تنها مدیر می‌تواند اختلاف را حل کند."
     }
   }
 }

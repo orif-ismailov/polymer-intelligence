@@ -63,6 +63,7 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "verification", href: "/verification", icon: BadgeCheck, minRole: "analyst" },
       { key: "companies", href: "/companies", icon: Building2, minRole: "analyst" },
       { key: "contracts", href: "/contracts", icon: FileText, minRole: "analyst" },
+      { key: "deals", href: "/deals", icon: Handshake, minRole: "analyst" },
     ],
   },
   {

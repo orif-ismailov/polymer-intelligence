@@ -27,7 +27,8 @@
       "newsAdmin": "Новости (админ)",
       "verification": "Верификация",
       "companies": "Компании",
-      "contracts": "Договоры"
+      "contracts": "Договоры",
+      "deals": "Сделки"
     },
     "guest": "Гость"
   },
@@ -952,6 +953,58 @@
       "declined": "Отклонён",
       "cancelled": "Отменён",
       "expired": "Истёк"
+    }
+  },
+  "deals": {
+    "title": "Сделки",
+    "subtitle": "Надзор за сделками: таймлайн, документы, чат (только чтение), разрешение споров.",
+    "filterAll": "Все статусы",
+    "search": "Поиск по номеру…",
+    "empty": "Сделок не найдено",
+    "selectHint": "Выберите сделку из списка.",
+    "total": "Всего: {count}",
+    "colNumber": "Номер",
+    "colParties": "Стороны",
+    "colAmount": "Сумма",
+    "colStatus": "Статус",
+    "timeline": "Таймлайн",
+    "documents": "Документы",
+    "noDocuments": "Документов нет",
+    "chat": "Чат сделки",
+    "chatReadOnly": "только чтение",
+    "noMessages": "Сообщений нет",
+    "cancelledReason": "Причина отмены",
+    "status": {
+      "negotiation": "Переговоры",
+      "contract_pending": "Ожидание договора",
+      "contract_signed": "Договор подписан",
+      "payment_pending": "Ожидание оплаты",
+      "paid_escrow": "Оплачено (эскроу)",
+      "shipped": "Отгружено",
+      "delivered": "Получено",
+      "completed": "Завершена",
+      "cancelled": "Отменена",
+      "disputed": "Спор"
+    },
+    "actor": {
+      "buyer": "покупатель",
+      "seller": "продавец",
+      "staff": "команда",
+      "system": "система"
+    },
+    "docKind": {
+      "contract": "Договор",
+      "invoice": "Счёт",
+      "lab_passport": "Паспорт качества",
+      "transport": "Транспортный",
+      "other": "Прочее"
+    },
+    "resolve": {
+      "title": "Разрешение спора",
+      "comment": "Комментарий (обязательно)",
+      "restore": "Вернуть в статус",
+      "cancel": "Отменить сделку",
+      "adminOnly": "Спор может разрешить только администратор."
     }
   }
 }

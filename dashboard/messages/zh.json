@@ -27,7 +27,8 @@
       "newsAdmin": "新闻（管理）",
       "verification": "验证",
       "companies": "公司",
-      "contracts": "合同"
+      "contracts": "合同",
+      "deals": "交易"
     },
     "guest": "访客"
   },
@@ -937,6 +938,58 @@
       "declined": "已拒绝",
       "cancelled": "已取消",
       "expired": "已过期"
+    }
+  },
+  "deals": {
+    "title": "交易",
+    "subtitle": "交易监管：时间线、文件、聊天（只读）、争议处理。",
+    "filterAll": "全部状态",
+    "search": "按编号搜索…",
+    "empty": "未找到交易",
+    "selectHint": "从列表中选择一笔交易。",
+    "total": "共 {count} 笔",
+    "colNumber": "编号",
+    "colParties": "双方",
+    "colAmount": "金额",
+    "colStatus": "状态",
+    "timeline": "时间线",
+    "documents": "文件",
+    "noDocuments": "暂无文件",
+    "chat": "交易聊天",
+    "chatReadOnly": "只读",
+    "noMessages": "暂无消息",
+    "cancelledReason": "取消原因",
+    "status": {
+      "negotiation": "洽谈中",
+      "contract_pending": "待签合同",
+      "contract_signed": "合同已签",
+      "payment_pending": "待付款",
+      "paid_escrow": "已付款（托管）",
+      "shipped": "已发货",
+      "delivered": "已收货",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "disputed": "争议"
+    },
+    "actor": {
+      "buyer": "买方",
+      "seller": "卖方",
+      "staff": "团队",
+      "system": "系统"
+    },
+    "docKind": {
+      "contract": "合同",
+      "invoice": "发票",
+      "lab_passport": "质量证书",
+      "transport": "运输",
+      "other": "其他"
+    },
+    "resolve": {
+      "title": "争议处理",
+      "comment": "说明（必填）",
+      "restore": "恢复到状态",
+      "cancel": "取消交易",
+      "adminOnly": "仅管理员可处理争议。"
     }
   }
 }
