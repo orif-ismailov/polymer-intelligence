@@ -10,3 +10,4 @@ export { useMarket, useMarketOffer, useFavorites, useToggleFavorite } from "./mo
 export { FavoriteButton } from "./ui/FavoriteButton";
 export { OfferReadinessBadges } from "./ui/OfferReadinessBadges";
 export { BusinessRoleBadges } from "./ui/BusinessRoleBadges";
+export { MarketOfferCard } from "./ui/MarketOfferCard";
