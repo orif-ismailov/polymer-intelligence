@@ -8,6 +8,8 @@ export type {
   DealList,
   DealDocument,
   DealDocumentKind,
+  DealEscrow,
+  EscrowStatus,
   DealMessage,
   DealMessagePage,
   DealTimelineEntry,

@@ -766,7 +766,16 @@
       "open": "Open contract"
     },
     "escrow": {
-      "soon": "Escrow payment arrives in the next stage."
+      "noneTitle": "No invoice yet",
+      "noneBody": "The payment invoice appears once both parties have signed the contract.",
+      "bankTitle": "Payment via the partner bank",
+      "bankBody": "Payment is made against an invoice issued by the partner bank. The funds are held and released to the seller once the buyer confirms delivery.",
+      "status": {
+        "pending": "Awaiting payment",
+        "funded": "Funds held",
+        "released": "Released to the seller",
+        "refunded": "Refunded to the buyer"
+      }
     }
   },
   "rfq": {

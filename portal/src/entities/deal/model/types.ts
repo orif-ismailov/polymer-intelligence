@@ -98,6 +98,22 @@ export interface DealList {
   counters: DealCounters;
 }
 
+export type EscrowStatus = "pending" | "funded" | "released" | "refunded";
+
+/**
+ * The money side of a deal (R4 / P3). Status and dates only: the buyer pays an
+ * invoice issued by the partner bank, so there is nothing to act on here and no
+ * account details to show — the platform holds none.
+ */
+export interface DealEscrow {
+  status: EscrowStatus;
+  amount: string;
+  currency: string;
+  funded_at: string | null;
+  released_at: string | null;
+  refunded_at: string | null;
+}
+
 export interface DealDetail extends DealSummary {
   buyer: DealParty;
   seller: DealParty;
@@ -113,8 +129,8 @@ export interface DealDetail extends DealSummary {
    * re-implemented here.
    */
   available_transitions: DealStatus[];
-  /** Null until P3 ships escrow. */
-  escrow: Record<string, unknown> | null;
+  /** Null until the contract is signed and the invoice is raised. */
+  escrow: DealEscrow | null;
 }
 
 export interface RfqResponse {

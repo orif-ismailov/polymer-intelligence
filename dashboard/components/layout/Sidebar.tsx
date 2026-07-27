@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import {
   Activity,
   BadgeCheck,
+  Banknote,
   BarChart3,
   Bell,
   Boxes,
@@ -64,6 +65,7 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "companies", href: "/companies", icon: Building2, minRole: "analyst" },
       { key: "contracts", href: "/contracts", icon: FileText, minRole: "analyst" },
       { key: "deals", href: "/deals", icon: Handshake, minRole: "analyst" },
+      { key: "escrow", href: "/escrow", icon: Banknote, minRole: "analyst" },
     ],
   },
   {

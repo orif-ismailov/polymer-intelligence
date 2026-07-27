@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useActiveCompany } from "@/entities/company";
 import { DealStatusBadge, useDeal } from "@/entities/deal";
 import type { DealParty, DealStatus } from "@/entities/deal";
-import { DealActionBar, DealChat, DealDocuments } from "@/features/deal-room";
+import { DealActionBar, DealChat, DealDocuments, DealEscrowPanel } from "@/features/deal-room";
 import { cn, formatDateTime } from "@/shared/lib";
 import {
   Alert,
@@ -223,11 +223,7 @@ export function DealDetailPage() {
           </CardBody>
         </Card>
       ) : (
-        <Card>
-          <CardBody>
-            <p className="text-sm text-text-muted">{t("deals.escrow.soon")}</p>
-          </CardBody>
-        </Card>
+        <DealEscrowPanel escrow={deal.escrow} />
       )}
 
       <div>

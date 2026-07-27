@@ -766,7 +766,16 @@
       "open": "Shartnomani ochish"
     },
     "escrow": {
-      "soon": "Eskrou to‘lovi keyingi bosqichda qo‘shiladi."
+      "noneTitle": "Hisob-faktura hali chiqarilmagan",
+      "noneBody": "To‘lov uchun hisob-faktura shartnoma ikkala tomon tomonidan imzolangach paydo bo‘ladi.",
+      "bankTitle": "Hamkor bank orqali to‘lov",
+      "bankBody": "To‘lov hamkor bank orqali hisob-faktura bo‘yicha amalga oshiriladi. Mablag‘ zaxiraga olinadi va xaridor qabul qilishni tasdiqlagach sotuvchiga o‘tkaziladi.",
+      "status": {
+        "pending": "To‘lov kutilmoqda",
+        "funded": "Mablag‘ zaxiraga olindi",
+        "released": "Sotuvchiga o‘tkazildi",
+        "refunded": "Xaridorga qaytarildi"
+      }
     }
   },
   "rfq": {

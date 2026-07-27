@@ -28,7 +28,8 @@
       "verification": "Doğrulama",
       "companies": "Şirketler",
       "contracts": "Sözleşmeler",
-      "deals": "İşlemler"
+      "deals": "İşlemler",
+      "escrow": "Emanet"
     },
     "guest": "Misafir"
   },
@@ -1005,6 +1006,53 @@
       "restore": "Duruma geri al",
       "cancel": "İşlemi iptal et",
       "adminOnly": "Uyuşmazlığı yalnızca yönetici çözebilir."
+    }
+  },
+  "escrow": {
+    "title": "Emanet ödemeleri",
+    "subtitle": "İki kuyruk: bize kim borçlu ve kime ödeme yapmalıyız. Para hareketini yalnızca banka ekstresiyle karşılaştırdıktan sonra işaretleyin.",
+    "filterAll": "Tüm durumlar",
+    "empty": "Ödeme yok",
+    "selectHint": "Ayrıntılar için bir ödeme seçin.",
+    "terminal": "İşlem tamamlandı — ödeme artık değişmez.",
+    "colDeal": "İşlem",
+    "colParties": "Taraflar",
+    "colAmount": "Tutar",
+    "colStatus": "Durum",
+    "dealStatus": "İşlem durumu",
+    "mode": "Mod",
+    "fundedAt": "Giriş",
+    "releasedAt": "Ödeme",
+    "refundedAt": "İade",
+    "lastNote": "Not",
+    "status": {
+      "pending": "Ödeme bekleniyor",
+      "funded": "Fonlar bloke edildi",
+      "released": "Satıcıya aktarıldı",
+      "refunded": "Alıcıya iade edildi"
+    },
+    "counters": {
+      "awaitingFunds": "Ödeme bekleyen",
+      "awaitingPayout": "Ödeme yapılacak",
+      "settled": "Tamamlanan",
+      "blocked": "Engellenen"
+    },
+    "mark": {
+      "title": "Para hareketini işaretle",
+      "note": "Not: banka referansı, ekstre numarası…",
+      "confirm": "Bankada paranın fiilen hareket ettiğini onaylıyorum",
+      "funded": "Para geldi",
+      "released": "Para satıcıya ödendi",
+      "refunded": "Para alıcıya iade edildi",
+      "adminOnly": "Para hareketini yalnızca yönetici işaretleyebilir."
+    },
+    "blocked": {
+      "title": "Faturasız işlemler",
+      "hint": "Sözleşme imzalandı ama fatura kesilemiyor. Operatör müdahalesi gerekiyor.",
+      "reason": {
+        "no_amount": "Tutar mutabık değil",
+        "not_opened_yet": "Fatura henüz kesilmedi"
+      }
     }
   }
 }

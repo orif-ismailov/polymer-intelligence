@@ -28,7 +28,8 @@
       "verification": "Tekshiruv",
       "companies": "Kompaniyalar",
       "contracts": "Shartnomalar",
-      "deals": "Bitimlar"
+      "deals": "Bitimlar",
+      "escrow": "Eskrou"
     },
     "guest": "Mehmon"
   },
@@ -1005,6 +1006,53 @@
       "restore": "Holatga qaytarish",
       "cancel": "Bitimni bekor qilish",
       "adminOnly": "Nizoni faqat administrator hal qila oladi."
+    }
+  },
+  "escrow": {
+    "title": "Eskrou to‘lovlar",
+    "subtitle": "Ikki navbat: kim bizga pul qarzdor va kimga biz o‘tkazishimiz kerak. Mablag‘ harakatini faqat bank ko‘chirmasi bilan solishtirgandan keyin belgilang.",
+    "filterAll": "Barcha holatlar",
+    "empty": "To‘lovlar yo‘q",
+    "selectHint": "Tafsilotlarni ko‘rish uchun to‘lovni tanlang.",
+    "terminal": "Operatsiya yakunlandi — to‘lov endi o‘zgarmaydi.",
+    "colDeal": "Bitim",
+    "colParties": "Tomonlar",
+    "colAmount": "Summa",
+    "colStatus": "Holat",
+    "dealStatus": "Bitim holati",
+    "mode": "Rejim",
+    "fundedAt": "Tushum",
+    "releasedAt": "To‘lov",
+    "refundedAt": "Qaytarish",
+    "lastNote": "Izoh",
+    "status": {
+      "pending": "To‘lov kutilmoqda",
+      "funded": "Mablag‘ zaxiraga olindi",
+      "released": "Sotuvchiga o‘tkazildi",
+      "refunded": "Xaridorga qaytarildi"
+    },
+    "counters": {
+      "awaitingFunds": "To‘lov kutilmoqda",
+      "awaitingPayout": "To‘lash kutilmoqda",
+      "settled": "Yakunlangan",
+      "blocked": "Bloklangan"
+    },
+    "mark": {
+      "title": "Mablag‘ harakatini belgilash",
+      "note": "Izoh: bank havolasi, ko‘chirma raqami…",
+      "confirm": "Bankda mablag‘ haqiqatan harakatlanganini tasdiqlayman",
+      "funded": "Mablag‘ tushdi",
+      "released": "Mablag‘ sotuvchiga to‘landi",
+      "refunded": "Mablag‘ xaridorga qaytarildi",
+      "adminOnly": "Mablag‘ harakatini faqat administrator belgilay oladi."
+    },
+    "blocked": {
+      "title": "Hisob-fakturasiz bitimlar",
+      "hint": "Shartnoma imzolangan, lekin hisob-faktura chiqarib bo‘lmaydi. Operator aralashuvi kerak.",
+      "reason": {
+        "no_amount": "Summa kelishilmagan",
+        "not_opened_yet": "Hisob-faktura hali chiqarilmagan"
+      }
     }
   }
 }

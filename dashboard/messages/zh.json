@@ -28,7 +28,8 @@
       "verification": "验证",
       "companies": "公司",
       "contracts": "合同",
-      "deals": "交易"
+      "deals": "交易",
+      "escrow": "托管"
     },
     "guest": "访客"
   },
@@ -990,6 +991,53 @@
       "restore": "恢复到状态",
       "cancel": "取消交易",
       "adminOnly": "仅管理员可处理争议。"
+    }
+  },
+  "escrow": {
+    "title": "托管付款",
+    "subtitle": "两个队列：谁欠我们钱，以及我们该付给谁。资金流动须与银行对账单核对后再标记。",
+    "filterAll": "全部状态",
+    "empty": "暂无付款",
+    "selectHint": "选择一笔付款查看详情。",
+    "terminal": "操作已完成——该付款不再变更。",
+    "colDeal": "交易",
+    "colParties": "双方",
+    "colAmount": "金额",
+    "colStatus": "状态",
+    "dealStatus": "交易状态",
+    "mode": "模式",
+    "fundedAt": "到账",
+    "releasedAt": "放款",
+    "refundedAt": "退款",
+    "lastNote": "备注",
+    "status": {
+      "pending": "待付款",
+      "funded": "资金已冻结",
+      "released": "已付给卖方",
+      "refunded": "已退还买方"
+    },
+    "counters": {
+      "awaitingFunds": "待到账",
+      "awaitingPayout": "待放款",
+      "settled": "已结清",
+      "blocked": "受阻"
+    },
+    "mark": {
+      "title": "标记资金流动",
+      "note": "备注：银行流水号、对账单编号……",
+      "confirm": "我确认银行中的资金确已发生流动",
+      "funded": "资金已到账",
+      "released": "资金已付给卖方",
+      "refunded": "资金已退还买方",
+      "adminOnly": "只有管理员可以标记资金流动。"
+    },
+    "blocked": {
+      "title": "无发票的交易",
+      "hint": "合同已签署，但无法开具账单，需要运营人员介入。",
+      "reason": {
+        "no_amount": "金额未议定",
+        "not_opened_yet": "尚未开具账单"
+      }
     }
   }
 }
