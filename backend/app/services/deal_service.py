@@ -215,19 +215,32 @@ def _assert_verified(company: Company) -> None:
         raise CompanyNotVerified(str(company.id))
 
 
-def acting_company(db: Session, deal: Deal, account: UserAccount) -> Company:
+def acting_company(
+    db: Session, deal: Deal, account: UserAccount, company_id: int | None = None
+) -> Company:
     """The party company `account` acts for in this deal, or NotDealParticipant.
 
     Requires an ACTIVE owner/manager membership: a plain member of a party
     company can read the deal but not speak or act inside it.
+
+    `company_id` pins which side to act as. One person can belong to both
+    companies in a deal (a broker running both ends, or test data), and then
+    "whichever membership we found first" would silently pick a side. The API
+    always passes it — the company in the URL is the hat the user is wearing.
     """
+    sides = [deal.buyer_company_id, deal.seller_company_id]
+    if company_id is not None:
+        if company_id not in sides:
+            raise NotDealParticipant(str(company_id))
+        sides = [company_id]
+
     row = (
         db.query(CompanyMember)
         .filter(
             CompanyMember.user_account_id == account.id,
             CompanyMember.status == CompanyMemberStatus.active,
             CompanyMember.member_role.in_(list(DEAL_ACTOR_ROLES)),
-            CompanyMember.company_id.in_([deal.buyer_company_id, deal.seller_company_id]),
+            CompanyMember.company_id.in_(sides),
         )
         .first()
     )
@@ -642,9 +655,10 @@ def transition_by_party(
     account: UserAccount,
     to_status: DealStatus,
     reason: str | None = None,
+    company_id: int | None = None,
 ) -> Deal:
     """`transition` driven by a party account — resolves its side for you."""
-    company = acting_company(db, deal, account)
+    company = acting_company(db, deal, account, company_id)
     return transition(
         db,
         deal,
@@ -653,6 +667,30 @@ def transition_by_party(
         actor_id=account.id,
         reason=reason,
     )
+
+
+def available_transitions(deal: Deal, actor_kind: DealActorKind) -> list[DealStatus]:
+    """Statuses this actor may move the deal to right now.
+
+    The action bar is built from this, so the UI never offers a button the API
+    would refuse — and never re-implements the state machine in TypeScript.
+    """
+    return [
+        to
+        for to in DealStatus
+        if to in VALID_TRANSITIONS[deal.status]
+        and actor_kind in allowed_actors(deal.status, to)
+    ]
+
+
+def needs_action(deal: Deal, actor_kind: DealActorKind) -> bool:
+    """Whether this side owes the deal a move.
+
+    Cancelling and disputing are always available and are not "progress", so
+    they do not count — otherwise every live deal would demand attention.
+    """
+    passive = {DealStatus.cancelled, DealStatus.disputed}
+    return any(to not in passive for to in available_transitions(deal, actor_kind))
 
 
 # ── Chat ──────────────────────────────────────────────────────────────────────
@@ -666,13 +704,14 @@ def post_message(
     *,
     file_content: bytes | None = None,
     file_name: str | None = None,
+    company_id: int | None = None,
 ) -> DealMessage:
     """Append a Trade Room message (text, a file, or both).
 
     The author's company is stored, not derived: membership changes over time
     and a message must keep showing the side that actually wrote it.
     """
-    company = acting_company(db, deal, account)
+    company = acting_company(db, deal, account, company_id)
     text = (body or "").strip()
 
     storage_path: str | None = None
@@ -731,9 +770,10 @@ def add_document(
     kind: DealDocumentKind,
     content: bytes,
     file_name: str,
+    company_id: int | None = None,
 ) -> DealDocument:
     """Attach a document to the deal (append-only; sha256 recorded as evidence)."""
-    company = acting_company(db, deal, account)
+    company = acting_company(db, deal, account, company_id)
     if len(content) > MAX_DEAL_FILE_BYTES:
         raise ValueError("file_too_large")
 
@@ -770,7 +810,11 @@ def add_document(
 
 
 def revoke_document(
-    db: Session, document: DealDocument, account: UserAccount, reason: str
+    db: Session,
+    document: DealDocument,
+    account: UserAccount,
+    reason: str,
+    company_id: int | None = None,
 ) -> DealDocument:
     """Mark a document withdrawn. The S3 object stays — this is an evidence trail.
 
@@ -779,7 +823,7 @@ def revoke_document(
     deal = db.get(Deal, document.deal_id)
     if deal is None:  # pragma: no cover — FK guarantees it
         raise NotDealParticipant(str(document.deal_id))
-    company = acting_company(db, deal, account)
+    company = acting_company(db, deal, account, company_id)
     if company.id != document.uploaded_by_company_id:
         raise NotDealParticipant(str(company.id))
     if document.revoked:

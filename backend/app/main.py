@@ -55,6 +55,7 @@ from app.api.offer_requests import router as offer_requests_router
 from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.companies import router as portal_companies_router
 from app.api.portal.contracts import router as portal_contracts_router
+from app.api.portal.deals import router as portal_deals_router
 from app.api.portal.eimzo import router as portal_eimzo_router
 from app.api.portal.inquiries import router as portal_inquiries_router
 from app.api.portal.market import router as portal_market_router
@@ -208,6 +209,9 @@ def create_app() -> FastAPI:
     # Contracts router first: its literal /portal/companies/directory must win over the
     # companies router's /portal/companies/{company_id} param route.
     application.include_router(portal_contracts_router, prefix="/api/v1")
+    # Deals before companies for the same reason: its literal
+    # /portal/companies/{company_id}/deals routes must be matched by this router.
+    application.include_router(portal_deals_router, prefix="/api/v1")
     application.include_router(portal_companies_router, prefix="/api/v1")
     application.include_router(portal_eimzo_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
