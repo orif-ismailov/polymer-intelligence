@@ -31,3 +31,6 @@ tsconfig.tsbuildinfo
 
 # Planning (GSD tooling — not part of the shipped codebase)
 .planning/config.json
+
+# Playwright MCP scratch output (page snapshots, console logs, screenshots)
+.playwright-mcp/

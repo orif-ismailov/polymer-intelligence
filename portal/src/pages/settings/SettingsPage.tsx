@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useAuthStore, useLogout, useUpdateAccount } from "@/entities/account";
 import { SUPPORTED_LANGS, coerceLang } from "@/shared/i18n";
-import { formatPhoneMask } from "@/shared/lib";
+import { THEME_MODES, formatPhoneMask, useThemeStore, type ThemeMode } from "@/shared/lib";
 import {
   Alert,
   Button,
@@ -25,6 +25,9 @@ export function SettingsPage() {
   const account = useAuthStore((s) => s.account);
   const update = useUpdateAccount();
   const logout = useLogout();
+
+  const themeMode = useThemeStore((s) => s.mode);
+  const setThemeMode = useThemeStore((s) => s.setMode);
 
   const [name, setName] = useState(account?.name ?? "");
   const [language, setLanguage] = useState(coerceLang(account?.language));
@@ -100,6 +103,29 @@ export function SettingsPage() {
               {t("settings.save")}
             </Button>
           </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("settings.appearance")}</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <FormField label={t("settings.theme")} hint={t("settings.themeHint")}>
+            {({ id }) => (
+              <Select
+                id={id}
+                value={themeMode}
+                options={THEME_MODES.map((mode) => ({
+                  value: mode,
+                  label: t(`theme.${mode}`),
+                }))}
+                onChange={(e) => {
+                  setThemeMode(e.target.value as ThemeMode);
+                }}
+              />
+            )}
+          </FormField>
         </CardBody>
       </Card>
 

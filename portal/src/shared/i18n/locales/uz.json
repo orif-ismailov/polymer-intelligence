@@ -318,7 +318,10 @@
     "save": "O‘zgarishlarni saqlash",
     "saved": "O‘zgarishlar saqlandi",
     "logout": "Hisobdan chiqish",
-    "logoutConfirm": "Rostdan ham chiqmoqchimisiz?"
+    "logoutConfirm": "Rostdan ham chiqmoqchimisiz?",
+    "appearance": "Ko‘rinish",
+    "theme": "Mavzu",
+    "themeHint": "Standart holatda — to‘q mavzu. «Tizim bo‘yicha» qurilma sozlamasiga mos keladi."
   },
   "companyStatus": {
     "draft": "Qoralama",
@@ -389,6 +392,11 @@
     "ru": "Русский",
     "uz": "O‘zbekcha",
     "en": "English"
+  },
+  "theme": {
+    "dark": "To‘q",
+    "light": "Yorug‘",
+    "system": "Tizim bo‘yicha"
   },
   "inquiryStatus": {
     "pending": "Moderatsiyada",

@@ -3,55 +3,86 @@
 @tailwind utilities;
 
 /*
- * Design tokens. Consumed by tailwind.config.ts (color/radius names read these
- * vars), so theming is a single `data-theme` flip on <html>. Light is the only
- * theme shipped today; the dark block is kept as the extension seam.
+ * Design tokens — the IMEX AI design system (P0, sampled from docs/new-design/).
+ * Consumed by tailwind.config.ts (color/radius/shadow names read these vars), so
+ * theming is a single `data-theme` flip on <html>.
+ *
+ * DARK IS THE DEFAULT (the mockups are a dark product); light is the secondary
+ * theme, recoloured to the same green brand rather than designed separately.
+ *
+ * Rule for every screen: never write a hex value or a stock Tailwind palette
+ * class (`blue-600`, `slate-800`, …) in a component. A new colour is a new token
+ * here. See docs/design-system.md.
+ *
+ * Palette reference (dark):
+ *   #070907 bg          near-black graphite, faint green undertone
+ *   #101512 surface     card
+ *   #171D19 surface-2   inset / hover
+ *   #232B26 border      hairline, green-grey
+ *   #22C55E brand       neon green (mockup CTAs)
+ *   #052E10 brand-fg    DARK label on the green buttons (per mockups)
+ *   #EAB308 gold        Laboratory Verified / premium / mid-flow steps
  */
 :root,
-[data-theme="light"] {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
-  --surface-2: #f1f3f5;
-  --border: #e3e6ea;
-  --border-strong: #ccd2d9;
-  --text: #101418;
-  --text-muted: #5b6470;
-  --text-subtle: #98a1ac;
-
-  --brand: #2563eb;
-  --brand-fg: #ffffff;
-
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
-  --info: #2563eb;
-
-  --radius-lg: 0.75rem;
-  --radius-md: 0.5rem;
-  --radius-sm: 0.375rem;
-
-  color-scheme: light;
-}
-
 [data-theme="dark"] {
-  --bg: #0b0f14;
-  --surface: #12171e;
-  --surface-2: #1a212a;
-  --border: #232c37;
-  --border-strong: #33404f;
-  --text: #e8edf3;
-  --text-muted: #9aa5b1;
-  --text-subtle: #6b7684;
+  --bg: #070907;
+  --surface: #101512;
+  --surface-2: #1a211c;
+  /* Form controls sit *below* the card they live in (mockups inset them). */
+  --surface-inset: #0a0d0b;
+  --border: #2b342e;
+  --border-strong: #3e4a43;
+  --text: #e9efea;
+  --text-muted: #9aa59d;
+  --text-subtle: #6d7873;
 
-  --brand: #3b82f6;
-  --brand-fg: #0b0f14;
+  --brand: #22c55e;
+  --brand-fg: #052e10;
+
+  --accent-gold: #eab308;
+  --accent-gold-fg: #241a00;
 
   --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
+  --warning: #eab308;
+  --danger: #f05252;
+  --info: #58b8f0;
+
+  /* Accent glow behind brand CTAs / active nav — mockups light the green up. */
+  --brand-glow: 0 0 24px color-mix(in srgb, var(--brand) 35%, transparent);
+
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
 
   color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f5f8f6;
+  --surface: #ffffff;
+  --surface-2: #eef2ef;
+  --surface-inset: #f7faf8;
+  --border: #dfe6e1;
+  --border-strong: #c3ccc6;
+  --text: #0d1210;
+  --text-muted: #515c56;
+  --text-subtle: #78837d;
+
+  /* Same brand hue, darkened until white labels clear AA (4.5:1) on the fill. */
+  --brand: #0f7a37;
+  --brand-fg: #ffffff;
+
+  --accent-gold: #8a6100;
+  --accent-gold-fg: #ffffff;
+
+  --success: #157f3c;
+  --warning: #8a6100;
+  --danger: #b91c1c;
+  --info: #1d6fa5;
+
+  --brand-glow: 0 0 20px color-mix(in srgb, var(--brand) 22%, transparent);
+
+  color-scheme: light;
 }
 
 html,
@@ -72,4 +103,17 @@ body {
 /* Consistent focus visuals across custom controls. */
 :focus-visible {
   outline: none;
+}
+
+@layer utilities {
+  /*
+   * Figures that get compared column-to-column (prices, MOQ, volumes, metric
+   * tiles) must not jitter as digits change. Declared here rather than relying
+   * on Tailwind's `tabular-nums` so the design system owns the rule and it is
+   * present regardless of which components happen to reference it.
+   */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
 }

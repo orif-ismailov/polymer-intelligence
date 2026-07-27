@@ -9,6 +9,15 @@ export const ACTIVE_COMPANY_KEY = "portal.activeCompanyId";
 /** localStorage key for the UI language preference. */
 export const LANGUAGE_KEY = "portal.language";
 
+/**
+ * localStorage key for the colour-theme preference.
+ *
+ * Also read by the inline bootstrap script in `index.html` — it sets
+ * `data-theme` before first paint to avoid a flash of the wrong theme. Change
+ * this constant and that script together.
+ */
+export const THEME_KEY = "portal.theme";
+
 /** OTP code length the backend issues. */
 export const OTP_CODE_LENGTH = 6;
 

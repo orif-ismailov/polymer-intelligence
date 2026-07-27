@@ -318,7 +318,10 @@
     "save": "Save changes",
     "saved": "Changes saved",
     "logout": "Log out",
-    "logoutConfirm": "Are you sure you want to log out?"
+    "logoutConfirm": "Are you sure you want to log out?",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeHint": "Dark is the default. “System” follows your device setting."
   },
   "companyStatus": {
     "draft": "Draft",
@@ -389,6 +392,11 @@
     "ru": "Русский",
     "uz": "O‘zbekcha",
     "en": "English"
+  },
+  "theme": {
+    "dark": "Dark",
+    "light": "Light",
+    "system": "System"
   },
   "inquiryStatus": {
     "pending": "Pending",

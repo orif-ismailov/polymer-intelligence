@@ -15,6 +15,7 @@ const config: Config = {
         surface: {
           DEFAULT: "var(--surface)",
           2: "var(--surface-2)",
+          inset: "var(--surface-inset)",
         },
         border: {
           DEFAULT: "var(--border)",
@@ -31,10 +32,19 @@ const config: Config = {
           soft: "color-mix(in srgb, var(--brand) 14%, transparent)",
           line: "color-mix(in srgb, var(--brand) 35%, transparent)",
         },
+        gold: {
+          DEFAULT: "var(--accent-gold)",
+          fg: "var(--accent-gold-fg)",
+          soft: "color-mix(in srgb, var(--accent-gold) 14%, transparent)",
+          line: "color-mix(in srgb, var(--accent-gold) 38%, transparent)",
+        },
         success: "var(--success)",
         warning: "var(--warning)",
         danger: "var(--danger)",
         info: "var(--info)",
+      },
+      boxShadow: {
+        glow: "var(--brand-glow)",
       },
       borderRadius: {
         lg: "var(--radius-lg)",
