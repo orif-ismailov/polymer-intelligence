@@ -16,7 +16,8 @@ Two rules are enforced on every move and they are separate concerns:
   * **Who** may drive one — `allowed_actors`. A seller declares the shipment, a
     buyer confirms delivery, either side may cancel or dispute, and only
     `system` may assert the statuses that follow from an event (contract
-    activated, escrow funded, funds released). Only staff leaves a dispute.
+    activated, escrow opened, escrow funded, funds released). Only staff leaves
+    a dispute.
 
 FR-D8: a unilateral cancel is allowed strictly BEFORE `paid_escrow`. Once money
 is in escrow the way out is a dispute, which staff resolve by restoring a
@@ -116,9 +117,11 @@ _ACTOR_RULES: dict[DealStatus, frozenset[DealActorKind]] = {
     DealStatus.negotiation: frozenset({DealActorKind.system}),
     DealStatus.contract_pending: frozenset({DealActorKind.system}),
     DealStatus.contract_signed: frozenset({DealActorKind.system}),
-    # P3 replaces this with an automatic step; until then staff may move a signed
-    # deal to payment_pending by hand.
-    DealStatus.payment_pending: frozenset({DealActorKind.staff, DealActorKind.system}),
+    # P3: `escrow_service.open_for_deal` raises the invoice and moves the deal in
+    # the same transaction, so this is `system` only — a deal can never be
+    # "awaiting payment" without an escrow payment behind it. (Staff still RESTORE
+    # a disputed deal here; that path goes through `allowed_actors` above.)
+    DealStatus.payment_pending: frozenset({DealActorKind.system}),
     DealStatus.paid_escrow: frozenset({DealActorKind.system}),
     DealStatus.shipped: frozenset({DealActorKind.seller}),
     DealStatus.delivered: frozenset({DealActorKind.buyer}),

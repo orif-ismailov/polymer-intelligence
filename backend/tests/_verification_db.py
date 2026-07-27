@@ -30,6 +30,9 @@ requires_real_db = pytest.mark.skipif(
 _TABLES = [
     "domain_events",
     "audit_log",
+    "provider_events",
+    # Payments before deals — escrow_payments.deal_id references them.
+    "escrow_payments",
     # Deals before contracts/requests/offers — deals.contract_id references them.
     "rfq_responses",
     "deal_documents",

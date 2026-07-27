@@ -114,15 +114,21 @@ class TestActorRules:
         assert {"buyer", "seller"} <= _actors("paid_escrow", "disputed")
 
     def test_money_and_signature_statuses_are_system_only(self) -> None:
-        """These are consequences of events (contract activated, escrow funded,
-        funds released) — never something a hand-written HTTP call may assert.
+        """These are consequences of events (contract activated, escrow opened,
+        escrow funded, funds released) — never something a hand-written HTTP call
+        may assert.
+
+        `payment_pending` joined this list in P3: while there was no escrow, staff
+        moved a signed deal on by hand; now `escrow_service.open_for_deal` does it
+        together with creating the payment, so a deal can never be "awaiting
+        payment" without an invoice behind it.
 
         Dispute resolution is excluded on purpose: staff RESTORING a deal to the
         status it already held is a different act from asserting that status for
         the first time, and it is staff-only by the rule above.
         """
         table = _table()
-        for to in ("contract_signed", "paid_escrow", "completed"):
+        for to in ("contract_signed", "payment_pending", "paid_escrow", "completed"):
             sources = [
                 frm
                 for frm, targets in table.items()
