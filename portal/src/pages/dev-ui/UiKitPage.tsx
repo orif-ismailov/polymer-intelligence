@@ -103,7 +103,9 @@ export function UiKitPage() {
           <Button variant="outline">Связаться с продавцом</Button>
           <Button variant="secondary">Изменить заявку</Button>
           <Button variant="ghost">Отмена</Button>
-          <Button variant="danger">Выйти</Button>
+          <Button variant="danger" data-testid="ui-button-danger">
+            Выйти
+          </Button>
           <Button data-testid="ui-button-disabled" disabled>
             Сохранить изменения
           </Button>

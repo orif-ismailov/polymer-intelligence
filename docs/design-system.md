@@ -188,3 +188,101 @@ accent semantics** (§4). Where the two sheets disagree, the resolution and the 
 | New surfaces | — | "Как это работает?", "Чат-поддержка", seller "Проверка и публикация", "Общий чат" | `pages/HowItWorks.tsx`, `pages/Support.tsx`, seller wizard step 4 review; "Общий чат" listing feed = the Маркет catalog | — |
 
 Copy is verbatim from the sheets, in `webapp/src/i18n/{ru,uz,tr,en}.json` (ru = source of truth).
+
+---
+
+# Part II — IMEX AI portal (`portal/`)
+
+> Added by `.planning/deal-lifecycle/P0-DESIGN-SYSTEM.md`. **Scope: `portal/` only.**
+> Everything above (Part I) governs `webapp/` (frozen) and `dashboard/` (internal, not
+> restyled) and is unchanged. The portal is the client-facing surface and follows the
+> IMEX AI mockups in **`docs/new-design/`** (7 sheets + README catalog).
+
+## P1. Principles
+
+Dark-first, near-black graphite with a **neon-green** brand and a **gold** accent for
+lab/premium marks. Data-dense but airy: large radii, hairline borders, tabular figures,
+one bright accent per view. **Dark is the default theme**; light is the secondary theme,
+recoloured to the same brand rather than designed separately.
+
+## P2. Colour tokens
+
+Declared in `portal/src/app/styles.css`; `portal/tailwind.config.ts` maps utility names onto
+them, so a theme is one `data-theme` flip on `<html>`.
+
+| Token | Dark (default) | Light | Use |
+|---|---|---|---|
+| `--bg` | `#070907` | `#f5f8f6` | page canvas |
+| `--surface` | `#101512` | `#ffffff` | card |
+| `--surface-2` | `#1a211c` | `#eef2ef` | raised / hover / secondary button |
+| `--surface-inset` | `#0a0d0b` | `#f7faf8` | form wells (inputs sit *below* their card) |
+| `--border` | `#2b342e` | `#dfe6e1` | hairline |
+| `--border-strong` | `#3e4a43` | `#c3ccc6` | outline-button border |
+| `--text` | `#e9efea` | `#0d1210` | body text, values |
+| `--text-muted` | `#9aa59d` | `#515c56` | labels, captions |
+| `--text-subtle` | `#848f89` | `#616b65` | meta lines, placeholders |
+| `--brand` | `#22c55e` | `#0d6e31` | CTAs, prices, active nav, links |
+| `--brand-fg` | `#052e10` | `#ffffff` | label **on** the brand fill |
+| `--accent-gold` | `#eab308` | `#8a6100` | Laboratory Verified, premium, in-flight steps |
+| `--accent-gold-fg` | `#241a00` | `#ffffff` | label on the gold fill |
+| `--success` / `--warning` / `--danger` / `--info` | `#22c55e` / `#eab308` / `#f05252` / `#58b8f0` | `#157f3c` / `#8a6100` / `#b91c1c` / `#1d6fa5` | status |
+| `--danger-fg` | `#2b0505` | `#ffffff` | label on the danger fill |
+| `--overlay` | `rgb(0 0 0 / .62)` | `rgb(9 14 11 / .45)` | modal + drawer scrim |
+| `--brand-glow` | `0 0 24px` brand@35% | `0 0 20px` brand@22% | glow under accent CTAs (`shadow-glow`) |
+| `--radius-lg` / `-md` / `-sm` | `1rem` / `.75rem` / `.5rem` | same | cards / controls / chips |
+
+Derived Tailwind names: `brand-soft` / `brand-line` (brand at 14% / 35%), `gold-soft` /
+`gold-line`, `surface-inset`, `shadow-glow`, `.num`.
+
+Values are not arbitrary — every one is pinned by the contrast test in P5. In light theme
+`--brand` is darker than the mockups' neon so that **both** white-on-fill and
+brand-as-text-on-`brand-soft` clear AA.
+
+## P3. Rules for new screens
+
+1. **No colour literals.** No hex, no stock Tailwind palette (`blue-600`, `slate-800`), no
+   `text-white`. A new colour is a new token in `styles.css` + `tailwind.config.ts`.
+   *Watch for silently-dead classes:* `accent` was referenced 17 times across 11 files
+   without ever being defined, so those hovers and focus rings rendered as nothing.
+   If a colour class does not visibly change anything, check it exists in the config.
+2. **Compose from `shared/ui`.** Don't restyle a primitive at the call site; add a variant
+   to it. Semantic props over colour props: `<Badge variant="verified">`, not
+   `<Badge tone="success" icon={…}>`.
+3. **Figures use `.num`** (tabular) wherever numbers are compared down a column — prices,
+   MOQ, volumes, metric tiles, timestamps.
+4. **Both themes, every time.** Check light too; it is secondary, not optional.
+5. **Restart the dev server after touching `tailwind.config.ts`.** Vite does not always pick
+   up config changes, and a missing utility fails *silently* — the class stays on the element
+   and the property just falls back (this is how `text-danger-fg` shipped a 2.98:1 button
+   through a passing token test).
+
+## P4. Primitive catalog (`portal/src/shared/ui`)
+
+| Primitive | Notes |
+|---|---|
+| `Button` | `primary` (brand fill, dark label, glow on hover) · `outline` (the mockups' partner CTA) · `secondary` · `ghost` · `danger`. Disabled is a **neutral** surface, never a faded fill. |
+| `Badge` | `variant`: `verified` · `lab-verified` (gold) · `in-stock` · `on-order`, each with its glyph; or plain `tone`. Never wraps. |
+| `Card` | `variant="accent"` for the mockups' brand-outlined module cards. |
+| `Stepper` | Horizontal wizard progress: ticks for done, filled glowing disc for active. |
+| `StatusStepper` | Vertical timeline for long processes (contract signing, escrow, deal): green done, gold in flight, hollow pending. `data-state` per row. |
+| `StatChip` | Metric tile (`50 000+` / label), tabular. |
+| `ProgressRing` | Circular dial (AI-check screens); a real `progressbar` for AT. |
+| `BottomNav` | Phone-only bottom bar; the shell wires it in `widgets/app-shell/MobileNav`. Screens it covers need bottom padding. |
+| `BrandLogo` | IMEX AI lockup. **Interim** — swap the `<svg>` when the operator delivers the vector. |
+| `icons.tsx` | The glyph set the primitives need. The portal ships no icon dependency. |
+
+## P5. Enforcement
+
+The portal has no unit-test runner, so the design system is pinned by Playwright:
+
+- `portal/e2e/p0-design-system.spec.ts` — dark-is-default, the green brand family, the
+  surface elevation ladder, switcher persistence, `.num`, and **WCAG AA on every token pair
+  we paint with, in both themes**.
+- `portal/e2e/p0-ui-kit.spec.ts` — every primitive rendered on the DEV-only gallery at
+  **`/dev/ui`**, asserting variants resolve to their tokens and that *rendered* badge and
+  button labels clear AA (token maths alone cannot see a rule that never reached the element).
+- `/dev/ui` is also the fastest way to eyeball a token change against the mockups.
+
+axe-core (`wcag2a` + `wcag2aa`) run on `/login`, `/market`, `/companies/:id` and `/dev/ui` in
+both themes: **0 violations**. Two were found and fixed during P0 — `--text-subtle` at 4.02:1
+on cards, and brand-on-`brand-soft` badges at 4.19:1 in light theme.

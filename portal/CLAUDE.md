@@ -63,6 +63,22 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   `cabinet.ai-imex.com` (no CORS). Don't hardcode absolute API URLs.
 - **Enforcement is badge-only in R1**: publishing requires a *verified* company (backend 403
   `company_not_verified`), surfaced as a locked offer form. No other gates are flipped.
+- **Design system (P0 — `docs/design-system.md` Part II).** The portal follows the IMEX AI
+  mockups in `docs/new-design/`; **dark is the default theme**, light is secondary.
+  - Build screens from `shared/ui` primitives and tokens **only**. No hex, no stock Tailwind
+    palette (`blue-600`, `slate-800`), no `text-white` — a new colour is a new token in
+    `src/app/styles.css` + `tailwind.config.ts`, never an inline value. Need a new look for a
+    primitive? Add a variant to the primitive, don't restyle it at the call site.
+  - Prefer semantic props: `<Badge variant="verified">` over hand-picking tone + icon.
+  - Numbers that line up in a column (prices, MOQ, volumes, metrics) get `.num`.
+  - A colour class that changes nothing on screen probably **doesn't exist** in the config —
+    that failure mode is silent. Same for a utility added to `tailwind.config.ts` without
+    restarting `npm run dev`.
+  - `/dev/ui` (DEV builds only) renders the whole kit on one page; it's both the visual
+    reference and the fixture for `e2e/p0-ui-kit.spec.ts`. Add new primitives there.
+  - The two `e2e/p0-*.spec.ts` specs gate the system (dark default, token contrast in both
+    themes, rendered-label AA, primitive semantics). Keep them green; extend them when you
+    add tokens or variants.
 
 ## Deploy
 

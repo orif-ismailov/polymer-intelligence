@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 
-import { useTranslation } from "react-i18next";
+import { BrandLogo } from "@/shared/ui";
 
 import { LanguageMenu } from "./LanguageMenu";
 
@@ -12,16 +12,10 @@ interface AuthLayoutProps {
 
 /** Centered card layout shared by the login + OTP screens. */
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
-  const { t } = useTranslation();
   return (
     <div className="flex min-h-screen flex-col bg-bg text-text">
       <header className="flex items-center justify-between px-4 py-4">
-        <div className="flex items-center gap-2 font-semibold">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand text-sm text-brand-fg">
-            IA
-          </span>
-          <span>{t("common.appName")}</span>
-        </div>
+        <BrandLogo withTagline />
         <LanguageMenu />
       </header>
 

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { NotificationBell } from "@/features/notification-center";
 import { CompanySwitcher } from "@/features/switch-company";
+import { BrandLogo } from "@/shared/ui";
 
 interface TopbarProps {
   onOpenMenu: () => void;
@@ -12,7 +13,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   const { t } = useTranslation();
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
         <button
           type="button"
           aria-label={t("nav.home")}
@@ -24,11 +25,8 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           </svg>
         </button>
 
-        <Link to="/" className="flex items-center gap-2 font-semibold text-text">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand text-sm text-brand-fg">
-            IA
-          </span>
-          <span className="hidden sm:inline">{t("common.appName")}</span>
+        <Link to="/" aria-label={t("common.appName")} className="flex items-center">
+          <BrandLogo className="[&>span:last-child]:hidden sm:[&>span:last-child]:block" />
         </Link>
 
         <div className="ml-auto flex items-center gap-3">

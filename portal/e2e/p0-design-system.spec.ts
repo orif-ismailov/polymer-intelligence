@@ -76,6 +76,7 @@ const THEME_TOKENS = [
   "--border",
   "--text",
   "--text-muted",
+  "--text-subtle",
   "--brand",
   "--brand-fg",
   "--accent-gold",
@@ -168,8 +169,11 @@ test("token colour pairs meet WCAG AA in both themes", async ({ page }) => {
 
     const tk = await readTokens(page, THEME_TOKENS);
 
-    // Body text and muted text on both surface levels — AA normal text (4.5:1).
-    for (const fg of ["--text", "--text-muted"] as const) {
+    // Body / muted / subtle text on every surface level — AA normal text (4.5:1).
+    // `--text-subtle` is in here because it paints real content (card meta lines,
+    // hints) and not just placeholders: an axe run caught it at 4.02:1 on cards
+    // while this spec still passed, because the token was not covered.
+    for (const fg of ["--text", "--text-muted", "--text-subtle"] as const) {
       for (const bgToken of ["--bg", "--surface", "--surface-2"] as const) {
         expect(
           contrastRatio(tk[fg], tk[bgToken]),

@@ -13,6 +13,7 @@ export { Label } from "./Label";
 export { FormField } from "./FormField";
 export { Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter } from "./Card";
 export type { CardVariant } from "./Card";
+export { BrandLogo } from "./BrandLogo";
 export { Badge } from "./Badge";
 export type { BadgeTone, BadgeVariant } from "./Badge";
 export { Alert } from "./Alert";

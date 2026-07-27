@@ -63,6 +63,47 @@ function rgbKey(raw: string): string {
   return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)).join(",");
 }
 
+// ── colour maths (shared shape with p0-design-system.spec.ts) ────────────────
+
+interface Rgba {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+function parseRgba(raw: string): Rgba {
+  const key = rgbKey(raw);
+  const [r, g, b] = key.split(",").map(Number);
+  const alpha = /^(?:rgba\([^)]*?[\s,]\/?\s*|color\(srgb[^/)]*\/\s*)([\d.]+)\s*\)/.exec(raw.trim());
+  const legacy = /^rgba\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*,\s*([\d.]+)/.exec(raw.trim());
+  return { r, g, b, a: Number(alpha?.[1] ?? legacy?.[1] ?? 1) };
+}
+
+/** Flatten a translucent colour over an opaque backdrop. */
+function composite(fore: string, backdrop: string): string {
+  const f = parseRgba(fore);
+  const b = parseRgba(backdrop);
+  const mix = (x: number, y: number): number => Math.round(x * f.a + y * (1 - f.a));
+  return `rgb(${mix(f.r, b.r)}, ${mix(f.g, b.g)}, ${mix(f.b, b.b)})`;
+}
+
+function relativeLuminance(color: string): number {
+  const { r, g, b } = parseRgba(color);
+  const ch = (raw: number): number => {
+    const c = raw / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b);
+}
+
+function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  const [hi, lo] = la > lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 test.beforeEach(async ({ page }) => {
   // The gallery needs no session, but the app's boot-time silent refresh does:
   // for an anonymous visitor it 401s and the fetch client hard-navigates to
@@ -124,6 +165,50 @@ test("badge variants cover the mockup set and use their own tokens", async ({ pa
 
   // The verified badge carries the mockups' check mark.
   await expect(page.getByTestId("ui-badge-verified").locator("svg")).toBeVisible();
+});
+
+// ── T2.1 — badges are legible on their own tinted fill, in BOTH themes ───────
+
+test("badge label contrast clears AA on every tinted variant and tone", async ({ page }) => {
+  // Buttons are in here too, on purpose. The token-level contrast spec only
+  // proves the *pairs* are sound; it cannot see a label colour that never
+  // reaches the element. `text-danger-fg` did exactly that — the class was on
+  // the button while its rule was missing, so the label fell back to body text
+  // on a red fill at 2.98:1. Measuring what the browser actually painted is the
+  // only check that catches it.
+  const ids = [
+    "ui-badge-verified",
+    "ui-badge-lab",
+    "ui-badge-in-stock",
+    "ui-badge-on-order",
+    "ui-button-primary",
+    "ui-button-danger",
+    "ui-button-disabled",
+  ] as const;
+
+  for (const theme of ["dark", "light"] as const) {
+    // Go through the stored preference so the app's own bootstrap applies it —
+    // poking `data-theme` from a test gets reverted by ThemeProvider on re-render,
+    // which quietly makes an assertion measure the wrong theme.
+    await page.evaluate((t) => localStorage.setItem("portal.theme", t), theme);
+    await page.goto(GALLERY);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+
+    for (const id of ids) {
+      const { fg, bg } = await page.getByTestId(id).evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { fg: s.color, bg: s.backgroundColor };
+      });
+      // Tinted fills are translucent, so the effective backdrop is the card
+      // behind them; compose the badge tint over it before measuring.
+      const surface = await token(page, "--surface");
+      expect(contrastRatio(fg, composite(bg, surface)), `${theme}: ${id}`).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
+  }
+
+  await page.evaluate(() => localStorage.setItem("portal.theme", "dark"));
 });
 
 // ── T2.1 — Card accent: the thin green outline from the module cards ─────────

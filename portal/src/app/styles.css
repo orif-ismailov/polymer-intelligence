@@ -34,7 +34,7 @@
   --border-strong: #3e4a43;
   --text: #e9efea;
   --text-muted: #9aa59d;
-  --text-subtle: #6d7873;
+  --text-subtle: #848f89;
 
   --brand: #22c55e;
   --brand-fg: #052e10;
@@ -70,10 +70,14 @@
   --border-strong: #c3ccc6;
   --text: #0d1210;
   --text-muted: #515c56;
-  --text-subtle: #78837d;
+  --text-subtle: #616b65;
 
-  /* Same brand hue, darkened until white labels clear AA (4.5:1) on the fill. */
-  --brand: #0f7a37;
+  /*
+   * Same brand hue, darkened until it clears AA both ways in light theme: white
+   * labels on the solid fill, AND brand-as-text on the 14% `brand-soft` tint used
+   * by badges (that pairing sat at 4.19:1 before this step — axe caught it).
+   */
+  --brand: #0d6e31;
   --brand-fg: #ffffff;
 
   --accent-gold: #8a6100;
