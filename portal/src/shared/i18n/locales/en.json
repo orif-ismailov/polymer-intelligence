@@ -775,7 +775,8 @@
         "funded": "Funds held",
         "released": "Released to the seller",
         "refunded": "Refunded to the buyer"
-      }
+      },
+      "refundCause": "The funds were refunded to the buyer through escrow."
     }
   },
   "rfq": {

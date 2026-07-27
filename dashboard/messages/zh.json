@@ -1038,6 +1038,17 @@
         "no_amount": "金额未议定",
         "not_opened_yet": "尚未开具账单"
       }
+    },
+    "modeValue": {
+      "stub": "由运营人员手动确认",
+      "live": "银行接口"
+    },
+    "errors": {
+      "release_before_delivery": "只有在买方确认收货后才能向卖方放款。",
+      "deal_transition_blocked": "该交易无法进入此状态。如需退款，请先就该交易发起争议。",
+      "invalid_transition": "该付款状态变更不可行——请刷新页面查看当前状态。",
+      "confirmation_required": "请勾选确认资金确已发生流动。",
+      "note_required": "备注为必填项。"
     }
   }
 }

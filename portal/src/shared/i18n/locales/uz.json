@@ -775,7 +775,8 @@
         "funded": "Mablag‘ zaxiraga olindi",
         "released": "Sotuvchiga o‘tkazildi",
         "refunded": "Xaridorga qaytarildi"
-      }
+      },
+      "refundCause": "Mablag‘ eskrou orqali xaridorga qaytarildi."
     }
   },
   "rfq": {

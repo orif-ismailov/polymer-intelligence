@@ -24,6 +24,13 @@ import type { StatusStep } from "@/shared/ui";
 
 type Tab = "chat" | "documents" | "timeline" | "contract" | "escrow";
 
+/**
+ * Marker the backend writes into `cancelled_reason` when escrow refunded the
+ * money (`escrow_service.REFUND_REASON`). It is machine-readable on purpose —
+ * strip it here rather than showing a client raw developer-speak.
+ */
+const REFUND_MARKER = "escrow_refund: ";
+
 /** The happy path, in order. Side exits (cancelled/disputed) are not steps. */
 const FLOW: DealStatus[] = [
   "negotiation",
@@ -92,9 +99,19 @@ export function DealDetailPage() {
   const deal = query.data;
   const refresh = () => void query.refetch();
 
-  // The stepper stops at whatever the deal actually reached; a deal that ended
-  // early simply has fewer done steps, and the banner explains why.
-  const reached = FLOW.indexOf(deal.status);
+  // The stepper stops at whatever the deal actually reached. A cancelled or
+  // disputed deal is not on the happy path at all, but it is not "nowhere"
+  // either — a buyer whose money was held and refunded must not be shown an
+  // empty track, so fall back to the furthest happy-path status its timeline
+  // actually recorded.
+  const onPath = FLOW.indexOf(deal.status);
+  const reached =
+    onPath >= 0
+      ? onPath
+      : Math.max(
+          -1,
+          ...deal.timeline.map((entry) => FLOW.indexOf(entry.to_status)),
+        );
   const steps: StatusStep[] = FLOW.map((status, index) => ({
     id: status,
     label: t(`deals.status.${status}`),
@@ -118,7 +135,9 @@ export function DealDetailPage() {
 
       {deal.status === "cancelled" && deal.cancelled_reason ? (
         <Alert tone="danger" title={t("deals.cancelledTitle")}>
-          {deal.cancelled_reason}
+          {deal.cancelled_reason.startsWith(REFUND_MARKER)
+            ? `${t("deals.escrow.refundCause")} ${deal.cancelled_reason.slice(REFUND_MARKER.length)}`
+            : deal.cancelled_reason}
         </Alert>
       ) : null}
       {deal.status === "disputed" ? (

@@ -1053,6 +1053,17 @@
         "no_amount": "Summa kelishilmagan",
         "not_opened_yet": "Hisob-faktura hali chiqarilmagan"
       }
+    },
+    "modeValue": {
+      "stub": "operator qo‘lda tasdiqlaydi",
+      "live": "bank adapteri"
+    },
+    "errors": {
+      "release_before_delivery": "Sotuvchiga to‘lash faqat xaridor qabul qilishni tasdiqlagandan keyin mumkin.",
+      "deal_transition_blocked": "Bitim bu holatga o‘ta olmaydi. Mablag‘ni qaytarish uchun avval bitim bo‘yicha nizo oching.",
+      "invalid_transition": "To‘lovning bunday o‘tishi mumkin emas — sahifani yangilab, joriy holatni tekshiring.",
+      "confirmation_required": "Mablag‘ning haqiqiy harakatini tasdiqlang.",
+      "note_required": "Izoh majburiy."
     }
   }
 }

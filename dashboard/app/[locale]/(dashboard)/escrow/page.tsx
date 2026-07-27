@@ -22,7 +22,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Banknote } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { formatTashkent } from "@/lib/tz";
 
@@ -78,6 +78,9 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function EscrowPage() {
   const t = useTranslations("escrow");
+  // The deal's own status is named in the deals namespace — reuse it rather than
+  // translating the same ten statuses twice, or showing the raw enum value.
+  const tDeal = useTranslations("deals");
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -107,8 +110,25 @@ export default function EscrowPage() {
       setError(null);
       void queryClient.invalidateQueries({ queryKey: ["admin-escrow"] });
     },
-    onError: (err: unknown) => setError(err instanceof Error ? err.message : String(err)),
+    onError: (err: unknown) => setError(reasonOf(err)),
   });
+
+  /**
+   * The API answers a refused mark with a specific reason — "you cannot release
+   * before the buyer confirms delivery", "this refund needs the deal disputed
+   * first". A bare "409 Conflict" tells an operator holding a bank statement
+   * nothing about what to do next, so translate the reason when we recognise it.
+   */
+  function reasonOf(err: unknown): string {
+    const detail =
+      err instanceof ApiError && err.body && typeof err.body === "object"
+        ? (err.body as { detail?: unknown }).detail
+        : null;
+    if (typeof detail === "string" && t.has(`errors.${detail}`)) {
+      return t(`errors.${detail}`);
+    }
+    return err instanceof Error ? err.message : String(err);
+  }
 
   const data = listQuery.data;
   const isAdmin = user?.role === "admin";
@@ -216,8 +236,8 @@ export default function EscrowPage() {
                 {current.amount} {current.currency}
               </p>
               <dl className="space-y-1 text-xs text-foreground-muted">
-                <Row label={t("dealStatus")} value={current.deal_status} />
-                <Row label={t("mode")} value={current.mode} />
+                <Row label={t("dealStatus")} value={tDeal(`status.${current.deal_status}`)} />
+                <Row label={t("mode")} value={t(`modeValue.${current.mode}`)} />
                 {current.funded_at ? (
                   <Row label={t("fundedAt")} value={formatTashkent(current.funded_at)} />
                 ) : null}
@@ -284,7 +304,9 @@ export default function EscrowPage() {
       {/* Signed deals with no escrow. The outbox consumer only logs these, so
           without this list they would sit invisible at contract_signed. */}
       {data?.blocked.length ? (
-        <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50/50 p-4">
+        /* Amber border, not an amber FILL: the dashboard theme is dark, and a
+           light amber panel washes the muted body text out to unreadable. */
+        <div className="mt-6 rounded-lg border border-amber-500/50 bg-background-secondary p-4">
           <h2 className="mb-1 font-medium">{t("blocked.title")}</h2>
           <p className="mb-2 text-xs text-foreground-muted">{t("blocked.hint")}</p>
           <ul className="space-y-1">
@@ -294,7 +316,7 @@ export default function EscrowPage() {
                 <span className="text-foreground-muted">
                   {b.buyer_name} → {b.seller_name}
                 </span>
-                <span className="text-amber-700">{t(`blocked.reason.${b.reason}`)}</span>
+                <span className="text-amber-400">{t(`blocked.reason.${b.reason}`)}</span>
               </li>
             ))}
           </ul>

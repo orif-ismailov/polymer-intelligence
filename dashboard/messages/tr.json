@@ -1053,6 +1053,17 @@
         "no_amount": "Tutar mutabık değil",
         "not_opened_yet": "Fatura henüz kesilmedi"
       }
+    },
+    "modeValue": {
+      "stub": "operatör elle onaylar",
+      "live": "banka adaptörü"
+    },
+    "errors": {
+      "release_before_delivery": "Satıcıya ödeme ancak alıcı teslimatı onayladıktan sonra yapılabilir.",
+      "deal_transition_blocked": "İşlem bu duruma geçemez. İade için önce işlemde anlaşmazlık açın.",
+      "invalid_transition": "Ödeme için bu geçiş mümkün değil — sayfayı yenileyip mevcut durumu kontrol edin.",
+      "confirmation_required": "Paranın fiilen hareket ettiğini onaylayın.",
+      "note_required": "Not zorunludur."
     }
   }
 }
