@@ -71,7 +71,8 @@
     "requests": "Заявки",
     "inquiries": "Запросы",
     "news": "Новости",
-    "notifications": "Уведомления"
+    "notifications": "Уведомления",
+    "deals": "Сделки"
   },
   "home": {
     "title": "Обзор",
@@ -662,6 +663,145 @@
       "awaitingSignature": "Ожидает подписи: {{company}}",
       "active": "Договор подписан обеими сторонами",
       "awaiting": "Ожидается"
+    }
+  },
+  "deals": {
+    "title": "Сделки",
+    "subtitle": "Комнаты сделок: чат, документы, статусы.",
+    "empty": "Сделок пока нет",
+    "emptyBody": "Откликнитесь на заявку покупателя или примите отклик на свою.",
+    "browseRfqs": "Открытые заявки",
+    "needsAction": "Требует действия",
+    "noAmount": "Сумма не указана",
+    "progress": "Ход сделки",
+    "roleAny": "Все",
+    "cancelledTitle": "Сделка отменена",
+    "disputedTitle": "Открыт спор",
+    "disputedBody": "Спор решает команда платформы.",
+    "role": {
+      "buyer": "Покупка",
+      "seller": "Продажа"
+    },
+    "tabs": {
+      "all": "Все",
+      "action": "Требуют действия",
+      "active": "Активные",
+      "closed": "Завершённые",
+      "chat": "Чат",
+      "documents": "Документы",
+      "timeline": "Таймлайн",
+      "contract": "Договор",
+      "escrow": "Оплата"
+    },
+    "status": {
+      "negotiation": "Переговоры",
+      "contract_pending": "Ожидание договора",
+      "contract_signed": "Договор подписан",
+      "payment_pending": "Ожидание оплаты",
+      "paid_escrow": "Оплачено (эскроу)",
+      "shipped": "Отгружено",
+      "delivered": "Получено",
+      "completed": "Завершена",
+      "cancelled": "Отменена",
+      "disputed": "Спор"
+    },
+    "actor": {
+      "buyer": "покупатель",
+      "seller": "продавец",
+      "staff": "команда",
+      "system": "система"
+    },
+    "actions": {
+      "contract_pending": "Отправить договор",
+      "contract_signed": "Договор подписан",
+      "payment_pending": "К оплате",
+      "paid_escrow": "Оплачено",
+      "shipped": "Отгружено",
+      "delivered": "Получено",
+      "completed": "Завершить",
+      "cancelled": "Отменить",
+      "disputed": "Открыть спор",
+      "negotiation": "Вернуть в переговоры",
+      "reasonPlaceholder": "Укажите причину",
+      "confirm": {
+        "cancelled": "Отменить сделку?",
+        "disputed": "Открыть спор по сделке?"
+      }
+    },
+    "chat": {
+      "title": "Чат сделки",
+      "empty": "Сообщений пока нет",
+      "placeholder": "Написать сообщение…",
+      "send": "Отправить",
+      "attach": "Файл"
+    },
+    "documents": {
+      "add": "Добавить документ",
+      "kind": "Тип документа",
+      "empty": "Документов пока нет",
+      "emptyBody": "Загрузите счёт, накладную или паспорт качества.",
+      "revoked": "Отозван",
+      "revokeAction": "Отозвать",
+      "revokePrompt": "Причина отзыва документа",
+      "kinds": {
+        "contract": "Договор",
+        "invoice": "Счёт",
+        "lab_passport": "Паспорт качества",
+        "transport": "Транспортный",
+        "other": "Прочее"
+      }
+    },
+    "contract": {
+      "none": "Договор ещё не создан.",
+      "create": "Создать договор",
+      "linked": "Договор: {{status}}",
+      "open": "Открыть договор"
+    },
+    "escrow": {
+      "soon": "Эскроу-оплата появится на следующем этапе."
+    }
+  },
+  "rfq": {
+    "marketTitle": "Открытые заявки",
+    "marketSubtitle": "Заявки покупателей, на которые вы можете откликнуться.",
+    "marketEmpty": "Открытых заявок нет",
+    "marketEmptyBody": "Загляните позже — новые заявки появляются регулярно.",
+    "respond": "Откликнуться",
+    "alreadyResponded": "Отклик отправлен",
+    "submit": "Отправить отклик",
+    "price": "Цена",
+    "currency": "Валюта",
+    "qty": "Объём",
+    "qtyUnit": "Ед. изм.",
+    "incoterms": "Incoterms",
+    "incotermsAny": "Не указано",
+    "leadTime": "Срок поставки, дней",
+    "leadTimeDays": "{{count}} дн.",
+    "comment": "Комментарий",
+    "commentPlaceholder": "Условия, сроки, детали",
+    "volume": "Объём",
+    "destination": "Назначение",
+    "desiredDate": "Желаемая дата",
+    "requiredDocs": "Нужны документы",
+    "responses": "Отклики",
+    "noResponses": "Откликов пока нет",
+    "noResponsesBody": "Поставщики ещё не ответили на заявку.",
+    "accept": "Принять",
+    "acceptTitle": "Принять отклик?",
+    "acceptBody": "Будет открыта сделка с {{company}} на {{price}}. Остальные отклики будут отклонены.",
+    "openDeal": "Открыть сделку",
+    "status": {
+      "submitted": "Отправлен",
+      "accepted": "Принят",
+      "not_selected": "Не выбран",
+      "withdrawn": "Отозван"
+    },
+    "docs": {
+      "sds": "SDS",
+      "coa": "COA",
+      "origin_cert": "Сертификат происхождения",
+      "commercial_offer": "Коммерческое предложение",
+      "other": "Прочее"
     }
   }
 }

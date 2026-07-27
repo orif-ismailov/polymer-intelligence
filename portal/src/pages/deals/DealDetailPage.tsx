@@ -1,0 +1,238 @@
+import { useState } from "react";
+
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
+
+import { useActiveCompany } from "@/entities/company";
+import { DealStatusBadge, useDeal } from "@/entities/deal";
+import type { DealParty, DealStatus } from "@/entities/deal";
+import { DealActionBar, DealChat, DealDocuments } from "@/features/deal-room";
+import { cn, formatDateTime } from "@/shared/lib";
+import {
+  Alert,
+  Badge,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  ErrorView,
+  LinkButton,
+  LoadingView,
+  StatusStepper,
+} from "@/shared/ui";
+import type { StatusStep } from "@/shared/ui";
+
+type Tab = "chat" | "documents" | "timeline" | "contract" | "escrow";
+
+/** The happy path, in order. Side exits (cancelled/disputed) are not steps. */
+const FLOW: DealStatus[] = [
+  "negotiation",
+  "contract_pending",
+  "contract_signed",
+  "payment_pending",
+  "paid_escrow",
+  "shipped",
+  "delivered",
+  "completed",
+];
+
+function PartyCard({ party, label }: { party: DealParty; label: string }) {
+  const { t } = useTranslation();
+  const initials = (party.name ?? "?").slice(0, 2).toUpperCase();
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface-inset text-xs font-semibold text-text-muted">
+        {party.logo_url ? (
+          <img src={party.logo_url} alt="" className="h-full w-full object-cover" />
+        ) : (
+          initials
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-text-subtle">{label}</p>
+        <p className="truncate text-sm font-medium text-text">{party.name ?? "—"}</p>
+      </div>
+      {party.verified ? (
+        <Badge variant="verified" className="ml-auto">
+          {t("market.verified")}
+        </Badge>
+      ) : null}
+    </div>
+  );
+}
+
+export function DealDetailPage() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const params = useParams<{ dealId: string }>();
+  const dealId = Number(params.dealId);
+  const { activeCompany } = useActiveCompany();
+  const companyId = activeCompany?.id ?? null;
+
+  const query = useDeal(companyId, Number.isInteger(dealId) ? dealId : null);
+  const [tab, setTab] = useState<Tab>("chat");
+
+  if (query.isLoading) return <LoadingView label={t("common.loading")} />;
+  if (query.isError || !query.data) {
+    return (
+      <ErrorView
+        title={t("errors.loadFailed")}
+        retryLabel={t("common.retry")}
+        onRetry={() => void query.refetch()}
+      >
+        <LinkButton to="/deals">{t("deals.title")}</LinkButton>
+      </ErrorView>
+    );
+  }
+
+  const deal = query.data;
+  const refresh = () => void query.refetch();
+
+  // The stepper stops at whatever the deal actually reached; a deal that ended
+  // early simply has fewer done steps, and the banner explains why.
+  const reached = FLOW.indexOf(deal.status);
+  const steps: StatusStep[] = FLOW.map((status, index) => ({
+    id: status,
+    label: t(`deals.status.${status}`),
+    state: reached < 0 ? "pending" : index < reached ? "done" : index === reached ? "current" : "pending",
+  }));
+
+  const tabs: Tab[] = ["chat", "documents", "timeline", "contract", "escrow"];
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="num text-2xl font-semibold text-text">{deal.number}</h1>
+          <p className="mt-1 text-sm text-text-muted">
+            {t(`deals.role.${deal.role}`)} ·{" "}
+            {deal.amount ? `${deal.amount} ${deal.currency}` : t("deals.noAmount")}
+          </p>
+        </div>
+        <DealStatusBadge status={deal.status} />
+      </div>
+
+      {deal.status === "cancelled" && deal.cancelled_reason ? (
+        <Alert tone="danger" title={t("deals.cancelledTitle")}>
+          {deal.cancelled_reason}
+        </Alert>
+      ) : null}
+      {deal.status === "disputed" ? (
+        <Alert tone="warning" title={t("deals.disputedTitle")}>
+          {t("deals.disputedBody")}
+        </Alert>
+      ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardBody className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <PartyCard party={deal.buyer} label={t("deals.role.buyer")} />
+              <PartyCard party={deal.seller} label={t("deals.role.seller")} />
+            </div>
+            <div className="border-t border-border pt-4">
+              <DealActionBar companyId={companyId as number} deal={deal} onChanged={refresh} />
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("deals.progress")}</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <StatusStepper steps={steps} />
+          </CardBody>
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap gap-2 border-b border-border">
+        {tabs.map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTab(id)}
+            aria-pressed={tab === id}
+            className={cn(
+              "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+              tab === id
+                ? "border-brand text-brand"
+                : "border-transparent text-text-muted hover:text-text",
+            )}
+          >
+            {t(`deals.tabs.${id}`)}
+          </button>
+        ))}
+      </div>
+
+      {tab === "chat" ? (
+        <DealChat companyId={companyId as number} dealId={deal.id} />
+      ) : tab === "documents" ? (
+        <DealDocuments companyId={companyId as number} deal={deal} onChanged={refresh} />
+      ) : tab === "timeline" ? (
+        <ul className="space-y-2">
+          {deal.timeline.map((entry) => (
+            <li
+              key={entry.id}
+              className="flex flex-wrap items-baseline gap-2 rounded-md border border-border px-3 py-2"
+            >
+              <span className="text-sm font-medium text-text">
+                {t(`deals.status.${entry.to_status}`)}
+              </span>
+              <span className="text-xs text-text-subtle">
+                {t(`deals.actor.${entry.actor_kind}`)}
+              </span>
+              {entry.reason ? (
+                <span className="text-sm text-text-muted">— {entry.reason}</span>
+              ) : null}
+              <span className="num ml-auto text-xs text-text-subtle">
+                {formatDateTime(entry.created_at)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : tab === "contract" ? (
+        <Card>
+          <CardBody className="space-y-3">
+            {deal.contract_id ? (
+              <>
+                <p className="text-sm text-text-muted">
+                  {t("deals.contract.linked", {
+                    status: t(`contracts.status.${deal.contract_status ?? "draft"}`),
+                  })}
+                </p>
+                <LinkButton to={`/contracts/${deal.contract_id}`}>
+                  {t("deals.contract.open")}
+                </LinkButton>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-text-muted">{t("deals.contract.none")}</p>
+                {/* Pre-filled from the deal's own agreed terms by the contracts flow. */}
+                <LinkButton to={`/contracts/new?deal_id=${deal.id}`}>
+                  {t("deals.contract.create")}
+                </LinkButton>
+              </>
+            )}
+          </CardBody>
+        </Card>
+      ) : (
+        <Card>
+          <CardBody>
+            <p className="text-sm text-text-muted">{t("deals.escrow.soon")}</p>
+          </CardBody>
+        </Card>
+      )}
+
+      <div>
+        <button
+          type="button"
+          onClick={() => navigate("/deals")}
+          className="text-sm text-text-muted underline-offset-2 hover:text-text hover:underline"
+        >
+          ← {t("deals.title")}
+        </button>
+      </div>
+    </div>
+  );
+}

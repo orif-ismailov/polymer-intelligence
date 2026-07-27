@@ -71,7 +71,8 @@
     "requests": "Arizalar",
     "inquiries": "So'rovlar",
     "news": "Yangiliklar",
-    "notifications": "Bildirishnomalar"
+    "notifications": "Bildirishnomalar",
+    "deals": "Bitimlar"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -662,6 +663,145 @@
       "awaitingSignature": "Imzo kutilmoqda: {{company}}",
       "active": "Shartnoma ikki tomon tomonidan imzolandi",
       "awaiting": "Kutilmoqda"
+    }
+  },
+  "deals": {
+    "title": "Bitimlar",
+    "subtitle": "Bitim xonalari: chat, hujjatlar, holatlar.",
+    "empty": "Hozircha bitimlar yo‘q",
+    "emptyBody": "Xaridor so‘roviga javob bering yoki o‘z so‘rovingizga kelgan taklifni qabul qiling.",
+    "browseRfqs": "Ochiq so‘rovlar",
+    "needsAction": "Harakat kerak",
+    "noAmount": "Summa ko‘rsatilmagan",
+    "progress": "Bitim jarayoni",
+    "roleAny": "Barchasi",
+    "cancelledTitle": "Bitim bekor qilindi",
+    "disputedTitle": "Nizo ochildi",
+    "disputedBody": "Nizoni platforma jamoasi hal qiladi.",
+    "role": {
+      "buyer": "Xarid",
+      "seller": "Sotuv"
+    },
+    "tabs": {
+      "all": "Barchasi",
+      "action": "Harakat kerak",
+      "active": "Faol",
+      "closed": "Yakunlangan",
+      "chat": "Chat",
+      "documents": "Hujjatlar",
+      "timeline": "Xronologiya",
+      "contract": "Shartnoma",
+      "escrow": "To‘lov"
+    },
+    "status": {
+      "negotiation": "Muzokara",
+      "contract_pending": "Shartnoma kutilmoqda",
+      "contract_signed": "Shartnoma imzolandi",
+      "payment_pending": "To‘lov kutilmoqda",
+      "paid_escrow": "To‘landi (eskrou)",
+      "shipped": "Jo‘natildi",
+      "delivered": "Qabul qilindi",
+      "completed": "Yakunlandi",
+      "cancelled": "Bekor qilindi",
+      "disputed": "Nizo"
+    },
+    "actor": {
+      "buyer": "xaridor",
+      "seller": "sotuvchi",
+      "staff": "jamoa",
+      "system": "tizim"
+    },
+    "actions": {
+      "contract_pending": "Shartnomani yuborish",
+      "contract_signed": "Shartnoma imzolandi",
+      "payment_pending": "To‘lovga",
+      "paid_escrow": "To‘landi",
+      "shipped": "Jo‘natildi",
+      "delivered": "Qabul qilindi",
+      "completed": "Yakunlash",
+      "cancelled": "Bekor qilish",
+      "disputed": "Nizo ochish",
+      "negotiation": "Muzokaraga qaytarish",
+      "reasonPlaceholder": "Sababni ko‘rsating",
+      "confirm": {
+        "cancelled": "Bitim bekor qilinsinmi?",
+        "disputed": "Bitim bo‘yicha nizo ochilsinmi?"
+      }
+    },
+    "chat": {
+      "title": "Bitim chati",
+      "empty": "Hozircha xabarlar yo‘q",
+      "placeholder": "Xabar yozing…",
+      "send": "Yuborish",
+      "attach": "Fayl"
+    },
+    "documents": {
+      "add": "Hujjat qo‘shish",
+      "kind": "Hujjat turi",
+      "empty": "Hozircha hujjatlar yo‘q",
+      "emptyBody": "Hisob-faktura, yuk xati yoki sifat pasportini yuklang.",
+      "revoked": "Chaqirib olindi",
+      "revokeAction": "Chaqirib olish",
+      "revokePrompt": "Hujjatni chaqirib olish sababi",
+      "kinds": {
+        "contract": "Shartnoma",
+        "invoice": "Hisob-faktura",
+        "lab_passport": "Sifat pasporti",
+        "transport": "Transport",
+        "other": "Boshqa"
+      }
+    },
+    "contract": {
+      "none": "Shartnoma hali tuzilmagan.",
+      "create": "Shartnoma tuzish",
+      "linked": "Shartnoma: {{status}}",
+      "open": "Shartnomani ochish"
+    },
+    "escrow": {
+      "soon": "Eskrou to‘lovi keyingi bosqichda qo‘shiladi."
+    }
+  },
+  "rfq": {
+    "marketTitle": "Ochiq so‘rovlar",
+    "marketSubtitle": "Siz javob bera oladigan xaridor so‘rovlari.",
+    "marketEmpty": "Ochiq so‘rovlar yo‘q",
+    "marketEmptyBody": "Keyinroq qarang — yangi so‘rovlar muntazam paydo bo‘ladi.",
+    "respond": "Javob berish",
+    "alreadyResponded": "Taklif yuborilgan",
+    "submit": "Taklifni yuborish",
+    "price": "Narx",
+    "currency": "Valyuta",
+    "qty": "Hajm",
+    "qtyUnit": "O‘lchov",
+    "incoterms": "Incoterms",
+    "incotermsAny": "Ko‘rsatilmagan",
+    "leadTime": "Yetkazib berish muddati, kun",
+    "leadTimeDays": "{{count}} kun",
+    "comment": "Izoh",
+    "commentPlaceholder": "Shartlar, muddatlar, tafsilotlar",
+    "volume": "Hajm",
+    "destination": "Manzil",
+    "desiredDate": "Istalgan sana",
+    "requiredDocs": "Kerakli hujjatlar",
+    "responses": "Takliflar",
+    "noResponses": "Hozircha takliflar yo‘q",
+    "noResponsesBody": "Yetkazib beruvchilar hali javob bermagan.",
+    "accept": "Qabul qilish",
+    "acceptTitle": "Taklif qabul qilinsinmi?",
+    "acceptBody": "{{company}} bilan {{price}} bo‘yicha bitim ochiladi. Qolgan takliflar rad etiladi.",
+    "openDeal": "Bitimni ochish",
+    "status": {
+      "submitted": "Yuborilgan",
+      "accepted": "Qabul qilingan",
+      "not_selected": "Tanlanmagan",
+      "withdrawn": "Chaqirib olingan"
+    },
+    "docs": {
+      "sds": "SDS",
+      "coa": "COA",
+      "origin_cert": "Kelib chiqish sertifikati",
+      "commercial_offer": "Tijorat taklifi",
+      "other": "Boshqa"
     }
   }
 }

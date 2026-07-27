@@ -50,3 +50,14 @@ export const ContractIcon = (
     <path d="M5 3h6l4 4v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 3v4h4M7 12l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+export const HandshakeIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path
+      d="M2 7.5l3-2 3 1.5 2-1 2 1 3-1.5 3 2v5l-3 2-2.5-2.5M13 11l-2 2-2-2-2 2-2-2"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);

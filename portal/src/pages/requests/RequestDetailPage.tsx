@@ -8,6 +8,7 @@ import {
   useRequest,
   type StatusHistoryEntry,
 } from "@/entities/request";
+import { RfqResponseList } from "@/features/rfq-response";
 import {
   Alert,
   Badge,
@@ -94,6 +95,19 @@ export function RequestDetailPage() {
               ) : null}
             </CardBody>
           </Card>
+
+          {/* Supplier quotes on this RFQ (P2). The buyer accepts one, which
+              opens the deal and declines the rest. */}
+          {companyId != null && requestId != null ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("rfq.responses")}</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <RfqResponseList companyId={companyId} requestId={requestId} canAccept />
+              </CardBody>
+            </Card>
+          ) : null}
 
           {canCancel ? (
             <Button

@@ -71,7 +71,8 @@
     "requests": "Requests",
     "inquiries": "Inquiries",
     "news": "News",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "deals": "Deals"
   },
   "home": {
     "title": "Overview",
@@ -662,6 +663,145 @@
       "awaitingSignature": "Awaiting signature from {{company}}",
       "active": "Signed by both parties",
       "awaiting": "Awaiting"
+    }
+  },
+  "deals": {
+    "title": "Deals",
+    "subtitle": "Trade rooms: chat, documents, status.",
+    "empty": "No deals yet",
+    "emptyBody": "Quote on a buyer's request, or accept a quote on your own.",
+    "browseRfqs": "Open requests",
+    "needsAction": "Needs action",
+    "noAmount": "Amount not set",
+    "progress": "Progress",
+    "roleAny": "All",
+    "cancelledTitle": "Deal cancelled",
+    "disputedTitle": "Dispute open",
+    "disputedBody": "The platform team resolves disputes.",
+    "role": {
+      "buyer": "Buying",
+      "seller": "Selling"
+    },
+    "tabs": {
+      "all": "All",
+      "action": "Needs action",
+      "active": "Active",
+      "closed": "Closed",
+      "chat": "Chat",
+      "documents": "Documents",
+      "timeline": "Timeline",
+      "contract": "Contract",
+      "escrow": "Payment"
+    },
+    "status": {
+      "negotiation": "Negotiation",
+      "contract_pending": "Awaiting contract",
+      "contract_signed": "Contract signed",
+      "payment_pending": "Awaiting payment",
+      "paid_escrow": "Paid (escrow)",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "disputed": "Disputed"
+    },
+    "actor": {
+      "buyer": "buyer",
+      "seller": "seller",
+      "staff": "team",
+      "system": "system"
+    },
+    "actions": {
+      "contract_pending": "Send contract",
+      "contract_signed": "Contract signed",
+      "payment_pending": "To payment",
+      "paid_escrow": "Paid",
+      "shipped": "Mark shipped",
+      "delivered": "Confirm delivery",
+      "completed": "Complete",
+      "cancelled": "Cancel",
+      "disputed": "Open dispute",
+      "negotiation": "Back to negotiation",
+      "reasonPlaceholder": "State the reason",
+      "confirm": {
+        "cancelled": "Cancel this deal?",
+        "disputed": "Open a dispute on this deal?"
+      }
+    },
+    "chat": {
+      "title": "Deal chat",
+      "empty": "No messages yet",
+      "placeholder": "Write a message…",
+      "send": "Send",
+      "attach": "File"
+    },
+    "documents": {
+      "add": "Add document",
+      "kind": "Document type",
+      "empty": "No documents yet",
+      "emptyBody": "Upload an invoice, waybill or quality passport.",
+      "revoked": "Revoked",
+      "revokeAction": "Revoke",
+      "revokePrompt": "Reason for revoking this document",
+      "kinds": {
+        "contract": "Contract",
+        "invoice": "Invoice",
+        "lab_passport": "Quality passport",
+        "transport": "Transport",
+        "other": "Other"
+      }
+    },
+    "contract": {
+      "none": "No contract drawn up yet.",
+      "create": "Create contract",
+      "linked": "Contract: {{status}}",
+      "open": "Open contract"
+    },
+    "escrow": {
+      "soon": "Escrow payment arrives in the next stage."
+    }
+  },
+  "rfq": {
+    "marketTitle": "Open requests",
+    "marketSubtitle": "Buyer requests you can quote against.",
+    "marketEmpty": "No open requests",
+    "marketEmptyBody": "Check back later — new requests appear regularly.",
+    "respond": "Respond",
+    "alreadyResponded": "Quote sent",
+    "submit": "Send quote",
+    "price": "Price",
+    "currency": "Currency",
+    "qty": "Quantity",
+    "qtyUnit": "Unit",
+    "incoterms": "Incoterms",
+    "incotermsAny": "Not specified",
+    "leadTime": "Lead time, days",
+    "leadTimeDays": "{{count}} d",
+    "comment": "Comment",
+    "commentPlaceholder": "Terms, timing, details",
+    "volume": "Volume",
+    "destination": "Destination",
+    "desiredDate": "Desired date",
+    "requiredDocs": "Required documents",
+    "responses": "Quotes",
+    "noResponses": "No quotes yet",
+    "noResponsesBody": "Suppliers have not answered this request yet.",
+    "accept": "Accept",
+    "acceptTitle": "Accept this quote?",
+    "acceptBody": "A deal with {{company}} at {{price}} will open. The other quotes will be declined.",
+    "openDeal": "Open deal",
+    "status": {
+      "submitted": "Submitted",
+      "accepted": "Accepted",
+      "not_selected": "Not selected",
+      "withdrawn": "Withdrawn"
+    },
+    "docs": {
+      "sds": "SDS",
+      "coa": "COA",
+      "origin_cert": "Certificate of origin",
+      "commercial_offer": "Commercial offer",
+      "other": "Other"
     }
   }
 }

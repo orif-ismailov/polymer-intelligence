@@ -71,13 +71,20 @@ export const DOCUMENT_KINDS = [
 ] as const;
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
 
+/**
+ * Must match the backend `PriceBasis` enum verbatim (`app/models/enums.py`).
+ *
+ * It previously offered CIP and DPU — which the API rejects with a 422 — and
+ * omitted FOB and CIF, which it accepts. Any value here that Pydantic does not
+ * know is a form the user can fill in and never submit.
+ */
 export const INCOTERMS = [
   "EXW",
   "FCA",
+  "FOB",
+  "CIF",
   "CPT",
-  "CIP",
   "DAP",
-  "DPU",
   "DDP",
   "unknown",
 ] as const;
