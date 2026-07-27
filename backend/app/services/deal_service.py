@@ -40,6 +40,7 @@ from sqlalchemy.orm import Session
 from app.core.time import to_display_tz, utcnow
 from app.models.accounts import UserAccount
 from app.models.companies import Company, CompanyMember
+from app.models.contracts import Contract
 from app.models.deals import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
 from app.models.enums import (
     CompanyMemberRole,
@@ -457,6 +458,116 @@ def open_deal_from_inquiry(
         amount=_total_amount(inquiry.target_price, inquiry.quantity),
         currency=inquiry.currency or offer.currency or "UZS",
     )
+
+
+# ── Contract seam (T1.4) ──────────────────────────────────────────────────────
+
+#: RFQ/offer quantity units → the units contract templates speak.
+_UNIT_MAP: dict[str, str] = {"MT": "t", "T": "t", "TON": "t", "KG": "kg", "PCS": "pcs"}
+
+
+def attach_contract(
+    db: Session, deal: Deal, contract: Contract, account: UserAccount
+) -> Deal:
+    """Point the deal at a contract drawn up for it.
+
+    The link lives here and nowhere else: the contracts context never writes to
+    a deals table, it just emits events. Idempotent for the same contract; a
+    second, different contract is refused, because the partial unique index on
+    `contract_id` is what lets the activation consumer look a deal up by
+    contract and trust the answer.
+    """
+    if {contract.initiator_company_id, contract.counterparty_company_id} != {
+        deal.buyer_company_id,
+        deal.seller_company_id,
+    }:
+        raise NotDealParticipant(str(contract.id))
+    if deal.contract_id == contract.id:
+        return deal
+    if deal.contract_id is not None:
+        raise DealAlreadyOpen(f"deal {deal.id} already has contract {deal.contract_id}")
+
+    existing = (
+        db.query(Deal.id)
+        .filter(Deal.contract_id == contract.id, Deal.id != deal.id)
+        .first()
+    )
+    if existing is not None:
+        raise DealAlreadyOpen(f"contract {contract.id} belongs to deal {existing[0]}")
+
+    deal.contract_id = contract.id
+    db.flush()
+    audit_service.write_audit(
+        db, None, "deal.attach_contract", "deals", str(deal.id),
+        {"account_id": account.id, "contract_id": contract.id},
+    )
+    return deal
+
+
+def contract_prefill(
+    db: Session, deal: Deal, *, schema: dict[str, object] | None = None
+) -> dict[str, str]:
+    """Contract variables suggested by the deal's own agreed terms.
+
+    Best-effort: whatever the deal cannot answer (payment terms, delivery
+    window) is simply absent, for the user to fill in.
+
+    Passing the target template's `schema` drops values that would violate one
+    of its enums. FOB, for instance, is a real Incoterm and a real `PriceBasis`,
+    but SUPPLY_V1 does not list it — prefilling it would fail validation and
+    block the whole form rather than leaving one field blank.
+    """
+    values: dict[str, str] = {}
+
+    response: RfqResponse | None = None
+    if deal.request_id is not None:
+        response = (
+            db.query(RfqResponse)
+            .filter(
+                RfqResponse.request_id == deal.request_id,
+                RfqResponse.status == RfqResponseStatus.accepted,
+            )
+            .first()
+        )
+        request = db.get(Request, deal.request_id)
+        if request is not None:
+            product = request.product_text or request.grade_text
+            if product:
+                values["product"] = product
+
+    if response is not None:
+        values["price"] = f"{response.price:.2f}"
+        values["currency"] = response.currency
+        values["qty"] = format(response.qty.normalize(), "f")
+        values["unit"] = _UNIT_MAP.get(response.qty_unit.upper(), response.qty_unit)
+        if response.incoterms is not None:
+            values["incoterms"] = response.incoterms.value
+    elif deal.offer_id is not None:
+        offer = db.get(SellerOffer, deal.offer_id)
+        if offer is not None:
+            product = offer.product_text or offer.grade_text
+            if product:
+                values["product"] = product
+            if offer.price is not None:
+                values["price"] = f"{offer.price:.2f}"
+            if offer.currency:
+                values["currency"] = offer.currency
+
+    if schema is not None:
+        properties = schema.get("properties")
+        props = properties if isinstance(properties, dict) else {}
+        for key in list(values):
+            spec = props.get(key)
+            if isinstance(spec, dict) and "enum" in spec:
+                allowed = spec["enum"]
+                if isinstance(allowed, list) and values[key] not in allowed:
+                    values.pop(key)
+    return values
+
+
+def deal_for_contract(db: Session, contract_id: int) -> Deal | None:
+    """The deal a contract was drawn up for, if any (R3 contracts have none)."""
+    return db.query(Deal).filter(Deal.contract_id == contract_id).first()
 
 
 # ── Transitions ───────────────────────────────────────────────────────────────
