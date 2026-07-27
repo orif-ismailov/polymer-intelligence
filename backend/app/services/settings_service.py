@@ -11,6 +11,7 @@ of operator toggles the news module exposes at runtime:
 - report_auto_publish   — auto-publish generated reports (skip manual approve)
 - llm_extract_model     — model the news extractor uses (defaults to LLM_EXTRACT_MODEL)
 - news_prompt_version   — news extraction prompt version (defaults to the code version)
+- escrow_mode           — escrow rail: `stub` (operator-confirmed) or `live` (bank adapter)
 
 Service axiom (DEC-dep-owns-commit): flush only — the router/task owns the commit.
 """
@@ -42,6 +43,10 @@ class SettingSpec:
     label: str
     min: int | None = None
     max: int | None = None
+    #: Closed value set for a "str" setting. When present the admin panel renders
+    #: a select and `_coerce` rejects anything else — a typo in a mode switch must
+    #: fail at write time, not surface later as an unroutable runtime value.
+    choices: tuple[str, ...] | None = None
 
 
 def _specs() -> tuple[SettingSpec, ...]:
@@ -72,6 +77,11 @@ def _specs() -> tuple[SettingSpec, ...]:
             "Days a contract may sit awaiting the counterparty/signatures before it expires",
             min=1, max=365,
         ),
+        SettingSpec(
+            "escrow_mode", "str", "stub",
+            "Escrow rail: stub (an operator confirms movement) or live (bank adapter)",
+            choices=("stub", "live"),
+        ),
     )
 
 
@@ -100,6 +110,8 @@ def _coerce(spec: SettingSpec, value: object) -> SettingValue:
     text = str(value).strip()
     if not text:
         raise ValueError(f"{spec.key} must be a non-empty string")
+    if spec.choices is not None and text not in spec.choices:
+        raise ValueError(f"{spec.key} must be one of: {', '.join(spec.choices)}")
     return text
 
 
@@ -134,6 +146,7 @@ def get_all(db: Session) -> list[dict[str, object]]:
                 "value": value,
                 "default": spec.default,
                 "is_overridden": overridden,
+                "choices": list(spec.choices) if spec.choices else None,
             }
         )
     return out
