@@ -48,15 +48,19 @@ function PartyCard({ party, label }: { party: DealParty; label: string }) {
           initials
         )}
       </div>
+      {/* The badge sits under the name, not beside it: a legal name is long and
+          side-by-side truncates it to 'ООО "ХИМ…' at this column width. */}
       <div className="min-w-0">
         <p className="text-xs text-text-subtle">{label}</p>
-        <p className="truncate text-sm font-medium text-text">{party.name ?? "—"}</p>
+        <p className="truncate text-sm font-medium text-text" title={party.name ?? undefined}>
+          {party.name ?? "—"}
+        </p>
+        {party.verified ? (
+          <Badge variant="verified" className="mt-1">
+            {t("market.verified")}
+          </Badge>
+        ) : null}
       </div>
-      {party.verified ? (
-        <Badge variant="verified" className="ml-auto">
-          {t("market.verified")}
-        </Badge>
-      ) : null}
     </div>
   );
 }
@@ -123,7 +127,9 @@ export function DealDetailPage() {
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* items-start: without it the grid stretches both cards to the taller
+          one, leaving a large void under the short action bar. */}
+      <div className="grid items-start gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardBody className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
