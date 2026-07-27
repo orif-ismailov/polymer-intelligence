@@ -31,6 +31,8 @@ _TABLES = [
     "domain_events",
     "audit_log",
     "provider_events",
+    "rfq_push_log",
+    "offer_favorites",
     # Payments before deals — escrow_payments.deal_id references them.
     "escrow_payments",
     # Deals before contracts/requests/offers — deals.contract_id references them.

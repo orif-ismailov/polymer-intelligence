@@ -82,6 +82,20 @@ def _specs() -> tuple[SettingSpec, ...]:
             "Escrow rail: stub (an operator confirms movement) or live (bank adapter)",
             choices=("stub", "live"),
         ),
+        SettingSpec(
+            "rfq_supplier_push_enabled", "bool", False,
+            "Notify matching suppliers when a buyer publishes an RFQ",
+        ),
+        SettingSpec(
+            "rfq_supplier_push_top_n", "int", 10,
+            "How many matched suppliers one RFQ may notify",
+            min=1, max=100,
+        ),
+        SettingSpec(
+            "rfq_supplier_offer_max_age_days", "int", 90,
+            "How recent a supplier's listing must be to count as a match",
+            min=1, max=730,
+        ),
     )
 
 

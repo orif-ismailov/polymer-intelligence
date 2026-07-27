@@ -87,6 +87,7 @@ from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.marketplace import (  # noqa: F401
     OfferFavorite,
     OfferRequest,
+    RfqPushLog,
     Seller,
     SellerOffer,
     SellerOfferFile,
@@ -187,6 +188,7 @@ __all__ = [
     "OfferRequest",
     "OfferFavorite",
     "OfferSaleMode",
+    "RfqPushLog",
     # Sourcing (Phase 4)
     "InventoryItem",
     "PartnerSupplier",

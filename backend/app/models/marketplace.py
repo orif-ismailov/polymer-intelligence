@@ -394,3 +394,35 @@ class OfferRequest(Base):
     def origin(self) -> str:
         """"company" for portal-originated inquiries, else "client" (TG Mini App)."""
         return "company" if self.created_by_user_account_id is not None else "client"
+
+
+class RfqPushLog(Base):
+    """One "we told this supplier about this RFQ" record (P4 W3).
+
+    The unique pair IS the dedup rule (FR-A2): the push task inserts with
+    ON CONFLICT DO NOTHING, so re-running it never notifies a supplier twice.
+
+    `score` and `rank` are stored rather than recomputed. Staff read this to
+    answer "why did we push this to them?", and the weights will change over
+    time — a rank re-derived with today's weights would not explain a push made
+    last month.
+    """
+
+    __tablename__ = "rfq_push_log"
+    __table_args__ = (
+        UniqueConstraint("request_id", "company_id", name="uq_rfq_push_target"),
+        Index("ix_rfq_push_log_request", "request_id", "rank"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    request_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("requests.id", ondelete="CASCADE"), nullable=False
+    )
+    company_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    )
+    score: Mapped[decimal.Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    notified_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
