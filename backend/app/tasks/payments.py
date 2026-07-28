@@ -174,6 +174,78 @@ def sweep_provider_events(limit: int = 100) -> dict[str, Any]:
     return {"processed": processed, "outcomes": outcomes}
 
 
+@celery_app.task(name="reconcile_escrow_payments", queue="verify")  # type: ignore[untyped-decorator]
+def reconcile_escrow_payments(limit: int = 100) -> dict[str, Any]:
+    """Ask the bank where each live payment stands (beat — the `verify` queue).
+
+    The only part of the escrow rail that CALLS OUT, hence `verify`: the queue
+    exists so a slow or dead provider cannot starve ingest/parse/notify.
+
+    Today this is honestly a no-op — `escrow_mode` ships `stub`, and `live` has
+    no adapter until the bank's specification arrives. It reports which of the
+    two it is rather than raising or quietly polling the stub, because a stub
+    standing in for a bank is exactly the confusion this rail must not create.
+
+    A divergence the rules refuse to apply (the bank released funds on a deal
+    nobody confirmed delivered; the bank refunded) raises an admin alert. It is
+    never an auto-transition.
+    """
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.integrations.escrow import client as escrow_client  # noqa: PLC0415
+    from app.services import escrow_service  # noqa: PLC0415
+
+    try:
+        with Session(engine) as db:
+            mode = escrow_client.current_mode(db)
+            if mode != escrow_client.MODE_LIVE:
+                return {"status": "no_provider", "reason": f"escrow_mode is {mode!r}"}
+            try:
+                client = escrow_client.get_escrow_client(db)
+            except escrow_client.ProviderUnavailable as exc:
+                return {"status": "no_provider", "reason": str(exc)}
+
+            report = escrow_service.reconcile_with_provider(db, client, limit=limit)
+            db.commit()
+    except Exception as exc:  # noqa: BLE001 — a beat that raises just retries the same failure
+        logger.exception("payment_tasks.reconcile_failed")
+        return {"status": "error", "error": str(exc)}
+
+    held_ids = report.get("held_payment_ids") or []
+    if isinstance(held_ids, list) and held_ids:
+        _alert_divergence(held_ids, report.get("reasons"))
+    logger.info("payment_tasks.reconcile", extra={k: v for k, v in report.items()})
+    return {"status": "ok", **report}
+
+
+def _alert_divergence(payment_ids: list[Any], reasons: Any = None) -> None:
+    """Best-effort admin-channel alert on a bank/ledger divergence (never raises).
+
+    Mirrors `app.tasks.contracts._alert_integrity`. Deduplication is upstream: the
+    synthesized poll event id is deterministic, so a standing disagreement is
+    alerted once and then lives in the operator queue.
+    """
+    from app.core.config import settings  # noqa: PLC0415
+
+    chat_id = settings.VERIFICATION_NOTIFY_CHAT_ID or settings.REQUEST_NOTIFY_CHAT_ID
+    if chat_id is None:
+        return
+    try:
+        import asyncio  # noqa: PLC0415
+
+        from telegram.bot import bot  # noqa: PLC0415
+
+        detail = ", ".join(str(r) for r in (reasons or [])) or "—"
+        text = (
+            "⚠️ Расхождение эскроу с банком (переход НЕ выполнен автоматически).\n"
+            f"Платежи: {', '.join(str(i) for i in payment_ids)}\nПричины: {detail}"
+        )
+        asyncio.run(bot.send_message(chat_id=chat_id, text=text[:4096]))
+    except Exception as exc:  # noqa: BLE001
+        logger.error("payment_tasks.reconcile_alert_failed", extra={"error": str(exc)})
+
+
 def _register_consumers() -> None:
     """Wire DEAL_STATUS_CHANGED to this consumer (idempotent — see events.CONSUMERS)."""
     from app.tasks.events import CONSUMERS  # noqa: PLC0415

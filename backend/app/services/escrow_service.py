@@ -634,6 +634,112 @@ def apply_provider_event(db: Session, event: ProviderEvent) -> dict[str, object]
     }
 
 
+def reconcile_with_provider(
+    db: Session,
+    client: object,
+    *,
+    provider: str = provider_events_map.PROVIDER_GENERIC,
+    limit: int = 100,
+) -> dict[str, object]:
+    """Ask the provider where each live, non-terminal payment stands.
+
+    The bank's notification format is unknown and Didox has no partner webhooks,
+    so polling is not a fallback — it is the mechanism we can rely on.
+
+    A polled status becomes a **synthesized callback row** and goes through
+    `apply_provider_event` like any pushed one. One path from "the provider says
+    X" to "we did Y": a second, parallel path is where a guard eventually gets
+    forgotten. It also makes the poll idempotent for free — the synthetic
+    `external_id` is deterministic per (reference, status), so an unresolved
+    disagreement is reported ONCE rather than on every sweep, and then lives in
+    `held_provider_events` until an operator settles it.
+
+    Never raises. A dead provider stops the sweep (`unavailable=True`) and
+    touches nothing: provider unavailability degrades, it never moves or blocks a
+    deal.
+    """
+    from app.integrations.escrow.client import ProviderUnavailable  # noqa: PLC0415
+
+    counts: dict[str, int] = {
+        "checked": 0,
+        "agreed": 0,
+        "applied": 0,
+        "held": 0,
+        "already_processed": 0,
+        "noop": 0,
+        "unknown": 0,
+        "unmodelled": 0,
+    }
+    reasons: list[str] = []
+    held_ids: list[int] = []
+    unavailable = False
+
+    candidates = (
+        db.query(EscrowPayment)
+        .filter(
+            EscrowPayment.mode == ESCROW_MODE_LIVE,
+            EscrowPayment.provider_ref.isnot(None),
+            EscrowPayment.status.in_([EscrowStatus.pending, EscrowStatus.funded]),
+        )
+        .order_by(EscrowPayment.id)
+        .limit(limit)
+        .all()
+    )
+
+    for payment in candidates:
+        ref = payment.provider_ref
+        if ref is None:  # pragma: no cover — filtered above
+            continue
+        counts["checked"] += 1
+        try:
+            raw = client.get_status(ref)  # type: ignore[attr-defined]
+        except ProviderUnavailable as exc:
+            unavailable = True
+            logger.warning("escrow_service.reconcile.unavailable", extra={"error": str(exc)})
+            break
+
+        if not isinstance(raw, str) or not raw.strip():
+            counts["unknown"] += 1
+            continue
+        status_value = raw.strip().lower()
+        if status_value not in provider_events_map.KNOWN_STATUSES:
+            # A status we do not model. Counted and logged, never guessed at.
+            counts["unmodelled"] += 1
+            logger.warning(
+                "escrow_service.reconcile.unmodelled_status",
+                extra={"payment_id": payment.id, "provider_status": raw},
+            )
+            continue
+        if status_value == payment.status.value:
+            counts["agreed"] += 1
+            continue
+
+        synthetic_id = f"poll:{ref}:{status_value}"
+        event = record_provider_event(
+            db,
+            provider,
+            synthetic_id,
+            {
+                "event_id": synthetic_id,
+                "escrow_ref": ref,
+                "status": status_value,
+                "_source": "reconcile",
+            },
+        )
+        outcome = apply_provider_event(db, event)
+        key = str(outcome.get("status", "unknown"))
+        counts[key] = counts.get(key, 0) + 1
+        if key == "held":
+            reasons.append(str(outcome.get("reason", "")))
+            held_ids.append(payment.id)
+
+    report: dict[str, object] = dict(counts)
+    report["unavailable"] = unavailable
+    report["reasons"] = reasons
+    report["held_payment_ids"] = held_ids
+    return report
+
+
 def held_provider_events(db: Session, limit: int = 100) -> list[dict[str, object]]:
     """The operator queue: callbacks we understood and deliberately did not apply.
 

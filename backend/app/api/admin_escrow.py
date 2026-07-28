@@ -89,6 +89,35 @@ class EscrowCountersOut(BaseModel):
     awaiting_payout: int
     settled: int
     blocked: int
+    #: Bank callbacks we understood and deliberately did not apply (R6 / P7.b).
+    #: Surfaced in the counters so an operator sees there is something to
+    #: reconcile without opening another tab.
+    provider_holds: int = 0
+
+
+class ProviderHoldOut(BaseModel):
+    """A provider callback that was recorded, explained, and left to a human.
+
+    `claimed_status` is what the bank says; `payment_status` is what we record.
+    The row exists precisely because the two disagree — and it disappears from
+    this list once an operator's manual mark makes them agree, which is why
+    there is no resolve button.
+    """
+
+    event_id: int
+    provider: str
+    external_id: str
+    reason: str
+    detail: str
+    claimed_status: str | None = None
+    payment_id: int | None = None
+    payment_status: str | None = None
+    deal_id: int | None = None
+    created_at: datetime.datetime
+
+
+class ProviderHoldListOut(BaseModel):
+    items: list[ProviderHoldOut]
 
 
 class EscrowListOut(BaseModel):
@@ -211,7 +240,29 @@ def list_escrow(
             settled=by_status.get(EscrowStatus.released, 0)
             + by_status.get(EscrowStatus.refunded, 0),
             blocked=len(blocked),
+            provider_holds=len(escrow_service.held_provider_events(db)),
         ),
+    )
+
+
+@router.get("/escrow/provider-events", response_model=ProviderHoldListOut)
+def list_provider_holds(
+    limit: int = Query(default=100, ge=1, le=200),
+    db: Session = Depends(get_db),
+    _staff: StaffUser = Depends(require_analyst_or_admin),
+) -> ProviderHoldListOut:
+    """Bank callbacks held for a human (R6 / P7.b).
+
+    Declared BEFORE `/escrow/{payment_id}`: that route types the id as an int, so
+    a literal segment declared after it would 422 rather than match.
+
+    There is no resolve action here on purpose. Resolving a hold IS the ordinary
+    mark on the payment — the operator checks the statement, disputes the deal if
+    a refund is real, and marks it. The hold then stops being a disagreement and
+    drops off this list by itself.
+    """
+    return ProviderHoldListOut(
+        items=[ProviderHoldOut(**item) for item in escrow_service.held_provider_events(db, limit)]  # type: ignore[arg-type]
     )
 
 

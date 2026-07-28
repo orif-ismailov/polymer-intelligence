@@ -1084,7 +1084,8 @@
       "awaitingFunds": "To‘lov kutilmoqda",
       "awaitingPayout": "To‘lash kutilmoqda",
       "settled": "Yakunlangan",
-      "blocked": "Bloklangan"
+      "blocked": "Bloklangan",
+      "providerHolds": "Bank bilan tafovutlar"
     },
     "mark": {
       "title": "Mablag‘ harakatini belgilash",
@@ -1113,6 +1114,25 @@
       "invalid_transition": "To‘lovning bunday o‘tishi mumkin emas — sahifani yangilab, joriy holatni tekshiring.",
       "confirmation_required": "Mablag‘ning haqiqiy harakatini tasdiqlang.",
       "note_required": "Izoh majburiy."
+    },
+    "providerHolds": {
+      "title": "Operator ishtirokini talab qiladigan bank xabarlari",
+      "hint": "Bu xabarlar yozib olindi, lekin avtomatik qo'llanmadi: ular yo bitimni yopadi, yo bizning ma'lumotlarimizga mos kelmaydi. Bank ko'chirmasi bilan solishtirib, to'lovni qo'lda belgilang — satr o'zi yo'qoladi.",
+      "disagreement": "Bank: {bank} · Bizda: {ours}",
+      "unreadable": "Xabarni o'qib bo'lmadi",
+      "open": "To'lovni ochish",
+      "reason": {
+        "needs_operator": "Mablag'ni qaytarish — faqat operator qarori bilan",
+        "release_before_delivery": "Qabul tasdiqlanmasdan oldin to'lov",
+        "unknown_ref": "Noma'lum eskrou havolasi",
+        "wrong_rail": "To'lov operator tomonidan qo'lda yuritiladi",
+        "amount_mismatch": "Summa hisobga mos kelmaydi",
+        "currency_mismatch": "Valyuta hisobga mos kelmaydi",
+        "invalid_transition": "Holatning nomaqbul o'zgarishi",
+        "deal_blocked": "Bitim bu holatga o'ta olmaydi",
+        "unknown_provider": "Provayder ulanmagan",
+        "malformed": "Xabar tahlil qilinmadi"
+      }
     }
   },
   "substances": {

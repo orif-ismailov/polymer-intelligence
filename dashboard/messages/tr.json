@@ -1084,7 +1084,8 @@
       "awaitingFunds": "Ödeme bekleyen",
       "awaitingPayout": "Ödeme yapılacak",
       "settled": "Tamamlanan",
-      "blocked": "Engellenen"
+      "blocked": "Engellenen",
+      "providerHolds": "Banka ile uyuşmazlıklar"
     },
     "mark": {
       "title": "Para hareketini işaretle",
@@ -1113,6 +1114,25 @@
       "invalid_transition": "Ödeme için bu geçiş mümkün değil — sayfayı yenileyip mevcut durumu kontrol edin.",
       "confirmation_required": "Paranın fiilen hareket ettiğini onaylayın.",
       "note_required": "Not zorunludur."
+    },
+    "providerHolds": {
+      "title": "Operatör müdahalesi gerektiren banka bildirimleri",
+      "hint": "Bu bildirimler kaydedildi ancak otomatik uygulanmadı: ya anlaşmayı kapatıyorlar ya da kayıtlarımızla çelişiyorlar. Banka ekstresiyle karşılaştırıp ödemeyi elle işaretleyin — satır kendiliğinden kaybolur.",
+      "disagreement": "Banka: {bank} · Bizde: {ours}",
+      "unreadable": "Bildirim çözümlenemedi",
+      "open": "Ödemeyi aç",
+      "reason": {
+        "needs_operator": "Geri ödeme yalnızca operatör kararıyla",
+        "release_before_delivery": "Teslim onayından önce ödeme",
+        "unknown_ref": "Bilinmeyen escrow referansı",
+        "wrong_rail": "Ödeme operatör tarafından elle yürütülüyor",
+        "amount_mismatch": "Tutar faturayla uyuşmuyor",
+        "currency_mismatch": "Para birimi faturayla uyuşmuyor",
+        "invalid_transition": "Geçersiz durum geçişi",
+        "deal_blocked": "Anlaşma bu duruma geçemez",
+        "unknown_provider": "Sağlayıcı bağlı değil",
+        "malformed": "Bildirim ayrıştırılamadı"
+      }
     }
   },
   "substances": {

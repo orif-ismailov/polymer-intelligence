@@ -64,7 +64,28 @@ interface EscrowList {
     awaiting_payout: number;
     settled: number;
     blocked: number;
+    provider_holds: number;
   };
+}
+
+/**
+ * A bank callback that was recorded and deliberately NOT applied (R6 / P7.b).
+ * `claimed_status` is the bank's word, `payment_status` is our ledger — the row
+ * exists because they disagree. There is no resolve button: settling the
+ * disagreement IS the ordinary mark on the payment, after which the hold stops
+ * matching and drops off the list by itself.
+ */
+interface ProviderHold {
+  event_id: number;
+  provider: string;
+  external_id: string;
+  reason: string;
+  detail: string;
+  claimed_status: string | null;
+  payment_id: number | null;
+  payment_status: string | null;
+  deal_id: number | null;
+  created_at: string;
 }
 
 const STATUSES = ["", "pending", "funded", "released", "refunded"] as const;
@@ -96,6 +117,14 @@ export default function EscrowPage() {
       apiFetch<EscrowList>(`/admin/escrow${status ? `?status=${status}` : ""}`),
   });
 
+  // Only fetched when the counters say there is something to fetch: the common
+  // case is zero holds, and an empty panel is not worth a second request.
+  const holdsQuery = useQuery({
+    queryKey: ["admin-escrow-holds"],
+    queryFn: () => apiFetch<{ items: ProviderHold[] }>("/admin/escrow/provider-events"),
+    enabled: (listQuery.data?.counters.provider_holds ?? 0) > 0,
+  });
+
   const mark = useMutation({
     mutationFn: (toStatus: string) =>
       apiFetch<EscrowPayment>(`/admin/escrow/${selected}/mark`, {
@@ -109,6 +138,9 @@ export default function EscrowPage() {
       setConfirmed(false);
       setError(null);
       void queryClient.invalidateQueries({ queryKey: ["admin-escrow"] });
+      // A mark is how a provider hold gets resolved, so the queue has to be
+      // re-read — the row it settled should disappear.
+      void queryClient.invalidateQueries({ queryKey: ["admin-escrow-holds"] });
     },
     onError: (err: unknown) => setError(reasonOf(err)),
   });
@@ -158,6 +190,7 @@ export default function EscrowPage() {
           <Counter label={t("counters.awaitingPayout")} value={data.counters.awaiting_payout} />
           <Counter label={t("counters.settled")} value={data.counters.settled} />
           <Counter label={t("counters.blocked")} value={data.counters.blocked} />
+          <Counter label={t("counters.providerHolds")} value={data.counters.provider_holds} />
         </div>
       ) : null}
 
@@ -317,6 +350,54 @@ export default function EscrowPage() {
                   {b.buyer_name} → {b.seller_name}
                 </span>
                 <span className="text-amber-400">{t(`blocked.reason.${b.reason}`)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {/* Bank callbacks we understood and refused to apply unattended. A refund
+          kills a deal, and an early release pays a seller for goods nobody
+          confirmed arrived — both need a person. Resolving one is the ordinary
+          mark above, after which the row stops disagreeing and disappears. */}
+      {holdsQuery.data?.items.length ? (
+        <div className="mt-6 rounded-lg border border-red-500/50 bg-background-secondary p-4">
+          <h2 className="mb-1 font-medium">{t("providerHolds.title")}</h2>
+          <p className="mb-2 text-xs text-foreground-muted">{t("providerHolds.hint")}</p>
+          <ul className="space-y-2">
+            {holdsQuery.data.items.map((h) => (
+              <li
+                key={h.event_id}
+                className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 text-xs first:border-0 first:pt-0"
+              >
+                <span className="text-foreground-muted">
+                  {h.provider} · {formatTashkent(h.created_at)}
+                </span>
+                <span>
+                  {h.claimed_status
+                    ? t("providerHolds.disagreement", {
+                        bank: t(`status.${h.claimed_status}`),
+                        ours: h.payment_status ? t(`status.${h.payment_status}`) : "—",
+                      })
+                    : t("providerHolds.unreadable")}
+                </span>
+                <span className="text-red-400">
+                  {t.has(`providerHolds.reason.${h.reason}`)
+                    ? t(`providerHolds.reason.${h.reason}`)
+                    : h.reason}
+                </span>
+                {h.payment_id ? (
+                  <button
+                    onClick={() => {
+                      setSelected(h.payment_id);
+                      setConfirmed(false);
+                      setError(null);
+                    }}
+                    className="rounded border border-border bg-background-tertiary px-2 py-1 font-medium"
+                  >
+                    {t("providerHolds.open")}
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>

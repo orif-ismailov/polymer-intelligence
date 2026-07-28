@@ -145,6 +145,16 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "sweep_provider_events",
         "schedule": crontab(minute="*/5"),
     },
+    # ── Escrow ↔ bank reconciliation: every 30 minutes (R6 / P7.b T3.1) ───────
+    # The only outbound call on the escrow rail, hence the `verify` queue. Asks
+    # the bank where each live payment stands: an advance is applied through the
+    # same door as a webhook, a divergence (bank released, deal not delivered;
+    # bank refunded) raises an admin alert and is NEVER an auto-transition.
+    # A no-op while `escrow_mode` is `stub` or the live adapter is missing.
+    "reconcile_escrow_payments": {
+        "task": "reconcile_escrow_payments",
+        "schedule": crontab(minute="*/30"),
+    },
     # ── Contract PDF integrity: daily at 03:00 UTC (R3 TB4.1) ─────────────────
     # Recomputes stored-PDF sha256 vs document_sha256 for active contracts and
     # alerts the admin channel on any mismatch (tamper detection).

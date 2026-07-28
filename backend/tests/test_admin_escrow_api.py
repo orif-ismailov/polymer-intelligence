@@ -351,3 +351,86 @@ def test_a_missing_payment_is_a_404(api) -> None:  # noqa: ANN001
     _scene(session)
     headers = _staff_headers(session, "admin", "n@example.com")
     assert _mark(client, headers, 999999, "funded").status_code == 404
+
+
+# ── provider holds (R6 / P7.b — T3.2) ─────────────────────────────────────────
+
+
+def test_provider_events_route_is_registered() -> None:
+    from app.api.admin_escrow import router  # noqa: PLC0415
+
+    paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
+    assert "/admin/escrow/provider-events" in paths
+
+
+def test_provider_events_is_declared_before_the_payment_detail_route() -> None:
+    """`/escrow/{payment_id}` types the id as int, so a literal segment declared
+    after it would 422 instead of matching. Order is the contract here."""
+    from app.api.admin_escrow import router  # noqa: PLC0415
+
+    paths = [r.path for r in router.routes]  # type: ignore[attr-defined]
+    assert paths.index("/admin/escrow/provider-events") < paths.index("/admin/escrow/{payment_id}")
+
+
+def _hold_a_refund(session, payment_id):  # noqa: ANN001, ANN202
+    """Put the payment on the live rail, fund it, then have the bank say refunded."""
+    from app.models.payments import EscrowPayment  # noqa: PLC0415
+    from app.services import escrow_service  # noqa: PLC0415
+
+    with session() as db:
+        payment = db.get(EscrowPayment, payment_id)
+        payment.mode = "live"
+        payment.provider_ref = "ESC-1"
+        db.flush()
+        escrow_service.apply_provider_event(
+            db,
+            escrow_service.record_provider_event(
+                db, "generic", "op-1",
+                {"event_id": "op-1", "escrow_ref": "ESC-1", "status": "funded"},
+            ),
+        )
+        escrow_service.apply_provider_event(
+            db,
+            escrow_service.record_provider_event(
+                db, "generic", "op-2",
+                {"event_id": "op-2", "escrow_ref": "ESC-1", "status": "refunded"},
+            ),
+        )
+        db.commit()
+
+
+@requires_real_db
+def test_an_analyst_may_read_the_provider_holds(api) -> None:  # noqa: ANN001
+    """Watching the queue is analyst work; only marking money is admin-only."""
+    client, session = api
+    scene = _scene(session)
+    _hold_a_refund(session, scene["payment_id"])
+    headers = _staff_headers(session, "analyst", "ph1@example.com")
+
+    response = client.get(f"{_A}/escrow/provider-events", headers=headers)
+    assert response.status_code == 200
+    items = response.json()["items"]
+    assert len(items) == 1
+    assert items[0]["reason"] == "needs_operator"
+    assert items[0]["claimed_status"] == "refunded"
+    assert items[0]["payment_status"] == "funded"
+    assert items[0]["payment_id"] == scene["payment_id"]
+    assert items[0]["deal_id"] == scene["deal_id"]
+
+
+@requires_real_db
+def test_the_provider_holds_need_authentication(api) -> None:  # noqa: ANN001
+    client, _session = api
+    assert client.get(f"{_A}/escrow/provider-events").status_code in {401, 403}
+
+
+@requires_real_db
+def test_the_escrow_counters_surface_the_number_of_holds(api) -> None:  # noqa: ANN001
+    """An operator must see there is something to reconcile without opening a tab."""
+    client, session = api
+    scene = _scene(session)
+    headers = _staff_headers(session, "analyst", "ph2@example.com")
+
+    assert client.get(f"{_A}/escrow", headers=headers).json()["counters"]["provider_holds"] == 0
+    _hold_a_refund(session, scene["payment_id"])
+    assert client.get(f"{_A}/escrow", headers=headers).json()["counters"]["provider_holds"] == 1

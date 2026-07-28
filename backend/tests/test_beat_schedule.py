@@ -62,6 +62,8 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         # webhook commits its row before enqueuing, so a dropped dispatch costs
         # latency, not evidence. This is what collects it.
         "sweep_provider_events",
+        # R6 P7.b T3.1: escrow ↔ bank reconciliation (every 30 min, `verify` queue)
+        "reconcile_escrow_payments",
     }
     assert set(beat_schedule.keys()) == required_keys, (
         f"Beat schedule keys mismatch: {set(beat_schedule.keys())!r}"

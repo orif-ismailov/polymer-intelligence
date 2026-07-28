@@ -1069,7 +1069,8 @@
       "awaitingFunds": "待到账",
       "awaitingPayout": "待放款",
       "settled": "已结清",
-      "blocked": "受阻"
+      "blocked": "受阻",
+      "providerHolds": "与银行的差异"
     },
     "mark": {
       "title": "标记资金流动",
@@ -1098,6 +1099,25 @@
       "invalid_transition": "该付款状态变更不可行——请刷新页面查看当前状态。",
       "confirmation_required": "请勾选确认资金确已发生流动。",
       "note_required": "备注为必填项。"
+    },
+    "providerHolds": {
+      "title": "需要操作员处理的银行通知",
+      "hint": "这些通知已记录，但未自动执行：它们要么会结束交易，要么与我们的记录不一致。请核对银行对账单并手动标记付款——该条目会自行消失。",
+      "disagreement": "银行：{bank} · 我方：{ours}",
+      "unreadable": "无法解析该通知",
+      "open": "打开付款",
+      "reason": {
+        "needs_operator": "退款仅由操作员决定",
+        "release_before_delivery": "在确认收货前放款",
+        "unknown_ref": "未知的托管编号",
+        "wrong_rail": "该付款由操作员手动处理",
+        "amount_mismatch": "金额与账单不一致",
+        "currency_mismatch": "币种与账单不一致",
+        "invalid_transition": "状态转换不允许",
+        "deal_blocked": "交易无法进入该状态",
+        "unknown_provider": "服务商未接入",
+        "malformed": "通知未能解析"
+      }
     }
   },
   "substances": {
