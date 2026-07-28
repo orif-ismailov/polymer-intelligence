@@ -910,6 +910,46 @@
       "reject": "Rad etish",
       "requestInfo": "Ma'lumot so'rash",
       "decidedAt": "Qaror qabul qilindi"
+    },
+    "registry": {
+      "title": "Davlat reyestrlari",
+      "hint": "Xususiy kompaniyalar uchun rasmiy realtime API hozircha yo'q. Kompaniyani ochiq xizmatda tekshiring (registr.stat.uz, my.soliq.uz, license.gov.uz) va natijani kiriting — u skrinshot bilan o'zgarmas yozuv sifatida saqlanadi va mos tekshiruvni yangilaydi.",
+      "neverChecked": "tekshirilmagan",
+      "openEvidence": "Skrinshotni ochish",
+      "kind": {
+        "company": "Kompaniya (EGRPO)",
+        "vat": "QQS guvohnomasi",
+        "licenses": "Litsenziyalar"
+      },
+      "source": {
+        "manual": "operator kiritgan",
+        "registry": "reyestr javobi"
+      },
+      "status": {
+        "active": "Faoliyat ko'rsatmoqda",
+        "liquidated": "Tugatilgan",
+        "suspended": "To'xtatilgan",
+        "unknown": "Holat ko'rsatilmagan"
+      },
+      "form": {
+        "title": "Tekshiruv natijasini kiritish",
+        "kind": "Nima tekshirildi",
+        "status": "Reyestrdagi holat",
+        "name": "Reyestrdagi nomi",
+        "director": "Rahbar",
+        "registered": "QQS to'lovchisi",
+        "certificateNo": "Guvohnoma raqami",
+        "rawStatus": "Reyestr ifodasi (so'zma-so'z)",
+        "note": "Izoh (qayerda va nimani ko'rdingiz)",
+        "evidence": "Skrinshot (PNG, JPEG yoki PDF)",
+        "submit": "Natijani kiritish"
+      },
+      "errors": {
+        "unknown_kind": "Tekshiruv turi noma'lum.",
+        "invalid_file_type": "Bu faylni ilova qilib bo'lmaydi: faqat PNG, JPEG yoki PDF.",
+        "file_too_large": "Fayl juda katta.",
+        "generic": "Tekshiruv natijasini kiritib bo'lmadi."
+      }
     }
   },
   "companies": {

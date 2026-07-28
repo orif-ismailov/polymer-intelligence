@@ -910,6 +910,46 @@
       "reject": "Reddet",
       "requestInfo": "Bilgi iste",
       "decidedAt": "Karar verildi"
+    },
+    "registry": {
+      "title": "Devlet sicilleri",
+      "hint": "Özel şirketler için resmî bir gerçek zamanlı API henüz yok. Şirketi açık bir hizmette doğrulayın (registr.stat.uz, my.soliq.uz, license.gov.uz) ve sonucu girin — ekran görüntüsüyle birlikte değiştirilemez bir kayıt olarak saklanır ve ilgili kontrolü güncellenir.",
+      "neverChecked": "hiç kontrol edilmedi",
+      "openEvidence": "Ekran görüntüsünü aç",
+      "kind": {
+        "company": "Şirket (EGRPO)",
+        "vat": "KDV belgesi",
+        "licenses": "Lisanslar"
+      },
+      "source": {
+        "manual": "operatör girdi",
+        "registry": "sicil yanıtı"
+      },
+      "status": {
+        "active": "Faal",
+        "liquidated": "Tasfiye edilmiş",
+        "suspended": "Askıya alınmış",
+        "unknown": "Durum belirtilmemiş"
+      },
+      "form": {
+        "title": "Kontrol sonucunu gir",
+        "kind": "Ne kontrol edildi",
+        "status": "Sicildeki durum",
+        "name": "Sicildeki unvan",
+        "director": "Yönetici",
+        "registered": "KDV mükellefi",
+        "certificateNo": "Belge numarası",
+        "rawStatus": "Sicilin ifadesi (birebir)",
+        "note": "Not (nerede ve neye bakıldı)",
+        "evidence": "Ekran görüntüsü (PNG, JPEG veya PDF)",
+        "submit": "Sonucu gir"
+      },
+      "errors": {
+        "unknown_kind": "Bilinmeyen kontrol türü.",
+        "invalid_file_type": "Bu dosya eklenemez: yalnızca PNG, JPEG veya PDF.",
+        "file_too_large": "Dosya çok büyük.",
+        "generic": "Kontrol sonucu girilemedi."
+      }
     }
   },
   "companies": {

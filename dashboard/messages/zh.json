@@ -895,6 +895,46 @@
       "reject": "拒绝",
       "requestInfo": "请求信息",
       "decidedAt": "已做出决定"
+    },
+    "registry": {
+      "title": "国家登记系统",
+      "hint": "目前尚无面向私营企业的官方实时接口。请在公开服务中核查该公司（registr.stat.uz、my.soliq.uz、license.gov.uz），然后录入结果——它将连同截图作为不可修改的记录保存，并更新对应的核查项。",
+      "neverChecked": "尚未核查",
+      "openEvidence": "打开截图",
+      "kind": {
+        "company": "公司（EGRPO）",
+        "vat": "增值税证书",
+        "licenses": "许可证"
+      },
+      "source": {
+        "manual": "操作员录入",
+        "registry": "登记系统答复"
+      },
+      "status": {
+        "active": "存续",
+        "liquidated": "已清算",
+        "suspended": "已暂停",
+        "unknown": "未说明状态"
+      },
+      "form": {
+        "title": "录入核查结果",
+        "kind": "核查了什么",
+        "status": "登记系统中的状态",
+        "name": "登记名称",
+        "director": "负责人",
+        "registered": "增值税纳税人",
+        "certificateNo": "证书编号",
+        "rawStatus": "登记系统原文表述",
+        "note": "备注（在何处查看了什么）",
+        "evidence": "截图（PNG、JPEG 或 PDF）",
+        "submit": "录入结果"
+      },
+      "errors": {
+        "unknown_kind": "未知的核查类型。",
+        "invalid_file_type": "无法附加该文件：仅支持 PNG、JPEG 或 PDF。",
+        "file_too_large": "文件过大。",
+        "generic": "无法录入核查结果。"
+      }
     }
   },
   "companies": {

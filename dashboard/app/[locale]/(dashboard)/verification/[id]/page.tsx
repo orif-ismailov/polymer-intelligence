@@ -21,11 +21,12 @@ import {
   Check,
   FileText,
   History,
+  Landmark,
   ShieldOff,
   X,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { ApiError, apiFetch } from "@/lib/api";
+import { ApiError, apiFetch, apiUpload } from "@/lib/api";
 import { formatTashkent } from "@/lib/tz";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -90,6 +91,28 @@ interface AuditEntry {
   created_at: string;
 }
 
+/**
+ * One immutable state-registry observation (R6 / P7.c).
+ *
+ * `source` is the whole point: `manual` means a member of staff read an open
+ * service and transcribed it, `registry` means an API answered. The verdict is
+ * computed from the payload by the same backend function either way, so this
+ * field is the only record of which it was.
+ */
+interface RegistrySnapshot {
+  id: number;
+  kind: string;
+  source: string;
+  provider: string;
+  payload: Record<string, unknown>;
+  raw_status: string | null;
+  note: string | null;
+  created_by: number | null;
+  evidence_url: string | null;
+  fetched_at: string;
+  created_at: string;
+}
+
 interface VerificationCaseDetail {
   id: number;
   case_type: string;
@@ -103,7 +126,15 @@ interface VerificationCaseDetail {
   checks: VerificationCheck[];
   documents: VerificationDocument[];
   audit: AuditEntry[];
+  /** Newest snapshot per kind. An absent kind was never checked — which must not
+   *  look like "checked, found nothing". */
+  registry: Record<string, RegistrySnapshot>;
 }
+
+/** The three lookups, in the order an operator works them. */
+const REGISTRY_KINDS = ["company", "vat", "licenses"] as const;
+
+const REGISTRY_STATUSES = ["active", "liquidated", "suspended", "unknown"] as const;
 
 type DecisionAction = "approve" | "reject" | "request-info";
 
@@ -264,6 +295,14 @@ export default function VerificationCaseDetailPage() {
         )}
       </section>
 
+      {/* State registries (R6 / P7.c) */}
+      <RegistrySection
+        caseId={caseId}
+        snapshots={c.registry}
+        queryKey={queryKey}
+        alreadyDecided={alreadyDecided}
+      />
+
       {/* Documents */}
       <section className="rounded-lg border border-border bg-background-secondary p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground-muted">
@@ -391,6 +430,272 @@ export default function VerificationCaseDetailPage() {
         )}
       </section>
     </div>
+  );
+}
+
+// ─── State registries (R6 / P7.c) ─────────────────────────────────────────────
+
+/**
+ * The pre-ПЦД bridge, made visible.
+ *
+ * There is no realtime registry API for private companies yet, so the channel
+ * that works today is a person: staff open my.soliq.uz / license.gov.uz /
+ * registr.stat.uz, read the answer, and record it here with a screenshot. The
+ * backend derives the verification verdict from the same pure function a future
+ * ПЦД adapter will feed, so nothing about this form makes the result "weaker" —
+ * only the snapshot's `source` says a human transcribed it.
+ *
+ * Each row shows the LATEST snapshot; re-checking appends rather than replaces,
+ * because the history of who said what and when is the evidence.
+ */
+function RegistrySection({
+  caseId,
+  snapshots,
+  queryKey,
+  alreadyDecided,
+}: {
+  caseId: string;
+  snapshots: Record<string, RegistrySnapshot>;
+  queryKey: (string | undefined)[];
+  alreadyDecided: boolean;
+}) {
+  const t = useTranslations("verification");
+  const qc = useQueryClient();
+
+  const [kind, setKind] = useState<string>("company");
+  const [registryStatus, setRegistryStatus] = useState<string>("active");
+  const [rawStatus, setRawStatus] = useState("");
+  const [name, setName] = useState("");
+  const [director, setDirector] = useState("");
+  const [registered, setRegistered] = useState(true);
+  const [certificateNo, setCertificateNo] = useState("");
+  const [note, setNote] = useState("");
+  const [evidence, setEvidence] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  // A file input keeps the browser-owned filename it displays even after the
+  // React state behind it is cleared, so after a successful submit the field
+  // would still show a screenshot that is NOT going to be sent. Bumping this key
+  // remounts the input, which is the only way to clear what the user sees.
+  const [fileKey, setFileKey] = useState(0);
+
+  const record = useMutation({
+    mutationFn: () => {
+      const form = new FormData();
+      form.append("kind", kind);
+      form.append("note", note);
+      form.append("raw_status", rawStatus);
+      if (kind === "company") {
+        form.append("status", registryStatus);
+        form.append("name", name);
+        form.append("director", director);
+      }
+      if (kind === "vat") {
+        form.append("registered", registered ? "true" : "false");
+        form.append("certificate_no", certificateNo);
+      }
+      if (evidence) form.append("evidence", evidence);
+      return apiUpload<{ check_status: string | null }>(
+        `/admin/verification/cases/${caseId}/registry-check`,
+        form,
+      );
+    },
+    onMutate: () => setError(null),
+    onSuccess: () => {
+      setRawStatus("");
+      setName("");
+      setDirector("");
+      setCertificateNo("");
+      setNote("");
+      setEvidence(null);
+      setFileKey((k) => k + 1);
+      void qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: unknown) => {
+      const detail =
+        e instanceof ApiError && e.body && typeof e.body === "object"
+          ? (e.body as { detail?: unknown }).detail
+          : null;
+      const key = typeof detail === "string" ? `registry.errors.${detail}` : "";
+      setError(key && t.has(key) ? t(key) : t("registry.errors.generic"));
+    },
+  });
+
+  return (
+    <section className="rounded-lg border border-border bg-background-secondary p-4">
+      <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-foreground-muted">
+        <Landmark size={16} aria-hidden="true" /> {t("registry.title")}
+      </h2>
+      <p className="mt-1 text-xs text-foreground-muted">{t("registry.hint")}</p>
+
+      <div className="mt-3 flex flex-col gap-2">
+        {REGISTRY_KINDS.map((k) => {
+          const snapshot = snapshots[k];
+          return (
+            <div key={k} className="rounded-md border border-border bg-background p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-sm font-medium text-foreground">
+                  {t(`registry.kind.${k}`)}
+                </span>
+                {snapshot ? (
+                  <span className="text-xs text-foreground-muted">
+                    {t(`registry.source.${snapshot.source}`)} ·{" "}
+                    <time dateTime={snapshot.fetched_at}>
+                      {formatTashkent(snapshot.fetched_at)}
+                    </time>
+                    {snapshot.created_by != null
+                      ? ` · ${t("audit.staff")} #${snapshot.created_by}`
+                      : ""}
+                  </span>
+                ) : (
+                  <span className="text-xs text-foreground-muted">
+                    {t("registry.neverChecked")}
+                  </span>
+                )}
+              </div>
+              {snapshot && (
+                <>
+                  <JsonBlock value={snapshot.payload} />
+                  {snapshot.note && (
+                    <p className="mt-1 text-xs italic text-foreground-muted">
+                      “{snapshot.note}”
+                    </p>
+                  )}
+                  {snapshot.evidence_url && (
+                    <a
+                      href={snapshot.evidence_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-background-tertiary"
+                    >
+                      {t("registry.openEvidence")}
+                    </a>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {alreadyDecided ? null : (
+        <div className="mt-4 rounded-md border border-border bg-background p-3">
+          <h3 className="text-sm font-medium text-foreground">{t("registry.form.title")}</h3>
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <label className="flex flex-col gap-1 text-xs text-foreground-muted">
+              {t("registry.form.kind")}
+              <select
+                value={kind}
+                onChange={(e) => setKind(e.target.value)}
+                className="rounded-md border border-border bg-background-secondary px-2 py-1.5 text-sm text-foreground"
+              >
+                {REGISTRY_KINDS.map((k) => (
+                  <option key={k} value={k}>
+                    {t(`registry.kind.${k}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {kind === "company" && (
+              <>
+                <label className="flex flex-col gap-1 text-xs text-foreground-muted">
+                  {t("registry.form.status")}
+                  <select
+                    value={registryStatus}
+                    onChange={(e) => setRegistryStatus(e.target.value)}
+                    className="rounded-md border border-border bg-background-secondary px-2 py-1.5 text-sm text-foreground"
+                  >
+                    {REGISTRY_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {t(`registry.status.${s}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <TextField
+                  label={t("registry.form.name")}
+                  value={name}
+                  onChange={setName}
+                />
+                <TextField
+                  label={t("registry.form.director")}
+                  value={director}
+                  onChange={setDirector}
+                />
+              </>
+            )}
+
+            {kind === "vat" && (
+              <>
+                <label className="flex items-center gap-2 self-end text-xs text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={registered}
+                    onChange={(e) => setRegistered(e.target.checked)}
+                  />
+                  {t("registry.form.registered")}
+                </label>
+                <TextField
+                  label={t("registry.form.certificateNo")}
+                  value={certificateNo}
+                  onChange={setCertificateNo}
+                />
+              </>
+            )}
+
+            <TextField
+              label={t("registry.form.rawStatus")}
+              value={rawStatus}
+              onChange={setRawStatus}
+            />
+            <TextField label={t("registry.form.note")} value={note} onChange={setNote} />
+
+            <label className="flex flex-col gap-1 text-xs text-foreground-muted sm:col-span-2">
+              {t("registry.form.evidence")}
+              <input
+                key={fileKey}
+                type="file"
+                accept="image/png,image/jpeg,application/pdf"
+                onChange={(e) => setEvidence(e.target.files?.[0] ?? null)}
+                className="rounded-md border border-border bg-background-secondary px-2 py-1.5 text-sm text-foreground"
+              />
+            </label>
+          </div>
+
+          <button
+            type="button"
+            disabled={record.isPending}
+            onClick={() => record.mutate()}
+            className="mt-3 inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary disabled:opacity-50"
+          >
+            <Landmark size={14} aria-hidden="true" /> {t("registry.form.submit")}
+          </button>
+          {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-1 text-xs text-foreground-muted">
+      {label}
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-md border border-border bg-background-secondary px-2 py-1.5 text-sm text-foreground"
+      />
+    </label>
   );
 }
 
