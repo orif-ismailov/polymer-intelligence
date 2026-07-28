@@ -117,7 +117,7 @@ services:
     # writing bytecode into /app makes the watcher restart uvicorn mid-migration.
     # The lifespan hook (RUN_MIGRATIONS_ON_STARTUP, default false) stays available
     # for prod/no-reload.
-    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_contract_templates && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_contract_templates && python -m app.seed.seed_substances && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ../backend:/app  # live reload in dev
     healthcheck:

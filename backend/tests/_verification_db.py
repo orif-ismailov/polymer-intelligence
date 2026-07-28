@@ -33,6 +33,7 @@ _TABLES = [
     "provider_events",
     "rfq_push_log",
     "offer_favorites",
+    "substance_suggestions",
     # Payments before deals — escrow_payments.deal_id references them.
     "escrow_payments",
     # Deals before contracts/requests/offers — deals.contract_id references them.
@@ -55,7 +56,9 @@ _TABLES = [
     "seller_offer_files",
     "offer_requests",
     "seller_offers",
+    "substances",
     "company_bank_accounts",
+    "company_licenses",
     "verification_documents",
     "verification_cases",
     "company_business_roles",

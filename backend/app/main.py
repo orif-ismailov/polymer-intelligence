@@ -42,6 +42,7 @@ from app.api.admin_escrow import router as admin_escrow_router
 from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
+from app.api.admin_substances import router as admin_substances_router
 from app.api.admin_users import router as admin_users_router
 from app.api.admin_verification import router as admin_verification_router
 from app.api.alert_rules import alerts_router
@@ -65,6 +66,7 @@ from app.api.portal.news import router as portal_news_router
 from app.api.portal.notifications import router as portal_notifications_router
 from app.api.portal.offers import router as portal_offers_router
 from app.api.portal.requests import router as portal_requests_router
+from app.api.portal.substances import router as portal_substances_router
 from app.api.prices import router as prices_router
 from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
@@ -218,6 +220,7 @@ def create_app() -> FastAPI:
     application.include_router(portal_eimzo_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
     application.include_router(portal_market_router, prefix="/api/v1")
+    application.include_router(portal_substances_router, prefix="/api/v1")
     application.include_router(portal_inquiries_router, prefix="/api/v1")
     application.include_router(portal_requests_router, prefix="/api/v1")
     application.include_router(portal_news_router, prefix="/api/v1")
@@ -226,6 +229,7 @@ def create_app() -> FastAPI:
     application.include_router(admin_contracts_router, prefix="/api/v1")
     application.include_router(admin_deals_router, prefix="/api/v1")
     application.include_router(admin_escrow_router, prefix="/api/v1")
+    application.include_router(admin_substances_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.

@@ -93,6 +93,13 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   → admin-channel alert) and `expire_stale_contracts` (`contract_pending_ttl_days`, default 30) run
   on the existing `default` queue — no queue/compose change. `EIMZO_STUB=true` (dev/CI only) lets the
   whole sign flow run without the sidecar; **must be false in production**.
+- **Compliance (R5 / P5)** — the api startup command also runs
+  `python -m app.seed.seed_substances` (idempotent) which digitizes the ПКМ lists into
+  `substances`. The shipped revision is `v1-provisional` and **deliberately incomplete** — only the
+  entries confirmed by `.planning/deal-lifecycle/INTEGRATIONS.md` §4. Re-running never duplicates a
+  row and never overwrites one an operator edited in the admin panel (`seed_revision` goes NULL on
+  a hand edit). The publish gate `dangerous_check_enforced` is a runtime setting that ships **off**;
+  turning it on before the legal review of the lists would block trade on an incomplete registry.
 
 ## Make targets (run from repo root)
 

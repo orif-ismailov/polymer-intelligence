@@ -96,6 +96,11 @@ def _specs() -> tuple[SettingSpec, ...]:
             "How recent a supplier's listing must be to count as a match",
             min=1, max=730,
         ),
+        SettingSpec(
+            "chem_registry_mode", "str", "stub",
+            "Chemical registry: stub (our own substance table) or live (P7 adapter)",
+            choices=("stub", "live"),
+        ),
     )
 
 
