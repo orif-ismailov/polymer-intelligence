@@ -340,8 +340,13 @@ class VerificationCaseStatus(enum.StrEnum):
 class VerificationCheckType(enum.StrEnum):
     """Individual check within a case (PG type: verification_check_type).
 
-    R1 ships the four manual/format checks. R3 adds eimzo_signature and P2 adds
-    gov_registry/tax_status/vat_status via ALTER TYPE ADD VALUE.
+    R1 ships the four manual/format checks; R3 added eimzo_signature. P7.c adds
+    the two registry checks (migration 0029) — APPENDED, never reordered, because
+    the values are a PG enum and `ALTER TYPE` can only add.
+
+    Both registry checks may be `unavailable`: there is no realtime API for
+    private companies without ПЦД access, and an operator's transcription of an
+    open service (my.soliq.uz, license.gov.uz) is the channel that works today.
     """
 
     tax_id_format = "tax_id_format"
@@ -349,6 +354,8 @@ class VerificationCheckType(enum.StrEnum):
     documents_complete = "documents_complete"
     manual_kyb = "manual_kyb"
     eimzo_signature = "eimzo_signature"  # R3 — E-IMZO digital-signature identity confirmation
+    gov_registry = "gov_registry"        # P7.c — company exists/active in the state registry
+    vat_status = "vat_status"            # P7.c — VAT certificate status
 
 
 class VerificationCheckStatus(enum.StrEnum):

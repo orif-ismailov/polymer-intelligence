@@ -109,6 +109,15 @@ def _specs() -> tuple[SettingSpec, ...]:
             "Chemical registry: stub (our own substance table) or live (P7 adapter)",
             choices=("stub", "live"),
         ),
+        # P7.c — ships `stub`, and `live` raises until a ПЦД adapter exists. On
+        # `live` a submitted case also spawns the two registry checks; on `stub`
+        # they are created only when an operator records a manual snapshot, so a
+        # case can never be stranded waiting for a channel we do not have.
+        SettingSpec(
+            "gov_registry_mode", "str", "stub",
+            "State registry: stub (manual operator checks) or live (ПЦД adapter)",
+            choices=("stub", "live"),
+        ),
     )
 
 

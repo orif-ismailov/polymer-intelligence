@@ -113,6 +113,7 @@ from app.models.reference import (  # noqa: F401
     ProductGrade,
     ProductSynonym,
 )
+from app.models.registry import RegistrySnapshot  # noqa: F401
 from app.models.reports import Report  # noqa: F401
 from app.models.requests import Client, Request, RequestFile, RequestStatusHistory  # noqa: F401
 from app.models.signals import Signal  # noqa: F401
@@ -253,4 +254,6 @@ __all__ = [
     "LabPartner",
     "LabOrder",
     "SampleRequest",
+    # State-registry evidence (R6 / P7.c)
+    "RegistrySnapshot",
 ]

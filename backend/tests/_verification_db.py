@@ -50,6 +50,7 @@ _TABLES = [
     "contracts",
     "contract_templates",
     "integration_call_log",
+    "registry_snapshots",
     "signature_evidence",
     "company_person_data",
     "verification_checks",

@@ -269,6 +269,6 @@ class TestOfferModelHelpers:
 class TestSingleHead:
     def test_0028_is_the_head(self) -> None:
         script = _script_dir()
-        assert script.get_heads() == ["0028"], (
+        assert script.get_heads() == ["0029"], (
             f"expected a single head 0028, got {script.get_heads()}"
         )
