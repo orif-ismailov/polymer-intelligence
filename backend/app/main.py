@@ -39,6 +39,7 @@ import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
 from app.api.admin_contracts import router as admin_contracts_router
 from app.api.admin_deals import router as admin_deals_router
 from app.api.admin_escrow import router as admin_escrow_router
+from app.api.admin_licenses import router as admin_licenses_router
 from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
@@ -57,6 +58,7 @@ from app.api.moderation import router as moderation_router
 from app.api.offer_requests import router as offer_requests_router
 from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.companies import router as portal_companies_router
+from app.api.portal.compliance import router as portal_compliance_router
 from app.api.portal.contracts import router as portal_contracts_router
 from app.api.portal.deals import router as portal_deals_router
 from app.api.portal.eimzo import router as portal_eimzo_router
@@ -216,6 +218,7 @@ def create_app() -> FastAPI:
     # Deals before companies for the same reason: its literal
     # /portal/companies/{company_id}/deals routes must be matched by this router.
     application.include_router(portal_deals_router, prefix="/api/v1")
+    application.include_router(portal_compliance_router, prefix="/api/v1")
     application.include_router(portal_companies_router, prefix="/api/v1")
     application.include_router(portal_eimzo_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
@@ -230,6 +233,7 @@ def create_app() -> FastAPI:
     application.include_router(admin_deals_router, prefix="/api/v1")
     application.include_router(admin_escrow_router, prefix="/api/v1")
     application.include_router(admin_substances_router, prefix="/api/v1")
+    application.include_router(admin_licenses_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.

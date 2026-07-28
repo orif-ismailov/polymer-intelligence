@@ -97,6 +97,10 @@ def _specs() -> tuple[SettingSpec, ...]:
             min=1, max=730,
         ),
         SettingSpec(
+            "dangerous_check_enforced", "bool", False,
+            "Block publication of regulated substances without licence/documents",
+        ),
+        SettingSpec(
             "chem_registry_mode", "str", "stub",
             "Chemical registry: stub (our own substance table) or live (P7 adapter)",
             choices=("stub", "live"),

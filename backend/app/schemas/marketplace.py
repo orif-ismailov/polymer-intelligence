@@ -24,6 +24,7 @@ from app.models.enums import (
     PriceBasis,
     SellerOfferStatus,
 )
+from app.schemas.compliance import ComplianceOut
 
 # ── Create ──────────────────────────────────────────────────────────────────────
 
@@ -248,6 +249,11 @@ class ModerationOfferOut(_CatalogOfferFields):
     status: SellerOfferStatus
     created_at: datetime.datetime
     seller: ModerationSeller | None = None
+    #: Chemical compliance (P5, FR-C5) — the substance, its regulation level and
+    #: what is still missing, so the moderator decides with it in front of them
+    #: instead of approving a precursor listing by eye. Evaluated live: a licence
+    #: can expire between submission and this screen.
+    compliance: ComplianceOut | None = None
 
 
 class CategoryCount(BaseModel):

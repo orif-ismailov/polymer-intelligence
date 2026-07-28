@@ -15,7 +15,7 @@ from app.core.db import get_db
 from app.models.marketplace import SellerOffer
 from app.models.staff import StaffUser
 from app.schemas.marketplace import ModerationDecision, ModerationOfferOut, SellerOfferOut
-from app.services import offer_service
+from app.services import offer_compliance_service, offer_service
 
 router = APIRouter(prefix="/admin/moderation", tags=["moderation"])
 
@@ -29,8 +29,18 @@ def moderation_queue(
     db: Session = Depends(get_db),
     _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> list[ModerationOfferOut]:
-    """GET /admin/moderation/offers — pending offers, oldest first."""
-    return offer_service.list_pending(db)  # type: ignore[return-value]
+    """GET /admin/moderation/offers — pending offers, oldest first.
+
+    Each card carries its chemical-compliance block (FR-C5), evaluated now: the
+    moderator is about to make the substance public, so a stale verdict is worse
+    than none.
+    """
+    return [
+        ModerationOfferOut.model_validate(offer).model_copy(
+            update={"compliance": offer_compliance_service.verdict_out(db, offer)}
+        )
+        for offer in offer_service.list_pending(db)
+    ]
 
 
 def _get_pending(db: Session, offer_id: int) -> SellerOffer:
@@ -51,9 +61,25 @@ def approve_offer(
     db: Session = Depends(get_db),
     user: StaffUser = Depends(require_analyst_or_admin),
 ) -> SellerOfferOut:
-    """POST /admin/moderation/offers/{id}/approve."""
+    """POST /admin/moderation/offers/{id}/approve.
+
+    409 when chemical compliance blocks publication (FR-C4) — the body names
+    what is missing so the moderator can tell the seller, or register the
+    licence, instead of guessing why the button refused.
+    """
     offer = _get_pending(db, offer_id)
-    offer_service.moderate_offer(db, offer, user.id, approve=True, note=body.note)
+    try:
+        offer_service.moderate_offer(db, offer, user.id, approve=True, note=body.note)
+    except offer_compliance_service.CompliancePublishBlocked as exc:
+        db.commit()  # keep the freshly stamped verdict; the approval itself is refused
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "compliance_blocked",
+                "level": str(exc.verdict.level),
+                "missing": exc.verdict.as_json(),
+            },
+        ) from exc
     db.commit()
     return offer  # type: ignore[return-value]
 

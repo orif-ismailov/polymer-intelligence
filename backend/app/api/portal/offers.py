@@ -68,7 +68,10 @@ def create_offer(
             status_code=status.HTTP_403_FORBIDDEN, detail={"code": "company_not_verified"}
         ) from exc
     db.commit()
-    offer_service.enqueue_offer_group_notify(offer.id)
+    # A compliance-held offer is saved as a draft, not queued: there is nothing
+    # for the team to moderate until the seller supplies what is missing.
+    if offer.status == SellerOfferStatus.pending_moderation:
+        offer_service.enqueue_offer_group_notify(offer.id)
     return offer
 
 
@@ -95,7 +98,7 @@ def update_offer(
     offer = _offer_or_404(db, company.id, offer_id)
     offer, requeued = offer_service.update_company_offer(db, offer, body)
     db.commit()
-    if requeued:
+    if requeued and offer.status == SellerOfferStatus.pending_moderation:
         offer_service.enqueue_offer_group_notify(offer.id, edited=True)
     return offer
 
@@ -170,6 +173,10 @@ async def upload_offer_file(
     requeued = False
     if file_kind == OfferFileKind.image:
         requeued = offer_service.requeue_for_photo_change(db, offer)
+    else:
+        # A compliance document is the thing a held draft was waiting for
+        # (documents can only be attached once the offer row exists).
+        requeued = offer_service.recheck_compliance_after_files(db, offer)
     db.commit()
     db.refresh(offer)
     if requeued:

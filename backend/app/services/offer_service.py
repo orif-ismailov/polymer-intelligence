@@ -371,6 +371,13 @@ def _notify_company_offer_moderated(
     )
 
 
+def _assert_compliant_for_publication(db: Session, offer: SellerOffer) -> None:
+    """Guard both approval paths (dashboard and Telegram) with one check."""
+    from app.services import offer_compliance_service  # noqa: PLC0415 — cycle
+
+    offer_compliance_service.assert_publishable(db, offer)
+
+
 def moderate_offer(
     db: Session,
     offer: SellerOffer,
@@ -384,8 +391,14 @@ def moderate_offer(
     Approved offers become public (published_at set). Rejected offers carry the note
     back to the seller. (Analytics parity — emitting a sell_offer signal on approval —
     is a follow-up; signal_id stays NULL for now.)
+
+    Approval re-checks compliance (FR-C6) and raises `CompliancePublishBlocked`
+    when the gate is on: a licence can expire between a seller submitting an
+    offer and staff getting to it. Rejection is never blocked — staff must
+    always be able to clear the queue.
     """
     if approve:
+        _assert_compliant_for_publication(db, offer)
         offer.status = SellerOfferStatus.approved
         offer.published_at = utcnow()
     else:
@@ -424,8 +437,12 @@ def moderate_offer_via_telegram(
     admin), not a StaffUser — so ``moderated_by`` stays NULL and the acting Telegram
     id is recorded in the audit ``details`` instead. Authorization (must be a group
     admin) is enforced by the caller in the bot handler, not here.
+
+    Like the dashboard path, approval re-checks compliance — the bot must not be
+    a way around the gate.
     """
     if approve:
+        _assert_compliant_for_publication(db, offer)
         offer.status = SellerOfferStatus.approved
         offer.published_at = utcnow()
     else:
@@ -479,6 +496,75 @@ def enqueue_offer_group_notify(offer_id: int, *, edited: bool = False) -> None:
         )
 
 
+# ── Chemical compliance gate (P5 W3 — T3.3) ───────────────────────────────────
+
+
+def apply_publish_gate(db: Session, offer: SellerOffer) -> bool:
+    """Stamp the compliance verdict and hold the offer if publishing is barred.
+
+    Returns True when the offer was HELD (moved to / kept as `draft`).
+
+    Holding rather than raising is deliberate. A `docs_required` substance can
+    only receive its documents after the offer row exists — files are uploaded
+    against an offer id — so refusing creation would make such an offer
+    impossible to publish at all. The seller instead gets a saved draft plus a
+    list of what is missing, and attaching the document releases it
+    (:func:`recheck_compliance_after_files`).
+
+    With `dangerous_check_enforced` off (the default) nothing is held, but the
+    verdict is still cached so staff can see what a flip would block.
+    """
+    from app.services import offer_compliance_service  # noqa: PLC0415 — cycle
+
+    verdict = offer_compliance_service.evaluate_and_stamp(db, offer)
+    if verdict.ok or not offer_compliance_service.enforcement_enabled(db):
+        return False
+    if offer.status == SellerOfferStatus.draft:
+        return True
+
+    offer.status = SellerOfferStatus.draft
+    offer.published_at = None
+    db.flush()
+    write_audit(
+        db, None, "offer.compliance_held", "seller_offers", str(offer.id),
+        {"level": str(verdict.level), "missing": verdict.as_json()},
+    )
+    logger.info(
+        "offer_service.compliance_held",
+        extra={"offer_id": offer.id, "level": str(verdict.level)},
+    )
+    return True
+
+
+def recheck_compliance_after_files(db: Session, offer: SellerOffer) -> bool:
+    """Re-evaluate after the offer's files changed; release a compliant draft.
+
+    Returns True when the offer was released into moderation. Only a draft that
+    the gate itself is holding can be released — a seller's own unfinished draft
+    (compliance never failed) is left alone.
+    """
+    from app.services import offer_compliance_service  # noqa: PLC0415 — cycle
+
+    was_blocked = offer.compliance_ok is False
+    verdict = offer_compliance_service.evaluate_and_stamp(db, offer)
+    if not (
+        was_blocked
+        and verdict.ok
+        and offer.status == SellerOfferStatus.draft
+        and offer_compliance_service.enforcement_enabled(db)
+    ):
+        return False
+
+    offer.status = SellerOfferStatus.pending_moderation
+    db.flush()
+    write_audit(
+        db, None, "offer.compliance_released", "seller_offers", str(offer.id),
+        {"level": str(verdict.level)},
+    )
+    logger.info("offer_service.compliance_released", extra={"offer_id": offer.id})
+    return True
+
+
 # ── Company-origin offers (R1 W5 — portal) ────────────────────────────────────
 
 
@@ -517,10 +603,15 @@ def create_company_offer(
         accepts_rfq=data.accepts_rfq,
         accepts_contract=data.accepts_contract,
         accepts_escrow=data.accepts_escrow,
+        substance_id=data.substance_id,
+        cas_number=data.cas_number,
+        hs_code=data.hs_code,
+        declared_concentration_pct=data.declared_concentration_pct,
         status=SellerOfferStatus.pending_moderation,
     )
     db.add(offer)
     db.flush()
+    apply_publish_gate(db, offer)
     event_service.emit(
         db, event_types.OFFER_PUBLISHED_BY_COMPANY, "seller_offer", offer.id,
         {"company_id": company.id, "account_id": account.id},
@@ -558,6 +649,10 @@ def update_company_offer(
     offer.accepts_rfq = data.accepts_rfq
     offer.accepts_contract = data.accepts_contract
     offer.accepts_escrow = data.accepts_escrow
+    offer.substance_id = data.substance_id
+    offer.cas_number = data.cas_number
+    offer.hs_code = data.hs_code
+    offer.declared_concentration_pct = data.declared_concentration_pct
 
     requeued = offer.status in (SellerOfferStatus.approved, SellerOfferStatus.rejected)
     if requeued:
@@ -567,6 +662,10 @@ def update_company_offer(
         offer.moderation_note = None
 
     db.flush()
+    # FR-C6: every edit re-checks. The substance may have changed, and so may
+    # the licence behind it — a held offer must not stay live on a stale verdict.
+    if apply_publish_gate(db, offer):
+        requeued = False
     write_audit(
         db, None, "offer.edit", "seller_offers", str(offer.id),
         {"via": "company", "requeued": requeued},

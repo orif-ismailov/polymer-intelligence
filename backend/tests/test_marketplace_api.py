@@ -68,6 +68,13 @@ def _mock_offer(id: int = 11, status: str = "approved") -> MagicMock:
     o.origin = "seller"
     o.display_name = "Chem Trade LLC"
     o.company_verified = False
+    # Chemical compliance (P5): a MagicMock claims to have every attribute, so
+    # the compliance fields are pinned to "no chemistry" — otherwise the verdict
+    # tries to compare two MagicMock concentrations.
+    o.substance_id = None
+    o.cas_number = None
+    o.hs_code = None
+    o.declared_concentration_pct = None
     return o
 
 

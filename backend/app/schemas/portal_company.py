@@ -17,8 +17,10 @@ from app.models.enums import (
     OfferAvailability,
     OfferSaleMode,
     PriceBasis,
+    RegulationLevel,
     SellerOfferStatus,
 )
+from app.schemas.compliance import MissingOut
 from app.schemas.marketplace import OfferFileRef
 
 # ── Inputs ────────────────────────────────────────────────────────────────────
@@ -152,6 +154,15 @@ class CompanyOfferIn(BaseModel):
     accepts_rfq: bool = True
     accepts_contract: bool = False
     accepts_escrow: bool = False
+    # ── Chemistry (P5) ────────────────────────────────────────────────────────
+    #: Registry link. A seller may instead type an identifier for something they
+    #: believe is not in the registry (FR-C2) — the gate resolves that too.
+    substance_id: int | None = None
+    cas_number: str | None = Field(default=None, max_length=20)
+    hs_code: str | None = Field(default=None, max_length=20)
+    #: Regulation is concentration-dependent; leaving this empty is treated as
+    #: "regulated", never as an exemption.
+    declared_concentration_pct: decimal.Decimal | None = Field(default=None, ge=0, le=100)
 
     @model_validator(mode="after")
     def _made_to_order_states_a_lead_time(self) -> CompanyOfferIn:
@@ -191,6 +202,15 @@ class CompanyOfferOut(BaseModel):
     accepts_rfq: bool = True
     accepts_contract: bool = False
     accepts_escrow: bool = False
+    #: Chemistry + the cached verdict (P5). `compliance_ok=False` on a draft is
+    #: why it is a draft — the seller's requirements panel reads it.
+    substance_id: int | None = None
+    cas_number: str | None = None
+    hs_code: str | None = None
+    declared_concentration_pct: decimal.Decimal | None = None
+    compliance_level: RegulationLevel | None = None
+    compliance_ok: bool | None = None
+    compliance_missing: list[MissingOut] | None = None
     moderation_note: str | None = None
     created_at: datetime.datetime
     #: Attached files in upload order (photos + documents), so the seller's own

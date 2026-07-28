@@ -19,6 +19,11 @@ def test_moderate_via_telegram_approve_sets_public_and_audits() -> None:
     from app.services import offer_service  # noqa: PLC0415
 
     offer = MagicMock()
+    # No chemistry on this offer: a bare MagicMock would answer "yes" to having
+    # a substance and the compliance re-check would compare two mocks (P5).
+    offer.substance_id = None
+    offer.cas_number = None
+    offer.hs_code = None
     db = MagicMock()
 
     with patch("app.services.offer_service.write_audit") as mock_audit:
@@ -26,7 +31,10 @@ def test_moderate_via_telegram_approve_sets_public_and_audits() -> None:
 
     assert offer.status == SellerOfferStatus.approved
     assert offer.published_at is not None
-    db.flush.assert_called_once()
+    # Flushes (the compliance re-check stamps its verdict first, P5) but never
+    # commits — the caller owns the transaction.
+    assert db.flush.called
+    db.commit.assert_not_called()
     # actor is a telegram user → no staff id, id recorded in details
     _, kwargs = mock_audit.call_args
     assert kwargs["staff_user_id"] is None
