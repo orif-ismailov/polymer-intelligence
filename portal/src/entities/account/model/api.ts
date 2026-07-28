@@ -17,11 +17,13 @@ export const accountApi = {
 
   updateMe: (patch: AccountPatch): Promise<Account> =>
     api.patch<Account>("/portal/me", patch),
-
-  /** Dev/e2e helper — reads the last OTP for a phone. Not used in production. */
-  peekOtp: (phone: string): Promise<{ code: string }> =>
-    api.get<{ code: string }>("/portal/auth/otp/peek", { query: { phone } }),
 };
+
+// NOTE: there is deliberately no `peekOtp` here. The backend does expose
+// `GET /portal/auth/otp/peek` as a test hook, but it is double-gated (404 unless
+// DEBUG *and* the console SMS driver) and nothing in the app or the e2e suite
+// called the client wrapper — it only shipped the endpoint's name inside the
+// production bundle. The e2e specs read the code from the API directly.
 
 export const accountKeys = {
   me: ["account", "me"] as const,

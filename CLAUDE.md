@@ -260,8 +260,10 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 
 ## CI
 
-`.github/workflows/ci.yml` runs five jobs: **backend** (ruff · mypy · pytest against a Postgres
+`.github/workflows/ci.yml` runs eight jobs: **backend** (ruff · mypy · pytest against a Postgres
 service), **dashboard** (eslint · `next typegen` · tsc), **dashboard-e2e** (Playwright against a
-live migrated+seeded API), **webapp** (eslint · tsc), and **build-images** (docker build of the
-backend + dashboard images). Deploy to the server runs only on push to `main` after the gates pass.
-CI uses placeholder secrets so `Settings` doesn't fail-fast.
+live migrated+seeded API), **webapp** (eslint · tsc), **portal** (eslint · tsc · vite build),
+**build-images** (builds + pushes four GHCR images — backend, dashboard, webapp, portal — gated on
+all four frontend/backend jobs), then **deploy** (push to `main`) and **deploy-dev** (push to
+`dev`), which pull those images and re-run the one-shot `webapp-build`/`portal-build` services to
+refresh the static bundles. CI uses placeholder secrets so `Settings` doesn't fail-fast.

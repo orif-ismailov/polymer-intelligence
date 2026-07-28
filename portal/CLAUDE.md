@@ -85,5 +85,19 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
 Static bundle → `portal_static` volume via `make portal-bundle` (= the profile-`build`
 `portal-build` compose service, `deploy/Dockerfile.portal`). nginx serves it at the root of
 `cabinet.ai-imex.com` + proxies `/api/` → `api:8000` same-origin. Prod TLS terminates on the
-host front door (behind-proxy topology — see `deploy/CLAUDE.md`); DNS `cabinet.*` + cert are
-ops steps. CI: the `portal` job (npm ci → lint → typecheck → build).
+host front door (behind-proxy topology — see `deploy/CLAUDE.md`).
+
+CI does the whole path on a push to `main`/`dev`: the `portal` job (lint · tsc · vite build)
+gates `build-images`, which pushes `…-portal:<branch>`, and the deploy job pulls it and runs
+`portal-build` so `portal_static` is refreshed on every deploy. **The bundle is not part of any
+long-running image** — a deploy that skips `portal-build` leaves the previous cabinet build (or,
+on a fresh server, an empty volume that answers 404).
+
+Two things a request needs that live OUTSIDE this repo's containers, and both are ops steps:
+`cabinet.ai-imex.com` DNS, and a **host** nginx vhost forwarding it to `127.0.0.1:8080` —
+the inner nginx routes by `Host`, so a domain with no host-side block never reaches it
+(`deploy/nginx/host-vhost.ai-imex.conf.example` now ships that block; certbot covers the name).
+
+The bundle needs no build-time env or secrets: the API base is the relative `/api/v1`. Nothing
+dev-only ships — `/dev/ui` is behind `import.meta.env.DEV`, and there is no client for the
+`otp/peek` test hook.

@@ -308,8 +308,12 @@ flipped. Rollout (dev → prod):
    `DEBUG=true`) → create 2 companies → submit → approve one from dashboard `/verification`, the
    other from the Telegram group → switch active company → publish an offer → moderate → offer
    appears in the public market with `company_verified: true`.
-3. **Bundle the frontends**: `make portal-bundle` (+ `make webapp-bundle` if changed) to load the
-   static portal into `portal_static`.
+3. **Bundle the frontends** — only needed for a MANUAL deploy: `make portal-bundle`
+   (+ `make webapp-bundle` if changed). On a push to `dev`/`main` the CI deploy job already
+   pulls the prebuilt `…-portal` image and runs `portal-build` itself, so nothing compiles on
+   the server. Either way the step is not optional: the bundle lives in the `portal_static`
+   volume, not in any long-running image, so a deploy that skips it serves the PREVIOUS
+   cabinet build — or, on a fresh server, an empty volume that answers 404.
 4. **Prod prep** (in the prod `../.env`, one level above the repo root):
    - `VERIFICATION_ENC_KEY` — a **new required secret** (≥32 urlsafe-b64 chars). Generate once and
      store securely; **rotating it makes existing encrypted bank numbers/PINFL undecryptable**.
@@ -317,10 +321,26 @@ flipped. Rollout (dev → prod):
    - `VERIFICATION_NOTIFY_CHAT_ID` (optional; falls back to `REQUEST_NOTIFY_CHAT_ID`).
    - Leave the enforcement app-settings OFF (`verification_auto_approve`,
      `bank_verification_required`, `verification_required_for_publish`) — badge-only.
-5. **DNS + TLS**: add `cabinet.ai-imex.com` DNS → the host front door, and a cert on the host nginx
-   (behind-proxy topology: host nginx terminates TLS → docker nginx :8080; the `cabinet.*` server
-   block is already in `nginx.behind-proxy.conf`).
-6. **Announce**: verified companies now carry a «проверено» badge and can publish from the cabinet.
+5. **DNS + TLS + the host vhost** — three steps, and the third is the one that gets missed:
+   - `cabinet.ai-imex.com` DNS → the host front door;
+   - a **host** nginx server block for that name forwarding to `127.0.0.1:8080`. The inner
+     nginx routes by `Host`, so a domain with no host-side block never reaches it, no matter
+     how healthy the container is. The block ships in
+     `deploy/nginx/host-vhost.ai-imex.conf.example` — copy the file, `nginx -t`, reload;
+   - the cert: add `-d cabinet.ai-imex.com` to the certbot invocation in that file's header.
+
+   (The inner `cabinet.*` block has been in `nginx.behind-proxy.conf` since R1; the dev stack's
+   equivalent is `dev-cabinet.ai-imex.com` in `nginx.dev-server.behind-proxy.conf`.)
+6. **Verify** (from outside the server, so the host front door is in the path):
+   ```bash
+   curl -sI https://cabinet.ai-imex.com/            | head -1   # 200, not 404/502
+   curl -s   https://cabinet.ai-imex.com/companies  -o /dev/null -w '%{http_code}\n'  # 200 — SPA fallback
+   curl -s   https://cabinet.ai-imex.com/api/v1/health                                 # same-origin API
+   ```
+   A **404 at the root** means `portal_static` is empty → run `portal-build`. A **502** means the
+   inner nginx is unreachable → check the container. **Landing on another site** means the host
+   vhost for `cabinet.*` is missing → step 5.
+7. **Announce**: verified companies now carry a «проверено» badge and can publish from the cabinet.
 
 ---
 

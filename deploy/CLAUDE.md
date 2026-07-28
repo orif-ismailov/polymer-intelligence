@@ -54,8 +54,18 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
 - **Client portal (R1)** is a Vite bundle in the `portal_static` volume: `make portal-bundle`
   (= `docker compose --profile build run --rm --build portal-build`). nginx serves it at the root
   of **cabinet.ai-imex.com** + proxies `/api/` → `api:8000` same-origin (server block in
-  `nginx.behind-proxy.conf`). Prod needs DNS `cabinet.*` + a host cert (behind-proxy: host nginx
-  terminates TLS → docker nginx :8080). New envs (R1): `VERIFICATION_ENC_KEY` (**secret**, ≥32
+  `nginx.behind-proxy.conf`; the dev stack's is `dev-cabinet.ai-imex.com` in
+  `nginx.dev-server.behind-proxy.conf`). Prod needs DNS `cabinet.*` + a host cert (behind-proxy:
+  host nginx terminates TLS → docker nginx :8080).
+  **The bundle is in a VOLUME, not an image** — so it is refreshed only when `portal-build` runs.
+  CI now does that on every deploy (it pulls `…-portal:<branch>`, built by `build-images`, and
+  runs the one-shot service — nothing compiles on the 2-core box). A deploy that skips it leaves
+  the previous cabinet build; a fresh server with an empty volume answers **404**.
+  **Every public domain also needs a HOST-side vhost.** The inner nginx routes by `Host` and
+  never sees a request for a name the host front door has no block for — that request just lands
+  on the default site. `cabinet.*` was inner-only until now;
+  `host-vhost.ai-imex{,-dev}.conf.example` ship the block, and the certbot line in each header
+  covers the name. If the cabinet is unreachable while the container is healthy, check there first. New envs (R1): `VERIFICATION_ENC_KEY` (**secret**, ≥32
   urlsafe-b64 chars), `SMS_PROVIDER` (`console` dev / `eskiz` prod) + `ESKIZ_EMAIL`/`ESKIZ_PASSWORD`
   (secret, required when eskiz), `VERIFICATION_NOTIFY_CHAT_ID` (optional). Enforcement app-settings
   (`verification_auto_approve`, `bank_verification_required`, `verification_required_for_publish`)

@@ -1,12 +1,13 @@
 # Host nginx vhost for the DEV split — place on the SERVER, next to ai-imex.conf.
 # ============================================================================
 # Shared HOST nginx front-door config for the DEV environment. It terminates TLS
-# for the three DEV domains and forwards plain HTTP by Host to the dev-server
+# for the four DEV domains and forwards plain HTTP by Host to the dev-server
 # compose stack's inner nginx on 127.0.0.1:8081 (prod uses :8080).
 #
 #   dev.ai-imex.com       → dev-server stack webapp static
 #   dev-admin.ai-imex.com → dev-server stack dashboard
 #   dev-api.ai-imex.com   → dev-server stack api  (+ Telegram webhook for the DEV bot)
+#   dev-cabinet.ai-imex.com → dev-server stack client portal static (R1 W7)
 #
 # Install (alongside — NOT replacing — the prod ai-imex.conf):
 #   sudo cp deploy/nginx/host-vhost.ai-imex-dev.conf.example \
@@ -14,7 +15,8 @@
 #   sudo ln -sf /etc/nginx/sites-available/ai-imex-dev.conf \
 #               /etc/nginx/sites-enabled/ai-imex-dev.conf
 #   sudo nginx -t && sudo systemctl reload nginx
-#   sudo certbot --nginx -d dev.ai-imex.com -d dev-admin.ai-imex.com -d dev-api.ai-imex.com
+#   sudo certbot --nginx -d dev.ai-imex.com -d dev-admin.ai-imex.com \
+#                        -d dev-api.ai-imex.com -d dev-cabinet.ai-imex.com
 #   # certbot rewrites these blocks in place: adds `listen 443 ssl`, the cert
 #   # paths, and an 80→443 redirect. Then: sudo systemctl reload nginx
 #
@@ -64,6 +66,28 @@ server {
 server {
     listen 80;
     server_name dev.ai-imex.com;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8081;
+        proxy_http_version 1.1;
+        proxy_set_header   Connection "";
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_buffering    off;
+        proxy_read_timeout 3600s;
+    }
+}
+
+# Client cabinet (Vite portal). Served by the inner nginx from `portal_static`,
+# which the one-shot `portal-build` service populates — an empty volume answers
+# 404, which is the usual cause of "the dev cabinet is down".
+server {
+    listen 80;
+    server_name dev-cabinet.ai-imex.com;
 
     client_max_body_size 12m;
 
