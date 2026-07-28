@@ -16,10 +16,12 @@ matching on polymer type outrank a trader matching the exact product, because a
 buyer would rather hear from the plant. Weights are module constants and the
 ordering they produce is pinned by a table-driven test.
 
-The lab-passport term is wired but inert: P6 adds lab passports, and having the
-weight here already means the ranking will not need re-deriving then. It
-contributes nothing today (`has_lab_passport` defaults False), so P6 landing
-does not silently shift every existing score.
+The lab-passport term went live with P6: a supplier whose matching listing
+carries a laboratory passport scores `W_LAB_PASSPORT` higher than an otherwise
+identical one. It counts the PASSPORT, not `lab_verified` — that is what the
+weight is named for, and a buyer cares that an analysis exists, not who paid for
+it. (P4 shipped the term wired but inert on purpose, so this landing did not
+silently re-derive the whole ranking.)
 """
 
 from __future__ import annotations
@@ -38,12 +40,13 @@ from app.models.companies import Company, CompanyBusinessRole
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,
+    OfferFileKind,
     SellerOfferStatus,
 )
 from app.models.enums import (
     CompanyBusinessRole as RoleEnum,
 )
-from app.models.marketplace import SellerOffer
+from app.models.marketplace import SellerOffer, SellerOfferFile
 from app.models.requests import Request
 
 logger = logging.getLogger(__name__)
@@ -56,7 +59,7 @@ W_PRODUCT_TYPE = decimal.Decimal("0.6")    # same polymer type
 W_PRODUCT_TEXT = decimal.Decimal("0.4")    # free-text overlap only
 
 W_VERIFIED = decimal.Decimal("0.2")
-#: P6 will set `has_lab_passport`. Inert until then — see the module docstring.
+#: Live since P6: any matching listing of theirs carries a laboratory passport.
 W_LAB_PASSPORT = decimal.Decimal("0.15")
 W_FRESH_OFFER = decimal.Decimal("0.1")
 
@@ -143,11 +146,24 @@ def match_suppliers(db: Session, request: Request) -> list[ScoredCompany]:
     if match_clause is None:
         return []
 
+    # Does ANY of this company's matching listings carry a passport (P6)? Asked
+    # in the same grouped pass rather than per candidate: a supplier with five
+    # matching listings is still one supplier, and one analysis is enough.
+    passport_exists = (
+        db.query(SellerOfferFile.id)
+        .filter(
+            SellerOfferFile.offer_id == SellerOffer.id,
+            SellerOfferFile.kind == OfferFileKind.lab_passport,
+        )
+        .exists()
+    )
+
     rows = (
         db.query(
             SellerOffer.company_id.label("company_id"),
             sa.func.min(kind_case).label("match_rank"),
             sa.func.max(SellerOffer.published_at).label("latest"),
+            sa.func.bool_or(passport_exists).label("lab_passport"),
         )
         .join(Company, Company.id == SellerOffer.company_id)
         .filter(
@@ -178,6 +194,7 @@ def match_suppliers(db: Session, request: Request) -> list[ScoredCompany]:
                 verified=True,               # the query already filtered on it
                 fresh_offer=True,            # …and on the freshness window
                 roles=roles_by_company.get(row.company_id, ()),
+                has_lab_passport=bool(row.lab_passport),
             ),
             rank=0,                          # assigned after sorting
             match_kind=kinds.get(int(row.match_rank), "text"),

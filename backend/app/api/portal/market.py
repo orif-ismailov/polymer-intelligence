@@ -49,6 +49,12 @@ def list_market(
     company_id: int | None = Query(
         default=None, description="Exclude this company's own offers when browsing"
     ),
+    has_lab_passport: bool = Query(
+        default=False, description="Only offers carrying a laboratory passport"
+    ),
+    lab_verified: bool = Query(
+        default=False, description="Only offers analysed through the platform"
+    ),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -58,6 +64,10 @@ def list_market(
 
     When ``company_id`` is a company the caller belongs to, that company's own
     offers are excluded (it cannot inquire on itself).
+
+    The two laboratory filters (FR-L5) are separate questions and stack: "has an
+    analysis" and "we arranged it". Both default to off — an unticked checkbox
+    must not filter anything.
     """
     exclude_company_id: int | None = None
     if company_id is not None:
@@ -69,6 +79,8 @@ def list_market(
         availability=availability,
         country=country,
         exclude_company_id=exclude_company_id,
+        has_lab_passport=has_lab_passport,
+        lab_verified=lab_verified,
         limit=limit,
         offset=offset,
     )

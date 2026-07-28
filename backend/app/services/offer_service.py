@@ -242,6 +242,8 @@ def list_catalog(
     country: str | None = None,
     exclude_seller_id: int | None = None,
     exclude_company_id: int | None = None,
+    has_lab_passport: bool | None = None,
+    lab_verified: bool | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[SellerOffer]:
@@ -253,6 +255,11 @@ def list_catalog(
     the linked catalog offers.
 
     ``availability`` / ``country`` are optional equality filters (R2 portal market).
+
+    ``has_lab_passport`` / ``lab_verified`` are the two SEPARATE laboratory
+    filters of FR-L5: "there is an analysis" and "we had it analysed". Only
+    ``True`` filters — ``False`` from an unticked checkbox means "don't filter",
+    not "show me offers without one", which would empty the market on a click.
 
     When ``exclude_seller_id`` is set, that seller's own listings are omitted — a seller
     browsing the marketplace sees only other sellers' offers (they manage their own under
@@ -285,6 +292,20 @@ def list_catalog(
         query = query.filter(SellerOffer.availability == availability)
     if country is not None:
         query = query.filter(SellerOffer.country == country)
+    if has_lab_passport:
+        # EXISTS rather than a cached column: `files` is already loaded for the
+        # card, and a `has_lab_passport` flag would be a second source of truth
+        # that every file deletion had to remember to update.
+        query = query.filter(
+            db.query(SellerOfferFile.id)
+            .filter(
+                SellerOfferFile.offer_id == SellerOffer.id,
+                SellerOfferFile.kind == OfferFileKind.lab_passport,
+            )
+            .exists()
+        )
+    if lab_verified:
+        query = query.filter(SellerOffer.lab_verified.is_(True))
     if q:
         like = f"%{q.strip()}%"
         conditions = [

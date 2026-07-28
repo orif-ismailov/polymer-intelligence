@@ -12,6 +12,8 @@ internals stay hidden, exactly as in the Mini App.
 
 from __future__ import annotations
 
+import decimal
+
 from app.models.enums import OfferSaleMode
 from app.schemas.marketplace import (
     CatalogOfferOut,
@@ -37,6 +39,16 @@ class PortalMarketOfferOut(CatalogOfferOut):
     #: CONFIRMED business roles of the company behind the offer (P4 W2). Empty for
     #: seller-origin offers — there is no portal company to have confirmed any.
     business_roles: list[str] = []
+    #: Laboratory (P6, FR-L1). Two different claims: a passport is attached
+    #: (derived from the files) versus a platform lab order produced it. The
+    #: market filters them separately for the same reason.
+    has_lab_passport: bool = False
+    lab_verified: bool = False
+    #: Sample terms (P6, FR-L3) — a property of the listing, so the card can say
+    #: "samples: 15 USD, ships in 3 days" before anyone asks.
+    samples_available: bool = False
+    sample_price: decimal.Decimal | None = None
+    sample_dispatch_days: int | None = None
 
 
 class PortalMarketOfferDetail(PortalMarketOfferOut):
