@@ -164,6 +164,23 @@ class CompanyOfferIn(BaseModel):
     #: Regulation is concentration-dependent; leaving this empty is treated as
     #: "regulated", never as an exemption.
     declared_concentration_pct: decimal.Decimal | None = Field(default=None, ge=0, le=100)
+    # ── Samples (P6) ──────────────────────────────────────────────────────────
+    #: Sample terms are a property of the LISTING — the same for every buyer who
+    #: asks — so they live here rather than on each request. A NULL price with
+    #: samples available means free.
+    samples_available: bool = False
+    sample_price: decimal.Decimal | None = Field(default=None, ge=0)
+    sample_dispatch_days: int | None = Field(default=None, ge=1, le=365)
+
+    @model_validator(mode="after")
+    def _sample_terms_need_samples(self) -> CompanyOfferIn:
+        """A price or a dispatch time for a sample nobody can order is a card
+        that promises something the seller did not offer."""
+        if not self.samples_available and (
+            self.sample_price is not None or self.sample_dispatch_days is not None
+        ):
+            raise ValueError("sample terms require samples_available")
+        return self
 
     @model_validator(mode="after")
     def _made_to_order_states_a_lead_time(self) -> CompanyOfferIn:
@@ -215,6 +232,13 @@ class CompanyOfferOut(BaseModel):
     compliance_level: RegulationLevel | None = None
     compliance_ok: bool | None = None
     compliance_missing: list[MissingOut] | None = None
+    #: Samples + laboratory (P6). `has_lab_passport` is derived from the files,
+    #: `lab_verified` is the flag only a finished platform lab order sets.
+    samples_available: bool = False
+    sample_price: decimal.Decimal | None = None
+    sample_dispatch_days: int | None = None
+    has_lab_passport: bool = False
+    lab_verified: bool = False
     moderation_note: str | None = None
     created_at: datetime.datetime
     #: Attached files in upload order (photos + documents), so the seller's own

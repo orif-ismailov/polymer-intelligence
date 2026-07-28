@@ -70,6 +70,7 @@ from app.api.portal.news import router as portal_news_router
 from app.api.portal.notifications import router as portal_notifications_router
 from app.api.portal.offers import router as portal_offers_router
 from app.api.portal.requests import router as portal_requests_router
+from app.api.portal.samples import router as portal_samples_router
 from app.api.portal.substances import router as portal_substances_router
 from app.api.prices import router as prices_router
 from app.api.reports import router as reports_router
@@ -223,6 +224,7 @@ def create_app() -> FastAPI:
     application.include_router(portal_compliance_router, prefix="/api/v1")
     # Lab orders hang off /portal/companies/{id}/lab-orders — same reason again.
     application.include_router(portal_lab_router, prefix="/api/v1")
+    application.include_router(portal_samples_router, prefix="/api/v1")
     application.include_router(portal_companies_router, prefix="/api/v1")
     application.include_router(portal_eimzo_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")

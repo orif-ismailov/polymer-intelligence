@@ -610,6 +610,9 @@ def create_company_offer(
         cas_number=data.cas_number,
         hs_code=data.hs_code,
         declared_concentration_pct=data.declared_concentration_pct,
+        samples_available=data.samples_available,
+        sample_price=data.sample_price,
+        sample_dispatch_days=data.sample_dispatch_days,
         status=SellerOfferStatus.pending_moderation,
     )
     db.add(offer)
@@ -656,6 +659,9 @@ def update_company_offer(
     offer.cas_number = data.cas_number
     offer.hs_code = data.hs_code
     offer.declared_concentration_pct = data.declared_concentration_pct
+    offer.samples_available = data.samples_available
+    offer.sample_price = data.sample_price
+    offer.sample_dispatch_days = data.sample_dispatch_days
 
     requeued = offer.status in (SellerOfferStatus.approved, SellerOfferStatus.rejected)
     if requeued:
