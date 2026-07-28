@@ -1,4 +1,4 @@
-"""Escrow payment service (R4 / P3 — T1.2). The money side of a deal.
+"""Escrow payment service (R4 / P3 — T1.2; R6 / P7.b). The money side of a deal.
 
 Money never touches this platform: it moves between the buyer, a partner bank
 and the seller. What lives here is the *record* of that movement, and the rule
@@ -28,6 +28,13 @@ FR-D8 shows up here as a refusal: once escrow is funded, a refund needs the deal
 disputed first, because `paid_escrow → cancelled` is not a transition. That is
 deliberate — it makes a refund a recorded staff decision rather than a quiet
 reversal.
+
+**P7.b — the provider rail.** A bank reports movements through
+`apply_provider_event`, which either applies them via `mark_from_provider` or
+HOLDS them for an operator. The two doors (`mark` for an operator,
+`mark_from_provider` for a bank) share one body, `_apply_mark`: they differ only
+in who is accountable, and every guard above applies to both. A rail that had
+its own, looser rules would be the way around the guards, not a second way in.
 """
 
 from __future__ import annotations
@@ -40,9 +47,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.integrations.escrow import events as provider_events_map
 from app.models.deals import Deal
 from app.models.enums import DealActorKind, DealStatus, EscrowStatus
-from app.models.payments import ESCROW_MODE_STUB, EscrowPayment, ProviderEvent
+from app.models.payments import ESCROW_MODE_LIVE, ESCROW_MODE_STUB, EscrowPayment, ProviderEvent
 from app.models.staff import StaffUser
 from app.services import (
     audit_service,
@@ -88,6 +96,39 @@ _STAMPS: dict[EscrowStatus, str] = {
 REFUND_REASON = "escrow_refund"
 
 
+# ── The provider rail: what a bank may decide on its own (P7.b) ───────────────
+
+#: Statuses a provider callback may apply UNATTENDED.
+#:
+#: `funded` and `released` only move a deal forward, and their deal-side targets
+#: (`paid_escrow`, `completed`) are already `system`-only — a bank reporting them
+#: is reporting a fact. `refunded` is absent on purpose: it CANCELS the deal, and
+#: `cancelled` is deliberately unreachable by `system` (`deal_service._ACTOR_RULES`).
+#:
+#: That gap is the open question P3 recorded in this module. The answer is
+#: neither a service account nor a widening of the actor rules: a refund is held
+#: for an operator, because ending a deal is a decision that needs a person and a
+#: reason on it. FR-D8 already says the same thing on the operator path — out of
+#: funded escrow, a refund requires the deal disputed first.
+AUTO_APPLIED: frozenset[EscrowStatus] = frozenset({EscrowStatus.funded, EscrowStatus.released})
+
+#: Prefix stamped into `provider_events.error` when an event was understood but
+#: deliberately not applied. The operator queue is a scan for it; a held event is
+#: `processed` because we DID decide what it means — the decision was "a human".
+HOLD_PREFIX = "hold:"
+
+HOLD_UNKNOWN_PROVIDER = "unknown_provider"
+HOLD_MALFORMED = "malformed"
+HOLD_UNKNOWN_REF = "unknown_ref"
+HOLD_WRONG_RAIL = "wrong_rail"
+HOLD_AMOUNT_MISMATCH = "amount_mismatch"
+HOLD_CURRENCY_MISMATCH = "currency_mismatch"
+HOLD_NEEDS_OPERATOR = "needs_operator"
+HOLD_RELEASE_BEFORE_DELIVERY = "release_before_delivery"
+HOLD_INVALID_TRANSITION = "invalid_transition"
+HOLD_DEAL_BLOCKED = "deal_blocked"
+
+
 # ── Domain exceptions (no `Error` suffix — house style) ───────────────────────
 
 
@@ -109,6 +150,14 @@ class NoteRequired(Exception):
 
 class StaffRequired(Exception):
     """This mark must be attributed to a staff member (stub rail)."""
+
+
+class WrongRail(Exception):
+    """A provider tried to move a payment opened on the stub rail (or vice versa).
+
+    `escrow_payments.mode` is frozen at creation, so flipping the runtime setting
+    can never rewrite how a payment already in flight may be marked.
+    """
 
 
 # ── Lookups ───────────────────────────────────────────────────────────────────
@@ -224,7 +273,49 @@ def mark(
         raise NoteRequired(str(payment.id))
     if staff_user is None:
         raise StaffRequired(str(payment.id))
+    return _apply_mark(db, payment, to_status, note=clean_note, staff_user=staff_user, event=None)
 
+
+def mark_from_provider(
+    db: Session,
+    payment: EscrowPayment,
+    to_status: EscrowStatus,
+    event: ProviderEvent,
+) -> EscrowPayment:
+    """Record a movement the PROVIDER reported. No staff member, by design.
+
+    The callback is the evidence, which is why `escrow_payments.*_marked_by` has
+    been nullable since P3 — nothing in the schema changes to support a bank.
+    The note points back at the inbox row so the payment and the raw callback are
+    joinable by eye.
+
+    Only usable on a payment opened on the live rail (`WrongRail` otherwise): a
+    payment whose movement an operator is reconciling by hand must not also be
+    moved by a provider behind their back.
+    """
+    if payment.mode != ESCROW_MODE_LIVE:
+        raise WrongRail(f"payment {payment.id} is on the {payment.mode} rail")
+    note = f"provider:{event.provider}:{event.external_id}"
+    return _apply_mark(db, payment, to_status, note=note, staff_user=None, event=event)
+
+
+def _apply_mark(
+    db: Session,
+    payment: EscrowPayment,
+    to_status: EscrowStatus,
+    *,
+    note: str,
+    staff_user: StaffUser | None,
+    event: ProviderEvent | None,
+) -> EscrowPayment:
+    """Shared body of `mark` (operator) and `mark_from_provider` (bank).
+
+    The two doors differ ONLY in who is accountable; every rule below — the row
+    lock, the transition table, the release-before-delivery guard, the deal being
+    dragged in the same transaction — applies identically to both. Splitting the
+    rules per door is how a rail quietly becomes the way around a guard.
+    """
+    clean_note = note
     locked = db.execute(
         select(EscrowPayment).where(EscrowPayment.id == payment.id).with_for_update()
     ).scalar_one()
@@ -247,22 +338,39 @@ def mark(
     stamp = _STAMPS[to_status]
     locked.status = to_status
     setattr(locked, f"{stamp}_at", now)
-    setattr(locked, f"{stamp}_marked_by", staff_user.id)
+    # NULL on the provider path — the inbox row is the evidence there, and an
+    # invented staff id would make a bank-driven mark indistinguishable from an
+    # operator's assertion.
+    setattr(locked, f"{stamp}_marked_by", staff_user.id if staff_user is not None else None)
     locked.note = clean_note
     db.flush()
 
     _drag_the_deal(db, deal, to_status, staff_user, clean_note)
 
+    extra: dict[str, object] = {"from": frm.value, "note": clean_note}
+    if event is not None:
+        extra["provider"] = event.provider
+        extra["provider_event_id"] = event.id
     event_service.emit(
         db,
         _EVENT_FOR[to_status],
         "escrow_payment",
         locked.id,
-        _payload(deal, locked, extra={"from": frm.value, "note": clean_note}),
+        _payload(deal, locked, extra=extra),
     )
     audit_service.write_audit(
-        db, staff_user.id, "escrow.mark", "escrow_payments", str(locked.id),
-        {"deal_id": deal.id, "from": frm.value, "to": to_status.value, "note": clean_note},
+        db,
+        staff_user.id if staff_user is not None else None,
+        "escrow.mark" if event is None else "escrow.mark_provider",
+        "escrow_payments",
+        str(locked.id),
+        {
+            "deal_id": deal.id,
+            "from": frm.value,
+            "to": to_status.value,
+            "note": clean_note,
+            **({"provider_event_id": event.id} if event is not None else {}),
+        },
     )
     _notify_both(
         db, deal, locked, notification_service.KIND_ESCROW_STATUS, status=to_status.value
@@ -281,7 +389,7 @@ def _drag_the_deal(
     db: Session,
     deal: Deal,
     to_status: EscrowStatus,
-    staff_user: StaffUser,
+    staff_user: StaffUser | None,
     note: str,
 ) -> None:
     """Apply the deal transition this escrow move asserts.
@@ -291,9 +399,16 @@ def _drag_the_deal(
     attributed to the staff member who marked it, and carries the `escrow_refund`
     marker so a money-driven cancellation is distinguishable from a party simply
     walking away.
+
+    Which is why a refund with no staff member behind it is refused here rather
+    than handed to `deal_service` as `system`: `apply_provider_event` already
+    holds provider refunds for an operator, and this is the second lock on the
+    same door.
     """
     target = _DEAL_EFFECT[to_status]
     if to_status is EscrowStatus.refunded:
+        if staff_user is None:
+            raise StaffRequired(f"deal {deal.id}: a refund needs a staff actor")
         deal_service.transition(
             db,
             deal,
@@ -407,32 +522,167 @@ def record_provider_event(
     return event
 
 
+def _hold(
+    db: Session, event: ProviderEvent, reason: str, detail: str = ""
+) -> dict[str, object]:
+    """Stamp an event as understood-but-not-applied, and say why.
+
+    `processed` is True because we DID decide what the callback means — the
+    decision was "a human has to look at this". Leaving it unprocessed would have
+    the sweeper retry a verdict that will never change, and the inbox would grow
+    with no trace of the reason.
+    """
+    event.processed = True
+    event.processed_at = utcnow()
+    event.error = f"{HOLD_PREFIX}{reason}" + (f": {detail}" if detail else "")
+    db.flush()
+    logger.warning(
+        "escrow_service.provider_event.held",
+        extra={"event_id": event.id, "provider": event.provider, "reason": reason},
+    )
+    return {"status": "held", "event_id": event.id, "reason": reason, "detail": detail}
+
+
+def _by_provider_ref(db: Session, provider_ref: str) -> EscrowPayment | None:
+    return (
+        db.query(EscrowPayment).filter(EscrowPayment.provider_ref == provider_ref).one_or_none()
+    )
+
+
 def apply_provider_event(db: Session, event: ProviderEvent) -> dict[str, object]:
-    """Turn a provider callback into a `mark`. Skeleton until P7.
+    """Turn a provider callback into a `mark` — or hold it for an operator.
 
-    The live rail has no adapter yet, so this records WHY nothing happened and
-    stamps the event processed. Leaving it unprocessed instead would grow the
-    inbox forever with no trace of the reason.
+    The rail is deliberately one-directional. A provider may report the two
+    movements that only carry a deal FORWARD (`funded`, `released`, see
+    `AUTO_APPLIED`); everything else is recorded, explained and left to a human.
+    In particular a refund is never applied unattended — that is the answer to
+    the question P3 left in this module, and it needed no service account and no
+    change to `deal_service._ACTOR_RULES`.
 
-    P7 replaces the body: parse the payload into an `EscrowStatus`, resolve the
-    payment by `provider_ref`, and call `mark`. Note that a provider-driven
-    refund needs a staff actor under the current deal rules (`cancelled` is not
-    reachable by `system`) — P7 decides whether that is a service account or a
-    widening of `deal_service._ACTOR_RULES`. The schema and this seam are ready
-    either way.
+    Every refusal is a hold with a named reason rather than an exception,
+    because the caller is a batch task: one poisoned transaction would take the
+    rest of the batch down with it. The mark itself runs inside a SAVEPOINT for
+    the same reason — a refused deal transition rolls back to the savepoint and
+    the hold is still written.
     """
     if event.processed:
         return {"status": "already_processed", "event_id": event.id}
 
+    try:
+        normalized = provider_events_map.normalize(event.provider, event.payload)
+    except provider_events_map.UnknownProvider:
+        return _hold(db, event, HOLD_UNKNOWN_PROVIDER, event.provider)
+    except provider_events_map.MalformedEvent as exc:
+        return _hold(db, event, HOLD_MALFORMED, str(exc))
+
+    payment = _by_provider_ref(db, normalized.provider_ref)
+    if payment is None:
+        return _hold(db, event, HOLD_UNKNOWN_REF, normalized.provider_ref)
+    if payment.mode != ESCROW_MODE_LIVE:
+        return _hold(db, event, HOLD_WRONG_RAIL, f"payment {payment.id} is {payment.mode}")
+
+    to_status = EscrowStatus(normalized.status)
+
+    # An acknowledgement that the escrow exists. Not a movement, nothing to do —
+    # but it IS decided, so it does not come back through the sweeper.
+    if to_status is EscrowStatus.pending or to_status is payment.status:
+        event.processed = True
+        event.processed_at = utcnow()
+        db.flush()
+        return {"status": "noop", "event_id": event.id, "payment_id": payment.id}
+
+    # Money that does not match the invoice. Partial payment is a real banking
+    # behaviour we do not model; accepting it as `funded` would tell the seller
+    # they have been paid in full.
+    if normalized.amount is not None and normalized.amount != payment.amount:
+        return _hold(
+            db, event, HOLD_AMOUNT_MISMATCH, f"{normalized.amount} vs {payment.amount}"
+        )
+    if normalized.currency is not None and normalized.currency != payment.currency:
+        return _hold(
+            db, event, HOLD_CURRENCY_MISMATCH, f"{normalized.currency} vs {payment.currency}"
+        )
+
+    if to_status not in AUTO_APPLIED:
+        return _hold(db, event, HOLD_NEEDS_OPERATOR, to_status.value)
+
+    try:
+        with db.begin_nested():
+            mark_from_provider(db, payment, to_status, event)
+    except EscrowReleaseBeforeDelivery as exc:
+        return _hold(db, event, HOLD_RELEASE_BEFORE_DELIVERY, str(exc))
+    except InvalidEscrowTransition as exc:
+        return _hold(db, event, HOLD_INVALID_TRANSITION, str(exc))
+    except WrongRail as exc:  # pragma: no cover — guarded above; kept as a second lock
+        return _hold(db, event, HOLD_WRONG_RAIL, str(exc))
+    except (deal_service.InvalidDealTransition, deal_service.ActorNotAllowed) as exc:
+        return _hold(db, event, HOLD_DEAL_BLOCKED, str(exc))
+
     event.processed = True
     event.processed_at = utcnow()
-    event.error = f"no adapter for provider {event.provider!r} (live escrow lands in P7)"
+    event.error = None
     db.flush()
     logger.info(
-        "escrow_service.provider_event.unsupported",
-        extra={"event_id": event.id, "provider": event.provider},
+        "escrow_service.provider_event.applied",
+        extra={"event_id": event.id, "payment_id": payment.id, "to": to_status.value},
     )
-    return {"status": "unsupported", "event_id": event.id}
+    return {
+        "status": "applied",
+        "event_id": event.id,
+        "payment_id": payment.id,
+        "to": to_status.value,
+    }
+
+
+def held_provider_events(db: Session, limit: int = 100) -> list[dict[str, object]]:
+    """The operator queue: callbacks we understood and deliberately did not apply.
+
+    Self-clearing, and that is why a held event needs neither a resolve button
+    nor an extra column: a hold is a DISAGREEMENT between what the bank claims
+    and what we record, so once the operator marks the payment by hand the two
+    agree and the row stops matching. An event we could not read at all has no
+    claim to compare, so it stays listed until someone deals with it.
+    """
+    rows = (
+        db.query(ProviderEvent)
+        .filter(ProviderEvent.error.like(f"{HOLD_PREFIX}%"))
+        .order_by(ProviderEvent.id.desc())
+        .limit(limit)
+        .all()
+    )
+    out: list[dict[str, object]] = []
+    for event in rows:
+        reason = (event.error or "")[len(HOLD_PREFIX) :].split(":", 1)[0]
+        item: dict[str, object] = {
+            "event_id": event.id,
+            "provider": event.provider,
+            "external_id": event.external_id,
+            "reason": reason,
+            "detail": event.error or "",
+            "created_at": event.created_at,
+            "claimed_status": None,
+            "payment_id": None,
+            "payment_status": None,
+            "deal_id": None,
+        }
+        try:
+            normalized = provider_events_map.normalize(event.provider, event.payload)
+        except (provider_events_map.UnknownProvider, provider_events_map.MalformedEvent):
+            out.append(item)  # unreadable → no claim to reconcile against
+            continue
+
+        payment = _by_provider_ref(db, normalized.provider_ref)
+        item["claimed_status"] = normalized.status
+        if payment is None:
+            out.append(item)
+            continue
+        if payment.status.value == normalized.status:
+            continue  # the operator resolved it; bank and ledger agree again
+        item["payment_id"] = payment.id
+        item["payment_status"] = payment.status.value
+        item["deal_id"] = payment.deal_id
+        out.append(item)
+    return out
 
 
 def now_utc() -> datetime.datetime:
