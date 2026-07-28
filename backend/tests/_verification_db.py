@@ -34,6 +34,10 @@ _TABLES = [
     "rfq_push_log",
     "offer_favorites",
     "substance_suggestions",
+    # Lab orders point at deal documents, offer files, deals, offers and
+    # partners — they go first (P6).
+    "lab_orders",
+    "sample_requests",
     # Payments before deals — escrow_payments.deal_id references them.
     "escrow_payments",
     # Deals before contracts/requests/offers — deals.contract_id references them.
@@ -57,6 +61,7 @@ _TABLES = [
     "offer_requests",
     "seller_offers",
     "substances",
+    "lab_partners",
     "company_bank_accounts",
     "company_licenses",
     "verification_documents",

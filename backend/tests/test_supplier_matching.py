@@ -72,7 +72,7 @@ class TestMigration:
     def test_is_the_single_head(self) -> None:
         cfg = Config(str(BACKEND_DIR / "alembic.ini"))
         cfg.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
-        assert ScriptDirectory.from_config(cfg).get_heads() == ["0027"]
+        assert ScriptDirectory.from_config(cfg).get_heads() == ["0028"]
 
     def test_one_push_per_company_per_rfq(self) -> None:
         """FR-A2. This unique index IS the dedup: re-running the task inserts

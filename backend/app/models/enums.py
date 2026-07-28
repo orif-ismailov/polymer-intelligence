@@ -176,6 +176,10 @@ class OfferFileKind(enum.StrEnum):
     `sds` and `coa` arrived with P5: a regulated substance carries a list of
     required documents (SDS/TDS/COA), and the `docs_required` verdict has to be
     able to tell them apart — "some file is attached" is not compliance.
+
+    `lab_passport` (P6) is the one kind that is also a public trust claim: it
+    puts a badge on the market card, so attaching it re-enters moderation the
+    way a photo does.
     """
 
     image = "image"
@@ -184,6 +188,7 @@ class OfferFileKind(enum.StrEnum):
     other = "other"
     sds = "sds"  # P5 — safety data sheet
     coa = "coa"  # P5 — certificate of analysis
+    lab_passport = "lab_passport"  # P6 — laboratory analysis passport
 
 
 class OfferAvailability(enum.StrEnum):
@@ -543,3 +548,44 @@ class LicenseStatus(enum.StrEnum):
     expired = "expired"
     revoked = "revoked"
     rejected = "rejected"
+
+
+# ── Labs and samples (R5 / P6) ────────────────────────────────────────────────
+
+
+class LabOrderStatus(enum.StrEnum):
+    """A request for a laboratory analysis (PG type: lab_order_status).
+
+    submitted → accepted → sample_awaited → in_analysis → done; `rejected` is
+    reachable from every live state. The analysis itself is a manual process run
+    by a partner lab (TZ §5), so every step is moved by an operator — the
+    platform orchestrates and stores the result, it does not run the lab.
+
+    `done` is the only status that produces something, and it is the only one
+    the schema constrains: a done order points at the passport it produced. The
+    transition table lives in `app/services/lab_service.py::_TRANSITIONS`.
+    """
+
+    submitted = "submitted"
+    accepted = "accepted"
+    sample_awaited = "sample_awaited"
+    in_analysis = "in_analysis"
+    done = "done"
+    rejected = "rejected"
+
+
+class SampleRequestStatus(enum.StrEnum):
+    """A buyer's request for a physical sample (PG type: sample_request_status).
+
+    requested → accepted → sent → received; the seller may `declined` instead of
+    accepting, and the buyer may `rejected_by_buyer` what arrived. Unlike the lab
+    machine, both sides drive this one — which party may make which move is
+    `sample_service._ACTOR_RULES`, not a comment.
+    """
+
+    requested = "requested"
+    accepted = "accepted"
+    declined = "declined"
+    sent = "sent"
+    received = "received"
+    rejected_by_buyer = "rejected_by_buyer"

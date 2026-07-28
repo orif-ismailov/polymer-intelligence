@@ -194,6 +194,21 @@ class SellerOffer(Base):
     compliance_checked_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # ── Samples and laboratory (P6) ───────────────────────────────────────────
+    #: Sample terms live on the OFFER, not on each request: they are a term of
+    #: the listing ("samples: 15 USD, ships in 3 days"), identical for every
+    #: buyer who asks. A NULL price with samples available means free.
+    samples_available: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    sample_price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
+    sample_dispatch_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: INDEPENDENT confirmation — set only by `lab_service.complete_with_result`
+    #: when a platform lab order finishes. A seller uploading their own passport
+    #: gets the "lab passport" badge; only this flag says we had it analysed.
+    lab_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     status: Mapped[SellerOfferStatus] = mapped_column(
         PgEnum(SellerOfferStatus, name="seller_offer_status", create_type=False),
         nullable=False,
@@ -241,6 +256,24 @@ class SellerOffer(Base):
         """Id of the cover photo — the first one uploaded (FR-M2), or None."""
         photos = self.photos
         return photos[0].id if photos else None
+
+    # ── Laboratory passport (P6, FR-L1) ───────────────────────────────────────
+    # Derived, not cached. The catalog query already selectinloads `files`, and a
+    # `has_lab_passport` column would be a second source of truth for "is there a
+    # PDF attached" — one that a file deletion would have to remember to update.
+    # The market FILTER cannot use a property, so it runs the same question as an
+    # EXISTS subquery (`offer_service.list_catalog`).
+
+    @property
+    def has_lab_passport(self) -> bool:
+        """True when a laboratory passport is attached, whoever uploaded it."""
+        return any(f.kind == OfferFileKind.lab_passport for f in self.files)
+
+    @property
+    def lab_passport_file_id(self) -> int | None:
+        """Id of the most recent lab passport (files come back in upload order)."""
+        passports = [f for f in self.files if f.kind == OfferFileKind.lab_passport]
+        return passports[-1].id if passports else None
 
     # ── Dual-origin display helpers (R1 W5) ───────────────────────────────────
     # A serializer-agnostic view of "who is behind this offer" so every consumer

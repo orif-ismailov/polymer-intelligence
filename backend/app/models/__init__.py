@@ -62,6 +62,7 @@ from app.models.enums import (  # noqa: F401
     DeliveryStatus,
     DocumentReviewStatus,
     EscrowStatus,
+    LabOrderStatus,
     LicenseStatus,
     OfferFileKind,
     OfferRequestStatus,
@@ -76,6 +77,7 @@ from app.models.enums import (  # noqa: F401
     RequestStatus,
     RfqResponseStatus,
     RfqVisibility,
+    SampleRequestStatus,
     SellerOfferStatus,
     SignalKind,
     SourceKind,
@@ -92,6 +94,7 @@ from app.models.enums import (
 )
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
+from app.models.lab import LabOrder, LabPartner, SampleRequest  # noqa: F401
 from app.models.marketplace import (  # noqa: F401
     OfferFavorite,
     OfferRequest,
@@ -244,4 +247,10 @@ __all__ = [
     "Substance",
     "CompanyLicense",
     "SubstanceSuggestion",
+    # Labs and samples (R5 / P6)
+    "LabOrderStatus",
+    "SampleRequestStatus",
+    "LabPartner",
+    "LabOrder",
+    "SampleRequest",
 ]
