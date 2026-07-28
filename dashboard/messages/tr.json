@@ -29,7 +29,8 @@
       "companies": "Şirketler",
       "contracts": "Sözleşmeler",
       "deals": "İşlemler",
-      "escrow": "Emanet"
+      "escrow": "Emanet",
+      "substances": "Maddeler"
     },
     "guest": "Misafir"
   },
@@ -397,7 +398,24 @@
     "priceOnRequest": "Fiyat talep üzerine",
     "approve": "Onayla",
     "reject": "Reddet",
-    "notePlaceholder": "Satıcı için not (isteğe bağlı)"
+    "notePlaceholder": "Satıcı için not (isteğe bağlı)",
+    "compliance": {
+      "title": "Uyumluluk",
+      "noSubstance": "Madde belirtilmemiş",
+      "ok": "gereklilikler karşılandı",
+      "blocked": "yayın engellendi",
+      "wouldBlock": "kontrol açıkken engellenirdi",
+      "missingLicense": "Geçerli lisans gerekli: {regime}",
+      "missingDocument": "Belge gerekli: {doc}",
+      "missingProhibited": "Yasak dayanağı: {act}",
+      "approveBlocked": "Uyumluluk yayını reddetti:",
+      "level": {
+        "free": "Serbest dolaşım",
+        "docs_required": "Belge gerekli",
+        "license_required": "Lisans gerekli",
+        "prohibited": "Yasak"
+      }
+    }
   },
   "sources": {
     "title": "Kaynaklar",
@@ -1076,6 +1094,108 @@
       "invalid_transition": "Ödeme için bu geçiş mümkün değil — sayfayı yenileyip mevcut durumu kontrol edin.",
       "confirmation_required": "Paranın fiilen hareket ettiğini onaylayın.",
       "note_required": "Not zorunludur."
+    }
+  },
+  "substances": {
+    "title": "Madde kataloğu",
+    "subtitle": "ПКМ listelerinin sayısallaştırılması — yayın kontrolü için doğruluk kaynağı",
+    "provisional": "Tohum sürümü v1-provisional: yalnızca hukuki haritada doğrulanan maddeler dahildir. ПКМ ekleri hukuki inceleme sonrası eklenecek — o zamana kadar yayın engelini açmayın.",
+    "add": "Madde ekle",
+    "addTitle": "Yeni madde",
+    "editTitle": "Maddeyi düzenle",
+    "edit": "Düzenle",
+    "deactivate": "Devre dışı",
+    "activate": "Etkinleştir",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "empty": "Sonuç yok",
+    "error": "Katalog yüklenemedi",
+    "searchPlaceholder": "Ad, CAS, GTİP…",
+    "allLevels": "Tüm seviyeler",
+    "columns": {
+      "name": "Ad",
+      "hs": "GTİP",
+      "cas": "CAS",
+      "level": "Düzenleme",
+      "threshold": "Eşik",
+      "source": "Dayanak"
+    },
+    "fields": {
+      "code": "Kod (slug)",
+      "nameRu": "Ad (ru)",
+      "nameUz": "Ad (uz)",
+      "nameEn": "Ad (en)",
+      "hs": "GTİP kodu",
+      "hsHint": "Birincil hukuki tanımlayıcı",
+      "cas": "CAS",
+      "casHint": "İkincil, SDS ve AI için",
+      "level": "Düzenleme seviyesi",
+      "regime": "Rejim",
+      "regimeHint": "Düzenlemeye tabi maddeler için zorunlu",
+      "threshold": "Eşik konsantrasyon, %",
+      "thresholdHint": "Eşiğin altında rejim uygulanmaz",
+      "exemption": "Yıllık muafiyet limiti",
+      "exemptionUnit": "Birim",
+      "licenseCategory": "Lisans kategorisi",
+      "requiredDocs": "Zorunlu belgeler",
+      "synonyms": "Eş anlamlılar",
+      "synonymsHint": "Virgülle ayırın",
+      "sourceAct": "Dayanak mevzuat",
+      "sourceActHint": "Örn.: ПКМ №330, 12.11.2015, Liste IV"
+    },
+    "errors": {
+      "exists": "Bu kod veya CAS ile bir madde zaten var"
+    },
+    "level": {
+      "free": "Serbest dolaşım",
+      "docs_required": "Belge gerekli",
+      "license_required": "Lisans gerekli",
+      "prohibited": "Yasak"
+    },
+    "regime": {
+      "precursor_list_iv": "Öncü maddeler (Liste IV, ПКМ-330)",
+      "explosive_toxic": "Patlayıcı ve zehirli (ПКМ-782)",
+      "strong_acting": "Güçlü etkili (ПКМ-818)",
+      "pkm916_import": "Tehlikeli ürün ithalatı (ПКМ-916)"
+    },
+    "docKind": {
+      "sds": "güvenlik bilgi formu (SDS)",
+      "tds": "teknik veri formu (TDS)",
+      "coa": "analiz sertifikası (COA)",
+      "certificate": "sertifika"
+    }
+  },
+  "licenses": {
+    "title": "Lisanslar",
+    "hint": "Şirketin kabul edilen belgesine göre operatör tarafından kaydedilir. Düzenlemeye tabi maddeli ilanlarda kontrol edilir.",
+    "register": "Kaydet",
+    "empty": "Lisans yok",
+    "revoke": "İptal et",
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "active": "Geçerli",
+    "until": "kadar",
+    "perpetual": "süresiz",
+    "fields": {
+      "regime": "Rejim",
+      "category": "Kategori",
+      "number": "Numara",
+      "issuedBy": "Veren kurum",
+      "expiresAt": "Geçerlilik",
+      "reason": "İptal nedeni"
+    },
+    "status": {
+      "pending_review": "İncelemede",
+      "active": "Geçerli",
+      "expired": "Süresi doldu",
+      "revoked": "İptal edildi",
+      "rejected": "Reddedildi"
+    },
+    "regime": {
+      "precursor_list_iv": "Öncü maddeler (Liste IV, ПКМ-330)",
+      "explosive_toxic": "Patlayıcı ve zehirli (ПКМ-782)",
+      "strong_acting": "Güçlü etkili (ПКМ-818)",
+      "pkm916_import": "Tehlikeli ürün ithalatı (ПКМ-916)"
     }
   }
 }

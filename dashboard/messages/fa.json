@@ -29,7 +29,8 @@
       "companies": "شرکت‌ها",
       "contracts": "قراردادها",
       "deals": "معاملات",
-      "escrow": "امانی"
+      "escrow": "امانی",
+      "substances": "مواد"
     },
     "guest": "مهمان"
   },
@@ -390,7 +391,24 @@
     "priceOnRequest": "قیمت با استعلام",
     "approve": "تأیید",
     "reject": "رد",
-    "notePlaceholder": "توضیح برای فروشنده (اختیاری)"
+    "notePlaceholder": "توضیح برای فروشنده (اختیاری)",
+    "compliance": {
+      "title": "انطباق",
+      "noSubstance": "ماده مشخص نشده",
+      "ok": "الزامات برآورده شده",
+      "blocked": "انتشار مسدود شد",
+      "wouldBlock": "با فعال بودن بررسی مسدود می‌شد",
+      "missingLicense": "مجوز معتبر لازم است: {regime}",
+      "missingDocument": "مدرک لازم است: {doc}",
+      "missingProhibited": "مبنای ممنوعیت: {act}",
+      "approveBlocked": "انطباق انتشار را رد کرد:",
+      "level": {
+        "free": "گردش آزاد",
+        "docs_required": "نیازمند مدارک",
+        "license_required": "نیازمند مجوز",
+        "prohibited": "ممنوع"
+      }
+    }
   },
   "sources": {
     "title": "منابع",
@@ -1061,6 +1079,108 @@
       "invalid_transition": "این تغییر وضعیت پرداخت ممکن نیست — صفحه را تازه کنید و وضعیت فعلی را ببینید.",
       "confirmation_required": "جابه‌جایی واقعی وجه را تأیید کنید.",
       "note_required": "توضیح الزامی است."
+    }
+  },
+  "substances": {
+    "title": "فهرست مواد",
+    "subtitle": "دیجیتال‌سازی فهرست‌های ПКМ — مرجع بررسی انتشار",
+    "provisional": "نسخه داده v1-provisional: تنها اقلام تأییدشده در نقشه حقوقی وارد شده‌اند. پیوست‌های ПКМ پس از بررسی حقوقی اضافه می‌شوند — تا آن زمان مسدودسازی انتشار را فعال نکنید.",
+    "add": "افزودن ماده",
+    "addTitle": "ماده جدید",
+    "editTitle": "ویرایش ماده",
+    "edit": "ویرایش",
+    "deactivate": "غیرفعال",
+    "activate": "فعال",
+    "save": "ذخیره",
+    "cancel": "انصراف",
+    "empty": "چیزی یافت نشد",
+    "error": "بارگذاری فهرست ناموفق بود",
+    "searchPlaceholder": "نام، CAS، کد گمرکی…",
+    "allLevels": "همه سطوح",
+    "columns": {
+      "name": "نام",
+      "hs": "کد گمرکی",
+      "cas": "CAS",
+      "level": "سطح تنظیم",
+      "threshold": "آستانه",
+      "source": "مبنا"
+    },
+    "fields": {
+      "code": "کد (slug)",
+      "nameRu": "نام (ru)",
+      "nameUz": "نام (uz)",
+      "nameEn": "نام (en)",
+      "hs": "کد گمرکی",
+      "hsHint": "شناسه حقوقی اصلی",
+      "cas": "CAS",
+      "casHint": "ثانویه، برای SDS و هوش مصنوعی",
+      "level": "سطح تنظیم",
+      "regime": "رژیم",
+      "regimeHint": "برای مواد تحت تنظیم الزامی است",
+      "threshold": "غلظت آستانه، ٪",
+      "thresholdHint": "زیر آستانه، رژیم اعمال نمی‌شود",
+      "exemption": "سقف سالانه معافیت",
+      "exemptionUnit": "واحد",
+      "licenseCategory": "دسته مجوز",
+      "requiredDocs": "مدارک الزامی",
+      "synonyms": "مترادف‌ها",
+      "synonymsHint": "با کاما جدا کنید",
+      "sourceAct": "سند مبنا",
+      "sourceActHint": "مثال: ПКМ №330 مورخ 12.11.2015، فهرست چهارم"
+    },
+    "errors": {
+      "exists": "ماده‌ای با این کد یا CAS از قبل وجود دارد"
+    },
+    "level": {
+      "free": "گردش آزاد",
+      "docs_required": "نیازمند مدارک",
+      "license_required": "نیازمند مجوز",
+      "prohibited": "ممنوع"
+    },
+    "regime": {
+      "precursor_list_iv": "پیش‌سازها (فهرست چهارم، ПКМ-330)",
+      "explosive_toxic": "منفجره و سمی (ПКМ-782)",
+      "strong_acting": "قوی‌الاثر (ПКМ-818)",
+      "pkm916_import": "واردات کالای خطرناک (ПКМ-916)"
+    },
+    "docKind": {
+      "sds": "برگه ایمنی (SDS)",
+      "tds": "مشخصات فنی (TDS)",
+      "coa": "گواهی آنالیز (COA)",
+      "certificate": "گواهی"
+    }
+  },
+  "licenses": {
+    "title": "مجوزها",
+    "hint": "توسط اپراتور بر اساس مدرک پذیرفته‌شده شرکت ثبت می‌شود. هنگام انتشار آگهی مواد تحت تنظیم بررسی می‌شود.",
+    "register": "ثبت",
+    "empty": "مجوزی وجود ندارد",
+    "revoke": "ابطال",
+    "save": "ذخیره",
+    "cancel": "انصراف",
+    "active": "معتبر",
+    "until": "تا",
+    "perpetual": "بدون انقضا",
+    "fields": {
+      "regime": "رژیم",
+      "category": "دسته",
+      "number": "شماره",
+      "issuedBy": "صادرکننده",
+      "expiresAt": "اعتبار تا",
+      "reason": "دلیل ابطال"
+    },
+    "status": {
+      "pending_review": "در حال بررسی",
+      "active": "معتبر",
+      "expired": "منقضی",
+      "revoked": "ابطال‌شده",
+      "rejected": "رد شده"
+    },
+    "regime": {
+      "precursor_list_iv": "پیش‌سازها (فهرست چهارم، ПКМ-330)",
+      "explosive_toxic": "منفجره و سمی (ПКМ-782)",
+      "strong_acting": "قوی‌الاثر (ПКМ-818)",
+      "pkm916_import": "واردات کالای خطرناک (ПКМ-916)"
     }
   }
 }

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+import type { SubstanceBrief } from "@/entities/compliance";
 import type { CompanyOffer, OfferPayload } from "@/entities/offer";
 import type { Availability, SaleMode } from "@/shared/config";
 
@@ -22,6 +23,11 @@ export interface OfferFormState {
   accepts_rfq: boolean;
   accepts_contract: boolean;
   accepts_escrow: boolean;
+  /** Chosen registry row (P5). Null when the seller types CAS/HS by hand. */
+  substance: SubstanceBrief | null;
+  cas_number: string;
+  hs_code: string;
+  declared_concentration_pct: string;
 }
 
 export interface OfferFormErrors {
@@ -51,6 +57,10 @@ export const EMPTY_OFFER_FORM: OfferFormState = {
   accepts_rfq: true,
   accepts_contract: false,
   accepts_escrow: false,
+  substance: null,
+  cas_number: "",
+  hs_code: "",
+  declared_concentration_pct: "",
 };
 
 /** Seed the form state from an existing offer (edit mode). */
@@ -74,6 +84,11 @@ export function offerToForm(offer: CompanyOffer): OfferFormState {
     accepts_rfq: offer.accepts_rfq,
     accepts_contract: offer.accepts_contract,
     accepts_escrow: offer.accepts_escrow,
+    substance: offer.substance ?? null,
+    cas_number: offer.cas_number ?? "",
+    hs_code: offer.hs_code ?? "",
+    declared_concentration_pct:
+      offer.declared_concentration_pct != null ? String(offer.declared_concentration_pct) : "",
   };
 }
 
@@ -82,7 +97,13 @@ function trimOrNull(value: string): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
-/** Convert validated form state into the API payload. */
+/**
+ * Convert validated form state into the API payload.
+ *
+ * The registry link comes from the picked row, which edit mode seeds from the
+ * offer — so clearing the substance really unlinks it, and a plain "change the
+ * price" save keeps it.
+ */
 export function formToPayload(state: OfferFormState): OfferPayload {
   return {
     product_text: trimOrNull(state.product_text),
@@ -105,6 +126,10 @@ export function formToPayload(state: OfferFormState): OfferPayload {
     accepts_rfq: state.accepts_rfq,
     accepts_contract: state.accepts_contract,
     accepts_escrow: state.accepts_escrow,
+    substance_id: state.substance?.id ?? null,
+    cas_number: trimOrNull(state.cas_number),
+    hs_code: trimOrNull(state.hs_code),
+    declared_concentration_pct: trimOrNull(state.declared_concentration_pct),
   };
 }
 

@@ -555,6 +555,11 @@ def _scene(session):  # noqa: ANN001, ANN202
             substance_id=substance.id,
             status=SellerOfferStatus.pending_moderation,
         )
+        # Stamp the verdict the way a real create/edit would — a raw insert
+        # bypasses the gate, and the cached fields are what the payload carries.
+        from app.services import offer_compliance_service  # noqa: PLC0415
+
+        offer_compliance_service.evaluate_and_stamp(db, offer)
         db.commit()
         return {
             "company_id": company.id,
@@ -621,6 +626,23 @@ class TestApi:
         assert body["level"] == "license_required"
         assert body["missing"] == [{"kind": "license", "detail": "precursor_list_iv"}]
         assert body["substance"]["code"] == "acetone"
+
+    def test_the_offer_list_carries_the_substance_and_verdict(self, api) -> None:  # noqa: ANN001
+        """The seller's own screens name what was picked instead of echoing a
+        CAS back, and the cached verdict is why a held offer is a draft."""
+        client, session = api
+        scene = _scene(session)
+
+        listed = client.get(
+            f"{_P}/companies/{scene['company_id']}/offers", headers=scene["headers"]
+        )
+        assert listed.status_code == 200
+        card = listed.json()[0]
+        assert card["substance"]["name_ru"] == "Ацетон"
+        assert card["compliance_ok"] is False
+        assert card["compliance_missing"] == [
+            {"kind": "license", "detail": "precursor_list_iv"}
+        ]
 
     def test_the_seller_sees_their_own_licences(self, api) -> None:  # noqa: ANN001
         client, session = api

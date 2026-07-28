@@ -6,6 +6,7 @@ import {
   Activity,
   BadgeCheck,
   Banknote,
+  FlaskConical,
   BarChart3,
   Bell,
   Boxes,
@@ -66,6 +67,7 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "contracts", href: "/contracts", icon: FileText, minRole: "analyst" },
       { key: "deals", href: "/deals", icon: Handshake, minRole: "analyst" },
       { key: "escrow", href: "/escrow", icon: Banknote, minRole: "analyst" },
+      { key: "substances", href: "/substances", icon: FlaskConical, minRole: "analyst" },
     ],
   },
   {

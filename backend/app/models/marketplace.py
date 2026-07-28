@@ -46,6 +46,7 @@ from app.models.enums import (
 
 if TYPE_CHECKING:
     from app.models.companies import Company
+    from app.models.compliance import Substance
     from app.models.requests import Client
 
 
@@ -218,6 +219,9 @@ class SellerOffer(Base):
 
     seller: Mapped[Seller | None] = relationship("Seller", back_populates="offers")
     company: Mapped[Company | None] = relationship("Company")  # dual-origin (R1 A1)
+    # The registry row this offer is about (P5). Loaded so the seller's own
+    # screens can name the substance they picked, not just echo its CAS back.
+    substance: Mapped[Substance | None] = relationship("Substance")
     files: Mapped[list[SellerOfferFile]] = relationship(
         "SellerOfferFile",
         back_populates="offer",

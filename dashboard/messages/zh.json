@@ -29,7 +29,8 @@
       "companies": "公司",
       "contracts": "合同",
       "deals": "交易",
-      "escrow": "托管"
+      "escrow": "托管",
+      "substances": "物质"
     },
     "guest": "访客"
   },
@@ -390,7 +391,24 @@
     "priceOnRequest": "价格面议",
     "approve": "批准",
     "reject": "驳回",
-    "notePlaceholder": "给卖方的备注（可选）"
+    "notePlaceholder": "给卖方的备注（可选）",
+    "compliance": {
+      "title": "合规",
+      "noSubstance": "未指定物质",
+      "ok": "要求已满足",
+      "blocked": "发布已被拦截",
+      "wouldBlock": "若开启校验将被拦截",
+      "missingLicense": "需要有效许可证：{regime}",
+      "missingDocument": "需要文件：{doc}",
+      "missingProhibited": "禁止依据：{act}",
+      "approveBlocked": "合规拒绝发布：",
+      "level": {
+        "free": "自由流通",
+        "docs_required": "需要文件",
+        "license_required": "需要许可证",
+        "prohibited": "禁止"
+      }
+    }
   },
   "sources": {
     "title": "数据源",
@@ -1061,6 +1079,108 @@
       "invalid_transition": "该付款状态变更不可行——请刷新页面查看当前状态。",
       "confirmation_required": "请勾选确认资金确已发生流动。",
       "note_required": "备注为必填项。"
+    }
+  },
+  "substances": {
+    "title": "物质目录",
+    "subtitle": "内阁决议清单的数字化——发布校验的事实来源",
+    "provisional": "种子版本 v1-provisional：仅收录法律地图已确认的条目。内阁决议附件将在法律核对后补录——在此之前请勿开启发布拦截。",
+    "add": "添加物质",
+    "addTitle": "新物质",
+    "editTitle": "编辑物质",
+    "edit": "编辑",
+    "deactivate": "停用",
+    "activate": "启用",
+    "save": "保存",
+    "cancel": "取消",
+    "empty": "未找到内容",
+    "error": "目录加载失败",
+    "searchPlaceholder": "名称、CAS、HS 编码…",
+    "allLevels": "全部级别",
+    "columns": {
+      "name": "名称",
+      "hs": "HS 编码",
+      "cas": "CAS",
+      "level": "监管级别",
+      "threshold": "阈值",
+      "source": "依据"
+    },
+    "fields": {
+      "code": "代码 (slug)",
+      "nameRu": "名称 (ru)",
+      "nameUz": "名称 (uz)",
+      "nameEn": "名称 (en)",
+      "hs": "HS 编码",
+      "hsHint": "主要法律标识",
+      "cas": "CAS",
+      "casHint": "次要标识，用于 SDS 和 AI",
+      "level": "监管级别",
+      "regime": "监管制度",
+      "regimeHint": "受管制物质必填",
+      "threshold": "阈值浓度 %",
+      "thresholdHint": "低于阈值不适用该制度",
+      "exemption": "年度豁免上限",
+      "exemptionUnit": "单位",
+      "licenseCategory": "许可证类别",
+      "requiredDocs": "必需文件",
+      "synonyms": "同义词",
+      "synonymsHint": "用逗号分隔",
+      "sourceAct": "依据法规",
+      "sourceActHint": "例如：ПКМ №330（2026.11.12），第四清单"
+    },
+    "errors": {
+      "exists": "该代码或 CAS 的物质已存在"
+    },
+    "level": {
+      "free": "自由流通",
+      "docs_required": "需要文件",
+      "license_required": "需要许可证",
+      "prohibited": "禁止"
+    },
+    "regime": {
+      "precursor_list_iv": "前体化学品（第四清单，ПКМ-330）",
+      "explosive_toxic": "爆炸性与有毒（ПКМ-782）",
+      "strong_acting": "强效物质（ПКМ-818）",
+      "pkm916_import": "危险品进口（ПКМ-916）"
+    },
+    "docKind": {
+      "sds": "安全数据表 (SDS)",
+      "tds": "技术数据表 (TDS)",
+      "coa": "分析证书 (COA)",
+      "certificate": "证书"
+    }
+  },
+  "licenses": {
+    "title": "许可证",
+    "hint": "由运营人员依据公司已受理的文件登记。发布含受管制物质的报价时校验。",
+    "register": "登记",
+    "empty": "暂无许可证",
+    "revoke": "吊销",
+    "save": "保存",
+    "cancel": "取消",
+    "active": "有效",
+    "until": "至",
+    "perpetual": "长期有效",
+    "fields": {
+      "regime": "监管制度",
+      "category": "类别",
+      "number": "编号",
+      "issuedBy": "签发机关",
+      "expiresAt": "有效期至",
+      "reason": "吊销原因"
+    },
+    "status": {
+      "pending_review": "审核中",
+      "active": "有效",
+      "expired": "已过期",
+      "revoked": "已吊销",
+      "rejected": "已拒绝"
+    },
+    "regime": {
+      "precursor_list_iv": "前体化学品（第四清单，ПКМ-330）",
+      "explosive_toxic": "爆炸性与有毒（ПКМ-782）",
+      "strong_acting": "强效物质（ПКМ-818）",
+      "pkm916_import": "危险品进口（ПКМ-916）"
     }
   }
 }

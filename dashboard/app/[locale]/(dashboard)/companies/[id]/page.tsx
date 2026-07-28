@@ -18,6 +18,7 @@ import { apiFetch } from "@/lib/api";
 import { formatTashkent } from "@/lib/tz";
 import { useAuth } from "@/hooks/useAuth";
 import { CompanyStatusBadge, CompanyRoleBadge } from "@/components/verification/company-status";
+import { CompanyLicenses } from "@/components/verification/company-licenses";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -154,6 +155,9 @@ export default function CompanyDetailPage() {
           />
         </dl>
       </section>
+
+      {/* Licences (P5) — what this company may actually trade, per regime. */}
+      <CompanyLicenses companyId={companyId} />
 
       {/* Roles */}
       <section className="rounded-lg border border-border bg-background-secondary p-4">

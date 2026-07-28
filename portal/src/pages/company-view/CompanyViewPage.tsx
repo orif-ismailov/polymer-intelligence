@@ -7,6 +7,7 @@ import { ApiError } from "@/shared/api";
 
 import { BankSection } from "./sections/BankSection";
 import { DocumentsSection } from "./sections/DocumentsSection";
+import { LicensesSection } from "./sections/LicensesSection";
 import { ProfileSection } from "./sections/ProfileSection";
 import { RolesSection } from "./sections/RolesSection";
 
@@ -78,6 +79,7 @@ export function CompanyViewPage() {
       <RolesSection company={company} />
       <BankSection company={company} editable={editable} />
       <DocumentsSection company={company} editable={editable} />
+      <LicensesSection companyId={company.id} />
     </div>
   );
 }

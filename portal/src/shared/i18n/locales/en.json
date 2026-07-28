@@ -26,7 +26,8 @@
     "notSpecified": "Not specified",
     "search": "Search",
     "all": "All",
-    "prev": "Previous"
+    "prev": "Previous",
+    "clear": "Clear"
   },
   "errors": {
     "generic": "Something went wrong",
@@ -852,6 +853,63 @@
       "origin_cert": "Certificate of origin",
       "commercial_offer": "Commercial offer",
       "other": "Other"
+    }
+  },
+  "compliance": {
+    "title": "Substance and compliance",
+    "hint": "Name the substance if this offer is a chemical. Polymers (PP, PE, PVC) can be left blank.",
+    "search": "Search the registry",
+    "searchHint": "Name, synonym, CAS or HS code",
+    "searchPlaceholder": "e.g. acetone, 67-64-1, 2914",
+    "searchEmpty": "Nothing found. You can type the CAS and HS code by hand.",
+    "cas": "CAS",
+    "hs": "HS code",
+    "concentration": "Concentration, %",
+    "concentrationHint": "Below the substance's threshold the regime does not apply. Left empty, it is treated as regulated.",
+    "askAi": "Identify the substance from the description",
+    "aiSuggestion": "AI suggestion",
+    "aiAccept": "Confirm",
+    "aiReject": "Not this one",
+    "aiNoHint": "No hint available right now — pick the substance by hand.",
+    "aiUnknownSubstance": "This substance is not in the registry — type the CAS and HS code by hand.",
+    "substance": "Substance",
+    "blockedTitle": "This offer is not published",
+    "wouldBlockTitle": "Will be required to publish",
+    "prohibitedTitle": "Listing is prohibited",
+    "blockedHint": "As soon as the requirements are met, the offer goes to moderation automatically.",
+    "prohibitedHint": "The substance is on the prohibited list. Uploading documents will not change that.",
+    "missingDocument": "Document required: {{doc}}",
+    "missingLicense": "An active licence is required: {{regime}}",
+    "missingProhibited": "Ban under: {{act}}",
+    "licenses": "Licences",
+    "licensesHint": "Licences are registered by staff from the document you uploaded.",
+    "noLicenses": "No licences",
+    "licenseActive": "Active",
+    "until": "until",
+    "level": {
+      "free": "Unregulated",
+      "docs_required": "Documents required",
+      "license_required": "Licence required",
+      "prohibited": "Prohibited"
+    },
+    "regime": {
+      "precursor_list_iv": "Precursors (List IV, ПКМ-330)",
+      "explosive_toxic": "Explosive and toxic (ПКМ-782)",
+      "strong_acting": "Strong-acting (ПКМ-818)",
+      "pkm916_import": "Hazardous import (ПКМ-916)"
+    },
+    "docKind": {
+      "sds": "safety data sheet (SDS)",
+      "tds": "technical data sheet (TDS)",
+      "coa": "certificate of analysis (COA)",
+      "certificate": "certificate"
+    },
+    "licenseStatus": {
+      "pending_review": "Pending review",
+      "active": "Active",
+      "expired": "Expired",
+      "revoked": "Revoked",
+      "rejected": "Rejected"
     }
   }
 }

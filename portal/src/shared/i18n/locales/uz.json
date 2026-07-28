@@ -26,7 +26,8 @@
     "notSpecified": "Ko‘rsatilmagan",
     "search": "Qidiruv",
     "all": "Barchasi",
-    "prev": "Orqaga"
+    "prev": "Orqaga",
+    "clear": "Tozalash"
   },
   "errors": {
     "generic": "Nimadir noto‘g‘ri ketdi",
@@ -852,6 +853,63 @@
       "origin_cert": "Kelib chiqish sertifikati",
       "commercial_offer": "Tijorat taklifi",
       "other": "Boshqa"
+    }
+  },
+  "compliance": {
+    "title": "Modda va komplayens",
+    "hint": "Taklif kimyoviy mahsulot bo‘lsa, moddani ko‘rsating. Polimerlar (PP, PE, PVX) uchun bo‘sh qoldirsa bo‘ladi.",
+    "search": "Ma’lumotnomadan qidirish",
+    "searchHint": "Nomi, sinonimi, CAS yoki TN VED kodi",
+    "searchPlaceholder": "Masalan: aseton, 67-64-1, 2914",
+    "searchEmpty": "Hech narsa topilmadi. CAS va TN VED ni qo‘lda kiritishingiz mumkin.",
+    "cas": "CAS",
+    "hs": "TN VED kodi",
+    "concentration": "Konsentratsiya, %",
+    "concentrationHint": "Modda chegarasidan past bo‘lsa, rejim qo‘llanmaydi. Ko‘rsatilmasa — tartibga solinadi deb hisoblaymiz.",
+    "askAi": "Tavsif bo‘yicha moddani aniqlash",
+    "aiSuggestion": "AI taxmini",
+    "aiAccept": "Tasdiqlash",
+    "aiReject": "Mos emas",
+    "aiNoHint": "Hozir maslahat mavjud emas — moddani qo‘lda tanlang.",
+    "aiUnknownSubstance": "Bu modda ma’lumotnomada yo‘q — CAS va TN VED ni qo‘lda kiriting.",
+    "substance": "Modda",
+    "blockedTitle": "Taklif e’lon qilinmaydi",
+    "wouldBlockTitle": "E’lon qilish uchun talab qilinadi",
+    "prohibitedTitle": "Joylashtirish taqiqlangan",
+    "blockedHint": "Talablar bajarilishi bilan taklif avtomatik ravishda moderatsiyaga o‘tadi.",
+    "prohibitedHint": "Modda taqiqlanganlar ro‘yxatida. Hujjat yuklash buni o‘zgartirmaydi.",
+    "missingDocument": "Hujjat kerak: {{doc}}",
+    "missingLicense": "Amaldagi litsenziya kerak: {{regime}}",
+    "missingProhibited": "Taqiq asosi: {{act}}",
+    "licenses": "Litsenziyalar",
+    "licensesHint": "Litsenziyani siz yuklagan hujjat asosida operator ro‘yxatga oladi.",
+    "noLicenses": "Litsenziyalar yo‘q",
+    "licenseActive": "Amalda",
+    "until": "gacha",
+    "level": {
+      "free": "Erkin muomala",
+      "docs_required": "Hujjatlar kerak",
+      "license_required": "Litsenziya kerak",
+      "prohibited": "Taqiqlangan"
+    },
+    "regime": {
+      "precursor_list_iv": "Prekursorlar (IV ro‘yxat, VMQ-330)",
+      "explosive_toxic": "Portlovchi va zaharli (VMQ-782)",
+      "strong_acting": "Kuchli ta’sir etuvchi (VMQ-818)",
+      "pkm916_import": "Xavfli mahsulot importi (VMQ-916)"
+    },
+    "docKind": {
+      "sds": "xavfsizlik pasporti (SDS)",
+      "tds": "texnik tavsif (TDS)",
+      "coa": "tahlil sertifikati (COA)",
+      "certificate": "sertifikat"
+    },
+    "licenseStatus": {
+      "pending_review": "Tekshiruvda",
+      "active": "Amalda",
+      "expired": "Muddati tugagan",
+      "revoked": "Bekor qilingan",
+      "rejected": "Rad etilgan"
     }
   }
 }

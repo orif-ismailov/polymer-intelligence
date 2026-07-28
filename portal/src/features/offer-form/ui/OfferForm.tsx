@@ -15,6 +15,7 @@ import {
   useOfferForm,
 } from "../model/useOfferForm";
 import { isNotVerifiedError, useSaveOffer } from "../model/useSaveOffer";
+import { SubstanceField } from "./SubstanceField";
 
 interface OfferFormProps {
   companyId: number;
@@ -246,6 +247,22 @@ export function OfferForm({ companyId, offer, onSaved, onCancel, onNotVerified }
           label={t("offers.acceptsEscrow")}
         />
       </fieldset>
+
+      <SubstanceField
+        companyId={companyId}
+        substance={state.substance}
+        casNumber={state.cas_number}
+        hsCode={state.hs_code}
+        concentration={state.declared_concentration_pct}
+        offerText={[state.product_text, state.grade_text, state.description]
+          .filter(Boolean)
+          .join(" ")}
+        offerId={offer?.id ?? null}
+        onPick={(substance) => setField("substance", substance)}
+        onCas={(value) => setField("cas_number", value)}
+        onHs={(value) => setField("hs_code", value)}
+        onConcentration={(value) => setField("declared_concentration_pct", value)}
+      />
 
       <FormField label={t("offers.description")}>
         {({ id }) => (

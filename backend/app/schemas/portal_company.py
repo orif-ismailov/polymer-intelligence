@@ -22,6 +22,7 @@ from app.models.enums import (
 )
 from app.schemas.compliance import MissingOut
 from app.schemas.marketplace import OfferFileRef
+from app.schemas.substance import SubstanceBrief
 
 # ── Inputs ────────────────────────────────────────────────────────────────────
 
@@ -205,6 +206,9 @@ class CompanyOfferOut(BaseModel):
     #: Chemistry + the cached verdict (P5). `compliance_ok=False` on a draft is
     #: why it is a draft — the seller's requirements panel reads it.
     substance_id: int | None = None
+    #: The registry row itself, so an edit form can show what was picked rather
+    #: than only echoing the CAS back at the seller.
+    substance: SubstanceBrief | None = None
     cas_number: str | None = None
     hs_code: str | None = None
     declared_concentration_pct: decimal.Decimal | None = None

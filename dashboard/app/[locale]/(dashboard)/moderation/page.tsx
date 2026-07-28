@@ -14,6 +14,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
+interface ComplianceBlock {
+  ok: boolean;
+  level: "free" | "docs_required" | "license_required" | "prohibited";
+  regime: string | null;
+  exempt_reason: string | null;
+  missing: Array<{ kind: string; detail: string | null }>;
+  substance: { id: number; name_ru: string; hs_code: string; cas: string | null } | null;
+  /** False while `dangerous_check_enforced` is off — nothing is actually blocked. */
+  enforced: boolean;
+}
+
 interface ModerationOffer {
   id: number;
   grade_text: string | null;
@@ -33,12 +44,36 @@ interface ModerationOffer {
     telegram_username: string | null;
     is_verified: boolean;
   };
+  /** Chemical compliance (P5, FR-C5) — evaluated now, not when submitted. */
+  compliance: ComplianceBlock | null;
+}
+
+/** Turn a refused approval into a sentence naming what compliance is waiting for. */
+function blockedReason(
+  err: unknown,
+  t: (key: string, values?: Record<string, string>) => string,
+): string {
+  const detail = (err as { body?: { detail?: unknown } })?.body?.detail as
+    | { code?: string; missing?: Array<{ kind: string; detail: string | null }> }
+    | undefined;
+  if (detail?.code !== "compliance_blocked") {
+    return err instanceof Error ? err.message : t("error");
+  }
+  const items = (detail.missing ?? []).map((m) =>
+    m.kind === "license"
+      ? t("compliance.missingLicense", { regime: m.detail ?? "—" })
+      : m.kind === "document"
+        ? t("compliance.missingDocument", { doc: m.detail ?? "—" })
+        : t("compliance.missingProhibited", { act: m.detail ?? "—" }),
+  );
+  return `${t("compliance.approveBlocked")} ${items.join("; ")}`;
 }
 
 export default function ModerationPage() {
   const t = useTranslations("moderation");
   const qc = useQueryClient();
   const [notes, setNotes] = useState<Record<number, string>>({});
+  const [blocked, setBlocked] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery<ModerationOffer[]>({
     queryKey: ["moderation-offers"],
@@ -51,7 +86,13 @@ export default function ModerationPage() {
         method: "POST",
         body: JSON.stringify({ note: note ?? null }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["moderation-offers"] }),
+    onSuccess: () => {
+      setBlocked(null);
+      void qc.invalidateQueries({ queryKey: ["moderation-offers"] });
+    },
+    // A 409 means compliance refused publication (an expired licence, a missing
+    // document). Show WHAT is missing — "409 Conflict" tells a moderator nothing.
+    onError: (err: unknown) => setBlocked(blockedReason(err, t)),
   });
 
   return (
@@ -63,6 +104,12 @@ export default function ModerationPage() {
           <p className="text-sm text-foreground-muted mt-1">{t("subtitle")}</p>
         </div>
       </div>
+
+      {blocked && (
+        <p className="rounded-lg border border-red-500/50 bg-background-secondary p-3 text-sm text-red-400">
+          {blocked}
+        </p>
+      )}
 
       {isLoading && <p className="text-sm text-foreground-muted">…</p>}
       {isError && <p className="text-sm text-red-400">{t("error")}</p>}
@@ -116,6 +163,52 @@ export default function ModerationPage() {
               placeholder={t("notePlaceholder")}
               className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
+
+            {o.compliance && (o.compliance.substance || !o.compliance.ok) && (
+              <div className="mt-3 rounded-md border border-border bg-background p-3">
+                <p className="text-xs uppercase tracking-wider text-foreground-muted">
+                  {t("compliance.title")}
+                </p>
+                <p className="mt-1 text-sm text-foreground">
+                  {o.compliance.substance
+                    ? `${o.compliance.substance.name_ru} · ${o.compliance.substance.hs_code}${
+                        o.compliance.substance.cas ? ` · CAS ${o.compliance.substance.cas}` : ""
+                      }`
+                    : t("compliance.noSubstance")}
+                </p>
+                <p className="mt-1 text-sm">
+                  <span
+                    className={
+                      o.compliance.ok
+                        ? "text-foreground-muted"
+                        : o.compliance.enforced
+                          ? "text-red-400"
+                          : "text-amber-400"
+                    }
+                  >
+                    {t(`compliance.level.${o.compliance.level}`)}
+                    {o.compliance.ok
+                      ? ` · ${t("compliance.ok")}`
+                      : o.compliance.enforced
+                        ? ` · ${t("compliance.blocked")}`
+                        : ` · ${t("compliance.wouldBlock")}`}
+                  </span>
+                </p>
+                {o.compliance.missing.length > 0 && (
+                  <ul className="mt-1 list-disc ps-5 text-sm text-foreground-muted">
+                    {o.compliance.missing.map((m, i) => (
+                      <li key={`${m.kind}-${m.detail ?? i}`}>
+                        {m.kind === "license"
+                          ? t("compliance.missingLicense", { regime: m.detail ?? "—" })
+                          : m.kind === "document"
+                            ? t("compliance.missingDocument", { doc: m.detail ?? "—" })
+                            : t("compliance.missingProhibited", { act: m.detail ?? "—" })}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <div className="mt-3 flex gap-2">
               <button

@@ -29,7 +29,8 @@
       "companies": "Kompaniyalar",
       "contracts": "Shartnomalar",
       "deals": "Bitimlar",
-      "escrow": "Eskrou"
+      "escrow": "Eskrou",
+      "substances": "Moddalar"
     },
     "guest": "Mehmon"
   },
@@ -397,7 +398,24 @@
     "priceOnRequest": "Narx so'rov bo'yicha",
     "approve": "Tasdiqlash",
     "reject": "Rad etish",
-    "notePlaceholder": "Sotuvchi uchun izoh (ixtiyoriy)"
+    "notePlaceholder": "Sotuvchi uchun izoh (ixtiyoriy)",
+    "compliance": {
+      "title": "Komplayens",
+      "noSubstance": "Modda ko‘rsatilmagan",
+      "ok": "talablar bajarilgan",
+      "blocked": "e’lon bloklangan",
+      "wouldBlock": "tekshiruv yoqilganda bloklardi",
+      "missingLicense": "Amaldagi litsenziya kerak: {regime}",
+      "missingDocument": "Hujjat kerak: {doc}",
+      "missingProhibited": "Taqiq asosi: {act}",
+      "approveBlocked": "Komplayens e’lonni rad etdi:",
+      "level": {
+        "free": "Erkin muomala",
+        "docs_required": "Hujjatlar kerak",
+        "license_required": "Litsenziya kerak",
+        "prohibited": "Taqiqlangan"
+      }
+    }
   },
   "sources": {
     "title": "Manbalar",
@@ -1076,6 +1094,108 @@
       "invalid_transition": "To‘lovning bunday o‘tishi mumkin emas — sahifani yangilab, joriy holatni tekshiring.",
       "confirmation_required": "Mablag‘ning haqiqiy harakatini tasdiqlang.",
       "note_required": "Izoh majburiy."
+    }
+  },
+  "substances": {
+    "title": "Moddalar ma’lumotnomasi",
+    "subtitle": "VMQ ro‘yxatlarining raqamlashtirilgani — e’lonni tekshirish uchun haqiqat manbai",
+    "provisional": "Sid revizyasi v1-provisional: faqat huquqiy xarita tasdiqlagan pozitsiyalar kiritilgan. VMQ ilovalari yuridik tekshiruvdan so‘ng raqamlashtiriladi — undan oldin e’lon blokirovkasini yoqmang.",
+    "add": "Modda qo‘shish",
+    "addTitle": "Yangi modda",
+    "editTitle": "Moddani tahrirlash",
+    "edit": "Tahrirlash",
+    "deactivate": "O‘chirish",
+    "activate": "Yoqish",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "empty": "Hech narsa topilmadi",
+    "error": "Ma’lumotnomani yuklab bo‘lmadi",
+    "searchPlaceholder": "Nomi, CAS, TN VED…",
+    "allLevels": "Barcha darajalar",
+    "columns": {
+      "name": "Nomi",
+      "hs": "TN VED",
+      "cas": "CAS",
+      "level": "Tartibga solish",
+      "threshold": "Chegara",
+      "source": "Asos"
+    },
+    "fields": {
+      "code": "Kod (slug)",
+      "nameRu": "Nomi (ru)",
+      "nameUz": "Nomi (uz)",
+      "nameEn": "Nomi (en)",
+      "hs": "TN VED kodi",
+      "hsHint": "Birlamchi yuridik identifikator",
+      "cas": "CAS",
+      "casHint": "Ikkilamchi, SDS va AI uchun",
+      "level": "Tartibga solish darajasi",
+      "regime": "Rejim",
+      "regimeHint": "Tartibga solinadigan moddalar uchun majburiy",
+      "threshold": "Chegaraviy konsentratsiya, %",
+      "thresholdHint": "Chegaradan past bo‘lsa rejim qo‘llanmaydi",
+      "exemption": "Yillik chiqarib tashlash limiti",
+      "exemptionUnit": "Birlik",
+      "licenseCategory": "Litsenziya toifasi",
+      "requiredDocs": "Majburiy hujjatlar",
+      "synonyms": "Sinonimlar",
+      "synonymsHint": "Vergul bilan",
+      "sourceAct": "Asos hujjat",
+      "sourceActHint": "Masalan: VMQ №330, 12.11.2015, IV ro‘yxat"
+    },
+    "errors": {
+      "exists": "Bunday kod yoki CAS bilan modda allaqachon mavjud"
+    },
+    "level": {
+      "free": "Erkin muomala",
+      "docs_required": "Hujjatlar kerak",
+      "license_required": "Litsenziya kerak",
+      "prohibited": "Taqiqlangan"
+    },
+    "regime": {
+      "precursor_list_iv": "Prekursorlar (IV ro‘yxat, VMQ-330)",
+      "explosive_toxic": "Portlovchi va zaharli (VMQ-782)",
+      "strong_acting": "Kuchli ta’sir etuvchi (VMQ-818)",
+      "pkm916_import": "Xavfli mahsulot importi (VMQ-916)"
+    },
+    "docKind": {
+      "sds": "xavfsizlik pasporti (SDS)",
+      "tds": "texnik tavsif (TDS)",
+      "coa": "tahlil sertifikati (COA)",
+      "certificate": "sertifikat"
+    }
+  },
+  "licenses": {
+    "title": "Litsenziyalar",
+    "hint": "Kompaniyaning qabul qilingan hujjati asosida operator ro‘yxatga oladi. Tartibga solinadigan moddali e’lonlarda tekshiriladi.",
+    "register": "Ro‘yxatga olish",
+    "empty": "Litsenziyalar yo‘q",
+    "revoke": "Bekor qilish",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "active": "Amalda",
+    "until": "gacha",
+    "perpetual": "muddatsiz",
+    "fields": {
+      "regime": "Rejim",
+      "category": "Toifa",
+      "number": "Raqam",
+      "issuedBy": "Kim bergan",
+      "expiresAt": "Amal qilish muddati",
+      "reason": "Bekor qilish sababi"
+    },
+    "status": {
+      "pending_review": "Tekshiruvda",
+      "active": "Amalda",
+      "expired": "Muddati tugagan",
+      "revoked": "Bekor qilingan",
+      "rejected": "Rad etilgan"
+    },
+    "regime": {
+      "precursor_list_iv": "Prekursorlar (IV ro‘yxat, VMQ-330)",
+      "explosive_toxic": "Portlovchi va zaharli (VMQ-782)",
+      "strong_acting": "Kuchli ta’sir etuvchi (VMQ-818)",
+      "pkm916_import": "Xavfli mahsulot importi (VMQ-916)"
     }
   }
 }

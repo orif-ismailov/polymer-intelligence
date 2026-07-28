@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "@/entities/account";
 import { useActiveCompany } from "@/entities/company";
+import { ComplianceRequirements, RegulationBadge } from "@/entities/compliance";
 import { OfferStatusBadge, useArchiveOffer, useOffers } from "@/entities/offer";
 import type { CompanyOffer } from "@/entities/offer";
 import { coerceLang, useEnumLabels } from "@/shared/i18n";
@@ -50,7 +51,12 @@ function OfferCard({
               {[offer.grade_text, offer.polymer_type].filter(Boolean).join(" · ") || "—"}
             </p>
           </div>
-          <OfferStatusBadge status={offer.status} />
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {offer.substance ? (
+              <RegulationBadge level={offer.substance.regulation_level} />
+            ) : null}
+            <OfferStatusBadge status={offer.status} />
+          </div>
         </div>
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3">
@@ -75,6 +81,17 @@ function OfferCard({
             <dd className="font-medium text-text">{formatDate(offer.created_at, lang)}</dd>
           </div>
         </dl>
+
+        {/* Why a held offer is a draft (P5): the gate saved it rather than
+            losing the form, and this is the list of what it is waiting for. */}
+        {offer.compliance_missing && offer.compliance_missing.length > 0 ? (
+          <ComplianceRequirements
+            level={offer.compliance_level ?? "free"}
+            missing={offer.compliance_missing}
+            enforced={offer.status === "draft"}
+            substanceName={offer.substance?.name_ru ?? null}
+          />
+        ) : null}
 
         {offer.moderation_note ? (
           <p className="rounded-md bg-surface-2 px-3 py-2 text-sm text-text-muted">
