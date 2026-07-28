@@ -1300,6 +1300,79 @@ def send_escrow_funded_to_group(
     )
 
 
+@celery_app.task(name="send_lab_order_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_lab_order_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """LAB_ORDER_SUBMITTED consumer — a customer has asked for an analysis.
+
+    This card is the START of a manual process: nobody is watching the dashboard
+    queue at 9pm, and the whole feature depends on someone picking the phone up
+    and calling a laboratory. Only submission gets a card — the statuses after it
+    are moved by the same operator who is already looking at the queue.
+
+    Never raises (ru/uz/tr, fail-soft like the other cards).
+    """
+    data = payload or {}
+    lab_order_id = aggregate_id or data.get("lab_order_id")
+    if lab_order_id is None:
+        return {"status": "skipped", "error": "no_lab_order_id"}
+
+    chat_id = _verification_notify_chat_id()
+    if chat_id is None:
+        return {"status": "skipped", "error": "no_chat_id"}
+
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.models.lab import LabOrder  # noqa: PLC0415
+
+    try:
+        with Session(engine) as session:
+            order = session.get(LabOrder, int(lab_order_id))
+            if order is None:
+                return {"status": "error", "error": f"lab order {lab_order_id} not found"}
+            company = session.get(Company, order.company_id)
+            customer = (
+                (company.legal_name or company.short_name or company.tax_id)
+                if company is not None
+                else str(order.company_id)
+            )
+            subject = (
+                f"оффер #{order.offer_id}"
+                if order.offer_id is not None
+                else f"сделка #{order.deal_id}"
+            )
+            lines = [
+                "🧪 Новая лабораторная заявка"
+                " · Yangi laboratoriya arizasi"
+                " · Yeni laboratuvar talebi",
+                "",
+                f"🆔 {order.number}",
+                f"🏢 {customer}",
+                f"📦 {subject}",
+            ]
+            if order.sample_volume:
+                lines.append(f"⚖️ {order.sample_volume}")
+            if order.comment:
+                lines.append(f"📝 {order.comment}")
+            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+    except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
+        logger.error(
+            "notify.lab_order.error", extra={"lab_order_id": lab_order_id, "error": str(exc)}
+        )
+        return {"status": "error", "error": str(exc)}
+
+    logger.info(
+        "notify.lab_order.sent", extra={"lab_order_id": lab_order_id, "chat_id": chat_id}
+    )
+    return {"status": "ok", "error": None}
+
+
 def _register_consumers() -> None:
     """Wire outbox events → team group cards (see events.CONSUMERS)."""
     from app.services import event_types  # noqa: PLC0415
@@ -1317,6 +1390,9 @@ def _register_consumers() -> None:
         CONSUMERS[event_types.VERIFICATION_CASE_SUBMITTED].append(send_verification_case_to_group)
     if send_contract_activated_to_group not in CONSUMERS.get(event_types.CONTRACT_ACTIVATED, []):
         CONSUMERS[event_types.CONTRACT_ACTIVATED].append(send_contract_activated_to_group)
+
+    if send_lab_order_to_group not in CONSUMERS.get(event_types.LAB_ORDER_SUBMITTED, []):
+        CONSUMERS[event_types.LAB_ORDER_SUBMITTED].append(send_lab_order_to_group)
 
 
 _register_consumers()
