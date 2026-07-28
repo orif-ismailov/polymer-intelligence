@@ -46,12 +46,27 @@ logger = logging.getLogger(__name__)
 
 _REVERIFICATION_DAYS = 365
 
+#: How many times `run_single_check` may attempt a check before giving up. Declared
+#: here rather than in the task because the EVALUATOR needs the same number: an
+#: `unavailable` check blocks the case while retries remain and stops blocking once
+#: they are exhausted (see `on_check_completed`). Two copies of this number would
+#: disagree exactly when a provider is down.
+MAX_CHECK_ATTEMPTS = 5
+
 # The four checks R1 spawns for every submitted case.
 _R1_CHECK_TYPES: tuple[VerificationCheckType, ...] = (
     VerificationCheckType.tax_id_format,
     VerificationCheckType.bank_requisites,
     VerificationCheckType.documents_complete,
     VerificationCheckType.manual_kyb,
+)
+
+#: P7.c registry checks. Spawned at submit ONLY on the live rail — on the stub
+#: rail (the shipped default) they are created when an operator records a manual
+#: snapshot, so a case never sits waiting for a channel we do not have.
+_REGISTRY_CHECK_TYPES: tuple[VerificationCheckType, ...] = (
+    VerificationCheckType.gov_registry,
+    VerificationCheckType.vat_status,
 )
 
 _OPEN_CASE_STATUSES = frozenset(
@@ -148,7 +163,7 @@ def submit_case(db: Session, company: Company, account: UserAccount) -> Verifica
     # Fresh checks each submit (resubmit from needs_info replaces the prior set).
     db.query(VerificationCheck).filter(VerificationCheck.case_id == case.id).delete()
     db.flush()
-    for check_type in _R1_CHECK_TYPES:
+    for check_type in (*_R1_CHECK_TYPES, *_registry_checks_for(db)):
         db.add(
             VerificationCheck(
                 case_id=case.id, check_type=check_type, status=VerificationCheckStatus.pending
@@ -176,6 +191,64 @@ def submit_case(db: Session, company: Company, account: UserAccount) -> Verifica
     return case
 
 
+def _registry_checks_for(db: Session) -> tuple[VerificationCheckType, ...]:
+    """The registry checks to spawn, given the configured rail.
+
+    Empty on the stub rail, which is what ships: there is no ПЦД channel, so a
+    spawned check would only ever be `unavailable`, and a case whose checks can
+    never resolve is worse than a case with fewer checks. On the stub rail these
+    appear the moment an operator records a manual snapshot (`upsert_check`).
+    """
+    from app.integrations.gov_registry import MODE_LIVE, current_mode  # noqa: PLC0415
+
+    return _REGISTRY_CHECK_TYPES if current_mode(db) == MODE_LIVE else ()
+
+
+def upsert_check(
+    db: Session,
+    case_id: int,
+    check_type: VerificationCheckType,
+    status: VerificationCheckStatus,
+    result: dict[str, object],
+) -> VerificationCheck:
+    """Create or overwrite one check's outcome, then re-evaluate the case.
+
+    Used by the operator's manual registry check: a check the submit did not
+    spawn (stub rail) is created on the spot, and a re-check overwrites its
+    predecessor's verdict. The EVIDENCE is not overwritten — that lives in
+    `registry_snapshots`, which is append-only. This row is a derived verdict, and
+    the case only needs the current one.
+    """
+    check = (
+        db.query(VerificationCheck)
+        .filter(
+            VerificationCheck.case_id == case_id,
+            VerificationCheck.check_type == check_type,
+        )
+        .first()
+    )
+    if check is None:
+        # `attempts` has a Python-side default that only applies at flush, so a
+        # freshly constructed row carries None until then — set it here.
+        check = VerificationCheck(case_id=case_id, check_type=check_type, attempts=0)
+        db.add(check)
+    check.status = status
+    check.result = result
+    check.attempts += 1
+    check.finished_at = company_service.now_utc()
+    db.flush()
+
+    event_service.emit(
+        db,
+        event_types.VERIFICATION_CHECK_COMPLETED,
+        "verification_check",
+        check.id,
+        {"case_id": case_id, "check_status": str(status)},
+    )
+    on_check_completed(db, case_id)
+    return check
+
+
 def _dispatch_checks(case_id: int) -> None:
     """Enqueue run_verification_checks on the verify queue (fail-soft)."""
     try:
@@ -194,13 +267,38 @@ def _set_case_status(db: Session, case: VerificationCase, to: VerificationCaseSt
     db.flush()
 
 
+def _still_running(check: VerificationCheck) -> bool:
+    """True while a check may yet produce a different answer.
+
+    `unavailable` counts as running only while the task has attempts left. Once
+    the retry budget is spent the provider is simply absent, and the case must be
+    allowed to reach a human — see the note in `on_check_completed`.
+    """
+    if check.status in {VerificationCheckStatus.pending, VerificationCheckStatus.running}:
+        return True
+    return (
+        check.status == VerificationCheckStatus.unavailable
+        and check.attempts < MAX_CHECK_ATTEMPTS
+    )
+
+
 def on_check_completed(db: Session, case_id: int) -> VerificationCase | None:
     """Re-evaluate a case after a check finishes (or a waive). Idempotent under FOR UPDATE.
 
     Any automated check failed → needs_info. All automated checks resolved
     ({passed, warning, waived}) → auto-approve (if enabled) else pending_review.
-    Otherwise (a check still pending/running/unavailable) → stay checks_running.
-    manual_kyb is a human item and does NOT block pending_review.
+    Otherwise (a check still pending/running, or `unavailable` with retries left)
+    → stay checks_running. manual_kyb is a human item and does NOT block
+    pending_review.
+
+    **`unavailable` stops blocking once retries are exhausted** (P7.c T5.2). It
+    used to block unconditionally, which meant a check that failed all five
+    attempts pinned the case in `checks_running` — where `approve()` cannot reach
+    it, because the human decisions are optimistic updates against
+    `pending_review`. A dead provider therefore disabled the manual path it was
+    supposed to leave open, contradicting the R1 degradation invariant. R1 shipped
+    safely only because none of its four checks could go `unavailable`; the P7.c
+    registry checks can, and legitimately do.
     """
     case = db.execute(
         select(VerificationCase).where(VerificationCase.id == case_id).with_for_update()
@@ -214,15 +312,7 @@ def on_check_completed(db: Session, case_id: int) -> VerificationCase | None:
     checks = db.query(VerificationCheck).filter(VerificationCheck.case_id == case_id).all()
     automated = [c for c in checks if c.check_type != VerificationCheckType.manual_kyb]
 
-    if any(
-        c.status
-        in {
-            VerificationCheckStatus.pending,
-            VerificationCheckStatus.running,
-            VerificationCheckStatus.unavailable,
-        }
-        for c in automated
-    ):
+    if any(_still_running(c) for c in automated):
         return case  # not finished yet
 
     if any(c.status == VerificationCheckStatus.failed for c in automated):

@@ -10,17 +10,34 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.db import get_db
+from app.integrations import gov_registry
 from app.models.companies import Company, CompanyBankAccount
-from app.models.enums import CompanyStatus, VerificationCaseStatus
+from app.models.enums import CompanyStatus, VerificationCaseStatus, VerificationCheckType
+from app.models.registry import RegistrySnapshot
 from app.models.staff import AuditLog, StaffUser
 from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
-from app.services import company_service, storage_service, verification_service
+from app.services import (
+    company_service,
+    registry_service,
+    storage_service,
+    verification_checks,
+    verification_service,
+)
 
 router = APIRouter(prefix="/admin", tags=["admin-verification"])
 
@@ -168,7 +185,192 @@ def get_case(
              "details": a.details, "created_at": a.created_at}
             for a in audit
         ],
+        # P7.c — the newest snapshot of each kind. Absent kinds are simply not in
+        # the map: "never checked" and "checked, found nothing" must not look alike.
+        "registry": {
+            kind: _snapshot_row(snapshot)
+            for kind, snapshot in registry_service.all_latest(db, company.id).items()
+        },
     }
+
+
+def _snapshot_row(snapshot: RegistrySnapshot) -> dict[str, Any]:
+    """One registry observation, with a short-lived link to its screenshot."""
+    evidence_url = (
+        storage_service.presign_object(snapshot.evidence_path, ttl=600)
+        if snapshot.evidence_path
+        else None
+    )
+    return {
+        "id": snapshot.id,
+        "kind": snapshot.kind,
+        "source": snapshot.source,
+        "provider": snapshot.provider,
+        "payload": snapshot.payload,
+        "raw_status": snapshot.raw_status,
+        "note": snapshot.note,
+        "created_by": snapshot.created_by,
+        "evidence_url": evidence_url,
+        "fetched_at": snapshot.fetched_at,
+        "created_at": snapshot.created_at,
+    }
+
+
+@router.post("/verification/cases/{case_id}/registry-check")
+def record_registry_check(
+    case_id: int,
+    kind: str = Form(...),
+    # `company` fields
+    registry_status: str | None = Form(default=None, alias="status"),
+    raw_status: str | None = Form(default=None),
+    name: str | None = Form(default=None),
+    director: str | None = Form(default=None),
+    oked: str | None = Form(default=None),
+    address: str | None = Form(default=None),
+    # `vat` fields
+    registered: bool = Form(default=False),
+    certificate_no: str | None = Form(default=None),
+    note: str | None = Form(default=None),
+    evidence: UploadFile | None = File(default=None),
+    db: Session = Depends(get_db),
+    staff: StaffUser = Depends(require_analyst_or_admin),
+) -> dict[str, Any]:
+    """Record a registry check an operator performed by hand (P7.c — T5.4).
+
+    The pre-ПЦД bridge, and the half of P7.c that works today: staff read an open
+    service (my.soliq.uz for the VAT register, license.gov.uz for licences,
+    registr.stat.uz for the company itself), transcribe the result and optionally
+    attach a screenshot. INTEGRATIONS.md §3 sanctions exactly this.
+
+    One transaction does all of it: an immutable `registry_snapshots` row with the
+    operator's name on it, the derived `VerificationCheck` verdict, a re-evaluation
+    of the case, and the audit entry. The verdict comes from the SAME pure function
+    that will judge a ПЦД answer — an operator's reading is weighted no differently,
+    and the only record of which it was is the snapshot's `source`.
+
+    `require_analyst_or_admin`: this is verification work, not an admin power.
+    """
+    case = _case_or_404(db, case_id)
+    company = _company_or_404(db, case.company_id)
+
+    if kind not in registry_service.SNAPSHOT_KINDS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="unknown_kind"
+        )
+
+    payload, effective_raw_status = _manual_payload(
+        kind,
+        company.tax_id,
+        registry_status=registry_status,
+        raw_status=raw_status,
+        name=name,
+        director=director,
+        oked=oked,
+        address=address,
+        registered=registered,
+        certificate_no=certificate_no,
+    )
+
+    evidence_path: str | None = None
+    evidence_sha: str | None = None
+    if evidence is not None and evidence.filename:
+        content = evidence.file.read()
+        try:
+            evidence_path, evidence_sha = storage_service.store_registry_evidence(
+                company.id, content, evidence.filename
+            )
+        except ValueError as exc:
+            # Refuse BEFORE anything is recorded: a snapshot whose screenshot was
+            # rejected would claim evidence it does not have.
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+            ) from exc
+
+    snapshot = registry_service.record_snapshot(
+        db,
+        company,
+        kind=kind,
+        source=registry_service.SNAPSHOT_SOURCE_MANUAL,
+        provider=registry_service.PROVIDER_MANUAL,
+        payload=payload,
+        raw_status=effective_raw_status,
+        evidence_path=evidence_path,
+        evidence_sha256=evidence_sha,
+        note=note,
+        created_by=staff.id,
+    )
+
+    check_status: str | None = None
+    check_type = _CHECK_FOR_KIND.get(kind)
+    if check_type is not None:
+        result = _CHECK_FN[check_type](company, snapshot)
+        check = verification_service.upsert_check(
+            db, case.id, check_type, result.status, result.result
+        )
+        check_status = str(check.status)
+
+    db.commit()
+    db.refresh(case)
+    return {
+        "snapshot": _snapshot_row(snapshot),
+        "check_status": check_status,
+        "case_status": str(case.status),
+    }
+
+
+#: Which verification check each snapshot kind feeds. `licenses` has none: a
+#: licence is checked against a SUBSTANCE at publication time (P5
+#: `company_license_service`), not against a company at onboarding — recording the
+#: snapshot is still useful as evidence for that later decision.
+_CHECK_FOR_KIND: dict[str, VerificationCheckType] = {
+    registry_service.SNAPSHOT_KIND_COMPANY: VerificationCheckType.gov_registry,
+    registry_service.SNAPSHOT_KIND_VAT: VerificationCheckType.vat_status,
+}
+
+_CHECK_FN = {
+    VerificationCheckType.gov_registry: verification_checks.check_gov_registry,
+    VerificationCheckType.vat_status: verification_checks.check_vat_status,
+}
+
+
+def _manual_payload(
+    kind: str,
+    tax_id: str,
+    *,
+    registry_status: str | None,
+    raw_status: str | None,
+    name: str | None,
+    director: str | None,
+    oked: str | None,
+    address: str | None,
+    registered: bool,
+    certificate_no: str | None,
+) -> tuple[dict[str, object], str | None]:
+    """Build the snapshot payload from the operator's form.
+
+    Routed through the same DTOs the live adapter produces, so a transcription and
+    an API answer are byte-comparable in the table — and a future ПЦД adapter
+    cannot accidentally introduce a second payload shape.
+    """
+    if kind == registry_service.SNAPSHOT_KIND_COMPANY:
+        record = gov_registry.CompanySnapshot(
+            inn=tax_id,
+            name=name,
+            status=(registry_status or gov_registry.COMPANY_UNKNOWN).strip().lower(),
+            raw_status=raw_status,
+            director=director,
+            oked=oked,
+            address=address,
+        )
+        return record.as_payload(), raw_status
+    if kind == registry_service.SNAPSHOT_KIND_VAT:
+        vat = gov_registry.VatSnapshot(
+            registered=registered, certificate_no=certificate_no, raw_status=raw_status
+        )
+        return vat.as_payload(), raw_status
+    # licenses — free-form for now: the operator's note plus the raw text they saw.
+    # Structuring it needs the actual КИС «Лицензия» field set, which we do not have.
+    return {"licenses": [], "transcribed": raw_status or ""}, raw_status
 
 
 def _decide(db: Session, case_id: int, staff_id: int, note: str | None, action: str) -> dict[str, Any]:

@@ -18,6 +18,7 @@ from typing import Any
 
 from app.services import company_service
 from app.services.verification_checks import CheckResult
+from app.services.verification_service import MAX_CHECK_ATTEMPTS
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -80,10 +81,40 @@ def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-lay
     if check_type == VerificationCheckType.manual_kyb:
         return verification_checks.check_manual_kyb()
 
+    # P7.c — the two registry checks. Both read the newest snapshot and nothing
+    # else, so a live ПЦД answer and an operator's transcription are judged by the
+    # same code; only the snapshot's `source` distinguishes them. `fetch_and_record`
+    # is attempted first and returns None when there is no channel, which leaves
+    # the check `unavailable` rather than manufacturing a finding.
+    if check_type in {
+        VerificationCheckType.gov_registry,
+        VerificationCheckType.vat_status,
+    }:
+        from app.models.registry import SNAPSHOT_KIND_COMPANY, SNAPSHOT_KIND_VAT
+        from app.services import registry_service
+
+        kind = (
+            SNAPSHOT_KIND_COMPANY
+            if check_type == VerificationCheckType.gov_registry
+            else SNAPSHOT_KIND_VAT
+        )
+        snapshot = registry_service.fetch_and_record(db, company, kind) or registry_service.latest(
+            db, company.id, kind
+        )
+        if check_type == VerificationCheckType.gov_registry:
+            return verification_checks.check_gov_registry(company, snapshot)
+        return verification_checks.check_vat_status(company, snapshot)
+
     raise ValueError(f"unknown check type: {check_type}")
 
 
-@celery_app.task(name="run_single_check", bind=True, max_retries=5)  # type: ignore[untyped-decorator]
+@celery_app.task(  # type: ignore[untyped-decorator]
+    name="run_single_check",
+    bind=True,
+    # One number, one place: the EVALUATOR uses the same budget to decide when an
+    # `unavailable` check stops blocking a case (verification_service.MAX_CHECK_ATTEMPTS).
+    max_retries=MAX_CHECK_ATTEMPTS,
+)
 def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celery task
     """Run one verification check, record its result, and re-evaluate the case."""
     from app.core.db import SessionLocal

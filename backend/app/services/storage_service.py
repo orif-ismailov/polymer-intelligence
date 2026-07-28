@@ -580,3 +580,45 @@ def presign_object(key: str, ttl: int = 600) -> str:
         ExpiresIn=ttl,
     )
     return str(url)
+
+
+# ── State-registry evidence (R6 / P7.c) ───────────────────────────────────────
+
+#: An operator's registry screenshot is a picture or a saved PDF page — never a
+#: spreadsheet. Narrower than VERIFICATION_MIMES on purpose.
+REGISTRY_EVIDENCE_MIMES: frozenset[str] = frozenset(
+    {"image/jpeg", "image/png", "application/pdf"}
+)
+
+
+def store_registry_evidence(
+    company_id: int, content: bytes, filename: str
+) -> tuple[str, str]:
+    """Store an operator's registry screenshot; return (storage_path, sha256).
+
+    Same treatment as a PKCS#7 in `store_eimzo_pkcs7`: immutable object, hash
+    returned so the snapshot row can carry it and tampering stays detectable.
+    Key `evidence/registry/{company_id}/{token}.{ext}` — traversal-safe by
+    construction, since the extension comes from the detected MIME and never from
+    the client's filename.
+
+    Raises ValueError('file_too_large' | 'invalid_file_type') — the caller refuses
+    the whole request rather than recording a snapshot that claims evidence it
+    does not have.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    mime = validate_upload(content, filename)  # size + magic bytes
+    if mime not in REGISTRY_EVIDENCE_MIMES:
+        raise ValueError("invalid_file_type")
+
+    extension = {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"}[mime]
+    key = f"evidence/registry/{company_id}/{secrets.token_hex(8)}.{extension}"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET, Key=key, Body=content, ContentType=mime
+    )
+    logger.info(
+        "storage_service.store_registry_evidence.done",
+        extra={"company_id": company_id, "key": key, "mime": mime},
+    )
+    return key, hashlib.sha256(content).hexdigest()

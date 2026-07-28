@@ -571,10 +571,16 @@ def test_a_different_operation_id_is_a_different_row(sf) -> None:  # noqa: ANN00
 
 
 @requires_real_db
-def test_applying_a_provider_event_is_a_recorded_no_op_until_p7(sf) -> None:  # noqa: ANN001
-    """The live rail has no adapter yet. Applying an event must mark it processed
-    with the reason recorded — silently leaving it unprocessed would have the
-    inbox grow forever with no trace of why."""
+def test_applying_an_event_from_an_unmapped_provider_is_recorded_and_held(sf) -> None:  # noqa: ANN001
+    """A callback we cannot interpret is decided, not left pending.
+
+    P3 shipped this as "unsupported — no adapter until P7". P7.b replaced the body
+    with the real rail, so `bank` (which has no mapper) now resolves to a HOLD with
+    a named reason. The invariant the P3 test was protecting is unchanged and is
+    what still matters: the event is stamped `processed` with the reason recorded,
+    because silently leaving it unprocessed would grow the inbox forever with no
+    trace of why. The full rail is covered in `test_escrow_provider_events_db.py`.
+    """
     from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
@@ -585,7 +591,8 @@ def test_applying_a_provider_event_is_a_recorded_no_op_until_p7(sf) -> None:  # 
         assert event.processed is True
         assert event.processed_at is not None
         assert event.error
-        assert result["status"] == "unsupported"
+        assert result["status"] == "held"
+        assert result["reason"] == escrow_service.HOLD_UNKNOWN_PROVIDER
 
         # Idempotent: a second apply changes nothing.
         stamped = event.processed_at
