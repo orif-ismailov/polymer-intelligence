@@ -58,6 +58,10 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         # R3 TB4.1/TB4.2: contract PDF integrity + stale-contract expiry (daily)
         "verify_contract_integrity",
         "expire_stale_contracts",
+        # R6 P7.b T2.2: escrow provider-callback inbox sweep (every 5 min) — the
+        # webhook commits its row before enqueuing, so a dropped dispatch costs
+        # latency, not evidence. This is what collects it.
+        "sweep_provider_events",
     }
     assert set(beat_schedule.keys()) == required_keys, (
         f"Beat schedule keys mismatch: {set(beat_schedule.keys())!r}"

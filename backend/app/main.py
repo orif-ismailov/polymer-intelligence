@@ -85,6 +85,7 @@ from app.api.webapp.news import router as webapp_news_router
 from app.api.webapp.reference import router as webapp_reference_router
 from app.api.webapp.requests import router as webapp_requests_router
 from app.api.webapp.seller import router as webapp_seller_router
+from app.api.webhooks_escrow import router as webhooks_escrow_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.models.staff import StaffUser
@@ -213,6 +214,9 @@ def create_app() -> FastAPI:
     application.include_router(sourcing_router, prefix="/api/v1")
     # ── telegram bot webhook (dev-spec §4.1: webhook inside api container) ────
     application.include_router(telegram_webhook_router, prefix="/api/v1")
+    # External provider callback inbox (R6 / P7.b) — authenticated by a shared
+    # secret, not a JWT; absent from the OpenAPI schema.
+    application.include_router(webhooks_escrow_router, prefix="/api/v1")
     # ── portal (client cabinet — passwordless OTP accounts, R1 W3) ─────────────
     application.include_router(portal_auth_router, prefix="/api/v1")
     # Contracts router first: its literal /portal/companies/directory must win over the

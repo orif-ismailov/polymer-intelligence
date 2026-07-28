@@ -139,6 +139,20 @@ class Settings(BaseSettings):
     # demo). MUST stay false in production (real O'zDSt verification via the sidecar).
     EIMZO_STUB: bool = False
 
+    # ── Escrow provider callbacks (R6 / P7.b) ─────────────────────────────────
+    # Shared secret the partner bank sends in `X-Escrow-Token` on every callback
+    # to POST /api/v1/webhooks/escrow/{provider}.
+    #
+    # Empty default on purpose, and NOT a violation of "secrets have no defaults":
+    # that rule exists so a misconfiguration fails fast at startup, but the escrow
+    # rail is a RUNTIME setting (`escrow_mode`) that a startup validator cannot
+    # see. Making this mandatory would force every deployment — including the
+    # ones that never enable escrow — to invent a value. Same shape as
+    # ESKIZ_EMAIL/ESKIZ_PASSWORD: conditionally required, validated at the point
+    # of use. While it is empty the webhook route answers 404, so an unconfigured
+    # deployment does not advertise the endpoint at all.
+    ESCROW_WEBHOOK_SECRET: str = ""
+
     # ── CORS ──────────────────────────────────────────────────────────────────
     # Explicit non-wildcard list of allowed origins for credentialed CORS requests.
     # Never default to ["*"] — wildcard with allow_credentials=True is both a

@@ -1,10 +1,20 @@
-"""Outbox consumer that raises the escrow for a signed deal (R4 / P3 — T1.4).
+"""Payments tasks (R4 / P3 — T1.4; R6 / P7.b — T2.2).
+
+Two directions of causation live here.
+
+**Outbound (P3):**
 
     DEAL_STATUS_CHANGED (to=contract_signed) → escrow_service.open_for_deal
 
-That is the whole module. It exists so that no HTTP handler, and nobody's
-signature callback, has to remember to create the payment: the deal reaching
-`contract_signed` is what causes the invoice, and the event says so.
+It exists so that no HTTP handler, and nobody's signature callback, has to
+remember to create the payment: the deal reaching `contract_signed` is what
+causes the invoice, and the event says so.
+
+**Inbound (P7.b):** `apply_escrow_provider_event` interprets one bank callback
+already sitting in the `provider_events` inbox, and `sweep_provider_events` is
+the beat that catches whatever the broker dropped between the webhook's commit
+and its `apply_async`. Both run on `default` rather than `verify`: they make no
+outbound call, they move a deal.
 
 Delivery is at-least-once — the consumer runs before its event is stamped
 published, so a crash in between re-delivers. `open_for_deal` is idempotent, and
@@ -84,6 +94,84 @@ def open_escrow_on_deal_signed(
     except Exception as exc:  # noqa: BLE001 — a bad consumer must not wedge the outbox
         logger.exception("payment_tasks.escrow_open_failed", extra={"deal_id": deal_id})
         return {"status": "error", "error": str(exc), "deal_id": deal_id}
+
+
+@celery_app.task(name="payments.apply_escrow_provider_event", queue="default")  # type: ignore[untyped-decorator]
+def apply_escrow_provider_event(event_id: int) -> dict[str, Any]:
+    """Interpret one recorded bank callback (`escrow_service.apply_provider_event`).
+
+    Never raises. The webhook already answered 200, so the bank will not retry;
+    an exception here would only have the sweeper re-attempt a verdict that will
+    not change. Everything the service refuses comes back as a `held` result with
+    a named reason, which is what the operator queue reads.
+    """
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.services import escrow_service  # noqa: PLC0415
+
+    try:
+        with Session(engine) as db:
+            event = db.get(ProviderEvent, event_id)
+            if event is None:
+                return {"status": "skipped", "reason": "event not found", "event_id": event_id}
+            result = escrow_service.apply_provider_event(db, event)
+            db.commit()
+            logger.info("payment_tasks.provider_event", extra={"event_id": event_id, **result})
+            return result
+    except Exception as exc:  # noqa: BLE001 — a bad callback must not wedge the rail
+        logger.exception("payment_tasks.provider_event_failed", extra={"event_id": event_id})
+        return {"status": "error", "error": str(exc), "event_id": event_id}
+
+
+@celery_app.task(name="sweep_provider_events")  # type: ignore[untyped-decorator]
+def sweep_provider_events(limit: int = 100) -> dict[str, Any]:
+    """Apply provider callbacks still unprocessed (beat — every 5 minutes).
+
+    The webhook commits the inbox row BEFORE enqueuing the applier, precisely so
+    that a Redis blip costs latency rather than evidence. This is the other half
+    of that bargain. Idempotent: an already-processed row is not selected, and
+    `apply_provider_event` short-circuits on one anyway.
+    """
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.services import escrow_service  # noqa: PLC0415
+
+    processed = 0
+    outcomes: dict[str, int] = {}
+    with Session(engine) as db:
+        pending = (
+            db.query(ProviderEvent)
+            .filter(ProviderEvent.processed.is_(False))
+            .order_by(ProviderEvent.id)
+            .limit(limit)
+            .all()
+        )
+        for event in pending:
+            try:
+                result = escrow_service.apply_provider_event(db, event)
+                db.commit()
+            except Exception as exc:  # noqa: BLE001 — one bad row must not stop the sweep
+                db.rollback()
+                logger.exception(
+                    "payment_tasks.sweep_item_failed", extra={"event_id": event.id}
+                )
+                outcomes["error"] = outcomes.get("error", 0) + 1
+                del exc
+                continue
+            processed += 1
+            key = str(result.get("status", "unknown"))
+            outcomes[key] = outcomes.get(key, 0) + 1
+
+    if processed:
+        logger.info(
+            "payment_tasks.sweep_provider_events",
+            extra={"processed": processed, "outcomes": outcomes},
+        )
+    return {"processed": processed, "outcomes": outcomes}
 
 
 def _register_consumers() -> None:

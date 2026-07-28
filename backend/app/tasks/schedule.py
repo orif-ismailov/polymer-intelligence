@@ -137,6 +137,14 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "prune_portal_notifications",
         "schedule": crontab(minute=30, hour=3),
     },
+    # ── Escrow provider inbox sweep: every 5 minutes (R6 / P7.b T2.2) ────────
+    # The webhook commits the `provider_events` row BEFORE enqueuing its applier,
+    # so a Redis blip costs latency rather than evidence. This is the other half
+    # of that bargain: anything still unprocessed gets applied here. Idempotent.
+    "sweep_provider_events": {
+        "task": "sweep_provider_events",
+        "schedule": crontab(minute="*/5"),
+    },
     # ── Contract PDF integrity: daily at 03:00 UTC (R3 TB4.1) ─────────────────
     # Recomputes stored-PDF sha256 vs document_sha256 for active contracts and
     # alerts the admin channel on any mismatch (tamper detection).
