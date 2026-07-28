@@ -1249,8 +1249,75 @@ ALTER TABLE seller_offers
     ADD COLUMN lab_verified boolean NOT NULL DEFAULT false;  -- ставит только платформа
 ```
 
+### R6 / P7 — Гос-реестры: неизменяемые снапшоты (migration 0029_gov_registry)
+
+Официального realtime-API к госреестрам для частной организации не существует: единственный
+канал — **ПЦД**, порядок доступа к которому нормативно не формализован (`INTEGRATIONS.md` §3).
+Поэтому P7.c кладёт в схему не «текущее состояние компании в реестре», а **историю
+наблюдений**: `registry_snapshots` — append-only таблица без `updated_at` и без единого пути
+на UPDATE во всём коде. Повторная проверка — новая строка; история проверок компании и есть
+последовательность её строк.
+
+Это не стилистика, а несущая конструкция, потому что строки пишут **два разных источника**:
+
+- `source='registry'` — ответила API. `created_by` = NULL: никто ничего не утверждал.
+- `source='manual'` — оператор прочитал открытый сервис (my.soliq.uz — реестр НДС,
+  license.gov.uz — лицензии, registr.stat.uz — сама компания), перенёс результат и приложил
+  скриншот. `created_by` — сотрудник, чьё имя стоит под утверждением.
+
+Перезапись строки стёрла бы, **кто именно** и **когда** это сказал — то есть ровно тот
+вопрос, который задаёт аудитор. Скриншот получает то же обращение, что PKCS#7 в
+`signature_evidence`: ключ объекта + sha256 байтов.
+
+`kind`/`source` — Text + CHECK, а не PG-enum'ы (образец `escrow_payments.mode`): маленькие
+закрытые множества, члены которых заодно живут константами в сервисном коде.
+
+Вердикт из снапшота считают **чистые функции** `verification_checks.check_gov_registry` /
+`check_vat_status` — одни и те же для ответа ПЦД и для транскрипции оператора. Различие
+между ними хранится ровно в одном месте, в колонке `source`, и нигде больше.
+
+Два новых значения `verification_check_type` **дописаны** (`ALTER TYPE … ADD VALUE`, вне
+транзакционного блока) — enum нельзя переупорядочить. Это первые чеки, которые законно
+бывают `unavailable`, и поэтому же в этой миграции пришлось починить эвалюатор: до P7.c
+`unavailable` блокировал кейс безусловно, а `approve()` работает только из `pending_review`,
+так что чек, исчерпавший 5 ретраев, запирал кейс в `checks_running` — то есть мёртвый
+провайдер отключал ручной путь, который обязан был остаться (инвариант R1).
+
+```sql
+ALTER TYPE verification_check_type ADD VALUE IF NOT EXISTS 'gov_registry';
+ALTER TYPE verification_check_type ADD VALUE IF NOT EXISTS 'vat_status';
+
+CREATE TABLE registry_snapshots (
+    id              bigserial PRIMARY KEY,
+    company_id      bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    kind            text NOT NULL,       -- company | licenses | vat (по методам адаптера)
+    source          text NOT NULL,       -- registry (ответила API) | manual (внёс оператор)
+    provider        text NOT NULL,       -- 'pcd' | 'oneid' | 'manual' — свободный текст
+    payload         jsonb NOT NULL,      -- нормализованный DTO; пустой снапшот не доказательство
+    raw_status      text,                -- формулировка реестра дословно
+    evidence_path   text,                -- скриншот оператора (S3)
+    evidence_sha256 text,                -- ... и хеш его байтов
+    note            text,
+    created_by      int REFERENCES staff_users(id),   -- NULL = ответила API
+    fetched_at      timestamptz NOT NULL,             -- когда наблюдали
+    created_at      timestamptz NOT NULL DEFAULT now(),  -- когда записали
+    CONSTRAINT ck_registry_snapshot_kind   CHECK (kind IN ('company','licenses','vat')),
+    CONSTRAINT ck_registry_snapshot_source CHECK (source IN ('registry','manual'))
+    -- НЕТ updated_at: строка неизменяема, повторная проверка = новая строка
+);
+CREATE INDEX ix_registry_snapshots_lookup
+    ON registry_snapshots(company_id, kind, id);   -- «последний снапшот вида X»
+```
+
+P7.b (входящий контур эскроу) схемы **не потребовал**: `provider_events` с
+`UNIQUE (provider, external_id)` и nullable `escrow_payments.*_marked_by` приехали с P3
+(миграция 0024) именно под это. Идемпотентность вебхука — уже инвариант схемы, а
+provider-отметка платежа ложится в существующие колонки: NULL в `*_marked_by` означает
+«за движением стоит не оператор, а событие банка».
+
 ## История версий
 
+- v1.13 (28.07.2026): R6/P7 — гос-реестры (миграция 0029_gov_registry): `verification_check_type += gov_registry / vat_status`; таблица `registry_snapshots` — append-only (нет `updated_at`, нет UPDATE-пути), `source` различает ответ API и транскрипцию оператора, скриншот + sha256 как evidence, `fetched_at` отдельно от `created_at`. Заодно починен эвалюатор R1: `unavailable` перестаёт блокировать кейс после исчерпания ретраев (иначе мёртвый провайдер отключал ручной путь). P7.b (входящий контур эскроу) схемы не потребовал — `provider_events` и nullable `*_marked_by` приехали с P3.
 - v1.12 (28.07.2026): R5/P6 — лаборатории и образцы (миграция 0028_lab): enum'ы `lab_order_status`, `sample_request_status`, `offer_file_kind += lab_passport`; таблицы `lab_partners`, `lab_orders` (CHECK «заявка о чём-то» + CHECK «`done` ссылается на паспорт», результат указателем на файловую строку), `sample_requests` (продавец копией, частичный UQ на один живой запрос); `seller_offers += samples_available / sample_price / sample_dispatch_days / lab_verified`.
 - v1.11 (28.07.2026): R5/P5 — комплаенс химии (миграция 0027_compliance): enum'ы `regulation_level`, `regulation_regime`, `license_status`, `offer_file_kind += sds/coa`; таблицы `substances` (собственный источник истины, `hs_code` NOT NULL / `cas` UNIQUE NULL, пороги концентрации и изъятия), `company_licenses` (по режиму, срок действия проверяется на чтении), `substance_suggestions` (журнал AI-подсказок, `accepted IS NULL` = решения нет); `seller_offers += substance_id / cas_number / hs_code / declared_concentration_pct` + кеш вердикта.
 - v1.10 (27.07.2026): R4/P4 — лог AI-рассылки (миграция 0026_rfq_push_log): таблица `rfq_push_log` с UNIQUE `(request_id, company_id)` как правилом дедупликации и хранимыми `score`/`rank`.

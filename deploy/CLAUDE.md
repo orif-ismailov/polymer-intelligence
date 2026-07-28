@@ -101,6 +101,36 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   a hand edit). The publish gate `dangerous_check_enforced` is a runtime setting that ships **off**;
   turning it on before the legal review of the lists would block trade on an incomplete registry.
 
+- **Live integrations (R6 / P7)** — two operator-facing rails, both shipping OFF.
+  *Escrow callbacks (P7.b):* nginx must pass `POST /api/v1/webhooks/escrow/{provider}` through
+  to the api like the rest of `/api/`, and the bank sends a shared secret in `X-Escrow-Token`.
+  New env **`ESCROW_WEBHOOK_SECRET`** (**secret**, empty default — the route answers **404**
+  while it is empty, so a deployment that never enables escrow does not advertise the
+  endpoint; conditionally required, same shape as `ESKIZ_*`, because the rail is a RUNTIME
+  setting a startup validator cannot see). Two new beats on existing queues — no compose
+  change: `sweep_provider_events` (`default`, every 5 min — the safety net for a dropped
+  dispatch) and `reconcile_escrow_payments` (`verify`, every 30 min — the only OUTBOUND call
+  on the rail; a no-op until `escrow_mode=live` AND a bank adapter exists). Divergences
+  (bank released without confirmed delivery; bank refunded) alert the admin channel and are
+  never auto-applied.
+  *Gov registries (P7.c):* new runtime setting `gov_registry_mode` (ships `stub`; `live`
+  raises until ПЦД access exists). No new env, no sidecar. The channel that works today is
+  the operator's manual check — its screenshots land in S3 under `evidence/registry/`, so
+  they are covered by the same bucket/backup policy as `evidence/eimzo/`.
+  **NOTE (`.env.example`):** `ESCROW_WEBHOOK_SECRET` must be appended by hand to the tracked
+  `deploy/.env.example` env contract — the local tooling denies edits to `.env*` files (the
+  same constraint that left the three R3 E-IMZO variables to be pasted in). Paste:
+  ```
+  # ── Escrow provider callbacks (R6 / P7.b) ─────────────────────────────────────
+  # Shared secret the partner bank sends in `X-Escrow-Token` on every callback to
+  # POST /api/v1/webhooks/escrow/{provider}. Empty by default and required only once
+  # the bank rail is on: `escrow_mode` is a RUNTIME setting a startup validator cannot
+  # see, so a mandatory value would burden every deployment. Same shape as ESKIZ_*.
+  # While empty the webhook answers 404 — an unconfigured deployment does not
+  # advertise the endpoint.
+  ESCROW_WEBHOOK_SECRET=                     # [SECRET] required only for escrow_mode=live
+  ```
+
 ## Make targets (run from repo root)
 
 ```bash

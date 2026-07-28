@@ -21,7 +21,7 @@ npx next typegen   # regenerate typed-route defs before tsc on a clean checkout 
 
 | Path | Role |
 |------|------|
-| `app/[locale]/...` | Localized App Router tree. The `(dashboard)/` route group holds the authed pages — signal side: `feed`, `signals`, `offers`, `prices`, `requests`, `sources`, `alerts`; marketplace/sourcing: `moderation`, `offer-requests`, `sourcing`, `partners`, `inventory`, `intel`, `substances` (the regulated-chemistry registry — admin writes, analyst reads), `lab-orders` (the manual analysis queue, oldest first) and `lab-partners` (laboratory directory — admin writes, analyst reads); news: `reports`, `admin/news`; plus `admin/users` and `admin/products`. `login/` is outside the group. |
+| `app/[locale]/...` | Localized App Router tree. The `(dashboard)/` route group holds the authed pages — signal side: `feed`, `signals`, `offers`, `prices`, `requests`, `sources`, `alerts`; marketplace/sourcing: `moderation`, `offer-requests`, `sourcing`, `partners`, `inventory`, `intel`, `substances` (the regulated-chemistry registry — admin writes, analyst reads), `lab-orders` (the manual analysis queue, oldest first) and `lab-partners` (laboratory directory — admin writes, analyst reads); the `verification/[id]` case page carries the **P7.c gov-registry block** (three immutable-snapshot rows + the operator's "check in the registry" form with a screenshot) and `escrow` carries the **P7.b provider-hold queue**; news: `reports`, `admin/news`; plus `admin/users` and `admin/products`. `login/` is outside the group. |
 | `app/layout.tsx`, `app/[locale]/layout.tsx` | Root + locale shells. |
 | `components/ui/` | shadcn primitives. `components/<domain>/` | feature components (feed, requests, sources, alerts, prices). `components/shared/` | cross-page chips/cards (`KindChip`, `StatusChip`, `UrgencyChip`, `KpiCard`). `components/layout/` | AppShell, Sidebar, LanguageSwitcher. |
 | `hooks/` | `useSSE.ts` (live feed), `useAuth.ts`, `useDashboardSummary.ts`. |
@@ -45,7 +45,11 @@ npx next typegen   # regenerate typed-route defs before tsc on a clean checkout 
   and `next-env.d.ts` imports it (CI runs typegen explicitly).
 - Time: store UTC, display Asia/Tashkent via `lib/tz.ts` — mirror of backend `app/core/time.py`.
 - Prod image: `deploy/Dockerfile.dashboard` (Next standalone); served behind nginx at `/dashboard/`.
-- `lib/api.ts` exports `apiFetch` (JSON) and `apiUpload` (multipart — the lab-result PDF).
+- `lib/api.ts` exports `apiFetch` (JSON) and `apiUpload` (multipart — the lab-result PDF,
+  and the P7.c registry screenshot).
   They are separate because `apiFetch` always sets `Content-Type: application/json`; on a
   FormData body the browser must set the header itself so it can add the boundary.
+- A **file input keeps the filename it displays** even after the React state behind it is
+  cleared, so a form that resets on success must remount it (`key={n}`) or it will advertise
+  a file it is not going to send. Found in the browser on the P7.c registry form.
 - e2e (`dashboard-e2e` CI job) runs Playwright against a live migrated+seeded API on :8000.
