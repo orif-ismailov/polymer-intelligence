@@ -248,6 +248,48 @@ export function OfferForm({ companyId, offer, onSaved, onCancel, onNotVerified }
         />
       </fieldset>
 
+      {/* Sample terms: a property of the listing, identical for every buyer who
+          asks, which is why they live on the offer and not on each request. */}
+      <fieldset className="space-y-3 rounded-lg border border-border p-4">
+        <legend className="px-1 text-sm font-medium text-text">
+          {t("offers.samplesTitle")}
+        </legend>
+        <Checkbox
+          checked={state.samples_available}
+          onChange={(e) => setField("samples_available", e.target.checked)}
+          label={t("offers.samplesAvailable")}
+        />
+        {state.samples_available ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              label={t("offers.samplePrice")}
+              hint={t("offers.samplePriceHint")}
+              error={errors.sample_price ? t(errors.sample_price) : null}
+            >
+              {({ id, invalid }) => (
+                <Input
+                  id={id}
+                  inputMode="decimal"
+                  invalid={invalid}
+                  value={state.sample_price}
+                  onChange={(e) => setField("sample_price", e.target.value)}
+                />
+              )}
+            </FormField>
+            <FormField label={t("offers.sampleDispatchDays")}>
+              {({ id }) => (
+                <Input
+                  id={id}
+                  inputMode="numeric"
+                  value={state.sample_dispatch_days}
+                  onChange={(e) => setField("sample_dispatch_days", e.target.value)}
+                />
+              )}
+            </FormField>
+          </div>
+        ) : null}
+      </fieldset>
+
       <SubstanceField
         companyId={companyId}
         substance={state.substance}

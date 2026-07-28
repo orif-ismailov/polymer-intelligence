@@ -66,3 +66,26 @@ export const HeartIcon = (
     <path d="M10 16.6l-1.2-1.1C4.5 11.6 2 9.1 2 6.2 2 3.9 3.8 2 6.1 2c1.3 0 2.6.6 3.4 1.6.8-1 2.1-1.6 3.4-1.6C15.2 2 17 3.9 17 6.2c0 2.9-2.5 5.4-6.8 9.3L10 16.6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
   </svg>
 );
+export const FlaskNavIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path
+      d="M8 2.5h4M8.5 2.5v5.2L4.6 14.4A1.6 1.6 0 0 0 6 16.8h8a1.6 1.6 0 0 0 1.4-2.4L11.5 7.7V2.5"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M6.6 12.4h6.8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+  </svg>
+);
+export const SampleBoxIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path
+      d="M10 2.6 17 6v8l-7 3.4L3 14V6l7-3.4z"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinejoin="round"
+    />
+    <path d="M3 6l7 3.4L17 6M10 9.4v8" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+  </svg>
+);

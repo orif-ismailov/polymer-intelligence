@@ -8,6 +8,7 @@ import { DealDetailPage, DealsPage } from "@/pages/deals";
 import { UiKitPage } from "@/pages/dev-ui";
 import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
+import { LabOrdersPage } from "@/pages/lab-orders";
 import { LoginPage } from "@/pages/login";
 import {
   FavoritesPage,
@@ -21,6 +22,7 @@ import { OfferEditPage } from "@/pages/offer-edit";
 import { OffersPage } from "@/pages/offers";
 import { OtpPage } from "@/pages/otp";
 import { RequestCreatePage, RequestDetailPage, RequestsPage } from "@/pages/requests";
+import { SamplesPage } from "@/pages/samples";
 import { SettingsPage } from "@/pages/settings";
 import { VerificationStatusPage } from "@/pages/verification-status";
 import { AppShell } from "@/widgets/app-shell";
@@ -60,6 +62,8 @@ export const router = createBrowserRouter([
           { path: "/deals", element: <DealsPage /> },
           { path: "/deals/:dealId", element: <DealDetailPage /> },
           { path: "/inquiries", element: <InquiriesPage /> },
+          { path: "/samples", element: <SamplesPage /> },
+          { path: "/lab-orders", element: <LabOrdersPage /> },
           { path: "/inquiries/:inquiryId", element: <InquiryDetailPage /> },
           { path: "/requests", element: <RequestsPage /> },
           { path: "/requests/new", element: <RequestCreatePage /> },

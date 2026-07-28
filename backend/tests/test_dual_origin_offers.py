@@ -39,6 +39,11 @@ def _offer(**kw):  # noqa: ANN003, ANN202
         product_id=2, grade_text="HDPE 5502", availability=OfferAvailability.in_stock,
         qty_available=decimal.Decimal("100"), qty_unit="MT", price=decimal.Decimal("1200"),
         currency="USD", incoterms=PriceBasis.unknown, status=SellerOfferStatus.approved,
+        # NOT NULL booleans with a server default: a row read from the database
+        # always has them, but a detached instance built here does not, and the
+        # serializers type them as plain `bool`. Stated for the same reason
+        # `status` and `currency` are.
+        samples_available=False, lab_verified=False,
     )
     offer.id = 11
     for key, value in kw.items():

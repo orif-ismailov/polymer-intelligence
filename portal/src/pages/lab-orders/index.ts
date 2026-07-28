@@ -1,0 +1,1 @@
+export { LabOrdersPage } from "./LabOrdersPage";

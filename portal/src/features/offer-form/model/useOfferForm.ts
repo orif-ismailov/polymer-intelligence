@@ -28,12 +28,17 @@ export interface OfferFormState {
   cas_number: string;
   hs_code: string;
   declared_concentration_pct: string;
+  /** Sample terms (P6) — a property of the listing, not of each request. */
+  samples_available: boolean;
+  sample_price: string;
+  sample_dispatch_days: string;
 }
 
 export interface OfferFormErrors {
   product_text?: string;
   qty_unit?: string;
   lead_time_days?: string;
+  sample_price?: string;
 }
 
 export const EMPTY_OFFER_FORM: OfferFormState = {
@@ -61,6 +66,9 @@ export const EMPTY_OFFER_FORM: OfferFormState = {
   cas_number: "",
   hs_code: "",
   declared_concentration_pct: "",
+  samples_available: false,
+  sample_price: "",
+  sample_dispatch_days: "",
 };
 
 /** Seed the form state from an existing offer (edit mode). */
@@ -89,6 +97,10 @@ export function offerToForm(offer: CompanyOffer): OfferFormState {
     hs_code: offer.hs_code ?? "",
     declared_concentration_pct:
       offer.declared_concentration_pct != null ? String(offer.declared_concentration_pct) : "",
+    samples_available: offer.samples_available ?? false,
+    sample_price: offer.sample_price != null ? String(offer.sample_price) : "",
+    sample_dispatch_days:
+      offer.sample_dispatch_days != null ? String(offer.sample_dispatch_days) : "",
   };
 }
 
@@ -130,6 +142,14 @@ export function formToPayload(state: OfferFormState): OfferPayload {
     cas_number: trimOrNull(state.cas_number),
     hs_code: trimOrNull(state.hs_code),
     declared_concentration_pct: trimOrNull(state.declared_concentration_pct),
+    samples_available: state.samples_available,
+    // The API rejects sample terms without samples, so unticking the box has to
+    // clear them here rather than leave a stale price behind in the payload.
+    sample_price: state.samples_available ? trimOrNull(state.sample_price) : null,
+    sample_dispatch_days:
+      state.samples_available && state.sample_dispatch_days.trim() !== ""
+        ? Number(state.sample_dispatch_days)
+        : null,
   };
 }
 
@@ -142,6 +162,9 @@ export function validateOfferForm(state: OfferFormState): OfferFormErrors {
   // this just says so before the round trip.
   if (state.availability === "on_order" && state.lead_time_days.trim() === "") {
     errors.lead_time_days = "offers.leadTimeRequired";
+  }
+  if (state.samples_available && Number(state.sample_price) < 0) {
+    errors.sample_price = "offers.samplePriceInvalid";
   }
   return errors;
 }

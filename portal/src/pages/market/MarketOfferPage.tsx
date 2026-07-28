@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { useCreateInquiry } from "@/entities/inquiry";
+import { LabBadges } from "@/entities/lab";
 import {
   BusinessRoleBadges,
   OfferReadinessBadges,
@@ -12,6 +13,7 @@ import {
   offerPhotos,
   useMarketOffer,
 } from "@/entities/market";
+import { SampleRequestForm } from "@/features/sample-request";
 import { cn } from "@/shared/lib";
 import {
   Alert,
@@ -50,6 +52,7 @@ export function MarketOfferPage() {
   const [targetPrice, setTargetPrice] = useState("");
   const [message, setMessage] = useState("");
   const [activePhoto, setActivePhoto] = useState(0);
+  const [sampleSent, setSampleSent] = useState(false);
 
   if (offerQuery.isLoading) return <LoadingView label={t("common.loading")} />;
   if (offerQuery.isError || !offerQuery.data) {
@@ -67,6 +70,7 @@ export function MarketOfferPage() {
   const product = offer.product_text ?? offer.grade_text ?? "—";
   const photos = offerPhotos(offer.files);
   const active = photos[activePhoto] ?? photos[0] ?? null;
+  const passport = offer.files.find((f) => f.kind === "lab_passport") ?? null;
   const grade = offer.product_text && offer.grade_text ? offer.grade_text : null;
   const canInquire = companyId != null && !offer.is_own;
 
@@ -181,8 +185,63 @@ export function MarketOfferPage() {
               {offer.description ? (
                 <p className="whitespace-pre-line text-sm text-text-muted">{offer.description}</p>
               ) : null}
+
+              {/* The laboratory claim, with the document behind it. A badge a
+                  buyer cannot open is a badge they have to take on trust. */}
+              {offer.has_lab_passport ? (
+                <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
+                  <LabBadges
+                    hasLabPassport={offer.has_lab_passport}
+                    labVerified={offer.lab_verified}
+                  />
+                  {passport ? (
+                    <a
+                      href={offerImageUrl(offer.id, passport.id)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    >
+                      {t("lab.openPassport")}
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
             </CardBody>
           </Card>
+
+          {/* Samples: only offered when the seller said so, and never to
+              themselves — the API refuses both, this just does not ask. */}
+          {offer.samples_available && !offer.is_own ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("samples.offerTitle")}</CardTitle>
+                <CardDescription>
+                  {offer.sample_price == null
+                    ? t("samples.free")
+                    : t("samples.priced", {
+                        price: offer.sample_price,
+                        currency: offer.currency,
+                      })}
+                  {offer.sample_dispatch_days != null
+                    ? ` · ${t("samples.dispatch", { count: offer.sample_dispatch_days })}`
+                    : ""}
+                </CardDescription>
+              </CardHeader>
+              <CardBody>
+                {!activeCompany ? (
+                  <Alert tone="info">{t("home.noActiveCompany")}</Alert>
+                ) : sampleSent ? (
+                  <Alert tone="success">{t("samples.sentOk")}</Alert>
+                ) : (
+                  <SampleRequestForm
+                    offerId={offer.id}
+                    companyId={activeCompany.id}
+                    onSent={() => setSampleSent(true)}
+                  />
+                )}
+              </CardBody>
+            </Card>
+          ) : null}
 
           {offer.my_inquiries.length > 0 ? (
             <Card>

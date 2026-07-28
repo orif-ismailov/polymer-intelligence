@@ -74,7 +74,9 @@
     "news": "News",
     "notifications": "Notifications",
     "deals": "Deals",
-    "favorites": "Favorites"
+    "favorites": "Favorites",
+    "samples": "Samples",
+    "labOrders": "Laboratory"
   },
   "home": {
     "title": "Overview",
@@ -335,7 +337,13 @@
     "readinessHint": "What you tick shows as badges on your market card.",
     "acceptsRfq": "I answer requests (RFQ)",
     "acceptsContract": "Ready to sign a contract on the platform",
-    "acceptsEscrow": "Ready to work through escrow"
+    "acceptsEscrow": "Ready to work through escrow",
+    "samplesTitle": "Samples",
+    "samplesAvailable": "Ready to send samples",
+    "samplePrice": "Sample price",
+    "samplePriceHint": "Empty — the sample is free",
+    "samplePriceInvalid": "The price cannot be negative",
+    "sampleDispatchDays": "Dispatch time, days"
   },
   "settings": {
     "title": "Settings",
@@ -473,6 +481,10 @@
       "rfq": "RFQ",
       "contract": "Contract",
       "escrow": "Escrow"
+    },
+    "filter": {
+      "labPassport": "With a lab passport only",
+      "labVerified": "Laboratory Verified only"
     }
   },
   "inquiries": {
@@ -645,6 +657,18 @@
     "rfq_match": {
       "title": "A new request matching your profile",
       "body": "{{product}} — {{volume}} {{volume_unit}}. Request {{number}}"
+    },
+    "lab_order_status": {
+      "title": "Laboratory order",
+      "body": "Order {{number}}: status changed"
+    },
+    "sample_request_new": {
+      "title": "Sample request",
+      "body": "A buyer asked for a sample of your offer"
+    },
+    "sample_request_status": {
+      "title": "Sample status",
+      "body": "Sample request: status changed"
     }
   },
   "contracts": {
@@ -732,7 +756,8 @@
       "documents": "Documents",
       "timeline": "Timeline",
       "contract": "Contract",
-      "escrow": "Payment"
+      "escrow": "Payment",
+      "lab": "Laboratory"
     },
     "status": {
       "negotiation": "Negotiation",
@@ -910,6 +935,90 @@
       "expired": "Expired",
       "revoked": "Revoked",
       "rejected": "Rejected"
+    }
+  },
+  "lab": {
+    "blockTitle": "Laboratory passport",
+    "blockHint": "A passport backs up what the material is and puts a badge on the catalog card. Upload your own, or order an analysis through IMEX.",
+    "saveFirst": "Save the offer first — a passport attaches to an existing offer.",
+    "upload": "Upload passport (PDF)",
+    "pdfOnly": "The passport must be a PDF.",
+    "resultLocked": "This passport came from a platform lab order — it cannot be removed.",
+    "orderCta": "Order an analysis through IMEX",
+    "orderCopy": "We will call you to agree the laboratory, the price and how to hand the sample over.",
+    "orderCommentPlaceholder": "What to check: MFI, density, moisture…",
+    "orderSubmit": "Send request",
+    "partnerPending": "Laboratory not assigned yet",
+    "openPassport": "Open passport",
+    "volume": "Sample volume",
+    "comment": "Comment",
+    "created": "Created",
+    "rejectedReason": "Rejection reason",
+    "operatorNote": "Operator note",
+    "openOffer": "Open offer",
+    "ordersTitle": "Laboratory orders",
+    "ordersSubtitle": "Our operator drives the statuses: a partner laboratory runs the analysis.",
+    "ordersEmpty": "No orders yet",
+    "ordersEmptyBody": "Order an analysis from the offer form or from a Trade Room.",
+    "dealNoneTitle": "No analysis ordered for this deal",
+    "dealNoneBody": "You can have the material checked before shipment — our operator handles it.",
+    "dealResultInDocs": "The passport was added to the Documents tab.",
+    "badge": {
+      "passport": "Lab passport",
+      "verified": "Laboratory Verified"
+    },
+    "status": {
+      "submitted": "Submitted",
+      "accepted": "Accepted",
+      "sample_awaited": "Awaiting sample",
+      "in_analysis": "In analysis",
+      "done": "Done",
+      "rejected": "Rejected"
+    }
+  },
+  "samples": {
+    "title": "Samples",
+    "subtitle": "Sample requests: what buyers ask of you, and what you asked for.",
+    "tab": {
+      "incoming": "Incoming",
+      "sent": "Sent"
+    },
+    "empty": {
+      "incoming": "No incoming requests",
+      "sent": "You have not asked for a sample"
+    },
+    "emptyBody": "You can request a sample from an offer page in the market.",
+    "offerTitle": "Request a sample",
+    "free": "Sample is free",
+    "priced": "Sample: {{price}} {{currency}}",
+    "dispatch": "ships in {{count}} days",
+    "qty": "Quantity",
+    "qtyHint": "Free text: “1 kg”, “a few pellets”",
+    "address": "Delivery address",
+    "send": "Request a sample",
+    "sentOk": "The request went to the seller.",
+    "reason": "Reason",
+    "courier": "Courier",
+    "tracking": "Tracking number",
+    "shipmentHint": "Enter the courier and the tracking number — that is how the buyer follows it.",
+    "action": {
+      "accepted": "Accept",
+      "declined": "Decline",
+      "sent": "Mark sent",
+      "received": "Mark received",
+      "rejected_by_buyer": "Not suitable"
+    },
+    "status": {
+      "requested": "Requested",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "sent": "Sent",
+      "received": "Received",
+      "rejected_by_buyer": "Not suitable"
+    },
+    "errors": {
+      "alreadyRequested": "You already have a live request against this offer.",
+      "notAvailable": "The seller does not offer samples for this listing."
     }
   }
 }

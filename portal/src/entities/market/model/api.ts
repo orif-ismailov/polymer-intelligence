@@ -14,6 +14,10 @@ export const marketApi = {
         product_id: filters.product_id,
         availability: filters.availability,
         country: filters.country || undefined,
+        // Only sent when ticked: `false` on the wire is the same as absent to
+        // the API, but sending it makes the query key noisier for no gain.
+        has_lab_passport: filters.has_lab_passport || undefined,
+        lab_verified: filters.lab_verified || undefined,
         company_id: opts.companyId ?? undefined,
         limit: opts.limit ?? 24,
         offset: opts.offset ?? 0,

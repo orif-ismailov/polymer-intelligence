@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 
+import { LabBadges } from "@/entities/lab";
 import { Badge, Card, CardBody } from "@/shared/ui";
 
 import { offerImageUrl, offerPhotos } from "../model/api";
@@ -106,10 +107,15 @@ export function MarketOfferCard({ offer, onOpen }: MarketOfferCardProps) {
             ) : null}
           </div>
 
-          {/* Two badge rows, and they say different things: what the SELLER is
-              (confirmed roles) and what they are ready to DO. */}
+          {/* Three badge rows, and they say different things: what the SELLER is
+              (confirmed roles), what they are ready to DO, and what has been
+              checked about the MATERIAL. */}
           <BusinessRoleBadges roles={offer.business_roles} max={2} />
           <OfferReadinessBadges offer={offer} />
+          <LabBadges
+            hasLabPassport={offer.has_lab_passport}
+            labVerified={offer.lab_verified}
+          />
 
           <div className="mt-auto flex items-end justify-between gap-2 border-t border-border pt-3">
             <span className="min-w-0 text-sm text-text-muted">

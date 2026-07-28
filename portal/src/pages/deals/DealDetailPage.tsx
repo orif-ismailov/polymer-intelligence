@@ -6,7 +6,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useActiveCompany } from "@/entities/company";
 import { DealStatusBadge, useDeal } from "@/entities/deal";
 import type { DealParty, DealStatus } from "@/entities/deal";
-import { DealActionBar, DealChat, DealDocuments, DealEscrowPanel } from "@/features/deal-room";
+import {
+  DealActionBar,
+  DealChat,
+  DealDocuments,
+  DealEscrowPanel,
+  DealLabPanel,
+} from "@/features/deal-room";
 import { cn, formatDateTime } from "@/shared/lib";
 import {
   Alert,
@@ -22,7 +28,7 @@ import {
 } from "@/shared/ui";
 import type { StatusStep } from "@/shared/ui";
 
-type Tab = "chat" | "documents" | "timeline" | "contract" | "escrow";
+type Tab = "chat" | "documents" | "timeline" | "contract" | "escrow" | "lab";
 
 /**
  * Marker the backend writes into `cancelled_reason` when escrow refunded the
@@ -118,7 +124,7 @@ export function DealDetailPage() {
     state: reached < 0 ? "pending" : index < reached ? "done" : index === reached ? "current" : "pending",
   }));
 
-  const tabs: Tab[] = ["chat", "documents", "timeline", "contract", "escrow"];
+  const tabs: Tab[] = ["chat", "documents", "timeline", "contract", "escrow", "lab"];
 
   return (
     <div className="space-y-5">
@@ -241,8 +247,10 @@ export function DealDetailPage() {
             )}
           </CardBody>
         </Card>
-      ) : (
+      ) : tab === "escrow" ? (
         <DealEscrowPanel escrow={deal.escrow} />
+      ) : (
+        <DealLabPanel companyId={companyId as number} dealId={deal.id} />
       )}
 
       <div>

@@ -8,6 +8,7 @@ import { MarketOfferCard, useMarket, type MarketFilters } from "@/entities/marke
 import { AVAILABILITY } from "@/shared/config";
 import {
   Button,
+  Checkbox,
   EmptyState,
   ErrorView,
   Input,
@@ -26,6 +27,8 @@ export function MarketPage() {
   const [q, setQ] = useState("");
   const [availability, setAvailability] = useState("");
   const [country, setCountry] = useState("");
+  const [hasPassport, setHasPassport] = useState(false);
+  const [labVerified, setLabVerified] = useState(false);
   const [offset, setOffset] = useState(0);
 
   const filters: MarketFilters = useMemo(
@@ -33,8 +36,10 @@ export function MarketPage() {
       q: q.trim() || undefined,
       availability: availability ? (availability as MarketFilters["availability"]) : undefined,
       country: country.trim().toUpperCase() || undefined,
+      has_lab_passport: hasPassport || undefined,
+      lab_verified: labVerified || undefined,
     }),
-    [q, availability, country],
+    [q, availability, country, hasPassport, labVerified],
   );
 
   const marketQuery = useMarket(filters, companyId, offset);
@@ -79,6 +84,27 @@ export function MarketPage() {
           }}
           aria-label={t("market.country")}
           maxLength={2}
+        />
+      </div>
+
+      {/* Two laboratory filters, not one: "there is an analysis" and "we
+          arranged it" are different levels of trust, and FR-L5 asks for both. */}
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        <Checkbox
+          checked={hasPassport}
+          onChange={(e) => {
+            setHasPassport(e.target.checked);
+            setOffset(0);
+          }}
+          label={t("market.filter.labPassport")}
+        />
+        <Checkbox
+          checked={labVerified}
+          onChange={(e) => {
+            setLabVerified(e.target.checked);
+            setOffset(0);
+          }}
+          label={t("market.filter.labVerified")}
         />
       </div>
 

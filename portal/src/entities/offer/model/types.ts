@@ -8,8 +8,9 @@ import type { Availability, OfferStatus, SaleMode } from "@/shared/config";
 /** A file attached to an offer — photo (`image`) or document. */
 export interface OfferFile {
   id: number;
-  /** `sds`/`coa` arrived with the compliance document list (P5). */
-  kind: "image" | "tds" | "certificate" | "other" | "sds" | "coa";
+  /** `sds`/`coa` arrived with the compliance document list (P5);
+   *  `lab_passport` with the laboratory badge (P6). */
+  kind: "image" | "tds" | "certificate" | "other" | "sds" | "coa" | "lab_passport";
   file_name: string;
 }
 
@@ -41,6 +42,11 @@ export interface OfferPayload {
   cas_number?: string | null;
   hs_code?: string | null;
   declared_concentration_pct?: string | number | null;
+  /** Sample terms (P6). A price without `samples_available` is rejected by the
+   *  API — the card would promise something nobody can order. */
+  samples_available?: boolean;
+  sample_price?: string | number | null;
+  sample_dispatch_days?: number | null;
 }
 
 export interface CompanyOffer extends OfferPayload {
@@ -62,4 +68,8 @@ export interface CompanyOffer extends OfferPayload {
   compliance_level?: RegulationLevel | null;
   compliance_ok?: boolean | null;
   compliance_missing?: MissingRequirement[] | null;
+  /** A passport is attached (anyone can upload one). */
+  has_lab_passport?: boolean;
+  /** We arranged the analysis — set only by a finished platform lab order. */
+  lab_verified?: boolean;
 }

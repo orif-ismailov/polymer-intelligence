@@ -51,6 +51,10 @@ interface ModerationOffer {
   company_verified: boolean;
   /** Chemical compliance (P5, FR-C5) — evaluated now, not when submitted. */
   compliance: ComplianceBlock | null;
+  /** Laboratory (P6). A passport re-queues the offer so staff see the claim
+   *  before buyers do; `lab_verified` means WE arranged the analysis. */
+  has_lab_passport: boolean;
+  lab_verified: boolean;
 }
 
 type T = (key: string, values?: Record<string, string>) => string;
@@ -182,6 +186,22 @@ export default function ModerationPage() {
                 )}
               </p>
             </div>
+
+            {/* The passport is why this offer came back to the queue (P6), so
+                the moderator has to see the claim they are approving. */}
+            {o.has_lab_passport && (
+              <p className="mt-2 text-sm">
+                <span
+                  className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
+                    o.lab_verified
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {t(o.lab_verified ? "lab.verified" : "lab.passport")}
+                </span>
+              </p>
+            )}
 
             <input
               type="text"

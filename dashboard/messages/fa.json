@@ -30,7 +30,9 @@
       "contracts": "قراردادها",
       "deals": "معاملات",
       "escrow": "امانی",
-      "substances": "مواد"
+      "substances": "مواد",
+      "labOrders": "آزمایشگاه",
+      "labPartners": "آزمایشگاه‌ها"
     },
     "guest": "مهمان"
   },
@@ -421,7 +423,11 @@
         "certificate": "گواهی"
       }
     },
-    "verified": "تأییدشده"
+    "verified": "تأییدشده",
+    "lab": {
+      "passport": "گواهی آزمایشگاه",
+      "verified": "Laboratory Verified"
+    }
   },
   "sources": {
     "title": "منابع",
@@ -1195,5 +1201,84 @@
       "strong_acting": "قوی‌الاثر (ПКМ-818)",
       "pkm916_import": "واردات کالای خطرناک (ПКМ-916)"
     }
+  },
+  "labOrders": {
+    "title": "درخواست‌های آزمایشگاهی",
+    "subtitle": "آزمایش را آزمایشگاه شریک انجام می‌دهد — وضعیت‌ها را اپراتور پیش می‌برد. درخواست‌ها از قدیمی‌ترین نمایش داده می‌شوند.",
+    "filterAll": "همه وضعیت‌ها",
+    "empty": "درخواستی نیست",
+    "selectHint": "یک درخواست از صف انتخاب کنید.",
+    "terminal": "درخواست پایان یافته — اقدام دیگری نیست.",
+    "colNumber": "شماره",
+    "colCompany": "شرکت",
+    "colSubject": "موضوع",
+    "colStatus": "وضعیت",
+    "company": "شرکت",
+    "subject": "موضوع",
+    "subjectDeal": "معامله #{id}",
+    "substance": "ماده",
+    "volume": "حجم نمونه",
+    "createdAt": "ایجاد",
+    "completedAt": "تکمیل",
+    "rejectedReason": "دلیل رد",
+    "operatorNote": "یادداشت اپراتور",
+    "partner": "آزمایشگاه",
+    "partnerNone": "تعیین نشده",
+    "resultAttached": "گواهی به آگهی/معامله پیوست شد.",
+    "counters": {
+      "submitted": "جدید",
+      "inProgress": "در جریان",
+      "done": "انجام‌شده",
+      "rejected": "رد شده"
+    },
+    "status": {
+      "submitted": "ارسال‌شده",
+      "accepted": "پذیرفته‌شده",
+      "sample_awaited": "در انتظار نمونه",
+      "in_analysis": "در حال آزمایش",
+      "done": "انجام‌شده",
+      "rejected": "رد شده"
+    },
+    "act": {
+      "title": "اقدام",
+      "note": "یادداشت (در رد الزامی)",
+      "reasonHint": "«انجام‌شده» بارگذاری گواهی را باز می‌کند — وضعیت بدون سند ثبت نمی‌شود.",
+      "accepted": "پذیرش",
+      "sample_awaited": "در انتظار نمونه",
+      "in_analysis": "به آزمایش",
+      "rejected": "رد",
+      "uploadResult": "بارگذاری گواهی (PDF)"
+    },
+    "errors": {
+      "invalid_transition": "این گذار از وضعیت فعلی ممکن نیست.",
+      "reason_required": "دلیل رد را بنویسید.",
+      "result_required": "«انجام‌شده» نیازمند بارگذاری گواهی است.",
+      "invalid_file_type": "گواهی فقط PDF پذیرفته می‌شود.",
+      "file_too_large": "فایل بسیار بزرگ است.",
+      "orderer_left_the_deal": "درخواست‌کننده دیگر طرف معامله نیست — سند قابل پیوست نیست."
+    }
+  },
+  "labPartners": {
+    "title": "آزمایشگاه‌های شریک",
+    "subtitle": "فهرست آزمایشگاه‌ها. تحلیلگر می‌خواند (هنگام تخصیص انتخاب می‌کند)، فقط مدیر ویرایش می‌کند.",
+    "empty": "هنوز آزمایشگاهی نیست",
+    "colName": "نام",
+    "colContacts": "تماس",
+    "colState": "وضعیت",
+    "active": "فعال",
+    "retired": "بازنشسته",
+    "retire": "بازنشسته کردن",
+    "restore": "بازگرداندن",
+    "addTitle": "افزودن آزمایشگاه",
+    "editTitle": "ویرایش آزمایشگاه",
+    "fieldName": "نام",
+    "fieldContactName": "شخص رابط",
+    "fieldPhone": "تلفن",
+    "fieldEmail": "ایمیل",
+    "fieldAddress": "نشانی",
+    "fieldNote": "یادداشت",
+    "save": "ذخیره",
+    "cancel": "انصراف",
+    "adminOnly": "فهرست را مدیر ویرایش می‌کند."
   }
 }

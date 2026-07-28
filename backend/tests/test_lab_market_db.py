@@ -274,3 +274,28 @@ class TestSupplierScoringHook:
             c.company_id: c for c in supplier_matching_service.match_suppliers(db, rfq)
         }
         assert by_company[plain.id].score == by_company[verified.id].score
+
+
+class TestModerationCard:
+    """A lab passport re-queues the offer specifically so staff see it before
+    buyers do (`portal/offers.py`). That is worth nothing if the card does not
+    show it — found in the browser, not by the suite."""
+
+    def test_the_card_says_whether_a_passport_is_attached(self, db: Session) -> None:
+        from app.schemas.marketplace import ModerationOfferOut  # noqa: PLC0415
+
+        _plain, with_passport, verified = _three_offers(db)
+        card = ModerationOfferOut.model_validate(with_passport)
+        assert card.has_lab_passport is True
+        assert card.lab_verified is False
+
+        independent = ModerationOfferOut.model_validate(verified)
+        assert independent.lab_verified is True
+
+    def test_a_plain_offer_claims_neither(self, db: Session) -> None:
+        from app.schemas.marketplace import ModerationOfferOut  # noqa: PLC0415
+
+        plain, _with_passport, _verified = _three_offers(db)
+        card = ModerationOfferOut.model_validate(plain)
+        assert card.has_lab_passport is False
+        assert card.lab_verified is False

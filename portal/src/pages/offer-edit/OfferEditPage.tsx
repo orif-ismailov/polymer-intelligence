@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { useOffer, type CompanyOffer } from "@/entities/offer";
+import { LabPassportBlock } from "@/features/lab-passport";
 import { OfferForm, OfferPhotos } from "@/features/offer-form";
 import { OffersLocked } from "@/pages/offers";
 import { Card, CardBody, CardHeader, CardTitle, ErrorView, LinkButton, LoadingView } from "@/shared/ui";
@@ -92,6 +93,15 @@ export function OfferEditPage() {
           onChanged={setPhotoOffer}
         />
       ) : null}
+
+      {/* Rendered on the create screen too, where it explains why it is inert:
+          a passport needs an offer to attach to. Hiding it would leave a seller
+          wondering whether the platform does laboratory analysis at all. */}
+      <LabPassportBlock
+        companyId={activeCompany.id}
+        offer={offer}
+        onUploaded={setPhotoOffer}
+      />
     </div>
   );
 }

@@ -30,7 +30,9 @@
       "contracts": "Sözleşmeler",
       "deals": "İşlemler",
       "escrow": "Emanet",
-      "substances": "Maddeler"
+      "substances": "Maddeler",
+      "labOrders": "Laboratuvar",
+      "labPartners": "Laboratuvarlar"
     },
     "guest": "Misafir"
   },
@@ -428,7 +430,11 @@
         "certificate": "sertifika"
       }
     },
-    "verified": "doğrulanmış"
+    "verified": "doğrulanmış",
+    "lab": {
+      "passport": "Lab pasaportu",
+      "verified": "Laboratory Verified"
+    }
   },
   "sources": {
     "title": "Kaynaklar",
@@ -1210,5 +1216,84 @@
       "strong_acting": "Güçlü etkili (ПКМ-818)",
       "pkm916_import": "Tehlikeli ürün ithalatı (ПКМ-916)"
     }
+  },
+  "labOrders": {
+    "title": "Laboratuvar talepleri",
+    "subtitle": "Analizi iş ortağı laboratuvar yapar — durumları operatör yürütür. Talepler en eskiden başlar.",
+    "filterAll": "Tüm durumlar",
+    "empty": "Talep yok",
+    "selectHint": "Kuyruktan bir talep seçin.",
+    "terminal": "Talep tamamlandı — başka işlem yok.",
+    "colNumber": "Numara",
+    "colCompany": "Şirket",
+    "colSubject": "Konu",
+    "colStatus": "Durum",
+    "company": "Şirket",
+    "subject": "Konu",
+    "subjectDeal": "İşlem #{id}",
+    "substance": "Madde",
+    "volume": "Numune hacmi",
+    "createdAt": "Oluşturuldu",
+    "completedAt": "Tamamlandı",
+    "rejectedReason": "Ret nedeni",
+    "operatorNote": "Operatör notu",
+    "partner": "Laboratuvar",
+    "partnerNone": "Atanmadı",
+    "resultAttached": "Pasaport tekliften/işleme eklendi.",
+    "counters": {
+      "submitted": "Yeni",
+      "inProgress": "İşlemde",
+      "done": "Tamam",
+      "rejected": "Reddedildi"
+    },
+    "status": {
+      "submitted": "Gönderildi",
+      "accepted": "Kabul edildi",
+      "sample_awaited": "Numune bekleniyor",
+      "in_analysis": "Analizde",
+      "done": "Tamamlandı",
+      "rejected": "Reddedildi"
+    },
+    "act": {
+      "title": "İşlem",
+      "note": "Not (rette zorunlu)",
+      "reasonHint": "«Tamam» pasaport yüklemeyi açar — belgesiz durum atanmaz.",
+      "accepted": "Kabul et",
+      "sample_awaited": "Numune bekle",
+      "in_analysis": "Analize al",
+      "rejected": "Reddet",
+      "uploadResult": "Pasaport yükle (PDF)"
+    },
+    "errors": {
+      "invalid_transition": "Mevcut durumdan bu geçiş yapılamaz.",
+      "reason_required": "Ret nedenini belirtin.",
+      "result_required": "«Tamam» için pasaport yüklenmelidir.",
+      "invalid_file_type": "Pasaport yalnızca PDF olabilir.",
+      "file_too_large": "Dosya çok büyük.",
+      "orderer_left_the_deal": "Talep sahibi artık işlem tarafı değil — belge eklenemez."
+    }
+  },
+  "labPartners": {
+    "title": "İş ortağı laboratuvarlar",
+    "subtitle": "Laboratuvar dizini. Analist okur (atama sırasında seçer), yalnızca yönetici düzenler.",
+    "empty": "Henüz laboratuvar yok",
+    "colName": "Ad",
+    "colContacts": "İletişim",
+    "colState": "Durum",
+    "active": "Aktif",
+    "retired": "Devre dışı",
+    "retire": "Devre dışı bırak",
+    "restore": "Geri al",
+    "addTitle": "Laboratuvar ekle",
+    "editTitle": "Laboratuvarı düzenle",
+    "fieldName": "Ad",
+    "fieldContactName": "İlgili kişi",
+    "fieldPhone": "Telefon",
+    "fieldEmail": "E-posta",
+    "fieldAddress": "Adres",
+    "fieldNote": "Not",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "adminOnly": "Dizini yönetici düzenler."
   }
 }

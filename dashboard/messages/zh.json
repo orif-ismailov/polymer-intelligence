@@ -30,7 +30,9 @@
       "contracts": "合同",
       "deals": "交易",
       "escrow": "托管",
-      "substances": "物质"
+      "substances": "物质",
+      "labOrders": "实验室",
+      "labPartners": "合作实验室"
     },
     "guest": "访客"
   },
@@ -421,7 +423,11 @@
         "certificate": "证书"
       }
     },
-    "verified": "已认证"
+    "verified": "已认证",
+    "lab": {
+      "passport": "检测报告",
+      "verified": "Laboratory Verified"
+    }
   },
   "sources": {
     "title": "数据源",
@@ -1195,5 +1201,84 @@
       "strong_acting": "强效物质（ПКМ-818）",
       "pkm916_import": "危险品进口（ПКМ-916）"
     }
+  },
+  "labOrders": {
+    "title": "实验室检测申请",
+    "subtitle": "检测由合作实验室完成——状态由运营人员推进。列表按最早提交排序。",
+    "filterAll": "全部状态",
+    "empty": "暂无申请",
+    "selectHint": "从队列中选择一条申请。",
+    "terminal": "申请已结束，无可执行操作。",
+    "colNumber": "编号",
+    "colCompany": "公司",
+    "colSubject": "对象",
+    "colStatus": "状态",
+    "company": "公司",
+    "subject": "对象",
+    "subjectDeal": "交易 #{id}",
+    "substance": "物质",
+    "volume": "样品量",
+    "createdAt": "创建时间",
+    "completedAt": "完成时间",
+    "rejectedReason": "拒绝原因",
+    "operatorNote": "运营备注",
+    "partner": "实验室",
+    "partnerNone": "未指定",
+    "resultAttached": "检测报告已附加到报价/交易。",
+    "counters": {
+      "submitted": "新申请",
+      "inProgress": "处理中",
+      "done": "已完成",
+      "rejected": "已拒绝"
+    },
+    "status": {
+      "submitted": "已提交",
+      "accepted": "已受理",
+      "sample_awaited": "等待样品",
+      "in_analysis": "检测中",
+      "done": "已完成",
+      "rejected": "已拒绝"
+    },
+    "act": {
+      "title": "操作",
+      "note": "备注（拒绝时必填）",
+      "reasonHint": "「已完成」会打开报告上传——没有文件不能置为完成。",
+      "accepted": "受理",
+      "sample_awaited": "等待样品",
+      "in_analysis": "转入检测",
+      "rejected": "拒绝",
+      "uploadResult": "上传报告（PDF）"
+    },
+    "errors": {
+      "invalid_transition": "当前状态无法执行该流转。",
+      "reason_required": "请填写拒绝原因。",
+      "result_required": "「已完成」需要上传检测报告。",
+      "invalid_file_type": "报告仅接受 PDF。",
+      "file_too_large": "文件过大。",
+      "orderer_left_the_deal": "申请人已不是交易方，无法附加文件。"
+    }
+  },
+  "labPartners": {
+    "title": "合作实验室",
+    "subtitle": "实验室名录。分析师可查看（指派时选择），仅管理员可编辑。",
+    "empty": "暂无实验室",
+    "colName": "名称",
+    "colContacts": "联系方式",
+    "colState": "状态",
+    "active": "启用",
+    "retired": "已停用",
+    "retire": "停用",
+    "restore": "恢复",
+    "addTitle": "添加实验室",
+    "editTitle": "编辑实验室",
+    "fieldName": "名称",
+    "fieldContactName": "联系人",
+    "fieldPhone": "电话",
+    "fieldEmail": "邮箱",
+    "fieldAddress": "地址",
+    "fieldNote": "备注",
+    "save": "保存",
+    "cancel": "取消",
+    "adminOnly": "名录由管理员维护。"
   }
 }

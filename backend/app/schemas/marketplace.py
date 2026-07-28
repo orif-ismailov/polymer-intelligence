@@ -254,6 +254,12 @@ class ModerationOfferOut(_CatalogOfferFields):
     #: instead of approving a precursor listing by eye. Evaluated live: a licence
     #: can expire between submission and this screen.
     compliance: ComplianceOut | None = None
+    #: Laboratory (P6). Attaching a passport sends the offer BACK to this queue
+    #: precisely so staff see the claim before buyers do — which is worth nothing
+    #: unless the card shows it. `lab_verified` distinguishes a passport we
+    #: produced from one the seller uploaded.
+    has_lab_passport: bool = False
+    lab_verified: bool = False
 
 
 class CategoryCount(BaseModel):

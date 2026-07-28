@@ -18,6 +18,7 @@ import {
   Handshake,
   Home,
   Inbox,
+  Microscope,
   Newspaper,
   Package,
   ShieldCheck,
@@ -68,6 +69,8 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "deals", href: "/deals", icon: Handshake, minRole: "analyst" },
       { key: "escrow", href: "/escrow", icon: Banknote, minRole: "analyst" },
       { key: "substances", href: "/substances", icon: FlaskConical, minRole: "analyst" },
+      { key: "labOrders", href: "/lab-orders", icon: Microscope, minRole: "analyst" },
+      { key: "labPartners", href: "/lab-partners", icon: Building2, minRole: "analyst" },
     ],
   },
   {

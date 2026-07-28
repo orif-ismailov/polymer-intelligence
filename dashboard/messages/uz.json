@@ -30,7 +30,9 @@
       "contracts": "Shartnomalar",
       "deals": "Bitimlar",
       "escrow": "Eskrou",
-      "substances": "Moddalar"
+      "substances": "Moddalar",
+      "labOrders": "Laboratoriya",
+      "labPartners": "Laboratoriyalar"
     },
     "guest": "Mehmon"
   },
@@ -428,7 +430,11 @@
         "certificate": "sertifikat"
       }
     },
-    "verified": "tasdiqlangan"
+    "verified": "tasdiqlangan",
+    "lab": {
+      "passport": "Lab. pasport",
+      "verified": "Laboratory Verified"
+    }
   },
   "sources": {
     "title": "Manbalar",
@@ -1210,5 +1216,84 @@
       "strong_acting": "Kuchli ta’sir etuvchi (VMQ-818)",
       "pkm916_import": "Xavfli mahsulot importi (VMQ-916)"
     }
+  },
+  "labOrders": {
+    "title": "Laboratoriya arizalari",
+    "subtitle": "Tahlilni hamkor laboratoriya bajaradi — holatlarni operator yuritadi. Arizalar eng eskisidan ko‘rsatiladi.",
+    "filterAll": "Barcha holatlar",
+    "empty": "Ariza yo‘q",
+    "selectHint": "Navbatdan arizani tanlang.",
+    "terminal": "Ariza yakunlangan — boshqa amal yo‘q.",
+    "colNumber": "Raqam",
+    "colCompany": "Kompaniya",
+    "colSubject": "Mavzu",
+    "colStatus": "Holat",
+    "company": "Kompaniya",
+    "subject": "Mavzu",
+    "subjectDeal": "Bitim #{id}",
+    "substance": "Modda",
+    "volume": "Namuna hajmi",
+    "createdAt": "Yaratilgan",
+    "completedAt": "Yakunlangan",
+    "rejectedReason": "Rad etish sababi",
+    "operatorNote": "Operator izohi",
+    "partner": "Laboratoriya",
+    "partnerNone": "Tayinlanmagan",
+    "resultAttached": "Pasport taklif/bitimga biriktirildi.",
+    "counters": {
+      "submitted": "Yangi",
+      "inProgress": "Ishda",
+      "done": "Tayyor",
+      "rejected": "Rad etilgan"
+    },
+    "status": {
+      "submitted": "Yuborilgan",
+      "accepted": "Qabul qilingan",
+      "sample_awaited": "Namuna kutilmoqda",
+      "in_analysis": "Tahlilda",
+      "done": "Tayyor",
+      "rejected": "Rad etilgan"
+    },
+    "act": {
+      "title": "Amal",
+      "note": "Izoh (rad etishda majburiy)",
+      "reasonHint": "«Tayyor» pasport yuklashni ochadi — hujjatsiz holat qo‘yilmaydi.",
+      "accepted": "Qabul qilish",
+      "sample_awaited": "Namuna kutilmoqda",
+      "in_analysis": "Tahlilga",
+      "rejected": "Rad etish",
+      "uploadResult": "Pasportni yuklash (PDF)"
+    },
+    "errors": {
+      "invalid_transition": "Joriy holatdan bunday o‘tish mumkin emas.",
+      "reason_required": "Rad etish sababini ko‘rsating.",
+      "result_required": "«Tayyor» uchun pasport yuklash kerak.",
+      "invalid_file_type": "Pasport faqat PDF formatida qabul qilinadi.",
+      "file_too_large": "Fayl juda katta.",
+      "orderer_left_the_deal": "Buyurtmachi endi bitim ishtirokchisi emas — hujjatni biriktirib bo‘lmaydi."
+    }
+  },
+  "labPartners": {
+    "title": "Hamkor laboratoriyalar",
+    "subtitle": "Laboratoriyalar ma’lumotnomasi. Tahlilchi o‘qiydi (tayinlashda tanlaydi), faqat administrator tahrirlaydi.",
+    "empty": "Hozircha laboratoriya yo‘q",
+    "colName": "Nomi",
+    "colContacts": "Kontaktlar",
+    "colState": "Holati",
+    "active": "Faol",
+    "retired": "Chiqarilgan",
+    "retire": "Chiqarish",
+    "restore": "Qaytarish",
+    "addTitle": "Laboratoriya qo‘shish",
+    "editTitle": "Laboratoriyani tahrirlash",
+    "fieldName": "Nomi",
+    "fieldContactName": "Aloqa shaxsi",
+    "fieldPhone": "Telefon",
+    "fieldEmail": "Email",
+    "fieldAddress": "Manzil",
+    "fieldNote": "Eslatma",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "adminOnly": "Ma’lumotnomani administrator tahrirlaydi."
   }
 }

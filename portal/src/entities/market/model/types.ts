@@ -55,6 +55,14 @@ export interface MarketOffer {
   /** CONFIRMED business roles of the company behind the offer. Empty for
    *  seller-origin (Telegram) offers — no portal company, nothing confirmed. */
   business_roles: string[];
+  /** P6: a passport is attached (anyone can upload one) versus we arranged the
+   *  analysis. Two different claims, filtered separately in the market. */
+  has_lab_passport: boolean;
+  lab_verified: boolean;
+  /** Sample terms, so the card can say "samples: 15 USD, ships in 3 days". */
+  samples_available: boolean;
+  sample_price: string | number | null;
+  sample_dispatch_days: number | null;
 }
 
 /** Offer detail + the caller company's own inquiries on it (PortalMarketOfferDetail). */
@@ -67,4 +75,9 @@ export interface MarketFilters {
   product_id?: number;
   availability?: Availability;
   country?: string;
+  /** FR-L5 — two separate questions: "has an analysis" and "we arranged it".
+   *  Undefined (or false) means "don't filter", never "show me the ones
+   *  without". */
+  has_lab_passport?: boolean;
+  lab_verified?: boolean;
 }

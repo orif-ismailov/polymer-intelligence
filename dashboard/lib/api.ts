@@ -114,3 +114,45 @@ export async function apiFetch<T>(
 
   return response.json() as Promise<T>;
 }
+
+/**
+ * Multipart upload (P6 — the lab-result PDF).
+ *
+ * Separate from `apiFetch` because that one always sets
+ * `Content-Type: application/json`; on a FormData body the browser must set the
+ * header itself so it can add the multipart boundary. Overriding it by hand
+ * produces a request the server cannot parse.
+ */
+export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const response = await fetch(url, {
+    method: "POST",
+    body: form,
+    headers,
+    credentials: "include",
+  });
+
+  if (response.status === 401) {
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new ApiError(401, null, "Unauthorized — redirecting to login");
+  }
+  if (!response.ok) {
+    let body: unknown = null;
+    try {
+      body = await response.json();
+    } catch {
+      // ignore parse failure on error responses
+    }
+    throw new ApiError(
+      response.status,
+      body,
+      `API request failed: ${response.status} ${response.statusText}`,
+    );
+  }
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
+}
