@@ -97,6 +97,10 @@ def _specs() -> tuple[SettingSpec, ...]:
             min=1, max=730,
         ),
         SettingSpec(
+            "substance_ai_enabled", "bool", True,
+            "Offer an AI substance hint on the seller's offer form",
+        ),
+        SettingSpec(
             "dangerous_check_enforced", "bool", False,
             "Block publication of regulated substances without licence/documents",
         ),

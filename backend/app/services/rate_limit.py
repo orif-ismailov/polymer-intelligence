@@ -19,6 +19,9 @@ OFFER_CREATE_PER_DAY = 20
 # R2 W6 — per-company buy-side limits (notification endpoints are NOT limited).
 INQUIRY_CREATE_PER_DAY = 10
 REQUEST_CREATE_PER_DAY = 10
+# P5 — the AI substance hint is a paid LLM call a seller can trigger by hand.
+# Generous (a form may be re-checked while it is edited) but not unbounded.
+SUBSTANCE_SUGGEST_PER_DAY = 50
 
 
 class RateLimited(Exception):

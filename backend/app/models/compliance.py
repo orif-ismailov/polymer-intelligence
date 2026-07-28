@@ -250,3 +250,5 @@ class SubstanceSuggestion(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+    substance: Mapped[Substance | None] = relationship("Substance")
