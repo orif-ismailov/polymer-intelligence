@@ -112,8 +112,39 @@ def normalize_phone(raw: str) -> str:
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
 
+#: Digits in an OTP. `config._dev_otp_shape` validates `OTP_DEV_CODE` against the
+#: same number using a literal (config stays import-free); a test asserts they agree.
+CODE_LENGTH = 6
+
+
+def _dev_fixed_code() -> str | None:
+    """The configured dev OTP, or None to generate a random one.
+
+    Double-gated exactly like the `/portal/auth/otp/peek` hook — `DEBUG` **and**
+    the console SMS driver — because it has the same consequence: a predictable
+    code means anyone who knows a phone number can sign in as its owner. Either
+    half of the gate being off returns None, so a stale `.env` line cannot weaken
+    a stack that sends real SMS. `Settings` also refuses that combination at
+    startup; this is the second lock on the same door.
+    """
+    if not settings.OTP_DEV_CODE:
+        return None
+    if not (settings.DEBUG and settings.SMS_PROVIDER == "console"):
+        return None
+    return settings.OTP_DEV_CODE
+
+
 def _generate_code() -> str:
-    return f"{secrets.randbelow(1_000_000):06d}"
+    """A random code — unless a dev fixed code is configured and permitted.
+
+    The override lives HERE rather than in `request_code` so everything
+    downstream is untouched: the stored value is still `sha256(code)`, and
+    `verify_code` compares a fixed code by exactly the same path as a random one.
+    """
+    fixed = _dev_fixed_code()
+    if fixed is not None:
+        return fixed
+    return f"{secrets.randbelow(10**CODE_LENGTH):0{CODE_LENGTH}d}"
 
 
 def _hash_code(code: str) -> str:

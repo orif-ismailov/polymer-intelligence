@@ -303,9 +303,10 @@ flipped. Rollout (dev → prod):
 
 1. **Merge to `dev`** — the dev stack auto-pulls `dev` and redeploys. Migration `0017`
    applies automatically (advisory-locked). The `portal` CI job (lint · tsc · build) must be green.
-2. **Run the demo on the dev stack** (R1-PLAN Definition of Done): register by phone (console SMS
-   driver prints the code in worker logs, or use `GET /portal/auth/otp/peek?phone=` when
-   `DEBUG=true`) → create 2 companies → submit → approve one from dashboard `/verification`, the
+2. **Run the demo on the dev stack** (R1-PLAN Definition of Done): register by phone — three ways
+   to get the code, all requiring `DEBUG=true` + `SMS_PROVIDER=console`: set `OTP_DEV_CODE=000000`
+   and just type it, read the worker log (`sms.console.send`), or call
+   `GET /portal/auth/otp/peek?phone=` → create 2 companies → submit → approve one from dashboard `/verification`, the
    other from the Telegram group → switch active company → publish an offer → moderate → offer
    appears in the public market with `company_verified: true`.
 3. **Bundle the frontends** — only needed for a MANUAL deploy: `make portal-bundle`

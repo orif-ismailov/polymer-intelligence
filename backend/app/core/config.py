@@ -114,6 +114,18 @@ class Settings(BaseSettings):
     SMS_PROVIDER: str = "console"
     ESKIZ_EMAIL: str = ""
     ESKIZ_PASSWORD: str = ""
+    # DEV/DEMO ONLY — a fixed OTP code, so a demo login does not need the code
+    # fished out of a worker log every time. Set it to "000000" in a dev .env.
+    #
+    # Empty by default, and honoured ONLY when `DEBUG` is on AND `SMS_PROVIDER` is
+    # `console` — the same double gate as the `/portal/auth/otp/peek` hook, because
+    # this has the same consequence: a predictable OTP means anyone who knows a
+    # phone number can sign in as its owner. Both halves of that gate live in
+    # `otp_service._dev_fixed_code`, and `_reject_fixed_otp_with_real_sms` below
+    # refuses the one combination that can only be a mistake.
+    #
+    # MUST stay empty in production.
+    OTP_DEV_CODE: str = ""
     # OTP tunables (Redis-backed, see app/services/otp_service.py).
     OTP_TTL_SECONDS: int = 300
     OTP_RESEND_COOLDOWN_SECONDS: int = 60
@@ -288,6 +300,39 @@ class Settings(BaseSettings):
         except zoneinfo.ZoneInfoNotFoundError as exc:
             raise ValueError(f"Unknown timezone: {v!r}") from exc
         return v
+
+    @field_validator("OTP_DEV_CODE")
+    @classmethod
+    def _dev_otp_shape(cls, v: str) -> str:
+        """Empty, or exactly the digits a real code has.
+
+        A 5-digit "dev code" would never match a stored hash, and the symptom
+        would read as a broken OTP flow rather than a typo in `.env`. The length
+        is `otp_service.CODE_LENGTH`, which cannot be imported here (config must
+        stay dependency-free) — a test asserts the two agree.
+        """
+        if not v:
+            return v
+        if len(v) != 6 or not v.isdigit():
+            raise ValueError("OTP_DEV_CODE must be empty or exactly 6 digits (e.g. 000000)")
+        return v
+
+    @model_validator(mode="after")
+    def _reject_fixed_otp_with_real_sms(self) -> Self:
+        """Refuse a fixed OTP alongside a real SMS provider.
+
+        `otp_service` would ignore the setting anyway (it requires the console
+        driver), but ignoring it silently is the wrong answer: the operator asked
+        for every real user's code to be the same six digits. That is either a
+        `.env` copied from dev or a serious misunderstanding, and both deserve a
+        boot failure rather than a stack that looks fine.
+        """
+        if self.OTP_DEV_CODE and self.SMS_PROVIDER != "console":
+            raise ValueError(
+                "OTP_DEV_CODE is a dev-only fixed OTP and cannot be combined with "
+                f"SMS_PROVIDER={self.SMS_PROVIDER!r} — clear it, or use the console driver"
+            )
+        return self
 
     @model_validator(mode="after")
     def _require_eskiz_creds(self) -> Self:

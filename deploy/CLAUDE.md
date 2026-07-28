@@ -140,6 +140,23 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   # advertise the endpoint.
   ESCROW_WEBHOOK_SECRET=                     # [SECRET] required only for escrow_mode=live
   ```
+- **Fixed dev OTP (`OTP_DEV_CODE`)** — set it to `000000` in a DEV `.env` and every portal
+  login accepts that code, so a demo no longer needs the real one fished out of the worker log.
+  Ships **empty**, and is honoured only when `DEBUG=true` **and** `SMS_PROVIDER=console` (the
+  same double gate as the `/portal/auth/otp/peek` hook — a predictable OTP is an auth bypass:
+  anyone who knows a phone number can sign in as its owner). `Settings` **refuses to boot** if
+  it is set alongside a real SMS provider, or if it is not exactly 6 digits.
+  **Think before putting it on the shared dev stack** (`dev-cabinet.ai-imex.com` is public):
+  it makes every account there signable-in by anyone who knows the number. That box is already
+  open in the same way if it runs `DEBUG=true` + console (the peek hook is unauthenticated), so
+  this changes degree rather than kind — but it is a deliberate choice, not a default.
+  Also append to `deploy/.env.example` by hand (`.env*` edits are denied locally):
+  ```
+  # DEV/DEMO ONLY — fixed OTP so a demo login needs no code lookup. Honoured only
+  # when DEBUG=true AND SMS_PROVIDER=console; startup FAILS if set with a real SMS
+  # provider or with a value that is not 6 digits. MUST stay empty in production.
+  OTP_DEV_CODE=                              # e.g. 000000 in a dev .env
+  ```
 
 ## Make targets (run from repo root)
 

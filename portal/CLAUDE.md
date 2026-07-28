@@ -23,6 +23,8 @@ npm run lint           # eslint . --max-warnings 0
 npm run typecheck      # tsc --noEmit
 npm run build          # tsc -b tsconfig.build.json && vite build → dist/
 npm run e2e            # playwright (needs a live API on :8000 + DEBUG=true console SMS)
+#                        tip: OTP_DEV_CODE=000000 on that API fixes the login code so you can
+#                        click through by hand; the specs read the real one via the peek hook
 ```
 
 **Lockfile:** regenerate with `npx npm@10 install` — npm-11 lockfiles break Docker `npm ci`
