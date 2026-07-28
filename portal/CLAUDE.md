@@ -36,7 +36,7 @@ in this repo (same constraint as `webapp/`/`dashboard/`).
 | `pages/` | login, otp, home, companies, company-create (wizard), company-view, verification-status, offers, offer-edit, settings + **R2** market (grid + offer detail w/ inquiry form), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list). |
 | `widgets/` | `app-shell` (topbar + company switcher), `case-status-panel` (per-check chips + needs_info deep-links). |
 | `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll). |
-| `entities/` | account, company, verification, offer + **R2** market, inquiry, request, news, notification — types + api hooks + zustand models. |
+| `entities/` | account, company, verification, offer + **R2** market, inquiry, request, news, notification + **P5** compliance (substance picker data, verdicts, licences) — types + api hooks + zustand models. |
 | `shared/` | `api` (fetch client + auth bridge), `ui` (Tailwind primitives), `lib` (phone mask, formatters), `config`, `i18n`. |
 
 FSD import rule: a layer may import only from layers below it (`shared ⇐ entities ⇐ features

@@ -21,7 +21,7 @@ npx next typegen   # regenerate typed-route defs before tsc on a clean checkout 
 
 | Path | Role |
 |------|------|
-| `app/[locale]/...` | Localized App Router tree. The `(dashboard)/` route group holds the authed pages — signal side: `feed`, `signals`, `offers`, `prices`, `requests`, `sources`, `alerts`; marketplace/sourcing: `moderation`, `offer-requests`, `sourcing`, `partners`, `inventory`, `intel`; news: `reports`, `admin/news`; plus `admin/users` and `admin/products`. `login/` is outside the group. |
+| `app/[locale]/...` | Localized App Router tree. The `(dashboard)/` route group holds the authed pages — signal side: `feed`, `signals`, `offers`, `prices`, `requests`, `sources`, `alerts`; marketplace/sourcing: `moderation`, `offer-requests`, `sourcing`, `partners`, `inventory`, `intel`, `substances` (the regulated-chemistry registry — admin writes, analyst reads); news: `reports`, `admin/news`; plus `admin/users` and `admin/products`. `login/` is outside the group. |
 | `app/layout.tsx`, `app/[locale]/layout.tsx` | Root + locale shells. |
 | `components/ui/` | shadcn primitives. `components/<domain>/` | feature components (feed, requests, sources, alerts, prices). `components/shared/` | cross-page chips/cards (`KindChip`, `StatusChip`, `UrgencyChip`, `KpiCard`). `components/layout/` | AppShell, Sidebar, LanguageSwitcher. |
 | `hooks/` | `useSSE.ts` (live feed), `useAuth.ts`, `useDashboardSummary.ts`. |
