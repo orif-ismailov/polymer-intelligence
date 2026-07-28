@@ -40,6 +40,7 @@ from app.models.enums import (
     OfferRequestStatus,
     OfferSaleMode,
     PriceBasis,
+    RegulationLevel,
     SellerOfferStatus,
 )
 
@@ -164,6 +165,33 @@ class SellerOffer(Base):
     )
     accepts_escrow: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
+    )
+    # ── Chemical compliance (P5) ──────────────────────────────────────────────
+    # The registry link is optional: most polymer listings are ordinary goods,
+    # and a seller may also type a CAS/HS pair for something we do not carry yet.
+    substance_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("substances.id", ondelete="SET NULL"), nullable=True
+    )
+    cas_number: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hs_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: Regulation is concentration-dependent (acetone is a precursor at ≥60%),
+    #: so the seller declares strength and the verdict compares it to the
+    #: substance's threshold. NULL is treated as "regulated" — conservative.
+    declared_concentration_pct: Mapped[decimal.Decimal | None] = mapped_column(
+        Numeric(5, 2), nullable=True
+    )
+    #: Cached verdict (FR-C6) — recomputed on every edit/re-publication, so a
+    #: list screen never re-evaluates a page of offers. NULL = never evaluated
+    #: (an offer that predates P5).
+    compliance_level: Mapped[RegulationLevel | None] = mapped_column(
+        PgEnum(RegulationLevel, name="regulation_level", create_type=False), nullable=True
+    )
+    compliance_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    compliance_missing: Mapped[list[dict[str, str | None]] | None] = mapped_column(
+        JSONB, nullable=True
+    )
+    compliance_checked_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
     status: Mapped[SellerOfferStatus] = mapped_column(
         PgEnum(SellerOfferStatus, name="seller_offer_status", create_type=False),

@@ -26,6 +26,11 @@ from app.models.companies import (  # noqa: F401
     CompanyBusinessRole,
     CompanyMember,
 )
+from app.models.compliance import (  # noqa: F401
+    CompanyLicense,
+    Substance,
+    SubstanceSuggestion,
+)
 from app.models.contracts import (  # noqa: F401
     Contract,
     ContractSignature,
@@ -57,12 +62,15 @@ from app.models.enums import (  # noqa: F401
     DeliveryStatus,
     DocumentReviewStatus,
     EscrowStatus,
+    LicenseStatus,
     OfferFileKind,
     OfferRequestStatus,
     OfferSaleMode,
     ParseStatus,
     PriceBasis,
     PricePointKind,
+    RegulationLevel,
+    RegulationRegime,
     ReportKind,
     ReportStatus,
     RequestStatus,
@@ -229,4 +237,11 @@ __all__ = [
     "EscrowStatus",
     "EscrowPayment",
     "ProviderEvent",
+    # Chemical compliance (R5 / P5)
+    "RegulationLevel",
+    "RegulationRegime",
+    "LicenseStatus",
+    "Substance",
+    "CompanyLicense",
+    "SubstanceSuggestion",
 ]

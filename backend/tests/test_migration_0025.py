@@ -154,6 +154,6 @@ class TestOfferFavorites:
 class TestSingleHead:
     def test_0025_is_the_head(self) -> None:
         script = _script_dir()
-        assert script.get_heads() == ["0026"], (
-            f"expected a single head 0026, got {script.get_heads()}"
+        assert script.get_heads() == ["0027"], (
+            f"expected a single head 0027, got {script.get_heads()}"
         )

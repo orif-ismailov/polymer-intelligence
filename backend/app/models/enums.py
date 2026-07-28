@@ -171,12 +171,19 @@ class SellerOfferStatus(enum.StrEnum):
 
 
 class OfferFileKind(enum.StrEnum):
-    """Type of file attached to a seller offer (Phase 2)."""
+    """Type of file attached to a seller offer (Phase 2).
+
+    `sds` and `coa` arrived with P5: a regulated substance carries a list of
+    required documents (SDS/TDS/COA), and the `docs_required` verdict has to be
+    able to tell them apart — "some file is attached" is not compliance.
+    """
 
     image = "image"
     tds = "tds"
     certificate = "certificate"
     other = "other"
+    sds = "sds"  # P5 — safety data sheet
+    coa = "coa"  # P5 — certificate of analysis
 
 
 class OfferAvailability(enum.StrEnum):
@@ -481,3 +488,58 @@ class EscrowStatus(enum.StrEnum):
     funded = "funded"
     released = "released"
     refunded = "refunded"
+
+
+# ── Chemical compliance (R5 / P5) ─────────────────────────────────────────────
+
+
+class RegulationLevel(enum.StrEnum):
+    """How tightly a substance is regulated (PG type: regulation_level).
+
+    Drives what publishing an offer of it requires:
+    `free` — nothing; `docs_required` — the documents the substance names
+    (SDS/TDS/COA); `license_required` — an active company licence of the matching
+    regime; `prohibited` — the platform will not carry it at all, and no upload
+    changes that.
+    """
+
+    free = "free"
+    docs_required = "docs_required"
+    license_required = "license_required"
+    prohibited = "prohibited"
+
+
+class RegulationRegime(enum.StrEnum):
+    """Which Uzbek regime a substance falls under (PG type: regulation_regime).
+
+    Four separate acts, four separate licensors — there is no single national
+    registry (INTEGRATIONS.md §4), so the regime is what a licence is checked
+    against:
+
+    - `precursor_list_iv`  — ПКМ №330 (Список IV), concentration thresholds +
+      the ≤12 kg/year exemption; licensed through the Ministry of Health system
+    - `explosive_toxic`    — ПКМ №782 + ПКМ №397 (explosives, toxic classes I–III)
+    - `strong_acting`      — ПКМ №818 (strong-acting substances)
+    - `pkm916_import`      — ПКМ №916 import/export lists (bans + eco-certification)
+    """
+
+    precursor_list_iv = "precursor_list_iv"
+    explosive_toxic = "explosive_toxic"
+    strong_acting = "strong_acting"
+    pkm916_import = "pkm916_import"
+
+
+class LicenseStatus(enum.StrEnum):
+    """State of a company licence (PG type: license_status).
+
+    From `company-verification/ARCHITECTURE.md` §CompanyLicense:
+    pending_review → active → expired (by date) / revoked; pending_review →
+    rejected. An expired or revoked licence is never resurrected — the company
+    registers a new one.
+    """
+
+    pending_review = "pending_review"
+    active = "active"
+    expired = "expired"
+    revoked = "revoked"
+    rejected = "rejected"
