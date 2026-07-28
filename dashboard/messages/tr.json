@@ -414,8 +414,21 @@
         "docs_required": "Belge gerekli",
         "license_required": "Lisans gerekli",
         "prohibited": "Yasak"
+      },
+      "regime": {
+        "precursor_list_iv": "Öncü maddeler (Liste IV, ПКМ-330)",
+        "explosive_toxic": "Patlayıcı ve zehirli (ПКМ-782)",
+        "strong_acting": "Güçlü etkili (ПКМ-818)",
+        "pkm916_import": "Tehlikeli ürün ithalatı (ПКМ-916)"
+      },
+      "docKind": {
+        "sds": "güvenlik bilgi formu (SDS)",
+        "tds": "teknik veri formu (TDS)",
+        "coa": "analiz sertifikası (COA)",
+        "certificate": "sertifika"
       }
-    }
+    },
+    "verified": "doğrulanmış"
   },
   "sources": {
     "title": "Kaynaklar",

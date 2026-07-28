@@ -414,8 +414,21 @@
         "docs_required": "Hujjatlar kerak",
         "license_required": "Litsenziya kerak",
         "prohibited": "Taqiqlangan"
+      },
+      "regime": {
+        "precursor_list_iv": "Prekursorlar (IV ro‘yxat, VMQ-330)",
+        "explosive_toxic": "Portlovchi va zaharli (VMQ-782)",
+        "strong_acting": "Kuchli ta’sir etuvchi (VMQ-818)",
+        "pkm916_import": "Xavfli mahsulot importi (VMQ-916)"
+      },
+      "docKind": {
+        "sds": "xavfsizlik pasporti (SDS)",
+        "tds": "texnik tavsif (TDS)",
+        "coa": "tahlil sertifikati (COA)",
+        "certificate": "sertifikat"
       }
-    }
+    },
+    "verified": "tasdiqlangan"
   },
   "sources": {
     "title": "Manbalar",

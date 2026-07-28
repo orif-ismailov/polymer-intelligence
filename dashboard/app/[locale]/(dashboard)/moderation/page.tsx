@@ -37,15 +37,39 @@ interface ModerationOffer {
   currency: string;
   warehouse_city: string | null;
   created_at: string;
+  /** Null for portal-company offers — they have no Telegram seller behind them. */
   seller: {
     company_name: string | null;
     contact_name: string | null;
     phone: string | null;
     telegram_username: string | null;
     is_verified: boolean;
-  };
+  } | null;
+  /** Dual-origin display: "company" | "seller" + the name to show either way. */
+  origin: string;
+  display_name: string | null;
+  company_verified: boolean;
   /** Chemical compliance (P5, FR-C5) — evaluated now, not when submitted. */
   compliance: ComplianceBlock | null;
+}
+
+type T = (key: string, values?: Record<string, string>) => string;
+
+/** Enum values arrive raw from the API; a moderator must not read `precursor_list_iv`. */
+const REGIME_KEYS = new Set([
+  "precursor_list_iv",
+  "explosive_toxic",
+  "strong_acting",
+  "pkm916_import",
+]);
+const DOC_KEYS = new Set(["sds", "tds", "coa", "certificate"]);
+
+function regimeLabel(detail: string | null, t: T): string {
+  return detail && REGIME_KEYS.has(detail) ? t(`compliance.regime.${detail}`) : (detail ?? "—");
+}
+
+function docLabel(detail: string | null, t: T): string {
+  return detail && DOC_KEYS.has(detail) ? t(`compliance.docKind.${detail}`) : (detail ?? "—");
 }
 
 /** Turn a refused approval into a sentence naming what compliance is waiting for. */
@@ -61,9 +85,9 @@ function blockedReason(
   }
   const items = (detail.missing ?? []).map((m) =>
     m.kind === "license"
-      ? t("compliance.missingLicense", { regime: m.detail ?? "—" })
+      ? t("compliance.missingLicense", { regime: regimeLabel(m.detail, t) })
       : m.kind === "document"
-        ? t("compliance.missingDocument", { doc: m.detail ?? "—" })
+        ? t("compliance.missingDocument", { doc: docLabel(m.detail, t) })
         : t("compliance.missingProhibited", { act: m.detail ?? "—" }),
   );
   return `${t("compliance.approveBlocked")} ${items.join("; ")}`;
@@ -136,10 +160,13 @@ export default function ModerationPage() {
                   {o.qty_available != null ? ` · ${o.qty_available.toLocaleString()} ${o.qty_unit}` : ""}
                   {o.warehouse_city ? ` · ${o.warehouse_city}` : ""}
                 </p>
+                {/* A portal-company offer has no `seller` block at all — reading
+                    through it crashed the whole queue. */}
                 <p className="text-sm text-foreground mt-1">
-                  {t("seller")}: {o.seller.company_name || "—"}
-                  {o.seller.phone ? ` · ${o.seller.phone}` : ""}
-                  {o.seller.telegram_username ? ` · @${o.seller.telegram_username}` : ""}
+                  {t("seller")}: {o.display_name || o.seller?.company_name || "—"}
+                  {o.seller?.phone ? ` · ${o.seller.phone}` : ""}
+                  {o.seller?.telegram_username ? ` · @${o.seller.telegram_username}` : ""}
+                  {o.company_verified ? ` · ${t("verified")}` : ""}
                 </p>
               </div>
               <p className="text-lg font-bold text-accent whitespace-nowrap">
@@ -199,9 +226,11 @@ export default function ModerationPage() {
                     {o.compliance.missing.map((m, i) => (
                       <li key={`${m.kind}-${m.detail ?? i}`}>
                         {m.kind === "license"
-                          ? t("compliance.missingLicense", { regime: m.detail ?? "—" })
+                          ? t("compliance.missingLicense", {
+                              regime: regimeLabel(m.detail, t),
+                            })
                           : m.kind === "document"
-                            ? t("compliance.missingDocument", { doc: m.detail ?? "—" })
+                            ? t("compliance.missingDocument", { doc: docLabel(m.detail, t) })
                             : t("compliance.missingProhibited", { act: m.detail ?? "—" })}
                       </li>
                     ))}

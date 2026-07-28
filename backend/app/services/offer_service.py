@@ -500,69 +500,72 @@ def enqueue_offer_group_notify(offer_id: int, *, edited: bool = False) -> None:
 
 
 def apply_publish_gate(db: Session, offer: SellerOffer) -> bool:
-    """Stamp the compliance verdict and hold the offer if publishing is barred.
+    """Stamp the compliance verdict; hold or release the offer accordingly.
 
-    Returns True when the offer was HELD (moved to / kept as `draft`).
+    Returns True when the offer is being HELD (moved to / kept as `draft`).
 
     Holding rather than raising is deliberate. A `docs_required` substance can
     only receive its documents after the offer row exists — files are uploaded
     against an offer id — so refusing creation would make such an offer
-    impossible to publish at all. The seller instead gets a saved draft plus a
-    list of what is missing, and attaching the document releases it
-    (:func:`recheck_compliance_after_files`).
+    impossible to publish at all. The seller gets a saved draft plus a list of
+    what is missing.
+
+    The reverse move matters just as much: a LICENCE lives on the company, not
+    on the offer, so a held offer cannot be fixed by attaching anything to it.
+    Once the requirement is met (or an operator switches enforcement off), the
+    next save releases the draft into moderation — otherwise the offer is stuck
+    forever with nothing the seller can do about it.
+
+    Only a draft the GATE is holding (`compliance_ok` is False) is released; a
+    draft that never failed compliance is the seller's own and is left alone.
 
     With `dangerous_check_enforced` off (the default) nothing is held, but the
     verdict is still cached so staff can see what a flip would block.
     """
     from app.services import offer_compliance_service  # noqa: PLC0415 — cycle
 
+    was_held = offer.compliance_ok is False
     verdict = offer_compliance_service.evaluate_and_stamp(db, offer)
-    if verdict.ok or not offer_compliance_service.enforcement_enabled(db):
-        return False
-    if offer.status == SellerOfferStatus.draft:
+
+    if not verdict.ok and offer_compliance_service.enforcement_enabled(db):
+        if offer.status != SellerOfferStatus.draft:
+            offer.status = SellerOfferStatus.draft
+            offer.published_at = None
+            db.flush()
+            write_audit(
+                db, None, "offer.compliance_held", "seller_offers", str(offer.id),
+                {"level": str(verdict.level), "missing": verdict.as_json()},
+            )
+            logger.info(
+                "offer_service.compliance_held",
+                extra={"offer_id": offer.id, "level": str(verdict.level)},
+            )
         return True
 
-    offer.status = SellerOfferStatus.draft
-    offer.published_at = None
-    db.flush()
-    write_audit(
-        db, None, "offer.compliance_held", "seller_offers", str(offer.id),
-        {"level": str(verdict.level), "missing": verdict.as_json()},
-    )
-    logger.info(
-        "offer_service.compliance_held",
-        extra={"offer_id": offer.id, "level": str(verdict.level)},
-    )
-    return True
+    if was_held and offer.status == SellerOfferStatus.draft:
+        offer.status = SellerOfferStatus.pending_moderation
+        db.flush()
+        write_audit(
+            db, None, "offer.compliance_released", "seller_offers", str(offer.id),
+            {"level": str(verdict.level)},
+        )
+        logger.info("offer_service.compliance_released", extra={"offer_id": offer.id})
+    return False
 
 
 def recheck_compliance_after_files(db: Session, offer: SellerOffer) -> bool:
-    """Re-evaluate after the offer's files changed; release a compliant draft.
+    """Re-evaluate after the offer's files changed. True when it was released.
 
-    Returns True when the offer was released into moderation. Only a draft that
-    the gate itself is holding can be released — a seller's own unfinished draft
-    (compliance never failed) is left alone.
+    The upload path's view of the same gate: attaching the missing SDS/COA is
+    how a `docs_required` draft becomes publishable.
     """
-    from app.services import offer_compliance_service  # noqa: PLC0415 — cycle
-
-    was_blocked = offer.compliance_ok is False
-    verdict = offer_compliance_service.evaluate_and_stamp(db, offer)
-    if not (
-        was_blocked
-        and verdict.ok
-        and offer.status == SellerOfferStatus.draft
-        and offer_compliance_service.enforcement_enabled(db)
-    ):
-        return False
-
-    offer.status = SellerOfferStatus.pending_moderation
-    db.flush()
-    write_audit(
-        db, None, "offer.compliance_released", "seller_offers", str(offer.id),
-        {"level": str(verdict.level)},
+    before = offer.status
+    held = apply_publish_gate(db, offer)
+    return (
+        not held
+        and before == SellerOfferStatus.draft
+        and offer.status == SellerOfferStatus.pending_moderation
     )
-    logger.info("offer_service.compliance_released", extra={"offer_id": offer.id})
-    return True
 
 
 # ── Company-origin offers (R1 W5 — portal) ────────────────────────────────────
@@ -663,9 +666,16 @@ def update_company_offer(
 
     db.flush()
     # FR-C6: every edit re-checks. The substance may have changed, and so may
-    # the licence behind it — a held offer must not stay live on a stale verdict.
+    # the licence behind it — a held offer must not stay live on a stale verdict,
+    # and a draft whose licence has since been registered must be let go.
+    status_before_gate = offer.status
     if apply_publish_gate(db, offer):
         requeued = False
+    elif (
+        status_before_gate == SellerOfferStatus.draft
+        and offer.status == SellerOfferStatus.pending_moderation
+    ):
+        requeued = True
     write_audit(
         db, None, "offer.edit", "seller_offers", str(offer.id),
         {"via": "company", "requeued": requeued},

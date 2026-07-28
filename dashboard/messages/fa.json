@@ -407,8 +407,21 @@
         "docs_required": "نیازمند مدارک",
         "license_required": "نیازمند مجوز",
         "prohibited": "ممنوع"
+      },
+      "regime": {
+        "precursor_list_iv": "پیش‌سازها (فهرست چهارم، ПКМ-330)",
+        "explosive_toxic": "منفجره و سمی (ПКМ-782)",
+        "strong_acting": "قوی‌الاثر (ПКМ-818)",
+        "pkm916_import": "واردات کالای خطرناک (ПКМ-916)"
+      },
+      "docKind": {
+        "sds": "برگه ایمنی (SDS)",
+        "tds": "مشخصات فنی (TDS)",
+        "coa": "گواهی آنالیز (COA)",
+        "certificate": "گواهی"
       }
-    }
+    },
+    "verified": "تأییدشده"
   },
   "sources": {
     "title": "منابع",

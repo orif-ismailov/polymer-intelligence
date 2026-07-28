@@ -407,8 +407,21 @@
         "docs_required": "需要文件",
         "license_required": "需要许可证",
         "prohibited": "禁止"
+      },
+      "regime": {
+        "precursor_list_iv": "前体化学品（第四清单，ПКМ-330）",
+        "explosive_toxic": "爆炸性与有毒（ПКМ-782）",
+        "strong_acting": "强效物质（ПКМ-818）",
+        "pkm916_import": "危险品进口（ПКМ-916）"
+      },
+      "docKind": {
+        "sds": "安全数据表 (SDS)",
+        "tds": "技术数据表 (TDS)",
+        "coa": "分析证书 (COA)",
+        "certificate": "证书"
       }
-    }
+    },
+    "verified": "已认证"
   },
   "sources": {
     "title": "数据源",

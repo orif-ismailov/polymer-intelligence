@@ -439,6 +439,51 @@ class TestPublishGate:
         assert released is True
         assert offer.status == SellerOfferStatus.pending_moderation
 
+    def test_registering_the_licence_releases_the_draft_on_the_next_save(
+        self, db: Session
+    ) -> None:
+        """The other half of the demo. A licence lives on the COMPANY, so a held
+        offer cannot be fixed by attaching anything to it — re-saving is the
+        seller's only move, and it has to work or the offer is stuck forever."""
+        from app.models.enums import RegulationRegime, SellerOfferStatus  # noqa: PLC0415
+        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
+        from app.services import company_license_service, offer_service  # noqa: PLC0415
+
+        staff = make_staff(db)
+        substance = _substance(db)
+        account, company = _verified_company(db)
+        _enforce(db, True)
+        payload = CompanyOfferIn(product_text="Ацетон техн.", substance_id=substance.id)
+        offer = offer_service.create_company_offer(db, company, account, payload)
+        assert offer.status == SellerOfferStatus.draft
+
+        company_license_service.register(
+            db, company_id=company.id, regime=RegulationRegime.precursor_list_iv,
+            staff_user_id=staff.id,
+        )
+        offer, requeued = offer_service.update_company_offer(db, offer, payload)
+        assert offer.status == SellerOfferStatus.pending_moderation
+        assert requeued is True, "the team has to be told there is something to moderate"
+
+    def test_turning_the_gate_off_releases_held_drafts_on_the_next_save(
+        self, db: Session
+    ) -> None:
+        """An operator switching enforcement off must not leave offers stranded."""
+        from app.models.enums import SellerOfferStatus  # noqa: PLC0415
+        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
+        from app.services import offer_service  # noqa: PLC0415
+
+        substance = _substance(db)
+        account, company = _verified_company(db)
+        _enforce(db, True)
+        payload = CompanyOfferIn(product_text="Ацетон техн.", substance_id=substance.id)
+        offer = offer_service.create_company_offer(db, company, account, payload)
+        assert offer.status == SellerOfferStatus.draft
+
+        _enforce(db, False)
+        offer, _ = offer_service.update_company_offer(db, offer, payload)
+        assert offer.status == SellerOfferStatus.pending_moderation
+
     def test_a_prohibited_substance_is_never_released(self, db: Session) -> None:
         from app.models.enums import (  # noqa: PLC0415
             RegulationLevel,
