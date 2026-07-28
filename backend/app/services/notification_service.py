@@ -63,6 +63,12 @@ KIND_ESCROW_STATUS = "escrow_status"
 # catalogue. Deep-links to `rfq`, not `request` — the buyer's request page is
 # company-scoped and a supplier cannot open it.
 KIND_RFQ_MATCH = "rfq_match"
+# Labs and samples (R5 / P6). Like the escrow kinds, these are never deduped by
+# their producer: "your sample is awaited" and "your passport is ready" are
+# different sentences about one order.
+KIND_LAB_ORDER_STATUS = "lab_order_status"
+KIND_SAMPLE_REQUEST_NEW = "sample_request_new"
+KIND_SAMPLE_REQUEST_STATUS = "sample_request_status"
 
 
 def keys_for(kind: str) -> tuple[str, str]:

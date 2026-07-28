@@ -51,6 +51,12 @@ ESCROW_FUNDED = "escrow.funded"
 ESCROW_RELEASED = "escrow.released"
 ESCROW_REFUNDED = "escrow.refunded"
 
+# ── Labs and samples (R5 / P6) ────────────────────────────────────────────────
+LAB_ORDER_SUBMITTED = "lab_order.submitted"
+LAB_ORDER_COMPLETED = "lab_order.completed"
+SAMPLE_REQUEST_CREATED = "sample_request.created"
+SAMPLE_REQUEST_STATUS_CHANGED = "sample_request.status_changed"
+
 # ── Marketplace bridge ────────────────────────────────────────────────────────
 OFFER_PUBLISHED_BY_COMPANY = "offer.published_by_company"
 
@@ -87,6 +93,10 @@ ALL_EVENT_TYPES: frozenset[str] = frozenset(
         ESCROW_FUNDED,
         ESCROW_RELEASED,
         ESCROW_REFUNDED,
+        LAB_ORDER_SUBMITTED,
+        LAB_ORDER_COMPLETED,
+        SAMPLE_REQUEST_CREATED,
+        SAMPLE_REQUEST_STATUS_CHANGED,
         OFFER_PUBLISHED_BY_COMPANY,
     }
 )

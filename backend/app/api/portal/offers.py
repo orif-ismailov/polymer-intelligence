@@ -20,7 +20,7 @@ from app.models.accounts import UserAccount
 from app.models.enums import OfferFileKind, SellerOfferStatus
 from app.models.marketplace import SellerOffer, SellerOfferFile
 from app.schemas.portal_company import CompanyOfferIn, CompanyOfferOut
-from app.services import offer_service, rate_limit, storage_service
+from app.services import lab_service, offer_service, rate_limit, storage_service
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-offers"])
 
@@ -131,6 +131,10 @@ async def upload_offer_file(
 
     Photos: ≤ 8 per offer, JPEG/PNG, ≤ 10 MB (FR-M2). Adding one to a live offer
     re-enters moderation, since photos are part of what was approved.
+
+    A `lab_passport` (P6) must be a PDF and also re-enters moderation: unlike an
+    SDS, which only feeds the compliance verdict, it puts a public badge on the
+    market card, so it is part of what was approved too.
     """
     company = _company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
@@ -162,6 +166,12 @@ async def upload_offer_file(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="invalid_file_type"
         )
+    # A laboratory passport is a document with a badge attached to it. A photo of
+    # one is not something a buyer can read, and not something staff can check.
+    if file_kind == OfferFileKind.lab_passport and mime != lab_service.RESULT_MIME:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="invalid_file_type"
+        )
 
     try:
         storage_service.upload_offer_file(
@@ -171,7 +181,7 @@ async def upload_offer_file(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
 
     requeued = False
-    if file_kind == OfferFileKind.image:
+    if file_kind in (OfferFileKind.image, OfferFileKind.lab_passport):
         requeued = offer_service.requeue_for_photo_change(db, offer)
     else:
         # A compliance document is the thing a held draft was waiting for
@@ -229,6 +239,12 @@ def delete_offer_file(
 ) -> SellerOffer:
     """Detach a file. Removing a photo from a live offer re-enters moderation.
 
+    A passport that a platform lab order produced cannot be removed at all (409):
+    it is the evidence behind the "Laboratory Verified" badge, staff uploaded it,
+    and deleting it would leave the badge standing on nothing. Removing a
+    self-uploaded passport is fine — and takes the verification with it if it was
+    the last one.
+
     Returns the updated offer so the client re-renders the gallery (and the promoted
     cover) from one response.
     """
@@ -242,12 +258,22 @@ def delete_offer_file(
     if f is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
-    was_image = f.kind == OfferFileKind.image
+    try:
+        lab_service.assert_result_unlocked(db, f.id)
+    except lab_service.LabResultLocked as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail={"code": "lab_result_locked"}
+        ) from exc
+
+    visible_change = f.kind in (OfferFileKind.image, OfferFileKind.lab_passport)
     storage_path = f.storage_path
     db.delete(f)
     db.flush()
+    lab_service.clear_lab_verification(db, offer)
 
-    requeued = offer_service.requeue_for_photo_change(db, offer) if was_image else False
+    requeued = (
+        offer_service.requeue_for_photo_change(db, offer) if visible_change else False
+    )
     db.commit()
     if storage_path:
         storage_service.discard_object(storage_path, context="offer_file_delete")

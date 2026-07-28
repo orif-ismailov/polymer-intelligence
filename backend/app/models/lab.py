@@ -28,7 +28,7 @@ State machines live in `app/services/lab_service.py` and
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -70,7 +70,7 @@ class LabPartner(Base):
     #: Free-form {phone, email, address, contact_name} — a directory entry, not a
     #: verified profile, so it is not worth four nullable columns and a schema
     #: migration the first time a lab gives us a second phone number.
-    contacts: Mapped[dict[str, Any]] = mapped_column(
+    contacts: Mapped[dict[str, str]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
     )
     company_id: Mapped[int | None] = mapped_column(
