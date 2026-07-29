@@ -16,6 +16,7 @@ from __future__ import annotations
 import decimal
 import logging
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
@@ -40,6 +41,19 @@ logger = logging.getLogger(__name__)
 
 # Logical fields shown in the buyer-edit diff (rendered in the group + seller messages).
 _DIFF_FIELDS = ("quantity", "target_price", "message")
+
+
+class AlreadyModerated(Exception):
+    """The inquiry has already left `pending` — another decision won the race.
+
+    Carries the status the winning decision left, so the caller can tell a
+    moderator what actually happened to the item they were acting on.
+    """
+
+    def __init__(self, offer_request_id: int, current_status: str) -> None:
+        super().__init__(f"inquiry {offer_request_id} is already {current_status}")
+        self.offer_request_id = offer_request_id
+        self.current_status = current_status
 
 
 def create_offer_request(
@@ -315,14 +329,40 @@ def update_offer_request(
     return req, summary
 
 
-def _apply_decision(req: OfferRequest, *, approve: bool, note: str | None) -> None:
-    """Shared state transition for a moderation decision (no audit, no commit)."""
+def _decision_values(*, approve: bool, note: str | None) -> dict[str, object]:
+    """Shared column set for a moderation decision (no audit, no commit)."""
     now = utcnow()
-    req.status = OfferRequestStatus.approved if approve else OfferRequestStatus.rejected
-    req.moderation_note = note
-    req.reviewed_at = now
+    values: dict[str, object] = {
+        "status": OfferRequestStatus.approved if approve else OfferRequestStatus.rejected,
+        "moderation_note": note,
+        "reviewed_at": now,
+    }
     if approve:
-        req.forwarded_at = now
+        values["forwarded_at"] = now
+    return values
+
+
+def _claim_pending(db: Session, req: OfferRequest, values: dict[str, object]) -> None:
+    """Optimistically move an inquiry OUT of `pending`; AlreadyModerated if it left.
+
+    Approve and reject are separate endpoints over the same queue item, so a
+    read-then-write leaves room for two moderators to each land half a decision —
+    one verdict in `status`, the other's note in `moderation_note`. The
+    `WHERE status='pending'` guard makes it exactly-once instead; the loser
+    updates 0 rows. Mirror of ``offer_service._claim_pending_moderation``.
+    """
+    result = db.execute(
+        update(OfferRequest)
+        .where(
+            OfferRequest.id == req.id,
+            OfferRequest.status == OfferRequestStatus.pending,
+        )
+        .values(values)
+    )
+    if result.rowcount == 0:  # type: ignore[attr-defined]  # DML → CursorResult.rowcount
+        db.refresh(req)  # report what the winner left, not our stale read
+        raise AlreadyModerated(req.id, str(req.status))
+    db.refresh(req)
 
 
 def _forward_on_approval(db: Session, req: OfferRequest) -> None:
@@ -366,10 +406,12 @@ def moderate_offer_request(
     """Approve/reject an inquiry from the dashboard. Does NOT commit.
 
     Approval marks it forwarded; the router enqueues the seller DM after commit.
+    Raises `AlreadyModerated` when the inquiry is no longer pending — the
+    decision is exactly-once, see :func:`_claim_pending`.
     """
-    _apply_decision(req, approve=approve, note=note)
-    req.moderated_by = staff_user_id
-    db.flush()
+    values = _decision_values(approve=approve, note=note)
+    values["moderated_by"] = staff_user_id
+    _claim_pending(db, req, values)
     if approve:
         _forward_on_approval(db, req)
     write_audit(
@@ -398,10 +440,11 @@ def moderate_offer_request_via_telegram(
     """Approve/reject an inquiry from the team Telegram group. Does NOT commit.
 
     Actor is a group admin (a Telegram user, not a StaffUser): moderated_by stays
-    NULL and the acting id is recorded in the audit details.
+    NULL and the acting id is recorded in the audit details. Shares the dashboard
+    path's exactly-once claim — a double-tapped inline button loses the race the
+    same way (`AlreadyModerated`).
     """
-    _apply_decision(req, approve=approve, note=note)
-    db.flush()
+    _claim_pending(db, req, _decision_values(approve=approve, note=note))
     if approve:
         _forward_on_approval(db, req)
     details: dict[str, object] = {"via": "telegram", "telegram_user_id": telegram_user_id}

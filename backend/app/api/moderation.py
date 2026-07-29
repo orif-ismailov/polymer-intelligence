@@ -50,6 +50,19 @@ def _get_pending(db: Session, offer_id: int) -> SellerOffer:
     return offer
 
 
+def _conflict(exc: offer_service.AlreadyModerated) -> HTTPException:
+    """409 for a decision that lost the race — naming the status that won.
+
+    "409" alone would leave a moderator wondering whether their click worked;
+    the body says what the offer actually is now, so the UI can say
+    "already rejected by someone else" and refresh the queue.
+    """
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={"code": "already_moderated", "status": exc.current_status},
+    )
+
+
 @router.post(
     "/offers/{offer_id}/approve",
     response_model=SellerOfferOut,
@@ -66,6 +79,9 @@ def approve_offer(
     409 when chemical compliance blocks publication (FR-C4) — the body names
     what is missing so the moderator can tell the seller, or register the
     licence, instead of guessing why the button refused.
+
+    409 as well when the offer already left the queue: two moderators acting on
+    the same item (or one client retrying) must not each land half a decision.
     """
     offer = _get_pending(db, offer_id)
     try:
@@ -80,6 +96,8 @@ def approve_offer(
                 "missing": exc.verdict.as_json(),
             },
         ) from exc
+    except offer_service.AlreadyModerated as exc:
+        raise _conflict(exc) from exc
     db.commit()
     return offer  # type: ignore[return-value]
 
@@ -95,8 +113,14 @@ def reject_offer(
     db: Session = Depends(get_db),
     user: StaffUser = Depends(require_analyst_or_admin),
 ) -> SellerOfferOut:
-    """POST /admin/moderation/offers/{id}/reject."""
+    """POST /admin/moderation/offers/{id}/reject.
+
+    409 when the offer already left the queue — same exactly-once guard as approve.
+    """
     offer = _get_pending(db, offer_id)
-    offer_service.moderate_offer(db, offer, user.id, approve=False, note=body.note)
+    try:
+        offer_service.moderate_offer(db, offer, user.id, approve=False, note=body.note)
+    except offer_service.AlreadyModerated as exc:
+        raise _conflict(exc) from exc
     db.commit()
     return offer  # type: ignore[return-value]

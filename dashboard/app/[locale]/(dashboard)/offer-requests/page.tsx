@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { alreadyModeratedStatus } from "@/lib/conflict";
 
 interface OfferBrief {
   id: number;
@@ -57,10 +58,15 @@ interface OfferRequestCompany {
   verified: boolean;
 }
 
+/** Statuses a lost review race can report. Anything else shows raw. */
+const INQUIRY_STATUS_KEYS = new Set(["pending", "approved", "rejected"]);
+
 export default function OfferRequestsPage() {
   const t = useTranslations("offerRequests");
   const qc = useQueryClient();
   const [notes, setNotes] = useState<Record<number, string>>({});
+  const [conflict, setConflict] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery<OfferRequest[]>({
     queryKey: ["offer-requests"],
@@ -73,7 +79,29 @@ export default function OfferRequestsPage() {
         method: "POST",
         body: JSON.stringify({ note: note ?? null }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["offer-requests"] }),
+    onSuccess: () => {
+      setConflict(null);
+      setFailed(null);
+      void qc.invalidateQueries({ queryKey: ["offer-requests"] });
+    },
+    // Until now a failed decision was swallowed entirely — the card just sat there
+    // looking pending. A 409 means another reviewer got there first: name the
+    // outcome and refetch; anything else at least has to say it failed.
+    onError: (err: unknown) => {
+      const settled = alreadyModeratedStatus(err);
+      if (settled !== null) {
+        setFailed(null);
+        setConflict(
+          t("conflict.alreadyModerated", {
+            status: INQUIRY_STATUS_KEYS.has(settled) ? t(`conflict.status.${settled}`) : settled,
+          }),
+        );
+        void qc.invalidateQueries({ queryKey: ["offer-requests"] });
+        return;
+      }
+      setConflict(null);
+      setFailed(err instanceof Error ? err.message : t("decideFailed"));
+    },
   });
 
   return (
@@ -85,6 +113,20 @@ export default function OfferRequestsPage() {
           <p className="text-sm text-foreground-muted mt-1">{t("subtitle")}</p>
         </div>
       </div>
+
+      {conflict && (
+        <p
+          role="status"
+          className="rounded-lg border border-amber-500/50 bg-background-secondary p-3 text-sm text-amber-400"
+        >
+          {conflict}
+        </p>
+      )}
+      {failed && (
+        <p className="rounded-lg border border-red-500/50 bg-background-secondary p-3 text-sm text-red-400">
+          {failed}
+        </p>
+      )}
 
       {isLoading && <p className="text-sm text-foreground-muted">…</p>}
       {isError && <p className="text-sm text-red-400">{t("error")}</p>}

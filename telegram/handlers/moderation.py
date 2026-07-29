@@ -60,9 +60,17 @@ def _apply_moderation(offer_id: int, telegram_user_id: int, *, approve: bool) ->
             return {"ok": False, "reason": "not_found"}
         if offer.status != SellerOfferStatus.pending_moderation:
             return {"ok": False, "reason": "already", "status": offer.status.value}
-        offer_service.moderate_offer_via_telegram(
-            session, offer, telegram_user_id, approve=approve
-        )
+        try:
+            offer_service.moderate_offer_via_telegram(
+                session, offer, telegram_user_id, approve=approve
+            )
+        except offer_service.AlreadyModerated as exc:
+            # The status read above went stale between the check and the write —
+            # a dashboard moderator (or the other inline button) got there first.
+            # The service's claim is what actually decides; this is just how the
+            # tap is reported.
+            session.rollback()
+            return {"ok": False, "reason": "already", "status": exc.current_status}
         session.commit()
         return {"ok": True, "approved": approve}
 
@@ -183,9 +191,15 @@ def _apply_offer_request_moderation(
             return {"ok": False, "reason": "not_found"}
         if req.status != OfferRequestStatus.pending:
             return {"ok": False, "reason": "already", "status": req.status.value}
-        offer_request_service.moderate_offer_request_via_telegram(
-            session, req, telegram_user_id, approve=approve
-        )
+        try:
+            offer_request_service.moderate_offer_request_via_telegram(
+                session, req, telegram_user_id, approve=approve
+            )
+        except offer_request_service.AlreadyModerated as exc:
+            # Same race as the offer path: the pre-check is a courtesy, the
+            # service's claim is the guarantee.
+            session.rollback()
+            return {"ok": False, "reason": "already", "status": exc.current_status}
         session.commit()
         return {"ok": True, "approved": approve}
 

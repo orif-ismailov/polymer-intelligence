@@ -516,12 +516,18 @@ class TestPublishGate:
 
     def test_moderation_refuses_to_approve_a_blocked_offer(self, db: Session) -> None:
         """A licence can expire between submission and approval."""
+        from app.models.enums import SellerOfferStatus  # noqa: PLC0415
         from app.services import offer_compliance_service, offer_service  # noqa: PLC0415
 
         staff = make_staff(db)
         substance = _substance(db)
         _, company = _verified_company(db)
-        offer = make_seller_offer(db, company=company, substance_id=substance.id)
+        offer = make_seller_offer(
+            db,
+            company=company,
+            substance_id=substance.id,
+            status=SellerOfferStatus.pending_moderation,
+        )
         _enforce(db, True)
         with pytest.raises(offer_compliance_service.CompliancePublishBlocked):
             offer_service.moderate_offer(db, offer, staff.id, approve=True)
@@ -533,7 +539,12 @@ class TestPublishGate:
         staff = make_staff(db)
         substance = _substance(db)
         _, company = _verified_company(db)
-        offer = make_seller_offer(db, company=company, substance_id=substance.id)
+        offer = make_seller_offer(
+            db,
+            company=company,
+            substance_id=substance.id,
+            status=SellerOfferStatus.pending_moderation,
+        )
         _enforce(db, True)
         offer_service.moderate_offer(db, offer, staff.id, approve=False, note="нельзя")
         assert offer.status == SellerOfferStatus.rejected

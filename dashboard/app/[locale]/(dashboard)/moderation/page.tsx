@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { alreadyModeratedStatus } from "@/lib/conflict";
 
 interface ComplianceBlock {
   ok: boolean;
@@ -67,6 +68,14 @@ const REGIME_KEYS = new Set([
   "pkm916_import",
 ]);
 const DOC_KEYS = new Set(["sds", "tds", "coa", "certificate"]);
+/** Statuses a lost moderation race can report. Anything else shows raw. */
+const OFFER_STATUS_KEYS = new Set([
+  "draft",
+  "pending_moderation",
+  "approved",
+  "rejected",
+  "archived",
+]);
 
 function regimeLabel(detail: string | null, t: T): string {
   return detail && REGIME_KEYS.has(detail) ? t(`compliance.regime.${detail}`) : (detail ?? "—");
@@ -74,6 +83,10 @@ function regimeLabel(detail: string | null, t: T): string {
 
 function docLabel(detail: string | null, t: T): string {
   return detail && DOC_KEYS.has(detail) ? t(`compliance.docKind.${detail}`) : (detail ?? "—");
+}
+
+function offerStatusLabel(status: string, t: T): string {
+  return OFFER_STATUS_KEYS.has(status) ? t(`conflict.status.${status}`) : status;
 }
 
 /** Turn a refused approval into a sentence naming what compliance is waiting for. */
@@ -102,6 +115,7 @@ export default function ModerationPage() {
   const qc = useQueryClient();
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [blocked, setBlocked] = useState<string | null>(null);
+  const [conflict, setConflict] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery<ModerationOffer[]>({
     queryKey: ["moderation-offers"],
@@ -116,11 +130,25 @@ export default function ModerationPage() {
       }),
     onSuccess: () => {
       setBlocked(null);
+      setConflict(null);
       void qc.invalidateQueries({ queryKey: ["moderation-offers"] });
     },
-    // A 409 means compliance refused publication (an expired licence, a missing
-    // document). Show WHAT is missing — "409 Conflict" tells a moderator nothing.
-    onError: (err: unknown) => setBlocked(blockedReason(err, t)),
+    onError: (err: unknown) => {
+      // A 409 is two different refusals. `already_moderated`: someone else
+      // decided this item first — say which way it went and drop it from the
+      // queue, so the moderator learns their click did nothing.
+      const settled = alreadyModeratedStatus(err);
+      if (settled !== null) {
+        setBlocked(null);
+        setConflict(t("conflict.alreadyModerated", { status: offerStatusLabel(settled, t) }));
+        void qc.invalidateQueries({ queryKey: ["moderation-offers"] });
+        return;
+      }
+      // Otherwise compliance refused publication (an expired licence, a missing
+      // document). Show WHAT is missing — "409 Conflict" tells a moderator nothing.
+      setConflict(null);
+      setBlocked(blockedReason(err, t));
+    },
   });
 
   return (
@@ -132,6 +160,15 @@ export default function ModerationPage() {
           <p className="text-sm text-foreground-muted mt-1">{t("subtitle")}</p>
         </div>
       </div>
+
+      {conflict && (
+        <p
+          role="status"
+          className="rounded-lg border border-amber-500/50 bg-background-secondary p-3 text-sm text-amber-400"
+        >
+          {conflict}
+        </p>
+      )}
 
       {blocked && (
         <p className="rounded-lg border border-red-500/50 bg-background-secondary p-3 text-sm text-red-400">

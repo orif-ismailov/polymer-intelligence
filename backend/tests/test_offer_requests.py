@@ -16,6 +16,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from tests._claims import claim_update
+
 # ── Schema validation ─────────────────────────────────────────────────────────
 
 
@@ -104,10 +106,13 @@ def test_moderate_offer_request_approve_sets_forwarded_and_audits() -> None:
     with patch("app.services.offer_request_service.write_audit") as mock_audit:
         offer_request_service.moderate_offer_request(db, req, 3, approve=True, note=None)
 
-    assert req.status == OfferRequestStatus.approved
-    assert req.reviewed_at is not None
-    assert req.forwarded_at is not None
-    assert req.moderated_by == 3
+    # The decision is a guarded UPDATE, not a read-then-write (QA #1).
+    values, where = claim_update(db, "offer_requests")
+    assert values["status"] == OfferRequestStatus.approved
+    assert values["reviewed_at"] is not None
+    assert values["forwarded_at"] is not None
+    assert values["moderated_by"] == 3
+    assert OfferRequestStatus.pending in where.values()
     _, kwargs = mock_audit.call_args
     assert kwargs["action"] == "offer_request.approve"
 
@@ -117,14 +122,30 @@ def test_moderate_offer_request_reject_no_forward() -> None:
     from app.services import offer_request_service  # noqa: PLC0415
 
     req = MagicMock()
-    req.forwarded_at = None
     db = MagicMock()
     with patch("app.services.offer_request_service.write_audit"):
         offer_request_service.moderate_offer_request(db, req, 3, approve=False, note="dup")
 
-    assert req.status == OfferRequestStatus.rejected
-    assert req.forwarded_at is None
-    assert req.moderation_note == "dup"
+    values, where = claim_update(db, "offer_requests")
+    assert values["status"] == OfferRequestStatus.rejected
+    assert "forwarded_at" not in values
+    assert values["moderation_note"] == "dup"
+    assert OfferRequestStatus.pending in where.values()
+
+
+def test_moderate_offer_request_losing_the_race_raises() -> None:
+    """0 rows updated = another reviewer already claimed the inquiry (QA #1)."""
+    from app.services import offer_request_service  # noqa: PLC0415
+
+    req = MagicMock()
+    db = MagicMock()
+    db.execute.return_value.rowcount = 0
+
+    with (
+        patch("app.services.offer_request_service.write_audit"),
+        pytest.raises(offer_request_service.AlreadyModerated),
+    ):
+        offer_request_service.moderate_offer_request(db, req, 3, approve=True, note=None)
 
 
 # ── Telegram handler idempotency ──────────────────────────────────────────────

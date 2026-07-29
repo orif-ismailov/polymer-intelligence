@@ -17,6 +17,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from tests._claims import claim_update
+
 
 def _mock_client(id: int = 1, telegram_user_id: int = 555) -> MagicMock:
     c = MagicMock()
@@ -290,6 +292,7 @@ class TestModeration:
         from app.api.deps import require_analyst_or_admin  # noqa: PLC0415
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
+        from app.models.enums import SellerOfferStatus  # noqa: PLC0415
 
         staff = MagicMock()
         staff.id = 3
@@ -306,13 +309,59 @@ class TestModeration:
         application.dependency_overrides[get_db] = _db
         application.dependency_overrides[require_analyst_or_admin] = lambda: staff
 
-        # Let the real moderate_offer run against the mock offer (it mutates status →
-        # approved + stamps published_at, then write_audit/flush on the mock db).
+        # Let the real moderate_offer run against the mock offer. It publishes via a
+        # guarded UPDATE (QA #1) rather than by mutating the ORM object, so the
+        # decision is asserted on the statement; a mock session has no row to refresh.
         with patch("app.api.health._check_redis", return_value="ok"), TestClient(application) as tc:
             resp = tc.post("/api/v1/admin/moderation/offers/11/approve", json={"note": "ok"})
 
         assert resp.status_code == 200, resp.text
-        assert resp.json()["status"] == "approved"
+        values, where = claim_update(mock_db, "seller_offers")
+        assert values["status"] == SellerOfferStatus.approved
+        assert values["moderation_note"] == "ok"
+        assert values["moderated_by"] == 3
+        # The WHERE is the guard: only a still-pending offer can be claimed.
+        assert SellerOfferStatus.pending_moderation in where.values()
+
+    def test_approve_offer_409_when_already_moderated(self):
+        """A decision that loses the race gets 409, not a silent second verdict (QA #1)."""
+        from app.api.deps import require_analyst_or_admin  # noqa: PLC0415
+        from app.core.db import get_db  # noqa: PLC0415
+        from app.main import create_app  # noqa: PLC0415
+        from app.models.enums import SellerOfferStatus  # noqa: PLC0415
+
+        staff = MagicMock()
+        staff.id = 3
+        mock_db = MagicMock()
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        offer = _mock_offer(status="pending_moderation")
+        mock_query.first.return_value = offer
+        mock_db.query.return_value = mock_query
+        # 0 rows claimed → the other moderator got there first; refresh reveals it.
+        mock_db.execute.return_value.rowcount = 0
+
+        def _refresh(obj: Any) -> None:
+            obj.status = SellerOfferStatus.rejected
+
+        mock_db.refresh.side_effect = _refresh
+
+        def _db() -> Generator[Any, None, None]:
+            yield mock_db
+
+        application = create_app()
+        application.dependency_overrides[get_db] = _db
+        application.dependency_overrides[require_analyst_or_admin] = lambda: staff
+
+        with patch("app.api.health._check_redis", return_value="ok"), TestClient(application) as tc:
+            resp = tc.post("/api/v1/admin/moderation/offers/11/approve", json={"note": "ok"})
+
+        assert resp.status_code == 409, resp.text
+        detail = resp.json()["detail"]
+        assert detail["code"] == "already_moderated"
+        # The body names the status that won, so the UI can say which way it went.
+        assert detail["status"] == "rejected"
+        mock_db.commit.assert_not_called()
 
 
 # ── Buyer edits their own inquiry (PATCH /webapp/market/my-requests/{id}) ───────

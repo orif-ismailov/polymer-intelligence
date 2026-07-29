@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, update
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.time import utcnow
@@ -39,6 +39,19 @@ logger = logging.getLogger(__name__)
 
 class CompanyNotVerified(Exception):
     """A company may only publish offers once it is verified."""
+
+
+class AlreadyModerated(Exception):
+    """The offer has already left `pending_moderation` — another decision won.
+
+    Carries the status the winning decision left, so the caller can tell a
+    moderator whether the item was approved or rejected out from under them.
+    """
+
+    def __init__(self, offer_id: int, current_status: str) -> None:
+        super().__init__(f"offer {offer_id} is already {current_status}")
+        self.offer_id = offer_id
+        self.current_status = current_status
 
 
 def get_or_create_seller(db: Session, *, telegram_user_id: int, data: SellerOfferCreate) -> Seller:
@@ -399,6 +412,37 @@ def _assert_compliant_for_publication(db: Session, offer: SellerOffer) -> None:
     offer_compliance_service.assert_publishable(db, offer)
 
 
+def _claim_pending_moderation(
+    db: Session, offer: SellerOffer, values: dict[str, object]
+) -> None:
+    """Optimistically move an offer OUT of pending_moderation; AlreadyModerated if it left.
+
+    Read-then-write is not enough here: approve and reject are separate endpoints
+    over the same queue item, so two moderators (or one client retrying a slow
+    request) could each read `pending_moderation` and each write their own verdict.
+    Last write won on `status` while the other's `moderation_note` survived — an
+    offer published as `approved` carrying its own rejection note, invisible in the
+    queue because it is no longer pending.
+
+    The `WHERE status='pending_moderation'` guard makes the decision exactly-once:
+    the loser updates 0 rows and gets AlreadyModerated, carrying the status the
+    winner actually left behind. Same shape as
+    ``verification_service._claim_pending_review`` — this endpoint simply predates it.
+    """
+    result = db.execute(
+        update(SellerOffer)
+        .where(
+            SellerOffer.id == offer.id,
+            SellerOffer.status == SellerOfferStatus.pending_moderation,
+        )
+        .values(values)
+    )
+    if result.rowcount == 0:  # type: ignore[attr-defined]  # DML → CursorResult.rowcount
+        db.refresh(offer)  # report what the winner left, not our stale read
+        raise AlreadyModerated(offer.id, str(offer.status))
+    db.refresh(offer)
+
+
 def moderate_offer(
     db: Session,
     offer: SellerOffer,
@@ -417,16 +461,19 @@ def moderate_offer(
     when the gate is on: a licence can expire between a seller submitting an
     offer and staff getting to it. Rejection is never blocked — staff must
     always be able to clear the queue.
+
+    Raises `AlreadyModerated` when the offer is no longer pending (a concurrent
+    or repeated decision) — the decision is exactly-once, see
+    :func:`_claim_pending_moderation`.
     """
+    values: dict[str, object] = {"moderated_by": staff_user_id, "moderation_note": note}
     if approve:
         _assert_compliant_for_publication(db, offer)
-        offer.status = SellerOfferStatus.approved
-        offer.published_at = utcnow()
+        values["status"] = SellerOfferStatus.approved
+        values["published_at"] = utcnow()
     else:
-        offer.status = SellerOfferStatus.rejected
-    offer.moderated_by = staff_user_id
-    offer.moderation_note = note
-    db.flush()
+        values["status"] = SellerOfferStatus.rejected
+    _claim_pending_moderation(db, offer, values)
     _notify_company_offer_moderated(db, offer, approve=approve)
 
     write_audit(
@@ -460,16 +507,18 @@ def moderate_offer_via_telegram(
     admin) is enforced by the caller in the bot handler, not here.
 
     Like the dashboard path, approval re-checks compliance — the bot must not be
-    a way around the gate.
+    a way around the gate. It shares the same exactly-once claim too: an inline
+    button can be tapped twice, or tapped while a moderator decides on the
+    dashboard, and both paths must lose the race the same way (`AlreadyModerated`).
     """
+    values: dict[str, object] = {"moderation_note": note}
     if approve:
         _assert_compliant_for_publication(db, offer)
-        offer.status = SellerOfferStatus.approved
-        offer.published_at = utcnow()
+        values["status"] = SellerOfferStatus.approved
+        values["published_at"] = utcnow()
     else:
-        offer.status = SellerOfferStatus.rejected
-    offer.moderation_note = note
-    db.flush()
+        values["status"] = SellerOfferStatus.rejected
+    _claim_pending_moderation(db, offer, values)
     _notify_company_offer_moderated(db, offer, approve=approve)
 
     details: dict[str, object] = {"via": "telegram", "telegram_user_id": telegram_user_id}
