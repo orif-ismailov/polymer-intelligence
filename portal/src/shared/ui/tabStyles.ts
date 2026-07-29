@@ -13,9 +13,16 @@ const base =
   "focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
 
 const variants: Record<TabsVariant, { list: string; item: (active: boolean) => string }> = {
-  // The mockups' section switcher (product detail, company profile, trade room).
+  /*
+   * The mockups' section switcher (product detail, company profile, trade room).
+   *
+   * `min-w-0` matters: the strip scrolls horizontally, but a grid/flex item's
+   * automatic minimum size is its content's min-content, so without this a row
+   * of tabs silently widens its column past the viewport instead of scrolling.
+   * A page that puts Tabs inside a grid column needs `min-w-0` on that column too.
+   */
   underline: {
-    list: "flex gap-2 overflow-x-auto border-b border-border",
+    list: "flex min-w-0 max-w-full gap-2 overflow-x-auto border-b border-border",
     item: (active) =>
       cn(
         "-mb-px rounded-t-sm border-b-2 px-3 py-2 text-sm",
@@ -24,9 +31,10 @@ const variants: Record<TabsVariant, { list: string; item: (active: boolean) => s
           : "border-transparent text-text-muted hover:text-text",
       ),
   },
-  // The mockups' filter chips (market categories, deal scopes).
+  // The mockups' filter chips (market categories, deal scopes). Wraps rather
+  // than scrolls, so it has no min-content problem.
   pill: {
-    list: "flex flex-wrap items-center gap-2",
+    list: "flex min-w-0 flex-wrap items-center gap-2",
     item: (active) =>
       cn(
         "rounded-full border px-3 py-1.5 text-sm font-medium",

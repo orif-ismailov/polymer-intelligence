@@ -13,7 +13,7 @@ import {
   DealEscrowPanel,
   DealLabPanel,
 } from "@/features/deal-room";
-import { cn, formatDateTime } from "@/shared/lib";
+import { formatDateTime } from "@/shared/lib";
 import {
   Alert,
   Badge,
@@ -24,9 +24,11 @@ import {
   ErrorView,
   LinkButton,
   LoadingView,
+  PageHeader,
   StatusStepper,
+  Tabs,
 } from "@/shared/ui";
-import type { StatusStep } from "@/shared/ui";
+import type { StatusStep, TabItem } from "@/shared/ui";
 
 type Tab = "chat" | "documents" | "timeline" | "contract" | "escrow" | "lab";
 
@@ -124,20 +126,21 @@ export function DealDetailPage() {
     state: reached < 0 ? "pending" : index < reached ? "done" : index === reached ? "current" : "pending",
   }));
 
-  const tabs: Tab[] = ["chat", "documents", "timeline", "contract", "escrow", "lab"];
+  const tabs: TabItem[] = (["chat", "documents", "timeline", "contract", "escrow", "lab"] as const).map(
+    (id) => ({ id, label: t(`deals.tabs.${id}`) }),
+  );
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="num text-2xl font-semibold text-text">{deal.number}</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {t(`deals.role.${deal.role}`)} ·{" "}
-            {deal.amount ? `${deal.amount} ${deal.currency}` : t("deals.noAmount")}
-          </p>
-        </div>
-        <DealStatusBadge status={deal.status} />
-      </div>
+      <PageHeader
+        backTo="/deals"
+        backLabel={t("deals.title")}
+        title={<span className="num">{deal.number}</span>}
+        subtitle={`${t(`deals.role.${deal.role}`)} · ${
+          deal.amount ? `${deal.amount} ${deal.currency}` : t("deals.noAmount")
+        }`}
+        badge={<DealStatusBadge status={deal.status} />}
+      />
 
       {deal.status === "cancelled" && deal.cancelled_reason ? (
         <Alert tone="danger" title={t("deals.cancelledTitle")}>
@@ -177,24 +180,7 @@ export function DealDetailPage() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-border">
-        {tabs.map((id) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setTab(id)}
-            aria-pressed={tab === id}
-            className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-              tab === id
-                ? "border-brand text-brand"
-                : "border-transparent text-text-muted hover:text-text",
-            )}
-          >
-            {t(`deals.tabs.${id}`)}
-          </button>
-        ))}
-      </div>
+      <Tabs items={tabs} value={tab} onChange={(id) => setTab(id as Tab)} label={deal.number} />
 
       {tab === "chat" ? (
         <DealChat companyId={companyId as number} dealId={deal.id} />

@@ -485,7 +485,15 @@
     "filter": {
       "labPassport": "Faqat lab. pasporti bilan",
       "labVerified": "Faqat Laboratory Verified"
-    }
+    },
+    "tabs": {
+      "description": "Tavsif",
+      "specs": "Xususiyatlari",
+      "documents": "Hujjatlar"
+    },
+    "noDescription": "Tavsif yo‘q",
+    "noDocuments": "Hujjatlar biriktirilmagan",
+    "leadTimeShort": "Muddat"
   },
   "inquiries": {
     "title": "So'rovlar",

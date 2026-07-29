@@ -18,17 +18,30 @@ import { cn } from "@/shared/lib";
 import {
   Alert,
   Badge,
+  BoxIcon,
   Button,
+  buttonClasses,
   Card,
   CardBody,
   CardDescription,
   CardHeader,
   CardTitle,
+  ClockIcon,
+  DownloadIcon,
+  FileRow,
   FormField,
   Input,
   LinkButton,
   LoadingView,
+  PageHeader,
+  ShieldIcon,
+  SpecItem,
+  SpecList,
+  SpecTile,
+  StickyActionBar,
+  Tabs,
   Textarea,
+  type TabItem,
 } from "@/shared/ui";
 
 const INQUIRY_STATUS_TONE = {
@@ -36,6 +49,9 @@ const INQUIRY_STATUS_TONE = {
   approved: "success",
   rejected: "danger",
 } as const;
+
+/** The sheet's five tabs minus the two whose data is out of scope (compatibility, reviews). */
+const TAB_IDS = ["description", "specs", "documents"] as const;
 
 export function MarketOfferPage() {
   const { t } = useTranslation();
@@ -53,6 +69,7 @@ export function MarketOfferPage() {
   const [message, setMessage] = useState("");
   const [activePhoto, setActivePhoto] = useState(0);
   const [sampleSent, setSampleSent] = useState(false);
+  const [tab, setTab] = useState<(typeof TAB_IDS)[number]>("description");
 
   if (offerQuery.isLoading) return <LoadingView label={t("common.loading")} />;
   if (offerQuery.isError || !offerQuery.data) {
@@ -71,8 +88,15 @@ export function MarketOfferPage() {
   const photos = offerPhotos(offer.files);
   const active = photos[activePhoto] ?? photos[0] ?? null;
   const passport = offer.files.find((f) => f.kind === "lab_passport") ?? null;
+  const documents = offer.files.filter((f) => f.kind !== "image");
   const grade = offer.product_text && offer.grade_text ? offer.grade_text : null;
   const canInquire = companyId != null && !offer.is_own;
+
+  const tabs: TabItem[] = TAB_IDS.map((id) => ({
+    id,
+    label: t(`market.tabs.${id}`),
+    ...(id === "documents" && documents.length > 0 ? { count: documents.length } : {}),
+  }));
 
   function submit() {
     if (companyId == null || offerId == null) return;
@@ -97,23 +121,29 @@ export function MarketOfferPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <LinkButton to="/market" variant="ghost" className="text-sm">
-        ← {t("market.backToMarket")}
-      </LinkButton>
+    // `pb-36` clears the StickyActionBar on phones — a fixed bar does not extend
+    // this box, so without it the last card hides behind the CTA.
+    <div className="space-y-5 pb-36 md:pb-0">
+      <PageHeader
+        backTo="/market"
+        backLabel={t("market.backToMarket")}
+        title={product}
+        subtitle={grade}
+        badge={
+          <>
+            <Badge variant={offer.availability === "in_stock" ? "in-stock" : "on-order"}>
+              {t(`availability.${offer.availability}`)}
+            </Badge>
+            <LabBadges hasLabPassport={offer.has_lab_passport} labVerified={offer.lab_verified} />
+          </>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid gap-5 lg:grid-cols-3">
+        {/* `min-w-0`: the tab strip scrolls, but a grid item's automatic
+            minimum size is its content, so without this the column widens. */}
+        <div className="min-w-0 space-y-5 lg:col-span-2">
           <Card>
-            <CardHeader className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <CardTitle>{product}</CardTitle>
-                {grade ? <CardDescription>{grade}</CardDescription> : null}
-              </div>
-              <Badge variant={offer.availability === "in_stock" ? "in-stock" : "on-order"}>
-                {t(`availability.${offer.availability}`)}
-              </Badge>
-            </CardHeader>
             <CardBody className="space-y-4">
               {/* The price is the hero figure on the mockup product page. */}
               <div>
@@ -169,42 +199,117 @@ export function MarketOfferPage() {
                   ) : null}
                 </div>
               ) : null}
-              <dl className="grid grid-cols-2 gap-3 text-sm">
-                <Spec
+              {/* The sheet's fact strip: the four numbers a buyer scans first. */}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <SpecTile
+                  icon={<BoxIcon />}
                   label={t("market.qty")}
-                  value={offer.qty_available != null ? `${offer.qty_available} ${offer.qty_unit}` : "—"}
+                  value={
+                    offer.qty_available != null
+                      ? `${offer.qty_available} ${offer.qty_unit}`
+                      : "—"
+                  }
+                  numeric
                 />
-                <Spec label={t("market.incoterms")} value={offer.incoterms} />
-                <Spec label={t("market.country")} value={offer.country ?? "—"} />
-                <Spec label={t("market.warehouse")} value={offer.warehouse_city ?? "—"} />
-                <Spec
+                <SpecTile icon={<ShieldIcon />} label={t("market.incoterms")} value={offer.incoterms} />
+                <SpecTile
+                  icon={<BoxIcon />}
                   label={t("market.minOrder")}
-                  value={offer.min_order_qty != null ? `${offer.min_order_qty} ${offer.qty_unit}` : "—"}
+                  value={
+                    offer.min_order_qty != null
+                      ? `${offer.min_order_qty} ${offer.qty_unit}`
+                      : "—"
+                  }
+                  numeric
                 />
-              </dl>
-              {offer.description ? (
-                <p className="whitespace-pre-line text-sm text-text-muted">{offer.description}</p>
+                <SpecTile
+                  icon={<ClockIcon />}
+                  label={t("market.leadTimeShort")}
+                  value={offer.lead_time_days != null ? String(offer.lead_time_days) : "—"}
+                  numeric
+                />
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Sheet …42 splits the long tail into tabs rather than one long scroll. */}
+          <Card>
+            <CardBody className="space-y-4">
+              <Tabs items={tabs} value={tab} onChange={(id) => setTab(id as typeof tab)} label={product} />
+
+              {tab === "description" ? (
+                offer.description ? (
+                  <p className="whitespace-pre-line text-sm text-text">{offer.description}</p>
+                ) : (
+                  <p className="text-sm text-text-muted">{t("market.noDescription")}</p>
+                )
+              ) : null}
+
+              {tab === "specs" ? (
+                <SpecList>
+                  <SpecItem label={t("market.country")} value={offer.country ?? "—"} />
+                  <SpecItem label={t("market.warehouse")} value={offer.warehouse_city ?? "—"} />
+                  <SpecItem label={t("market.incoterms")} value={offer.incoterms} />
+                  <SpecItem
+                    label={t("market.qty")}
+                    value={
+                      offer.qty_available != null
+                        ? `${offer.qty_available} ${offer.qty_unit}`
+                        : "—"
+                    }
+                    numeric
+                  />
+                  <SpecItem
+                    label={t("market.minOrder")}
+                    value={
+                      offer.min_order_qty != null
+                        ? `${offer.min_order_qty} ${offer.qty_unit}`
+                        : "—"
+                    }
+                    numeric
+                  />
+                  {offer.lead_time_days != null ? (
+                    <SpecItem
+                      label={t("market.leadTimeShort")}
+                      value={t("market.leadTime", { count: offer.lead_time_days })}
+                      numeric
+                    />
+                  ) : null}
+                </SpecList>
               ) : null}
 
               {/* The laboratory claim, with the document behind it. A badge a
                   buyer cannot open is a badge they have to take on trust. */}
-              {offer.has_lab_passport ? (
-                <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-                  <LabBadges
-                    hasLabPassport={offer.has_lab_passport}
-                    labVerified={offer.lab_verified}
-                  />
-                  {passport ? (
-                    <a
-                      href={offerImageUrl(offer.id, passport.id)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                    >
-                      {t("lab.openPassport")}
-                    </a>
-                  ) : null}
-                </div>
+              {tab === "documents" ? (
+                documents.length > 0 ? (
+                  <div className="space-y-2">
+                    {documents.map((file) => (
+                      <FileRow
+                        key={file.id}
+                        name={file.file_name}
+                        meta={t(`documentKind.${file.kind}`, { defaultValue: file.kind })}
+                        status={
+                          file.id === passport?.id ? (
+                            <Badge variant="lab-verified">{t("lab.badge.passport")}</Badge>
+                          ) : undefined
+                        }
+                        actions={
+                          <a
+                            href={offerImageUrl(offer.id, file.id)}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={t("common.download")}
+                            className="rounded-sm p-1.5 text-text-muted transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                          >
+                            <DownloadIcon size={16} />
+                          </a>
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-text-muted">{t("market.noDocuments")}</p>
+                )
               ) : null}
             </CardBody>
           </Card>
@@ -212,7 +317,7 @@ export function MarketOfferPage() {
           {/* Samples: only offered when the seller said so, and never to
               themselves — the API refuses both, this just does not ask. */}
           {offer.samples_available && !offer.is_own ? (
-            <Card>
+            <Card id="samples">
               <CardHeader>
                 <CardTitle>{t("samples.offerTitle")}</CardTitle>
                 <CardDescription>
@@ -269,16 +374,21 @@ export function MarketOfferPage() {
           ) : null}
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader
+              icon={<ShieldIcon size={16} />}
+              action={
+                offer.company_verified ? (
+                  <Badge variant="verified">{t("market.verified")}</Badge>
+                ) : undefined
+              }
+            >
               <CardTitle>{t("market.seller")}</CardTitle>
             </CardHeader>
             <CardBody className="space-y-2 text-sm">
               <div className="font-medium text-text">{offer.display_name ?? "—"}</div>
-              {offer.company_verified ? (
-                <Badge variant="verified">{t("market.verified")}</Badge>
-              ) : (
+              {offer.company_verified ? null : (
                 <span className="text-text-muted">{t("market.notVerified")}</span>
               )}
               {/* No `max` here: the detail page has room, and a buyer choosing a
@@ -293,7 +403,7 @@ export function MarketOfferPage() {
             </CardBody>
           </Card>
 
-          <Card>
+          <Card id="inquiry">
             <CardHeader>
               <CardTitle>{t("market.sendInquiry")}</CardTitle>
             </CardHeader>
@@ -355,15 +465,27 @@ export function MarketOfferPage() {
           </Card>
         </div>
       </div>
-    </div>
-  );
-}
 
-function Spec({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-text-muted">{label}</dt>
-      <dd className="font-medium text-text">{value}</dd>
+      {/*
+       * The sheet pins the primary actions to the bottom of the phone screen.
+       * Only on phones: at md+ the inquiry form is already in the right rail, so
+       * a second copy of its CTA would be noise rather than reach.
+       */}
+      {canInquire ? (
+        <StickyActionBar className="md:hidden">
+          <a
+            href="#inquiry"
+            className={buttonClasses({ variant: "outline", fullWidth: true })}
+          >
+            {t("market.sendInquiry")}
+          </a>
+          {offer.samples_available && !sampleSent ? (
+            <a href="#samples" className={buttonClasses({ fullWidth: true })}>
+              {t("samples.send")}
+            </a>
+          ) : null}
+        </StickyActionBar>
+      ) : null}
     </div>
   );
 }

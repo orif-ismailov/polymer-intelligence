@@ -485,7 +485,15 @@
     "filter": {
       "labPassport": "Только с лаб. паспортом",
       "labVerified": "Только Laboratory Verified"
-    }
+    },
+    "tabs": {
+      "description": "Описание",
+      "specs": "Характеристики",
+      "documents": "Документы"
+    },
+    "noDescription": "Нет описания",
+    "noDocuments": "Документы не приложены",
+    "leadTimeShort": "Срок"
   },
   "inquiries": {
     "title": "Запросы",

@@ -8,12 +8,14 @@ import { MarketOfferCard, useMarket, type MarketFilters } from "@/entities/marke
 import { AVAILABILITY } from "@/shared/config";
 import {
   Button,
-  Checkbox,
   EmptyState,
   ErrorView,
   Input,
-  Select,
+  PageHeader,
   Skeleton,
+  tabItemClasses,
+  Tabs,
+  type TabItem,
 } from "@/shared/ui";
 
 const PAGE_SIZE = 24;
@@ -45,15 +47,17 @@ export function MarketPage() {
   const marketQuery = useMarket(filters, companyId, offset);
   const offers = marketQuery.data ?? [];
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{t("market.title")}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("market.subtitle")}</p>
-      </div>
+  const availabilityTabs: TabItem[] = [
+    { id: "", label: t("market.availabilityAll") },
+    ...AVAILABILITY.map((a) => ({ id: a, label: t(`availability.${a}`) })),
+  ];
 
-      {/* Search takes the row; the two filters sit beside it once there's width. */}
-      <div className="grid gap-3 sm:grid-cols-[1fr_11rem_7rem]">
+  return (
+    <div className="space-y-5">
+      <PageHeader title={t("market.title")} subtitle={t("market.subtitle")} />
+
+      {/* Search takes the row; the country code sits beside it once there's width. */}
+      <div className="grid gap-3 sm:grid-cols-[1fr_7rem]">
         <Input
           placeholder={t("market.searchPlaceholder")}
           value={q}
@@ -62,18 +66,6 @@ export function MarketPage() {
             setOffset(0);
           }}
           aria-label={t("market.searchPlaceholder")}
-        />
-        <Select
-          value={availability}
-          onChange={(e) => {
-            setAvailability(e.target.value);
-            setOffset(0);
-          }}
-          aria-label={t("market.availability")}
-          options={[
-            { value: "", label: t("market.availabilityAll") },
-            ...AVAILABILITY.map((a) => ({ value: a, label: t(`availability.${a}`) })),
-          ]}
         />
         <Input
           placeholder={t("market.country")}
@@ -87,25 +79,48 @@ export function MarketPage() {
         />
       </div>
 
-      {/* Two laboratory filters, not one: "there is an analysis" and "we
-          arranged it" are different levels of trust, and FR-L5 asks for both. */}
-      <div className="flex flex-wrap gap-x-6 gap-y-2">
-        <Checkbox
-          checked={hasPassport}
-          onChange={(e) => {
-            setHasPassport(e.target.checked);
+      {/*
+       * The sheet filters with chips, not a select and two checkboxes: they read
+       * as one row of the same control, and the applied filters stay visible
+       * instead of collapsing into a closed dropdown. Same state, same query.
+       *
+       * Two laboratory filters, not one: "there is an analysis" and "we arranged
+       * it" are different levels of trust, and FR-L5 asks for both. They toggle
+       * independently, so they are their own chips rather than a third tab.
+       */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Tabs
+          variant="pill"
+          items={availabilityTabs}
+          value={availability}
+          onChange={(id) => {
+            setAvailability(id);
             setOffset(0);
           }}
-          label={t("market.filter.labPassport")}
+          label={t("market.availability")}
         />
-        <Checkbox
-          checked={labVerified}
-          onChange={(e) => {
-            setLabVerified(e.target.checked);
+        <button
+          type="button"
+          aria-pressed={hasPassport}
+          onClick={() => {
+            setHasPassport((v) => !v);
             setOffset(0);
           }}
-          label={t("market.filter.labVerified")}
-        />
+          className={tabItemClasses("pill", hasPassport)}
+        >
+          {t("market.filter.labPassport")}
+        </button>
+        <button
+          type="button"
+          aria-pressed={labVerified}
+          onClick={() => {
+            setLabVerified((v) => !v);
+            setOffset(0);
+          }}
+          className={tabItemClasses("pill", labVerified)}
+        >
+          {t("market.filter.labVerified")}
+        </button>
       </div>
 
       {marketQuery.isLoading ? (

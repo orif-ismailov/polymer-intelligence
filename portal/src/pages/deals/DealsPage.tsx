@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useActiveCompany } from "@/entities/company";
 import { DealStatusBadge, useDeals } from "@/entities/deal";
 import type { DealSummary } from "@/entities/deal";
-import { cn, formatDateTime } from "@/shared/lib";
+import { formatDateTime } from "@/shared/lib";
 import {
   Badge,
   Card,
@@ -14,7 +14,10 @@ import {
   EmptyState,
   ErrorView,
   LinkButton,
+  PageHeader,
   Skeleton,
+  Tabs,
+  type TabItem,
 } from "@/shared/ui";
 
 type Tab = "all" | "action" | "active" | "closed";
@@ -96,57 +99,38 @@ export function DealsPage() {
     );
   }
 
-  const tabs: { id: Tab; count?: number }[] = [
-    { id: "all", count: counters?.total },
-    { id: "action", count: counters?.needs_action },
-    { id: "active", count: counters?.active },
-    { id: "closed", count: counters?.closed },
-  ];
+  const scopeTabs: TabItem[] = (["all", "action", "active", "closed"] as const).map((id) => ({
+    id,
+    label: t(`deals.tabs.${id}`),
+    count: { all: counters?.total, action: counters?.needs_action, active: counters?.active, closed: counters?.closed }[id],
+  }));
+
+  const roleTabs: TabItem[] = (["", "buyer", "seller"] as const).map((r) => ({
+    id: r,
+    label: r ? t(`deals.role.${r}`) : t("deals.roleAny"),
+  }));
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{t("deals.title")}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("deals.subtitle")}</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader title={t("deals.title")} subtitle={t("deals.subtitle")} />
 
+      {/* Scope on the left, party on the right — one chip row, as in the sheets. */}
       <div className="flex flex-wrap items-center gap-2">
-        {tabs.map(({ id, count }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setTab(id)}
-            aria-pressed={tab === id}
-            className={cn(
-              "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-              tab === id
-                ? "border-brand-line bg-brand-soft text-brand"
-                : "border-border text-text-muted hover:bg-surface-2 hover:text-text",
-            )}
-          >
-            {t(`deals.tabs.${id}`)}
-            {count != null ? <span className="num ml-1.5 text-xs">{count}</span> : null}
-          </button>
-        ))}
-
-        <div className="ml-auto flex gap-2">
-          {(["", "buyer", "seller"] as const).map((r) => (
-            <button
-              key={r || "any"}
-              type="button"
-              onClick={() => setRole(r)}
-              aria-pressed={role === r}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-sm transition-colors",
-                role === r
-                  ? "border-brand-line bg-brand-soft text-brand"
-                  : "border-border text-text-muted hover:bg-surface-2 hover:text-text",
-              )}
-            >
-              {r ? t(`deals.role.${r}`) : t("deals.roleAny")}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="pill"
+          items={scopeTabs}
+          value={tab}
+          onChange={(id) => setTab(id as Tab)}
+          label={t("deals.title")}
+        />
+        <Tabs
+          className="ms-auto"
+          variant="pill"
+          items={roleTabs}
+          value={role}
+          onChange={(id) => setRole(id as "" | "buyer" | "seller")}
+          label={t("deals.roleAny")}
+        />
       </div>
 
       {query.isLoading ? (

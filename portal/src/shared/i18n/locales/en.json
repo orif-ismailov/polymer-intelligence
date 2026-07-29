@@ -485,7 +485,15 @@
     "filter": {
       "labPassport": "With a lab passport only",
       "labVerified": "Laboratory Verified only"
-    }
+    },
+    "tabs": {
+      "description": "Description",
+      "specs": "Specifications",
+      "documents": "Documents"
+    },
+    "noDescription": "No description",
+    "noDocuments": "No documents attached",
+    "leadTimeShort": "Lead time"
   },
   "inquiries": {
     "title": "Inquiries",
