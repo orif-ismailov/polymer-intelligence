@@ -11,20 +11,31 @@ import {
   CardTitle,
   Checkbox,
   ConfirmDialog,
+  DownloadIcon,
   EmptyState,
+  FileRow,
   FormField,
+  InfoIcon,
   Input,
+  PageHeader,
   ProgressRing,
   Select,
+  ShieldIcon,
   Skeleton,
+  SpecItem,
+  SpecList,
+  SpecTile,
   Spinner,
   StatChip,
   StatusStepper,
   Stepper,
+  StickyActionBar,
+  Tabs,
   Textarea,
   Tooltip,
   type BottomNavItem,
   type StatusStep,
+  type TabItem,
 } from "@/shared/ui";
 
 /**
@@ -75,6 +86,20 @@ const NAV_ITEMS: readonly BottomNavItem[] = [
   { to: "/settings", label: "Профиль", icon: <NavGlyph d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 17c0-3 2.7-5 6-5s6 2 6 5" /> },
 ];
 
+const SECTION_TABS: readonly TabItem[] = [
+  { id: "description", label: "Описание" },
+  { id: "specs", label: "Характеристики" },
+  { id: "documents", label: "Документы", count: 4 },
+  { id: "reviews", label: "Отзывы" },
+];
+
+const FILTER_TABS: readonly TabItem[] = [
+  { id: "all", label: "Все" },
+  { id: "pp", label: "PP", count: 12 },
+  { id: "hdpe", label: "HDPE", count: 8 },
+  { id: "ldpe", label: "LDPE" },
+];
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
@@ -87,9 +112,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function UiKitPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [checked, setChecked] = useState(true);
+  const [sectionTab, setSectionTab] = useState("description");
+  const [filterTab, setFilterTab] = useState("pp");
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 pb-24 md:pb-8">
+    // `pb-36` on phones, because this page renders a StickyActionBar — the rule
+    // every page using that primitive follows.
+    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 pb-36 md:pb-8">
       <header>
         <h1 className="text-2xl font-semibold text-text">UI kit</h1>
         <p className="mt-1 text-sm text-text-muted">
@@ -105,6 +134,9 @@ export function UiKitPage() {
           <Button variant="ghost">Отмена</Button>
           <Button variant="danger" data-testid="ui-button-danger">
             Выйти
+          </Button>
+          <Button variant="gold" data-testid="ui-button-gold">
+            Опубликовать заявку
           </Button>
           <Button data-testid="ui-button-disabled" disabled>
             Сохранить изменения
@@ -243,6 +275,93 @@ export function UiKitPage() {
           <Skeleton className="h-10 w-full" />
           <EmptyState title="Предложения не найдены" description="Измените фильтры или зайдите позже." />
         </div>
+      </Section>
+
+      <Section title="Page header">
+        <Card>
+          <CardBody>
+            <PageHeader
+              title="PP H030 GP"
+              subtitle="Полипропилен гомополимер (Injection Molding Grade)"
+              badge={<Badge variant="lab-verified">Laboratory Verified</Badge>}
+              backTo="/dev/ui"
+              backLabel="Назад"
+              actions={<Button size="sm">Запросить RFQ</Button>}
+            />
+          </CardBody>
+        </Card>
+      </Section>
+
+      <Section title="Tabs">
+        <Card>
+          <CardBody className="space-y-4">
+            <Tabs
+              data-testid="ui-tabs-underline"
+              items={SECTION_TABS}
+              value={sectionTab}
+              onChange={setSectionTab}
+              label="Разделы товара"
+            />
+            <Tabs
+              data-testid="ui-tabs-pill"
+              variant="pill"
+              items={FILTER_TABS}
+              value={filterTab}
+              onChange={setFilterTab}
+              label="Категории"
+            />
+          </CardBody>
+        </Card>
+      </Section>
+
+      <Section title="Specs">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <SpecTile icon={<InfoIcon />} label="CAS" value="9003-07-0" numeric />
+          <SpecTile icon={<InfoIcon />} label="HS Code" value="3902.10.9000" numeric />
+          <SpecTile icon={<ShieldIcon />} label="Страна" value="Узбекистан" />
+        </div>
+        <Card>
+          <CardHeader icon={<InfoIcon size={16} />} action={<Badge tone="brand">Активен</Badge>}>
+            <CardTitle>Данные договора</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <SpecList>
+              <SpecItem label="Номер договора" value="IMX-2024-000567" numeric />
+              <SpecItem label="Товар" value="PP H030 GP" />
+              <SpecItem label="Объём" value="100 MT" numeric />
+              <SpecItem label="Цена" value="950 USD/MT" numeric />
+              <SpecItem label="Условия поставки" value="CIF Ташкент, Узбекистан" span={2} />
+            </SpecList>
+          </CardBody>
+        </Card>
+      </Section>
+
+      <Section title="Documents">
+        <div className="space-y-2">
+          <FileRow
+            name="SDS_PP_H030GP.pdf"
+            meta="PDF · 2.4 MB · 12.05.2026"
+            status={<Badge tone="success">Принят</Badge>}
+            actions={
+              <Button size="sm" variant="ghost" aria-label="Скачать">
+                <DownloadIcon size={16} />
+              </Button>
+            }
+          />
+          <FileRow name="Лицензия_на_экспорт.pdf" meta="PDF · 890 KB" muted />
+        </div>
+      </Section>
+
+      <Section title="Sticky actions">
+        <p className="text-sm text-text-muted">
+          На телефоне закрепляется над нижней навигацией; на десктопе — обычная строка.
+        </p>
+        <StickyActionBar>
+          <Button variant="outline" fullWidth>
+            Написать продавцу
+          </Button>
+          <Button fullWidth>Запросить контракт</Button>
+        </StickyActionBar>
       </Section>
 
       <BottomNav items={NAV_ITEMS} />

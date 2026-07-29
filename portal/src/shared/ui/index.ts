@@ -13,6 +13,15 @@ export { Label } from "./Label";
 export { FormField } from "./FormField";
 export { Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter } from "./Card";
 export type { CardVariant } from "./Card";
+export { PageHeader } from "./PageHeader";
+export { Tabs } from "./Tabs";
+export type { TabItem } from "./Tabs";
+export { tabItemClasses, tabListClasses } from "./tabStyles";
+export type { TabsVariant } from "./tabStyles";
+export { SpecList, SpecItem } from "./SpecList";
+export { SpecTile } from "./SpecTile";
+export { FileRow } from "./FileRow";
+export { StickyActionBar } from "./StickyActionBar";
 export { BrandLogo } from "./BrandLogo";
 export { Badge } from "./Badge";
 export type { BadgeTone, BadgeVariant } from "./Badge";
@@ -32,5 +41,17 @@ export type { StatChipTone } from "./StatChip";
 export { ProgressRing } from "./ProgressRing";
 export { BottomNav } from "./BottomNav";
 export type { BottomNavItem } from "./BottomNav";
-export { CheckCircleIcon, CheckIcon, FlaskIcon, BoxIcon, ClockIcon } from "./icons";
+export {
+  CheckCircleIcon,
+  CheckIcon,
+  FlaskIcon,
+  BoxIcon,
+  ClockIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DownloadIcon,
+  FileIcon,
+  InfoIcon,
+  ShieldIcon,
+} from "./icons";
 export { LoadingView, ErrorView } from "./StateViews";

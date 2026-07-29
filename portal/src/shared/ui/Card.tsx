@@ -1,4 +1,4 @@
-import { type HTMLAttributes } from "react";
+import { type HTMLAttributes, type ReactNode } from "react";
 
 import { cn } from "@/shared/lib";
 
@@ -27,8 +27,41 @@ export function Card({ variant = "default", className, ...rest }: CardProps) {
   );
 }
 
-export function CardHeader({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("border-b border-border px-5 py-4", className)} {...rest} />;
+interface CardHeaderProps extends HTMLAttributes<HTMLDivElement> {
+  /** Glyph before the title — the mockups head most sections with one. */
+  icon?: ReactNode;
+  /** Right-aligned slot: a status badge, or a "Смотреть все" link. */
+  action?: ReactNode;
+}
+
+/**
+ * With `action` (or `icon`) this renders the `flex items-center justify-between`
+ * shape that a dozen call sites were writing by hand; without them it stays the
+ * plain block it always was, so existing headers are untouched.
+ */
+export function CardHeader({ icon, action, className, children, ...rest }: CardHeaderProps) {
+  if (!icon && !action) {
+    return (
+      <div className={cn("border-b border-border px-5 py-4", className)} {...rest}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-3 border-b border-border px-5 py-4",
+        className,
+      )}
+      {...rest}
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        {icon ? <span className="shrink-0 text-brand">{icon}</span> : null}
+        <div className="min-w-0">{children}</div>
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </div>
+  );
 }
 
 export function CardTitle({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {

@@ -1,6 +1,12 @@
 import { cn } from "@/shared/lib";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "danger"
+  | "gold";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const base =
@@ -27,6 +33,13 @@ const variants: Record<ButtonVariant, string> = {
     "border border-border-strong bg-transparent text-text hover:border-brand-line hover:bg-brand-soft",
   ghost: "bg-transparent text-text hover:bg-surface-2",
   danger: "bg-danger text-danger-fg hover:brightness-110",
+  /*
+   * The publish moment. The mockups switch the CTA from neon green to gold at the
+   * last step of the offer and RFQ wizards ("Опубликовать заявку" / "Опубликовать
+   * товар") — the one action that makes something public gets its own colour.
+   * Reuses the already-AA-tested --accent-gold / --accent-gold-fg pair.
+   */
+  gold: "bg-gold text-gold-fg hover:brightness-110 hover:shadow-glow active:brightness-95",
 };
 
 const sizes: Record<ButtonSize, string> = {

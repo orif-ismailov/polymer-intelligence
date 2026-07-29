@@ -322,3 +322,129 @@ test("the authenticated shell shows the bottom bar on phones only", async ({ pag
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(nav).toBeHidden();
 });
+
+// ── Wave 1 primitives (portal restyle) ───────────────────────────────────────
+//
+// Added, never edited: the twelve assertions above are P0's contract and stay
+// exactly as they were. These cover the six primitives the restyle introduces.
+
+test("page header renders a real h1 with its back link and action slot", async ({ page }) => {
+  const header = page.getByTestId("ui-page-header");
+  await expect(header).toBeVisible();
+
+  // Load-bearing: the flow specs locate screens by `heading, level: 1`.
+  await expect(header.locator("h1")).toHaveText("PP H030 GP");
+  await expect(header.getByRole("link", { name: /назад/i })).toBeVisible();
+  await expect(header.getByRole("button", { name: /RFQ/i })).toBeVisible();
+});
+
+test("tabs mark exactly one option pressed in each variant", async ({ page }) => {
+  for (const id of ["ui-tabs-underline", "ui-tabs-pill"] as const) {
+    const group = page.getByTestId(id);
+    await expect(group).toBeVisible();
+    await expect(group.locator('[aria-pressed="true"]')).toHaveCount(1);
+
+    // Selecting another option moves the pressed state rather than adding one.
+    await group.getByRole("button").nth(1).click();
+    await expect(group.locator('[aria-pressed="true"]')).toHaveCount(1);
+  }
+
+  // Counts beside a label are figures, so they line up down a column of tabs.
+  const counted = page.getByTestId("ui-tabs-underline").locator("span.num").first();
+  await expect(counted).toHaveCSS("font-variant-numeric", /tabular-nums/);
+});
+
+test("spec list is a definition list and marks its numeric values tabular", async ({ page }) => {
+  const list = page.getByTestId("ui-spec-list");
+  await expect(list).toBeVisible();
+  expect(await list.evaluate((el) => el.tagName)).toBe("DL");
+
+  // Label above value, both present — the mockups' contract data block.
+  await expect(list.locator("dt").first()).toHaveText(/номер договора/i);
+  await expect(list.locator("dd.num").first()).toHaveCSS(
+    "font-variant-numeric",
+    /tabular-nums/,
+  );
+});
+
+test("spec tiles sit on the card surface with the label above the value", async ({ page }) => {
+  const tile = page.getByTestId("ui-spec-tile").first();
+  await expect(tile).toBeVisible();
+  expect(rgbKey(await tile.evaluate((el) => getComputedStyle(el).backgroundColor))).toBe(
+    rgbKey(await token(page, "--surface")),
+  );
+
+  const box = await tile.boundingBox();
+  const valueBox = await tile.locator("p").boundingBox();
+  expect(valueBox!.y).toBeGreaterThan(box!.y);
+});
+
+test("file rows show the name, the meta line and their actions", async ({ page }) => {
+  const row = page.getByTestId("ui-file-row").first();
+  await expect(row).toBeVisible();
+  await expect(row).toContainText("SDS_PP_H030GP.pdf");
+  await expect(row).toContainText(/2\.4 MB/);
+  await expect(row.getByRole("button", { name: /скачать/i })).toBeVisible();
+
+  // A superseded document is struck through rather than removed.
+  const muted = page.getByTestId("ui-file-row").nth(1);
+  await expect(muted.locator("p").first()).toHaveCSS("text-decoration-line", /line-through/);
+});
+
+test("gold button paints the gold token pair and clears AA in both themes", async ({ page }) => {
+  // Same reasoning as the badge-contrast test: a colour class that never reaches
+  // the element is invisible to token-level maths, so measure what was painted.
+  for (const theme of ["dark", "light"] as const) {
+    await page.evaluate((t) => localStorage.setItem("portal.theme", t), theme);
+    await page.goto(GALLERY);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+
+    const { fg, bg } = await page.getByTestId("ui-button-gold").evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { fg: s.color, bg: s.backgroundColor };
+    });
+    expect(rgbKey(bg), `${theme}: fill`).toBe(rgbKey(await token(page, "--accent-gold")));
+    expect(rgbKey(fg), `${theme}: label`).toBe(rgbKey(await token(page, "--accent-gold-fg")));
+
+    const surface = await token(page, "--surface");
+    expect(contrastRatio(fg, composite(bg, surface)), `${theme}: AA`).toBeGreaterThanOrEqual(4.5);
+  }
+
+  await page.evaluate(() => localStorage.setItem("portal.theme", "dark"));
+});
+
+test("sticky action bar clears the bottom nav on phones and goes static on desktop", async ({
+  page,
+}) => {
+  const bar = page.getByTestId("ui-sticky-action-bar");
+  const nav = page.getByTestId("ui-bottom-nav");
+
+  await page.setViewportSize({ width: 375, height: 780 });
+  await expect(bar).toBeVisible();
+  expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("fixed");
+
+  // The bar sits ON TOP of the nav, not over it.
+  const [barBottom, navTop] = await Promise.all([
+    bar.evaluate((el) => el.getBoundingClientRect().bottom),
+    nav.evaluate((el) => el.getBoundingClientRect().top),
+  ]);
+  expect(barBottom).toBeLessThanOrEqual(navTop + 1);
+
+  /*
+   * And the content clears the BAR, not just the nav. The existing shell test
+   * measures `main.bottom <= nav.top`, which a fixed bar cannot violate — a bar
+   * covering the last row of content passes it silently. This is the assertion
+   * that actually holds the `pb-36` rule in place.
+   */
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  const lastContentBottom = await page
+    .locator("section")
+    .last()
+    .locator("p")
+    .evaluate((el) => el.getBoundingClientRect().bottom);
+  const barTop = await bar.evaluate((el) => el.getBoundingClientRect().top);
+  expect(lastContentBottom).toBeLessThanOrEqual(barTop);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
+});
