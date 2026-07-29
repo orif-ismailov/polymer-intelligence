@@ -323,7 +323,14 @@ export function OfferForm({ companyId, offer, onSaved, onCancel, onNotVerified }
         <Button variant="ghost" onClick={onCancel} disabled={save.isPending}>
           {t("common.cancel")}
         </Button>
-        <Button type="submit" loading={save.isPending} className="min-w-40">
+        {/* Sheet …41 ends the add-product flow on a gold CTA — the step that
+            makes the offer visible to buyers, as distinct from editing one. */}
+        <Button
+          type="submit"
+          variant={offer == null ? "gold" : "primary"}
+          loading={save.isPending}
+          className="min-w-40"
+        >
           {save.isPending ? t("offers.saving") : t("offers.save")}
         </Button>
       </div>

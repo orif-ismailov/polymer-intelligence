@@ -12,6 +12,7 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  FileRow,
   FlaskIcon,
   Spinner,
   Textarea,
@@ -108,21 +109,24 @@ export function LabPassportBlock({ companyId, offer, onUploaded }: LabPassportBl
         {offer == null ? (
           <Alert tone="info">{t("lab.saveFirst")}</Alert>
         ) : passport ? (
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-inset p-3">
-            <span className="flex min-w-0 items-center gap-2">
-              {offer.lab_verified ? (
+          <FileRow
+            name={passport.file_name}
+            icon={<FlaskIcon size={18} />}
+            status={
+              offer.lab_verified ? (
                 <Badge variant="lab-verified">{t("lab.badge.verified")}</Badge>
               ) : (
                 <Badge tone="neutral" icon={<FlaskIcon />}>
                   {t("lab.badge.passport")}
                 </Badge>
-              )}
-              <span className="truncate text-sm text-text">{passport.file_name}</span>
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleRemove} disabled={busy}>
-              {t("common.delete")}
-            </Button>
-          </div>
+              )
+            }
+            actions={
+              <Button variant="ghost" size="sm" onClick={handleRemove} disabled={busy}>
+                {t("common.delete")}
+              </Button>
+            }
+          />
         ) : (
           <div className="space-y-3">
             <input

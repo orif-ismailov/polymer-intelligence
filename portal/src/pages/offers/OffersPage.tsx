@@ -19,7 +19,10 @@ import {
   ErrorView,
   LinkButton,
   LoadingView,
+  PageHeader,
   Skeleton,
+  SpecItem,
+  SpecList,
 } from "@/shared/ui";
 
 import { OffersLocked } from "./OffersLocked";
@@ -59,28 +62,28 @@ function OfferCard({
           </div>
         </div>
 
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="text-text-muted">{t("offers.availability")}</dt>
-            <dd className="font-medium text-text">{label("availability", offer.availability)}</dd>
-          </div>
-          <div>
-            <dt className="text-text-muted">{t("offers.qtyAvailable")}</dt>
-            <dd className="font-medium text-text">{formatQty(offer.qty_available, offer.qty_unit, lang)}</dd>
-          </div>
-          <div>
-            <dt className="text-text-muted">{t("offers.price")}</dt>
-            <dd className="font-medium text-text">{formatMoney(offer.price, offer.currency, lang)}</dd>
-          </div>
-          <div>
-            <dt className="text-text-muted">{t("offers.incoterms")}</dt>
-            <dd className="font-medium text-text">{offer.incoterms}</dd>
-          </div>
-          <div>
-            <dt className="text-text-muted">{t("offers.createdAt")}</dt>
-            <dd className="font-medium text-text">{formatDate(offer.created_at, lang)}</dd>
-          </div>
-        </dl>
+        <SpecList className="sm:grid-cols-3">
+          <SpecItem
+            label={t("offers.availability")}
+            value={label("availability", offer.availability)}
+          />
+          <SpecItem
+            label={t("offers.qtyAvailable")}
+            value={formatQty(offer.qty_available, offer.qty_unit, lang)}
+            numeric
+          />
+          <SpecItem
+            label={t("offers.price")}
+            value={formatMoney(offer.price, offer.currency, lang)}
+            numeric
+          />
+          <SpecItem label={t("offers.incoterms")} value={offer.incoterms} />
+          <SpecItem
+            label={t("offers.createdAt")}
+            value={formatDate(offer.created_at, lang)}
+            numeric
+          />
+        </SpecList>
 
         {/* Why a held offer is a draft (P5): the gate saved it rather than
             losing the form, and this is the list of what it is waiting for. */}
@@ -150,16 +153,12 @@ export function OffersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-text">{t("offers.title")}</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {t("offers.subtitle", { company: companyName })}
-          </p>
-        </div>
-        <LinkButton to="/offers/new">{t("offers.create")}</LinkButton>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        title={t("offers.title")}
+        subtitle={t("offers.subtitle", { company: companyName })}
+        actions={<LinkButton to="/offers/new">{t("offers.create")}</LinkButton>}
+      />
 
       {offersQuery.isLoading ? (
         <div className="space-y-4">

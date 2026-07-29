@@ -8,7 +8,14 @@ import { useOffer, type CompanyOffer } from "@/entities/offer";
 import { LabPassportBlock } from "@/features/lab-passport";
 import { OfferForm, OfferPhotos } from "@/features/offer-form";
 import { OffersLocked } from "@/pages/offers";
-import { Card, CardBody, CardHeader, CardTitle, ErrorView, LinkButton, LoadingView } from "@/shared/ui";
+import {
+  Card,
+  CardBody,
+  ErrorView,
+  LinkButton,
+  LoadingView,
+  PageHeader,
+} from "@/shared/ui";
 
 export function OfferEditPage() {
   const { t } = useTranslation();
@@ -57,17 +64,15 @@ export function OfferEditPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">
-          {isCreate ? t("offers.create") : t("offers.edit")}
-        </h1>
-        <p className="mt-1 text-sm text-text-muted">{t("offers.subtitle", { company: companyName })}</p>
-      </div>
+      {/* The card repeated the page title verbatim; one of them had to go. */}
+      <PageHeader
+        backTo="/offers"
+        backLabel={t("offers.title")}
+        title={isCreate ? t("offers.create") : t("offers.edit")}
+        subtitle={t("offers.subtitle", { company: companyName })}
+      />
 
       <Card>
-        <CardHeader>
-          <CardTitle>{isCreate ? t("offers.create") : t("offers.edit")}</CardTitle>
-        </CardHeader>
         <CardBody>
           <OfferForm
             companyId={activeCompany.id}
