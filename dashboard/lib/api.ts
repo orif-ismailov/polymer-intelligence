@@ -50,6 +50,25 @@ export async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+/**
+ * End the session server-side: POST /auth/logout clears the httpOnly refresh
+ * cookie, then the in-memory access token is dropped.
+ *
+ * Clearing the token alone would not be a logout — the 7-day refresh cookie
+ * silently re-authenticates on the next page load, so closing the tab never
+ * ended the session. Best-effort on the network call: if it fails the cookie may
+ * survive, but this tab is signed out either way and the caller redirects to
+ * /login rather than pretending nothing happened.
+ */
+export async function logoutSession(): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
+  } catch {
+    // Network failure — nothing to report; the token is dropped regardless.
+  }
+  setToken(null);
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,

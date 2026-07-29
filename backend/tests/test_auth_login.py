@@ -287,6 +287,73 @@ def test_refresh_with_invalid_cookie_returns_401(auth_client: TestClient):
         assert resp.status_code == 401
 
 
+# ── Logout tests (QA 2026-07-28 #3) ───────────────────────────────────────────
+
+
+def test_logout_clears_the_refresh_cookie(auth_client: TestClient):
+    """The cookie IS the session — logout must revoke it, not just drop the token."""
+    login = auth_client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@polymer.uz", "password": "admin_password_secure"},
+    )
+    assert login.status_code == 200
+    assert auth_client.cookies.get("refresh_token")
+
+    resp = auth_client.post("/api/v1/auth/logout")
+    assert resp.status_code == 204, resp.text
+    set_cookie = resp.headers.get("set-cookie", "")
+    assert "refresh_token=" in set_cookie
+    # An expiry in the past is how a cookie is deleted.
+    assert "expires=" in set_cookie.lower() or "max-age=0" in set_cookie.lower()
+
+    # And the browser really cannot re-authenticate afterwards.
+    assert auth_client.post("/api/v1/auth/refresh").status_code == 401
+
+
+def test_logout_audits_the_identity_from_the_cookie(auth_client: TestClient):
+    """Identity comes from the verified `sub` claim, never the request (T-03-06)."""
+    auth_client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@polymer.uz", "password": "admin_password_secure"},
+    )
+    with patch("app.api.auth.write_audit") as mock_audit:
+        assert auth_client.post("/api/v1/auth/logout").status_code == 204
+
+    _, kwargs = mock_audit.call_args
+    assert kwargs["action"] == "auth.logout"
+    assert kwargs["staff_user_id"] == 1
+
+
+def test_logout_without_a_cookie_is_still_204(auth_client: TestClient):
+    """Logout is idempotent — it must never leave a caller believing they are signed in."""
+    with patch("app.api.auth.write_audit") as mock_audit:
+        resp = auth_client.post("/api/v1/auth/logout")
+    assert resp.status_code == 204, resp.text
+    mock_audit.assert_not_called()
+
+
+def test_logout_with_an_unreadable_cookie_still_clears_it(auth_client: TestClient):
+    """A garbage/expired cookie must not be the reason you are stuck signed in."""
+    auth_client.cookies.set("refresh_token", "totally.invalid.token")
+    with patch("app.api.auth.write_audit") as mock_audit:
+        resp = auth_client.post("/api/v1/auth/logout")
+    assert resp.status_code == 204, resp.text
+    assert "refresh_token=" in resp.headers.get("set-cookie", "")
+    mock_audit.assert_not_called()  # unattributable, but still revoked
+
+
+def test_logout_needs_no_access_token(auth_client: TestClient):
+    """Deliberately unauthenticated: an expired access token must not block logout."""
+    auth_client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@polymer.uz", "password": "admin_password_secure"},
+    )
+    resp = auth_client.post(
+        "/api/v1/auth/logout", headers={"Authorization": "Bearer expired.garbage.token"}
+    )
+    assert resp.status_code == 204, resp.text
+
+
 # ── Security hardening tests (CR-04, CR-05, T-03-01) ──────────────────────────
 
 def test_dummy_verify_does_not_raise() -> None:
