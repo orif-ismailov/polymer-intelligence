@@ -18,6 +18,8 @@ import {
   LinkButton,
   PageHeader,
   Skeleton,
+  SpecItem,
+  SpecList,
 } from "@/shared/ui";
 
 /**
@@ -66,30 +68,23 @@ function RequestCard({
           ) : null}
         </div>
 
-        <dl className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <dt className="text-xs text-text-subtle">{t("rfq.volume")}</dt>
-            <dd className="num text-text">
-              {request.volume} {request.volume_unit}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-text-subtle">{t("rfq.incoterms")}</dt>
-            <dd className="text-text">{request.incoterms}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-text-subtle">{t("rfq.destination")}</dt>
-            <dd className="text-text">
-              {[request.port_or_city, request.destination_country].filter(Boolean).join(", ")}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-text-subtle">{t("rfq.desiredDate")}</dt>
-            <dd className="num text-text">
-              {request.desired_date ? formatDate(request.desired_date) : "—"}
-            </dd>
-          </div>
-        </dl>
+        <SpecList>
+          <SpecItem
+            label={t("rfq.volume")}
+            value={`${request.volume} ${request.volume_unit}`}
+            numeric
+          />
+          <SpecItem label={t("rfq.incoterms")} value={request.incoterms} />
+          <SpecItem
+            label={t("rfq.destination")}
+            value={[request.port_or_city, request.destination_country].filter(Boolean).join(", ")}
+          />
+          <SpecItem
+            label={t("rfq.desiredDate")}
+            value={request.desired_date ? formatDate(request.desired_date) : "—"}
+            numeric
+          />
+        </SpecList>
 
         {request.required_docs.length > 0 ? (
           <div className="flex flex-wrap items-center gap-1.5">

@@ -14,6 +14,8 @@ import {
   LinkButton,
   PageHeader,
   Skeleton,
+  SpecItem,
+  SpecList,
   Tabs,
   type TabItem,
 } from "@/shared/ui";
@@ -49,37 +51,20 @@ function SampleCard({
           <SampleStatusBadge status={sample.status} />
         </div>
 
-        <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
-          {sample.qty ? (
-            <div className="flex gap-2">
-              <dt className="text-text-muted">{t("samples.qty")}:</dt>
-              <dd className="num text-text">{sample.qty}</dd>
-            </div>
-          ) : null}
-          <div className="flex min-w-0 gap-2">
-            <dt className="shrink-0 text-text-muted">{t("samples.address")}:</dt>
-            <dd className="truncate text-text">{sample.delivery_address}</dd>
-          </div>
+        <SpecList variant="inline">
+          {sample.qty ? <SpecItem label={t("samples.qty")} value={sample.qty} numeric /> : null}
+          <SpecItem label={t("samples.address")} value={sample.delivery_address} />
           {/* The two fields that make a shipment checkable rather than claimed. */}
           {sample.courier ? (
-            <div className="flex gap-2">
-              <dt className="text-text-muted">{t("samples.courier")}:</dt>
-              <dd className="text-text">{sample.courier}</dd>
-            </div>
+            <SpecItem label={t("samples.courier")} value={sample.courier} />
           ) : null}
           {sample.tracking_ref ? (
-            <div className="flex gap-2">
-              <dt className="text-text-muted">{t("samples.tracking")}:</dt>
-              <dd className="num text-text">{sample.tracking_ref}</dd>
-            </div>
+            <SpecItem label={t("samples.tracking")} value={sample.tracking_ref} numeric />
           ) : null}
           {sample.decline_reason ? (
-            <div className="flex min-w-0 gap-2 sm:col-span-2">
-              <dt className="shrink-0 text-text-muted">{t("samples.reason")}:</dt>
-              <dd className="truncate text-text">{sample.decline_reason}</dd>
-            </div>
+            <SpecItem label={t("samples.reason")} value={sample.decline_reason} span={2} />
           ) : null}
-        </dl>
+        </SpecList>
 
         <SampleActions sample={sample} companyId={companyId} />
       </CardBody>

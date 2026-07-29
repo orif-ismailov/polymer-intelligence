@@ -12,6 +12,8 @@ import {
   LinkButton,
   PageHeader,
   Skeleton,
+  SpecItem,
+  SpecList,
 } from "@/shared/ui";
 
 function LabOrderCard({ order, onOpen }: { order: LabOrder; onOpen: () => void }) {
@@ -29,38 +31,23 @@ function LabOrderCard({ order, onOpen }: { order: LabOrder; onOpen: () => void }
           <LabOrderStatusBadge status={order.status} />
         </div>
 
-        <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+        <SpecList variant="inline">
           {order.sample_volume ? (
-            <div className="flex gap-2">
-              <dt className="text-text-muted">{t("lab.volume")}:</dt>
-              <dd className="text-text">{order.sample_volume}</dd>
-            </div>
+            <SpecItem label={t("lab.volume")} value={order.sample_volume} numeric />
           ) : null}
-          <div className="flex gap-2">
-            <dt className="text-text-muted">{t("lab.created")}:</dt>
-            <dd className="text-text">{formatDateTime(order.created_at)}</dd>
-          </div>
+          <SpecItem label={t("lab.created")} value={formatDateTime(order.created_at)} numeric />
           {order.comment ? (
-            <div className="flex min-w-0 gap-2 sm:col-span-2">
-              <dt className="shrink-0 text-text-muted">{t("lab.comment")}:</dt>
-              <dd className="truncate text-text">{order.comment}</dd>
-            </div>
+            <SpecItem label={t("lab.comment")} value={order.comment} span={2} />
           ) : null}
           {/* The two things a customer will ask about, so they are on the card
               rather than one click away. */}
           {order.rejected_reason ? (
-            <div className="flex min-w-0 gap-2 sm:col-span-2">
-              <dt className="shrink-0 text-text-muted">{t("lab.rejectedReason")}:</dt>
-              <dd className="truncate text-text">{order.rejected_reason}</dd>
-            </div>
+            <SpecItem label={t("lab.rejectedReason")} value={order.rejected_reason} span={2} />
           ) : null}
           {order.operator_note ? (
-            <div className="flex min-w-0 gap-2 sm:col-span-2">
-              <dt className="shrink-0 text-text-muted">{t("lab.operatorNote")}:</dt>
-              <dd className="truncate text-text">{order.operator_note}</dd>
-            </div>
+            <SpecItem label={t("lab.operatorNote")} value={order.operator_note} span={2} />
           ) : null}
-        </dl>
+        </SpecList>
 
         {order.offer_id != null ? (
           <button

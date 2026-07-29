@@ -78,7 +78,8 @@
     "deals": "Сделки",
     "favorites": "Избранное",
     "samples": "Образцы",
-    "labOrders": "Лаборатория"
+    "labOrders": "Лаборатория",
+    "openMenu": "Открыть меню"
   },
   "home": {
     "title": "Обзор",

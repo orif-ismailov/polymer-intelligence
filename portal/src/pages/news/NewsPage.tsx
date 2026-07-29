@@ -2,7 +2,15 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { useNewsArticles, type NewsArticle } from "@/entities/news";
-import { Badge, Card, CardBody, EmptyState, ErrorView, Skeleton } from "@/shared/ui";
+import {
+  Badge,
+  Card,
+  CardBody,
+  EmptyState,
+  ErrorView,
+  PageHeader,
+  Skeleton,
+} from "@/shared/ui";
 import { formatDate } from "@/shared/lib";
 
 function ArticleCard({ article, onOpen }: { article: NewsArticle; onOpen: () => void }) {
@@ -41,11 +49,8 @@ export function NewsPage() {
   const newsQuery = useNewsArticles({ lang: i18n.language });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{t("news.title")}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("news.subtitle")}</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader title={t("news.title")} subtitle={t("news.subtitle")} />
 
       {newsQuery.isLoading ? (
         <div className="space-y-3">

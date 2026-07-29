@@ -17,6 +17,8 @@ import {
   Input,
   LinkButton,
   LoadingView,
+  SpecItem,
+  SpecList,
   Textarea,
 } from "@/shared/ui";
 
@@ -104,28 +106,29 @@ export function InquiryDetailPage() {
           ) : null}
 
           {!editing ? (
-            <dl className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <dt className="text-text-muted">{t("market.quantity")}</dt>
-                <dd className="font-medium text-text">
-                  {inquiry.quantity != null ? `${inquiry.quantity} ${inquiry.qty_unit}` : "—"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-text-muted">{t("market.targetPrice")}</dt>
-                <dd className="font-medium text-text">
-                  {inquiry.target_price != null
+            <SpecList>
+              <SpecItem
+                label={t("market.quantity")}
+                value={
+                  inquiry.quantity != null ? `${inquiry.quantity} ${inquiry.qty_unit}` : "—"
+                }
+                numeric
+              />
+              <SpecItem
+                label={t("market.targetPrice")}
+                value={
+                  inquiry.target_price != null
                     ? `${inquiry.target_price} ${inquiry.currency ?? ""}`.trim()
-                    : "—"}
-                </dd>
-              </div>
-              <div className="col-span-2">
-                <dt className="text-text-muted">{t("market.message")}</dt>
-                <dd className="whitespace-pre-line font-medium text-text">
-                  {inquiry.message ?? "—"}
-                </dd>
-              </div>
-            </dl>
+                    : "—"
+                }
+                numeric
+              />
+              <SpecItem
+                label={t("market.message")}
+                value={<span className="whitespace-pre-line">{inquiry.message ?? "—"}</span>}
+                span={2}
+              />
+            </SpecList>
           ) : (
             <div className="space-y-3">
               {update.isError ? <Alert tone="danger">{t("inquiries.editFailed")}</Alert> : null}

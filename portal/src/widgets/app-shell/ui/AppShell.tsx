@@ -45,8 +45,9 @@ export function AppShell() {
             onClick={() => setDrawerOpen(false)}
           />
           <div
+            id="portal-nav-drawer"
             className={cn(
-              "absolute left-0 top-0 h-full w-64 border-r border-border bg-surface p-4 shadow-lg animate-fade-in",
+              "absolute start-0 top-0 h-full w-64 border-e border-border bg-surface p-4 shadow-lg animate-fade-in",
             )}
           >
             <SideNav onNavigate={() => setDrawerOpen(false)} />

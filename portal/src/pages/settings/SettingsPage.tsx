@@ -16,6 +16,7 @@ import {
   ConfirmDialog,
   FormField,
   Input,
+  PageHeader,
   Select,
 } from "@/shared/ui";
 
@@ -54,7 +55,7 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <h1 className="text-2xl font-semibold text-text">{t("settings.title")}</h1>
+      <PageHeader title={t("settings.title")} />
 
       <Card>
         <CardHeader>

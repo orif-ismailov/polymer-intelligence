@@ -78,7 +78,8 @@
     "deals": "Deals",
     "favorites": "Favorites",
     "samples": "Samples",
-    "labOrders": "Laboratory"
+    "labOrders": "Laboratory",
+    "openMenu": "Open menu"
   },
   "home": {
     "title": "Overview",

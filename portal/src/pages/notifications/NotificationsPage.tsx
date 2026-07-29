@@ -10,7 +10,15 @@ import {
   useUnreadCount,
   type PortalNotification,
 } from "@/entities/notification";
-import { Button, Card, CardBody, EmptyState, ErrorView, Skeleton } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  CardBody,
+  EmptyState,
+  ErrorView,
+  PageHeader,
+  Skeleton,
+} from "@/shared/ui";
 import { cn, formatDateTime } from "@/shared/lib";
 
 export function NotificationsPage() {
@@ -35,18 +43,18 @@ export function NotificationsPage() {
   const items = list.data?.items ?? [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-text">{t("nav.notifications")}</h1>
-          <p className="mt-1 text-sm text-text-muted">{t("notifications.subtitle")}</p>
-        </div>
-        {hasUnread ? (
-          <Button variant="secondary" onClick={() => markRead.mutate({ all: true })}>
-            {t("notifications.markAllRead")}
-          </Button>
-        ) : null}
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        title={t("nav.notifications")}
+        subtitle={t("notifications.subtitle")}
+        actions={
+          hasUnread ? (
+            <Button variant="secondary" onClick={() => markRead.mutate({ all: true })}>
+              {t("notifications.markAllRead")}
+            </Button>
+          ) : null
+        }
+      />
 
       {list.isLoading ? (
         <div className="space-y-3">

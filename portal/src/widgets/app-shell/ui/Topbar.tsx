@@ -14,11 +14,13 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+        {/* This opened the drawer while announcing itself as "Home". */}
         <button
           type="button"
-          aria-label={t("nav.home")}
+          aria-label={t("nav.openMenu")}
+          aria-controls="portal-nav-drawer"
           onClick={onOpenMenu}
-          className="rounded-md p-2 text-text-muted hover:bg-surface-2 md:hidden"
+          className="rounded-md p-2 text-text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:hidden"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />

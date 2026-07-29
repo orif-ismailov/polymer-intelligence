@@ -11,6 +11,7 @@ import {
   CardTitle,
   LinkButton,
   LoadingView,
+  PageHeader,
 } from "@/shared/ui";
 import { formatDate } from "@/shared/lib";
 
@@ -37,22 +38,24 @@ export function NewsArticlePage() {
 
   return (
     <article className="space-y-6">
-      <LinkButton to="/news" variant="ghost" className="text-sm">
-        ← {t("news.back")}
-      </LinkButton>
-
-      <header className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          {isBreaking ? <Badge tone="danger">{t("news.breaking")}</Badge> : null}
-          {a.category ? <Badge tone="info">{a.category}</Badge> : null}
-          {a.country ? <Badge tone="neutral">{a.country}</Badge> : null}
-        </div>
-        <h1 className="text-2xl font-semibold text-text">{a.headline}</h1>
-        <div className="text-sm text-text-muted">
-          {a.source_name ? <span>{a.source_name}</span> : null}
-          {a.published_at ? <span> · {formatDate(a.published_at)}</span> : null}
-        </div>
-      </header>
+      <PageHeader
+        backTo="/news"
+        backLabel={t("news.back")}
+        title={a.headline}
+        badge={
+          <>
+            {isBreaking ? <Badge tone="danger">{t("news.breaking")}</Badge> : null}
+            {a.category ? <Badge tone="info">{a.category}</Badge> : null}
+            {a.country ? <Badge tone="neutral">{a.country}</Badge> : null}
+          </>
+        }
+        subtitle={
+          <>
+            {a.source_name ? <span>{a.source_name}</span> : null}
+            {a.published_at ? <span className="num"> · {formatDate(a.published_at)}</span> : null}
+          </>
+        }
+      />
 
       {a.summary ? <p className="text-text">{a.summary}</p> : null}
 
