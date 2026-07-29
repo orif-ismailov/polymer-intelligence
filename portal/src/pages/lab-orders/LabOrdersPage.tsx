@@ -4,7 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { useActiveCompany } from "@/entities/company";
 import { LabOrderStatusBadge, useLabOrders, type LabOrder } from "@/entities/lab";
 import { formatDateTime } from "@/shared/lib";
-import { Card, CardBody, EmptyState, ErrorView, LinkButton, Skeleton } from "@/shared/ui";
+import {
+  Card,
+  CardBody,
+  EmptyState,
+  ErrorView,
+  LinkButton,
+  PageHeader,
+  Skeleton,
+} from "@/shared/ui";
 
 function LabOrderCard({ order, onOpen }: { order: LabOrder; onOpen: () => void }) {
   const { t } = useTranslation();
@@ -91,11 +99,8 @@ export function LabOrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{t("lab.ordersTitle")}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("lab.ordersSubtitle")}</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader title={t("lab.ordersTitle")} subtitle={t("lab.ordersSubtitle")} />
 
       {orders.isLoading ? (
         <div className="space-y-3">

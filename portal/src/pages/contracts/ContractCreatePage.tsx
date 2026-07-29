@@ -8,7 +8,17 @@ import { contractApi, useContractTemplates } from "@/entities/contract";
 import type { ContractTemplate, DirectoryCompany } from "@/entities/contract";
 import { BusinessRoleBadges } from "@/entities/market";
 import { ApiError } from "@/shared/api";
-import { Alert, Button, Card, CardBody, FormField, Input, LoadingView, Select } from "@/shared/ui";
+import {
+  Alert,
+  Button,
+  Card,
+  CardBody,
+  FormField,
+  Input,
+  LoadingView,
+  PageHeader,
+  Select,
+} from "@/shared/ui";
 
 interface FieldSpec {
   key: string;
@@ -111,7 +121,11 @@ export function ContractCreatePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <h1 className="text-2xl font-semibold text-text">{t("contracts.create")}</h1>
+      <PageHeader
+        backTo="/contracts"
+        backLabel={t("contracts.title")}
+        title={t("contracts.create")}
+      />
 
       <Card>
         <CardBody className="space-y-4" data-testid="contract-variables">

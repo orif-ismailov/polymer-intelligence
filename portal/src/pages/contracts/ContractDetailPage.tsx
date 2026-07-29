@@ -20,6 +20,7 @@ import {
   ErrorView,
   LinkButton,
   LoadingView,
+  PageHeader,
   StatusStepper,
   Textarea,
 } from "@/shared/ui";
@@ -157,15 +158,13 @@ export function ContractDetailPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-text">{contract.title}</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {contract.initiator_name} → {contract.counterparty_name}
-          </p>
-        </div>
-        <ContractStatusBadge status={contract.status} />
-      </div>
+      <PageHeader
+        backTo="/contracts"
+        backLabel={t("contracts.title")}
+        title={contract.title}
+        subtitle={`${contract.initiator_name} → ${contract.counterparty_name}`}
+        badge={<ContractStatusBadge status={contract.status} />}
+      />
 
       {/* Action bar */}
       <Card>

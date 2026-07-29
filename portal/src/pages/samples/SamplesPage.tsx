@@ -6,8 +6,17 @@ import { useNavigate } from "react-router-dom";
 import { useActiveCompany } from "@/entities/company";
 import { SampleStatusBadge, useSamples, type SampleRequest } from "@/entities/sample";
 import { SampleActions } from "@/features/sample-request";
-import { cn } from "@/shared/lib";
-import { Card, CardBody, EmptyState, ErrorView, LinkButton, Skeleton } from "@/shared/ui";
+import {
+  Card,
+  CardBody,
+  EmptyState,
+  ErrorView,
+  LinkButton,
+  PageHeader,
+  Skeleton,
+  Tabs,
+  type TabItem,
+} from "@/shared/ui";
 
 type Tab = "incoming" | "sent";
 
@@ -105,30 +114,16 @@ export function SamplesPage() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{t("samples.title")}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("samples.subtitle")}</p>
-      </div>
+  const sampleTabs: TabItem[] = (["incoming", "sent"] as const).map((key) => ({
+    id: key,
+    label: t(`samples.tab.${key}`),
+  }));
 
-      <div className="flex gap-2 border-b border-border">
-        {(["incoming", "sent"] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-              tab === key
-                ? "border-brand text-text"
-                : "border-transparent text-text-muted hover:text-text",
-            )}
-          >
-            {t(`samples.tab.${key}`)}
-          </button>
-        ))}
-      </div>
+  return (
+    <div className="space-y-5">
+      <PageHeader title={t("samples.title")} subtitle={t("samples.subtitle")} />
+
+      <Tabs items={sampleTabs} value={tab} onChange={(id) => setTab(id as Tab)} label={t("samples.title")} />
 
       {active.isLoading ? (
         <div className="space-y-3">

@@ -8,7 +8,17 @@ import { ContractStatusBadge, useContracts } from "@/entities/contract";
 import type { ContractSummary } from "@/entities/contract";
 import { coerceLang } from "@/shared/i18n";
 import { formatDate } from "@/shared/lib";
-import { Button, Card, CardBody, EmptyState, ErrorView, LoadingView } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  CardBody,
+  EmptyState,
+  ErrorView,
+  LoadingView,
+  PageHeader,
+  Tabs,
+  type TabItem,
+} from "@/shared/ui";
 
 type Tab = "all" | "action" | "active";
 
@@ -41,35 +51,26 @@ export function ContractsPage() {
     { id: "active", label: t("contracts.tabs.active"), count: contracts.filter((c) => c.status === "active").length },
   ];
 
+  const tabItems: TabItem[] = tabs.map((tabItem) => ({
+    id: tabItem.id,
+    label: tabItem.label,
+    count: tabItem.count,
+    testId: `contracts-tab-${tabItem.id}`,
+  }));
+
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-text">{t("contracts.title")}</h1>
-          <p className="mt-1 text-sm text-text-muted">{t("contracts.subtitle")}</p>
-        </div>
-        <Button onClick={() => navigate("/contracts/new")} data-testid="contracts-new">
-          {t("contracts.create")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("contracts.title")}
+        subtitle={t("contracts.subtitle")}
+        actions={
+          <Button onClick={() => navigate("/contracts/new")} data-testid="contracts-new">
+            {t("contracts.create")}
+          </Button>
+        }
+      />
 
-      <div className="flex gap-2 border-b border-border">
-        {tabs.map((tabItem) => (
-          <button
-            key={tabItem.id}
-            type="button"
-            onClick={() => setTab(tabItem.id)}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm ${
-              tab === tabItem.id
-                ? "border-brand font-medium text-text"
-                : "border-transparent text-text-muted hover:text-text"
-            }`}
-            data-testid={`contracts-tab-${tabItem.id}`}
-          >
-            {tabItem.label} ({tabItem.count})
-          </button>
-        ))}
-      </div>
+      <Tabs items={tabItems} value={tab} onChange={(id) => setTab(id as Tab)} label={t("contracts.title")} />
 
       {query.isLoading ? <LoadingView label={t("common.loading")} /> : null}
       {query.isError ? (
