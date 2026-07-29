@@ -14,6 +14,7 @@ T-03-03: type claim distinguishes access vs refresh; cross-use rejected.
 from __future__ import annotations
 
 import contextlib
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -186,6 +187,59 @@ def create_client_session_token(subject: str) -> str:
         "type": "client_session",
         "iat": now,
         "exp": now + timedelta(seconds=settings.CLIENT_SESSION_TTL_SECONDS),
+    }
+    return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
+
+
+def create_portal_access_token(subject: str) -> str:
+    """Create a short-lived portal access JWT (15 min) for a UserAccount.
+
+    Audience isolation uses the SAME mechanism as staff/client tokens — the
+    `type` claim (here `portal_access`), enforced by decode_token(expected_type=…).
+    A portal token therefore fails on staff/webapp deps (which expect
+    'access'/'client_session') and vice versa. We deliberately do NOT set a JWT
+    `aud` claim: python-jose would then demand an `audience=` on every decode,
+    breaking the shared decode_token. A random `jti` makes each token unique so
+    refresh rotation yields an observably new token.
+
+    Args:
+        subject: The user_accounts.id as a string (JWT sub claim).
+
+    Returns:
+        A signed JWT portal access token string.
+    """
+    now = datetime.now(UTC)
+    payload = {
+        "sub": subject,
+        "role": "account",
+        "type": "portal_access",
+        "jti": secrets.token_hex(8),
+        "iat": now,
+        "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    }
+    return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
+
+
+def create_portal_refresh_token(subject: str) -> str:
+    """Create a long-lived portal refresh JWT (PORTAL_SESSION_TTL_DAYS).
+
+    Delivered only via the httpOnly `portal_session` cookie. Carries
+    type='portal_refresh' + a random jti (so rotation produces a new token).
+    The role is re-read from the DB on refresh, so it is not embedded here.
+
+    Args:
+        subject: The user_accounts.id as a string (JWT sub claim).
+
+    Returns:
+        A signed JWT portal refresh token string.
+    """
+    now = datetime.now(UTC)
+    payload = {
+        "sub": subject,
+        "type": "portal_refresh",
+        "jti": secrets.token_hex(8),
+        "iat": now,
+        "exp": now + timedelta(days=settings.PORTAL_SESSION_TTL_DAYS),
     }
     return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 

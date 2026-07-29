@@ -188,3 +188,149 @@ accent semantics** (§4). Where the two sheets disagree, the resolution and the 
 | New surfaces | — | "Как это работает?", "Чат-поддержка", seller "Проверка и публикация", "Общий чат" | `pages/HowItWorks.tsx`, `pages/Support.tsx`, seller wizard step 4 review; "Общий чат" listing feed = the Маркет catalog | — |
 
 Copy is verbatim from the sheets, in `webapp/src/i18n/{ru,uz,tr,en}.json` (ru = source of truth).
+
+---
+
+# Part II — IMEX AI portal (`portal/`)
+
+> Added by `.planning/deal-lifecycle/P0-DESIGN-SYSTEM.md`. **Scope: `portal/` only.**
+> Everything above (Part I) governs `webapp/` (frozen) and `dashboard/` (internal, not
+> restyled) and is unchanged. The portal is the client-facing surface and follows the
+> IMEX AI mockups in **`docs/new-design/`** (7 sheets + README catalog).
+
+## P1. Principles
+
+Dark-first, near-black graphite with a **neon-green** brand and a **gold** accent for
+lab/premium marks. Data-dense but airy: large radii, hairline borders, tabular figures,
+one bright accent per view. **Dark is the default theme**; light is the secondary theme,
+recoloured to the same brand rather than designed separately.
+
+## P2. Colour tokens
+
+Declared in `portal/src/app/styles.css`; `portal/tailwind.config.ts` maps utility names onto
+them, so a theme is one `data-theme` flip on `<html>`.
+
+| Token | Dark (default) | Light | Use |
+|---|---|---|---|
+| `--bg` | `#070907` | `#f5f8f6` | page canvas |
+| `--surface` | `#101512` | `#ffffff` | card |
+| `--surface-2` | `#1a211c` | `#eef2ef` | raised / hover / secondary button |
+| `--surface-inset` | `#0a0d0b` | `#f7faf8` | form wells (inputs sit *below* their card) |
+| `--border` | `#2b342e` | `#dfe6e1` | hairline |
+| `--border-strong` | `#3e4a43` | `#c3ccc6` | outline-button border |
+| `--text` | `#e9efea` | `#0d1210` | body text, values |
+| `--text-muted` | `#9aa59d` | `#515c56` | labels, captions |
+| `--text-subtle` | `#848f89` | `#616b65` | meta lines, placeholders |
+| `--brand` | `#22c55e` | `#0d6e31` | CTAs, prices, active nav, links |
+| `--brand-fg` | `#052e10` | `#ffffff` | label **on** the brand fill |
+| `--accent-gold` | `#eab308` | `#8a6100` | Laboratory Verified, premium, in-flight steps |
+| `--accent-gold-fg` | `#241a00` | `#ffffff` | label on the gold fill |
+| `--success` / `--warning` / `--danger` / `--info` | `#22c55e` / `#eab308` / `#f05252` / `#58b8f0` | `#157f3c` / `#8a6100` / `#b91c1c` / `#1d6fa5` | status |
+| `--danger-fg` | `#2b0505` | `#ffffff` | label on the danger fill |
+| `--overlay` | `rgb(0 0 0 / .62)` | `rgb(9 14 11 / .45)` | modal + drawer scrim |
+| `--brand-glow` | `0 0 24px` brand@35% | `0 0 20px` brand@22% | glow under accent CTAs (`shadow-glow`) |
+| `--radius-lg` / `-md` / `-sm` | `1rem` / `.75rem` / `.5rem` | same | cards / controls / chips |
+
+Derived Tailwind names: `brand-soft` / `brand-line` (brand at 14% / 35%), `gold-soft` /
+`gold-line`, `surface-inset`, `shadow-glow`, `.num`.
+
+Values are not arbitrary — every one is pinned by the contrast test in P5. In light theme
+`--brand` is darker than the mockups' neon so that **both** white-on-fill and
+brand-as-text-on-`brand-soft` clear AA.
+
+## P3. Rules for new screens
+
+1. **No colour literals.** No hex, no stock Tailwind palette (`blue-600`, `slate-800`), no
+   `text-white`. A new colour is a new token in `styles.css` + `tailwind.config.ts`.
+   *Watch for silently-dead classes:* `accent` was referenced 17 times across 11 files
+   without ever being defined, so those hovers and focus rings rendered as nothing.
+   If a colour class does not visibly change anything, check it exists in the config.
+2. **Compose from `shared/ui`.** Don't restyle a primitive at the call site; add a variant
+   to it. Semantic props over colour props: `<Badge variant="verified">`, not
+   `<Badge tone="success" icon={…}>`.
+3. **Figures use `.num`** (tabular) wherever numbers are compared down a column — prices,
+   MOQ, volumes, metric tiles, timestamps.
+4. **Both themes, every time.** Check light too; it is secondary, not optional.
+5. **Restart the dev server after touching `tailwind.config.ts`.** Vite does not always pick
+   up config changes, and a missing utility fails *silently* — the class stays on the element
+   and the property just falls back (this is how `text-danger-fg` shipped a 2.98:1 button
+   through a passing token test).
+
+## P4. Primitive catalog (`portal/src/shared/ui`)
+
+| Primitive | Notes |
+|---|---|
+| `Button` | `primary` (brand fill, dark label, glow on hover) · `outline` (the mockups' partner CTA) · `secondary` · `ghost` · `danger`. Disabled is a **neutral** surface, never a faded fill. |
+| `Badge` | `variant`: `verified` · `lab-verified` (gold) · `in-stock` · `on-order`, each with its glyph; or plain `tone`. Never wraps. |
+| `Card` | `variant="accent"` for the mockups' brand-outlined module cards. |
+| `Stepper` | Horizontal wizard progress: ticks for done, filled glowing disc for active. |
+| `StatusStepper` | Vertical timeline for long processes (contract signing, escrow, deal): green done, gold in flight, hollow pending. `data-state` per row. |
+| `StatChip` | Metric tile (`50 000+` / label), tabular. |
+| `ProgressRing` | Circular dial (AI-check screens); a real `progressbar` for AT. |
+| `BottomNav` | Phone-only bottom bar; the shell wires it in `widgets/app-shell/MobileNav`. Screens it covers need bottom padding. |
+| `BrandLogo` | IMEX AI lockup. **Interim** — swap the `<svg>` when the operator delivers the vector. |
+| `PageHeader` | The chrome every screen opens with: optional back chevron, `<h1>`, inline badge slot, subtitle, right-hand `actions`. Owns the page-title rung so no screen picks a font size for its own header. The `<h1>` is load-bearing — the e2e flows find screens with `getByRole("heading", { level: 1 })`. |
+| `Tabs` | The two switcher shapes: `underline` (product detail, company profile, trade room) and `pill` (market filters, deal scopes). Optional per-item `count` and `testId`. Deliberately **not** `role="tablist"` — these filter a list that lives outside them, and a tablist with no matching `tabpanel` is an axe violation where a toggle button is not. Class strings live in `tabStyles.ts`, a sibling `.ts`, because exporting a helper beside a component from a `.tsx` trips `react-refresh/only-export-components` and fails `--max-warnings 0`. |
+| `SpecList` / `SpecItem` | The key/value `<dl>`. `stacked` (label above value) where the grid *is* the content; `inline` (`label: value`) inside list cards. The variant travels by context, not per item, so a list can't end up with one mismatched row. `numeric` marks a value tabular. |
+| `SpecTile` | Bordered fact tile — icon, label, value. Not a `StatChip` variant: StatChip is figure-first with the figure pinned as its own test id; this is label-first. |
+| `FileRow` | Document row: glyph, name, `kind · size · date` meta, optional status badge, trailing actions. `muted` strikes through a superseded document. |
+| `StickyActionBar` | The sheets' phone action bar, pinned above `BottomNav`; a plain static row at `md`. **A page using it must add `pb-36 md:pb-0`** — a fixed element does not extend `<main>`'s box, so without it the bar covers the last row of content and the bottom-nav clearance test cannot see it. |
+| `icons.tsx` | The glyph set the primitives need. The portal ships no icon dependency. |
+
+## P6. Type and spacing
+
+Not in `tailwind.config.ts`, on purpose. A named utility (`text-h1`) renames the call-site
+decision instead of removing it, and **nothing in the gate can see a font size** — every
+pinned assertion measures a colour, a contrast ratio, an ARIA attribute, a `data-*` value or
+a literal string. A wrong scale would ship through a fully green suite. `<PageHeader/>`,
+`Tabs`, `SpecList` and `CardTitle` own these rungs instead; the table is what they encode.
+
+| Role | Class string |
+|---|---|
+| Hero (auth screens) | `text-2xl font-semibold leading-tight sm:text-3xl` |
+| Page title (`h1`) | `text-2xl font-semibold text-text` |
+| Page subtitle | `mt-1 text-sm text-text-muted` |
+| Section / card title | `text-base font-semibold text-text` |
+| Body | `text-sm text-text` |
+| Label / caption | `text-xs text-text-muted` (meta lines: `text-text-subtle`) |
+| Hero figure (price, escrow amount) | `num text-2xl font-semibold leading-tight text-brand` |
+| Metric tile figure | `num text-xl font-semibold` |
+| Nav / tab label | `text-sm font-medium`; bottom nav `text-[11px]` |
+
+Rhythm: page root `space-y-5` · card body `space-y-4` · title→subtitle `mt-1` ·
+label→value `mt-0.5` · card padding `px-5 py-4` (already in `CardHeader`/`CardBody`) ·
+phone bottom padding `pb-24` (in `AppShell`), `pb-36` on a screen with a `StickyActionBar`.
+
+**If you are typing `text-2xl` or `<h1>` in a page file, you are re-implementing a primitive.**
+
+## P5. Enforcement
+
+The portal has no unit-test runner, so the design system is pinned by Playwright:
+
+- `portal/e2e/p0-design-system.spec.ts` — dark-is-default, the green brand family, the
+  surface elevation ladder, switcher persistence, `.num`, and **WCAG AA on every token pair
+  we paint with, in both themes**.
+- `portal/e2e/p0-ui-kit.spec.ts` — every primitive rendered on the DEV-only gallery at
+  **`/dev/ui`**, asserting variants resolve to their tokens and that *rendered* badge and
+  button labels clear AA (token maths alone cannot see a rule that never reached the element).
+- `/dev/ui` is also the fastest way to eyeball a token change against the mockups.
+
+axe-core (`wcag2a` + `wcag2aa`) run on `/login`, `/market`, `/companies/:id` and `/dev/ui` in
+both themes: **0 violations**. Two were found and fixed during P0 — `--text-subtle` at 4.02:1
+on cards, and brand-on-`brand-soft` badges at 4.19:1 in light theme.
+
+### What the gate cannot see
+
+Worth knowing before you trust a green run:
+
+- **No page is ever measured in the light theme.** Every both-themes assertion is either
+  token-level or against `/dev/ui`. A `bg-surface/95 backdrop-blur` bar that disappears on a
+  white page ships green. Eyeball light on every screen you touch.
+- **Nothing measures page width.** A tab strip inside a grid column silently widened the
+  market offer page to 401px at a 375px viewport instead of scrolling, because a grid item's
+  automatic minimum size is its content's min-content and `overflow-x-auto` does not break
+  that chain. `Tabs` carries `min-w-0 max-w-full`; a column containing one needs `min-w-0` too.
+- **A fixed bar cannot violate `main.bottom <= nav.top`.** That is why the sticky-bar test
+  measures against the bar itself, and why `pb-36` is a rule rather than a suggestion.
+- **Nothing switches locale.** A key added to `ru.json` alone crashes `uz`/`en` at runtime.
+  Prefer passing labels as props (`PageHeader`'s `backLabel`) — `shared/ui` imports no i18n.

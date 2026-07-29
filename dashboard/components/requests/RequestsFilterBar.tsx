@@ -40,6 +40,13 @@ const STATUS_OPTIONS = [
   { value: "cancelled", labelKey: "statusOptCancelled" },
 ];
 
+// Dual-origin (R2 W4): filter by request origin — TG Mini App vs portal company.
+const ORIGIN_OPTIONS = [
+  { value: "", labelKey: "originOptAll" },
+  { value: "client", labelKey: "originOptClient" },
+  { value: "company", labelKey: "originOptCompany" },
+];
+
 interface ActiveFilter {
   key: string;
   label: string;
@@ -51,6 +58,7 @@ function getActiveFilters(
   urgency: string,
   status: string,
   product: string,
+  origin: string,
   t: (key: string) => string,
 ): ActiveFilter[] {
   const filters: ActiveFilter[] = [];
@@ -80,6 +88,14 @@ function getActiveFilters(
     });
   if (product)
     filters.push({ key: "product", label: t("filterProduct"), value: product });
+  if (origin)
+    filters.push({
+      key: "origin",
+      label: t("filterOrigin"),
+      value: ORIGIN_OPTIONS.find((o) => o.value === origin)
+        ? t(ORIGIN_OPTIONS.find((o) => o.value === origin)!.labelKey)
+        : origin,
+    });
   return filters;
 }
 
@@ -92,6 +108,7 @@ export function RequestsFilterBar() {
   const urgency = searchParams.get("urgency") ?? "";
   const status = searchParams.get("status") ?? "";
   const product = searchParams.get("product") ?? "";
+  const origin = searchParams.get("origin") ?? "";
 
   function setParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -116,7 +133,7 @@ export function RequestsFilterBar() {
     router.replace("?");
   }
 
-  const activeFilters = getActiveFilters(period, urgency, status, product, t);
+  const activeFilters = getActiveFilters(period, urgency, status, product, origin, t);
 
   return (
     <div className="flex flex-col gap-3">
@@ -182,6 +199,30 @@ export function RequestsFilterBar() {
             className="h-8 rounded-lg border border-border bg-background-secondary px-2.5 pe-8 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {t(o.labelKey)}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            size={14}
+            className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 text-foreground-muted"
+            aria-hidden="true"
+          />
+        </div>
+
+        {/* Origin (R2 W4) — TG Mini App vs portal company */}
+        <div className="relative">
+          <label htmlFor="filter-origin" className="sr-only">
+            {t("filterOrigin")}
+          </label>
+          <select
+            id="filter-origin"
+            value={origin}
+            onChange={(e) => setParam("origin", e.target.value)}
+            className="h-8 rounded-lg border border-border bg-background-secondary px-2.5 pe-8 text-sm text-foreground appearance-none cursor-pointer hover:bg-background-tertiary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            {ORIGIN_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {t(o.labelKey)}
               </option>

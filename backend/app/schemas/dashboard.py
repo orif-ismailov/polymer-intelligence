@@ -109,6 +109,11 @@ class RequestListOut(BaseModel):
     currency: str
     urgency: str                            # Urgency value as string
     assigned_to: int | None
+    # Dual-origin (R2 W4): "client" (TG Mini App) or "company" (portal). company_*
+    # are set only for portal-originated requests so the table can badge + link them.
+    origin: str = "client"
+    company_id: int | None = None
+    company_name: str | None = None
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
@@ -145,6 +150,10 @@ class RequestDetailOut(BaseModel):
     urgency: str
     comment: str | None
     assigned_to: int | None
+    # Dual-origin (R2 W4): origin badge + company link on the request detail.
+    origin: str = "client"
+    company_id: int | None = None
+    company_name: str | None = None
     # D-01: AI fields — null in Phase 4, shape preserved for Phase 5
     ai: dict[str, Any]
     # D-02: Real price analysis from price_points (computed server-side)

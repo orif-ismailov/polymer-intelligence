@@ -296,4 +296,53 @@ After the stack is healthy and smoke-green, run the Phase-1 acceptance steps in
 
 ---
 
+## R1 — Company Verification & Portal rollout checklist
+
+R1 ships **badge-only**: verification is required only to publish offers; no other gate is
+flipped. Rollout (dev → prod):
+
+1. **Merge to `dev`** — the dev stack auto-pulls `dev` and redeploys. Migration `0017`
+   applies automatically (advisory-locked). The `portal` CI job (lint · tsc · build) must be green.
+2. **Run the demo on the dev stack** (R1-PLAN Definition of Done): register by phone — three ways
+   to get the code, all requiring `DEBUG=true` + `SMS_PROVIDER=console`: set `OTP_DEV_CODE=000000`
+   and just type it, read the worker log (`sms.console.send`), or call
+   `GET /portal/auth/otp/peek?phone=` → create 2 companies → submit → approve one from dashboard `/verification`, the
+   other from the Telegram group → switch active company → publish an offer → moderate → offer
+   appears in the public market with `company_verified: true`.
+3. **Bundle the frontends** — only needed for a MANUAL deploy: `make portal-bundle`
+   (+ `make webapp-bundle` if changed). On a push to `dev`/`main` the CI deploy job already
+   pulls the prebuilt `…-portal` image and runs `portal-build` itself, so nothing compiles on
+   the server. Either way the step is not optional: the bundle lives in the `portal_static`
+   volume, not in any long-running image, so a deploy that skips it serves the PREVIOUS
+   cabinet build — or, on a fresh server, an empty volume that answers 404.
+4. **Prod prep** (in the prod `../.env`, one level above the repo root):
+   - `VERIFICATION_ENC_KEY` — a **new required secret** (≥32 urlsafe-b64 chars). Generate once and
+     store securely; **rotating it makes existing encrypted bank numbers/PINFL undecryptable**.
+   - `SMS_PROVIDER=eskiz` + `ESKIZ_EMAIL` / `ESKIZ_PASSWORD` (secrets). Leave `console` for staging.
+   - `VERIFICATION_NOTIFY_CHAT_ID` (optional; falls back to `REQUEST_NOTIFY_CHAT_ID`).
+   - Leave the enforcement app-settings OFF (`verification_auto_approve`,
+     `bank_verification_required`, `verification_required_for_publish`) — badge-only.
+5. **DNS + TLS + the host vhost** — three steps, and the third is the one that gets missed:
+   - `cabinet.ai-imex.com` DNS → the host front door;
+   - a **host** nginx server block for that name forwarding to `127.0.0.1:8080`. The inner
+     nginx routes by `Host`, so a domain with no host-side block never reaches it, no matter
+     how healthy the container is. The block ships in
+     `deploy/nginx/host-vhost.ai-imex.conf.example` — copy the file, `nginx -t`, reload;
+   - the cert: add `-d cabinet.ai-imex.com` to the certbot invocation in that file's header.
+
+   (The inner `cabinet.*` block has been in `nginx.behind-proxy.conf` since R1; the dev stack's
+   equivalent is `dev-cabinet.ai-imex.com` in `nginx.dev-server.behind-proxy.conf`.)
+6. **Verify** (from outside the server, so the host front door is in the path):
+   ```bash
+   curl -sI https://cabinet.ai-imex.com/            | head -1   # 200, not 404/502
+   curl -s   https://cabinet.ai-imex.com/companies  -o /dev/null -w '%{http_code}\n'  # 200 — SPA fallback
+   curl -s   https://cabinet.ai-imex.com/api/v1/health                                 # same-origin API
+   ```
+   A **404 at the root** means `portal_static` is empty → run `portal-build`. A **502** means the
+   inner nginx is unreachable → check the container. **Landing on another site** means the host
+   vhost for `cabinet.*` is missing → step 5.
+7. **Announce**: verified companies now carry a «проверено» badge and can publish from the cabinet.
+
+---
+
 *No real secret values appear in this guide.*

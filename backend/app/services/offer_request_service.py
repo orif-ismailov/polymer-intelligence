@@ -16,26 +16,44 @@ from __future__ import annotations
 import decimal
 import logging
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.models.accounts import UserAccount
+from app.models.companies import Company
 from app.models.enums import OfferRequestStatus, SellerOfferStatus
 from app.models.marketplace import OfferRequest, SellerOffer
 from app.models.requests import Client
 from app.schemas.marketplace import (
     AdminOfferRequestBuyer,
+    AdminOfferRequestCompany,
     AdminOfferRequestOut,
     AdminOfferRequestSeller,
     OfferBrief,
     OfferRequestCreate,
     OfferRequestUpdate,
 )
+from app.services import notification_service
 from app.services.audit_service import write_audit
 
 logger = logging.getLogger(__name__)
 
 # Logical fields shown in the buyer-edit diff (rendered in the group + seller messages).
 _DIFF_FIELDS = ("quantity", "target_price", "message")
+
+
+class AlreadyModerated(Exception):
+    """The inquiry has already left `pending` — another decision won the race.
+
+    Carries the status the winning decision left, so the caller can tell a
+    moderator what actually happened to the item they were acting on.
+    """
+
+    def __init__(self, offer_request_id: int, current_status: str) -> None:
+        super().__init__(f"inquiry {offer_request_id} is already {current_status}")
+        self.offer_request_id = offer_request_id
+        self.current_status = current_status
 
 
 def create_offer_request(
@@ -76,6 +94,54 @@ def create_offer_request(
     return req
 
 
+def create_company_inquiry(
+    db: Session,
+    company: Company,
+    account: UserAccount,
+    offer: SellerOffer,
+    data: OfferRequestCreate,
+) -> OfferRequest:
+    """Create a `pending` company-origin inquiry against an approved offer (R2 A2).
+
+    Mirrors ``create_offer_request`` but carries ``company_id`` +
+    ``created_by_user_account_id`` (``client_id`` NULL). Enters the SAME moderation
+    machine — staff review it identically to TG inquiries. Does NOT commit.
+
+    Raises ValueError if the offer is not public (approved) or if the buyer company
+    is the seller of the offer (a company cannot inquire on its own listing).
+    """
+    if offer.status != SellerOfferStatus.approved:
+        raise ValueError("Offer not found")
+
+    if offer.company_id is not None and offer.company_id == company.id:
+        raise ValueError("You cannot send an inquiry on your own offer")
+
+    req = OfferRequest(
+        offer_id=offer.id,
+        client_id=None,
+        company_id=company.id,
+        created_by_user_account_id=account.id,
+        quantity=data.quantity,
+        qty_unit=data.qty_unit,
+        target_price=data.target_price,
+        currency=data.currency,
+        message=data.message.strip() if data.message else None,
+        status=OfferRequestStatus.pending,
+    )
+    db.add(req)
+    db.flush()
+    logger.info(
+        "offer_request_service.create_company",
+        extra={
+            "offer_request_id": req.id,
+            "offer_id": offer.id,
+            "company_id": company.id,
+            "account_id": account.id,
+        },
+    )
+    return req
+
+
 def list_pending(db: Session) -> list[OfferRequest]:
     """Pending inquiries for the dashboard review queue, oldest first."""
     return (
@@ -96,6 +162,49 @@ def list_for_client(db: Session, client_id: int) -> list[OfferRequest]:
     return (
         db.query(OfferRequest)
         .filter(OfferRequest.client_id == client_id)
+        .order_by(OfferRequest.created_at.desc())
+        .all()
+    )
+
+
+def list_for_company(db: Session, company_id: int) -> list[OfferRequest]:
+    """Inquiries SENT by a company (portal-origin), newest first (any status)."""
+    return (
+        db.query(OfferRequest)
+        .filter(OfferRequest.company_id == company_id)
+        .order_by(OfferRequest.created_at.desc())
+        .all()
+    )
+
+
+def list_incoming_for_company(db: Session, company_id: int) -> list[OfferRequest]:
+    """Post-moderation inquiries RECEIVED on a company's own offers, newest first.
+
+    Only approved (forwarded) inquiries are visible to the selling company — the
+    pending/rejected moderation states stay internal to staff.
+    """
+    return (
+        db.query(OfferRequest)
+        .join(SellerOffer, OfferRequest.offer_id == SellerOffer.id)
+        .filter(
+            SellerOffer.company_id == company_id,
+            OfferRequest.status == OfferRequestStatus.approved,
+        )
+        .order_by(OfferRequest.created_at.desc())
+        .all()
+    )
+
+
+def list_company_inquiries_for_offer(
+    db: Session, company_id: int, offer_id: int
+) -> list[OfferRequest]:
+    """A company's own inquiries against one offer (the market-detail relationship block)."""
+    return (
+        db.query(OfferRequest)
+        .filter(
+            OfferRequest.company_id == company_id,
+            OfferRequest.offer_id == offer_id,
+        )
         .order_by(OfferRequest.created_at.desc())
         .all()
     )
@@ -220,14 +329,70 @@ def update_offer_request(
     return req, summary
 
 
-def _apply_decision(req: OfferRequest, *, approve: bool, note: str | None) -> None:
-    """Shared state transition for a moderation decision (no audit, no commit)."""
+def _decision_values(*, approve: bool, note: str | None) -> dict[str, object]:
+    """Shared column set for a moderation decision (no audit, no commit)."""
     now = utcnow()
-    req.status = OfferRequestStatus.approved if approve else OfferRequestStatus.rejected
-    req.moderation_note = note
-    req.reviewed_at = now
+    values: dict[str, object] = {
+        "status": OfferRequestStatus.approved if approve else OfferRequestStatus.rejected,
+        "moderation_note": note,
+        "reviewed_at": now,
+    }
     if approve:
-        req.forwarded_at = now
+        values["forwarded_at"] = now
+    return values
+
+
+def _claim_pending(db: Session, req: OfferRequest, values: dict[str, object]) -> None:
+    """Optimistically move an inquiry OUT of `pending`; AlreadyModerated if it left.
+
+    Approve and reject are separate endpoints over the same queue item, so a
+    read-then-write leaves room for two moderators to each land half a decision —
+    one verdict in `status`, the other's note in `moderation_note`. The
+    `WHERE status='pending'` guard makes it exactly-once instead; the loser
+    updates 0 rows. Mirror of ``offer_service._claim_pending_moderation``.
+    """
+    result = db.execute(
+        update(OfferRequest)
+        .where(
+            OfferRequest.id == req.id,
+            OfferRequest.status == OfferRequestStatus.pending,
+        )
+        .values(values)
+    )
+    if result.rowcount == 0:  # type: ignore[attr-defined]  # DML → CursorResult.rowcount
+        db.refresh(req)  # report what the winner left, not our stale read
+        raise AlreadyModerated(req.id, str(req.status))
+    db.refresh(req)
+
+
+def _forward_on_approval(db: Session, req: OfferRequest) -> None:
+    """Notify the *selling* side that an inquiry was approved, routed by offer origin.
+
+    Company-origin offer (R1) → an in-portal notification for every active member of
+    the selling company (kind ``inquiry_approved``), written in THIS transaction —
+    contact withholding is unchanged (the notification carries only ids, not the
+    buyer's identity). TG-seller offer → no-op here; the caller enqueues the existing
+    bot-DM forward after commit.
+
+    ``dedup=False`` so a re-approval after a buyer edit always re-notifies the seller.
+    """
+    offer = req.offer
+    if offer.company_id is None:
+        return  # TG-seller offer → existing post-commit bot DM handles it
+    title_key, body_key = notification_service.keys_for(
+        notification_service.KIND_INQUIRY_APPROVED
+    )
+    notification_service.notify_company(
+        db,
+        offer.company_id,
+        kind=notification_service.KIND_INQUIRY_APPROVED,
+        title_key=title_key,
+        body_key=body_key,
+        params={"offer_id": offer.id, "inquiry_id": req.id},
+        entity="inquiry",
+        entity_id=str(req.id),
+        dedup=False,
+    )
 
 
 def moderate_offer_request(
@@ -241,10 +406,14 @@ def moderate_offer_request(
     """Approve/reject an inquiry from the dashboard. Does NOT commit.
 
     Approval marks it forwarded; the router enqueues the seller DM after commit.
+    Raises `AlreadyModerated` when the inquiry is no longer pending — the
+    decision is exactly-once, see :func:`_claim_pending`.
     """
-    _apply_decision(req, approve=approve, note=note)
-    req.moderated_by = staff_user_id
-    db.flush()
+    values = _decision_values(approve=approve, note=note)
+    values["moderated_by"] = staff_user_id
+    _claim_pending(db, req, values)
+    if approve:
+        _forward_on_approval(db, req)
     write_audit(
         db=db,
         staff_user_id=staff_user_id,
@@ -271,10 +440,13 @@ def moderate_offer_request_via_telegram(
     """Approve/reject an inquiry from the team Telegram group. Does NOT commit.
 
     Actor is a group admin (a Telegram user, not a StaffUser): moderated_by stays
-    NULL and the acting id is recorded in the audit details.
+    NULL and the acting id is recorded in the audit details. Shares the dashboard
+    path's exactly-once claim — a double-tapped inline button loses the race the
+    same way (`AlreadyModerated`).
     """
-    _apply_decision(req, approve=approve, note=note)
-    db.flush()
+    _claim_pending(db, req, _decision_values(approve=approve, note=note))
+    if approve:
+        _forward_on_approval(db, req)
     details: dict[str, object] = {"via": "telegram", "telegram_user_id": telegram_user_id}
     if note:
         details["note"] = note
@@ -293,9 +465,27 @@ def moderate_offer_request_via_telegram(
     return req
 
 
+def _company_party(company: object | None) -> AdminOfferRequestCompany | None:
+    """A company party block (name + verified badge) for the staff queue, or None."""
+    if company is None:
+        return None
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+    return AdminOfferRequestCompany(
+        id=company.id,  # type: ignore[attr-defined]
+        name=company.short_name or company.legal_name,  # type: ignore[attr-defined]
+        verified=company.status == CompanyStatus.verified,  # type: ignore[attr-defined]
+    )
+
+
 def to_admin_out(req: OfferRequest) -> AdminOfferRequestOut:
-    """Build the staff-facing view (both parties' contacts) from a loaded inquiry."""
-    seller = req.offer.seller
+    """Build the staff-facing view (both parties' contacts) from a loaded inquiry.
+
+    Dual-origin (R2 W4): a portal buyer has no ``client`` (→ ``buyer_company``); a
+    company-origin offer has no ``seller`` (→ ``seller_company``).
+    """
+    offer = req.offer
+    seller = offer.seller
     return AdminOfferRequestOut(
         id=req.id,
         status=req.status,
@@ -305,9 +495,12 @@ def to_admin_out(req: OfferRequest) -> AdminOfferRequestOut:
         currency=req.currency,
         message=req.message,
         created_at=req.created_at,
-        offer=OfferBrief.model_validate(req.offer),
-        buyer=AdminOfferRequestBuyer.model_validate(req.client),
-        seller=AdminOfferRequestSeller.model_validate(seller),
+        origin=req.origin,
+        offer=OfferBrief.model_validate(offer),
+        buyer=AdminOfferRequestBuyer.model_validate(req.client) if req.client is not None else None,
+        buyer_company=_company_party(req.company),
+        seller=AdminOfferRequestSeller.model_validate(seller) if seller is not None else None,
+        seller_company=_company_party(offer.company),
     )
 
 

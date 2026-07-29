@@ -24,9 +24,26 @@
       "adminProducts": "Mahsulotlar",
       "adminUsers": "Foydalanuvchilar",
       "offerRequests": "Taklif so'rovlari",
-      "newsAdmin": "Yangiliklar (admin)"
+      "newsAdmin": "Yangiliklar (admin)",
+      "verification": "Tekshiruv",
+      "companies": "Kompaniyalar",
+      "contracts": "Shartnomalar",
+      "deals": "Bitimlar",
+      "escrow": "Eskrou",
+      "substances": "Moddalar",
+      "labOrders": "Laboratoriya",
+      "labPartners": "Laboratoriyalar"
     },
-    "guest": "Mehmon"
+    "guest": "Mehmon",
+    "openMenu": "Menyuni ochish",
+    "closeMenu": "Menyuni yopish",
+    "logout": "Chiqish",
+    "sessionChanged": {
+      "title": "Sessiya o‘zgardi",
+      "switched": "Bu brauzerda boshqa foydalanuvchi tizimga kirdi. Bu oyna eskirgan hisobni ko‘rsatmoqda — joriy hisob ostida davom etish uchun sahifani yangilang.",
+      "signedOut": "Sessiya boshqa oynada yakunlandi. Qayta kirish uchun sahifani yangilang.",
+      "reload": "Sahifani yangilash"
+    }
   },
   "login": {
     "subtitle": "Boshqaruv paneliga kiring",
@@ -73,7 +90,8 @@
       "low": "Past"
     },
     "urgencyAriaLabel": "Shoshilinchlik: {label}",
-    "needsReview": "Tekshirish kerak"
+    "needsReview": "Tekshirish kerak",
+    "loading": "Yuklanmoqda…"
   },
   "home": {
     "title": "Boshqaruv paneli",
@@ -294,7 +312,16 @@
     "unassigned": "Tayinlanmagan",
     "markAsProcessed": "Qayta ishlangan deb belgilash",
     "exportError": "Eksport amalga oshmadi. Qayta urinib ko'ring yoki muammo davom etsa qo'llab-quvvatlash xizmatiga murojaat qiling.",
-    "exportAriaLabel": "So'rovlarni CSV sifatida eksport qilish"
+    "exportAriaLabel": "So'rovlarni CSV sifatida eksport qilish",
+    "originTelegram": "Telegram",
+    "originPortal": "Portal",
+    "originPortalNamed": "Portal: {company}",
+    "filterOrigin": "Manba",
+    "originOptAll": "Barcha manbalar",
+    "originOptClient": "Telegram",
+    "originOptCompany": "Portal",
+    "sectionPushedSuppliers": "Xabardor qilingan yetkazib beruvchilar",
+    "pushedScoreHint": "Rassilka paytidagi moslik bahosi"
   },
   "broker": {
     "intel": {
@@ -383,7 +410,51 @@
     "priceOnRequest": "Narx so'rov bo'yicha",
     "approve": "Tasdiqlash",
     "reject": "Rad etish",
-    "notePlaceholder": "Sotuvchi uchun izoh (ixtiyoriy)"
+    "notePlaceholder": "Sotuvchi uchun izoh (ixtiyoriy)",
+    "compliance": {
+      "title": "Komplayens",
+      "noSubstance": "Modda ko‘rsatilmagan",
+      "ok": "talablar bajarilgan",
+      "blocked": "e’lon bloklangan",
+      "wouldBlock": "tekshiruv yoqilganda bloklardi",
+      "missingLicense": "Amaldagi litsenziya kerak: {regime}",
+      "missingDocument": "Hujjat kerak: {doc}",
+      "missingProhibited": "Taqiq asosi: {act}",
+      "approveBlocked": "Komplayens e’lonni rad etdi:",
+      "level": {
+        "free": "Erkin muomala",
+        "docs_required": "Hujjatlar kerak",
+        "license_required": "Litsenziya kerak",
+        "prohibited": "Taqiqlangan"
+      },
+      "regime": {
+        "precursor_list_iv": "Prekursorlar (IV ro‘yxat, VMQ-330)",
+        "explosive_toxic": "Portlovchi va zaharli (VMQ-782)",
+        "strong_acting": "Kuchli ta’sir etuvchi (VMQ-818)",
+        "pkm916_import": "Xavfli mahsulot importi (VMQ-916)"
+      },
+      "docKind": {
+        "sds": "xavfsizlik pasporti (SDS)",
+        "tds": "texnik tavsif (TDS)",
+        "coa": "tahlil sertifikati (COA)",
+        "certificate": "sertifikat"
+      }
+    },
+    "verified": "tasdiqlangan",
+    "lab": {
+      "passport": "Lab. pasport",
+      "verified": "Laboratory Verified"
+    },
+    "conflict": {
+      "alreadyModerated": "Bu taklifni boshqa moderator allaqachon ko‘rib chiqqan: {status}. Ro‘yxat yangilandi.",
+      "status": {
+        "draft": "qoralama",
+        "pending_moderation": "moderatsiyada",
+        "approved": "tasdiqlangan",
+        "rejected": "rad etilgan",
+        "archived": "arxivda"
+      }
+    }
   },
   "sources": {
     "title": "Manbalar",
@@ -511,7 +582,8 @@
       "publicUrlsOnly": "Faqat ommaviy URL manzillar.",
       "selectPlaceholder": "{label} ni tanlang…",
       "enterPlaceholder": "{label} ni kiriting…"
-    }
+    },
+    "readOnlyNotice": "Faqat ko‘rish rejimi: manba qo‘shish, tekshirish, qayta ishlash va yoqish faqat administrator uchun."
   },
   "alerts": {
     "pageTitle": "Ogohlantirishlar",
@@ -671,7 +743,18 @@
     "seller": "Sotuvchi",
     "approve": "Tasdiqlash va sotuvchiga yuborish",
     "reject": "Rad etish",
-    "notePlaceholder": "Izoh (ixtiyoriy)"
+    "notePlaceholder": "Izoh (ixtiyoriy)",
+    "originPortal": "Portal",
+    "verified": "tasdiqlangan",
+    "conflict": {
+      "alreadyModerated": "Bu so‘rovni boshqa xodim allaqachon ko‘rib chiqqan: {status}. Ro‘yxat yangilandi.",
+      "status": {
+        "pending": "ko‘rib chiqilmoqda",
+        "approved": "tasdiqlangan",
+        "rejected": "rad etilgan"
+      }
+    },
+    "decideFailed": "Qarorni qo‘llash imkoni bo‘lmadi"
   },
   "newsAdmin": {
     "title": "Yangiliklar boshqaruvi",
@@ -746,5 +829,561 @@
       "testFail": "Test xatosi",
       "feedChangedNote": "Lentani o‘zgartirish testni bekor qiladi — qayta test qilinmaguncha manba o‘chiriladi."
     }
+  },
+  "verification": {
+    "title": "Tekshiruv",
+    "subtitle": "Kompaniyalarni tekshirish so'rovlari navbati",
+    "loading": "Yuklanmoqda…",
+    "error": "Ma'lumotlarni yuklab bo'lmadi",
+    "empty": "Tekshirish so'rovlari yo'q",
+    "back": "Navbatga qaytish",
+    "inn": "STIR",
+    "unnamedCompany": "Nomsiz",
+    "filter": {
+      "label": "Holat",
+      "all": "Barchasi"
+    },
+    "caseStatus": {
+      "draft": "Qoralama",
+      "submitted": "Yuborilgan",
+      "checks_running": "Tekshiruvlar bajarilmoqda",
+      "needs_info": "Ma'lumot kerak",
+      "pending_review": "Qaror kutilmoqda",
+      "approved": "Tasdiqlangan",
+      "rejected": "Rad etilgan",
+      "cancelled": "Bekor qilingan"
+    },
+    "caseType": {
+      "onboarding": "Ro‘yxatdan o‘tish",
+      "reverification": "Qayta tekshiruv",
+      "targeted": "Maqsadli tekshiruv"
+    },
+    "columns": {
+      "submittedAt": "Yuborilgan",
+      "company": "Kompaniya",
+      "caseType": "Turi",
+      "status": "Holat",
+      "checks": "Tekshiruvlar"
+    },
+    "profile": {
+      "title": "Kompaniya profili",
+      "legalName": "Yuridik nom",
+      "shortName": "Qisqa nom",
+      "publicId": "Ommaviy ID",
+      "jurisdiction": "Yurisdiksiya",
+      "legalForm": "Tashkiliy-huquqiy shakl",
+      "director": "Direktor",
+      "address": "Yuridik manzil",
+      "status": "Holat",
+      "verifiedAt": "Tekshirilgan",
+      "roles": "Rollar",
+      "bankAccounts": "Bank hisoblari",
+      "mfo": "MFO"
+    },
+    "checks": {
+      "title": "Tekshiruvlar",
+      "empty": "Tekshiruvlar yo'q",
+      "attempts": "Urinishlar",
+      "lastError": "So'nggi xato",
+      "waivedReason": "Bekor qilish sababi",
+      "missingDocuments": "Yo'q hujjatlar",
+      "reasons": "Sabablar",
+      "waive": "Tekshiruvni bekor qilish",
+      "waiveReasonPlaceholder": "Bekor qilish sababi (majburiy)",
+      "waiveConflict": "Tekshiruv allaqachon yangilangan — ma'lumotlar qayta yuklandi"
+    },
+    "checkType": {
+      "tax_id_format": "STIR formati",
+      "bank_requisites": "Bank rekvizitlari",
+      "documents_complete": "Hujjatlar",
+      "manual_kyb": "Qo‘lda tekshiruv (KYB)",
+      "eimzo_signature": "E-IMZO imzosi",
+      "gov_registry": "Davlat reestri",
+      "tax_status": "Soliq holati",
+      "vat_status": "QQS holati"
+    },
+    "checkStatus": {
+      "pending": "Kutilmoqda",
+      "running": "Bajarilmoqda",
+      "passed": "O'tdi",
+      "warning": "Ogohlantirish",
+      "failed": "O'tmadi",
+      "unavailable": "Mavjud emas",
+      "waived": "Bekor qilingan"
+    },
+    "documents": {
+      "title": "Hujjatlar",
+      "empty": "Hujjatlar yo'q",
+      "download": "Yuklab olish"
+    },
+    "docKind": {
+      "charter": "Ustav",
+      "registration": "Ro'yxatdan o'tish guvohnomasi",
+      "director_id": "Direktor pasporti",
+      "bank_statement": "Bank ko'chirmasi",
+      "power_of_attorney": "Ishonchnoma",
+      "other": "Boshqa",
+      "registration_certificate": "Ro‘yxatdan o‘tish guvohnomasi",
+      "bank_letter": "Bank xati",
+      "license": "Litsenziya"
+    },
+    "audit": {
+      "title": "Tarix",
+      "empty": "Yozuvlar yo'q",
+      "staff": "Xodim"
+    },
+    "decision": {
+      "title": "Qaror",
+      "conflict": "So'rov boshqa xodim tomonidan qayta ishlangan — ma'lumotlar qayta yuklandi",
+      "notePlaceholder": "Qaror izohi (ixtiyoriy)",
+      "approve": "Tasdiqlash",
+      "reject": "Rad etish",
+      "requestInfo": "Ma'lumot so'rash",
+      "decidedAt": "Qaror qabul qilindi"
+    },
+    "registry": {
+      "title": "Davlat reyestrlari",
+      "hint": "Xususiy kompaniyalar uchun rasmiy realtime API hozircha yo'q. Kompaniyani ochiq xizmatda tekshiring (registr.stat.uz, my.soliq.uz, license.gov.uz) va natijani kiriting — u skrinshot bilan o'zgarmas yozuv sifatida saqlanadi va mos tekshiruvni yangilaydi.",
+      "neverChecked": "tekshirilmagan",
+      "openEvidence": "Skrinshotni ochish",
+      "kind": {
+        "company": "Kompaniya (EGRPO)",
+        "vat": "QQS guvohnomasi",
+        "licenses": "Litsenziyalar"
+      },
+      "source": {
+        "manual": "operator kiritgan",
+        "registry": "reyestr javobi"
+      },
+      "status": {
+        "active": "Faoliyat ko'rsatmoqda",
+        "liquidated": "Tugatilgan",
+        "suspended": "To'xtatilgan",
+        "unknown": "Holat ko'rsatilmagan"
+      },
+      "form": {
+        "title": "Tekshiruv natijasini kiritish",
+        "kind": "Nima tekshirildi",
+        "status": "Reyestrdagi holat",
+        "name": "Reyestrdagi nomi",
+        "director": "Rahbar",
+        "registered": "QQS to'lovchisi",
+        "certificateNo": "Guvohnoma raqami",
+        "rawStatus": "Reyestr ifodasi (so'zma-so'z)",
+        "note": "Izoh (qayerda va nimani ko'rdingiz)",
+        "evidence": "Skrinshot (PNG, JPEG yoki PDF)",
+        "submit": "Natijani kiritish"
+      },
+      "errors": {
+        "unknown_kind": "Tekshiruv turi noma'lum.",
+        "invalid_file_type": "Bu faylni ilova qilib bo'lmaydi: faqat PNG, JPEG yoki PDF.",
+        "file_too_large": "Fayl juda katta.",
+        "generic": "Tekshiruv natijasini kiritib bo'lmadi."
+      }
+    }
+  },
+  "companies": {
+    "title": "Kompaniyalar",
+    "subtitle": "Kompaniyalar reyestri va ularning holatlari",
+    "loading": "Yuklanmoqda…",
+    "error": "Ma'lumotlarni yuklab bo'lmadi",
+    "empty": "Kompaniyalar topilmadi",
+    "back": "Ro'yxatga qaytish",
+    "unnamed": "Nomsiz",
+    "searchPlaceholder": "Nomi yoki STIR bo'yicha qidirish",
+    "searchButton": "Qidirish",
+    "noRoles": "Rollar yo'q",
+    "suspend": "To'xtatish",
+    "reinstate": "Tiklash",
+    "filter": {
+      "label": "Holat",
+      "all": "Barchasi"
+    },
+    "status": {
+      "draft": "Qoralama",
+      "pending_verification": "Tekshiruvda",
+      "verified": "Tekshirilgan",
+      "rejected": "Rad etilgan",
+      "suspended": "To'xtatilgan",
+      "liquidated": "Tugatilgan"
+    },
+    "columns": {
+      "name": "Nom",
+      "inn": "STIR",
+      "jurisdiction": "Yurisdiksiya",
+      "status": "Holat",
+      "verifiedAt": "Tekshirilgan",
+      "roles": "Rollar"
+    },
+    "profile": {
+      "title": "Kompaniya profili",
+      "legalName": "Yuridik nom",
+      "shortName": "Qisqa nom",
+      "publicId": "Ommaviy ID",
+      "jurisdiction": "Yurisdiksiya",
+      "taxId": "STIR",
+      "legalForm": "Tashkiliy-huquqiy shakl",
+      "director": "Direktor",
+      "address": "Yuridik manzil",
+      "verifiedAt": "Tekshirilgan",
+      "reverificationDue": "Qayta tekshiruv",
+      "roles": "Rollar"
+    },
+    "role": {
+      "buyer": "Xaridor",
+      "seller": "Sotuvchi",
+      "broker": "Broker",
+      "manufacturer": "Ishlab chiqaruvchi",
+      "importer": "Importchi",
+      "trader": "Treyder",
+      "logistics_provider": "Logistika",
+      "distributor": "Distribyutor",
+      "laboratory": "Laboratoriya",
+      "insurance_provider": "Sug‘urta"
+    },
+    "roles": {
+      "manufacturer": "Ishlab chiqaruvchi",
+      "importer": "Importchi",
+      "trader": "Treyder",
+      "logistics_provider": "Logistika",
+      "distributor": "Distributor",
+      "laboratory": "Laboratoriya",
+      "insurance_provider": "Sug‘urta"
+    }
+  },
+  "contracts": {
+    "title": "Shartnomalar",
+    "subtitle": "Elektron shartnomalar nazorati (faqat o‘qish).",
+    "filterAll": "Barcha holatlar",
+    "search": "Nomi yoki ID bo‘yicha qidirish…",
+    "colTitle": "Nomi",
+    "colParties": "Tomonlar",
+    "colStatus": "Holat",
+    "empty": "Shartnomalar yo‘q",
+    "selectHint": "Ko‘rish uchun shartnomani tanlang.",
+    "openDocument": "Hujjatni ochish",
+    "signatures": "Imzolar",
+    "noSignatures": "Imzolar yo‘q",
+    "timeline": "Tarix",
+    "status": {
+      "draft": "Qoralama",
+      "pending_counterparty": "Kontragent kutilmoqda",
+      "pending_signatures": "Imzolar kutilmoqda",
+      "active": "Faol",
+      "declined": "Rad etilgan",
+      "cancelled": "Bekor qilingan",
+      "expired": "Muddati o‘tgan"
+    }
+  },
+  "deals": {
+    "title": "Bitimlar",
+    "subtitle": "Bitimlar nazorati: xronologiya, hujjatlar, chat (faqat o‘qish), nizolarni hal qilish.",
+    "filterAll": "Barcha holatlar",
+    "search": "Raqam bo‘yicha qidirish…",
+    "empty": "Bitimlar topilmadi",
+    "selectHint": "Ro‘yxatdan bitim tanlang.",
+    "total": "Jami: {count}",
+    "colNumber": "Raqam",
+    "colParties": "Tomonlar",
+    "colAmount": "Summa",
+    "colStatus": "Holat",
+    "timeline": "Xronologiya",
+    "documents": "Hujjatlar",
+    "noDocuments": "Hujjatlar yo‘q",
+    "chat": "Bitim chati",
+    "chatReadOnly": "faqat o‘qish",
+    "noMessages": "Xabarlar yo‘q",
+    "cancelledReason": "Bekor qilish sababi",
+    "status": {
+      "negotiation": "Muzokara",
+      "contract_pending": "Shartnoma kutilmoqda",
+      "contract_signed": "Shartnoma imzolandi",
+      "payment_pending": "To‘lov kutilmoqda",
+      "paid_escrow": "To‘landi (eskrou)",
+      "shipped": "Jo‘natildi",
+      "delivered": "Qabul qilindi",
+      "completed": "Yakunlandi",
+      "cancelled": "Bekor qilindi",
+      "disputed": "Nizo"
+    },
+    "actor": {
+      "buyer": "xaridor",
+      "seller": "sotuvchi",
+      "staff": "jamoa",
+      "system": "tizim"
+    },
+    "docKind": {
+      "contract": "Shartnoma",
+      "invoice": "Hisob-faktura",
+      "lab_passport": "Sifat pasporti",
+      "transport": "Transport",
+      "other": "Boshqa"
+    },
+    "resolve": {
+      "title": "Nizoni hal qilish",
+      "comment": "Izoh (majburiy)",
+      "restore": "Holatga qaytarish",
+      "cancel": "Bitimni bekor qilish",
+      "adminOnly": "Nizoni faqat administrator hal qila oladi."
+    }
+  },
+  "escrow": {
+    "title": "Eskrou to‘lovlar",
+    "subtitle": "Ikki navbat: kim bizga pul qarzdor va kimga biz o‘tkazishimiz kerak. Mablag‘ harakatini faqat bank ko‘chirmasi bilan solishtirgandan keyin belgilang.",
+    "filterAll": "Barcha holatlar",
+    "empty": "To‘lovlar yo‘q",
+    "selectHint": "Tafsilotlarni ko‘rish uchun to‘lovni tanlang.",
+    "terminal": "Operatsiya yakunlandi — to‘lov endi o‘zgarmaydi.",
+    "colDeal": "Bitim",
+    "colParties": "Tomonlar",
+    "colAmount": "Summa",
+    "colStatus": "Holat",
+    "dealStatus": "Bitim holati",
+    "mode": "Rejim",
+    "fundedAt": "Tushum",
+    "releasedAt": "To‘lov",
+    "refundedAt": "Qaytarish",
+    "lastNote": "Izoh",
+    "status": {
+      "pending": "To‘lov kutilmoqda",
+      "funded": "Mablag‘ zaxiraga olindi",
+      "released": "Sotuvchiga o‘tkazildi",
+      "refunded": "Xaridorga qaytarildi"
+    },
+    "counters": {
+      "awaitingFunds": "To‘lov kutilmoqda",
+      "awaitingPayout": "To‘lash kutilmoqda",
+      "settled": "Yakunlangan",
+      "blocked": "Bloklangan",
+      "providerHolds": "Bank bilan tafovutlar"
+    },
+    "mark": {
+      "title": "Mablag‘ harakatini belgilash",
+      "note": "Izoh: bank havolasi, ko‘chirma raqami…",
+      "confirm": "Bankda mablag‘ haqiqatan harakatlanganini tasdiqlayman",
+      "funded": "Mablag‘ tushdi",
+      "released": "Mablag‘ sotuvchiga to‘landi",
+      "refunded": "Mablag‘ xaridorga qaytarildi",
+      "adminOnly": "Mablag‘ harakatini faqat administrator belgilay oladi."
+    },
+    "blocked": {
+      "title": "Hisob-fakturasiz bitimlar",
+      "hint": "Shartnoma imzolangan, lekin hisob-faktura chiqarib bo‘lmaydi. Operator aralashuvi kerak.",
+      "reason": {
+        "no_amount": "Summa kelishilmagan",
+        "not_opened_yet": "Hisob-faktura hali chiqarilmagan"
+      }
+    },
+    "modeValue": {
+      "stub": "operator qo‘lda tasdiqlaydi",
+      "live": "bank adapteri"
+    },
+    "errors": {
+      "release_before_delivery": "Sotuvchiga to‘lash faqat xaridor qabul qilishni tasdiqlagandan keyin mumkin.",
+      "deal_transition_blocked": "Bitim bu holatga o‘ta olmaydi. Mablag‘ni qaytarish uchun avval bitim bo‘yicha nizo oching.",
+      "invalid_transition": "To‘lovning bunday o‘tishi mumkin emas — sahifani yangilab, joriy holatni tekshiring.",
+      "confirmation_required": "Mablag‘ning haqiqiy harakatini tasdiqlang.",
+      "note_required": "Izoh majburiy."
+    },
+    "providerHolds": {
+      "title": "Operator ishtirokini talab qiladigan bank xabarlari",
+      "hint": "Bu xabarlar yozib olindi, lekin avtomatik qo'llanmadi: ular yo bitimni yopadi, yo bizning ma'lumotlarimizga mos kelmaydi. Bank ko'chirmasi bilan solishtirib, to'lovni qo'lda belgilang — satr o'zi yo'qoladi.",
+      "disagreement": "Bank: {bank} · Bizda: {ours}",
+      "unreadable": "Xabarni o'qib bo'lmadi",
+      "open": "To'lovni ochish",
+      "reason": {
+        "needs_operator": "Mablag'ni qaytarish — faqat operator qarori bilan",
+        "release_before_delivery": "Qabul tasdiqlanmasdan oldin to'lov",
+        "unknown_ref": "Noma'lum eskrou havolasi",
+        "wrong_rail": "To'lov operator tomonidan qo'lda yuritiladi",
+        "amount_mismatch": "Summa hisobga mos kelmaydi",
+        "currency_mismatch": "Valyuta hisobga mos kelmaydi",
+        "invalid_transition": "Holatning nomaqbul o'zgarishi",
+        "deal_blocked": "Bitim bu holatga o'ta olmaydi",
+        "unknown_provider": "Provayder ulanmagan",
+        "malformed": "Xabar tahlil qilinmadi"
+      }
+    }
+  },
+  "substances": {
+    "title": "Moddalar ma’lumotnomasi",
+    "subtitle": "VMQ ro‘yxatlarining raqamlashtirilgani — e’lonni tekshirish uchun haqiqat manbai",
+    "provisional": "Sid revizyasi v1-provisional: faqat huquqiy xarita tasdiqlagan pozitsiyalar kiritilgan. VMQ ilovalari yuridik tekshiruvdan so‘ng raqamlashtiriladi — undan oldin e’lon blokirovkasini yoqmang.",
+    "add": "Modda qo‘shish",
+    "addTitle": "Yangi modda",
+    "editTitle": "Moddani tahrirlash",
+    "edit": "Tahrirlash",
+    "deactivate": "O‘chirish",
+    "activate": "Yoqish",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "empty": "Hech narsa topilmadi",
+    "error": "Ma’lumotnomani yuklab bo‘lmadi",
+    "searchPlaceholder": "Nomi, CAS, TN VED…",
+    "allLevels": "Barcha darajalar",
+    "columns": {
+      "name": "Nomi",
+      "hs": "TN VED",
+      "cas": "CAS",
+      "level": "Tartibga solish",
+      "threshold": "Chegara",
+      "source": "Asos"
+    },
+    "fields": {
+      "code": "Kod (slug)",
+      "nameRu": "Nomi (ru)",
+      "nameUz": "Nomi (uz)",
+      "nameEn": "Nomi (en)",
+      "hs": "TN VED kodi",
+      "hsHint": "Birlamchi yuridik identifikator",
+      "cas": "CAS",
+      "casHint": "Ikkilamchi, SDS va AI uchun",
+      "level": "Tartibga solish darajasi",
+      "regime": "Rejim",
+      "regimeHint": "Tartibga solinadigan moddalar uchun majburiy",
+      "threshold": "Chegaraviy konsentratsiya, %",
+      "thresholdHint": "Chegaradan past bo‘lsa rejim qo‘llanmaydi",
+      "exemption": "Yillik chiqarib tashlash limiti",
+      "exemptionUnit": "Birlik",
+      "licenseCategory": "Litsenziya toifasi",
+      "requiredDocs": "Majburiy hujjatlar",
+      "synonyms": "Sinonimlar",
+      "synonymsHint": "Vergul bilan",
+      "sourceAct": "Asos hujjat",
+      "sourceActHint": "Masalan: VMQ №330, 12.11.2015, IV ro‘yxat"
+    },
+    "errors": {
+      "exists": "Bunday kod yoki CAS bilan modda allaqachon mavjud"
+    },
+    "level": {
+      "free": "Erkin muomala",
+      "docs_required": "Hujjatlar kerak",
+      "license_required": "Litsenziya kerak",
+      "prohibited": "Taqiqlangan"
+    },
+    "regime": {
+      "precursor_list_iv": "Prekursorlar (IV ro‘yxat, VMQ-330)",
+      "explosive_toxic": "Portlovchi va zaharli (VMQ-782)",
+      "strong_acting": "Kuchli ta’sir etuvchi (VMQ-818)",
+      "pkm916_import": "Xavfli mahsulot importi (VMQ-916)"
+    },
+    "docKind": {
+      "sds": "xavfsizlik pasporti (SDS)",
+      "tds": "texnik tavsif (TDS)",
+      "coa": "tahlil sertifikati (COA)",
+      "certificate": "sertifikat"
+    }
+  },
+  "licenses": {
+    "title": "Litsenziyalar",
+    "hint": "Kompaniyaning qabul qilingan hujjati asosida operator ro‘yxatga oladi. Tartibga solinadigan moddali e’lonlarda tekshiriladi.",
+    "register": "Ro‘yxatga olish",
+    "empty": "Litsenziyalar yo‘q",
+    "revoke": "Bekor qilish",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "active": "Amalda",
+    "until": "gacha",
+    "perpetual": "muddatsiz",
+    "fields": {
+      "regime": "Rejim",
+      "category": "Toifa",
+      "number": "Raqam",
+      "issuedBy": "Kim bergan",
+      "expiresAt": "Amal qilish muddati",
+      "reason": "Bekor qilish sababi"
+    },
+    "status": {
+      "pending_review": "Tekshiruvda",
+      "active": "Amalda",
+      "expired": "Muddati tugagan",
+      "revoked": "Bekor qilingan",
+      "rejected": "Rad etilgan"
+    },
+    "regime": {
+      "precursor_list_iv": "Prekursorlar (IV ro‘yxat, VMQ-330)",
+      "explosive_toxic": "Portlovchi va zaharli (VMQ-782)",
+      "strong_acting": "Kuchli ta’sir etuvchi (VMQ-818)",
+      "pkm916_import": "Xavfli mahsulot importi (VMQ-916)"
+    }
+  },
+  "labOrders": {
+    "title": "Laboratoriya arizalari",
+    "subtitle": "Tahlilni hamkor laboratoriya bajaradi — holatlarni operator yuritadi. Arizalar eng eskisidan ko‘rsatiladi.",
+    "filterAll": "Barcha holatlar",
+    "empty": "Ariza yo‘q",
+    "selectHint": "Navbatdan arizani tanlang.",
+    "terminal": "Ariza yakunlangan — boshqa amal yo‘q.",
+    "colNumber": "Raqam",
+    "colCompany": "Kompaniya",
+    "colSubject": "Mavzu",
+    "colStatus": "Holat",
+    "company": "Kompaniya",
+    "subject": "Mavzu",
+    "subjectDeal": "Bitim #{id}",
+    "substance": "Modda",
+    "volume": "Namuna hajmi",
+    "createdAt": "Yaratilgan",
+    "completedAt": "Yakunlangan",
+    "rejectedReason": "Rad etish sababi",
+    "operatorNote": "Operator izohi",
+    "partner": "Laboratoriya",
+    "partnerNone": "Tayinlanmagan",
+    "resultAttached": "Pasport taklif/bitimga biriktirildi.",
+    "counters": {
+      "submitted": "Yangi",
+      "inProgress": "Ishda",
+      "done": "Tayyor",
+      "rejected": "Rad etilgan"
+    },
+    "status": {
+      "submitted": "Yuborilgan",
+      "accepted": "Qabul qilingan",
+      "sample_awaited": "Namuna kutilmoqda",
+      "in_analysis": "Tahlilda",
+      "done": "Tayyor",
+      "rejected": "Rad etilgan"
+    },
+    "act": {
+      "title": "Amal",
+      "note": "Izoh (rad etishda majburiy)",
+      "reasonHint": "«Tayyor» pasport yuklashni ochadi — hujjatsiz holat qo‘yilmaydi.",
+      "accepted": "Qabul qilish",
+      "sample_awaited": "Namuna kutilmoqda",
+      "in_analysis": "Tahlilga",
+      "rejected": "Rad etish",
+      "uploadResult": "Pasportni yuklash (PDF)"
+    },
+    "errors": {
+      "invalid_transition": "Joriy holatdan bunday o‘tish mumkin emas.",
+      "reason_required": "Rad etish sababini ko‘rsating.",
+      "result_required": "«Tayyor» uchun pasport yuklash kerak.",
+      "invalid_file_type": "Pasport faqat PDF formatida qabul qilinadi.",
+      "file_too_large": "Fayl juda katta.",
+      "orderer_left_the_deal": "Buyurtmachi endi bitim ishtirokchisi emas — hujjatni biriktirib bo‘lmaydi."
+    }
+  },
+  "labPartners": {
+    "title": "Hamkor laboratoriyalar",
+    "subtitle": "Laboratoriyalar ma’lumotnomasi. Tahlilchi o‘qiydi (tayinlashda tanlaydi), faqat administrator tahrirlaydi.",
+    "empty": "Hozircha laboratoriya yo‘q",
+    "colName": "Nomi",
+    "colContacts": "Kontaktlar",
+    "colState": "Holati",
+    "active": "Faol",
+    "retired": "Chiqarilgan",
+    "retire": "Chiqarish",
+    "restore": "Qaytarish",
+    "addTitle": "Laboratoriya qo‘shish",
+    "editTitle": "Laboratoriyani tahrirlash",
+    "fieldName": "Nomi",
+    "fieldContactName": "Aloqa shaxsi",
+    "fieldPhone": "Telefon",
+    "fieldEmail": "Email",
+    "fieldAddress": "Manzil",
+    "fieldNote": "Eslatma",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "adminOnly": "Ma’lumotnomani administrator tahrirlaydi."
   }
 }

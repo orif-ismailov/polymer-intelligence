@@ -14,6 +14,7 @@ def _make_request() -> MagicMock:
     req = MagicMock()
     req.id = 42
     req.number = "REQ-2026-06-29-00007"
+    req.company_id = None  # TG-origin (portal-origin adds a 🌐 Портал line)
     req.product_id = None  # → uses product_text, single session.get
     req.product_text = "EVA"
     req.grade_text = "Grade A"
@@ -72,6 +73,47 @@ def test_sends_formatted_message_to_chat():
     assert "EVA" in text
     assert "Срочно" in text  # urgency label
     assert "Acme LLC" in text
+    assert "🌐 Портал" not in text  # TG-origin card has no portal line (regression)
+
+
+def test_portal_origin_shows_portal_company_line():
+    """R2 W4 T4.2 — a portal-originated request card carries a 🌐 Портал line."""
+    sent: list[dict[str, object]] = []
+
+    async def _capture(chat_id: int, text: str, **kwargs: object) -> None:
+        sent.append({"chat_id": chat_id, "text": text})
+
+    from app.core.config import settings  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+
+    req = _make_request()
+    req.company_id = 77
+    company = MagicMock()
+    company.short_name = "Verified Co"
+    company.legal_name = "OOO Verified"
+    company.id = 77
+
+    def _get(model, _id):  # noqa: ANN001, ANN202
+        return company if model is Company else req
+
+    with (
+        patch.object(settings, "REQUEST_NOTIFY_CHAT_ID", -1001234567890),
+        patch("sqlalchemy.orm.Session") as mock_session_cls,
+        patch("app.core.db.engine"),
+        patch("telegram.bot.bot") as mock_bot,
+    ):
+        mock_session = MagicMock()
+        mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
+        mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
+        mock_session.get.side_effect = _get
+        mock_bot.send_message = _capture
+
+        from app.tasks.notify import send_request_to_group  # noqa: PLC0415
+
+        result = send_request_to_group(request_id=42)
+
+    assert result == {"status": "ok", "error": None}
+    assert "🌐 Портал: Verified Co" in sent[0]["text"]
 
 
 def test_missing_request_returns_error():

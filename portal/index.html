@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Mirrors --bg of the default (dark) theme in src/app/styles.css. -->
+    <meta name="theme-color" content="#070907" />
+    <title>IMEX AI — Кабинет</title>
+    <meta
+      name="description"
+      content="Личный кабинет IMEX AI: регистрация компаний, верификация и публикация предложений на рынке нефтехимического сырья."
+    />
+    <!-- Open Graph: the cabinet is behind auth, so this is only for link previews
+         shared between colleagues. No image asset until the operator supplies the
+         brand vector (P0 T3.2). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IMEX AI" />
+    <meta property="og:title" content="IMEX AI — Кабинет" />
+    <meta
+      property="og:description"
+      content="Личный кабинет IMEX AI: регистрация компаний, верификация и публикация предложений на рынке нефтехимического сырья."
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <!--
+      Resolve the stored theme before first paint so a `light` preference never
+      flashes the dark default. Mirrors shared/lib/theme.ts — the key here must
+      stay in sync with THEME_KEY in shared/config.
+    -->
+    <script>
+      (function () {
+        try {
+          var mode = localStorage.getItem("portal.theme") || "dark";
+          var resolved =
+            mode === "system"
+              ? window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "light"
+                : "dark"
+              : mode === "light"
+                ? "light"
+                : "dark";
+          document.documentElement.setAttribute("data-theme", resolved);
+        } catch (e) {
+          /* keep the markup default */
+        }
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
+import { RouteGuardFallback } from "@/components/shared/RouteGuardFallback";
 import { useAuth } from "@/hooks/useAuth";
 import { refreshAccessToken } from "@/lib/api";
 import queryClient from "@/lib/queryClient";
@@ -45,13 +46,15 @@ export default function DashboardLayout({
     };
   }, [isAuthenticated, login, router]);
 
-  // Render nothing until authenticated. This avoids a flash of protected content
-  // while the silent refresh runs, and avoids a premature /login bounce — the
-  // redirect is issued from the effect only after the refresh attempt fails.
+  // No protected content until authenticated. This avoids a flash of protected
+  // content while the silent refresh runs, and avoids a premature /login bounce —
+  // the redirect is issued from the effect only after the refresh attempt fails.
   // (Render outcome is children ⟺ isAuthenticated, so no separate "checking"
   // state is needed; that synchronous setState-in-effect was also a render smell.)
+  // A spinner rather than `null`: the refresh is a network round-trip, and a black
+  // viewport for its duration is indistinguishable from a broken page.
   if (!isAuthenticated) {
-    return null;
+    return <RouteGuardFallback />;
   }
 
   return (

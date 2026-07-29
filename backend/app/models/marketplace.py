@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
@@ -25,6 +26,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB
@@ -36,11 +38,15 @@ from app.models.enums import (
     OfferAvailability,
     OfferFileKind,
     OfferRequestStatus,
+    OfferSaleMode,
     PriceBasis,
+    RegulationLevel,
     SellerOfferStatus,
 )
 
 if TYPE_CHECKING:
+    from app.models.companies import Company
+    from app.models.compliance import Substance
     from app.models.requests import Client
 
 
@@ -67,6 +73,9 @@ class Seller(Base):
     counterparty_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("counterparties.id"), nullable=True
     )                                                                             # link to intelligence loop
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # dormant portal-company bridge (R1, A1)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -82,14 +91,28 @@ class SellerOffer(Base):
     __tablename__ = "seller_offers"
     __table_args__ = (
         Index("ix_seller_offers_status_created", "status", "created_at"),
+        # R2 W6 T6.2: backs the portal/webapp market list
+        # (WHERE status='approved' ORDER BY published_at DESC).
+        Index("ix_seller_offers_status_published", "status", "published_at"),
         Index("ix_seller_offers_product", "product_id"),
         Index("ix_seller_offers_seller", "seller_id"),
+        # Dual-origin (R1, A1): an offer comes from a TG seller OR a portal company.
+        CheckConstraint(
+            "seller_id IS NOT NULL OR company_id IS NOT NULL", name="ck_offer_origin"
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    seller_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("sellers.id", ondelete="CASCADE"), nullable=False
+    # Nullable (R1): a portal offer originates from a company, not a TG seller.
+    seller_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("sellers.id", ondelete="CASCADE"), nullable=True
     )
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # set for portal-published offers
+    created_by_user_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=True
+    )                                                                             # portal author (A1)
     # Nullable: a seller may list a product not in our catalog (product_text).
     product_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("products.id"), nullable=True
@@ -124,6 +147,68 @@ class SellerOffer(Base):
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
     min_order_qty: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # ── How the seller trades this offer (P4 W1) ──────────────────────────────
+    # Production/sourcing lead time. Required by the API schema for made-to-order
+    # offers, optional here: the column cannot see `availability` to enforce it,
+    # and existing rows predate the field.
+    lead_time_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    sale_mode: Mapped[OfferSaleMode | None] = mapped_column(
+        PgEnum(OfferSaleMode, name="offer_sale_mode", create_type=False), nullable=True
+    )
+    # "Ready to deal" flags → badges on the market card. Answering an RFQ costs a
+    # seller nothing, so it is opt-OUT; signing a contract and holding money in
+    # escrow are commitments, so they are opt-in.
+    accepts_rfq: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    accepts_contract: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    accepts_escrow: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    # ── Chemical compliance (P5) ──────────────────────────────────────────────
+    # The registry link is optional: most polymer listings are ordinary goods,
+    # and a seller may also type a CAS/HS pair for something we do not carry yet.
+    substance_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("substances.id", ondelete="SET NULL"), nullable=True
+    )
+    cas_number: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hs_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: Regulation is concentration-dependent (acetone is a precursor at ≥60%),
+    #: so the seller declares strength and the verdict compares it to the
+    #: substance's threshold. NULL is treated as "regulated" — conservative.
+    declared_concentration_pct: Mapped[decimal.Decimal | None] = mapped_column(
+        Numeric(5, 2), nullable=True
+    )
+    #: Cached verdict (FR-C6) — recomputed on every edit/re-publication, so a
+    #: list screen never re-evaluates a page of offers. NULL = never evaluated
+    #: (an offer that predates P5).
+    compliance_level: Mapped[RegulationLevel | None] = mapped_column(
+        PgEnum(RegulationLevel, name="regulation_level", create_type=False), nullable=True
+    )
+    compliance_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    compliance_missing: Mapped[list[dict[str, str | None]] | None] = mapped_column(
+        JSONB, nullable=True
+    )
+    compliance_checked_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # ── Samples and laboratory (P6) ───────────────────────────────────────────
+    #: Sample terms live on the OFFER, not on each request: they are a term of
+    #: the listing ("samples: 15 USD, ships in 3 days"), identical for every
+    #: buyer who asks. A NULL price with samples available means free.
+    samples_available: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    sample_price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
+    sample_dispatch_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: INDEPENDENT confirmation — set only by `lab_service.complete_with_result`
+    #: when a platform lab order finishes. A seller uploading their own passport
+    #: gets the "lab passport" badge; only this flag says we had it analysed.
+    lab_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     status: Mapped[SellerOfferStatus] = mapped_column(
         PgEnum(SellerOfferStatus, name="seller_offer_status", create_type=False),
         nullable=False,
@@ -147,10 +232,93 @@ class SellerOffer(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
-    seller: Mapped[Seller] = relationship("Seller", back_populates="offers")
+    seller: Mapped[Seller | None] = relationship("Seller", back_populates="offers")
+    company: Mapped[Company | None] = relationship("Company")  # dual-origin (R1 A1)
+    # The registry row this offer is about (P5). Loaded so the seller's own
+    # screens can name the substance they picked, not just echo its CAS back.
+    substance: Mapped[Substance | None] = relationship("Substance")
     files: Mapped[list[SellerOfferFile]] = relationship(
-        "SellerOfferFile", back_populates="offer", cascade="all, delete-orphan"
+        "SellerOfferFile",
+        back_populates="offer",
+        cascade="all, delete-orphan",
+        # Upload order is display order, and the first photo is the cover (FR-M2),
+        # so the relationship must not come back in arbitrary order.
+        order_by="SellerOfferFile.id",
     )
+
+    @property
+    def photos(self) -> list[SellerOfferFile]:
+        """Attached photos in display order (documents excluded)."""
+        return [f for f in self.files if f.kind == OfferFileKind.image]
+
+    @property
+    def cover_file_id(self) -> int | None:
+        """Id of the cover photo — the first one uploaded (FR-M2), or None."""
+        photos = self.photos
+        return photos[0].id if photos else None
+
+    # ── Laboratory passport (P6, FR-L1) ───────────────────────────────────────
+    # Derived, not cached. The catalog query already selectinloads `files`, and a
+    # `has_lab_passport` column would be a second source of truth for "is there a
+    # PDF attached" — one that a file deletion would have to remember to update.
+    # The market FILTER cannot use a property, so it runs the same question as an
+    # EXISTS subquery (`offer_service.list_catalog`).
+
+    @property
+    def has_lab_passport(self) -> bool:
+        """True when a laboratory passport is attached, whoever uploaded it."""
+        return any(f.kind == OfferFileKind.lab_passport for f in self.files)
+
+    @property
+    def lab_passport_file_id(self) -> int | None:
+        """Id of the most recent lab passport (files come back in upload order)."""
+        passports = [f for f in self.files if f.kind == OfferFileKind.lab_passport]
+        return passports[-1].id if passports else None
+
+    # ── Dual-origin display helpers (R1 W5) ───────────────────────────────────
+    # A serializer-agnostic view of "who is behind this offer" so every consumer
+    # (moderation, public market, TG card) renders seller- and company-origin
+    # offers uniformly. company_verified drives the public "verified" badge.
+
+    @property
+    def origin(self) -> str:
+        return "company" if self.company_id is not None else "seller"
+
+    @property
+    def display_name(self) -> str | None:
+        if self.company_id is not None and self.company is not None:
+            return self.company.short_name or self.company.legal_name
+        if self.seller is not None:
+            return self.seller.company_name
+        return None
+
+    @property
+    def company_verified(self) -> bool:
+        from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+        return self.company is not None and self.company.status == CompanyStatus.verified
+
+    @property
+    def business_roles(self) -> list[str]:
+        """CONFIRMED business roles of the company behind this offer (P4 W2).
+
+        Confirmed only, deliberately. A company declares its roles when it
+        registers and staff confirm them during verification; showing a declared
+        role as a badge would let anyone self-award "manufacturer" — which is
+        exactly the claim a buyer is using the badge to check.
+
+        Empty for seller-origin (Telegram) offers: there is no portal company
+        behind them, so there is nothing to have confirmed.
+        """
+        from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
+
+        if self.company is None:
+            return []
+        return [
+            str(role.role)
+            for role in self.company.business_roles
+            if role.status == BusinessRoleStatus.confirmed
+        ]
 
 
 class SellerOfferFile(Base):
@@ -179,6 +347,32 @@ class SellerOfferFile(Base):
     offer: Mapped[SellerOffer] = relationship("SellerOffer", back_populates="files")
 
 
+class OfferFavorite(Base):
+    """A person's bookmarked offer (P4 W1).
+
+    Keyed to the ACCOUNT, not the company: a shortlist is personal, and someone
+    switching company hats in the portal should keep their own list. That is also
+    why there is no company_id to scope it by.
+    """
+
+    __tablename__ = "offer_favorites"
+    __table_args__ = (
+        UniqueConstraint("user_account_id", "offer_id", name="uq_offer_favorite"),
+        Index("ix_offer_favorites_account", "user_account_id", "id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    user_account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id", ondelete="CASCADE"), nullable=False
+    )
+    offer_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("seller_offers.id", ondelete="CASCADE"), nullable=False
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 class OfferRequest(Base):
     """A buyer's inquiry against a specific approved seller offer ("Request an offer").
 
@@ -189,14 +383,30 @@ class OfferRequest(Base):
     """
 
     __tablename__ = "offer_requests"
+    __table_args__ = (
+        # Dual-origin (R2, A2): an inquiry comes from a TG client OR a portal
+        # company account. The CHECK keeps the origin invariant at the DB level.
+        CheckConstraint(
+            "client_id IS NOT NULL OR created_by_user_account_id IS NOT NULL",
+            name="ck_inquiry_origin",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     offer_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("seller_offers.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    client_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True
+    # Nullable (R2): a portal inquiry originates from a company account, not a
+    # TG client. Exactly one origin is guaranteed by ck_inquiry_origin.
+    client_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=True, index=True
     )
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # set for portal-originated inquiries (A2)
+    created_by_user_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=True
+    )                                                                             # portal author (A2)
     quantity: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
     qty_unit: Mapped[str] = mapped_column(String(8), nullable=False, default="MT", server_default="MT")
     target_price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
@@ -241,4 +451,43 @@ class OfferRequest(Base):
     )
 
     offer: Mapped[SellerOffer] = relationship("SellerOffer")
-    client: Mapped[Client] = relationship("Client")
+    client: Mapped[Client | None] = relationship("Client")
+    company: Mapped[Company | None] = relationship("Company")  # dual-origin (R2 A2)
+
+    # ── Dual-origin display helper (R2 W1) ────────────────────────────────────
+    @property
+    def origin(self) -> str:
+        """"company" for portal-originated inquiries, else "client" (TG Mini App)."""
+        return "company" if self.created_by_user_account_id is not None else "client"
+
+
+class RfqPushLog(Base):
+    """One "we told this supplier about this RFQ" record (P4 W3).
+
+    The unique pair IS the dedup rule (FR-A2): the push task inserts with
+    ON CONFLICT DO NOTHING, so re-running it never notifies a supplier twice.
+
+    `score` and `rank` are stored rather than recomputed. Staff read this to
+    answer "why did we push this to them?", and the weights will change over
+    time — a rank re-derived with today's weights would not explain a push made
+    last month.
+    """
+
+    __tablename__ = "rfq_push_log"
+    __table_args__ = (
+        UniqueConstraint("request_id", "company_id", name="uq_rfq_push_target"),
+        Index("ix_rfq_push_log_request", "request_id", "rank"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    request_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("requests.id", ondelete="CASCADE"), nullable=False
+    )
+    company_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    )
+    score: Mapped[decimal.Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    notified_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

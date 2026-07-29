@@ -49,6 +49,10 @@ export interface RequestListItem {
   currency: string;
   urgency: string;
   assigned_to: number | null;
+  // Dual-origin (R2 W4): "client" (TG Mini App) or "company" (portal).
+  origin: string;
+  company_id: number | null;
+  company_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -57,11 +61,13 @@ function buildRequestsUrl(
   status: string,
   urgency: string,
   productId: string,
+  origin: string,
 ): string {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (urgency) params.set("urgency", urgency);
   if (productId) params.set("product_id", productId);
+  if (origin) params.set("origin", origin);
   const qs = params.toString();
   return `/requests${qs ? `?${qs}` : ""}`;
 }
@@ -78,6 +84,7 @@ export function RequestsTable() {
   const status = searchParams.get("status") ?? "";
   const urgency = searchParams.get("urgency") ?? "";
   const productId = searchParams.get("product") ?? "";
+  const origin = searchParams.get("origin") ?? "";
   const selectedId = searchParams.get("id");
 
   const [sorting, setSorting] = useState<SortingState>([
@@ -86,14 +93,16 @@ export function RequestsTable() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZE });
 
   const filters = useMemo(
-    () => ({ status, urgency, productId }),
-    [status, urgency, productId],
+    () => ({ status, urgency, productId, origin }),
+    [status, urgency, productId, origin],
   );
 
   const { data, isLoading, isError, error } = useQuery<RequestListItem[]>({
     queryKey: ["requests", filters],
     queryFn: () =>
-      apiFetch<RequestListItem[]>(buildRequestsUrl(status, urgency, productId)),
+      apiFetch<RequestListItem[]>(
+        buildRequestsUrl(status, urgency, productId, origin),
+      ),
   });
 
   const handleRowClick = useCallback(
@@ -220,16 +229,33 @@ export function RequestsTable() {
         ),
         size: 120,
       }),
-      columnHelper.accessor("number", {
+      columnHelper.accessor("origin", {
         id: "source",
         header: () => (
           <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
             {t("colSource")}
           </span>
         ),
-        cell: () => (
-          <span className="text-sm text-foreground-muted">—</span>
-        ),
+        cell: (info) => {
+          const row = info.row.original;
+          if (info.getValue() === "company") {
+            return (
+              <span
+                className="inline-flex max-w-[9rem] items-center gap-1 truncate rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent"
+                title={row.company_name ?? undefined}
+              >
+                {row.company_name
+                  ? t("originPortalNamed", { company: row.company_name })
+                  : t("originPortal")}
+              </span>
+            );
+          }
+          return (
+            <span className="inline-flex items-center rounded-md bg-background-tertiary px-2 py-0.5 text-xs font-medium text-foreground-muted">
+              {t("originTelegram")}
+            </span>
+          );
+        },
         size: 140,
       }),
       columnHelper.accessor("urgency", {

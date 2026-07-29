@@ -27,6 +27,7 @@ def _make_offer(with_image: bool = False) -> MagicMock:
     offer.min_order_qty = 20
     offer.warehouse_city = "Ташкент"
     offer.description = "Свежая партия"
+    offer.company_id = None  # seller-origin (R1 W5 dual-origin branch)
     offer.seller = SimpleNamespace(
         company_name="Acme LLC",
         contact_name="Ivan",

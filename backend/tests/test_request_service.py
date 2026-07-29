@@ -38,11 +38,14 @@ def _make_mock_client(id: int = 1) -> MagicMock:
 
 
 def _make_mock_request(status_val: str = "in_progress", id: int = 42) -> MagicMock:
-    """Return a MagicMock that quacks like a Request ORM object."""
+    """Return a MagicMock that quacks like a TG-origin Request ORM object."""
     from app.models.enums import RequestStatus  # noqa: PLC0415
     req = MagicMock()
     req.id = id
     req.status = RequestStatus(status_val)
+    # TG-origin: no portal account behind it, so transition_status takes the TG DM
+    # path (a bare MagicMock attr is truthy and would wrongly select the portal path).
+    req.created_by_user_account_id = None
     return req
 
 

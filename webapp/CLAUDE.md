@@ -21,12 +21,12 @@ npm run e2e        # Playwright
 
 | Path | Role |
 |------|------|
-| `src/pages/` | `Home`, `MyRequests`, `RequestDetail`, `Notifications`, `Settings`, and the `wizard/` steps (`Step1`–`Step3`, `Confirm`). |
-| `src/store/wizardStore.ts` | zustand store backing the multi-step request-submission wizard. |
-| `src/api/client.ts` | API client; authenticates with the Telegram `initData` HMAC header. |
+| `src/pages/` | `Landing` (public marketing `/`), request flow (`Home`, `MyRequests`, `RequestDetail`, `Notifications`, `Settings`, `Profile`) + `wizard/` steps (`Step1`–`Step4`, `Confirm`); marketplace (`Market`, `OfferDetail`, `MyInquiries`, `InquiryDetail`, `Sell`, `SellOffer`, `EditOffer`); news (`News`, `NewsArticle`, `NewsDetail`); info (`HowItWorks`, `Support`). |
+| `src/store/` | `wizardStore.ts` (request wizard), `authStore.ts` (Mini-App vs. browser auth resolution), `roleStore.ts` (buyer/seller preference). |
+| `src/api/client.ts` | API client; authenticates with the Telegram `initData` HMAC header (or browser cookie). Covers `/webapp/{auth,requests,me,reference,market,seller,news}` — incl. news cards `GET /webapp/news/articles[/{id}]` + `/filters`. |
 | `src/telegram.ts` | Telegram WebApp SDK bootstrap (theme, initData). |
-| `src/i18n/` | i18next setup + `ru`/`uz`/`tr` JSON. |
-| `src/components/` | Shared UI (FieldGroup, FileUploader, StatusTimeline, StepIndicator, …). |
+| `src/i18n/` | i18next setup + `ru`/`en`/`uz`/`tr`/`fa`/`zh` JSON (`SUPPORTED_LANGS`; `fa` is RTL). |
+| `src/components/` | Shared UI (FieldGroup, FileUploader, StatusTimeline, StepIndicator, BottomTabBar, TopNav, IncotermsField, RadioCard, …). |
 | `src/types.ts` | Shared types. `vite.config.ts` | build config. |
 | `e2e/` | Playwright specs incl. a Telegram-env stub (`telegram.ts`) and cross-app spec. |
 
@@ -51,6 +51,10 @@ npm run e2e        # Playwright
   `base: "/"`). Build + load into the `webapp_static` volume from the repo root with
   `make webapp-bundle` (`deploy/Dockerfile.webapp`). The bot's WebApp button points at
   `${PUBLIC_WEBAPP_URL}/`.
-- **Locales** `ru`/`uz`/`tr` (ru primary) via i18next — keep all three in sync.
+- **Scope**: beyond the request-submission wizard this app is now a full Mini-App surface — a
+  marketplace (browse offers `/market`, submit inquiries `/inquiries`, publish/edit seller offers
+  `/sell`) and a **news reader** (`/news` cards → `/news/article/:id`, plus `/news/:id` digest reports).
+  The bottom-tab set is Market · Requests · Sell · News · Profile.
+- **Locales** `ru`/`en`/`uz`/`tr`/`fa`/`zh` (ru primary) via i18next — keep all six in sync; `fa` is RTL.
 - Forms use react-hook-form + zod. Wizard state lives in zustand, not URL/router state.
 - Separate eslint/tsconfig from `dashboard/` — this is a plain Vite app, not Next.

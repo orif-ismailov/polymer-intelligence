@@ -24,9 +24,26 @@
       "adminProducts": "Ürünler",
       "adminUsers": "Kullanıcılar",
       "offerRequests": "Teklif talepleri",
-      "newsAdmin": "Haberler (yönetici)"
+      "newsAdmin": "Haberler (yönetici)",
+      "verification": "Doğrulama",
+      "companies": "Şirketler",
+      "contracts": "Sözleşmeler",
+      "deals": "İşlemler",
+      "escrow": "Emanet",
+      "substances": "Maddeler",
+      "labOrders": "Laboratuvar",
+      "labPartners": "Laboratuvarlar"
     },
-    "guest": "Misafir"
+    "guest": "Misafir",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat",
+    "logout": "Çıkış yap",
+    "sessionChanged": {
+      "title": "Oturum değişti",
+      "switched": "Bu tarayıcıda başka bir kullanıcı oturum açtı. Bu sekme artık güncel değil — mevcut hesapla devam etmek için sayfayı yenileyin.",
+      "signedOut": "Oturum başka bir sekmede kapatıldı. Yeniden giriş yapmak için sayfayı yenileyin.",
+      "reload": "Sayfayı yenile"
+    }
   },
   "login": {
     "subtitle": "Panele giriş yapın",
@@ -73,7 +90,8 @@
       "low": "Düşük"
     },
     "urgencyAriaLabel": "Aciliyet: {label}",
-    "needsReview": "İnceleme Gerekli"
+    "needsReview": "İnceleme Gerekli",
+    "loading": "Yükleniyor…"
   },
   "home": {
     "title": "Gösterge Paneli",
@@ -294,7 +312,16 @@
     "unassigned": "Atanmamış",
     "markAsProcessed": "İşlendi Olarak İşaretle",
     "exportError": "Dışa aktarma başarısız oldu. Tekrar deneyin veya sorun devam ederse destek ile iletişime geçin.",
-    "exportAriaLabel": "Talepleri CSV olarak dışa aktar"
+    "exportAriaLabel": "Talepleri CSV olarak dışa aktar",
+    "originTelegram": "Telegram",
+    "originPortal": "Portal",
+    "originPortalNamed": "Portal: {company}",
+    "filterOrigin": "Kaynak",
+    "originOptAll": "Tüm kaynaklar",
+    "originOptClient": "Telegram",
+    "originOptCompany": "Portal",
+    "sectionPushedSuppliers": "Bilgilendirilen tedarikçiler",
+    "pushedScoreHint": "Gönderim anındaki eşleşme puanı"
   },
   "broker": {
     "intel": {
@@ -383,7 +410,51 @@
     "priceOnRequest": "Fiyat talep üzerine",
     "approve": "Onayla",
     "reject": "Reddet",
-    "notePlaceholder": "Satıcı için not (isteğe bağlı)"
+    "notePlaceholder": "Satıcı için not (isteğe bağlı)",
+    "compliance": {
+      "title": "Uyumluluk",
+      "noSubstance": "Madde belirtilmemiş",
+      "ok": "gereklilikler karşılandı",
+      "blocked": "yayın engellendi",
+      "wouldBlock": "kontrol açıkken engellenirdi",
+      "missingLicense": "Geçerli lisans gerekli: {regime}",
+      "missingDocument": "Belge gerekli: {doc}",
+      "missingProhibited": "Yasak dayanağı: {act}",
+      "approveBlocked": "Uyumluluk yayını reddetti:",
+      "level": {
+        "free": "Serbest dolaşım",
+        "docs_required": "Belge gerekli",
+        "license_required": "Lisans gerekli",
+        "prohibited": "Yasak"
+      },
+      "regime": {
+        "precursor_list_iv": "Öncü maddeler (Liste IV, ПКМ-330)",
+        "explosive_toxic": "Patlayıcı ve zehirli (ПКМ-782)",
+        "strong_acting": "Güçlü etkili (ПКМ-818)",
+        "pkm916_import": "Tehlikeli ürün ithalatı (ПКМ-916)"
+      },
+      "docKind": {
+        "sds": "güvenlik bilgi formu (SDS)",
+        "tds": "teknik veri formu (TDS)",
+        "coa": "analiz sertifikası (COA)",
+        "certificate": "sertifika"
+      }
+    },
+    "verified": "doğrulanmış",
+    "lab": {
+      "passport": "Lab pasaportu",
+      "verified": "Laboratory Verified"
+    },
+    "conflict": {
+      "alreadyModerated": "Bu teklif başka bir moderatör tarafından zaten işleme alındı: {status}. Liste yenilendi.",
+      "status": {
+        "draft": "taslak",
+        "pending_moderation": "moderasyonda",
+        "approved": "onaylandı",
+        "rejected": "reddedildi",
+        "archived": "arşivde"
+      }
+    }
   },
   "sources": {
     "title": "Kaynaklar",
@@ -511,7 +582,8 @@
       "publicUrlsOnly": "Yalnızca herkese açık URL'ler.",
       "selectPlaceholder": "{label} seçin…",
       "enterPlaceholder": "{label} girin…"
-    }
+    },
+    "readOnlyNotice": "Salt okunur görünüm: kaynak ekleme, test etme, yeniden işleme ve etkinleştirme yalnızca yöneticiye açıktır."
   },
   "alerts": {
     "pageTitle": "Uyarılar",
@@ -671,7 +743,18 @@
     "seller": "Satıcı",
     "approve": "Onayla ve satıcıya gönder",
     "reject": "Reddet",
-    "notePlaceholder": "Not (isteğe bağlı)"
+    "notePlaceholder": "Not (isteğe bağlı)",
+    "originPortal": "Portal",
+    "verified": "doğrulandı",
+    "conflict": {
+      "alreadyModerated": "Bu talep başka bir personel tarafından zaten işleme alındı: {status}. Liste yenilendi.",
+      "status": {
+        "pending": "incelemede",
+        "approved": "onaylandı",
+        "rejected": "reddedildi"
+      }
+    },
+    "decideFailed": "Karar uygulanamadı"
   },
   "newsAdmin": {
     "title": "Haber Yönetimi",
@@ -746,5 +829,561 @@
       "testFail": "Test hatası",
       "feedChangedNote": "Akışı değiştirmek testi sıfırlar — yeniden test edilene kadar kaynak devre dışı kalır."
     }
+  },
+  "verification": {
+    "title": "Doğrulama",
+    "subtitle": "Şirket doğrulama başvuruları kuyruğu",
+    "loading": "Yükleniyor…",
+    "error": "Veriler yüklenemedi",
+    "empty": "Doğrulama başvurusu yok",
+    "back": "Kuyruğa dön",
+    "inn": "VKN",
+    "unnamedCompany": "İsimsiz",
+    "filter": {
+      "label": "Durum",
+      "all": "Tümü"
+    },
+    "caseStatus": {
+      "draft": "Taslak",
+      "submitted": "Gönderildi",
+      "checks_running": "Kontroller çalışıyor",
+      "needs_info": "Bilgi gerekli",
+      "pending_review": "Karar bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "cancelled": "İptal edildi"
+    },
+    "caseType": {
+      "onboarding": "Kayıt",
+      "reverification": "Yeniden doğrulama",
+      "targeted": "Hedefli inceleme"
+    },
+    "columns": {
+      "submittedAt": "Gönderildi",
+      "company": "Şirket",
+      "caseType": "Tür",
+      "status": "Durum",
+      "checks": "Kontroller"
+    },
+    "profile": {
+      "title": "Şirket profili",
+      "legalName": "Yasal ad",
+      "shortName": "Kısa ad",
+      "publicId": "Genel kimlik",
+      "jurisdiction": "Yargı alanı",
+      "legalForm": "Yasal biçim",
+      "director": "Müdür",
+      "address": "Yasal adres",
+      "status": "Durum",
+      "verifiedAt": "Doğrulandı",
+      "roles": "Roller",
+      "bankAccounts": "Banka hesapları",
+      "mfo": "MFO"
+    },
+    "checks": {
+      "title": "Kontroller",
+      "empty": "Kontrol yok",
+      "attempts": "Denemeler",
+      "lastError": "Son hata",
+      "waivedReason": "Muafiyet nedeni",
+      "missingDocuments": "Eksik belgeler",
+      "reasons": "Nedenler",
+      "waive": "Kontrolü atla",
+      "waiveReasonPlaceholder": "Muafiyet nedeni (zorunlu)",
+      "waiveConflict": "Kontrol zaten güncellendi — veriler yeniden yüklendi"
+    },
+    "checkType": {
+      "tax_id_format": "Vergi no. formatı",
+      "bank_requisites": "Banka bilgileri",
+      "documents_complete": "Belgeler",
+      "manual_kyb": "Manuel doğrulama (KYB)",
+      "eimzo_signature": "E-IMZO imzası",
+      "gov_registry": "Devlet sicili",
+      "tax_status": "Vergi durumu",
+      "vat_status": "KDV durumu"
+    },
+    "checkStatus": {
+      "pending": "Bekliyor",
+      "running": "Çalışıyor",
+      "passed": "Geçti",
+      "warning": "Uyarı",
+      "failed": "Başarısız",
+      "unavailable": "Kullanılamaz",
+      "waived": "Muaf tutuldu"
+    },
+    "documents": {
+      "title": "Belgeler",
+      "empty": "Belge yok",
+      "download": "İndir"
+    },
+    "docKind": {
+      "charter": "Tüzük",
+      "registration": "Tescil belgesi",
+      "director_id": "Müdür kimliği",
+      "bank_statement": "Banka ekstresi",
+      "power_of_attorney": "Vekaletname",
+      "other": "Diğer",
+      "registration_certificate": "Kayıt belgesi",
+      "bank_letter": "Banka mektubu",
+      "license": "Lisans"
+    },
+    "audit": {
+      "title": "Geçmiş",
+      "empty": "Kayıt yok",
+      "staff": "Personel"
+    },
+    "decision": {
+      "title": "Karar",
+      "conflict": "Başvuru başka bir personel tarafından işlendi — veriler yeniden yüklendi",
+      "notePlaceholder": "Karar notu (isteğe bağlı)",
+      "approve": "Onayla",
+      "reject": "Reddet",
+      "requestInfo": "Bilgi iste",
+      "decidedAt": "Karar verildi"
+    },
+    "registry": {
+      "title": "Devlet sicilleri",
+      "hint": "Özel şirketler için resmî bir gerçek zamanlı API henüz yok. Şirketi açık bir hizmette doğrulayın (registr.stat.uz, my.soliq.uz, license.gov.uz) ve sonucu girin — ekran görüntüsüyle birlikte değiştirilemez bir kayıt olarak saklanır ve ilgili kontrolü güncellenir.",
+      "neverChecked": "hiç kontrol edilmedi",
+      "openEvidence": "Ekran görüntüsünü aç",
+      "kind": {
+        "company": "Şirket (EGRPO)",
+        "vat": "KDV belgesi",
+        "licenses": "Lisanslar"
+      },
+      "source": {
+        "manual": "operatör girdi",
+        "registry": "sicil yanıtı"
+      },
+      "status": {
+        "active": "Faal",
+        "liquidated": "Tasfiye edilmiş",
+        "suspended": "Askıya alınmış",
+        "unknown": "Durum belirtilmemiş"
+      },
+      "form": {
+        "title": "Kontrol sonucunu gir",
+        "kind": "Ne kontrol edildi",
+        "status": "Sicildeki durum",
+        "name": "Sicildeki unvan",
+        "director": "Yönetici",
+        "registered": "KDV mükellefi",
+        "certificateNo": "Belge numarası",
+        "rawStatus": "Sicilin ifadesi (birebir)",
+        "note": "Not (nerede ve neye bakıldı)",
+        "evidence": "Ekran görüntüsü (PNG, JPEG veya PDF)",
+        "submit": "Sonucu gir"
+      },
+      "errors": {
+        "unknown_kind": "Bilinmeyen kontrol türü.",
+        "invalid_file_type": "Bu dosya eklenemez: yalnızca PNG, JPEG veya PDF.",
+        "file_too_large": "Dosya çok büyük.",
+        "generic": "Kontrol sonucu girilemedi."
+      }
+    }
+  },
+  "companies": {
+    "title": "Şirketler",
+    "subtitle": "Şirket kaydı ve durumları",
+    "loading": "Yükleniyor…",
+    "error": "Veriler yüklenemedi",
+    "empty": "Şirket bulunamadı",
+    "back": "Listeye dön",
+    "unnamed": "İsimsiz",
+    "searchPlaceholder": "Ada veya VKN'ye göre ara",
+    "searchButton": "Ara",
+    "noRoles": "Rol yok",
+    "suspend": "Askıya al",
+    "reinstate": "Geri al",
+    "filter": {
+      "label": "Durum",
+      "all": "Tümü"
+    },
+    "status": {
+      "draft": "Taslak",
+      "pending_verification": "Doğrulamada",
+      "verified": "Doğrulandı",
+      "rejected": "Reddedildi",
+      "suspended": "Askıya alındı",
+      "liquidated": "Tasfiye edildi"
+    },
+    "columns": {
+      "name": "Ad",
+      "inn": "VKN",
+      "jurisdiction": "Yargı alanı",
+      "status": "Durum",
+      "verifiedAt": "Doğrulandı",
+      "roles": "Roller"
+    },
+    "profile": {
+      "title": "Şirket profili",
+      "legalName": "Yasal ad",
+      "shortName": "Kısa ad",
+      "publicId": "Genel kimlik",
+      "jurisdiction": "Yargı alanı",
+      "taxId": "VKN",
+      "legalForm": "Yasal biçim",
+      "director": "Müdür",
+      "address": "Yasal adres",
+      "verifiedAt": "Doğrulandı",
+      "reverificationDue": "Yeniden doğrulama",
+      "roles": "Roller"
+    },
+    "role": {
+      "buyer": "Alıcı",
+      "seller": "Satıcı",
+      "broker": "Aracı",
+      "manufacturer": "Üretici",
+      "importer": "İthalatçı",
+      "trader": "Tüccar",
+      "logistics_provider": "Lojistik sağlayıcı",
+      "distributor": "Distribütör",
+      "laboratory": "Laboratuvar",
+      "insurance_provider": "Sigorta sağlayıcı"
+    },
+    "roles": {
+      "manufacturer": "Üretici",
+      "importer": "İthalatçı",
+      "trader": "Tüccar",
+      "logistics_provider": "Lojistik",
+      "distributor": "Distribütör",
+      "laboratory": "Laboratuvar",
+      "insurance_provider": "Sigorta"
+    }
+  },
+  "contracts": {
+    "title": "Sözleşmeler",
+    "subtitle": "Elektronik sözleşme gözetimi (salt okunur).",
+    "filterAll": "Tüm durumlar",
+    "search": "Başlık veya kimliğe göre ara…",
+    "colTitle": "Başlık",
+    "colParties": "Taraflar",
+    "colStatus": "Durum",
+    "empty": "Sözleşme yok",
+    "selectHint": "Görüntülemek için bir sözleşme seçin.",
+    "openDocument": "Belgeyi aç",
+    "signatures": "İmzalar",
+    "noSignatures": "İmza yok",
+    "timeline": "Zaman çizelgesi",
+    "status": {
+      "draft": "Taslak",
+      "pending_counterparty": "Karşı taraf bekleniyor",
+      "pending_signatures": "İmzalar bekleniyor",
+      "active": "Aktif",
+      "declined": "Reddedildi",
+      "cancelled": "İptal edildi",
+      "expired": "Süresi doldu"
+    }
+  },
+  "deals": {
+    "title": "İşlemler",
+    "subtitle": "İşlem denetimi: zaman çizelgesi, belgeler, sohbet (salt okunur), uyuşmazlık çözümü.",
+    "filterAll": "Tüm durumlar",
+    "search": "Numaraya göre ara…",
+    "empty": "İşlem bulunamadı",
+    "selectHint": "Listeden bir işlem seçin.",
+    "total": "Toplam: {count}",
+    "colNumber": "Numara",
+    "colParties": "Taraflar",
+    "colAmount": "Tutar",
+    "colStatus": "Durum",
+    "timeline": "Zaman çizelgesi",
+    "documents": "Belgeler",
+    "noDocuments": "Belge yok",
+    "chat": "İşlem sohbeti",
+    "chatReadOnly": "salt okunur",
+    "noMessages": "Mesaj yok",
+    "cancelledReason": "İptal nedeni",
+    "status": {
+      "negotiation": "Müzakere",
+      "contract_pending": "Sözleşme bekleniyor",
+      "contract_signed": "Sözleşme imzalandı",
+      "payment_pending": "Ödeme bekleniyor",
+      "paid_escrow": "Ödendi (emanet)",
+      "shipped": "Sevk edildi",
+      "delivered": "Teslim alındı",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi",
+      "disputed": "Uyuşmazlık"
+    },
+    "actor": {
+      "buyer": "alıcı",
+      "seller": "satıcı",
+      "staff": "ekip",
+      "system": "sistem"
+    },
+    "docKind": {
+      "contract": "Sözleşme",
+      "invoice": "Fatura",
+      "lab_passport": "Kalite pasaportu",
+      "transport": "Taşıma",
+      "other": "Diğer"
+    },
+    "resolve": {
+      "title": "Uyuşmazlık çözümü",
+      "comment": "Açıklama (zorunlu)",
+      "restore": "Duruma geri al",
+      "cancel": "İşlemi iptal et",
+      "adminOnly": "Uyuşmazlığı yalnızca yönetici çözebilir."
+    }
+  },
+  "escrow": {
+    "title": "Emanet ödemeleri",
+    "subtitle": "İki kuyruk: bize kim borçlu ve kime ödeme yapmalıyız. Para hareketini yalnızca banka ekstresiyle karşılaştırdıktan sonra işaretleyin.",
+    "filterAll": "Tüm durumlar",
+    "empty": "Ödeme yok",
+    "selectHint": "Ayrıntılar için bir ödeme seçin.",
+    "terminal": "İşlem tamamlandı — ödeme artık değişmez.",
+    "colDeal": "İşlem",
+    "colParties": "Taraflar",
+    "colAmount": "Tutar",
+    "colStatus": "Durum",
+    "dealStatus": "İşlem durumu",
+    "mode": "Mod",
+    "fundedAt": "Giriş",
+    "releasedAt": "Ödeme",
+    "refundedAt": "İade",
+    "lastNote": "Not",
+    "status": {
+      "pending": "Ödeme bekleniyor",
+      "funded": "Fonlar bloke edildi",
+      "released": "Satıcıya aktarıldı",
+      "refunded": "Alıcıya iade edildi"
+    },
+    "counters": {
+      "awaitingFunds": "Ödeme bekleyen",
+      "awaitingPayout": "Ödeme yapılacak",
+      "settled": "Tamamlanan",
+      "blocked": "Engellenen",
+      "providerHolds": "Banka ile uyuşmazlıklar"
+    },
+    "mark": {
+      "title": "Para hareketini işaretle",
+      "note": "Not: banka referansı, ekstre numarası…",
+      "confirm": "Bankada paranın fiilen hareket ettiğini onaylıyorum",
+      "funded": "Para geldi",
+      "released": "Para satıcıya ödendi",
+      "refunded": "Para alıcıya iade edildi",
+      "adminOnly": "Para hareketini yalnızca yönetici işaretleyebilir."
+    },
+    "blocked": {
+      "title": "Faturasız işlemler",
+      "hint": "Sözleşme imzalandı ama fatura kesilemiyor. Operatör müdahalesi gerekiyor.",
+      "reason": {
+        "no_amount": "Tutar mutabık değil",
+        "not_opened_yet": "Fatura henüz kesilmedi"
+      }
+    },
+    "modeValue": {
+      "stub": "operatör elle onaylar",
+      "live": "banka adaptörü"
+    },
+    "errors": {
+      "release_before_delivery": "Satıcıya ödeme ancak alıcı teslimatı onayladıktan sonra yapılabilir.",
+      "deal_transition_blocked": "İşlem bu duruma geçemez. İade için önce işlemde anlaşmazlık açın.",
+      "invalid_transition": "Ödeme için bu geçiş mümkün değil — sayfayı yenileyip mevcut durumu kontrol edin.",
+      "confirmation_required": "Paranın fiilen hareket ettiğini onaylayın.",
+      "note_required": "Not zorunludur."
+    },
+    "providerHolds": {
+      "title": "Operatör müdahalesi gerektiren banka bildirimleri",
+      "hint": "Bu bildirimler kaydedildi ancak otomatik uygulanmadı: ya anlaşmayı kapatıyorlar ya da kayıtlarımızla çelişiyorlar. Banka ekstresiyle karşılaştırıp ödemeyi elle işaretleyin — satır kendiliğinden kaybolur.",
+      "disagreement": "Banka: {bank} · Bizde: {ours}",
+      "unreadable": "Bildirim çözümlenemedi",
+      "open": "Ödemeyi aç",
+      "reason": {
+        "needs_operator": "Geri ödeme yalnızca operatör kararıyla",
+        "release_before_delivery": "Teslim onayından önce ödeme",
+        "unknown_ref": "Bilinmeyen escrow referansı",
+        "wrong_rail": "Ödeme operatör tarafından elle yürütülüyor",
+        "amount_mismatch": "Tutar faturayla uyuşmuyor",
+        "currency_mismatch": "Para birimi faturayla uyuşmuyor",
+        "invalid_transition": "Geçersiz durum geçişi",
+        "deal_blocked": "Anlaşma bu duruma geçemez",
+        "unknown_provider": "Sağlayıcı bağlı değil",
+        "malformed": "Bildirim ayrıştırılamadı"
+      }
+    }
+  },
+  "substances": {
+    "title": "Madde kataloğu",
+    "subtitle": "ПКМ listelerinin sayısallaştırılması — yayın kontrolü için doğruluk kaynağı",
+    "provisional": "Tohum sürümü v1-provisional: yalnızca hukuki haritada doğrulanan maddeler dahildir. ПКМ ekleri hukuki inceleme sonrası eklenecek — o zamana kadar yayın engelini açmayın.",
+    "add": "Madde ekle",
+    "addTitle": "Yeni madde",
+    "editTitle": "Maddeyi düzenle",
+    "edit": "Düzenle",
+    "deactivate": "Devre dışı",
+    "activate": "Etkinleştir",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "empty": "Sonuç yok",
+    "error": "Katalog yüklenemedi",
+    "searchPlaceholder": "Ad, CAS, GTİP…",
+    "allLevels": "Tüm seviyeler",
+    "columns": {
+      "name": "Ad",
+      "hs": "GTİP",
+      "cas": "CAS",
+      "level": "Düzenleme",
+      "threshold": "Eşik",
+      "source": "Dayanak"
+    },
+    "fields": {
+      "code": "Kod (slug)",
+      "nameRu": "Ad (ru)",
+      "nameUz": "Ad (uz)",
+      "nameEn": "Ad (en)",
+      "hs": "GTİP kodu",
+      "hsHint": "Birincil hukuki tanımlayıcı",
+      "cas": "CAS",
+      "casHint": "İkincil, SDS ve AI için",
+      "level": "Düzenleme seviyesi",
+      "regime": "Rejim",
+      "regimeHint": "Düzenlemeye tabi maddeler için zorunlu",
+      "threshold": "Eşik konsantrasyon, %",
+      "thresholdHint": "Eşiğin altında rejim uygulanmaz",
+      "exemption": "Yıllık muafiyet limiti",
+      "exemptionUnit": "Birim",
+      "licenseCategory": "Lisans kategorisi",
+      "requiredDocs": "Zorunlu belgeler",
+      "synonyms": "Eş anlamlılar",
+      "synonymsHint": "Virgülle ayırın",
+      "sourceAct": "Dayanak mevzuat",
+      "sourceActHint": "Örn.: ПКМ №330, 12.11.2015, Liste IV"
+    },
+    "errors": {
+      "exists": "Bu kod veya CAS ile bir madde zaten var"
+    },
+    "level": {
+      "free": "Serbest dolaşım",
+      "docs_required": "Belge gerekli",
+      "license_required": "Lisans gerekli",
+      "prohibited": "Yasak"
+    },
+    "regime": {
+      "precursor_list_iv": "Öncü maddeler (Liste IV, ПКМ-330)",
+      "explosive_toxic": "Patlayıcı ve zehirli (ПКМ-782)",
+      "strong_acting": "Güçlü etkili (ПКМ-818)",
+      "pkm916_import": "Tehlikeli ürün ithalatı (ПКМ-916)"
+    },
+    "docKind": {
+      "sds": "güvenlik bilgi formu (SDS)",
+      "tds": "teknik veri formu (TDS)",
+      "coa": "analiz sertifikası (COA)",
+      "certificate": "sertifika"
+    }
+  },
+  "licenses": {
+    "title": "Lisanslar",
+    "hint": "Şirketin kabul edilen belgesine göre operatör tarafından kaydedilir. Düzenlemeye tabi maddeli ilanlarda kontrol edilir.",
+    "register": "Kaydet",
+    "empty": "Lisans yok",
+    "revoke": "İptal et",
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "active": "Geçerli",
+    "until": "kadar",
+    "perpetual": "süresiz",
+    "fields": {
+      "regime": "Rejim",
+      "category": "Kategori",
+      "number": "Numara",
+      "issuedBy": "Veren kurum",
+      "expiresAt": "Geçerlilik",
+      "reason": "İptal nedeni"
+    },
+    "status": {
+      "pending_review": "İncelemede",
+      "active": "Geçerli",
+      "expired": "Süresi doldu",
+      "revoked": "İptal edildi",
+      "rejected": "Reddedildi"
+    },
+    "regime": {
+      "precursor_list_iv": "Öncü maddeler (Liste IV, ПКМ-330)",
+      "explosive_toxic": "Patlayıcı ve zehirli (ПКМ-782)",
+      "strong_acting": "Güçlü etkili (ПКМ-818)",
+      "pkm916_import": "Tehlikeli ürün ithalatı (ПКМ-916)"
+    }
+  },
+  "labOrders": {
+    "title": "Laboratuvar talepleri",
+    "subtitle": "Analizi iş ortağı laboratuvar yapar — durumları operatör yürütür. Talepler en eskiden başlar.",
+    "filterAll": "Tüm durumlar",
+    "empty": "Talep yok",
+    "selectHint": "Kuyruktan bir talep seçin.",
+    "terminal": "Talep tamamlandı — başka işlem yok.",
+    "colNumber": "Numara",
+    "colCompany": "Şirket",
+    "colSubject": "Konu",
+    "colStatus": "Durum",
+    "company": "Şirket",
+    "subject": "Konu",
+    "subjectDeal": "İşlem #{id}",
+    "substance": "Madde",
+    "volume": "Numune hacmi",
+    "createdAt": "Oluşturuldu",
+    "completedAt": "Tamamlandı",
+    "rejectedReason": "Ret nedeni",
+    "operatorNote": "Operatör notu",
+    "partner": "Laboratuvar",
+    "partnerNone": "Atanmadı",
+    "resultAttached": "Pasaport tekliften/işleme eklendi.",
+    "counters": {
+      "submitted": "Yeni",
+      "inProgress": "İşlemde",
+      "done": "Tamam",
+      "rejected": "Reddedildi"
+    },
+    "status": {
+      "submitted": "Gönderildi",
+      "accepted": "Kabul edildi",
+      "sample_awaited": "Numune bekleniyor",
+      "in_analysis": "Analizde",
+      "done": "Tamamlandı",
+      "rejected": "Reddedildi"
+    },
+    "act": {
+      "title": "İşlem",
+      "note": "Not (rette zorunlu)",
+      "reasonHint": "«Tamam» pasaport yüklemeyi açar — belgesiz durum atanmaz.",
+      "accepted": "Kabul et",
+      "sample_awaited": "Numune bekle",
+      "in_analysis": "Analize al",
+      "rejected": "Reddet",
+      "uploadResult": "Pasaport yükle (PDF)"
+    },
+    "errors": {
+      "invalid_transition": "Mevcut durumdan bu geçiş yapılamaz.",
+      "reason_required": "Ret nedenini belirtin.",
+      "result_required": "«Tamam» için pasaport yüklenmelidir.",
+      "invalid_file_type": "Pasaport yalnızca PDF olabilir.",
+      "file_too_large": "Dosya çok büyük.",
+      "orderer_left_the_deal": "Talep sahibi artık işlem tarafı değil — belge eklenemez."
+    }
+  },
+  "labPartners": {
+    "title": "İş ortağı laboratuvarlar",
+    "subtitle": "Laboratuvar dizini. Analist okur (atama sırasında seçer), yalnızca yönetici düzenler.",
+    "empty": "Henüz laboratuvar yok",
+    "colName": "Ad",
+    "colContacts": "İletişim",
+    "colState": "Durum",
+    "active": "Aktif",
+    "retired": "Devre dışı",
+    "retire": "Devre dışı bırak",
+    "restore": "Geri al",
+    "addTitle": "Laboratuvar ekle",
+    "editTitle": "Laboratuvarı düzenle",
+    "fieldName": "Ad",
+    "fieldContactName": "İlgili kişi",
+    "fieldPhone": "Telefon",
+    "fieldEmail": "E-posta",
+    "fieldAddress": "Adres",
+    "fieldNote": "Not",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "adminOnly": "Dizini yönetici düzenler."
   }
 }

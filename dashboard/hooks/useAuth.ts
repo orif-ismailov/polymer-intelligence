@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { setToken, getToken } from "@/lib/api";
+import { setToken, getToken, logoutSession } from "@/lib/api";
+import { announceSession } from "@/lib/session";
 
 export interface AuthUser {
   id: number;
@@ -55,13 +56,25 @@ export function useAuth() {
   const login = useCallback((newToken: string) => {
     setToken(newToken);
     setTokenState(newToken);
-    setUser(parseJwtPayload(newToken));
+    const next = parseJwtPayload(newToken);
+    setUser(next);
+    // The refresh cookie is browser-wide: this sign-in re-points every other open
+    // tab at `next`. Say so, so they can warn instead of switching in silence.
+    if (next) announceSession({ type: "signin", userId: next.id });
   }, []);
 
-  const logout = useCallback(() => {
-    setToken(null);
+  /**
+   * End the session everywhere, not just in this tab.
+   *
+   * Revoking the refresh cookie server-side is the part that matters: the access
+   * token is in memory only, so without it "logging out" would leave a 7-day
+   * silent re-auth sitting on the workstation. The redirect happens either way.
+   */
+  const logout = useCallback(async () => {
+    await logoutSession();
     setTokenState(null);
     setUser(null);
+    announceSession({ type: "signout" });
     if (typeof window !== "undefined") {
       window.location.href = "/login";
     }

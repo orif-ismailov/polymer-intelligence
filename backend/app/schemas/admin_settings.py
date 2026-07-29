@@ -20,6 +20,9 @@ class SettingItem(BaseModel):
     value: bool | int | str
     default: bool | int | str
     is_overridden: bool
+    #: Closed value set for a `str` setting (e.g. escrow_mode) — the panel renders
+    #: a select instead of a free-text input. None means free text.
+    choices: list[str] | None = None
 
 
 class NewsStats(BaseModel):

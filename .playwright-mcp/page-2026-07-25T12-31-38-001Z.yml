@@ -1,0 +1,93 @@
+- generic [ref=f9e10]:
+  - banner [ref=f9e11]:
+    - generic [ref=f9e12]:
+      - link "IA IMEX AI" [ref=f9e13] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f9e14]: IA
+        - generic [ref=f9e15]: IMEX AI
+      - button "Создать компанию" [ref=f9e17] [cursor=pointer]
+  - generic [ref=f9e18]:
+    - complementary [ref=f9e19]:
+      - navigation "Кабинет" [ref=f9e21]:
+        - link "Главная" [ref=f9e22] [cursor=pointer]:
+          - /url: /
+        - link "Компании" [ref=f9e25] [cursor=pointer]:
+          - /url: /companies
+        - link "Предложения" [ref=f9e28] [cursor=pointer]:
+          - /url: /offers
+        - link "Настройки" [ref=f9e32] [cursor=pointer]:
+          - /url: /settings
+    - main [ref=f9e36]:
+      - generic [ref=f9e37]:
+        - generic [ref=f9e38]:
+          - heading "Регистрация компании" [level=1] [ref=f9e39]
+          - paragraph [ref=f9e40]: Шаг 4 из 5
+        - list "Progress" [ref=f9e41]:
+          - listitem [ref=f9e42]:
+            - generic [ref=f9e43]:
+              - generic [ref=f9e44]: ✓
+              - generic [ref=f9e45]: Реквизиты
+          - listitem [ref=f9e46]:
+            - generic [ref=f9e47]:
+              - generic [ref=f9e48]: ✓
+              - generic [ref=f9e49]: Деятельность
+          - listitem [ref=f9e50]:
+            - generic [ref=f9e51]:
+              - generic [ref=f9e52]: ✓
+              - generic [ref=f9e53]: Банк
+          - listitem [ref=f9e54]:
+            - generic [ref=f9e55]:
+              - generic [ref=f9e56]: "4"
+              - generic [ref=f9e57]: Документы
+          - listitem [ref=f9e58]:
+            - generic [ref=f9e59]:
+              - generic [ref=f9e60]: "5"
+              - generic [ref=f9e61]: Подтверждение
+        - generic [ref=f9e64]:
+          - generic [ref=f9e65]:
+            - heading "Документы" [level=2] [ref=f9e66]
+            - paragraph [ref=f9e67]: Загрузите учредительные документы для верификации.
+          - list [ref=f9e68]:
+            - listitem [ref=f9e69]: • Свидетельство о регистрации обязательно.
+          - generic [ref=f9e70]:
+            - generic [ref=f9e71]:
+              - generic [ref=f9e72]:
+                - generic [ref=f9e73]: Свидетельство о регистрации
+                - generic [ref=f9e74]: обязательно
+              - button "Choose File" [ref=f9e75]
+              - generic [ref=f9e105]:
+                - generic [ref=f9e106]:
+                  - generic [ref=f9e107]: 📄
+                  - generic [ref=f9e108]:
+                    - paragraph [ref=f9e109]: test-doc.png
+                    - paragraph [ref=f9e110]: 4.0 KB
+                - generic [ref=f9e111]:
+                  - button "Заменить" [ref=f9e112] [cursor=pointer]
+                  - button "Убрать" [ref=f9e113] [cursor=pointer]
+            - generic [ref=f9e79]:
+              - generic [ref=f9e80]:
+                - generic [ref=f9e81]: Банковское письмо
+                - generic [ref=f9e82]: необязательно
+              - button "Choose File" [ref=f9e83]
+              - button "Загрузить документ Нажмите, чтобы выбрать файл (PDF, JPG, PNG до 20 МБ)" [ref=f9e84] [cursor=pointer]:
+                - generic [ref=f9e85]: Загрузить документ
+                - generic [ref=f9e86]: Нажмите, чтобы выбрать файл (PDF, JPG, PNG до 20 МБ)
+            - generic [ref=f9e87]:
+              - generic [ref=f9e88]:
+                - generic [ref=f9e89]: Удостоверение руководителя
+                - generic [ref=f9e90]: необязательно
+              - button "Choose File" [ref=f9e91]
+              - button "Загрузить документ Нажмите, чтобы выбрать файл (PDF, JPG, PNG до 20 МБ)" [ref=f9e92] [cursor=pointer]:
+                - generic [ref=f9e93]: Загрузить документ
+                - generic [ref=f9e94]: Нажмите, чтобы выбрать файл (PDF, JPG, PNG до 20 МБ)
+            - generic [ref=f9e95]:
+              - generic [ref=f9e96]:
+                - generic [ref=f9e97]: Лицензия
+                - generic [ref=f9e98]: необязательно
+              - button "Choose File" [ref=f9e99]
+              - button "Загрузить документ Нажмите, чтобы выбрать файл (PDF, JPG, PNG до 20 МБ)" [ref=f9e100] [cursor=pointer]:
+                - generic [ref=f9e101]: Загрузить документ
+                - generic [ref=f9e102]: Нажмите, чтобы выбрать файл (PDF, JPG, PNG до 20 МБ)
+          - generic [ref=f9e103]:
+            - button "Назад" [ref=f9e104] [cursor=pointer]
+            - button "Далее" [ref=f9e114] [cursor=pointer]

@@ -50,6 +50,25 @@ export async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+/**
+ * End the session server-side: POST /auth/logout clears the httpOnly refresh
+ * cookie, then the in-memory access token is dropped.
+ *
+ * Clearing the token alone would not be a logout — the 7-day refresh cookie
+ * silently re-authenticates on the next page load, so closing the tab never
+ * ended the session. Best-effort on the network call: if it fails the cookie may
+ * survive, but this tab is signed out either way and the caller redirects to
+ * /login rather than pretending nothing happened.
+ */
+export async function logoutSession(): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
+  } catch {
+    // Network failure — nothing to report; the token is dropped regardless.
+  }
+  setToken(null);
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -112,5 +131,47 @@ export async function apiFetch<T>(
     return undefined as T;
   }
 
+  return response.json() as Promise<T>;
+}
+
+/**
+ * Multipart upload (P6 — the lab-result PDF).
+ *
+ * Separate from `apiFetch` because that one always sets
+ * `Content-Type: application/json`; on a FormData body the browser must set the
+ * header itself so it can add the multipart boundary. Overriding it by hand
+ * produces a request the server cannot parse.
+ */
+export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const response = await fetch(url, {
+    method: "POST",
+    body: form,
+    headers,
+    credentials: "include",
+  });
+
+  if (response.status === 401) {
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new ApiError(401, null, "Unauthorized — redirecting to login");
+  }
+  if (!response.ok) {
+    let body: unknown = null;
+    try {
+      body = await response.json();
+    } catch {
+      // ignore parse failure on error responses
+    }
+    throw new ApiError(
+      response.status,
+      body,
+      `API request failed: ${response.status} ${response.statusText}`,
+    );
+  }
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }

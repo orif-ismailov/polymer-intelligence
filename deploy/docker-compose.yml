@@ -120,6 +120,42 @@ services:
       echo \"minio-init: bucket $${S3_BUCKET} ready\"
       "
 
+  # ── E-IMZO verification sidecar (UNICON e-imzo-server; R3) ─────────────────
+  # National O'zDSt PKCS#7 verification — stock crypto libs cannot verify it, so
+  # ALL signature verification is delegated to this Java server. The image is an
+  # OPERATOR PREREQUISITE (obtain per UNICON licensing; push to the private
+  # registry) — set EIMZO_SERVER_IMAGE in .env. Profile-gated (`eimzo`) so a plain
+  # `docker compose up` never requires the artifact: when the sidecar is absent the
+  # gateway adapter opens its circuit and the API returns 503 (ProviderUnavailable),
+  # and the manual verification path stays fully usable (degradation invariant).
+  # Root trust: mount the production UZ root/intermediate certs (refresh procedure
+  # in deploy/CLAUDE.md). Internal-only — no published ports; the API/worker reach
+  # it by service name at EIMZO_SERVER_URL (default http://eimzo-server:8080).
+  eimzo-server:
+    # Placeholder default keeps the default stack parseable (`docker compose config`
+    # / `make smoke` evaluate interpolation even for inactive-profile services). The
+    # placeholder does not resolve — activating the `eimzo` profile without setting
+    # EIMZO_SERVER_IMAGE fails clearly at pull time, which is the intended signal.
+    image: ${EIMZO_SERVER_IMAGE:-eimzo-server-image-unset:latest}
+    restart: unless-stopped
+    profiles: ["eimzo"]
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      EIMZO_CHALLENGE_TTL_SECONDS: ${EIMZO_CHALLENGE_TTL_SECONDS:-300}
+    volumes:
+      # Production UZ root/intermediate CA bundle (see deploy/CLAUDE.md for refresh).
+      - ./eimzo/truststore:/opt/eimzo/truststore:ro
+    # No host ports — internal-only (T-06-10).
+    healthcheck:
+      # Endpoint path is distribution-specific; adjust per the UNICON build if it
+      # exposes a different liveness path.
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # ── API (FastAPI + uvicorn; also serves the aiogram webhook) ───────────────
   api:
     # Prebuilt image pulled from GHCR (CI `build-images` job). IMAGE_TAG selects the
@@ -161,7 +197,7 @@ services:
     # Migrate + seed (reference, staff, sources) BEFORE serving — idempotent
     # pre-start steps so a fresh deploy comes up fully provisioned with no manual
     # step. NO --reload in production (immutable image, no bind-mount watcher).
-    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_sources && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_sources && python -m app.seed.seed_contract_templates && python -m app.seed.seed_substances && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     # No host ports — only nginx reaches the api over the docker network (T-06-10).
     # No source bind-mount — the image is the single source of truth in prod.
     healthcheck:
@@ -204,7 +240,7 @@ services:
       # worker consumes) lazily imports userbot.heartbeat. Repo-root package, not in
       # the image, so mount it read-only at /app/userbot (WORKDIR is /app) too.
       - ../userbot:/app/userbot:ro
-    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default
+    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default,verify
     # No host ports.
 
   # ── Celery Beat (scheduler) ───────────────────────────────────────────────
@@ -332,6 +368,9 @@ services:
       # Built static Telegram Web App served directly by nginx at the root of
       # ai-imex.com. Populate it with `make webapp-bundle`. See deployment-guide §4a.
       - webapp_static:/var/www/webapp:ro
+      # Built client portal (Vite) served at the root of cabinet.ai-imex.com.
+      # Populate it with `make portal-bundle`.
+      - portal_static:/var/www/portal:ro
     depends_on:
       - api
       - dashboard
@@ -355,6 +394,22 @@ services:
     # Replace the bundle atomically-ish: clear, then copy the freshly built dist.
     command: sh -c "rm -rf /out/* && cp -a /dist/. /out/ && echo '[webapp-build] bundle loaded into webapp_static'"
 
+  # ── Portal bundle builder (one-shot; profile-gated, never runs on `up`) ───────
+  # Builds the client portal (Vite) and loads the static bundle into portal_static,
+  # which nginx serves at the root of cabinet.ai-imex.com. Run at deploy time and on
+  # every portal change:
+  #   docker compose -f deploy/docker-compose.yml --profile build run --rm --build portal-build
+  #   (or: make portal-bundle)
+  portal-build:
+    profiles: ["build"]
+    image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-portal:${IMAGE_TAG:-main}
+    build:
+      context: ../portal
+      dockerfile: ../deploy/Dockerfile.portal
+    volumes:
+      - portal_static:/out
+    command: sh -c "rm -rf /out/* && cp -a /dist/. /out/ && echo '[portal-build] bundle loaded into portal_static'"
+
 volumes:
   postgres_data:
   redis_data:
@@ -362,3 +417,4 @@ volumes:
   letsencrypt:
   certbot_www:
   webapp_static:
+  portal_static:

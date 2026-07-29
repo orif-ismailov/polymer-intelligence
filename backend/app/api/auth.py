@@ -1,5 +1,5 @@
 """
-Auth API endpoints: POST /auth/login and POST /auth/refresh.
+Auth API endpoints: POST /auth/login, POST /auth/refresh and POST /auth/logout.
 
 DEC-auth-split: access token (15 min) in response body; refresh token (7 d) httpOnly cookie.
 REQ-nfr-security: all login attempts (success only) write an audit_log row (T-03-07).
@@ -26,6 +26,7 @@ from app.schemas.auth import LoginRequest, TokenResponse
 from app.services.audit_service import write_audit
 from app.services.auth_service import (
     authenticate,
+    clear_refresh_cookie,
     get_refresh_cookie_name,
     set_refresh_cookie,
 )
@@ -82,6 +83,47 @@ def login(
         access_token=create_access_token(subject=str(user.id), role=user.role.value),
         role=user.role.value,
     )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(
+    response: Response,
+    db: Session = Depends(get_db),
+    refresh_token_cookie: str | None = Cookie(default=None, alias=_REFRESH_COOKIE),
+) -> None:
+    """End the staff session: clear the refresh cookie so the browser cannot re-auth.
+
+    The access token lives only in memory, so the *cookie* is the session — without
+    this a staff member could not end their own session at all, and closing the tab
+    left a 7-day re-auth sitting on a possibly shared workstation.
+
+    Deliberately unauthenticated: an expired access token must not be the reason you
+    are stuck signed in, and the cookie is the only thing being revoked. Identity for
+    the audit row comes from the cookie's verified `sub` claim (T-03-06), never from
+    the request; an absent or unreadable cookie is still a 204 — logout is idempotent
+    and must never leave the caller believing they are still signed in.
+    """
+    staff_user_id: int | None = None
+    if refresh_token_cookie is not None:
+        try:
+            subject = decode_token(refresh_token_cookie, expected_type="refresh").get("sub")
+            staff_user_id = int(subject) if subject is not None else None
+        except (JWTError, ValueError, TypeError):
+            staff_user_id = None  # unreadable cookie: still clear it, just unattributed
+
+    if staff_user_id is not None:
+        write_audit(
+            db=db,
+            staff_user_id=staff_user_id,
+            action="auth.logout",
+            entity="staff_users",
+            entity_id=str(staff_user_id),
+            details={},
+        )
+        db.commit()
+
+    # The Set-Cookie header set here is merged into the 204 FastAPI builds.
+    clear_refresh_cookie(response=response)
 
 
 @router.post("/refresh", response_model=TokenResponse)

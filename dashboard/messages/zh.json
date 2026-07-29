@@ -24,9 +24,26 @@
       "adminProducts": "产品",
       "adminUsers": "用户",
       "offerRequests": "报价请求",
-      "newsAdmin": "新闻（管理）"
+      "newsAdmin": "新闻（管理）",
+      "verification": "验证",
+      "companies": "公司",
+      "contracts": "合同",
+      "deals": "交易",
+      "escrow": "托管",
+      "substances": "物质",
+      "labOrders": "实验室",
+      "labPartners": "合作实验室"
     },
-    "guest": "访客"
+    "guest": "访客",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单",
+    "logout": "退出登录",
+    "sessionChanged": {
+      "title": "会话已变更",
+      "switched": "另一位用户已在此浏览器登录。当前标签页显示的是旧账号——请刷新页面以使用当前账号继续。",
+      "signedOut": "会话已在其他标签页中结束。请刷新页面重新登录。",
+      "reload": "刷新页面"
+    }
   },
   "login": {
     "subtitle": "登录到控制台",
@@ -73,7 +90,8 @@
       "low": "低"
     },
     "urgencyAriaLabel": "紧急程度：{label}",
-    "needsReview": "需要审核"
+    "needsReview": "需要审核",
+    "loading": "加载中…"
   },
   "home": {
     "title": "仪表盘",
@@ -287,7 +305,16 @@
     "unassigned": "未指定",
     "markAsProcessed": "标记为已处理",
     "exportError": "导出执行失败。请重试，如问题持续存在请联系支持。",
-    "exportAriaLabel": "将需求导出为 CSV"
+    "exportAriaLabel": "将需求导出为 CSV",
+    "originTelegram": "Telegram",
+    "originPortal": "门户",
+    "originPortalNamed": "门户：{company}",
+    "filterOrigin": "来源",
+    "originOptAll": "所有来源",
+    "originOptClient": "Telegram",
+    "originOptCompany": "门户",
+    "sectionPushedSuppliers": "已通知的供应商",
+    "pushedScoreHint": "推送时的匹配评分"
   },
   "broker": {
     "intel": {
@@ -376,7 +403,51 @@
     "priceOnRequest": "价格面议",
     "approve": "批准",
     "reject": "驳回",
-    "notePlaceholder": "给卖方的备注（可选）"
+    "notePlaceholder": "给卖方的备注（可选）",
+    "compliance": {
+      "title": "合规",
+      "noSubstance": "未指定物质",
+      "ok": "要求已满足",
+      "blocked": "发布已被拦截",
+      "wouldBlock": "若开启校验将被拦截",
+      "missingLicense": "需要有效许可证：{regime}",
+      "missingDocument": "需要文件：{doc}",
+      "missingProhibited": "禁止依据：{act}",
+      "approveBlocked": "合规拒绝发布：",
+      "level": {
+        "free": "自由流通",
+        "docs_required": "需要文件",
+        "license_required": "需要许可证",
+        "prohibited": "禁止"
+      },
+      "regime": {
+        "precursor_list_iv": "前体化学品（第四清单，ПКМ-330）",
+        "explosive_toxic": "爆炸性与有毒（ПКМ-782）",
+        "strong_acting": "强效物质（ПКМ-818）",
+        "pkm916_import": "危险品进口（ПКМ-916）"
+      },
+      "docKind": {
+        "sds": "安全数据表 (SDS)",
+        "tds": "技术数据表 (TDS)",
+        "coa": "分析证书 (COA)",
+        "certificate": "证书"
+      }
+    },
+    "verified": "已认证",
+    "lab": {
+      "passport": "检测报告",
+      "verified": "Laboratory Verified"
+    },
+    "conflict": {
+      "alreadyModerated": "该报价已由其他审核人处理：{status}。列表已刷新。",
+      "status": {
+        "draft": "草稿",
+        "pending_moderation": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝",
+        "archived": "已归档"
+      }
+    }
   },
   "sources": {
     "title": "数据源",
@@ -496,7 +567,8 @@
       "publicUrlsOnly": "仅限公开 URL。",
       "selectPlaceholder": "请选择 {label}…",
       "enterPlaceholder": "请输入 {label}…"
-    }
+    },
+    "readOnlyNotice": "只读视图：添加、测试、重新处理和启用数据源仅限管理员。"
   },
   "alerts": {
     "pageTitle": "预警",
@@ -656,7 +728,18 @@
     "seller": "卖方",
     "approve": "批准并发送给卖方",
     "reject": "驳回",
-    "notePlaceholder": "备注（可选）"
+    "notePlaceholder": "备注（可选）",
+    "originPortal": "门户",
+    "verified": "已验证",
+    "conflict": {
+      "alreadyModerated": "该询价已由其他同事处理：{status}。列表已刷新。",
+      "status": {
+        "pending": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝"
+      }
+    },
+    "decideFailed": "无法应用该决定"
   },
   "newsAdmin": {
     "title": "新闻管理",
@@ -731,5 +814,561 @@
       "testFail": "测试失败",
       "feedChangedNote": "更改订阅源会重置测试——重新测试前该来源将被禁用。"
     }
+  },
+  "verification": {
+    "title": "验证",
+    "subtitle": "公司验证申请队列",
+    "loading": "加载中…",
+    "error": "无法加载数据",
+    "empty": "没有验证申请",
+    "back": "返回队列",
+    "inn": "税号",
+    "unnamedCompany": "未命名",
+    "filter": {
+      "label": "状态",
+      "all": "全部"
+    },
+    "caseStatus": {
+      "draft": "草稿",
+      "submitted": "已提交",
+      "checks_running": "检查进行中",
+      "needs_info": "需要信息",
+      "pending_review": "待决定",
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "cancelled": "已取消"
+    },
+    "caseType": {
+      "onboarding": "注册",
+      "reverification": "重新验证",
+      "targeted": "定向审查"
+    },
+    "columns": {
+      "submittedAt": "提交时间",
+      "company": "公司",
+      "caseType": "类型",
+      "status": "状态",
+      "checks": "检查"
+    },
+    "profile": {
+      "title": "公司资料",
+      "legalName": "法定名称",
+      "shortName": "简称",
+      "publicId": "公开 ID",
+      "jurisdiction": "管辖区",
+      "legalForm": "法律形式",
+      "director": "董事",
+      "address": "法定地址",
+      "status": "状态",
+      "verifiedAt": "已验证",
+      "roles": "角色",
+      "bankAccounts": "银行账户",
+      "mfo": "银行代码"
+    },
+    "checks": {
+      "title": "检查",
+      "empty": "没有检查",
+      "attempts": "尝试次数",
+      "lastError": "最后错误",
+      "waivedReason": "豁免原因",
+      "missingDocuments": "缺失文件",
+      "reasons": "原因",
+      "waive": "豁免检查",
+      "waiveReasonPlaceholder": "豁免原因（必填）",
+      "waiveConflict": "检查已更新——数据已重新加载"
+    },
+    "checkType": {
+      "tax_id_format": "税号格式",
+      "bank_requisites": "银行信息",
+      "documents_complete": "文件",
+      "manual_kyb": "人工审核 (KYB)",
+      "eimzo_signature": "E-IMZO 签名",
+      "gov_registry": "政府登记",
+      "tax_status": "税务状态",
+      "vat_status": "增值税状态"
+    },
+    "checkStatus": {
+      "pending": "待处理",
+      "running": "运行中",
+      "passed": "通过",
+      "warning": "警告",
+      "failed": "未通过",
+      "unavailable": "不可用",
+      "waived": "已豁免"
+    },
+    "documents": {
+      "title": "文件",
+      "empty": "没有文件",
+      "download": "下载"
+    },
+    "docKind": {
+      "charter": "章程",
+      "registration": "注册证书",
+      "director_id": "董事证件",
+      "bank_statement": "银行对账单",
+      "power_of_attorney": "授权书",
+      "other": "其他",
+      "registration_certificate": "注册证书",
+      "bank_letter": "银行证明函",
+      "license": "许可证"
+    },
+    "audit": {
+      "title": "历史",
+      "empty": "没有记录",
+      "staff": "员工"
+    },
+    "decision": {
+      "title": "决定",
+      "conflict": "申请已被其他员工处理——数据已重新加载",
+      "notePlaceholder": "决定备注（可选）",
+      "approve": "批准",
+      "reject": "拒绝",
+      "requestInfo": "请求信息",
+      "decidedAt": "已做出决定"
+    },
+    "registry": {
+      "title": "国家登记系统",
+      "hint": "目前尚无面向私营企业的官方实时接口。请在公开服务中核查该公司（registr.stat.uz、my.soliq.uz、license.gov.uz），然后录入结果——它将连同截图作为不可修改的记录保存，并更新对应的核查项。",
+      "neverChecked": "尚未核查",
+      "openEvidence": "打开截图",
+      "kind": {
+        "company": "公司（EGRPO）",
+        "vat": "增值税证书",
+        "licenses": "许可证"
+      },
+      "source": {
+        "manual": "操作员录入",
+        "registry": "登记系统答复"
+      },
+      "status": {
+        "active": "存续",
+        "liquidated": "已清算",
+        "suspended": "已暂停",
+        "unknown": "未说明状态"
+      },
+      "form": {
+        "title": "录入核查结果",
+        "kind": "核查了什么",
+        "status": "登记系统中的状态",
+        "name": "登记名称",
+        "director": "负责人",
+        "registered": "增值税纳税人",
+        "certificateNo": "证书编号",
+        "rawStatus": "登记系统原文表述",
+        "note": "备注（在何处查看了什么）",
+        "evidence": "截图（PNG、JPEG 或 PDF）",
+        "submit": "录入结果"
+      },
+      "errors": {
+        "unknown_kind": "未知的核查类型。",
+        "invalid_file_type": "无法附加该文件：仅支持 PNG、JPEG 或 PDF。",
+        "file_too_large": "文件过大。",
+        "generic": "无法录入核查结果。"
+      }
+    }
+  },
+  "companies": {
+    "title": "公司",
+    "subtitle": "公司注册表及其状态",
+    "loading": "加载中…",
+    "error": "无法加载数据",
+    "empty": "未找到公司",
+    "back": "返回列表",
+    "unnamed": "未命名",
+    "searchPlaceholder": "按名称或税号搜索",
+    "searchButton": "搜索",
+    "noRoles": "没有角色",
+    "suspend": "暂停",
+    "reinstate": "恢复",
+    "filter": {
+      "label": "状态",
+      "all": "全部"
+    },
+    "status": {
+      "draft": "草稿",
+      "pending_verification": "验证中",
+      "verified": "已验证",
+      "rejected": "已拒绝",
+      "suspended": "已暂停",
+      "liquidated": "已清算"
+    },
+    "columns": {
+      "name": "名称",
+      "inn": "税号",
+      "jurisdiction": "管辖区",
+      "status": "状态",
+      "verifiedAt": "已验证",
+      "roles": "角色"
+    },
+    "profile": {
+      "title": "公司资料",
+      "legalName": "法定名称",
+      "shortName": "简称",
+      "publicId": "公开 ID",
+      "jurisdiction": "管辖区",
+      "taxId": "税号",
+      "legalForm": "法律形式",
+      "director": "董事",
+      "address": "法定地址",
+      "verifiedAt": "已验证",
+      "reverificationDue": "重新验证",
+      "roles": "角色"
+    },
+    "role": {
+      "buyer": "买方",
+      "seller": "卖方",
+      "broker": "经纪人",
+      "manufacturer": "生产商",
+      "importer": "进口商",
+      "trader": "贸易商",
+      "logistics_provider": "物流商",
+      "distributor": "分销商",
+      "laboratory": "实验室",
+      "insurance_provider": "保险机构"
+    },
+    "roles": {
+      "manufacturer": "生产商",
+      "importer": "进口商",
+      "trader": "贸易商",
+      "logistics_provider": "物流",
+      "distributor": "分销商",
+      "laboratory": "实验室",
+      "insurance_provider": "保险"
+    }
+  },
+  "contracts": {
+    "title": "合同",
+    "subtitle": "电子合同监督（只读）。",
+    "filterAll": "所有状态",
+    "search": "按标题或ID搜索…",
+    "colTitle": "标题",
+    "colParties": "各方",
+    "colStatus": "状态",
+    "empty": "暂无合同",
+    "selectHint": "选择一份合同以查看。",
+    "openDocument": "打开文档",
+    "signatures": "签名",
+    "noSignatures": "暂无签名",
+    "timeline": "时间线",
+    "status": {
+      "draft": "草稿",
+      "pending_counterparty": "等待对方",
+      "pending_signatures": "等待签名",
+      "active": "生效",
+      "declined": "已拒绝",
+      "cancelled": "已取消",
+      "expired": "已过期"
+    }
+  },
+  "deals": {
+    "title": "交易",
+    "subtitle": "交易监管：时间线、文件、聊天（只读）、争议处理。",
+    "filterAll": "全部状态",
+    "search": "按编号搜索…",
+    "empty": "未找到交易",
+    "selectHint": "从列表中选择一笔交易。",
+    "total": "共 {count} 笔",
+    "colNumber": "编号",
+    "colParties": "双方",
+    "colAmount": "金额",
+    "colStatus": "状态",
+    "timeline": "时间线",
+    "documents": "文件",
+    "noDocuments": "暂无文件",
+    "chat": "交易聊天",
+    "chatReadOnly": "只读",
+    "noMessages": "暂无消息",
+    "cancelledReason": "取消原因",
+    "status": {
+      "negotiation": "洽谈中",
+      "contract_pending": "待签合同",
+      "contract_signed": "合同已签",
+      "payment_pending": "待付款",
+      "paid_escrow": "已付款（托管）",
+      "shipped": "已发货",
+      "delivered": "已收货",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "disputed": "争议"
+    },
+    "actor": {
+      "buyer": "买方",
+      "seller": "卖方",
+      "staff": "团队",
+      "system": "系统"
+    },
+    "docKind": {
+      "contract": "合同",
+      "invoice": "发票",
+      "lab_passport": "质量证书",
+      "transport": "运输",
+      "other": "其他"
+    },
+    "resolve": {
+      "title": "争议处理",
+      "comment": "说明（必填）",
+      "restore": "恢复到状态",
+      "cancel": "取消交易",
+      "adminOnly": "仅管理员可处理争议。"
+    }
+  },
+  "escrow": {
+    "title": "托管付款",
+    "subtitle": "两个队列：谁欠我们钱，以及我们该付给谁。资金流动须与银行对账单核对后再标记。",
+    "filterAll": "全部状态",
+    "empty": "暂无付款",
+    "selectHint": "选择一笔付款查看详情。",
+    "terminal": "操作已完成——该付款不再变更。",
+    "colDeal": "交易",
+    "colParties": "双方",
+    "colAmount": "金额",
+    "colStatus": "状态",
+    "dealStatus": "交易状态",
+    "mode": "模式",
+    "fundedAt": "到账",
+    "releasedAt": "放款",
+    "refundedAt": "退款",
+    "lastNote": "备注",
+    "status": {
+      "pending": "待付款",
+      "funded": "资金已冻结",
+      "released": "已付给卖方",
+      "refunded": "已退还买方"
+    },
+    "counters": {
+      "awaitingFunds": "待到账",
+      "awaitingPayout": "待放款",
+      "settled": "已结清",
+      "blocked": "受阻",
+      "providerHolds": "与银行的差异"
+    },
+    "mark": {
+      "title": "标记资金流动",
+      "note": "备注：银行流水号、对账单编号……",
+      "confirm": "我确认银行中的资金确已发生流动",
+      "funded": "资金已到账",
+      "released": "资金已付给卖方",
+      "refunded": "资金已退还买方",
+      "adminOnly": "只有管理员可以标记资金流动。"
+    },
+    "blocked": {
+      "title": "无发票的交易",
+      "hint": "合同已签署，但无法开具账单，需要运营人员介入。",
+      "reason": {
+        "no_amount": "金额未议定",
+        "not_opened_yet": "尚未开具账单"
+      }
+    },
+    "modeValue": {
+      "stub": "由运营人员手动确认",
+      "live": "银行接口"
+    },
+    "errors": {
+      "release_before_delivery": "只有在买方确认收货后才能向卖方放款。",
+      "deal_transition_blocked": "该交易无法进入此状态。如需退款，请先就该交易发起争议。",
+      "invalid_transition": "该付款状态变更不可行——请刷新页面查看当前状态。",
+      "confirmation_required": "请勾选确认资金确已发生流动。",
+      "note_required": "备注为必填项。"
+    },
+    "providerHolds": {
+      "title": "需要操作员处理的银行通知",
+      "hint": "这些通知已记录，但未自动执行：它们要么会结束交易，要么与我们的记录不一致。请核对银行对账单并手动标记付款——该条目会自行消失。",
+      "disagreement": "银行：{bank} · 我方：{ours}",
+      "unreadable": "无法解析该通知",
+      "open": "打开付款",
+      "reason": {
+        "needs_operator": "退款仅由操作员决定",
+        "release_before_delivery": "在确认收货前放款",
+        "unknown_ref": "未知的托管编号",
+        "wrong_rail": "该付款由操作员手动处理",
+        "amount_mismatch": "金额与账单不一致",
+        "currency_mismatch": "币种与账单不一致",
+        "invalid_transition": "状态转换不允许",
+        "deal_blocked": "交易无法进入该状态",
+        "unknown_provider": "服务商未接入",
+        "malformed": "通知未能解析"
+      }
+    }
+  },
+  "substances": {
+    "title": "物质目录",
+    "subtitle": "内阁决议清单的数字化——发布校验的事实来源",
+    "provisional": "种子版本 v1-provisional：仅收录法律地图已确认的条目。内阁决议附件将在法律核对后补录——在此之前请勿开启发布拦截。",
+    "add": "添加物质",
+    "addTitle": "新物质",
+    "editTitle": "编辑物质",
+    "edit": "编辑",
+    "deactivate": "停用",
+    "activate": "启用",
+    "save": "保存",
+    "cancel": "取消",
+    "empty": "未找到内容",
+    "error": "目录加载失败",
+    "searchPlaceholder": "名称、CAS、HS 编码…",
+    "allLevels": "全部级别",
+    "columns": {
+      "name": "名称",
+      "hs": "HS 编码",
+      "cas": "CAS",
+      "level": "监管级别",
+      "threshold": "阈值",
+      "source": "依据"
+    },
+    "fields": {
+      "code": "代码 (slug)",
+      "nameRu": "名称 (ru)",
+      "nameUz": "名称 (uz)",
+      "nameEn": "名称 (en)",
+      "hs": "HS 编码",
+      "hsHint": "主要法律标识",
+      "cas": "CAS",
+      "casHint": "次要标识，用于 SDS 和 AI",
+      "level": "监管级别",
+      "regime": "监管制度",
+      "regimeHint": "受管制物质必填",
+      "threshold": "阈值浓度 %",
+      "thresholdHint": "低于阈值不适用该制度",
+      "exemption": "年度豁免上限",
+      "exemptionUnit": "单位",
+      "licenseCategory": "许可证类别",
+      "requiredDocs": "必需文件",
+      "synonyms": "同义词",
+      "synonymsHint": "用逗号分隔",
+      "sourceAct": "依据法规",
+      "sourceActHint": "例如：ПКМ №330（2026.11.12），第四清单"
+    },
+    "errors": {
+      "exists": "该代码或 CAS 的物质已存在"
+    },
+    "level": {
+      "free": "自由流通",
+      "docs_required": "需要文件",
+      "license_required": "需要许可证",
+      "prohibited": "禁止"
+    },
+    "regime": {
+      "precursor_list_iv": "前体化学品（第四清单，ПКМ-330）",
+      "explosive_toxic": "爆炸性与有毒（ПКМ-782）",
+      "strong_acting": "强效物质（ПКМ-818）",
+      "pkm916_import": "危险品进口（ПКМ-916）"
+    },
+    "docKind": {
+      "sds": "安全数据表 (SDS)",
+      "tds": "技术数据表 (TDS)",
+      "coa": "分析证书 (COA)",
+      "certificate": "证书"
+    }
+  },
+  "licenses": {
+    "title": "许可证",
+    "hint": "由运营人员依据公司已受理的文件登记。发布含受管制物质的报价时校验。",
+    "register": "登记",
+    "empty": "暂无许可证",
+    "revoke": "吊销",
+    "save": "保存",
+    "cancel": "取消",
+    "active": "有效",
+    "until": "至",
+    "perpetual": "长期有效",
+    "fields": {
+      "regime": "监管制度",
+      "category": "类别",
+      "number": "编号",
+      "issuedBy": "签发机关",
+      "expiresAt": "有效期至",
+      "reason": "吊销原因"
+    },
+    "status": {
+      "pending_review": "审核中",
+      "active": "有效",
+      "expired": "已过期",
+      "revoked": "已吊销",
+      "rejected": "已拒绝"
+    },
+    "regime": {
+      "precursor_list_iv": "前体化学品（第四清单，ПКМ-330）",
+      "explosive_toxic": "爆炸性与有毒（ПКМ-782）",
+      "strong_acting": "强效物质（ПКМ-818）",
+      "pkm916_import": "危险品进口（ПКМ-916）"
+    }
+  },
+  "labOrders": {
+    "title": "实验室检测申请",
+    "subtitle": "检测由合作实验室完成——状态由运营人员推进。列表按最早提交排序。",
+    "filterAll": "全部状态",
+    "empty": "暂无申请",
+    "selectHint": "从队列中选择一条申请。",
+    "terminal": "申请已结束，无可执行操作。",
+    "colNumber": "编号",
+    "colCompany": "公司",
+    "colSubject": "对象",
+    "colStatus": "状态",
+    "company": "公司",
+    "subject": "对象",
+    "subjectDeal": "交易 #{id}",
+    "substance": "物质",
+    "volume": "样品量",
+    "createdAt": "创建时间",
+    "completedAt": "完成时间",
+    "rejectedReason": "拒绝原因",
+    "operatorNote": "运营备注",
+    "partner": "实验室",
+    "partnerNone": "未指定",
+    "resultAttached": "检测报告已附加到报价/交易。",
+    "counters": {
+      "submitted": "新申请",
+      "inProgress": "处理中",
+      "done": "已完成",
+      "rejected": "已拒绝"
+    },
+    "status": {
+      "submitted": "已提交",
+      "accepted": "已受理",
+      "sample_awaited": "等待样品",
+      "in_analysis": "检测中",
+      "done": "已完成",
+      "rejected": "已拒绝"
+    },
+    "act": {
+      "title": "操作",
+      "note": "备注（拒绝时必填）",
+      "reasonHint": "「已完成」会打开报告上传——没有文件不能置为完成。",
+      "accepted": "受理",
+      "sample_awaited": "等待样品",
+      "in_analysis": "转入检测",
+      "rejected": "拒绝",
+      "uploadResult": "上传报告（PDF）"
+    },
+    "errors": {
+      "invalid_transition": "当前状态无法执行该流转。",
+      "reason_required": "请填写拒绝原因。",
+      "result_required": "「已完成」需要上传检测报告。",
+      "invalid_file_type": "报告仅接受 PDF。",
+      "file_too_large": "文件过大。",
+      "orderer_left_the_deal": "申请人已不是交易方，无法附加文件。"
+    }
+  },
+  "labPartners": {
+    "title": "合作实验室",
+    "subtitle": "实验室名录。分析师可查看（指派时选择），仅管理员可编辑。",
+    "empty": "暂无实验室",
+    "colName": "名称",
+    "colContacts": "联系方式",
+    "colState": "状态",
+    "active": "启用",
+    "retired": "已停用",
+    "retire": "停用",
+    "restore": "恢复",
+    "addTitle": "添加实验室",
+    "editTitle": "编辑实验室",
+    "fieldName": "名称",
+    "fieldContactName": "联系人",
+    "fieldPhone": "电话",
+    "fieldEmail": "邮箱",
+    "fieldAddress": "地址",
+    "fieldNote": "备注",
+    "save": "保存",
+    "cancel": "取消",
+    "adminOnly": "名录由管理员维护。"
   }
 }

@@ -10,9 +10,16 @@
 #           /etc/nginx/sites-enabled/ai-imex.conf
 #   sudo nginx -t && sudo systemctl reload nginx
 #   sudo certbot --nginx -d ai-imex.com -d www.ai-imex.com \
-#                        -d admin.ai-imex.com -d api.ai-imex.com
+#                        -d admin.ai-imex.com -d api.ai-imex.com \
+#                        -d cabinet.ai-imex.com
 #   # certbot rewrites these blocks in place: adds `listen 443 ssl`, the cert
 #   # paths, and an 80→443 redirect. Then: sudo systemctl reload nginx
+#
+# EVERY public domain needs a block HERE as well as in the inner nginx config.
+# The inner nginx routes by Host, but it never sees a request whose domain has no
+# host-side vhost — that domain just lands on the default server. cabinet.* was
+# added late (R1 shipped the inner block only), so if the cabinet is unreachable
+# while the container is healthy, this file is the first thing to check.
 # ============================================================================
 
 # SSE (dashboard live feed + /api streams) needs buffering off + a long read
@@ -40,6 +47,30 @@ server {
 server {
     listen 80;
     server_name admin.ai-imex.com;
+
+    client_max_body_size 12m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header   Connection "";
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_buffering    off;
+        proxy_read_timeout 3600s;
+    }
+}
+
+# Client cabinet (the Vite portal, R1 W7). Static bundle + same-origin /api/, both
+# served by the inner nginx from the `portal_static` volume — so this block is a
+# plain pass-through like the others. `proxy_buffering off` is inherited style; the
+# cabinet has no SSE, but uploads (verification documents, offer photos, the P7.c
+# registry screenshot) need the same 12 MB cap as the rest.
+server {
+    listen 80;
+    server_name cabinet.ai-imex.com;
 
     client_max_body_size 12m;
 

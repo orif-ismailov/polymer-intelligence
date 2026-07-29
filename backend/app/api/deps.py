@@ -22,7 +22,8 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.security import decode_token
-from app.models.enums import StaffRole
+from app.models.accounts import UserAccount
+from app.models.enums import AccountStatus, StaffRole
 from app.models.requests import Client
 from app.models.staff import StaffUser
 
@@ -130,6 +131,69 @@ def _resolve_staff_user(token: str | None, db: Session) -> StaffUser:
         )
 
     return user
+
+
+def get_current_account(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+    db: Session = Depends(get_db),
+) -> UserAccount:
+    """Authenticate a portal person via the Bearer `portal_access` token.
+
+    Audience-isolated from staff/webapp identities: the token type must be
+    `portal_access`, so a staff `access` or webapp `client_session` token fails
+    here (and a portal token fails on those deps).
+
+    Raises HTTP 401 if the header/token is missing, malformed, expired, the wrong
+    type, or the account no longer exists. Raises HTTP 403 if the account is
+    blocked (status != active).
+
+    Returns:
+        The authenticated UserAccount ORM object.
+    """
+    token = credentials.credentials if credentials is not None else None
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        payload = decode_token(token, expected_type="portal_access")
+    except JWTError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
+
+    subject = payload.get("sub")
+    try:
+        account_id = int(subject)  # type: ignore[arg-type]  # None/str → caught below
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token: subject",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
+
+    account: UserAccount | None = (
+        db.query(UserAccount).filter(UserAccount.id == account_id).first()
+    )
+    if account is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if account.status != AccountStatus.active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is blocked",
+        )
+
+    return account
 
 
 def require_role(*roles: StaffRole) -> Callable[[StaffUser], StaffUser]:

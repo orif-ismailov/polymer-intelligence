@@ -434,6 +434,337 @@ CREATE TABLE app_settings (
 
 ---
 
+## 10. Верификация компаний и портал (R1, миграция 0017)
+
+Модель личности v2 (ARCHITECTURE §5, поправка A1): человек = `user_accounts`
+(телефон, passwordless OTP), членство в компании — через `company_members.user_account_id`.
+Telegram-личности (`clients`/`sellers`) — отдельный «замороженный» мир; связь пока
+дремлющая (`user_accounts.telegram_user_id`, `sellers.company_id`, `clients.company_id`,
+`seller_offers.company_id` — все NULL, без логики моста в R1–R3).
+
+Бизнес-логика в `app/services/` (company/verification/otp/event сервисы, R1 wave 4+);
+шифрование PII — `app/core/crypto.py` (Fernet, ключ `VERIFICATION_ENC_KEY`);
+транзакционный outbox — `domain_events` + beat-таск `dispatch_domain_events`.
+
+```sql
+-- ── ENUM-типы (14) ────────────────────────────────────────────────────────
+CREATE TYPE account_status              AS ENUM ('active','blocked');
+CREATE TYPE company_status              AS ENUM ('draft','pending_verification','verified','rejected','suspended','liquidated');
+CREATE TYPE company_member_role         AS ENUM ('owner','manager','member');
+CREATE TYPE company_member_status       AS ENUM ('active','invited','removed');
+CREATE TYPE company_business_role       AS ENUM ('manufacturer','importer','trader','logistics_provider','distributor','laboratory','insurance_provider');
+CREATE TYPE business_role_status        AS ENUM ('declared','confirmed','revoked');
+CREATE TYPE bank_account_status         AS ENUM ('unverified','pending','verified','failed','archived');
+CREATE TYPE bank_verification_method    AS ENUM ('document','e_invoice_crosscheck','bank_api','manual');
+CREATE TYPE verification_case_type      AS ENUM ('onboarding','reverification','targeted');
+CREATE TYPE verification_case_status    AS ENUM ('draft','submitted','checks_running','needs_info','pending_review','approved','rejected','cancelled');
+CREATE TYPE verification_check_type     AS ENUM ('tax_id_format','bank_requisites','documents_complete','manual_kyb');  -- R3 +eimzo_signature; P2 +gov_registry/tax_status/vat_status
+CREATE TYPE verification_check_status   AS ENUM ('pending','running','passed','warning','failed','unavailable','waived');
+CREATE TYPE verification_document_kind  AS ENUM ('registration_certificate','director_id','bank_letter','license','permit','certificate','power_of_attorney','other');
+CREATE TYPE document_review_status      AS ENUM ('pending_review','accepted','rejected');
+
+-- ── Личности портала ──────────────────────────────────────────────────────
+CREATE TABLE user_accounts (
+    id               bigserial PRIMARY KEY,
+    phone            text NOT NULL UNIQUE,            -- E.164
+    name             text,
+    language         char(2) NOT NULL DEFAULT 'ru',
+    status           account_status NOT NULL DEFAULT 'active',
+    telegram_user_id bigint UNIQUE,                   -- дремлющий мост к Mini App (frozen)
+    created_at       timestamptz NOT NULL DEFAULT now(),
+    last_login_at    timestamptz
+);
+
+-- Лог отправок SMS — учёт стоимости + форензика OTP-абьюза. Коды НЕ хранятся.
+CREATE TABLE sms_send_log (
+    id              bigserial PRIMARY KEY,
+    phone           text NOT NULL,
+    purpose         text NOT NULL,                    -- 'otp'
+    provider        text NOT NULL,                    -- 'console' | 'eskiz'
+    provider_msg_id text,
+    status          text NOT NULL,                    -- 'ok' | 'error'
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_sms_send_log_phone_created ON sms_send_log(phone, created_at);  -- дневной лимит
+
+-- ── Реестр компаний ───────────────────────────────────────────────────────
+CREATE TABLE companies (
+    id                         bigserial PRIMARY KEY,
+    public_id                  uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),  -- стабильная внешняя ссылка
+    jurisdiction               char(2) NOT NULL DEFAULT 'UZ',
+    tax_id                     text NOT NULL,          -- STIR/INN
+    legal_name                 text, short_name text, legal_form text,
+    legal_address              text, director_name text, registration_date date,
+    registry_status            text,                   -- статус по данным гос-реестра (заполняется в P2)
+    status                     company_status NOT NULL DEFAULT 'draft',
+    verified_at                timestamptz, reverification_due_at timestamptz,
+    counterparty_id            int REFERENCES counterparties(id),
+    created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    created_at                 timestamptz NOT NULL DEFAULT now(),
+    updated_at                 timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (jurisdiction, tax_id)                      -- uq_company_jurisdiction_tax_id
+);
+
+CREATE TABLE company_members (
+    id                         bigserial PRIMARY KEY,
+    company_id                 bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    user_account_id            bigint NOT NULL REFERENCES user_accounts(id),
+    member_role                company_member_role NOT NULL DEFAULT 'member',
+    status                     company_member_status NOT NULL DEFAULT 'active',
+    invited_by_user_account_id bigint REFERENCES user_accounts(id),
+    created_at                 timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (company_id, user_account_id)               -- uq_company_member
+);
+
+CREATE TABLE company_business_roles (
+    id           bigserial PRIMARY KEY,
+    company_id   bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    role         company_business_role NOT NULL,
+    status       business_role_status NOT NULL DEFAULT 'declared',
+    confirmed_by int REFERENCES staff_users(id),
+    created_at   timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (company_id, role)                           -- uq_company_business_role
+);
+
+CREATE TABLE company_bank_accounts (
+    id                   bigserial PRIMARY KEY,
+    company_id           bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    bank_mfo             char(5) NOT NULL, bank_name text,
+    account_number_enc   bytea NOT NULL,               -- Fernet-шифртекст (app-layer, §15)
+    account_last4        char(4) NOT NULL,             -- для маскирования
+    currency             char(3) NOT NULL DEFAULT 'UZS',
+    status               bank_account_status NOT NULL DEFAULT 'unverified',
+    verification_method  bank_verification_method,
+    evidence_document_id bigint REFERENCES verification_documents(id),
+    verified_at timestamptz, verified_by int REFERENCES staff_users(id),
+    created_at           timestamptz NOT NULL DEFAULT now()
+);
+
+-- ── Верификация ───────────────────────────────────────────────────────────
+CREATE TABLE verification_cases (
+    id            bigserial PRIMARY KEY,
+    company_id    bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    case_type     verification_case_type NOT NULL DEFAULT 'onboarding',
+    status        verification_case_status NOT NULL DEFAULT 'draft',
+    submitted_at timestamptz, decided_at timestamptz,
+    decided_by    int REFERENCES staff_users(id),      -- NULL = авто/telegram-актор (детали в audit_log)
+    decision_note text,
+    created_at    timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_verification_cases_company_id ON verification_cases(company_id);
+-- Один открытый кейс на компанию — инвариант как ограничение БД, а не логика приложения (§6.1):
+CREATE UNIQUE INDEX ux_open_case ON verification_cases(company_id)
+    WHERE status NOT IN ('approved','rejected','cancelled');
+
+CREATE TABLE verification_checks (
+    id          bigserial PRIMARY KEY,
+    case_id     bigint NOT NULL REFERENCES verification_cases(id) ON DELETE CASCADE,
+    check_type  verification_check_type NOT NULL,
+    status      verification_check_status NOT NULL DEFAULT 'pending',
+    result      jsonb, attempts int NOT NULL DEFAULT 0, last_error text,
+    started_at timestamptz, finished_at timestamptz,
+    waived_by   int REFERENCES staff_users(id), waive_reason text,
+    UNIQUE (case_id, check_type)                        -- uq_verification_check
+);
+
+CREATE TABLE verification_documents (
+    id                          bigserial PRIMARY KEY,
+    company_id                  bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    case_id                     bigint REFERENCES verification_cases(id) ON DELETE SET NULL,
+    kind                        verification_document_kind NOT NULL,
+    storage_path                text NOT NULL,          -- verification/{company_id}/{token}-{name}
+    mime_type text, size_bytes int, sha256 text NOT NULL,
+    uploaded_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    status                      document_review_status NOT NULL DEFAULT 'pending_review',
+    review_note text, reviewed_by int REFERENCES staff_users(id), reviewed_at timestamptz,
+    expires_at timestamptz, created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_verification_documents_company_id ON verification_documents(company_id);
+
+-- ── Транзакционный outbox (§7) ────────────────────────────────────────────
+CREATE TABLE domain_events (
+    id             bigserial PRIMARY KEY,
+    event_type     text NOT NULL,                       -- см. app/services/event_types.py
+    aggregate_type text NOT NULL, aggregate_id text NOT NULL,
+    payload        jsonb NOT NULL DEFAULT '{}',
+    occurred_at    timestamptz NOT NULL DEFAULT now(),
+    published_at   timestamptz, attempts int NOT NULL DEFAULT 0
+);
+CREATE INDEX ix_outbox_unpublished ON domain_events(id) WHERE published_at IS NULL;
+
+-- ── Мост маркетплейса (dual-origin offers, A1) ────────────────────────────
+ALTER TABLE seller_offers ADD COLUMN company_id bigint REFERENCES companies(id);
+ALTER TABLE seller_offers ADD COLUMN created_by_user_account_id bigint REFERENCES user_accounts(id);
+ALTER TABLE seller_offers ALTER COLUMN seller_id DROP NOT NULL;   -- оффер от TG-продавца ИЛИ от компании
+ALTER TABLE seller_offers ADD CONSTRAINT ck_offer_origin CHECK (seller_id IS NOT NULL OR company_id IS NOT NULL);
+ALTER TABLE sellers ADD COLUMN company_id bigint REFERENCES companies(id);   -- дремлющий
+ALTER TABLE clients ADD COLUMN company_id bigint REFERENCES companies(id);   -- дремлющий
+```
+
+### R2 — паритет портала (migration 0018_portal_parity, A2)
+
+Двусторонний бридж распространяется на buy-side: заявки и запросы-по-офферу могут
+исходить от TG-клиента **ИЛИ** от портальной компании-аккаунта. `client_id`
+становится NULLABLE, добавляются `company_id` + `created_by_user_account_id`, а
+инвариант происхождения держит CHECK — не app-логика. Плюс новый центр
+уведомлений портала (`portal_notifications`): тексты никогда не хранятся готовыми —
+только i18n-ключи + `params`, чтобы портал рендерил на языке читателя (ru/uz/en).
+
+```sql
+-- ── requests: dual-origin (TG-клиент ИЛИ портальная компания) ─────────────
+ALTER TABLE requests ADD COLUMN company_id bigint REFERENCES companies(id);
+ALTER TABLE requests ADD COLUMN created_by_user_account_id bigint REFERENCES user_accounts(id);
+ALTER TABLE requests ALTER COLUMN client_id DROP NOT NULL;
+ALTER TABLE requests ADD CONSTRAINT ck_request_origin
+    CHECK (client_id IS NOT NULL OR created_by_user_account_id IS NOT NULL);
+
+-- ── offer_requests (inquiries): те же поля происхождения ──────────────────
+ALTER TABLE offer_requests ADD COLUMN company_id bigint REFERENCES companies(id);
+ALTER TABLE offer_requests ADD COLUMN created_by_user_account_id bigint REFERENCES user_accounts(id);
+ALTER TABLE offer_requests ALTER COLUMN client_id DROP NOT NULL;
+ALTER TABLE offer_requests ADD CONSTRAINT ck_inquiry_origin
+    CHECK (client_id IS NOT NULL OR created_by_user_account_id IS NOT NULL);
+
+-- ── portal_notifications: центр уведомлений (polling-модель, SSE отложен) ──
+CREATE TABLE portal_notifications (
+    id              bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    user_account_id bigint NOT NULL REFERENCES user_accounts(id) ON DELETE CASCADE,
+    kind            text NOT NULL,                 -- расширяемо: request_status, inquiry_approved, verification_decided, offer_moderated, news_breaking…
+    title_key       text NOT NULL,                 -- i18n-ключ (не готовый текст)
+    body_key        text NOT NULL,                 -- i18n-ключ
+    params          jsonb NOT NULL DEFAULT '{}',   -- значения для интерполяции
+    entity          text,                          -- цель deep-link (тип)
+    entity_id       text,                          -- цель deep-link (id)
+    read_at         timestamptz,                   -- NULL ⇒ непрочитано
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+-- (user_account_id, read_at, id): unread-count + лента (новые сверху, скан назад)
+CREATE INDEX ix_portal_notifications_account_unread
+    ON portal_notifications(user_account_id, read_at, id);
+```
+
+### R3 Stage A — E-IMZO рельсы верификации (migration 0020_eimzo)
+
+Подтверждение личности компании цифровой подписью через сайдкар UNICON
+**e-imzo-server** (национальные алгоритмы O'zDSt — сами PKCS#7 никогда не парсим).
+Подписанный challenge заполняет и **замораживает** реквизиты компании
+(`companies.identity_locked`), авто-проставляет проверку `eimzo_signature=passed`
+и авто-подтверждает подписанта владельцем. Доказательства неизменяемы
+(append-only `signature_evidence`), PINFL/ФИО шифруются тем же `VERIFICATION_ENC_KEY`
+(§6.2). `integration_call_log` — журнал вызовов шлюза (метаданные, прунится 90 дней;
+тела запросов/ответов НЕ хранятся — там может быть PINFL/PKCS#7).
+
+```sql
+-- Новое значение enum (ADD VALUE вне транзакции; DROP невозможен → downgrade оставляет)
+ALTER TYPE verification_check_type ADD VALUE IF NOT EXISTS 'eimzo_signature';
+
+-- Реквизиты, подтверждённые ЭЦП, замораживаются (PATCH по ним отклоняется)
+ALTER TABLE companies ADD COLUMN identity_locked boolean NOT NULL DEFAULT false;
+
+-- Неизменяемое доказательство одной проверенной подписи (purpose: company_identity | contract)
+CREATE TABLE signature_evidence (
+    id                 bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    company_id         bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    user_account_id    bigint NOT NULL REFERENCES user_accounts(id),   -- кто подписал
+    purpose            text NOT NULL,                    -- 'company_identity' | 'contract'
+    challenge          text NOT NULL,                    -- подписанный nonce
+    pkcs7_storage_path text NOT NULL,                    -- S3 evidence/eimzo/{company_id}/…
+    pkcs7_sha256       text NOT NULL,                    -- целостность сохранённого blob
+    cert_subject       jsonb,                            -- разобранные поля subject сертификата
+    signed_at          timestamptz,
+    created_at         timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_signature_evidence_company_id ON signature_evidence(company_id);
+
+-- Персональные данные директора/подписанта (шифрование на уровне приложения, §6.2)
+CREATE TABLE company_person_data (
+    id              bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    company_id      bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    user_account_id bigint REFERENCES user_accounts(id),
+    full_name_enc   bytea NOT NULL,                      -- Fernet ciphertext
+    pinfl_enc       bytea NOT NULL,                      -- Fernet ciphertext
+    pinfl_last4     char(4),                             -- в открытом виде, только для маски ****last4
+    position        text,
+    source          text NOT NULL DEFAULT 'eimzo',
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_company_person_data_company_id ON company_person_data(company_id);
+
+-- Журнал вызовов интеграционного шлюза (аудит circuit-breaker; только метаданные)
+CREATE TABLE integration_call_log (
+    id          bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    provider    text NOT NULL,                           -- 'eimzo', далее gov/bank/…
+    operation   text NOT NULL,                           -- 'verify_pkcs7'
+    ok          boolean NOT NULL,
+    status_code int,
+    latency_ms  int,
+    error       text,
+    created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_integration_call_log_created  ON integration_call_log(created_at);          -- прун 90д
+CREATE INDEX ix_integration_call_log_provider ON integration_call_log(provider, created_at);
+```
+
+### R3 Stage B — Контракты (migration 0021_contracts)
+
+Контекст «Контракты» — зерно домена Deal Lifecycle. Верифицированная компания
+создаёт `Contract` из `ContractTemplate` со второй верифицированной компанией; обе
+стороны подписывают через E-IMZO (каждая подпись — строка `signature_evidence`
+`purpose='contract'`, на неё ссылается `contract_signatures`). Обе подписи →
+статус `active`. Сгенерированный PDF хранится в S3 (`generated_document_path`) с
+`document_sha256` для детекции подделки.
+
+```sql
+CREATE TYPE contract_status AS ENUM (
+    'draft','pending_counterparty','pending_signatures','active','declined','cancelled','expired');
+
+-- Шаблон договора (двуязычный) + JSON Schema обязательных переменных
+CREATE TABLE contract_templates (
+    id                bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    code              text NOT NULL UNIQUE,             -- SUPPLY_V1
+    name_ru           text NOT NULL, name_uz text, name_en text,
+    body_storage_path text NOT NULL,                    -- S3 contracts/templates/…
+    variables_schema  jsonb NOT NULL,
+    version           int NOT NULL DEFAULT 1,
+    is_active         boolean NOT NULL DEFAULT true,
+    created_at        timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE contracts (
+    id                       bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    public_id                uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    template_id              bigint NOT NULL REFERENCES contract_templates(id),
+    template_version         int NOT NULL,
+    initiator_company_id     bigint NOT NULL REFERENCES companies(id),
+    counterparty_company_id  bigint NOT NULL REFERENCES companies(id),
+    offer_id                 bigint REFERENCES seller_offers(id),     -- контекстная ссылка
+    title                    text NOT NULL,
+    variables                jsonb NOT NULL DEFAULT '{}',
+    generated_document_path  text, document_sha256 text,
+    status                   contract_status NOT NULL DEFAULT 'draft',
+    created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    sent_at timestamptz, activated_at timestamptz, declined_reason text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT ck_contract_parties_distinct CHECK (initiator_company_id <> counterparty_company_id)
+);
+CREATE INDEX ix_contracts_initiator    ON contracts(initiator_company_id);
+CREATE INDEX ix_contracts_counterparty ON contracts(counterparty_company_id);
+
+-- Подпись одной стороны (переиспользует signature_evidence)
+CREATE TABLE contract_signatures (
+    id                        bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    contract_id               bigint NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+    company_id                bigint NOT NULL REFERENCES companies(id),
+    signed_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    signature_evidence_id     bigint NOT NULL REFERENCES signature_evidence(id),
+    signed_at                 timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT uq_contract_signature UNIQUE (contract_id, company_id)
+);
+```
+
+---
+
 ## Маппинг на экраны мокапов
 
 | Экран | Источник данных |
@@ -462,7 +793,540 @@ CREATE TABLE app_settings (
 3. ~~Курсы валют~~ — РЕШЕНО: таблица `fx_rates` добавлена в схему (см. раздел 1), источник — ЦБ РУз.
 4. **Retention сырых данных:** `raw_items` растёт быстрее всех; решить, через сколько месяцев архивировать content (хэш и метаданные остаются).
 
+### R4 / P1 — Медиа: логотип компании (migration 0022_company_logo)
+
+Блок F ТЗ deal-lifecycle (FR-M1, FR-M4). У компании появляется логотип. Хранится
+**только ключ объекта** — постоянных публичных URL нет, API отдаёт короткоживущую presigned
+ссылку на каждый запрос (TTL ≤ 600 с, как у документов контрактов R3). Замена логотипа
+удаляет старый объект из S3 (fail-soft: ошибка удаления логируется, запрос не падает).
+Фото офферов схему НЕ меняют — используется существующая `seller_offer_files`
+(`kind='image'`).
+
+```sql
+-- NULL = логотипа нет (нормальное состояние, не ошибка)
+ALTER TABLE companies ADD COLUMN logo_storage_path text;
+```
+
+### R4 / P2 — Сделки: Deal, Trade Room, отклики на RFQ (migration 0023_deals)
+
+Блок A ТЗ deal-lifecycle (FR-D1–D10). Ядро домена: `Deal` — комната, в которой две
+верифицированные компании доводят сделку до конца (машина состояний, чат, документы,
+таймлайн). Сделка открывается из принятого отклика на RFQ либо из одобренного inquiry.
+
+**Граница контекста.** Связь с контрактами односторонняя: FK живёт на `deals.contract_id`,
+таблица `contracts` НЕ изменяется. Контекст контрактов о сделках не знает — сделка реагирует
+на доменные события `CONTRACT_*` (outbox). Это даёт один источник истины вместо двух
+взаимных nullable-FK, которые неизбежно разъезжаются.
+
+```sql
+CREATE TYPE deal_status AS ENUM (
+    'negotiation','contract_pending','contract_signed','payment_pending','paid_escrow',
+    'shipped','delivered','completed','cancelled','disputed');
+CREATE TYPE deal_actor_kind    AS ENUM ('buyer','seller','staff','system');
+CREATE TYPE deal_document_kind AS ENUM ('contract','invoice','lab_passport','transport','other');
+CREATE TYPE rfq_response_status AS ENUM ('submitted','accepted','not_selected','withdrawn');
+CREATE TYPE rfq_visibility      AS ENUM ('verified_only','all','selected');
+
+-- Номер: DEAL-YYYY-NNNNNN (посерийная последовательность deal_seq_{YYYY})
+CREATE TABLE deals (
+    id                bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    public_id         uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    number            text NOT NULL UNIQUE,
+    buyer_company_id  bigint NOT NULL REFERENCES companies(id),
+    seller_company_id bigint NOT NULL REFERENCES companies(id),
+    request_id  int    REFERENCES requests(id),        -- контекст: из какого RFQ
+    offer_id    int    REFERENCES seller_offers(id),   -- контекст: из какого оффера
+    contract_id bigint REFERENCES contracts(id),       -- владелец связи — сделка
+    status      deal_status NOT NULL DEFAULT 'negotiation',
+    amount      numeric(16,2), currency char(3) NOT NULL DEFAULT 'UZS',
+    created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    cancelled_reason text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT ck_deal_parties_distinct CHECK (buyer_company_id <> seller_company_id)
+);
+CREATE INDEX ix_deals_buyer_status  ON deals(buyer_company_id, status);
+CREATE INDEX ix_deals_seller_status ON deals(seller_company_id, status);
+-- Партиальный UNIQUE: потребитель события CONTRACT_ACTIVATED ищет сделку ПО contract_id
+-- и обязан находить максимум одну.
+CREATE UNIQUE INDEX uq_deals_contract ON deals(contract_id) WHERE contract_id IS NOT NULL;
+
+-- Таймлайн: append-only, from_status NULL только у открывающей строки
+CREATE TABLE deal_status_history (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    deal_id bigint NOT NULL REFERENCES deals(id) ON DELETE CASCADE,
+    from_status deal_status, to_status deal_status NOT NULL,
+    actor_kind  deal_actor_kind NOT NULL, actor_id bigint, reason text,
+    created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_deal_status_history_deal ON deal_status_history(deal_id, id);
+
+-- Чат Trade Room: append-only, путей UPDATE/DELETE нет
+CREATE TABLE deal_messages (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    deal_id bigint NOT NULL REFERENCES deals(id) ON DELETE CASCADE,
+    author_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    -- Сторона на момент отправки: членство меняется, а сообщение обязано
+    -- продолжать показывать того, кто его действительно написал.
+    author_company_id bigint NOT NULL REFERENCES companies(id),
+    body text NOT NULL DEFAULT '',
+    file_storage_path text, file_name text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT ck_deal_message_not_empty CHECK (body <> '' OR file_storage_path IS NOT NULL)
+);
+CREATE INDEX ix_deal_messages_deal ON deal_messages(deal_id, id);
+
+-- Документы: отзываются пометкой, объект в S3 остаётся как доказательство
+CREATE TABLE deal_documents (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    deal_id bigint NOT NULL REFERENCES deals(id) ON DELETE CASCADE,
+    kind deal_document_kind NOT NULL DEFAULT 'other',
+    file_name text NOT NULL, mime_type text NOT NULL, size_bytes int NOT NULL,
+    storage_path text NOT NULL, sha256 char(64) NOT NULL,
+    uploaded_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    uploaded_by_company_id      bigint NOT NULL REFERENCES companies(id),
+    revoked boolean NOT NULL DEFAULT false, revoked_reason text,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_deal_documents_deal ON deal_documents(deal_id, id);
+
+CREATE TABLE rfq_responses (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    request_id int NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
+    company_id bigint NOT NULL REFERENCES companies(id),
+    created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    price numeric(14,2) NOT NULL, currency char(3) NOT NULL DEFAULT 'USD',
+    qty numeric(14,3) NOT NULL, qty_unit text NOT NULL DEFAULT 'MT',
+    incoterms price_basis,                    -- NULL = не указано (≠ 'unknown')
+    lead_time_days int, comment text,
+    status rfq_response_status NOT NULL DEFAULT 'submitted',
+    deal_id bigint REFERENCES deals(id),      -- заполняется при акцепте
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_rfq_responses_request ON rfq_responses(request_id, id);
+CREATE INDEX ix_rfq_responses_company ON rfq_responses(company_id, status);
+-- Один ЖИВОЙ отклик компании на RFQ; партиальный, чтобы отзыв освобождал слот,
+-- а не блокировал поставщика навсегда.
+CREATE UNIQUE INDEX uq_rfq_response_active ON rfq_responses(request_id, company_id)
+    WHERE status <> 'withdrawn';
+
+-- Расширения RFQ (FR-D10) на существующей таблице requests
+ALTER TABLE requests ADD COLUMN required_docs jsonb;                  -- sds|coa|origin_cert|…
+ALTER TABLE requests ADD COLUMN visibility rfq_visibility NOT NULL DEFAULT 'verified_only';
+ALTER TABLE requests ADD COLUMN visible_company_ids jsonb;            -- для visibility='selected'
+```
+
+### R4 / P3 — Escrow-платежи (migration 0024_escrow)
+
+Деньги идут через банк-партнёр, не через платформу. Здесь хранится только *запись*
+о движении: одна `EscrowPayment` на сделку и сырой inbox колбэков провайдера.
+
+Два сознательных отсутствия:
+
+- **Никаких банковских реквизитов** — ни номера счёта, ни IBAN, ни МФО. Счёт
+  выставляет банк; хранение реквизитов не даёт ничего операционно, но делает
+  таблицу мишенью для мошенничества.
+- **Никакой статусной логики** — переходы, блокировка строки и побочные эффекты на
+  сделку принадлежат `escrow_service`. Здесь только схема.
+
+`mode` фиксируется в момент создания: оператор может переключить runtime-настройку
+`escrow_mode` когда угодно, но платёж, открытый на stub-рельсе, остаётся stub —
+иначе переключение задним числом изменило бы правила отметки существующих строк.
+
+`provider_events` создаётся здесь, а не в P7: гарантия идемпотентности принадлежит
+**схеме** (UNIQUE `(provider, external_id)` — повторный колбэк банка падает на
+вставке, а не применяется дважды), а P7 добавляет только клиент и webhook-роут.
+
+```sql
+CREATE TYPE escrow_status AS ENUM ('pending','funded','released','refunded');
+
+CREATE TABLE escrow_payments (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    deal_id  bigint NOT NULL REFERENCES deals(id) ON DELETE CASCADE,
+    amount   numeric(16,2) NOT NULL, currency char(3) NOT NULL DEFAULT 'UZS',
+    status   escrow_status NOT NULL DEFAULT 'pending',
+    mode     text NOT NULL DEFAULT 'stub',      -- 'stub' | 'live', зафиксирован при создании
+    provider_ref text,                          -- id операции банка (live); НЕ реквизиты
+    funded_at timestamptz, released_at timestamptz, refunded_at timestamptz,
+    funded_marked_by   bigint,                  -- staff_users.id (stub-режим)
+    released_marked_by bigint,
+    refunded_marked_by bigint,
+    note text,                                  -- обязательный комментарий оператора
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    -- Одна запись на сделку: весь денежный путь ищет платёж ПО сделке,
+    -- две строки сделали бы вопрос «оплачена ли сделка» неоднозначным.
+    CONSTRAINT uq_escrow_payments_deal UNIQUE (deal_id)
+);
+CREATE INDEX ix_escrow_payments_status ON escrow_payments(status, id);
+
+-- Webhook-inbox (используется и P7). Payload хранится дословно: непонятый
+-- колбэк — всё ещё доказательство.
+CREATE TABLE provider_events (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    provider text NOT NULL, external_id text NOT NULL,
+    payload jsonb NOT NULL,
+    processed boolean NOT NULL DEFAULT false, processed_at timestamptz, error text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT uq_provider_events_external UNIQUE (provider, external_id)
+);
+CREATE INDEX ix_provider_events_unprocessed ON provider_events(processed, id);
+```
+
+### R4 / P4 — Поля продажи оффера + избранное (migration 0025_offer_sale_fields)
+
+Как продавец на самом деле торгует этим оффером: срок производства, способ продажи и
+три флага «готов к сделке» — они становятся бейджами на карточке маркета.
+
+`seller_offers` — живая таблица с записями двух происхождений (TG-продавцы и
+компании портала), поэтому **каждая** добавленная колонка nullable либо имеет
+server default: голый NOT NULL уронил бы миграцию на реальной базе.
+
+`accepts_rfq` по умолчанию TRUE, остальные два — FALSE: ответить на RFQ продавцу ничего
+не стоит, а подписание договора и удержание денег в escrow — обязательства, в которые
+нельзя записать задним числом.
+
+`offer_favorites` привязано к **аккаунту**, а не к компании: закладка личная, и смена
+«шляпы» компании в портале не должна её менять.
+
+```sql
+CREATE TYPE offer_sale_mode AS ENUM ('from_stock','made_to_order','recurring_contract');
+
+ALTER TABLE seller_offers ADD COLUMN lead_time_days int;              -- срок производства
+ALTER TABLE seller_offers ADD COLUMN sale_mode offer_sale_mode;       -- способ продажи
+ALTER TABLE seller_offers ADD COLUMN accepts_rfq      boolean NOT NULL DEFAULT true;
+ALTER TABLE seller_offers ADD COLUMN accepts_contract boolean NOT NULL DEFAULT false;
+ALTER TABLE seller_offers ADD COLUMN accepts_escrow   boolean NOT NULL DEFAULT false;
+
+CREATE TABLE offer_favorites (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    user_account_id bigint NOT NULL REFERENCES user_accounts(id) ON DELETE CASCADE,
+    offer_id        int    NOT NULL REFERENCES seller_offers(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT uq_offer_favorite UNIQUE (user_account_id, offer_id)
+);
+CREATE INDEX ix_offer_favorites_account ON offer_favorites(user_account_id, id);
+```
+
+### R4 / P4 — Лог AI-рассылки поставщикам (migration 0026_rfq_push_log)
+
+UNIQUE `(request_id, company_id)` — это и есть правило дедупликации (FR-A2): задача
+вставляет с `ON CONFLICT DO NOTHING`, поэтому повторный запуск (ретрай, редактирование
+RFQ) никого не уведомляет дважды.
+
+`score` и `rank` **хранятся**, а не пересчитываются: staff читает лог, чтобы ответить
+«почему мы отправили эту заявку именно им», а веса со временем меняются — ранг,
+пересчитанный сегодняшними весами, не объяснит рассылку месячной давности.
+
+```sql
+CREATE TABLE rfq_push_log (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    request_id int    NOT NULL REFERENCES requests(id)  ON DELETE CASCADE,
+    company_id bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    score numeric(5,2) NOT NULL,
+    rank  int          NOT NULL,
+    notified_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT uq_rfq_push_target UNIQUE (request_id, company_id)
+);
+CREATE INDEX ix_rfq_push_log_request ON rfq_push_log(request_id, rank);
+```
+
+### R5 / P5 — Комплаенс химии (migration 0027_compliance)
+
+Машиночитаемого гос-реестра опасной химии в РУз **не существует** (закон «О химической
+безопасности» — законопроект, НРОХВ пуст). Поэтому источник истины — **наш** справочник
+`substances`, оцифрованный из официальных перечней ПКМ версионируемым сидом и
+редактируемый в админке. Это архитектурное решение, а не времянка.
+
+Два следствия для схемы:
+
+- **Юридический идентификатор — ТН ВЭД/HS, а не CAS.** Перечни РУз написаны
+  наименованиями + кодами ТН ВЭД; CAS встречается только в международных SDS и нужен
+  AI-матчингу. Отсюда `hs_code NOT NULL`, `cas` — nullable UNIQUE.
+- **Регулирование зависит от концентрации и годового объёма.** Ацетон — прекурсор
+  Списка IV при ≥60% и обычный растворитель ниже; изъятие — ≤12 кг(л)/год. Порог и
+  изъятие живут на веществе, иначе гейт заблокировал бы половину промышленной химии.
+
+`company_licenses` заведены **по режиму**: у четырёх режимов четыре разных лицензиара,
+и «у компании есть лицензия» без режима — не факт, на который можно опереть блокировку
+(экологический сертификат разблокировал бы торговлю прекурсорами). Срок действия
+проверяется **на чтении** (`status='active' AND (expires_at IS NULL OR expires_at >= today)
+AND revoked_at IS NULL`) — ночная развёртка статуса оставила бы окно, ради закрытия
+которого таблица и существует.
+
+`substance_suggestions` — журнал AI-подсказок (FR-C3) в духе `parse_runs`: модель и
+версия промпта хранятся вместе со строкой. `accepted IS NULL` — полноценное состояние
+(продавец ещё не ответил); в оффер подсказка сама по себе не пишется никогда.
+
+```sql
+CREATE TYPE regulation_level  AS ENUM ('free','docs_required','license_required','prohibited');
+CREATE TYPE regulation_regime AS ENUM (
+    'precursor_list_iv',   -- ПКМ №330, Список IV (пороги + изъятие ≤12 кг/год)
+    'explosive_toxic',     -- ПКМ №782 + №397
+    'strong_acting',       -- ПКМ №818
+    'pkm916_import');      -- ПКМ №916 (перечни по ТН ВЭД)
+CREATE TYPE license_status    AS ENUM ('pending_review','active','expired','revoked','rejected');
+ALTER TYPE offer_file_kind ADD VALUE 'sds';   -- перечень обязательных документов
+ALTER TYPE offer_file_kind ADD VALUE 'coa';   -- знал только 'tds'
+
+CREATE TABLE substances (
+    id      bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    code    text NOT NULL,                    -- slug: натуральный ключ идемпотентного сида
+    name_ru text NOT NULL, name_uz text, name_en text,
+    hs_code text NOT NULL,                    -- ТН ВЭД — первичный юр-идентификатор
+    cas     text,                             -- вторичный (SDS/AI); групповые позиции его не имеют
+    hazard_class text,
+    regulation_level  regulation_level  NOT NULL DEFAULT 'free',
+    regulation_regime regulation_regime,      -- NULL у free — его не ловит ни один акт
+    threshold_concentration_pct numeric(5,2), -- ниже порога режим не применяется
+    exemption_annual_limit      numeric(12,3), exemption_unit text,
+    license_category text,                    -- сверяется с company_licenses.category
+    required_docs jsonb NOT NULL DEFAULT '[]',-- значения offer_file_kind: sds/tds/coa/certificate
+    synonyms      jsonb NOT NULL DEFAULT '[]',
+    source_act    text,                       -- «ПКМ №330 от 12.11.2015, Список IV»
+    seed_revision text,                       -- какой ревизией сида создана строка
+    is_active  boolean NOT NULL DEFAULT true,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT uq_substances_code UNIQUE (code),
+    CONSTRAINT uq_substances_cas  UNIQUE (cas)
+);
+CREATE INDEX ix_substances_hs_code ON substances(hs_code);
+CREATE INDEX ix_substances_level   ON substances(regulation_level);
+
+CREATE TABLE company_licenses (
+    id         bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    company_id bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    regime     regulation_regime NOT NULL,
+    category   text, license_number text, issued_by text,
+    issued_at  date, expires_at date,         -- NULL = бессрочная
+    status     license_status NOT NULL DEFAULT 'pending_review',
+    document_id bigint REFERENCES verification_documents(id) ON DELETE SET NULL,  -- доказательство (R1)
+    registered_by int REFERENCES staff_users(id),
+    revoked_at timestamptz, revoke_reason text, note text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_company_licenses_lookup ON company_licenses(company_id, regime, status);
+
+CREATE TABLE substance_suggestions (
+    id         bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    offer_id   int    REFERENCES seller_offers(id) ON DELETE CASCADE,  -- NULL: форма ещё не сохранена
+    company_id bigint REFERENCES companies(id)     ON DELETE CASCADE,
+    input_text text NOT NULL,
+    substance_id bigint REFERENCES substances(id)  ON DELETE SET NULL, -- NULL: такого у нас нет
+    suggested_name text, suggested_cas text, suggested_hs_code text,
+    suggested_concentration_pct numeric(5,2),
+    confidence numeric(3,2),
+    model text NOT NULL, prompt_version text NOT NULL,
+    tokens_in int, tokens_out int,
+    accepted boolean,                          -- NULL = решения ещё нет
+    decided_at timestamptz, decided_by_user_account_id bigint REFERENCES user_accounts(id),
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_substance_suggestions_company ON substance_suggestions(company_id, id);
+CREATE INDEX ix_substance_suggestions_offer   ON substance_suggestions(offer_id);
+
+-- Оффер: ссылка на вещество, ручные CAS/HS, заявленная концентрация и КЕШ вердикта
+ALTER TABLE seller_offers
+    ADD COLUMN substance_id bigint REFERENCES substances(id) ON DELETE SET NULL,
+    ADD COLUMN cas_number text,
+    ADD COLUMN hs_code    text,
+    ADD COLUMN declared_concentration_pct numeric(5,2),
+    ADD COLUMN compliance_level regulation_level,   -- FR-C6: пересчёт на каждом
+    ADD COLUMN compliance_ok    boolean,            -- редактировании/переопубликации
+    ADD COLUMN compliance_missing jsonb,            -- [{kind, detail}] — чего не хватает
+    ADD COLUMN compliance_checked_at timestamptz;
+```
+
+Все добавленные в `seller_offers` колонки nullable: таблица живая и наполняется из двух
+источников (Telegram-продавцы и портальные компании).
+
+### R5 / P6 — Лаборатории и образцы (migration 0028_lab)
+
+Лабораторный анализ — **ручной процесс** партнёрской лаборатории (ТЗ §5): платформа
+оркеструет заявку и хранит результат, но не выполняет анализ и не контролирует SLA.
+Поэтому статусы `lab_orders` двигает оператор, а не таймер.
+
+Два инварианта вынесены в **CHECK**, а не в код сервиса, потому что оба — из тех, что
+будущий вызывающий нарушит ровно один раз, и этого хватит:
+
+- `ck_lab_order_target` — заявка всегда о чём-то (оффер **или** сделка): заявке без
+  цели некуда положить результат и некому показать бейдж;
+- `ck_lab_order_done_has_result` — `done` обязан ссылаться на выданный паспорт. Бейдж
+  «Laboratory Verified» без документа за ним — ровно тот отказ, ради предотвращения
+  которого фича существует.
+
+Результат хранится **указателем** (`result_offer_file_id` / `result_deal_document_id`),
+а не вторым экземпляром пути в S3: ключ уже лежит в `seller_offer_files.storage_path` /
+`deal_documents.storage_path`, а копия разъедется при первом же изменении файловой строки.
+
+`seller_offers.lab_verified` ставит **только** `lab_service.complete_with_result` —
+это и есть разница между «продавец загрузил паспорт» (бейдж «Лаб. паспорт», выводится
+из `seller_offer_files.kind='lab_passport'`) и «мы отдали материал в лабораторию»
+(бейдж «Laboratory Verified»). Наличие паспорта колонкой **не кешируется**: каталожный
+запрос и так грузит `files`, а фильтр маркета спрашивает то же самое через `EXISTS`.
+
+`sample_requests.seller_company_id` **копируется** из оффера при создании, а не читается
+через него: входящие продавца выбираются по этой колонке, и переход через оффер поставил
+бы содержимое ящика в зависимость от того, что оффер никогда не редактировали. Один живой
+запрос на пару (оффер, покупатель) — частичный уникальный индекс (образец
+`uq_rfq_response_active`); отказ освобождает слот, иначе «нет» однажды заблокировало бы
+покупателя навсегда.
+
+```sql
+CREATE TYPE lab_order_status      AS ENUM (
+    'submitted','accepted','sample_awaited','in_analysis','done','rejected');
+CREATE TYPE sample_request_status AS ENUM (
+    'requested','accepted','declined','sent','received','rejected_by_buyer');
+ALTER TYPE offer_file_kind ADD VALUE 'lab_passport';   -- у сделок он уже был (0023)
+
+CREATE TABLE lab_partners (                    -- справочник лабораторий (админка)
+    id      bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    name    text NOT NULL,
+    contacts jsonb NOT NULL DEFAULT '{}'::jsonb,   -- {phone,email,address,contact_name}
+    company_id bigint REFERENCES companies(id) ON DELETE SET NULL,  -- если лаборатория
+    note text,                                                      -- зарегистрирована
+    is_active boolean NOT NULL DEFAULT true,   -- выводится из оборота, не удаляется
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE lab_orders (
+    id      bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    number  text NOT NULL UNIQUE,              -- 'LAB-2026-000042' (оператор называет
+    company_id bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,  -- по телефону)
+    created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    offer_id int    REFERENCES seller_offers(id) ON DELETE CASCADE,
+    deal_id  bigint REFERENCES deals(id)         ON DELETE CASCADE,
+    substance_id bigint REFERENCES substances(id) ON DELETE SET NULL,
+    sample_volume text, comment text,
+    status lab_order_status NOT NULL DEFAULT 'submitted',
+    lab_partner_id bigint REFERENCES lab_partners(id) ON DELETE SET NULL,
+    result_offer_file_id    int    REFERENCES seller_offer_files(id) ON DELETE SET NULL,
+    result_deal_document_id bigint REFERENCES deal_documents(id)     ON DELETE SET NULL,
+    operator_note text, rejected_reason text,
+    handled_by int REFERENCES staff_users(id),
+    completed_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT ck_lab_order_target CHECK (offer_id IS NOT NULL OR deal_id IS NOT NULL),
+    CONSTRAINT ck_lab_order_done_has_result CHECK (
+        status <> 'done' OR result_offer_file_id IS NOT NULL
+                         OR result_deal_document_id IS NOT NULL)
+);
+CREATE INDEX ix_lab_orders_status  ON lab_orders(status, id);
+CREATE INDEX ix_lab_orders_company ON lab_orders(company_id, id);
+CREATE INDEX ix_lab_orders_offer   ON lab_orders(offer_id);
+
+CREATE TABLE sample_requests (
+    id      bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    offer_id int NOT NULL REFERENCES seller_offers(id) ON DELETE CASCADE,
+    buyer_company_id  bigint NOT NULL REFERENCES companies(id),
+    seller_company_id bigint NOT NULL REFERENCES companies(id),   -- копия из оффера
+    created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+    status sample_request_status NOT NULL DEFAULT 'requested',
+    qty text,                                  -- свободный текст: «1 кг», «пара гранул»
+    delivery_address text NOT NULL,            -- предзаполняется юр. адресом покупателя
+    courier text, tracking_ref text,           -- заполняются при отправке (FR-L3)
+    decline_reason text,
+    accepted_at timestamptz, sent_at timestamptz, received_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT ck_sample_parties_distinct CHECK (buyer_company_id <> seller_company_id)
+);
+CREATE UNIQUE INDEX uq_sample_request_active ON sample_requests(offer_id, buyer_company_id)
+    WHERE status IN ('requested','accepted','sent');   -- отказ освобождает слот
+CREATE INDEX ix_sample_requests_seller ON sample_requests(seller_company_id, status);
+CREATE INDEX ix_sample_requests_buyer  ON sample_requests(buyer_company_id, id);
+
+-- Оффер: условия по образцам + флаг независимого подтверждения
+ALTER TABLE seller_offers
+    ADD COLUMN samples_available boolean NOT NULL DEFAULT false,
+    ADD COLUMN sample_price numeric(14,2),         -- NULL при доступных образцах = бесплатно
+    ADD COLUMN sample_dispatch_days int,
+    ADD COLUMN lab_verified boolean NOT NULL DEFAULT false;  -- ставит только платформа
+```
+
+### R6 / P7 — Гос-реестры: неизменяемые снапшоты (migration 0029_gov_registry)
+
+Официального realtime-API к госреестрам для частной организации не существует: единственный
+канал — **ПЦД**, порядок доступа к которому нормативно не формализован (`INTEGRATIONS.md` §3).
+Поэтому P7.c кладёт в схему не «текущее состояние компании в реестре», а **историю
+наблюдений**: `registry_snapshots` — append-only таблица без `updated_at` и без единого пути
+на UPDATE во всём коде. Повторная проверка — новая строка; история проверок компании и есть
+последовательность её строк.
+
+Это не стилистика, а несущая конструкция, потому что строки пишут **два разных источника**:
+
+- `source='registry'` — ответила API. `created_by` = NULL: никто ничего не утверждал.
+- `source='manual'` — оператор прочитал открытый сервис (my.soliq.uz — реестр НДС,
+  license.gov.uz — лицензии, registr.stat.uz — сама компания), перенёс результат и приложил
+  скриншот. `created_by` — сотрудник, чьё имя стоит под утверждением.
+
+Перезапись строки стёрла бы, **кто именно** и **когда** это сказал — то есть ровно тот
+вопрос, который задаёт аудитор. Скриншот получает то же обращение, что PKCS#7 в
+`signature_evidence`: ключ объекта + sha256 байтов.
+
+`kind`/`source` — Text + CHECK, а не PG-enum'ы (образец `escrow_payments.mode`): маленькие
+закрытые множества, члены которых заодно живут константами в сервисном коде.
+
+Вердикт из снапшота считают **чистые функции** `verification_checks.check_gov_registry` /
+`check_vat_status` — одни и те же для ответа ПЦД и для транскрипции оператора. Различие
+между ними хранится ровно в одном месте, в колонке `source`, и нигде больше.
+
+Два новых значения `verification_check_type` **дописаны** (`ALTER TYPE … ADD VALUE`, вне
+транзакционного блока) — enum нельзя переупорядочить. Это первые чеки, которые законно
+бывают `unavailable`, и поэтому же в этой миграции пришлось починить эвалюатор: до P7.c
+`unavailable` блокировал кейс безусловно, а `approve()` работает только из `pending_review`,
+так что чек, исчерпавший 5 ретраев, запирал кейс в `checks_running` — то есть мёртвый
+провайдер отключал ручной путь, который обязан был остаться (инвариант R1).
+
+```sql
+ALTER TYPE verification_check_type ADD VALUE IF NOT EXISTS 'gov_registry';
+ALTER TYPE verification_check_type ADD VALUE IF NOT EXISTS 'vat_status';
+
+CREATE TABLE registry_snapshots (
+    id              bigserial PRIMARY KEY,
+    company_id      bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    kind            text NOT NULL,       -- company | licenses | vat (по методам адаптера)
+    source          text NOT NULL,       -- registry (ответила API) | manual (внёс оператор)
+    provider        text NOT NULL,       -- 'pcd' | 'oneid' | 'manual' — свободный текст
+    payload         jsonb NOT NULL,      -- нормализованный DTO; пустой снапшот не доказательство
+    raw_status      text,                -- формулировка реестра дословно
+    evidence_path   text,                -- скриншот оператора (S3)
+    evidence_sha256 text,                -- ... и хеш его байтов
+    note            text,
+    created_by      int REFERENCES staff_users(id),   -- NULL = ответила API
+    fetched_at      timestamptz NOT NULL,             -- когда наблюдали
+    created_at      timestamptz NOT NULL DEFAULT now(),  -- когда записали
+    CONSTRAINT ck_registry_snapshot_kind   CHECK (kind IN ('company','licenses','vat')),
+    CONSTRAINT ck_registry_snapshot_source CHECK (source IN ('registry','manual'))
+    -- НЕТ updated_at: строка неизменяема, повторная проверка = новая строка
+);
+CREATE INDEX ix_registry_snapshots_lookup
+    ON registry_snapshots(company_id, kind, id);   -- «последний снапшот вида X»
+```
+
+P7.b (входящий контур эскроу) схемы **не потребовал**: `provider_events` с
+`UNIQUE (provider, external_id)` и nullable `escrow_payments.*_marked_by` приехали с P3
+(миграция 0024) именно под это. Идемпотентность вебхука — уже инвариант схемы, а
+provider-отметка платежа ложится в существующие колонки: NULL в `*_marked_by` означает
+«за движением стоит не оператор, а событие банка».
+
 ## История версий
 
+- v1.13 (28.07.2026): R6/P7 — гос-реестры (миграция 0029_gov_registry): `verification_check_type += gov_registry / vat_status`; таблица `registry_snapshots` — append-only (нет `updated_at`, нет UPDATE-пути), `source` различает ответ API и транскрипцию оператора, скриншот + sha256 как evidence, `fetched_at` отдельно от `created_at`. Заодно починен эвалюатор R1: `unavailable` перестаёт блокировать кейс после исчерпания ретраев (иначе мёртвый провайдер отключал ручной путь). P7.b (входящий контур эскроу) схемы не потребовал — `provider_events` и nullable `*_marked_by` приехали с P3.
+- v1.12 (28.07.2026): R5/P6 — лаборатории и образцы (миграция 0028_lab): enum'ы `lab_order_status`, `sample_request_status`, `offer_file_kind += lab_passport`; таблицы `lab_partners`, `lab_orders` (CHECK «заявка о чём-то» + CHECK «`done` ссылается на паспорт», результат указателем на файловую строку), `sample_requests` (продавец копией, частичный UQ на один живой запрос); `seller_offers += samples_available / sample_price / sample_dispatch_days / lab_verified`.
+- v1.11 (28.07.2026): R5/P5 — комплаенс химии (миграция 0027_compliance): enum'ы `regulation_level`, `regulation_regime`, `license_status`, `offer_file_kind += sds/coa`; таблицы `substances` (собственный источник истины, `hs_code` NOT NULL / `cas` UNIQUE NULL, пороги концентрации и изъятия), `company_licenses` (по режиму, срок действия проверяется на чтении), `substance_suggestions` (журнал AI-подсказок, `accepted IS NULL` = решения нет); `seller_offers += substance_id / cas_number / hs_code / declared_concentration_pct` + кеш вердикта.
+- v1.10 (27.07.2026): R4/P4 — лог AI-рассылки (миграция 0026_rfq_push_log): таблица `rfq_push_log` с UNIQUE `(request_id, company_id)` как правилом дедупликации и хранимыми `score`/`rank`.
+- v1.9 (27.07.2026): R4/P4 — поля продажи оффера (миграция 0025_offer_sale_fields): enum `offer_sale_mode`; `seller_offers += lead_time_days / sale_mode / accepts_rfq / accepts_contract / accepts_escrow` (все nullable или с server default — таблица живая); таблица `offer_favorites` (UNIQUE `(user_account_id, offer_id)`, привязка к аккаунту, не к компании).
+- v1.8 (27.07.2026): R4/P3 — escrow-платежи (миграция 0024_escrow): enum `escrow_status`; таблицы `escrow_payments` (UNIQUE по `deal_id`, `mode` зафиксирован при создании, `*_at`/`*_marked_by` на каждую отметку) и `provider_events` (webhook-inbox, UNIQUE `(provider, external_id)`). Банковских реквизитов в схеме нет. Таблица `deals` НЕ изменена — платёж двигает сделку только через `deal_service.transition()`.
+- v1.7 (27.07.2026): R4/P2 — сделки (миграция 0023_deals): enum'ы `deal_status`, `deal_actor_kind`, `deal_document_kind`, `rfq_response_status`, `rfq_visibility`; таблицы `deals` (CHECK `buyer <> seller`, партиальный UNIQUE по `contract_id`), `deal_status_history`, `deal_messages` (CHECK «текст или файл»), `deal_documents`, `rfq_responses` (партиальный UNIQUE живого отклика); `requests += required_docs / visibility / visible_company_ids`. Таблица `contracts` НЕ изменена — связь односторонняя (`deals.contract_id`) + доменные события.
+- v1.6 (27.07.2026): R4/P1 — медиа (миграция 0022_company_logo): `companies.logo_storage_path` (nullable, только S3-ключ; выдача — presigned TTL ≤ 600 с). Фото офферов — без изменений схемы (существующая `seller_offer_files`, `kind='image'`).
+- v1.5 (26.07.2026): R3 Stage B — Контракты (миграция 0021_contracts): enum `contract_status`, таблицы `contract_templates`, `contracts` (CHECK `initiator <> counterparty`), `contract_signatures` (UNIQUE(contract_id, company_id), FK на `signature_evidence`). Зерно домена Deal Lifecycle.
+- v1.4 (26.07.2026): R3 Stage A — E-IMZO рельсы (миграция 0020_eimzo): enum-значение `verification_check_type += 'eimzo_signature'`, `companies.identity_locked`, таблицы `signature_evidence` (неизменяемое доказательство подписи), `company_person_data` (шифрованные PINFL/ФИО, §6.2), `integration_call_log` (журнал шлюза, прун 90д).
+- v1.2 (23.07.2026): раздел 10 — верификация компаний и портал (R1, миграция 0017): 14 ENUM-типов, таблицы `user_accounts`, `sms_send_log`, `companies`, `company_members`, `company_business_roles`, `company_bank_accounts`, `verification_cases`, `verification_checks`, `verification_documents`, `domain_events`; мост маркетплейса (`seller_offers.company_id`/`created_by_user_account_id`, nullable `seller_id` + CHECK `ck_offer_origin`; дремлющие `sellers.company_id`/`clients.company_id`).
 - v1.1 (12.06.2026): `sources.adapter` + `last_test_ok_at` под конструктор источников (dev-спека §2.5); `fx_rates`; kind `rss`; вопросы 1 и 3 закрыты.
 - v1.0 (12.06.2026): первая версия.

@@ -1,0 +1,205 @@
+- generic [active] [ref=f2e1]:
+  - button "Open Next.js Dev Tools" [ref=f2e7] [cursor=pointer]
+  - alert [ref=f2e11]
+  - generic [ref=f2e150]:
+    - complementary "Main navigation" [ref=f2e151]:
+      - generic [ref=f2e152]: Polymer Intelligence
+      - navigation "Dashboard navigation" [ref=f2e157]:
+        - generic [ref=f2e158]:
+          - paragraph [ref=f2e159]: ГЛАВНОЕ
+          - list [ref=f2e160]:
+            - listitem [ref=f2e161]:
+              - link "Панель" [ref=f2e162] [cursor=pointer]:
+                - /url: /ru
+            - listitem [ref=f2e166]:
+              - link "Лента" [ref=f2e167] [cursor=pointer]:
+                - /url: /ru/signals
+        - generic [ref=f2e170]:
+          - paragraph [ref=f2e171]: ЗАЯВКИ
+          - list [ref=f2e172]:
+            - listitem [ref=f2e173]:
+              - link "Заявки на закупку" [ref=f2e174] [cursor=pointer]:
+                - /url: /ru/requests
+            - listitem [ref=f2e179]:
+              - link "Предложения" [ref=f2e180] [cursor=pointer]:
+                - /url: /ru/offers
+            - listitem [ref=f2e184]:
+              - link "Модерация" [ref=f2e185] [cursor=pointer]:
+                - /url: /ru/moderation
+            - listitem [ref=f2e189]:
+              - link "Запросы предложений" [ref=f2e190] [cursor=pointer]:
+                - /url: /ru/offer-requests
+            - listitem [ref=f2e194]:
+              - link "Верификация" [ref=f2e195] [cursor=pointer]:
+                - /url: /ru/verification
+            - listitem [ref=f2e199]:
+              - link "Компании" [ref=f2e200] [cursor=pointer]:
+                - /url: /ru/companies
+        - generic [ref=f2e205]:
+          - paragraph [ref=f2e206]: БРОКЕР
+          - list [ref=f2e207]:
+            - listitem [ref=f2e208]:
+              - link "AI-подбор" [ref=f2e209] [cursor=pointer]:
+                - /url: /ru/sourcing
+            - listitem [ref=f2e214]:
+              - link "Склад" [ref=f2e215] [cursor=pointer]:
+                - /url: /ru/inventory
+            - listitem [ref=f2e226]:
+              - link "Партнёры" [ref=f2e227] [cursor=pointer]:
+                - /url: /ru/partners
+            - listitem [ref=f2e233]:
+              - link "Аналитика" [ref=f2e234] [cursor=pointer]:
+                - /url: /ru/intel
+        - generic [ref=f2e237]:
+          - paragraph [ref=f2e238]: ИСТОЧНИКИ
+          - list [ref=f2e239]:
+            - listitem [ref=f2e240]:
+              - link "Источники" [ref=f2e241] [cursor=pointer]:
+                - /url: /ru/sources
+            - listitem [ref=f2e246]:
+              - link "Оповещения" [ref=f2e247] [cursor=pointer]:
+                - /url: /ru/alerts
+        - generic [ref=f2e251]:
+          - paragraph [ref=f2e252]: НАСТРОЙКИ
+          - list [ref=f2e253]:
+            - listitem [ref=f2e254]:
+              - link "Отчёты" [ref=f2e255] [cursor=pointer]:
+                - /url: /ru/reports
+            - listitem [ref=f2e259]:
+              - link "Новости (админ)" [ref=f2e260] [cursor=pointer]:
+                - /url: /ru/admin/news
+            - listitem [ref=f2e262]:
+              - link "Цены" [ref=f2e263] [cursor=pointer]:
+                - /url: /ru/prices
+            - listitem [ref=f2e266]:
+              - link "Продукты" [ref=f2e267] [cursor=pointer]:
+                - /url: /ru/admin/products
+            - listitem [ref=f2e272]:
+              - link "Пользователи" [ref=f2e273] [cursor=pointer]:
+                - /url: /ru/admin/users
+      - generic [ref=f2e279]:
+        - generic [ref=f2e281]:
+          - generic [ref=f2e285]: Язык
+          - combobox "Язык" [ref=f2e286]:
+            - option "Русский" [selected]
+            - option "O'zbek"
+            - option "Türkçe"
+            - option "فارسی"
+            - option "中文"
+        - generic [ref=f2e287]:
+          - generic [ref=f2e288]: "?"
+          - generic [ref=f2e289]:
+            - paragraph
+            - generic [ref=f2e290]: admin
+    - main [ref=f2e12]:
+      - generic [ref=f2e13]:
+        - link "Назад к очереди" [ref=f2e14] [cursor=pointer]:
+          - /url: /ru/verification
+        - generic [ref=f2e17]:
+          - generic [ref=f2e22]:
+            - heading "Аплоуд Тест ООО" [level=1] [ref=f2e23]
+            - paragraph [ref=f2e24]: "Регистрация · ИНН: 301234567"
+          - generic [ref=f2e25]: Одобрена
+        - generic [ref=f2e26]:
+          - heading "Профиль компании" [level=2] [ref=f2e27]
+          - generic [ref=f2e28]:
+            - generic [ref=f2e29]:
+              - term [ref=f2e30]: Юридическое название
+              - definition [ref=f2e31]: Аплоуд Тест ООО
+            - generic [ref=f2e32]:
+              - term [ref=f2e33]: Краткое название
+              - definition [ref=f2e34]: —
+            - generic [ref=f2e35]:
+              - term [ref=f2e36]: Публичный ID
+              - definition [ref=f2e37]: a9788462-d6d8-485c-b55c-6626688350cc
+            - generic [ref=f2e38]:
+              - term [ref=f2e39]: Юрисдикция
+              - definition [ref=f2e40]: UZ
+            - generic [ref=f2e41]:
+              - term [ref=f2e42]: Правовая форма
+              - definition [ref=f2e43]: ООО
+            - generic [ref=f2e44]:
+              - term [ref=f2e45]: Директор
+              - definition [ref=f2e46]: Иван Тестов
+            - generic [ref=f2e47]:
+              - term [ref=f2e48]: Юридический адрес
+              - definition [ref=f2e49]: —
+            - generic [ref=f2e50]:
+              - term [ref=f2e51]: Статус
+              - definition [ref=f2e52]:
+                - generic [ref=f2e53]: Проверена
+            - generic [ref=f2e54]:
+              - term [ref=f2e55]: Проверена
+              - definition [ref=f2e56]: 25.07.2026, 17:56
+          - generic [ref=f2e57]:
+            - paragraph [ref=f2e58]: Роли
+            - 'generic "Производитель: declared" [ref=f2e60]': Производитель
+        - generic [ref=f2e61]:
+          - heading "Проверки" [level=2] [ref=f2e62]
+          - generic [ref=f2e63]:
+            - generic [ref=f2e64]:
+              - generic [ref=f2e66]:
+                - generic [ref=f2e67]: Формат ИНН
+                - generic [ref=f2e68]: Пройдена
+                - generic [ref=f2e69]: "Попыток: 1"
+              - generic [ref=f2e70]: "{ \"valid\": true, \"digits\": 9, \"jurisdiction\": \"UZ\" }"
+            - generic [ref=f2e72]:
+              - generic [ref=f2e74]:
+                - generic [ref=f2e75]: Банковские реквизиты
+                - generic [ref=f2e76]: Предупреждение
+                - generic [ref=f2e77]: "Попыток: 1"
+              - generic [ref=f2e78]: "{ \"reason\": \"no_bank_account\" }"
+              - generic [ref=f2e80]:
+                - textbox "Причина отмены (обязательно)" [ref=f2e81]
+                - button "Отменить проверку" [disabled] [ref=f2e82]
+            - generic [ref=f2e87]:
+              - generic [ref=f2e89]:
+                - generic [ref=f2e90]: Документы
+                - generic [ref=f2e91]: Пройдена
+                - generic [ref=f2e92]: "Попыток: 1"
+              - generic [ref=f2e93]: "{ \"missing\": [], \"required\": [ \"registration_certificate\" ] }"
+            - generic [ref=f2e95]:
+              - generic [ref=f2e97]:
+                - generic [ref=f2e98]: Ручная проверка (KYB)
+                - generic [ref=f2e99]: Пройдена
+                - generic [ref=f2e100]: "Попыток: 1"
+              - generic [ref=f2e101]: "{ \"note\": \"awaiting_human_review\" }"
+        - generic [ref=f2e103]:
+          - heading "Документы" [level=2] [ref=f2e104]
+          - list [ref=f2e105]:
+            - listitem [ref=f2e106]:
+              - generic [ref=f2e111]:
+                - paragraph [ref=f2e112]: Свидетельство о регистрации
+                - paragraph [ref=f2e113]: image/png · 4.0 KB · pending_review
+              - link "Скачать" [ref=f2e114] [cursor=pointer]:
+                - /url: http://localhost:9000/polymer-demo/verification/3/616d8c5d6034ebff-test-doc.png?AWSAccessKeyId=minioadmin&Signature=kvsLVcqwnMNMKwjEDZ4HdZI3Pfw%3D&Expires=1784984775
+        - generic [ref=f2e115]:
+          - heading "История" [level=2] [ref=f2e116]
+          - list [ref=f2e121]:
+            - listitem [ref=f2e291]:
+              - paragraph [ref=f2e292]:
+                - text: vercase.approve
+                - generic [ref=f2e293]: "Сотрудник #1"
+              - paragraph [ref=f2e294]:
+                - time [ref=f2e295]: 25.07.2026, 17:56
+              - generic [ref=f2e296]: "{ \"staff\": 1 }"
+            - listitem [ref=f2e122]:
+              - paragraph [ref=f2e123]:
+                - text: vercase.approve
+                - generic [ref=f2e124]: "Сотрудник #1"
+              - paragraph [ref=f2e125]:
+                - time [ref=f2e126]: 25.07.2026, 17:51
+              - generic [ref=f2e127]: "{ \"staff\": 1 }"
+            - listitem [ref=f2e128]:
+              - paragraph [ref=f2e129]: vercase.submit
+              - paragraph [ref=f2e130]:
+                - time [ref=f2e131]: 25.07.2026, 17:40
+              - generic [ref=f2e132]: "{ \"account_id\": 2 }"
+            - listitem [ref=f2e133]:
+              - paragraph [ref=f2e134]: vercase.open
+              - paragraph [ref=f2e135]:
+                - time [ref=f2e136]: 25.07.2026, 17:39
+              - generic [ref=f2e137]: "{ \"case_type\": \"onboarding\", \"company_id\": 3 }"
+        - generic [ref=f2e138]:
+          - heading "Решение" [level=2] [ref=f2e139]
+          - generic [ref=f2e297]: "Решение принято: 25.07.2026, 17:56"

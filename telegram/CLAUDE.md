@@ -19,9 +19,11 @@ on startup when `PUBLIC_WEBAPP_URL` is set.
 
 | Path | Role |
 |------|------|
-| `bot.py` | `bot`/`dp` aiogram singletons, `setup_webhook()`, `load_template()`, `web_app_keyboard()`. |
+| `bot.py` | `bot`/`dp` aiogram singletons, `setup_webhook()`, `load_template()`, `web_app_keyboard()`, and the offer / offer-request moderation keyboards. `dp` wires the start, chatid, and offer-moderation routers. |
 | `handlers/start.py` | `start_router` — the `/start` handler. |
-| `templates/{ru,uz,tr}/` | Message templates (`start.txt`, `status_change.txt`). |
+| `handlers/chatid.py` | `/chatid` — returns chat id / type / topic thread id (a helper for wiring up notify/moderation groups). |
+| `handlers/moderation.py` | Inline-callback approve/reject routers for seller offers + buyer offer-requests, actioned from the team group. |
+| `templates/{ru,uz,tr,fa,zh}/` | Message templates (`start.txt`, `status_change.txt`). |
 
 ## Notes specific to this package
 
@@ -34,6 +36,11 @@ on startup when `PUBLIC_WEBAPP_URL` is set.
   `${PUBLIC_WEBAPP_URL}/` (the Web App is served at the root of `ai-imex.com`).
 - **Never log `WEBHOOK_SECRET`** — `setup_webhook` logs a masked URL only (CR-03).
 - **Templates**: `load_template(lang, name)` falls back to `ru` when a lang dir is missing. Add new
-  templates to all of `ru`/`uz`/`tr`.
+  templates to all of `ru`/`uz`/`tr`/`fa`/`zh`.
 - The webhook **route** lives in the backend (`app/api/telegram_webhook.py`); outbound status-change
   notifications are sent from the Celery `notify` tasks. This package supplies the bot client + templates.
+- **News channel posting is NOT here.** The daily/evening report digest and breaking-news alerts are
+  formatted (`report_service.render_telegram_digest` / `render_breaking_alert`) and sent from the
+  backend `app/tasks/reports.py` tasks (`publish_report_to_channel`, `publish_breaking_news`) to
+  `NEWS_CHANNEL_ID` — they just `from telegram.bot import bot` to reuse this client. No news templates
+  live in this package.

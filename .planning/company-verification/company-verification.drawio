@@ -1,0 +1,231 @@
+<mxfile host="app.diagrams.net" version="24.7.8">
+  <diagram id="arch-page" name="Target architecture">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="aMini" value="Mini app onboarding wizard&#10;(webapp, Telegram Web App)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aDash" value="Dashboard: /verification queue,&#10;/companies, /compliance rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="410" y="40" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aTg" value="Telegram staff group&#10;(inline case approve / reject)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="780" y="40" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="aCore" value="Company + compliance core (new bounded contexts, same monolith)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#534AB7;dashed=1;verticalAlign=top;fontStyle=1;fontSize=12;fontColor=#3C3489" vertex="1" parent="1">
+          <mxGeometry x="40" y="170" width="980" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="aReg" value="Company registry&#10;companies, members, business roles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="80" y="210" width="270" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aVer" value="Verification&#10;cases, checks, decisions, re-verification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="395" y="210" width="270" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aComp" value="Compliance + licensing&#10;license catalog, requirement rules, eligibility" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="710" y="210" width="270" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aTrust" value="Trust + reputation&#10;event ledger, score, badges" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="80" y="350" width="270" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aVault" value="Document vault&#10;S3/MinIO evidence + uploads" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="395" y="350" width="270" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aGw" value="Integration gateway&#10;provider adapters, snapshots, circuit breakers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="710" y="350" width="270" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="aOutbox" value="Domain events outbox&#10;(same-transaction write, Celery dispatch, Kafka-ready)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="200" y="530" width="340" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aProv" value="Gov + bank providers&#10;soliq, gov registry, license.gov.uz, CBU MFO, banks, e-imzo (P2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="640" y="530" width="340" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="aExist" value="Existing platform (event consumers)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#0F6E56;dashed=1;verticalAlign=top;fontStyle=1;fontSize=12;fontColor=#085041" vertex="1" parent="1">
+          <mxGeometry x="40" y="670" width="980" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="aMkt" value="Marketplace&#10;publish gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#04342C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="80" y="710" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aNotify" value="Notify queue&#10;bot DMs + staff group" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#04342C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="320" y="710" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aCp" value="Counterparty graph&#10;verified INN enrichment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#04342C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="560" y="710" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aSig" value="Signals + news&#10;unchanged" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#04342C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="800" y="710" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="aDeal" value="Deal lifecycle module (future): escrow, e-invoice, e-contract, customs, track and trace — consumes company public_id, eligibility facade, trust facade, event catalog" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#888780;dashed=1;fontColor=#444441;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="40" y="880" width="980" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ae1" value="onboarding" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="aMini" target="aReg"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae2" value="case review" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="aDash" target="aVer"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae3" value="inline approvals" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="aTg" target="aVer"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae4" value="run checks (verify queue)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="aVer" target="aGw"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae5" value="lookups → immutable snapshots" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5F5E5A;fontSize=11;fontColor=#444441" edge="1" parent="1" source="aGw" target="aProv"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae6" value="domain events (same tx)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="aCore" target="aOutbox"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae7" value="company.verified, eligibility.changed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1D9E75;fontSize=11;fontColor=#085041" edge="1" parent="1" source="aOutbox" target="aMkt"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae8" value="DMs, group cards" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1D9E75;fontSize=11;fontColor=#085041" edge="1" parent="1" source="aOutbox" target="aNotify"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae9" value="verified INN" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1D9E75;fontSize=11;fontColor=#085041" edge="1" parent="1" source="aOutbox" target="aCp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae10" value="eligibility check (sync facade)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#0F6E56;dashed=1;fontSize=11;fontColor=#085041" edge="1" parent="1" source="aMkt" target="aComp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ae11" value="future integration, no refactor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#888780;dashed=1;fontSize=11;fontColor=#444441" edge="1" parent="1" source="aExist" target="aDeal"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="er-page" name="ER model">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="tMembers" value="&lt;b&gt;company_members&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;telegram_user_id&lt;br&gt;member_role (owner/manager/member)&lt;br&gt;status" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="330" y="60" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="tRoles" value="&lt;b&gt;company_business_roles&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;role (manufacturer/importer/…)&lt;br&gt;status (declared/confirmed)&lt;br&gt;confirmed_by FK staff_users" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="610" y="60" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="tCLic" value="&lt;b&gt;company_licenses&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;license_type_id FK&lt;br&gt;license_number&lt;br&gt;expires_at&lt;br&gt;status (pending/active/expired/revoked)&lt;br&gt;document_id FK 0..1&lt;br&gt;snapshot_id FK 0..1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="890" y="60" width="240" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="tLTypes" value="&lt;b&gt;license_types&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;code UQ&lt;br&gt;name_ru / name_uz / name_en&lt;br&gt;issuing_authority" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="1190" y="60" width="230" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="tReqs" value="&lt;b&gt;license_requirements&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;product_id FK 0..1 / product_group&lt;br&gt;hazard_class&lt;br&gt;license_type_id FK&lt;br&gt;requirement_level (required/conditional)&lt;br&gt;jurisdiction&lt;br&gt;effective_from / effective_to&lt;br&gt;rule_version" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="1480" y="60" width="250" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tBank" value="&lt;b&gt;company_bank_accounts&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;bank_mfo&lt;br&gt;account_number_enc (encrypted)&lt;br&gt;account_last4&lt;br&gt;status (unverified/pending/verified)&lt;br&gt;verification_method&lt;br&gt;evidence_document_id FK 0..1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="610" y="280" width="240" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="tElig" value="&lt;b&gt;company_eligibility&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;product_id FK / product_group&lt;br&gt;eligible bool&lt;br&gt;reasons JSONB&lt;br&gt;rule_version" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="1190" y="280" width="230" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="tProducts" value="&lt;b&gt;products&lt;/b&gt; (existing)&lt;hr&gt;id PK&lt;br&gt;name" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A" vertex="1" parent="1">
+          <mxGeometry x="1480" y="300" width="230" height="65" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tSellers" value="&lt;b&gt;sellers&lt;/b&gt; (existing)&lt;hr&gt;id PK&lt;br&gt;telegram_user_id UQ&lt;br&gt;company_id FK 0..1 (NEW bridge)&lt;br&gt;is_verified (legacy badge)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="230" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="tOffers" value="&lt;b&gt;seller_offers&lt;/b&gt; (existing)&lt;hr&gt;id PK&lt;br&gt;seller_id FK&lt;br&gt;company_id FK 0..1 (NEW bridge)&lt;br&gt;status" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A" vertex="1" parent="1">
+          <mxGeometry x="40" y="380" width="230" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="tClients" value="&lt;b&gt;clients&lt;/b&gt; (existing)&lt;hr&gt;id PK&lt;br&gt;telegram_user_id UQ&lt;br&gt;company_id FK 0..1 (NEW bridge)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A" vertex="1" parent="1">
+          <mxGeometry x="40" y="520" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="tCparty" value="&lt;b&gt;counterparties&lt;/b&gt; (existing)&lt;hr&gt;id PK&lt;br&gt;canonical_name&lt;br&gt;role&lt;br&gt;tax_id (unverified, UZEX)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A" vertex="1" parent="1">
+          <mxGeometry x="40" y="650" width="230" height="95" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tComp" value="&lt;b&gt;companies&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;public_id UUID UQ&lt;br&gt;jurisdiction + tax_id UQ&lt;br&gt;legal_name / director_name&lt;br&gt;registry_status (gov-reported)&lt;br&gt;status (draft/…/verified/suspended)&lt;br&gt;verified_at&lt;br&gt;reverification_due_at&lt;br&gt;counterparty_id FK 0..1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="330" y="520" width="240" height="170" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tCases" value="&lt;b&gt;verification_cases&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;case_type (onboarding/reverif./targeted)&lt;br&gt;status (draft/…/approved/rejected)&lt;br&gt;decided_by FK staff_users 0..1&lt;br&gt;decision_note" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="660" y="520" width="250" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="tChecks" value="&lt;b&gt;verification_checks&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;case_id FK (UQ with check_type)&lt;br&gt;check_type (gov/tax/vat/bank/licenses)&lt;br&gt;status (pending/…/waived)&lt;br&gt;result JSONB&lt;br&gt;snapshot_id FK 0..1&lt;br&gt;attempts / last_error" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="970" y="520" width="250" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="tSnaps" value="&lt;b&gt;registry_snapshots&lt;/b&gt; (immutable)&lt;hr&gt;id PK&lt;br&gt;provider (soliq/license_gov/…)&lt;br&gt;query_key&lt;br&gt;content_hash (UQ w/ provider+key)&lt;br&gt;payload JSONB&lt;br&gt;fetched_at" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="1290" y="520" width="250" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tTrustE" value="&lt;b&gt;trust_events&lt;/b&gt; (append-only)&lt;hr&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;event_type&lt;br&gt;payload JSONB&lt;br&gt;occurred_at&lt;br&gt;source" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="330" y="790" width="230" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="tTrustP" value="&lt;b&gt;trust_profiles&lt;/b&gt; (projection)&lt;hr&gt;company_id PK FK&lt;br&gt;score / grade&lt;br&gt;components JSONB&lt;br&gt;badges JSONB&lt;br&gt;scoring_version" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="620" y="790" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="tDocs" value="&lt;b&gt;verification_documents&lt;/b&gt;&lt;hr&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;case_id FK 0..1&lt;br&gt;kind (reg_cert/bank_letter/license/…)&lt;br&gt;storage_path (S3)&lt;br&gt;sha256&lt;br&gt;status (pending/accepted/rejected)&lt;br&gt;expires_at" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C" vertex="1" parent="1">
+          <mxGeometry x="970" y="790" width="250" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="tStaff" value="&lt;b&gt;staff_users&lt;/b&gt; (existing)&lt;hr&gt;id PK&lt;br&gt;role (admin/analyst/…)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A" vertex="1" parent="1">
+          <mxGeometry x="1290" y="790" width="230" height="65" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tOutbox" value="&lt;b&gt;domain_events&lt;/b&gt; (outbox, no FKs by design)&lt;hr&gt;id PK&lt;br&gt;event_type&lt;br&gt;aggregate_type / aggregate_id&lt;br&gt;payload JSONB&lt;br&gt;published_at 0..1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="900" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="tAudit" value="&lt;b&gt;audit_log&lt;/b&gt; (existing, append-only)&lt;hr&gt;id PK&lt;br&gt;staff_user_id FK 0..1&lt;br&gt;action / entity / entity_id&lt;br&gt;details JSONB" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=2;fontSize=12;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="1290" y="900" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="er1" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tMembers"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er2" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tRoles"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er3" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tBank"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er4" value="1..* (one open, partial UQ)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tCases"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er5" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tCases" target="tChecks"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er6" value="evidence 0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tSnaps" target="tChecks"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er7" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tDocs"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er8" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tCLic"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er9" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tLTypes" target="tCLic"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er10" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tLTypes" target="tReqs"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er11" value="0..1 per rule" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#888780;fontSize=11;fontColor=#444441" edge="1" parent="1" source="tProducts" target="tReqs"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er12" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tElig"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#888780;fontSize=11;fontColor=#444441" edge="1" parent="1" source="tProducts" target="tElig"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er14" value="1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tTrustE"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er15" value="1..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERone;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tComp" target="tTrustP"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er16" value="bridge 0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERone;endFill=0;strokeColor=#888780;dashed=1;fontSize=11;fontColor=#444441" edge="1" parent="1" source="tCparty" target="tComp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er17" value="bridge 0..* (new FK)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#888780;dashed=1;fontSize=11;fontColor=#444441" edge="1" parent="1" source="tComp" target="tSellers"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er18" value="bridge 0..* (new FK)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#888780;dashed=1;fontSize=11;fontColor=#444441" edge="1" parent="1" source="tComp" target="tClients"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er19" value="bridge 0..* (new FK)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#888780;dashed=1;fontSize=11;fontColor=#444441" edge="1" parent="1" source="tComp" target="tOffers"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er20" value="decided_by 0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=#888780;fontSize=11;fontColor=#444441" edge="1" parent="1" source="tStaff" target="tCases"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er21" value="evidence 0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERone;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tDocs" target="tCLic"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="er22" value="evidence 0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=ERone;startFill=0;endArrow=ERone;endFill=0;strokeColor=#7F77DD;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="tDocs" target="tBank"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="flow-page" name="Verification flow">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="f1" value="Company submits verification case&#10;(wizard: profile, roles, bank, docs, licenses)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#04342C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="380" y="40" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" value="Auto checks fan out (verify queue)&#10;gov registry, tax, VAT, bank, licenses" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#26215C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="380" y="170" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" value="needs_info&#10;(mismatch — user corrects, checks re-run)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#04342C;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" value="unavailable&#10;(provider down — retry w/ backoff, or admin waive, audited)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="400" y="300" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" value="pending_review&#10;(staff: dashboard queue or Telegram inline)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#2C2C2A;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="740" y="300" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f6" value="rejected&#10;(resubmit allowed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCEBEB;strokeColor=#A32D2D;fontColor=#501313;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="740" y="450" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f7" value="approved → company.verified&#10;trust init, eligibility compute, publish unlock, bot DM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3DE;strokeColor=#3B6D11;fontColor=#173404;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="380" y="450" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f8" value="Re-verification (beat): due date or gov registry drift → new targeted case, silent pass unless drift" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#888780;dashed=1;fontColor=#444441;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="380" y="580" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fe1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5F5E5A" edge="1" parent="1" source="f1" target="f2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe2" value="mismatch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5F5E5A;fontSize=11" edge="1" parent="1" source="f2" target="f3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe3" value="provider outage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5F5E5A;fontSize=11" edge="1" parent="1" source="f2" target="f4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe4" value="checks terminal" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5F5E5A;fontSize=11" edge="1" parent="1" source="f2" target="f5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe5" value="resubmit ↻" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5F5E5A;dashed=1;fontSize=11" edge="1" parent="1" source="f3" target="f2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe6" value="retry / waive" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5F5E5A;dashed=1;fontSize=11" edge="1" parent="1" source="f4" target="f5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe7" value="reject" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#A32D2D;fontSize=11;fontColor=#791F1F" edge="1" parent="1" source="f5" target="f6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe8" value="approve" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3B6D11;fontSize=11;fontColor=#27500A" edge="1" parent="1" source="f5" target="f7"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe9" value="all auto passed + auto_approve setting" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#534AB7;dashed=1;fontSize=11;fontColor=#3C3489" edge="1" parent="1" source="f2" target="f7"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="fe10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#888780;dashed=1" edge="1" parent="1" source="f7" target="f8"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

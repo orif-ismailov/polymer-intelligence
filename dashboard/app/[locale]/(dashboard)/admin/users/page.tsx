@@ -18,6 +18,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { RouteGuardFallback } from "@/components/shared/RouteGuardFallback";
 import { useAuth } from "@/hooks/useAuth";
 import { apiFetch } from "@/lib/api";
 import { formatTashkent } from "@/lib/tz";
@@ -155,9 +156,10 @@ function AdminUsersPageContent() {
     }
   }, [isAuthenticated, role, router]);
 
-  // Don't render table while redirecting
+  // Don't render the table while redirecting — but show that something IS
+  // happening; `null` here was a blank black screen for a few hundred ms.
   if (role && role !== "admin") {
-    return null;
+    return <RouteGuardFallback />;
   }
 
   return (

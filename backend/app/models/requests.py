@@ -14,11 +14,12 @@ from __future__ import annotations
 
 import datetime
 import decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     ForeignKey,
@@ -35,7 +36,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.core.db import Base
-from app.models.enums import PriceBasis, RequestStatus, Urgency
+from app.models.enums import PriceBasis, RequestStatus, RfqVisibility, Urgency
+
+if TYPE_CHECKING:
+    from app.models.companies import Company
 
 
 class Client(Base):
@@ -56,6 +60,9 @@ class Client(Base):
     counterparty_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("counterparties.id"), nullable=True
     )                                                                             # link to intelligence loop
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # dormant portal-company bridge (R1, A1)
     is_blocked: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
@@ -79,13 +86,27 @@ class Request(Base):
     __table_args__ = (
         Index("ix_requests_status_created_at", "status", "created_at"),
         Index("ix_requests_client_created_at", "client_id", "created_at"),
+        # Dual-origin (R2, A2): a request comes from a TG client OR a portal
+        # company account. The CHECK keeps the origin invariant at the DB level.
+        CheckConstraint(
+            "client_id IS NOT NULL OR created_by_user_account_id IS NOT NULL",
+            name="ck_request_origin",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     number: Mapped[str] = mapped_column(Text, nullable=False, unique=True)       # 'REQ-2026-06-12-00125'
-    client_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("clients.id"), nullable=False
+    # Nullable (R2): a portal request originates from a company account, not a
+    # TG client. Exactly one origin is guaranteed by ck_request_origin.
+    client_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("clients.id"), nullable=True
     )
+    company_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("companies.id"), nullable=True
+    )                                                                             # set for portal-originated requests (A2)
+    created_by_user_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=True
+    )                                                                             # portal author (A2)
     # Nullable: a buyer may type a product not in our catalog (product_text holds
     # the free-typed name). product_id OR product_text is required at the schema layer.
     product_id: Mapped[int | None] = mapped_column(
@@ -135,6 +156,20 @@ class Request(Base):
         default=RequestStatus.new,
         server_default="new",
     )
+    # ── RFQ extensions (R4 / P2, FR-D10) ──────────────────────────────────────
+    # Documents the buyer requires of a responding supplier (list of codes, see
+    # app/models/deals.py::REQUIRED_DOC_CODES). NULL = nothing required.
+    required_docs: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    # Who may see this RFQ in the supplier-facing market list. Defaults to the
+    # narrow option — widening is the buyer's explicit choice.
+    visibility: Mapped[RfqVisibility] = mapped_column(
+        PgEnum(RfqVisibility, name="rfq_visibility", create_type=False),
+        nullable=False,
+        default=RfqVisibility.verified_only,
+        server_default="verified_only",
+    )
+    # Company ids allowed to see it when visibility='selected'.
+    visible_company_ids: Mapped[list[int] | None] = mapped_column(JSONB, nullable=True)
     assigned_to: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )                                                                             # REFERENCES staff_users(id)
@@ -149,13 +184,20 @@ class Request(Base):
     )
 
     # Relationships
-    client: Mapped[Client] = relationship("Client", back_populates="requests")
+    client: Mapped[Client | None] = relationship("Client", back_populates="requests")
+    company: Mapped[Company | None] = relationship("Company")  # dual-origin (R2 A2)
     files: Mapped[list[RequestFile]] = relationship(
         "RequestFile", back_populates="request", cascade="all, delete-orphan"
     )
     status_history: Mapped[list[RequestStatusHistory]] = relationship(
         "RequestStatusHistory", back_populates="request", cascade="all, delete-orphan"
     )
+
+    # ── Dual-origin display helper (R2 W1) ────────────────────────────────────
+    @property
+    def origin(self) -> str:
+        """"company" for portal-originated requests, else "client" (TG Mini App)."""
+        return "company" if self.created_by_user_account_id is not None else "client"
 
 
 class RequestFile(Base):

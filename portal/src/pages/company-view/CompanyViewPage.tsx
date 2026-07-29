@@ -1,0 +1,90 @@
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
+
+import { CompanyStatusBadge, useCompany } from "@/entities/company";
+import {
+  Alert,
+  ErrorView,
+  LinkButton,
+  LoadingView,
+  PageHeader,
+  Skeleton,
+} from "@/shared/ui";
+import { ApiError } from "@/shared/api";
+
+import { BankSection } from "./sections/BankSection";
+import { DocumentsSection } from "./sections/DocumentsSection";
+import { LicensesSection } from "./sections/LicensesSection";
+import { ProfileSection } from "./sections/ProfileSection";
+import { RolesSection } from "./sections/RolesSection";
+
+/** Company statuses in which profile/bank/doc mutations are still allowed. */
+const EDITABLE_STATUSES = new Set(["draft", "pending_verification", "rejected"]);
+
+export function CompanyViewPage() {
+  const { t } = useTranslation();
+  const params = useParams<{ companyId: string }>();
+  const companyId = Number(params.companyId);
+  const query = useCompany(Number.isInteger(companyId) ? companyId : null);
+
+  if (query.isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-24 w-full" />
+        <LoadingView />
+      </div>
+    );
+  }
+
+  if (query.isError) {
+    const notFound = query.error instanceof ApiError && query.error.status === 404;
+    return (
+      <ErrorView
+        title={notFound ? t("errors.notFound") : t("errors.loadFailed")}
+        message={notFound ? t("errors.notFoundBody") : undefined}
+        retryLabel={notFound ? undefined : t("common.retry")}
+        onRetry={notFound ? undefined : () => void query.refetch()}
+      >
+        {notFound ? <LinkButton to="/companies">{t("nav.companies")}</LinkButton> : null}
+      </ErrorView>
+    );
+  }
+
+  const company = query.data;
+  if (!company) return null;
+
+  const editable = EDITABLE_STATUSES.has(company.status);
+  const name = company.legal_name ?? company.short_name ?? t("companies.noName");
+
+  return (
+    <div className="space-y-5">
+      {/* Sheet …46 leads a company profile with the name, its trust badge and the
+          two actions — not with a card wrapped around all three. */}
+      <PageHeader
+        backTo="/companies"
+        backLabel={t("nav.companies")}
+        title={name}
+        subtitle={`${t("companies.taxId")}: ${company.tax_id} · ${company.public_id}`}
+        badge={<CompanyStatusBadge status={company.status} />}
+        actions={
+          <>
+            <LinkButton variant="outline" to={`/companies/${company.id}/verification`}>
+              {t("company.goToVerification")}
+            </LinkButton>
+            {company.status === "verified" ? (
+              <LinkButton to="/offers/new">{t("company.createOffer")}</LinkButton>
+            ) : null}
+          </>
+        }
+      />
+
+      {!editable ? <Alert tone="info">{t("company.notEditable")}</Alert> : null}
+
+      <ProfileSection company={company} editable={editable} />
+      <RolesSection company={company} />
+      <BankSection company={company} editable={editable} />
+      <DocumentsSection company={company} editable={editable} />
+      <LicensesSection companyId={company.id} />
+    </div>
+  );
+}

@@ -1,0 +1,24 @@
+- generic [ref=f4e22]:
+  - banner [ref=f4e23]:
+    - generic [ref=f4e24]:
+      - generic [ref=f4e25]: IA
+      - generic [ref=f4e26]: IMEX AI
+    - combobox "Язык интерфейса" [ref=f4e27]:
+      - option "Русский" [selected]
+      - option "O‘zbekcha"
+      - option "English"
+  - main [ref=f4e28]:
+    - generic [ref=f4e29]:
+      - generic [ref=f4e30]:
+        - heading "Введите код" [level=1] [ref=f4e31]
+        - paragraph [ref=f4e32]: Введите номер телефона — мы отправим код подтверждения.
+      - generic [ref=f4e35]:
+        - paragraph [ref=f4e36]:
+          - text: Мы отправили 6-значный код на номер +998 90 100 20 30.
+          - button "Изменить номер" [ref=f4e37] [cursor=pointer]
+        - generic [ref=f4e38]:
+          - generic [ref=f4e39]: Код подтверждения*
+          - textbox "Код подтверждения*" [active] [ref=f4e40]:
+            - /placeholder: ••••••
+        - button "Войти" [disabled]
+        - generic [ref=f4e41]: Повторная отправка через 55 с

@@ -171,12 +171,24 @@ class SellerOfferStatus(enum.StrEnum):
 
 
 class OfferFileKind(enum.StrEnum):
-    """Type of file attached to a seller offer (Phase 2)."""
+    """Type of file attached to a seller offer (Phase 2).
+
+    `sds` and `coa` arrived with P5: a regulated substance carries a list of
+    required documents (SDS/TDS/COA), and the `docs_required` verdict has to be
+    able to tell them apart — "some file is attached" is not compliance.
+
+    `lab_passport` (P6) is the one kind that is also a public trust claim: it
+    puts a badge on the market card, so attaching it re-enters moderation the
+    way a photo does.
+    """
 
     image = "image"
     tds = "tds"
     certificate = "certificate"
     other = "other"
+    sds = "sds"  # P5 — safety data sheet
+    coa = "coa"  # P5 — certificate of analysis
+    lab_passport = "lab_passport"  # P6 — laboratory analysis passport
 
 
 class OfferAvailability(enum.StrEnum):
@@ -187,6 +199,20 @@ class OfferAvailability(enum.StrEnum):
 
     in_stock = "in_stock"
     on_order = "on_order"
+
+
+class OfferSaleMode(enum.StrEnum):
+    """How a seller trades this offer (PG type: offer_sale_mode).
+
+    Orthogonal to `OfferAvailability`, which says whether the goods exist right
+    now. A `from_stock` offer can still be `on_order` availability (the seller
+    restocks to fill it), and a `recurring_contract` seller is advertising terms
+    rather than a lot.
+    """
+
+    from_stock = "from_stock"
+    made_to_order = "made_to_order"
+    recurring_contract = "recurring_contract"
 
 
 class OfferRequestStatus(enum.StrEnum):
@@ -200,3 +226,373 @@ class OfferRequestStatus(enum.StrEnum):
     pending = "pending"
     approved = "approved"
     rejected = "rejected"
+
+
+# ── Company Verification & Portal (R1) ────────────────────────────────────────
+# Identity model v2 (ARCHITECTURE Amendment A1): person = user_accounts (phone
+# OTP), company membership via company_members.user_account_id. All ENUM values
+# below are verbatim from R1-PLAN §T1.1 and mapped to native PG ENUM types in
+# migration 0017. Do not change a value without a migration + DB-doc edit.
+
+
+class AccountStatus(enum.StrEnum):
+    """Portal user-account lifecycle (PG type: account_status)."""
+
+    active = "active"
+    blocked = "blocked"
+
+
+class CompanyStatus(enum.StrEnum):
+    """Company verification lifecycle (PG type: company_status).
+
+    draft → pending_verification → {verified, rejected}; verified → suspended →
+    verified (reinstate); liquidated is terminal (gov-driven, P2).
+    """
+
+    draft = "draft"
+    pending_verification = "pending_verification"
+    verified = "verified"
+    rejected = "rejected"
+    suspended = "suspended"
+    liquidated = "liquidated"
+
+
+class CompanyMemberRole(enum.StrEnum):
+    """Membership role within a company (PG type: company_member_role)."""
+
+    owner = "owner"
+    manager = "manager"
+    member = "member"
+
+
+class CompanyMemberStatus(enum.StrEnum):
+    """Membership status within a company (PG type: company_member_status)."""
+
+    active = "active"
+    invited = "invited"
+    removed = "removed"
+
+
+class CompanyBusinessRole(enum.StrEnum):
+    """Declared business role of a company (PG type: company_business_role)."""
+
+    manufacturer = "manufacturer"
+    importer = "importer"
+    trader = "trader"
+    logistics_provider = "logistics_provider"
+    distributor = "distributor"
+    laboratory = "laboratory"
+    insurance_provider = "insurance_provider"
+
+
+class BusinessRoleStatus(enum.StrEnum):
+    """Confirmation state of a declared business role (PG type: business_role_status)."""
+
+    declared = "declared"
+    confirmed = "confirmed"
+    revoked = "revoked"
+
+
+class BankAccountStatus(enum.StrEnum):
+    """Company bank-account verification state (PG type: bank_account_status)."""
+
+    unverified = "unverified"
+    pending = "pending"
+    verified = "verified"
+    failed = "failed"
+    archived = "archived"
+
+
+class BankVerificationMethod(enum.StrEnum):
+    """How a bank account was verified (PG type: bank_verification_method)."""
+
+    document = "document"
+    e_invoice_crosscheck = "e_invoice_crosscheck"
+    bank_api = "bank_api"
+    manual = "manual"
+
+
+class VerificationCaseType(enum.StrEnum):
+    """Type of a verification case (PG type: verification_case_type)."""
+
+    onboarding = "onboarding"
+    reverification = "reverification"
+    targeted = "targeted"
+
+
+class VerificationCaseStatus(enum.StrEnum):
+    """Verification-case lifecycle (PG type: verification_case_status).
+
+    draft → submitted → checks_running → {needs_info, pending_review} →
+    {approved, rejected}; cancelled is terminal.
+    """
+
+    draft = "draft"
+    submitted = "submitted"
+    checks_running = "checks_running"
+    needs_info = "needs_info"
+    pending_review = "pending_review"
+    approved = "approved"
+    rejected = "rejected"
+    cancelled = "cancelled"
+
+
+class VerificationCheckType(enum.StrEnum):
+    """Individual check within a case (PG type: verification_check_type).
+
+    R1 ships the four manual/format checks; R3 added eimzo_signature. P7.c adds
+    the two registry checks (migration 0029) — APPENDED, never reordered, because
+    the values are a PG enum and `ALTER TYPE` can only add.
+
+    Both registry checks may be `unavailable`: there is no realtime API for
+    private companies without ПЦД access, and an operator's transcription of an
+    open service (my.soliq.uz, license.gov.uz) is the channel that works today.
+    """
+
+    tax_id_format = "tax_id_format"
+    bank_requisites = "bank_requisites"
+    documents_complete = "documents_complete"
+    manual_kyb = "manual_kyb"
+    eimzo_signature = "eimzo_signature"  # R3 — E-IMZO digital-signature identity confirmation
+    gov_registry = "gov_registry"        # P7.c — company exists/active in the state registry
+    vat_status = "vat_status"            # P7.c — VAT certificate status
+
+
+class VerificationCheckStatus(enum.StrEnum):
+    """Result state of a check (PG type: verification_check_status)."""
+
+    pending = "pending"
+    running = "running"
+    passed = "passed"
+    warning = "warning"
+    failed = "failed"
+    unavailable = "unavailable"
+    waived = "waived"
+
+
+class VerificationDocumentKind(enum.StrEnum):
+    """Kind of uploaded verification document (PG type: verification_document_kind)."""
+
+    registration_certificate = "registration_certificate"
+    director_id = "director_id"
+    bank_letter = "bank_letter"
+    license = "license"
+    permit = "permit"
+    certificate = "certificate"
+    power_of_attorney = "power_of_attorney"
+    other = "other"
+
+
+class DocumentReviewStatus(enum.StrEnum):
+    """Staff review state of a verification document (PG type: document_review_status)."""
+
+    pending_review = "pending_review"
+    accepted = "accepted"
+    rejected = "rejected"
+
+
+# ── Contracts (R3 Stage B — Deal Lifecycle seed) ──────────────────────────────
+
+
+class ContractStatus(enum.StrEnum):
+    """Contract lifecycle (PG type: contract_status).
+
+    draft → pending_counterparty → pending_signatures → active; declined /
+    cancelled / expired are terminal.
+    """
+
+    draft = "draft"
+    pending_counterparty = "pending_counterparty"
+    pending_signatures = "pending_signatures"
+    active = "active"
+    declined = "declined"
+    cancelled = "cancelled"
+    expired = "expired"
+
+
+# ── Deals (R4 / P2 — Deal Lifecycle core) ─────────────────────────────────────
+
+
+class DealStatus(enum.StrEnum):
+    """Deal lifecycle (PG type: deal_status).
+
+    negotiation → contract_pending → contract_signed → payment_pending →
+    paid_escrow → shipped → delivered → completed. `disputed` is reachable from
+    every in-flight state and only staff can leave it; `completed`/`cancelled`
+    are terminal. The transition table itself lives in
+    `app/services/deal_service.py::VALID_TRANSITIONS` — declaration order here is
+    the happy path, not the rule.
+    """
+
+    negotiation = "negotiation"
+    contract_pending = "contract_pending"
+    contract_signed = "contract_signed"
+    payment_pending = "payment_pending"
+    paid_escrow = "paid_escrow"
+    shipped = "shipped"
+    delivered = "delivered"
+    completed = "completed"
+    cancelled = "cancelled"
+    disputed = "disputed"
+
+
+class DealActorKind(enum.StrEnum):
+    """Who drove a deal transition (PG type: deal_actor_kind).
+
+    `system` is reserved for event-driven transitions (contract activation, and
+    later the escrow callbacks) — no HTTP handler may pass it.
+    """
+
+    buyer = "buyer"
+    seller = "seller"
+    staff = "staff"
+    system = "system"
+
+
+class DealDocumentKind(enum.StrEnum):
+    """Kind of document attached to a deal (PG type: deal_document_kind)."""
+
+    contract = "contract"
+    invoice = "invoice"
+    lab_passport = "lab_passport"
+    transport = "transport"
+    other = "other"
+
+
+class RfqResponseStatus(enum.StrEnum):
+    """Supplier response to a buyer RFQ (PG type: rfq_response_status).
+
+    Accepting one response moves the rest of that RFQ's submitted responses to
+    `not_selected`. `withdrawn` frees the slot so the supplier may respond again.
+    """
+
+    submitted = "submitted"
+    accepted = "accepted"
+    not_selected = "not_selected"
+    withdrawn = "withdrawn"
+
+
+class RfqVisibility(enum.StrEnum):
+    """Who may see a buyer's RFQ (PG type: rfq_visibility).
+
+    Default `verified_only` — an RFQ carries commercial intent, so it is never
+    widened to unverified companies unless the buyer chooses to.
+    """
+
+    verified_only = "verified_only"
+    all = "all"
+    selected = "selected"
+
+
+class EscrowStatus(enum.StrEnum):
+    """Escrow payment state (PG type: escrow_status).
+
+    Deliberately shorter than the deal's own machine: escrow only answers "where
+    is the money". `pending` — the buyer has been given an invoice; `funded` —
+    the bank confirms the money arrived; `released` — it was paid out to the
+    seller; `refunded` — it went back to the buyer. The last two are terminal.
+
+    Each state change drags the deal with it (`escrow_service.mark`), which is
+    why a deal can never reach `paid_escrow` or `completed` by hand.
+    """
+
+    pending = "pending"
+    funded = "funded"
+    released = "released"
+    refunded = "refunded"
+
+
+# ── Chemical compliance (R5 / P5) ─────────────────────────────────────────────
+
+
+class RegulationLevel(enum.StrEnum):
+    """How tightly a substance is regulated (PG type: regulation_level).
+
+    Drives what publishing an offer of it requires:
+    `free` — nothing; `docs_required` — the documents the substance names
+    (SDS/TDS/COA); `license_required` — an active company licence of the matching
+    regime; `prohibited` — the platform will not carry it at all, and no upload
+    changes that.
+    """
+
+    free = "free"
+    docs_required = "docs_required"
+    license_required = "license_required"
+    prohibited = "prohibited"
+
+
+class RegulationRegime(enum.StrEnum):
+    """Which Uzbek regime a substance falls under (PG type: regulation_regime).
+
+    Four separate acts, four separate licensors — there is no single national
+    registry (INTEGRATIONS.md §4), so the regime is what a licence is checked
+    against:
+
+    - `precursor_list_iv`  — ПКМ №330 (Список IV), concentration thresholds +
+      the ≤12 kg/year exemption; licensed through the Ministry of Health system
+    - `explosive_toxic`    — ПКМ №782 + ПКМ №397 (explosives, toxic classes I–III)
+    - `strong_acting`      — ПКМ №818 (strong-acting substances)
+    - `pkm916_import`      — ПКМ №916 import/export lists (bans + eco-certification)
+    """
+
+    precursor_list_iv = "precursor_list_iv"
+    explosive_toxic = "explosive_toxic"
+    strong_acting = "strong_acting"
+    pkm916_import = "pkm916_import"
+
+
+class LicenseStatus(enum.StrEnum):
+    """State of a company licence (PG type: license_status).
+
+    From `company-verification/ARCHITECTURE.md` §CompanyLicense:
+    pending_review → active → expired (by date) / revoked; pending_review →
+    rejected. An expired or revoked licence is never resurrected — the company
+    registers a new one.
+    """
+
+    pending_review = "pending_review"
+    active = "active"
+    expired = "expired"
+    revoked = "revoked"
+    rejected = "rejected"
+
+
+# ── Labs and samples (R5 / P6) ────────────────────────────────────────────────
+
+
+class LabOrderStatus(enum.StrEnum):
+    """A request for a laboratory analysis (PG type: lab_order_status).
+
+    submitted → accepted → sample_awaited → in_analysis → done; `rejected` is
+    reachable from every live state. The analysis itself is a manual process run
+    by a partner lab (TZ §5), so every step is moved by an operator — the
+    platform orchestrates and stores the result, it does not run the lab.
+
+    `done` is the only status that produces something, and it is the only one
+    the schema constrains: a done order points at the passport it produced. The
+    transition table lives in `app/services/lab_service.py::_TRANSITIONS`.
+    """
+
+    submitted = "submitted"
+    accepted = "accepted"
+    sample_awaited = "sample_awaited"
+    in_analysis = "in_analysis"
+    done = "done"
+    rejected = "rejected"
+
+
+class SampleRequestStatus(enum.StrEnum):
+    """A buyer's request for a physical sample (PG type: sample_request_status).
+
+    requested → accepted → sent → received; the seller may `declined` instead of
+    accepting, and the buyer may `rejected_by_buyer` what arrived. Unlike the lab
+    machine, both sides drive this one — which party may make which move is
+    `sample_service._ACTOR_RULES`, not a comment.
+    """
+
+    requested = "requested"
+    accepted = "accepted"
+    declined = "declined"
+    sent = "sent"
+    received = "received"
+    rejected_by_buyer = "rejected_by_buyer"
