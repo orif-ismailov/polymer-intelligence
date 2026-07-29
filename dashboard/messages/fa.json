@@ -34,7 +34,16 @@
       "labOrders": "آزمایشگاه",
       "labPartners": "آزمایشگاه‌ها"
     },
-    "guest": "مهمان"
+    "guest": "مهمان",
+    "openMenu": "باز کردن منو",
+    "closeMenu": "بستن منو",
+    "logout": "خروج",
+    "sessionChanged": {
+      "title": "نشست تغییر کرد",
+      "switched": "کاربر دیگری در این مرورگر وارد شده است. این زبانه حساب قدیمی را نشان می‌دهد — برای ادامه با حساب فعلی صفحه را تازه‌سازی کنید.",
+      "signedOut": "نشست در زبانه دیگری پایان یافت. برای ورود دوباره صفحه را تازه‌سازی کنید.",
+      "reload": "تازه‌سازی صفحه"
+    }
   },
   "login": {
     "subtitle": "به پنل مدیریت وارد شوید",
@@ -81,7 +90,8 @@
       "low": "کم"
     },
     "urgencyAriaLabel": "فوریت: {label}",
-    "needsReview": "نیازمند بررسی"
+    "needsReview": "نیازمند بررسی",
+    "loading": "در حال بارگذاری…"
   },
   "home": {
     "title": "داشبورد",
@@ -427,6 +437,16 @@
     "lab": {
       "passport": "گواهی آزمایشگاه",
       "verified": "Laboratory Verified"
+    },
+    "conflict": {
+      "alreadyModerated": "این پیشنهاد پیش‌تر توسط ناظر دیگری بررسی شده است: {status}. فهرست به‌روزرسانی شد.",
+      "status": {
+        "draft": "پیش‌نویس",
+        "pending_moderation": "در حال بررسی",
+        "approved": "تأییدشده",
+        "rejected": "ردشده",
+        "archived": "بایگانی‌شده"
+      }
     }
   },
   "sources": {
@@ -547,7 +567,8 @@
       "publicUrlsOnly": "فقط URLهای عمومی.",
       "selectPlaceholder": "{label} را انتخاب کنید…",
       "enterPlaceholder": "{label} را وارد کنید…"
-    }
+    },
+    "readOnlyNotice": "نمای فقط‌خواندنی: افزودن، آزمایش، پردازش مجدد و فعال‌سازی منابع تنها برای مدیر در دسترس است."
   },
   "alerts": {
     "pageTitle": "هشدارها",
@@ -709,7 +730,16 @@
     "reject": "رد",
     "notePlaceholder": "توضیح (اختیاری)",
     "originPortal": "پورتال",
-    "verified": "تأیید‌شده"
+    "verified": "تأیید‌شده",
+    "conflict": {
+      "alreadyModerated": "این درخواست پیش‌تر توسط همکار دیگری بررسی شده است: {status}. فهرست به‌روزرسانی شد.",
+      "status": {
+        "pending": "در انتظار بررسی",
+        "approved": "تأییدشده",
+        "rejected": "ردشده"
+      }
+    },
+    "decideFailed": "اعمال تصمیم ممکن نشد"
   },
   "newsAdmin": {
     "title": "مدیریت اخبار",

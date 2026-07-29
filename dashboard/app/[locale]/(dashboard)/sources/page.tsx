@@ -6,18 +6,27 @@
  * Lists all configured data sources with health info.
  * "Add Source" button opens the AddSourceWizard dialog.
  *
+ * RBAC: `GET /sources` is deliberately readable by any staff role (health only,
+ * never the config column — T-04-22), so the page stays visible to everyone. But
+ * every *mutation* here is `require_admin` server-side, so the controls that call
+ * them are admin-only in the UI too, and a non-admin gets one sentence saying why
+ * instead of buttons that 403 in silence.
+ *
  * Empty state shown when no sources exist.
  * No hardcoded hex.
  */
 
 import { useState, Suspense } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Server } from "lucide-react";
+import { Info, Plus, Server } from "lucide-react";
 import { SourcesList } from "@/components/sources/SourcesList";
 import { AddSourceWizard } from "@/components/sources/AddSourceWizard";
+import { useAuth } from "@/hooks/useAuth";
 
 function SourcesPageContent() {
   const t = useTranslations("sources");
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const [wizardOpen, setWizardOpen] = useState(false);
 
   return (
@@ -33,20 +42,31 @@ function SourcesPageContent() {
             {t("subtitle")}
           </p>
         </div>
-        <button
-          onClick={() => setWizardOpen(true)}
-          className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
-        >
-          <Plus size={16} aria-hidden="true" />
-          {t("addSource")}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setWizardOpen(true)}
+            className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
+          >
+            <Plus size={16} aria-hidden="true" />
+            {t("addSource")}
+          </button>
+        )}
       </div>
+
+      {!isAdmin && (
+        <p className="flex items-start gap-2 rounded-lg border border-border bg-background-secondary p-3 text-sm text-foreground-muted">
+          <Info size={16} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+          {t("readOnlyNotice")}
+        </p>
+      )}
 
       {/* Sources list */}
       <SourcesList />
 
-      {/* Wizard dialog */}
-      <AddSourceWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
+      {/* Wizard dialog — admin-only; every step of it calls an admin endpoint. */}
+      {isAdmin && (
+        <AddSourceWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
+      )}
     </div>
   );
 }

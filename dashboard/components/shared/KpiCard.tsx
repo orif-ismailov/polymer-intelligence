@@ -40,13 +40,15 @@ export function KpiCard({
     <div
       className={`rounded-lg bg-background-secondary border border-border p-6 flex flex-col gap-2 ${className}`}
     >
-      <div className="flex items-center gap-2">
+      {/* `min-w-0` so a long uppercase label ("ВСЕГО ПРОДАВЦОВ") wraps at its
+          space instead of overflowing the card in a narrow column. */}
+      <div className="flex items-center gap-2 min-w-0">
         <Icon size={24} className="text-foreground-muted flex-shrink-0" aria-hidden="true" />
-        <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">
+        <span className="min-w-0 text-xs font-semibold text-foreground-muted uppercase tracking-wider">
           {label}
         </span>
       </div>
-      <div className="flex items-end gap-3">
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
         <span className="text-[28px] font-semibold text-foreground leading-none">
           {value}
         </span>

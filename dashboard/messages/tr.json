@@ -34,7 +34,16 @@
       "labOrders": "Laboratuvar",
       "labPartners": "Laboratuvarlar"
     },
-    "guest": "Misafir"
+    "guest": "Misafir",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat",
+    "logout": "Çıkış yap",
+    "sessionChanged": {
+      "title": "Oturum değişti",
+      "switched": "Bu tarayıcıda başka bir kullanıcı oturum açtı. Bu sekme artık güncel değil — mevcut hesapla devam etmek için sayfayı yenileyin.",
+      "signedOut": "Oturum başka bir sekmede kapatıldı. Yeniden giriş yapmak için sayfayı yenileyin.",
+      "reload": "Sayfayı yenile"
+    }
   },
   "login": {
     "subtitle": "Panele giriş yapın",
@@ -81,7 +90,8 @@
       "low": "Düşük"
     },
     "urgencyAriaLabel": "Aciliyet: {label}",
-    "needsReview": "İnceleme Gerekli"
+    "needsReview": "İnceleme Gerekli",
+    "loading": "Yükleniyor…"
   },
   "home": {
     "title": "Gösterge Paneli",
@@ -434,6 +444,16 @@
     "lab": {
       "passport": "Lab pasaportu",
       "verified": "Laboratory Verified"
+    },
+    "conflict": {
+      "alreadyModerated": "Bu teklif başka bir moderatör tarafından zaten işleme alındı: {status}. Liste yenilendi.",
+      "status": {
+        "draft": "taslak",
+        "pending_moderation": "moderasyonda",
+        "approved": "onaylandı",
+        "rejected": "reddedildi",
+        "archived": "arşivde"
+      }
     }
   },
   "sources": {
@@ -562,7 +582,8 @@
       "publicUrlsOnly": "Yalnızca herkese açık URL'ler.",
       "selectPlaceholder": "{label} seçin…",
       "enterPlaceholder": "{label} girin…"
-    }
+    },
+    "readOnlyNotice": "Salt okunur görünüm: kaynak ekleme, test etme, yeniden işleme ve etkinleştirme yalnızca yöneticiye açıktır."
   },
   "alerts": {
     "pageTitle": "Uyarılar",
@@ -724,7 +745,16 @@
     "reject": "Reddet",
     "notePlaceholder": "Not (isteğe bağlı)",
     "originPortal": "Portal",
-    "verified": "doğrulandı"
+    "verified": "doğrulandı",
+    "conflict": {
+      "alreadyModerated": "Bu talep başka bir personel tarafından zaten işleme alındı: {status}. Liste yenilendi.",
+      "status": {
+        "pending": "incelemede",
+        "approved": "onaylandı",
+        "rejected": "reddedildi"
+      }
+    },
+    "decideFailed": "Karar uygulanamadı"
   },
   "newsAdmin": {
     "title": "Haber Yönetimi",

@@ -76,7 +76,9 @@ export default function DashboardHomePage() {
       </div>
 
       {/* KPI cards row — 5 cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {/* One column on a phone: two 140px cards could not fit a label like
+          «ВСЕГО ПОКУПАТЕЛЕЙ» without either overflowing or breaking mid-word. */}
+      <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
           icon={Users}
           label={t("kpiTotalBuyers")}

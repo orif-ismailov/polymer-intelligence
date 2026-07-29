@@ -34,7 +34,16 @@
       "labOrders": "Laboratoriya",
       "labPartners": "Laboratoriyalar"
     },
-    "guest": "Mehmon"
+    "guest": "Mehmon",
+    "openMenu": "Menyuni ochish",
+    "closeMenu": "Menyuni yopish",
+    "logout": "Chiqish",
+    "sessionChanged": {
+      "title": "Sessiya o‘zgardi",
+      "switched": "Bu brauzerda boshqa foydalanuvchi tizimga kirdi. Bu oyna eskirgan hisobni ko‘rsatmoqda — joriy hisob ostida davom etish uchun sahifani yangilang.",
+      "signedOut": "Sessiya boshqa oynada yakunlandi. Qayta kirish uchun sahifani yangilang.",
+      "reload": "Sahifani yangilash"
+    }
   },
   "login": {
     "subtitle": "Boshqaruv paneliga kiring",
@@ -81,7 +90,8 @@
       "low": "Past"
     },
     "urgencyAriaLabel": "Shoshilinchlik: {label}",
-    "needsReview": "Tekshirish kerak"
+    "needsReview": "Tekshirish kerak",
+    "loading": "Yuklanmoqda…"
   },
   "home": {
     "title": "Boshqaruv paneli",
@@ -434,6 +444,16 @@
     "lab": {
       "passport": "Lab. pasport",
       "verified": "Laboratory Verified"
+    },
+    "conflict": {
+      "alreadyModerated": "Bu taklifni boshqa moderator allaqachon ko‘rib chiqqan: {status}. Ro‘yxat yangilandi.",
+      "status": {
+        "draft": "qoralama",
+        "pending_moderation": "moderatsiyada",
+        "approved": "tasdiqlangan",
+        "rejected": "rad etilgan",
+        "archived": "arxivda"
+      }
     }
   },
   "sources": {
@@ -562,7 +582,8 @@
       "publicUrlsOnly": "Faqat ommaviy URL manzillar.",
       "selectPlaceholder": "{label} ni tanlang…",
       "enterPlaceholder": "{label} ni kiriting…"
-    }
+    },
+    "readOnlyNotice": "Faqat ko‘rish rejimi: manba qo‘shish, tekshirish, qayta ishlash va yoqish faqat administrator uchun."
   },
   "alerts": {
     "pageTitle": "Ogohlantirishlar",
@@ -724,7 +745,16 @@
     "reject": "Rad etish",
     "notePlaceholder": "Izoh (ixtiyoriy)",
     "originPortal": "Portal",
-    "verified": "tasdiqlangan"
+    "verified": "tasdiqlangan",
+    "conflict": {
+      "alreadyModerated": "Bu so‘rovni boshqa xodim allaqachon ko‘rib chiqqan: {status}. Ro‘yxat yangilandi.",
+      "status": {
+        "pending": "ko‘rib chiqilmoqda",
+        "approved": "tasdiqlangan",
+        "rejected": "rad etilgan"
+      }
+    },
+    "decideFailed": "Qarorni qo‘llash imkoni bo‘lmadi"
   },
   "newsAdmin": {
     "title": "Yangiliklar boshqaruvi",

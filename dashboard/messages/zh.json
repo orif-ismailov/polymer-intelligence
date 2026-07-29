@@ -34,7 +34,16 @@
       "labOrders": "实验室",
       "labPartners": "合作实验室"
     },
-    "guest": "访客"
+    "guest": "访客",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单",
+    "logout": "退出登录",
+    "sessionChanged": {
+      "title": "会话已变更",
+      "switched": "另一位用户已在此浏览器登录。当前标签页显示的是旧账号——请刷新页面以使用当前账号继续。",
+      "signedOut": "会话已在其他标签页中结束。请刷新页面重新登录。",
+      "reload": "刷新页面"
+    }
   },
   "login": {
     "subtitle": "登录到控制台",
@@ -81,7 +90,8 @@
       "low": "低"
     },
     "urgencyAriaLabel": "紧急程度：{label}",
-    "needsReview": "需要审核"
+    "needsReview": "需要审核",
+    "loading": "加载中…"
   },
   "home": {
     "title": "仪表盘",
@@ -427,6 +437,16 @@
     "lab": {
       "passport": "检测报告",
       "verified": "Laboratory Verified"
+    },
+    "conflict": {
+      "alreadyModerated": "该报价已由其他审核人处理：{status}。列表已刷新。",
+      "status": {
+        "draft": "草稿",
+        "pending_moderation": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝",
+        "archived": "已归档"
+      }
     }
   },
   "sources": {
@@ -547,7 +567,8 @@
       "publicUrlsOnly": "仅限公开 URL。",
       "selectPlaceholder": "请选择 {label}…",
       "enterPlaceholder": "请输入 {label}…"
-    }
+    },
+    "readOnlyNotice": "只读视图：添加、测试、重新处理和启用数据源仅限管理员。"
   },
   "alerts": {
     "pageTitle": "预警",
@@ -709,7 +730,16 @@
     "reject": "驳回",
     "notePlaceholder": "备注（可选）",
     "originPortal": "门户",
-    "verified": "已验证"
+    "verified": "已验证",
+    "conflict": {
+      "alreadyModerated": "该询价已由其他同事处理：{status}。列表已刷新。",
+      "status": {
+        "pending": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝"
+      }
+    },
+    "decideFailed": "无法应用该决定"
   },
   "newsAdmin": {
     "title": "新闻管理",
