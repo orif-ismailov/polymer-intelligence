@@ -834,7 +834,8 @@
         "released": "Sotuvchiga o‘tkazildi",
         "refunded": "Xaridorga qaytarildi"
       },
-      "refundCause": "Mablag‘ eskrou orqali xaridorga qaytarildi."
+      "refundCause": "Mablag‘ eskrou orqali xaridorga qaytarildi.",
+      "amount": "Bitim summasi"
     }
   },
   "rfq": {

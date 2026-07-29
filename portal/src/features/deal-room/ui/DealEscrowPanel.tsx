@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import type { DealEscrow } from "@/entities/deal";
 import { formatDateTime, formatMoney } from "@/shared/lib";
-import { Alert, Badge, Card, CardBody, EmptyState, StatusStepper } from "@/shared/ui";
+import { Alert, Badge, Card, CardBody, EmptyState, StatChip, StatusStepper } from "@/shared/ui";
 import type { BadgeTone, StatusStep } from "@/shared/ui";
 
 interface DealEscrowPanelProps {
@@ -58,10 +58,15 @@ export function DealEscrowPanel({ escrow }: DealEscrowPanelProps) {
     <div className="space-y-4">
       <Card>
         <CardBody className="space-y-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="num text-xl font-semibold text-text">
-              {formatMoney(escrow.amount, escrow.currency, i18n.language)}
-            </p>
+          {/* The sheet leads the payment screen with the figure ("Сумма к оплате"),
+              so the amount is a metric tile rather than a bold paragraph. */}
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <StatChip
+              className="min-w-40 flex-1"
+              value={formatMoney(escrow.amount, escrow.currency, i18n.language)}
+              label={t("deals.escrow.amount")}
+              tone="brand"
+            />
             <Badge tone={TONES[escrow.status]}>
               {t(`deals.escrow.status.${escrow.status}`)}
             </Badge>

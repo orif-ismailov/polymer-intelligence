@@ -834,7 +834,8 @@
         "released": "Released to the seller",
         "refunded": "Refunded to the buyer"
       },
-      "refundCause": "The funds were refunded to the buyer through escrow."
+      "refundCause": "The funds were refunded to the buyer through escrow.",
+      "amount": "Deal amount"
     }
   },
   "rfq": {

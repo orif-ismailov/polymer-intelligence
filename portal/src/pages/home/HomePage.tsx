@@ -1,3 +1,5 @@
+import { type ReactNode } from "react";
+
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -7,55 +9,59 @@ import { useNewsArticles } from "@/entities/news";
 import { useUnreadCount } from "@/entities/notification";
 import { useRequests } from "@/entities/request";
 import { CaseStatusBadge } from "@/entities/verification";
-import { cn } from "@/shared/lib";
 import {
   Card,
   CardBody,
   CardHeader,
   CardTitle,
+  ChevronRightIcon,
   EmptyState,
   LinkButton,
   LoadingView,
+  PageHeader,
+  StatChip,
 } from "@/shared/ui";
 
 const ACTIVE_REQUEST_STATUSES = new Set(["new", "viewed", "in_progress", "offer_sent"]);
 
-interface QuickCardProps {
-  to: string;
-  title: string;
-  hint: string;
-}
-
-function QuickCard({ to, title, hint }: QuickCardProps) {
+/**
+ * The mockups' module tile: a bordered card with the destination and a one-line
+ * explanation. Only routes that already exist in the cabinet — the sheet's other
+ * eight modules belong to features we haven't built.
+ */
+function ModuleCard({ to, title, hint }: { to: string; title: string; hint: string }) {
   return (
     <Link
       to={to}
-      className="block rounded-lg border border-brand-line bg-surface p-5 transition-colors hover:bg-surface-2 hover:shadow-glow"
+      className="group flex items-start justify-between gap-3 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-brand-line hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
     >
-      <p className="text-base font-semibold text-text">{title}</p>
-      <p className="mt-1 text-sm text-text-muted">{hint}</p>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-text">{title}</span>
+        <span className="mt-0.5 block text-xs text-text-muted">{hint}</span>
+      </span>
+      <span className="mt-0.5 shrink-0 text-text-subtle transition-colors group-hover:text-brand">
+        <ChevronRightIcon size={16} />
+      </span>
     </Link>
   );
 }
 
-function StatCard({ to, label, value }: { to: string; label: string; value: number | string }) {
-  // A count reads as a metric (brand, tabular); a bare "→" is just an affordance.
-  const isCount = typeof value === "number";
+function SectionCard({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <Link
-      to={to}
-      className="block rounded-lg border border-border bg-surface p-4 transition-colors hover:border-brand-line hover:bg-surface-2"
-    >
-      <p
-        className={cn(
-          "text-2xl font-semibold leading-tight",
-          isCount ? "num text-brand" : "text-text-muted",
-        )}
-      >
-        {value}
-      </p>
-      <p className="mt-0.5 text-sm text-text-muted">{label}</p>
-    </Link>
+    <Card>
+      <CardHeader action={action}>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardBody className="space-y-4">{children}</CardBody>
+    </Card>
   );
 }
 
@@ -79,58 +85,51 @@ export function HomePage() {
     : t("home.welcomeAnon");
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{greeting}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("home.title")}</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader title={greeting} subtitle={t("home.title")} />
 
-      {/* R2 stat cards — assembled from existing endpoints */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard to="/market" label={t("nav.market")} value="→" />
-        <StatCard to="/requests" label={t("home.activeRequests")} value={activeRequests} />
-        <StatCard to="/inquiries" label={t("nav.inquiries")} value="→" />
-        <StatCard to="/notifications" label={t("home.unread")} value={unreadCount} />
+      {/* Two real figures. The sheet's other tiles are metrics we don't have —
+          a navigation link is not a metric, so those became module cards. */}
+      <div className="grid grid-cols-2 gap-3">
+        <StatChip value={activeRequests} label={t("home.activeRequests")} tone="brand" />
+        <StatChip value={unreadCount} label={t("home.unread")} />
       </div>
 
       {isLoading ? (
         <LoadingView />
       ) : activeCompany ? (
-        <Card>
-          <CardHeader className="flex items-center justify-between">
-            <CardTitle>{t("home.activeCompany")}</CardTitle>
-            <CompanyStatusBadge status={activeCompany.status} />
-          </CardHeader>
-          <CardBody className="space-y-4">
-            <div>
-              <p className="text-lg font-medium text-text">
-                {activeCompany.legal_name ?? activeCompany.short_name ?? t("companies.noName")}
-              </p>
-              <p className="text-sm text-text-muted">
-                {t("companies.taxId")}: {activeCompany.tax_id}
-              </p>
-            </div>
+        <SectionCard
+          title={t("home.activeCompany")}
+          action={<CompanyStatusBadge status={activeCompany.status} />}
+        >
+          <div>
+            <p className="text-base font-medium text-text">
+              {activeCompany.legal_name ?? activeCompany.short_name ?? t("companies.noName")}
+            </p>
+            <p className="num mt-0.5 text-sm text-text-muted">
+              {t("companies.taxId")}: {activeCompany.tax_id}
+            </p>
+          </div>
 
-            {activeCompany.active_case ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-text-muted">{t("home.verificationState")}:</span>
-                <CaseStatusBadge status={activeCompany.active_case.status} />
-              </div>
+          {activeCompany.active_case ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-text-muted">{t("home.verificationState")}:</span>
+              <CaseStatusBadge status={activeCompany.active_case.status} />
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap gap-3">
+            <LinkButton variant="outline" to={`/companies/${activeCompany.id}`}>
+              {t("companies.open")}
+            </LinkButton>
+            <LinkButton variant="outline" to={`/companies/${activeCompany.id}/verification`}>
+              {t("home.goToVerification")}
+            </LinkButton>
+            {activeCompany.status === "verified" ? (
+              <LinkButton to="/offers/new">{t("home.publishOffer")}</LinkButton>
             ) : null}
-
-            <div className="flex flex-wrap gap-3">
-              <LinkButton variant="outline" to={`/companies/${activeCompany.id}`}>
-                {t("companies.open")}
-              </LinkButton>
-              <LinkButton variant="outline" to={`/companies/${activeCompany.id}/verification`}>
-                {t("home.goToVerification")}
-              </LinkButton>
-              {activeCompany.status === "verified" ? (
-                <LinkButton to="/offers/new">{t("home.publishOffer")}</LinkButton>
-              ) : null}
-            </div>
-          </CardBody>
-        </Card>
+          </div>
+        </SectionCard>
       ) : (
         <EmptyState
           title={t("home.noActiveCompany")}
@@ -139,33 +138,45 @@ export function HomePage() {
         />
       )}
 
-      {/* Latest news */}
+      {/* The sheet's module grid, filled with the destinations this cabinet has. */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold text-text">{t("home.quickActions")}</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ModuleCard to="/market" title={t("nav.market")} hint={t("market.subtitle")} />
+          <ModuleCard to="/requests" title={t("nav.requests")} hint={t("requests.subtitle")} />
+          <ModuleCard to="/inquiries" title={t("nav.inquiries")} hint={t("inquiries.subtitle")} />
+          <ModuleCard to="/deals" title={t("nav.deals")} hint={t("deals.subtitle")} />
+          <ModuleCard
+            to="/companies"
+            title={t("home.companiesCard")}
+            hint={t("home.companiesCardHint")}
+          />
+          <ModuleCard to="/offers" title={t("home.offersCard")} hint={t("home.offersCardHint")} />
+        </div>
+      </section>
+
       {latestNews.length > 0 ? (
-        <Card>
-          <CardHeader className="flex items-center justify-between">
-            <CardTitle>{t("home.latestNews")}</CardTitle>
+        <SectionCard
+          title={t("home.latestNews")}
+          action={
             <Link to="/news" className="text-sm text-brand hover:underline">
               {t("notifications.viewAll")}
             </Link>
-          </CardHeader>
-          <CardBody className="space-y-2">
+          }
+        >
+          <div className="space-y-2">
             {latestNews.map((a) => (
               <Link
                 key={a.id}
                 to={`/news/${a.id}`}
-                className="block rounded-md border border-border px-3 py-2 text-sm hover:border-brand"
+                className="block rounded-md border border-border px-3 py-2 text-sm transition-colors hover:border-brand-line hover:bg-surface-2"
               >
                 {a.headline}
               </Link>
             ))}
-          </CardBody>
-        </Card>
+          </div>
+        </SectionCard>
       ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <QuickCard to="/companies" title={t("home.companiesCard")} hint={t("home.companiesCardHint")} />
-        <QuickCard to="/offers" title={t("home.offersCard")} hint={t("home.offersCardHint")} />
-      </div>
     </div>
   );
 }

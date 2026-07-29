@@ -18,9 +18,26 @@ import {
   EmptyState,
   ErrorView,
   LoadingView,
+  ProgressRing,
+  SpecItem,
+  SpecList,
 } from "@/shared/ui";
 
 import { CheckRow } from "./CheckRow";
+
+/**
+ * A check is resolved once it has an answer of any kind — `pending` and `running`
+ * are the only two states still in flight (shared/config/enums.ts). Everything
+ * else, including `unavailable` and `waived`, is a check that has finished
+ * telling us something.
+ */
+const RESOLVED_CHECKS = new Set(["passed", "warning", "failed", "unavailable", "waived"]);
+
+function completionPercent(checks: CaseOut["checks"]): number {
+  if (checks.length === 0) return 0;
+  const done = checks.filter((c) => RESOLVED_CHECKS.has(c.status)).length;
+  return Math.round((done / checks.length) * 100);
+}
 
 interface CaseStatusPanelProps {
   companyId: number;
@@ -79,21 +96,29 @@ export function CaseStatusPanel({ companyId, fallbackCase }: CaseStatusPanelProp
 
   return (
     <Card>
-      <CardHeader className="flex items-center justify-between">
+      <CardHeader action={<CaseStatusBadge status={caseOut.status} />}>
         <CardTitle>{t("verification.checks")}</CardTitle>
-        <CaseStatusBadge status={caseOut.status} />
       </CardHeader>
       <CardBody className="space-y-4">
-        <dl className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt className="text-text-muted">{t("verification.caseType")}</dt>
-            <dd className="font-medium text-text">{caseOut.case_type}</dd>
+        {/* The mockups lead this screen with the dial, not with the metadata:
+            "how far along am I" is the question a client opens it to answer. */}
+        {caseOut.checks.length > 0 ? (
+          <div className="flex justify-center py-2">
+            <ProgressRing
+              value={completionPercent(caseOut.checks)}
+              ariaLabel={t("verification.checks")}
+            />
           </div>
-          <div>
-            <dt className="text-text-muted">{t("verification.submittedAt")}</dt>
-            <dd className="font-medium text-text">{formatDateTime(caseOut.submitted_at, lang)}</dd>
-          </div>
-        </dl>
+        ) : null}
+
+        <SpecList>
+          <SpecItem label={t("verification.caseType")} value={caseOut.case_type} />
+          <SpecItem
+            label={t("verification.submittedAt")}
+            value={formatDateTime(caseOut.submitted_at, lang)}
+            numeric
+          />
+        </SpecList>
 
         {needsInfo ? (
           <Alert
