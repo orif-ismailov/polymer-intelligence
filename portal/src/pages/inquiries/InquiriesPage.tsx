@@ -9,8 +9,19 @@ import {
   useSentInquiries,
   type Inquiry,
 } from "@/entities/inquiry";
-import { Badge, Card, CardBody, EmptyState, ErrorView, LinkButton, Skeleton } from "@/shared/ui";
-import { cn } from "@/shared/lib";
+import {
+  Badge,
+  Card,
+  CardBody,
+  ChevronRightIcon,
+  EmptyState,
+  ErrorView,
+  LinkButton,
+  PageHeader,
+  Skeleton,
+  Tabs,
+  type TabItem,
+} from "@/shared/ui";
 
 const STATUS_TONE = { pending: "warning", approved: "success", rejected: "danger" } as const;
 
@@ -25,7 +36,7 @@ function InquiryRow({ inquiry, onOpen }: { inquiry: Inquiry; onOpen: () => void 
       onClick={onOpen}
       className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
     >
-      <Card className="transition-colors hover:border-brand">
+      <Card className="transition-colors hover:border-brand-line">
         <CardBody className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="font-medium text-text">{product}</div>
@@ -33,7 +44,12 @@ function InquiryRow({ inquiry, onOpen }: { inquiry: Inquiry; onOpen: () => void 
               {inquiry.message ?? "—"}
             </div>
           </div>
-          <Badge tone={STATUS_TONE[inquiry.status]}>{t(`inquiryStatus.${inquiry.status}`)}</Badge>
+          <div className="flex shrink-0 items-center gap-3">
+            <Badge tone={STATUS_TONE[inquiry.status]}>{t(`inquiryStatus.${inquiry.status}`)}</Badge>
+            <span className="text-text-subtle">
+              <ChevronRightIcon size={16} />
+            </span>
+          </div>
         </CardBody>
       </Card>
     </button>
@@ -60,30 +76,16 @@ export function InquiriesPage() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{t("inquiries.title")}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("inquiries.subtitle")}</p>
-      </div>
+  const inquiryTabs: TabItem[] = (["sent", "incoming"] as const).map((key) => ({
+    id: key,
+    label: t(`inquiries.tab.${key}`),
+  }));
 
-      <div className="flex gap-2 border-b border-border">
-        {(["sent", "incoming"] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-              tab === key
-                ? "border-brand text-text"
-                : "border-transparent text-text-muted hover:text-text",
-            )}
-          >
-            {t(`inquiries.tab.${key}`)}
-          </button>
-        ))}
-      </div>
+  return (
+    <div className="space-y-5">
+      <PageHeader title={t("inquiries.title")} subtitle={t("inquiries.subtitle")} />
+
+      <Tabs items={inquiryTabs} value={tab} onChange={(id) => setTab(id as Tab)} label={t("inquiries.title")} />
 
       {active.isLoading ? (
         <div className="space-y-3">

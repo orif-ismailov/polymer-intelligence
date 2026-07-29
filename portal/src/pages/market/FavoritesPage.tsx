@@ -2,7 +2,13 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { MarketOfferCard, useFavorites } from "@/entities/market";
-import { EmptyState, ErrorView, LinkButton, Skeleton } from "@/shared/ui";
+import {
+  EmptyState,
+  ErrorView,
+  LinkButton,
+  PageHeader,
+  Skeleton,
+} from "@/shared/ui";
 
 /**
  * The account's shortlist.
@@ -44,11 +50,8 @@ export function FavoritesPage() {
   const items = query.data ?? [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{t("market.favorites")}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("market.favoritesHint")}</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader title={t("market.favorites")} subtitle={t("market.favoritesHint")} />
 
       {items.length === 0 ? (
         <EmptyState

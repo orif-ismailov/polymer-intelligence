@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { RequestWizard } from "@/features/request-wizard";
-import { EmptyState, LinkButton } from "@/shared/ui";
+import {
+  EmptyState,
+  PageHeader,
+} from "@/shared/ui";
 
 export function RequestCreatePage() {
   const { t } = useTranslation();
@@ -20,16 +23,13 @@ export function RequestCreatePage() {
     activeCompany.short_name ?? activeCompany.legal_name ?? activeCompany.tax_id;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <LinkButton to="/requests" variant="ghost" className="text-sm">
-          ← {t("requests.title")}
-        </LinkButton>
-        <h1 className="mt-2 text-2xl font-semibold text-text">{t("requests.create")}</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {t("requests.forCompany", { company: companyName })}
-        </p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        backTo="/requests"
+        backLabel={t("requests.title")}
+        title={t("requests.create")}
+        subtitle={t("requests.forCompany", { company: companyName })}
+      />
       <RequestWizard
         companyId={activeCompany.id}
         companyName={companyName}

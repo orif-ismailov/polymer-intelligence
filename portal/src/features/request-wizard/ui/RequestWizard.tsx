@@ -114,7 +114,7 @@ export function RequestWizard({ companyId, companyName, onCreated }: RequestWiza
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Stepper steps={steps} current={step} />
 
       {create.isError ? <Alert tone="danger">{t("requestWizard.submitFailed")}</Alert> : null}
@@ -251,7 +251,10 @@ export function RequestWizard({ companyId, companyName, onCreated }: RequestWiza
             {t("common.next")}
           </Button>
         ) : (
+          // Sheet …44 turns the last step's CTA gold: the one action that makes
+          // something public gets its own colour.
           <Button
+            variant="gold"
             disabled={!step1Valid || !step2Valid || create.isPending}
             onClick={submit}
           >

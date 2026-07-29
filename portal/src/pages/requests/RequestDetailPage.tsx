@@ -19,6 +19,11 @@ import {
   CardTitle,
   LinkButton,
   LoadingView,
+  PageHeader,
+  SpecItem,
+  SpecList,
+  StatusStepper,
+  StickyActionBar,
 } from "@/shared/ui";
 import { formatDateTime } from "@/shared/lib";
 
@@ -64,35 +69,46 @@ export function RequestDetailPage() {
   const canCancel = CANCELLABLE.has(r.status);
 
   return (
-    <div className="space-y-6">
-      <LinkButton to="/requests" variant="ghost" className="text-sm">
-        ← {t("requests.back")}
-      </LinkButton>
+    <div className="space-y-5 pb-36 md:pb-0">
+      {/* Sheet …47 heads a request with its number and status, not a card. */}
+      <PageHeader
+        backTo="/requests"
+        backLabel={t("requests.back")}
+        title={<span className="num">{r.number}</span>}
+        badge={<Badge tone="info">{t(`requestStatus.${key}`)}</Badge>}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid gap-5 lg:grid-cols-3">
+        <div className="min-w-0 space-y-5 lg:col-span-2">
           <Card>
-            <CardHeader className="flex items-start justify-between gap-3">
-              <CardTitle>{r.number}</CardTitle>
-              <Badge tone="info">{t(`requestStatus.${key}`)}</Badge>
-            </CardHeader>
-            <CardBody className="grid grid-cols-2 gap-3 text-sm">
-              <Spec label={t("requestWizard.product")} value={r.grade_text ?? r.product_text ?? "—"} />
-              <Spec label={t("requestWizard.polymer")} value={r.polymer_type ?? "—"} />
-              <Spec label={t("requestWizard.volume")} value={`${r.volume} ${r.volume_unit}`} />
-              <Spec
-                label={t("requestWizard.targetPrice")}
-                value={r.target_price != null ? `${r.target_price} ${r.currency}` : "—"}
-              />
-              <Spec label={t("requestWizard.incoterms")} value={r.incoterms} />
-              <Spec label={t("requestWizard.country")} value={r.destination_country} />
-              <Spec label={t("requestWizard.city")} value={r.port_or_city ?? "—"} />
-              <Spec label={t("requestWizard.urgency")} value={t(`requestWizard.urgencyOpt.${r.urgency}`)} />
-              {r.comment ? (
-                <div className="col-span-2">
-                  <Spec label={t("requestWizard.comment")} value={r.comment} />
-                </div>
-              ) : null}
+            <CardBody>
+              <SpecList>
+                <SpecItem
+                  label={t("requestWizard.product")}
+                  value={r.grade_text ?? r.product_text ?? "—"}
+                />
+                <SpecItem label={t("requestWizard.polymer")} value={r.polymer_type ?? "—"} />
+                <SpecItem
+                  label={t("requestWizard.volume")}
+                  value={`${r.volume} ${r.volume_unit}`}
+                  numeric
+                />
+                <SpecItem
+                  label={t("requestWizard.targetPrice")}
+                  value={r.target_price != null ? `${r.target_price} ${r.currency}` : "—"}
+                  numeric
+                />
+                <SpecItem label={t("requestWizard.incoterms")} value={r.incoterms} />
+                <SpecItem label={t("requestWizard.country")} value={r.destination_country} />
+                <SpecItem label={t("requestWizard.city")} value={r.port_or_city ?? "—"} />
+                <SpecItem
+                  label={t("requestWizard.urgency")}
+                  value={t(`requestWizard.urgencyOpt.${r.urgency}`)}
+                />
+                {r.comment ? (
+                  <SpecItem label={t("requestWizard.comment")} value={r.comment} span={2} />
+                ) : null}
+              </SpecList>
             </CardBody>
           </Card>
 
@@ -109,15 +125,6 @@ export function RequestDetailPage() {
             </Card>
           ) : null}
 
-          {canCancel ? (
-            <Button
-              variant="danger"
-              disabled={cancel.isPending}
-              onClick={() => requestId != null && cancel.mutate(requestId)}
-            >
-              {cancel.isPending ? t("common.saving") : t("requests.cancel")}
-            </Button>
-          ) : null}
         </div>
 
         <Card>
@@ -125,31 +132,32 @@ export function RequestDetailPage() {
             <CardTitle>{t("requests.timeline")}</CardTitle>
           </CardHeader>
           <CardBody>
-            <ol className="space-y-4">
-              {timeline.map((entry, i) => (
-                <li key={`${entry.key}-${i}`} className="flex gap-3">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand" />
-                  <div>
-                    <div className="text-sm font-medium text-text">
-                      {t(`requestStatus.${entry.key}`)}
-                    </div>
-                    <div className="text-xs text-text-muted">{formatDateTime(entry.at)}</div>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            {/* The same vertical timeline the contract and deal rooms use — a
+                request's history is the same kind of thing, so it looks it. */}
+            <StatusStepper
+              steps={timeline.map((entry, i) => ({
+                id: `${entry.key}-${i}`,
+                label: t(`requestStatus.${entry.key}`),
+                hint: formatDateTime(entry.at),
+                state: "done" as const,
+              }))}
+            />
           </CardBody>
         </Card>
       </div>
-    </div>
-  );
-}
 
-function Spec({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-text-muted">{label}</dt>
-      <dd className="font-medium text-text">{value}</dd>
+      {canCancel ? (
+        <StickyActionBar>
+          <Button
+            variant="danger"
+            fullWidth
+            disabled={cancel.isPending}
+            onClick={() => requestId != null && cancel.mutate(requestId)}
+          >
+            {cancel.isPending ? t("common.saving") : t("requests.cancel")}
+          </Button>
+        </StickyActionBar>
+      ) : null}
     </div>
   );
 }

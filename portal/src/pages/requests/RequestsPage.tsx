@@ -3,7 +3,17 @@ import { useNavigate } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { CLIENT_STATUS_KEY, useRequests, type RequestSummary } from "@/entities/request";
-import { Badge, Card, CardBody, EmptyState, ErrorView, LinkButton, Skeleton } from "@/shared/ui";
+import {
+  Badge,
+  Card,
+  CardBody,
+  ChevronRightIcon,
+  EmptyState,
+  ErrorView,
+  LinkButton,
+  PageHeader,
+  Skeleton,
+} from "@/shared/ui";
 import { formatDate } from "@/shared/lib";
 
 const STATUS_TONE: Record<string, "neutral" | "success" | "warning" | "danger" | "info"> = {
@@ -24,13 +34,18 @@ function RequestRow({ request, onOpen }: { request: RequestSummary; onOpen: () =
       onClick={onOpen}
       className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
     >
-      <Card className="transition-colors hover:border-brand">
+      <Card className="transition-colors hover:border-brand-line">
         <CardBody className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <div className="font-medium text-text">{request.number}</div>
-            <div className="text-sm text-text-muted">{formatDate(request.created_at)}</div>
+            <div className="num font-medium text-text">{request.number}</div>
+            <div className="num text-sm text-text-muted">{formatDate(request.created_at)}</div>
           </div>
-          <Badge tone={STATUS_TONE[key] ?? "neutral"}>{t(`requestStatus.${key}`)}</Badge>
+          <div className="flex shrink-0 items-center gap-3">
+            <Badge tone={STATUS_TONE[key] ?? "neutral"}>{t(`requestStatus.${key}`)}</Badge>
+            <span className="text-text-subtle">
+              <ChevronRightIcon size={16} />
+            </span>
+          </div>
         </CardBody>
       </Card>
     </button>
@@ -51,14 +66,14 @@ export function RequestsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-text">{t("requests.title")}</h1>
-          <p className="mt-1 text-sm text-text-muted">{t("requests.subtitle")}</p>
-        </div>
-        <LinkButton to="/requests/new">{t("requests.create")}</LinkButton>
-      </div>
+    <div className="space-y-5">
+      {/* The create CTA stays a LinkButton: r2-portal.spec.ts finds this screen
+          by `getByRole("link", { name: /new request|новая заявка/i })`. */}
+      <PageHeader
+        title={t("requests.title")}
+        subtitle={t("requests.subtitle")}
+        actions={<LinkButton to="/requests/new">{t("requests.create")}</LinkButton>}
+      />
 
       {requestsQuery.isLoading ? (
         <div className="space-y-3">

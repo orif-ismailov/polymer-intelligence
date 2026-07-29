@@ -16,6 +16,7 @@ import {
   EmptyState,
   ErrorView,
   LinkButton,
+  PageHeader,
   Skeleton,
 } from "@/shared/ui";
 
@@ -146,11 +147,8 @@ export function MarketRequestsPage() {
   const items = query.data?.items ?? [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{t("rfq.marketTitle")}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t("rfq.marketSubtitle")}</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader title={t("rfq.marketTitle")} subtitle={t("rfq.marketSubtitle")} />
 
       {query.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">
