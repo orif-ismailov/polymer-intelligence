@@ -211,6 +211,12 @@ jobs:
         working-directory: backend
         run: |
           nohup uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 > "$RUNNER_TEMP/uvicorn.log" 2>&1 &
+          # Remember the `uv run` PID so the cleanup step can stop it. Leaving it
+          # alive is what broke this job: setup-uv's post step runs
+          # `uv cache prune --ci`, and uv 0.11 refuses to prune a cache that is
+          # still in use (hence its `--force` "ignore in-use checks" flag), so the
+          # prune exited 2 and failed the job *after* the e2e run had passed.
+          echo "API_PID=$!" >> "$GITHUB_ENV"
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 2
@@ -235,6 +241,32 @@ jobs:
       - name: Run e2e
         working-directory: dashboard
         run: npm run e2e
+
+      # Runs even when the e2e step fails, so the API log is available for a
+      # failure that only shows up as a Playwright timeout.
+      - name: Stop API
+        if: ${{ always() }}
+        run: |
+          # Match on the command line rather than the process group: each `run:`
+          # step is its own shell, so by now $API_PID's group belongs to a shell
+          # that has already exited — and a recycled group id is not something to
+          # send a signal to. `uv run` and the uvicorn it spawns both carry this
+          # string, so one pattern reaches the whole tree.
+          pkill -f "uvicorn app.main:app" 2>/dev/null || true
+          # Guarded, not `kill "${API_PID:-0}"` — `kill 0` signals the whole
+          # current process group, i.e. this step's own shell.
+          if [ -n "${API_PID:-}" ]; then kill "$API_PID" 2>/dev/null || true; fi
+          # `kill` returning is not the same as the process being gone, and the
+          # prune runs moments later — wait for the port to actually close.
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:8000/api/v1/health >/dev/null 2>&1 || break
+            sleep 1
+          done
+          if curl -sf http://localhost:8000/api/v1/health >/dev/null 2>&1; then
+            echo "::warning::API on :8000 did not stop; the uv cache prune may fail"
+          fi
+          echo "--- uvicorn log ---"
+          cat "$RUNNER_TEMP/uvicorn.log" || true
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
