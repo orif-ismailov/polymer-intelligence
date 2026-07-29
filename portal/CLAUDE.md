@@ -72,6 +72,14 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
     `src/app/styles.css` + `tailwind.config.ts`, never an inline value. Need a new look for a
     primitive? Add a variant to the primitive, don't restyle it at the call site.
   - Prefer semantic props: `<Badge variant="verified">` over hand-picking tone + icon.
+  - **Page chrome comes from primitives.** `PageHeader` (back link + `h1` + badge + subtitle
+    + actions), `Tabs`, `SpecList`/`SpecItem`, `SpecTile`, `FileRow`, `StickyActionBar`. If
+    you are typing `text-2xl` or `<h1>` in a page file, you are re-implementing `PageHeader`
+    — the type/spacing scale lives in those primitives and in `docs/design-system.md` §P6,
+    deliberately NOT in `tailwind.config.ts` (a named utility renames the call-site decision
+    instead of removing it, and no gate can see a font size).
+  - A screen using `StickyActionBar` must add `pb-36 md:pb-0`; a grid column containing
+    `Tabs` must have `min-w-0`. Both failure modes are invisible to the suite.
   - Numbers that line up in a column (prices, MOQ, volumes, metrics) get `.num`.
   - A colour class that changes nothing on screen probably **doesn't exist** in the config —
     that failure mode is silent. Same for a utility added to `tailwind.config.ts` without

@@ -269,7 +269,39 @@ brand-as-text-on-`brand-soft` clear AA.
 | `ProgressRing` | Circular dial (AI-check screens); a real `progressbar` for AT. |
 | `BottomNav` | Phone-only bottom bar; the shell wires it in `widgets/app-shell/MobileNav`. Screens it covers need bottom padding. |
 | `BrandLogo` | IMEX AI lockup. **Interim** — swap the `<svg>` when the operator delivers the vector. |
+| `PageHeader` | The chrome every screen opens with: optional back chevron, `<h1>`, inline badge slot, subtitle, right-hand `actions`. Owns the page-title rung so no screen picks a font size for its own header. The `<h1>` is load-bearing — the e2e flows find screens with `getByRole("heading", { level: 1 })`. |
+| `Tabs` | The two switcher shapes: `underline` (product detail, company profile, trade room) and `pill` (market filters, deal scopes). Optional per-item `count` and `testId`. Deliberately **not** `role="tablist"` — these filter a list that lives outside them, and a tablist with no matching `tabpanel` is an axe violation where a toggle button is not. Class strings live in `tabStyles.ts`, a sibling `.ts`, because exporting a helper beside a component from a `.tsx` trips `react-refresh/only-export-components` and fails `--max-warnings 0`. |
+| `SpecList` / `SpecItem` | The key/value `<dl>`. `stacked` (label above value) where the grid *is* the content; `inline` (`label: value`) inside list cards. The variant travels by context, not per item, so a list can't end up with one mismatched row. `numeric` marks a value tabular. |
+| `SpecTile` | Bordered fact tile — icon, label, value. Not a `StatChip` variant: StatChip is figure-first with the figure pinned as its own test id; this is label-first. |
+| `FileRow` | Document row: glyph, name, `kind · size · date` meta, optional status badge, trailing actions. `muted` strikes through a superseded document. |
+| `StickyActionBar` | The sheets' phone action bar, pinned above `BottomNav`; a plain static row at `md`. **A page using it must add `pb-36 md:pb-0`** — a fixed element does not extend `<main>`'s box, so without it the bar covers the last row of content and the bottom-nav clearance test cannot see it. |
 | `icons.tsx` | The glyph set the primitives need. The portal ships no icon dependency. |
+
+## P6. Type and spacing
+
+Not in `tailwind.config.ts`, on purpose. A named utility (`text-h1`) renames the call-site
+decision instead of removing it, and **nothing in the gate can see a font size** — every
+pinned assertion measures a colour, a contrast ratio, an ARIA attribute, a `data-*` value or
+a literal string. A wrong scale would ship through a fully green suite. `<PageHeader/>`,
+`Tabs`, `SpecList` and `CardTitle` own these rungs instead; the table is what they encode.
+
+| Role | Class string |
+|---|---|
+| Hero (auth screens) | `text-2xl font-semibold leading-tight sm:text-3xl` |
+| Page title (`h1`) | `text-2xl font-semibold text-text` |
+| Page subtitle | `mt-1 text-sm text-text-muted` |
+| Section / card title | `text-base font-semibold text-text` |
+| Body | `text-sm text-text` |
+| Label / caption | `text-xs text-text-muted` (meta lines: `text-text-subtle`) |
+| Hero figure (price, escrow amount) | `num text-2xl font-semibold leading-tight text-brand` |
+| Metric tile figure | `num text-xl font-semibold` |
+| Nav / tab label | `text-sm font-medium`; bottom nav `text-[11px]` |
+
+Rhythm: page root `space-y-5` · card body `space-y-4` · title→subtitle `mt-1` ·
+label→value `mt-0.5` · card padding `px-5 py-4` (already in `CardHeader`/`CardBody`) ·
+phone bottom padding `pb-24` (in `AppShell`), `pb-36` on a screen with a `StickyActionBar`.
+
+**If you are typing `text-2xl` or `<h1>` in a page file, you are re-implementing a primitive.**
 
 ## P5. Enforcement
 
@@ -286,3 +318,19 @@ The portal has no unit-test runner, so the design system is pinned by Playwright
 axe-core (`wcag2a` + `wcag2aa`) run on `/login`, `/market`, `/companies/:id` and `/dev/ui` in
 both themes: **0 violations**. Two were found and fixed during P0 — `--text-subtle` at 4.02:1
 on cards, and brand-on-`brand-soft` badges at 4.19:1 in light theme.
+
+### What the gate cannot see
+
+Worth knowing before you trust a green run:
+
+- **No page is ever measured in the light theme.** Every both-themes assertion is either
+  token-level or against `/dev/ui`. A `bg-surface/95 backdrop-blur` bar that disappears on a
+  white page ships green. Eyeball light on every screen you touch.
+- **Nothing measures page width.** A tab strip inside a grid column silently widened the
+  market offer page to 401px at a 375px viewport instead of scrolling, because a grid item's
+  automatic minimum size is its content's min-content and `overflow-x-auto` does not break
+  that chain. `Tabs` carries `min-w-0 max-w-full`; a column containing one needs `min-w-0` too.
+- **A fixed bar cannot violate `main.bottom <= nav.top`.** That is why the sticky-bar test
+  measures against the bar itself, and why `pb-36` is a rule rather than a suggestion.
+- **Nothing switches locale.** A key added to `ru.json` alone crashes `uz`/`en` at runtime.
+  Prefer passing labels as props (`PageHeader`'s `backLabel`) — `shared/ui` imports no i18n.
