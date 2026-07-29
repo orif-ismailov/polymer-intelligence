@@ -2,7 +2,14 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 import { CompanyStatusBadge, useCompany } from "@/entities/company";
-import { Alert, Card, CardBody, ErrorView, LinkButton, LoadingView, Skeleton } from "@/shared/ui";
+import {
+  Alert,
+  ErrorView,
+  LinkButton,
+  LoadingView,
+  PageHeader,
+  Skeleton,
+} from "@/shared/ui";
 import { ApiError } from "@/shared/api";
 
 import { BankSection } from "./sections/BankSection";
@@ -51,27 +58,25 @@ export function CompanyViewPage() {
 
   return (
     <div className="space-y-5">
-      <Card>
-        <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-text">{name}</h1>
-              <CompanyStatusBadge status={company.status} />
-            </div>
-            <p className="mt-1 text-sm text-text-muted">
-              {t("companies.taxId")}: {company.tax_id} · {company.public_id}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
+      {/* Sheet …46 leads a company profile with the name, its trust badge and the
+          two actions — not with a card wrapped around all three. */}
+      <PageHeader
+        backTo="/companies"
+        backLabel={t("nav.companies")}
+        title={name}
+        subtitle={`${t("companies.taxId")}: ${company.tax_id} · ${company.public_id}`}
+        badge={<CompanyStatusBadge status={company.status} />}
+        actions={
+          <>
             <LinkButton variant="outline" to={`/companies/${company.id}/verification`}>
               {t("company.goToVerification")}
             </LinkButton>
             {company.status === "verified" ? (
               <LinkButton to="/offers/new">{t("company.createOffer")}</LinkButton>
             ) : null}
-          </div>
-        </CardBody>
-      </Card>
+          </>
+        }
+      />
 
       {!editable ? <Alert tone="info">{t("company.notEditable")}</Alert> : null}
 

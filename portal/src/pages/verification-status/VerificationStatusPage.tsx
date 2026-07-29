@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useCompany } from "@/entities/company";
 import { EimzoSignButton, companyIdentitySigner } from "@/features/eimzo-sign";
 import { CaseStatusPanel } from "@/widgets/case-status-panel";
-import { Alert, ErrorView, LinkButton, LoadingView } from "@/shared/ui";
+import { Alert, ErrorView, LinkButton, LoadingView, PageHeader } from "@/shared/ui";
 import { ApiError } from "@/shared/api";
 
 export function VerificationStatusPage() {
@@ -40,17 +40,17 @@ export function VerificationStatusPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-text">{t("verification.title")}</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {t("verification.subtitle", { company: displayName })}
-          </p>
-        </div>
-        <LinkButton variant="outline" to={`/companies/${company.id}`}>
-          {t("company.detailsTitle")}
-        </LinkButton>
-      </div>
+      <PageHeader
+        backTo="/companies"
+        backLabel={t("nav.companies")}
+        title={t("verification.title")}
+        subtitle={t("verification.subtitle", { company: displayName })}
+        actions={
+          <LinkButton variant="outline" to={`/companies/${company.id}`}>
+            {t("company.detailsTitle")}
+          </LinkButton>
+        }
+      />
 
       {company.identity_locked ? (
         <Alert tone="success" title={t("eimzo.confirmedBadge")}>

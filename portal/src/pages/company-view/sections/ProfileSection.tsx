@@ -11,6 +11,8 @@ import {
   Card,
   CardBody,
   CardHeader,
+  SpecItem,
+  SpecList,
   CardTitle,
   FormField,
   Input,
@@ -66,13 +68,16 @@ export function ProfileSection({ company, editable }: ProfileSectionProps) {
 
   return (
     <Card>
-      <CardHeader className="flex items-center justify-between">
+      <CardHeader
+        action={
+          editable && !editing ? (
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+              {t("company.editProfile")}
+            </Button>
+          ) : undefined
+        }
+      >
         <CardTitle>{t("company.profile")}</CardTitle>
-        {editable && !editing ? (
-          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-            {t("company.editProfile")}
-          </Button>
-        ) : null}
       </CardHeader>
       <CardBody>
         {editing ? (
@@ -115,14 +120,15 @@ export function ProfileSection({ company, editable }: ProfileSectionProps) {
             </div>
           </div>
         ) : (
-          <dl className="divide-y divide-border">
+          <SpecList>
             {rows.map((row) => (
-              <div key={row.label} className="flex justify-between gap-4 py-2.5 text-sm">
-                <dt className="text-text-muted">{row.label}</dt>
-                <dd className="text-right font-medium text-text">{row.value ?? t("common.notSpecified")}</dd>
-              </div>
+              <SpecItem
+                key={row.label}
+                label={row.label}
+                value={row.value ?? t("common.notSpecified")}
+              />
             ))}
-          </dl>
+          </SpecList>
         )}
       </CardBody>
     </Card>

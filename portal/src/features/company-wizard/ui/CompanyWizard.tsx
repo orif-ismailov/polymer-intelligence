@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { Card, CardBody, Stepper } from "@/shared/ui";
+import { Card, CardBody, PageHeader, Stepper } from "@/shared/ui";
 import type { Step } from "@/shared/ui";
 
 import { WIZARD_CONFIRM_STEP, WIZARD_FIRST_STEP, WIZARD_STEP_COUNT } from "../model/constants";
@@ -50,15 +50,15 @@ export function CompanyWizard() {
   ];
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-text">{t("wizard.title")}</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {t("wizard.step", { current: step, total: WIZARD_STEP_COUNT })}
-        </p>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-5">
+      <PageHeader
+        backTo="/companies"
+        backLabel={t("nav.companies")}
+        title={t("wizard.title")}
+        subtitle={t("wizard.step", { current: step, total: WIZARD_STEP_COUNT })}
+      />
 
-      <Stepper steps={steps} current={step} className="mb-8" />
+      <Stepper steps={steps} current={step} />
 
       <Card>
         <CardBody>

@@ -59,7 +59,9 @@
     "changePhone": "Raqamni o‘zgartirish",
     "tooManyRequests": "Urinishlar juda ko‘p. Keyinroq qayta urinib ko‘ring.",
     "wrongCode": "Kod noto‘g‘ri. Tekshirib qayta urinib ko‘ring.",
-    "sessionExpired": "Sessiya tugadi. Qaytadan kiring."
+    "sessionExpired": "Sessiya tugadi. Qaytadan kiring.",
+    "trustTitle": "Xavfsiz va ishonchli",
+    "trustBody": "Ma’lumotlaringiz himoyalangan va xalqaro xavfsizlik standartlariga mos keladi."
   },
   "nav": {
     "home": "Bosh sahifa",

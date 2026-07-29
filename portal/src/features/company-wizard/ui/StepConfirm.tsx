@@ -68,7 +68,7 @@ export function StepConfirm({ onBack, onEditStep, onComplete }: StepConfirmProps
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-text">{t("wizard.confirm.title")}</h2>
+        <h2 className="text-base font-semibold text-text">{t("wizard.confirm.title")}</h2>
         <p className="mt-1 text-sm text-text-muted">{t("wizard.confirm.subtitle")}</p>
       </div>
 

@@ -61,13 +61,16 @@ export function BankSection({ company, editable }: BankSectionProps) {
 
   return (
     <Card>
-      <CardHeader className="flex items-center justify-between">
+      <CardHeader
+        action={
+          editable && !adding ? (
+            <Button size="sm" variant="outline" onClick={() => setAdding(true)}>
+              {t("company.addBankAccount")}
+            </Button>
+          ) : undefined
+        }
+      >
         <CardTitle>{t("company.bankAccounts")}</CardTitle>
-        {editable && !adding ? (
-          <Button size="sm" variant="outline" onClick={() => setAdding(true)}>
-            {t("company.addBankAccount")}
-          </Button>
-        ) : null}
       </CardHeader>
       <CardBody className="space-y-4">
         {company.bank_accounts.length > 0 ? (
@@ -75,7 +78,7 @@ export function BankSection({ company, editable }: BankSectionProps) {
             {company.bank_accounts.map((account) => (
               <li key={account.id} className="flex items-center justify-between gap-3 py-3">
                 <div>
-                  <p className="text-sm font-medium text-text">{account.account_masked}</p>
+                  <p className="num text-sm font-medium text-text">{account.account_masked}</p>
                   <p className="text-xs text-text-muted">
                     {t("company.bankMfo")} {account.bank_mfo}
                     {account.bank_name ? ` · ${account.bank_name}` : ""} · {account.currency}

@@ -59,7 +59,9 @@
     "changePhone": "Change number",
     "tooManyRequests": "Too many attempts. Please try again later.",
     "wrongCode": "Wrong code. Check it and try again.",
-    "sessionExpired": "Your session expired. Please sign in again."
+    "sessionExpired": "Your session expired. Please sign in again.",
+    "trustTitle": "Secure and reliable",
+    "trustBody": "Your data is protected and meets international security standards."
   },
   "nav": {
     "home": "Home",

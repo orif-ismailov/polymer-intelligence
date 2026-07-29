@@ -20,6 +20,8 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  DownloadIcon,
+  FileRow,
   ConfirmDialog,
   FormField,
   Select,
@@ -61,33 +63,37 @@ function DocumentRow({
   const removable = editable && document.status === "pending_review";
 
   return (
-    <li className="flex items-center justify-between gap-3 py-3">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-text">{label("documentKind", document.kind)}</p>
-        <p className="text-xs text-text-muted">
-          {formatBytes(document.size_bytes)} · {formatDate(document.created_at, lang)}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-3">
-        <Badge tone={document.status === "approved" ? "success" : "neutral"}>{document.status}</Badge>
-        <button
-          type="button"
-          onClick={() => void download()}
-          className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
-        >
-          {downloading ? <Spinner /> : null}
-          {t("common.download")}
-        </button>
-        {removable ? (
-          <button
-            type="button"
-            onClick={() => onRemove(document.id)}
-            className="text-xs font-medium text-danger hover:underline"
-          >
-            {t("common.remove")}
-          </button>
-        ) : null}
-      </div>
+    <li>
+      <FileRow
+        name={label("documentKind", document.kind)}
+        meta={`${formatBytes(document.size_bytes)} · ${formatDate(document.created_at, lang)}`}
+        status={
+          <Badge tone={document.status === "approved" ? "success" : "neutral"}>
+            {document.status}
+          </Badge>
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => void download()}
+              aria-label={t("common.download")}
+              className="inline-flex items-center gap-1 rounded-sm p-1.5 text-text-muted transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              {downloading ? <Spinner /> : <DownloadIcon size={16} />}
+            </button>
+            {removable ? (
+              <button
+                type="button"
+                onClick={() => onRemove(document.id)}
+                className="rounded-sm px-2 py-1 text-xs font-medium text-danger transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                {t("common.remove")}
+              </button>
+            ) : null}
+          </>
+        }
+      />
     </li>
   );
 }
@@ -121,7 +127,7 @@ export function DocumentsSection({ company, editable }: DocumentsSectionProps) {
       </CardHeader>
       <CardBody className="space-y-4">
         {company.documents.length > 0 ? (
-          <ul className="divide-y divide-border">
+          <ul className="space-y-2">
             {company.documents.map((document) => (
               <DocumentRow
                 key={document.id}
