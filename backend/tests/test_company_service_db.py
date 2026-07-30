@@ -145,12 +145,12 @@ def test_set_business_roles_replaces(sf) -> None:  # noqa: ANN001
         db.commit()
 
         company_service.set_business_roles(
-            db, company, [CompanyBusinessRole.manufacturer, CompanyBusinessRole.trader]
+            db, company, [CompanyBusinessRole.distributor, CompanyBusinessRole.trader]
         )
         db.commit()
         db.refresh(company)
         assert {r.role for r in company.business_roles} == {
-            CompanyBusinessRole.manufacturer,
+            CompanyBusinessRole.distributor,
             CompanyBusinessRole.trader,
         }
 
@@ -159,6 +159,24 @@ def test_set_business_roles_replaces(sf) -> None:  # noqa: ANN001
         db.commit()
         db.refresh(company)
         assert {r.role for r in company.business_roles} == {CompanyBusinessRole.importer}
+
+
+@requires_real_db
+def test_set_business_roles_rejects_cross_account_type_mix(sf) -> None:  # noqa: ANN001
+    from app.models.enums import CompanyBusinessRole  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
+
+    with sf() as db:
+        account = make_account(db, "+998900000001")
+        company = company_service.create_company(db, account, "UZ", "123456789")
+        db.commit()
+
+        with pytest.raises(company_service.InvalidBusinessRoles):
+            company_service.set_business_roles(
+                db,
+                company,
+                [CompanyBusinessRole.manufacturer, CompanyBusinessRole.trader],
+            )
 
 
 @requires_real_db

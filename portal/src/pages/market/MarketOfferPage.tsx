@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { useCreateInquiry } from "@/entities/inquiry";
@@ -81,6 +81,10 @@ export function MarketOfferPage() {
   const offerId = offerIdParam ? Number(offerIdParam) : null;
   const { activeCompany } = useActiveCompany();
   const companyId = activeCompany?.id ?? null;
+  const [searchParams] = useSearchParams();
+  // Arrived from the manufacturers directory — swap the trader inquiry door for
+  // a direct chat + factory RFQ (`docs/new-design/manufacturer_flow.jpeg`).
+  const fromManufacturer = searchParams.get("fromManufacturer") === "1";
 
   const offerQuery = useMarketOffer(offerId, companyId);
   const createInquiry = useCreateInquiry(companyId);
@@ -240,6 +244,10 @@ export function MarketOfferPage() {
         photos={photos}
         canInquire={canInquire}
         onRequestRfq={() => {
+          if (fromManufacturer && offer.seller_company_id != null) {
+            void navigate(`/manufacturers/${offer.seller_company_id}/rfq/${offer.id}`);
+            return;
+          }
           setTab("description");
           window.setTimeout(() => scrollTo("inquiry"), 50);
         }}
@@ -474,7 +482,13 @@ export function MarketOfferPage() {
         acceptsRfq={offer.accepts_rfq}
         acceptsEscrow={offer.accepts_escrow}
         contractBlockedReason={contractBlockedReason}
-        onMessage={() => scrollTo("inquiry")}
+        onMessage={() => {
+          if (fromManufacturer && offer.seller_company_id != null) {
+            void navigate(`/manufacturers/${offer.seller_company_id}/chat`);
+            return;
+          }
+          scrollTo("inquiry");
+        }}
         onContract={() =>
           navigate(
             `/contracts/new?offerId=${offer.id}&counterpartyId=${offer.seller_company_id}`,

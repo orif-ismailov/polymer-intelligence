@@ -30,7 +30,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy import Enum as PgEnum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -71,8 +71,26 @@ class Company(Base):
     short_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     legal_form: Mapped[str | None] = mapped_column(Text, nullable=True)            # OOO/AJ/ChP…
     legal_address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: Physical factory / plant address (manufacturer registration — distinct from legal).
+    actual_address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: Company registration / OGRN-style number from the certificate (not the tax id).
+    registration_number: Mapped[str | None] = mapped_column(Text, nullable=True)
     director_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     registration_date: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
+    #: Manufacturer-only questionnaire (production + buyer terms). NULL for other roles.
+    manufacturer_profile: Mapped[dict[str, object] | None] = mapped_column(
+        JSONB, nullable=True
+    )
+    #: Logistics-provider questionnaire (services, geography, cargo, tariffs).
+    #: NULL for other roles — same JSONB pattern as manufacturer_profile.
+    logistics_profile: Mapped[dict[str, object] | None] = mapped_column(
+        JSONB, nullable=True
+    )
+    #: Laboratory questionnaire (city, website, contacts, description).
+    #: NULL for other roles — same JSONB pattern as manufacturer_profile.
+    laboratory_profile: Mapped[dict[str, object] | None] = mapped_column(
+        JSONB, nullable=True
+    )
     registry_status: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )                                                                             # gov-reported status (populated in P2)

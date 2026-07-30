@@ -21,10 +21,15 @@ interface FlowHeaderProps {
  * centred against the *screen* and does not shift when only one side has a
  * control. The `<h1>` is load-bearing: e2e flows locate screens by heading level.
  */
-export function FlowHeader({ title, leading, trailing, className }: FlowHeaderProps) {
+export function FlowHeader({
+  title,
+  leading,
+  trailing,
+  className,
+}: FlowHeaderProps) {
   return (
     <div
-      className={cn("flex items-center gap-2", className)}
+      className={cn("flex items-center gap-2 relative -z-10", className)}
       data-testid="ui-flow-header"
     >
       <div className="flex w-9 shrink-0 justify-start">{leading}</div>

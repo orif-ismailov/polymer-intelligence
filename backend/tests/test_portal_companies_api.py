@@ -144,7 +144,9 @@ def test_profile_roles_and_bank_masking(api) -> None:  # noqa: ANN001
 
     client.patch(f"{_BASE}/{company_id}", json={"legal_name": "OOO Test"}, headers=auth)
     client.put(
-        f"{_BASE}/{company_id}/roles", json={"roles": ["manufacturer", "trader"]}, headers=auth
+        f"{_BASE}/{company_id}/roles",
+        json={"roles": ["distributor", "trader"]},
+        headers=auth,
     )
     bank = client.post(
         f"{_BASE}/{company_id}/bank-accounts",
@@ -154,9 +156,24 @@ def test_profile_roles_and_bank_masking(api) -> None:  # noqa: ANN001
     assert bank.status_code == 201
     detail = bank.json()
     assert detail["legal_name"] == "OOO Test"
-    assert {r["role"] for r in detail["roles"]} == {"manufacturer", "trader"}
+    assert {r["role"] for r in detail["roles"]} == {"distributor", "trader"}
     assert detail["bank_accounts"][0]["account_masked"] == "****1234"
     assert "20208000900040041234" not in str(detail)  # full number never serialized
+
+
+@requires_real_db
+def test_roles_reject_cross_account_type_mix(api) -> None:  # noqa: ANN001
+    client, session = api
+    _aid, auth = _seed_account(session, "+998900000011")
+    company_id = client.post(_BASE, json={"tax_id": "123456790"}, headers=auth).json()["id"]
+
+    resp = client.put(
+        f"{_BASE}/{company_id}/roles",
+        json={"roles": ["manufacturer", "trader"]},
+        headers=auth,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["detail"] == "roles_span_multiple_account_types"
 
 
 @requires_real_db

@@ -38,6 +38,15 @@ export const companyApi = {
     return api.upload<DocumentMeta>(`/portal/companies/${id}/documents`, form);
   },
 
+  uploadLogo: (id: number, file: File): Promise<CompanyDetail> => {
+    const form = new FormData();
+    form.append("file", file);
+    return api.upload<CompanyDetail>(`/portal/companies/${id}/logo`, form);
+  },
+
+  deleteLogo: (id: number): Promise<void> =>
+    api.del<void>(`/portal/companies/${id}/logo`),
+
   removeDocument: (id: number, documentId: number): Promise<void> =>
     api.del<void>(`/portal/companies/${id}/documents/${documentId}`),
 

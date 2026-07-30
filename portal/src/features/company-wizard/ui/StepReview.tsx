@@ -14,7 +14,8 @@ import {
 } from "@/shared/ui";
 import type { ChecklistState } from "@/shared/ui";
 
-import { CHECK_ORDER } from "../model/constants";
+import { CHECK_ORDER, isManufacturerType } from "../model/constants";
+import { useWizardDraft } from "../model/draftStore";
 import { useSubmitWizard } from "../model/useSubmitWizard";
 import { CheckGlyph } from "./wizardGlyphs";
 
@@ -38,17 +39,19 @@ interface StepReviewProps {
 }
 
 /**
- * Step 5 — «Проверка компании».
+ * Final wizard step.
  *
- * Entering this screen IS the submit: the mockup has no separate confirmation
- * sheet, and by here the user has clicked «Далее» through every step of a flow
- * titled "register a company". The run is guarded by a ref so React's double
- * mount (and a re-render mid-flight) cannot submit twice.
+ * Default types: entering this screen IS the submit (register.jpeg).
+ * Manufacturer: an «Almost ready» confirm sheet (companys_list.jpeg) gates the
+ * submit behind an explicit «Отправить на модерацию» click.
  */
 export function StepReview({ onBack, onComplete }: StepReviewProps) {
   const { t } = useTranslation();
+  const accountType = useWizardDraft((s) => s.accountType);
+  const manufacturer = isManufacturerType(accountType);
   const { submit, error, isSubmitting, reset } = useSubmitWizard();
   const [companyId, setCompanyId] = useState<number | null>(null);
+  const [confirmed, setConfirmed] = useState(!manufacturer);
   const startedRef = useRef(false);
 
   function runSubmit(): void {
@@ -58,19 +61,13 @@ export function StepReview({ onBack, onComplete }: StepReviewProps) {
   }
 
   useEffect(() => {
+    if (!confirmed) return;
     if (startedRef.current) return;
     startedRef.current = true;
     runSubmit();
-    // Submit is a one-shot side effect of arriving here; `submit` is recreated
-    // every render, so depending on it would re-fire the whole sequence.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [confirmed]);
 
-  /**
-   * Retry in place. Without this the only exit from a failed submit was «Назад»,
-   * because «Далее» stays disabled until there is a company id — so the screen
-   * that reported the failure offered no way to act on it.
-   */
   function handleRetry(): void {
     reset();
     runSubmit();
@@ -85,7 +82,9 @@ export function StepReview({ onBack, onComplete }: StepReviewProps) {
       )
     : CHECK_ORDER.map((check_type) => ({ check_type, status: "pending", detail: null }));
 
-  const resolved = rows.every((c) => CHECK_STATE[c.status] !== "pending" && CHECK_STATE[c.status] !== "running");
+  const resolved = rows.every(
+    (c) => CHECK_STATE[c.status] !== "pending" && CHECK_STATE[c.status] !== "running",
+  );
   const anyProblem = rows.some((c) => {
     const state = CHECK_STATE[c.status] ?? "pending";
     return state === "failed" || state === "warning";
@@ -94,11 +93,49 @@ export function StepReview({ onBack, onComplete }: StepReviewProps) {
 
   function handleContinue(): void {
     if (companyId == null) return;
-    // Navigate only. The draft is cleared by the done screen (`RegistrationDone`),
-    // NOT here: resetting first empties the draft while this wizard is still
-    // mounted, and the wizard's step guard then sees an unreachable step 5 and
-    // redirects to step 1 — overriding the navigation to the done sheet.
     onComplete(companyId);
+  }
+
+  if (manufacturer && !confirmed) {
+    return (
+      <div className="space-y-6" data-testid="wizard-almost-ready">
+        <div className="flex flex-col items-center gap-3 pt-4 text-center">
+          <SuccessMark size="lg" />
+          <h2 className="text-xl font-semibold text-text">{t("wizard.almostReady.title")}</h2>
+          <p className="max-w-md text-sm text-text-muted">{t("wizard.almostReady.subtitle")}</p>
+        </div>
+
+        <Card>
+          <CardBody className="space-y-4">
+            <h3 className="text-sm font-semibold text-text">{t("wizard.almostReady.whatsNext")}</h3>
+            <ol className="space-y-3 text-sm text-text-muted">
+              <li>1. {t("wizard.almostReady.steps.check")}</li>
+              <li>2. {t("wizard.almostReady.steps.notify")}</li>
+              <li>3. {t("wizard.almostReady.steps.buyers")}</li>
+            </ol>
+          </CardBody>
+        </Card>
+
+        <Alert tone="info" title={t("wizard.almostReady.privacyTitle")}>
+          {t("wizard.almostReady.privacyBody")}
+        </Alert>
+
+        <div className="flex flex-col gap-3">
+          <Button
+            type="button"
+            size="lg"
+            className="w-full"
+            data-testid="wizard-submit-moderation"
+            onClick={() => setConfirmed(true)}
+          >
+            {t("wizard.almostReady.submit")}
+          </Button>
+          <Button type="button" variant="ghost" size="lg" className="w-full" onClick={onBack}>
+            {t("wizard.almostReady.saveDraft")}
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -136,9 +173,6 @@ export function StepReview({ onBack, onComplete }: StepReviewProps) {
         </Alert>
       ) : null}
 
-      {/* One state at a time. A hard failure used to render alongside the blue
-          «Идёт проверка… Страницу можно не закрывать», so the screen simultaneously
-          reported that the submit had failed and that it was still in progress. */}
       {error ? null : allPassed ? (
         <Card>
           <CardBody className="flex flex-col items-center py-8 text-center">
@@ -148,8 +182,6 @@ export function StepReview({ onBack, onComplete }: StepReviewProps) {
           </CardBody>
         </Card>
       ) : caseOut != null && resolved ? (
-        // Resolved but not clean: the case is in, staff will come back on the
-        // flagged points. Saying "verified" here would be a promise we cannot keep.
         <Alert tone="warning" title={t("wizard.review.needsAttentionTitle")}>
           {t("wizard.review.needsAttentionBody")}
         </Alert>

@@ -72,6 +72,7 @@
     "settings": "Sozlamalar",
     "logout": "Chiqish",
     "market": "Bozor",
+    "manufacturers": "Ishlab chiqaruvchilar",
     "requests": "Arizalar",
     "inquiries": "So'rovlar",
     "news": "Yangiliklar",
@@ -146,6 +147,7 @@
     "removeDocumentConfirm": "Hujjat o‘chiriladi. Bu amalni bekor qilib bo‘lmaydi.",
     "notEditable": "Joriy holatda kompaniya ma’lumotlarini o‘zgartirib bo‘lmaydi.",
     "goToVerification": "Verifikatsiya holati",
+    "manage": "Kompaniyani boshqarish",
     "createOffer": "Taklif yaratish",
     "viewOffers": "Kompaniya takliflari",
     "legalForms": {
@@ -165,7 +167,16 @@
       "details": "Ma’lumotlar",
       "bank": "Bank",
       "documents": "Hujjatlar",
-      "review": "Tekshiruv"
+      "review": "Tekshiruv",
+      "production": "Ishlab chiqarish",
+      "catalog": "Katalog",
+      "certificates": "Sertifikatlar",
+      "buyerReqs": "Talablar",
+      "services": "Xizmatlar",
+      "geography": "Geografiya",
+      "specialization": "Ixtisoslashuv",
+      "tariffsDocs": "Tariflar",
+      "labLicenses": "Litsenziyalar"
     },
     "bank": {
       "title": "Bank hisobi",
@@ -209,19 +220,23 @@
       "options": {
         "buyer": {
           "title": "Xaridor",
-          "description": "Ishlab chiqarishingiz uchun xomashyo va materiallar xaridi"
+          "description": "Ishlab chiqarishingiz uchun xomashyo va materiallar xarid qilish"
         },
-        "supplier": {
-          "title": "Yetkazib beruvchi",
-          "description": "Mahsulotingizni xalqaro mijozlarga sotish"
+        "distributor": {
+          "title": "Distribyutor/Treyder",
+          "description": "Sanoat xomashyosini tarqatish va savdo qilish"
         },
         "manufacturer": {
-          "title": "Ishlab chiqaruvchi",
-          "description": "O‘z ishlab chiqarishingizdan to‘g‘ridan-to‘g‘ri yetkazib berish"
+          "title": "Ishlab chiqaruvchi/Zavod",
+          "description": "O‘z ishlab chiqarishidan to‘g‘ridan-to‘g‘ri yetkazib berish"
         },
-        "trader": {
-          "title": "Treyder",
-          "description": "Sanoat xomashyosi savdosi va distribyutsiyasi"
+        "logistics": {
+          "title": "Logistika",
+          "description": "Tashish, omborxona va yetkazib berish xizmatlari"
+        },
+        "laboratory": {
+          "title": "Laboratoriya",
+          "description": "Materiallarni tahlil qilish, sinash va sertifikatlash"
         }
       }
     },
@@ -264,8 +279,35 @@
         "taxId": "STIR (INN)",
         "address": "Yuridik manzil",
         "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana",
-        "ownershipForm": "Mulkchilik shakli"
-      }
+        "ownershipForm": "Mulkchilik shakli",
+        "logo": "Kompaniya logotipi",
+        "factoryLegalName": "Zavodning to‘liq yuridik nomi",
+        "commercialName": "Tijorat nomi (agar bor bo‘lsa)",
+        "registrationNumber": "Kompaniya ro‘yxat raqami",
+        "factoryAddress": "Zavodning amaldagi manzili",
+        "city": "Shahar",
+        "taxIdOrReg": "STIR / Ro‘yxatga olish raqami",
+        "laboratoryName": "Laboratoriya nomi",
+        "website": "Sayt",
+        "email": "Email",
+        "phone": "Telefon",
+        "description": "Tavsif"
+      },
+      "manufacturerTitle": "Zavodning yuridik ma’lumotlari",
+      "manufacturerSubtitle": "Zavodingizning yuridik ma’lumotlarini to‘ldiring",
+      "logoUpload": "Logotip yuklash",
+      "logoHint": "JPG yoki PNG. Maks. 5 MB.",
+      "logoRemove": "Logotipni olib tashlash",
+      "registrationNumberRequired": "Kompaniya ro‘yxat raqamini kiriting",
+      "factoryAddressRequired": "Zavodning amaldagi manzilini kiriting",
+      "logisticsTitle": "Kompaniya ma’lumotlari",
+      "logisticsSubtitle": "Logistika kompaniyangiz ma’lumotlarini to‘ldiring",
+      "laboratoryTitle": "Asosiy ma’lumot",
+      "laboratorySubtitle": "Laboratoriya ma’lumotlarini to‘ldiring",
+      "cityRequired": "Shaharni kiriting",
+      "emailInvalid": "To‘g‘ri email kiriting",
+      "phoneRequired": "Telefon raqamini kiriting",
+      "descriptionRequired": "Laboratoriya tavsifini kiriting"
     },
     "review": {
       "title": "Kompaniyani tekshirish",
@@ -295,6 +337,244 @@
       "toCabinet": "Kabinetga o‘tish",
       "toPublish": "Mahsulot e’lon qilishga o‘tish",
       "registeredAt": "Ro‘yxatdan o‘tgan sana"
+    },
+    "manufacturerTitle": "Ishlab chiqaruvchini ro‘yxatdan o‘tkazish",
+    "production": {
+      "title": "Ishlab chiqarish haqida",
+      "subtitle": "Ishlab chiqarish quvvatlaringiz haqida yozing",
+      "required": "Majburiy maydon",
+      "selectPlaceholder": "Tanlang",
+      "yearPlaceholder": "Yilni tanlang",
+      "isoPlaceholder": "Sertifikatni tanlang",
+      "exportCountriesRequired": "Kamida bitta eksport davlatini tanlang",
+      "fields": {
+        "productionType": "Ishlab chiqarish turi",
+        "mainProducts": "Asosiy mahsulotlar",
+        "annualCapacity": "Yillik ishlab chiqarish quvvati",
+        "productionLines": "Ishlab chiqarish liniyalari soni",
+        "employees": "Xodimlar soni",
+        "markets": "Asosiy bozorlar",
+        "exportCountries": "Eksport davlatlari",
+        "foundedYear": "Zavod tashkil etilgan yil",
+        "iso": "ISO sertifikati"
+      },
+      "types": {
+        "polymers": "Polimerlar",
+        "petrochemicals": "Neffximiya",
+        "compounds": "Kompaundlar / masterbatch",
+        "recycling": "Qayta ishlash",
+        "other": "Boshqa"
+      },
+      "products": {
+        "pp": "PP",
+        "hdpe": "HDPE",
+        "ldpe": "LDPE",
+        "pvc": "PVC",
+        "pet": "PET",
+        "abs": "ABS",
+        "other": "Boshqa"
+      },
+      "iso": {
+        "iso_9001": "ISO 9001",
+        "iso_14001": "ISO 14001",
+        "iso_45001": "ISO 45001",
+        "iso_22000": "ISO 22000",
+        "none": "Yo‘q"
+      },
+      "markets": {
+        "domestic": "Ichki bozor",
+        "export": "Eksport"
+      },
+      "countries": {
+        "KZ": "Qozog‘iston",
+        "RU": "Rossiya",
+        "TJ": "Tojikiston",
+        "KG": "Qirg‘iziston",
+        "TM": "Turkmaniston",
+        "CN": "Xitoy",
+        "TR": "Turkiya",
+        "AE": "BAA",
+        "other": "Boshqa"
+      }
+    },
+    "catalog": {
+      "title": "Mahsulot katalogi",
+      "subtitle": "Assortimentni qo‘shing — ro‘yxatdan keyin yakunlash mumkin",
+      "addManual": "Mahsulotni qo‘lda qo‘shish",
+      "addExcel": "Excel orqali yuklash",
+      "excelFormats": ".xlsx, .xls",
+      "yourProducts": "Mahsulotlaringiz ({{count}})",
+      "emptyTitle": "Mahsulotlar ro‘yxati bo‘sh",
+      "emptyBody": "Mahsulotlarni qo‘lda qo‘shing yoki Excel fayl yuklang",
+      "tipTitle": "Maslahat",
+      "tipBody": "Har bir mahsulot uchun hujjatlarni katalogda alohida yuklash mumkin.",
+      "deferNote": "Mahsulotlar ro‘yxatdan o‘tgach takliflar bo‘limida nashr etiladi. Bu qadamni o‘tkazib yuborish mumkin.",
+      "openOffers": "Takliflarga o‘tish"
+    },
+    "mfrDocs": {
+      "title": "Zavod sertifikatlari va litsenziyalari",
+      "subtitle": "Umumiy hujjatlar va litsenziyalarni yuklang",
+      "uploadHint": "Hujjat yuklang",
+      "moderationNote": "Barcha hujjatlar profilingiz nashr etilishidan oldin moderator tomonidan tekshiriladi."
+    },
+    "buyerReqs": {
+      "title": "Xaridorlarga talablar",
+      "subtitle": "Xaridorlaringiz mos kelishi kerak bo‘lgan talablarni ko‘rsating",
+      "volumeSection": "Minimal buyurtma hajmi",
+      "financialSection": "Moliyaviy talablar",
+      "additionalSection": "Qo‘shimcha talablar",
+      "moqRequired": "Minimal buyurtma hajmini kiriting",
+      "fields": {
+        "moq": "Minimal hajm (MOQ)",
+        "minAnnual": "Minimal yillik hajm",
+        "otherDetail": "Boshqa talablar"
+      },
+      "financial": {
+        "bank_guarantee": "Bank kafolati",
+        "letter_of_credit": "Akkreditiv (LC)",
+        "payment_deferral": "To‘lovni kechiktirish",
+        "prepayment": "Oldindan to‘lov"
+      },
+      "additional": {
+        "financial_reporting": "Moliyaviy hisobot",
+        "market_experience": "Bozordagi tajriba",
+        "licenses_certificates": "Litsenziyalar va sertifikatlar",
+        "end_products_info": "Yakuniy mahsulot haqida ma’lumot",
+        "production_photos": "Ishlab chiqarish fotolari",
+        "other": "Boshqa"
+      }
+    },
+    "almostReady": {
+      "title": "Deyarli tayyor!",
+      "subtitle": "Ma’lumotni tekshiring va profilni moderatsiyaga yuboring.",
+      "whatsNext": "Keyin nima?",
+      "steps": {
+        "check": "Profilingiz va hujjatlaringizni tekshiramiz (1–2 ish kuni)",
+        "notify": "Tasdiqlangandan keyin bildirishnoma olasiz",
+        "buyers": "Xaridorlar sizga to‘g‘ridan-to‘g‘ri so‘rov yubora oladi"
+      },
+      "privacyTitle": "Ko‘rinish",
+      "privacyBody": "Profilingiz faqat tekshirilgan xaridorlar va kompaniyalarga ko‘rinadi.",
+      "submit": "Moderatsiyaga yuborish",
+      "saveDraft": "Qoralamani saqlash"
+    },
+    "units": {
+      "tons": "tonna",
+      "tonsPerYear": "tonna/yil"
+    },
+    "logisticsTitle": "Logistika kompaniyasini ro‘yxatdan o‘tkazish",
+    "logistics": {
+      "details": {
+        "next": "Keyingi: Xizmatlar →"
+      },
+      "services": {
+        "title": "Logistika kompaniyasi xizmatlari",
+        "subtitle": "Ta’minlaydigan xizmat turlariini tanlang",
+        "required": "Kamida bitta xizmatni tanlang",
+        "next": "Keyingi: Geografiya →",
+        "options": {
+          "international_road": "Xalqaro avtomobil tashish",
+          "rail": "Temiryo‘l tashish",
+          "sea": "Dengiz tashish",
+          "air": "Aviatsiya tashish",
+          "multimodal": "Multimodal tashish",
+          "customs_clearance": "Bojxona rasmiylashtirish",
+          "export_clearance": "Eksport rasmiylashtirish",
+          "import_clearance": "Import rasmiylashtirish",
+          "certification": "Sertifikatlash",
+          "cargo_insurance": "Yuk sug‘urtasi",
+          "warehouse": "Ombor xizmatlari",
+          "consolidation": "Yuk konsolidatsiyasi",
+          "container_transport": "Konteyner tashish"
+        }
+      },
+      "geography": {
+        "title": "Ish geografiyasi",
+        "subtitle": "Davlatlar va mashhur marshrutlarni belgilang",
+        "required": "Kamida bitta jo‘natuvchi va bitta qabul qiluvchi davlatni tanlang",
+        "fromTitle": "Qayerdan (yetkazib beruvchi davlatlar)",
+        "toTitle": "Qayerga (qabul qiluvchi davlatlar)",
+        "routesTitle": "Mashhur marshrutlar",
+        "next": "Keyingi: Ixtisoslashuv →",
+        "countries": {
+          "CN": "Xitoy",
+          "IR": "Eron",
+          "RU": "Rossiya",
+          "KZ": "Qozog‘iston",
+          "TR": "Turkiya",
+          "AE": "BAA",
+          "UZ": "O‘zbekiston",
+          "KG": "Qirg‘iziston",
+          "TJ": "Tojikiston",
+          "TM": "Turkmaniston",
+          "other": "Boshqa davlatlar"
+        },
+        "routes": {
+          "shanghai_tashkent": "Shanxay → Toshkent",
+          "tehran_tashkent": "Tehron → Toshkent",
+          "bandar_abbas_tashkent": "Bandar-Abbos → Toshkent",
+          "moscow_tashkent": "Moskva → Toshkent",
+          "kazan_tashkent": "Qozon → Toshkent"
+        }
+      },
+      "specialization": {
+        "title": "Ixtisoslashuv",
+        "subtitle": "Qanday yuklarni tashiysiz va qanday imkoniyatlarga egasiz",
+        "cargoTitle": "Qanday yuklarni tashiysiz?",
+        "capabilitiesTitle": "Kompaniya imkoniyatlari",
+        "required": "Kamida bitta yuk turini tanlang",
+        "next": "Keyingi: Tariflar →",
+        "cargo": {
+          "petrochemicals_polymers": "Neftkimyo / polimerlar",
+          "chemical_products": "Kimyoviy mahsulotlar",
+          "liquid_bulk": "Suyuq yuklar",
+          "dangerous_goods_adr": "Xavfli yuklar (ADR)",
+          "container_shipping": "Konteyner tashish",
+          "big_bags": "Big Bag / qoplar",
+          "other_cargo": "Boshqa yuklar"
+        },
+        "capabilities": {
+          "own_trucks": "O‘z avtotransport vositalari",
+          "own_rail_wagons": "O‘z temiryo‘l vagonlari",
+          "sea_containers": "Dengiz konteynerlari",
+          "storage_facilities": "Ombor xonalari",
+          "customs_warehouse": "Bojxona ombori",
+          "foreign_offices": "Boshqa davlatlardagi vakolatxonalar",
+          "customs_brokers": "Bojxona brokerlari"
+        }
+      },
+      "tariffs": {
+        "title": "Tariflar va hujjatlar",
+        "subtitle": "Narx hisoblash formatini tanlang va hujjatlarni yuklang",
+        "tariffsSection": "Tariflar",
+        "tariffsHint": "Qulay narx hisoblash formatini tanlang:",
+        "required": "Tarif modelini tanlang",
+        "docsSection": "Kerakli hujjatlar",
+        "docsHint": "Tashuvchi hujjatlarini yuklang — moderatsiya nashr oldidan tekshiradi.",
+        "moderationNote": "Barcha hujjatlar profilingiz nashr etilishidan oldin moderator tekshiruvidan o‘tadi.",
+        "next": "Keyingi: Nashr →",
+        "models": {
+          "individual": "Narx individual hisoblanadi",
+          "per_container": "Konteyner uchun narx",
+          "per_ton": "Tonna uchun narx",
+          "per_km": "Kilometr uchun narx",
+          "minimum_order": "Minimal buyurtma"
+        }
+      }
+    },
+    "laboratoryTitle": "Laboratoriya ro‘yxatdan o‘tishi",
+    "laboratory": {
+      "details": {
+        "next": "Keyingi: Litsenziyalar →"
+      },
+      "licenses": {
+        "next": "Keyingi: Moderatsiya →"
+      }
+    },
+    "labDocs": {
+      "title": "Litsenziyalar va sertifikatlar",
+      "subtitle": "Laboratoriya akkreditatsiyasi va hujjatlarini yuklang",
+      "moderationNote": "Barcha hujjatlar profilingiz nashr etilishidan oldin moderator tekshiruvidan o‘tadi."
     }
   },
   "verification": {
@@ -722,7 +1002,16 @@
     "permit": "Ruxsatnoma",
     "certificate": "Sertifikat",
     "power_of_attorney": "Ishonchnoma",
-    "other": "Boshqa"
+    "other": "Boshqa",
+    "production_license": "Ishlab chiqarish litsenziyasi",
+    "export_license": "Eksport litsenziyasi",
+    "certificate_of_origin": "Kelib chiqish sertifikati",
+    "iso_certificate": "ISO sertifikatlar",
+    "compliance_certificate": "REACH / RoHS / GOST",
+    "carrier_license": "Tashuvchi litsenziyasi",
+    "liability_insurance": "Javobgarlik sug‘urtasi",
+    "service_contract": "Shartnoma",
+    "accreditation_certificate": "Akkreditatsiya sertifikati"
   },
   "offerDocumentKind": {
     "image": "Foto",
@@ -1592,7 +1881,100 @@
     "documentsEmptyBody": "Yetkazib beruvchi ommaviy hujjatlar to‘plamini e’lon qilganda ular shu yerda bo‘ladi.",
     "message": "Yozish",
     "requestRfq": "Taklif so‘rash (RFQ)",
+    "messageManufacturer": "Zavod bilan bog‘lanish",
+    "requestFactoryRfq": "Taklif so‘rash",
     "pickOfferHint": "Sotuvchiga so‘rov yuborish uchun pastdan mahsulot tanlang"
+  },
+  "manufacturers": {
+    "title": "Ishlab chiqaruvchilar",
+    "subtitle": "Tasdiqlangan zavodlar — to‘g‘ridan-to‘g‘ri taklif so‘rashingiz mumkin",
+    "search": "Nomi yoki mahsulot bo‘yicha qidirish…",
+    "empty": "Ishlab chiqaruvchilar topilmadi",
+    "emptyBody": "Boshqa so‘rov bilan urinib ko‘ring.",
+    "noIso": "ISO sertifikati ko‘rsatilmagan",
+    "offerCount": "{{count}} mahsulot",
+    "employeesShort": "{{count}} xodim",
+    "foundedShort": "{{year}}-yildan",
+    "chatWithFactory": "Zavod bilan chat",
+    "leaveFactoryRfq": "Zavodga so‘rov qoldirish"
+  },
+  "factoryRfq": {
+    "title": "Zavodga so‘rov (RFQ)",
+    "subtitle": "Ishlab chiqaruvchiga kengaytirilgan so‘rov yuboring",
+    "stepOf": "{{total}} dan {{current}}-qadam",
+    "steps": {
+      "basic": "Shartlar",
+      "documents": "Hujjatlar",
+      "terms": "Tijorat",
+      "contact": "Aloqa"
+    },
+    "basic": {
+      "title": "1. Asosiy shartlar",
+      "quantity": "Miqdor",
+      "quantityRequired": "Miqdorni noldan katta son sifatida kiriting",
+      "targetPrice": "Maqsadli narx",
+      "currency": "Valyuta",
+      "incoterms": "Yetkazib berish shartlari (Incoterms)",
+      "incotermsPlaceholder": "Yetkazib berish bazasini tanlang",
+      "destinationPort": "Yetkazib berish porti / shahri",
+      "desiredDeliveryDate": "Istalgan yetkazib berish sanasi"
+    },
+    "documents": {
+      "title": "2. Muvofiqlik hujjatlari",
+      "subtitle": "Zavodga kerak bo‘ladigan hujjatlarni biriktiring — ularni keyinroq so‘rovdan qo‘shishingiz mumkin",
+      "dropLabel": "Yuklash uchun bosing",
+      "dropHint": "PDF, JPG, PNG",
+      "uploaded": "Biriktirilgan",
+      "remove": "O‘chirish",
+      "kinds": {
+        "founding_docs": "Ta’sis hujjatlari",
+        "registration_certificate": "Ro‘yxatdan o‘tish guvohnomasi",
+        "tax_id": "STIR guvohnomasi",
+        "bank_details": "Bank rekvizitlari",
+        "import_export_license": "Import/eksport litsenziyasi"
+      }
+    },
+    "terms": {
+      "title": "3. Tijorat shartlari",
+      "paymentMethod": "To‘lov usuli",
+      "paymentMethodPlaceholder": "masalan, 30% avans, qolgani konosament bo‘yicha",
+      "offerValidity": "Taklif amal qilish muddati",
+      "offerValidityPlaceholder": "masalan, 30 kun",
+      "performanceGuarantee": "Ijro kafolati",
+      "performanceGuaranteePlaceholder": "masalan, bank kafolati 2%",
+      "inspectionRequirement": "Inspeksiya talabi",
+      "inspectionRequirementPlaceholder": "masalan, yuklashda SGS",
+      "additionalRequirements": "Qo‘shimcha talablar",
+      "additionalRequirementsPlaceholder": "Zavod bilishi kerak bo‘lgan boshqa narsalar"
+    },
+    "contact": {
+      "title": "4. Kontakt shaxs",
+      "name": "To‘liq ism",
+      "nameRequired": "Kontakt shaxs ismini kiriting",
+      "position": "Lavozimi",
+      "email": "Email",
+      "phone": "Telefon",
+      "phoneRequired": "Telefon raqamini kiriting",
+      "telegram": "Telegram",
+      "submit": "So‘rovni yuborish"
+    },
+    "submitFailed": "So‘rovni yuborib bo‘lmadi.",
+    "done": {
+      "title": "So‘rov zavodga yuborildi!",
+      "body": "Zavod so‘rovingizni ko‘rib chiqib, siz bilan bog‘lanadi.",
+      "numberLabel": "So‘rov raqami",
+      "dateLabel": "Yuborilgan",
+      "toManufacturers": "Ishlab chiqaruvchilarga qaytish",
+      "toHome": "Bosh sahifaga"
+    }
+  },
+  "manufacturerChat": {
+    "title": "Zavod bilan chat",
+    "subtitle": "Ishlab chiqaruvchi bilan bevosita chat",
+    "empty": "Hali xabarlar yo‘q",
+    "placeholder": "Xabar yozing…",
+    "send": "Yuborish",
+    "attach": "Fayl"
   },
   "bankAccountStatus": {
     "unverified": "Tasdiqlanmagan",

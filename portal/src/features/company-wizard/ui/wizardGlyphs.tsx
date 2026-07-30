@@ -5,12 +5,13 @@ import {
   BuyerIcon,
   FactoryIcon,
   FileIcon,
+  FlaskIcon,
   FolderCheckIcon,
   PenLineIcon,
   ShieldAlertIcon,
   SupplierIcon,
   TaxIcon,
-  TraderIcon,
+  TruckIcon,
 } from "@/shared/ui";
 
 /*
@@ -21,9 +22,10 @@ import {
 
 const ACCOUNT_TYPE_GLYPHS: Record<string, ReactNode> = {
   buyer: <BuyerIcon size={22} />,
-  supplier: <SupplierIcon size={22} />,
+  distributor: <SupplierIcon size={22} />,
   manufacturer: <FactoryIcon size={22} />,
-  trader: <TraderIcon size={22} />,
+  logistics: <TruckIcon size={22} />,
+  laboratory: <FlaskIcon size={22} />,
 };
 
 /**

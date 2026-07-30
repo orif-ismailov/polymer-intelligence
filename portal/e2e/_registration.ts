@@ -39,7 +39,7 @@ export async function stepAccountType(
   opts: { type?: string; sign?: boolean } = {},
 ): Promise<void> {
   await page.goto("/companies/new/1");
-  await page.getByTestId(`account-type-${opts.type ?? "trader"}`).click();
+  await page.getByTestId(`account-type-${opts.type ?? "distributor"}`).click();
 
   if (opts.sign) {
     // The PIN gates the CTA exactly as the sheet draws it; the E-IMZO module

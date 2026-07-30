@@ -6,6 +6,9 @@ export type {
   DocumentMeta,
   CreateCompanyPayload,
   CompanyProfilePatch,
+  ManufacturerProfile,
+  LogisticsProfile,
+  LaboratoryProfile,
   CreateBankAccountPayload,
 } from "./model/types";
 export { companyApi, companyKeys } from "./model/api";

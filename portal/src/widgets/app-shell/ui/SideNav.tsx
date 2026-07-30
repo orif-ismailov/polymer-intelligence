@@ -15,6 +15,7 @@ import {
   HandshakeIcon,
   HeartIcon,
   HomeIcon,
+  ManufacturersIcon,
   NewsIcon,
   SampleBoxIcon,
   StoreIcon,
@@ -31,6 +32,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: "/", labelKey: "nav.home", icon: HomeIcon, end: true },
   { to: "/market", labelKey: "nav.market", icon: StoreIcon },
+  { to: "/manufacturers", labelKey: "nav.manufacturers", icon: ManufacturersIcon },
   { to: "/market/favorites", labelKey: "nav.favorites", icon: HeartIcon },
   { to: "/requests", labelKey: "nav.requests", icon: DocIcon },
   { to: "/deals", labelKey: "nav.deals", icon: HandshakeIcon },

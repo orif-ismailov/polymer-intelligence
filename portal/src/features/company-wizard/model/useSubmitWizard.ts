@@ -3,14 +3,29 @@ import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { companyApi, companyKeys, useActiveCompanyStore } from "@/entities/company";
-import type { CompanyProfilePatch } from "@/entities/company";
+import type {
+  CompanyProfilePatch,
+  LaboratoryProfile,
+  LogisticsProfile,
+  ManufacturerProfile,
+} from "@/entities/company";
 import { verificationApi, verificationKeys } from "@/entities/verification";
 import type { CaseOut } from "@/entities/verification";
 import { ApiError } from "@/shared/api";
 import { MAX_UPLOAD_MB } from "@/shared/config";
 
-import { ACCOUNT_TYPES } from "./constants";
+import {
+  ACCOUNT_TYPES,
+  isLaboratoryType,
+  isLogisticsType,
+  isManufacturerType,
+} from "./constants";
 import { useWizardDraft } from "./draftStore";
+import type {
+  WizardLaboratoryProfile,
+  WizardLogisticsProfile,
+  WizardManufacturerProfile,
+} from "./draftStore";
 
 export type SubmitStage =
   | "idle"
@@ -116,6 +131,7 @@ export function useSubmitWizard(): SubmitResult {
   const createdRef = useRef<{ id: number; taxId: string } | null>(null);
   /** Same id, recorded on the draft so it survives this component unmounting. */
   const adoptCompany = useWizardDraft((s) => s.adoptCompany);
+  const clearCompany = useWizardDraft((s) => s.clearCompany);
 
   function mapError(err: unknown, failedAt: SubmitStage): SubmitError {
     if (err instanceof ApiError) {
@@ -147,7 +163,9 @@ export function useSubmitWizard(): SubmitResult {
   async function submit(): Promise<number | null> {
     setError(null);
     const draft = useWizardDraft.getState();
-    const { identity, accountType, bank, documents, identityLocked } = draft;
+    const { identity, accountType, bank, documents, logo, manufacturer, logistics, laboratory } =
+      draft;
+    let { identityLocked } = draft;
     const taxId = identity.tax_id.trim();
     // Tracked locally: `stage` state is stale inside this closure's catch.
     let failedAt: SubmitStage = "creating";
@@ -157,12 +175,42 @@ export function useSubmitWizard(): SubmitResult {
     }
 
     try {
+      // Persisted drafts can still point at a company that finished verification
+      // (or was a showcase row). Patching those 409s — drop the id and create
+      // fresh when the tax id is free.
+      let resumeId = draft.companyId;
+      if (resumeId != null) {
+        try {
+          const existing = await companyApi.get(resumeId);
+          const editable =
+            existing.status === "draft" || existing.status === "pending_verification";
+          if (!editable) {
+            clearCompany();
+            createdRef.current = null;
+            resumeId = null;
+            identityLocked = false;
+          } else {
+            identityLocked = existing.identity_locked;
+            adoptCompany(existing.id, existing.identity_locked);
+          }
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 404) {
+            clearCompany();
+            createdRef.current = null;
+            resumeId = null;
+            identityLocked = false;
+          } else {
+            throw err;
+          }
+        }
+      }
+
       // Three ways in: signed on step 1 (draft.companyId), a previous attempt that
       // got past `create` and failed later (createdRef), or a fresh registration.
       // Re-creating would 409 on the unique tax_id and strand the user.
       const resumable = createdRef.current;
       const companyId =
-        draft.companyId ??
+        resumeId ??
         (resumable?.taxId === taxId
           ? resumable.id
           : await (async () => {
@@ -172,11 +220,6 @@ export function useSubmitWizard(): SubmitResult {
                 tax_id: taxId,
               });
               createdRef.current = { id: created.id, taxId };
-              // Record it on the DRAFT too, not just this hook's ref. `createdRef`
-              // belongs to StepReview, so pressing «Назад» to fix a rejected
-              // document unmounted it and lost the id — the retry then re-ran
-              // `create`, hit 409 on its own tax_id, and the wizard could never be
-              // completed for that STIR. The draft outlives the step.
               adoptCompany(created.id, false);
               return created.id;
             })());
@@ -185,21 +228,38 @@ export function useSubmitWizard(): SubmitResult {
       const patch: CompanyProfilePatch = {
         legal_form: identity.legal_form.trim() || undefined,
         legal_address: identity.legal_address.trim() || undefined,
+        actual_address: identity.actual_address.trim() || undefined,
+        registration_number: identity.registration_number.trim() || undefined,
+        short_name: identity.short_name.trim() || undefined,
         registration_date: identity.registration_date || undefined,
       };
       if (!identityLocked) {
         patch.legal_name = identity.legal_name.trim() || undefined;
         patch.director_name = identity.director_name.trim() || undefined;
       }
+      if (isManufacturerType(accountType)) {
+        patch.manufacturer_profile = toManufacturerProfilePayload(manufacturer);
+      }
+      if (isLogisticsType(accountType)) {
+        patch.logistics_profile = toLogisticsProfilePayload(logistics);
+      }
+      if (isLaboratoryType(accountType)) {
+        patch.laboratory_profile = toLaboratoryProfilePayload(laboratory);
+      }
       await companyApi.updateProfile(companyId, patch);
 
-      const role = ACCOUNT_TYPES.find((spec) => spec.id === accountType)?.role;
-      if (role) {
+      const roles = ACCOUNT_TYPES.find((spec) => spec.id === accountType)?.roles;
+      if (roles && roles.length > 0) {
         advance("roles");
-        await companyApi.setRoles(companyId, [role]);
+        await companyApi.setRoles(companyId, [...roles]);
       }
 
-      if (bank.enabled) {
+      if (
+        bank.enabled &&
+        !isManufacturerType(accountType) &&
+        !isLogisticsType(accountType) &&
+        !isLaboratoryType(accountType)
+      ) {
         advance("bank");
         await companyApi.addBankAccount(companyId, {
           bank_mfo: bank.bank_mfo.trim(),
@@ -214,6 +274,9 @@ export function useSubmitWizard(): SubmitResult {
         if (file instanceof File) {
           await companyApi.uploadDocument(companyId, kind, file);
         }
+      }
+      if (logo instanceof File) {
+        await companyApi.uploadLogo(companyId, logo);
       }
 
       advance("submitting");
@@ -243,5 +306,60 @@ export function useSubmitWizard(): SubmitResult {
       setStage("idle");
       setError(null);
     },
+  };
+}
+
+function optionalNumber(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const n = Number(trimmed);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function optionalInt(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return undefined;
+  return Number(trimmed);
+}
+
+function toManufacturerProfilePayload(profile: WizardManufacturerProfile): ManufacturerProfile {
+  return {
+    production_type: profile.production_type.trim() || undefined,
+    main_products: profile.main_products.trim() || undefined,
+    annual_capacity_tons: optionalNumber(profile.annual_capacity_tons),
+    production_lines: optionalInt(profile.production_lines),
+    employees: optionalInt(profile.employees),
+    markets: [...profile.markets],
+    export_countries: [...profile.export_countries],
+    founded_year: optionalInt(profile.founded_year),
+    iso_certification: profile.iso_certification.trim() || undefined,
+    moq_tons: optionalNumber(profile.moq_tons),
+    min_annual_volume_tons: optionalNumber(profile.min_annual_volume_tons),
+    financial_requirements: { ...profile.financial_requirements },
+    additional_requirements: [...profile.additional_requirements],
+    additional_other: profile.additional_other.trim() || undefined,
+  };
+}
+
+function toLogisticsProfilePayload(profile: WizardLogisticsProfile): LogisticsProfile {
+  return {
+    city: profile.city.trim() || undefined,
+    services: [...profile.services],
+    from_countries: [...profile.from_countries],
+    to_countries: [...profile.to_countries],
+    popular_routes: [...profile.popular_routes],
+    cargo_types: [...profile.cargo_types],
+    capabilities: [...profile.capabilities],
+    tariff_model: profile.tariff_model.trim() || undefined,
+  };
+}
+
+function toLaboratoryProfilePayload(profile: WizardLaboratoryProfile): LaboratoryProfile {
+  return {
+    city: profile.city.trim() || undefined,
+    website: profile.website.trim() || undefined,
+    email: profile.email.trim() || undefined,
+    phone: profile.phone.trim() || undefined,
+    description: profile.description.trim() || undefined,
   };
 }

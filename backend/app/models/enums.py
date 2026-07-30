@@ -381,6 +381,18 @@ class VerificationDocumentKind(enum.StrEnum):
     certificate = "certificate"
     power_of_attorney = "power_of_attorney"
     other = "other"
+    # Manufacturer registration (0031 — docs/new-design/companys_list.jpeg).
+    production_license = "production_license"
+    export_license = "export_license"
+    certificate_of_origin = "certificate_of_origin"
+    iso_certificate = "iso_certificate"
+    compliance_certificate = "compliance_certificate"
+    # Logistics registration (0032 — docs/new-design/logist_reg_flow.jpeg).
+    carrier_license = "carrier_license"
+    liability_insurance = "liability_insurance"
+    service_contract = "service_contract"
+    # Laboratory registration (0033 — docs/new-design/labaratory_reg_flow.jpeg).
+    accreditation_certificate = "accreditation_certificate"
 
 
 class DocumentReviewStatus(enum.StrEnum):
@@ -596,3 +608,37 @@ class SampleRequestStatus(enum.StrEnum):
     sent = "sent"
     received = "received"
     rejected_by_buyer = "rejected_by_buyer"
+
+
+# ── Manufacturers directory + factory RFQ ─────────────────────────────────────
+
+
+class FactoryRfqStatus(enum.StrEnum):
+    """Lifecycle of a buyer→factory RFQ (PG type: factory_rfq_status).
+
+    Distinct from trader inquiries (`offer_requests`): a factory RFQ carries
+    commercial terms, compliance documents and a named contact. Manufacturer
+    replies are out of band for v1 — status moves are operator / manufacturer
+    side later.
+    """
+
+    submitted = "submitted"
+    viewed = "viewed"
+    in_progress = "in_progress"
+    quoted = "quoted"
+    closed = "closed"
+    rejected = "rejected"
+
+
+class FactoryRfqDocumentKind(enum.StrEnum):
+    """Document slots on a factory RFQ (PG type: factory_rfq_document_kind).
+
+    Mirrors the compliance checklist on the mockup
+    (`docs/new-design/manufacturer_flow.jpeg` step 2).
+    """
+
+    founding_docs = "founding_docs"
+    registration_certificate = "registration_certificate"
+    tax_id = "tax_id"
+    bank_details = "bank_details"
+    import_export_license = "import_export_license"

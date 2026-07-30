@@ -72,6 +72,7 @@
     "settings": "Settings",
     "logout": "Log out",
     "market": "Market",
+    "manufacturers": "Manufacturers",
     "requests": "Requests",
     "inquiries": "Inquiries",
     "news": "News",
@@ -146,6 +147,7 @@
     "removeDocumentConfirm": "The document will be deleted. This cannot be undone.",
     "notEditable": "Company details cannot be edited in the current status.",
     "goToVerification": "Verification status",
+    "manage": "Manage company",
     "createOffer": "Create offer",
     "viewOffers": "Company offers",
     "legalForms": {
@@ -165,7 +167,16 @@
       "details": "Details",
       "bank": "Bank",
       "documents": "Documents",
-      "review": "Checks"
+      "review": "Checks",
+      "production": "Production",
+      "catalog": "Catalog",
+      "certificates": "Certificates",
+      "buyerReqs": "Buyer terms",
+      "services": "Services",
+      "geography": "Geography",
+      "specialization": "Specialization",
+      "tariffsDocs": "Tariffs",
+      "labLicenses": "Licenses"
     },
     "bank": {
       "title": "Bank account",
@@ -209,19 +220,23 @@
       "options": {
         "buyer": {
           "title": "Buyer",
-          "description": "Sourcing raw materials and inputs for your production"
+          "description": "Purchase raw materials for your production"
         },
-        "supplier": {
-          "title": "Supplier",
-          "description": "Selling your products to international customers"
+        "distributor": {
+          "title": "Distributor / Trader",
+          "description": "Distribution and trading of industrial materials"
         },
         "manufacturer": {
-          "title": "Manufacturer",
+          "title": "Manufacturer / Factory",
           "description": "Direct supply from your own production"
         },
-        "trader": {
-          "title": "Trader",
-          "description": "Trading and distribution of industrial feedstock"
+        "logistics": {
+          "title": "Logistics",
+          "description": "Freight, warehousing and delivery services"
+        },
+        "laboratory": {
+          "title": "Laboratory",
+          "description": "Analysis, testing and certification of materials"
         }
       }
     },
@@ -264,8 +279,35 @@
         "taxId": "Tax ID (STIR)",
         "address": "Legal address",
         "registrationDate": "Company registration date",
-        "ownershipForm": "Ownership form"
-      }
+        "ownershipForm": "Ownership form",
+        "logo": "Company logo",
+        "factoryLegalName": "Full legal name of the factory",
+        "commercialName": "Commercial name (if any)",
+        "registrationNumber": "Company registration number",
+        "factoryAddress": "Actual factory address",
+        "city": "City",
+        "taxIdOrReg": "TIN / Registration number",
+        "laboratoryName": "Laboratory name",
+        "website": "Website",
+        "email": "Email",
+        "phone": "Phone",
+        "description": "Description"
+      },
+      "manufacturerTitle": "Factory legal information",
+      "manufacturerSubtitle": "Fill in the legal details of your plant",
+      "logoUpload": "Upload logo",
+      "logoHint": "JPG or PNG. Max 5 MB.",
+      "logoRemove": "Remove logo",
+      "registrationNumberRequired": "Enter the company registration number",
+      "factoryAddressRequired": "Enter the factory address",
+      "logisticsTitle": "Company information",
+      "logisticsSubtitle": "Fill in your logistics company details",
+      "laboratoryTitle": "Basic information",
+      "laboratorySubtitle": "Fill in your laboratory details",
+      "cityRequired": "Enter the city",
+      "emailInvalid": "Enter a valid email",
+      "phoneRequired": "Enter the phone number",
+      "descriptionRequired": "Enter a laboratory description"
     },
     "review": {
       "title": "Company checks",
@@ -295,6 +337,244 @@
       "toCabinet": "Go to cabinet",
       "toPublish": "Publish a product",
       "registeredAt": "Registration date"
+    },
+    "manufacturerTitle": "Manufacturer registration",
+    "production": {
+      "title": "Production information",
+      "subtitle": "Tell us about your manufacturing capacity",
+      "required": "This field is required",
+      "selectPlaceholder": "Select an option",
+      "yearPlaceholder": "Select year",
+      "isoPlaceholder": "Select certificate",
+      "exportCountriesRequired": "Select at least one export country",
+      "fields": {
+        "productionType": "Production type",
+        "mainProducts": "Main products",
+        "annualCapacity": "Annual production capacity",
+        "productionLines": "Number of production lines",
+        "employees": "Number of employees",
+        "markets": "Main markets",
+        "exportCountries": "Export countries",
+        "foundedYear": "Factory foundation year",
+        "iso": "ISO certification"
+      },
+      "types": {
+        "polymers": "Polymers",
+        "petrochemicals": "Petrochemicals",
+        "compounds": "Compounds / masterbatch",
+        "recycling": "Recycling",
+        "other": "Other"
+      },
+      "products": {
+        "pp": "PP",
+        "hdpe": "HDPE",
+        "ldpe": "LDPE",
+        "pvc": "PVC",
+        "pet": "PET",
+        "abs": "ABS",
+        "other": "Other"
+      },
+      "iso": {
+        "iso_9001": "ISO 9001",
+        "iso_14001": "ISO 14001",
+        "iso_45001": "ISO 45001",
+        "iso_22000": "ISO 22000",
+        "none": "None"
+      },
+      "markets": {
+        "domestic": "Domestic market",
+        "export": "Export"
+      },
+      "countries": {
+        "KZ": "Kazakhstan",
+        "RU": "Russia",
+        "TJ": "Tajikistan",
+        "KG": "Kyrgyzstan",
+        "TM": "Turkmenistan",
+        "CN": "China",
+        "TR": "Turkey",
+        "AE": "UAE",
+        "other": "Other"
+      }
+    },
+    "catalog": {
+      "title": "Product catalog",
+      "subtitle": "Add your assortment — you can finish this after registration",
+      "addManual": "Add product manually",
+      "addExcel": "Upload via Excel",
+      "excelFormats": ".xlsx, .xls",
+      "yourProducts": "Your products ({{count}})",
+      "emptyTitle": "Product list is empty",
+      "emptyBody": "Add products manually or upload an Excel file with your assortment",
+      "tipTitle": "Tip",
+      "tipBody": "You can upload documents for each product separately in the product catalog.",
+      "deferNote": "Products are published after registration through the offers flow. You can skip this step for now.",
+      "openOffers": "Open offers"
+    },
+    "mfrDocs": {
+      "title": "Factory certificates and licenses",
+      "subtitle": "Upload general documents and licenses",
+      "uploadHint": "Upload document",
+      "moderationNote": "All documents are reviewed by a moderator before your profile is published."
+    },
+    "buyerReqs": {
+      "title": "Buyer requirements",
+      "subtitle": "Specify the requirements your buyers must meet",
+      "volumeSection": "Minimum order volume",
+      "financialSection": "Financial requirements",
+      "additionalSection": "Additional requirements",
+      "moqRequired": "Enter the minimum order volume",
+      "fields": {
+        "moq": "Minimum volume (MOQ)",
+        "minAnnual": "Minimum annual volume",
+        "otherDetail": "Other requirements"
+      },
+      "financial": {
+        "bank_guarantee": "Bank guarantee",
+        "letter_of_credit": "Letter of credit (LC)",
+        "payment_deferral": "Payment deferral",
+        "prepayment": "Prepayment"
+      },
+      "additional": {
+        "financial_reporting": "Financial reporting",
+        "market_experience": "Market experience",
+        "licenses_certificates": "Licenses and certificates",
+        "end_products_info": "Information about end products",
+        "production_photos": "Production photos",
+        "other": "Other"
+      }
+    },
+    "almostReady": {
+      "title": "Almost ready!",
+      "subtitle": "Check the information and send the profile for moderation.",
+      "whatsNext": "What’s next?",
+      "steps": {
+        "check": "We will review your profile and documents (1–2 business days)",
+        "notify": "You will get a notification after approval",
+        "buyers": "Buyers will be able to send you direct requests"
+      },
+      "privacyTitle": "Visibility",
+      "privacyBody": "Your profile will be visible only to verified buyers and companies.",
+      "submit": "Submit for moderation",
+      "saveDraft": "Save draft"
+    },
+    "units": {
+      "tons": "tons",
+      "tonsPerYear": "tons/year"
+    },
+    "logisticsTitle": "Logistics company registration",
+    "logistics": {
+      "details": {
+        "next": "Next: Services →"
+      },
+      "services": {
+        "title": "Logistics company services",
+        "subtitle": "Select the types of services you provide",
+        "required": "Select at least one service",
+        "next": "Next: Geography →",
+        "options": {
+          "international_road": "International road transport",
+          "rail": "Rail transport",
+          "sea": "Sea transport",
+          "air": "Air transport",
+          "multimodal": "Multimodal transport",
+          "customs_clearance": "Customs clearance",
+          "export_clearance": "Export clearance",
+          "import_clearance": "Import clearance",
+          "certification": "Certification",
+          "cargo_insurance": "Cargo insurance",
+          "warehouse": "Warehouse services",
+          "consolidation": "Cargo consolidation",
+          "container_transport": "Container transport"
+        }
+      },
+      "geography": {
+        "title": "Work geography",
+        "subtitle": "Select countries and popular routes",
+        "required": "Select at least one origin and one destination country",
+        "fromTitle": "From (supplier countries)",
+        "toTitle": "To (recipient countries)",
+        "routesTitle": "Popular routes",
+        "next": "Next: Specialization →",
+        "countries": {
+          "CN": "China",
+          "IR": "Iran",
+          "RU": "Russia",
+          "KZ": "Kazakhstan",
+          "TR": "Turkey",
+          "AE": "UAE",
+          "UZ": "Uzbekistan",
+          "KG": "Kyrgyzstan",
+          "TJ": "Tajikistan",
+          "TM": "Turkmenistan",
+          "other": "Other countries"
+        },
+        "routes": {
+          "shanghai_tashkent": "Shanghai → Tashkent",
+          "tehran_tashkent": "Tehran → Tashkent",
+          "bandar_abbas_tashkent": "Bandar Abbas → Tashkent",
+          "moscow_tashkent": "Moscow → Tashkent",
+          "kazan_tashkent": "Kazan → Tashkent"
+        }
+      },
+      "specialization": {
+        "title": "Specialization",
+        "subtitle": "Tell us which cargo you haul and what capabilities you have",
+        "cargoTitle": "What cargo do you transport?",
+        "capabilitiesTitle": "Company capabilities",
+        "required": "Select at least one cargo type",
+        "next": "Next: Tariffs →",
+        "cargo": {
+          "petrochemicals_polymers": "Petrochemicals / polymers",
+          "chemical_products": "Chemical products",
+          "liquid_bulk": "Liquid bulk cargo",
+          "dangerous_goods_adr": "Dangerous goods (ADR)",
+          "container_shipping": "Container shipping",
+          "big_bags": "Big Bag / sacks",
+          "other_cargo": "Other cargo"
+        },
+        "capabilities": {
+          "own_trucks": "Own road transport vehicles",
+          "own_rail_wagons": "Own rail wagons",
+          "sea_containers": "Sea containers",
+          "storage_facilities": "Storage facilities",
+          "customs_warehouse": "Customs warehouse",
+          "foreign_offices": "Offices in other countries",
+          "customs_brokers": "Customs brokers"
+        }
+      },
+      "tariffs": {
+        "title": "Tariffs and documents",
+        "subtitle": "Choose a pricing model and upload documents",
+        "tariffsSection": "Tariffs",
+        "tariffsHint": "Choose a convenient pricing format:",
+        "required": "Select a tariff model",
+        "docsSection": "Required documents",
+        "docsHint": "Upload carrier documents — moderation will review them before publication.",
+        "moderationNote": "All documents are reviewed by a moderator before your profile is published.",
+        "next": "Next: Publication →",
+        "models": {
+          "individual": "Price calculated individually",
+          "per_container": "Cost per container",
+          "per_ton": "Cost per ton",
+          "per_km": "Cost per km",
+          "minimum_order": "Minimum order"
+        }
+      }
+    },
+    "laboratoryTitle": "Laboratory registration",
+    "laboratory": {
+      "details": {
+        "next": "Next: Licenses →"
+      },
+      "licenses": {
+        "next": "Next: Moderation →"
+      }
+    },
+    "labDocs": {
+      "title": "Licenses and certificates",
+      "subtitle": "Upload laboratory accreditations and documents",
+      "moderationNote": "All documents are reviewed by a moderator before your profile is published."
     }
   },
   "verification": {
@@ -722,7 +1002,16 @@
     "permit": "Permit",
     "certificate": "Certificate",
     "power_of_attorney": "Power of attorney",
-    "other": "Other"
+    "other": "Other",
+    "production_license": "Production license",
+    "export_license": "Export license",
+    "certificate_of_origin": "Certificate of origin",
+    "iso_certificate": "ISO certificates",
+    "compliance_certificate": "REACH / RoHS / GOST",
+    "carrier_license": "Carrier license",
+    "liability_insurance": "Liability insurance",
+    "service_contract": "Contract",
+    "accreditation_certificate": "Accreditation certificate"
   },
   "offerDocumentKind": {
     "image": "Photo",
@@ -1592,7 +1881,100 @@
     "documentsEmptyBody": "A public document set will appear when the supplier publishes one.",
     "message": "Message",
     "requestRfq": "Request quote (RFQ)",
+    "messageManufacturer": "Contact the factory",
+    "requestFactoryRfq": "Request a quote",
     "pickOfferHint": "Pick a product below to send the seller a request"
+  },
+  "manufacturers": {
+    "title": "Manufacturers",
+    "subtitle": "Verified factories you can request quotes from directly",
+    "search": "Search by name or product…",
+    "empty": "No manufacturers found",
+    "emptyBody": "Try a different search term.",
+    "noIso": "No ISO certification listed",
+    "offerCount": "{{count}} listings",
+    "employeesShort": "{{count}} employees",
+    "foundedShort": "since {{year}}",
+    "chatWithFactory": "Chat with the factory",
+    "leaveFactoryRfq": "Leave a factory RFQ"
+  },
+  "factoryRfq": {
+    "title": "Factory RFQ",
+    "subtitle": "Send an extended request straight to the factory",
+    "stepOf": "Step {{current}} of {{total}}",
+    "steps": {
+      "basic": "Terms",
+      "documents": "Documents",
+      "terms": "Commercial",
+      "contact": "Contact"
+    },
+    "basic": {
+      "title": "1. Basic terms",
+      "quantity": "Quantity",
+      "quantityRequired": "Enter the quantity as a number greater than zero",
+      "targetPrice": "Target price",
+      "currency": "Currency",
+      "incoterms": "Incoterms",
+      "incotermsPlaceholder": "Choose a delivery basis",
+      "destinationPort": "Destination port / city",
+      "desiredDeliveryDate": "Desired delivery date"
+    },
+    "documents": {
+      "title": "2. Compliance documents",
+      "subtitle": "Attach the documents the factory will need — you can add them later from the RFQ",
+      "dropLabel": "Click to upload",
+      "dropHint": "PDF, JPG, PNG",
+      "uploaded": "Attached",
+      "remove": "Remove",
+      "kinds": {
+        "founding_docs": "Founding documents",
+        "registration_certificate": "Registration certificate",
+        "tax_id": "Tax ID certificate",
+        "bank_details": "Bank details",
+        "import_export_license": "Import/export license"
+      }
+    },
+    "terms": {
+      "title": "3. Commercial terms",
+      "paymentMethod": "Payment method",
+      "paymentMethodPlaceholder": "e.g. 30% advance, balance on B/L",
+      "offerValidity": "Offer validity",
+      "offerValidityPlaceholder": "e.g. 30 days",
+      "performanceGuarantee": "Performance guarantee",
+      "performanceGuaranteePlaceholder": "e.g. bank guarantee 2%",
+      "inspectionRequirement": "Inspection requirement",
+      "inspectionRequirementPlaceholder": "e.g. SGS at loading",
+      "additionalRequirements": "Additional requirements",
+      "additionalRequirementsPlaceholder": "Anything else the factory should know"
+    },
+    "contact": {
+      "title": "4. Contact person",
+      "name": "Full name",
+      "nameRequired": "Enter the contact name",
+      "position": "Position",
+      "email": "Email",
+      "phone": "Phone",
+      "phoneRequired": "Enter a phone number",
+      "telegram": "Telegram",
+      "submit": "Submit RFQ"
+    },
+    "submitFailed": "Could not submit the RFQ.",
+    "done": {
+      "title": "RFQ sent to the factory!",
+      "body": "The factory will review your request and get back to you.",
+      "numberLabel": "RFQ number",
+      "dateLabel": "Submitted",
+      "toManufacturers": "Back to manufacturers",
+      "toHome": "Go to home"
+    }
+  },
+  "manufacturerChat": {
+    "title": "Chat with the factory",
+    "subtitle": "Direct chat with the manufacturer",
+    "empty": "No messages yet",
+    "placeholder": "Write a message…",
+    "send": "Send",
+    "attach": "File"
   },
   "bankAccountStatus": {
     "unverified": "Unverified",

@@ -39,6 +39,24 @@ from app.models.enums import (
 from app.models.verification import VerificationCase
 from app.services import audit_service, event_service, event_types
 
+# ── Account-type exclusivity ──────────────────────────────────────────────────
+#
+# Registration picks ONE of five cards (`portal` ACCOUNT_TYPES). Each maps to a
+# closed set of `company_business_role` values. A company may hold roles from at
+# most one card — never manufacturer+trader, importer+distributor, etc.
+# «Дистрибьютор/Трейдер» is the only card that declares two enum members; both
+# together (or either alone) still count as that single account type.
+
+ACCOUNT_TYPE_ROLE_SETS: tuple[frozenset[CompanyBusinessRoleEnum], ...] = (
+    frozenset({CompanyBusinessRoleEnum.importer}),
+    frozenset(
+        {CompanyBusinessRoleEnum.distributor, CompanyBusinessRoleEnum.trader}
+    ),
+    frozenset({CompanyBusinessRoleEnum.manufacturer}),
+    frozenset({CompanyBusinessRoleEnum.logistics_provider}),
+    frozenset({CompanyBusinessRoleEnum.laboratory}),
+)
+
 # ── Domain exceptions (no `Error` suffix — house style) ───────────────────────
 
 
@@ -56,6 +74,10 @@ class InvalidJurisdiction(Exception):
 
 class InvalidBankMfo(Exception):
     """The bank MFO is not a 5-digit code."""
+
+
+class InvalidBusinessRoles(Exception):
+    """Roles span more than one registration account type (or none)."""
 
 
 class CompanyAlreadyRegistered(Exception):
@@ -265,8 +287,13 @@ _EDITABLE_FIELDS = frozenset(
         "short_name",
         "legal_form",
         "legal_address",
+        "actual_address",
+        "registration_number",
         "director_name",
         "registration_date",
+        "manufacturer_profile",
+        "logistics_profile",
+        "laboratory_profile",
     }
 )
 
@@ -344,16 +371,39 @@ def update_profile(
     return company
 
 
+def assert_single_account_type(roles: list[CompanyBusinessRoleEnum]) -> None:
+    """Raise InvalidBusinessRoles unless `roles` fit exactly one ACCOUNT_TYPES card.
+
+    Empty is allowed (clear roles). Unknown roles (e.g. insurance_provider) and
+    mixes across cards (manufacturer+trader, importer+distributor) are rejected.
+    """
+    role_set = frozenset(roles)
+    if not role_set:
+        return
+    matches = [allowed for allowed in ACCOUNT_TYPE_ROLE_SETS if role_set <= allowed]
+    if len(matches) != 1:
+        raise InvalidBusinessRoles(
+            "roles must belong to a single account type "
+            "(buyer / distributor-trader / manufacturer / logistics / laboratory)"
+        )
+
+
 def set_business_roles(
     db: Session, company: Company, roles: list[CompanyBusinessRoleEnum]
 ) -> list[CompanyBusinessRole]:
-    """Replace the company's declared business roles with `roles` (deduped)."""
+    """Replace the company's declared business roles with `roles` (deduped).
+
+    Enforces account-type exclusivity — see `assert_single_account_type`.
+    """
+    deduped = list(dict.fromkeys(roles))
+    assert_single_account_type(deduped)
+
     for existing in list(company.business_roles):
         db.delete(existing)
     db.flush()
 
     created: list[CompanyBusinessRole] = []
-    for role in dict.fromkeys(roles):  # dedupe, preserve order
+    for role in deduped:
         row = CompanyBusinessRole(
             company_id=company.id, role=role, status=BusinessRoleStatus.declared
         )

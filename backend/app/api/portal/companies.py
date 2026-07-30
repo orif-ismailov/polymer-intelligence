@@ -152,8 +152,13 @@ def _detail_out(db: Session, company: Company) -> CompanyDetailOut:
         short_name=company.short_name,
         legal_form=company.legal_form,
         legal_address=company.legal_address,
+        actual_address=company.actual_address,
+        registration_number=company.registration_number,
         director_name=company.director_name,
         registration_date=company.registration_date,
+        manufacturer_profile=company.manufacturer_profile,
+        logistics_profile=company.logistics_profile,
+        laboratory_profile=company.laboratory_profile,
         status=str(company.status),
         identity_locked=company.identity_locked,
         verified_at=company.verified_at,
@@ -269,7 +274,13 @@ def set_roles(
         roles = [CompanyBusinessRole(r) for r in body.roles]
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unknown role") from exc
-    company_service.set_business_roles(db, company, roles)
+    try:
+        company_service.set_business_roles(db, company, roles)
+    except company_service.InvalidBusinessRoles as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="roles_span_multiple_account_types",
+        ) from exc
     db.commit()
     return _detail_out(db, company)
 

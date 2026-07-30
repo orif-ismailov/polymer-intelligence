@@ -75,7 +75,9 @@
       "offer_sent": "پیشنهاد ارسال شد",
       "matched": "تطبیق‌یافته",
       "closed": "بسته‌شده",
-      "cancelled": "لغوشده"
+      "cancelled": "لغوشده",
+      "processed": "پردازش‌شده",
+      "archived": "بایگانی‌شده"
     },
     "kind": {
       "buy_request": "خریدار",

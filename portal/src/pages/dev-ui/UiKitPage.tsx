@@ -88,9 +88,9 @@ const ACCOUNT_TYPE_DEMO = [
     icon: <RegistryIcon size={22} />,
   },
   {
-    id: "supplier",
-    title: "Поставщик",
-    description: "Продажа вашей продукции международным клиентам",
+    id: "distributor",
+    title: "Дистрибьютор/Трейдер",
+    description: "Дистрибуция и торговля промышленным сырьём",
     icon: <FactoryIcon size={22} />,
   },
 ] as const;
@@ -158,7 +158,7 @@ export function UiKitPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [checked, setChecked] = useState(true);
   const [sectionTab, setSectionTab] = useState("description");
-  const [accountType, setAccountType] = useState("supplier");
+  const [accountType, setAccountType] = useState("distributor");
   const [eimzoMethod, setEimzoMethod] = useState("usb_token");
   const [filterTab, setFilterTab] = useState("pp");
   const [availability, setAvailability] = useState("in_stock");

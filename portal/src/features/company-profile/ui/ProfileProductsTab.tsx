@@ -16,12 +16,23 @@ interface ProfileProductsTabProps {
   offers: MarketOffer[];
   offerCount: number;
   onSeeAll?: () => void;
+  /**
+   * Appended to the product-detail link — the manufacturer profile marks the
+   * hop with `?fromManufacturer=1` so the offer page can offer Chat + factory
+   * RFQ instead of the regular trader inquiry form.
+   */
+  linkQuery?: string;
 }
 
 /**
  * «Продукты» — vertical list matching the mockup: thumb · name · CAS · stock · chevron.
  */
-export function ProfileProductsTab({ offers, offerCount, onSeeAll }: ProfileProductsTabProps) {
+export function ProfileProductsTab({
+  offers,
+  offerCount,
+  onSeeAll,
+  linkQuery,
+}: ProfileProductsTabProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -49,7 +60,7 @@ export function ProfileProductsTab({ offers, offerCount, onSeeAll }: ProfileProd
             <button
               key={offer.id}
               type="button"
-              onClick={() => navigate(`/market/${offer.id}`)}
+              onClick={() => navigate(`/market/${offer.id}${linkQuery ?? ""}`)}
               className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2.5 text-left transition-colors hover:border-brand-line hover:bg-surface-2"
             >
               <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface-inset">
