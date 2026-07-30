@@ -55,11 +55,15 @@ class TestRevision:
         assert callable(module.upgrade)  # type: ignore[attr-defined]
         assert callable(module.downgrade)  # type: ignore[attr-defined]
 
-    def test_0030_is_the_head(self) -> None:
+    def test_0030_is_in_a_single_head_chain(self) -> None:
+        # The invariant is "one head", not "0030 is the head" — pinning the revision
+        # made every later migration fail a test about 0030. Same shape as the
+        # sibling guards in test_migration_0029 and up.
         script = _script_dir()
-        assert script.get_heads() == ["0030"], (
+        assert len(script.get_heads()) == 1, (
             f"a second head means two migrations claim the same parent: {script.get_heads()}"
         )
+        assert script.get_revision("0030").down_revision == "0029"
 
 
 class TestColumns:
