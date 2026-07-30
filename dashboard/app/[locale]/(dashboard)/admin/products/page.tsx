@@ -16,6 +16,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Boxes, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { RouteGuardFallback } from "@/components/shared/RouteGuardFallback";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, apiFetch } from "@/lib/api";
 
@@ -258,8 +259,10 @@ function AdminProductsPageContent() {
     }
   }, [isAuthenticated, role, router]);
 
+  // Not `null` — an effect-driven redirect takes a beat, and a blank viewport
+  // during it reads as a crash rather than as a permission bounce.
   if (role && role !== "admin") {
-    return null;
+    return <RouteGuardFallback />;
   }
 
   return (

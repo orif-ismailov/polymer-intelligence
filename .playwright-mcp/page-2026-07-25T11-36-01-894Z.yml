@@ -1,0 +1,21 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: IA
+      - generic [ref=f1e7]: IMEX AI
+    - combobox "Interface language" [ref=f1e8]:
+      - option "Русский"
+      - option "O‘zbekcha"
+      - option "English" [selected]
+  - main [ref=f1e9]:
+    - generic [ref=f1e10]:
+      - generic [ref=f1e11]:
+        - heading "Sign in to your cabinet" [level=1] [ref=f1e12]
+        - paragraph [ref=f1e13]: Enter your phone number — we'll send a verification code.
+      - generic [ref=f1e16]:
+        - generic [ref=f1e17]:
+          - generic [ref=f1e18]: Phone number*
+          - textbox "Phone number*" [active] [ref=f1e19]:
+            - /placeholder: +998 90 123 45 67
+          - paragraph [ref=f1e20]: Uzbekistan (+998) or international format with a leading “+”.
+        - button "Get code" [disabled]

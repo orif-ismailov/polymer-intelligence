@@ -30,15 +30,40 @@ _TEST_ENV: dict[str, str] = {
     "JWT_SECRET": "test_jwt_secret_must_be_at_least_64_chars_long_for_security_xx",
     "S3_ACCESS_KEY": "minio_test_access",
     "S3_SECRET_KEY": "minio_test_secret",
+    "VERIFICATION_ENC_KEY": "cG9seW1lcl92ZXJpZmljYXRpb25fdGVzdF9rZXlfMzI=",
+    # Not required by Settings, but asserted on by tests. Settings reads
+    # `env_file=".env"` relative to the CWD, so a developer running pytest from
+    # backend/ with a local backend/.env had their own values substituted for
+    # these — the budget and OTP-cap tests then failed on their machine and
+    # nowhere else, because CI has no such file. Pinning them here restores the
+    # documented defaults; os.environ takes precedence over env_file.
+    "LLM_DAILY_TOKEN_LIMIT": "500000",
+    "OTP_MAX_SENDS_PER_DAY": "5",
 }
+
+# Applied at conftest IMPORT time, not from the fixture below, because a
+# session-scoped fixture runs after collection — and `settings` is a module-level
+# singleton built the first time anything imports app.core.config. A test module
+# that imports an app module at top level (needed when enum members appear in a
+# @parametrize) does that during collection, so the singleton would be built from
+# the developer's real .env and keep those values for the whole session. That is
+# silent and remote: it surfaced as "HMAC mismatch" in the Telegram auth tests,
+# which sign with the token below and were then verified against a real one.
+#
+# conftest is imported before any test module in its directory, so setting the
+# vars here is early enough. No restore: the values are only meant to outlive the
+# process, and pytest owns it.
+# Test values win over anything already exported, matching the fixture's
+# patch.dict(..., clear=False) semantics.
+os.environ.update(_TEST_ENV)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def patch_env() -> Generator[None, None, None]:
-    """Patch environment variables for the entire test session.
+    """Keep the test env in place for the session, and restore it afterwards.
 
-    This runs before any module that imports app.core.config so that
-    Settings() gets valid env values rather than raising ValidationError.
+    The values are already set at import time (see above) — this fixture exists so
+    a test that deliberately mutates one of them is still rolled back at teardown.
     """
     with patch.dict(os.environ, _TEST_ENV, clear=False):
         yield

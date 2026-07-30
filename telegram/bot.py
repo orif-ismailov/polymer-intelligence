@@ -152,6 +152,35 @@ def offer_request_moderation_keyboard(offer_request_id: int) -> "InlineKeyboardM
     )
 
 
+def verification_moderation_keyboard(case_id: int) -> "InlineKeyboardMarkup":
+    """Inline keyboard for a submitted verification case posted to the team group.
+
+    ✅ Одобрить (approve → company verified) / ❌ Отклонить (reject) / ✋ Запросить инфо
+    (send the case back to needs_info). callback_data: "vercase:<action>:<id>"
+    (parsed in handlers/verification.py). `info` is used for the request-info action to
+    stay well under Telegram's 64-byte callback_data limit.
+    """
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Одобрить", callback_data=f"vercase:approve:{case_id}"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отклонить", callback_data=f"vercase:reject:{case_id}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="✋ Запросить инфо", callback_data=f"vercase:info:{case_id}"
+                ),
+            ],
+        ]
+    )
+
+
 # ── Webhook setup ─────────────────────────────────────────────────────────────
 
 async def setup_webhook() -> None:
@@ -222,11 +251,13 @@ def _create_dispatcher() -> "Dispatcher":
     from telegram.handlers.chatid import chatid_router  # noqa: PLC0415
     from telegram.handlers.moderation import offer_moderation_router  # noqa: PLC0415
     from telegram.handlers.start import start_router  # noqa: PLC0415
+    from telegram.handlers.verification import verification_moderation_router  # noqa: PLC0415
 
     _dp = _Dispatcher()
     _dp.include_router(start_router)
     _dp.include_router(chatid_router)
     _dp.include_router(offer_moderation_router)
+    _dp.include_router(verification_moderation_router)
     return _dp
 
 

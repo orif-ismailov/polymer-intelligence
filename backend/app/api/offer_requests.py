@@ -41,6 +41,14 @@ def _get_pending(db: Session, offer_request_id: int) -> OfferRequest:
     return req
 
 
+def _conflict(exc: offer_request_service.AlreadyModerated) -> HTTPException:
+    """409 for a decision that lost the race — naming the status that won."""
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={"code": "already_moderated", "status": exc.current_status},
+    )
+
+
 @router.post(
     "/{offer_request_id}/approve",
     response_model=AdminOfferRequestOut,
@@ -52,9 +60,16 @@ def approve_offer_request(
     db: Session = Depends(get_db),
     user: StaffUser = Depends(require_analyst_or_admin),
 ) -> AdminOfferRequestOut:
-    """POST /admin/offer-requests/{id}/approve."""
+    """POST /admin/offer-requests/{id}/approve.
+
+    409 when the inquiry already left the queue — two reviewers must not each
+    land half a decision (see `offer_request_service._claim_pending`).
+    """
     req = _get_pending(db, offer_request_id)
-    offer_request_service.moderate_offer_request(db, req, user.id, approve=True, note=body.note)
+    try:
+        offer_request_service.moderate_offer_request(db, req, user.id, approve=True, note=body.note)
+    except offer_request_service.AlreadyModerated as exc:
+        raise _conflict(exc) from exc
     db.commit()
     offer_request_service.enqueue_offer_request_to_seller(req.id)
     return offer_request_service.to_admin_out(req)
@@ -71,8 +86,16 @@ def reject_offer_request(
     db: Session = Depends(get_db),
     user: StaffUser = Depends(require_analyst_or_admin),
 ) -> AdminOfferRequestOut:
-    """POST /admin/offer-requests/{id}/reject."""
+    """POST /admin/offer-requests/{id}/reject.
+
+    409 when the inquiry already left the queue — same exactly-once guard as approve.
+    """
     req = _get_pending(db, offer_request_id)
-    offer_request_service.moderate_offer_request(db, req, user.id, approve=False, note=body.note)
+    try:
+        offer_request_service.moderate_offer_request(
+            db, req, user.id, approve=False, note=body.note
+        )
+    except offer_request_service.AlreadyModerated as exc:
+        raise _conflict(exc) from exc
     db.commit()
     return offer_request_service.to_admin_out(req)

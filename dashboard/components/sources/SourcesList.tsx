@@ -10,6 +10,10 @@
  * - Pending types (backend-stub adapters, last_test_ok_at=null): amber badge,
  *   disabled Test/Enable (D-05). None currently — all adapters are wired.
  *
+ * RBAC: the health list itself is readable by any staff role, but Test, Reprocess
+ * and the Enable toggle are all `require_admin` server-side. They render as "—"
+ * below admin rather than as buttons that 403 silently.
+ *
  * No hardcoded hex. All colors via Tailwind token classes.
  */
 
@@ -28,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
 import { apiFetch } from "@/lib/api";
 import { formatTashkent } from "@/lib/tz";
 
@@ -187,6 +192,8 @@ function DisableConfirmDialog({
 
 export function SourcesList() {
   const t = useTranslations("sources");
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const queryClient = useQueryClient();
   const [testingSourceId, setTestingSourceId] = useState<number | null>(null);
   const [disableConfirmId, setDisableConfirmId] = useState<number | null>(null);
@@ -273,18 +280,28 @@ export function SourcesList() {
     );
   }
 
+  // The last three columns are all admin-only mutations; below admin the table
+  // is the health view it is allowed to be, not a row of dead buttons.
+  const gridCols = isAdmin
+    ? "grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto]"
+    : "grid-cols-[2fr_1fr_1fr_1fr]";
+
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-1">
         {/* Header */}
-        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-4 py-2 text-xs font-semibold text-foreground-muted uppercase tracking-wider">
+        <div className={`grid ${gridCols} gap-4 px-4 py-2 text-xs font-semibold text-foreground-muted uppercase tracking-wider`}>
           <span>{t("columns.nameType")}</span>
           <span>{t("columns.status")}</span>
           <span>{t("columns.lastFetch")}</span>
           <span>{t("columns.failures")}</span>
-          <span>{t("columns.test")}</span>
-          <span>{t("columns.reprocess")}</span>
-          <span>{t("columns.enable")}</span>
+          {isAdmin && (
+            <>
+              <span>{t("columns.test")}</span>
+              <span>{t("columns.reprocess")}</span>
+              <span>{t("columns.enable")}</span>
+            </>
+          )}
         </div>
 
         {sources.map((source) => {
@@ -295,7 +312,7 @@ export function SourcesList() {
 
           return (
             <div key={source.id} className="flex flex-col gap-1">
-              <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center rounded-lg bg-background-secondary px-4 py-3 border border-border">
+              <div className={`grid ${gridCols} gap-4 items-center rounded-lg bg-background-secondary px-4 py-3 border border-border`}>
                 {/* Name + Type badge */}
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="text-sm font-medium text-foreground truncate">{source.name}</span>
@@ -344,94 +361,99 @@ export function SourcesList() {
                   )}
                 </div>
 
-                {/* Test button */}
-                <div>
-                  {isPending ? (
-                    <Tooltip>
-                      <TooltipTrigger render={
-                        <button
-                          disabled
-                          className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground-subtle cursor-not-allowed opacity-50"
-                          aria-label={t("test.unavailableAria")}
-                        >
-                          {t("test.button")}
-                        </button>
-                      } />
-                      <TooltipContent className="bg-background-tertiary text-foreground-muted text-xs border-border">
-                        {t("test.availableAfterPhase5")}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <button
-                      onClick={() => setTestingSourceId(testingSourceId === source.id ? null : source.id)}
-                      className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background-tertiary transition-colors"
-                    >
-                      {t("test.button")}
-                    </button>
-                  )}
-                </div>
+                {/* Test / Reprocess / Enable — all require_admin server-side. */}
+                {isAdmin && (
+                  <>
+                  {/* Test button */}
+                  <div>
+                    {isPending ? (
+                      <Tooltip>
+                        <TooltipTrigger render={
+                          <button
+                            disabled
+                            className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground-subtle cursor-not-allowed opacity-50"
+                            aria-label={t("test.unavailableAria")}
+                          >
+                            {t("test.button")}
+                          </button>
+                        } />
+                        <TooltipContent className="bg-background-tertiary text-foreground-muted text-xs border-border">
+                          {t("test.availableAfterPhase5")}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <button
+                        onClick={() => setTestingSourceId(testingSourceId === source.id ? null : source.id)}
+                        className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background-tertiary transition-colors"
+                      >
+                        {t("test.button")}
+                      </button>
+                    )}
+                  </div>
 
-                {/* Reprocess button — re-parse previously-dropped raw_items */}
-                <div>
-                  {REPROCESSABLE_ADAPTERS.has(source.adapter) ? (
-                    <Tooltip>
-                      <TooltipTrigger render={
-                        <button
-                          onClick={() => reprocessMutation.mutate(source.id)}
-                          disabled={reprocessMutation.isPending && reprocessMutation.variables === source.id}
-                          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background-tertiary transition-colors disabled:opacity-50"
-                          aria-label={t("reprocess.aria")}
-                        >
-                          <RefreshCw
-                            size={12}
-                            aria-hidden="true"
-                            className={reprocessMutation.isPending && reprocessMutation.variables === source.id ? "animate-spin" : ""}
-                          />
-                          {t("reprocess.button")}
-                        </button>
-                      } />
-                      <TooltipContent className="bg-background-tertiary text-foreground-muted text-xs border-border max-w-xs">
-                        {t("reprocess.tooltip")}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <span className="text-foreground-subtle text-xs">—</span>
-                  )}
-                </div>
+                  {/* Reprocess button — re-parse previously-dropped raw_items */}
+                  <div>
+                    {REPROCESSABLE_ADAPTERS.has(source.adapter) ? (
+                      <Tooltip>
+                        <TooltipTrigger render={
+                          <button
+                            onClick={() => reprocessMutation.mutate(source.id)}
+                            disabled={reprocessMutation.isPending && reprocessMutation.variables === source.id}
+                            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background-tertiary transition-colors disabled:opacity-50"
+                            aria-label={t("reprocess.aria")}
+                          >
+                            <RefreshCw
+                              size={12}
+                              aria-hidden="true"
+                              className={reprocessMutation.isPending && reprocessMutation.variables === source.id ? "animate-spin" : ""}
+                            />
+                            {t("reprocess.button")}
+                          </button>
+                        } />
+                        <TooltipContent className="bg-background-tertiary text-foreground-muted text-xs border-border max-w-xs">
+                          {t("reprocess.tooltip")}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-foreground-subtle text-xs">—</span>
+                    )}
+                  </div>
 
-                {/* Enable/Disable toggle */}
-                <div>
-                  {isPending ? (
-                    <Tooltip>
-                      <TooltipTrigger render={
-                        <button
-                          disabled
-                          className="cursor-not-allowed opacity-50"
-                          aria-label={t("enable.unavailableAria")}
-                        >
-                          <ToggleLeft size={24} className="text-foreground-subtle" />
-                        </button>
-                      } />
-                      <TooltipContent className="bg-background-tertiary text-foreground-muted text-xs border-border">
-                        {t("test.availableAfterPhase5")}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <button
-                      onClick={() => handleToggle(source)}
-                      className="transition-colors hover:opacity-80"
-                      aria-label={source.is_enabled ? t("enable.disableAria") : t("enable.enableAria")}
-                      disabled={!source.is_enabled && !source.last_test_ok_at}
-                      title={!source.is_enabled && !source.last_test_ok_at ? t("enable.mustTestFirst") : undefined}
-                    >
-                      {source.is_enabled ? (
-                        <ToggleRight size={24} className="text-accent" />
-                      ) : (
-                        <ToggleLeft size={24} className={source.last_test_ok_at ? "text-foreground-muted" : "text-foreground-subtle opacity-40"} />
-                      )}
-                    </button>
-                  )}
-                </div>
+                  {/* Enable/Disable toggle */}
+                  <div>
+                    {isPending ? (
+                      <Tooltip>
+                        <TooltipTrigger render={
+                          <button
+                            disabled
+                            className="cursor-not-allowed opacity-50"
+                            aria-label={t("enable.unavailableAria")}
+                          >
+                            <ToggleLeft size={24} className="text-foreground-subtle" />
+                          </button>
+                        } />
+                        <TooltipContent className="bg-background-tertiary text-foreground-muted text-xs border-border">
+                          {t("test.availableAfterPhase5")}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <button
+                        onClick={() => handleToggle(source)}
+                        className="transition-colors hover:opacity-80"
+                        aria-label={source.is_enabled ? t("enable.disableAria") : t("enable.enableAria")}
+                        disabled={!source.is_enabled && !source.last_test_ok_at}
+                        title={!source.is_enabled && !source.last_test_ok_at ? t("enable.mustTestFirst") : undefined}
+                      >
+                        {source.is_enabled ? (
+                          <ToggleRight size={24} className="text-accent" />
+                        ) : (
+                          <ToggleLeft size={24} className={source.last_test_ok_at ? "text-foreground-muted" : "text-foreground-subtle opacity-40"} />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  </>
+                )}
               </div>
 
               {/* Inline test result */}

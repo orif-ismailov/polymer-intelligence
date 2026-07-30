@@ -36,10 +36,17 @@ import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
+from app.api.admin_contracts import router as admin_contracts_router
+from app.api.admin_deals import router as admin_deals_router
+from app.api.admin_escrow import router as admin_escrow_router
+from app.api.admin_lab import router as admin_lab_router
+from app.api.admin_licenses import router as admin_licenses_router
 from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
+from app.api.admin_substances import router as admin_substances_router
 from app.api.admin_users import router as admin_users_router
+from app.api.admin_verification import router as admin_verification_router
 from app.api.alert_rules import alerts_router
 from app.api.alert_rules import router as alert_rules_router
 from app.api.auth import router as auth_router
@@ -50,6 +57,23 @@ from app.api.feed import router as feed_router
 from app.api.health import router as health_router
 from app.api.moderation import router as moderation_router
 from app.api.offer_requests import router as offer_requests_router
+from app.api.portal.auth import router as portal_auth_router
+from app.api.portal.companies import router as portal_companies_router
+from app.api.portal.compliance import router as portal_compliance_router
+from app.api.portal.contracts import router as portal_contracts_router
+from app.api.portal.deals import router as portal_deals_router
+from app.api.portal.eimzo import router as portal_eimzo_router
+from app.api.portal.inquiries import router as portal_inquiries_router
+from app.api.portal.lab import router as portal_lab_router
+from app.api.portal.manufacturers import router as portal_manufacturers_router
+from app.api.portal.market import router as portal_market_router
+from app.api.portal.news import router as portal_news_router
+from app.api.portal.notifications import router as portal_notifications_router
+from app.api.portal.offers import router as portal_offers_router
+from app.api.portal.reference import router as portal_reference_router
+from app.api.portal.requests import router as portal_requests_router
+from app.api.portal.samples import router as portal_samples_router
+from app.api.portal.substances import router as portal_substances_router
 from app.api.prices import router as prices_router
 from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
@@ -63,6 +87,7 @@ from app.api.webapp.news import router as webapp_news_router
 from app.api.webapp.reference import router as webapp_reference_router
 from app.api.webapp.requests import router as webapp_requests_router
 from app.api.webapp.seller import router as webapp_seller_router
+from app.api.webhooks_escrow import router as webhooks_escrow_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.models.staff import StaffUser
@@ -191,6 +216,40 @@ def create_app() -> FastAPI:
     application.include_router(sourcing_router, prefix="/api/v1")
     # ── telegram bot webhook (dev-spec §4.1: webhook inside api container) ────
     application.include_router(telegram_webhook_router, prefix="/api/v1")
+    # External provider callback inbox (R6 / P7.b) — authenticated by a shared
+    # secret, not a JWT; absent from the OpenAPI schema.
+    application.include_router(webhooks_escrow_router, prefix="/api/v1")
+    # ── portal (client cabinet — passwordless OTP accounts, R1 W3) ─────────────
+    application.include_router(portal_auth_router, prefix="/api/v1")
+    # Contracts router first: its literal /portal/companies/directory must win over the
+    # companies router's /portal/companies/{company_id} param route.
+    application.include_router(portal_contracts_router, prefix="/api/v1")
+    # Deals before companies for the same reason: its literal
+    # /portal/companies/{company_id}/deals routes must be matched by this router.
+    application.include_router(portal_deals_router, prefix="/api/v1")
+    application.include_router(portal_compliance_router, prefix="/api/v1")
+    # Lab orders hang off /portal/companies/{id}/lab-orders — same reason again.
+    application.include_router(portal_lab_router, prefix="/api/v1")
+    application.include_router(portal_samples_router, prefix="/api/v1")
+    application.include_router(portal_companies_router, prefix="/api/v1")
+    application.include_router(portal_eimzo_router, prefix="/api/v1")
+    application.include_router(portal_offers_router, prefix="/api/v1")
+    application.include_router(portal_market_router, prefix="/api/v1")
+    # Manufacturers before any catch-all company/id routes that could shadow list paths.
+    application.include_router(portal_manufacturers_router, prefix="/api/v1")
+    application.include_router(portal_substances_router, prefix="/api/v1")
+    application.include_router(portal_reference_router, prefix="/api/v1")
+    application.include_router(portal_inquiries_router, prefix="/api/v1")
+    application.include_router(portal_requests_router, prefix="/api/v1")
+    application.include_router(portal_news_router, prefix="/api/v1")
+    application.include_router(portal_notifications_router, prefix="/api/v1")
+    application.include_router(admin_verification_router, prefix="/api/v1")
+    application.include_router(admin_contracts_router, prefix="/api/v1")
+    application.include_router(admin_deals_router, prefix="/api/v1")
+    application.include_router(admin_escrow_router, prefix="/api/v1")
+    application.include_router(admin_substances_router, prefix="/api/v1")
+    application.include_router(admin_licenses_router, prefix="/api/v1")
+    application.include_router(admin_lab_router, prefix="/api/v1")
 
     # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
     # These minimal routes exist to prove the require_role guard works end-to-end.

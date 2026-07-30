@@ -12,11 +12,22 @@
 
 FROM python:3.12-slim
 
-# System deps needed by psycopg binary wheel (libpq) and argon2-cffi (libffi)
+# System deps: psycopg binary wheel (libpq), argon2-cffi (libffi), curl (healthcheck),
+# and WeasyPrint (R3 contract PDF rendering) — Pango/Cairo/GDK-Pixbuf + Cyrillic fonts
+# (fonts-dejavu/liberation) so ru/uz contract text renders. Frozen fonts keep the PDF
+# render reproducible across builds.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq5 \
         libffi8 \
         curl \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libpangoft2-1.0-0 \
+        libharfbuzz0b \
+        libgdk-pixbuf-2.0-0 \
+        libcairo2 \
+        fonts-dejavu-core \
+        fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

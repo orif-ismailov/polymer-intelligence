@@ -1,0 +1,1 @@
+export { VerificationStatusPage } from "./VerificationStatusPage";

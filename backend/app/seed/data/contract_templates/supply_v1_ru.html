@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: sans-serif; font-size: 11pt; color: #111; line-height: 1.45; }
+  h1 { font-size: 15pt; text-align: center; margin-bottom: 4pt; }
+  .sub { text-align: center; color: #555; font-size: 9pt; margin-top: 0; }
+  h2 { font-size: 12pt; border-bottom: 1px solid #999; padding-bottom: 2pt; margin-top: 16pt; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6pt; }
+  td, th { border: 1px solid #bbb; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #f0f0f0; width: 40%; }
+  .parties { display: flex; gap: 16pt; }
+  .party { width: 50%; }
+  .sig { margin-top: 24pt; display: flex; gap: 24pt; }
+  .sig div { width: 50%; border-top: 1px solid #333; padding-top: 4pt; font-size: 9pt; }
+  .muted { color: #666; font-size: 9pt; }
+</style>
+</head>
+<body>
+  <h1>ДОГОВОР ПОСТАВКИ № {{ contract_public_id }}</h1>
+  <p class="sub">г. Ташкент · {{ generated_at }}</p>
+  <p class="muted">ШАБЛОН-ЗАГЛУШКА ДЛЯ РАЗРАБОТКИ. Итоговый текст договора предоставляется юридической службой (блокер запуска).</p>
+
+  <h2>1. Стороны</h2>
+  <div class="parties">
+    <div class="party">
+      <p><strong>Поставщик:</strong><br />
+        {{ initiator_legal_name }}<br />
+        ИНН: {{ initiator_inn }}<br />
+        Адрес: {{ initiator_address }}<br />
+        Директор: {{ initiator_director }}<br />
+        Р/с: {{ initiator_bank_account }} ({{ initiator_bank_mfo }})</p>
+    </div>
+    <div class="party">
+      <p><strong>Покупатель:</strong><br />
+        {{ counterparty_legal_name }}<br />
+        ИНН: {{ counterparty_inn }}<br />
+        Адрес: {{ counterparty_address }}<br />
+        Директор: {{ counterparty_director }}<br />
+        Р/с: {{ counterparty_bank_account }} ({{ counterparty_bank_mfo }})</p>
+    </div>
+  </div>
+
+  <h2>2. Предмет договора</h2>
+  <table>
+    <tr><th>Товар</th><td>{{ product }}</td></tr>
+    <tr><th>Количество</th><td>{{ qty }} {{ unit }}</td></tr>
+    <tr><th>Цена</th><td>{{ price }} {{ currency }}</td></tr>
+    <tr><th>Условия поставки (Incoterms)</th><td>{{ incoterms }}</td></tr>
+    <tr><th>Условия оплаты</th><td>{{ payment_terms }}</td></tr>
+    <tr><th>Срок поставки</th><td>{{ delivery_window }}</td></tr>
+    <tr><th>Особые условия</th><td>{{ special_conditions }}</td></tr>
+  </table>
+
+  <h2>3. Подписи сторон</h2>
+  <p class="muted">Договор подписан сторонами электронной цифровой подписью (E-IMZO). Отметки о подписании и сертификаты хранятся в системе как неизменяемое доказательство.</p>
+  <div class="sig">
+    <div>Поставщик: {{ initiator_legal_name }}</div>
+    <div>Покупатель: {{ counterparty_legal_name }}</div>
+  </div>
+</body>
+</html>

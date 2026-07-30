@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens — the IMEX AI design system (P0, sampled from docs/new-design/).
+ * Consumed by tailwind.config.ts (color/radius/shadow names read these vars), so
+ * theming is a single `data-theme` flip on <html>.
+ *
+ * DARK IS THE DEFAULT (the mockups are a dark product); light is the secondary
+ * theme, recoloured to the same green brand rather than designed separately.
+ *
+ * Rule for every screen: never write a hex value or a stock Tailwind palette
+ * class (`blue-600`, `slate-800`, …) in a component. A new colour is a new token
+ * here. See docs/design-system.md.
+ *
+ * Palette reference (dark):
+ *   #070907 bg          near-black graphite, faint green undertone
+ *   #101512 surface     card
+ *   #171D19 surface-2   inset / hover
+ *   #232B26 border      hairline, green-grey
+ *   #22C55E brand       neon green (mockup CTAs)
+ *   #052E10 brand-fg    DARK label on the green buttons (per mockups)
+ *   #EAB308 gold        Laboratory Verified / premium / mid-flow steps
+ */
+:root,
+[data-theme="dark"] {
+  --bg: #070907;
+  --surface: #101512;
+  --surface-2: #1a211c;
+  /* Form controls sit *below* the card they live in (mockups inset them). */
+  --surface-inset: #0a0d0b;
+  --border: #2b342e;
+  --border-strong: #3e4a43;
+  --text: #e9efea;
+  --text-muted: #9aa59d;
+  --text-subtle: #848f89;
+
+  --brand: #22c55e;
+  --brand-fg: #052e10;
+
+  --accent-gold: #eab308;
+  --accent-gold-fg: #241a00;
+
+  --success: #22c55e;
+  --warning: #eab308;
+  --danger: #f05252;
+  --danger-fg: #2b0505;
+  --info: #58b8f0;
+
+  /* Scrim behind modals and the mobile drawer. */
+  --overlay: rgb(0 0 0 / 0.62);
+
+  /* Accent glow behind brand CTAs / active nav — mockups light the green up. */
+  --brand-glow: 0 0 24px color-mix(in srgb, var(--brand) 35%, transparent);
+
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f5f8f6;
+  --surface: #ffffff;
+  --surface-2: #eef2ef;
+  --surface-inset: #f7faf8;
+  --border: #dfe6e1;
+  --border-strong: #c3ccc6;
+  --text: #0d1210;
+  --text-muted: #515c56;
+  --text-subtle: #616b65;
+
+  /*
+   * Same brand hue, darkened until it clears AA both ways in light theme: white
+   * labels on the solid fill, AND brand-as-text on the 14% `brand-soft` tint used
+   * by badges (that pairing sat at 4.19:1 before this step — axe caught it).
+   */
+  --brand: #0d6e31;
+  --brand-fg: #ffffff;
+
+  --accent-gold: #8a6100;
+  --accent-gold-fg: #ffffff;
+
+  --success: #157f3c;
+  --warning: #8a6100;
+  --danger: #b91c1c;
+  --danger-fg: #ffffff;
+  --info: #1d6fa5;
+
+  --overlay: rgb(9 14 11 / 0.45);
+
+  --brand-glow: 0 0 20px color-mix(in srgb, var(--brand) 22%, transparent);
+
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Consistent focus visuals across custom controls. */
+:focus-visible {
+  outline: none;
+}
+
+/*
+ * `<input type="date">` draws a UA picker indicator that cannot be restyled and
+ * renders as a pale system glyph on the dark inset well. `DateInput` supplies the
+ * design-system calendar and drives `showPicker()`, so the native one is hidden —
+ * here rather than in the component, because a pseudo-element is not reachable
+ * from a Tailwind class.
+ */
+.date-field::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
+@layer utilities {
+  /*
+   * Figures that get compared column-to-column (prices, MOQ, volumes, metric
+   * tiles) must not jitter as digits change. Declared here rather than relying
+   * on Tailwind's `tabular-nums` so the design system owns the rule and it is
+   * present regardless of which components happen to reference it.
+   */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+}
+
+/*
+ * Product-detail gallery (Swiper). Pagination sits over the image like the
+ * mockup dots — not as a separate strip below that never responded to swipe.
+ */
+.product-detail-swiper {
+  --swiper-pagination-bullet-size: 7px;
+  --swiper-pagination-bullet-horizontal-gap: 4px;
+  --swiper-pagination-color: #ffffff;
+  --swiper-pagination-bullet-inactive-color: #ffffff;
+  --swiper-pagination-bullet-inactive-opacity: 0.35;
+}
+
+.product-detail-swiper .swiper-pagination {
+  bottom: 10px !important;
+}
+
+.product-detail-swiper .swiper-slide {
+  height: auto;
+}

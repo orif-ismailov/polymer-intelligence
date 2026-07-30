@@ -1,0 +1,75 @@
+- generic [ref=f10e10]:
+  - banner [ref=f10e11]:
+    - generic [ref=f10e12]:
+      - link "IA IMEX AI" [ref=f10e13] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f10e14]: IA
+        - generic [ref=f10e15]: IMEX AI
+      - button "Создать компанию" [ref=f10e17] [cursor=pointer]
+  - generic [ref=f10e18]:
+    - complementary [ref=f10e19]:
+      - navigation "Кабинет" [ref=f10e21]:
+        - link "Главная" [ref=f10e22] [cursor=pointer]:
+          - /url: /
+        - link "Компании" [ref=f10e25] [cursor=pointer]:
+          - /url: /companies
+        - link "Предложения" [ref=f10e28] [cursor=pointer]:
+          - /url: /offers
+        - link "Настройки" [ref=f10e32] [cursor=pointer]:
+          - /url: /settings
+    - main [ref=f10e36]:
+      - generic [ref=f10e37]:
+        - generic [ref=f10e38]:
+          - heading "Регистрация компании" [level=1] [ref=f10e39]
+          - paragraph [ref=f10e40]: Шаг 3 из 5
+        - list "Progress" [ref=f10e41]:
+          - listitem [ref=f10e42]:
+            - generic [ref=f10e43]:
+              - generic [ref=f10e44]: ✓
+              - generic [ref=f10e45]: Реквизиты
+          - listitem [ref=f10e46]:
+            - generic [ref=f10e47]:
+              - generic [ref=f10e48]: ✓
+              - generic [ref=f10e49]: Деятельность
+          - listitem [ref=f10e50]:
+            - generic [ref=f10e51]:
+              - generic [ref=f10e52]: "3"
+              - generic [ref=f10e53]: Банк
+          - listitem [ref=f10e54]:
+            - generic [ref=f10e55]:
+              - generic [ref=f10e56]: "4"
+              - generic [ref=f10e57]: Документы
+          - listitem [ref=f10e58]:
+            - generic [ref=f10e59]:
+              - generic [ref=f10e60]: "5"
+              - generic [ref=f10e61]: Подтверждение
+        - generic [ref=f10e129]:
+          - generic [ref=f10e130]:
+            - heading "Банковский счёт" [level=2] [ref=f10e131]
+            - paragraph [ref=f10e132]: Добавьте расчётный счёт. Этот шаг можно пропустить.
+          - generic [ref=f10e133]:
+            - generic [ref=f10e134]:
+              - generic [ref=f10e135]: МФО банка
+              - textbox "МФО банка" [ref=f10e136]
+              - paragraph [ref=f10e137]: МФО — 5 цифр.
+            - generic [ref=f10e138]:
+              - generic [ref=f10e139]: Валюта
+              - combobox "Валюта" [ref=f10e140]:
+                - option "UZS" [selected]
+                - option "USD"
+                - option "EUR"
+                - option "RUB"
+                - option "CNY"
+          - generic [ref=f10e141]:
+            - generic [ref=f10e142]: Номер счёта
+            - textbox "Номер счёта" [ref=f10e143]
+          - generic [ref=f10e144]:
+            - generic [ref=f10e145]: Название банка
+            - textbox "Название банка" [ref=f10e146]
+          - status [ref=f10e147]:
+            - generic [ref=f10e148]: Если пропустить, счёт можно добавить позже в карточке компании.
+          - generic [ref=f10e152]:
+            - button "Назад" [ref=f10e153] [cursor=pointer]
+            - generic [ref=f10e154]:
+              - button "Пропустить" [ref=f10e155] [cursor=pointer]
+              - button "Далее" [ref=f10e156] [cursor=pointer]

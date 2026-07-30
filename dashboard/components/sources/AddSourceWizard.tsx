@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/useAuth";
 import { apiFetch } from "@/lib/api";
 import { JsonSchemaForm, type JsonSchemaFormValues } from "./JsonSchemaForm";
 
@@ -234,6 +235,8 @@ interface AddSourceWizardProps {
 
 export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
   const t = useTranslations("sources");
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<WizardStep>(1);
@@ -246,11 +249,14 @@ export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
   const [isEnabling, setIsEnabling] = useState(false);
   const [finalError, setFinalError] = useState<string | null>(null);
 
-  // Fetch available source types
+  // Fetch available source types. `isAdmin` because GET /admin/source-types is
+  // require_admin: below admin the request 403s, the list falls back to [], and
+  // step 1 renders permanently empty with no explanation. Don't make a call we
+  // already know will fail — the page hides the wizard's entry point instead.
   const { data: sourceTypes = [] } = useQuery<SourceTypeItem[]>({
     queryKey: ["source-types"],
     queryFn: () => apiFetch<SourceTypeItem[]>("/admin/source-types"),
-    enabled: open,
+    enabled: open && isAdmin,
   });
 
   const isPendingType = selectedType ? PENDING_ADAPTERS.has(selectedType) : false;

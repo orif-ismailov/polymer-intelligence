@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { alreadyModeratedStatus } from "@/lib/conflict";
 
 interface OfferBrief {
   id: number;
@@ -34,23 +35,38 @@ interface OfferRequest {
   message: string | null;
   created_at: string;
   offer: OfferBrief;
+  // Dual-origin (R2): "client" (TG) fills buyer; "company" (portal) fills buyer_company.
+  origin: string;
   buyer: {
     contact_name: string | null;
     company_name: string | null;
     phone: string | null;
     telegram_user_id: number | null;
-  };
+  } | null;
+  buyer_company: OfferRequestCompany | null;
   seller: {
     company_name: string | null;
     phone: string | null;
     telegram_username: string | null;
-  };
+  } | null;
+  seller_company: OfferRequestCompany | null;
 }
+
+interface OfferRequestCompany {
+  id: number;
+  name: string | null;
+  verified: boolean;
+}
+
+/** Statuses a lost review race can report. Anything else shows raw. */
+const INQUIRY_STATUS_KEYS = new Set(["pending", "approved", "rejected"]);
 
 export default function OfferRequestsPage() {
   const t = useTranslations("offerRequests");
   const qc = useQueryClient();
   const [notes, setNotes] = useState<Record<number, string>>({});
+  const [conflict, setConflict] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery<OfferRequest[]>({
     queryKey: ["offer-requests"],
@@ -63,7 +79,29 @@ export default function OfferRequestsPage() {
         method: "POST",
         body: JSON.stringify({ note: note ?? null }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["offer-requests"] }),
+    onSuccess: () => {
+      setConflict(null);
+      setFailed(null);
+      void qc.invalidateQueries({ queryKey: ["offer-requests"] });
+    },
+    // Until now a failed decision was swallowed entirely — the card just sat there
+    // looking pending. A 409 means another reviewer got there first: name the
+    // outcome and refetch; anything else at least has to say it failed.
+    onError: (err: unknown) => {
+      const settled = alreadyModeratedStatus(err);
+      if (settled !== null) {
+        setFailed(null);
+        setConflict(
+          t("conflict.alreadyModerated", {
+            status: INQUIRY_STATUS_KEYS.has(settled) ? t(`conflict.status.${settled}`) : settled,
+          }),
+        );
+        void qc.invalidateQueries({ queryKey: ["offer-requests"] });
+        return;
+      }
+      setConflict(null);
+      setFailed(err instanceof Error ? err.message : t("decideFailed"));
+    },
   });
 
   return (
@@ -75,6 +113,20 @@ export default function OfferRequestsPage() {
           <p className="text-sm text-foreground-muted mt-1">{t("subtitle")}</p>
         </div>
       </div>
+
+      {conflict && (
+        <p
+          role="status"
+          className="rounded-lg border border-amber-500/50 bg-background-secondary p-3 text-sm text-amber-400"
+        >
+          {conflict}
+        </p>
+      )}
+      {failed && (
+        <p className="rounded-lg border border-red-500/50 bg-background-secondary p-3 text-sm text-red-400">
+          {failed}
+        </p>
+      )}
 
       {isLoading && <p className="text-sm text-foreground-muted">…</p>}
       {isError && <p className="text-sm text-red-400">{t("error")}</p>}
@@ -113,22 +165,54 @@ export default function OfferRequestsPage() {
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="rounded-md border border-border bg-background p-3">
                 <p className="text-xs font-medium uppercase text-foreground-muted">{t("buyer")}</p>
-                <p className="text-sm text-foreground mt-1">
-                  {r.buyer.company_name || "—"}
-                  {r.buyer.contact_name ? ` · ${r.buyer.contact_name}` : ""}
-                </p>
-                <p className="text-sm text-foreground-muted">
-                  {r.buyer.phone || ""}
-                  {r.buyer.telegram_user_id ? ` · id ${r.buyer.telegram_user_id}` : ""}
-                </p>
+                {r.buyer_company ? (
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-foreground">
+                    <span className="rounded-md bg-accent/10 px-1.5 py-0.5 text-xs font-medium text-accent">
+                      {t("originPortal")}
+                    </span>
+                    {r.buyer_company.name || "—"}
+                    {r.buyer_company.verified ? (
+                      <span className="rounded-md bg-urgency-low/15 px-1.5 py-0.5 text-xs font-medium text-urgency-low">
+                        {t("verified")}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-foreground mt-1">
+                      {r.buyer?.company_name || "—"}
+                      {r.buyer?.contact_name ? ` · ${r.buyer.contact_name}` : ""}
+                    </p>
+                    <p className="text-sm text-foreground-muted">
+                      {r.buyer?.phone || ""}
+                      {r.buyer?.telegram_user_id ? ` · id ${r.buyer.telegram_user_id}` : ""}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="rounded-md border border-border bg-background p-3">
                 <p className="text-xs font-medium uppercase text-foreground-muted">{t("seller")}</p>
-                <p className="text-sm text-foreground mt-1">{r.seller.company_name || "—"}</p>
-                <p className="text-sm text-foreground-muted">
-                  {r.seller.phone || ""}
-                  {r.seller.telegram_username ? ` · @${r.seller.telegram_username}` : ""}
-                </p>
+                {r.seller_company ? (
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-foreground">
+                    <span className="rounded-md bg-accent/10 px-1.5 py-0.5 text-xs font-medium text-accent">
+                      {t("originPortal")}
+                    </span>
+                    {r.seller_company.name || "—"}
+                    {r.seller_company.verified ? (
+                      <span className="rounded-md bg-urgency-low/15 px-1.5 py-0.5 text-xs font-medium text-urgency-low">
+                        {t("verified")}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-foreground mt-1">{r.seller?.company_name || "—"}</p>
+                    <p className="text-sm text-foreground-muted">
+                      {r.seller?.phone || ""}
+                      {r.seller?.telegram_username ? ` · @${r.seller.telegram_username}` : ""}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 

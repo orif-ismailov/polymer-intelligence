@@ -11,6 +11,7 @@ of operator toggles the news module exposes at runtime:
 - report_auto_publish   — auto-publish generated reports (skip manual approve)
 - llm_extract_model     — model the news extractor uses (defaults to LLM_EXTRACT_MODEL)
 - news_prompt_version   — news extraction prompt version (defaults to the code version)
+- escrow_mode           — escrow rail: `stub` (operator-confirmed) or `live` (bank adapter)
 
 Service axiom (DEC-dep-owns-commit): flush only — the router/task owns the commit.
 """
@@ -42,6 +43,10 @@ class SettingSpec:
     label: str
     min: int | None = None
     max: int | None = None
+    #: Closed value set for a "str" setting. When present the admin panel renders
+    #: a select and `_coerce` rejects anything else — a typo in a mode switch must
+    #: fail at write time, not surface later as an unroutable runtime value.
+    choices: tuple[str, ...] | None = None
 
 
 def _specs() -> tuple[SettingSpec, ...]:
@@ -54,6 +59,64 @@ def _specs() -> tuple[SettingSpec, ...]:
         SettingSpec(
             "news_refresh_interval_minutes", "int", 60, "News refresh interval (minutes)",
             min=5, max=1440,
+        ),
+        SettingSpec(
+            "verification_auto_approve", "bool", False,
+            "Auto-approve verification cases when all automated checks pass",
+        ),
+        SettingSpec(
+            "bank_verification_required", "bool", False,
+            "Require a verified bank account before a company can be approved",
+        ),
+        SettingSpec(
+            "verification_required_for_publish", "bool", False,
+            "Require company verification before publishing offers (reserved — TG path)",
+        ),
+        SettingSpec(
+            "contract_pending_ttl_days", "int", 30,
+            "Days a contract may sit awaiting the counterparty/signatures before it expires",
+            min=1, max=365,
+        ),
+        SettingSpec(
+            "escrow_mode", "str", "stub",
+            "Escrow rail: stub (an operator confirms movement) or live (bank adapter)",
+            choices=("stub", "live"),
+        ),
+        SettingSpec(
+            "rfq_supplier_push_enabled", "bool", False,
+            "Notify matching suppliers when a buyer publishes an RFQ",
+        ),
+        SettingSpec(
+            "rfq_supplier_push_top_n", "int", 10,
+            "How many matched suppliers one RFQ may notify",
+            min=1, max=100,
+        ),
+        SettingSpec(
+            "rfq_supplier_offer_max_age_days", "int", 90,
+            "How recent a supplier's listing must be to count as a match",
+            min=1, max=730,
+        ),
+        SettingSpec(
+            "substance_ai_enabled", "bool", True,
+            "Offer an AI substance hint on the seller's offer form",
+        ),
+        SettingSpec(
+            "dangerous_check_enforced", "bool", False,
+            "Block publication of regulated substances without licence/documents",
+        ),
+        SettingSpec(
+            "chem_registry_mode", "str", "stub",
+            "Chemical registry: stub (our own substance table) or live (P7 adapter)",
+            choices=("stub", "live"),
+        ),
+        # P7.c — ships `stub`, and `live` raises until a ПЦД adapter exists. On
+        # `live` a submitted case also spawns the two registry checks; on `stub`
+        # they are created only when an operator records a manual snapshot, so a
+        # case can never be stranded waiting for a channel we do not have.
+        SettingSpec(
+            "gov_registry_mode", "str", "stub",
+            "State registry: stub (manual operator checks) or live (ПЦД adapter)",
+            choices=("stub", "live"),
         ),
     )
 
@@ -83,6 +146,8 @@ def _coerce(spec: SettingSpec, value: object) -> SettingValue:
     text = str(value).strip()
     if not text:
         raise ValueError(f"{spec.key} must be a non-empty string")
+    if spec.choices is not None and text not in spec.choices:
+        raise ValueError(f"{spec.key} must be one of: {', '.join(spec.choices)}")
     return text
 
 
@@ -117,6 +182,7 @@ def get_all(db: Session) -> list[dict[str, object]]:
                 "value": value,
                 "default": spec.default,
                 "is_overridden": overridden,
+                "choices": list(spec.choices) if spec.choices else None,
             }
         )
     return out

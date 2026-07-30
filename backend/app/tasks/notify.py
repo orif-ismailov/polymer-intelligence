@@ -231,6 +231,14 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
                 return {"status": "error", "error": f"Request {request_id} not found"}
 
             client = request.client
+            if client is None:
+                # Portal-origin request (R2, A2): no TG client to DM. W2 routes
+                # these to a portal_notification instead; nothing to send here.
+                logger.info(
+                    "notify.status_change.no_client",
+                    extra={"request_id": request_id},
+                )
+                return {"status": "ok", "error": None}
             lang = client.language if client.language in ("ru", "uz") else "ru"
 
             # Resolve D-10 display key → localized label
@@ -496,6 +504,16 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
             product_label = product_name or request.product_text or "—"
 
             lines: list[str] = [f"🆕 Новая заявка {request.number}", ""]
+            # Origin line for portal-originated requests (R2 W4 T4.2); TG requests
+            # keep the card byte-identical (no line added).
+            if request.company_id is not None:
+                from app.models.companies import Company  # noqa: PLC0415
+
+                company = session.get(Company, request.company_id)
+                if company is not None:
+                    cname = company.short_name or company.legal_name or f"#{company.id}"
+                    lines.append(f"🌐 Портал: {cname}")
+                    lines.append("")
             grade = f" · {request.grade_text}" if request.grade_text else ""
             lines.append(f"📦 Продукт: {product_label}{grade}")
             if request.volume is not None:
@@ -624,9 +642,15 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
                 lines.append("")
                 lines.append(f"💬 {offer.description}")
 
-            # Seller (who created it) — the detail the team needs to vet the listing.
+            # Who created it — the detail the team needs to vet the listing. Dual-origin
+            # (R1 W5): a company-origin offer (seller is None) renders the verified company
+            # instead of the Telegram seller contact block.
             contact: list[str] = []
-            if seller is not None:
+            if offer.company_id is not None:
+                if offer.display_name:
+                    contact.append(f"🏢 {offer.display_name}")
+                contact.append(f"🏛 Компания{' ✅' if offer.company_verified else ''}")
+            elif seller is not None:
                 if seller.company_name:
                     contact.append(f"🏢 {seller.company_name}")
                 if seller.contact_name:
@@ -803,7 +827,17 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
 
             client = req.client
             buyer: list[str] = []
-            if client is not None:
+            buyer_label = "Покупатель:"
+            if req.company_id is not None:
+                # Portal-origin inquiry (R2 W4 T4.2): show the buyer company + origin.
+                from app.models.companies import Company  # noqa: PLC0415
+
+                company = session.get(Company, req.company_id)
+                if company is not None:
+                    cname = company.short_name or company.legal_name or f"#{company.id}"
+                    buyer.append(f"🌐 Портал · {cname}")
+                buyer_label = "Покупатель (Портал):"
+            elif client is not None:
                 if client.company_name:
                     buyer.append(f"🏢 {client.company_name}")
                 if client.contact_name:
@@ -814,7 +848,7 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
                     buyer.append(f"🆔 {client.telegram_user_id}")
             if buyer:
                 lines.append("")
-                lines.append("Покупатель:")
+                lines.append(buyer_label)
                 lines.extend(buyer)
 
             keyboard = offer_request_moderation_keyboard(req.id)
@@ -929,3 +963,436 @@ def send_offer_request_to_seller(offer_request_id: int) -> dict[str, Any]:
         return {"status": "error", "error": str(exc)}
 
     return {"status": "ok", "error": None}
+
+
+# ── OTP / portal SMS delivery (R1 W3) ─────────────────────────────────────────
+
+
+def _write_sms_log(
+    phone: str,
+    purpose: str,
+    provider: str,
+    provider_msg_id: str | None,
+    status: str,
+) -> None:
+    """Record one SMS attempt in `sms_send_log` (separate short transaction).
+
+    Codes are NEVER written here — only the fact/outcome of a send, for cost
+    tracking + OTP-abuse forensics. Best-effort: a logging failure must not fail
+    the send task.
+    """
+    from app.core.db import SessionLocal  # noqa: PLC0415
+    from app.models.accounts import SmsSendLog  # noqa: PLC0415
+
+    try:
+        with SessionLocal() as db:
+            db.add(
+                SmsSendLog(
+                    phone=phone,
+                    purpose=purpose,
+                    provider=provider,
+                    provider_msg_id=provider_msg_id,
+                    status=status,
+                )
+            )
+            db.commit()
+    except Exception as exc:  # noqa: BLE001 — forensic log must not break delivery
+        logger.warning("sms_log.error", extra={"error": str(exc)})
+
+
+@celery_app.task(name="send_sms", queue="notify")  # type: ignore[untyped-decorator]
+def send_sms(phone: str, text: str, purpose: str = "otp") -> dict[str, Any]:
+    """Deliver an SMS via the configured provider and log the attempt.
+
+    Never raises (T-03-13 pattern): returns a status dict so the worker stays
+    alive on any provider/DB failure. The OTP code lives in `text` and is NEVER
+    logged here — only the console driver prints it (dev/CI, gated by
+    SMS_PROVIDER=console).
+    """
+    from app.integrations.sms import get_sms_provider  # noqa: PLC0415
+
+    provider = get_sms_provider()
+    try:
+        result = asyncio.run(provider.send(phone, text))
+    except Exception as exc:  # noqa: BLE001 — dead provider must not kill the worker
+        logger.warning("send_sms.error", extra={"phone": phone, "error": str(exc)})
+        _write_sms_log(phone, purpose, provider.provider_name, None, "error")
+        return {"status": "error", "error": str(exc)}
+
+    outcome = "ok" if result.ok else "error"
+    _write_sms_log(phone, purpose, provider.provider_name, result.provider_msg_id, outcome)
+    return {"status": outcome, "provider_msg_id": result.provider_msg_id, "error": result.error}
+
+
+# ── Verification case → team group card (R1 W6) ───────────────────────────────
+
+_CHECK_STATUS_EMOJI: dict[str, str] = {
+    "passed": "✅",
+    "warning": "⚠️",
+    "failed": "❌",
+    "pending": "⏳",
+    "running": "⏳",
+    "waived": "➖",
+    "unavailable": "🚫",
+}
+
+
+def _verification_notify_chat_id() -> int | None:
+    """Verification cards go to VERIFICATION_NOTIFY_CHAT_ID, else the request group."""
+    from app.core.config import settings  # noqa: PLC0415
+
+    return settings.VERIFICATION_NOTIFY_CHAT_ID or settings.REQUEST_NOTIFY_CHAT_ID
+
+
+@celery_app.task(name="send_verification_case_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_verification_case_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """Post a submitted verification case to the team group for a human decision.
+
+    Consumer of VERIFICATION_CASE_SUBMITTED (called with event_id/aggregate_id/payload;
+    aggregate_id is the case id). Skips when no group is configured. Never raises
+    (T-03-13): returns a status dict so the worker stays alive.
+    """
+    case_id_raw = aggregate_id or (payload or {}).get("case_id")
+    if case_id_raw is None:
+        return {"status": "skipped", "error": "no_case_id"}
+    case_id = int(case_id_raw)
+
+    chat_id = _verification_notify_chat_id()
+    if chat_id is None:
+        return {"status": "skipped", "error": "no_chat_id"}
+
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot, verification_moderation_keyboard  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
+
+    try:
+        with Session(engine) as session:
+            case = session.get(VerificationCase, case_id)
+            if case is None:
+                return {"status": "error", "error": f"case {case_id} not found"}
+            company = session.get(Company, case.company_id)
+            checks = (
+                session.query(VerificationCheck)
+                .filter(VerificationCheck.case_id == case_id)
+                .order_by(VerificationCheck.id)
+                .all()
+            )
+            doc_count = (
+                session.query(VerificationDocument)
+                .filter(VerificationDocument.company_id == case.company_id)
+                .count()
+            )
+
+            name = None
+            roles: list[str] = []
+            tax_id = ""
+            if company is not None:
+                name = company.short_name or company.legal_name
+                tax_id = company.tax_id
+                roles = [r.role.value for r in company.business_roles]
+
+            lines = ["🔎 Новая заявка на верификацию", ""]
+            lines.append(f"🏢 {name or ('ИНН ' + tax_id)}")
+            lines.append(f"🆔 ИНН: {tax_id}")
+            lines.append(f"📋 Роли: {', '.join(roles) if roles else '—'}")
+            lines.append(f"📎 Документы: {doc_count}")
+            if checks:
+                lines.append("")
+                lines.append("Проверки:")
+                for check in checks:
+                    status_value = check.status.value
+                    emoji = _CHECK_STATUS_EMOJI.get(status_value, "•")
+                    lines.append(f"{emoji} {check.check_type.value}: {status_value}")
+
+            asyncio.run(
+                bot.send_message(
+                    chat_id=chat_id,
+                    text="\n".join(lines)[:4096],
+                    reply_markup=verification_moderation_keyboard(case_id),
+                )
+            )
+    except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
+        logger.error("notify.verification_case.error", extra={"case_id": case_id, "error": str(exc)})
+        return {"status": "error", "error": str(exc)}
+
+    logger.info("notify.verification_case.sent", extra={"case_id": case_id, "chat_id": chat_id})
+    return {"status": "ok", "error": None}
+
+
+@celery_app.task(name="send_contract_activated_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_contract_activated_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """Read-only staff awareness card when a contract is signed by both sides.
+
+    Consumer of CONTRACT_ACTIVATED (aggregate_id = contract id). No buttons — R3 has
+    no staff mutation of contracts. Trilingual (ru/uz/tr). Never raises.
+    """
+    contract_id_raw = aggregate_id or (payload or {}).get("contract_id")
+    if contract_id_raw is None:
+        return {"status": "skipped", "error": "no_contract_id"}
+    contract_id = int(contract_id_raw)
+
+    chat_id = _verification_notify_chat_id()
+    if chat_id is None:
+        return {"status": "skipped", "error": "no_chat_id"}
+
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.models.contracts import Contract  # noqa: PLC0415
+
+    def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
+        c = session.get(Company, company_id)
+        return (c.legal_name or c.short_name or c.tax_id) if c is not None else str(company_id)
+
+    try:
+        with Session(engine) as session:
+            contract = session.get(Contract, contract_id)
+            if contract is None:
+                return {"status": "error", "error": f"contract {contract_id} not found"}
+            initiator = _name(session, contract.initiator_company_id)
+            counterparty = _name(session, contract.counterparty_company_id)
+            lines = [
+                "✅ Договор подписан обеими сторонами"
+                " · Shartnoma ikkala tomon tomonidan imzolandi"
+                " · Sözleşme iki tarafça imzalandı",
+                "",
+                f"📄 {contract.title}",
+                f"🏢 {initiator} → {counterparty}",
+                f"🆔 {contract.public_id}",
+            ]
+            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+    except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
+        logger.error("notify.contract_activated.error", extra={"contract_id": contract_id, "error": str(exc)})
+        return {"status": "error", "error": str(exc)}
+
+    logger.info("notify.contract_activated.sent", extra={"contract_id": contract_id, "chat_id": chat_id})
+    return {"status": "ok", "error": None}
+
+
+def _deal_card(deal_id_raw: str | None, headline: str, extra: list[str] | None = None) -> dict[str, Any]:
+    """Send a read-only deal card to the staff group. Never raises."""
+    if deal_id_raw is None:
+        return {"status": "skipped", "error": "no_deal_id"}
+    try:
+        deal_id = int(deal_id_raw)
+    except (TypeError, ValueError):
+        return {"status": "skipped", "error": "bad_deal_id"}
+
+    chat_id = _verification_notify_chat_id()
+    if chat_id is None:
+        return {"status": "skipped", "error": "no_chat_id"}
+
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.models.deals import Deal  # noqa: PLC0415
+
+    def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
+        company = session.get(Company, company_id)
+        return (
+            (company.legal_name or company.short_name or company.tax_id)
+            if company is not None
+            else str(company_id)
+        )
+
+    try:
+        with Session(engine) as session:
+            deal = session.get(Deal, deal_id)
+            if deal is None:
+                return {"status": "error", "error": f"deal {deal_id} not found"}
+            amount = f"{deal.amount:.2f} {deal.currency}" if deal.amount is not None else "—"
+            lines = [
+                headline,
+                "",
+                f"🆔 {deal.number}",
+                f"🏢 {_name(session, deal.buyer_company_id)}"
+                f" → {_name(session, deal.seller_company_id)}",
+                f"💰 {amount}",
+                f"📊 {deal.status}",
+                *(extra or []),
+            ]
+            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+    except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
+        logger.error("notify.deal_card.error", extra={"deal_id": deal_id, "error": str(exc)})
+        return {"status": "error", "error": str(exc)}
+
+    logger.info("notify.deal_card.sent", extra={"deal_id": deal_id, "chat_id": chat_id})
+    return {"status": "ok", "error": None}
+
+
+@celery_app.task(name="send_deal_opened_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_deal_opened_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """DEAL_OPENED consumer — read-only staff awareness card (ru/uz/tr). Never raises."""
+    return _deal_card(
+        aggregate_id or (payload or {}).get("deal_id"),
+        "🤝 Открыта сделка · Bitim ochildi · İşlem açıldı",
+    )
+
+
+@celery_app.task(name="send_deal_status_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_deal_status_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """DEAL_STATUS_CHANGED consumer — cards ONLY for disputes.
+
+    Every transition emits this event; the staff group only wants the ones that
+    need a human, so anything but `disputed` is skipped rather than filtered at
+    the dispatcher (which routes by type, not payload).
+    """
+    data = payload or {}
+    if data.get("to") != "disputed":
+        return {"status": "skipped", "error": None}
+    reason = data.get("reason")
+    extra = [f"⚠️ {reason}"] if reason else []
+    return _deal_card(
+        aggregate_id or data.get("deal_id"),
+        "🚩 Спор по сделке · Bitim bo‘yicha nizo · İşlem anlaşmazlığı",
+        extra,
+    )
+
+
+@celery_app.task(name="send_escrow_funded_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_escrow_funded_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """ESCROW_FUNDED consumer — money ARRIVED, which is what operators act on.
+
+    Only this one of the four escrow events carries a card: raising an invoice
+    and paying out are routine, but funds landing is the moment the seller can
+    be told to ship and the operator's reconciliation is on the clock.
+
+    `aggregate_id` is the payment id, so the deal comes from the payload.
+    Never raises (ru/uz/tr, fail-soft like the other cards).
+    """
+    data = payload or {}
+    amount = f"{data.get('amount', '—')} {data.get('currency', '')}".strip()
+    note = data.get("note")
+    extra = [f"💵 {amount}"]
+    if note:
+        extra.append(f"📝 {note}")
+    return _deal_card(
+        data.get("deal_id"),
+        "💰 Escrow пополнен · Escrow to‘ldirildi · Escrow'a para geldi",
+        extra,
+    )
+
+
+@celery_app.task(name="send_lab_order_to_group", queue="notify")  # type: ignore[untyped-decorator]
+def send_lab_order_to_group(
+    event_id: int | None = None,
+    aggregate_id: str | None = None,
+    payload: Any = None,
+) -> dict[str, Any]:
+    """LAB_ORDER_SUBMITTED consumer — a customer has asked for an analysis.
+
+    This card is the START of a manual process: nobody is watching the dashboard
+    queue at 9pm, and the whole feature depends on someone picking the phone up
+    and calling a laboratory. Only submission gets a card — the statuses after it
+    are moved by the same operator who is already looking at the queue.
+
+    Never raises (ru/uz/tr, fail-soft like the other cards).
+    """
+    data = payload or {}
+    lab_order_id = aggregate_id or data.get("lab_order_id")
+    if lab_order_id is None:
+        return {"status": "skipped", "error": "no_lab_order_id"}
+
+    chat_id = _verification_notify_chat_id()
+    if chat_id is None:
+        return {"status": "skipped", "error": "no_chat_id"}
+
+    from sqlalchemy.orm import Session  # noqa: PLC0415
+    from telegram.bot import bot  # noqa: PLC0415
+
+    from app.core.db import engine  # noqa: PLC0415
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.models.lab import LabOrder  # noqa: PLC0415
+
+    try:
+        with Session(engine) as session:
+            order = session.get(LabOrder, int(lab_order_id))
+            if order is None:
+                return {"status": "error", "error": f"lab order {lab_order_id} not found"}
+            company = session.get(Company, order.company_id)
+            customer = (
+                (company.legal_name or company.short_name or company.tax_id)
+                if company is not None
+                else str(order.company_id)
+            )
+            subject = (
+                f"оффер #{order.offer_id}"
+                if order.offer_id is not None
+                else f"сделка #{order.deal_id}"
+            )
+            lines = [
+                "🧪 Новая лабораторная заявка"
+                " · Yangi laboratoriya arizasi"
+                " · Yeni laboratuvar talebi",
+                "",
+                f"🆔 {order.number}",
+                f"🏢 {customer}",
+                f"📦 {subject}",
+            ]
+            if order.sample_volume:
+                lines.append(f"⚖️ {order.sample_volume}")
+            if order.comment:
+                lines.append(f"📝 {order.comment}")
+            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+    except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
+        logger.error(
+            "notify.lab_order.error", extra={"lab_order_id": lab_order_id, "error": str(exc)}
+        )
+        return {"status": "error", "error": str(exc)}
+
+    logger.info(
+        "notify.lab_order.sent", extra={"lab_order_id": lab_order_id, "chat_id": chat_id}
+    )
+    return {"status": "ok", "error": None}
+
+
+def _register_consumers() -> None:
+    """Wire outbox events → team group cards (see events.CONSUMERS)."""
+    from app.services import event_types  # noqa: PLC0415
+    from app.tasks.events import CONSUMERS  # noqa: PLC0415
+
+    if send_escrow_funded_to_group not in CONSUMERS.get(event_types.ESCROW_FUNDED, []):
+        CONSUMERS[event_types.ESCROW_FUNDED].append(send_escrow_funded_to_group)
+
+    if send_deal_opened_to_group not in CONSUMERS.get(event_types.DEAL_OPENED, []):
+        CONSUMERS[event_types.DEAL_OPENED].append(send_deal_opened_to_group)
+    if send_deal_status_to_group not in CONSUMERS.get(event_types.DEAL_STATUS_CHANGED, []):
+        CONSUMERS[event_types.DEAL_STATUS_CHANGED].append(send_deal_status_to_group)
+
+    if send_verification_case_to_group not in CONSUMERS.get(event_types.VERIFICATION_CASE_SUBMITTED, []):
+        CONSUMERS[event_types.VERIFICATION_CASE_SUBMITTED].append(send_verification_case_to_group)
+    if send_contract_activated_to_group not in CONSUMERS.get(event_types.CONTRACT_ACTIVATED, []):
+        CONSUMERS[event_types.CONTRACT_ACTIVATED].append(send_contract_activated_to_group)
+
+    if send_lab_order_to_group not in CONSUMERS.get(event_types.LAB_ORDER_SUBMITTED, []):
+        CONSUMERS[event_types.LAB_ORDER_SUBMITTED].append(send_lab_order_to_group)
+
+
+_register_consumers()

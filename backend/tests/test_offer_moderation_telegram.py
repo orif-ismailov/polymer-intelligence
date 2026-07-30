@@ -13,20 +13,32 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+from tests._claims import claim_update
+
 
 def test_moderate_via_telegram_approve_sets_public_and_audits() -> None:
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
     from app.services import offer_service  # noqa: PLC0415
 
     offer = MagicMock()
+    # No chemistry on this offer: a bare MagicMock would answer "yes" to having
+    # a substance and the compliance re-check would compare two mocks (P5).
+    offer.substance_id = None
+    offer.cas_number = None
+    offer.hs_code = None
     db = MagicMock()
 
     with patch("app.services.offer_service.write_audit") as mock_audit:
         offer_service.moderate_offer_via_telegram(db, offer, 555, approve=True)
 
-    assert offer.status == SellerOfferStatus.approved
-    assert offer.published_at is not None
-    db.flush.assert_called_once()
+    # The decision is a guarded UPDATE, not a read-then-write (QA #1): the SET
+    # publishes, the WHERE is what makes it exactly-once.
+    values, where = claim_update(db, "seller_offers")
+    assert values["status"] == SellerOfferStatus.approved
+    assert values["published_at"] is not None
+    assert SellerOfferStatus.pending_moderation in where.values()
+    # Never commits — the caller owns the transaction.
+    db.commit.assert_not_called()
     # actor is a telegram user → no staff id, id recorded in details
     _, kwargs = mock_audit.call_args
     assert kwargs["staff_user_id"] is None
@@ -44,8 +56,58 @@ def test_moderate_via_telegram_reject_sets_rejected() -> None:
     with patch("app.services.offer_service.write_audit"):
         offer_service.moderate_offer_via_telegram(db, offer, 555, approve=False, note="spam")
 
-    assert offer.status == SellerOfferStatus.rejected
-    assert offer.moderation_note == "spam"
+    values, where = claim_update(db, "seller_offers")
+    assert values["status"] == SellerOfferStatus.rejected
+    assert values["moderation_note"] == "spam"
+    assert SellerOfferStatus.pending_moderation in where.values()
+
+
+def test_moderate_via_telegram_losing_the_race_raises() -> None:
+    """0 rows updated = another decision already claimed the offer (QA #1)."""
+    import pytest  # noqa: PLC0415
+
+    from app.services import offer_service  # noqa: PLC0415
+
+    offer = MagicMock()
+    db = MagicMock()
+    db.execute.return_value.rowcount = 0
+
+    with (
+        patch("app.services.offer_service.write_audit"),
+        pytest.raises(offer_service.AlreadyModerated),
+    ):
+        offer_service.moderate_offer_via_telegram(db, offer, 555, approve=False)
+
+
+def test_apply_moderation_reports_already_when_the_claim_loses() -> None:
+    """A stale pre-check must not become a second verdict — the tap reports 'already'."""
+    from telegram.handlers import moderation  # noqa: PLC0415
+
+    from app.models.enums import SellerOfferStatus  # noqa: PLC0415
+    from app.services import offer_service  # noqa: PLC0415
+
+    offer = MagicMock()
+    offer.status = SellerOfferStatus.pending_moderation  # stale read: it just left
+
+    with (
+        patch("sqlalchemy.orm.Session") as mock_session_cls,
+        patch("app.core.db.engine"),
+        patch(
+            "app.services.offer_service.moderate_offer_via_telegram",
+            side_effect=offer_service.AlreadyModerated(11, "approved"),
+        ),
+    ):
+        mock_session = MagicMock()
+        mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
+        mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
+        mock_session.get.return_value = offer
+
+        result = moderation._apply_moderation(11, 555, approve=True)
+
+        assert mock_session.commit.called is False
+        assert mock_session.rollback.called is True
+
+    assert result == {"ok": False, "reason": "already", "status": "approved"}
 
 
 def _run_apply(offer_status: object, *, approve: bool = True) -> dict[str, object]:

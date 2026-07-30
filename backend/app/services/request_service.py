@@ -32,9 +32,12 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.time import to_display_tz, utcnow
+from app.models.accounts import UserAccount
+from app.models.companies import Company
 from app.models.enums import RequestStatus
 from app.models.requests import Request, RequestStatusHistory
 from app.schemas.webapp import RequestCreate
+from app.services import notification_service
 from app.services.audit_service import write_audit
 
 logger = logging.getLogger(__name__)
@@ -81,6 +84,28 @@ def _enqueue_group_notify_soft(request_id: int) -> None:
         logger.warning(
             "group-notify enqueue failed (broker unavailable); request %s committed "
             "without a team notification: %s",
+            request_id,
+            exc,
+        )
+
+
+def _enqueue_supplier_push_soft(request_id: int) -> None:
+    """Enqueue the matched-supplier push for a company RFQ, fail-soft (P4 W3).
+
+    Like the notify/analysis enqueues: a broker outage must never break request
+    creation. The task itself re-checks the `rfq_supplier_push_enabled` gate, so
+    there is nothing to look up here.
+    """
+    from app.tasks.rfq_push import notify_matched_suppliers  # noqa: PLC0415
+
+    try:
+        notify_matched_suppliers.apply_async(
+            args=[request_id], queue="notify", retry=False
+        )
+    except Exception as exc:  # noqa: BLE001 — broker outage must not break creation
+        logger.warning(
+            "supplier-push enqueue failed (broker unavailable); request %s "
+            "committed without notifying suppliers: %s",
             request_id,
             exc,
         )
@@ -299,6 +324,160 @@ def create_request(
     return req
 
 
+def create_company_request(
+    db: Session,
+    company: Company,
+    account: UserAccount,
+    data: RequestCreate,
+) -> Request:
+    """Create a portal-origin purchase request on behalf of a company (R2 A2).
+
+    Same wizard payload as the Mini App path, but the request carries
+    ``company_id`` + ``created_by_user_account_id`` and ``client_id`` is NULL. It
+    enters the SAME status machine and ``request_status_history`` as TG requests —
+    the dashboard processes it identically. Does NOT commit (caller owns the tx).
+
+    The creator is NOT self-notified on creation (they just submitted it); status
+    changes by the team produce in-portal notifications via ``transition_status``.
+    The team-group card + AI analysis fire as for TG requests (fail-soft).
+    """
+    number = generate_request_number(db)
+
+    req = Request(
+        number=number,
+        client_id=None,
+        company_id=company.id,
+        created_by_user_account_id=account.id,
+        status=RequestStatus.new,
+        product_id=data.product_id,
+        product_text=data.product_text,
+        grade_text=data.grade_text,
+        polymer_type=data.polymer_type,
+        volume=data.volume,
+        volume_unit=data.volume_unit,
+        target_price=data.target_price,
+        currency=data.currency,
+        incoterms=data.incoterms,
+        destination_country=data.destination_country,
+        port_or_city=data.port_or_city,
+        desired_date=data.desired_date,
+        validity_days=data.validity_days,
+        urgency=data.urgency,
+        comment=data.comment,
+        company_name=data.company_name,
+        contact_name=data.contact_name,
+        phone=data.phone,
+        legal_address=data.legal_address,
+    )
+    db.add(req)
+    db.flush()
+
+    hist = RequestStatusHistory(
+        request_id=req.id,
+        from_status=None,
+        to_status=RequestStatus.new,
+        changed_by=None,
+        comment=None,
+    )
+    db.add(hist)
+    db.flush()
+
+    # Staff-facing side effects only (no creator self-notification on submit).
+    _enqueue_group_notify_soft(req.id)
+    _enqueue_analysis_soft(req.id)
+    # A company RFQ is live for suppliers the moment it is filed — there is no
+    # separate "published" state in RequestStatus (see rfq_response_service
+    # .OPEN_STATUSES), so this is the publication point.
+    _enqueue_supplier_push_soft(req.id)
+
+    logger.info(
+        "request_service.create_company",
+        extra={"number": number, "company_id": company.id, "account_id": account.id},
+    )
+    return req
+
+
+#: Client-visible non-terminal states a buyer may cancel from (mirror Mini App).
+_CLIENT_CANCELLABLE: set[RequestStatus] = {
+    RequestStatus.new,
+    RequestStatus.viewed,
+    RequestStatus.in_progress,
+    RequestStatus.offer_sent,
+}
+
+
+def list_company_requests(db: Session, company_id: int) -> list[Request]:
+    """A company's purchase requests, newest first (portal-origin)."""
+    return (
+        db.query(Request)
+        .filter(Request.company_id == company_id)
+        .order_by(Request.created_at.desc())
+        .all()
+    )
+
+
+def get_company_request(db: Session, company_id: int, request_id: int) -> Request | None:
+    """One request scoped to a company (else None — opaque 404 at the router)."""
+    return (
+        db.query(Request)
+        .filter(Request.id == request_id, Request.company_id == company_id)
+        .first()
+    )
+
+
+def cancel_request(db: Session, request: Request) -> Request:
+    """Client-initiated cancellation from a client-visible non-terminal state.
+
+    Independent of the staff ``VALID_TRANSITIONS`` machine (a buyer may cancel a
+    brand-new request, which staff-side new→cancelled is not a transition). Writes a
+    history row; the buyer initiated it, so no self-notification. Does NOT commit.
+    """
+    if request.status not in _CLIENT_CANCELLABLE:
+        raise ValueError(f"cannot cancel a request in status {request.status.value}")
+    old_status = request.status
+    request.status = RequestStatus.cancelled
+    db.add(
+        RequestStatusHistory(
+            request_id=request.id,
+            from_status=old_status,
+            to_status=RequestStatus.cancelled,
+            changed_by=None,
+            comment="cancelled by client",
+        )
+    )
+    db.flush()
+    logger.info(
+        "request_service.cancel", extra={"request_id": request.id, "from": old_status.value}
+    )
+    return request
+
+
+def _notify_portal_status_change(db: Session, request: Request) -> None:
+    """Create an in-portal notification for a portal-origin request's creator.
+
+    Flush-only (shares the transition's transaction). ``dedup=False``: each real
+    status transition is a distinct event and must not be suppressed by an earlier
+    unread status notification on the same request.
+    """
+    account_id = request.created_by_user_account_id
+    if account_id is None:  # pragma: no cover — guarded by the caller
+        return
+    title_key, body_key = notification_service.keys_for(
+        notification_service.KIND_REQUEST_STATUS
+    )
+    notification_service.notify_account(
+        db,
+        account_id,
+        kind=notification_service.KIND_REQUEST_STATUS,
+        title_key=title_key,
+        body_key=body_key,
+        params={"number": request.number, "status": client_facing_status(request.status)},
+        entity="request",
+        entity_id=str(request.id),
+        dedup=False,
+    )
+
+
 def transition_status(
     db: Session,
     request: Request,
@@ -359,8 +538,13 @@ def transition_status(
             details={"from": old_status.value, "to": to_status.value},
         )
 
-    # Enqueue the notify task (best-effort — must not fail the status transition)
-    _enqueue_notify_soft(request.id)
+    # Route the status notification by origin (R2 A2):
+    #   portal-origin → in-portal notification, written in THIS transaction;
+    #   TG-origin     → TG DM Celery task (best-effort, fail-soft) — unchanged.
+    if request.created_by_user_account_id is not None:
+        _notify_portal_status_change(db, request)
+    else:
+        _enqueue_notify_soft(request.id)
 
     logger.info(
         "request_service.transition_status",

@@ -1,0 +1,1 @@
+export { OtpPage } from "./OtpPage";

@@ -1,0 +1,22 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - generic [ref=f4e6]: IA
+      - generic [ref=f4e7]: IMEX AI
+    - combobox "Язык интерфейса" [ref=f4e8]:
+      - option "Русский" [selected]
+      - option "O‘zbekcha"
+      - option "English"
+  - main [ref=f4e9]:
+    - generic [ref=f4e10]:
+      - generic [ref=f4e11]:
+        - heading "Вход в кабинет" [level=1] [ref=f4e12]
+        - paragraph [ref=f4e13]: Введите номер телефона — мы отправим код подтверждения.
+      - generic [ref=f4e16]:
+        - generic [ref=f4e17]:
+          - generic [ref=f4e18]: Номер телефона*
+          - textbox "Номер телефона*" [active] [ref=f4e19]:
+            - /placeholder: +998 90 123 45 67
+            - text: +998 90 100 20 30
+          - paragraph [ref=f4e20]: Узбекистан (+998) или международный формат с «+».
+        - button "Получить код" [ref=f4e21] [cursor=pointer]

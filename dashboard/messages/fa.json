@@ -24,9 +24,26 @@
       "adminProducts": "محصولات",
       "adminUsers": "کاربران",
       "offerRequests": "درخواست پیشنهاد",
-      "newsAdmin": "اخبار (مدیریت)"
+      "newsAdmin": "اخبار (مدیریت)",
+      "verification": "احراز هویت",
+      "companies": "شرکت‌ها",
+      "contracts": "قراردادها",
+      "deals": "معاملات",
+      "escrow": "امانی",
+      "substances": "مواد",
+      "labOrders": "آزمایشگاه",
+      "labPartners": "آزمایشگاه‌ها"
     },
-    "guest": "مهمان"
+    "guest": "مهمان",
+    "openMenu": "باز کردن منو",
+    "closeMenu": "بستن منو",
+    "logout": "خروج",
+    "sessionChanged": {
+      "title": "نشست تغییر کرد",
+      "switched": "کاربر دیگری در این مرورگر وارد شده است. این زبانه حساب قدیمی را نشان می‌دهد — برای ادامه با حساب فعلی صفحه را تازه‌سازی کنید.",
+      "signedOut": "نشست در زبانه دیگری پایان یافت. برای ورود دوباره صفحه را تازه‌سازی کنید.",
+      "reload": "تازه‌سازی صفحه"
+    }
   },
   "login": {
     "subtitle": "به پنل مدیریت وارد شوید",
@@ -58,7 +75,9 @@
       "offer_sent": "پیشنهاد ارسال شد",
       "matched": "تطبیق‌یافته",
       "closed": "بسته‌شده",
-      "cancelled": "لغوشده"
+      "cancelled": "لغوشده",
+      "processed": "پردازش‌شده",
+      "archived": "بایگانی‌شده"
     },
     "kind": {
       "buy_request": "خریدار",
@@ -73,7 +92,8 @@
       "low": "کم"
     },
     "urgencyAriaLabel": "فوریت: {label}",
-    "needsReview": "نیازمند بررسی"
+    "needsReview": "نیازمند بررسی",
+    "loading": "در حال بارگذاری…"
   },
   "home": {
     "title": "داشبورد",
@@ -287,7 +307,16 @@
     "unassigned": "تعیین‌نشده",
     "markAsProcessed": "علامت‌گذاری به‌عنوان پردازش‌شده",
     "exportError": "اجرای خروجی‌گیری ناموفق بود. دوباره تلاش کنید یا در صورت تداوم مشکل با پشتیبانی تماس بگیرید.",
-    "exportAriaLabel": "خروجی گرفتن از درخواست‌ها به CSV"
+    "exportAriaLabel": "خروجی گرفتن از درخواست‌ها به CSV",
+    "originTelegram": "تلگرام",
+    "originPortal": "پورتال",
+    "originPortalNamed": "پورتال: {company}",
+    "filterOrigin": "منبع",
+    "originOptAll": "همه منابع",
+    "originOptClient": "تلگرام",
+    "originOptCompany": "پورتال",
+    "sectionPushedSuppliers": "تأمین‌کنندگان مطلع‌شده",
+    "pushedScoreHint": "امتیاز تطابق در زمان ارسال"
   },
   "broker": {
     "intel": {
@@ -376,7 +405,51 @@
     "priceOnRequest": "قیمت با استعلام",
     "approve": "تأیید",
     "reject": "رد",
-    "notePlaceholder": "توضیح برای فروشنده (اختیاری)"
+    "notePlaceholder": "توضیح برای فروشنده (اختیاری)",
+    "compliance": {
+      "title": "انطباق",
+      "noSubstance": "ماده مشخص نشده",
+      "ok": "الزامات برآورده شده",
+      "blocked": "انتشار مسدود شد",
+      "wouldBlock": "با فعال بودن بررسی مسدود می‌شد",
+      "missingLicense": "مجوز معتبر لازم است: {regime}",
+      "missingDocument": "مدرک لازم است: {doc}",
+      "missingProhibited": "مبنای ممنوعیت: {act}",
+      "approveBlocked": "انطباق انتشار را رد کرد:",
+      "level": {
+        "free": "گردش آزاد",
+        "docs_required": "نیازمند مدارک",
+        "license_required": "نیازمند مجوز",
+        "prohibited": "ممنوع"
+      },
+      "regime": {
+        "precursor_list_iv": "پیش‌سازها (فهرست چهارم، ПКМ-330)",
+        "explosive_toxic": "منفجره و سمی (ПКМ-782)",
+        "strong_acting": "قوی‌الاثر (ПКМ-818)",
+        "pkm916_import": "واردات کالای خطرناک (ПКМ-916)"
+      },
+      "docKind": {
+        "sds": "برگه ایمنی (SDS)",
+        "tds": "مشخصات فنی (TDS)",
+        "coa": "گواهی آنالیز (COA)",
+        "certificate": "گواهی"
+      }
+    },
+    "verified": "تأییدشده",
+    "lab": {
+      "passport": "گواهی آزمایشگاه",
+      "verified": "Laboratory Verified"
+    },
+    "conflict": {
+      "alreadyModerated": "این پیشنهاد پیش‌تر توسط ناظر دیگری بررسی شده است: {status}. فهرست به‌روزرسانی شد.",
+      "status": {
+        "draft": "پیش‌نویس",
+        "pending_moderation": "در حال بررسی",
+        "approved": "تأییدشده",
+        "rejected": "ردشده",
+        "archived": "بایگانی‌شده"
+      }
+    }
   },
   "sources": {
     "title": "منابع",
@@ -496,7 +569,8 @@
       "publicUrlsOnly": "فقط URLهای عمومی.",
       "selectPlaceholder": "{label} را انتخاب کنید…",
       "enterPlaceholder": "{label} را وارد کنید…"
-    }
+    },
+    "readOnlyNotice": "نمای فقط‌خواندنی: افزودن، آزمایش، پردازش مجدد و فعال‌سازی منابع تنها برای مدیر در دسترس است."
   },
   "alerts": {
     "pageTitle": "هشدارها",
@@ -656,7 +730,18 @@
     "seller": "فروشنده",
     "approve": "تأیید و ارسال به فروشنده",
     "reject": "رد",
-    "notePlaceholder": "توضیح (اختیاری)"
+    "notePlaceholder": "توضیح (اختیاری)",
+    "originPortal": "پورتال",
+    "verified": "تأیید‌شده",
+    "conflict": {
+      "alreadyModerated": "این درخواست پیش‌تر توسط همکار دیگری بررسی شده است: {status}. فهرست به‌روزرسانی شد.",
+      "status": {
+        "pending": "در انتظار بررسی",
+        "approved": "تأییدشده",
+        "rejected": "ردشده"
+      }
+    },
+    "decideFailed": "اعمال تصمیم ممکن نشد"
   },
   "newsAdmin": {
     "title": "مدیریت اخبار",
@@ -731,5 +816,561 @@
       "testFail": "خطای تست",
       "feedChangedNote": "تغییر فید تست را بازنشانی می‌کند — منبع تا تست مجدد غیرفعال می‌شود."
     }
+  },
+  "verification": {
+    "title": "احراز هویت",
+    "subtitle": "صف درخواست‌های تأیید شرکت‌ها",
+    "loading": "در حال بارگذاری…",
+    "error": "بارگذاری داده‌ها ناموفق بود",
+    "empty": "درخواست تأییدی وجود ندارد",
+    "back": "بازگشت به صف",
+    "inn": "شناسه مالیاتی",
+    "unnamedCompany": "بدون نام",
+    "filter": {
+      "label": "وضعیت",
+      "all": "همه"
+    },
+    "caseStatus": {
+      "draft": "پیش‌نویس",
+      "submitted": "ارسال‌شده",
+      "checks_running": "بررسی‌ها در حال اجرا",
+      "needs_info": "نیاز به اطلاعات",
+      "pending_review": "در انتظار تصمیم",
+      "approved": "تأییدشده",
+      "rejected": "ردشده",
+      "cancelled": "لغوشده"
+    },
+    "caseType": {
+      "onboarding": "ثبت‌نام",
+      "reverification": "بازبینی",
+      "targeted": "بررسی هدفمند"
+    },
+    "columns": {
+      "submittedAt": "ارسال‌شده",
+      "company": "شرکت",
+      "caseType": "نوع",
+      "status": "وضعیت",
+      "checks": "بررسی‌ها"
+    },
+    "profile": {
+      "title": "پروفایل شرکت",
+      "legalName": "نام حقوقی",
+      "shortName": "نام کوتاه",
+      "publicId": "شناسه عمومی",
+      "jurisdiction": "حوزه قضایی",
+      "legalForm": "شکل حقوقی",
+      "director": "مدیر",
+      "address": "آدرس قانونی",
+      "status": "وضعیت",
+      "verifiedAt": "تأیید‌شده",
+      "roles": "نقش‌ها",
+      "bankAccounts": "حساب‌های بانکی",
+      "mfo": "کد بانک"
+    },
+    "checks": {
+      "title": "بررسی‌ها",
+      "empty": "بررسی‌ای وجود ندارد",
+      "attempts": "تلاش‌ها",
+      "lastError": "آخرین خطا",
+      "waivedReason": "دلیل صرف‌نظر",
+      "missingDocuments": "مدارک ناقص",
+      "reasons": "دلایل",
+      "waive": "صرف‌نظر از بررسی",
+      "waiveReasonPlaceholder": "دلیل صرف‌نظر (الزامی)",
+      "waiveConflict": "بررسی قبلاً به‌روزرسانی شده — داده‌ها دوباره بارگذاری شد"
+    },
+    "checkType": {
+      "tax_id_format": "قالب شناسه مالیاتی",
+      "bank_requisites": "مشخصات بانکی",
+      "documents_complete": "مدارک",
+      "manual_kyb": "بررسی دستی (KYB)",
+      "eimzo_signature": "امضای E-IMZO",
+      "gov_registry": "سامانه دولتی",
+      "tax_status": "وضعیت مالیاتی",
+      "vat_status": "وضعیت مالیات بر ارزش افزوده"
+    },
+    "checkStatus": {
+      "pending": "در انتظار",
+      "running": "در حال اجرا",
+      "passed": "قبول",
+      "warning": "هشدار",
+      "failed": "ناموفق",
+      "unavailable": "در دسترس نیست",
+      "waived": "صرف‌نظر شد"
+    },
+    "documents": {
+      "title": "مدارک",
+      "empty": "مدرکی وجود ندارد",
+      "download": "دانلود"
+    },
+    "docKind": {
+      "charter": "اساسنامه",
+      "registration": "گواهی ثبت",
+      "director_id": "شناسه مدیر",
+      "bank_statement": "صورت‌حساب بانکی",
+      "power_of_attorney": "وکالت‌نامه",
+      "other": "سایر",
+      "registration_certificate": "گواهی ثبت",
+      "bank_letter": "نامه بانکی",
+      "license": "مجوز"
+    },
+    "audit": {
+      "title": "تاریخچه",
+      "empty": "رکوردی وجود ندارد",
+      "staff": "کارمند"
+    },
+    "decision": {
+      "title": "تصمیم",
+      "conflict": "درخواست توسط کارمند دیگری پردازش شده — داده‌ها دوباره بارگذاری شد",
+      "notePlaceholder": "یادداشت تصمیم (اختیاری)",
+      "approve": "تأیید",
+      "reject": "رد",
+      "requestInfo": "درخواست اطلاعات",
+      "decidedAt": "تصمیم گرفته شد"
+    },
+    "registry": {
+      "title": "سوابق دولتی",
+      "hint": "هنوز API رسمی و برخط برای شرکت‌های خصوصی وجود ندارد. شرکت را در یک سرویس عمومی بررسی کنید (registr.stat.uz، my.soliq.uz، license.gov.uz) و نتیجه را وارد کنید — به‌همراه تصویر صفحه به‌عنوان یک رکورد تغییرناپذیر ذخیره می‌شود و بررسی مربوطه را به‌روز می‌کند.",
+      "neverChecked": "بررسی نشده",
+      "openEvidence": "باز کردن تصویر صفحه",
+      "kind": {
+        "company": "شرکت (EGRPO)",
+        "vat": "گواهی مالیات بر ارزش افزوده",
+        "licenses": "مجوزها"
+      },
+      "source": {
+        "manual": "ورود توسط اپراتور",
+        "registry": "پاسخ سامانه"
+      },
+      "status": {
+        "active": "فعال",
+        "liquidated": "منحل‌شده",
+        "suspended": "تعلیق‌شده",
+        "unknown": "وضعیت ذکر نشده"
+      },
+      "form": {
+        "title": "ثبت نتیجه بررسی",
+        "kind": "چه چیزی بررسی شد",
+        "status": "وضعیت در سامانه",
+        "name": "نام ثبت‌شده",
+        "director": "مدیر",
+        "registered": "مشمول مالیات بر ارزش افزوده",
+        "certificateNo": "شماره گواهی",
+        "rawStatus": "عبارت سامانه (عیناً)",
+        "note": "یادداشت (کجا و چه چیزی دیده شد)",
+        "evidence": "تصویر صفحه (PNG، JPEG یا PDF)",
+        "submit": "ثبت نتیجه"
+      },
+      "errors": {
+        "unknown_kind": "نوع بررسی ناشناخته است.",
+        "invalid_file_type": "این فایل قابل پیوست نیست: فقط PNG، JPEG یا PDF.",
+        "file_too_large": "حجم فایل زیاد است.",
+        "generic": "ثبت نتیجه بررسی ممکن نشد."
+      }
+    }
+  },
+  "companies": {
+    "title": "شرکت‌ها",
+    "subtitle": "فهرست شرکت‌ها و وضعیت آن‌ها",
+    "loading": "در حال بارگذاری…",
+    "error": "بارگذاری داده‌ها ناموفق بود",
+    "empty": "شرکتی یافت نشد",
+    "back": "بازگشت به فهرست",
+    "unnamed": "بدون نام",
+    "searchPlaceholder": "جستجو بر اساس نام یا شناسه مالیاتی",
+    "searchButton": "جستجو",
+    "noRoles": "نقشی وجود ندارد",
+    "suspend": "تعلیق",
+    "reinstate": "بازگرداندن",
+    "filter": {
+      "label": "وضعیت",
+      "all": "همه"
+    },
+    "status": {
+      "draft": "پیش‌نویس",
+      "pending_verification": "در حال بررسی",
+      "verified": "تأییدشده",
+      "rejected": "ردشده",
+      "suspended": "معلق",
+      "liquidated": "منحل‌شده"
+    },
+    "columns": {
+      "name": "نام",
+      "inn": "شناسه مالیاتی",
+      "jurisdiction": "حوزه قضایی",
+      "status": "وضعیت",
+      "verifiedAt": "تأییدشده",
+      "roles": "نقش‌ها"
+    },
+    "profile": {
+      "title": "پروفایل شرکت",
+      "legalName": "نام حقوقی",
+      "shortName": "نام کوتاه",
+      "publicId": "شناسه عمومی",
+      "jurisdiction": "حوزه قضایی",
+      "taxId": "شناسه مالیاتی",
+      "legalForm": "شکل حقوقی",
+      "director": "مدیر",
+      "address": "آدرس قانونی",
+      "verifiedAt": "تأییدشده",
+      "reverificationDue": "بازبینی مجدد",
+      "roles": "نقش‌ها"
+    },
+    "role": {
+      "buyer": "خریدار",
+      "seller": "فروشنده",
+      "broker": "کارگزار",
+      "manufacturer": "تولیدکننده",
+      "importer": "واردکننده",
+      "trader": "تاجر",
+      "logistics_provider": "ارائه‌دهنده لجستیک",
+      "distributor": "توزیع‌کننده",
+      "laboratory": "آزمایشگاه",
+      "insurance_provider": "ارائه‌دهنده بیمه"
+    },
+    "roles": {
+      "manufacturer": "تولیدکننده",
+      "importer": "واردکننده",
+      "trader": "بازرگان",
+      "logistics_provider": "لجستیک",
+      "distributor": "توزیع‌کننده",
+      "laboratory": "آزمایشگاه",
+      "insurance_provider": "بیمه"
+    }
+  },
+  "contracts": {
+    "title": "قراردادها",
+    "subtitle": "نظارت بر قراردادهای الکترونیکی (فقط خواندنی).",
+    "filterAll": "همه وضعیت‌ها",
+    "search": "جستجو بر اساس عنوان یا شناسه…",
+    "colTitle": "عنوان",
+    "colParties": "طرفین",
+    "colStatus": "وضعیت",
+    "empty": "قراردادی وجود ندارد",
+    "selectHint": "برای مشاهده یک قرارداد را انتخاب کنید.",
+    "openDocument": "باز کردن سند",
+    "signatures": "امضاها",
+    "noSignatures": "امضایی نیست",
+    "timeline": "سوابق",
+    "status": {
+      "draft": "پیش‌نویس",
+      "pending_counterparty": "در انتظار طرف مقابل",
+      "pending_signatures": "در انتظار امضا",
+      "active": "فعال",
+      "declined": "رد شده",
+      "cancelled": "لغو شده",
+      "expired": "منقضی شده"
+    }
+  },
+  "deals": {
+    "title": "معاملات",
+    "subtitle": "نظارت بر معاملات: خط زمانی، اسناد، گفتگو (فقط خواندنی)، حل اختلاف.",
+    "filterAll": "همه وضعیت‌ها",
+    "search": "جستجو بر اساس شماره…",
+    "empty": "معامله‌ای یافت نشد",
+    "selectHint": "یک معامله از فهرست انتخاب کنید.",
+    "total": "مجموع: {count}",
+    "colNumber": "شماره",
+    "colParties": "طرفین",
+    "colAmount": "مبلغ",
+    "colStatus": "وضعیت",
+    "timeline": "خط زمانی",
+    "documents": "اسناد",
+    "noDocuments": "سندی نیست",
+    "chat": "گفتگوی معامله",
+    "chatReadOnly": "فقط خواندنی",
+    "noMessages": "پیامی نیست",
+    "cancelledReason": "دلیل لغو",
+    "status": {
+      "negotiation": "مذاکره",
+      "contract_pending": "در انتظار قرارداد",
+      "contract_signed": "قرارداد امضا شد",
+      "payment_pending": "در انتظار پرداخت",
+      "paid_escrow": "پرداخت شد (امانی)",
+      "shipped": "ارسال شد",
+      "delivered": "تحویل شد",
+      "completed": "تکمیل شد",
+      "cancelled": "لغو شد",
+      "disputed": "اختلاف"
+    },
+    "actor": {
+      "buyer": "خریدار",
+      "seller": "فروشنده",
+      "staff": "تیم",
+      "system": "سامانه"
+    },
+    "docKind": {
+      "contract": "قرارداد",
+      "invoice": "فاکتور",
+      "lab_passport": "گواهی کیفیت",
+      "transport": "حمل",
+      "other": "سایر"
+    },
+    "resolve": {
+      "title": "حل اختلاف",
+      "comment": "توضیح (الزامی)",
+      "restore": "بازگرداندن به وضعیت",
+      "cancel": "لغو معامله",
+      "adminOnly": "تنها مدیر می‌تواند اختلاف را حل کند."
+    }
+  },
+  "escrow": {
+    "title": "پرداخت‌های امانی",
+    "subtitle": "دو صف: چه کسی به ما بدهکار است و به چه کسی باید پرداخت کنیم. جابه‌جایی وجه را فقط پس از تطبیق با صورت‌حساب بانکی ثبت کنید.",
+    "filterAll": "همه وضعیت‌ها",
+    "empty": "پرداختی وجود ندارد",
+    "selectHint": "برای دیدن جزئیات یک پرداخت را انتخاب کنید.",
+    "terminal": "عملیات پایان یافت — این پرداخت دیگر تغییر نمی‌کند.",
+    "colDeal": "معامله",
+    "colParties": "طرفین",
+    "colAmount": "مبلغ",
+    "colStatus": "وضعیت",
+    "dealStatus": "وضعیت معامله",
+    "mode": "حالت",
+    "fundedAt": "دریافت",
+    "releasedAt": "پرداخت",
+    "refundedAt": "بازگشت",
+    "lastNote": "توضیح",
+    "status": {
+      "pending": "در انتظار پرداخت",
+      "funded": "وجه مسدود شد",
+      "released": "به فروشنده پرداخت شد",
+      "refunded": "به خریدار بازگردانده شد"
+    },
+    "counters": {
+      "awaitingFunds": "در انتظار پرداخت",
+      "awaitingPayout": "در انتظار تسویه",
+      "settled": "تکمیل‌شده",
+      "blocked": "مسدود",
+      "providerHolds": "اختلاف با بانک"
+    },
+    "mark": {
+      "title": "ثبت جابه‌جایی وجه",
+      "note": "توضیح: مرجع بانکی، شماره صورت‌حساب…",
+      "confirm": "تأیید می‌کنم که وجه واقعاً در بانک جابه‌جا شده است",
+      "funded": "وجه دریافت شد",
+      "released": "وجه به فروشنده پرداخت شد",
+      "refunded": "وجه به خریدار بازگردانده شد",
+      "adminOnly": "فقط مدیر می‌تواند جابه‌جایی وجه را ثبت کند."
+    },
+    "blocked": {
+      "title": "معاملات بدون صورت‌حساب",
+      "hint": "قرارداد امضا شده اما صورت‌حساب صادر نمی‌شود. نیازمند دخالت اپراتور است.",
+      "reason": {
+        "no_amount": "مبلغ توافق نشده",
+        "not_opened_yet": "صورت‌حساب هنوز صادر نشده"
+      }
+    },
+    "modeValue": {
+      "stub": "تأیید دستی توسط اپراتور",
+      "live": "رابط بانکی"
+    },
+    "errors": {
+      "release_before_delivery": "پرداخت به فروشنده تنها پس از تأیید دریافت توسط خریدار ممکن است.",
+      "deal_transition_blocked": "معامله نمی‌تواند به این وضعیت برود. برای بازگشت وجه ابتدا اختلاف را ثبت کنید.",
+      "invalid_transition": "این تغییر وضعیت پرداخت ممکن نیست — صفحه را تازه کنید و وضعیت فعلی را ببینید.",
+      "confirmation_required": "جابه‌جایی واقعی وجه را تأیید کنید.",
+      "note_required": "توضیح الزامی است."
+    },
+    "providerHolds": {
+      "title": "پیام‌های بانک که نیاز به اپراتور دارند",
+      "hint": "این اطلاع‌رسانی‌ها ثبت شده‌اند اما به‌صورت خودکار اعمال نشدند: یا معامله را می‌بندند یا با داده‌های ما اختلاف دارند. با صورت‌حساب بانکی مقایسه کنید و پرداخت را دستی علامت بزنید — این ردیف خودش حذف می‌شود.",
+      "disagreement": "بانک: {bank} · نزد ما: {ours}",
+      "unreadable": "اطلاع‌رسانی قابل تفسیر نبود",
+      "open": "باز کردن پرداخت",
+      "reason": {
+        "needs_operator": "بازگشت وجه فقط با تصمیم اپراتور",
+        "release_before_delivery": "پرداخت پیش از تأیید تحویل",
+        "unknown_ref": "شناسه اسکرو ناشناخته",
+        "wrong_rail": "این پرداخت به‌صورت دستی توسط اپراتور اداره می‌شود",
+        "amount_mismatch": "مبلغ با صورت‌حساب مطابقت ندارد",
+        "currency_mismatch": "ارز با صورت‌حساب مطابقت ندارد",
+        "invalid_transition": "تغییر وضعیت مجاز نیست",
+        "deal_blocked": "معامله نمی‌تواند به این وضعیت برود",
+        "unknown_provider": "ارائه‌دهنده متصل نیست",
+        "malformed": "اطلاع‌رسانی تجزیه نشد"
+      }
+    }
+  },
+  "substances": {
+    "title": "فهرست مواد",
+    "subtitle": "دیجیتال‌سازی فهرست‌های ПКМ — مرجع بررسی انتشار",
+    "provisional": "نسخه داده v1-provisional: تنها اقلام تأییدشده در نقشه حقوقی وارد شده‌اند. پیوست‌های ПКМ پس از بررسی حقوقی اضافه می‌شوند — تا آن زمان مسدودسازی انتشار را فعال نکنید.",
+    "add": "افزودن ماده",
+    "addTitle": "ماده جدید",
+    "editTitle": "ویرایش ماده",
+    "edit": "ویرایش",
+    "deactivate": "غیرفعال",
+    "activate": "فعال",
+    "save": "ذخیره",
+    "cancel": "انصراف",
+    "empty": "چیزی یافت نشد",
+    "error": "بارگذاری فهرست ناموفق بود",
+    "searchPlaceholder": "نام، CAS، کد گمرکی…",
+    "allLevels": "همه سطوح",
+    "columns": {
+      "name": "نام",
+      "hs": "کد گمرکی",
+      "cas": "CAS",
+      "level": "سطح تنظیم",
+      "threshold": "آستانه",
+      "source": "مبنا"
+    },
+    "fields": {
+      "code": "کد (slug)",
+      "nameRu": "نام (ru)",
+      "nameUz": "نام (uz)",
+      "nameEn": "نام (en)",
+      "hs": "کد گمرکی",
+      "hsHint": "شناسه حقوقی اصلی",
+      "cas": "CAS",
+      "casHint": "ثانویه، برای SDS و هوش مصنوعی",
+      "level": "سطح تنظیم",
+      "regime": "رژیم",
+      "regimeHint": "برای مواد تحت تنظیم الزامی است",
+      "threshold": "غلظت آستانه، ٪",
+      "thresholdHint": "زیر آستانه، رژیم اعمال نمی‌شود",
+      "exemption": "سقف سالانه معافیت",
+      "exemptionUnit": "واحد",
+      "licenseCategory": "دسته مجوز",
+      "requiredDocs": "مدارک الزامی",
+      "synonyms": "مترادف‌ها",
+      "synonymsHint": "با کاما جدا کنید",
+      "sourceAct": "سند مبنا",
+      "sourceActHint": "مثال: ПКМ №330 مورخ 12.11.2015، فهرست چهارم"
+    },
+    "errors": {
+      "exists": "ماده‌ای با این کد یا CAS از قبل وجود دارد"
+    },
+    "level": {
+      "free": "گردش آزاد",
+      "docs_required": "نیازمند مدارک",
+      "license_required": "نیازمند مجوز",
+      "prohibited": "ممنوع"
+    },
+    "regime": {
+      "precursor_list_iv": "پیش‌سازها (فهرست چهارم، ПКМ-330)",
+      "explosive_toxic": "منفجره و سمی (ПКМ-782)",
+      "strong_acting": "قوی‌الاثر (ПКМ-818)",
+      "pkm916_import": "واردات کالای خطرناک (ПКМ-916)"
+    },
+    "docKind": {
+      "sds": "برگه ایمنی (SDS)",
+      "tds": "مشخصات فنی (TDS)",
+      "coa": "گواهی آنالیز (COA)",
+      "certificate": "گواهی"
+    }
+  },
+  "licenses": {
+    "title": "مجوزها",
+    "hint": "توسط اپراتور بر اساس مدرک پذیرفته‌شده شرکت ثبت می‌شود. هنگام انتشار آگهی مواد تحت تنظیم بررسی می‌شود.",
+    "register": "ثبت",
+    "empty": "مجوزی وجود ندارد",
+    "revoke": "ابطال",
+    "save": "ذخیره",
+    "cancel": "انصراف",
+    "active": "معتبر",
+    "until": "تا",
+    "perpetual": "بدون انقضا",
+    "fields": {
+      "regime": "رژیم",
+      "category": "دسته",
+      "number": "شماره",
+      "issuedBy": "صادرکننده",
+      "expiresAt": "اعتبار تا",
+      "reason": "دلیل ابطال"
+    },
+    "status": {
+      "pending_review": "در حال بررسی",
+      "active": "معتبر",
+      "expired": "منقضی",
+      "revoked": "ابطال‌شده",
+      "rejected": "رد شده"
+    },
+    "regime": {
+      "precursor_list_iv": "پیش‌سازها (فهرست چهارم، ПКМ-330)",
+      "explosive_toxic": "منفجره و سمی (ПКМ-782)",
+      "strong_acting": "قوی‌الاثر (ПКМ-818)",
+      "pkm916_import": "واردات کالای خطرناک (ПКМ-916)"
+    }
+  },
+  "labOrders": {
+    "title": "درخواست‌های آزمایشگاهی",
+    "subtitle": "آزمایش را آزمایشگاه شریک انجام می‌دهد — وضعیت‌ها را اپراتور پیش می‌برد. درخواست‌ها از قدیمی‌ترین نمایش داده می‌شوند.",
+    "filterAll": "همه وضعیت‌ها",
+    "empty": "درخواستی نیست",
+    "selectHint": "یک درخواست از صف انتخاب کنید.",
+    "terminal": "درخواست پایان یافته — اقدام دیگری نیست.",
+    "colNumber": "شماره",
+    "colCompany": "شرکت",
+    "colSubject": "موضوع",
+    "colStatus": "وضعیت",
+    "company": "شرکت",
+    "subject": "موضوع",
+    "subjectDeal": "معامله #{id}",
+    "substance": "ماده",
+    "volume": "حجم نمونه",
+    "createdAt": "ایجاد",
+    "completedAt": "تکمیل",
+    "rejectedReason": "دلیل رد",
+    "operatorNote": "یادداشت اپراتور",
+    "partner": "آزمایشگاه",
+    "partnerNone": "تعیین نشده",
+    "resultAttached": "گواهی به آگهی/معامله پیوست شد.",
+    "counters": {
+      "submitted": "جدید",
+      "inProgress": "در جریان",
+      "done": "انجام‌شده",
+      "rejected": "رد شده"
+    },
+    "status": {
+      "submitted": "ارسال‌شده",
+      "accepted": "پذیرفته‌شده",
+      "sample_awaited": "در انتظار نمونه",
+      "in_analysis": "در حال آزمایش",
+      "done": "انجام‌شده",
+      "rejected": "رد شده"
+    },
+    "act": {
+      "title": "اقدام",
+      "note": "یادداشت (در رد الزامی)",
+      "reasonHint": "«انجام‌شده» بارگذاری گواهی را باز می‌کند — وضعیت بدون سند ثبت نمی‌شود.",
+      "accepted": "پذیرش",
+      "sample_awaited": "در انتظار نمونه",
+      "in_analysis": "به آزمایش",
+      "rejected": "رد",
+      "uploadResult": "بارگذاری گواهی (PDF)"
+    },
+    "errors": {
+      "invalid_transition": "این گذار از وضعیت فعلی ممکن نیست.",
+      "reason_required": "دلیل رد را بنویسید.",
+      "result_required": "«انجام‌شده» نیازمند بارگذاری گواهی است.",
+      "invalid_file_type": "گواهی فقط PDF پذیرفته می‌شود.",
+      "file_too_large": "فایل بسیار بزرگ است.",
+      "orderer_left_the_deal": "درخواست‌کننده دیگر طرف معامله نیست — سند قابل پیوست نیست."
+    }
+  },
+  "labPartners": {
+    "title": "آزمایشگاه‌های شریک",
+    "subtitle": "فهرست آزمایشگاه‌ها. تحلیلگر می‌خواند (هنگام تخصیص انتخاب می‌کند)، فقط مدیر ویرایش می‌کند.",
+    "empty": "هنوز آزمایشگاهی نیست",
+    "colName": "نام",
+    "colContacts": "تماس",
+    "colState": "وضعیت",
+    "active": "فعال",
+    "retired": "بازنشسته",
+    "retire": "بازنشسته کردن",
+    "restore": "بازگرداندن",
+    "addTitle": "افزودن آزمایشگاه",
+    "editTitle": "ویرایش آزمایشگاه",
+    "fieldName": "نام",
+    "fieldContactName": "شخص رابط",
+    "fieldPhone": "تلفن",
+    "fieldEmail": "ایمیل",
+    "fieldAddress": "نشانی",
+    "fieldNote": "یادداشت",
+    "save": "ذخیره",
+    "cancel": "انصراف",
+    "adminOnly": "فهرست را مدیر ویرایش می‌کند."
   }
 }

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
+from app.models.companies import Company
 from app.models.marketplace import SellerOfferFile
 from app.models.requests import Client
 from app.schemas.marketplace import (
@@ -145,6 +146,35 @@ def get_offer_image(
     obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=f.storage_path)  # type: ignore[attr-defined]
     body: bytes = obj["Body"].read()
     return Response(content=body, media_type=f.mime_type or "application/octet-stream")
+
+
+@router.get(
+    "/companies/{company_id}/logo",
+    summary="Stream a company logo (public — for <img> tags)",
+)
+def get_company_logo(company_id: int, db: Session = Depends(get_db)) -> Response:
+    """GET a company logo's bytes.
+
+    PUBLIC and byte-proxied for the same reason as `get_offer_image`: a presigned
+    S3 URL is signed against the INTERNAL endpoint (`http://minio:9000`), which no
+    browser can resolve, so every `<img src>` built from one is a broken image.
+    Proxying through the API keeps logos on the same origin as the rest of the app.
+
+    A logo is brand material shown on the public catalog, so no auth gate — but the
+    key is read from the row, never from the caller, so this cannot be walked to
+    other objects in the bucket.
+    """
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if company is None or not company.logo_storage_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+    from app.core.config import settings  # noqa: PLC0415
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=company.logo_storage_path)  # type: ignore[attr-defined]
+    body = obj["Body"].read()
+    media_type = "image/png" if company.logo_storage_path.endswith(".png") else "image/jpeg"
+    return Response(content=body, media_type=media_type)
 
 
 @router.post(

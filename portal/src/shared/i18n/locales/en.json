@@ -1,0 +1,1986 @@
+{
+  "common": {
+    "appName": "IMEX AI",
+    "cabinet": "Cabinet",
+    "loading": "Loading…",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "edit": "Edit",
+    "delete": "Delete",
+    "archive": "Archive",
+    "retry": "Retry",
+    "close": "Close",
+    "add": "Add",
+    "remove": "Remove",
+    "download": "Download",
+    "optional": "optional",
+    "required": "required",
+    "yes": "Yes",
+    "no": "No",
+    "soon": "soon",
+    "notSpecified": "Not specified",
+    "search": "Search",
+    "all": "All",
+    "prev": "Previous",
+    "clear": "Clear",
+    "pickDate": "Pick a date"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "genericBody": "The request could not be completed. Please try again.",
+    "network": "Network error. Check your connection.",
+    "loadFailed": "Failed to load data",
+    "notFound": "Not found",
+    "notFoundBody": "The page or resource does not exist.",
+    "forbidden": "Access denied",
+    "unexpected": "Unexpected error"
+  },
+  "auth": {
+    "loginTitle": "Sign in to your cabinet",
+    "loginSubtitle": "Enter your phone number — we'll send a verification code.",
+    "phoneLabel": "Phone number",
+    "phonePlaceholder": "+998 90 123 45 67",
+    "phoneHint": "Uzbekistan (+998) or international format with a leading “+”.",
+    "phoneInvalid": "Enter a valid phone number",
+    "requestCode": "Get code",
+    "requestingCode": "Sending code…",
+    "codeTitle": "Enter the code",
+    "codeSubtitle": "We sent a 6-digit code to {{phone}}.",
+    "codeLabel": "Verification code",
+    "codeInvalid": "The code must be 6 digits",
+    "verify": "Sign in",
+    "verifying": "Verifying code…",
+    "resend": "Resend code",
+    "resendIn": "Resend in {{seconds}}s",
+    "changePhone": "Change number",
+    "tooManyRequests": "Too many attempts. Please try again later.",
+    "wrongCode": "Wrong code. Check it and try again.",
+    "sessionExpired": "Your session expired. Please sign in again.",
+    "trustTitle": "Secure and reliable",
+    "trustBody": "Your data is protected and meets international security standards."
+  },
+  "nav": {
+    "home": "Home",
+    "companies": "Companies",
+    "offers": "Offers",
+    "contracts": "Contracts",
+    "settings": "Settings",
+    "logout": "Log out",
+    "market": "Market",
+    "manufacturers": "Manufacturers",
+    "requests": "Requests",
+    "inquiries": "Inquiries",
+    "news": "News",
+    "notifications": "Notifications",
+    "deals": "Deals",
+    "favorites": "Favorites",
+    "samples": "Samples",
+    "labOrders": "Laboratory",
+    "openMenu": "Open menu"
+  },
+  "home": {
+    "title": "Overview",
+    "welcome": "Hello, {{name}}",
+    "welcomeAnon": "Welcome",
+    "companiesCard": "Companies",
+    "companiesCardHint": "Registration and verification",
+    "offersCard": "Offers",
+    "offersCardHint": "Publishing and moderation",
+    "noActiveCompany": "No active company selected",
+    "noActiveCompanyBody": "Create a company to get started.",
+    "activeCompany": "Active company",
+    "verificationState": "Verification status",
+    "quickActions": "Quick actions",
+    "createCompany": "Create company",
+    "goToVerification": "Go to verification status",
+    "publishOffer": "Publish an offer",
+    "activeRequests": "Active requests",
+    "unread": "Unread",
+    "latestNews": "Latest news"
+  },
+  "companies": {
+    "title": "My companies",
+    "subtitle": "Manage your legal entities and their verification.",
+    "empty": "You don't have any companies yet",
+    "emptyBody": "Register a company, complete verification and start publishing offers.",
+    "create": "Create company",
+    "taxId": "Tax ID",
+    "jurisdiction": "Jurisdiction",
+    "legalName": "Legal name",
+    "shortName": "Short name",
+    "verifiedAt": "Verified",
+    "open": "Open",
+    "activeCase": "Case",
+    "noName": "Unnamed"
+  },
+  "company": {
+    "detailsTitle": "Company details",
+    "profile": "Profile",
+    "legalForm": "Legal form",
+    "legalAddress": "Legal address",
+    "director": "Director",
+    "roles": "Business roles",
+    "bankAccounts": "Bank accounts",
+    "documents": "Documents",
+    "reverificationDue": "Re-verification due",
+    "publicId": "Public ID",
+    "editProfile": "Edit profile",
+    "addBankAccount": "Add account",
+    "bankMfo": "Bank MFO",
+    "bankName": "Bank name",
+    "accountNumber": "Account number",
+    "accountMasked": "Account",
+    "currency": "Currency",
+    "status": "Status",
+    "noBankAccounts": "No bank accounts added",
+    "noDocuments": "No documents uploaded",
+    "uploadDocument": "Upload document",
+    "documentKind": "Document type",
+    "removeDocument": "Remove document",
+    "removeBankAccount": "Remove account",
+    "removeBankAccountConfirm": "The account will be archived. Continue?",
+    "removeDocumentConfirm": "The document will be deleted. This cannot be undone.",
+    "notEditable": "Company details cannot be edited in the current status.",
+    "goToVerification": "Verification status",
+    "manage": "Manage company",
+    "createOffer": "Create offer",
+    "viewOffers": "Company offers",
+    "legalForms": {
+      "ООО": "Limited liability company",
+      "ЧП": "Private enterprise",
+      "АО": "Joint-stock company",
+      "СП": "Joint venture",
+      "ИП": "Sole proprietor",
+      "ГУП": "State unitary enterprise"
+    },
+    "registrationDate": "Company registration date"
+  },
+  "wizard": {
+    "title": "Register a company",
+    "steps": {
+      "accountType": "Company type",
+      "details": "Details",
+      "bank": "Bank",
+      "documents": "Documents",
+      "review": "Checks",
+      "production": "Production",
+      "catalog": "Catalog",
+      "certificates": "Certificates",
+      "buyerReqs": "Buyer terms",
+      "services": "Services",
+      "geography": "Geography",
+      "specialization": "Specialization",
+      "tariffsDocs": "Tariffs",
+      "labLicenses": "Licenses"
+    },
+    "bank": {
+      "title": "Bank account",
+      "subtitle": "Add a settlement account. You can skip this step.",
+      "mfoHint": "MFO — 5 digits.",
+      "mfoInvalid": "MFO must be 5 digits",
+      "accountInvalid": "Enter the account number",
+      "skipHint": "You can add an account later from the company card — but the application will be submitted flagged “no bank details”."
+    },
+    "documents": {
+      "title": "Documents",
+      "subtitle": "Upload the founding documents for verification.",
+      "registrationRequired": "The registration certificate is required.",
+      "bankLetterRequired": "A bank letter is required if a bank account was added.",
+      "dropHint": "Click to choose a file (PDF, JPG, PNG up to {{mb}} MB)",
+      "uploaded": "Uploaded",
+      "uploading": "Uploading…",
+      "tooLarge": "The file exceeds {{mb}} MB",
+      "replace": "Replace",
+      "invalidType": "Unsupported file format. Upload a PDF, JPG or PNG.",
+      "eimzoWaived": "Documents are optional: the company is confirmed by a digital signature. You can add them later."
+    },
+    "errors": {
+      "duplicate": "A company with this Tax ID already exists.",
+      "createFailed": "Failed to create the company.",
+      "submitFailed": "The company was created but could not be submitted for verification. Please retry.",
+      "missingRequiredDocs": "Upload the required documents.",
+      "documentFailed": "Failed to upload the documents. The company was created — fix the file and retry.",
+      "conflict": "That action conflicts with the company's current state.",
+      "profileLocked": "The company details can no longer be changed: the application has already been reviewed. Please contact support.",
+      "identityLocked": "The name, Tax ID and director are confirmed by a digital signature and cannot be changed.",
+      "noOpenCase": "No active verification application was found.",
+      "insufficientRole": "You do not have sufficient company permissions for this action.",
+      "rateLimited": "You have reached the daily registration limit. Please try again tomorrow.",
+      "jurisdictionInvalid": "Choose a country of registration from the list."
+    },
+    "accountType": {
+      "title": "Choose your account type",
+      "subtitle": "It determines what you can do on the platform",
+      "required": "Choose an account type",
+      "options": {
+        "buyer": {
+          "title": "Buyer",
+          "description": "Purchase raw materials for your production"
+        },
+        "distributor": {
+          "title": "Distributor / Trader",
+          "description": "Distribution and trading of industrial materials"
+        },
+        "manufacturer": {
+          "title": "Manufacturer / Factory",
+          "description": "Direct supply from your own production"
+        },
+        "logistics": {
+          "title": "Logistics",
+          "description": "Freight, warehousing and delivery services"
+        },
+        "laboratory": {
+          "title": "Laboratory",
+          "description": "Analysis, testing and certification of materials"
+        }
+      }
+    },
+    "eimzo": {
+      "title": "Digital signature",
+      "subtitle": "Sign the documents to complete your company registration",
+      "methods": {
+        "usb_token": "USB Token",
+        "mobile_id": "Mobile ID",
+        "cloud_id": "Cloud ID"
+      },
+      "methodUnavailable": "This signing method is coming later. Use USB Token for now.",
+      "instructionTitle": "Instructions",
+      "instruction": {
+        "step1": "Plug your USB Token into the device",
+        "step2": "Enter your token PIN",
+        "step3": "Press “Sign and submit”"
+      },
+      "pinLabel": "Token PIN",
+      "revealPin": "Show PIN",
+      "sign": "Sign and submit",
+      "signedBody": "Company confirmed. Requisites were filled from the certificate and locked.",
+      "legalNote": "Documents are signed and encrypted in line with the laws of Uzbekistan"
+    },
+    "details": {
+      "title": "Company details",
+      "subtitle": "Fill in your company information",
+      "taxIdHint": "Uzbek tax id (STIR) — 9 digits.",
+      "taxIdInvalid": "Tax id must be 9 digits",
+      "legalNameRequired": "Enter the company name",
+      "addressRequired": "Enter the legal address",
+      "legalFormRequired": "Choose a legal form",
+      "legalFormPlaceholder": "Choose a legal form",
+      "registrationDateInvalid": "Enter a valid registration date",
+      "lockedTitle": "Requisites confirmed via E-IMZO",
+      "lockedBody": "Name, tax id and director came from the certificate and cannot be changed.",
+      "fields": {
+        "legalName": "Company name",
+        "country": "Country of registration",
+        "taxId": "Tax ID (STIR)",
+        "address": "Legal address",
+        "registrationDate": "Company registration date",
+        "ownershipForm": "Ownership form",
+        "logo": "Company logo",
+        "factoryLegalName": "Full legal name of the factory",
+        "commercialName": "Commercial name (if any)",
+        "registrationNumber": "Company registration number",
+        "factoryAddress": "Actual factory address",
+        "city": "City",
+        "taxIdOrReg": "TIN / Registration number",
+        "laboratoryName": "Laboratory name",
+        "website": "Website",
+        "email": "Email",
+        "phone": "Phone",
+        "description": "Description"
+      },
+      "manufacturerTitle": "Factory legal information",
+      "manufacturerSubtitle": "Fill in the legal details of your plant",
+      "logoUpload": "Upload logo",
+      "logoHint": "JPG or PNG. Max 5 MB.",
+      "logoRemove": "Remove logo",
+      "registrationNumberRequired": "Enter the company registration number",
+      "factoryAddressRequired": "Enter the factory address",
+      "logisticsTitle": "Company information",
+      "logisticsSubtitle": "Fill in your logistics company details",
+      "laboratoryTitle": "Basic information",
+      "laboratorySubtitle": "Fill in your laboratory details",
+      "cityRequired": "Enter the city",
+      "emailInvalid": "Enter a valid email",
+      "phoneRequired": "Enter the phone number",
+      "descriptionRequired": "Enter a laboratory description"
+    },
+    "review": {
+      "title": "Company checks",
+      "subtitle": "We verify your data against state registries",
+      "checkState": {
+        "pending": "Waiting",
+        "running": "Running",
+        "passed": "Passed",
+        "warning": "Needs attention",
+        "failed": "Failed"
+      },
+      "runningTitle": "Checks in progress",
+      "runningBody": "This can take a few minutes. You can leave this page open.",
+      "passedTitle": "Company verified successfully",
+      "passedBody": "All data is confirmed. You can move on to the next step.",
+      "needsAttentionTitle": "Needs attention",
+      "needsAttentionBody": "Your case was accepted. We will follow up on the flagged items in your cabinet."
+    },
+    "done": {
+      "title": "Registration complete!",
+      "subtitle": "Your company is now registered on",
+      "statusLabel": "Company status",
+      "verified": "Verified Company",
+      "companyId": "Company ID",
+      "checkStatus": "Verification status",
+      "accessLevel": "Company type",
+      "toCabinet": "Go to cabinet",
+      "toPublish": "Publish a product",
+      "registeredAt": "Registration date"
+    },
+    "manufacturerTitle": "Manufacturer registration",
+    "production": {
+      "title": "Production information",
+      "subtitle": "Tell us about your manufacturing capacity",
+      "required": "This field is required",
+      "selectPlaceholder": "Select an option",
+      "yearPlaceholder": "Select year",
+      "isoPlaceholder": "Select certificate",
+      "exportCountriesRequired": "Select at least one export country",
+      "fields": {
+        "productionType": "Production type",
+        "mainProducts": "Main products",
+        "annualCapacity": "Annual production capacity",
+        "productionLines": "Number of production lines",
+        "employees": "Number of employees",
+        "markets": "Main markets",
+        "exportCountries": "Export countries",
+        "foundedYear": "Factory foundation year",
+        "iso": "ISO certification"
+      },
+      "types": {
+        "polymers": "Polymers",
+        "petrochemicals": "Petrochemicals",
+        "compounds": "Compounds / masterbatch",
+        "recycling": "Recycling",
+        "other": "Other"
+      },
+      "products": {
+        "pp": "PP",
+        "hdpe": "HDPE",
+        "ldpe": "LDPE",
+        "pvc": "PVC",
+        "pet": "PET",
+        "abs": "ABS",
+        "other": "Other"
+      },
+      "iso": {
+        "iso_9001": "ISO 9001",
+        "iso_14001": "ISO 14001",
+        "iso_45001": "ISO 45001",
+        "iso_22000": "ISO 22000",
+        "none": "None"
+      },
+      "markets": {
+        "domestic": "Domestic market",
+        "export": "Export"
+      },
+      "countries": {
+        "KZ": "Kazakhstan",
+        "RU": "Russia",
+        "TJ": "Tajikistan",
+        "KG": "Kyrgyzstan",
+        "TM": "Turkmenistan",
+        "CN": "China",
+        "TR": "Turkey",
+        "AE": "UAE",
+        "other": "Other"
+      }
+    },
+    "catalog": {
+      "title": "Product catalog",
+      "subtitle": "Add your assortment — you can finish this after registration",
+      "addManual": "Add product manually",
+      "addExcel": "Upload via Excel",
+      "excelFormats": ".xlsx, .xls",
+      "yourProducts": "Your products ({{count}})",
+      "emptyTitle": "Product list is empty",
+      "emptyBody": "Add products manually or upload an Excel file with your assortment",
+      "tipTitle": "Tip",
+      "tipBody": "You can upload documents for each product separately in the product catalog.",
+      "deferNote": "Products are published after registration through the offers flow. You can skip this step for now.",
+      "openOffers": "Open offers"
+    },
+    "mfrDocs": {
+      "title": "Factory certificates and licenses",
+      "subtitle": "Upload general documents and licenses",
+      "uploadHint": "Upload document",
+      "moderationNote": "All documents are reviewed by a moderator before your profile is published."
+    },
+    "buyerReqs": {
+      "title": "Buyer requirements",
+      "subtitle": "Specify the requirements your buyers must meet",
+      "volumeSection": "Minimum order volume",
+      "financialSection": "Financial requirements",
+      "additionalSection": "Additional requirements",
+      "moqRequired": "Enter the minimum order volume",
+      "fields": {
+        "moq": "Minimum volume (MOQ)",
+        "minAnnual": "Minimum annual volume",
+        "otherDetail": "Other requirements"
+      },
+      "financial": {
+        "bank_guarantee": "Bank guarantee",
+        "letter_of_credit": "Letter of credit (LC)",
+        "payment_deferral": "Payment deferral",
+        "prepayment": "Prepayment"
+      },
+      "additional": {
+        "financial_reporting": "Financial reporting",
+        "market_experience": "Market experience",
+        "licenses_certificates": "Licenses and certificates",
+        "end_products_info": "Information about end products",
+        "production_photos": "Production photos",
+        "other": "Other"
+      }
+    },
+    "almostReady": {
+      "title": "Almost ready!",
+      "subtitle": "Check the information and send the profile for moderation.",
+      "whatsNext": "What’s next?",
+      "steps": {
+        "check": "We will review your profile and documents (1–2 business days)",
+        "notify": "You will get a notification after approval",
+        "buyers": "Buyers will be able to send you direct requests"
+      },
+      "privacyTitle": "Visibility",
+      "privacyBody": "Your profile will be visible only to verified buyers and companies.",
+      "submit": "Submit for moderation",
+      "saveDraft": "Save draft"
+    },
+    "units": {
+      "tons": "tons",
+      "tonsPerYear": "tons/year"
+    },
+    "logisticsTitle": "Logistics company registration",
+    "logistics": {
+      "details": {
+        "next": "Next: Services →"
+      },
+      "services": {
+        "title": "Logistics company services",
+        "subtitle": "Select the types of services you provide",
+        "required": "Select at least one service",
+        "next": "Next: Geography →",
+        "options": {
+          "international_road": "International road transport",
+          "rail": "Rail transport",
+          "sea": "Sea transport",
+          "air": "Air transport",
+          "multimodal": "Multimodal transport",
+          "customs_clearance": "Customs clearance",
+          "export_clearance": "Export clearance",
+          "import_clearance": "Import clearance",
+          "certification": "Certification",
+          "cargo_insurance": "Cargo insurance",
+          "warehouse": "Warehouse services",
+          "consolidation": "Cargo consolidation",
+          "container_transport": "Container transport"
+        }
+      },
+      "geography": {
+        "title": "Work geography",
+        "subtitle": "Select countries and popular routes",
+        "required": "Select at least one origin and one destination country",
+        "fromTitle": "From (supplier countries)",
+        "toTitle": "To (recipient countries)",
+        "routesTitle": "Popular routes",
+        "next": "Next: Specialization →",
+        "countries": {
+          "CN": "China",
+          "IR": "Iran",
+          "RU": "Russia",
+          "KZ": "Kazakhstan",
+          "TR": "Turkey",
+          "AE": "UAE",
+          "UZ": "Uzbekistan",
+          "KG": "Kyrgyzstan",
+          "TJ": "Tajikistan",
+          "TM": "Turkmenistan",
+          "other": "Other countries"
+        },
+        "routes": {
+          "shanghai_tashkent": "Shanghai → Tashkent",
+          "tehran_tashkent": "Tehran → Tashkent",
+          "bandar_abbas_tashkent": "Bandar Abbas → Tashkent",
+          "moscow_tashkent": "Moscow → Tashkent",
+          "kazan_tashkent": "Kazan → Tashkent"
+        }
+      },
+      "specialization": {
+        "title": "Specialization",
+        "subtitle": "Tell us which cargo you haul and what capabilities you have",
+        "cargoTitle": "What cargo do you transport?",
+        "capabilitiesTitle": "Company capabilities",
+        "required": "Select at least one cargo type",
+        "next": "Next: Tariffs →",
+        "cargo": {
+          "petrochemicals_polymers": "Petrochemicals / polymers",
+          "chemical_products": "Chemical products",
+          "liquid_bulk": "Liquid bulk cargo",
+          "dangerous_goods_adr": "Dangerous goods (ADR)",
+          "container_shipping": "Container shipping",
+          "big_bags": "Big Bag / sacks",
+          "other_cargo": "Other cargo"
+        },
+        "capabilities": {
+          "own_trucks": "Own road transport vehicles",
+          "own_rail_wagons": "Own rail wagons",
+          "sea_containers": "Sea containers",
+          "storage_facilities": "Storage facilities",
+          "customs_warehouse": "Customs warehouse",
+          "foreign_offices": "Offices in other countries",
+          "customs_brokers": "Customs brokers"
+        }
+      },
+      "tariffs": {
+        "title": "Tariffs and documents",
+        "subtitle": "Choose a pricing model and upload documents",
+        "tariffsSection": "Tariffs",
+        "tariffsHint": "Choose a convenient pricing format:",
+        "required": "Select a tariff model",
+        "docsSection": "Required documents",
+        "docsHint": "Upload carrier documents — moderation will review them before publication.",
+        "moderationNote": "All documents are reviewed by a moderator before your profile is published.",
+        "next": "Next: Publication →",
+        "models": {
+          "individual": "Price calculated individually",
+          "per_container": "Cost per container",
+          "per_ton": "Cost per ton",
+          "per_km": "Cost per km",
+          "minimum_order": "Minimum order"
+        }
+      }
+    },
+    "laboratoryTitle": "Laboratory registration",
+    "laboratory": {
+      "details": {
+        "next": "Next: Licenses →"
+      },
+      "licenses": {
+        "next": "Next: Moderation →"
+      }
+    },
+    "labDocs": {
+      "title": "Licenses and certificates",
+      "subtitle": "Upload laboratory accreditations and documents",
+      "moderationNote": "All documents are reviewed by a moderator before your profile is published."
+    }
+  },
+  "verification": {
+    "title": "Verification status",
+    "subtitle": "Verification progress for {{company}}.",
+    "noCase": "No verification case yet",
+    "noCaseBody": "Submit the company for verification to start the checks.",
+    "submit": "Submit for verification",
+    "submitting": "Submitting…",
+    "resubmit": "Submit again",
+    "submittedAt": "Submitted",
+    "caseType": "Case type",
+    "checks": "Checks",
+    "needsInfoTitle": "More information required",
+    "needsInfoBody": "Review the flagged items and complete the data.",
+    "fixStep": "Fix",
+    "checkTypes": {
+      "tax_id_format": "Tax ID format",
+      "bank_requisites": "Bank requisites",
+      "documents_complete": "Documents complete",
+      "manual_kyb": "Manual review (KYB)",
+      "eimzo_signature": "E-IMZO signature"
+    },
+    "checkDetail": {
+      "empty": "No additional information.",
+      "reason": "Reason",
+      "message": "Note"
+    }
+  },
+  "eimzo": {
+    "title": "Verify via E-IMZO",
+    "subtitle": "Sign the request with the company's e-signature key.",
+    "cta": "Verify via E-IMZO",
+    "retry": "Retry",
+    "done": "Done",
+    "selectCert": "Choose the company key:",
+    "noCerts": "No e-signature keys found. Insert the token and retry.",
+    "confirmedBadge": "Verified with E-IMZO",
+    "confirmedBody": "Identity confirmed by digital signature: {{name}}.",
+    "offerTitle": "Verify the company via E-IMZO",
+    "offerBody": "Sign — the requisites are confirmed automatically.",
+    "progress": {
+      "probing": "Checking the E-IMZO module…",
+      "listing": "Loading the key list…",
+      "signing": "Sign the request in the E-IMZO window…",
+      "verifying": "Verifying the signature…"
+    },
+    "moduleMissing": {
+      "title": "E-IMZO module not found",
+      "body": "Install E-IMZO on your computer and launch the app, then retry.",
+      "link_eimzo": "Download E-IMZO (e-imzo.uz)",
+      "link_soliq": "Instructions (my.soliq.uz)",
+      "desktopHint": "Signing is available only on a computer with the E-IMZO module installed."
+    },
+    "success": {
+      "title": "Signature accepted",
+      "body": "Company verified ({{holder}})."
+    },
+    "errors": {
+      "title": "Verification failed",
+      "unavailable": "E-IMZO service is unavailable. Submit the company for manual verification.",
+      "mismatch": "The certificate INN does not match the company Tax ID.",
+      "expired": "The request expired. Please retry.",
+      "already_registered": "A company with this Tax ID is already registered.",
+      "signature_invalid": "The signature is invalid.",
+      "cert_revoked": "The certificate is revoked.",
+      "sign_failed": "Could not create the signature in the E-IMZO module.",
+      "unknown": "Something went wrong. Please retry.",
+      "cert_no_tin": "The certificate carries no organisation tax id. Choose a legal-entity certificate."
+    }
+  },
+  "offers": {
+    "title": "Offers",
+    "subtitle": "Publish offers on behalf of {{company}}.",
+    "empty": "No offers yet",
+    "emptyBody": "Create your first offer to send it to moderation.",
+    "create": "Create offer",
+    "edit": "Edit offer",
+    "product": "Product",
+    "productText": "Product name",
+    "grade": "Grade",
+    "polymerType": "Polymer type",
+    "availability": "Availability",
+    "qtyAvailable": "Quantity available",
+    "qtyUnit": "Unit",
+    "price": "Price",
+    "currency": "Currency",
+    "incoterms": "Incoterms",
+    "warehouseCity": "Warehouse city",
+    "country": "Country",
+    "minOrderQty": "Min. order",
+    "description": "Description",
+    "moderationNote": "Moderator note",
+    "createdAt": "Created",
+    "save": "Save offer",
+    "saving": "Saving…",
+    "archiveConfirm": "Move this offer to the archive?",
+    "lockedTitle": "Company not verified",
+    "lockedBody": "Only verified companies can publish offers. Complete verification to unlock this.",
+    "goToVerification": "Go to verification",
+    "notVerifiedError": "The company is not verified yet.",
+    "productTextRequired": "Enter the product name",
+    "qtyUnitRequired": "Choose a unit",
+    "attachments": "Images",
+    "addImage": "Add image",
+    "photos": {
+      "title": "Product photos",
+      "hint": "Up to {{max}} photos, JPEG or PNG. The first one is the cover in the market list.",
+      "add": "Add photos",
+      "cover": "Cover",
+      "remove": "Remove photo",
+      "tooMany": "You can upload at most {{max}} photos.",
+      "tooLarge": "File is too large — 10 MB max.",
+      "badType": "Only JPEG and PNG are supported.",
+      "requeueWarning": "Changing photos sends the offer back for moderation."
+    },
+    "leadTimeDays": "Lead time, days",
+    "leadTimeHint": "Required for made-to-order offers — they carry no price.",
+    "leadTimeRequired": "State a lead time for a made-to-order offer",
+    "saleModeLabel": "Sale mode",
+    "saleModeUnset": "Not stated",
+    "saleMode": {
+      "from_stock": "From stock",
+      "made_to_order": "Made to order",
+      "recurring_contract": "Recurring contract"
+    },
+    "readinessTitle": "Ready to deal",
+    "readinessHint": "What you tick shows as badges on your market card.",
+    "acceptsRfq": "I answer requests (RFQ)",
+    "acceptsContract": "Ready to sign a contract on the platform",
+    "acceptsEscrow": "Ready to work through escrow",
+    "samplesTitle": "Samples",
+    "samplesAvailable": "Ready to send samples",
+    "samplePrice": "Sample price",
+    "samplePriceHint": "Empty — the sample is free",
+    "samplePriceInvalid": "The price cannot be negative",
+    "sampleDispatchDays": "Dispatch time, days"
+  },
+  "offerWizard": {
+    "title": "Add a product: chemical goods",
+    "editTitle": "Edit product",
+    "subtitle": "Safe, professional trade in chemical feedstock in Uzbekistan and abroad",
+    "stepOf": "Step {{current}} of {{total}}",
+    "steps": {
+      "basics": "Details",
+      "ai": "AI check",
+      "availability": "Stock / On order",
+      "documents": "Documents",
+      "lab": "Laboratory data",
+      "terms": "Sales terms",
+      "publish": "Publish"
+    },
+    "trust": {
+      "safe": "Safe",
+      "legal": "Legal",
+      "professional": "Professional",
+      "international": "International standard"
+    },
+    "assurance": {
+      "deals": {
+        "title": "Safe deals",
+        "body": "Escrow, verified companies, legal protection"
+      },
+      "trade": {
+        "title": "Legal trade",
+        "body": "Checks against Uzbek registries, hazardous-substance control"
+      },
+      "lab": {
+        "title": "Laboratory support",
+        "body": "Help getting a quality passport through IMEX AI"
+      },
+      "b2b": {
+        "title": "Professional B2B",
+        "body": "RFQs, D-Doc, contracts, samples"
+      },
+      "global": {
+        "title": "Reach international markets",
+        "body": "One standard of quality and trust"
+      }
+    },
+    "basics": {
+      "title": "Basic information",
+      "heading": "Add a product",
+      "productName": "Product name",
+      "productPlaceholder": "Choose a product",
+      "productOther": "Other (type it in)",
+      "productRequired": "Choose a product",
+      "productManual": "Product name",
+      "productManualPlaceholder": "e.g. PP H030 GP",
+      "productManualRequired": "Enter the product name",
+      "grade": "Grade",
+      "gradePlaceholder": "e.g. H030 GP",
+      "cas": "CAS Number (if any)",
+      "hs": "HS Code (if any)",
+      "manufacturer": "Manufacturer",
+      "manufacturerPlaceholder": "e.g. Sibur",
+      "manufacturerOther": "Other (type it in)",
+      "manufacturerManual": "Manufacturer (manual)",
+      "originCountry": "Country of origin",
+      "category": "Category",
+      "categoryUnset": "Not specified",
+      "photos": "Product photos",
+      "catalogUnavailable": "Catalog unavailable",
+      "catalogUnavailableBody": "Choose “Other” and type the product name in."
+    },
+    "ai": {
+      "title": "AI product check",
+      "running": "AI is analysing the product…",
+      "finished": "Analysis complete",
+      "rows": {
+        "substance": "Identifying the chemical substance",
+        "cas": "Checking the CAS Number",
+        "hs": "Checking the HS Code",
+        "dangerList": "Checking the Uzbek hazardous-substance list",
+        "circulation": "Checking circulation requirements",
+        "done": "Analysis complete"
+      },
+      "clearTitle": "Product is not regulated",
+      "clearBody": "This product is not on the Republic of Uzbekistan's list of regulated or hazardous chemical substances.",
+      "regulated": {
+        "free": "Circulation is unrestricted.",
+        "docs_required": "Publishing will require documents for the substance.",
+        "license_required": "Publishing will require a valid company licence.",
+        "prohibited": "Circulation of this substance is prohibited — it cannot be published."
+      },
+      "unknownTitle": "Substance not identified",
+      "unknownBody": "We could not find the substance in the registry, so restrictions were not checked — give the CAS and HS Code as precisely as you can."
+    },
+    "availability": {
+      "title": "Stock / On order",
+      "kind": "Offer type",
+      "inStockHint": "Goods are in the warehouse",
+      "onOrderHint": "Produced on demand",
+      "inStockNote": "The goods are ready for immediate dispatch",
+      "onOrderNote": "Price and volume are agreed on request — state the lead time",
+      "qty": "Quantity in stock",
+      "qtyRequired": "Enter the quantity",
+      "price": "Price (per unit)",
+      "priceRequired": "Enter the price",
+      "warehouse": "Warehouse / Location",
+      "warehouseManual": "Enter the location",
+      "warehouseRequired": "Enter the location",
+      "cityOther": "Other",
+      "cities": {
+        "Ташкент": "Tashkent",
+        "Ташкентская область": "Tashkent Region",
+        "Самарканд": "Samarkand",
+        "Бухара": "Bukhara",
+        "Наманган": "Namangan",
+        "Андижан": "Andijan",
+        "Фергана": "Fergana",
+        "Навои": "Navoi",
+        "Карши": "Karshi",
+        "Термез": "Termez",
+        "Нукус": "Nukus",
+        "Ургенч": "Urgench",
+        "Джизак": "Jizzakh",
+        "Гулистан": "Gulistan"
+      },
+      "dispatch": {
+        "label": "Dispatch time",
+        "1-2": "1–2 days",
+        "3-7": "3–7 days",
+        "7-14": "7–14 days",
+        "14-30": "14–30 days",
+        "30-60": "30–60 days"
+      }
+    },
+    "documents": {
+      "title": "Documents",
+      "heading": "Required documents",
+      "kinds": {
+        "sds": "SDS (Safety Data Sheet)",
+        "tds": "TDS (Technical Data Sheet)",
+        "coa": "Certificate of Analysis (if any)"
+      },
+      "short": {
+        "sds": "SDS",
+        "tds": "TDS",
+        "coa": "COA"
+      },
+      "pick": "Choose a file",
+      "attached": "Document attached",
+      "dropLabel": "Drop files here, or click to upload",
+      "dropHint": "PDF, JPG, PNG (up to {{mb}} MB)",
+      "trustNote": "Documents make buyers trust the listing",
+      "missingTitle": "Required documents are missing",
+      "tooLarge": "File is too large — up to {{mb}} MB.",
+      "allSlotsFull": "All three slots are already filled."
+    },
+    "lab": {
+      "title": "Laboratory data",
+      "heading": "Laboratory passport",
+      "headingHint": "A quality passport backs up what the material is",
+      "hasPassport": "I have a passport",
+      "noPassport": "No passport",
+      "passportLabel": "Uploaded quality passport (COA)",
+      "passportRequired": "Attach the passport, or choose “No passport”",
+      "offerIntro": "If you need one, we can arrange laboratory certification through IMEX AI",
+      "offerWeWill": "We will get in touch and help you:",
+      "points": {
+        "accredited": "pick an accredited laboratory",
+        "cost": "agree the price and the timing",
+        "testing": "arrange the testing",
+        "passport": "obtain the official quality passport"
+      },
+      "requestCta": "Request laboratory certification"
+    },
+    "terms": {
+      "title": "Sales terms",
+      "samplesHint": "Samples help a buyer decide faster",
+      "samplesYes": "Available",
+      "samplesNo": "Not offered",
+      "sampleFee": "Sample terms",
+      "fee": {
+        "free": "Free",
+        "paid": "Paid"
+      },
+      "samplePriceRequired": "Enter the sample price",
+      "sampleDispatch": "Dispatch time",
+      "sampleBands": {
+        "1-3": "1–3 days",
+        "3-7": "3–7 days",
+        "7-14": "7–14 days"
+      },
+      "acceptsRfq": "I accept RFQs",
+      "acceptsContract": "Ready to sign a contract through D-Doc",
+      "acceptsEscrow": "I accept escrow payments"
+    },
+    "extra": {
+      "title": "Additional information",
+      "description": "Product description",
+      "descriptionPlaceholder": "Describe the material, its properties and its uses",
+      "keyProperties": "Key properties",
+      "keyPropertiesPlaceholder": "e.g. MFI: 3.0 g/10min",
+      "applications": "Applications",
+      "applicationsPlaceholder": "e.g. injection moulding"
+    },
+    "preview": {
+      "title": "Preview",
+      "noPhoto": "No photo added",
+      "country": "Country",
+      "qty": "Quantity",
+      "onRequest": "On request",
+      "samplesAvailable": "Samples available",
+      "dDoc": "D-Doc",
+      "escrow": "Escrow",
+      "publish": "Publish product",
+      "publishing": "Publishing…",
+      "uploading": "Uploading files {{done}} / {{total}}"
+    },
+    "done": {
+      "title": "Product published!",
+      "bodyLive": "Your product is live on IMEX AI and visible to buyers.",
+      "bodyModeration": "Your product went to moderation. Once it is reviewed it will appear on the IMEX AI market.",
+      "idLabel": "Listing ID",
+      "copyId": "Copy the ID",
+      "toOffers": "Go to my products",
+      "createAnother": "Add another product"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "name": "Name",
+    "namePlaceholder": "How should we address you",
+    "phone": "Phone",
+    "language": "Interface language",
+    "save": "Save changes",
+    "saved": "Changes saved",
+    "logout": "Log out",
+    "logoutConfirm": "Are you sure you want to log out?",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeHint": "Dark is the default. “System” follows your device setting."
+  },
+  "companyStatus": {
+    "draft": "Draft",
+    "pending_verification": "Pending verification",
+    "verified": "Verified",
+    "rejected": "Rejected",
+    "suspended": "Suspended",
+    "liquidated": "Liquidated"
+  },
+  "caseStatus": {
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "checks_running": "Checks running",
+    "needs_info": "Needs info",
+    "pending_review": "Pending review",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
+  },
+  "checkStatus": {
+    "pending": "Pending",
+    "running": "Running",
+    "passed": "Passed",
+    "warning": "Warning",
+    "failed": "Failed",
+    "unavailable": "Unavailable",
+    "waived": "Waived"
+  },
+  "offerStatus": {
+    "draft": "Draft",
+    "pending_moderation": "Pending moderation",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "archived": "Archived"
+  },
+  "businessRole": {
+    "manufacturer": "Manufacturer",
+    "importer": "Importer",
+    "trader": "Trader",
+    "logistics_provider": "Logistics provider",
+    "distributor": "Distributor",
+    "laboratory": "Laboratory",
+    "insurance_provider": "Insurance provider"
+  },
+  "documentKind": {
+    "registration_certificate": "Registration certificate",
+    "director_id": "Director ID",
+    "bank_letter": "Bank letter",
+    "license": "License",
+    "permit": "Permit",
+    "certificate": "Certificate",
+    "power_of_attorney": "Power of attorney",
+    "other": "Other",
+    "production_license": "Production license",
+    "export_license": "Export license",
+    "certificate_of_origin": "Certificate of origin",
+    "iso_certificate": "ISO certificates",
+    "compliance_certificate": "REACH / RoHS / GOST",
+    "carrier_license": "Carrier license",
+    "liability_insurance": "Liability insurance",
+    "service_contract": "Contract",
+    "accreditation_certificate": "Accreditation certificate"
+  },
+  "offerDocumentKind": {
+    "image": "Photo",
+    "tds": "Technical data sheet",
+    "sds": "Safety data sheet",
+    "coa": "Certificate of analysis",
+    "certificate": "Certificate",
+    "lab_passport": "Laboratory passport",
+    "other": "Other"
+  },
+  "availability": {
+    "in_stock": "In stock",
+    "on_order": "On order"
+  },
+  "jurisdiction": {
+    "UZ": "Uzbekistan",
+    "RU": "Russia",
+    "KZ": "Kazakhstan",
+    "CN": "China",
+    "TR": "Turkey",
+    "other": "Other"
+  },
+  "language": {
+    "ru": "Русский",
+    "uz": "O‘zbekcha",
+    "en": "English"
+  },
+  "theme": {
+    "dark": "Dark",
+    "light": "Light",
+    "system": "System"
+  },
+  "inquiryStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "market": {
+    "title": "Market",
+    "subtitle": "Approved supplier offers",
+    "searchPlaceholder": "Search by product or grade…",
+    "availability": "Availability",
+    "availabilityAll": "Any availability",
+    "country": "Country",
+    "price": "Price",
+    "qty": "Quantity",
+    "onRequest": "on request",
+    "verified": "Verified",
+    "notVerified": "Not verified",
+    "empty": "No offers found",
+    "emptyBody": "Adjust filters or check back later.",
+    "backToMarket": "Back to market",
+    "notFound": "Offer not found",
+    "seller": "Seller",
+    "incoterms": "Incoterms",
+    "warehouse": "Warehouse",
+    "minOrder": "Min. order",
+    "description": "Description",
+    "myInquiries": "My inquiries",
+    "sendInquiry": "Send inquiry",
+    "quantity": "Quantity",
+    "quantityInvalid": "Enter the quantity as a number greater than zero.",
+    "targetPrice": "Target price",
+    "targetPriceInvalid": "Enter the price as a number greater than zero.",
+    "message": "Message",
+    "ownOffer": "This is your company's offer.",
+    "selectCompanyHint": "Select a company to send an inquiry.",
+    "inquirySent": "Inquiry sent for moderation.",
+    "inquiryFailed": "Could not send the inquiry.",
+    "inquiryRateLimited": "You have reached today's inquiry limit. Try again tomorrow.",
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
+    "favorites": "Favorites",
+    "favoritesHint": "A personal list — switching company does not change it.",
+    "favoritesEmpty": "No favorites yet",
+    "favoritesEmptyBody": "Tap the heart on an offer card and it will show up here.",
+    "leadTime": "Lead time: {{count}} days",
+    "readiness": {
+      "rfq": "RFQ",
+      "contract": "Contract",
+      "escrow": "Escrow"
+    },
+    "filter": {
+      "labPassport": "With a lab passport only",
+      "labVerified": "Laboratory Verified only"
+    },
+    "tabs": {
+      "description": "Description",
+      "specs": "Specifications",
+      "documents": "Documents",
+      "compatibility": "Compatibility",
+      "reviews": "Reviews"
+    },
+    "noDescription": "No description",
+    "noDocuments": "No documents attached",
+    "leadTimeShort": "Lead time",
+    "detail": {
+      "marketplace": "IMEX AI Industrial Marketplace",
+      "share": "Share",
+      "linkCopied": "Link copied",
+      "noPhoto": "No photo added",
+      "gallery": "Gallery",
+      "requestRfq": "Request RFQ",
+      "addFavorite": "Add to favorites",
+      "basics": "Basic information",
+      "cas": "CAS",
+      "hs": "HS Code",
+      "country": "Country",
+      "offerType": "Offer type",
+      "offerTypeHint": "How the seller offers this product",
+      "qtyAvailable": "Quantity in stock",
+      "moq": "Minimum order (MOQ)",
+      "samples": "Samples",
+      "samplesHint": "You can request a sample from the seller",
+      "samplesAvailable": "Available",
+      "samplesUnavailable": "Not provided",
+      "requestSample": "Request sample",
+      "labPassport": "Laboratory passport (COA)",
+      "labPassportHint": "Quality passport attached to the offer",
+      "labPassportPresent": "Laboratory passport available",
+      "labPassportAbsent": "No passport attached",
+      "sellerHint": "Company that published the offer",
+      "verifiedSupplier": "Verified supplier",
+      "ratingPending": "Rating appears after deals",
+      "compatibility": "Compatibility with your equipment",
+      "compatibilityHint": "Check the material for your process",
+      "compatibilityBody": "Check whether this material fits your process.",
+      "checkCompatibility": "Check compatibility with equipment",
+      "comingSoon": "Coming soon",
+      "documentsHint": "Documents attached by the seller",
+      "manufacturer": "Manufacturer",
+      "keyProperties": "Key properties",
+      "applications": "Applications",
+      "messageSeller": "Message seller",
+      "requestContract": "Request contract",
+      "escrow": "Escrow payment",
+      "escrowInDealHint": "Escrow is agreed inside a deal — send the seller an inquiry first",
+      "escrowNotOffered": "This seller does not work through escrow",
+      "contractNeedsVerifiedSeller": "A contract requires a verified counterparty",
+      "contractNeedsVerifiedCompany": "Get your own company verified first",
+      "contractNotOffered": "The seller is not ready to sign a contract for this offer",
+      "rfqNotAccepted": "The seller does not accept RFQs on this offer",
+      "reviewsEmpty": "No reviews for this product yet.",
+      "docChip": {
+        "sds": "SDS PDF",
+        "tds": "TDS PDF",
+        "coa": "COA PDF",
+        "lab_passport": "Certificate PDF",
+        "certificate": "Certificate PDF"
+      }
+    }
+  },
+  "inquiries": {
+    "title": "Inquiries",
+    "subtitle": "Your inquiries and the ones received on your offers",
+    "tab": {
+      "sent": "Sent",
+      "incoming": "Incoming"
+    },
+    "empty": {
+      "sent": "No inquiries sent",
+      "incoming": "No incoming inquiries"
+    },
+    "emptyBody": "Send an inquiry from the market to see it here.",
+    "notFound": "Inquiry not found",
+    "back": "Back to inquiries",
+    "viewOffer": "View offer",
+    "editedNotice": "You revised this inquiry — it re-enters moderation.",
+    "edit": "Edit",
+    "resubmit": "Resubmit",
+    "editFailed": "Could not save the changes."
+  },
+  "requests": {
+    "title": "Purchase requests",
+    "subtitle": "Requests you've submitted for your company",
+    "create": "New request",
+    "forCompany": "On behalf of {{company}}",
+    "empty": "No requests yet",
+    "emptyBody": "Create a purchase request to get started.",
+    "notFound": "Request not found",
+    "back": "Back to requests",
+    "timeline": "Status timeline",
+    "cancel": "Cancel request"
+  },
+  "requestStatus": {
+    "new": "New",
+    "in_review": "In review",
+    "offer_received": "Offer received",
+    "matched": "Matched",
+    "closed": "Closed",
+    "cancelled": "Cancelled"
+  },
+  "requestWizard": {
+    "title": "New purchase request",
+    "subtitle": "Create a request and receive offers from suppliers",
+    "stepOf": "Step {{current}} of {{total}}",
+    "steps": {
+      "product": "Product",
+      "params": "Parameters",
+      "extra": "Extra",
+      "comm": "Terms",
+      "preview": "Publish"
+    },
+    "product": {
+      "title": "1. Select a product",
+      "searchPlaceholder": "Search products, grades, CAS…",
+      "category": "Category",
+      "allCategories": "All categories",
+      "recent": "Recent products",
+      "empty": "Nothing found",
+      "manual": "Specify product manually",
+      "manualName": "Product name",
+      "manualNamePlaceholder": "e.g. Polyethylene HDPE",
+      "manualGrade": "Grade",
+      "manualGradePlaceholder": "e.g. 5502",
+      "nameRequired": "Enter a product name",
+      "gradeRequired": "Enter a grade",
+      "pickRequired": "Pick a product from the list or enter it manually"
+    },
+    "params": {
+      "title": "2. Request parameters",
+      "volume": "Required volume",
+      "volumeRequired": "Enter a volume",
+      "unit": "Unit",
+      "price": "Target price (your maximum)",
+      "priceHint": "Suppliers will only see your range",
+      "currency": "Currency",
+      "dealType": "Deal type",
+      "dealHint": "Choose the Incoterms® delivery basis",
+      "incotermOpt": {
+        "EXW": "Purchase on EXW terms",
+        "FCA": "Purchase on FCA terms",
+        "FOB": "Purchase on FOB terms",
+        "CIF": "Purchase on CIF terms",
+        "CPT": "Purchase on CPT terms",
+        "DAP": "Purchase on DAP terms",
+        "DDP": "Purchase on DDP terms"
+      },
+      "country": "Country / region of delivery",
+      "city": "City / port",
+      "cityOther": "Other city",
+      "cityPlaceholder": "Enter a city or port",
+      "delivery": "Desired delivery timeframe",
+      "deliveryOpt": {
+        "urgent": "Urgent (1–7 days)",
+        "month": "Within a month",
+        "quarter": "1–3 months",
+        "later": "More than 3 months"
+      },
+      "validity": "Request validity period",
+      "validityOpt": "{{days}} days"
+    },
+    "extra": {
+      "title": "3. Additional parameters",
+      "specs": "Required characteristics (optional)",
+      "specsPlaceholder": "Write required characteristics, marking, quality standard, etc.",
+      "docs": "Required documents from the supplier",
+      "doc": {
+        "sds": "Safety Data Sheet (SDS)",
+        "coa": "Certificate of Analysis (COA)",
+        "coo": "Certificate of Origin",
+        "commercial": "Commercial offer",
+        "other": "Other documents"
+      },
+      "docOtherHint": "Select or specify in the comments",
+      "comment": "Additional comments",
+      "commentPlaceholder": "Any extra requirements or wishes for suppliers…"
+    },
+    "comm": {
+      "title": "4. Communication terms",
+      "channelLabel": "How do you want to receive offers",
+      "channel": {
+        "app": {
+          "title": "Inside IMEX AI",
+          "body": "All offers arrive in the cabinet — easy to compare"
+        },
+        "email": {
+          "title": "By email",
+          "body": "Also send offers to your email"
+        },
+        "telegram": {
+          "title": "In Telegram",
+          "body": "Notifications about new offers in the messenger"
+        }
+      },
+      "visibilityLabel": "Who can see the request",
+      "visibility": {
+        "verified": {
+          "title": "Verified suppliers only",
+          "body": "Only companies with confirmed verification will see it"
+        },
+        "all": {
+          "title": "All platform suppliers",
+          "body": "The request will be visible to every seller on the platform"
+        },
+        "selected": {
+          "title": "Selected suppliers",
+          "body": "We will send the request only to those you pick later"
+        }
+      }
+    },
+    "preview": {
+      "title": "5. Review and publish",
+      "product": "Product",
+      "volume": "Volume",
+      "price": "Target price",
+      "terms": "Delivery terms",
+      "delivery": "Delivery timeframe",
+      "validity": "Request validity",
+      "comment": "Comment",
+      "docs": "Documents from supplier",
+      "publish": "Publish request",
+      "visibilityNote": {
+        "verified": "Your request will only be visible to verified suppliers on the platform.",
+        "all": "Your request will be visible to all suppliers on the platform.",
+        "selected": "The request will be sent to the selected suppliers."
+      }
+    },
+    "done": {
+      "title": "Request published!",
+      "body": "Suppliers can already see your request and are preparing offers.",
+      "idLabel": "Request number",
+      "copyId": "Copy number",
+      "nextTitle": "What's next?",
+      "next": {
+        "offers": "Suppliers will send offers shortly",
+        "notify": "You will get a notification about new offers",
+        "compare": "Compare offers and choose the best terms"
+      },
+      "toRequests": "Go to my requests",
+      "createAnother": "Create another request"
+    },
+    "submitFailed": "Could not submit the request.",
+    "urgencyOpt": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    }
+  },
+  "news": {
+    "title": "News",
+    "subtitle": "Classified petrochemical market news",
+    "breaking": "Breaking",
+    "empty": "No news yet",
+    "emptyBody": "Check back soon for market updates.",
+    "notFound": "Article not found",
+    "back": "Back to news",
+    "analysis": "Analysis",
+    "recommendation": "Recommendation",
+    "readSource": "Read at the source →"
+  },
+  "notifications": {
+    "subtitle": "Updates on your requests, inquiries, offers and verification",
+    "markAllRead": "Mark all read",
+    "viewAll": "View all",
+    "empty": "No notifications",
+    "emptyBody": "You're all caught up.",
+    "request_status": {
+      "title": "Request update",
+      "body": "Request {{number}} was updated"
+    },
+    "inquiry_approved": {
+      "title": "New inquiry",
+      "body": "An approved inquiry arrived on your offer"
+    },
+    "inquiry_reply": {
+      "title": "Inquiry update",
+      "body": "There's an update on your inquiry"
+    },
+    "verification_decided": {
+      "title": "Verification",
+      "body": "Your company's verification status changed"
+    },
+    "offer_moderated": {
+      "title": "Offer moderation",
+      "body": "Your offer's status was updated"
+    },
+    "news_breaking": {
+      "title": "Breaking news",
+      "body": "{{headline}}"
+    },
+    "contract_incoming": {
+      "title": "New contract",
+      "body": "A contract “{{title}}” was sent to you"
+    },
+    "contract_accepted": {
+      "title": "Contract accepted",
+      "body": "The terms of “{{title}}” were accepted"
+    },
+    "contract_declined": {
+      "title": "Contract declined",
+      "body": "The contract “{{title}}” was declined"
+    },
+    "contract_expired": {
+      "title": "Contract expired",
+      "body": "The contract “{{title}}” expired while pending"
+    },
+    "rfq_response_new": {
+      "title": "New quote",
+      "body": "A supplier quoted on request {{number}}"
+    },
+    "rfq_response_accepted": {
+      "title": "Quote accepted",
+      "body": "Your quote was accepted — deal {{number}} is open"
+    },
+    "rfq_response_not_selected": {
+      "title": "Quote not selected",
+      "body": "Another quote was chosen for this request"
+    },
+    "deal_opened": {
+      "title": "Deal opened",
+      "body": "Deal {{number}} is open"
+    },
+    "deal_status": {
+      "title": "Deal status",
+      "body": "Deal {{number}}: status changed"
+    },
+    "deal_message": {
+      "title": "New message",
+      "body": "New messages in deal {{number}}"
+    },
+    "deal_document": {
+      "title": "New document",
+      "body": "A document was added to deal {{number}}"
+    },
+    "escrow_opened": {
+      "title": "Payment invoice",
+      "body": "An invoice for {{amount}} {{currency}} was issued for deal {{number}}"
+    },
+    "escrow_status": {
+      "title": "Payment status",
+      "body": "Deal {{number}}: {{amount}} {{currency}} — the payment status changed"
+    },
+    "rfq_match": {
+      "title": "A new request matching your profile",
+      "body": "{{product}} — {{volume}} {{volume_unit}}. Request {{number}}"
+    },
+    "lab_order_status": {
+      "title": "Laboratory order",
+      "body": "Order {{number}}: status changed"
+    },
+    "sample_request_new": {
+      "title": "Sample request",
+      "body": "A buyer asked for a sample of your offer"
+    },
+    "sample_request_status": {
+      "title": "Sample status",
+      "body": "Sample request: status changed"
+    }
+  },
+  "contracts": {
+    "title": "Contracts",
+    "subtitle": "Electronic contracts with verified companies.",
+    "create": "Create contract",
+    "createDraft": "Create draft",
+    "empty": "No contracts yet",
+    "emptyBody": "Create a contract with a verified company.",
+    "template": "Contract template",
+    "selectTemplate": "Select a template",
+    "counterparty": "Counterparty",
+    "counterpartyHint": "Verified companies only.",
+    "counterpartySearch": "Search by name or Tax ID…",
+    "needVerifiedInitiator": "Only a verified company can create a contract. Select a verified company in the switcher above.",
+    "document": "Document",
+    "signatures": "Signatures",
+    "awaitingOther": "Awaiting the other party's signature.",
+    "declinedTitle": "Contract declined",
+    "declineReason": "Reason for declining",
+    "tabs": {
+      "all": "All",
+      "action": "Needs action",
+      "active": "Active"
+    },
+    "role": {
+      "initiator": "Initiator",
+      "counterparty": "Counterparty"
+    },
+    "status": {
+      "draft": "Draft",
+      "pending_counterparty": "Awaiting counterparty",
+      "pending_signatures": "Awaiting signatures",
+      "active": "Active",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "actions": {
+      "send": "Send to counterparty",
+      "accept": "Accept terms",
+      "decline": "Decline",
+      "confirmDecline": "Confirm decline",
+      "sign": "Sign with E-IMZO",
+      "cancel": "Cancel",
+      "downloadPdf": "Download PDF",
+      "downloadBundle": "Download bundle (ZIP)"
+    },
+    "errors": {
+      "invalid": "Check the form fields.",
+      "createFailed": "Failed to create the contract."
+    },
+    "timeline": {
+      "created": "Draft created",
+      "sent": "Sent for approval",
+      "signedBy": "Signed by {{company}}",
+      "awaitingSignature": "Awaiting signature from {{company}}",
+      "active": "Signed by both parties",
+      "awaiting": "Awaiting"
+    }
+  },
+  "deals": {
+    "title": "Deals",
+    "subtitle": "Trade rooms: chat, documents, status.",
+    "empty": "No deals yet",
+    "emptyBody": "Quote on a buyer's request, or accept a quote on your own.",
+    "browseRfqs": "Open requests",
+    "needsAction": "Needs action",
+    "noAmount": "Amount not set",
+    "progress": "Progress",
+    "roleAny": "All",
+    "cancelledTitle": "Deal cancelled",
+    "disputedTitle": "Dispute open",
+    "disputedBody": "The platform team resolves disputes.",
+    "role": {
+      "buyer": "Buying",
+      "seller": "Selling"
+    },
+    "tabs": {
+      "all": "All",
+      "action": "Needs action",
+      "active": "Active",
+      "closed": "Closed",
+      "chat": "Chat",
+      "documents": "Documents",
+      "timeline": "Timeline",
+      "contract": "Contract",
+      "escrow": "Payment",
+      "lab": "Laboratory"
+    },
+    "status": {
+      "negotiation": "Negotiation",
+      "contract_pending": "Awaiting contract",
+      "contract_signed": "Contract signed",
+      "payment_pending": "Awaiting payment",
+      "paid_escrow": "Paid (escrow)",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "disputed": "Disputed"
+    },
+    "actor": {
+      "buyer": "buyer",
+      "seller": "seller",
+      "staff": "team",
+      "system": "system"
+    },
+    "actions": {
+      "contract_pending": "Send contract",
+      "contract_signed": "Contract signed",
+      "payment_pending": "To payment",
+      "paid_escrow": "Paid",
+      "shipped": "Mark shipped",
+      "delivered": "Confirm delivery",
+      "completed": "Complete",
+      "cancelled": "Cancel",
+      "disputed": "Open dispute",
+      "negotiation": "Back to negotiation",
+      "reasonPlaceholder": "State the reason",
+      "confirm": {
+        "cancelled": "Cancel this deal?",
+        "disputed": "Open a dispute on this deal?"
+      }
+    },
+    "chat": {
+      "title": "Deal chat",
+      "empty": "No messages yet",
+      "placeholder": "Write a message…",
+      "send": "Send",
+      "attach": "File"
+    },
+    "documents": {
+      "add": "Add document",
+      "kind": "Document type",
+      "empty": "No documents yet",
+      "emptyBody": "Upload an invoice, waybill or quality passport.",
+      "revoked": "Revoked",
+      "revokeAction": "Revoke",
+      "revokePrompt": "Reason for revoking this document",
+      "kinds": {
+        "contract": "Contract",
+        "invoice": "Invoice",
+        "lab_passport": "Quality passport",
+        "transport": "Transport",
+        "other": "Other"
+      }
+    },
+    "contract": {
+      "none": "No contract drawn up yet.",
+      "create": "Create contract",
+      "linked": "Contract: {{status}}",
+      "open": "Open contract"
+    },
+    "escrow": {
+      "noneTitle": "No invoice yet",
+      "noneBody": "The payment invoice appears once both parties have signed the contract.",
+      "bankTitle": "Payment via the partner bank",
+      "bankBody": "Payment is made against an invoice issued by the partner bank. The funds are held and released to the seller once the buyer confirms delivery.",
+      "status": {
+        "pending": "Awaiting payment",
+        "funded": "Funds held",
+        "released": "Released to the seller",
+        "refunded": "Refunded to the buyer"
+      },
+      "refundCause": "The funds were refunded to the buyer through escrow.",
+      "amount": "Deal amount"
+    }
+  },
+  "rfq": {
+    "marketTitle": "Open requests",
+    "marketSubtitle": "Buyer requests you can quote against.",
+    "marketEmpty": "No open requests",
+    "marketEmptyBody": "Check back later — new requests appear regularly.",
+    "respond": "Respond",
+    "alreadyResponded": "Quote sent",
+    "submit": "Send quote",
+    "price": "Price",
+    "currency": "Currency",
+    "qty": "Quantity",
+    "qtyUnit": "Unit",
+    "incoterms": "Incoterms",
+    "incotermsAny": "Not specified",
+    "leadTime": "Lead time, days",
+    "leadTimeDays": "{{count}} d",
+    "comment": "Comment",
+    "commentPlaceholder": "Terms, timing, details",
+    "volume": "Volume",
+    "destination": "Destination",
+    "desiredDate": "Desired date",
+    "requiredDocs": "Required documents",
+    "responses": "Quotes",
+    "noResponses": "No quotes yet",
+    "noResponsesBody": "Suppliers have not answered this request yet.",
+    "accept": "Accept",
+    "acceptTitle": "Accept this quote?",
+    "acceptBody": "A deal with {{company}} at {{price}} will open. The other quotes will be declined.",
+    "openDeal": "Open deal",
+    "status": {
+      "submitted": "Submitted",
+      "accepted": "Accepted",
+      "not_selected": "Not selected",
+      "withdrawn": "Withdrawn"
+    },
+    "docs": {
+      "sds": "SDS",
+      "coa": "COA",
+      "origin_cert": "Certificate of origin",
+      "commercial_offer": "Commercial offer",
+      "other": "Other"
+    }
+  },
+  "compliance": {
+    "title": "Substance and compliance",
+    "hint": "Name the substance if this offer is a chemical. Polymers (PP, PE, PVC) can be left blank.",
+    "search": "Search the registry",
+    "searchHint": "Name, synonym, CAS or HS code",
+    "searchPlaceholder": "e.g. acetone, 67-64-1, 2914",
+    "searchEmpty": "Nothing found. You can type the CAS and HS code by hand.",
+    "cas": "CAS",
+    "hs": "HS code",
+    "concentration": "Concentration, %",
+    "concentrationHint": "Below the substance's threshold the regime does not apply. Left empty, it is treated as regulated.",
+    "askAi": "Identify the substance from the description",
+    "aiSuggestion": "AI suggestion",
+    "aiAccept": "Confirm",
+    "aiReject": "Not this one",
+    "aiNoHint": "No hint available right now — pick the substance by hand.",
+    "aiUnknownSubstance": "This substance is not in the registry — type the CAS and HS code by hand.",
+    "substance": "Substance",
+    "blockedTitle": "This offer is not published",
+    "wouldBlockTitle": "Will be required to publish",
+    "prohibitedTitle": "Listing is prohibited",
+    "blockedHint": "As soon as the requirements are met, the offer goes to moderation automatically.",
+    "prohibitedHint": "The substance is on the prohibited list. Uploading documents will not change that.",
+    "missingDocument": "Document required: {{doc}}",
+    "missingLicense": "An active licence is required: {{regime}}",
+    "missingProhibited": "Ban under: {{act}}",
+    "licenses": "Licences",
+    "licensesHint": "Licences are registered by staff from the document you uploaded.",
+    "noLicenses": "No licences",
+    "licenseActive": "Active",
+    "until": "until",
+    "level": {
+      "free": "Unregulated",
+      "docs_required": "Documents required",
+      "license_required": "Licence required",
+      "prohibited": "Prohibited"
+    },
+    "regime": {
+      "precursor_list_iv": "Precursors (List IV, ПКМ-330)",
+      "explosive_toxic": "Explosive and toxic (ПКМ-782)",
+      "strong_acting": "Strong-acting (ПКМ-818)",
+      "pkm916_import": "Hazardous import (ПКМ-916)"
+    },
+    "docKind": {
+      "sds": "safety data sheet (SDS)",
+      "tds": "technical data sheet (TDS)",
+      "coa": "certificate of analysis (COA)",
+      "certificate": "certificate"
+    },
+    "licenseStatus": {
+      "pending_review": "Pending review",
+      "active": "Active",
+      "expired": "Expired",
+      "revoked": "Revoked",
+      "rejected": "Rejected"
+    }
+  },
+  "lab": {
+    "blockTitle": "Laboratory passport",
+    "blockHint": "A passport backs up what the material is and puts a badge on the catalog card. Upload your own, or order an analysis through IMEX.",
+    "saveFirst": "Save the offer first — a passport attaches to an existing offer.",
+    "upload": "Upload passport (PDF)",
+    "pdfOnly": "The passport must be a PDF.",
+    "resultLocked": "This passport came from a platform lab order — it cannot be removed.",
+    "orderCta": "Order an analysis through IMEX",
+    "orderCopy": "We will call you to agree the laboratory, the price and how to hand the sample over.",
+    "orderCommentPlaceholder": "What to check: MFI, density, moisture…",
+    "orderSubmit": "Send request",
+    "partnerPending": "Laboratory not assigned yet",
+    "openPassport": "Open passport",
+    "volume": "Sample volume",
+    "comment": "Comment",
+    "created": "Created",
+    "rejectedReason": "Rejection reason",
+    "operatorNote": "Operator note",
+    "openOffer": "Open offer",
+    "ordersTitle": "Laboratory orders",
+    "ordersSubtitle": "Our operator drives the statuses: a partner laboratory runs the analysis.",
+    "ordersEmpty": "No orders yet",
+    "ordersEmptyBody": "Order an analysis from the offer form or from a Trade Room.",
+    "dealNoneTitle": "No analysis ordered for this deal",
+    "dealNoneBody": "You can have the material checked before shipment — our operator handles it.",
+    "dealResultInDocs": "The passport was added to the Documents tab.",
+    "badge": {
+      "passport": "Lab passport",
+      "verified": "Laboratory Verified"
+    },
+    "status": {
+      "submitted": "Submitted",
+      "accepted": "Accepted",
+      "sample_awaited": "Awaiting sample",
+      "in_analysis": "In analysis",
+      "done": "Done",
+      "rejected": "Rejected"
+    }
+  },
+  "samples": {
+    "title": "Samples",
+    "subtitle": "Sample requests: what buyers ask of you, and what you asked for.",
+    "tab": {
+      "incoming": "Incoming",
+      "sent": "Sent"
+    },
+    "empty": {
+      "incoming": "No incoming requests",
+      "sent": "You have not asked for a sample"
+    },
+    "emptyBody": "You can request a sample from an offer page in the market.",
+    "offerTitle": "Request a sample",
+    "free": "Sample is free",
+    "priced": "Sample: {{price}} {{currency}}",
+    "dispatch": "ships in {{count}} days",
+    "qty": "Quantity",
+    "qtyHint": "Free text: “1 kg”, “a few pellets”",
+    "address": "Delivery address",
+    "send": "Request a sample",
+    "sentOk": "The request went to the seller.",
+    "reason": "Reason",
+    "courier": "Courier",
+    "tracking": "Tracking number",
+    "shipmentHint": "Enter the courier and the tracking number — that is how the buyer follows it.",
+    "action": {
+      "accepted": "Accept",
+      "declined": "Decline",
+      "sent": "Mark sent",
+      "received": "Mark received",
+      "rejected_by_buyer": "Not suitable"
+    },
+    "status": {
+      "requested": "Requested",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "sent": "Sent",
+      "received": "Received",
+      "rejected_by_buyer": "Not suitable"
+    },
+    "errors": {
+      "alreadyRequested": "You already have a live request against this offer.",
+      "notAvailable": "The seller does not offer samples for this listing.",
+      "ownOffer": "This is your own company's offer — no sample needed."
+    }
+  },
+  "onboarding": {
+    "title": "Register on",
+    "subtitle": "Create an account and unlock everything the platform offers",
+    "heroAlt": "Secure, verified IMEX AI platform",
+    "chips": {
+      "aiMatching": "AI Matching",
+      "verifiedCompany": "Verified Company",
+      "tradeFinance": "Trade Finance",
+      "secureDeals": "Secure Deals",
+      "logistics": "Logistics",
+      "governmentApi": "Government API"
+    },
+    "trustTitle": "Safe and reliable",
+    "trustBody": "Your data is protected and meets international security standards",
+    "start": "Start registration"
+  },
+  "companyProfile": {
+    "title": "Company profile",
+    "officialSupplier": "Official supplier on IMEX AI",
+    "verifiedCompany": "Verified company",
+    "onPlatformSince": "On the platform since {{date}}",
+    "notFound": "Company not found or not yet verified",
+    "tabs": {
+      "about": "About",
+      "products": "Products",
+      "reviews": "Reviews",
+      "documents": "Documents"
+    },
+    "statSince": "Since {{date}}",
+    "statSincePending": "On the platform",
+    "statOffers": "{{count}} listings",
+    "statResponsePending": "Response — soon",
+    "statLanguages": "RU / EN / UZ",
+    "about": "About",
+    "aboutForm": "Legal form: {{form}}.",
+    "aboutAddress": "Address: {{address}}.",
+    "aboutEmpty": "This company has not added a description yet.",
+    "kpiTitle": "Key indicators",
+    "kpiOnTime": "On-time delivery",
+    "kpiRating": "Buyer rating",
+    "kpiClients": "Regular clients",
+    "kpiCountries": "Delivery countries",
+    "kpiPendingHint": "Indicators appear after enough deals on the platform.",
+    "certificates": "Certificates",
+    "certificatesEmpty": "No public certificates yet",
+    "certificatesEmptyBody": "When the supplier publishes ISO and other certificates, they will show here.",
+    "details": "Company details",
+    "fullName": "Full name",
+    "companyType": "Company type",
+    "headOffice": "Head office",
+    "founded": "Founded",
+    "jurisdiction": "Jurisdiction",
+    "advantages": "Advantages",
+    "advantageVerified": "Verified on IMEX AI",
+    "advantageOffers": "{{count}} active market listings",
+    "mainProducts": "Main products",
+    "productsEmpty": "No published products",
+    "productsEmptyBody": "This company has no approved offers yet.",
+    "seeAllProducts": "See all products ({{count}})",
+    "reviewsScorePending": "— of 5",
+    "reviewsHint": "Rating builds from completed deals",
+    "reviewsEmpty": "No reviews yet",
+    "reviewsEmptyBody": "Reviews appear after deals with this company.",
+    "documentsEmpty": "No documents yet",
+    "documentsEmptyBody": "A public document set will appear when the supplier publishes one.",
+    "message": "Message",
+    "requestRfq": "Request quote (RFQ)",
+    "messageManufacturer": "Contact the factory",
+    "requestFactoryRfq": "Request a quote",
+    "pickOfferHint": "Pick a product below to send the seller a request"
+  },
+  "manufacturers": {
+    "title": "Manufacturers",
+    "subtitle": "Verified factories you can request quotes from directly",
+    "search": "Search by name or product…",
+    "empty": "No manufacturers found",
+    "emptyBody": "Try a different search term.",
+    "noIso": "No ISO certification listed",
+    "offerCount": "{{count}} listings",
+    "employeesShort": "{{count}} employees",
+    "foundedShort": "since {{year}}",
+    "chatWithFactory": "Chat with the factory",
+    "leaveFactoryRfq": "Leave a factory RFQ"
+  },
+  "factoryRfq": {
+    "title": "Factory RFQ",
+    "subtitle": "Send an extended request straight to the factory",
+    "stepOf": "Step {{current}} of {{total}}",
+    "steps": {
+      "basic": "Terms",
+      "documents": "Documents",
+      "terms": "Commercial",
+      "contact": "Contact"
+    },
+    "basic": {
+      "title": "1. Basic terms",
+      "quantity": "Quantity",
+      "quantityRequired": "Enter the quantity as a number greater than zero",
+      "targetPrice": "Target price",
+      "currency": "Currency",
+      "incoterms": "Incoterms",
+      "incotermsPlaceholder": "Choose a delivery basis",
+      "destinationPort": "Destination port / city",
+      "desiredDeliveryDate": "Desired delivery date"
+    },
+    "documents": {
+      "title": "2. Compliance documents",
+      "subtitle": "Attach the documents the factory will need — you can add them later from the RFQ",
+      "dropLabel": "Click to upload",
+      "dropHint": "PDF, JPG, PNG",
+      "uploaded": "Attached",
+      "remove": "Remove",
+      "kinds": {
+        "founding_docs": "Founding documents",
+        "registration_certificate": "Registration certificate",
+        "tax_id": "Tax ID certificate",
+        "bank_details": "Bank details",
+        "import_export_license": "Import/export license"
+      }
+    },
+    "terms": {
+      "title": "3. Commercial terms",
+      "paymentMethod": "Payment method",
+      "paymentMethodPlaceholder": "e.g. 30% advance, balance on B/L",
+      "offerValidity": "Offer validity",
+      "offerValidityPlaceholder": "e.g. 30 days",
+      "performanceGuarantee": "Performance guarantee",
+      "performanceGuaranteePlaceholder": "e.g. bank guarantee 2%",
+      "inspectionRequirement": "Inspection requirement",
+      "inspectionRequirementPlaceholder": "e.g. SGS at loading",
+      "additionalRequirements": "Additional requirements",
+      "additionalRequirementsPlaceholder": "Anything else the factory should know"
+    },
+    "contact": {
+      "title": "4. Contact person",
+      "name": "Full name",
+      "nameRequired": "Enter the contact name",
+      "position": "Position",
+      "email": "Email",
+      "phone": "Phone",
+      "phoneRequired": "Enter a phone number",
+      "telegram": "Telegram",
+      "submit": "Submit RFQ"
+    },
+    "submitFailed": "Could not submit the RFQ.",
+    "done": {
+      "title": "RFQ sent to the factory!",
+      "body": "The factory will review your request and get back to you.",
+      "numberLabel": "RFQ number",
+      "dateLabel": "Submitted",
+      "toManufacturers": "Back to manufacturers",
+      "toHome": "Go to home"
+    }
+  },
+  "manufacturerChat": {
+    "title": "Chat with the factory",
+    "subtitle": "Direct chat with the manufacturer",
+    "empty": "No messages yet",
+    "placeholder": "Write a message…",
+    "send": "Send",
+    "attach": "File"
+  },
+  "bankAccountStatus": {
+    "unverified": "Unverified",
+    "pending": "Pending",
+    "verified": "Verified",
+    "failed": "Rejected",
+    "archived": "Archived"
+  }
+}

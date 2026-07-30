@@ -198,10 +198,13 @@ def test_status_change_enqueues_notify_promptly() -> None:
     from app.services.request_service import transition_status  # noqa: PLC0415
 
     db = _make_mock_db()
-    # Request with status=new (valid transition: new → viewed)
+    # TG-origin request with status=new (valid transition: new → viewed). TG-origin
+    # (created_by_user_account_id=None) → the TG DM enqueue path; a bare MagicMock
+    # attr would be truthy and wrongly route to the portal-notification path.
     mock_request = MagicMock()
     mock_request.id = 42
     mock_request.status = RequestStatus.new
+    mock_request.created_by_user_account_id = None
 
     # Mock write_audit so the staff path doesn't break (no DB needed)
     with patch("app.services.request_service.write_audit"), patch(

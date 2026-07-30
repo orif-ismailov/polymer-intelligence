@@ -23,6 +23,8 @@ interface SettingItem {
   value: boolean | string | number;
   default: boolean | string | number;
   is_overridden: boolean;
+  /** Closed value set (e.g. escrow_mode stub|live) — render a select, not free text. */
+  choices?: string[] | null;
 }
 
 interface SourceBrief {
@@ -390,6 +392,20 @@ export default function NewsAdminPage() {
                     on={Boolean(valueOf(item))}
                     onChange={(v) => setEdits((e) => ({ ...e, [item.key]: v }))}
                   />
+                ) : item.choices?.length ? (
+                  /* A closed set (escrow_mode) is a select: a typo in a mode switch
+                     is rejected by the API anyway, so don't offer the chance. */
+                  <select
+                    value={String(valueOf(item))}
+                    onChange={(e) => setEdits((prev) => ({ ...prev, [item.key]: e.target.value }))}
+                    className="w-56 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    {item.choices.map((choice) => (
+                      <option key={choice} value={choice}>
+                        {choice}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <input
                     type={item.type === "int" ? "number" : "text"}

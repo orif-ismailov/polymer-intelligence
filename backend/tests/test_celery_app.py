@@ -20,13 +20,31 @@ def test_celery_app_imports_cleanly() -> None:
 
 
 def test_queue_names_match_compose_flag() -> None:
-    """Queue names must exactly match the compose -Q ingest,parse,notify,default flag."""
+    """Queue names must exactly match the compose -Q flag.
+
+    R1 W2 adds the isolated `verify` queue (company verification checks +
+    external-provider calls) → -Q ingest,parse,notify,default,verify.
+    """
     from app.tasks.celery_app import celery_app  # noqa: PLC0415
 
     queue_names = {q.name for q in celery_app.conf.task_queues}
-    assert queue_names == {"ingest", "parse", "notify", "default"}, (
+    assert queue_names == {"ingest", "parse", "notify", "default", "verify"}, (
         f"Queue names mismatch: {queue_names!r}"
     )
+
+
+def test_verify_queue_present() -> None:
+    """The R1 verify queue must exist so a dead provider can't starve other queues."""
+    from app.tasks.celery_app import celery_app  # noqa: PLC0415
+
+    assert "verify" in {q.name for q in celery_app.conf.task_queues}
+
+
+def test_verification_tasks_route_to_verify_queue() -> None:
+    """app.tasks.verification.* must route onto the verify queue."""
+    from app.tasks.celery_app import celery_app  # noqa: PLC0415
+
+    assert celery_app.conf.task_routes["app.tasks.verification.*"] == {"queue": "verify"}
 
 
 def test_default_queue_is_default() -> None:

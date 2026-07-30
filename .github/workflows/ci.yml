@@ -55,6 +55,16 @@ jobs:
           uv sync --frozen --extra dev
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
+      # WeasyPrint (R3 contract PDF render) needs Pango/Cairo/GDK-Pixbuf + fonts at
+      # runtime; without them the PDF render test skips. Install so it actually runs.
+      - name: Install WeasyPrint system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangocairo-1.0-0 libpangoft2-1.0-0 \
+            libharfbuzz0b libgdk-pixbuf-2.0-0 libcairo2 \
+            fonts-dejavu-core fonts-liberation
+
       # ── Lint: ruff ─────────────────────────────────────────────────────────
       - name: Lint (ruff check)
         run: ruff check .
@@ -83,6 +93,7 @@ jobs:
           S3_SECRET_KEY: ci-s3-secret-key
           S3_BUCKET: ci-bucket
           S3_ENDPOINT: http://localhost:9000
+          VERIFICATION_ENC_KEY: cG9seW1lcl92ZXJpZmljYXRpb25fdGVzdF9rZXlfMzI=
         run: pytest tests/ -q --tb=short
 
   # ── Dashboard: eslint + tsc ────────────────────────────────────────────────
@@ -166,6 +177,7 @@ jobs:
       ANTHROPIC_API_KEY: sk-ant-ci-placeholder
       S3_ACCESS_KEY: ci-minio-access
       S3_SECRET_KEY: ci-minio-secret
+      VERIFICATION_ENC_KEY: cG9seW1lcl92ZXJpZmljYXRpb25fdGVzdF9rZXlfMzI=
       # The dashboard's next.config rewrites /api/* to this origin.
       BACKEND_ORIGIN: http://localhost:8000
       NEXT_TELEMETRY_DISABLED: "1"
@@ -199,6 +211,12 @@ jobs:
         working-directory: backend
         run: |
           nohup uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 > "$RUNNER_TEMP/uvicorn.log" 2>&1 &
+          # Remember the `uv run` PID so the cleanup step can stop it. Leaving it
+          # alive is what broke this job: setup-uv's post step runs
+          # `uv cache prune --ci`, and uv 0.11 refuses to prune a cache that is
+          # still in use (hence its `--force` "ignore in-use checks" flag), so the
+          # prune exited 2 and failed the job *after* the e2e run had passed.
+          echo "API_PID=$!" >> "$GITHUB_ENV"
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 2
@@ -223,6 +241,32 @@ jobs:
       - name: Run e2e
         working-directory: dashboard
         run: npm run e2e
+
+      # Runs even when the e2e step fails, so the API log is available for a
+      # failure that only shows up as a Playwright timeout.
+      - name: Stop API
+        if: ${{ always() }}
+        run: |
+          # Match on the command line rather than the process group: each `run:`
+          # step is its own shell, so by now $API_PID's group belongs to a shell
+          # that has already exited — and a recycled group id is not something to
+          # send a signal to. `uv run` and the uvicorn it spawns both carry this
+          # string, so one pattern reaches the whole tree.
+          pkill -f "uvicorn app.main:app" 2>/dev/null || true
+          # Guarded, not `kill "${API_PID:-0}"` — `kill 0` signals the whole
+          # current process group, i.e. this step's own shell.
+          if [ -n "${API_PID:-}" ]; then kill "$API_PID" 2>/dev/null || true; fi
+          # `kill` returning is not the same as the process being gone, and the
+          # prune runs moments later — wait for the port to actually close.
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:8000/api/v1/health >/dev/null 2>&1 || break
+            sleep 1
+          done
+          if curl -sf http://localhost:8000/api/v1/health >/dev/null 2>&1; then
+            echo "::warning::API on :8000 did not stop; the uv cache prune may fail"
+          fi
+          echo "--- uvicorn log ---"
+          cat "$RUNNER_TEMP/uvicorn.log" || true
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
@@ -261,6 +305,38 @@ jobs:
       - name: Type-check (tsc --noEmit)
         run: npx tsc --noEmit
 
+  # ── Portal (client cabinet — Vite/React FSD, R1 W7) ───────────────────────────
+  portal:
+    name: Portal (eslint · tsc · build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: portal
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: portal/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Type-check (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Build (vite)
+        run: npm run build
+
   # ── Container image build + push (gated on backend + frontend passing) ─────
   # On a branch push (dev/main) this builds AND pushes the three runtime images to
   # GHCR so the server can PULL them instead of compiling on a 2-core box. On PRs it
@@ -270,10 +346,11 @@ jobs:
   #   ghcr.io/<owner>/<repo>-backend    (backend/Dockerfile — api, worker, beat)
   #   ghcr.io/<owner>/<repo>-dashboard  (deploy/Dockerfile.dashboard)
   #   ghcr.io/<owner>/<repo>-webapp     (deploy/Dockerfile.webapp — Vite bundle)
+  #   ghcr.io/<owner>/<repo>-portal     (deploy/Dockerfile.portal — Vite bundle)
   build-images:
     name: Build & push container images
     runs-on: ubuntu-latest
-    needs: [backend, dashboard, webapp]
+    needs: [backend, dashboard, webapp, portal]
     permissions:
       contents: read
       packages: write
@@ -351,6 +428,22 @@ jobs:
           cache-from: type=gha,scope=webapp
           cache-to: type=gha,scope=webapp,mode=max
 
+      - name: Build & push portal bundle
+        # The client cabinet (cabinet.ai-imex.com). Same one-shot-bundle shape as
+        # the webapp: the image carries only /dist, and the `portal-build` compose
+        # service copies it into the nginx-served portal_static volume. Without
+        # this image the deploy job would have to compile Vite on the 2-core box.
+        uses: docker/build-push-action@v6
+        with:
+          context: portal
+          file: deploy/Dockerfile.portal
+          push: ${{ env.PUSH }}
+          tags: |
+            ${{ steps.img.outputs.prefix }}-portal:${{ steps.img.outputs.tag }}
+            ${{ steps.img.outputs.prefix }}-portal:${{ github.sha }}
+          cache-from: type=gha,scope=portal
+          cache-to: type=gha,scope=portal,mode=max
+
   # ── Deploy: only on push to main, and only after CI passes ─────────────────
   # Gated by `needs` (won't run if any listed job fails) and `if` (push-to-main
   # only — never on PRs or dev). Requires the DEPLOY_* secrets. To also gate on
@@ -358,7 +451,7 @@ jobs:
   deploy:
     name: Deploy to server
     runs-on: ubuntu-latest
-    needs: [backend, dashboard, webapp, build-images]
+    needs: [backend, dashboard, webapp, portal, build-images]
     if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
     permissions:
       contents: read
@@ -398,10 +491,13 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             $COMPOSE pull
             $COMPOSE up -d
-            # Webapp bundle: pull the prebuilt image and run the one-shot copy into the
-            # nginx-served webapp_static volume (no --build → nothing compiles on the box).
-            $COMPOSE --profile build pull webapp-build
+            # Static bundles: pull the prebuilt images and run the one-shot copies into
+            # the nginx-served volumes (no --build → nothing compiles on the box).
+            # BOTH are required on every deploy — a stale portal_static serves the
+            # previous cabinet build, and an empty one serves 404 at cabinet.*.
+            $COMPOSE --profile build pull webapp-build portal-build
             $COMPOSE --profile build run --rm webapp-build
+            $COMPOSE --profile build run --rm portal-build
             $COMPOSE restart nginx
             $COMPOSE ps
             docker logout ghcr.io || true
@@ -417,7 +513,7 @@ jobs:
   deploy-dev:
     name: Deploy to dev server
     runs-on: ubuntu-latest
-    needs: [backend, dashboard, webapp, build-images]
+    needs: [backend, dashboard, webapp, portal, build-images]
     if: ${{ github.ref == 'refs/heads/dev' && github.event_name == 'push' }}
     permissions:
       contents: read
@@ -460,10 +556,13 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             $COMPOSE pull
             $COMPOSE up -d
-            # Webapp bundle: pull the prebuilt image and run the one-shot copy into the
-            # nginx-served webapp_static volume (no --build → nothing compiles on the box).
-            $COMPOSE --profile build pull webapp-build
+            # Static bundles: pull the prebuilt images and run the one-shot copies into
+            # the nginx-served volumes (no --build → nothing compiles on the box).
+            # BOTH are required on every deploy — a stale portal_static serves the
+            # previous cabinet build, and an empty one serves 404 at cabinet.*.
+            $COMPOSE --profile build pull webapp-build portal-build
             $COMPOSE --profile build run --rm webapp-build
+            $COMPOSE --profile build run --rm portal-build
             $COMPOSE restart nginx
             $COMPOSE ps
             docker logout ghcr.io || true

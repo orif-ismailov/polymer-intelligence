@@ -22,9 +22,19 @@ the worker boots without "Task not registered" errors.
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from celery.schedules import crontab
 
 BEAT_SCHEDULE: dict[str, dict[str, object]] = {
+    # ── Transactional-outbox dispatcher: every 15 s ──────────────────────────
+    # Polls unpublished domain_events (FOR UPDATE SKIP LOCKED), fans out to
+    # idempotent consumers, stamps published_at. Concurrency-safe: several
+    # instances grab disjoint batches (R1 W2 — company verification outbox).
+    "app.tasks.events.dispatch_domain_events": {
+        "task": "app.tasks.events.dispatch_domain_events",
+        "schedule": timedelta(seconds=15),
+    },
     # ── UZEX offers: every 15 min, 09:00-18:00, Mon-Fri ─────────────────────
     "uzex_fetch_offers": {
         "task": "uzex_fetch_offers",
@@ -119,5 +129,44 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
     "publish_breaking_news": {
         "task": "publish_breaking_news",
         "schedule": crontab(minute="*/10"),
+    },
+    # ── Portal notification retention: daily at 03:30 UTC ─────────────────────
+    # Deletes read notifications older than 90 d and unread older than 365 d so the
+    # portal_notifications table stays bounded (R2 W2 T2.3 / W6 T6.2).
+    "prune_portal_notifications": {
+        "task": "prune_portal_notifications",
+        "schedule": crontab(minute=30, hour=3),
+    },
+    # ── Escrow provider inbox sweep: every 5 minutes (R6 / P7.b T2.2) ────────
+    # The webhook commits the `provider_events` row BEFORE enqueuing its applier,
+    # so a Redis blip costs latency rather than evidence. This is the other half
+    # of that bargain: anything still unprocessed gets applied here. Idempotent.
+    "sweep_provider_events": {
+        "task": "sweep_provider_events",
+        "schedule": crontab(minute="*/5"),
+    },
+    # ── Escrow ↔ bank reconciliation: every 30 minutes (R6 / P7.b T3.1) ───────
+    # The only outbound call on the escrow rail, hence the `verify` queue. Asks
+    # the bank where each live payment stands: an advance is applied through the
+    # same door as a webhook, a divergence (bank released, deal not delivered;
+    # bank refunded) raises an admin alert and is NEVER an auto-transition.
+    # A no-op while `escrow_mode` is `stub` or the live adapter is missing.
+    "reconcile_escrow_payments": {
+        "task": "reconcile_escrow_payments",
+        "schedule": crontab(minute="*/30"),
+    },
+    # ── Contract PDF integrity: daily at 03:00 UTC (R3 TB4.1) ─────────────────
+    # Recomputes stored-PDF sha256 vs document_sha256 for active contracts and
+    # alerts the admin channel on any mismatch (tamper detection).
+    "verify_contract_integrity": {
+        "task": "verify_contract_integrity",
+        "schedule": crontab(minute=0, hour=3),
+    },
+    # ── Contract expiry: daily at 04:00 UTC (R3 TB4.2) ───────────────────────
+    # Expires contracts inactive in pending_counterparty/pending_signatures beyond
+    # contract_pending_ttl_days (default 30) + notifies both parties.
+    "expire_stale_contracts": {
+        "task": "expire_stale_contracts",
+        "schedule": crontab(minute=0, hour=4),
     },
 }

@@ -1,0 +1,26 @@
+# Polymer Intelligence — client portal static bundle builder
+# Build context: portal/
+# Usage (one-shot, via compose): see the `portal-build` service in
+#   deploy/docker-compose.yml (profile: build) and `make portal-bundle`.
+#
+# The portal calls the API at the relative path /api/v1 (proxied same-origin by
+# nginx in prod at cabinet.ai-imex.com), so the build needs no environment or
+# secrets. The final stage carries only the built bundle; the compose service
+# copies /dist into the shared portal_static volume nginx serves at the root of
+# cabinet.ai-imex.com.
+
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Install deps from the lockfile (layer-cached on unchanged manifests).
+COPY package.json package-lock.json* ./
+RUN npm ci --prefer-offline
+
+# Build the Vite bundle (npm run build = tsc -b && vite build → /app/dist).
+COPY . .
+RUN npm run build
+
+# ── Export stage — just the static bundle ─────────────────────────────────────
+FROM alpine:3
+COPY --from=build /app/dist /dist

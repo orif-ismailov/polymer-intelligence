@@ -24,6 +24,7 @@ from app.models.enums import (
     PriceBasis,
     SellerOfferStatus,
 )
+from app.schemas.compliance import ComplianceOut
 
 # ── Create ──────────────────────────────────────────────────────────────────────
 
@@ -189,14 +190,20 @@ class _CatalogOfferFields(BaseModel):
     description: str | None
     published_at: datetime.datetime | None
     files: list[OfferFileRef] = []
+    # Dual-origin (R1 W5): who is behind the offer, regardless of seller/company.
+    # Seller-origin offers keep these at their defaults (origin="seller",
+    # display_name=seller.company_name, company_verified=False).
+    origin: str = "seller"
+    display_name: str | None = None
+    company_verified: bool = False
 
     model_config = {"from_attributes": True}
 
 
 class CatalogOfferOut(_CatalogOfferFields):
-    """A public (approved) catalog offer with the seller's contact block."""
+    """A public (approved) catalog offer. Seller block present only for seller-origin."""
 
-    seller: CatalogSeller
+    seller: CatalogSeller | None = None
     # True when the authenticated caller owns this offer. The catalog list excludes
     # own offers, so this is only ever True on the single-offer detail — the client
     # uses it to hide the "Request an offer" action (a seller can't buy from itself).
@@ -228,16 +235,31 @@ class PublicFeaturedOffer(BaseModel):
     country: str | None
     published_at: datetime.datetime | None
     files: list[OfferFileRef] = []
+    # Dual-origin (R1 W5): public display + verified badge on the anonymous landing.
+    origin: str = "seller"
+    display_name: str | None = None
+    company_verified: bool = False
 
     model_config = {"from_attributes": True}
 
 
 class ModerationOfferOut(_CatalogOfferFields):
-    """A pending offer for the dashboard moderation queue (adds status + full seller contact)."""
+    """A pending offer for the dashboard moderation queue (adds status + seller/company)."""
 
     status: SellerOfferStatus
     created_at: datetime.datetime
-    seller: ModerationSeller
+    seller: ModerationSeller | None = None
+    #: Chemical compliance (P5, FR-C5) — the substance, its regulation level and
+    #: what is still missing, so the moderator decides with it in front of them
+    #: instead of approving a precursor listing by eye. Evaluated live: a licence
+    #: can expire between submission and this screen.
+    compliance: ComplianceOut | None = None
+    #: Laboratory (P6). Attaching a passport sends the offer BACK to this queue
+    #: precisely so staff see the claim before buyers do — which is worth nothing
+    #: unless the card shows it. `lab_verified` distinguishes a passport we
+    #: produced from one the seller uploaded.
+    has_lab_passport: bool = False
+    lab_verified: bool = False
 
 
 class CategoryCount(BaseModel):
@@ -334,8 +356,21 @@ class AdminOfferRequestSeller(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AdminOfferRequestCompany(BaseModel):
+    """Portal-company party block (R2 W4) — registered company + verified badge."""
+
+    id: int
+    name: str | None
+    verified: bool
+
+
 class AdminOfferRequestOut(BaseModel):
-    """A pending inquiry for the dashboard review queue (both parties' contacts)."""
+    """A pending inquiry for the dashboard review queue (both parties' contacts).
+
+    Dual-origin (R2 W4): a TG buyer fills ``buyer``; a portal buyer fills
+    ``buyer_company``. A TG seller fills ``seller``; a company-origin offer fills
+    ``seller_company``. ``origin`` is the inquiry's origin ("client"/"company").
+    """
 
     id: int
     status: OfferRequestStatus
@@ -345,6 +380,9 @@ class AdminOfferRequestOut(BaseModel):
     currency: str | None
     message: str | None
     created_at: datetime.datetime
+    origin: str = "client"
     offer: OfferBrief
-    buyer: AdminOfferRequestBuyer
-    seller: AdminOfferRequestSeller
+    buyer: AdminOfferRequestBuyer | None = None
+    buyer_company: AdminOfferRequestCompany | None = None
+    seller: AdminOfferRequestSeller | None = None
+    seller_company: AdminOfferRequestCompany | None = None

@@ -35,10 +35,13 @@ D-12: Status machine enforced server-side via transition_status.
 from __future__ import annotations
 
 import csv
+import datetime
+import decimal
 import io
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, field_serializer
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_staff_user, require_role
@@ -56,6 +59,7 @@ from app.services import (
     price_analysis_service,
     request_analysis_service,
     request_service,
+    rfq_push_service,
 )
 
 router = APIRouter(prefix="/requests", tags=["dashboard-requests"])
@@ -122,6 +126,9 @@ def _build_request_detail(
         urgency=req.urgency.value if hasattr(req.urgency, "value") else str(req.urgency),
         comment=req.comment,
         assigned_to=req.assigned_to,
+        origin=req.origin,
+        company_id=req.company_id,
+        company_name=_request_company_name(req),
         ai=ai_block,
         price_analysis=price_analysis,
         contact_available=contact_available,
@@ -144,6 +151,7 @@ def list_requests(
     status_filter: str | None = Query(default=None, alias="status"),
     urgency: str | None = None,
     product_id: int | None = None,
+    origin: str | None = Query(default=None, description='"client" (TG) or "company" (portal)'),
 ) -> list[RequestListOut]:
     """GET /requests — return requests ordered newest-first with optional filters.
 
@@ -165,6 +173,10 @@ def list_requests(
         query = query.filter(Request.urgency == urgency)
     if product_id is not None:
         query = query.filter(Request.product_id == product_id)
+    if origin == "company":
+        query = query.filter(Request.company_id.isnot(None))
+    elif origin == "client":
+        query = query.filter(Request.company_id.is_(None))
 
     reqs = query.all()
     return [
@@ -181,11 +193,21 @@ def list_requests(
             currency=r.currency,
             urgency=r.urgency.value if hasattr(r.urgency, "value") else str(r.urgency),
             assigned_to=r.assigned_to,
+            origin=r.origin,
+            company_id=r.company_id,
+            company_name=_request_company_name(r),
             created_at=r.created_at,
             updated_at=r.updated_at,
         )
         for r in reqs
     ]
+
+
+def _request_company_name(req: Request) -> str | None:
+    """The registered company's display name for a portal request, else None."""
+    if req.company is not None:
+        return req.company.short_name or req.company.legal_name
+    return None
 
 
 # ── GET /requests/export CSV stream ───────────────────────────────────────────
@@ -623,3 +645,49 @@ def analyze_request(
     db.commit()
 
     return _build_request_detail(req, db)
+
+
+# ── Notified suppliers (R4 / P4 — T3.4) ───────────────────────────────────────
+
+
+class PushedSupplierOut(BaseModel):
+    """One line of the "who did we tell about this RFQ?" panel."""
+
+    company_id: int
+    company_name: str | None = None
+    score: decimal.Decimal
+    rank: int
+    notified_at: datetime.datetime
+
+    @field_serializer("score")
+    def _score(self, value: decimal.Decimal) -> str:
+        return f"{value:.2f}"
+
+
+@router.get(
+    "/{request_id}/pushed-suppliers",
+    response_model=list[PushedSupplierOut],
+    summary="Suppliers this RFQ was pushed to (staff, read-only)",
+)
+def list_pushed_suppliers(
+    request_id: int,
+    db: Session = Depends(get_db),
+    _current_user: StaffUser = Depends(get_current_staff_user),
+) -> list[PushedSupplierOut]:
+    """GET /requests/{id}/pushed-suppliers — the AI push's own audit trail.
+
+    Read-only by design: the panel exists so the team supporting a buyer can
+    answer "did anyone hear about this, and why them?". Score and rank come from
+    the log rather than being recomputed — the weights change over time, and a
+    rank re-derived today would not explain a push made last month.
+    """
+    return [
+        PushedSupplierOut(
+            company_id=row.company_id,
+            company_name=row.company_name,
+            score=row.score,
+            rank=row.rank,
+            notified_at=row.notified_at,
+        )
+        for row in rfq_push_service.list_pushed(db, request_id)
+    ]

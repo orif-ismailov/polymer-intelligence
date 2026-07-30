@@ -24,6 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
+import { formatTashkent } from "@/lib/tz";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { UrgencyChip } from "@/components/shared/UrgencyChip";
 import { AiAnalysisBlock } from "@/components/requests/AiAnalysisBlock";
@@ -34,6 +35,16 @@ import {
 } from "@/components/ui/sheet";
 
 /** RequestDetailOut from app.schemas.dashboard (04-04). */
+/** One supplier the RFQ push notified (GET /requests/{id}/pushed-suppliers). */
+export interface PushedSupplier {
+  company_id: number;
+  company_name: string | null;
+  /** String on the wire — a score is displayed, never used for arithmetic here. */
+  score: string;
+  rank: number;
+  notified_at: string;
+}
+
 export interface RequestDetail {
   id: number;
   number: string;
@@ -90,6 +101,14 @@ export function RequestDetailPanel() {
   const { data, isLoading, isError } = useQuery<RequestDetail>({
     queryKey: ["request", selectedId],
     queryFn: () => apiFetch<RequestDetail>(`/requests/${selectedId}`),
+    enabled: !!selectedId,
+  });
+
+  // Who the AI push told about this RFQ. Read-only: the panel exists so the team
+  // supporting a buyer can answer "did anyone hear about this, and why them?".
+  const pushed = useQuery<PushedSupplier[]>({
+    queryKey: ["request-pushed", selectedId],
+    queryFn: () => apiFetch<PushedSupplier[]>(`/requests/${selectedId}/pushed-suppliers`),
     enabled: !!selectedId,
   });
 
@@ -280,6 +299,34 @@ export function RequestDetailPanel() {
                             {(file.size_bytes / 1024).toFixed(1)} KB
                           </span>
                         )}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {/* Suppliers the AI push notified (P4 T3.4) — read-only. */}
+              {pushed.data && pushed.data.length > 0 && (
+                <section className="p-4 border-b border-border">
+                  <h3 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3">
+                    {t("sectionPushedSuppliers")}
+                  </h3>
+                  <ul className="space-y-1.5">
+                    {pushed.data.map((row) => (
+                      <li key={row.company_id} className="flex items-baseline gap-2 text-sm">
+                        <span className="w-5 shrink-0 tabular-nums text-foreground-muted">
+                          {row.rank}.
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">{row.company_name}</span>
+                        <span
+                          className="tabular-nums text-xs text-foreground-muted"
+                          title={t("pushedScoreHint")}
+                        >
+                          {row.score}
+                        </span>
+                        <span className="shrink-0 text-xs text-foreground-muted">
+                          {formatTashkent(row.notified_at)}
+                        </span>
                       </li>
                     ))}
                   </ul>

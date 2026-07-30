@@ -99,6 +99,7 @@ JWT_SECRET=smoke_jwt_secret_at_least_thirty_two_chars_long
 S3_ACCESS_KEY=smoke_s3_access_key
 S3_SECRET_KEY=smoke_s3_secret_key
 S3_BUCKET=polymer-files
+VERIFICATION_ENC_KEY=cG9seW1lcl92ZXJpZmljYXRpb25fdGVzdF9rZXlfMzI=
 ENVEOF
 fi
 

@@ -21,12 +21,13 @@ npx next typegen   # regenerate typed-route defs before tsc on a clean checkout 
 
 | Path | Role |
 |------|------|
-| `app/[locale]/...` | Localized App Router tree. `(dashboard)/` route group holds the authed pages (feed, signals, offers, prices, requests, sources, alerts, admin/users). `login/` is outside it. |
+| `app/[locale]/...` | Localized App Router tree. The `(dashboard)/` route group holds the authed pages — signal side: `feed`, `signals`, `offers`, `prices`, `requests`, `sources`, `alerts`; marketplace/sourcing: `moderation`, `offer-requests`, `sourcing`, `partners`, `inventory`, `intel`, `substances` (the regulated-chemistry registry — admin writes, analyst reads), `lab-orders` (the manual analysis queue, oldest first) and `lab-partners` (laboratory directory — admin writes, analyst reads); the `verification/[id]` case page carries the **P7.c gov-registry block** (three immutable-snapshot rows + the operator's "check in the registry" form with a screenshot) and `escrow` carries the **P7.b provider-hold queue**; news: `reports`, `admin/news`; plus `admin/users` and `admin/products`. `login/` is outside the group. |
 | `app/layout.tsx`, `app/[locale]/layout.tsx` | Root + locale shells. |
-| `components/ui/` | shadcn primitives. `components/<domain>/` | feature components (feed, requests, sources, alerts, prices). `components/layout/` | AppShell, Sidebar, LanguageSwitcher. |
+| `components/ui/` | shadcn primitives. `components/<domain>/` | feature components (feed, requests, sources, alerts, prices). `components/shared/` | cross-page chips/cards (`KindChip`, `StatusChip`, `UrgencyChip`, `KpiCard`). `components/layout/` | AppShell, Sidebar, LanguageSwitcher. |
 | `hooks/` | `useSSE.ts` (live feed), `useAuth.ts`, `useDashboardSummary.ts`. |
 | `lib/` | `api.ts` (fetch wrapper on the relative `/api/v1` base), `tz.ts` (Asia/Tashkent display), `queryClient.ts`, `utils.ts`. |
-| `i18n/` | `routing.ts`, `request.ts`, `navigation.ts` (next-intl wiring). `messages/` | `ru`/`uz`/`tr` JSON. |
+| `i18n/` | `routing.ts`, `request.ts`, `navigation.ts` (next-intl wiring). `messages/` | `ru`/`uz`/`tr`/`fa`/`zh` JSON. |
+| `e2e/` | Playwright specs (the `dashboard-e2e` CI job). |
 | `next.config.mjs` | `output: "standalone"`, next-intl plugin, dev `/api/*` rewrite. |
 | `middleware.ts` | next-intl locale routing. |
 
@@ -34,10 +35,21 @@ npx next typegen   # regenerate typed-route defs before tsc on a clean checkout 
 
 - **API base is relative** (`/api/v1`): in prod nginx serves dashboard + backend same-origin (no
   CORS); in dev `next.config.mjs` rewrites `/api/*` → `BACKEND_ORIGIN`. Don't hardcode absolute API URLs.
-- **Locales** `ru`/`uz`/`tr` (ru primary). Add UI strings to all three `messages/*.json`.
+- **Locales** `ru`/`uz`/`tr`/`fa`/`zh` (ru primary). Add UI strings to all five `messages/*.json`.
 - **Live feed** is SSE via `hooks/useSSE.ts` (backend `feed_bus`), not polling.
+- **News Engine admin** lives at `admin/news` (runtime settings, per-article approval queue, news-ops
+  stats, run-parser trigger + live activity panel, AI-status health, edit-source) and `reports`
+  (generate/approve/publish the daily & evening briefs). These back the backend `/admin/settings`,
+  `/admin/news/*`, and `/admin/reports` routes.
 - `next typegen` must run before `tsc` on a clean checkout — `.next/types/routes.d.ts` is gitignored
   and `next-env.d.ts` imports it (CI runs typegen explicitly).
 - Time: store UTC, display Asia/Tashkent via `lib/tz.ts` — mirror of backend `app/core/time.py`.
 - Prod image: `deploy/Dockerfile.dashboard` (Next standalone); served behind nginx at `/dashboard/`.
+- `lib/api.ts` exports `apiFetch` (JSON) and `apiUpload` (multipart — the lab-result PDF,
+  and the P7.c registry screenshot).
+  They are separate because `apiFetch` always sets `Content-Type: application/json`; on a
+  FormData body the browser must set the header itself so it can add the boundary.
+- A **file input keeps the filename it displays** even after the React state behind it is
+  cleared, so a form that resets on success must remount it (`key={n}`) or it will advertise
+  a file it is not going to send. Found in the browser on the P7.c registry form.
 - e2e (`dashboard-e2e` CI job) runs Playwright against a live migrated+seeded API on :8000.

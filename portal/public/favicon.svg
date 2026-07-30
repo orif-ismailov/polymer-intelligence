@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- IMEX AI mark: crossed arrows (import × export) on the brand green.
+       Values are literal here because a favicon can't read CSS custom
+       properties; they mirror --brand / --brand-fg of the dark theme in
+       portal/src/app/styles.css. Keep them in sync. -->
+  <rect width="32" height="32" rx="9" fill="#22c55e"/>
+  <path d="M10 11l12 10M22 11L10 21" stroke="#052e10" stroke-width="3" stroke-linecap="round"/>
+</svg>

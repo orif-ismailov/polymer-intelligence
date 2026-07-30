@@ -2,17 +2,25 @@
 
 import { usePathname } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
+import { useState } from "react";
 import {
   Activity,
+  BadgeCheck,
+  Banknote,
+  FlaskConical,
   BarChart3,
   Bell,
   Boxes,
+  Building2,
   Database,
+  FileText,
   Flame,
   Globe,
   Handshake,
   Home,
   Inbox,
+  LogOut,
+  Microscope,
   Newspaper,
   Package,
   ShieldCheck,
@@ -21,6 +29,7 @@ import {
   Tag,
   Users,
   Workflow,
+  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -57,6 +66,14 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "offers", href: "/offers", icon: Tag },
       { key: "moderation", href: "/moderation", icon: ShieldCheck, minRole: "analyst" },
       { key: "offerRequests", href: "/offer-requests", icon: Inbox, minRole: "analyst" },
+      { key: "verification", href: "/verification", icon: BadgeCheck, minRole: "analyst" },
+      { key: "companies", href: "/companies", icon: Building2, minRole: "analyst" },
+      { key: "contracts", href: "/contracts", icon: FileText, minRole: "analyst" },
+      { key: "deals", href: "/deals", icon: Handshake, minRole: "analyst" },
+      { key: "escrow", href: "/escrow", icon: Banknote, minRole: "analyst" },
+      { key: "substances", href: "/substances", icon: FlaskConical, minRole: "analyst" },
+      { key: "labOrders", href: "/lab-orders", icon: Microscope, minRole: "analyst" },
+      { key: "labPartners", href: "/lab-partners", icon: Building2, minRole: "analyst" },
     ],
   },
   {
@@ -132,10 +149,18 @@ const ROLE_BADGE_CLASSES: Record<string, string> = {
   viewer: "bg-background-tertiary text-foreground-muted",
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  /** Mobile drawer state. Ignored at md+ where the sidebar is a static column. */
+  open?: boolean;
+  /** Close the mobile drawer (navigating, tapping ✕, or the scrim). */
+  onClose?: () => void;
+}
+
+export function Sidebar({ open = false, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const t = useTranslations("nav");
+  const [signingOut, setSigningOut] = useState(false);
 
   const role = user?.role ?? "viewer";
 
@@ -144,9 +169,30 @@ export function Sidebar() {
     return pathname.startsWith(href);
   }
 
+  async function handleLogout() {
+    setSigningOut(true);
+    // logout() hard-navigates to /login, so there is no "finally" to run.
+    await logout();
+  }
+
   return (
     <aside
-      className="flex h-screen w-60 flex-shrink-0 flex-col bg-background-secondary border-e border-border"
+      id="dashboard-nav"
+      className={cn(
+        // Below md the sidebar is an off-canvas drawer: at 375px a fixed 240px
+        // column left ~100px for the content and truncated every label into
+        // fragments. At md+ it is the static column it has always been.
+        "fixed inset-y-0 start-0 z-40 flex h-screen w-60 flex-shrink-0 flex-col",
+        "bg-background-secondary border-e border-border transition-transform duration-200",
+        "md:static md:z-auto",
+        // The hidden state is scoped INSIDE `max-md:` rather than undone by a
+        // `md:` counterpart: Tailwind emits `ltr:`/`rtl:` after the `md:` media
+        // block, and `:where()` gives them equal specificity, so a bare
+        // `ltr:-translate-x-full` would silently win at every width and slide the
+        // desktop sidebar off-screen. `invisible` keeps it out of the tab order
+        // while off-canvas, since a translated element is still focusable.
+        !open && "max-md:invisible max-md:ltr:-translate-x-full max-md:rtl:translate-x-full",
+      )}
       aria-label="Main navigation"
     >
       {/* Logo + wordmark */}
@@ -155,6 +201,14 @@ export function Sidebar() {
         <span className="text-base font-semibold text-accent leading-tight">
           Polymer Intelligence
         </span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="ms-auto rounded-md p-1 text-foreground-muted hover:bg-background-tertiary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
+          aria-label={t("closeMenu")}
+        >
+          <X className="h-5 w-5" aria-hidden="true" />
+        </button>
       </div>
 
       {/* Nav groups */}
@@ -178,6 +232,7 @@ export function Sidebar() {
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        onClick={onClose}
                         className={cn(
                           "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -233,6 +288,19 @@ export function Sidebar() {
               {role}
             </span>
           </div>
+          {/* Sign out. Without this there was no way to end a session at all:
+              the refresh cookie outlives the tab, so the next visit on a shared
+              staff workstation silently resumed as whoever logged in last. */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={signingOut}
+            title={t("logout")}
+            aria-label={t("logout")}
+            className="flex-shrink-0 rounded-md p-2 text-foreground-muted transition-colors hover:bg-background-tertiary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
       </div>
     </aside>

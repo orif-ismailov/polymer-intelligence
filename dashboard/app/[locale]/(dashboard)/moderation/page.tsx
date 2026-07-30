@@ -13,6 +13,18 @@ import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { alreadyModeratedStatus } from "@/lib/conflict";
+
+interface ComplianceBlock {
+  ok: boolean;
+  level: "free" | "docs_required" | "license_required" | "prohibited";
+  regime: string | null;
+  exempt_reason: string | null;
+  missing: Array<{ kind: string; detail: string | null }>;
+  substance: { id: number; name_ru: string; hs_code: string; cas: string | null } | null;
+  /** False while `dangerous_check_enforced` is off — nothing is actually blocked. */
+  enforced: boolean;
+}
 
 interface ModerationOffer {
   id: number;
@@ -26,19 +38,84 @@ interface ModerationOffer {
   currency: string;
   warehouse_city: string | null;
   created_at: string;
+  /** Null for portal-company offers — they have no Telegram seller behind them. */
   seller: {
     company_name: string | null;
     contact_name: string | null;
     phone: string | null;
     telegram_username: string | null;
     is_verified: boolean;
-  };
+  } | null;
+  /** Dual-origin display: "company" | "seller" + the name to show either way. */
+  origin: string;
+  display_name: string | null;
+  company_verified: boolean;
+  /** Chemical compliance (P5, FR-C5) — evaluated now, not when submitted. */
+  compliance: ComplianceBlock | null;
+  /** Laboratory (P6). A passport re-queues the offer so staff see the claim
+   *  before buyers do; `lab_verified` means WE arranged the analysis. */
+  has_lab_passport: boolean;
+  lab_verified: boolean;
+}
+
+type T = (key: string, values?: Record<string, string>) => string;
+
+/** Enum values arrive raw from the API; a moderator must not read `precursor_list_iv`. */
+const REGIME_KEYS = new Set([
+  "precursor_list_iv",
+  "explosive_toxic",
+  "strong_acting",
+  "pkm916_import",
+]);
+const DOC_KEYS = new Set(["sds", "tds", "coa", "certificate"]);
+/** Statuses a lost moderation race can report. Anything else shows raw. */
+const OFFER_STATUS_KEYS = new Set([
+  "draft",
+  "pending_moderation",
+  "approved",
+  "rejected",
+  "archived",
+]);
+
+function regimeLabel(detail: string | null, t: T): string {
+  return detail && REGIME_KEYS.has(detail) ? t(`compliance.regime.${detail}`) : (detail ?? "—");
+}
+
+function docLabel(detail: string | null, t: T): string {
+  return detail && DOC_KEYS.has(detail) ? t(`compliance.docKind.${detail}`) : (detail ?? "—");
+}
+
+function offerStatusLabel(status: string, t: T): string {
+  return OFFER_STATUS_KEYS.has(status) ? t(`conflict.status.${status}`) : status;
+}
+
+/** Turn a refused approval into a sentence naming what compliance is waiting for. */
+function blockedReason(
+  err: unknown,
+  t: (key: string, values?: Record<string, string>) => string,
+): string {
+  const detail = (err as { body?: { detail?: unknown } })?.body?.detail as
+    | { code?: string; missing?: Array<{ kind: string; detail: string | null }> }
+    | undefined;
+  if (detail?.code !== "compliance_blocked") {
+    return err instanceof Error ? err.message : t("error");
+  }
+  const items = (detail.missing ?? []).map((m) =>
+    m.kind === "license"
+      ? t("compliance.missingLicense", { regime: regimeLabel(m.detail, t) })
+      : m.kind === "document"
+        ? t("compliance.missingDocument", { doc: docLabel(m.detail, t) })
+        : t("compliance.missingProhibited", { act: m.detail ?? "—" }),
+  );
+  return `${t("compliance.approveBlocked")} ${items.join("; ")}`;
 }
 
 export default function ModerationPage() {
   const t = useTranslations("moderation");
   const qc = useQueryClient();
   const [notes, setNotes] = useState<Record<number, string>>({});
+  const [blocked, setBlocked] = useState<string | null>(null);
+  const [conflict, setConflict] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery<ModerationOffer[]>({
     queryKey: ["moderation-offers"],
@@ -51,7 +128,27 @@ export default function ModerationPage() {
         method: "POST",
         body: JSON.stringify({ note: note ?? null }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["moderation-offers"] }),
+    onSuccess: () => {
+      setBlocked(null);
+      setConflict(null);
+      void qc.invalidateQueries({ queryKey: ["moderation-offers"] });
+    },
+    onError: (err: unknown) => {
+      // A 409 is two different refusals. `already_moderated`: someone else
+      // decided this item first — say which way it went and drop it from the
+      // queue, so the moderator learns their click did nothing.
+      const settled = alreadyModeratedStatus(err);
+      if (settled !== null) {
+        setBlocked(null);
+        setConflict(t("conflict.alreadyModerated", { status: offerStatusLabel(settled, t) }));
+        void qc.invalidateQueries({ queryKey: ["moderation-offers"] });
+        return;
+      }
+      // Otherwise compliance refused publication (an expired licence, a missing
+      // document). Show WHAT is missing — "409 Conflict" tells a moderator nothing.
+      setConflict(null);
+      setBlocked(blockedReason(err, t));
+    },
   });
 
   return (
@@ -63,6 +160,21 @@ export default function ModerationPage() {
           <p className="text-sm text-foreground-muted mt-1">{t("subtitle")}</p>
         </div>
       </div>
+
+      {conflict && (
+        <p
+          role="status"
+          className="rounded-lg border border-amber-500/50 bg-background-secondary p-3 text-sm text-amber-400"
+        >
+          {conflict}
+        </p>
+      )}
+
+      {blocked && (
+        <p className="rounded-lg border border-red-500/50 bg-background-secondary p-3 text-sm text-red-400">
+          {blocked}
+        </p>
+      )}
 
       {isLoading && <p className="text-sm text-foreground-muted">…</p>}
       {isError && <p className="text-sm text-red-400">{t("error")}</p>}
@@ -89,10 +201,13 @@ export default function ModerationPage() {
                   {o.qty_available != null ? ` · ${o.qty_available.toLocaleString()} ${o.qty_unit}` : ""}
                   {o.warehouse_city ? ` · ${o.warehouse_city}` : ""}
                 </p>
+                {/* A portal-company offer has no `seller` block at all — reading
+                    through it crashed the whole queue. */}
                 <p className="text-sm text-foreground mt-1">
-                  {t("seller")}: {o.seller.company_name || "—"}
-                  {o.seller.phone ? ` · ${o.seller.phone}` : ""}
-                  {o.seller.telegram_username ? ` · @${o.seller.telegram_username}` : ""}
+                  {t("seller")}: {o.display_name || o.seller?.company_name || "—"}
+                  {o.seller?.phone ? ` · ${o.seller.phone}` : ""}
+                  {o.seller?.telegram_username ? ` · @${o.seller.telegram_username}` : ""}
+                  {o.company_verified ? ` · ${t("verified")}` : ""}
                 </p>
               </div>
               <p className="text-lg font-bold text-accent whitespace-nowrap">
@@ -109,6 +224,22 @@ export default function ModerationPage() {
               </p>
             </div>
 
+            {/* The passport is why this offer came back to the queue (P6), so
+                the moderator has to see the claim they are approving. */}
+            {o.has_lab_passport && (
+              <p className="mt-2 text-sm">
+                <span
+                  className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
+                    o.lab_verified
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {t(o.lab_verified ? "lab.verified" : "lab.passport")}
+                </span>
+              </p>
+            )}
+
             <input
               type="text"
               value={notes[o.id] ?? ""}
@@ -116,6 +247,54 @@ export default function ModerationPage() {
               placeholder={t("notePlaceholder")}
               className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
+
+            {o.compliance && (o.compliance.substance || !o.compliance.ok) && (
+              <div className="mt-3 rounded-md border border-border bg-background p-3">
+                <p className="text-xs uppercase tracking-wider text-foreground-muted">
+                  {t("compliance.title")}
+                </p>
+                <p className="mt-1 text-sm text-foreground">
+                  {o.compliance.substance
+                    ? `${o.compliance.substance.name_ru} · ${o.compliance.substance.hs_code}${
+                        o.compliance.substance.cas ? ` · CAS ${o.compliance.substance.cas}` : ""
+                      }`
+                    : t("compliance.noSubstance")}
+                </p>
+                <p className="mt-1 text-sm">
+                  <span
+                    className={
+                      o.compliance.ok
+                        ? "text-foreground-muted"
+                        : o.compliance.enforced
+                          ? "text-red-400"
+                          : "text-amber-400"
+                    }
+                  >
+                    {t(`compliance.level.${o.compliance.level}`)}
+                    {o.compliance.ok
+                      ? ` · ${t("compliance.ok")}`
+                      : o.compliance.enforced
+                        ? ` · ${t("compliance.blocked")}`
+                        : ` · ${t("compliance.wouldBlock")}`}
+                  </span>
+                </p>
+                {o.compliance.missing.length > 0 && (
+                  <ul className="mt-1 list-disc ps-5 text-sm text-foreground-muted">
+                    {o.compliance.missing.map((m, i) => (
+                      <li key={`${m.kind}-${m.detail ?? i}`}>
+                        {m.kind === "license"
+                          ? t("compliance.missingLicense", {
+                              regime: regimeLabel(m.detail, t),
+                            })
+                          : m.kind === "document"
+                            ? t("compliance.missingDocument", { doc: docLabel(m.detail, t) })
+                            : t("compliance.missingProhibited", { act: m.detail ?? "—" })}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <div className="mt-3 flex gap-2">
               <button
