@@ -467,7 +467,7 @@ test("radio cards expose real radios and mark exactly one selected", async ({ pa
    */
   await page.getByTestId("ui-radio-card-buyer").click();
   await expect(group.locator('input[value="buyer"]')).toBeChecked();
-  await expect(group.locator('input[value="supplier"]')).not.toBeChecked();
+  await expect(group.locator('input[value="distributor"]')).not.toBeChecked();
 
   /*
    * The chosen card is outlined in the brand colour, not merely tinted.

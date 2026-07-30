@@ -64,7 +64,7 @@ async function login(page: Page, request: APIRequestContext, phone: string): Pro
  * flow — so this walks the whole wizard rather than stopping at the signature.
  */
 async function onboardVerified(page: Page, tax: string): Promise<void> {
-  await registerCompany(page, tax, { type: "supplier", sign: true });
+  await registerCompany(page, tax, { type: "distributor", sign: true });
 }
 
 test("Stage B: two verified companies sign a contract end-to-end", async ({ browser, request }) => {

@@ -175,7 +175,7 @@ async function sellWith(
   await stubEimzo(context, taxId);
   const page = await context.newPage();
   await login(page, request, uniquePhone());
-  await registerCompany(page, taxId, { type: "supplier", sign: true });
+  await registerCompany(page, taxId, { type: "distributor", sign: true });
 
   const offerId = await publishOffer(page, `${name} ${taxId}`, opts);
   await approveOffer(request, offerId);

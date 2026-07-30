@@ -9,6 +9,7 @@
 import {
   Building2,
   ClipboardList,
+  Factory,
   FileCheck2,
   FlaskConical,
   Handshake,
@@ -30,6 +31,8 @@ export const BuildingIcon = <Building2 {...props} />;
 export const TagIcon = <Package {...props} />;
 export const CogIcon = <Settings {...props} />;
 export const StoreIcon = <Store {...props} />;
+/** Manufacturers directory. */
+export const ManufacturersIcon = <Factory {...props} />;
 /** Buyer↔seller inquiry inbox. */
 export const ChatIcon = <Inbox {...props} />;
 /** Purchase requests / RFQs. */

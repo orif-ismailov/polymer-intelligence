@@ -62,6 +62,8 @@ from app.models.enums import (  # noqa: F401
     DeliveryStatus,
     DocumentReviewStatus,
     EscrowStatus,
+    FactoryRfqDocumentKind,
+    FactoryRfqStatus,
     LabOrderStatus,
     LicenseStatus,
     OfferFileKind,
@@ -95,6 +97,12 @@ from app.models.enums import (
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.lab import LabOrder, LabPartner, SampleRequest  # noqa: F401
+from app.models.manufacturers import (  # noqa: F401
+    FactoryRfq,
+    FactoryRfqDocument,
+    ManufacturerMessage,
+    ManufacturerThread,
+)
 from app.models.marketplace import (  # noqa: F401
     OfferFavorite,
     OfferRequest,
@@ -254,6 +262,13 @@ __all__ = [
     "LabPartner",
     "LabOrder",
     "SampleRequest",
+    # Manufacturers directory + factory RFQ
+    "FactoryRfqStatus",
+    "FactoryRfqDocumentKind",
+    "FactoryRfq",
+    "FactoryRfqDocument",
+    "ManufacturerThread",
+    "ManufacturerMessage",
     # State-registry evidence (R6 / P7.c)
     "RegistrySnapshot",
 ]

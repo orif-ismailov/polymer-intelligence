@@ -93,7 +93,9 @@ function Disc({ step, isDone, isActive }: { step: Step; isDone: boolean; isActiv
       className={cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition-colors",
         isActive && "border-brand bg-brand text-brand-fg shadow-glow",
-        isDone && "border-brand bg-brand-soft text-brand",
+        // Opaque fill — `bg-brand-soft` is a transparent mix, so a connector
+        // ending under the disc would read as a stroke through the circle.
+        isDone && "border-brand bg-brand text-brand-fg",
         !isActive && !isDone && "border-border bg-surface text-text-subtle",
       )}
     >
@@ -107,6 +109,11 @@ function Disc({ step, isDone, isActive }: { step: Step; isDone: boolean; isActiv
  * so the row is laid out as equal columns with the line drawn as an absolutely
  * positioned segment across the gap. Floating the line in normal flow (the
  * `inline` variant's trick) would push the labels apart instead.
+ *
+ * The segment is inset by half the disc (`1rem` = w-8 / 2) from both centres so
+ * it never enters either circle — a later column's line would otherwise paint
+ * over the previous disc (sibling stacking), and a soft/transparent fill would
+ * show the stroke through the tick.
  */
 function StackedStepper({
   steps,
@@ -122,6 +129,9 @@ function StackedStepper({
       {steps.map((step) => {
         const isDone = isComplete(step.id);
         const isActive = step.id === current;
+        // Colour the segment from the *previous* step's completion: green once
+        // that step is done (or the current one is active and we are arriving).
+        const prevDone = step.id > 1 && isComplete(step.id - 1);
         return (
           <li key={step.id} className="relative flex min-w-0 flex-1 flex-col items-center gap-1.5">
             {step.id > 1 ? (
@@ -129,12 +139,14 @@ function StackedStepper({
                 aria-hidden="true"
                 className={cn(
                   // top-4 = the disc's vertical centre (h-8).
-                  "absolute end-1/2 top-4 h-px w-full",
-                  isDone || isActive ? "bg-brand" : "bg-border",
+                  // Inset 1rem from each centre so the stroke stops at the rim.
+                  "pointer-events-none absolute top-4 h-px",
+                  "start-[calc(-50%+1rem)] end-[calc(50%+1rem)]",
+                  prevDone || isActive ? "bg-brand" : "bg-border",
                 )}
               />
             ) : null}
-            <span className="relative z-10">
+            <span className="relative z-10 bg-bg">
               <Disc step={step} isDone={isDone} isActive={isActive} />
             </span>
             {/* Wraps rather than truncates: five steps on a 375 px phone give

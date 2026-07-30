@@ -807,6 +807,49 @@ CREATE TABLE contract_signatures (
 ALTER TABLE companies ADD COLUMN logo_storage_path text;
 ```
 
+### Manufacturer registration profile (migration 0031)
+
+Мокап регистрации производителя (`docs/new-design/companys_list.jpeg`) добавляет
+фактический адрес завода, регистрационный номер и анкету производства/требований
+к покупателям. Адрес и номер — отдельные text-колонки; остальное — JSONB
+`manufacturer_profile` (NULL у не-производителей). Пять новых kind'ов в
+`verification_document_kind` закрывают слоты сертификатов завода.
+
+```sql
+ALTER TABLE companies ADD COLUMN actual_address text;
+ALTER TABLE companies ADD COLUMN registration_number text;
+ALTER TABLE companies ADD COLUMN manufacturer_profile jsonb;
+-- + ALTER TYPE verification_document_kind ADD VALUE … (production_license,
+--   export_license, certificate_of_origin, iso_certificate, compliance_certificate)
+```
+
+### Logistics registration profile (migration 0032)
+
+Мокап регистрации логиста (`docs/new-design/logist_reg_flow.jpeg`) добавляет
+анкету услуг, географии (страны-поставщики/получатели + популярные маршруты),
+специализации грузов, возможностей компании и модели тарифа. Всё — JSONB
+`logistics_profile` (NULL у не-логистов). Три новых kind'а закрывают слоты
+документов перевозчика, которых ещё не было в enum.
+
+```sql
+ALTER TABLE companies ADD COLUMN logistics_profile jsonb;
+-- + ALTER TYPE verification_document_kind ADD VALUE … (carrier_license,
+--   liability_insurance, service_contract)
+```
+
+### Laboratory registration profile (migration 0033)
+
+Мокап регистрации лаборатории (`docs/new-design/labaratory_reg_flow.jpeg`)
+добавляет город, сайт, email, телефон и описание на шаге «Основная информация».
+Всё — JSONB `laboratory_profile` (NULL у не-лабораторий). Kind
+`accreditation_certificate` закрывает слот аккредитации рядом с уже
+существующими `iso_certificate` / `registration_certificate`.
+
+```sql
+ALTER TABLE companies ADD COLUMN laboratory_profile jsonb;
+-- + ALTER TYPE verification_document_kind ADD VALUE … (accreditation_certificate)
+```
+
 ### R4 / P2 — Сделки: Deal, Trade Room, отклики на RFQ (migration 0023_deals)
 
 Блок A ТЗ deal-lifecycle (FR-D1–D10). Ядро домена: `Deal` — комната, в которой две
@@ -1337,8 +1380,86 @@ ALTER TABLE seller_offers ADD COLUMN key_properties jsonb;   -- ["MFI: 3.0 г/10
 ALTER TABLE seller_offers ADD COLUMN applications   jsonb;   -- ["Литьё под давлением", …]
 ```
 
+### Manufacturers directory + factory RFQ (migration 0034)
+
+Мокап покупки у завода (`docs/new-design/manufacturer_flow.jpeg`) добавляет
+каталог подтверждённых производителей, расширенный RFQ (документы + коммерческие
+условия + контакт) и 1:1-чат покупатель↔завод — отдельно от лёгкого inquiry
+трейдеру (`offer_requests`).
+
+```sql
+CREATE TYPE factory_rfq_status AS ENUM (
+  'submitted','viewed','in_progress','quoted','closed','rejected'
+);
+CREATE TYPE factory_rfq_document_kind AS ENUM (
+  'founding_docs','registration_certificate','tax_id',
+  'bank_details','import_export_license'
+);
+
+CREATE TABLE factory_rfqs (
+  id bigserial PRIMARY KEY,
+  public_id uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  number text NOT NULL UNIQUE,                 -- FRQ-YYYY-NNNNNN
+  buyer_company_id bigint NOT NULL REFERENCES companies(id),
+  manufacturer_company_id bigint NOT NULL REFERENCES companies(id),
+  offer_id integer NOT NULL REFERENCES seller_offers(id),
+  created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  quantity numeric(14,3) NOT NULL,
+  qty_unit text NOT NULL DEFAULT 'MT',
+  target_price numeric(14,2),
+  currency varchar(3) NOT NULL DEFAULT 'USD',
+  incoterms text, destination_port text, desired_delivery_date date,
+  payment_method text, offer_validity text, performance_guarantee text,
+  inspection_requirement text, additional_requirements text,
+  contact_name text NOT NULL, contact_position text, contact_email text,
+  contact_phone text NOT NULL, contact_telegram text,
+  status factory_rfq_status NOT NULL DEFAULT 'submitted',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (buyer_company_id <> manufacturer_company_id),
+  CHECK (quantity > 0)
+);
+CREATE INDEX ix_factory_rfqs_buyer_status ON factory_rfqs(buyer_company_id, status);
+CREATE INDEX ix_factory_rfqs_manufacturer_status
+  ON factory_rfqs(manufacturer_company_id, status);
+
+CREATE TABLE factory_rfq_documents (
+  id bigserial PRIMARY KEY,
+  factory_rfq_id bigint NOT NULL REFERENCES factory_rfqs(id) ON DELETE CASCADE,
+  kind factory_rfq_document_kind NOT NULL,
+  file_name text NOT NULL, mime_type text NOT NULL,
+  size_bytes integer NOT NULL, storage_path text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (factory_rfq_id, kind)
+);
+
+CREATE TABLE manufacturer_threads (
+  id bigserial PRIMARY KEY,
+  buyer_company_id bigint NOT NULL REFERENCES companies(id),
+  manufacturer_company_id bigint NOT NULL REFERENCES companies(id),
+  created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (buyer_company_id <> manufacturer_company_id),
+  UNIQUE (buyer_company_id, manufacturer_company_id)
+);
+
+CREATE TABLE manufacturer_messages (
+  id bigserial PRIMARY KEY,
+  thread_id bigint NOT NULL REFERENCES manufacturer_threads(id) ON DELETE CASCADE,
+  author_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  author_company_id bigint NOT NULL REFERENCES companies(id),
+  body text NOT NULL DEFAULT '',
+  file_storage_path text, file_name text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (body <> '' OR file_storage_path IS NOT NULL)
+);
+CREATE INDEX ix_manufacturer_messages_thread ON manufacturer_messages(thread_id, id);
+```
+
 ## История версий
 
+- v1.15 (30.07.2026): каталог заводов + factory RFQ + чат (миграция 0034_manufacturers_module): enum'ы `factory_rfq_status` / `factory_rfq_document_kind`; таблицы `factory_rfqs` (CHECK parties distinct + quantity > 0, номер `FRQ-YYYY-NNNNNN`), `factory_rfq_documents` (UNIQUE kind на RFQ), `manufacturer_threads` (UNIQUE пара buyer×manufacturer), `manufacturer_messages` (CHECK текст-или-файл, как deal chat).
 - v1.14 (30.07.2026): карточка товара (миграция 0030_offer_product_facts): `seller_offers += manufacturer / key_properties / applications` — три факта с листов «Добавление товара», которым не было места в строке оффера; чипы как JSONB-массивы (свободный текст, по значению не ищется), `manufacturer` текстом, а не ссылкой на `companies`; все колонки nullable, NULL читается схемой как `[]`.
 - v1.13 (28.07.2026): R6/P7 — гос-реестры (миграция 0029_gov_registry): `verification_check_type += gov_registry / vat_status`; таблица `registry_snapshots` — append-only (нет `updated_at`, нет UPDATE-пути), `source` различает ответ API и транскрипцию оператора, скриншот + sha256 как evidence, `fetched_at` отдельно от `created_at`. Заодно починен эвалюатор R1: `unavailable` перестаёт блокировать кейс после исчерпания ретраев (иначе мёртвый провайдер отключал ручной путь). P7.b (входящий контур эскроу) схемы не потребовал — `provider_events` и nullable `*_marked_by` приехали с P3.
 - v1.12 (28.07.2026): R5/P6 — лаборатории и образцы (миграция 0028_lab): enum'ы `lab_order_status`, `sample_request_status`, `offer_file_kind += lab_passport`; таблицы `lab_partners`, `lab_orders` (CHECK «заявка о чём-то» + CHECK «`done` ссылается на паспорт», результат указателем на файловую строку), `sample_requests` (продавец копией, частичный UQ на один живой запрос); `seller_offers += samples_available / sample_price / sample_dispatch_days / lab_verified`.

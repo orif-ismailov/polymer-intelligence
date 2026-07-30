@@ -69,7 +69,7 @@ export function RegistrationDone({ companyId }: RegistrationDoneProps) {
 
   return (
     <div className="relative" data-testid="wizard-done">
-      <Confetti className="-top-6 h-64" />
+      <Confetti className="-top-6 h-64 " />
 
       <div className="relative flex flex-col items-center pt-6 text-center">
         <SuccessMark size="lg" />
@@ -88,12 +88,16 @@ export function RegistrationDone({ companyId }: RegistrationDoneProps) {
         <CardBody className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm text-text-muted">{t("wizard.done.statusLabel")}</p>
+              <p className="text-sm text-text-muted">
+                {t("wizard.done.statusLabel")}
+              </p>
               <p
                 className={`mt-1 text-xl font-semibold ${verified ? "text-brand" : "text-text"}`}
                 data-testid="wizard-done-status"
               >
-                {verified ? t("wizard.done.verified") : t(`companyStatus.${company.status}`)}
+                {verified
+                  ? t("wizard.done.verified")
+                  : t(`companyStatus.${company.status}`)}
               </p>
             </div>
             <span className={verified ? "text-brand" : "text-text-subtle"}>
@@ -102,7 +106,10 @@ export function RegistrationDone({ companyId }: RegistrationDoneProps) {
           </div>
 
           <SpecList variant="justified" columns={1}>
-            <SpecItem label={t("wizard.done.companyId")} value={company.public_id} />
+            <SpecItem
+              label={t("wizard.done.companyId")}
+              value={company.public_id}
+            />
             <SpecItem
               label={t("wizard.done.registeredAt")}
               value={formatDateShort(company.registration_date, lang)}
@@ -110,18 +117,27 @@ export function RegistrationDone({ companyId }: RegistrationDoneProps) {
             />
             <SpecItem
               label={t("wizard.done.checkStatus")}
-              value={t(`caseStatus.${company.case?.status ?? company.active_case?.status ?? "draft"}`)}
+              value={t(
+                `caseStatus.${company.case?.status ?? company.active_case?.status ?? "draft"}`,
+              )}
             />
             <SpecItem
               label={t("wizard.done.accessLevel")}
-              value={role ? t(`businessRole.${role}`) : t("common.notSpecified")}
+              value={
+                role ? t(`businessRole.${role}`) : t("common.notSpecified")
+              }
             />
           </SpecList>
         </CardBody>
       </Card>
 
       <div className="mt-6 space-y-3">
-        <Button fullWidth size="lg" onClick={() => void navigate("/")} data-testid="wizard-done-cabinet">
+        <Button
+          fullWidth
+          size="lg"
+          onClick={() => void navigate("/")}
+          data-testid="wizard-done-cabinet"
+        >
           {t("wizard.done.toCabinet")}
         </Button>
         <button

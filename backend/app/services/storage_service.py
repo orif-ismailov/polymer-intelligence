@@ -564,6 +564,52 @@ def store_deal_file(
     return key, mime, hashlib.sha256(content).hexdigest()
 
 
+def store_factory_rfq_file(
+    rfq_id: int, content: bytes, filename: str
+) -> tuple[str, str]:
+    """Validate + store a factory-RFQ compliance document; return (key, mime)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    mime = validate_upload(content, filename)
+    if mime not in DEAL_FILE_MIMES:
+        raise ValueError("invalid_file_type")
+
+    basename = os.path.basename(filename) or "upload"
+    safe = basename.replace("/", "_").replace("\\", "_").replace("..", "__")
+    key = f"factory-rfqs/{rfq_id}/{secrets.token_hex(8)}-{safe}"
+
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET,
+        Key=key,
+        Body=content,
+        ContentType=mime,
+    )
+    return key, mime
+
+
+def store_manufacturer_chat_file(
+    thread_id: int, content: bytes, filename: str
+) -> tuple[str, str]:
+    """Validate + store a manufacturer-thread chat attachment; return (key, mime)."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    mime = validate_upload(content, filename)
+    if mime not in DEAL_FILE_MIMES:
+        raise ValueError("invalid_file_type")
+
+    basename = os.path.basename(filename) or "upload"
+    safe = basename.replace("/", "_").replace("\\", "_").replace("..", "__")
+    key = f"manufacturer-chat/{thread_id}/{secrets.token_hex(8)}-{safe}"
+
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET,
+        Key=key,
+        Body=content,
+        ContentType=mime,
+    )
+    return key, mime
+
+
 def get_object_bytes(key: str) -> bytes:
     """Fetch an S3 object's raw bytes (contract PDF integrity checks)."""
     from app.core.storage import s3_client  # noqa: PLC0415

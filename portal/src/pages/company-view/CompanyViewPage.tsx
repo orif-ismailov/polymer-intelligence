@@ -1,92 +1,106 @@
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
-import { CompanyStatusBadge, useCompany } from "@/entities/company";
+import { useCompanies } from "@/entities/company";
+import { usePublicCompanyProfile } from "@/entities/market";
+import { CompanyProfileView } from "@/features/company-profile";
+import { ApiError } from "@/shared/api";
 import {
-  Alert,
+  Button,
   ErrorView,
   LinkButton,
   LoadingView,
-  PageHeader,
-  Skeleton,
+  StickyActionBar,
 } from "@/shared/ui";
-import { ApiError } from "@/shared/api";
 
-import { BankSection } from "./sections/BankSection";
-import { DocumentsSection } from "./sections/DocumentsSection";
-import { LicensesSection } from "./sections/LicensesSection";
-import { ProfileSection } from "./sections/ProfileSection";
-import { RolesSection } from "./sections/RolesSection";
+import { CompanyManagePage } from "./CompanyManagePage";
 
-/** Company statuses in which profile/bank/doc mutations are still allowed. */
-const EDITABLE_STATUSES = new Set(["draft", "pending_verification", "rejected"]);
-
+/**
+ * `/companies/:id` — same public profile sheet as `/sellers/:id` when the
+ * company is verified. Draft / pending members fall through to the manage
+ * editor (nothing public to show yet).
+ */
 export function CompanyViewPage() {
   const { t } = useTranslation();
   const params = useParams<{ companyId: string }>();
   const companyId = Number(params.companyId);
-  const query = useCompany(Number.isInteger(companyId) ? companyId : null);
+  const validId = Number.isInteger(companyId) ? companyId : null;
 
-  if (query.isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-24 w-full" />
-        <LoadingView />
-      </div>
-    );
-  }
+  const publicQuery = usePublicCompanyProfile(validId);
+  const companiesQuery = useCompanies();
+  const isMember =
+    validId != null && companiesQuery.data?.some((c) => c.id === validId) === true;
 
-  if (query.isError) {
-    const notFound = query.error instanceof ApiError && query.error.status === 404;
+  if (validId == null) {
     return (
-      <ErrorView
-        title={notFound ? t("errors.notFound") : t("errors.loadFailed")}
-        message={notFound ? t("errors.notFoundBody") : undefined}
-        retryLabel={notFound ? undefined : t("common.retry")}
-        onRetry={notFound ? undefined : () => void query.refetch()}
-      >
-        {notFound ? <LinkButton to="/companies">{t("nav.companies")}</LinkButton> : null}
+      <ErrorView title={t("errors.notFound")} message={t("errors.notFoundBody")}>
+        <LinkButton to="/companies">{t("nav.companies")}</LinkButton>
       </ErrorView>
     );
   }
 
-  const company = query.data;
-  if (!company) return null;
+  if (publicQuery.isLoading || companiesQuery.isLoading) {
+    return <LoadingView label={t("common.loading")} />;
+  }
 
-  const editable = EDITABLE_STATUSES.has(company.status);
-  const name = company.legal_name ?? company.short_name ?? t("companies.noName");
-
-  return (
-    <div className="space-y-5">
-      {/* Sheet …46 leads a company profile with the name, its trust badge and the
-          two actions — not with a card wrapped around all three. */}
-      <PageHeader
+  if (publicQuery.isSuccess && publicQuery.data) {
+    return (
+      <CompanyProfileView
+        companyId={validId}
         backTo="/companies"
-        backLabel={t("nav.companies")}
-        title={name}
-        // The public_id was here too; it is now shown once, in the profile grid's
-        // «Публичный ID» row, instead of twice on one screen.
-        subtitle={`${t("companies.taxId")}: ${company.tax_id}`}
-        badge={<CompanyStatusBadge status={company.status} />}
-        actions={
-          <>
-            <LinkButton variant="outline" to={`/companies/${company.id}/verification`}>
-              {t("company.goToVerification")}
-            </LinkButton>
-            {company.status === "verified" ? (
-              <LinkButton to="/offers/new">{t("company.createOffer")}</LinkButton>
-            ) : null}
-          </>
+        ownerActions={
+          isMember ? (
+            <StickyActionBar>
+              <div className="flex w-full flex-wrap gap-2" data-testid="company-owner-actions">
+                <LinkButton
+                  variant="outline"
+                  size="lg"
+                  className="min-w-0 flex-1"
+                  to={`/companies/${validId}/manage`}
+                >
+                  {t("company.manage")}
+                </LinkButton>
+                <LinkButton
+                  variant="outline"
+                  size="lg"
+                  className="min-w-0 flex-1"
+                  to={`/companies/${validId}/verification`}
+                >
+                  {t("company.goToVerification")}
+                </LinkButton>
+                <LinkButton size="lg" className="min-w-0 flex-[1.4]" to="/offers/new">
+                  {t("company.createOffer")}
+                </LinkButton>
+              </div>
+            </StickyActionBar>
+          ) : undefined
         }
       />
+    );
+  }
 
-      {!editable ? <Alert tone="info">{t("company.notEditable")}</Alert> : null}
+  // Public profile 404 — member of a not-yet-verified company → manage editor.
+  if (isMember) {
+    return <CompanyManagePage />;
+  }
 
-      <ProfileSection company={company} editable={editable} />
-      <RolesSection company={company} />
-      <BankSection company={company} editable={editable} />
-      <DocumentsSection company={company} editable={editable} />
-      <LicensesSection companyId={company.id} />
-    </div>
+  const notFound =
+    publicQuery.error instanceof ApiError && publicQuery.error.status === 404;
+
+  return (
+    <ErrorView
+      title={notFound ? t("companyProfile.notFound") : t("errors.loadFailed")}
+      message={notFound ? t("errors.notFoundBody") : undefined}
+      retryLabel={notFound ? undefined : t("common.retry")}
+      onRetry={notFound ? undefined : () => void publicQuery.refetch()}
+    >
+      {notFound ? (
+        <LinkButton to="/companies">{t("nav.companies")}</LinkButton>
+      ) : (
+        <Button variant="outline" onClick={() => void publicQuery.refetch()}>
+          {t("common.retry")}
+        </Button>
+      )}
+    </ErrorView>
   );
 }

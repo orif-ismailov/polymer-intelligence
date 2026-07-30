@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { CompaniesPage } from "@/pages/companies";
 import { CompanyCreatePage, CompanyCreatedPage } from "@/pages/company-create";
-import { CompanyViewPage } from "@/pages/company-view";
+import { CompanyManagePage, CompanyViewPage } from "@/pages/company-view";
 import { ContractCreatePage, ContractDetailPage, ContractsPage } from "@/pages/contracts";
 import { DealDetailPage, DealsPage } from "@/pages/deals";
 import { UiKitPage } from "@/pages/dev-ui";
@@ -10,6 +10,13 @@ import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
 import { LabOrdersPage } from "@/pages/lab-orders";
 import { LoginPage } from "@/pages/login";
+import {
+  FactoryRfqDonePage,
+  FactoryRfqPage,
+  ManufacturerChatPage,
+  ManufacturerDetailPage,
+  ManufacturersPage,
+} from "@/pages/manufacturers";
 import {
   FavoritesPage,
   MarketOfferPage,
@@ -77,6 +84,13 @@ export const router = createBrowserRouter([
           { path: "/market/favorites", element: <FavoritesPage /> },
           { path: "/market/:offerId", element: <MarketOfferPage /> },
           { path: "/sellers/:companyId", element: <SellerProfilePage /> },
+          { path: "/manufacturers", element: <ManufacturersPage /> },
+          // Literal segments before the `:companyId` param route, same reason
+          // as `/market/favorites` above.
+          { path: "/manufacturers/rfqs/:rfqId/done", element: <FactoryRfqDonePage /> },
+          { path: "/manufacturers/:companyId/chat", element: <ManufacturerChatPage /> },
+          { path: "/manufacturers/:companyId/rfq/:offerId", element: <FactoryRfqPage /> },
+          { path: "/manufacturers/:companyId", element: <ManufacturerDetailPage /> },
           { path: "/deals", element: <DealsPage /> },
           { path: "/deals/:dealId", element: <DealDetailPage /> },
           { path: "/inquiries", element: <InquiriesPage /> },
@@ -92,8 +106,9 @@ export const router = createBrowserRouter([
           { path: "/news/:signalId", element: <NewsArticlePage /> },
           { path: "/notifications", element: <NotificationsPage /> },
           { path: "/companies", element: <CompaniesPage /> },
-          { path: "/companies/:companyId", element: <CompanyViewPage /> },
+          { path: "/companies/:companyId/manage", element: <CompanyManagePage /> },
           { path: "/companies/:companyId/verification", element: <VerificationStatusPage /> },
+          { path: "/companies/:companyId", element: <CompanyViewPage /> },
           { path: "/offers", element: <OffersPage /> },
           // The add-product flow is URL-addressable by step. Literal segments
           // before the `:offerId` param route, or "new" is read as an offer id.

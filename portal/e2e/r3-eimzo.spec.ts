@@ -77,7 +77,7 @@ test("E-IMZO onboarding: the certificate registers and confirms the company", as
   await login(page, request, phone);
 
   await page.goto("/companies/new/1");
-  await page.getByTestId("account-type-supplier").click();
+  await page.getByTestId("account-type-distributor").click();
 
   // No tax id is typed anywhere: the certificate subject carries the STIR, and
   // the signer creates the company from it. That is the point of signing first.

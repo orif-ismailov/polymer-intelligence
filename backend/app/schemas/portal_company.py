@@ -32,6 +32,111 @@ class CompanyCreateIn(BaseModel):
     tax_id: str = Field(max_length=32)
 
 
+class ManufacturerProfileIn(BaseModel):
+    """Production + buyer-requirement facts for a manufacturer registration.
+
+    Stored as `companies.manufacturer_profile` JSONB. Other account types leave
+    the column NULL; the wizard only sends this blob when the chosen type is
+    manufacturer.
+    """
+
+    production_type: str | None = Field(default=None, max_length=200)
+    main_products: str | None = Field(default=None, max_length=500)
+    annual_capacity_tons: float | None = Field(default=None, ge=0, le=1_000_000_000)
+    production_lines: int | None = Field(default=None, ge=0, le=10_000)
+    employees: int | None = Field(default=None, ge=0, le=10_000_000)
+    markets: list[str] = Field(default_factory=list, max_length=4)
+    export_countries: list[str] = Field(default_factory=list, max_length=64)
+    founded_year: int | None = Field(default=None, ge=1800, le=2100)
+    iso_certification: str | None = Field(default=None, max_length=200)
+    moq_tons: float | None = Field(default=None, ge=0, le=1_000_000_000)
+    min_annual_volume_tons: float | None = Field(default=None, ge=0, le=1_000_000_000)
+    financial_requirements: dict[str, bool] = Field(default_factory=dict)
+    additional_requirements: list[str] = Field(default_factory=list, max_length=32)
+    additional_other: str | None = Field(default=None, max_length=500)
+
+    @field_validator("markets", "export_countries", "additional_requirements", mode="after")
+    @classmethod
+    def _clean_string_lists(cls, value: list[str]) -> list[str]:
+        return [item.strip() for item in value if item.strip()][:64]
+
+    @field_validator(
+        "production_type",
+        "main_products",
+        "iso_certification",
+        "additional_other",
+        mode="after",
+    )
+    @classmethod
+    def _strip_optional(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
+
+class LogisticsProfileIn(BaseModel):
+    """Services / geography / cargo / tariff facts for a logistics registration.
+
+    Stored as `companies.logistics_profile` JSONB. Other account types leave the
+    column NULL; the wizard only sends this blob for the logistics account type
+    (`docs/new-design/logist_reg_flow.jpeg`).
+    """
+
+    city: str | None = Field(default=None, max_length=200)
+    services: list[str] = Field(default_factory=list, max_length=32)
+    from_countries: list[str] = Field(default_factory=list, max_length=64)
+    to_countries: list[str] = Field(default_factory=list, max_length=64)
+    popular_routes: list[str] = Field(default_factory=list, max_length=64)
+    cargo_types: list[str] = Field(default_factory=list, max_length=32)
+    capabilities: list[str] = Field(default_factory=list, max_length=32)
+    tariff_model: str | None = Field(default=None, max_length=100)
+
+    @field_validator(
+        "services",
+        "from_countries",
+        "to_countries",
+        "popular_routes",
+        "cargo_types",
+        "capabilities",
+        mode="after",
+    )
+    @classmethod
+    def _clean_string_lists(cls, value: list[str]) -> list[str]:
+        return [item.strip() for item in value if item.strip()][:64]
+
+    @field_validator("city", "tariff_model", mode="after")
+    @classmethod
+    def _strip_optional(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
+
+class LaboratoryProfileIn(BaseModel):
+    """Contact / description facts for a laboratory registration.
+
+    Stored as `companies.laboratory_profile` JSONB. Other account types leave the
+    column NULL; the wizard only sends this blob for the laboratory account type
+    (`docs/new-design/labaratory_reg_flow.jpeg` — «Основная информация»).
+    """
+
+    city: str | None = Field(default=None, max_length=200)
+    website: str | None = Field(default=None, max_length=500)
+    email: str | None = Field(default=None, max_length=320)
+    phone: str | None = Field(default=None, max_length=64)
+    description: str | None = Field(default=None, max_length=4000)
+
+    @field_validator("city", "website", "email", "phone", "description", mode="after")
+    @classmethod
+    def _strip_optional(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
+
 class CompanyProfileUpdateIn(BaseModel):
     """Declared profile fields.
 
@@ -48,13 +153,25 @@ class CompanyProfileUpdateIn(BaseModel):
     short_name: str | None = Field(default=None, max_length=200)
     legal_form: str | None = Field(default=None, max_length=100)
     legal_address: str | None = Field(default=None, max_length=500)
+    actual_address: str | None = Field(default=None, max_length=500)
+    registration_number: str | None = Field(default=None, max_length=100)
     director_name: str | None = Field(default=None, max_length=200)
     #: Date on the registration certificate — collected by the wizard's
     #: «Дата регистрации компании» field and shown back on the company card.
     registration_date: datetime.date | None = None
+    manufacturer_profile: ManufacturerProfileIn | None = None
+    logistics_profile: LogisticsProfileIn | None = None
+    laboratory_profile: LaboratoryProfileIn | None = None
 
     @field_validator(
-        "legal_name", "short_name", "legal_form", "legal_address", "director_name", mode="after"
+        "legal_name",
+        "short_name",
+        "legal_form",
+        "legal_address",
+        "actual_address",
+        "registration_number",
+        "director_name",
+        mode="after",
     )
     @classmethod
     def _strip_non_blank(cls, value: str | None) -> str | None:
@@ -149,8 +266,13 @@ class CompanyDetailOut(BaseModel):
     short_name: str | None = None
     legal_form: str | None = None
     legal_address: str | None = None
+    actual_address: str | None = None
+    registration_number: str | None = None
     director_name: str | None = None
     registration_date: datetime.date | None = None
+    manufacturer_profile: dict[str, object] | None = None
+    logistics_profile: dict[str, object] | None = None
+    laboratory_profile: dict[str, object] | None = None
     status: str
     identity_locked: bool = False
     verified_at: datetime.datetime | None = None

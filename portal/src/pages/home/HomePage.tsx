@@ -12,6 +12,7 @@ import { CaseStatusBadge } from "@/entities/verification";
 import {
   Building2,
   ClipboardList,
+  Factory,
   Handshake,
   Inbox,
   Package,
@@ -170,6 +171,12 @@ export function HomePage() {
             title={t("nav.market")}
             hint={t("market.subtitle")}
             icon={<Store size={18} strokeWidth={1.75} aria-hidden />}
+          />
+          <ModuleCard
+            to="/manufacturers"
+            title={t("nav.manufacturers")}
+            hint={t("manufacturers.subtitle")}
+            icon={<Factory size={18} strokeWidth={1.75} aria-hidden />}
           />
           <ModuleCard
             to="/requests"

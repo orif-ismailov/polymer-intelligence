@@ -68,6 +68,15 @@ export const DOCUMENT_KINDS = [
   "certificate",
   "power_of_attorney",
   "other",
+  "production_license",
+  "export_license",
+  "certificate_of_origin",
+  "iso_certificate",
+  "compliance_certificate",
+  "carrier_license",
+  "liability_insurance",
+  "service_contract",
+  "accreditation_certificate",
 ] as const;
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
 

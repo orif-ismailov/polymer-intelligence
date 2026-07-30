@@ -18,13 +18,15 @@ import {
 interface ProfileHeaderProps {
   profile: PublicCompanyProfile;
   onShare: () => void;
+  /** Prefer a fixed back target when history may leave the cabinet flow. */
+  backTo?: string;
 }
 
 /**
  * Mockup header: back · title · share, then logo / name / verified / country /
  * rating chrome / verified badge. Platinum is omitted until we have a tier field.
  */
-export function ProfileHeader({ profile, onShare }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, onShare, backTo }: ProfileHeaderProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const lang = coerceLang(i18n.language);
@@ -35,7 +37,10 @@ export function ProfileHeader({ profile, onShare }: ProfileHeaderProps) {
   return (
     <div className="space-y-4" data-testid="seller-profile-header">
       <header className="flex items-center gap-2">
-        <IconButton label={t("common.back")} onClick={() => navigate(-1)}>
+        <IconButton
+          label={t("common.back")}
+          onClick={() => (backTo ? void navigate(backTo) : void navigate(-1))}
+        >
           <ChevronLeftIcon size={20} />
         </IconButton>
         <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-text">
