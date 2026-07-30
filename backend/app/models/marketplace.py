@@ -147,6 +147,15 @@ class SellerOffer(Base):
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
     min_order_qty: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # ── Product facts the add-product sheets collect (migration 0030) ─────────
+    # Who made the goods. Text, not a link to `companies` — the maker is usually
+    # not a party on this platform ("Sibur", "Shurtan GCC").
+    manufacturer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # «Ключевые свойства» / «Применение» — the chip rows on the product sheet.
+    # JSONB arrays of short strings: free text, never queried by value, and each
+    # chip renders as its own pill, so `description` could not hold them.
+    key_properties: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    applications: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     # ── How the seller trades this offer (P4 W1) ──────────────────────────────
     # Production/sourcing lead time. Required by the API schema for made-to-order
     # offers, optional here: the column cannot see `availability` to enforce it,

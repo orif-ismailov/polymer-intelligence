@@ -153,6 +153,7 @@ def _detail_out(db: Session, company: Company) -> CompanyDetailOut:
         legal_form=company.legal_form,
         legal_address=company.legal_address,
         director_name=company.director_name,
+        registration_date=company.registration_date,
         status=str(company.status),
         identity_locked=company.identity_locked,
         verified_at=company.verified_at,
@@ -195,6 +196,15 @@ def create_company(
     account: UserAccount = Depends(get_current_account),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> CompanySummaryOut:
+    # Validate BEFORE enforcing the quota: `enforce_daily` increments unconditionally,
+    # so charging it for input we are about to reject meant five STIR typos locked a
+    # legitimate applicant out of registering for the rest of the UTC day.
+    try:
+        jurisdiction, tax_id = company_service.normalize_new_company(body.jurisdiction, body.tax_id)
+    except company_service.InvalidTaxId as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+    except company_service.InvalidJurisdiction as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
     try:
         rate_limit.enforce_daily(
             redis_client, "company_create", account.id, rate_limit.COMPANY_CREATE_PER_DAY
@@ -202,10 +212,8 @@ def create_company(
     except rate_limit.RateLimited as exc:
         raise _rate_limited(exc) from exc
     try:
-        company = company_service.create_company(db, account, body.jurisdiction, body.tax_id)
+        company = company_service.create_company(db, account, jurisdiction, tax_id)
         verification_service.open_case(db, company)  # auto-open a draft case
-    except company_service.InvalidTaxId as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
     except company_service.CompanyAlreadyRegistered as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Company already registered") from exc
     db.commit()

@@ -11,7 +11,7 @@ import datetime
 import decimal
 import uuid
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models.enums import (
     OfferAvailability,
@@ -28,16 +28,49 @@ from app.schemas.substance import SubstanceBrief
 
 
 class CompanyCreateIn(BaseModel):
-    jurisdiction: str = "UZ"
-    tax_id: str
+    jurisdiction: str = Field(default="UZ", max_length=32)
+    tax_id: str = Field(max_length=32)
 
 
 class CompanyProfileUpdateIn(BaseModel):
-    legal_name: str | None = None
-    short_name: str | None = None
-    legal_form: str | None = None
-    legal_address: str | None = None
-    director_name: str | None = None
+    """Declared profile fields.
+
+    Every string is length-capped and blank-rejected here rather than trusted from
+    the client: these columns are unbounded `text`, so the API previously accepted
+    a 100 000-character `legal_name`, a whitespace-only name, and a registration
+    date in the year 9999 — all of which the wizard forbids but no API client had
+    to. `legal_form` is deliberately NOT constrained to the wizard's six options:
+    it is free text on the server, predates that select, and older/E-IMZO-filled
+    rows carry values outside the list (see StepDetails' legalFormOptions).
+    """
+
+    legal_name: str | None = Field(default=None, max_length=300)
+    short_name: str | None = Field(default=None, max_length=200)
+    legal_form: str | None = Field(default=None, max_length=100)
+    legal_address: str | None = Field(default=None, max_length=500)
+    director_name: str | None = Field(default=None, max_length=200)
+    #: Date on the registration certificate — collected by the wizard's
+    #: «Дата регистрации компании» field and shown back on the company card.
+    registration_date: datetime.date | None = None
+
+    @field_validator(
+        "legal_name", "short_name", "legal_form", "legal_address", "director_name", mode="after"
+    )
+    @classmethod
+    def _strip_non_blank(cls, value: str | None) -> str | None:
+        """Trim, and treat a whitespace-only value as absent rather than storing it."""
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
+    @field_validator("registration_date", mode="after")
+    @classmethod
+    def _not_in_the_future(cls, value: datetime.date | None) -> datetime.date | None:
+        """A company cannot have been registered tomorrow (the wizard also caps this)."""
+        if value is not None and value > datetime.datetime.now(datetime.UTC).date():
+            raise ValueError("registration_date cannot be in the future")
+        return value
 
 
 class RolesUpdateIn(BaseModel):
@@ -117,6 +150,7 @@ class CompanyDetailOut(BaseModel):
     legal_form: str | None = None
     legal_address: str | None = None
     director_name: str | None = None
+    registration_date: datetime.date | None = None
     status: str
     identity_locked: bool = False
     verified_at: datetime.datetime | None = None
@@ -147,6 +181,13 @@ class CompanyOfferIn(BaseModel):
     country: str | None = Field(default=None, max_length=2)
     min_order_qty: decimal.Decimal | None = None
     description: str | None = Field(default=None, max_length=2000)
+    # ── Product facts (migration 0030) ────────────────────────────────────────
+    #: Who made the goods, and the two chip rows on the product sheet. Capped in
+    #: count as well as length: the sheet renders them as pills, and a hundred of
+    #: them is not a spec, it is a paste.
+    manufacturer: str | None = Field(default=None, max_length=200)
+    key_properties: list[str] = Field(default_factory=list, max_length=12)
+    applications: list[str] = Field(default_factory=list, max_length=12)
     # ── How this company trades the offer (P4 W1) ─────────────────────────────
     lead_time_days: int | None = Field(default=None, ge=0, le=3650)
     sale_mode: OfferSaleMode | None = None
@@ -171,6 +212,13 @@ class CompanyOfferIn(BaseModel):
     samples_available: bool = False
     sample_price: decimal.Decimal | None = Field(default=None, ge=0)
     sample_dispatch_days: int | None = Field(default=None, ge=1, le=365)
+
+    @field_validator("key_properties", "applications", mode="after")
+    @classmethod
+    def _clean_chips(cls, value: list[str]) -> list[str]:
+        """Trim, drop blanks, cap each chip — a pill is a phrase, not a paragraph."""
+        cleaned = [chip.strip()[:80] for chip in value if chip.strip()]
+        return cleaned
 
     @model_validator(mode="after")
     def _sample_terms_need_samples(self) -> CompanyOfferIn:
@@ -215,6 +263,11 @@ class CompanyOfferOut(BaseModel):
     country: str | None = None
     min_order_qty: decimal.Decimal | None = None
     description: str | None = None
+    #: Product facts (0030). NULL columns read back as empty lists so the client
+    #: never has to branch on "no chips yet" versus "chips cleared".
+    manufacturer: str | None = None
+    key_properties: list[str] = Field(default_factory=list)
+    applications: list[str] = Field(default_factory=list)
     lead_time_days: int | None = None
     sale_mode: OfferSaleMode | None = None
     accepts_rfq: bool = True
@@ -246,3 +299,10 @@ class CompanyOfferOut(BaseModel):
     files: list[OfferFileRef] = Field(default_factory=list)
     #: The first photo. None when the offer has no photos (renders a placeholder).
     cover_file_id: int | None = None
+
+    @field_validator("key_properties", "applications", mode="before")
+    @classmethod
+    def _chips_never_null(cls, value: list[str] | None) -> list[str]:
+        """The columns are nullable (0030 backfilled nothing), and a client that
+        has to tell `null` from `[]` will eventually get it wrong."""
+        return value or []

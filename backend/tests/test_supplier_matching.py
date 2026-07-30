@@ -69,10 +69,13 @@ class TestMigration:
         assert module.revision == "0026"
         assert module.down_revision == "0025"
 
-    def test_is_the_single_head(self) -> None:
+    def test_is_in_a_single_head_chain(self) -> None:
         cfg = Config(str(BACKEND_DIR / "alembic.ini"))
         cfg.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
-        assert ScriptDirectory.from_config(cfg).get_heads() == ["0029"]
+        heads = ScriptDirectory.from_config(cfg).get_heads()
+        assert len(heads) == 1, (
+            f"a second head means two migrations claim the same parent: {heads}"
+        )
 
     def test_one_push_per_company_per_rfq(self) -> None:
         """FR-A2. This unique index IS the dedup: re-running the task inserts

@@ -129,6 +129,11 @@ class TestMarketCardCarriesTheNewFields:
             "accepts_contract",
             "accepts_escrow",
             "is_favorite",
+            "manufacturer",
+            "key_properties",
+            "applications",
+            "cas_number",
+            "hs_code",
         } <= portal
 
 

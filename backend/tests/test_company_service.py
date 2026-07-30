@@ -87,6 +87,58 @@ def test_create_company_rejects_bad_uz_tax_id(tax_id: str) -> None:
         company_service.create_company(MagicMock(), account, "UZ", tax_id)
 
 
+@pytest.mark.parametrize(
+    "tax_id",
+    [
+        "١٢٣٤٥٦٧٨٩",  # Arabic-Indic digits
+        "¹²³⁴⁵⁶⁷⁸⁹",  # superscript digits
+        "１２３４５６７８９",  # fullwidth digits
+        "12345678٩",  # ASCII + one Arabic-Indic digit
+    ],
+)
+def test_create_company_rejects_non_ascii_digit_tax_id(tax_id: str) -> None:
+    """`str.isdigit()` is True for these, so they used to register successfully.
+
+    That is not cosmetic: `uq_company_jurisdiction_tax_id` compares bytes, so the
+    homoglyph forms bypassed the duplicate guard and one legal entity could hold
+    several company rows (and would never match its E-IMZO certificate INN).
+    """
+    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
+
+    assert tax_id.isdigit() and len(tax_id) == 9, "fixture must defeat the old check"
+    account = UserAccount(phone="+998901234567")
+    account.id = 1
+    with pytest.raises(company_service.InvalidTaxId):
+        company_service.create_company(MagicMock(), account, "UZ", tax_id)
+
+
+# NB: "" is absent on purpose — it defaults to "UZ" (see normalize_new_company).
+@pytest.mark.parametrize("jurisdiction", ["other", "OTHER", "U", "USA", "12", "U1", "уз"])
+def test_create_company_rejects_non_two_letter_jurisdiction(jurisdiction: str) -> None:
+    """`companies.jurisdiction` is varchar(2); "other" reached PG and became a 500.
+
+    The step-2 «Страна регистрации» select shipped an `other` option, so a
+    first-class UI choice crashed the endpoint with StringDataRightTruncation.
+    """
+    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
+
+    account = UserAccount(phone="+998901234567")
+    account.id = 1
+    with pytest.raises(company_service.InvalidJurisdiction):
+        company_service.create_company(MagicMock(), account, jurisdiction, "123456789")
+
+
+def test_normalize_new_company_is_db_free_and_normalizes() -> None:
+    """The endpoint validates through this BEFORE spending the daily quota."""
+    from app.services import company_service  # noqa: PLC0415
+
+    assert company_service.normalize_new_company(" uz ", " 123456789 ") == ("UZ", "123456789")
+    # An empty jurisdiction still defaults to UZ (unchanged behaviour).
+    assert company_service.normalize_new_company("", "123456789") == ("UZ", "123456789")
+
+
 def test_create_company_makes_creator_an_owner_member() -> None:
     from app.models.accounts import UserAccount  # noqa: PLC0415
     from app.models.companies import CompanyMember  # noqa: PLC0415
@@ -132,3 +184,117 @@ def test_add_bank_account_encrypts_number_and_keeps_last4() -> None:
     assert isinstance(row.account_number_enc, bytes)
     assert decrypt_pii(row.account_number_enc) == "20208000900040041234"
     assert b"20208000900040041234" not in row.account_number_enc
+
+
+def test_update_profile_persists_registration_date() -> None:
+    """«Дата регистрации компании» is a field the registration wizard collects.
+
+    The `companies.registration_date` column has existed since 0017 but was not in
+    `_EDITABLE_FIELDS`, so a PATCH carrying it was silently dropped — the client
+    filled the field in and nothing was stored.
+    """
+    import datetime  # noqa: PLC0415
+
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
+
+    company = _company(CompanyStatus.draft)
+    company_service.update_profile(
+        MagicMock(), company, MagicMock(), registration_date=datetime.date(2020, 3, 12)
+    )
+    assert company.registration_date == datetime.date(2020, 3, 12)
+
+
+def test_profile_update_schema_accepts_registration_date() -> None:
+    import datetime  # noqa: PLC0415
+
+    from app.schemas.portal_company import CompanyDetailOut, CompanyProfileUpdateIn  # noqa: PLC0415
+
+    parsed = CompanyProfileUpdateIn(registration_date="2020-03-12")  # type: ignore[arg-type]
+    assert parsed.registration_date == datetime.date(2020, 3, 12)
+    assert "registration_date" in CompanyDetailOut.model_fields
+
+
+# ── profile schema hardening (the API used to trust the wizard) ────────────────
+
+
+def test_profile_update_schema_caps_string_lengths() -> None:
+    """These columns are unbounded `text`; a 100 000-char name used to be a 200."""
+    import pydantic  # noqa: PLC0415
+
+    from app.schemas.portal_company import CompanyProfileUpdateIn  # noqa: PLC0415
+
+    with pytest.raises(pydantic.ValidationError):
+        CompanyProfileUpdateIn(legal_name="A" * 100_000)
+
+
+@pytest.mark.parametrize("blank", ["   ", "\t", "\n ", ""])
+def test_profile_update_schema_treats_blank_as_absent(blank: str) -> None:
+    """A whitespace-only legal name used to be stored verbatim."""
+    from app.schemas.portal_company import CompanyProfileUpdateIn  # noqa: PLC0415
+
+    assert CompanyProfileUpdateIn(legal_name=blank).legal_name is None
+
+
+def test_profile_update_schema_trims_surrounding_whitespace() -> None:
+    from app.schemas.portal_company import CompanyProfileUpdateIn  # noqa: PLC0415
+
+    assert CompanyProfileUpdateIn(legal_name="  ООО «Тест»  ").legal_name == "ООО «Тест»"
+
+
+def test_profile_update_schema_rejects_future_registration_date() -> None:
+    """2099-12-31 and 9999-12-31 were both accepted and stored."""
+    import datetime  # noqa: PLC0415
+
+    import pydantic  # noqa: PLC0415
+
+    from app.schemas.portal_company import CompanyProfileUpdateIn  # noqa: PLC0415
+
+    tomorrow = datetime.datetime.now(datetime.UTC).date() + datetime.timedelta(days=1)
+    for bad in (tomorrow, datetime.date(2099, 12, 31), datetime.date(9999, 12, 31)):
+        with pytest.raises(pydantic.ValidationError):
+            CompanyProfileUpdateIn(registration_date=bad)
+    # Today is still fine (a company registered this morning).
+    today = datetime.datetime.now(datetime.UTC).date()
+    assert CompanyProfileUpdateIn(registration_date=today).registration_date == today
+
+
+# ── profile editability while a case is undecided (E-IMZO flow) ────────────────
+
+
+@pytest.mark.parametrize(
+    ("case_status_name", "editable"),
+    [
+        ("checks_running", True),
+        ("pending_review", True),
+        ("needs_info", True),
+        ("approved", False),
+        ("rejected", False),
+    ],
+)
+def test_profile_editable_while_case_undecided(case_status_name: str, editable: bool) -> None:
+    """A signed company leaves `draft` on wizard step 1, before it is asked for an address.
+
+    `eimzo_service.verify` treats the signature as the first-time submit, so the
+    company is already `pending_verification` / `pending_review` when step 5 PATCHes
+    the profile. Excluding those states made every E-IMZO registration fail with
+    409 `Profile not editable now`, silently dropping the legal address,
+    registration date and ownership form the user had entered.
+    """
+    from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
+
+    company = _company(CompanyStatus.pending_verification)
+    case_status = VerificationCaseStatus[case_status_name]
+
+    db = MagicMock()
+    # `_assert_profile_editable` looks for a case in an undecided status.
+    found = MagicMock() if case_status in company_service._UNDECIDED_CASE_STATUSES else None
+    db.query.return_value.filter.return_value.first.return_value = found
+
+    if editable:
+        company_service.update_profile(db, company, MagicMock(), legal_address="г. Ташкент")
+        assert company.legal_address == "г. Ташкент"
+    else:
+        with pytest.raises(company_service.ProfileNotEditable):
+            company_service.update_profile(db, company, MagicMock(), legal_address="г. Ташкент")

@@ -218,3 +218,70 @@ def test_incoming_shows_approved_only(api) -> None:  # noqa: ANN001
     assert resp.status_code == 200
     msgs = {i["message"] for i in resp.json()}
     assert msgs == {"approved"}  # pending inquiry stays internal to staff
+
+
+@requires_real_db
+def test_inquiry_rejected_when_offer_does_not_accept_rfq(api) -> None:  # noqa: ANN001
+    """`accepts_rfq=False` is a seller's decision, so the server has to hold it.
+
+    The portal hides the form, but a flag enforced only in one client is not
+    enforced at all — the Mini App and a bare curl reach the same route.
+    """
+    client, session = api
+    with session() as db:
+        seller_owner = make_account(db, "+998900005400")
+        selling_co = make_company(db, seller_owner, tax_id="315000400")
+        closed = make_seller_offer(db, company=selling_co, accepts_rfq=False)
+        open_offer = make_seller_offer(db, company=selling_co, accepts_rfq=True)
+        buyer_owner = make_account(db, "+998900005401")
+        buyer_co = make_company(db, buyer_owner, tax_id="315000401")
+        db.commit()
+        buyer_owner_id, buyer_co_id = buyer_owner.id, buyer_co.id
+        closed_id, open_id = closed.id, open_offer.id
+
+    body = {"company_id": buyer_co_id, "quantity": "10.000", "message": "hello"}
+
+    refused = client.post(
+        f"{_BASE}/market/{closed_id}/inquiries", json=body, headers=_auth(buyer_owner_id)
+    )
+    assert refused.status_code == 422, refused.text
+    assert refused.json()["detail"] == {"code": "rfq_not_accepted"}
+
+    allowed = client.post(
+        f"{_BASE}/market/{open_id}/inquiries", json=body, headers=_auth(buyer_owner_id)
+    )
+    assert allowed.status_code == 201, allowed.text
+
+
+@requires_real_db
+def test_inquiry_records_the_offers_unit_and_currency(api) -> None:  # noqa: ANN001
+    """The buyer types a bare number against an offer priced per KG in EUR.
+
+    `qty_unit`/`currency` default to MT/None on the wire, so a client that omits
+    them turns "500 KG" into "500 MT" for staff and the seller.
+    """
+    client, session = api
+    with session() as db:
+        seller_owner = make_account(db, "+998900005500")
+        selling_co = make_company(db, seller_owner, tax_id="315000500")
+        offer = make_seller_offer(db, company=selling_co, qty_unit="KG", currency="EUR")
+        buyer_owner = make_account(db, "+998900005501")
+        buyer_co = make_company(db, buyer_owner, tax_id="315000501")
+        db.commit()
+        buyer_owner_id, buyer_co_id, offer_id = buyer_owner.id, buyer_co.id, offer.id
+
+    resp = client.post(
+        f"{_BASE}/market/{offer_id}/inquiries",
+        json={
+            "company_id": buyer_co_id,
+            "quantity": "500.000",
+            "qty_unit": "KG",
+            "target_price": "1.25",
+            "currency": "EUR",
+        },
+        headers=_auth(buyer_owner_id),
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["qty_unit"] == "KG"
+    assert body["currency"] == "EUR"
