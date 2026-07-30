@@ -75,7 +75,9 @@
       "offer_sent": "Предложение отправлено",
       "matched": "Сопоставлена",
       "closed": "Закрыта",
-      "cancelled": "Отменена"
+      "cancelled": "Отменена",
+      "processed": "Обработана",
+      "archived": "В архиве"
     },
     "kind": {
       "buy_request": "ПОКУПАТЕЛЬ",

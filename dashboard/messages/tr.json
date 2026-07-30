@@ -75,7 +75,9 @@
       "offer_sent": "Teklif Gönderildi",
       "matched": "Eşleşti",
       "closed": "Kapatıldı",
-      "cancelled": "İptal Edildi"
+      "cancelled": "İptal Edildi",
+      "processed": "İşlendi",
+      "archived": "Arşivde"
     },
     "kind": {
       "buy_request": "ALICI",

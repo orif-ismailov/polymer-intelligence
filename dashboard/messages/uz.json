@@ -75,7 +75,9 @@
       "offer_sent": "Taklif yuborildi",
       "matched": "Moslashtirildi",
       "closed": "Yopilgan",
-      "cancelled": "Bekor qilingan"
+      "cancelled": "Bekor qilingan",
+      "processed": "Qayta ishlangan",
+      "archived": "Arxivda"
     },
     "kind": {
       "buy_request": "XARIDOR",

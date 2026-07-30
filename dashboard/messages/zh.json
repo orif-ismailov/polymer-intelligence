@@ -75,7 +75,9 @@
       "offer_sent": "报价已发送",
       "matched": "已匹配",
       "closed": "已关闭",
-      "cancelled": "已取消"
+      "cancelled": "已取消",
+      "processed": "已处理",
+      "archived": "已归档"
     },
     "kind": {
       "buy_request": "买方",
