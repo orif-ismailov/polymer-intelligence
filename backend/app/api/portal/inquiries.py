@@ -71,6 +71,13 @@ def create_inquiry(
     )
     if offer is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+    if not offer.accepts_rfq:
+        # A seller's opt-out has to hold here, not only in the client that renders
+        # the badge: the Mini App and a bare curl reach this same route.
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"code": "rfq_not_accepted"},
+        )
 
     try:
         req = offer_request_service.create_company_inquiry(db, company, account, offer, body)

@@ -6,9 +6,28 @@ import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from "@/shared/config";
 import { useEnumLabels } from "@/shared/i18n";
 import { formatBytes } from "@/shared/lib";
 import { cn } from "@/shared/lib";
-import { Badge, Spinner } from "@/shared/ui";
+import { Badge, FileIcon, Spinner } from "@/shared/ui";
 
 const ACCEPT = "application/pdf,image/jpeg,image/png";
+
+/**
+ * The same set as ACCEPT, but enforced in JS as well.
+ *
+ * `accept` only filters the OS file dialog — it is a hint, not a gate, and a user
+ * who picks "All files" (or drags one in) sails straight past it. Without this
+ * check an unsupported file was accepted into the form and rejected only by the
+ * server at the END of the wizard, after the company, profile, roles and bank
+ * account had already been written. The server still checks magic bytes and
+ * remains the authority; this just moves the obvious "no" to where the user is.
+ */
+const ALLOWED_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
+/** Fallback for browsers/files that report an empty `type`. */
+const ALLOWED_EXTENSIONS = /\.(pdf|jpe?g|png)$/i;
+
+function isAllowedFile(file: File): boolean {
+  if (file.type) return ALLOWED_TYPES.has(file.type);
+  return ALLOWED_EXTENSIONS.test(file.name);
+}
 
 export interface SelectedDocument {
   kind: string;
@@ -52,6 +71,10 @@ export function DocumentDropzone({
       setError(t("wizard.documents.tooLarge", { mb: MAX_UPLOAD_MB }));
       return;
     }
+    if (!isAllowedFile(chosen)) {
+      setError(t("wizard.documents.invalidType"));
+      return;
+    }
     setError(null);
     onSelect(chosen);
   }
@@ -79,7 +102,7 @@ export function DocumentDropzone({
       {file ? (
         <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 py-2.5">
           <div className="flex min-w-0 items-center gap-2">
-            {uploading ? <Spinner /> : <span aria-hidden="true">📄</span>}
+            {uploading ? <Spinner /> : <FileIcon size={16} className="shrink-0 text-text-subtle" />}
             <div className="min-w-0">
               <p className="truncate text-sm text-text">{file.name}</p>
               <p className="text-xs text-text-muted">{formatBytes(file.size)}</p>

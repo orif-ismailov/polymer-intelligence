@@ -12,6 +12,7 @@ Identity is a portal `UserAccount` (not staff): those actions audit with
 from __future__ import annotations
 
 import datetime
+import re
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -43,6 +44,14 @@ from app.services import audit_service, event_service, event_types
 
 class InvalidTaxId(Exception):
     """The tax id (STIR/INN) does not match the jurisdiction's format."""
+
+
+class InvalidJurisdiction(Exception):
+    """The jurisdiction is not a 2-letter ISO country code.
+
+    `companies.jurisdiction` is `varchar(2)`, so anything longer reached Postgres
+    as a `DataError` and surfaced to the client as a 500.
+    """
 
 
 class InvalidBankMfo(Exception):
@@ -119,12 +128,41 @@ def transition(
 # ── Validation helpers ────────────────────────────────────────────────────────
 
 
+#: ASCII-only. `str.isdigit()` is True for Arabic-Indic (٩), superscript (⁹) and
+#: fullwidth (９) digits, so it accepted "9-digit" STIRs that are not digits at
+#: all. Worse, the (jurisdiction, tax_id) unique constraint compares bytes, so
+#: those homoglyph forms slipped past the duplicate guard and one legal entity
+#: could be registered several times over.
+_UZ_TAX_ID_RE = re.compile(r"\A[0-9]{9}\Z")
+#: `companies.jurisdiction` is varchar(2) — enforce that here, not in Postgres.
+_JURISDICTION_RE = re.compile(r"\A[A-Z]{2}\Z")
+
+
 def _validate_tax_id(jurisdiction: str, tax_id: str) -> None:
     if jurisdiction == "UZ":
-        if not (tax_id.isdigit() and len(tax_id) == 9):
+        if not _UZ_TAX_ID_RE.match(tax_id):
             raise InvalidTaxId("UZ STIR must be exactly 9 digits")
     elif not tax_id:
         raise InvalidTaxId("tax id is required")
+
+
+def _validate_jurisdiction(jurisdiction: str) -> None:
+    if not _JURISDICTION_RE.match(jurisdiction):
+        raise InvalidJurisdiction("jurisdiction must be a 2-letter country code")
+
+
+def normalize_new_company(jurisdiction: str, tax_id: str) -> tuple[str, str]:
+    """Normalize + validate registration input WITHOUT touching the database.
+
+    Split out of `create_company` so the endpoint can reject malformed input
+    before it spends the caller's daily quota: `enforce_daily` used to run first,
+    so five STIR typos locked a legitimate user out of registering for a day.
+    """
+    juris = (jurisdiction or "UZ").strip().upper()
+    tax = tax_id.strip()
+    _validate_jurisdiction(juris)
+    _validate_tax_id(juris, tax)
+    return juris, tax
 
 
 def _active_membership(db: Session, company_id: int, account_id: int) -> CompanyMember | None:
@@ -146,9 +184,7 @@ def create_company(
     db: Session, account: UserAccount, jurisdiction: str, tax_id: str
 ) -> Company:
     """Register a company (creator becomes owner); emit COMPANY_REGISTERED + audit."""
-    juris = (jurisdiction or "UZ").strip().upper()
-    tax_id = tax_id.strip()
-    _validate_tax_id(juris, tax_id)
+    juris, tax_id = normalize_new_company(jurisdiction, tax_id)
 
     company = Company(
         jurisdiction=juris,
@@ -224,27 +260,54 @@ def get_company_for(db: Session, account: UserAccount, company_id: int) -> Compa
 # ── Profile / roles / bank ────────────────────────────────────────────────────
 
 _EDITABLE_FIELDS = frozenset(
-    {"legal_name", "short_name", "legal_form", "legal_address", "director_name"}
+    {
+        "legal_name",
+        "short_name",
+        "legal_form",
+        "legal_address",
+        "director_name",
+        "registration_date",
+    }
 )
 
 # Requisites filled+frozen by an E-IMZO signature (R3): rejected once identity_locked.
 _EIMZO_LOCKED_FIELDS = frozenset({"legal_name", "director_name"})
 
 
+#: Case states in which the DECLARED profile is still the applicant's to correct.
+#: A case that has not been decided yet has not been relied upon, so editing the
+#: address / registration date / legal form is legitimate; the requisites an
+#: E-IMZO signature froze stay protected separately by `IdentityLocked`.
+#:
+#: `pending_review` and `checks_running` are here because of the E-IMZO flow:
+#: `eimzo_service.verify` treats the signature as the first-time submit, so a
+#: signed company leaves `draft` on step 1 of the registration wizard — before the
+#: wizard has even asked for the address. Excluding those two states made every
+#: signed registration fail its step-5 profile PATCH with 409, silently discarding
+#: the legal address, registration date and ownership form the user had entered.
+_UNDECIDED_CASE_STATUSES = frozenset(
+    {
+        VerificationCaseStatus.checks_running,
+        VerificationCaseStatus.pending_review,
+        VerificationCaseStatus.needs_info,
+    }
+)
+
+
 def _assert_profile_editable(db: Session, company: Company) -> None:
-    """Editable only while draft, or while a submitted case is back in needs_info."""
+    """Editable while draft, or while a submitted case is still undecided."""
     if company.status == CompanyStatus.draft:
         return
     if company.status == CompanyStatus.pending_verification:
-        needs_info = (
+        undecided = (
             db.query(VerificationCase)
             .filter(
                 VerificationCase.company_id == company.id,
-                VerificationCase.status == VerificationCaseStatus.needs_info,
+                VerificationCase.status.in_(_UNDECIDED_CASE_STATUSES),
             )
             .first()
         )
-        if needs_info is not None:
+        if undecided is not None:
             return
     raise ProfileNotEditable(str(company.status))
 

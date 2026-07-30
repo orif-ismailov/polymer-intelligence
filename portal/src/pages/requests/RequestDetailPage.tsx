@@ -84,29 +84,36 @@ export function RequestDetailPage() {
             <CardBody>
               <SpecList>
                 <SpecItem
-                  label={t("requestWizard.product")}
+                  label={t("requestWizard.preview.product")}
                   value={r.grade_text ?? r.product_text ?? "—"}
                 />
-                <SpecItem label={t("requestWizard.polymer")} value={r.polymer_type ?? "—"} />
                 <SpecItem
-                  label={t("requestWizard.volume")}
+                  label={t("requestWizard.preview.volume")}
                   value={`${r.volume} ${r.volume_unit}`}
                   numeric
                 />
                 <SpecItem
-                  label={t("requestWizard.targetPrice")}
+                  label={t("requestWizard.preview.price")}
                   value={r.target_price != null ? `${r.target_price} ${r.currency}` : "—"}
                   numeric
                 />
-                <SpecItem label={t("requestWizard.incoterms")} value={r.incoterms} />
-                <SpecItem label={t("requestWizard.country")} value={r.destination_country} />
-                <SpecItem label={t("requestWizard.city")} value={r.port_or_city ?? "—"} />
+                <SpecItem label={t("requestWizard.preview.terms")} value={r.incoterms} />
                 <SpecItem
-                  label={t("requestWizard.urgency")}
-                  value={t(`requestWizard.urgencyOpt.${r.urgency}`)}
+                  label={t("requestWizard.params.country")}
+                  value={r.destination_country}
+                />
+                <SpecItem
+                  label={t("requestWizard.params.city")}
+                  value={r.port_or_city ?? "—"}
+                />
+                <SpecItem
+                  label={t("requestWizard.preview.delivery")}
+                  value={t(`requestWizard.urgencyOpt.${r.urgency}`, {
+                    defaultValue: r.urgency,
+                  })}
                 />
                 {r.comment ? (
-                  <SpecItem label={t("requestWizard.comment")} value={r.comment} span={2} />
+                  <SpecItem label={t("requestWizard.preview.comment")} value={r.comment} span={2} />
                 ) : null}
               </SpecList>
             </CardBody>

@@ -24,7 +24,11 @@ export function OtpPage() {
   }
 
   return (
-    <AuthLayout title={t("auth.codeTitle")} subtitle={t("auth.loginSubtitle")}>
+    // The subtitle was `auth.loginSubtitle` — «Введите номер телефона…» on the
+    // screen that asks for the CODE. `auth.codeSubtitle` names the phone, and
+    // OtpForm already renders it inside the card, so the page-level line is
+    // dropped rather than duplicated.
+    <AuthLayout title={t("auth.codeTitle")}>
       <Card>
         <CardBody>
           <OtpForm

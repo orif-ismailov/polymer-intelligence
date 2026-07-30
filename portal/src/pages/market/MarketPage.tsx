@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { MarketOfferCard, useMarket, type MarketFilters } from "@/entities/market";
@@ -16,6 +16,7 @@ import {
   tabItemClasses,
   Tabs,
   type TabItem,
+  StoreIcon,
 } from "@/shared/ui";
 
 const PAGE_SIZE = 24;
@@ -23,8 +24,14 @@ const PAGE_SIZE = 24;
 export function MarketPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { activeCompany } = useActiveCompany();
   const companyId = activeCompany?.id ?? null;
+
+  // Deep link from seller profile «Смотреть все» (`/market?seller={companyId}`).
+  const sellerRaw = searchParams.get("seller");
+  const sellerCompanyId =
+    sellerRaw && /^\d+$/.test(sellerRaw) ? Number(sellerRaw) : undefined;
 
   const [q, setQ] = useState("");
   const [availability, setAvailability] = useState("");
@@ -40,8 +47,9 @@ export function MarketPage() {
       country: country.trim().toUpperCase() || undefined,
       has_lab_passport: hasPassport || undefined,
       lab_verified: labVerified || undefined,
+      seller_company_id: sellerCompanyId,
     }),
-    [q, availability, country, hasPassport, labVerified],
+    [q, availability, country, hasPassport, labVerified, sellerCompanyId],
   );
 
   const marketQuery = useMarket(filters, companyId, offset);
@@ -164,7 +172,7 @@ export function MarketPage() {
           </div>
         </>
       ) : (
-        <EmptyState title={t("market.empty")} description={t("market.emptyBody")} />
+        <EmptyState icon={<StoreIcon size={28} />} title={t("market.empty")} description={t("market.emptyBody")} />
       )}
     </div>
   );

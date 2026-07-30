@@ -1,3 +1,4 @@
+import { Heart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/shared/lib";
@@ -38,14 +39,12 @@ export function FavoriteButton({ offerId, isFavorite, className }: FavoriteButto
         className,
       )}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M12 20.3l-1.45-1.32C5.4 14.36 2 11.28 2 7.5 2 4.42 4.42 2 7.5 2c1.74 0 3.41.81 4.5 2.09C13.09 2.81 14.76 2 16.5 2 19.58 2 22 4.42 22 7.5c0 3.78-3.4 6.86-8.55 11.49L12 20.3z"
-          fill={isFavorite ? "currentColor" : "none"}
-          stroke="currentColor"
-          strokeWidth="1.6"
-        />
-      </svg>
+      <Heart
+        size={16}
+        strokeWidth={1.75}
+        aria-hidden="true"
+        className={isFavorite ? "fill-current" : undefined}
+      />
     </button>
   );
 }

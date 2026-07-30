@@ -40,6 +40,8 @@ export interface CompanyDetail extends CompanySummary {
   legal_form: string | null;
   legal_address: string | null;
   director_name: string | null;
+  /** ISO `yyyy-mm-dd` — the date on the registration certificate. */
+  registration_date: string | null;
   identity_locked: boolean;
   reverification_due_at: string | null;
   roles: CompanyRole[];
@@ -59,6 +61,8 @@ export interface CompanyProfilePatch {
   legal_form?: string;
   legal_address?: string;
   director_name?: string;
+  /** ISO `yyyy-mm-dd`. */
+  registration_date?: string;
 }
 
 export interface CreateBankAccountPayload {

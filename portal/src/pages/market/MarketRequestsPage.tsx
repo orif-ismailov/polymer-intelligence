@@ -20,6 +20,7 @@ import {
   Skeleton,
   SpecItem,
   SpecList,
+  ClipboardListIcon,
 } from "@/shared/ui";
 
 /**
@@ -169,7 +170,7 @@ export function MarketRequestsPage() {
           ))}
         </div>
       ) : (
-        <EmptyState title={t("rfq.marketEmpty")} description={t("rfq.marketEmptyBody")} />
+        <EmptyState icon={<ClipboardListIcon size={28} />} title={t("rfq.marketEmpty")} description={t("rfq.marketEmptyBody")} />
       )}
     </div>
   );

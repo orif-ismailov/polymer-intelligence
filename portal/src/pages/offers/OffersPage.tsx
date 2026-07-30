@@ -23,6 +23,8 @@ import {
   Skeleton,
   SpecItem,
   SpecList,
+  BoxIcon,
+  RegistryIcon,
 } from "@/shared/ui";
 
 import { OffersLocked } from "./OffersLocked";
@@ -139,6 +141,7 @@ export function OffersPage() {
   if (!activeCompany) {
     return (
       <EmptyState
+          icon={<RegistryIcon size={28} />}
         title={t("home.noActiveCompany")}
         description={t("home.noActiveCompanyBody")}
         action={<LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>}
@@ -185,6 +188,7 @@ export function OffersPage() {
         </div>
       ) : (
         <EmptyState
+          icon={<BoxIcon size={28} />}
           title={t("offers.empty")}
           description={t("offers.emptyBody")}
           action={<LinkButton to="/offers/new">{t("offers.create")}</LinkButton>}

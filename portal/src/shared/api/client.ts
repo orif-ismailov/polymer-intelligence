@@ -162,6 +162,13 @@ async function rawRequest(
   });
 }
 
+function isNetworkFailure(err: unknown): boolean {
+  // Chromium: TypeError "Failed to fetch"; Safari/Firefox vary. Aborts stay aborts.
+  if (err instanceof DOMException && err.name === "AbortError") return false;
+  if (err instanceof TypeError) return true;
+  return err instanceof Error && /failed to fetch|networkerror|load failed/i.test(err.message);
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, query, skipAuthRetry = false, signal } = options;
 
@@ -173,7 +180,15 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     init.body = JSON.stringify(body);
   }
 
-  let res = await rawRequest(path, init, query);
+  let res: Response;
+  try {
+    res = await rawRequest(path, init, query);
+  } catch (err) {
+    if (isNetworkFailure(err)) {
+      throw new ApiError(0, "Network error", { code: "network" });
+    }
+    throw err;
+  }
 
   if (res.status === 401 && !skipAuthRetry) {
     const refreshed = await refreshOnce();
@@ -181,7 +196,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       redirectToLogin();
       throw extractError(401, await readBody(res), res.headers);
     }
-    res = await rawRequest(path, init, query);
+    try {
+      res = await rawRequest(path, init, query);
+    } catch (err) {
+      if (isNetworkFailure(err)) {
+        throw new ApiError(0, "Network error", { code: "network" });
+      }
+      throw err;
+    }
     if (res.status === 401) {
       redirectToLogin();
       throw extractError(401, await readBody(res), res.headers);

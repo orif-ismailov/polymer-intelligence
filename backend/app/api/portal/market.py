@@ -12,16 +12,27 @@ company-scoped: pass ``company_id`` (membership enforced → 404 for non-members
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_account
 from app.api.portal.companies import _company_or_404
 from app.core.db import get_db
 from app.models.accounts import UserAccount
-from app.models.enums import OfferAvailability
+from app.models.companies import Company
+from app.models.enums import (
+    BusinessRoleStatus,
+    CompanyStatus,
+    OfferAvailability,
+    SellerOfferStatus,
+)
+from app.models.marketplace import SellerOffer
 from app.schemas.marketplace import OfferRequestOut
-from app.schemas.portal_market import PortalMarketOfferDetail, PortalMarketOfferOut
-from app.services import offer_request_service, offer_service
+from app.schemas.portal_market import (
+    PortalMarketOfferDetail,
+    PortalMarketOfferOut,
+    PublicCompanyProfileOut,
+)
+from app.services import offer_request_service, offer_service, storage_service
 
 router = APIRouter(prefix="/portal/market", tags=["portal-market"])
 
@@ -49,6 +60,9 @@ def list_market(
     company_id: int | None = Query(
         default=None, description="Exclude this company's own offers when browsing"
     ),
+    seller_company_id: int | None = Query(
+        default=None, description="Only offers published by this seller company"
+    ),
     has_lab_passport: bool = Query(
         default=False, description="Only offers carrying a laboratory passport"
     ),
@@ -65,6 +79,9 @@ def list_market(
     When ``company_id`` is a company the caller belongs to, that company's own
     offers are excluded (it cannot inquire on itself).
 
+    ``seller_company_id`` is the opposite filter: only that seller's approved
+    listings (public profile Products tab / "see all").
+
     The two laboratory filters (FR-L5) are separate questions and stack: "has an
     analysis" and "we arranged it". Both default to off — an unticked checkbox
     must not filter anything.
@@ -79,6 +96,7 @@ def list_market(
         availability=availability,
         country=country,
         exclude_company_id=exclude_company_id,
+        company_id=seller_company_id,
         has_lab_passport=has_lab_passport,
         lab_verified=lab_verified,
         limit=limit,
@@ -87,9 +105,9 @@ def list_market(
     return _cards(db, account, list(offers))
 
 
-# ── Favorites (P4 W1) ─────────────────────────────────────────────────────────
+# ── Literal paths BEFORE /{offer_id} ──────────────────────────────────────────
 #
-# Declared BEFORE /{offer_id} so the literal paths win over the parameter route —
+# Favorites and the public company profile must win over the parameter route —
 # the same ordering rule the contracts router relies on for /directory.
 
 
@@ -143,6 +161,67 @@ def remove_favorite(
 
 
 @router.get(
+    "/companies/{company_id}",
+    response_model=PublicCompanyProfileOut,
+    summary="Public seller company profile",
+)
+def get_public_company_profile(
+    company_id: int,
+    offers_limit: int = Query(default=24, ge=1, le=100),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> PublicCompanyProfileOut:
+    """GET /portal/market/companies/{id} — catalog-safe profile of a verified seller.
+
+    Auth is required (same as the rest of the market), but membership is not:
+    any portal account may open a verified company's public sheet. Draft /
+    pending companies 404 the same way an unpublished offer does — there is
+    nothing public to show yet.
+
+    Bank accounts, verification documents and case internals are never returned.
+    """
+    company = (
+        db.query(Company)
+        .options(selectinload(Company.business_roles))
+        .filter(Company.id == company_id)
+        .first()
+    )
+    if company is None or company.status != CompanyStatus.verified:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
+
+    offer_count = (
+        db.query(SellerOffer.id)
+        .filter(
+            SellerOffer.company_id == company.id,
+            SellerOffer.status == SellerOfferStatus.approved,
+        )
+        .count()
+    )
+    offers = offer_service.list_catalog(
+        db, company_id=company.id, limit=offers_limit, offset=0
+    )
+    return PublicCompanyProfileOut(
+        id=company.id,
+        public_id=company.public_id,
+        legal_name=company.legal_name,
+        short_name=company.short_name,
+        legal_form=company.legal_form,
+        legal_address=company.legal_address,
+        jurisdiction=company.jurisdiction,
+        registration_date=company.registration_date,
+        verified_at=company.verified_at,
+        logo_url=storage_service.presign_company_logo(company),
+        roles=[
+            str(r.role)
+            for r in company.business_roles
+            if r.status == BusinessRoleStatus.confirmed
+        ],
+        offer_count=offer_count,
+        offers=_cards(db, account, list(offers)),
+    )
+
+
+@router.get(
     "/{offer_id}",
     response_model=PortalMarketOfferDetail,
     summary="Offer detail + my company's inquiries on it",
@@ -164,6 +243,8 @@ def get_market_offer(
 
     out = PortalMarketOfferDetail.model_validate(offer)
     out.is_favorite = offer.id in offer_service.favorite_offer_ids(db, account.id, [offer.id])
+    out.seller_company_id = offer.company_id
+    out.seller_legal_name = offer.company.legal_name if offer.company is not None else None
     if company_id is not None:
         company = _company_or_404(db, account, company_id)
         out.is_own = offer.company_id is not None and offer.company_id == company.id

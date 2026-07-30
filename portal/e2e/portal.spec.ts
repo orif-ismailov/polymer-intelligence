@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
+import { registerCompany } from "./_registration";
+
 /**
  * Happy-path e2e: OTP login → company wizard → verification submit → offer create.
  *
@@ -40,40 +42,27 @@ async function login(page: Page, request: APIRequestContext, phone: string): Pro
   await page.waitForURL((url) => !url.pathname.startsWith("/login"));
 }
 
+test("an account with no company is sent to registration", async ({ page, request }) => {
+  await login(page, request, uniquePhone());
+
+  // The cabinet is company-scoped end to end, so the gate redirects rather than
+  // rendering a shell of empty states the user cannot resolve.
+  await page.waitForURL("**/onboarding");
+  await expect(page.getByTestId("onboarding-start")).toBeVisible();
+
+  await page.getByTestId("onboarding-start").click();
+  await page.waitForURL("**/companies/new/1");
+});
+
 test("register a company and publish an offer", async ({ page, request }) => {
   const phone = uniquePhone();
   const taxId = uniqueTaxId();
 
   await login(page, request, phone);
+  await registerCompany(page, taxId);
 
-  // Step 1 — identity.
-  await page.goto("/companies/new/1");
-  await page.getByLabel(/tax id|инн|stir/i).fill(taxId);
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
-
-  // Step 2 — roles.
-  await page.waitForURL("**/companies/new/2");
-  await page.getByText(/trader|трейдер|treyder/i).first().click();
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
-
-  // Step 3 — bank (skip).
-  await page.waitForURL("**/companies/new/3");
-  await page.getByRole("button", { name: /skip|пропустить|o.tkazib/i }).click();
-
-  // Step 4 — documents (a required registration certificate).
-  await page.waitForURL("**/companies/new/4");
-  await page.setInputFiles('input[type="file"]', {
-    name: "registration.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4 test document"),
-  });
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
-
-  // Step 5 — confirm + submit.
-  await page.waitForURL("**/companies/new/5");
-  await page.getByTestId("wizard-submit").click();
-
-  // Lands on the verification status screen.
-  await page.waitForURL(/\/companies\/\d+\/verification/);
+  // The success sheet leads into the cabinet.
+  await page.getByTestId("wizard-done-cabinet").click();
+  await page.waitForURL((url) => url.pathname === "/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });

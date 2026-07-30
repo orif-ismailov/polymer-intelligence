@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { marketApi, marketKeys } from "./api";
 import type { MarketFilters, MarketOffer, MarketOfferDetail } from "./types";
 
+/** Every market cache holds either a page of cards or one detail sheet. */
+type MarketCache = MarketOffer[] | MarketOfferDetail | undefined;
+
 /** Browse approved offers (excludes the active company's own when companyId set). */
 export function useMarket(
   filters: MarketFilters,
@@ -24,6 +27,15 @@ export function useMarketOffer(offerId: number | null, companyId: number | null)
   });
 }
 
+/** Catalog-safe public profile of a verified seller company. */
+export function usePublicCompanyProfile(companyId: number | null) {
+  return useQuery({
+    queryKey: marketKeys.companyProfile(companyId ?? -1),
+    queryFn: () => marketApi.companyProfile(companyId as number),
+    enabled: companyId != null,
+  });
+}
+
 /** The account's own shortlist (not scoped to the active company). */
 export function useFavorites() {
   return useQuery<MarketOffer[]>({
@@ -38,6 +50,10 @@ export function useFavorites() {
  * Optimistic: the heart is the kind of control that must respond to the tap, not
  * to the network. On failure the previous cache is restored, and every market
  * query is invalidated on settle so the server stays the source of truth.
+ *
+ * Both cache shapes are patched. Listing only the array case left the product
+ * detail — a single object under `["market","detail",…]` — untouched, so the one
+ * screen with two hearts on it was the one where neither responded to the tap.
  */
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
@@ -46,12 +62,14 @@ export function useToggleFavorite() {
       next ? marketApi.star(offerId).then(() => undefined) : marketApi.unstar(offerId),
     onMutate: async ({ offerId, next }) => {
       await queryClient.cancelQueries({ queryKey: ["market"] });
-      const snapshot = queryClient.getQueriesData<MarketOffer[]>({ queryKey: ["market"] });
-      queryClient.setQueriesData<MarketOffer[]>({ queryKey: ["market"] }, (old) =>
-        Array.isArray(old)
-          ? old.map((o) => (o.id === offerId ? { ...o, is_favorite: next } : o))
-          : old,
-      );
+      const snapshot = queryClient.getQueriesData<MarketCache>({ queryKey: ["market"] });
+      queryClient.setQueriesData<MarketCache>({ queryKey: ["market"] }, (old) => {
+        if (Array.isArray(old)) {
+          return old.map((o) => (o.id === offerId ? { ...o, is_favorite: next } : o));
+        }
+        if (old && old.id === offerId) return { ...old, is_favorite: next };
+        return old;
+      });
       return { snapshot };
     },
     onError: (_err, _vars, context) => {

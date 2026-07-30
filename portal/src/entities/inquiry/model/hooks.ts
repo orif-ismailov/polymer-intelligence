@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { ApiError } from "@/shared/api";
+
 import { inquiryApi, inquiryKeys } from "./api";
 import type { Inquiry, InquiryPayload } from "./types";
 
@@ -27,15 +29,22 @@ export function useInquiry(inquiryId: number | null) {
   });
 }
 
-/** Create an inquiry against an offer, then refresh the company's sent list. */
+/**
+ * Create an inquiry against an offer, then refresh the company's sent list.
+ *
+ * The market caches go too: the offer detail carries `my_inquiries`, so without
+ * this the buyer sends an inquiry and the «Мои запросы» card on the very page
+ * they are looking at stays empty until a reload.
+ */
 export function useCreateInquiry(companyId: number | null) {
   const qc = useQueryClient();
-  return useMutation<Inquiry, Error, { offerId: number; payload: InquiryPayload }>({
+  return useMutation<Inquiry, ApiError, { offerId: number; payload: InquiryPayload }>({
     mutationFn: ({ offerId, payload }) => inquiryApi.create(offerId, payload),
     onSuccess: () => {
       if (companyId != null) {
         void qc.invalidateQueries({ queryKey: inquiryKeys.sent(companyId) });
       }
+      void qc.invalidateQueries({ queryKey: ["market"] });
     },
   });
 }

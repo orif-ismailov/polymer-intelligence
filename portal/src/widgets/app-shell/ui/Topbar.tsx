@@ -1,3 +1,4 @@
+import { Menu } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -22,9 +23,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           onClick={onOpenMenu}
           className="rounded-md p-2 text-text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:hidden"
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
+          <Menu size={20} strokeWidth={1.75} aria-hidden="true" />
         </button>
 
         <Link to="/" aria-label={t("common.appName")} className="flex items-center">

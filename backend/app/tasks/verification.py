@@ -23,6 +23,11 @@ from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
+#: Backoff for a deadlock/serialization retry. Deliberately short: unlike a dead
+#: provider (`60 * attempts`) this is same-instant contention between two checks of
+#: one case, and the loser just needs to come back after the winner commits.
+_CONTENTION_RETRY_SECONDS = 2
+
 
 def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-layer glue
     """Execute the pure check function for `check`, gathering its inputs from the DB."""
@@ -117,44 +122,64 @@ def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-lay
 )
 def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celery task
     """Run one verification check, record its result, and re-evaluate the case."""
+    from sqlalchemy.exc import OperationalError
+
     from app.core.db import SessionLocal
     from app.models.enums import VerificationCheckStatus
     from app.models.verification import VerificationCheck
     from app.services import event_service, event_types, verification_service
 
-    with SessionLocal() as db:
-        check = db.get(VerificationCheck, check_id)
-        if check is None:
-            return {"status": "error", "error": "check_not_found"}
+    try:
+        with SessionLocal() as db:
+            check = db.get(VerificationCheck, check_id)
+            if check is None:
+                return {"status": "error", "error": "check_not_found"}
 
-        check.status = VerificationCheckStatus.running
-        check.started_at = company_service.now_utc()
-        check.attempts += 1
-        db.flush()
+            check.status = VerificationCheckStatus.running
+            check.started_at = company_service.now_utc()
+            check.attempts += 1
+            db.flush()
 
-        try:
-            result = _run_check(db, check)
-        except Exception as exc:  # noqa: BLE001 — provider failure → unavailable + retry
-            check.status = VerificationCheckStatus.unavailable
-            check.last_error = str(exc)
+            try:
+                result = _run_check(db, check)
+            except OperationalError:
+                # Transient DB contention, not a provider fault — let the outer
+                # handler retry it instead of libelling the provider `unavailable`.
+                raise
+            except Exception as exc:  # noqa: BLE001 — provider failure → unavailable + retry
+                check.status = VerificationCheckStatus.unavailable
+                check.last_error = str(exc)
+                check.finished_at = company_service.now_utc()
+                db.commit()
+                logger.warning(
+                    "verification.check_unavailable",
+                    extra={"check_id": check_id, "attempts": check.attempts, "error": str(exc)},
+                )
+                raise self.retry(countdown=60 * check.attempts, exc=exc) from exc
+
+            check.status = result.status
+            check.result = result.result
             check.finished_at = company_service.now_utc()
-            db.commit()
-            logger.warning(
-                "verification.check_unavailable",
-                extra={"check_id": check_id, "attempts": check.attempts, "error": str(exc)},
+            db.flush()
+            event_service.emit(
+                db, event_types.VERIFICATION_CHECK_COMPLETED, "verification_check", check.id,
+                {"case_id": check.case_id, "check_status": str(result.status)},
             )
-            raise self.retry(countdown=60 * check.attempts, exc=exc) from exc
-
-        check.status = result.status
-        check.result = result.result
-        check.finished_at = company_service.now_utc()
-        db.flush()
-        event_service.emit(
-            db, event_types.VERIFICATION_CHECK_COMPLETED, "verification_check", check.id,
-            {"case_id": check.case_id, "check_status": str(result.status)},
+            verification_service.on_check_completed(db, check.case_id)
+            db.commit()
+    except OperationalError as exc:
+        # `on_check_completed` takes `SELECT … FOR UPDATE` on the SHARED parent
+        # `verification_cases` row, so two checks of the same case can deadlock.
+        # This used to sit outside every retry guard: the task died "raised
+        # unexpected", the rollback reverted even `attempts += 1`, and the check
+        # returned to a pristine `pending` that nothing ever re-dispatched — the
+        # case stayed in `checks_running` for good and the applicant watched
+        # «Идёт проверка» forever. Deadlocks are transient by definition; retry.
+        logger.warning(
+            "verification.check_contention_retry",
+            extra={"check_id": check_id, "error": str(exc)},
         )
-        verification_service.on_check_completed(db, check.case_id)
-        db.commit()
+        raise self.retry(countdown=_CONTENTION_RETRY_SECONDS, exc=exc) from exc
 
     return {"status": "ok", "check_status": str(result.status)}
 

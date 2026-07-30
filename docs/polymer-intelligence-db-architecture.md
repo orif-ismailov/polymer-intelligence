@@ -1315,8 +1315,31 @@ P7.b (входящий контур эскроу) схемы **не потреб
 provider-отметка платежа ложится в существующие колонки: NULL в `*_marked_by` означает
 «за движением стоит не оператор, а событие банка».
 
+### 10.9 Карточка товара: производитель и чипы (миграция 0030)
+
+Переработанный поток добавления товара (`docs/new-design/product_creation.jpeg`)
+спрашивает три факта, которым в `seller_offers` некуда было лечь: кто изготовил
+(«Производитель: Sibur») и две строки чипов — «Ключевые свойства» (ПТР, плотность,
+…) и «Применение» (литьё под давлением, упаковка, …).
+
+Оба набора чипов — **JSONB-массивы коротких строк**, а не join-таблица: это
+свободный текст продавца, по значению его никто не ищет, а нормализация купила бы
+только два джоина на каждый рендер карточки. `manufacturer` — `text`, а НЕ ссылка
+на `companies`: изготовитель товара, как правило, вообще не сторона на площадке.
+
+Все три колонки nullable — таблица живая, записи двух происхождений (TG-продавцы и
+портальные компании), бэкфила нет. Схема ответа отдаёт NULL как `[]`, чтобы клиенту
+не приходилось отличать «чипов не было» от «чипы очистили».
+
+```sql
+ALTER TABLE seller_offers ADD COLUMN manufacturer   text;
+ALTER TABLE seller_offers ADD COLUMN key_properties jsonb;   -- ["MFI: 3.0 г/10мин", …]
+ALTER TABLE seller_offers ADD COLUMN applications   jsonb;   -- ["Литьё под давлением", …]
+```
+
 ## История версий
 
+- v1.14 (30.07.2026): карточка товара (миграция 0030_offer_product_facts): `seller_offers += manufacturer / key_properties / applications` — три факта с листов «Добавление товара», которым не было места в строке оффера; чипы как JSONB-массивы (свободный текст, по значению не ищется), `manufacturer` текстом, а не ссылкой на `companies`; все колонки nullable, NULL читается схемой как `[]`.
 - v1.13 (28.07.2026): R6/P7 — гос-реестры (миграция 0029_gov_registry): `verification_check_type += gov_registry / vat_status`; таблица `registry_snapshots` — append-only (нет `updated_at`, нет UPDATE-пути), `source` различает ответ API и транскрипцию оператора, скриншот + sha256 как evidence, `fetched_at` отдельно от `created_at`. Заодно починен эвалюатор R1: `unavailable` перестаёт блокировать кейс после исчерпания ретраев (иначе мёртвый провайдер отключал ручной путь). P7.b (входящий контур эскроу) схемы не потребовал — `provider_events` и nullable `*_marked_by` приехали с P3.
 - v1.12 (28.07.2026): R5/P6 — лаборатории и образцы (миграция 0028_lab): enum'ы `lab_order_status`, `sample_request_status`, `offer_file_kind += lab_passport`; таблицы `lab_partners`, `lab_orders` (CHECK «заявка о чём-то» + CHECK «`done` ссылается на паспорт», результат указателем на файловую строку), `sample_requests` (продавец копией, частичный UQ на один живой запрос); `seller_offers += samples_available / sample_price / sample_dispatch_days / lab_verified`.
 - v1.11 (28.07.2026): R5/P5 — комплаенс химии (миграция 0027_compliance): enum'ы `regulation_level`, `regulation_regime`, `license_status`, `offer_file_kind += sds/coa`; таблицы `substances` (собственный источник истины, `hs_code` NOT NULL / `cas` UNIQUE NULL, пороги концентрации и изъятия), `company_licenses` (по режиму, срок действия проверяется на чтении), `substance_suggestions` (журнал AI-подсказок, `accepted IS NULL` = решения нет); `seller_offers += substance_id / cas_number / hs_code / declared_concentration_pct` + кеш вердикта.

@@ -10,6 +10,7 @@ interface AlertProps {
   children?: ReactNode;
   action?: ReactNode;
   className?: string;
+  "data-testid"?: string;
 }
 
 const tones: Record<AlertTone, string> = {
@@ -26,11 +27,19 @@ const dot: Record<AlertTone, string> = {
   danger: "bg-danger",
 };
 
-export function Alert({ tone = "info", title, children, action, className }: AlertProps) {
+export function Alert({
+  tone = "info",
+  title,
+  children,
+  action,
+  className,
+  "data-testid": testId,
+}: AlertProps) {
   return (
     <div
       role={tone === "danger" ? "alert" : "status"}
       className={cn("rounded-md border px-4 py-3", tones[tone], className)}
+      data-testid={testId}
     >
       <div className="flex items-start gap-3">
         <span className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", dot[tone])} aria-hidden="true" />

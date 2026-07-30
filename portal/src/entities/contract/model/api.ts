@@ -21,6 +21,17 @@ export const contractApi = {
   directory: (q: string): Promise<DirectoryCompany[]> =>
     api.get<DirectoryCompany[]>("/portal/companies/directory", { query: { q } }),
 
+  /**
+   * Resolve one verified company by id — the exact door the product page needs to
+   * preselect a seller. A name search would depend on the seller's legal name
+   * matching the ilike, and a company trading under a short name never would.
+   * Empty when the id is not (or no longer) verified.
+   */
+  directoryById: (companyId: number): Promise<DirectoryCompany[]> =>
+    api.get<DirectoryCompany[]>("/portal/companies/directory", {
+      query: { company_id: companyId },
+    }),
+
   list: (params: ListParams = {}): Promise<ContractSummary[]> =>
     api.get<ContractSummary[]>("/portal/contracts", { query: { ...params } }),
 

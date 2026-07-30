@@ -100,6 +100,7 @@ function DocumentRow({
 
 export function DocumentsSection({ company, editable }: DocumentsSectionProps) {
   const { t } = useTranslation();
+  const label = useEnumLabels();
   const lang = coerceLang(useAuthStore((s) => s.account?.language));
   const upload = useUploadCompanyDocument(company.id);
   const remove = useRemoveCompanyDocument(company.id);
@@ -150,7 +151,13 @@ export function DocumentsSection({ company, editable }: DocumentsSectionProps) {
                 <Select
                   id={id}
                   value={kind}
-                  options={DOCUMENT_KINDS.map((k) => ({ value: k, label: k }))}
+                  // `label: k` here rendered the raw enum (`registration_certificate`,
+                  // `power_of_attorney`, …). The translations exist and the rows above
+                  // already use them via label("documentKind", …).
+                  options={DOCUMENT_KINDS.map((k) => ({
+                    value: k,
+                    label: label("documentKind", k),
+                  }))}
                   onChange={(e) => setKind(e.target.value)}
                 />
               )}

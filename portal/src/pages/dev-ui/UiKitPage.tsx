@@ -5,22 +5,41 @@ import {
   Badge,
   BottomNav,
   Button,
+  DateInput,
   Card,
   CardBody,
   CardHeader,
   CardTitle,
   Checkbox,
+  ChecklistRow,
+  ChevronLeftIcon,
+  ChipInput,
+  ChoiceTile,
+  ClockIcon,
+  Confetti,
   ConfirmDialog,
   DownloadIcon,
+  Dropzone,
   EmptyState,
+  FactoryIcon,
   FileRow,
+  FlowHeader,
   FormField,
+  IconButton,
+  IconTile,
   InfoIcon,
+  GlobeIcon,
+  HashIcon,
   Input,
+  MapPinIcon,
   PageHeader,
+  PasswordInput,
   ProgressRing,
+  Radio,
+  RadioCard,
+  RegistryIcon,
+  Segmented,
   Select,
-  ShieldIcon,
   Skeleton,
   SpecItem,
   SpecList,
@@ -28,11 +47,15 @@ import {
   Spinner,
   StatChip,
   StatusStepper,
+  StepPanel,
   Stepper,
   StickyActionBar,
+  SuccessMark,
   Tabs,
+  TaxIcon,
   Textarea,
   Tooltip,
+  BoxIcon,
   type BottomNavItem,
   type StatusStep,
   type TabItem,
@@ -52,9 +75,31 @@ import {
 const WIZARD_STEPS = [
   { id: 1, label: "Тип компании" },
   { id: 2, label: "Данные" },
-  { id: 3, label: "Проверка" },
-  { id: 4, label: "Подпись" },
+  { id: 3, label: "Банк" },
+  { id: 4, label: "Документы" },
+  { id: 5, label: "Проверка" },
 ] as const;
+
+const ACCOUNT_TYPE_DEMO = [
+  {
+    id: "buyer",
+    title: "Покупатель",
+    description: "Закупка сырья и материалов для вашего производства",
+    icon: <RegistryIcon size={22} />,
+  },
+  {
+    id: "supplier",
+    title: "Поставщик",
+    description: "Продажа вашей продукции международным клиентам",
+    icon: <FactoryIcon size={22} />,
+  },
+] as const;
+
+const EIMZO_METHOD_DEMO: readonly TabItem[] = [
+  { id: "usb_token", label: "USB Token" },
+  { id: "mobile_id", label: "Mobile ID" },
+  { id: "cloud_id", label: "Cloud ID" },
+];
 
 const TIMELINE: readonly StatusStep[] = [
   { id: "created", label: "Проект создан продавцом", hint: "15.05.2026 10:30", state: "done" },
@@ -113,7 +158,13 @@ export function UiKitPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [checked, setChecked] = useState(true);
   const [sectionTab, setSectionTab] = useState("description");
+  const [accountType, setAccountType] = useState("supplier");
+  const [eimzoMethod, setEimzoMethod] = useState("usb_token");
   const [filterTab, setFilterTab] = useState("pp");
+  const [availability, setAvailability] = useState("in_stock");
+  const [samples, setSamples] = useState("yes");
+  const [sampleFee, setSampleFee] = useState("free");
+  const [chips, setChips] = useState<string[]>(["MFI: 3.0 г/10мин", "Плотность: 0.90 г/см³"]);
 
   return (
     // `pb-36` on phones, because this page renders a StickyActionBar — the rule
@@ -209,6 +260,9 @@ export function UiKitPage() {
         <Card>
           <CardBody className="space-y-6">
             <Stepper steps={WIZARD_STEPS} current={3} />
+            <div data-testid="ui-stepper-stacked">
+              <Stepper steps={WIZARD_STEPS} current={3} variant="stacked" />
+            </div>
             <div data-testid="ui-status-stepper">
               <StatusStepper steps={TIMELINE} />
             </div>
@@ -251,8 +305,80 @@ export function UiKitPage() {
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
             />
+            <div className="space-y-2" data-testid="ui-radio">
+              {(["free", "paid"] as const).map((fee) => (
+                <Radio
+                  key={fee}
+                  id={`ui-radio-${fee}`}
+                  name="ui-radio-group"
+                  value={fee}
+                  checked={sampleFee === fee}
+                  onChange={() => setSampleFee(fee)}
+                  label={fee === "free" ? "Бесплатно" : "Платно"}
+                />
+              ))}
+            </div>
+            <Segmented
+              ariaLabel="Образцы"
+              data-testid="ui-segmented"
+              value={samples}
+              onChange={setSamples}
+              options={[
+                { value: "yes", label: "Доступны" },
+                { value: "no", label: "Не предоставляются" },
+              ]}
+            />
+            <FormField label="Ключевые свойства">
+              {({ id }) => (
+                <ChipInput
+                  id={id}
+                  data-testid="ui-chip-input"
+                  values={chips}
+                  onChange={setChips}
+                  placeholder="Например, MFI: 3.0 г/10мин"
+                  addLabel="Добавить"
+                  removeLabel="Убрать"
+                />
+              )}
+            </FormField>
+            <Dropzone
+              data-testid="ui-dropzone"
+              label="Перетащите файлы или нажмите для загрузки"
+              hint="PDF, JPG, PNG (до 10 MB)"
+              accept="application/pdf"
+              onFiles={() => undefined}
+            />
           </CardBody>
         </Card>
+      </Section>
+
+      <Section title="Add-product sheets">
+        <div className="space-y-4">
+          <StepPanel step={3} title="Наличие / Под заказ" counter="Шаг 3 из 7" data-testid="ui-step-panel">
+            <div className="grid grid-cols-2 gap-3" data-testid="ui-choice-tiles">
+              <ChoiceTile
+                name="ui-availability"
+                value="in_stock"
+                tone="gold"
+                checked={availability === "in_stock"}
+                onChange={setAvailability}
+                icon={<BoxIcon size={22} />}
+                title="В наличии"
+                description="Товар есть на складе"
+              />
+              <ChoiceTile
+                name="ui-availability"
+                value="on_order"
+                tone="gold"
+                checked={availability === "on_order"}
+                onChange={setAvailability}
+                icon={<ClockIcon size={22} />}
+                title="Под заказ"
+                description="Производство по требованию"
+              />
+            </div>
+          </StepPanel>
+        </div>
       </Section>
 
       <Section title="Feedback">
@@ -273,7 +399,7 @@ export function UiKitPage() {
             </Button>
           </div>
           <Skeleton className="h-10 w-full" />
-          <EmptyState title="Предложения не найдены" description="Измените фильтры или зайдите позже." />
+          <EmptyState icon={<BoxIcon size={28} />} title="Предложения не найдены" description="Измените фильтры или зайдите позже." />
         </div>
       </Section>
 
@@ -316,9 +442,9 @@ export function UiKitPage() {
 
       <Section title="Specs">
         <div className="grid gap-3 sm:grid-cols-3">
-          <SpecTile icon={<InfoIcon />} label="CAS" value="9003-07-0" numeric />
-          <SpecTile icon={<InfoIcon />} label="HS Code" value="3902.10.9000" numeric />
-          <SpecTile icon={<ShieldIcon />} label="Страна" value="Узбекистан" />
+          <SpecTile icon={<HashIcon />} label="CAS" value="9003-07-0" numeric />
+          <SpecTile icon={<HashIcon />} label="HS Code" value="3902.10.9000" numeric />
+          <SpecTile icon={<GlobeIcon />} label="Страна" value="Узбекистан" />
         </div>
         <Card>
           <CardHeader icon={<InfoIcon size={16} />} action={<Badge tone="brand">Активен</Badge>}>
@@ -349,6 +475,132 @@ export function UiKitPage() {
             }
           />
           <FileRow name="Лицензия_на_экспорт.pdf" meta="PDF · 890 KB" muted />
+        </div>
+      </Section>
+
+      <Section title="Registration">
+        <div className="space-y-6">
+          <Card>
+            <CardBody>
+              <FlowHeader
+                title="Регистрация компании"
+                leading={
+                  <IconButton label="Назад">
+                    <ChevronLeftIcon size={20} />
+                  </IconButton>
+                }
+              />
+            </CardBody>
+          </Card>
+
+          <div className="space-y-3" data-testid="ui-radio-cards">
+            {ACCOUNT_TYPE_DEMO.map((option) => (
+              <RadioCard
+                key={option.id}
+                name="ui-kit-account-type"
+                value={option.id}
+                checked={accountType === option.id}
+                onChange={setAccountType}
+                title={option.title}
+                description={option.description}
+                icon={option.icon}
+                data-testid={`ui-radio-card-${option.id}`}
+              />
+            ))}
+          </div>
+
+          <Tabs
+            variant="segmented"
+            items={EIMZO_METHOD_DEMO}
+            value={eimzoMethod}
+            onChange={setEimzoMethod}
+            label="Способ подписи"
+            data-testid="ui-tabs-segmented"
+          />
+
+          <FormField label="PIN-код от токена" required>
+            {({ id }) => (
+              <PasswordInput id={id} defaultValue="123456" revealLabel="Показать PIN-код" data-testid="ui-password-input" />
+            )}
+          </FormField>
+
+          <FormField label="Дата регистрации компании" required>
+            {({ id }) => (
+              <DateInput id={id} defaultValue="2020-03-12" pickerLabel="Выбрать дату" />
+            )}
+          </FormField>
+
+          <FormField label="Юридический адрес" required>
+            {({ id }) => (
+              <Textarea
+                id={id}
+                rows={2}
+                defaultValue="100000, Узбекистан, г. Ташкент, ул. Амира Темура, 123"
+                trailing={<MapPinIcon size={18} />}
+                data-testid="ui-textarea-adorned"
+              />
+            )}
+          </FormField>
+
+          <Card>
+            <CardBody>
+              <ul className="divide-y divide-border" data-testid="ui-checklist">
+                <ChecklistRow
+                  icon={<RegistryIcon size={18} />}
+                  title="Проверка в реестре компаний"
+                  status="Успешно"
+                  state="passed"
+                />
+                <ChecklistRow
+                  icon={<TaxIcon size={18} />}
+                  title="Проверка налогового статуса"
+                  status="Выполняется"
+                  state="running"
+                />
+                <ChecklistRow
+                  icon={<FactoryIcon size={18} />}
+                  title="Проверка лицензий"
+                  status="Требуется уточнение"
+                  state="warning"
+                />
+              </ul>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardBody className="flex flex-col items-center py-8 text-center">
+              <SuccessMark data-testid="ui-success-mark" />
+              <p className="mt-5 text-base font-semibold text-text">Компания успешно проверена</p>
+            </CardBody>
+          </Card>
+
+          <Card className="relative overflow-hidden">
+            <Confetti />
+            <CardBody className="relative flex flex-col items-center py-10 text-center">
+              <SuccessMark size="lg" />
+              <p className="mt-6 text-2xl font-semibold text-text">Регистрация завершена!</p>
+              <SpecList variant="justified" columns={1} className="mt-6 w-full text-start">
+                <SpecItem label="ID компании" value="8f1c2b0e-4a77-4d1e-9b0a-1f2c3d4e5f60" />
+                <SpecItem label="Дата регистрации" value="12.03.2020" numeric />
+                <SpecItem label="Уровень доступа" value="Дистрибьютор" />
+              </SpecList>
+            </CardBody>
+          </Card>
+
+          <div className="flex flex-wrap gap-3" data-testid="ui-icon-tiles">
+            <IconTile tone="muted">
+              <FactoryIcon size={22} />
+            </IconTile>
+            <IconTile tone="brand">
+              <RegistryIcon size={22} />
+            </IconTile>
+            <IconTile tone="gold">
+              <TaxIcon size={22} />
+            </IconTile>
+            <IconTile tone="danger">
+              <InfoIcon size={22} />
+            </IconTile>
+          </div>
         </div>
       </Section>
 

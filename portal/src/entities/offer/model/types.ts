@@ -30,6 +30,11 @@ export interface OfferPayload {
   country?: string | null;
   min_order_qty?: string | number | null;
   description?: string | null;
+  /** Product facts the add-product sheets collect. Who made the goods, and the
+   *  two chip rows («Ключевые свойства» / «Применение»). */
+  manufacturer?: string | null;
+  key_properties?: string[];
+  applications?: string[];
   /** Production/sourcing lead time. Required by the API for made-to-order offers. */
   lead_time_days?: number | null;
   sale_mode?: SaleMode | null;

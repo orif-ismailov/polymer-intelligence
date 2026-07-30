@@ -142,8 +142,10 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 - App factory: `app/tasks/celery_app.py`. Beat schedule: `app/tasks/schedule.py`.
 - **Task modules must be listed explicitly** in `_TASK_MODULES` (autodiscover is a no-op here).
   Adding a new task module without listing it = "unregistered task" at dispatch.
-- Four queues: `ingest`, `parse`, `notify`, `default` (must match the compose
-  `-Q ingest,parse,notify,default` flag). Routing is in `task_routes`.
+- Five queues: `ingest`, `parse`, `notify`, `default` + `verify` (R1 company
+  verification, isolated so a slow provider can't starve the signal pipelines).
+  Must match the compose `-Q ingest,parse,notify,default,verify` flag in BOTH
+  compose files. Routing is in `task_routes`.
 - JSON-only serialization (refuses pickle); `task_acks_late=True` +
   `worker_prefetch_multiplier=1` so a crashed worker re-queues rather than dropping work.
 - The **userbot is a separate long-lived process** (`userbot/main.py`), NOT a Celery task. It

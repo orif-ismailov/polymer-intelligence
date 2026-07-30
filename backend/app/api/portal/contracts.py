@@ -153,10 +153,19 @@ def list_templates(
 @router.get("/companies/directory", response_model=list[DirectoryCompanyOut])
 def company_directory(
     q: str = Query(default="", max_length=200),
+    company_id: int | None = Query(
+        default=None, description="Resolve exactly this company (verified-only still applies)"
+    ),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> list[DirectoryCompanyOut]:
+    """Search verified companies by name/STIR, or resolve one by id.
+
+    The id lookup is what the product page hands over when a buyer taps «Запросить
+    контракт»: preselecting the seller by name would depend on its legal name
+    matching the ilike, and a company trading under a short name never would.
+    """
     try:
         rate_limit.enforce_window(
             redis_client, "directory", account.id, rate_limit.DIRECTORY_SEARCH_PER_MIN, 60
@@ -173,6 +182,8 @@ def company_directory(
         .options(selectinload(Company.business_roles))
         .filter(Company.status == CompanyStatus.verified)
     )
+    if company_id is not None:
+        query = query.filter(Company.id == company_id)
     term = q.strip()
     if term:
         like = f"%{term}%"

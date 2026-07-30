@@ -63,11 +63,45 @@ export interface MarketOffer {
   samples_available: boolean;
   sample_price: string | number | null;
   sample_dispatch_days: number | null;
+  /** Product facts the detail sheet paints (migration 0030 + compliance ids). */
+  manufacturer?: string | null;
+  key_properties?: string[];
+  applications?: string[];
+  cas_number?: string | null;
+  hs_code?: string | null;
 }
 
 /** Offer detail + the caller company's own inquiries on it (PortalMarketOfferDetail). */
 export interface MarketOfferDetail extends MarketOffer {
   my_inquiries: Inquiry[];
+  /**
+   * The selling COMPANY, so «Запросить контракт» can preselect a counterparty.
+   * `display_name` can't do that job — it is `short_name or legal_name`, while the
+   * counterparty directory searches `legal_name`/`tax_id`. Both null for
+   * seller-origin (Telegram) offers: no portal company, nobody to contract with.
+   */
+  seller_company_id: number | null;
+  seller_legal_name: string | null;
+}
+
+/**
+ * Catalog-safe public seller profile (`GET /portal/market/companies/{id}`).
+ * Verified companies only — no bank, docs, or verification case.
+ */
+export interface PublicCompanyProfile {
+  id: number;
+  public_id: string;
+  legal_name: string | null;
+  short_name: string | null;
+  legal_form: string | null;
+  legal_address: string | null;
+  jurisdiction: string;
+  registration_date: string | null;
+  verified_at: string | null;
+  logo_url: string | null;
+  roles: string[];
+  offer_count: number;
+  offers: MarketOffer[];
 }
 
 export interface MarketFilters {
@@ -80,4 +114,6 @@ export interface MarketFilters {
    *  without". */
   has_lab_passport?: boolean;
   lab_verified?: boolean;
+  /** Restrict to one seller company's approved listings (profile Products tab). */
+  seller_company_id?: number;
 }

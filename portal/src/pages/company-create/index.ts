@@ -1,1 +1,1 @@
-export { CompanyCreatePage } from "./CompanyCreatePage";
+export { CompanyCreatePage, CompanyCreatedPage } from "./CompanyCreatePage";

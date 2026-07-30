@@ -78,10 +78,12 @@ class TestRevision:
         assert callable(module.upgrade)  # type: ignore[attr-defined]
         assert callable(module.downgrade)  # type: ignore[attr-defined]
 
-    def test_0029_is_the_head(self) -> None:
-        assert _script_dir().get_heads() == ["0029"], (
-            "a second head means two migrations claim the same parent"
+    def test_0029_is_in_a_single_head_chain(self) -> None:
+        script = _script_dir()
+        assert len(script.get_heads()) == 1, (
+            f"a second head means two migrations claim the same parent: {script.get_heads()}"
         )
+        assert script.get_revision("0029").down_revision == "0028"
 
 
 class TestCheckTypes:

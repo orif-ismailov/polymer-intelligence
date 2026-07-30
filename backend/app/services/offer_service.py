@@ -255,6 +255,7 @@ def list_catalog(
     country: str | None = None,
     exclude_seller_id: int | None = None,
     exclude_company_id: int | None = None,
+    company_id: int | None = None,
     has_lab_passport: bool | None = None,
     lab_verified: bool | None = None,
     limit: int = 50,
@@ -268,6 +269,10 @@ def list_catalog(
     the linked catalog offers.
 
     ``availability`` / ``country`` are optional equality filters (R2 portal market).
+
+    ``company_id`` restricts to that seller company's approved listings (public
+    profile Products tab). Distinct from ``exclude_company_id``, which hides the
+    *viewer's* own offers while browsing the market.
 
     ``has_lab_passport`` / ``lab_verified`` are the two SEPARATE laboratory
     filters of FR-L5: "there is an analysis" and "we had it analysed". Only
@@ -299,6 +304,8 @@ def list_catalog(
                 SellerOffer.company_id != exclude_company_id,
             )
         )
+    if company_id is not None:
+        query = query.filter(SellerOffer.company_id == company_id)
     if product_id is not None:
         query = query.filter(SellerOffer.product_id == product_id)
     if availability is not None:
@@ -671,6 +678,9 @@ def create_company_offer(
         country=data.country,
         min_order_qty=data.min_order_qty,
         description=data.description,
+        manufacturer=data.manufacturer,
+        key_properties=data.key_properties,
+        applications=data.applications,
         lead_time_days=data.lead_time_days,
         sale_mode=data.sale_mode,
         accepts_rfq=data.accepts_rfq,
@@ -720,6 +730,9 @@ def update_company_offer(
     offer.country = data.country
     offer.min_order_qty = data.min_order_qty
     offer.description = data.description
+    offer.manufacturer = data.manufacturer
+    offer.key_properties = data.key_properties
+    offer.applications = data.applications
     offer.lead_time_days = data.lead_time_days
     offer.sale_mode = data.sale_mode
     offer.accepts_rfq = data.accepts_rfq

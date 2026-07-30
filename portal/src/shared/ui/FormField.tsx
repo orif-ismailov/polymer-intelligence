@@ -11,7 +11,17 @@ interface FormFieldProps {
   hint?: string;
   className?: string;
   /** Render-prop receives the id to wire onto the control for a11y. */
-  children: (fieldProps: { id: string; invalid: boolean; describedBy?: string }) => ReactNode;
+  children: (fieldProps: {
+    id: string;
+    invalid: boolean;
+    describedBy?: string;
+    /**
+     * Mirror of `required`, for `aria-required` on the control. The red asterisk
+     * on the label is a visual-only signal: without this, a screen-reader user was
+     * never told a field was mandatory.
+     */
+    required: boolean;
+  }) => ReactNode;
 }
 
 /**
@@ -32,7 +42,7 @@ export function FormField({ label, required, error, hint, className, children }:
           {label}
         </Label>
       ) : null}
-      {children({ id, invalid, describedBy })}
+      {children({ id, invalid, describedBy, required: Boolean(required) })}
       {hint && !error ? (
         <p id={hintId} className="mt-1 text-xs text-text-muted">
           {hint}

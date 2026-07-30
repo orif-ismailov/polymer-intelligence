@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -47,6 +47,7 @@ export function ContractCreatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const offerId = searchParams.get("offerId");
+  const counterpartyIdParam = searchParams.get("counterpartyId");
   const active = useActiveCompany().activeCompany;
   const templatesQuery = useContractTemplates();
 
@@ -63,6 +64,29 @@ export function ContractCreatePage() {
     [templatesQuery.data, templateId],
   );
   const fields = template ? fieldsOf(template) : [];
+
+  // Arriving from «Запросить контракт» on a product page: the offer hands over the
+  // seller's company id, so resolve it once and preselect it. Fetched by id rather
+  // than by name — the directory searches legal_name/tax_id, and a seller trading
+  // under a short name would never match its own listing. An id that is no longer
+  // verified comes back empty, which correctly leaves the buyer to pick by hand.
+  const preselectId = counterpartyIdParam ? Number(counterpartyIdParam) : null;
+  useEffect(() => {
+    if (preselectId == null || Number.isNaN(preselectId)) return;
+    if (active && preselectId === active.id) return;
+    let cancelled = false;
+    void contractApi
+      .directoryById(preselectId)
+      .then(([match]) => {
+        if (!cancelled && match) setCounterparty(match);
+      })
+      .catch(() => {
+        /* leave the picker empty — the buyer can still search by name */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [preselectId, active]);
 
   async function searchCounterparties(q: string): Promise<void> {
     setCpQuery(q);

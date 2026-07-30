@@ -10,6 +10,7 @@ import {
   ErrorView,
   PageHeader,
   Skeleton,
+  NewspaperIcon,
 } from "@/shared/ui";
 import { formatDate } from "@/shared/lib";
 
@@ -71,7 +72,7 @@ export function NewsPage() {
           ))}
         </div>
       ) : (
-        <EmptyState title={t("news.empty")} description={t("news.emptyBody")} />
+        <EmptyState icon={<NewspaperIcon size={28} />} title={t("news.empty")} description={t("news.emptyBody")} />
       )}
     </div>
   );

@@ -36,12 +36,16 @@ export function SampleRequestForm({ offerId, companyId, onSent }: SampleRequestF
     if (!touched && legalAddress) setAddress(legalAddress);
   }, [legalAddress, touched]);
 
+  // The server codes its refusals (`detail: {code}`); the fetch client puts that
+  // in `ApiError.code` and leaves `.message` as "Request failed with status 409",
+  // so matching on the message made every refusal read as a generic failure.
+  const ERRORS: Record<string, string> = {
+    already_requested: t("samples.errors.alreadyRequested"),
+    samples_not_available: t("samples.errors.notAvailable"),
+    own_offer: t("samples.errors.ownOffer"),
+  };
   const error = request.error
-    ? request.error.message.includes("already_requested")
-      ? t("samples.errors.alreadyRequested")
-      : request.error.message.includes("samples_not_available")
-        ? t("samples.errors.notAvailable")
-        : t("errors.generic")
+    ? (ERRORS[request.error.code ?? ""] ?? t("errors.generic"))
     : null;
 
   return (

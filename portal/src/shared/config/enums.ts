@@ -109,11 +109,28 @@ export type Availability = (typeof AVAILABILITY)[number];
 export const SALE_MODES = ["from_stock", "made_to_order", "recurring_contract"] as const;
 export type SaleMode = (typeof SALE_MODES)[number];
 
-export const QTY_UNITS = ["kg", "t", "pcs"] as const;
+/**
+ * Quantity units, in the spelling the rest of the stack uses.
+ *
+ * `MT` first and upper-case throughout: the backend column defaults to `"MT"`,
+ * the Mini App writes `MT`/`KG`, and every mockup prints `500 MT` — the portal's
+ * old lower-case `kg`/`t`/`pcs` was the only place a unit looked different, so
+ * one offer's card read `500 t` next to another's `500 MT`.
+ */
+export const QTY_UNITS = ["MT", "KG", "PCS"] as const;
 export type QtyUnit = (typeof QTY_UNITS)[number];
 
 export const CURRENCIES = ["UZS", "USD", "EUR", "RUB", "CNY"] as const;
 export type Currency = (typeof CURRENCIES)[number];
 
-export const JURISDICTIONS = ["UZ", "RU", "KZ", "CN", "TR", "other"] as const;
+/**
+ * `companies.jurisdiction` is a `varchar(2)` ISO country code, so every entry here
+ * must be exactly two letters.
+ *
+ * An `"other"` option used to ship in this list. The service upper-cases the value,
+ * so it reached Postgres as `"OTHER"` and blew the column width — a first-class,
+ * selectable UI choice answered 500 (`StringDataRightTruncation`). Adding a country
+ * means adding its real code, never a placeholder.
+ */
+export const JURISDICTIONS = ["UZ", "RU", "KZ", "CN", "TR"] as const;
 export type Jurisdiction = (typeof JURISDICTIONS)[number];

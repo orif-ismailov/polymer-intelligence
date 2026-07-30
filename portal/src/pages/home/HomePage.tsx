@@ -10,6 +10,14 @@ import { useUnreadCount } from "@/entities/notification";
 import { useRequests } from "@/entities/request";
 import { CaseStatusBadge } from "@/entities/verification";
 import {
+  Building2,
+  ClipboardList,
+  Handshake,
+  Inbox,
+  Package,
+  Store,
+} from "lucide-react";
+import {
   Card,
   CardBody,
   CardHeader,
@@ -18,6 +26,7 @@ import {
   EmptyState,
   LinkButton,
   LoadingView,
+  RegistryIcon,
   PageHeader,
   StatChip,
 } from "@/shared/ui";
@@ -29,15 +38,28 @@ const ACTIVE_REQUEST_STATUSES = new Set(["new", "viewed", "in_progress", "offer_
  * explanation. Only routes that already exist in the cabinet — the sheet's other
  * eight modules belong to features we haven't built.
  */
-function ModuleCard({ to, title, hint }: { to: string; title: string; hint: string }) {
+function ModuleCard({
+  to,
+  title,
+  hint,
+  icon,
+}: {
+  to: string;
+  title: string;
+  hint: string;
+  icon: ReactNode;
+}) {
   return (
     <Link
       to={to}
       className="group flex items-start justify-between gap-3 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-brand-line hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
     >
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold text-text">{title}</span>
-        <span className="mt-0.5 block text-xs text-text-muted">{hint}</span>
+      <span className="flex min-w-0 items-start gap-3">
+        <span className="mt-0.5 shrink-0 text-brand">{icon}</span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold text-text">{title}</span>
+          <span className="mt-0.5 block text-xs text-text-muted">{hint}</span>
+        </span>
       </span>
       <span className="mt-0.5 shrink-0 text-text-subtle transition-colors group-hover:text-brand">
         <ChevronRightIcon size={16} />
@@ -134,6 +156,7 @@ export function HomePage() {
         <EmptyState
           title={t("home.noActiveCompany")}
           description={t("home.noActiveCompanyBody")}
+          icon={<RegistryIcon size={28} />}
           action={<LinkButton to="/companies/new/1">{t("home.createCompany")}</LinkButton>}
         />
       )}
@@ -142,16 +165,42 @@ export function HomePage() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-text">{t("home.quickActions")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          <ModuleCard to="/market" title={t("nav.market")} hint={t("market.subtitle")} />
-          <ModuleCard to="/requests" title={t("nav.requests")} hint={t("requests.subtitle")} />
-          <ModuleCard to="/inquiries" title={t("nav.inquiries")} hint={t("inquiries.subtitle")} />
-          <ModuleCard to="/deals" title={t("nav.deals")} hint={t("deals.subtitle")} />
+          <ModuleCard
+            to="/market"
+            title={t("nav.market")}
+            hint={t("market.subtitle")}
+            icon={<Store size={18} strokeWidth={1.75} aria-hidden />}
+          />
+          <ModuleCard
+            to="/requests"
+            title={t("nav.requests")}
+            hint={t("requests.subtitle")}
+            icon={<ClipboardList size={18} strokeWidth={1.75} aria-hidden />}
+          />
+          <ModuleCard
+            to="/inquiries"
+            title={t("nav.inquiries")}
+            hint={t("inquiries.subtitle")}
+            icon={<Inbox size={18} strokeWidth={1.75} aria-hidden />}
+          />
+          <ModuleCard
+            to="/deals"
+            title={t("nav.deals")}
+            hint={t("deals.subtitle")}
+            icon={<Handshake size={18} strokeWidth={1.75} aria-hidden />}
+          />
           <ModuleCard
             to="/companies"
             title={t("home.companiesCard")}
             hint={t("home.companiesCardHint")}
+            icon={<Building2 size={18} strokeWidth={1.75} aria-hidden />}
           />
-          <ModuleCard to="/offers" title={t("home.offersCard")} hint={t("home.offersCardHint")} />
+          <ModuleCard
+            to="/offers"
+            title={t("home.offersCard")}
+            hint={t("home.offersCardHint")}
+            icon={<Package size={18} strokeWidth={1.75} aria-hidden />}
+          />
         </div>
       </section>
 

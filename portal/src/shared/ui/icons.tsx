@@ -1,260 +1,178 @@
 /**
- * Inline icon set for the design system. The portal deliberately ships no icon
- * dependency (see the hand-rolled SVGs in widgets/app-shell) — these are the
- * handful the shared primitives need, so pages don't re-draw them per screen.
+ * Portal icons — Lucide wrappers that keep the existing `{ size, className }` API
+ * so call sites and `@/shared/ui` re-exports stay stable.
  *
- * All of them inherit `currentColor` and size from the `size` prop, so a badge
- * or button controls the colour through tokens.
+ * Prefer adding a new named export here (mapped to a Lucide glyph) rather than
+ * pasting raw SVG into a page. Glyphs are chosen for the portal's domain
+ * (market / lab / verification / RFQ), not for decorative variety.
  */
 
-interface IconProps {
+import { type ComponentType } from "react";
+
+import {
+  AlertCircle,
+  AlignLeft,
+  Ban,
+  Banknote,
+  Bell,
+  Boxes,
+  Building2,
+  Calendar,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  CircleMinus,
+  ClipboardList,
+  Clock,
+  CloudUpload,
+  Copy,
+  Download,
+  Eye,
+  EyeOff,
+  Factory,
+  FileCheck2,
+  FileText,
+  FileType,
+  FlaskConical,
+  FolderCheck,
+  GitCompare,
+  Globe,
+  Handshake,
+  Hash,
+  Heart,
+  Image as LucideImage,
+  Inbox,
+  Info,
+  KeyRound,
+  Landmark,
+  Lock,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Newspaper,
+  Package,
+  PackageOpen,
+  Paperclip,
+  PenLine,
+  Plus,
+  Receipt,
+  Scale,
+  ScrollText,
+  Search,
+  Send,
+  Share2,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  Store,
+  Tag,
+  TestTube,
+  Truck,
+  Upload,
+  UserRound,
+  Users,
+  Usb,
+  Warehouse,
+  X,
+  type LucideProps,
+} from "lucide-react";
+
+export interface IconProps {
   size?: number;
   className?: string;
 }
 
-/** Filled circle with a tick — Verified / passed check (mockup badge glyph). */
-export function CheckCircleIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <circle cx="8" cy="8" r="7" fill="currentColor" />
-      <path
-        d="M4.8 8.3l2.1 2.1 4.3-4.6"
-        stroke="var(--surface)"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+type LucideGlyph = ComponentType<LucideProps>;
+
+function icon(Glyph: LucideGlyph) {
+  function Icon({ size = 14, className }: IconProps) {
+    return <Glyph size={size} className={className} aria-hidden="true" strokeWidth={1.75} />;
+  }
+  Icon.displayName = Glyph.displayName ?? Glyph.name;
+  return Icon;
 }
 
+/** Filled tick-in-circle — Verified / passed check (mockup badge glyph). */
+export const CheckCircleIcon = icon(CircleCheck);
 /** Bare tick, for use inside an already-filled circle (steppers). */
-export function CheckIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M3.5 8.4l3 3 6-6.8"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** Laboratory flask — the Laboratory Verified badge glyph. */
-export function FlaskIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M6 2h4M6.6 2v3.4L3.5 11.2A1.6 1.6 0 0 0 4.9 13.6h6.2a1.6 1.6 0 0 0 1.4-2.4L9.4 5.4V2"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M4.6 9.6h6.8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/** Stacked boxes — "in stock" availability. */
-export function BoxIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M2.5 5.2 8 2.4l5.5 2.8v5.6L8 13.6 2.5 10.8V5.2Z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <path d="M2.5 5.2 8 8m0 0 5.5-2.8M8 8v5.6" stroke="currentColor" strokeWidth="1.4" />
-    </svg>
-  );
-}
-
-/** Clock — "made to order" / lead time. */
-export function ClockIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <circle cx="8" cy="8" r="5.8" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M8 4.8V8l2.2 1.6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/** Left chevron — the mockups' "‹ Назад" affordance on every detail screen. */
-export function ChevronLeftIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M10 3.2 5.2 8l4.8 4.8"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** Right chevron — "open this row" on list cards and directory rows. */
-export function ChevronRightIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M6 3.2 10.8 8 6 12.8"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** Tray with a down arrow — the download affordance on document rows. */
-export function DownloadIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M8 2.6v6.6m0 0L5.4 6.6M8 9.2l2.6-2.6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M2.8 11v1.2a1.2 1.2 0 0 0 1.2 1.2h8a1.2 1.2 0 0 0 1.2-1.2V11"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Dog-eared sheet — the document glyph on file rows. */
-export function FileIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M9.2 1.8H4.6a1.2 1.2 0 0 0-1.2 1.2v10a1.2 1.2 0 0 0 1.2 1.2h6.8a1.2 1.2 0 0 0 1.2-1.2V5.2L9.2 1.8Z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <path d="M9.2 1.8v3.4h3.4" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-/** Circled "i" — the mockups mark explainable fields with one. */
-export function InfoIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <circle cx="8" cy="8" r="5.8" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M8 7.2v3.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="8" cy="5.2" r="0.85" fill="currentColor" />
-    </svg>
-  );
-}
-
-/** Shield with a tick — "safe and legal" reassurance blocks. */
-export function ShieldIcon({ size = 14, className }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M8 1.8 3.2 3.6v4.2c0 2.8 2 5.2 4.8 6.4 2.8-1.2 4.8-3.6 4.8-6.4V3.6L8 1.8Z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M5.9 7.9 7.4 9.4l2.9-3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+export const CheckIcon = icon(Check);
+/** Soft negative — «Нет паспорта» and similar non-chosen tiles. */
+export const CircleMinusIcon = icon(CircleMinus);
+export const FlaskIcon = icon(FlaskConical);
+export const TestTubeIcon = icon(TestTube);
+export const BoxIcon = icon(Package);
+export const PackageOpenIcon = icon(PackageOpen);
+export const ClockIcon = icon(Clock);
+export const ChevronLeftIcon = icon(ChevronLeft);
+export const ChevronRightIcon = icon(ChevronRight);
+export const DownloadIcon = icon(Download);
+export const FileIcon = icon(FileText);
+export const InfoIcon = icon(Info);
+export const ChevronDownIcon = icon(ChevronDown);
+export const CloseIcon = icon(X);
+export const GlobeIcon = icon(Globe);
+export const MapPinIcon = icon(MapPin);
+export const WarehouseIcon = icon(Warehouse);
+export const CalendarIcon = icon(Calendar);
+export const EyeIcon = icon(Eye);
+export const EyeOffIcon = icon(EyeOff);
+/** Outline tick-in-circle — AI-check row / soft success. */
+export const CheckCircleOutlineIcon = icon(CheckCircle2);
+export const AlertCircleIcon = icon(AlertCircle);
+export const AlignLeftIcon = icon(AlignLeft);
+export const ShieldCheckIcon = icon(ShieldCheck);
+export const ShieldAlertIcon = icon(ShieldAlert);
+export const SparkIcon = icon(Sparkles);
+export const BuyerIcon = icon(ShoppingBag);
+/** Distributor / supplier account type — inventory, not a delivery truck. */
+export const SupplierIcon = icon(Boxes);
+export const FactoryIcon = icon(Factory);
+export const TraderIcon = icon(Handshake);
+export const RegistryIcon = icon(Building2);
+export const BankIcon = icon(Landmark);
+export const TaxIcon = icon(Receipt);
+export const DirectorIcon = icon(UserRound);
+export const LicenseIcon = icon(ScrollText);
+export const LockIcon = icon(Lock);
+export const ScaleIcon = icon(Scale);
+export const SanctionsIcon = icon(Ban);
+export const PlusIcon = icon(Plus);
+export const ImageIcon = icon(LucideImage);
+export const UploadCloudIcon = icon(CloudUpload);
+export const TagIcon = icon(Tag);
+export const BanknoteIcon = icon(Banknote);
+export const TruckIcon = icon(Truck);
+export const CopyIcon = icon(Copy);
+/** Publish / go-live moment on the offer preview. */
+export const RocketIcon = icon(Upload);
+export const ShieldIcon = icon(Shield);
+export const SendIcon = icon(Send);
+export const ShareIcon = icon(Share2);
+export const MessageIcon = icon(MessageSquare);
+export const InboxIcon = icon(Inbox);
+export const StarIcon = icon(Star);
+/** HS / CAS-style codes — a hash, not a network graph. */
+export const NodesIcon = icon(Hash);
+export const HashIcon = icon(Hash);
+export const PdfIcon = icon(FileType);
+export const HeartIcon = icon(Heart);
+export const ContractSheetIcon = icon(FileCheck2);
+export const ClipboardListIcon = icon(ClipboardList);
+export const FolderCheckIcon = icon(FolderCheck);
+export const GitCompareIcon = icon(GitCompare);
+export const PenLineIcon = icon(PenLine);
+export const KeyRoundIcon = icon(KeyRound);
+export const UsbIcon = icon(Usb);
+export const StoreIcon = icon(Store);
+export const BellIcon = icon(Bell);
+export const NewspaperIcon = icon(Newspaper);
+export const PaperclipIcon = icon(Paperclip);
+export const SearchIcon = icon(Search);
+export const MailIcon = icon(Mail);
+export const UsersIcon = icon(Users);

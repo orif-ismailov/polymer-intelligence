@@ -116,6 +116,18 @@ body {
   outline: none;
 }
 
+/*
+ * `<input type="date">` draws a UA picker indicator that cannot be restyled and
+ * renders as a pale system glyph on the dark inset well. `DateInput` supplies the
+ * design-system calendar and drives `showPicker()`, so the native one is hidden —
+ * here rather than in the component, because a pseudo-element is not reachable
+ * from a Tailwind class.
+ */
+.date-field::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
 @layer utilities {
   /*
    * Figures that get compared column-to-column (prices, MOQ, volumes, metric
@@ -127,4 +139,24 @@ body {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
   }
+}
+
+/*
+ * Product-detail gallery (Swiper). Pagination sits over the image like the
+ * mockup dots — not as a separate strip below that never responded to swipe.
+ */
+.product-detail-swiper {
+  --swiper-pagination-bullet-size: 7px;
+  --swiper-pagination-bullet-horizontal-gap: 4px;
+  --swiper-pagination-color: #ffffff;
+  --swiper-pagination-bullet-inactive-color: #ffffff;
+  --swiper-pagination-bullet-inactive-opacity: 0.35;
+}
+
+.product-detail-swiper .swiper-pagination {
+  bottom: 10px !important;
+}
+
+.product-detail-swiper .swiper-slide {
+  height: auto;
 }

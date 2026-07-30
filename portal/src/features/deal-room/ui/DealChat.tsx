@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { DEAL_POLL_MS, dealApi } from "@/entities/deal";
 import type { DealMessage } from "@/entities/deal";
 import { cn, formatDateTime } from "@/shared/lib";
-import { Alert, Button, Input, Spinner } from "@/shared/ui";
+import { Alert, Button, Input, PaperclipIcon, Spinner } from "@/shared/ui";
 
 interface DealChatProps {
   companyId: number;
@@ -128,9 +128,10 @@ export function DealChat({ companyId, dealId }: DealChatProps) {
                   <button
                     type="button"
                     onClick={() => void openAttachment(message)}
-                    className="mt-1 text-sm font-medium text-brand underline-offset-2 hover:underline"
+                    className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-brand underline-offset-2 hover:underline"
                   >
-                    📎 {message.file_name}
+                    <PaperclipIcon size={14} />
+                    {message.file_name}
                   </button>
                 ) : null}
                 <p className="num mt-1 text-[11px] text-text-subtle">
@@ -167,7 +168,17 @@ export function DealChat({ companyId, dealId }: DealChatProps) {
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
         <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={sending}>
-          {file ? `📎 ${file.name}` : t("deals.chat.attach")}
+          {file ? (
+            <span className="inline-flex max-w-[12rem] items-center gap-1.5">
+              <PaperclipIcon size={14} />
+              <span className="truncate">{file.name}</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5">
+              <PaperclipIcon size={14} />
+              {t("deals.chat.attach")}
+            </span>
+          )}
         </Button>
         <Button onClick={() => void send()} loading={sending} disabled={!text.trim() && !file}>
           {t("deals.chat.send")}

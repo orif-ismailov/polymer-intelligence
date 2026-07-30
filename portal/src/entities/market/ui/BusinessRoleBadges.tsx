@@ -1,25 +1,33 @@
+import { type ReactNode } from "react";
+
 import { useTranslation } from "react-i18next";
 
-import { Badge } from "@/shared/ui";
+import {
+  Badge,
+  BoxIcon,
+  FactoryIcon,
+  FlaskIcon,
+  TraderIcon,
+  ShieldIcon,
+  SupplierIcon,
+  TruckIcon,
+} from "@/shared/ui";
 
 /**
  * Confirmed business roles of the company behind an offer.
  *
- * The glyphs come from the mockups. They are decoration, not information: the
- * label carries the meaning, so the emoji is aria-hidden and a screen reader
- * hears "Производитель", not "factory emoji".
- *
- * The backend sends CONFIRMED roles only, so anything rendered here has been
- * checked by staff — that is the whole point of the badge.
+ * Glyphs are decorative; the translated label carries the meaning.
+ * The backend sends CONFIRMED roles only — anything rendered here has been
+ * checked by staff.
  */
-const GLYPHS: Record<string, string> = {
-  manufacturer: "🏭",
-  distributor: "✅",
-  importer: "📦",
-  trader: "🌍",
-  laboratory: "🧪",
-  logistics_provider: "🚚",
-  insurance_provider: "🛡",
+const GLYPHS: Record<string, ReactNode> = {
+  manufacturer: <FactoryIcon size={12} />,
+  distributor: <SupplierIcon size={12} />,
+  importer: <BoxIcon size={12} />,
+  trader: <TraderIcon size={12} />,
+  laboratory: <FlaskIcon size={12} />,
+  logistics_provider: <TruckIcon size={12} />,
+  insurance_provider: <ShieldIcon size={12} />,
 };
 
 interface BusinessRoleBadgesProps {
@@ -40,8 +48,8 @@ export function BusinessRoleBadges({ roles, className, max }: BusinessRoleBadges
     <div className={className}>
       <div className="flex flex-wrap gap-1.5">
         {shown.map((role) => (
-          <Badge key={role} tone="neutral">
-            <span aria-hidden="true">{GLYPHS[role] ?? "•"}</span> {t(`businessRole.${role}`)}
+          <Badge key={role} tone="neutral" icon={GLYPHS[role]}>
+            {t(`businessRole.${role}`)}
           </Badge>
         ))}
         {hidden > 0 ? <Badge tone="neutral">+{hidden}</Badge> : null}

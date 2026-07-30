@@ -269,6 +269,6 @@ class TestOfferModelHelpers:
 class TestSingleHead:
     def test_0028_is_the_head(self) -> None:
         script = _script_dir()
-        assert script.get_heads() == ["0029"], (
-            f"expected a single head 0028, got {script.get_heads()}"
+        assert len(script.get_heads()) == 1, (
+            f"a second head means two migrations claim the same parent: {script.get_heads()}"
         )

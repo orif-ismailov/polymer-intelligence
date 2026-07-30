@@ -32,8 +32,19 @@ export type EimzoErrorCode =
   | "already_registered"
   | "signature_invalid"
   | "cert_revoked"
+  | "cert_no_tin"
   | "sign_failed"
   | "unknown";
+
+/**
+ * The chosen certificate's subject carries no organisation STIR, so there is
+ * nothing to register the company under.
+ *
+ * Declared here rather than beside the signer that raises it: `mapError` has to
+ * recognise it, and importing the signer module from the state machine would
+ * close an import cycle (the signers import this module for `EimzoSigner`).
+ */
+export class CertificateHasNoTin extends Error {}
 
 export interface EimzoVerifyOutcome<T> {
   ok: boolean;
@@ -42,8 +53,15 @@ export interface EimzoVerifyOutcome<T> {
 }
 
 export interface EimzoSigner<T> {
-  /** Issue the challenge to sign (server round-trip). */
-  getChallenge: () => Promise<string>;
+  /**
+   * Issue the challenge to sign (server round-trip).
+   *
+   * Receives the chosen certificate because a challenge is company-scoped and a
+   * first-time registration has no company yet — the wizard's signer reads the
+   * STIR out of the certificate subject and creates the row here. Signers that
+   * already know their subject (verification status, contracts) ignore it.
+   */
+  getChallenge: (cert: EimzoCertificate) => Promise<string>;
   /** Submit the PKCS#7 and return the typed outcome. */
   verify: (pkcs7: string) => Promise<EimzoVerifyOutcome<T>>;
 }
@@ -64,6 +82,7 @@ interface UseEimzoSign<T> {
 }
 
 function mapError(err: unknown): EimzoErrorCode {
+  if (err instanceof CertificateHasNoTin) return "cert_no_tin";
   if (err instanceof ApiError) {
     if (err.status === 422) return "mismatch";
     if (err.status === 400) return "expired";
@@ -95,12 +114,12 @@ export function useEimzoSign<T>({ signer, onConfirmed }: UseEimzoSignArgs<T>): U
   }, []);
 
   const runVerify = useCallback(
-    async (certId: string) => {
+    async (cert: EimzoCertificate) => {
       const bridge = getEimzoBridge();
       try {
         setState("signing");
-        const challenge = await signer.getChallenge();
-        const pkcs7 = await bridge.sign(certId, challenge);
+        const challenge = await signer.getChallenge(cert);
+        const pkcs7 = await bridge.sign(cert.id, challenge);
         setState("verifying");
         const out = await signer.verify(pkcs7);
         if (!out.ok) {
@@ -150,7 +169,9 @@ export function useEimzoSign<T>({ signer, onConfirmed }: UseEimzoSignArgs<T>): U
     setCerts(list);
     const [only] = list;
     if (list.length === 1 && only) {
-      await runVerify(only.id);
+      // Pass the object, not the id: `certs` state is not readable yet in this
+      // tick, and the signer needs the subject to resolve its company.
+      await runVerify(only);
       return;
     }
     setState("selecting");
@@ -158,9 +179,11 @@ export function useEimzoSign<T>({ signer, onConfirmed }: UseEimzoSignArgs<T>): U
 
   const pick = useCallback(
     async (certId: string) => {
-      await runVerify(certId);
+      const cert = certs.find((c) => c.id === certId);
+      if (!cert) return;
+      await runVerify(cert);
     },
-    [runVerify],
+    [certs, runVerify],
   );
 
   return { state, certs, error, result, start, pick, reset };

@@ -186,6 +186,40 @@ def test_directory_hides_non_verified(api) -> None:  # noqa: ANN001
     assert "309999999" not in taxes
 
 
+@requires_real_db
+def test_directory_lookup_by_id(api) -> None:  # noqa: ANN001
+    """Preselecting a counterparty needs an exact door, not a name guess.
+
+    The product page hands over a company id; searching by `q` would depend on the
+    seller's legal name matching the ilike, and a short_name never would. The
+    verified-only filter still applies — an id is not a way around it.
+    """
+    client, session = api
+    aid, auth = _account(session, "+998900000001")
+    verified_id = _verified_company(session, aid, "301111111")
+
+    bid, _ = _account(session, "+998900000002")
+    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
+
+    with session() as db:
+        draft = company_service.create_company(db, db.get(UserAccount, bid), "UZ", "309999999")
+        db.commit()
+        draft_id = draft.id
+
+    hit = client.get(
+        f"{_P}/companies/directory", params={"company_id": verified_id}, headers=auth
+    )
+    assert hit.status_code == 200
+    assert [c["id"] for c in hit.json()] == [verified_id]
+
+    miss = client.get(
+        f"{_P}/companies/directory", params={"company_id": draft_id}, headers=auth
+    )
+    assert miss.status_code == 200
+    assert miss.json() == []
+
+
 # ── authz matrix + full flow ──────────────────────────────────────────────────
 
 

@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
 
+import { registerCompany } from "./_registration";
+
 /**
  * R3 Stage B e2e: the full contract demo with a STUBBED CAPIWS bridge.
  *
@@ -54,12 +56,15 @@ async function login(page: Page, request: APIRequestContext, phone: string): Pro
   await page.waitForURL((url) => !url.pathname.startsWith("/login"));
 }
 
-/** Create + E-IMZO-verify a company (auto-approve assumed on). */
+/**
+ * Create + E-IMZO-verify a company (auto-approve assumed on).
+ *
+ * The signature now happens on step 1 and creates the company from the
+ * certificate's STIR, but the verification CASE is only opened at the end of the
+ * flow — so this walks the whole wizard rather than stopping at the signature.
+ */
 async function onboardVerified(page: Page, tax: string): Promise<void> {
-  await page.goto("/companies/new/1");
-  await page.getByLabel(/tax id|инн|stir/i).fill(tax);
-  await page.getByTestId("wizard-eimzo").click();
-  await page.waitForURL(/\/companies\/\d+\/verification/, { timeout: 15_000 });
+  await registerCompany(page, tax, { type: "supplier", sign: true });
 }
 
 test("Stage B: two verified companies sign a contract end-to-end", async ({ browser, request }) => {
