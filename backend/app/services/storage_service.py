@@ -413,22 +413,24 @@ def upload_verification_document(
 
 
 def presign_company_logo(company: Company, ttl: int = 600) -> str | None:
-    """Short-lived presigned GET URL for a company logo, or None if it has none.
+    """URL a browser can actually load for a company logo, or None if it has none.
 
-    Media has no permanent public URL (FR-M4) — every response mints a fresh link,
-    the same way contract documents are served.
+    NOT a presigned S3 link. `S3_ENDPOINT` is the INTERNAL address of the object
+    store (`http://minio:9000` under compose), so a presigned URL is signed against
+    a host no browser can resolve — every `<img src>` built from one renders as a
+    broken image. The bytes are therefore served by the API itself
+    (`GET /webapp/market/companies/{id}/logo`), the same proxy pattern offer photos
+    already use, which also keeps media same-origin with the portal.
+
+    Returned as a root-relative path so it works unchanged behind every host the
+    app is served from (cabinet./dev-cabinet./localhost) with no base-URL config.
+
+    `ttl` is accepted for call-site compatibility and ignored: the proxy route
+    carries no signature to expire.
     """
     if not company.logo_storage_path:
         return None
-
-    from app.core.storage import s3_client  # noqa: PLC0415
-
-    url = s3_client.generate_presigned_url(  # type: ignore[attr-defined]
-        "get_object",
-        Params={"Bucket": settings.S3_BUCKET, "Key": company.logo_storage_path},
-        ExpiresIn=ttl,
-    )
-    return str(url)
+    return f"/api/v1/webapp/market/companies/{company.id}/logo"
 
 
 def presign_verification_document(document: VerificationDocument, ttl: int = 600) -> str:

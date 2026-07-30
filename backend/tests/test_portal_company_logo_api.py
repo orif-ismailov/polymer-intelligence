@@ -112,13 +112,18 @@ def _company_for(client, auth: dict[str, str], tax_id: str) -> int:  # noqa: ANN
 
 
 @requires_real_db
-def test_owner_uploads_logo_and_gets_a_presigned_url(api) -> None:  # noqa: ANN001
+def test_owner_uploads_logo_and_gets_a_loadable_url(api) -> None:  # noqa: ANN001
+    """`logo_url` points at the API's own proxy route, not at a presigned S3 link.
+
+    S3_ENDPOINT is the object store's INTERNAL address, so a presigned URL is signed
+    against a host the browser cannot resolve — it would render as a broken image.
+    """
     client, session = api
     _aid, auth = _seed_account(session, "+998900000101")
     company_id = _company_for(client, auth, "111111111")
 
+    expected = f"/api/v1/webapp/market/companies/{company_id}/logo"
     fake_s3 = MagicMock()
-    fake_s3.generate_presigned_url.return_value = "https://s3.example/logo?sig=abc"
     with patch("app.core.storage.s3_client", fake_s3):
         res = client.post(
             f"{_BASE}/{company_id}/logo",
@@ -126,16 +131,15 @@ def test_owner_uploads_logo_and_gets_a_presigned_url(api) -> None:  # noqa: ANN0
             headers=auth,
         )
         assert res.status_code == 201, res.text
-        body = res.json()
-        assert body["logo_url"] == "https://s3.example/logo?sig=abc"
+        assert res.json()["logo_url"] == expected
 
-        # It survives a re-read, and the TTL is short-lived (FR-M4).
+        # It survives a re-read.
         detail = client.get(f"{_BASE}/{company_id}", headers=auth)
-        assert detail.json()["logo_url"] == "https://s3.example/logo?sig=abc"
+        assert detail.json()["logo_url"] == expected
 
     fake_s3.put_object.assert_called_once()
-    ttl = fake_s3.generate_presigned_url.call_args.kwargs["ExpiresIn"]
-    assert 0 < ttl <= 600
+    # No signature is minted any more — the proxy route carries none to expire.
+    fake_s3.generate_presigned_url.assert_not_called()
 
 
 @requires_real_db
