@@ -2,9 +2,11 @@ import { useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
+import { useAuthStore } from "@/entities/account";
 import { useUpdateCompanyProfile } from "@/entities/company";
 import type { CompanyDetail } from "@/entities/company";
-import { useEnumLabels } from "@/shared/i18n";
+import { coerceLang, useEnumLabels } from "@/shared/i18n";
+import { formatDate } from "@/shared/lib";
 import {
   Alert,
   Button,
@@ -31,6 +33,7 @@ interface Row {
 export function ProfileSection({ company, editable }: ProfileSectionProps) {
   const { t } = useTranslation();
   const label = useEnumLabels();
+  const lang = coerceLang(useAuthStore((s) => s.account?.language));
   const [editing, setEditing] = useState(false);
   const update = useUpdateCompanyProfile(company.id);
 
@@ -63,6 +66,13 @@ export function ProfileSection({ company, editable }: ProfileSectionProps) {
     { label: t("company.legalForm"), value: company.legal_form },
     { label: t("company.director"), value: company.director_name },
     { label: t("company.legalAddress"), value: company.legal_address },
+    // The wizard makes this required and the column has stored it since 0017, but
+    // the card never showed it back — so the one place the user could check what
+    // they had entered omitted it.
+    {
+      label: t("wizard.details.fields.registrationDate"),
+      value: company.registration_date ? formatDate(company.registration_date, lang) : null,
+    },
     { label: t("company.publicId"), value: company.public_id },
   ];
 

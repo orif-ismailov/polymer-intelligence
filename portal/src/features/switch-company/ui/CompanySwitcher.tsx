@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -54,9 +55,7 @@ export function CompanySwitcher() {
         <span className="truncate">
           {activeCompany ? companyLabel(activeCompany, t("companies.noName")) : t("home.activeCompany")}
         </span>
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+        <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
 
       {open ? (

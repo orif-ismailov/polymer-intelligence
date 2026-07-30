@@ -4,6 +4,7 @@ import {
   Card,
   CardBody,
   LinkButton,
+  LockIcon,
   PageHeader,
 } from "@/shared/ui";
 
@@ -32,10 +33,7 @@ export function OffersLocked({ companyId, companyName }: OffersLockedProps) {
             aria-hidden="true"
             className="flex h-12 w-12 items-center justify-center rounded-full bg-warning/10 text-warning"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.6" />
-              <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
+            <LockIcon size={24} />
           </span>
           <div>
             <h2 className="text-lg font-semibold text-text">{t("offers.lockedTitle")}</h2>

@@ -5,7 +5,7 @@ import { useAuthStore } from "@/entities/account";
 import { CompanyStatusBadge, useCompanies } from "@/entities/company";
 import type { CompanySummary } from "@/entities/company";
 import { CaseStatusBadge } from "@/entities/verification";
-import { coerceLang } from "@/shared/i18n";
+import { coerceLang, useEnumLabels } from "@/shared/i18n";
 import { formatDate } from "@/shared/lib";
 import {
   Card,
@@ -15,11 +15,16 @@ import {
   LinkButton,
   PageHeader,
   Skeleton,
+  RegistryIcon,
 } from "@/shared/ui";
 
 function CompanyRow({ company, lang }: { company: CompanySummary; lang: string }) {
   const { t } = useTranslation();
+  const label = useEnumLabels();
   const name = company.legal_name ?? company.short_name ?? t("companies.noName");
+  /** Compare what the badges would SAY, not the enum values — they differ. */
+  const sameLabel = (companyStatus: string, caseStatus: string): boolean =>
+    label("companyStatus", companyStatus) === label("caseStatus", caseStatus);
   return (
     <Link
       to={`/companies/${company.id}`}
@@ -27,8 +32,12 @@ function CompanyRow({ company, lang }: { company: CompanySummary; lang: string }
     >
       <div className="min-w-0">
         <p className="truncate font-medium text-text">{name}</p>
+        {/* The public_id used to be appended here. It is an opaque UUID that means
+            nothing to the person reading the list, it pushed the STIR they DO
+            recognise onto a second line, and the company card already shows it
+            once under «Публичный ID» for support to quote. */}
         <p className="num mt-0.5 text-sm text-text-muted">
-          {t("companies.taxId")}: {company.tax_id} · {company.public_id}
+          {t("companies.taxId")}: {company.tax_id}
         </p>
         {company.verified_at ? (
           <p className="num mt-0.5 text-xs text-text-subtle">
@@ -39,7 +48,12 @@ function CompanyRow({ company, lang }: { company: CompanySummary; lang: string }
       <div className="flex shrink-0 items-center gap-3">
         <div className="flex flex-col items-end gap-1.5">
           <CompanyStatusBadge status={company.status} />
-          {company.active_case ? <CaseStatusBadge status={company.active_case.status} /> : null}
+          {/* Only when it adds something. A draft company has a draft case, and both
+              labels are «Черновик», so the card stacked the same word twice and read
+              like a rendering bug. */}
+          {company.active_case && !sameLabel(company.status, company.active_case.status) ? (
+            <CaseStatusBadge status={company.active_case.status} />
+          ) : null}
         </div>
         <span className="text-text-subtle">
           <ChevronRightIcon size={16} />
@@ -88,6 +102,7 @@ export function CompaniesPage() {
         </Card>
       ) : (
         <EmptyState
+          icon={<RegistryIcon size={28} />}
           title={t("companies.empty")}
           description={t("companies.emptyBody")}
           action={<LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>}

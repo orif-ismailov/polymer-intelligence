@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAddBankAccount, useRemoveBankAccount } from "@/entities/company";
 import type { CompanyDetail } from "@/entities/company";
 import { BANK_MFO_LENGTH, CURRENCIES } from "@/shared/config";
+import { useEnumLabels } from "@/shared/i18n";
 import {
   Alert,
   Badge,
@@ -28,6 +29,7 @@ const DIGITS = /^\d+$/;
 
 export function BankSection({ company, editable }: BankSectionProps) {
   const { t } = useTranslation();
+  const label = useEnumLabels();
   const add = useAddBankAccount(company.id);
   const remove = useRemoveBankAccount(company.id);
   const [adding, setAdding] = useState(false);
@@ -85,7 +87,11 @@ export function BankSection({ company, editable }: BankSectionProps) {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge tone={account.status === "active" ? "success" : "neutral"}>{account.status}</Badge>
+                  {/* Was `{account.status}` — the raw enum, so a Russian card
+                      carried an English "unverified" badge. */}
+                  <Badge tone={account.status === "verified" ? "success" : "neutral"}>
+                    {label("bankAccountStatus", account.status)}
+                  </Badge>
                   {editable ? (
                     <button
                       type="button"

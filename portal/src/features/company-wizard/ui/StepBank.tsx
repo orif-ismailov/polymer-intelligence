@@ -14,6 +14,11 @@ interface StepBankProps {
   onBack: () => void;
 }
 
+/**
+ * Step 3 — «Банковский счёт». Not one of the mockup's four sheets, but the
+ * verification case's `bank_requisites` check reads what it collects, so it keeps
+ * its place in the flow wearing the same chrome as the sheets around it.
+ */
 export function StepBank({ onNext, onBack }: StepBankProps) {
   const { t } = useTranslation();
   const bank = useWizardDraft((s) => s.bank);
@@ -41,13 +46,13 @@ export function StepBank({ onNext, onBack }: StepBankProps) {
     : currencyOptions[0]?.value ?? "";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-base font-semibold text-text">{t("wizard.bank.title")}</h2>
+        <h2 className="text-lg font-semibold text-text">{t("wizard.bank.title")}</h2>
         <p className="mt-1 text-sm text-text-muted">{t("wizard.bank.subtitle")}</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-5">
         <FormField
           label={t("company.bankMfo")}
           hint={t("wizard.bank.mfoHint")}
@@ -66,6 +71,32 @@ export function StepBank({ onNext, onBack }: StepBankProps) {
           )}
         </FormField>
 
+        <FormField
+          label={t("company.accountNumber")}
+          error={touched && !accountOk ? t("wizard.bank.accountInvalid") : null}
+        >
+          {({ id, invalid, describedBy }) => (
+            <Input
+              id={id}
+              inputMode="numeric"
+              value={bank.account_number}
+              invalid={invalid}
+              aria-describedby={describedBy}
+              onChange={(e) => setBank({ account_number: e.target.value.replace(/\s+/g, "") })}
+            />
+          )}
+        </FormField>
+
+        <FormField label={t("company.bankName")}>
+          {({ id }) => (
+            <Input
+              id={id}
+              value={bank.bank_name}
+              onChange={(e) => setBank({ bank_name: e.target.value })}
+            />
+          )}
+        </FormField>
+
         <FormField label={t("company.currency")}>
           {({ id }) => (
             <Select
@@ -78,44 +109,23 @@ export function StepBank({ onNext, onBack }: StepBankProps) {
         </FormField>
       </div>
 
-      <FormField
-        label={t("company.accountNumber")}
-        error={touched && !accountOk ? t("wizard.bank.accountInvalid") : null}
-      >
-        {({ id, invalid, describedBy }) => (
-          <Input
-            id={id}
-            inputMode="numeric"
-            value={bank.account_number}
-            invalid={invalid}
-            aria-describedby={describedBy}
-            onChange={(e) => setBank({ account_number: e.target.value.replace(/\s+/g, "") })}
-          />
-        )}
-      </FormField>
-
-      <FormField label={t("company.bankName")}>
-        {({ id }) => (
-          <Input
-            id={id}
-            value={bank.bank_name}
-            onChange={(e) => setBank({ bank_name: e.target.value })}
-          />
-        )}
-      </FormField>
-
       <Alert tone="info">{t("wizard.bank.skipHint")}</Alert>
 
-      <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:justify-between">
-        <Button variant="ghost" onClick={onBack} className="sm:min-w-24">
-          {t("common.back")}
+      <div className="space-y-3">
+        <Button
+          fullWidth
+          size="lg"
+          onClick={() => proceed(true)}
+          data-testid="wizard-next"
+        >
+          {t("common.next")}
         </Button>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => proceed(false)}>
-            {t("common.skip")}
+          <Button variant="ghost" size="lg" onClick={onBack} className="min-w-24">
+            {t("common.back")}
           </Button>
-          <Button onClick={() => proceed(true)} className="min-w-32">
-            {t("common.next")}
+          <Button variant="outline" size="lg" onClick={() => proceed(false)} className="flex-1">
+            {t("common.skip")}
           </Button>
         </div>
       </div>

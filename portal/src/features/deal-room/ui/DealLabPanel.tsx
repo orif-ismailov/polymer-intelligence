@@ -13,6 +13,7 @@ import {
   FormField,
   Input,
   Textarea,
+  FlaskIcon,
 } from "@/shared/ui";
 
 interface DealLabPanelProps {
@@ -42,7 +43,7 @@ export function DealLabPanel({ companyId, dealId }: DealLabPanelProps) {
   return (
     <div className="space-y-4">
       {mine.length === 0 ? (
-        <EmptyState title={t("lab.dealNoneTitle")} description={t("lab.dealNoneBody")} />
+        <EmptyState icon={<FlaskIcon size={28} />} title={t("lab.dealNoneTitle")} description={t("lab.dealNoneBody")} />
       ) : (
         <div className="space-y-3">
           {mine.map((order) => (

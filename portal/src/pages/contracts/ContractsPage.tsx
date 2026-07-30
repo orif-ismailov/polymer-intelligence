@@ -18,6 +18,7 @@ import {
   PageHeader,
   Tabs,
   type TabItem,
+  ContractSheetIcon,
 } from "@/shared/ui";
 
 type Tab = "all" | "action" | "active";
@@ -78,7 +79,7 @@ export function ContractsPage() {
       ) : null}
 
       {!query.isLoading && !query.isError && filtered.length === 0 ? (
-        <EmptyState title={t("contracts.empty")} description={t("contracts.emptyBody")} />
+        <EmptyState icon={<ContractSheetIcon size={28} />} title={t("contracts.empty")} description={t("contracts.emptyBody")} />
       ) : null}
 
       <div className="space-y-3">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -38,15 +39,7 @@ export function NotificationBell() {
         onClick={() => setOpen((o) => !o)}
         className="relative rounded-md p-2 text-text-muted hover:bg-surface-2"
       >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path
-            d="M10 3a4 4 0 0 0-4 4c0 3-1.5 4.5-2 5h12c-.5-.5-2-2-2-5a4 4 0 0 0-4-4zM8 16a2 2 0 0 0 4 0"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Bell size={20} strokeWidth={1.75} aria-hidden="true" />
         {count > 0 ? (
           <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-danger-fg">
             {count > 9 ? "9+" : count}

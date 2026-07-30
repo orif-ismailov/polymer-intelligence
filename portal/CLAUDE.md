@@ -34,8 +34,8 @@ in this repo (same constraint as `webapp/`/`dashboard/`).
 
 | Layer | Role |
 |------|------|
-| `app/` | providers (QueryClient, i18n, router, theme), route tree, guards (`RequireAuth`, `RedirectIfAuthed`). |
-| `pages/` | login, otp, home, companies, company-create (wizard), company-view, verification-status, offers, offer-edit, settings + **R2** market (grid + offer detail w/ inquiry form), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
+| `app/` | providers (QueryClient, i18n, router, theme), route tree, guards (`RequireAuth`, `RedirectIfAuthed`, `RequireCompany`). |
+| `pages/` | login, otp, **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-edit, settings + **R2** market (grid + offer detail w/ inquiry form), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
 | `widgets/` | `app-shell` (topbar + company switcher), `case-status-panel` (per-check chips + needs_info deep-links). |
 | `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions). |
 | `entities/` | account, company, verification, offer + **R2** market, inquiry, request, news, notification + **P5** compliance (substance picker data, verdicts, licences) + **P6** lab (orders + the two badges), sample (requests + status badge) — types + api hooks + zustand models. |
@@ -65,6 +65,25 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   `cabinet.ai-imex.com` (no CORS). Don't hardcode absolute API URLs.
 - **Enforcement is badge-only in R1**: publishing requires a *verified* company (backend 403
   `company_not_verified`), surfaced as a locked offer form. No other gates are flipped.
+- **Registration is the gate, not a page in the cabinet.** `RequireCompany` sends an account with
+  zero companies to `/onboarding`; `/onboarding` and `/companies/new/*` are authenticated but sit
+  OUTSIDE both `AppShell` and that guard (gating the screen that resolves "you have no company"
+  on having one would loop). The flow follows `docs/new-design/register.jpeg`:
+  **1 Тип компании (+ «Электронная подпись») → 2 Данные → 3 Банк → 4 Документы → 5 Проверка →
+  «Регистрация завершена!»** (`/companies/new/done/:companyId`).
+  - The four account types are the mockup's, not the backend enum: `buyer→importer`,
+    `supplier→distributor` are the nearest members that exist (`ACCOUNT_TYPES` in
+    `features/company-wizard/model/constants.ts`). Sending anything else 422s — the enum is a
+    Postgres type, so widening it is a migration.
+  - **Signing comes before the form on purpose.** The challenge endpoint is company-scoped, so
+    `companyRegistrationSigner` reads the STIR out of the chosen certificate's subject, creates the
+    company from it, then signs — which is why `EimzoSigner.getChallenge` takes the certificate.
+    A signed company arrives at step 2 filled in and `identity_locked` (those fields render
+    disabled, and `useSubmitWizard` omits them from the PATCH or the server 409s).
+  - **Arriving at step 5 IS the submit** — there is no confirmation sheet. It is guarded by a ref
+    against React's double mount, and the checks then poll until they resolve.
+  - Bank + documents are not in the mockup but feed the case's `bank_requisites` /
+    `documents_complete` checks, so they keep their place in the flow wearing the same chrome.
 - **Design system (P0 — `docs/design-system.md` Part II).** The portal follows the IMEX AI
   mockups in `docs/new-design/`; **dark is the default theme**, light is secondary.
   - Build screens from `shared/ui` primitives and tokens **only**. No hex, no stock Tailwind

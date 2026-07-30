@@ -8,6 +8,7 @@ import {
   LinkButton,
   PageHeader,
   Skeleton,
+  HeartIcon,
 } from "@/shared/ui";
 
 /**
@@ -55,6 +56,7 @@ export function FavoritesPage() {
 
       {items.length === 0 ? (
         <EmptyState
+          icon={<HeartIcon size={28} />}
           title={t("market.favoritesEmpty")}
           description={t("market.favoritesEmptyBody")}
           action={<LinkButton to="/market">{t("market.title")}</LinkButton>}

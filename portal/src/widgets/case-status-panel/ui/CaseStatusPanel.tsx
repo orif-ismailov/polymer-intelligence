@@ -21,6 +21,7 @@ import {
   ProgressRing,
   SpecItem,
   SpecList,
+  ShieldIcon,
 } from "@/shared/ui";
 
 import { CheckRow } from "./CheckRow";
@@ -74,6 +75,7 @@ export function CaseStatusPanel({ companyId, fallbackCase }: CaseStatusPanelProp
   if (!caseOut) {
     return (
       <EmptyState
+          icon={<ShieldIcon size={28} />}
         title={t("verification.noCase")}
         description={t("verification.noCaseBody")}
         action={<SubmitVerificationButton companyId={companyId} onSubmitted={() => void query.refetch()} />}

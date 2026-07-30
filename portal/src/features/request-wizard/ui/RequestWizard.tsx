@@ -1,267 +1,116 @@
-import { useState } from "react";
-
 import { useTranslation } from "react-i18next";
 
-import { useCreateRequest, type RequestPayload } from "@/entities/request";
-import { INCOTERMS } from "@/shared/config";
+import { ChevronLeftIcon, IconButton, Stepper } from "@/shared/ui";
+import type { Step } from "@/shared/ui";
+
 import {
-  Alert,
-  Button,
-  FormField,
-  Input,
-  Select,
-  Stepper,
-  Textarea,
-  type Step,
-} from "@/shared/ui";
-
-const URGENCIES = ["low", "medium", "high"] as const;
-
-interface Draft {
-  product_text: string;
-  grade_text: string;
-  polymer_type: string;
-  volume: string;
-  volume_unit: string;
-  target_price: string;
-  currency: string;
-  incoterms: string;
-  destination_country: string;
-  port_or_city: string;
-  desired_date: string;
-  validity_days: string;
-  urgency: string;
-  comment: string;
-  company_name: string;
-  contact_name: string;
-  phone: string;
-  legal_address: string;
-}
-
-const EMPTY: Draft = {
-  product_text: "",
-  grade_text: "",
-  polymer_type: "",
-  volume: "",
-  volume_unit: "MT",
-  target_price: "",
-  currency: "USD",
-  incoterms: "unknown",
-  destination_country: "UZ",
-  port_or_city: "",
-  desired_date: "",
-  validity_days: "30",
-  urgency: "medium",
-  comment: "",
-  company_name: "",
-  contact_name: "",
-  phone: "",
-  legal_address: "",
-};
+  FIRST_STEP,
+  STEP_COMM,
+  STEP_EXTRA,
+  STEP_PARAMS,
+  STEP_PREVIEW,
+  STEP_PRODUCT,
+} from "../model/constants";
+import { useSubmitRequest } from "../model/useSubmitRequest";
+import { PublishDone } from "./PublishDone";
+import { StepComm } from "./StepComm";
+import { StepExtra } from "./StepExtra";
+import { StepParams } from "./StepParams";
+import { StepPreview } from "./StepPreview";
+import { StepProduct } from "./StepProduct";
 
 interface RequestWizardProps {
   companyId: number;
-  companyName: string;
-  onCreated: (requestId: number) => void;
+  step: number;
+  onStepChange: (step: number) => void;
+  onExit: () => void;
+  onPublished: (requestId: number) => void;
 }
 
-export function RequestWizard({ companyId, companyName, onCreated }: RequestWizardProps) {
+/**
+ * The new-purchase-request flow (`docs/new-design/request_page.jpeg`).
+ *
+ * Chrome first — back chevron, title, five-step rail — then whichever sheet the
+ * URL names. Sheets own their own validation and their own «Далее»; this
+ * component only decides which one is on screen and what publishing means.
+ */
+export function RequestWizard({
+  companyId,
+  step,
+  onStepChange,
+  onExit,
+  onPublished,
+}: RequestWizardProps) {
   const { t } = useTranslation();
-  const create = useCreateRequest(companyId);
-  const [step, setStep] = useState(1);
-  const [d, setD] = useState<Draft>({ ...EMPTY, company_name: companyName });
-
-  const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
-    setD((prev) => ({ ...prev, [key]: value }));
+  const save = useSubmitRequest(companyId);
 
   const steps: Step[] = [
-    { id: 1, label: t("requestWizard.step.product") },
-    { id: 2, label: t("requestWizard.step.specs") },
-    { id: 3, label: t("requestWizard.step.delivery") },
-    { id: 4, label: t("requestWizard.step.contacts") },
+    { id: 1, label: t("requestWizard.steps.product") },
+    { id: 2, label: t("requestWizard.steps.params") },
+    { id: 3, label: t("requestWizard.steps.extra") },
+    { id: 4, label: t("requestWizard.steps.comm") },
+    { id: 5, label: t("requestWizard.steps.preview") },
   ];
 
-  // Minimum to submit (mirror backend RequestCreate): a product, positive volume,
-  // and at least one of grade / polymer.
-  const step1Valid =
-    d.product_text.trim() !== "" &&
-    (d.grade_text.trim() !== "" || d.polymer_type.trim() !== "");
-  const step2Valid = Number(d.volume) > 0;
-
-  function submit() {
-    const payload: RequestPayload = {
-      company_id: companyId,
-      product_text: d.product_text.trim() || null,
-      grade_text: d.grade_text.trim() || null,
-      polymer_type: d.polymer_type.trim() || null,
-      volume: d.volume,
-      volume_unit: d.volume_unit,
-      target_price: d.target_price.trim() || null,
-      currency: d.currency,
-      incoterms: d.incoterms,
-      destination_country: d.destination_country.trim().toUpperCase() || "UZ",
-      port_or_city: d.port_or_city.trim() || null,
-      desired_date: d.desired_date || null,
-      validity_days: Number(d.validity_days) || 30,
-      urgency: d.urgency,
-      comment: d.comment.trim() || null,
-      company_name: d.company_name.trim() || null,
-      contact_name: d.contact_name.trim() || null,
-      phone: d.phone.trim() || null,
-      legal_address: d.legal_address.trim() || null,
-    };
-    create.mutate(payload, { onSuccess: (r) => onCreated(r.id) });
+  async function publish(): Promise<void> {
+    const saved = await save.submit();
+    if (saved) onPublished(saved.id);
   }
 
   return (
-    <div className="space-y-5">
-      <Stepper steps={steps} current={step} />
-
-      {create.isError ? <Alert tone="danger">{t("requestWizard.submitFailed")}</Alert> : null}
-
-      {step === 1 ? (
-        <div className="space-y-4">
-          <FormField label={t("requestWizard.product")} required>
-            {({ id }) => (
-              <Input id={id} value={d.product_text} onChange={(e) => set("product_text", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.grade")}>
-            {({ id }) => (
-              <Input id={id} value={d.grade_text} onChange={(e) => set("grade_text", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.polymer")}>
-            {({ id }) => (
-              <Input id={id} value={d.polymer_type} onChange={(e) => set("polymer_type", e.target.value)} />
-            )}
-          </FormField>
-        </div>
-      ) : null}
-
-      {step === 2 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label={t("requestWizard.volume")} required>
-            {({ id }) => (
-              <Input id={id} inputMode="decimal" value={d.volume} onChange={(e) => set("volume", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.unit")}>
-            {({ id }) => (
-              <Input id={id} value={d.volume_unit} onChange={(e) => set("volume_unit", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.targetPrice")}>
-            {({ id }) => (
-              <Input id={id} inputMode="decimal" value={d.target_price} onChange={(e) => set("target_price", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.currency")}>
-            {({ id }) => (
-              <Input id={id} value={d.currency} onChange={(e) => set("currency", e.target.value)} maxLength={3} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.incoterms")} className="sm:col-span-2">
-            {({ id }) => (
-              <Select
-                id={id}
-                value={d.incoterms}
-                onChange={(e) => set("incoterms", e.target.value)}
-                options={INCOTERMS.map((i) => ({ value: i, label: i }))}
-              />
-            )}
-          </FormField>
-        </div>
-      ) : null}
-
-      {step === 3 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label={t("requestWizard.country")}>
-            {({ id }) => (
-              <Input id={id} value={d.destination_country} onChange={(e) => set("destination_country", e.target.value)} maxLength={2} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.city")}>
-            {({ id }) => (
-              <Input id={id} value={d.port_or_city} onChange={(e) => set("port_or_city", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.desiredDate")}>
-            {({ id }) => (
-              <Input id={id} type="date" value={d.desired_date} onChange={(e) => set("desired_date", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.validityDays")}>
-            {({ id }) => (
-              <Input id={id} inputMode="numeric" value={d.validity_days} onChange={(e) => set("validity_days", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.urgency")} className="sm:col-span-2">
-            {({ id }) => (
-              <Select
-                id={id}
-                value={d.urgency}
-                onChange={(e) => set("urgency", e.target.value)}
-                options={URGENCIES.map((u) => ({ value: u, label: t(`requestWizard.urgencyOpt.${u}`) }))}
-              />
-            )}
-          </FormField>
-        </div>
-      ) : null}
-
-      {step === 4 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label={t("requestWizard.companyName")}>
-            {({ id }) => (
-              <Input id={id} value={d.company_name} onChange={(e) => set("company_name", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.contactName")}>
-            {({ id }) => (
-              <Input id={id} value={d.contact_name} onChange={(e) => set("contact_name", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.phone")}>
-            {({ id }) => (
-              <Input id={id} value={d.phone} onChange={(e) => set("phone", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.legalAddress")}>
-            {({ id }) => (
-              <Input id={id} value={d.legal_address} onChange={(e) => set("legal_address", e.target.value)} />
-            )}
-          </FormField>
-          <FormField label={t("requestWizard.comment")} className="sm:col-span-2">
-            {({ id }) => (
-              <Textarea id={id} rows={3} value={d.comment} onChange={(e) => set("comment", e.target.value)} />
-            )}
-          </FormField>
-        </div>
-      ) : null}
-
-      <div className="flex items-center justify-between pt-2">
-        <Button variant="ghost" disabled={step === 1} onClick={() => setStep((s) => s - 1)}>
-          {t("common.back")}
-        </Button>
-        {step < 4 ? (
-          <Button
-            disabled={(step === 1 && !step1Valid) || (step === 2 && !step2Valid)}
-            onClick={() => setStep((s) => s + 1)}
+    <div className="space-y-6">
+      <header className="space-y-3">
+        <div className="flex items-start gap-2">
+          <IconButton
+            label={t("common.back")}
+            onClick={() => (step > FIRST_STEP ? onStepChange(step - 1) : onExit())}
           >
-            {t("common.next")}
-          </Button>
-        ) : (
-          // Sheet …44 turns the last step's CTA gold: the one action that makes
-          // something public gets its own colour.
-          <Button
-            variant="gold"
-            disabled={!step1Valid || !step2Valid || create.isPending}
-            onClick={submit}
-          >
-            {create.isPending ? t("common.saving") : t("requestWizard.submit")}
-          </Button>
-        )}
+            <ChevronLeftIcon size={20} />
+          </IconButton>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-semibold leading-tight text-text">
+              {t("requestWizard.title")}
+            </h1>
+            <p className="mt-1 text-sm text-text-muted">{t("requestWizard.subtitle")}</p>
+          </div>
+        </div>
+      </header>
+
+      <Stepper steps={steps} current={step} variant="stacked" />
+
+      <div className="pt-1">
+        {step === STEP_PRODUCT ? (
+          <StepProduct onNext={() => onStepChange(STEP_PARAMS)} />
+        ) : null}
+        {step === STEP_PARAMS ? (
+          <StepParams
+            onNext={() => onStepChange(STEP_EXTRA)}
+            onBack={() => onStepChange(STEP_PRODUCT)}
+          />
+        ) : null}
+        {step === STEP_EXTRA ? (
+          <StepExtra
+            onNext={() => onStepChange(STEP_COMM)}
+            onBack={() => onStepChange(STEP_PARAMS)}
+          />
+        ) : null}
+        {step === STEP_COMM ? (
+          <StepComm
+            onNext={() => onStepChange(STEP_PREVIEW)}
+            onBack={() => onStepChange(STEP_EXTRA)}
+          />
+        ) : null}
+        {step === STEP_PREVIEW ? (
+          <StepPreview
+            error={save.error}
+            isPending={save.isPending}
+            onPublish={() => void publish()}
+            onEdit={() => onStepChange(STEP_PRODUCT)}
+          />
+        ) : null}
       </div>
     </div>
   );
 }
+
+export { PublishDone };

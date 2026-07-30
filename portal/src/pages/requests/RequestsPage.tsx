@@ -13,6 +13,8 @@ import {
   LinkButton,
   PageHeader,
   Skeleton,
+  ClipboardListIcon,
+  RegistryIcon,
 } from "@/shared/ui";
 import { formatDate } from "@/shared/lib";
 
@@ -61,7 +63,7 @@ export function RequestsPage() {
 
   if (!activeCompany) {
     return (
-      <EmptyState title={t("home.noActiveCompany")} description={t("home.noActiveCompanyBody")} />
+      <EmptyState icon={<RegistryIcon size={28} />} title={t("home.noActiveCompany")} description={t("home.noActiveCompanyBody")} />
     );
   }
 
@@ -94,6 +96,7 @@ export function RequestsPage() {
         </div>
       ) : (
         <EmptyState
+          icon={<ClipboardListIcon size={28} />}
           title={t("requests.empty")}
           description={t("requests.emptyBody")}
           action={<LinkButton to="/requests/new">{t("requests.create")}</LinkButton>}

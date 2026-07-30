@@ -13,6 +13,7 @@ import {
   ConfirmDialog,
   EmptyState,
   Skeleton,
+  MessageIcon,
 } from "@/shared/ui";
 import type { BadgeTone } from "@/shared/ui";
 
@@ -46,7 +47,7 @@ export function RfqResponseList({ companyId, requestId, canAccept }: RfqResponse
 
   const items = query.data?.items ?? [];
   if (items.length === 0) {
-    return <EmptyState title={t("rfq.noResponses")} description={t("rfq.noResponsesBody")} />;
+    return <EmptyState icon={<MessageIcon size={28} />} title={t("rfq.noResponses")} description={t("rfq.noResponsesBody")} />;
   }
 
   async function accept(response: RfqResponse): Promise<void> {

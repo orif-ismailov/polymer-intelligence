@@ -8,7 +8,8 @@ import { LanguageMenu } from "./LanguageMenu";
 
 interface AuthLayoutProps {
   title: string;
-  subtitle: string;
+  /** Optional: the OTP screen states its context inside the card instead. */
+  subtitle?: string;
   children: ReactNode;
 }
 
@@ -34,7 +35,7 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
             <h1 className="mt-6 text-2xl font-semibold leading-tight text-text sm:text-3xl">
               {title}
             </h1>
-            <p className="mt-2 text-sm text-text-muted">{subtitle}</p>
+            {subtitle ? <p className="mt-2 text-sm text-text-muted">{subtitle}</p> : null}
           </div>
 
           {children}

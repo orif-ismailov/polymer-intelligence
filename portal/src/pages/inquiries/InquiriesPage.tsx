@@ -21,6 +21,8 @@ import {
   Skeleton,
   Tabs,
   type TabItem,
+  InboxIcon,
+  RegistryIcon,
 } from "@/shared/ui";
 
 const STATUS_TONE = { pending: "warning", approved: "success", rejected: "danger" } as const;
@@ -70,6 +72,7 @@ export function InquiriesPage() {
   if (!activeCompany) {
     return (
       <EmptyState
+          icon={<RegistryIcon size={28} />}
         title={t("home.noActiveCompany")}
         description={t("home.noActiveCompanyBody")}
       />
@@ -110,6 +113,7 @@ export function InquiriesPage() {
         </div>
       ) : (
         <EmptyState
+          icon={<InboxIcon size={28} />}
           title={t(`inquiries.empty.${tab}`)}
           description={t("inquiries.emptyBody")}
           action={

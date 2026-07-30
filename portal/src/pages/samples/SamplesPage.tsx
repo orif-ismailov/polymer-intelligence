@@ -18,6 +18,8 @@ import {
   SpecList,
   Tabs,
   type TabItem,
+  PackageOpenIcon,
+  RegistryIcon,
 } from "@/shared/ui";
 
 type Tab = "incoming" | "sent";
@@ -93,6 +95,7 @@ export function SamplesPage() {
   if (!activeCompany) {
     return (
       <EmptyState
+          icon={<RegistryIcon size={28} />}
         title={t("home.noActiveCompany")}
         description={t("home.noActiveCompanyBody")}
       />
@@ -134,6 +137,7 @@ export function SamplesPage() {
         </div>
       ) : (
         <EmptyState
+          icon={<PackageOpenIcon size={28} />}
           title={t(`samples.empty.${tab}`)}
           description={t("samples.emptyBody")}
           action={

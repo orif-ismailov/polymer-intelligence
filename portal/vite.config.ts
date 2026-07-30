@@ -45,9 +45,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Prefer IPv4 explicitly: on macOS `localhost` resolves to ::1 first, while
+    // local uvicorn often binds only 127.0.0.1 — the proxy then fails and every
+    // `/api` call surfaces as a generic "Failed to fetch" in the SPA.
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: "http://127.0.0.1:8000",
         changeOrigin: true,
       },
     },

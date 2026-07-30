@@ -64,7 +64,9 @@ export function CompanyViewPage() {
         backTo="/companies"
         backLabel={t("nav.companies")}
         title={name}
-        subtitle={`${t("companies.taxId")}: ${company.tax_id} · ${company.public_id}`}
+        // The public_id was here too; it is now shown once, in the profile grid's
+        // «Публичный ID» row, instead of twice on one screen.
+        subtitle={`${t("companies.taxId")}: ${company.tax_id}`}
         badge={<CompanyStatusBadge status={company.status} />}
         actions={
           <>

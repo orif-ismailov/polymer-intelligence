@@ -39,6 +39,43 @@ export function formatDate(iso: string | null | undefined, lang = "ru"): string 
   }).format(date);
 }
 
+/**
+ * All-numeric date (`12.03.2020`).
+ *
+ * The mockups write calendar dates this way wherever they line up in a column —
+ * a registration date next to an id, a certificate date in a summary — because
+ * "12 мар. 2020 г." is a different width in every month and the column stops
+ * scanning. Prose keeps {@link formatDate}.
+ */
+export function formatDateShort(iso: string | null | undefined, lang = "ru"): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat(intlLocale(lang), {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: TZ_DISPLAY,
+  }).format(date);
+}
+
+/**
+ * Localized country name for an ISO-3166 alpha-2 code.
+ *
+ * `Intl.DisplayNames` rather than a translation table: the offer's `country`
+ * column is a `char(2)`, the selectors offer a dozen or so codes, and a
+ * hand-kept ru/uz/en list of country names is three files that drift. Falls back
+ * to the code itself — an unknown or malformed value must still print.
+ */
+export function countryName(code: string | null | undefined, lang = "ru"): string {
+  if (!code) return "—";
+  try {
+    return new Intl.DisplayNames([intlLocale(lang)], { type: "region" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 /** Human-readable byte size. */
 export function formatBytes(bytes: number | null | undefined): string {
   if (bytes == null) return "—";

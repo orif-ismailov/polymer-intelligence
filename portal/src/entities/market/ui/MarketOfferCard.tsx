@@ -1,7 +1,12 @@
 import { useTranslation } from "react-i18next";
 
 import { LabBadges } from "@/entities/lab";
-import { Badge, Card, CardBody } from "@/shared/ui";
+import {
+  Badge,
+  Card,
+  CardBody,
+  ImageIcon,
+} from "@/shared/ui";
 
 import { offerImageUrl, offerPhotos } from "../model/api";
 import type { MarketOffer } from "../model/types";
@@ -55,15 +60,7 @@ export function MarketOfferCard({ offer, onOpen }: MarketOfferCardProps) {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-text-subtle">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M3.5 6.5h17v11h-17zM3.5 15l4.5-4 3.5 3 3-2.5 6 5"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinejoin="round"
-                />
-                <circle cx="9" cy="10" r="1.3" fill="currentColor" />
-              </svg>
+              <ImageIcon size={28} />
             </div>
           )}
         </div>

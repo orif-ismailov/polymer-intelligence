@@ -1,6 +1,6 @@
 import { cn } from "@/shared/lib";
 
-export type TabsVariant = "underline" | "pill";
+export type TabsVariant = "underline" | "underlineGold" | "pill" | "segmented";
 
 /*
  * A separate .ts sibling, like buttonStyles.ts: exporting a non-component
@@ -31,6 +31,20 @@ const variants: Record<TabsVariant, { list: string; item: (active: boolean) => s
           : "border-transparent text-text-muted hover:text-text",
       ),
   },
+  /*
+   * Product detail (`docs/new-design/product_detail.jpeg`): the active tab is
+   * gold, not brand green — the sheet's secondary accent for section chrome.
+   */
+  underlineGold: {
+    list: "flex min-w-0 max-w-full gap-2 overflow-x-auto border-b border-border",
+    item: (active) =>
+      cn(
+        "-mb-px rounded-t-sm border-b-2 px-3 py-2 text-sm",
+        active
+          ? "border-gold font-medium text-gold"
+          : "border-transparent text-text-muted hover:text-text",
+      ),
+  },
   // The mockups' filter chips (market categories, deal scopes). Wraps rather
   // than scrolls, so it has no min-content problem.
   pill: {
@@ -41,6 +55,22 @@ const variants: Record<TabsVariant, { list: string; item: (active: boolean) => s
         active
           ? "border-brand-line bg-brand-soft text-brand"
           : "border-border text-text-muted hover:bg-surface-2 hover:text-text",
+      ),
+  },
+  /*
+   * The mockups' mode switcher inside a single well — E-IMZO «USB Token /
+   * Mobile ID / Cloud ID». Unlike `pill`, the options share one bordered track
+   * and split it evenly (`flex-1`), so the group reads as one control with a
+   * selected segment rather than as three independent chips.
+   */
+  segmented: {
+    list: "flex min-w-0 items-center gap-1 rounded-md border border-border bg-surface-inset p-1",
+    item: (active) =>
+      cn(
+        "flex-1 rounded-sm px-3 py-2 text-center text-sm font-medium",
+        active
+          ? "bg-brand-soft text-brand shadow-glow"
+          : "text-text-muted hover:bg-surface-2 hover:text-text",
       ),
   },
 };

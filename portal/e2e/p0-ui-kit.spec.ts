@@ -355,7 +355,10 @@ test("tabs mark exactly one option pressed in each variant", async ({ page }) =>
 });
 
 test("spec list is a definition list and marks its numeric values tabular", async ({ page }) => {
-  const list = page.getByTestId("ui-spec-list");
+  // `SpecList` stamps the testid on every instance, and the gallery now renders
+  // a second one (the `justified` receipt shape) — this test is about the first,
+  // `stacked`, block.
+  const list = page.getByTestId("ui-spec-list").first();
   await expect(list).toBeVisible();
   expect(await list.evaluate((el) => el.tagName)).toBe("DL");
 
@@ -447,4 +450,231 @@ test("sticky action bar clears the bottom nav on phones and goes static on deskt
 
   await page.setViewportSize({ width: 1280, height: 900 });
   expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
+});
+
+// ── Registration primitives (the redesigned company-registration flow) ───────
+
+test("radio cards expose real radios and mark exactly one selected", async ({ page }) => {
+  const group = page.getByTestId("ui-radio-cards");
+  const radios = group.locator('input[type="radio"]');
+  expect(await radios.count()).toBeGreaterThan(1);
+
+  /*
+   * The selection has to live on a real <input type="radio">: a styled <div> is
+   * what this primitive replaced, and it took arrow-key group navigation and
+   * screen-reader semantics with it. `sr-only` keeps it focusable — `hidden`
+   * or `display:none` would not be.
+   */
+  await page.getByTestId("ui-radio-card-buyer").click();
+  await expect(group.locator('input[value="buyer"]')).toBeChecked();
+  await expect(group.locator('input[value="supplier"]')).not.toBeChecked();
+
+  /*
+   * The chosen card is outlined in the brand colour, not merely tinted.
+   * `toHaveCSS` rather than a one-shot read: the native radio flips `checked`
+   * synchronously on click, so the paint is still one React commit behind.
+   */
+  const brand = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue("--brand").trim(),
+  );
+  const [r, g, b] = rgbKey(brand).split(",");
+  await expect(page.getByTestId("ui-radio-card-buyer")).toHaveCSS(
+    "border-top-color",
+    `rgb(${r}, ${g}, ${b})`,
+  );
+});
+
+test("segmented tabs share one track and press exactly one option", async ({ page }) => {
+  const strip = page.getByTestId("ui-tabs-segmented");
+  await expect(strip.locator('button[aria-pressed="true"]')).toHaveCount(1);
+
+  // The whole group is one control: the track is bordered, the items are not.
+  const trackBorder = await strip.evaluate((el) => getComputedStyle(el).borderTopWidth);
+  expect(parseFloat(trackBorder)).toBeGreaterThan(0);
+});
+
+test("checklist rows carry their outcome beyond colour alone", async ({ page }) => {
+  const rows = page.getByTestId("ui-checklist").locator("li");
+  expect(await rows.count()).toBeGreaterThan(2);
+
+  /*
+   * Every state must be readable without colour vision, so the outcome is
+   * spelled out in the status line rather than carried by the tint. The row also
+   * declares its state, which is what keeps the mark, the tint and the words
+   * from drifting apart.
+   */
+  for (const state of ["passed", "running", "warning"]) {
+    const row = page.locator(`[data-testid="ui-checklist"] li[data-state="${state}"]`).first();
+    await expect(row).toBeVisible();
+    expect((await row.innerText()).trim().length, `${state} row states its outcome`).toBeGreaterThan(0);
+  }
+});
+
+test("checklist status lines clear AA in both themes", async ({ page }) => {
+  for (const theme of ["dark", "light"] as const) {
+    await page.evaluate((t) => document.documentElement.setAttribute("data-theme", t), theme);
+
+    for (const state of ["passed", "warning", "failed", "running", "pending"]) {
+      const line = page.locator(`[data-testid="ui-checklist"] li[data-state="${state}"] p + p`);
+      if ((await line.count()) === 0) continue;
+      const { color, backdrop } = await line.first().evaluate((el) => {
+        let node: HTMLElement | null = el.parentElement;
+        let bg = "rgb(255, 255, 255)";
+        while (node) {
+          const value = getComputedStyle(node).backgroundColor;
+          if (!/rgba\(0, 0, 0, 0\)|transparent/.test(value)) {
+            bg = value;
+            break;
+          }
+          node = node.parentElement;
+        }
+        return { color: getComputedStyle(el).color, backdrop: bg };
+      });
+      expect(
+        contrastRatio(color, backdrop),
+        `${theme}: checklist ${state} status line`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  }
+  await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"));
+});
+
+test("the date field shows one calendar affordance, not the UA's as well", async ({ page }) => {
+  const field = page.locator("input.date-field").first();
+  await expect(field).toBeVisible();
+
+  /*
+   * `<input type="date">` paints `::-webkit-calendar-picker-indicator` from the
+   * system accent — on the dark inset well that is a pale wedge sitting next to
+   * our brand glyph, two calendars on one field. styles.css hides it.
+   *
+   * The rule is asserted through the stylesheet rather than `getComputedStyle`:
+   * author overrides on a UA-internal pseudo are not reported there (it answers
+   * "inline-block" even when the indicator is demonstrably gone), so reading it
+   * would fail a working field. What can silently break is the rule vanishing
+   * from the bundle, and that is exactly what this sees.
+   */
+  const rulePresent = await page.evaluate(() =>
+    [...document.styleSheets].some((sheet) => {
+      try {
+        return [...sheet.cssRules].some(
+          (rule) =>
+            rule.cssText.includes("calendar-picker-indicator") &&
+            rule.cssText.includes("date-field"),
+        );
+      } catch {
+        return false; // cross-origin sheet
+      }
+    }),
+  );
+  expect(rulePresent, "styles.css must hide the UA picker indicator").toBe(true);
+
+  // …and the design-system affordance that replaces it is there, exactly once.
+  await expect(field.locator("xpath=..").getByRole("button")).toHaveCount(1);
+});
+
+test("a password field masks by default and reveals on demand", async ({ page }) => {
+  const field = page.getByTestId("ui-password-input");
+  await expect(field).toHaveAttribute("type", "password");
+
+  // The reveal lives inside the well; `Input`'s adornment slot is otherwise
+  // pointer-transparent, so a click landing here proves the exception works.
+  const toggle = field.locator("xpath=..").getByRole("button");
+  await toggle.click();
+  await expect(field).toHaveAttribute("type", "text");
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+});
+
+test("the stacked stepper shows every label at phone width", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 900 });
+  const labels = page.getByTestId("ui-stepper-stacked").locator("li > span:last-child");
+  expect(await labels.count()).toBe(5);
+
+  /*
+   * Five steps on a 375 px phone give each label ~65 px. Truncating «Тип
+   * компании» to «Тип комп…» removes the one thing the rail exists to say, so
+   * the labels wrap instead — asserted as "nothing is clipped".
+   */
+  for (let i = 0; i < 5; i += 1) {
+    const clipped = await labels.nth(i).evaluate((el) => el.scrollWidth > el.clientWidth + 1);
+    expect(clipped, `step ${i + 1} label is clipped`).toBe(false);
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+});
+
+/*
+ * The add-product primitives (`ChoiceTile`, `Segmented`, `Radio`, `ChipInput`,
+ * `Dropzone`, `StepPanel`). Each one exists because the mockups' add-product
+ * sheets use a control the kit did not have, and each is easy to re-implement
+ * wrongly at a call site — so the contract is asserted here, not in the flow.
+ */
+
+test("a choice tile is a real radio and paints its chosen state", async ({ page }) => {
+  const tiles = page.getByTestId("ui-choice-tiles");
+  const inputs = tiles.getByRole("radio");
+  await expect(inputs).toHaveCount(2);
+
+  // The visible tile is a label around a hidden input: selection must be
+  // readable from the control, not only from the paint.
+  await expect(inputs.nth(0)).toBeChecked();
+  await inputs.nth(1).check();
+  await expect(inputs.nth(1)).toBeChecked();
+  await expect(inputs.nth(0)).not.toBeChecked();
+
+  // …and the chosen tile carries the gold border the mockup gives it, from the
+  // token rather than a stock palette class.
+  const chosen = tiles.locator("label").nth(1);
+  const border = await chosen.evaluate((el) => getComputedStyle(el).borderTopColor);
+  expect(rgbKey(border)).toBe(rgbKey(await token(page, "--accent-gold")));
+});
+
+test("the segmented control reports its state to assistive tech", async ({ page }) => {
+  const group = page.getByTestId("ui-segmented");
+  await expect(group).toHaveAttribute("role", "radiogroup");
+
+  const options = group.getByRole("radio");
+  await expect(options.nth(0)).toHaveAttribute("aria-checked", "true");
+  await options.nth(1).click();
+  await expect(options.nth(1)).toHaveAttribute("aria-checked", "true");
+  await expect(options.nth(0)).toHaveAttribute("aria-checked", "false");
+});
+
+test("radio rows share one group", async ({ page }) => {
+  const rows = page.getByTestId("ui-radio").getByRole("radio");
+  await expect(rows).toHaveCount(2);
+  await rows.nth(1).check();
+  await expect(rows.nth(0)).not.toBeChecked();
+});
+
+test("the chip input commits on Enter and removes a chip", async ({ page }) => {
+  const field = page.getByTestId("ui-chip-input");
+  const chips = field.locator("li");
+  const before = await chips.count();
+
+  await field.getByRole("textbox").fill("Высокая жёсткость");
+  await field.getByRole("textbox").press("Enter");
+  await expect(chips).toHaveCount(before + 1);
+  await expect(field.getByText("Высокая жёсткость")).toBeVisible();
+
+  // Every chip carries its own labelled ✕ — a bare glyph would be unreachable.
+  await field.getByRole("button", { name: /Убрать: Высокая жёсткость/ }).click();
+  await expect(chips).toHaveCount(before);
+});
+
+test("the dropzone opens a picker and hides its input", async ({ page }) => {
+  const zone = page.getByTestId("ui-dropzone");
+  await expect(zone).toBeVisible();
+
+  // The input is visually hidden but must still be a real file input, or the
+  // drop target is the only way in and keyboard users are locked out.
+  const input = page.locator('input[type="file"][accept="application/pdf"]');
+  await expect(input).toHaveCount(1);
+  await expect(input).not.toBeVisible();
+});
+
+test("a step panel numbers its sheet and states the counter", async ({ page }) => {
+  const panel = page.getByTestId("ui-step-panel");
+  await expect(panel.getByRole("heading", { level: 2 })).toHaveText("Наличие / Под заказ");
+  await expect(panel.getByText("Шаг 3 из 7")).toBeVisible();
+  await expect(panel.getByText("3", { exact: true }).first()).toBeVisible();
 });

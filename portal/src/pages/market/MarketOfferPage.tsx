@@ -1,44 +1,41 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { useCreateInquiry } from "@/entities/inquiry";
-import { LabBadges } from "@/entities/lab";
 import {
-  BusinessRoleBadges,
-  OfferReadinessBadges,
   offerImageUrl,
   offerPhotos,
   useMarketOffer,
+  useToggleFavorite,
 } from "@/entities/market";
-import { SampleRequestForm } from "@/features/sample-request";
-import { cn } from "@/shared/lib";
+import {
+  OfferActionBar,
+  OfferDescriptionBlocks,
+  OfferHero,
+} from "@/features/product-detail";
+import { coerceLang } from "@/shared/i18n";
+import { countryName } from "@/shared/lib";
 import {
   Alert,
   Badge,
-  BoxIcon,
   Button,
-  buttonClasses,
   Card,
   CardBody,
-  CardDescription,
   CardHeader,
   CardTitle,
-  ClockIcon,
-  DownloadIcon,
-  FileRow,
+  ChevronLeftIcon,
   FormField,
+  HeartIcon,
+  IconButton,
   Input,
   LinkButton,
   LoadingView,
-  PageHeader,
-  ShieldIcon,
+  ShareIcon,
   SpecItem,
   SpecList,
-  SpecTile,
-  StickyActionBar,
   Tabs,
   Textarea,
   type TabItem,
@@ -50,11 +47,35 @@ const INQUIRY_STATUS_TONE = {
   rejected: "danger",
 } as const;
 
-/** The sheet's five tabs minus the two whose data is out of scope (compatibility, reviews). */
-const TAB_IDS = ["description", "specs", "documents"] as const;
+const TAB_IDS = ["description", "specs", "documents", "compatibility", "reviews"] as const;
 
+/**
+ * True when a filled-in field cannot survive the wire.
+ *
+ * `quantity`/`target_price` land in `Decimal … gt=0` (`OfferRequestCreate`), so
+ * "500 тонн" or "0" comes back a 422 the buyer can only read as a generic
+ * failure. Empty is fine — it is sent as null. Same rule as the offer wizard's
+ * positive-number check (`features/offer-wizard/model/validation.ts`).
+ */
+function notPositiveNumber(value: string): boolean {
+  const trimmed = value.trim();
+  if (trimmed === "") return false;
+  const parsed = Number(trimmed);
+  return !Number.isFinite(parsed) || parsed <= 0;
+}
+
+/**
+ * Product detail — `docs/new-design/product_detail.jpeg`.
+ *
+ * One long sheet: hero (gallery + RFQ + favourite), gold-underline tabs, then
+ * the description blocks (facts / availability / samples / lab / seller /
+ * compatibility / documents). Specs and documents also have dedicated tabs;
+ * compatibility and reviews are present as chrome so the rail matches the
+ * mockup even while those surfaces are still empty.
+ */
 export function MarketOfferPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = coerceLang(i18n.language);
   const navigate = useNavigate();
   const { offerId: offerIdParam } = useParams<{ offerId: string }>();
   const offerId = offerIdParam ? Number(offerIdParam) : null;
@@ -63,13 +84,23 @@ export function MarketOfferPage() {
 
   const offerQuery = useMarketOffer(offerId, companyId);
   const createInquiry = useCreateInquiry(companyId);
+  const toggleFavorite = useToggleFavorite();
 
   const [quantity, setQuantity] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [message, setMessage] = useState("");
-  const [activePhoto, setActivePhoto] = useState(0);
   const [sampleSent, setSampleSent] = useState(false);
+  const [shareNote, setShareNote] = useState<string | null>(null);
   const [tab, setTab] = useState<(typeof TAB_IDS)[number]>("description");
+
+  // «Написать» from the seller profile returns with #inquiry — land on the form.
+  useEffect(() => {
+    if (window.location.hash === "#inquiry" && offerQuery.data) {
+      window.setTimeout(() => {
+        document.getElementById("inquiry")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    }
+  }, [offerQuery.data]);
 
   if (offerQuery.isLoading) return <LoadingView label={t("common.loading")} />;
   if (offerQuery.isError || !offerQuery.data) {
@@ -84,13 +115,25 @@ export function MarketOfferPage() {
   }
 
   const offer = offerQuery.data;
-  const product = offer.product_text ?? offer.grade_text ?? "—";
   const photos = offerPhotos(offer.files);
-  const active = photos[activePhoto] ?? photos[0] ?? null;
+  // A lab passport only — a COA is a different document. Accepting one here made
+  // the block say «паспорт отсутствует» next to a Download button.
   const passport = offer.files.find((f) => f.kind === "lab_passport") ?? null;
   const documents = offer.files.filter((f) => f.kind !== "image");
-  const grade = offer.product_text && offer.grade_text ? offer.grade_text : null;
   const canInquire = companyId != null && !offer.is_own;
+  const canSendRfq = canInquire && offer.accepts_rfq;
+  const title = offer.product_text ?? offer.grade_text ?? "—";
+
+  // Both sides must be verified or POST /portal/contracts answers 422, and a TG-origin
+  // offer has no company to sign with at all. Say which of those it is, on the page,
+  // rather than letting the buyer discover it two screens later.
+  const contractBlockedReason = !offer.accepts_contract
+    ? t("market.detail.contractNotOffered")
+    : offer.seller_company_id == null || !offer.company_verified
+      ? t("market.detail.contractNeedsVerifiedSeller")
+      : activeCompany?.status !== "verified"
+        ? t("market.detail.contractNeedsVerifiedCompany")
+        : null;
 
   const tabs: TabItem[] = TAB_IDS.map((id) => ({
     id,
@@ -98,7 +141,26 @@ export function MarketOfferPage() {
     ...(id === "documents" && documents.length > 0 ? { count: documents.length } : {}),
   }));
 
-  function submit() {
+  const quantityError = notPositiveNumber(quantity) ? t("market.quantityInvalid") : null;
+  const targetPriceError = notPositiveNumber(targetPrice) ? t("market.targetPriceInvalid") : null;
+  const inquiryError =
+    createInquiry.error?.code === "network" || createInquiry.error?.status === 0
+      ? t("common.network")
+      : createInquiry.error?.status === 429
+        ? t("market.inquiryRateLimited")
+        : createInquiry.error?.code === "rfq_not_accepted"
+          ? t("market.detail.rfqNotAccepted")
+          : createInquiry.error?.status === 400 && createInquiry.error.message
+            ? createInquiry.error.message
+            : createInquiry.isError
+              ? t("market.inquiryFailed")
+              : null;
+
+  function scrollTo(id: string): void {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function submitInquiry(): void {
     if (companyId == null || offerId == null) return;
     createInquiry.mutate(
       {
@@ -106,7 +168,11 @@ export function MarketOfferPage() {
         payload: {
           company_id: companyId,
           quantity: quantity.trim() || null,
+          // The offer's own unit and currency, or the server records its defaults
+          // (MT / none) and staff read "500" against a KG listing as 500 tonnes.
+          qty_unit: offer.qty_unit,
           target_price: targetPrice.trim() || null,
+          currency: offer.currency,
           message: message.trim() || null,
         },
       },
@@ -120,372 +186,301 @@ export function MarketOfferPage() {
     );
   }
 
+  /** Clear a stale success/error banner as soon as the buyer starts a new inquiry. */
+  function edit(setter: (value: string) => void): (value: string) => void {
+    return (value) => {
+      if (createInquiry.isSuccess || createInquiry.isError) createInquiry.reset();
+      setter(value);
+    };
+  }
+
+  async function share(): Promise<void> {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareNote(t("market.detail.linkCopied"));
+      window.setTimeout(() => setShareNote(null), 2500);
+    } catch {
+      /* user cancelled share sheet — nothing to report */
+    }
+  }
+
   return (
-    // `pb-36` clears the StickyActionBar on phones — a fixed bar does not extend
-    // this box, so without it the last card hides behind the CTA.
-    <div className="space-y-5 pb-36 md:pb-0">
-      <PageHeader
-        backTo="/market"
-        backLabel={t("market.backToMarket")}
-        title={product}
-        subtitle={grade}
-        badge={
-          <>
-            <Badge variant={offer.availability === "in_stock" ? "in-stock" : "on-order"}>
-              {t(`availability.${offer.availability}`)}
-            </Badge>
-            <LabBadges hasLabPassport={offer.has_lab_passport} labVerified={offer.lab_verified} />
-          </>
+    <div className="space-y-5 pb-36 md:pb-0" data-testid="product-detail">
+      <header className="flex items-center gap-2">
+        <IconButton label={t("market.backToMarket")} onClick={() => navigate("/market")}>
+          <ChevronLeftIcon size={20} />
+        </IconButton>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-text">{title}</p>
+          <p className="truncate text-xs text-text-muted">{t("market.detail.marketplace")}</p>
+        </div>
+        <IconButton
+          label={t(offer.is_favorite ? "market.unfavorite" : "market.favorite")}
+          onClick={() => toggleFavorite.mutate({ offerId: offer.id, next: !offer.is_favorite })}
+        >
+          <HeartIcon
+            size={18}
+            className={offer.is_favorite ? "fill-current text-danger" : undefined}
+          />
+        </IconButton>
+        <IconButton label={t("market.detail.share")} onClick={() => void share()}>
+          <ShareIcon size={18} />
+        </IconButton>
+      </header>
+
+      {shareNote ? <Alert tone="success">{shareNote}</Alert> : null}
+
+      <OfferHero
+        offer={offer}
+        photos={photos}
+        canInquire={canInquire}
+        onRequestRfq={() => {
+          setTab("description");
+          window.setTimeout(() => scrollTo("inquiry"), 50);
+        }}
+        onToggleFavorite={() =>
+          toggleFavorite.mutate({ offerId: offer.id, next: !offer.is_favorite })
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        {/* `min-w-0`: the tab strip scrolls, but a grid item's automatic
-            minimum size is its content, so without this the column widens. */}
-        <div className="min-w-0 space-y-5 lg:col-span-2">
-          <Card>
-            <CardBody className="space-y-4">
-              {/* The price is the hero figure on the mockup product page. */}
-              <div>
-                {offer.price == null ? (
-                  <p className="text-2xl font-semibold text-text-muted">
-                    {t("market.onRequest")}
-                  </p>
-                ) : (
-                  <p className="num text-2xl font-semibold leading-tight text-brand">
-                    {offer.price}{" "}
-                    <span className="text-base font-medium text-text-muted">
-                      {offer.currency}
-                      {offer.qty_unit ? `/${offer.qty_unit}` : ""}
-                    </span>
-                  </p>
-                )}
-              </div>
-              {active ? (
-                <div className="space-y-2">
-                  {/* Main frame + thumbnail strip (mockup sheet 4). */}
-                  <div className="overflow-hidden rounded-md border border-border bg-surface-inset">
-                    <img
-                      src={offerImageUrl(offer.id, active.id)}
-                      alt={active.file_name}
-                      className="max-h-96 w-full object-contain"
-                    />
-                  </div>
-                  {photos.length > 1 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {photos.map((f, index) => (
-                        <button
-                          key={f.id}
-                          type="button"
-                          onClick={() => setActivePhoto(index)}
-                          aria-label={f.file_name}
-                          aria-current={index === activePhoto}
-                          className={cn(
-                            "h-20 w-20 overflow-hidden rounded-md border transition-colors",
-                            index === activePhoto
-                              ? "border-brand"
-                              : "border-border hover:border-brand-line",
-                          )}
-                        >
-                          <img
-                            src={offerImageUrl(offer.id, f.id)}
-                            alt=""
-                            loading="lazy"
-                            className="h-full w-full object-cover"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-              {/* The sheet's fact strip: the four numbers a buyer scans first. */}
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <SpecTile
-                  icon={<BoxIcon />}
-                  label={t("market.qty")}
-                  value={
-                    offer.qty_available != null
-                      ? `${offer.qty_available} ${offer.qty_unit}`
-                      : "—"
-                  }
-                  numeric
-                />
-                <SpecTile icon={<ShieldIcon />} label={t("market.incoterms")} value={offer.incoterms} />
-                <SpecTile
-                  icon={<BoxIcon />}
-                  label={t("market.minOrder")}
-                  value={
-                    offer.min_order_qty != null
-                      ? `${offer.min_order_qty} ${offer.qty_unit}`
-                      : "—"
-                  }
-                  numeric
-                />
-                <SpecTile
-                  icon={<ClockIcon />}
-                  label={t("market.leadTimeShort")}
-                  value={offer.lead_time_days != null ? String(offer.lead_time_days) : "—"}
-                  numeric
-                />
-              </div>
-            </CardBody>
-          </Card>
+      <Tabs
+        items={tabs}
+        value={tab}
+        onChange={(id) => setTab(id as typeof tab)}
+        variant="underlineGold"
+        label={title}
+      />
 
-          {/* Sheet …42 splits the long tail into tabs rather than one long scroll. */}
-          <Card>
-            <CardBody className="space-y-4">
-              <Tabs items={tabs} value={tab} onChange={(id) => setTab(id as typeof tab)} label={product} />
-
-              {tab === "description" ? (
-                offer.description ? (
-                  <p className="whitespace-pre-line text-sm text-text">{offer.description}</p>
-                ) : (
-                  <p className="text-sm text-text-muted">{t("market.noDescription")}</p>
-                )
-              ) : null}
-
-              {tab === "specs" ? (
-                <SpecList>
-                  <SpecItem label={t("market.country")} value={offer.country ?? "—"} />
-                  <SpecItem label={t("market.warehouse")} value={offer.warehouse_city ?? "—"} />
-                  <SpecItem label={t("market.incoterms")} value={offer.incoterms} />
-                  <SpecItem
-                    label={t("market.qty")}
-                    value={
-                      offer.qty_available != null
-                        ? `${offer.qty_available} ${offer.qty_unit}`
-                        : "—"
-                    }
-                    numeric
-                  />
-                  <SpecItem
-                    label={t("market.minOrder")}
-                    value={
-                      offer.min_order_qty != null
-                        ? `${offer.min_order_qty} ${offer.qty_unit}`
-                        : "—"
-                    }
-                    numeric
-                  />
-                  {offer.lead_time_days != null ? (
-                    <SpecItem
-                      label={t("market.leadTimeShort")}
-                      value={t("market.leadTime", { count: offer.lead_time_days })}
-                      numeric
-                    />
-                  ) : null}
-                </SpecList>
-              ) : null}
-
-              {/* The laboratory claim, with the document behind it. A badge a
-                  buyer cannot open is a badge they have to take on trust. */}
-              {tab === "documents" ? (
-                documents.length > 0 ? (
-                  <div className="space-y-2">
-                    {documents.map((file) => (
-                      <FileRow
-                        key={file.id}
-                        name={file.file_name}
-                        meta={t(`documentKind.${file.kind}`, { defaultValue: file.kind })}
-                        status={
-                          file.id === passport?.id ? (
-                            <Badge variant="lab-verified">{t("lab.badge.passport")}</Badge>
-                          ) : undefined
-                        }
-                        actions={
-                          <a
-                            href={offerImageUrl(offer.id, file.id)}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label={t("common.download")}
-                            className="rounded-sm p-1.5 text-text-muted transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                          >
-                            <DownloadIcon size={16} />
-                          </a>
-                        }
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-text-muted">{t("market.noDocuments")}</p>
-                )
-              ) : null}
-            </CardBody>
-          </Card>
-
-          {/* Samples: only offered when the seller said so, and never to
-              themselves — the API refuses both, this just does not ask. */}
-          {offer.samples_available && !offer.is_own ? (
-            <Card id="samples">
-              <CardHeader>
-                <CardTitle>{t("samples.offerTitle")}</CardTitle>
-                <CardDescription>
-                  {offer.sample_price == null
-                    ? t("samples.free")
-                    : t("samples.priced", {
-                        price: offer.sample_price,
-                        currency: offer.currency,
-                      })}
-                  {offer.sample_dispatch_days != null
-                    ? ` · ${t("samples.dispatch", { count: offer.sample_dispatch_days })}`
-                    : ""}
-                </CardDescription>
-              </CardHeader>
-              <CardBody>
-                {!activeCompany ? (
-                  <Alert tone="info">{t("home.noActiveCompany")}</Alert>
-                ) : sampleSent ? (
-                  <Alert tone="success">{t("samples.sentOk")}</Alert>
-                ) : (
-                  <SampleRequestForm
-                    offerId={offer.id}
-                    companyId={activeCompany.id}
-                    onSent={() => setSampleSent(true)}
-                  />
-                )}
-              </CardBody>
-            </Card>
-          ) : null}
-
-          {offer.my_inquiries.length > 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("market.myInquiries")}</CardTitle>
-              </CardHeader>
-              <CardBody className="space-y-2">
-                {offer.my_inquiries.map((inq) => (
-                  <button
-                    key={inq.id}
-                    type="button"
-                    onClick={() => navigate(`/inquiries/${inq.id}`)}
-                    className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2 text-left text-sm hover:border-brand"
-                  >
-                    <span className="text-text-muted">
-                      {inq.message ?? `#${inq.id}`}
-                    </span>
-                    <Badge tone={INQUIRY_STATUS_TONE[inq.status]}>
-                      {t(`inquiryStatus.${inq.status}`)}
-                    </Badge>
-                  </button>
-                ))}
-              </CardBody>
-            </Card>
-          ) : null}
-        </div>
-
-        <div className="min-w-0 space-y-4">
-          <Card>
-            <CardHeader
-              icon={<ShieldIcon size={16} />}
-              action={
-                offer.company_verified ? (
-                  <Badge variant="verified">{t("market.verified")}</Badge>
-                ) : undefined
-              }
-            >
-              <CardTitle>{t("market.seller")}</CardTitle>
-            </CardHeader>
-            <CardBody className="space-y-2 text-sm">
-              <div className="font-medium text-text">{offer.display_name ?? "—"}</div>
-              {offer.company_verified ? null : (
-                <span className="text-text-muted">{t("market.notVerified")}</span>
-              )}
-              {/* No `max` here: the detail page has room, and a buyer choosing a
-                  counterparty wants the whole picture. */}
-              <BusinessRoleBadges roles={offer.business_roles} />
-              <OfferReadinessBadges offer={offer} />
-              {offer.lead_time_days != null ? (
-                <p className="num text-text-muted">
-                  {t("market.leadTime", { count: offer.lead_time_days })}
-                </p>
-              ) : null}
-            </CardBody>
-          </Card>
-
-          <Card id="inquiry">
-            <CardHeader>
-              <CardTitle>{t("market.sendInquiry")}</CardTitle>
-            </CardHeader>
-            <CardBody className="space-y-3">
-              {offer.is_own ? (
-                <Alert tone="info">{t("market.ownOffer")}</Alert>
-              ) : companyId == null ? (
-                <Alert tone="warning">{t("market.selectCompanyHint")}</Alert>
-              ) : (
-                <>
-                  {createInquiry.isSuccess ? (
-                    <Alert tone="success">{t("market.inquirySent")}</Alert>
-                  ) : null}
-                  {createInquiry.isError ? (
-                    <Alert tone="danger">{t("market.inquiryFailed")}</Alert>
-                  ) : null}
-                  <FormField label={t("market.quantity")}>
-                    {({ id }) => (
-                      <Input
-                        id={id}
-                        inputMode="decimal"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        placeholder={offer.qty_unit}
-                      />
-                    )}
-                  </FormField>
-                  <FormField label={t("market.targetPrice")}>
-                    {({ id }) => (
-                      <Input
-                        id={id}
-                        inputMode="decimal"
-                        value={targetPrice}
-                        onChange={(e) => setTargetPrice(e.target.value)}
-                        placeholder={offer.currency}
-                      />
-                    )}
-                  </FormField>
-                  <FormField label={t("market.message")}>
-                    {({ id }) => (
-                      <Textarea
-                        id={id}
-                        rows={3}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      />
-                    )}
-                  </FormField>
-                  <Button
-                    fullWidth
-                    disabled={!canInquire || createInquiry.isPending || (!quantity.trim() && !message.trim())}
-                    onClick={submit}
-                  >
-                    {createInquiry.isPending ? t("common.saving") : t("market.sendInquiry")}
-                  </Button>
-                </>
-              )}
-            </CardBody>
-          </Card>
-        </div>
-      </div>
-
-      {/*
-       * The sheet pins the primary actions to the bottom of the phone screen.
-       * Only on phones: at md+ the inquiry form is already in the right rail, so
-       * a second copy of its CTA would be noise rather than reach.
-       */}
-      {canInquire ? (
-        <StickyActionBar className="md:hidden">
-          <a
-            href="#inquiry"
-            className={buttonClasses({ variant: "outline", fullWidth: true })}
-          >
-            {t("market.sendInquiry")}
-          </a>
-          {offer.samples_available && !sampleSent ? (
-            <a href="#samples" className={buttonClasses({ fullWidth: true })}>
-              {t("samples.send")}
-            </a>
-          ) : null}
-        </StickyActionBar>
+      {tab === "description" ? (
+        <OfferDescriptionBlocks
+          offer={offer}
+          documents={documents}
+          passport={passport}
+          companyId={companyId}
+          sampleSent={sampleSent}
+          onSampleSent={() => setSampleSent(true)}
+          onRequestSample={() => scrollTo("samples")}
+        />
       ) : null}
+
+      {tab === "specs" ? (
+        <Card>
+          <CardBody>
+            <SpecList>
+              <SpecItem
+                label={t("market.detail.manufacturer")}
+                value={offer.manufacturer?.trim() || "—"}
+              />
+              <SpecItem label={t("market.detail.cas")} value={offer.cas_number?.trim() || "—"} />
+              <SpecItem label={t("market.detail.hs")} value={offer.hs_code?.trim() || "—"} />
+              <SpecItem
+                label={t("market.detail.country")}
+                value={offer.country ? countryName(offer.country, lang) : "—"}
+              />
+              <SpecItem label={t("market.warehouse")} value={offer.warehouse_city ?? "—"} />
+              <SpecItem label={t("market.incoterms")} value={offer.incoterms} />
+              {offer.lead_time_days != null ? (
+                <SpecItem
+                  label={t("market.leadTimeShort")}
+                  value={t("market.leadTime", { count: offer.lead_time_days })}
+                  numeric
+                />
+              ) : null}
+            </SpecList>
+            {(offer.key_properties?.length ?? 0) > 0 ? (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium text-text">
+                  {t("market.detail.keyProperties")}
+                </p>
+                <ul className="flex flex-wrap gap-2">
+                  {(offer.key_properties ?? []).map((chip) => (
+                    <li key={chip}>
+                      <Badge tone="neutral">{chip}</Badge>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {(offer.applications?.length ?? 0) > 0 ? (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium text-text">
+                  {t("market.detail.applications")}
+                </p>
+                <ul className="flex flex-wrap gap-2">
+                  {(offer.applications ?? []).map((chip) => (
+                    <li key={chip}>
+                      <Badge tone="neutral">{chip}</Badge>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {tab === "documents" ? (
+        <Card>
+          <CardBody>
+            {documents.length > 0 ? (
+              <ul className="space-y-2">
+                {documents.map((file) => (
+                  <li key={file.id}>
+                    <a
+                      href={offerImageUrl(offer.id, file.id)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm hover:border-brand-line"
+                    >
+                      <span className="min-w-0 truncate text-text">{file.file_name}</span>
+                      {/* `offerDocumentKind`, not `documentKind` — the latter is the
+                          company-verification set (bank letter, director ID …), so
+                          tds/sds/coa/lab_passport used to render as raw enum strings. */}
+                      <Badge tone="neutral">
+                        {t(`offerDocumentKind.${file.kind}`, { defaultValue: file.kind })}
+                      </Badge>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-text-muted">{t("market.noDocuments")}</p>
+            )}
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {tab === "compatibility" ? (
+        <Card className="border-info/40">
+          <CardBody className="space-y-2">
+            <p className="text-sm font-medium text-text">{t("market.detail.compatibility")}</p>
+            <p className="text-sm text-text-muted">{t("market.detail.compatibilityBody")}</p>
+            <p className="text-xs text-text-subtle">{t("market.detail.comingSoon")}</p>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {tab === "reviews" ? (
+        <Card>
+          <CardBody>
+            <p className="text-sm text-text-muted">{t("market.detail.reviewsEmpty")}</p>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {offer.my_inquiries.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("market.myInquiries")}</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-2">
+            {offer.my_inquiries.map((inq) => (
+              <button
+                key={inq.id}
+                type="button"
+                onClick={() => navigate(`/inquiries/${inq.id}`)}
+                className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2 text-left text-sm hover:border-brand"
+              >
+                <span className="text-text-muted">{inq.message ?? `#${inq.id}`}</span>
+                <Badge tone={INQUIRY_STATUS_TONE[inq.status]}>
+                  {t(`inquiryStatus.${inq.status}`)}
+                </Badge>
+              </button>
+            ))}
+          </CardBody>
+        </Card>
+      ) : null}
+
+      <Card id="inquiry">
+        <CardHeader>
+          <CardTitle>{t("market.detail.requestRfq")}</CardTitle>
+        </CardHeader>
+        <CardBody className="space-y-3">
+          {offer.is_own ? (
+            <Alert tone="info">{t("market.ownOffer")}</Alert>
+          ) : companyId == null ? (
+            <Alert tone="warning">{t("market.selectCompanyHint")}</Alert>
+          ) : !offer.accepts_rfq ? (
+            // The server refuses this too (422 `rfq_not_accepted`). Greying only the
+            // hero button while leaving a working form below it meant a seller's
+            // opt-out held in one place on the page and not in the other.
+            <Alert tone="info">{t("market.detail.rfqNotAccepted")}</Alert>
+          ) : (
+            <>
+              {createInquiry.isSuccess ? (
+                <Alert tone="success">{t("market.inquirySent")}</Alert>
+              ) : null}
+              {inquiryError ? <Alert tone="danger">{inquiryError}</Alert> : null}
+              <FormField label={t("market.quantity")} error={quantityError}>
+                {({ id, describedBy }) => (
+                  <Input
+                    id={id}
+                    inputMode="decimal"
+                    value={quantity}
+                    onChange={(e) => edit(setQuantity)(e.target.value)}
+                    placeholder={offer.qty_unit}
+                    aria-describedby={describedBy}
+                  />
+                )}
+              </FormField>
+              <FormField label={t("market.targetPrice")} error={targetPriceError}>
+                {({ id, describedBy }) => (
+                  <Input
+                    id={id}
+                    inputMode="decimal"
+                    value={targetPrice}
+                    onChange={(e) => edit(setTargetPrice)(e.target.value)}
+                    placeholder={offer.currency}
+                    aria-describedby={describedBy}
+                  />
+                )}
+              </FormField>
+              <FormField label={t("market.message")}>
+                {({ id }) => (
+                  <Textarea
+                    id={id}
+                    rows={3}
+                    value={message}
+                    onChange={(e) => edit(setMessage)(e.target.value)}
+                  />
+                )}
+              </FormField>
+              <Button
+                fullWidth
+                disabled={
+                  !canSendRfq ||
+                  createInquiry.isPending ||
+                  quantityError != null ||
+                  targetPriceError != null ||
+                  (!quantity.trim() && !message.trim())
+                }
+                onClick={submitInquiry}
+                data-testid="inquiry-submit"
+              >
+                {createInquiry.isPending ? t("common.saving") : t("market.sendInquiry")}
+              </Button>
+            </>
+          )}
+        </CardBody>
+      </Card>
+
+      <OfferActionBar
+        canAct={canInquire}
+        acceptsRfq={offer.accepts_rfq}
+        acceptsEscrow={offer.accepts_escrow}
+        contractBlockedReason={contractBlockedReason}
+        onMessage={() => scrollTo("inquiry")}
+        onContract={() =>
+          navigate(
+            `/contracts/new?offerId=${offer.id}&counterpartyId=${offer.seller_company_id}`,
+          )
+        }
+      />
     </div>
   );
 }

@@ -5,7 +5,13 @@ import { useTranslation } from "react-i18next";
 import { dealApi } from "@/entities/deal";
 import type { DealDetail, DealDocument, DealDocumentKind } from "@/entities/deal";
 import { cn, formatDateTime } from "@/shared/lib";
-import { Alert, Button, EmptyState, Select } from "@/shared/ui";
+import {
+  Alert,
+  Button,
+  EmptyState,
+  Select,
+  FileIcon,
+} from "@/shared/ui";
 
 const KINDS: DealDocumentKind[] = ["contract", "invoice", "lab_passport", "transport", "other"];
 
@@ -93,7 +99,7 @@ export function DealDocuments({ companyId, deal, onChanged }: DealDocumentsProps
       </div>
 
       {deal.documents.length === 0 ? (
-        <EmptyState title={t("deals.documents.empty")} description={t("deals.documents.emptyBody")} />
+        <EmptyState icon={<FileIcon size={28} />} title={t("deals.documents.empty")} description={t("deals.documents.emptyBody")} />
       ) : (
         <ul className="divide-y divide-border rounded-md border border-border">
           {deal.documents.map((document_) => (

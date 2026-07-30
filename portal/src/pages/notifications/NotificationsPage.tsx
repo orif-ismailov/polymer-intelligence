@@ -18,6 +18,7 @@ import {
   ErrorView,
   PageHeader,
   Skeleton,
+  BellIcon,
 } from "@/shared/ui";
 import { cn, formatDateTime } from "@/shared/lib";
 
@@ -108,7 +109,7 @@ export function NotificationsPage() {
           })}
         </div>
       ) : (
-        <EmptyState title={t("notifications.empty")} description={t("notifications.emptyBody")} />
+        <EmptyState icon={<BellIcon size={28} />} title={t("notifications.empty")} description={t("notifications.emptyBody")} />
       )}
     </div>
   );

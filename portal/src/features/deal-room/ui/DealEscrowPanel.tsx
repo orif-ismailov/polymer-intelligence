@@ -2,7 +2,16 @@ import { useTranslation } from "react-i18next";
 
 import type { DealEscrow } from "@/entities/deal";
 import { formatDateTime, formatMoney } from "@/shared/lib";
-import { Alert, Badge, Card, CardBody, EmptyState, StatChip, StatusStepper } from "@/shared/ui";
+import {
+  Alert,
+  Badge,
+  Card,
+  CardBody,
+  EmptyState,
+  StatChip,
+  StatusStepper,
+  BankIcon,
+} from "@/shared/ui";
 import type { BadgeTone, StatusStep } from "@/shared/ui";
 
 interface DealEscrowPanelProps {
@@ -30,6 +39,7 @@ export function DealEscrowPanel({ escrow }: DealEscrowPanelProps) {
   if (!escrow) {
     return (
       <EmptyState
+          icon={<BankIcon size={28} />}
         title={t("deals.escrow.noneTitle")}
         description={t("deals.escrow.noneBody")}
       />

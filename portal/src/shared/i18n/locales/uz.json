@@ -27,7 +27,8 @@
     "search": "Qidiruv",
     "all": "Barchasi",
     "prev": "Orqaga",
-    "clear": "Tozalash"
+    "clear": "Tozalash",
+    "pickDate": "Sanani tanlash"
   },
   "errors": {
     "generic": "Nimadir noto‘g‘ri ketdi",
@@ -146,32 +147,25 @@
     "notEditable": "Joriy holatda kompaniya ma’lumotlarini o‘zgartirib bo‘lmaydi.",
     "goToVerification": "Verifikatsiya holati",
     "createOffer": "Taklif yaratish",
-    "viewOffers": "Kompaniya takliflari"
+    "viewOffers": "Kompaniya takliflari",
+    "legalForms": {
+      "ООО": "Mas’uliyati cheklangan jamiyat",
+      "ЧП": "Xususiy korxona",
+      "АО": "Aksiyadorlik jamiyati",
+      "СП": "Qo‘shma korxona",
+      "ИП": "Yakka tartibdagi tadbirkor",
+      "ГУП": "Davlat unitar korxonasi"
+    },
+    "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana"
   },
   "wizard": {
     "title": "Kompaniyani ro‘yxatdan o‘tkazish",
-    "step": "{{total}} dan {{current}}-qadam",
     "steps": {
-      "identity": "Rekvizitlar",
-      "roles": "Faoliyat",
+      "accountType": "Kompaniya turi",
+      "details": "Ma’lumotlar",
       "bank": "Bank",
       "documents": "Hujjatlar",
-      "confirm": "Tasdiqlash"
-    },
-    "identity": {
-      "title": "Yuridik rekvizitlar",
-      "subtitle": "Yuridik shaxsning asosiy ma’lumotlarini kiriting.",
-      "eimzo": "E-IMZO orqali tasdiqlash",
-      "eimzoSoon": "tez orada",
-      "eimzoLead": "Kompaniyani E-IMZO orqali tasdiqlash",
-      "eimzoHint": " EDS kaliti bilan imzolang — rekvizitlar avtomatik to‘ldiriladi va qulflanadi.",
-      "taxIdHint": "O‘zbekiston STIR — 9 ta raqam.",
-      "taxIdInvalid": "STIR 9 ta raqamdan iborat bo‘lishi kerak"
-    },
-    "roles": {
-      "title": "Faoliyat turlari",
-      "subtitle": "Kompaniyaning bir yoki bir nechta faoliyat turini tanlang.",
-      "atLeastOne": "Kamida bitta faoliyat turini tanlang"
+      "review": "Tekshiruv"
     },
     "bank": {
       "title": "Bank hisobi",
@@ -179,7 +173,7 @@
       "mfoHint": "MFO — 5 ta raqam.",
       "mfoInvalid": "MFO 5 ta raqamdan iborat bo‘lishi kerak",
       "accountInvalid": "Hisob raqamini kiriting",
-      "skipHint": "O‘tkazib yuborsangiz, hisobni keyinroq kompaniya kartochkasida qo‘shishingiz mumkin."
+      "skipHint": "O‘tkazib yuborsangiz, hisobni keyinroq kompaniya kartasida qo‘shishingiz mumkin — lekin ariza «bank rekvizitlari yo‘q» belgisi bilan yuboriladi."
     },
     "documents": {
       "title": "Hujjatlar",
@@ -191,26 +185,116 @@
       "uploading": "Yuklanmoqda…",
       "tooLarge": "Fayl {{mb}} MB dan oshib ketdi",
       "replace": "Almashtirish",
-      "invalidType": "Fayl formati qo‘llab-quvvatlanmaydi. PDF, JPG yoki PNG yuklang."
-    },
-    "confirm": {
-      "title": "Tekshiring va tasdiqlang",
-      "subtitle": "Tasdiqlangandan so‘ng kompaniya verifikatsiyaga yuboriladi.",
-      "identitySection": "Rekvizitlar",
-      "rolesSection": "Faoliyat",
-      "bankSection": "Bank hisobi",
-      "documentsSection": "Hujjatlar",
-      "noBank": "Hisob qo‘shilmagan",
-      "submit": "Yaratish va verifikatsiyaga yuborish",
-      "submitting": "Yuborilmoqda…",
-      "editStep": "O‘zgartirish"
+      "invalidType": "Fayl formati qo‘llab-quvvatlanmaydi. PDF, JPG yoki PNG yuklang.",
+      "eimzoWaived": "Hujjatlar majburiy emas: kompaniya elektron imzo bilan tasdiqlangan. Ularni keyinroq qo‘shishingiz mumkin."
     },
     "errors": {
       "duplicate": "Bunday STIR bilan kompaniya allaqachon mavjud.",
       "createFailed": "Kompaniyani yaratib bo‘lmadi.",
       "submitFailed": "Kompaniya yaratildi, lekin uni verifikatsiyaga yuborib bo‘lmadi. Qayta urinib ko‘ring.",
       "missingRequiredDocs": "Majburiy hujjatlarni yuklang.",
-      "documentFailed": "Hujjatlarni yuklab bo‘lmadi. Kompaniya yaratildi — faylni to‘g‘rilab, qayta urinib ko‘ring."
+      "documentFailed": "Hujjatlarni yuklab bo‘lmadi. Kompaniya yaratildi — faylni to‘g‘rilab, qayta urinib ko‘ring.",
+      "conflict": "Amal kompaniyaning hozirgi holatiga to‘g‘ri kelmaydi.",
+      "profileLocked": "Kompaniya ma’lumotlarini o‘zgartirib bo‘lmaydi: ariza allaqachon ko‘rib chiqilgan. Qo‘llab-quvvatlash xizmatiga murojaat qiling.",
+      "identityLocked": "Nomi, STIR va rahbar elektron imzo bilan tasdiqlangan va o‘zgartirilmaydi.",
+      "noOpenCase": "Faol verifikatsiya arizasi topilmadi.",
+      "insufficientRole": "Bu amal uchun kompaniyada huquqlar yetarli emas.",
+      "rateLimited": "Kunlik ro‘yxatdan o‘tish chekloviga yetdingiz. Ertaga urinib ko‘ring.",
+      "jurisdictionInvalid": "Ro‘yxatdan o‘tgan davlatni ro‘yxatdan tanlang."
+    },
+    "accountType": {
+      "title": "Hisob turini tanlang",
+      "subtitle": "Platformadagi imkoniyatlaringiz shunga bog‘liq",
+      "required": "Hisob turini tanlang",
+      "options": {
+        "buyer": {
+          "title": "Xaridor",
+          "description": "Ishlab chiqarishingiz uchun xomashyo va materiallar xaridi"
+        },
+        "supplier": {
+          "title": "Yetkazib beruvchi",
+          "description": "Mahsulotingizni xalqaro mijozlarga sotish"
+        },
+        "manufacturer": {
+          "title": "Ishlab chiqaruvchi",
+          "description": "O‘z ishlab chiqarishingizdan to‘g‘ridan-to‘g‘ri yetkazib berish"
+        },
+        "trader": {
+          "title": "Treyder",
+          "description": "Sanoat xomashyosi savdosi va distribyutsiyasi"
+        }
+      }
+    },
+    "eimzo": {
+      "title": "Elektron imzo",
+      "subtitle": "Kompaniya ro‘yxatini yakunlash uchun hujjatlarni imzolang",
+      "methods": {
+        "usb_token": "USB Token",
+        "mobile_id": "Mobile ID",
+        "cloud_id": "Cloud ID"
+      },
+      "methodUnavailable": "Bu imzolash usuli keyinroq ishga tushadi. Hozircha USB Token’dan foydalaning.",
+      "instructionTitle": "Yo‘riqnoma",
+      "instruction": {
+        "step1": "USB Token’ni qurilmangizga ulang",
+        "step2": "Token PIN-kodini kiriting",
+        "step3": "«Imzolash va yuborish» tugmasini bosing"
+      },
+      "pinLabel": "Token PIN-kodi",
+      "revealPin": "PIN-kodni ko‘rsatish",
+      "sign": "Imzolash va yuborish",
+      "signedBody": "Kompaniya tasdiqlandi. Rekvizitlar sertifikatdan to‘ldirildi va qulflandi.",
+      "legalNote": "Hujjatlar O‘zbekiston Respublikasi qonunchiligiga muvofiq imzolanadi va shifrlanadi"
+    },
+    "details": {
+      "title": "Asosiy ma’lumotlar",
+      "subtitle": "Kompaniyangiz ma’lumotlarini to‘ldiring",
+      "taxIdHint": "O‘zbekiston STIR — 9 ta raqam.",
+      "taxIdInvalid": "STIR 9 ta raqamdan iborat bo‘lishi kerak",
+      "legalNameRequired": "Kompaniya nomini kiriting",
+      "addressRequired": "Yuridik manzilni kiriting",
+      "legalFormRequired": "Mulkchilik shaklini tanlang",
+      "legalFormPlaceholder": "Mulkchilik shaklini tanlang",
+      "registrationDateInvalid": "To‘g‘ri ro‘yxatdan o‘tish sanasini kiriting",
+      "lockedTitle": "Rekvizitlar E-IMZO orqali tasdiqlangan",
+      "lockedBody": "Nomi, STIR va rahbar sertifikatdan to‘ldirilgan va o‘zgartirilmaydi.",
+      "fields": {
+        "legalName": "Kompaniya nomi",
+        "country": "Ro‘yxatdan o‘tgan davlat",
+        "taxId": "STIR (INN)",
+        "address": "Yuridik manzil",
+        "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana",
+        "ownershipForm": "Mulkchilik shakli"
+      }
+    },
+    "review": {
+      "title": "Kompaniyani tekshirish",
+      "subtitle": "Ma’lumotlaringizni davlat reyestrlari orqali tekshiramiz",
+      "checkState": {
+        "pending": "Kutilmoqda",
+        "running": "Bajarilmoqda",
+        "passed": "Muvaffaqiyatli",
+        "warning": "Aniqlik talab qilinadi",
+        "failed": "O‘tmadi"
+      },
+      "runningTitle": "Tekshiruv ketmoqda",
+      "runningBody": "Bu bir necha daqiqa olishi mumkin. Sahifani yopmasangiz ham bo‘ladi.",
+      "passedTitle": "Kompaniya muvaffaqiyatli tekshirildi",
+      "passedBody": "Barcha ma’lumotlar tasdiqlandi. Keyingi bosqichga o‘tishingiz mumkin.",
+      "needsAttentionTitle": "Aniqlik talab qilinadi",
+      "needsAttentionBody": "Ariza qabul qilindi. Belgilangan bandlar bo‘yicha kabinetda bog‘lanamiz."
+    },
+    "done": {
+      "title": "Ro‘yxatdan o‘tish yakunlandi!",
+      "subtitle": "Kompaniyangiz platformada muvaffaqiyatli ro‘yxatdan o‘tdi:",
+      "statusLabel": "Kompaniya holati",
+      "verified": "Verified Company",
+      "companyId": "Kompaniya ID",
+      "checkStatus": "Tekshiruv holati",
+      "accessLevel": "Kompaniya turi",
+      "toCabinet": "Kabinetga o‘tish",
+      "toPublish": "Mahsulot e’lon qilishga o‘tish",
+      "registeredAt": "Ro‘yxatdan o‘tgan sana"
     }
   },
   "verification": {
@@ -278,7 +362,8 @@
       "signature_invalid": "Imzo yaroqsiz.",
       "cert_revoked": "Sertifikat bekor qilingan.",
       "sign_failed": "E-IMZO modulida imzo yaratib bo‘lmadi.",
-      "unknown": "Xatolik yuz berdi. Qayta urinib ko‘ring."
+      "unknown": "Xatolik yuz berdi. Qayta urinib ko‘ring.",
+      "cert_no_tin": "Sertifikatda tashkilot STIR ko‘rsatilmagan. Yuridik shaxs sertifikatini tanlang."
     }
   },
   "offers": {
@@ -348,6 +433,229 @@
     "samplePriceInvalid": "Narx manfiy bo‘lishi mumkin emas",
     "sampleDispatchDays": "Jo‘natish muddati, kun"
   },
+  "offerWizard": {
+    "title": "Tovar qo‘shish: kimyoviy mahsulot",
+    "editTitle": "Tovarni tahrirlash",
+    "subtitle": "O‘zbekistonda va chet elda kimyoviy xomashyo bilan xavfsiz va professional savdo",
+    "stepOf": "{{total}} dan {{current}}-qadam",
+    "steps": {
+      "basics": "Ma’lumot",
+      "ai": "AI tekshiruvi",
+      "availability": "Mavjud / Buyurtma asosida",
+      "documents": "Hujjatlar",
+      "lab": "Laboratoriya ma’lumotlari",
+      "terms": "Sotuv shartlari",
+      "publish": "E’lon qilish"
+    },
+    "trust": {
+      "safe": "Xavfsiz",
+      "legal": "Qonuniy",
+      "professional": "Professional",
+      "international": "Xalqaro standart"
+    },
+    "assurance": {
+      "deals": {
+        "title": "Xavfsiz bitimlar",
+        "body": "Escrow, tekshirilgan kompaniyalar, huquqiy himoya"
+      },
+      "trade": {
+        "title": "Qonuniy savdo",
+        "body": "O‘zbekiston reyestrlari bo‘yicha tekshiruv, xavfli moddalar nazorati"
+      },
+      "lab": {
+        "title": "Laboratoriya yordami",
+        "body": "IMEX AI orqali sifat pasportini olishda ko‘maklashamiz"
+      },
+      "b2b": {
+        "title": "Professional B2B",
+        "body": "RFQ so‘rovlari, D-Doc, shartnomalar, namunalar"
+      },
+      "global": {
+        "title": "Xalqaro bozorlarga chiqish",
+        "body": "Yagona sifat va ishonch standartlari"
+      }
+    },
+    "basics": {
+      "title": "Asosiy ma’lumot",
+      "heading": "Tovar qo‘shish",
+      "productName": "Tovar nomi",
+      "productPlaceholder": "Tovarni tanlang",
+      "productOther": "Boshqa (qo‘lda kiritish)",
+      "productRequired": "Tovarni tanlang",
+      "productManual": "Tovar nomini qo‘lda kiriting",
+      "productManualPlaceholder": "Masalan, PP H030 GP",
+      "productManualRequired": "Tovar nomini kiriting",
+      "grade": "Marka",
+      "gradePlaceholder": "Masalan, H030 GP",
+      "cas": "CAS Number (agar bo‘lsa)",
+      "hs": "HS Code (agar bo‘lsa)",
+      "manufacturer": "Ishlab chiqaruvchi",
+      "manufacturerPlaceholder": "Masalan, Sibur",
+      "manufacturerOther": "Boshqa (qo‘lda kiritish)",
+      "manufacturerManual": "Ishlab chiqaruvchi qo‘lda",
+      "originCountry": "Kelib chiqish mamlakati",
+      "category": "Kategoriya",
+      "categoryUnset": "Ko‘rsatilmagan",
+      "photos": "Tovar rasmlari",
+      "catalogUnavailable": "Katalog mavjud emas",
+      "catalogUnavailableBody": "«Boshqa»ni tanlang va tovar nomini qo‘lda kiriting."
+    },
+    "ai": {
+      "title": "Tovarni AI tekshiruvi",
+      "running": "AI tovarni tahlil qilmoqda…",
+      "finished": "Tahlil yakunlandi",
+      "rows": {
+        "substance": "Kimyoviy moddani aniqlaymiz",
+        "cas": "CAS Number tekshirilmoqda",
+        "hs": "HS Code tekshirilmoqda",
+        "dangerList": "O‘zbekiston xavfli moddalar ro‘yxati tekshirilmoqda",
+        "circulation": "Muomala talablari tekshirilmoqda",
+        "done": "Tahlil yakunlandi"
+      },
+      "clearTitle": "Tovar tartibga solinmaydi",
+      "clearBody": "Ushbu tovar O‘zbekiston Respublikasining tartibga solinadigan yoki xavfli kimyoviy moddalar ro‘yxatiga kirmaydi.",
+      "regulated": {
+        "free": "Muomala cheklanmagan.",
+        "docs_required": "E’lon qilish uchun moddaga oid hujjatlar talab qilinadi.",
+        "license_required": "E’lon qilish uchun kompaniyaning amaldagi litsenziyasi talab qilinadi.",
+        "prohibited": "Ushbu moddaning muomalasi taqiqlangan — tovarni e’lon qilib bo‘lmaydi."
+      },
+      "unknownTitle": "Modda aniqlanmadi",
+      "unknownBody": "Moddani reyestrdan topa olmadik. Cheklovlar tekshirilmadi — CAS va HS Code’ni imkon qadar aniq ko‘rsating."
+    },
+    "availability": {
+      "title": "Mavjud / Buyurtma asosida",
+      "kind": "Taklif turi",
+      "inStockHint": "Tovar omborda mavjud",
+      "onOrderHint": "Talab bo‘yicha ishlab chiqarish",
+      "inStockNote": "Tovar darhol jo‘natishga tayyor",
+      "onOrderNote": "Narx va hajm so‘rov bo‘yicha kelishiladi — ishlab chiqarish muddatini ko‘rsating",
+      "qty": "Mavjud miqdor",
+      "qtyRequired": "Miqdorni kiriting",
+      "price": "Narx (birlik uchun)",
+      "priceRequired": "Narxni kiriting",
+      "warehouse": "Ombor / Joylashuv",
+      "warehouseManual": "Joylashuvni kiriting",
+      "warehouseRequired": "Joylashuvni kiriting",
+      "cityOther": "Boshqa",
+      "cities": {
+        "Ташкент": "Toshkent",
+        "Ташкентская область": "Toshkent viloyati",
+        "Самарканд": "Samarqand",
+        "Бухара": "Buxoro",
+        "Наманган": "Namangan",
+        "Андижан": "Andijon",
+        "Фергана": "Farg‘ona",
+        "Навои": "Navoiy",
+        "Карши": "Qarshi",
+        "Термез": "Termiz",
+        "Нукус": "Nukus",
+        "Ургенч": "Urganch",
+        "Джизак": "Jizzax",
+        "Гулистан": "Guliston"
+      },
+      "dispatch": {
+        "label": "Jo‘natish muddati",
+        "1-2": "1–2 kun",
+        "3-7": "3–7 kun",
+        "7-14": "7–14 kun",
+        "14-30": "14–30 kun",
+        "30-60": "30–60 kun"
+      }
+    },
+    "documents": {
+      "title": "Hujjatlar",
+      "heading": "Majburiy hujjatlar",
+      "kinds": {
+        "sds": "SDS (Safety Data Sheet)",
+        "tds": "TDS (Technical Data Sheet)",
+        "coa": "Certificate of Analysis (agar bo‘lsa)"
+      },
+      "short": {
+        "sds": "SDS",
+        "tds": "TDS",
+        "coa": "COA"
+      },
+      "pick": "Faylni tanlash",
+      "attached": "Hujjat biriktirildi",
+      "dropLabel": "Fayllarni tashlang yoki yuklash uchun bosing",
+      "dropHint": "PDF, JPG, PNG ({{mb}} MB gacha)",
+      "trustNote": "Hujjatlarning mavjudligi xaridorlar ishonchini oshiradi",
+      "missingTitle": "Majburiy hujjatlar yetishmayapti",
+      "tooLarge": "Fayl juda katta — {{mb}} MB gacha.",
+      "allSlotsFull": "Uchala slot ham to‘ldirilgan."
+    },
+    "lab": {
+      "title": "Laboratoriya ma’lumotlari",
+      "heading": "Laboratoriya pasporti",
+      "headingHint": "Sifat pasporti material tavsiflarini tasdiqlaydi",
+      "hasPassport": "Menda pasport bor",
+      "noPassport": "Pasport yo‘q",
+      "passportLabel": "Yuklangan sifat pasporti (COA)",
+      "passportRequired": "Pasportni biriktiring yoki «Pasport yo‘q»ni tanlang",
+      "offerIntro": "Zarur bo‘lsa, IMEX AI orqali laboratoriya sertifikatini olishimiz mumkin",
+      "offerWeWill": "Biz siz bilan bog‘lanamiz va yordam beramiz:",
+      "points": {
+        "accredited": "akkreditatsiyalangan laboratoriyani tanlash",
+        "cost": "narx va muddatlarni kelishish",
+        "testing": "sinovlarni tashkil etish",
+        "passport": "rasmiy sifat pasportini olish"
+      },
+      "requestCta": "Laboratoriya sertifikatini so‘rash"
+    },
+    "terms": {
+      "title": "Sotuv shartlari",
+      "samplesHint": "Namunalar xaridorga tezroq qaror qabul qilishga yordam beradi",
+      "samplesYes": "Mavjud",
+      "samplesNo": "Taqdim etilmaydi",
+      "sampleFee": "Namuna taqdim etish shartlari",
+      "fee": {
+        "free": "Bepul",
+        "paid": "Pullik"
+      },
+      "samplePriceRequired": "Namuna narxini kiriting",
+      "sampleDispatch": "Jo‘natish muddati",
+      "sampleBands": {
+        "1-3": "1–3 kun",
+        "3-7": "3–7 kun",
+        "7-14": "7–14 kun"
+      },
+      "acceptsRfq": "RFQ so‘rovlarini qabul qilaman",
+      "acceptsContract": "D-Doc orqali shartnoma imzolashga tayyorman",
+      "acceptsEscrow": "Escrow to‘lovlarini qabul qilaman"
+    },
+    "extra": {
+      "title": "Qo‘shimcha ma’lumot",
+      "description": "Tovar tavsifi",
+      "descriptionPlaceholder": "Material, uning xossalari va qo‘llanilishini tavsiflang",
+      "keyProperties": "Asosiy xossalar",
+      "keyPropertiesPlaceholder": "Masalan, MFI: 3.0 g/10min",
+      "applications": "Qo‘llanilishi",
+      "applicationsPlaceholder": "Masalan, bosim ostida quyish"
+    },
+    "preview": {
+      "title": "Dastlabki ko‘rinish",
+      "noPhoto": "Rasm qo‘shilmagan",
+      "country": "Mamlakat",
+      "qty": "Miqdor",
+      "onRequest": "So‘rov bo‘yicha",
+      "samplesAvailable": "Namunalar mavjud",
+      "dDoc": "D-Doc",
+      "escrow": "Escrow",
+      "publish": "Tovarni e’lon qilish",
+      "publishing": "E’lon qilinmoqda…",
+      "uploading": "Fayllar yuklanmoqda {{done}} / {{total}}"
+    },
+    "done": {
+      "title": "Tovar e’lon qilindi!",
+      "bodyLive": "Tovaringiz IMEX AI platformasida joylashtirildi va xaridorlarga ochiq.",
+      "bodyModeration": "Tovaringiz moderatsiyaga yuborildi. Tekshiruvdan so‘ng u IMEX AI bozorida paydo bo‘ladi.",
+      "idLabel": "E’lon ID’si",
+      "copyId": "ID nusxasini olish",
+      "toOffers": "Mening tovarlarimga o‘tish",
+      "createAnother": "Yana bir tovar qo‘shish"
+    }
+  },
   "settings": {
     "title": "Sozlamalar",
     "profile": "Profil",
@@ -416,6 +724,15 @@
     "power_of_attorney": "Ishonchnoma",
     "other": "Boshqa"
   },
+  "offerDocumentKind": {
+    "image": "Foto",
+    "tds": "Texnik spetsifikatsiya",
+    "sds": "Xavfsizlik pasporti",
+    "coa": "Tahlil sertifikati",
+    "certificate": "Sertifikat",
+    "lab_passport": "Laboratoriya pasporti",
+    "other": "Boshqa"
+  },
   "availability": {
     "in_stock": "Mavjud",
     "on_order": "Buyurtma asosida"
@@ -467,12 +784,15 @@
     "myInquiries": "Mening so'rovlarim",
     "sendInquiry": "So'rov yuborish",
     "quantity": "Kerakli hajm",
+    "quantityInvalid": "Hajmni noldan katta son sifatida kiriting.",
     "targetPrice": "Istalgan narx",
+    "targetPriceInvalid": "Narxni noldan katta son sifatida kiriting.",
     "message": "Xabar",
     "ownOffer": "Bu sizning kompaniyangiz taklifi.",
     "selectCompanyHint": "So'rov yuborish uchun kompaniyani tanlang.",
     "inquirySent": "So'rov moderatsiyaga yuborildi.",
     "inquiryFailed": "So'rovni yuborib bo'lmadi.",
+    "inquiryRateLimited": "Bugungi so‘rovlar chegarasi tugadi. Ertaga urinib ko‘ring.",
     "favorite": "Saralanganga qo‘shish",
     "unfavorite": "Saralangandan olib tashlash",
     "favorites": "Saralangan",
@@ -492,11 +812,68 @@
     "tabs": {
       "description": "Tavsif",
       "specs": "Xususiyatlari",
-      "documents": "Hujjatlar"
+      "documents": "Hujjatlar",
+      "compatibility": "Moslik",
+      "reviews": "Sharhlar"
     },
     "noDescription": "Tavsif yo‘q",
     "noDocuments": "Hujjatlar biriktirilmagan",
-    "leadTimeShort": "Muddat"
+    "leadTimeShort": "Muddat",
+    "detail": {
+      "marketplace": "IMEX AI Industrial Marketplace",
+      "share": "Ulashish",
+      "linkCopied": "Havola nusxalandi",
+      "noPhoto": "Foto qo‘shilmagan",
+      "gallery": "Galereya",
+      "requestRfq": "RFQ so‘rash",
+      "addFavorite": "Sevimlilarga qo‘shish",
+      "basics": "Asosiy ma’lumot",
+      "cas": "CAS",
+      "hs": "HS Code",
+      "country": "Mamlakat",
+      "offerType": "Taklif turi",
+      "offerTypeHint": "Sotuvchi bu tovarni qanday taklif qiladi",
+      "qtyAvailable": "Omboridagi miqdor",
+      "moq": "Minimal buyurtma (MOQ)",
+      "samples": "Namunalar",
+      "samplesHint": "Sotuvchidan namuna so‘rash mumkin",
+      "samplesAvailable": "Mavjud",
+      "samplesUnavailable": "Berilmaydi",
+      "requestSample": "Namuna so‘rash",
+      "labPassport": "Laboratoriya pasporti (COA)",
+      "labPassportHint": "Taklifga biriktirilgan sifat pasporti",
+      "labPassportPresent": "Laboratoriya pasporti bor",
+      "labPassportAbsent": "Pasport biriktirilmagan",
+      "sellerHint": "Taklifni e’lon qilgan kompaniya",
+      "verifiedSupplier": "Tekshirilgan yetkazib beruvchi",
+      "ratingPending": "Reyting bitimlardan keyin paydo bo‘ladi",
+      "compatibility": "Uskunangiz bilan moslik",
+      "compatibilityHint": "Materialni jarayoningiz uchun tekshirish",
+      "compatibilityBody": "Ushbu material jarayoningizga mos kelishini tekshiring.",
+      "checkCompatibility": "Uskuna bilan moslikni tekshirish",
+      "comingSoon": "Tez orada",
+      "documentsHint": "Sotuvchi biriktirgan hujjatlar",
+      "manufacturer": "Ishlab chiqaruvchi",
+      "keyProperties": "Asosiy xususiyatlar",
+      "applications": "Qo‘llanilishi",
+      "messageSeller": "Sotuvchiga yozish",
+      "requestContract": "Shartnoma so‘rash",
+      "escrow": "Escrow to‘lov",
+      "escrowInDealHint": "Escrow bitim ichida kelishiladi — avval sotuvchiga so‘rov yuboring",
+      "escrowNotOffered": "Sotuvchi escrow orqali ishlamaydi",
+      "contractNeedsVerifiedSeller": "Shartnoma faqat verifikatsiyadan o‘tgan kompaniya bilan tuziladi",
+      "contractNeedsVerifiedCompany": "Avval o‘z kompaniyangizni verifikatsiyadan o‘tkazing",
+      "contractNotOffered": "Sotuvchi bu taklif bo‘yicha shartnoma tuzishga tayyor emas",
+      "rfqNotAccepted": "Sotuvchi bu taklif bo‘yicha KP so‘rovlarini qabul qilmaydi",
+      "reviewsEmpty": "Bu tovar bo‘yicha hali sharhlar yo‘q.",
+      "docChip": {
+        "sds": "SDS PDF",
+        "tds": "TDS PDF",
+        "coa": "COA PDF",
+        "lab_passport": "Sertifikat PDF",
+        "certificate": "Sertifikat PDF"
+      }
+    }
   },
   "inquiries": {
     "title": "So'rovlar",
@@ -539,37 +916,151 @@
     "cancelled": "Bekor qilingan"
   },
   "requestWizard": {
-    "step": {
+    "title": "Yangi xarid arizasi",
+    "subtitle": "Ariza yarating va yetkazib beruvchilardan takliflar oling",
+    "stepOf": "{{current}}-qadam / {{total}}",
+    "steps": {
       "product": "Mahsulot",
-      "specs": "Parametrlar",
-      "delivery": "Yetkazish",
-      "contacts": "Kontaktlar"
+      "params": "Parametrlar",
+      "extra": "Qo'shimcha",
+      "comm": "Shartlar",
+      "preview": "Nashr"
     },
-    "product": "Mahsulot",
-    "grade": "Marka",
-    "polymer": "Polimer turi",
-    "volume": "Hajm",
-    "unit": "Birlik",
-    "targetPrice": "Maqsad narx",
-    "currency": "Valyuta",
-    "incoterms": "Shartlar",
-    "country": "Davlat",
-    "city": "Shahar / port",
-    "desiredDate": "Istalgan sana",
-    "validityDays": "Amal qilish (kun)",
-    "urgency": "Shoshilinchlik",
+    "product": {
+      "title": "1. Mahsulotni tanlang",
+      "searchPlaceholder": "Mahsulot, marka, CAS bo'yicha qidirish…",
+      "category": "Kategoriya",
+      "allCategories": "Barcha kategoriyalar",
+      "recent": "So'nggi mahsulotlar",
+      "empty": "Hech narsa topilmadi",
+      "manual": "Mahsulotni qo'lda ko'rsatish",
+      "manualName": "Mahsulot nomi",
+      "manualNamePlaceholder": "Masalan, Polietilen HDPE",
+      "manualGrade": "Marka",
+      "manualGradePlaceholder": "Masalan, 5502",
+      "nameRequired": "Mahsulot nomini kiriting",
+      "gradeRequired": "Markani kiriting",
+      "pickRequired": "Ro'yxatdan tanlang yoki qo'lda kiriting"
+    },
+    "params": {
+      "title": "2. So'rov parametrlari",
+      "volume": "Kerakli hajm",
+      "volumeRequired": "Hajmni kiriting",
+      "unit": "Birlik",
+      "price": "Maqsad narx (maksimalingiz)",
+      "priceHint": "Yetkazib beruvchilar faqat diapazoningizni ko'radi",
+      "currency": "Valyuta",
+      "dealType": "Bitim turi",
+      "dealHint": "Incoterms® yetkazib berish bazisini tanlang",
+      "incotermOpt": {
+        "EXW": "EXW shartlarida xarid",
+        "FCA": "FCA shartlarida xarid",
+        "FOB": "FOB shartlarida xarid",
+        "CIF": "CIF shartlarida xarid",
+        "CPT": "CPT shartlarida xarid",
+        "DAP": "DAP shartlarida xarid",
+        "DDP": "DDP shartlarida xarid"
+      },
+      "country": "Yetkazib berish mamlakati / mintaqasi",
+      "city": "Shahar / port",
+      "cityOther": "Boshqa shahar",
+      "cityPlaceholder": "Shahar yoki portni kiriting",
+      "delivery": "Istalgan yetkazib berish muddati",
+      "deliveryOpt": {
+        "urgent": "Shoshilinch (1–7 kun)",
+        "month": "Bir oy ichida",
+        "quarter": "1–3 oy",
+        "later": "3 oydan ko'p"
+      },
+      "validity": "Ariza amal qilish muddati",
+      "validityOpt": "{{days}} kun"
+    },
+    "extra": {
+      "title": "3. Qo'shimcha parametrlar",
+      "specs": "Talab qilinadigan xususiyatlar (ixtiyoriy)",
+      "specsPlaceholder": "Kerakli xususiyatlar, markirovka, sifat standarti va h.k.",
+      "docs": "Yetkazib beruvchidan talab qilinadigan hujjatlar",
+      "doc": {
+        "sds": "Xavfsizlik pasporti (SDS)",
+        "coa": "Sifat sertifikati (COA)",
+        "coo": "Kelib chiqish sertifikati",
+        "commercial": "Tijorat taklifi",
+        "other": "Boshqa hujjatlar"
+      },
+      "docOtherHint": "Tanlang yoki izohlarda ko'rsating",
+      "comment": "Qo'shimcha izohlar",
+      "commentPlaceholder": "Yetkazib beruvchilarga qo'shimcha talablar yoki istaklar…"
+    },
+    "comm": {
+      "title": "4. Muloqot shartlari",
+      "channelLabel": "Takliflarni qanday olishni xohlaysiz",
+      "channel": {
+        "app": {
+          "title": "IMEX AI ichida",
+          "body": "Barcha takliflar kabinetga keladi — solishtirish oson"
+        },
+        "email": {
+          "title": "Email orqali",
+          "body": "Takliflarni elektron pochtaga ham yuborish"
+        },
+        "telegram": {
+          "title": "Telegramda",
+          "body": "Yangi takliflar haqida messengerda bildirishnoma"
+        }
+      },
+      "visibilityLabel": "Arizani kim ko'rishi mumkin",
+      "visibility": {
+        "verified": {
+          "title": "Faqat tekshirilgan yetkazib beruvchilar",
+          "body": "Faqat tasdiqlangan verifikatsiyali kompaniyalar ko'radi"
+        },
+        "all": {
+          "title": "Platformadagi barcha yetkazib beruvchilar",
+          "body": "Ariza maydondagi barcha sotuvchilarga ko'rinadi"
+        },
+        "selected": {
+          "title": "Tanlangan yetkazib beruvchilar",
+          "body": "Keyinroq ko'rsatganlaringizga yuboramiz"
+        }
+      }
+    },
+    "preview": {
+      "title": "5. Tekshiring va nashr eting",
+      "product": "Mahsulot",
+      "volume": "Hajm",
+      "price": "Maqsad narx",
+      "terms": "Yetkazib berish shartlari",
+      "delivery": "Yetkazib berish muddati",
+      "validity": "Ariza muddati",
+      "comment": "Izoh",
+      "docs": "Yetkazib beruvchi hujjatlari",
+      "publish": "Arizani nashr etish",
+      "visibilityNote": {
+        "verified": "Arizangiz faqat platformadagi tekshirilgan yetkazib beruvchilarga ko'rinadi.",
+        "all": "Arizangiz platformadagi barcha yetkazib beruvchilarga ko'rinadi.",
+        "selected": "Ariza tanlangan yetkazib beruvchilarga yuboriladi."
+      }
+    },
+    "done": {
+      "title": "Ariza nashr etildi!",
+      "body": "Yetkazib beruvchilar so'rovingizni ko'rmoqda va takliflar tayyorlamoqda.",
+      "idLabel": "Ariza raqami",
+      "copyId": "Raqamni nusxalash",
+      "nextTitle": "Keyingi nima?",
+      "next": {
+        "offers": "Yetkazib beruvchilar tez orada taklif yuboradi",
+        "notify": "Yangi takliflar haqida bildirishnoma olasiz",
+        "compare": "Takliflarni solishtiring va eng yaxshi shartni tanlang"
+      },
+      "toRequests": "Mening arizalarimga o'tish",
+      "createAnother": "Yana bir ariza yaratish"
+    },
+    "submitFailed": "Arizani yuborib bo'lmadi.",
     "urgencyOpt": {
       "low": "Past",
       "medium": "O'rta",
       "high": "Yuqori"
-    },
-    "companyName": "Kompaniya nomi",
-    "contactName": "Kontakt shaxs",
-    "phone": "Telefon",
-    "legalAddress": "Yuridik manzil",
-    "comment": "Izoh",
-    "submit": "Arizani yuborish",
-    "submitFailed": "Arizani yuborib bo'lmadi."
+    }
   },
   "news": {
     "title": "Yangiliklar",
@@ -1030,7 +1521,84 @@
     },
     "errors": {
       "alreadyRequested": "Bu taklif bo‘yicha faol so‘rovingiz allaqachon bor.",
-      "notAvailable": "Sotuvchi bu taklif bo‘yicha namuna taklif qilmaydi."
+      "notAvailable": "Sotuvchi bu taklif bo‘yicha namuna taklif qilmaydi.",
+      "ownOffer": "Bu sizning kompaniyangiz taklifi — namuna so‘rash kerak emas."
     }
+  },
+  "onboarding": {
+    "title": "Ro‘yxatdan o‘tish —",
+    "subtitle": "Hisob yarating va platformaning barcha imkoniyatlariga ega bo‘ling",
+    "heroAlt": "Himoyalangan va tasdiqlangan IMEX AI platformasi",
+    "chips": {
+      "aiMatching": "AI tanlash",
+      "verifiedCompany": "Tekshirilgan kompaniyalar",
+      "tradeFinance": "Savdo moliyalashtirish",
+      "secureDeals": "Xavfsiz bitimlar",
+      "logistics": "Logistika",
+      "governmentApi": "Davlat reyestrlari"
+    },
+    "trustTitle": "Xavfsiz va ishonchli",
+    "trustBody": "Ma’lumotlaringiz himoyalangan va xalqaro xavfsizlik standartlariga mos keladi",
+    "start": "Ro‘yxatdan o‘tishni boshlash"
+  },
+  "companyProfile": {
+    "title": "Kompaniya profili",
+    "officialSupplier": "IMEX AI dagi rasmiy yetkazib beruvchi",
+    "verifiedCompany": "Tekshirilgan kompaniya",
+    "onPlatformSince": "Platformada {{date}} dan",
+    "notFound": "Kompaniya topilmadi yoki hali tekshirilmagan",
+    "tabs": {
+      "about": "Kompaniya haqida",
+      "products": "Mahsulotlar",
+      "reviews": "Sharhlar",
+      "documents": "Hujjatlar"
+    },
+    "statSince": "{{date}} dan",
+    "statSincePending": "Platformada",
+    "statOffers": "{{count}} ta taklif",
+    "statResponsePending": "Javob — tez orada",
+    "statLanguages": "RU / EN / UZ",
+    "about": "Tavsif",
+    "aboutForm": "Shakl: {{form}}.",
+    "aboutAddress": "Manzil: {{address}}.",
+    "aboutEmpty": "Kompaniya hali tavsif qo‘shmagan.",
+    "kpiTitle": "Asosiy ko‘rsatkichlar",
+    "kpiOnTime": "O‘z vaqtida yetkazish",
+    "kpiRating": "Xaridor bahosi",
+    "kpiClients": "Doimiy mijozlar",
+    "kpiCountries": "Yetkazish mamlakatlari",
+    "kpiPendingHint": "Ko‘rsatkichlar platformadagi bitimlar to‘plangach paydo bo‘ladi.",
+    "certificates": "Sertifikatlar",
+    "certificatesEmpty": "Hali ommaviy sertifikatlar yo‘q",
+    "certificatesEmptyBody": "Yetkazib beruvchi ISO va boshqa sertifikatlarni e’lon qilganda ular shu yerda ko‘rinadi.",
+    "details": "Rekvizitlar",
+    "fullName": "To‘liq nomi",
+    "companyType": "Kompaniya turi",
+    "headOffice": "Bosh ofis",
+    "founded": "Tashkil etilgan",
+    "jurisdiction": "Yurisdiksiya",
+    "advantages": "Afzalliklar",
+    "advantageVerified": "IMEX AI da tekshiruvdan o‘tgan",
+    "advantageOffers": "Bozorda {{count}} ta faol taklif",
+    "mainProducts": "Asosiy mahsulotlar",
+    "productsEmpty": "E’lon qilingan mahsulotlar yo‘q",
+    "productsEmptyBody": "Bu kompaniyaning hali tasdiqlangan takliflari yo‘q.",
+    "seeAllProducts": "Barcha mahsulotlarni ko‘rish ({{count}})",
+    "reviewsScorePending": "— / 5",
+    "reviewsHint": "Reyting yakunlangan bitimlardan shakllanadi",
+    "reviewsEmpty": "Hali sharhlar yo‘q",
+    "reviewsEmptyBody": "Sharhlar shu kompaniya bilan bitimlardan keyin paydo bo‘ladi.",
+    "documentsEmpty": "Hali hujjatlar yo‘q",
+    "documentsEmptyBody": "Yetkazib beruvchi ommaviy hujjatlar to‘plamini e’lon qilganda ular shu yerda bo‘ladi.",
+    "message": "Yozish",
+    "requestRfq": "Taklif so‘rash (RFQ)",
+    "pickOfferHint": "Sotuvchiga so‘rov yuborish uchun pastdan mahsulot tanlang"
+  },
+  "bankAccountStatus": {
+    "unverified": "Tasdiqlanmagan",
+    "pending": "Tekshiruvda",
+    "verified": "Tasdiqlangan",
+    "failed": "Rad etilgan",
+    "archived": "Arxivda"
   }
 }

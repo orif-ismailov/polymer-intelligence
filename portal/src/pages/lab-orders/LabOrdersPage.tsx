@@ -14,6 +14,8 @@ import {
   Skeleton,
   SpecItem,
   SpecList,
+  FlaskIcon,
+  RegistryIcon,
 } from "@/shared/ui";
 
 function LabOrderCard({ order, onOpen }: { order: LabOrder; onOpen: () => void }) {
@@ -79,6 +81,7 @@ export function LabOrdersPage() {
   if (!activeCompany) {
     return (
       <EmptyState
+          icon={<RegistryIcon size={28} />}
         title={t("home.noActiveCompany")}
         description={t("home.noActiveCompanyBody")}
       />
@@ -112,6 +115,7 @@ export function LabOrdersPage() {
         </div>
       ) : (
         <EmptyState
+          icon={<FlaskIcon size={28} />}
           title={t("lab.ordersEmpty")}
           description={t("lab.ordersEmptyBody")}
           action={<LinkButton to="/offers">{t("nav.offers")}</LinkButton>}

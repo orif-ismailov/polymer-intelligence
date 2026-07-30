@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
+import { registerCompany } from "./_registration";
+
 /**
  * R2 demo e2e: OTP login → register a company → create a purchase request through
  * the 4-step wizard → see it in the requests list with a status timeline → browse
@@ -39,64 +41,43 @@ async function login(page: Page, request: APIRequestContext, phone: string): Pro
   await page.waitForURL((url) => !url.pathname.startsWith("/login"));
 }
 
-async function registerCompany(page: Page, taxId: string): Promise<void> {
-  await page.goto("/companies/new/1");
-  await page.getByLabel(/tax id|инн|stir/i).fill(taxId);
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
-
-  await page.waitForURL("**/companies/new/2");
-  await page.getByText(/trader|трейдер|treyder/i).first().click();
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
-
-  await page.waitForURL("**/companies/new/3");
-  await page.getByRole("button", { name: /skip|пропустить|o.tkazib/i }).click();
-
-  await page.waitForURL("**/companies/new/4");
-  await page.setInputFiles('input[type="file"]', {
-    name: "registration.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4 test document"),
-  });
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
-
-  await page.waitForURL("**/companies/new/5");
-  await page.getByTestId("wizard-submit").click();
-  await page.waitForURL(/\/companies\/\d+\/verification/);
-}
 
 test("buyer creates a purchase request and browses the R2 surfaces", async ({ page, request }) => {
   const phone = uniquePhone();
   await login(page, request, phone);
   await registerCompany(page, uniqueTaxId());
 
-  // ── Purchase request through the 4-step wizard ──────────────────────────────
+  // ── Purchase request through the 5-step wizard ──────────────────────────────
   await page.goto("/requests");
   // Two identical CTAs render on /requests (header + empty state) — take the header one.
   await page.getByRole("link", { name: /new request|новая заявка|yangi ariza/i }).first().click();
-  await page.waitForURL("**/requests/new");
+  await page.waitForURL("**/requests/new/**");
 
-  // Step 1 — product + grade
-  await page.getByLabel(/^product|^продукт|^mahsulot/i).first().fill("HDPE film grade");
-  await page.getByLabel(/grade|марка|marka/i).first().fill("F0348");
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
+  // Step 1 — pick manual product entry
+  await page.getByTestId("request-wizard-manual").click();
+  await page.getByTestId("request-wizard-product-text").fill("HDPE film grade");
+  await page.getByTestId("request-wizard-grade").fill("F0348");
+  await page.getByTestId("request-wizard-next").click();
 
-  // Step 2 — volume
-  await page.getByLabel(/volume|объём|hajm/i).first().fill("50");
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
+  // Step 2 — volume (defaults for the rest)
+  await page.getByTestId("request-wizard-volume").fill("50");
+  await page.getByTestId("request-wizard-next").click();
 
-  // Step 3 — delivery (defaults are fine)
-  await page.getByRole("button", { name: /next|далее|keyingisi/i }).click();
+  // Step 3 — extra (optional)
+  await page.getByTestId("request-wizard-next").click();
 
-  // Step 4 — contacts (optional) → submit
-  await page.getByRole("button", { name: /submit request|отправить заявку|arizani yuborish/i }).click();
+  // Step 4 — communication (defaults)
+  await page.getByTestId("request-wizard-next").click();
 
-  // Lands on the request detail with a status timeline (starts at "new").
-  await page.waitForURL(/\/requests\/\d+$/);
-  await expect(page.getByRole("heading", { name: /REQ-/ })).toBeVisible();
+  // Step 5 — publish
+  await page.getByTestId("request-wizard-publish").click();
 
-  // It also appears in the list.
-  await page.goto("/requests");
-  await expect(page.getByText(/REQ-/).first()).toBeVisible();
+  // Lands on the published celebration, then the list still has the request.
+  await page.waitForURL(/\/requests\/new\/done\/\d+$/);
+  await expect(page.getByTestId("request-wizard-done")).toBeVisible();
+  await page.getByTestId("request-wizard-done-list").click();
+  await page.waitForURL("**/requests");
+  await expect(page.getByText(/REQ-|IMX-/).first()).toBeVisible();
 
   // ── Browse the other R2 surfaces (may be empty — headings must render) ──────
   await page.goto("/market");

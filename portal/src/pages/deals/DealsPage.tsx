@@ -18,6 +18,7 @@ import {
   Skeleton,
   Tabs,
   type TabItem,
+  TraderIcon,
 } from "@/shared/ui";
 
 type Tab = "all" | "action" | "active" | "closed";
@@ -152,6 +153,7 @@ export function DealsPage() {
         </div>
       ) : (
         <EmptyState
+          icon={<TraderIcon size={28} />}
           title={t("deals.empty")}
           description={t("deals.emptyBody")}
           action={
