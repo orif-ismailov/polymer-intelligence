@@ -81,11 +81,18 @@ every `[SECRET]`. **All values below are placeholders.**
 
 ## 3. TLS Certificates via certbot
 
-The production nginx config (`deploy/nginx/nginx.conf`) is **TLS-terminating**: it
-listens on 443, redirects 80→443, and references Let's Encrypt cert paths. Out of the
-box it ships with the **placeholder** `server_name _;` and cert paths under
-`/etc/letsencrypt/live/example.com/`. You must (a) set your real domain and (b)
-obtain certs into the `letsencrypt` volume.
+> **Read the topology note at the end of this section first.** This repo ships two nginx
+> topologies, and a default `docker compose up` does **not** use the TLS-terminating config
+> described here. The prod compose file mounts
+> `./nginx/${INNER_NGINX_CONF:-nginx.behind-proxy.conf}` — the behind-proxy variant — so the
+> steps below apply only if you deliberately set `INNER_NGINX_CONF=nginx.conf` in `../.env`.
+
+`deploy/nginx/nginx.conf` is the **self-TLS** config: it listens on 443, redirects 80→443,
+and references Let's Encrypt cert paths. It does **not** ship with fill-in-the-blank
+placeholders — it is hardcoded to this project's production domains across four server
+blocks (`ai-imex.com`, `www.ai-imex.com`, `admin.ai-imex.com`, `api.ai-imex.com`), with all
+three cert pairs already pointing at `/etc/letsencrypt/live/ai-imex.com/`. Deploying a
+different domain means **rewriting** those values, not filling in blanks.
 
 ### Step 1: Point your domain at the VPS
 
@@ -94,15 +101,24 @@ requesting a certificate.
 
 ### Step 2: Set the real domain in nginx.conf
 
-Edit `deploy/nginx/nginx.conf`:
+Edit `deploy/nginx/nginx.conf` and replace the existing `ai-imex.com` values — there is no
+`_` or `example.com` placeholder to fill in:
 
-- Replace `server_name _;` with your domain (both the `:80` and `:443` server blocks).
-- Replace the two `example.com` cert paths with your domain:
+- Replace every `server_name` with your domain. There are four blocks: the `:80` redirect
+  block (which lists all domains on one line) and the three `:443` vhosts
+  (`api.`, `admin.`, and the apex + `www.`).
+- Replace all three `ssl_certificate` / `ssl_certificate_key` pairs — one per `:443` block:
 
   ```nginx
   ssl_certificate     /etc/letsencrypt/live/your-domain.example/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/your-domain.example/privkey.pem;
   ```
+
+Confirm you replaced them all before reloading:
+
+```bash
+grep -n 'server_name \|ssl_certificate ' deploy/nginx/nginx.conf
+```
 
 ### Step 3: Obtain the certificate (webroot / ACME http-01)
 

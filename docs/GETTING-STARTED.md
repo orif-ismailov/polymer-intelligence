@@ -64,11 +64,23 @@ docker compose -f deploy/docker-compose.dev.yml up
 
 This starts: `postgres` (16-alpine), `redis` (7-alpine), `minio` (S3-compatible file storage),
 `api` (FastAPI/uvicorn with `--reload`), `worker` (Celery, queues
-`ingest,parse,notify,default,verify`), `beat` (Celery scheduler), and `nginx` (HTTP-only
-reverse proxy on port 80). The `userbot` and `dashboard` services are **not** part of this
-dev scaffold — the dashboard runs separately via `npm run dev` (step 4), and the userbot is
-profile-gated (`--profile userbot up -d userbot`) since it needs a dedicated
-`TG_SESSION_STRING`.
+`ingest,parse,notify,default,verify`), `beat` (Celery scheduler), `userbot` (Telethon channel
+monitor), and `nginx` (HTTP-only reverse proxy on port 80).
+
+The `dashboard` service is **not** part of this dev scaffold — it runs separately via
+`npm run dev` (step 4).
+
+The `userbot` service **is** defined here and starts on a plain `up`; it is *not* profile-gated.
+It carries `restart: unless-stopped`, so without a valid `TG_API_ID`/`TG_API_HASH`/
+`TG_SESSION_STRING` it will crash-loop in the background. If you are not working on channel
+monitoring, either scale it to zero or exclude it explicitly:
+
+```bash
+docker compose -f deploy/docker-compose.dev.yml up --scale userbot=0
+```
+
+The only profile-gated service in this file is `eimzo-server` (`profiles: ["eimzo"]`), which
+stays down unless you pass `--profile eimzo`.
 
 Ports published to the host:
 

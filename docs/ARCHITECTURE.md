@@ -149,8 +149,9 @@ Each component also has its own scoped `CLAUDE.md` (`backend/CLAUDE.md`, `dashbo
   call. On exhaustion, items are marked `budget_deferred` and reprocessed by the
   `nightly_llm_catchup` beat task after the UTC midnight reset; meanwhile a rule-based fallback
   (`backend/parsing/fallback.py`) degrades gracefully instead of blocking the pipeline.
-- Extraction accuracy is guarded by golden/eval tests under `backend/tests/parsing/`
-  (`eval_cli.py` + golden fixtures).
+- Extraction accuracy is guarded by golden/eval tests under `backend/tests/parsing/` (golden
+  fixtures plus `eval_config.py`/`eval_metrics.py`/`golden_loader.py`), driven by the
+  `backend/parsing/eval_cli.py` CLI — the runner lives with the parsing package, not the tests.
 
 ## Data model
 
@@ -179,8 +180,15 @@ for the table-by-table design; this doc groups the model files by bounded contex
 | Manufacturers directory | `manufacturers.py` | Factory RFQ threads/documents/messages for the manufacturer-facing directory. |
 | Staff | `staff.py` | `StaffUser` + `AuditLog`. |
 
-Domain enums (`app/models/enums.py`) are declared `(str, Enum)` rather than `StrEnum` to match
-the Postgres ENUM types verbatim.
+Domain enums (`app/models/enums.py`) are all declared `enum.StrEnum` (47 classes). ENUM *values*
+are verbatim from the locked DDL and must not change without a migration.
+
+> **Stale rationale warning.** The `UP042` ignore in `backend/pyproject.toml` — and the matching
+> note in the root `CLAUDE.md` — still claim these enums are `(str, Enum)` and instruct
+> contributors not to switch to `StrEnum`. The code no longer matches: the migration to
+> `enum.StrEnum` already happened, which means `str(member)` and f-string output now yield
+> `"news"` rather than `"SignalKind.NEWS"`. Treat that guidance as obsolete and confirm the
+> intended string behaviour before relying on either form.
 
 ## API surface & auth
 
