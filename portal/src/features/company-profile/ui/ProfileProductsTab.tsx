@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-import type { MarketOffer } from "@/entities/market";
-import { offerImageUrl, offerPhotos } from "@/entities/market";
+import { offerImageUrl } from "@/entities/market";
+import { offerPhotoFiles } from "@/shared/config";
 import {
   Badge,
   CheckCircleIcon,
@@ -12,29 +12,36 @@ import {
   PackageOpenIcon,
 } from "@/shared/ui";
 
+import type { CompanyProfileOffer } from "../model/types";
+
 interface ProfileProductsTabProps {
-  offers: MarketOffer[];
+  offers: CompanyProfileOffer[];
   offerCount: number;
-  onSeeAll?: () => void;
   /**
-   * Appended to the product-detail link — the manufacturer profile marks the
-   * hop with `?fromManufacturer=1` so the offer page can offer Chat + factory
-   * RFQ instead of the regular trader inquiry form.
+   * Where a product row goes — always `/market/:id`, but the caller decides the
+   * query string: a manufacturer profile appends `?fromManufacturer=1` so the
+   * product sheet offers factory chat + RFQ instead of the trader inquiry form.
    */
-  linkQuery?: string;
+  productHref: (offer: CompanyProfileOffer) => string;
+  /** «Показать все» target; omit to hide the link. */
+  seeAllHref?: string;
 }
 
 /**
  * «Продукты» — vertical list matching the mockup: thumb · name · CAS · stock · chevron.
+ *
+ * Rows are `<Link>`s, not `<button onClick={navigate}>`. Client-side navigation
+ * is identical either way, but only one of them is a real `href` — openable in a
+ * new tab, and followable by a crawler on the storefront, which is the whole
+ * reason `PublicOfferTile` had to exist separately from the cabinet's card.
  */
 export function ProfileProductsTab({
   offers,
   offerCount,
-  onSeeAll,
-  linkQuery,
+  productHref,
+  seeAllHref,
 }: ProfileProductsTabProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   if (offers.length === 0) {
     return (
@@ -55,12 +62,11 @@ export function ProfileProductsTab({
           const subtitle =
             offer.polymer_type ??
             (offer.product_text && offer.grade_text ? offer.grade_text : null);
-          const cover = offerPhotos(offer.files)[0] ?? null;
+          const cover = offerPhotoFiles(offer.files)[0] ?? null;
           return (
-            <button
+            <Link
               key={offer.id}
-              type="button"
-              onClick={() => navigate(`/cabinet/market/${offer.id}${linkQuery ?? ""}`)}
+              to={productHref(offer)}
               className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2.5 text-left transition-colors hover:border-brand-line hover:bg-surface-2"
             >
               <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface-inset">
@@ -94,18 +100,17 @@ export function ProfileProductsTab({
                 </div>
               </div>
               <ChevronRightIcon size={16} className="shrink-0 text-text-subtle" />
-            </button>
+            </Link>
           );
         })}
       </div>
-      {offerCount > offers.length && onSeeAll ? (
-        <button
-          type="button"
-          onClick={onSeeAll}
-          className="w-full rounded-md border border-border px-3 py-2.5 text-sm font-medium text-brand transition-colors hover:border-brand-line hover:bg-brand-soft"
+      {offerCount > offers.length && seeAllHref ? (
+        <Link
+          to={seeAllHref}
+          className="block w-full rounded-md border border-border px-3 py-2.5 text-center text-sm font-medium text-brand transition-colors hover:border-brand-line hover:bg-brand-soft"
         >
           {t("companyProfile.seeAllProducts", { count: offerCount })}
-        </button>
+        </Link>
       ) : null}
     </div>
   );

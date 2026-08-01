@@ -72,7 +72,7 @@ export function FactoryRfqDone({ companyId, rfqId }: FactoryRfqDoneProps) {
         <Button
           fullWidth
           size="lg"
-          onClick={() => void navigate("/cabinet/manufacturers")}
+          onClick={() => void navigate("/manufacturers")}
           data-testid="factory-rfq-done-manufacturers"
         >
           {t("factoryRfq.done.toManufacturers")}

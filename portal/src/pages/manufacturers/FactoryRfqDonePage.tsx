@@ -12,10 +12,10 @@ export function FactoryRfqDonePage() {
   const { activeCompany, isLoading } = useActiveCompany();
 
   if (isLoading) return <LoadingView label={t("common.loading")} />;
-  if (!activeCompany) return <Navigate to="/cabinet/manufacturers" replace />;
+  if (!activeCompany) return <Navigate to="/manufacturers" replace />;
 
   const rfqId = Number(params.rfqId);
-  if (!Number.isInteger(rfqId)) return <Navigate to="/cabinet/manufacturers" replace />;
+  if (!Number.isInteger(rfqId)) return <Navigate to="/manufacturers" replace />;
 
   return (
     <div className="mx-auto max-w-xl pb-10">

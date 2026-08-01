@@ -1,22 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { marketApi, marketKeys } from "./api";
-import type { MarketFilters, MarketOffer, MarketOfferDetail } from "./types";
+import type { MarketOffer, MarketOfferDetail } from "./types";
 
 /** Every market cache holds either a page of cards or one detail sheet. */
 type MarketCache = MarketOffer[] | MarketOfferDetail | undefined;
-
-/** Browse approved offers (excludes the active company's own when companyId set). */
-export function useMarket(
-  filters: MarketFilters,
-  companyId: number | null,
-  offset = 0,
-) {
-  return useQuery<MarketOffer[]>({
-    queryKey: marketKeys.list(filters, companyId, offset),
-    queryFn: () => marketApi.list(filters, { companyId, offset }),
-  });
-}
 
 /** A single offer + the active company's inquiries on it. */
 export function useMarketOffer(offerId: number | null, companyId: number | null) {

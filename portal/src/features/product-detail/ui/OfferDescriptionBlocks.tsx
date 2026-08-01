@@ -1,11 +1,10 @@
 import { type ReactNode } from "react";
 
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-import type { MarketOfferDetail, OfferFileRef } from "@/entities/market";
 import { offerImageUrl } from "@/entities/market";
-import { SampleRequestForm } from "@/features/sample-request";
 import { coerceLang } from "@/shared/i18n";
 import { cn, countryName, formatQty } from "@/shared/lib";
 import {
@@ -26,16 +25,34 @@ import {
   StarIcon,
 } from "@/shared/ui";
 
+import { documentLabel } from "../model/labels";
+import type { ProductDetailFile, ProductDetailOffer } from "../model/types";
+
 import { SectionHeader } from "./SectionHeader";
 
 interface OfferDescriptionBlocksProps {
-  offer: MarketOfferDetail;
-  documents: OfferFileRef[];
-  passport: OfferFileRef | null;
-  companyId: number | null;
-  sampleSent: boolean;
-  onSampleSent: () => void;
-  onRequestSample: () => void;
+  offer: ProductDetailOffer;
+  documents: ProductDetailFile[];
+  passport: ProductDetailFile | null;
+  /**
+   * Where the seller card points. The two tiers have different destinations for
+   * the same company — `/cabinet/sellers/:id` behind the login, the public
+   * directory profile in front of it — so the page decides. `null` renders the
+   * card as a plain block with no link (a Telegram-origin offer has no company).
+   */
+  sellerHref: string | null;
+  /**
+   * The sample request form, when the visitor is in a position to send one.
+   *
+   * A slot because the form is authenticated (`useCompany` + `useRequestSample`)
+   * and this component server-renders on the storefront. The cabinet is the only
+   * caller that passes it.
+   */
+  sampleSlot?: ReactNode;
+  /** The visitor's own listing — no point offering them their own samples. */
+  isOwn?: boolean;
+  /** Omit to render no «Запросить образец» button at all. */
+  onRequestSample?: (() => void) | null;
 }
 
 function qtyLabel(
@@ -56,9 +73,9 @@ export function OfferDescriptionBlocks({
   offer,
   documents,
   passport,
-  companyId,
-  sampleSent,
-  onSampleSent,
+  sellerHref,
+  sampleSlot,
+  isOwn = false,
   onRequestSample,
 }: OfferDescriptionBlocksProps) {
   const { t, i18n } = useTranslation();
@@ -134,7 +151,7 @@ export function OfferDescriptionBlocks({
               okLabel={t("market.detail.samplesAvailable")}
               noLabel={t("market.detail.samplesUnavailable")}
             />
-            {offer.samples_available && !offer.is_own ? (
+            {offer.samples_available && !isOwn && onRequestSample ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -146,17 +163,9 @@ export function OfferDescriptionBlocks({
               </Button>
             ) : null}
           </div>
-          {offer.samples_available && !offer.is_own && companyId != null ? (
+          {offer.samples_available && !isOwn && sampleSlot ? (
             <div id="samples" className="mt-4 border-t border-border pt-4">
-              {sampleSent ? (
-                <p className="text-sm text-success">{t("samples.sentOk")}</p>
-              ) : (
-                <SampleRequestForm
-                  offerId={offer.id}
-                  companyId={companyId}
-                  onSent={onSampleSent}
-                />
-              )}
+              {sampleSlot}
             </div>
           ) : null}
         </CardBody>
@@ -192,52 +201,21 @@ export function OfferDescriptionBlocks({
       <Card>
         <CardBody>
           <SectionHeader title={t("market.seller")} hint={t("market.detail.sellerHint")} />
-          {offer.seller_company_id != null ? (
+          {sellerHref != null ? (
             <Link
-              to={`/cabinet/sellers/${offer.seller_company_id}?fromOffer=${offer.id}`}
+              to={sellerHref}
               className="flex items-center gap-3 rounded-md border border-border bg-surface-2 px-3 py-3 transition-colors hover:border-brand-line hover:bg-surface"
               data-testid="product-detail-seller"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-info/20 text-sm font-bold text-info">
-                {(offer.display_name ?? "?").slice(0, 1).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-text">{offer.display_name ?? "—"}</p>
-                {offer.company_verified ? (
-                  <p className="mt-0.5 flex items-center gap-1 text-xs text-brand">
-                    <CheckCircleIcon size={12} />
-                    {t("market.detail.verifiedSupplier")}
-                  </p>
-                ) : (
-                  <p className="mt-0.5 text-xs text-text-muted">{t("market.notVerified")}</p>
-                )}
-                <p className="mt-1 flex items-center gap-1 text-xs text-text-subtle">
-                  <StarIcon size={12} className="text-gold" />
-                  {t("market.detail.ratingPending")}
-                </p>
-              </div>
+              <SellerIdentity offer={offer} t={t} />
               <ChevronRightIcon size={16} className="shrink-0 text-text-subtle" />
             </Link>
           ) : (
-            <div className="flex items-center gap-3 rounded-md border border-border bg-surface-2 px-3 py-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-info/20 text-sm font-bold text-info">
-                {(offer.display_name ?? "?").slice(0, 1).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-text">{offer.display_name ?? "—"}</p>
-                {offer.company_verified ? (
-                  <p className="mt-0.5 flex items-center gap-1 text-xs text-brand">
-                    <CheckCircleIcon size={12} />
-                    {t("market.detail.verifiedSupplier")}
-                  </p>
-                ) : (
-                  <p className="mt-0.5 text-xs text-text-muted">{t("market.notVerified")}</p>
-                )}
-                <p className="mt-1 flex items-center gap-1 text-xs text-text-subtle">
-                  <StarIcon size={12} className="text-gold" />
-                  {t("market.detail.ratingPending")}
-                </p>
-              </div>
+            <div
+              className="flex items-center gap-3 rounded-md border border-border bg-surface-2 px-3 py-3"
+              data-testid="product-detail-seller"
+            >
+              <SellerIdentity offer={offer} t={t} />
             </div>
           )}
         </CardBody>
@@ -276,7 +254,7 @@ export function OfferDescriptionBlocks({
                     className="inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-text transition-colors hover:border-brand-line"
                   >
                     <PdfIcon size={14} className="text-danger" />
-                    <span>{t(`market.detail.docChip.${file.kind}`, { defaultValue: file.file_name })}</span>
+                    <span>{documentLabel(file, t)}</span>
                     <DownloadIcon size={12} className="text-text-subtle" />
                   </a>
                 </li>
@@ -288,6 +266,35 @@ export function OfferDescriptionBlocks({
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+/**
+ * Avatar + name + trust line. Shared by both seller-card branches so the linked
+ * and unlinked versions cannot drift — they were two verbatim copies.
+ */
+function SellerIdentity({ offer, t }: { offer: ProductDetailOffer; t: TFunction }) {
+  return (
+    <>
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-info/20 text-sm font-bold text-info">
+        {(offer.display_name ?? "?").slice(0, 1).toUpperCase()}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium text-text">{offer.display_name ?? "—"}</p>
+        {offer.company_verified ? (
+          <p className="mt-0.5 flex items-center gap-1 text-xs text-brand">
+            <CheckCircleIcon size={12} />
+            {t("market.detail.verifiedSupplier")}
+          </p>
+        ) : (
+          <p className="mt-0.5 text-xs text-text-muted">{t("market.notVerified")}</p>
+        )}
+        <p className="mt-1 flex items-center gap-1 text-xs text-text-subtle">
+          <StarIcon size={12} className="text-gold" />
+          {t("market.detail.ratingPending")}
+        </p>
+      </div>
+    </>
   );
 }
 

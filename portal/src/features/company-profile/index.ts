@@ -1,3 +1,5 @@
+export { CabinetCompanyProfile } from "./ui/CabinetCompanyProfile";
+export type { CabinetCompanyProfileProps } from "./ui/CabinetCompanyProfile";
 export { CompanyProfileView } from "./ui/CompanyProfileView";
 export type { CompanyProfileViewProps } from "./ui/CompanyProfileView";
 export { ProfileHeader } from "./ui/ProfileHeader";
@@ -6,3 +8,5 @@ export { ProfileProductsTab } from "./ui/ProfileProductsTab";
 export { ProfileReviewsTab } from "./ui/ProfileReviewsTab";
 export { ProfileDocumentsTab } from "./ui/ProfileDocumentsTab";
 export { ProfileActionBar } from "./ui/ProfileActionBar";
+export { COMPANY_PROFILE_TAB_IDS, type CompanyProfileTabId } from "./model/tabs";
+export type { CompanyProfileCompany, CompanyProfileOffer } from "./model/types";

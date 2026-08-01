@@ -53,7 +53,7 @@ export function FactoryRfqPage() {
         offerId={offerId}
         step={step}
         onStepChange={setStep}
-        onExit={() => navigate(`/cabinet/manufacturers/${manufacturerId}`)}
+        onExit={() => navigate(`/manufacturers/${manufacturerId}`)}
         onSubmitted={(rfqId) => navigate(`/cabinet/manufacturers/rfqs/${rfqId}/done`, { replace: true })}
       />
     </div>

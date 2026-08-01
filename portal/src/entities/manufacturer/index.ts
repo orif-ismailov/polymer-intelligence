@@ -12,12 +12,10 @@ export type {
 export { FACTORY_RFQ_DOC_KINDS } from "./model/types";
 export { manufacturerApi, manufacturerKeys } from "./model/api";
 export {
-  useManufacturers,
-  useOpenManufacturerThread,
+  useManufacturerThread,
   useManufacturerThreads,
   useCreateFactoryRfq,
   useFactoryRfq,
   useFactoryRfqs,
   MANUFACTURER_CHAT_POLL_MS,
 } from "./model/hooks";
-export { ManufacturerListCard } from "./ui/ManufacturerListCard";

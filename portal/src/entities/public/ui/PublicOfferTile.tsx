@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
+import { offerPhotoFiles } from "@/shared/config";
 import { Badge, ImageIcon } from "@/shared/ui";
 
 import { publicOfferImageUrl } from "../model/api";
@@ -19,7 +20,7 @@ export function PublicOfferTile({ offer }: { offer: PublicOfferCard }) {
   const title = offer.product_text ?? offer.grade_text ?? t("public.offer.untitled");
   const subtitle = offer.product_text && offer.grade_text ? offer.grade_text : null;
   const location = [offer.warehouse_city, offer.country].filter(Boolean).join(", ");
-  const cover = offer.files.find((f) => f.kind === "photo") ?? null;
+  const cover = offerPhotoFiles(offer.files)[0] ?? null;
 
   return (
     <Link

@@ -8,7 +8,6 @@ export type {
 } from "./model/types";
 export { marketApi, marketKeys, offerImageUrl, offerPhotos } from "./model/api";
 export {
-  useMarket,
   useMarketOffer,
   usePublicCompanyProfile,
   useFavorites,

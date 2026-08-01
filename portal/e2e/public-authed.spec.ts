@@ -51,6 +51,40 @@ test("anonymous visitors get the storefront and its two auth CTAs", async ({ pag
 });
 
 /*
+ * The other half of "one address per listing": a listing reads in full without a
+ * session, and carries none of the acting surface.
+ *
+ * This is the cacheability contract as much as an auth one — `/market/:id` is
+ * served with `s-maxage=60` precisely because nothing in that HTML varies by
+ * visitor, so an action leaking into the anonymous render would be served to
+ * everyone from the edge.
+ */
+test("an anonymous visitor reads a listing but gets no acting surface", async ({
+  page,
+  request,
+}) => {
+  const offerId = await anyPublicOfferId(request);
+  test.skip(offerId === null, "no published listing to read");
+
+  await page.goto(`/market/${offerId}`);
+
+  await expect(page.getByTestId("product-detail-hero")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /sign in to contact|войти, чтобы связаться/i }),
+  ).toBeVisible();
+
+  for (const testId of [
+    "product-detail-rfq",
+    "product-detail-favorite",
+    "product-detail-action-bar",
+    "inquiry-submit",
+  ]) {
+    await expect(page.getByTestId(testId)).toHaveCount(0);
+  }
+});
+
+/*
  * One signed-in session for the whole authed story: registering a company is
  * ~15 s of wizard, and the suite shares one OTP rate-limit bucket per IP.
  */
@@ -73,14 +107,19 @@ test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
     await expect(page.getByRole("link", { name: SIGN_IN })).toHaveCount(0);
   }
 
-  // Reading a listing stays public; contacting the seller is the cabinet's job.
+  // A listing has ONE address. Signing in does not move the visitor to a cabinet
+  // twin — that twin is gone — it grows the acting controls in place, mounted
+  // after hydration so the cached HTML stays the same for everyone.
   if (offerId !== null) {
     await page.goto(`/market/${offerId}`);
+    await expect(page.getByTestId("product-detail-rfq")).toBeVisible();
     expect(new URL(page.url()).pathname).toBe(`/market/${offerId}`);
-    await page
-      .getByRole("link", { name: /send inquiry|отправить запрос|so.rov yuborish/i })
-      .click();
-    await page.waitForURL(`**/cabinet/market/${offerId}`);
+    await expect(page.getByTestId("product-detail-favorite")).toBeVisible();
+    await expect(page.getByTestId("product-detail-action-bar")).toBeVisible();
+    // The sign-in prompt is what the actions replaced.
+    await expect(
+      page.getByRole("link", { name: /sign in to contact|войти, чтобы связаться/i }),
+    ).toHaveCount(0);
   }
 
   // ...and the two ways back out: the sidebar link and the brand lockup, which

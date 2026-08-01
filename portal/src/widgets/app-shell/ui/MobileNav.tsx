@@ -17,7 +17,7 @@ export function MobileNav() {
   const items: BottomNavItem[] = [
     { to: "/cabinet", label: t("nav.home"), icon: HomeIcon, end: true },
     { to: "/cabinet/requests", label: t("nav.requests"), icon: DocIcon },
-    { to: "/cabinet/market", label: t("nav.market"), icon: StoreIcon },
+    { to: "/market", label: t("nav.market"), icon: StoreIcon },
     { to: "/cabinet/deals", label: t("nav.deals"), icon: HandshakeIcon },
     { to: "/cabinet/settings", label: t("nav.settings"), icon: CogIcon },
   ];

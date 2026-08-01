@@ -1,0 +1,38 @@
+{
+  "run": "gsd-docs-update --reapply",
+  "scope": "verify-and-fix-only",
+  "project_type": "monorepo",
+  "docs_structure": "flat",
+  "signal_corrections": {
+    "is_monorepo": "false -> true (backend/ dashboard/ webapp/ portal/ telegram/ userbot/ workers/)",
+    "has_package_json": "false -> true (dashboard/ portal/ webapp/)",
+    "has_api_routes": "false -> true (27 FastAPI routers in backend/app/api/)",
+    "has_deploy_config": "false -> true (deploy/docker-compose.yml + 3 Dockerfiles + nginx)"
+  },
+  "canonical_queue": [
+    { "type": "readme",          "resolved_path": "README.md",                "mode": "verify", "preservation_mode": "preserve", "status": "verified", "claims": 20, "passed": 20, "failed": 0, "fixed": 0 },
+    { "type": "architecture",    "resolved_path": "docs/ARCHITECTURE.md",     "mode": "verify", "preservation_mode": null,       "status": "verified_after_fix", "claims": 46, "passed": 46, "failed_initial": 2, "fixed": 2 },
+    { "type": "configuration",   "resolved_path": "docs/CONFIGURATION.md",    "mode": "verify", "preservation_mode": null,       "status": "verified", "claims": 58, "passed": 58, "failed": 0, "fixed": 0 },
+    { "type": "getting_started", "resolved_path": "docs/GETTING-STARTED.md",  "mode": "verify", "preservation_mode": null,       "status": "verified_after_fix", "claims": 30, "passed": 30, "failed_initial": 2, "fixed": 2 },
+    { "type": "development",     "resolved_path": "docs/DEVELOPMENT.md",      "mode": "verify", "preservation_mode": null,       "status": "verified", "claims": 46, "passed": 46, "failed": 0, "fixed": 0 },
+    { "type": "testing",         "resolved_path": "docs/TESTING.md",          "mode": "verify", "preservation_mode": null,       "status": "verified", "claims": 24, "passed": 24, "failed": 0, "fixed": 0 },
+    { "type": "api",             "resolved_path": "docs/API.md",              "mode": "verify", "preservation_mode": null,       "status": "verified", "claims": 63, "passed": 63, "failed": 0, "fixed": 0 },
+    { "type": "deployment",      "resolved_path": "docs/deployment-guide.md", "mode": "verify", "preservation_mode": "preserve", "status": "verified_after_fix", "claims": 40, "passed": 40, "failed_initial": 1, "fixed": 1 }
+  ],
+  "totals": { "docs": 8, "claims_checked": 327, "failures_found": 5, "failures_fixed": 5, "failures_remaining": 0 },
+  "fix_loop": { "iterations_used": 1, "max": 2, "regressions": 0, "truncation_events": 0 },
+  "secret_scan": "clean",
+  "review_queue": [],
+  "gap_queue": [],
+  "codebase_drift_surfaced": [
+    "backend/app/models/enums.py uses enum.StrEnum (47 classes), but the UP042 ignore comment in backend/pyproject.toml and the root CLAUDE.md both still instruct contributors that they are (str, Enum) and must not be switched. Docs now flag this; the source-side guidance is still stale.",
+    "deploy/.env.example (48 keys) is missing EIMZO_*, ESCROW_WEBHOOK_SECRET, and OTP_DEV_CODE."
+  ],
+  "skipped": {
+    "contributing": "no LICENSE file — project is not open source",
+    "generation_waves": "user chose verify-only scope; docs written at bbd0a9e are current",
+    "gaps": "user declined: dashboard/ webapp/ telegram/ userbot/ deploy/ READMEs and docs/README.md index not created",
+    "non_canonical_review": "user chose canonical-only scope"
+  },
+  "created_at": "2026-08-01"
+}

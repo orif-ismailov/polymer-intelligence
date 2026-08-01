@@ -40,17 +40,32 @@ the session instead: `PublicTopNav` swaps «Войти»/«Регистраци�
 link, the cabinet's `SideNav` has a «Маркетплейс» link back out, and every `BrandLogo` on
 the site is wrapped in a link to `/` — cabinet topbar, login/OTP, onboarding, footer. The
 lockup is the marketplace's front door from everywhere; the cabinet home has its own nav
-entry and does not need the logo too. Public CTAs
-(«Отправить запрос», «Связаться») point into the cabinet when there is a session and
-through `/cabinet/login` with `state.from` set to that same destination when there is not,
-so signing in from a listing returns you to *that listing*, not to the cabinet home.
+entry and does not need the logo too. An anonymous CTA («Отправить запрос», «Связаться»)
+goes through `/cabinet/login` with `state.from` set to **the page it was clicked on**, so
+signing in from a listing returns you to *that listing* — where the real actions are now
+waiting.
 
-Only one thing on the storefront may depend on the session: which chrome renders.
-`selectIsAuthenticated` is `token !== null`, which is false during SSR and at first paint,
-so server and client render the same anonymous markup and the header swaps once the
-boot-time refresh resolves — a state change, not a hydration mismatch. Do **not** put the
-notification bell, the company switcher, or any other authed fetch on a public page: that
-HTML is shared-cached (`s-maxage=60`) precisely because nothing in it varies by visitor.
+**The product sheet and the company profile have no cabinet twin.** `/market/:offerId` and
+`/{directory}/:companyId` are the only ones, for everyone: `/cabinet/market/:offerId` and
+`/cabinet/manufacturers/:companyId` were deleted and now redirect (notification payloads
+still carry the old URLs). The signed-in surface — inquiry form, favourite, «Мои запросы»,
+the contract/escrow bar, sample requests, the factory chat/RFQ entry — mounts **on those
+same pages**, and only after hydration.
+
+That is the rule to understand before touching a public page. What may vary by session is
+what renders **after** hydration; what may never vary is the **server render**.
+`selectIsAuthenticated` is `token !== null`, false during SSR and at first paint, so the
+server always emits the anonymous markup and the session surface arrives as a state change
+rather than a hydration mismatch. That HTML is shared-cached (`s-maxage=60`) precisely
+because nothing in it varies by visitor — an `e2e/public-authed.spec.ts` case asserts an
+anonymous listing carries no acting controls at all.
+
+The mechanism is `useOfferSession` (`features/product-detail`): it gates every authed query
+on `selectIsAuthenticated` and returns `null` until they settle, so a caller reads it as
+"there is nobody to act as (yet)". Follow it for any new session surface — and note that a
+hook without an `enabled` guard fires from **Node** during SSR, which is how
+`useCompanies()` was quietly issuing `GET /portal/companies` on every public render before
+it took an `enabled` argument.
 
 What the `/cabinet` prefix earns is collision-freedom. Before it, cabinet pages lived
 inside public namespaces and had to be held apart by declaration order and comments:
@@ -63,7 +78,9 @@ news reader, the price table, the three non-manufacturer directories. They are o
 component, and their internal links go through `shared/lib/useTierBase()`, which returns
 `"/cabinet"` or `""` for the tier they are currently rendering in; hardcoding a path in one
 of those is the mistake to watch for. That duplication is **temporary** — it is being
-collapsed onto the single public URL page by page, so don't add new twins.
+collapsed onto the single public URL page by page (the market and manufacturer sheets went
+first), so don't add new twins. A link to a listing is the exception that is already
+settled: it is always `/market/:id`, never `${base}/market/:id`, because there is only one.
 
 Old root-level cabinet URLs (`/login`, `/companies/…`, `/offers/…`) **301 to their
 `/cabinet` equivalent** from `server.js`, not from the router: `entry-server.tsx` returns
@@ -95,7 +112,7 @@ in this repo (same constraint as `webapp/`/`dashboard/`).
 | Layer | Role |
 |------|------|
 | `app/` | providers (QueryClient, i18n, router, theme), route tree, guards (`RequireAuth`, `RedirectIfAuthed`, `RequireCompany`) — all three cabinet-side; the storefront has none. |
-| `pages/` | login, otp, **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-create, settings + **R2** market (grid + offer detail w/ inquiry form), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
+| `pages/` | login, otp, **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-create, settings + **R2** market (favorites + RFQ inbox only — the grid and the offer sheet are public now), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
 | `widgets/` | `app-shell` (topbar + company switcher), `case-status-panel` (per-check chips + needs_info deep-links). |
 | `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions). |
 | `entities/` | account, company, verification, offer + **R2** market, inquiry, request, news, notification + **P5** compliance (substance picker data, verdicts, licences) + **P6** lab (orders + the two badges), sample (requests + status badge) — types + api hooks + zustand models. |

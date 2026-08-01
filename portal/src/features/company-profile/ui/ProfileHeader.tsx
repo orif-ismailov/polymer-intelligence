@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import type { PublicCompanyProfile } from "@/entities/market";
 import { BusinessRoleBadges } from "@/entities/market";
 import { coerceLang } from "@/shared/i18n";
 import { countryName, formatDate } from "@/shared/lib";
@@ -15,8 +14,10 @@ import {
   StarIcon,
 } from "@/shared/ui";
 
+import type { CompanyProfileCompany } from "../model/types";
+
 interface ProfileHeaderProps {
-  profile: PublicCompanyProfile;
+  profile: CompanyProfileCompany;
   onShare: () => void;
   /** Prefer a fixed back target when history may leave the cabinet flow. */
   backTo?: string;
@@ -43,9 +44,13 @@ export function ProfileHeader({ profile, onShare, backTo }: ProfileHeaderProps) 
         >
           <ChevronLeftIcon size={20} />
         </IconButton>
-        <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-text">
+        {/* The breadcrumb label, not the page heading. The company's NAME is the
+            `h1` below — on the storefront this sheet is a company's landing
+            page, and «Профиль компании» as its heading would be the same h1 on
+            every one of them. */}
+        <p className="min-w-0 flex-1 truncate text-base font-semibold text-text">
           {t("companyProfile.title")}
-        </h1>
+        </p>
         <IconButton label={t("market.detail.share")} onClick={onShare}>
           <ShareIcon size={18} />
         </IconButton>
@@ -65,7 +70,7 @@ export function ProfileHeader({ profile, onShare, backTo }: ProfileHeaderProps) 
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <h2 className="text-xl font-semibold leading-tight text-text">{name}</h2>
+            <h1 className="text-xl font-semibold leading-tight text-text">{name}</h1>
             <CheckCircleIcon size={18} className="shrink-0 text-brand" />
           </div>
           <p className="mt-0.5 text-sm text-text-muted">{t("companyProfile.officialSupplier")}</p>
