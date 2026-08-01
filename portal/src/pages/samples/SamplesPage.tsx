@@ -131,7 +131,7 @@ export function SamplesPage() {
               key={sample.id}
               sample={sample}
               companyId={activeCompany.id}
-              onOpenOffer={() => navigate(`/market/${sample.offer_id}`)}
+              onOpenOffer={() => navigate(`/cabinet/market/${sample.offer_id}`)}
             />
           ))}
         </div>
@@ -141,7 +141,7 @@ export function SamplesPage() {
           title={t(`samples.empty.${tab}`)}
           description={t("samples.emptyBody")}
           action={
-            tab === "sent" ? <LinkButton to="/market">{t("nav.market")}</LinkButton> : undefined
+            tab === "sent" ? <LinkButton to="/cabinet/market">{t("nav.market")}</LinkButton> : undefined
           }
         />
       )}

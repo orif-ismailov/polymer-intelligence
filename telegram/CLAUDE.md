@@ -19,10 +19,11 @@ on startup when `PUBLIC_WEBAPP_URL` is set.
 
 | Path | Role |
 |------|------|
-| `bot.py` | `bot`/`dp` aiogram singletons, `setup_webhook()`, `load_template()`, `web_app_keyboard()`, and the offer / offer-request moderation keyboards. `dp` wires the start, chatid, and offer-moderation routers. |
+| `bot.py` | `bot`/`dp` aiogram singletons, `setup_webhook()`, `load_template()`, `web_app_keyboard()`, and the offer / offer-request moderation keyboards. `dp` wires the start, chatid, offer-moderation, and verification-moderation routers. |
 | `handlers/start.py` | `start_router` — the `/start` handler. |
 | `handlers/chatid.py` | `/chatid` — returns chat id / type / topic thread id (a helper for wiring up notify/moderation groups). |
 | `handlers/moderation.py` | Inline-callback approve/reject routers for seller offers + buyer offer-requests, actioned from the team group. |
+| `handlers/verification.py` | `verification_moderation_router` — inline-callback approve/reject for company verification (callback prefix `vercase:`), actioned from the team group. |
 | `templates/{ru,uz,tr,fa,zh}/` | Message templates (`start.txt`, `status_change.txt`). |
 
 ## Notes specific to this package

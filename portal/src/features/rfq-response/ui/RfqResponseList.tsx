@@ -55,7 +55,7 @@ export function RfqResponseList({ companyId, requestId, canAccept }: RfqResponse
     setError(null);
     try {
       const deal = await rfqApi.accept(companyId, requestId, response.id);
-      void navigate(`/deals/${deal.id}`);
+      void navigate(`/cabinet/deals/${deal.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errors.generic"));
       setBusy(false);
@@ -100,7 +100,7 @@ export function RfqResponseList({ companyId, requestId, canAccept }: RfqResponse
             </div>
 
             {response.status === "accepted" && response.deal_id ? (
-              <Button size="sm" variant="outline" onClick={() => navigate(`/deals/${response.deal_id}`)}>
+              <Button size="sm" variant="outline" onClick={() => navigate(`/cabinet/deals/${response.deal_id}`)}>
                 {t("rfq.openDeal")}
               </Button>
             ) : canAccept && response.status === "submitted" ? (

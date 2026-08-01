@@ -194,7 +194,7 @@ export function OfferDescriptionBlocks({
           <SectionHeader title={t("market.seller")} hint={t("market.detail.sellerHint")} />
           {offer.seller_company_id != null ? (
             <Link
-              to={`/sellers/${offer.seller_company_id}?fromOffer=${offer.id}`}
+              to={`/cabinet/sellers/${offer.seller_company_id}?fromOffer=${offer.id}`}
               className="flex items-center gap-3 rounded-md border border-border bg-surface-2 px-3 py-3 transition-colors hover:border-brand-line hover:bg-surface"
               data-testid="product-detail-seller"
             >

@@ -31,14 +31,14 @@ async function readOtp(request: APIRequestContext, phone: string): Promise<strin
 }
 
 async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
   await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/login/code");
+  await page.waitForURL("**/cabinet/login/code");
   const code = await readOtp(request, phone);
   await page.getByLabel(/code|код|kod/i).fill(code);
   await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
 }
 
 /** Inject a working stub CAPIWS bridge whose cert INN matches `taxId`. */
@@ -76,7 +76,7 @@ test("E-IMZO onboarding: the certificate registers and confirms the company", as
   await stubEimzo(page, taxId, { available: true });
   await login(page, request, phone);
 
-  await page.goto("/companies/new/1");
+  await page.goto("/cabinet/companies/new/1");
   await page.getByTestId("account-type-distributor").click();
 
   // No tax id is typed anywhere: the certificate subject carries the STIR, and
@@ -89,7 +89,7 @@ test("E-IMZO onboarding: the certificate registers and confirms the company", as
 
   // The requisites arrive filled and frozen on «Основная информация».
   await page.getByTestId("wizard-next").click();
-  await page.waitForURL("**/companies/new/2");
+  await page.waitForURL("**/cabinet/companies/new/2");
   await expect(page.getByTestId("wizard-identity-locked")).toBeVisible();
   await expect(page.getByLabel(/tax id|инн|stir/i)).toHaveValue(taxId);
   await expect(page.getByLabel(/tax id|инн|stir/i)).toBeDisabled();
@@ -101,7 +101,7 @@ test("E-IMZO module missing shows install guidance", async ({ page, request }) =
   await stubEimzo(page, taxId, { available: false });
   await login(page, request, phone);
 
-  await page.goto("/companies/new/1");
+  await page.goto("/cabinet/companies/new/1");
   await page.getByLabel(/pin/i).fill("123456");
   await page.getByTestId("wizard-eimzo").click();
 
@@ -113,7 +113,7 @@ test("signing is gated on the PIN the sheet asks for", async ({ page, request })
   await stubEimzo(page, uniqueTaxId(), { available: true });
   await login(page, request, phone);
 
-  await page.goto("/companies/new/1");
+  await page.goto("/cabinet/companies/new/1");
   await expect(page.getByTestId("wizard-eimzo")).toBeDisabled();
   await page.getByLabel(/pin/i).fill("123456");
   await expect(page.getByTestId("wizard-eimzo")).toBeEnabled();

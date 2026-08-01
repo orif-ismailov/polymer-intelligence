@@ -9,7 +9,7 @@ import { CompanyProfileView } from "@/features/company-profile";
  * `?fromOffer=` carries the offer the buyer came from so «Написать» can return
  * to that offer's inquiry form.
  *
- * UI lives in `CompanyProfileView` so `/companies/:id` can reuse the same sheet.
+ * UI lives in `CompanyProfileView` so `/cabinet/companies/:id` can reuse the same sheet.
  */
 export function SellerProfilePage() {
   const { companyId: rawId } = useParams<{ companyId: string }>();

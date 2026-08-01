@@ -48,7 +48,7 @@ export interface CompanyProfileViewProps {
 /**
  * Shared public company profile sheet — `docs/new-design/company_profile.jpeg`.
  *
- * Used by both `/sellers/:id` and `/companies/:id` so the two routes stay
+ * Used by both `/cabinet/sellers/:id` and `/cabinet/companies/:id` so the two routes stay
  * visually identical without duplicating the tab chrome.
  */
 export function CompanyProfileView({
@@ -73,7 +73,7 @@ export function CompanyProfileView({
     return (
       <div className="space-y-4">
         <Alert tone="danger">{t("companyProfile.notFound")}</Alert>
-        <LinkButton to={backTo ?? "/market"} variant="secondary">
+        <LinkButton to={backTo ?? "/cabinet/market"} variant="secondary">
           {backTo ? t("common.back") : t("market.backToMarket")}
         </LinkButton>
       </div>
@@ -108,11 +108,11 @@ export function CompanyProfileView({
 
   function goMessage(): void {
     if (mode === "manufacturer") {
-      void navigate(`/manufacturers/${profile.id}/chat`);
+      void navigate(`/cabinet/manufacturers/${profile.id}/chat`);
       return;
     }
     if (fromOfferId != null) {
-      void navigate(`/market/${fromOfferId}#inquiry`);
+      void navigate(`/cabinet/market/${fromOfferId}#inquiry`);
       return;
     }
     setTab("products");
@@ -132,11 +132,11 @@ export function CompanyProfileView({
             variant="outline"
             size="lg"
             className="min-w-0 flex-1"
-            to={`/companies/${profile.id}/manage`}
+            to={`/cabinet/companies/${profile.id}/manage`}
           >
             {t("company.manage")}
           </LinkButton>
-          <LinkButton size="lg" className="min-w-0 flex-[1.4]" to="/offers/new">
+          <LinkButton size="lg" className="min-w-0 flex-[1.4]" to="/cabinet/offers/new">
             {t("company.createOffer")}
           </LinkButton>
         </div>
@@ -167,7 +167,7 @@ export function CompanyProfileView({
           offers={profile.offers}
           offerCount={profile.offer_count}
           onSeeAll={() => {
-            void navigate(`/market?seller=${profile.id}`);
+            void navigate(`/cabinet/market?seller=${profile.id}`);
           }}
           linkQuery={mode === "manufacturer" ? "?fromManufacturer=1" : undefined}
         />

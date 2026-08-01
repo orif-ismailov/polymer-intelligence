@@ -18,7 +18,7 @@ interface FactoryRfqDoneProps {
   rfqId: number;
 }
 
-/** `/manufacturers/rfqs/:rfqId/done` — the closing sheet of the factory RFQ flow. */
+/** `/cabinet/manufacturers/rfqs/:rfqId/done` — the closing sheet of the factory RFQ flow. */
 export function FactoryRfqDone({ companyId, rfqId }: FactoryRfqDoneProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -72,7 +72,7 @@ export function FactoryRfqDone({ companyId, rfqId }: FactoryRfqDoneProps) {
         <Button
           fullWidth
           size="lg"
-          onClick={() => void navigate("/manufacturers")}
+          onClick={() => void navigate("/cabinet/manufacturers")}
           data-testid="factory-rfq-done-manufacturers"
         >
           {t("factoryRfq.done.toManufacturers")}
@@ -81,7 +81,7 @@ export function FactoryRfqDone({ companyId, rfqId }: FactoryRfqDoneProps) {
           fullWidth
           size="lg"
           variant="outline"
-          onClick={() => void navigate("/")}
+          onClick={() => void navigate("/cabinet")}
           data-testid="factory-rfq-done-home"
         >
           {t("factoryRfq.done.toHome")}

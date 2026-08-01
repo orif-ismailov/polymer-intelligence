@@ -28,7 +28,7 @@ export function RequireCompany() {
   }
 
   if (query.data && query.data.length === 0) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/cabinet/onboarding" replace />;
   }
 
   return <Outlet />;

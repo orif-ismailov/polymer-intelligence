@@ -7,7 +7,7 @@ import { expect, test, type Page } from "@playwright/test";
  * WCAG AA) rather than any single screen's markup, so P1+ screens can't
  * silently regress the design system.
  *
- * Only `/login` is exercised, so this spec needs a live API on :8000 solely for
+ * Only `/cabinet/login` is exercised, so this spec needs a live API on :8000 solely for
  * the SPA to boot — no auth, no seed data.
  */
 
@@ -83,12 +83,14 @@ const THEME_TOKENS = [
   "--accent-gold-fg",
   "--danger",
   "--danger-fg",
+  "--hero-field",
+  "--hero-field-fg",
 ] as const;
 
 // ── T1.2 — dark is the default theme ─────────────────────────────────────────
 
 test("dark theme is the default for a first-time visitor", async ({ page }) => {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
@@ -106,7 +108,7 @@ test("dark theme is the default for a first-time visitor", async ({ page }) => {
 // ── T1.1 — the brand is neon green with a dark foreground ────────────────────
 
 test("brand tokens are the neon-green family, not the old blue", async ({ page }) => {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   const tokens = await readTokens(page, THEME_TOKENS);
 
   for (const name of THEME_TOKENS) {
@@ -131,7 +133,7 @@ test("brand tokens are the neon-green family, not the old blue", async ({ page }
 
 test("surface elevation tokens stay visually distinct", async ({ page }) => {
   for (const theme of ["dark", "light"] as const) {
-    await page.goto("/login");
+    await page.goto("/cabinet/login");
     await page.evaluate((t) => document.documentElement.setAttribute("data-theme", t), theme);
     const tk = await readTokens(page, THEME_TOKENS);
 
@@ -164,7 +166,7 @@ test("surface elevation tokens stay visually distinct", async ({ page }) => {
 
 test("token colour pairs meet WCAG AA in both themes", async ({ page }) => {
   for (const theme of ["dark", "light"] as const) {
-    await page.goto("/login");
+    await page.goto("/cabinet/login");
     await page.evaluate((t) => document.documentElement.setAttribute("data-theme", t), theme);
 
     const tk = await readTokens(page, THEME_TOKENS);
@@ -187,6 +189,12 @@ test("token colour pairs meet WCAG AA in both themes", async ({ page }) => {
       ["--brand-fg", "--brand"],
       ["--accent-gold-fg", "--accent-gold"],
       ["--danger-fg", "--danger"],
+      // The storefront hero's search field. In here because it is the one
+      // control that stays bright in BOTH themes rather than following the
+      // surface ladder — the pairing it replaced was `color-mix(--text 97%)`,
+      // which inverted with the theme and turned the field into a black bar on
+      // the light page while every token-level assertion still passed.
+      ["--hero-field-fg", "--hero-field"],
     ] as const) {
       expect(contrastRatio(tk[fg], tk[fill]), `${theme}: ${fg} on ${fill}`).toBeGreaterThanOrEqual(
         4.5,
@@ -204,7 +212,7 @@ test("token colour pairs meet WCAG AA in both themes", async ({ page }) => {
 // ── T1.2 — the switcher persists the operator's choice across reloads ────────
 
 test("theme choice persists across a reload", async ({ page }) => {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
   // Switching is exposed as a plain <html data-theme> flip driven by the store,
@@ -225,7 +233,7 @@ test("theme choice persists across a reload", async ({ page }) => {
 // ── T1.3 — typography: tabular figures available for prices/metrics ─────────
 
 test("numeric type is tabular where numbers are compared", async ({ page }) => {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
 
   // `.num` is the design-system-owned utility for figures (styles.css), so it
   // exists regardless of which components happen to reference it.

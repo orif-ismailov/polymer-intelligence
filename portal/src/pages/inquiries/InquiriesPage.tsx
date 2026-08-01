@@ -107,7 +107,7 @@ export function InquiriesPage() {
             <InquiryRow
               key={inq.id}
               inquiry={inq}
-              onOpen={() => navigate(`/inquiries/${inq.id}`)}
+              onOpen={() => navigate(`/cabinet/inquiries/${inq.id}`)}
             />
           ))}
         </div>
@@ -118,7 +118,7 @@ export function InquiriesPage() {
           description={t("inquiries.emptyBody")}
           action={
             tab === "sent" ? (
-              <LinkButton to="/market">{t("nav.market")}</LinkButton>
+              <LinkButton to="/cabinet/market">{t("nav.market")}</LinkButton>
             ) : undefined
           }
         />

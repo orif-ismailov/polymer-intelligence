@@ -40,8 +40,8 @@ npm run e2e        # Playwright
   sets an httpOnly `client_session` cookie; `api/client.ts` sends `credentials:"include"` and
   omits the empty initData header so the backend falls through to the cookie. Backend
   `get_current_client` accepts either. Browser login needs `BOT_USERNAME` + BotFather `/setdomain`.
-- **Routing/chrome**: `/` is the public IMEX AI marketing landing (`pages/Landing.tsx`,
-  `styles/landing.css`), full-bleed with its own header/footer — shown in both contexts.
+- **Routing/chrome**: `/` is the public IMEX AI marketing landing (`pages/Landing.tsx`),
+  full-bleed with its own header/footer — shown in both contexts.
   All other routes live under the `AppLayout` layout route (`App.tsx`) behind `RequireAuth`;
   responsive chrome switches mobile `BottomTabBar` ↔ desktop `TopNav` via `hooks/useIsDesktop`.
 - **Landing** uses scoped CSS (`.imex-landing`, neon `#5CFF6E` on `#05070A`) + a tiny

@@ -16,7 +16,7 @@ import {
 
 const PAGE_SIZE = 24;
 
-/** `/manufacturers` — verified factories directory (`docs/new-design/manufacturer_flow.jpeg`). */
+/** `/cabinet/manufacturers` — verified factories directory (`docs/new-design/manufacturer_flow.jpeg`). */
 export function ManufacturersPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ export function ManufacturersPage() {
               <ManufacturerListCard
                 key={m.id}
                 manufacturer={m}
-                onOpen={() => navigate(`/manufacturers/${m.id}`)}
+                onOpen={() => navigate(`/cabinet/manufacturers/${m.id}`)}
               />
             ))}
           </div>

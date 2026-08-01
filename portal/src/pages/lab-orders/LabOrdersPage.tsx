@@ -109,7 +109,7 @@ export function LabOrdersPage() {
             <LabOrderCard
               key={order.id}
               order={order}
-              onOpen={() => navigate(`/offers/${order.offer_id}`)}
+              onOpen={() => navigate(`/cabinet/offers/${order.offer_id}`)}
             />
           ))}
         </div>
@@ -118,7 +118,7 @@ export function LabOrdersPage() {
           icon={<FlaskIcon size={28} />}
           title={t("lab.ordersEmpty")}
           description={t("lab.ordersEmptyBody")}
-          action={<LinkButton to="/offers">{t("nav.offers")}</LinkButton>}
+          action={<LinkButton to="/cabinet/offers">{t("nav.offers")}</LinkButton>}
         />
       )}
     </div>

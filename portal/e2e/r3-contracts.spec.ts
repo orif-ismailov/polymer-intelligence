@@ -47,13 +47,13 @@ async function stubEimzo(context: BrowserContext, tin: string): Promise<void> {
 }
 
 async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
   await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/login/code");
+  await page.waitForURL("**/cabinet/login/code");
   await page.getByLabel(/code|код|kod/i).fill(await readOtp(request, phone));
   await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
 }
 
 /**
@@ -87,7 +87,7 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
   await onboardVerified(pageB, taxB);
 
   // Company A creates a contract with company B.
-  await pageA.goto("/contracts/new");
+  await pageA.goto("/cabinet/contracts/new");
   // Template select (first non-empty option), then fill EVERY field the template's
   // variables_schema renders — the form is schema-driven, so drive it generically
   // rather than naming fields (a template change must not silently skip a required one).
@@ -108,7 +108,7 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
   await pageA.getByPlaceholder(/search|поиск|qidirish/i).fill(taxB);
   await pageA.getByTestId("cp-option").first().click();
   await pageA.getByTestId("contract-submit").click();
-  await pageA.waitForURL(/\/contracts\/\d+/);
+  await pageA.waitForURL(/\/cabinet\/contracts\/\d+/);
   const contractUrl = pageA.url();
 
   // A sends → pending_counterparty
@@ -120,7 +120,7 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
   // which unmounts the sign button. So assert the DURABLE outcome (the recorded
   // signature + resulting state), not the transient success alert.
   const contractId = contractUrl.split("/").pop();
-  await pageB.goto(`/contracts/${contractId}`);
+  await pageB.goto(`/cabinet/contracts/${contractId}`);
   await pageB.getByTestId("contract-accept").click();
   await pageB.getByTestId("eimzo-open").click();
   await expect(pageB.getByText(/awaiting the other|ожидаем подпись|ikkinchi tomon/i)).toBeVisible({
@@ -129,7 +129,7 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
   await expect(pageB.getByTestId("eimzo-open")).toHaveCount(0);
 
   // A signs → both signatures present → active
-  await pageA.goto(`/contracts/${contractId}`);
+  await pageA.goto(`/cabinet/contracts/${contractId}`);
   await pageA.getByTestId("eimzo-open").click();
   await expect(pageA.getByTestId("contract-download")).toBeVisible({ timeout: 15_000 });
   await pageA.reload();

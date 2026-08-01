@@ -16,7 +16,7 @@ import {
 import { CompanyManagePage } from "./CompanyManagePage";
 
 /**
- * `/companies/:id` — same public profile sheet as `/sellers/:id` when the
+ * `/cabinet/companies/:id` — same public profile sheet as `/cabinet/sellers/:id` when the
  * company is verified. Draft / pending members fall through to the manage
  * editor (nothing public to show yet).
  */
@@ -34,7 +34,7 @@ export function CompanyViewPage() {
   if (validId == null) {
     return (
       <ErrorView title={t("errors.notFound")} message={t("errors.notFoundBody")}>
-        <LinkButton to="/companies">{t("nav.companies")}</LinkButton>
+        <LinkButton to="/cabinet/companies">{t("nav.companies")}</LinkButton>
       </ErrorView>
     );
   }
@@ -47,7 +47,7 @@ export function CompanyViewPage() {
     return (
       <CompanyProfileView
         companyId={validId}
-        backTo="/companies"
+        backTo="/cabinet/companies"
         ownerActions={
           isMember ? (
             <StickyActionBar>
@@ -56,7 +56,7 @@ export function CompanyViewPage() {
                   variant="outline"
                   size="lg"
                   className="min-w-0 flex-1"
-                  to={`/companies/${validId}/manage`}
+                  to={`/cabinet/companies/${validId}/manage`}
                 >
                   {t("company.manage")}
                 </LinkButton>
@@ -64,11 +64,11 @@ export function CompanyViewPage() {
                   variant="outline"
                   size="lg"
                   className="min-w-0 flex-1"
-                  to={`/companies/${validId}/verification`}
+                  to={`/cabinet/companies/${validId}/verification`}
                 >
                   {t("company.goToVerification")}
                 </LinkButton>
-                <LinkButton size="lg" className="min-w-0 flex-[1.4]" to="/offers/new">
+                <LinkButton size="lg" className="min-w-0 flex-[1.4]" to="/cabinet/offers/new">
                   {t("company.createOffer")}
                 </LinkButton>
               </div>
@@ -95,7 +95,7 @@ export function CompanyViewPage() {
       onRetry={notFound ? undefined : () => void publicQuery.refetch()}
     >
       {notFound ? (
-        <LinkButton to="/companies">{t("nav.companies")}</LinkButton>
+        <LinkButton to="/cabinet/companies">{t("nav.companies")}</LinkButton>
       ) : (
         <Button variant="outline" onClick={() => void publicQuery.refetch()}>
           {t("common.retry")}

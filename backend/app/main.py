@@ -75,6 +75,7 @@ from app.api.portal.requests import router as portal_requests_router
 from app.api.portal.samples import router as portal_samples_router
 from app.api.portal.substances import router as portal_substances_router
 from app.api.prices import router as prices_router
+from app.api.public import router as public_router
 from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
 from app.api.sourcing import router as sourcing_router
@@ -184,6 +185,11 @@ def create_app() -> FastAPI:
     application.include_router(health_router, prefix="/api/v1")
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(admin_sources_router, prefix="/api/v1")
+    # ── public marketplace storefront (anonymous — server-rendered for search) ─
+    # Deliberately first among the product routers: it is the only surface with
+    # no auth dependency, so it stays visible at the top rather than buried in
+    # the portal block where a reader would assume the account guard applies.
+    application.include_router(public_router, prefix="/api/v1")
     # ── dashboard routers (Phase 4 internal team dashboard) ──────────────────
     application.include_router(feed_router, prefix="/api/v1")
     application.include_router(dashboard_router, prefix="/api/v1")

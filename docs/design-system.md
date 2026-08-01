@@ -165,8 +165,10 @@ tolerate longer DE/EN/TR strings (no fixed-width labels). Numbers/prices: thin-s
 
 - **webapp/** (Vite): tokens in a global stylesheet (`src/styles/tokens.css`), `ThemeProvider`
   using `@telegram-apps/sdk` `colorScheme` + `themeChanged`, override persisted via profile API.
-- **dashboard/** (Next + Tailwind + shadcn): same token names in `globals.css`; shadcn theme
-  variables mapped onto them so primitives inherit the system. `system` follows `prefers-color-scheme`.
+- **dashboard/** (Next + Tailwind + shadcn): `globals.css` uses shadcn's own HSL-based token names
+  (`--background`, `--card`, `--primary`, etc.) — a different naming system from the webapp's
+  tokens — reconciled to the same locked Polymer Intelligence color values via `tailwind.config.ts`
+  (see the mapping table in `globals.css`'s own header comment). `system` follows `prefers-color-scheme`.
 - Tailwind `theme.extend.colors` references the CSS vars so utility classes resolve per-theme.
 - Acceptance for any new screen: renders pixel-faithful to its mockup in **both** themes, AA
   contrast on text/controls, and uses only `var(--token)` colors (lint rule: no raw hex in components).
@@ -196,7 +198,7 @@ Copy is verbatim from the sheets, in `webapp/src/i18n/{ru,uz,tr,en}.json` (ru = 
 > Added by `.planning/deal-lifecycle/P0-DESIGN-SYSTEM.md`. **Scope: `portal/` only.**
 > Everything above (Part I) governs `webapp/` (frozen) and `dashboard/` (internal, not
 > restyled) and is unchanged. The portal is the client-facing surface and follows the
-> IMEX AI mockups in **`docs/new-design/`** (7 sheets + README catalog).
+> IMEX AI mockups in **`docs/new-design/`** (12 sheets + README catalog).
 
 ## P1. Principles
 
@@ -225,18 +227,41 @@ them, so a theme is one `data-theme` flip on `<html>`.
 | `--brand-fg` | `#052e10` | `#ffffff` | label **on** the brand fill |
 | `--accent-gold` | `#eab308` | `#8a6100` | Laboratory Verified, premium, in-flight steps |
 | `--accent-gold-fg` | `#241a00` | `#ffffff` | label on the gold fill |
-| `--success` / `--warning` / `--danger` / `--info` | `#22c55e` / `#eab308` / `#f05252` / `#58b8f0` | `#157f3c` / `#8a6100` / `#b91c1c` / `#1d6fa5` | status |
+| `--success` / `--warning` / `--danger` / `--info` | `#22c55e` / `#eab308` / `#f05252` / `#58b8f0` | `#0d6e31` / `#8a6100` / `#b91c1c` / `#1d6fa5` | status |
 | `--danger-fg` | `#2b0505` | `#ffffff` | label on the danger fill |
+| `--hero-field` / `--hero-field-fg` | `#f2f6f3` / `#0c110e` | `#ffffff` / `#0d1210` | the storefront hero's search field — the one control that stays **bright in both themes** |
 | `--overlay` | `rgb(0 0 0 / .62)` | `rgb(9 14 11 / .45)` | modal + drawer scrim |
 | `--brand-glow` | `0 0 24px` brand@35% | `0 0 20px` brand@22% | glow under accent CTAs (`shadow-glow`) |
+| `--hero-lift` | `0 18px 50px` black@38% | `0 10px 26px` `#090e0b`@10% | lift under a control floating on a photo (`shadow-hero-lift`) |
 | `--radius-lg` / `-md` / `-sm` | `1rem` / `.75rem` / `.5rem` | same | cards / controls / chips |
 
 Derived Tailwind names: `brand-soft` / `brand-line` (brand at 14% / 35%), `gold-soft` /
-`gold-line`, `surface-inset`, `shadow-glow`, `.num`.
+`gold-line`, `surface-inset`, `shadow-glow`, `shadow-hero-lift`, `.num`.
 
 Values are not arbitrary — every one is pinned by the contrast test in P5. In light theme
 `--brand` is darker than the mockups' neon so that **both** white-on-fill and
-brand-as-text-on-`brand-soft` clear AA.
+brand-as-text-on-`brand-soft` clear AA. `--success` is now that same darkened green for the
+same reason: `bg-success/10` did not paint until the alpha fix below, so the badge label had
+only ever been measured against plain white, and the real tint put it at 4.44:1.
+
+### Alpha on a token colour
+
+`bg-surface/60` works — but it did not until `tailwind.config.ts` grew `token()`. Every
+colour here is a custom property holding a *complete* colour, and given a bare `var(--bg)`
+Tailwind v3 has nothing to modulate and no `<alpha-value>` slot to fill, so it drops the
+declaration **entirely and silently**. Measured before the fix: `bg-bg/95` on the public
+header and `bg-surface/95` on the cabinet topbar both computed to `rgba(0,0,0,0)` — the bars
+were transparent, held up only by their `backdrop-blur` — and the hero's
+`from-bg via-bg/85 to-bg/30` scrim lost two of its three stops. `token()` wraps each colour
+in `color-mix`, which leaves the variables themselves untouched for `body`, `--brand-glow`,
+`.hero-grid` and the e2e token reader.
+
+**Two rules follow, and both fail silently:**
+
+1. **A bare opacity modifier must come from `theme.opacity`, which steps by 5.** `bg-bg/88`
+   and `bg-info/8` compile to nothing at all. Use `/90`, `/10`, or bracket it: `bg-bg/[.88]`.
+2. **When a translucent fill starts painting, re-measure what sits on it.** The tint you just
+   turned on is a new backdrop, and the token behind it was chosen against the old one.
 
 ## P3. Rules for new screens
 
@@ -260,7 +285,7 @@ brand-as-text-on-`brand-soft` clear AA.
 
 | Primitive | Notes |
 |---|---|
-| `Button` | `primary` (brand fill, dark label, glow on hover) · `outline` (the mockups' partner CTA) · `secondary` · `ghost` · `danger`. Disabled is a **neutral** surface, never a faded fill. |
+| `Button` | `primary` (brand fill, dark label, glow on hover) · `outline` (the mockups' partner CTA) · `secondary` · `ghost` · `glass` · `danger` · `gold`. `glass` is `outline` for a control that sits on a **photograph**: same silhouette, laid on a blurred `surface/70` plate, because a transparent button's label contrast is otherwise whatever pixel happens to be behind it. Disabled is a **neutral** surface, never a faded fill. |
 | `Badge` | `variant`: `verified` · `lab-verified` (gold) · `in-stock` · `on-order`, each with its glyph; or plain `tone`. Never wraps. |
 | `Card` | `variant="accent"` for the mockups' brand-outlined module cards. |
 | `Stepper` | Horizontal wizard progress: ticks for done, filled glowing disc for active. |
@@ -315,7 +340,8 @@ The portal has no unit-test runner, so the design system is pinned by Playwright
   button labels clear AA (token maths alone cannot see a rule that never reached the element).
 - `/dev/ui` is also the fastest way to eyeball a token change against the mockups.
 
-axe-core (`wcag2a` + `wcag2aa`) run on `/login`, `/market`, `/companies/:id` and `/dev/ui` in
+axe-core (`wcag2a` + `wcag2aa`) run on `/cabinet/login`, `/market`, `/cabinet/companies/:id`
+and `/dev/ui` in
 both themes: **0 violations**. Two were found and fixed during P0 — `--text-subtle` at 4.02:1
 on cards, and brand-on-`brand-soft` badges at 4.19:1 in light theme.
 
@@ -334,3 +360,12 @@ Worth knowing before you trust a green run:
   measures against the bar itself, and why `pb-36` is a rule rather than a suggestion.
 - **Nothing switches locale.** A key added to `ru.json` alone crashes `uz`/`en` at runtime.
   Prefer passing labels as props (`PageHeader`'s `backLabel`) — `shared/ui` imports no i18n.
+- **No contrast assertion can see text on a photograph.** Token maths compares two flat
+  colours; the storefront hero paints over a JPEG, where the backdrop varies per pixel and
+  per breakpoint. Measure it by hand: hide the text runs (`visibility: hidden`), screenshot,
+  then sample the composited pixels inside each run's box and take the *worst* ratio, not the
+  average. Doing that on the hero found three failures a green suite could not: the light
+  theme's popular-query row at 3.81:1 (the search shell's drop shadow), and the mobile
+  subtitle and chip label at 1.85:1 and 1.57:1 (a scrim too thin for the sunlit part of the
+  frame). Re-run it at 390 **and** desktop, in both themes, whenever the scrim, the crop or
+  the copy's position changes.

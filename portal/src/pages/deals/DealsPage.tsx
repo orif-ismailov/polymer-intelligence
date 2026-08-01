@@ -95,7 +95,7 @@ export function DealsPage() {
   if (!activeCompany) {
     return (
       <ErrorView title={t("home.noActiveCompany")} message={t("home.noActiveCompanyBody")}>
-        <LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>
+        <LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>
       </ErrorView>
     );
   }
@@ -148,7 +148,7 @@ export function DealsPage() {
       ) : items.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {items.map((deal) => (
-            <DealCard key={deal.id} deal={deal} onOpen={() => navigate(`/deals/${deal.id}`)} />
+            <DealCard key={deal.id} deal={deal} onOpen={() => navigate(`/cabinet/deals/${deal.id}`)} />
           ))}
         </div>
       ) : (
@@ -157,7 +157,7 @@ export function DealsPage() {
           title={t("deals.empty")}
           description={t("deals.emptyBody")}
           action={
-            <LinkButton to="/market/requests" variant="outline">
+            <LinkButton to="/cabinet/market/requests" variant="outline">
               {t("deals.browseRfqs")}
             </LinkButton>
           }

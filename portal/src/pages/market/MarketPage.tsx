@@ -28,8 +28,11 @@ export function MarketPage() {
   const { activeCompany } = useActiveCompany();
   const companyId = activeCompany?.id ?? null;
 
-  // Deep link from seller profile «Смотреть все» (`/market?seller={companyId}`).
-  const sellerRaw = searchParams.get("seller");
+  // Deep link from a seller profile's «Смотреть все». Two spellings because two
+  // profile sheets emit it: the cabinet's own uses `?seller`, the shared public
+  // company page uses the API's `?seller_company_id` and is mounted in BOTH
+  // tiers, so its link reaches this page as `/cabinet/market?seller_company_id=`.
+  const sellerRaw = searchParams.get("seller") ?? searchParams.get("seller_company_id");
   const sellerCompanyId =
     sellerRaw && /^\d+$/.test(sellerRaw) ? Number(sellerRaw) : undefined;
 
@@ -150,7 +153,7 @@ export function MarketPage() {
               <MarketOfferCard
                 key={offer.id}
                 offer={offer}
-                onOpen={() => navigate(`/market/${offer.id}`)}
+                onOpen={() => navigate(`/cabinet/market/${offer.id}`)}
               />
             ))}
           </div>

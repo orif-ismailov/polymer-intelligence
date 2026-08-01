@@ -99,7 +99,7 @@ export function DealDetailPage() {
         retryLabel={t("common.retry")}
         onRetry={() => void query.refetch()}
       >
-        <LinkButton to="/deals">{t("deals.title")}</LinkButton>
+        <LinkButton to="/cabinet/deals">{t("deals.title")}</LinkButton>
       </ErrorView>
     );
   }
@@ -133,7 +133,7 @@ export function DealDetailPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        backTo="/deals"
+        backTo="/cabinet/deals"
         backLabel={t("deals.title")}
         title={<span className="num">{deal.number}</span>}
         subtitle={`${t(`deals.role.${deal.role}`)} · ${
@@ -218,7 +218,7 @@ export function DealDetailPage() {
                     status: t(`contracts.status.${deal.contract_status ?? "draft"}`),
                   })}
                 </p>
-                <LinkButton to={`/contracts/${deal.contract_id}`}>
+                <LinkButton to={`/cabinet/contracts/${deal.contract_id}`}>
                   {t("deals.contract.open")}
                 </LinkButton>
               </>
@@ -226,7 +226,7 @@ export function DealDetailPage() {
               <>
                 <p className="text-sm text-text-muted">{t("deals.contract.none")}</p>
                 {/* Pre-filled from the deal's own agreed terms by the contracts flow. */}
-                <LinkButton to={`/contracts/new?deal_id=${deal.id}`}>
+                <LinkButton to={`/cabinet/contracts/new?deal_id=${deal.id}`}>
                   {t("deals.contract.create")}
                 </LinkButton>
               </>
@@ -242,7 +242,7 @@ export function DealDetailPage() {
       <div>
         <button
           type="button"
-          onClick={() => navigate("/deals")}
+          onClick={() => navigate("/cabinet/deals")}
           className="text-sm text-text-muted underline-offset-2 hover:text-text hover:underline"
         >
           ← {t("deals.title")}

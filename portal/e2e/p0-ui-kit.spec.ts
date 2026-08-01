@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
+import { registerCompany } from "./_registration";
+
 /**
  * P0 W2 — the shared/ui kit contract, exercised against the DEV-only gallery at
  * `/dev/ui`. The portal has no unit-test runner, so this spec is the render test
@@ -11,6 +13,10 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
 const GALLERY = "/dev/ui";
 const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
 
+function uniqueTaxId(): string {
+  return String(Math.floor(Math.random() * 900_000_000) + 100_000_000);
+}
+
 function uniquePhone(): string {
   const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
   return `+998${suffix}`;
@@ -19,18 +25,18 @@ function uniquePhone(): string {
 /** OTP login — only needed by the shell test, which must render the real cabinet. */
 async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
   await page.unrouteAll();
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
   await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
 
-  await page.waitForURL("**/login/code");
+  await page.waitForURL("**/cabinet/login/code");
   const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
   expect(res.ok()).toBeTruthy();
   const { code } = (await res.json()) as { code: string };
   await page.getByLabel(/code|код|kod/i).fill(code);
   await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
 
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
 }
 
 /** Resolve a CSS custom property to the value the browser computed. */
@@ -302,7 +308,15 @@ test("bottom nav marks the active route and surfaces unread counts", async ({ pa
 // ── The cabinet shell actually uses the bar on phones (P0 definition of done) ──
 
 test("the authenticated shell shows the bottom bar on phones only", async ({ page, request }) => {
+  // A company is required, not incidental: `RequireCompany` sends a companyless
+  // account to `/cabinet/onboarding`, which sits outside `AppShell` and so has
+  // no bottom bar to assert on. This test is about the SHELL, so it has to get
+  // past the registration gate first.
   await login(page, request, uniquePhone());
+  await registerCompany(page, uniqueTaxId());
+  // The wizard ends on `/cabinet/companies/new/done/:id`, which is deliberately
+  // outside `AppShell` — step into the cabinet proper to get the shell.
+  await page.goto("/cabinet");
 
   await page.setViewportSize({ width: 375, height: 780 });
   const nav = page.getByTestId("ui-bottom-nav");
@@ -310,8 +324,12 @@ test("the authenticated shell shows the bottom bar on phones only", async ({ pag
 
   // The bar is fixed, so the end of the content must still clear it once the
   // page is scrolled all the way down — otherwise the last row hides behind it.
-  await page.evaluate(() => {
+  // Settle first: the cabinet home grows as its queries resolve, and scrolling
+  // to a height measured before that leaves the page part-way down.
+  await page.waitForLoadState("networkidle");
+  await page.evaluate(async () => {
     window.scrollTo(0, document.body.scrollHeight);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   });
   const [barTop, mainBottom] = await Promise.all([
     nav.evaluate((el) => el.getBoundingClientRect().top),

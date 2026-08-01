@@ -6,24 +6,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- Mirrors --bg of the default (dark) theme in src/app/styles.css. -->
     <meta name="theme-color" content="#070907" />
-    <title>IMEX AI — Кабинет</title>
+    <meta property="og:site_name" content="IMEX AI" />
+    <!--
+      Critical paint colours, inline so they apply before any stylesheet resolves.
+      The SSR body arrives ahead of the CSS, and without this the first paint is
+      the UA's white — a full-page white flash on a dark product, on every reload.
+      Same duplication (and same reason) as the theme-color meta above: these two
+      values mirror --bg in src/app/styles.css and must be changed with it.
+    -->
+    <style>
+      html {
+        background: #070907;
+        color-scheme: dark;
+      }
+      html[data-theme="light"] {
+        background: #f5f8f6;
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+      }
+    </style>
+    <!-- server.js replaces the whole ssr-head block; see its applyTemplate(). -->
+    <!--ssr-head-->
+    <title>IMEX AI</title>
     <meta
       name="description"
-      content="Личный кабинет IMEX AI: регистрация компаний, верификация и публикация предложений на рынке нефтехимического сырья."
+      content="IMEX AI: маркетплейс нефтехимического сырья. Проверенные производители, трейдеры, логистика и лаборатории."
     />
-    <!-- Open Graph: the cabinet is behind auth, so this is only for link previews
-         shared between colleagues. No image asset until the operator supplies the
-         brand vector (P0 T3.2). -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="IMEX AI" />
-    <meta property="og:title" content="IMEX AI — Кабинет" />
-    <meta
-      property="og:description"
-      content="Личный кабинет IMEX AI: регистрация компаний, верификация и публикация предложений на рынке нефтехимического сырья."
-    />
+    <!--/ssr-head-->
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--ssr-outlet--></div>
+    <!--ssr-state-->
     <!--
       Resolve the stored theme before first paint so a `light` preference never
       flashes the dark default. Mirrors shared/lib/theme.ts — the key here must
@@ -47,6 +62,6 @@
         }
       })();
     </script>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/entry-client.tsx"></script>
   </body>
 </html>

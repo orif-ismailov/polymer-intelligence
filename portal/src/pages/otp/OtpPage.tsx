@@ -1,13 +1,17 @@
 import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { OtpForm } from "@/features/auth-by-otp";
 import { AuthLayout } from "@/pages/login/AuthLayout";
 import { useAuthFlowStore } from "@/pages/login";
+import { isCabinetPath } from "@/shared/config";
 import { Card, CardBody } from "@/shared/ui";
 
 /** OTP code entry screen — step 2 of the login flow. */
 export function OtpPage() {
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
+  const returnTo = from && isCabinetPath(from) ? from : "/cabinet";
   const { t } = useTranslation();
   const navigate = useNavigate();
   const phone = useAuthFlowStore((s) => s.phone);
@@ -20,7 +24,7 @@ export function OtpPage() {
   // It's ephemeral (in-memory, gone on reload) and overwritten on the next request;
   // we clear it explicitly on verify / change-phone below.
   if (!phone) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/cabinet/login" replace />;
   }
 
   return (
@@ -36,11 +40,15 @@ export function OtpPage() {
             initialCooldown={cooldownSeconds}
             onVerified={() => {
               clear();
-              void navigate("/", { replace: true });
+              // Honour the page the guard bounced them off, falling back to the
+              // cabinet home. `RequireAuth` has always written `state.from`;
+              // until now nothing read it, so every sign-in landed on the home
+              // screen no matter which deep link brought the visitor here.
+              void navigate(returnTo, { replace: true });
             }}
             onChangePhone={() => {
               clear();
-              void navigate("/login", { replace: true });
+              void navigate("/cabinet/login", { replace: true });
             }}
           />
         </CardBody>

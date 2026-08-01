@@ -81,6 +81,7 @@
     "favorites": "Favorites",
     "samples": "Samples",
     "labOrders": "Laboratory",
+    "marketplace": "Marketplace",
     "openMenu": "Open menu"
   },
   "home": {
@@ -1982,5 +1983,274 @@
     "verified": "Verified",
     "failed": "Rejected",
     "archived": "Archived"
+  },
+  "public": {
+    "nav": {
+      "primary": "Primary navigation",
+      "home": "Home",
+      "catalog": "Catalog",
+      "traders": "Traders",
+      "logistics": "Logistics",
+      "laboratories": "Laboratories",
+      "prices": "Prices and analytics",
+      "news": "News",
+      "signIn": "Sign in",
+      "register": "Register"
+    },
+    "role": {
+      "manufacturer": "Manufacturer",
+      "trader": "Trader",
+      "logistics_provider": "Logistics",
+      "laboratory": "Laboratory",
+      "importer": "Importer",
+      "distributor": "Distributor",
+      "insurance_provider": "Insurance"
+    },
+    "home": {
+      "metaTitle": "IMEX AI: petrochemical raw materials marketplace",
+      "metaDescription": "Polymers and petrochemicals from verified manufacturers, traders and laboratories. Live prices, lab passports, secured deals.",
+      "heroTitle": "Global marketplace for petrochemical products",
+      "heroSubtitle": "Manufacturers, traders, logistics and laboratories on one platform",
+      "heroEyebrow": "Verified companies · e-signed deals",
+      "heroCtaPrimary": "Create an account",
+      "heroCtaPrimaryAuthed": "Go to cabinet",
+      "heroCtaSecondary": "Browse the catalog",
+      "searchLabel": "Search the catalog",
+      "searchPlaceholder": "Search products, grades, companies, services...",
+      "searchAction": "Search",
+      "popular": "Popular queries:",
+      "statsHeading": "The platform in numbers",
+      "statLive": "Updated from live platform data",
+      "directoriesHeading": "Who are you looking for",
+      "companyCount_one": "{{count}} company",
+      "companyCount_other": "{{count}} companies",
+      "seeAll": "See all",
+      "noOffers": "No listings published yet",
+      "marketPrices": "Market prices",
+      "priceProduct": "Product",
+      "priceValue": "Price",
+      "priceChange": "Chg.",
+      "noHistory": "no data",
+      "noPrices": "Quotes appear after the first observations",
+      "industryNews": "Industry news",
+      "noNews": "No news yet",
+      "whyEyebrow": "A verified B2B marketplace",
+      "whyHeading": "Why companies choose IMEX AI",
+      "whySubtitle": "Every company is checked against state registries and signs its documents digitally — before you ever start a deal.",
+      "why": {
+        "verified": {
+          "title": "Verified companies",
+          "body": "Registry checks and a digital signature before a company can publish."
+        },
+        "prices": {
+          "title": "Current prices and analytics",
+          "body": "Quotes collected daily from exchange and industry sources."
+        },
+        "signing": {
+          "title": "Secure deals via D-Doc",
+          "body": "Both parties sign digitally. No paper, no couriers."
+        },
+        "international": {
+          "title": "International platform",
+          "body": "Suppliers and buyers from many countries on one marketplace."
+        },
+        "support": {
+          "title": "24/7 support",
+          "body": "The IMEX AI team helps at every step of the deal."
+        }
+      },
+      "joinHeading": "Join IMEX AI",
+      "joinBody": "Grow your petrochemical business on a global marketplace with us",
+      "allQueries": "All queries",
+      "searchScope": "Search scope",
+      "scope": {
+        "products": "Products",
+        "companies": "Companies",
+        "services": "Services"
+      },
+      "directoryCard": {
+        "manufacturersBody": "Direct supply from plants",
+        "tradersBody": "Verified traders and distributors",
+        "logisticsBody": "Delivery, customs, warehousing",
+        "laboratoriesBody": "Lab research and quality passports",
+        "pricesBody": "Live prices and market analytics",
+        "newsBody": "Industry news and updates",
+        "daily": "Updated daily"
+      },
+      "productCategories": "Product categories",
+      "resetFilters": "Reset all",
+      "filterCountry": "Country of origin",
+      "filterCountryPlaceholder": "Select country",
+      "filterIncoterms": "Delivery terms",
+      "filterCompany": "Manufacturer / Company",
+      "filterCompanyPlaceholder": "Select",
+      "showProducts": "Show products",
+      "showProductsCount_one": "Show {{count}} product",
+      "showProductsCount_other": "Show {{count}} products",
+      "recommendedProducts": "Recommended products",
+      "verifiedManufacturers": "Verified manufacturers",
+      "manufacturerOffers_one": "{{count}} offer",
+      "manufacturerOffers_other": "{{count}} offers",
+      "seeAllPeople": "See all",
+      "contact": "Contact",
+      "saveOffer": "Save listing",
+      "offerForm": "Form",
+      "offerFormGranules": "Granules",
+      "offerTerms": "Terms",
+      "priceValueUsd": "Price (USD/MT)",
+      "priceChange24h": "Chg. (24h)",
+      "priceSource": "Source: platform market observations",
+      "priceUpdated": "Updated: {{date}}",
+      "popularServices": "Popular services",
+      "allServices": "All services",
+      "service": {
+        "logistics": {
+          "title": "International logistics",
+          "body": "Turnkey delivery"
+        },
+        "customs": {
+          "title": "Customs clearance",
+          "body": "Export / Import"
+        },
+        "lab": {
+          "title": "Laboratory research",
+          "body": "Analysis and quality passports"
+        }
+      },
+      "registerCompany": "Company registration",
+      "platformStat": {
+        "products": "Products in catalog",
+        "companies": "Companies",
+        "countries": "Countries",
+        "requests": "Daily inquiries",
+        "deals": "Successful deals",
+        "satisfaction": "Satisfaction"
+      },
+      "fallbackCategory": {
+        "PE": "Polyethylene (PE)",
+        "PP": "Polypropylene (PP)",
+        "PVC": "PVC",
+        "PET": "PET",
+        "PS": "Polystyrene (PS)",
+        "Rubber": "Rubbers",
+        "Solvents": "Solvents",
+        "Additives": "Additives"
+      },
+      "popularTag": {
+        "rubber": "Rubber",
+        "solvents": "Solvents"
+      }
+    },
+    "market": {
+      "metaTitle": "Petrochemical raw materials catalog",
+      "metaDescription": "Polymers, solvents and additives from verified suppliers. Filter by product, availability, country and lab passport.",
+      "title": "Catalog",
+      "subtitle": "Published listings from verified suppliers",
+      "filters": "Filters",
+      "search": "Search",
+      "searchPlaceholder": "Grade or product",
+      "category": "Category",
+      "allCategories": "All categories",
+      "availability": "Availability",
+      "any": "Any",
+      "country": "Country",
+      "laboratory": "Laboratory",
+      "hasPassport": "Has a quality passport",
+      "labVerified": "Analysed via the platform",
+      "reset": "Clear filters",
+      "resultCount_one": "{{count}} listing",
+      "resultCount_other": "{{count}} listings",
+      "empty": "Nothing matches these filters",
+      "pagination": "Pagination",
+      "pageOf": "Page {{page}} of {{pages}}",
+      "anyPlural": "Any"
+    },
+    "offer": {
+      "untitled": "Untitled",
+      "onRequest": "Price on request",
+      "moq": "Min. order",
+      "leadTime": "Lead time, days",
+      "labVerified": "Laboratory verified",
+      "labPassport": "Passport attached",
+      "verified": "Verified",
+      "metaTitle": "{{name}} from {{seller}}",
+      "metaDescription": "{{name}} available. Ships from {{location}}. Verified supplier on IMEX AI.",
+      "notFound": "Listing not found",
+      "notFoundBody": "It may have been withdrawn.",
+      "breadcrumb": "Breadcrumb",
+      "grade": "Grade",
+      "polymer": "Polymer type",
+      "cas": "CAS",
+      "hs": "HS code",
+      "manufacturer": "Manufacturer",
+      "incoterms": "Incoterms",
+      "location": "Ships from",
+      "properties": "Properties",
+      "applications": "Applications",
+      "description": "Description",
+      "soldBy": "Supplier:",
+      "sendInquiry": "Send an inquiry",
+      "signInToContact": "Sign in to contact",
+      "contactHint": "Supplier contacts open after you sign in."
+    },
+    "directory": {
+      "metaTitle": "{{name}}, verified companies",
+      "search": "Search companies",
+      "searchPlaceholder": "Name or address",
+      "resultCount_one": "{{count}} company",
+      "resultCount_other": "{{count}} companies",
+      "empty": "No companies found",
+      "notFound": "No such section"
+    },
+    "directories": {
+      "manufacturers": {
+        "subtitle": "Polymer plants and producers with a confirmed role"
+      },
+      "traders": {
+        "subtitle": "Trading houses and distributors of petrochemical raw materials"
+      },
+      "logistics": {
+        "subtitle": "Freight, customs clearance and warehousing"
+      },
+      "laboratories": {
+        "subtitle": "Accredited laboratories for analysis and quality passports"
+      }
+    },
+    "company": {
+      "untitled": "Untitled",
+      "notFound": "Company not found",
+      "notFoundBody": "It may not have passed verification yet.",
+      "metaTitle": "{{name}}, {{directory}}",
+      "metaDescription": "{{name}}, {{country}}. Verified company on the IMEX AI marketplace.",
+      "offers": "Listings",
+      "founded": "Founded",
+      "employees": "Employees",
+      "iso": "ISO",
+      "legalName": "Legal name",
+      "legalForm": "Legal form",
+      "address": "Address",
+      "jurisdiction": "Jurisdiction",
+      "productionType": "Production type",
+      "exportTo": "Exports to",
+      "products": "Company listings",
+      "noProducts": "This company has no published listings yet",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "prices": {
+      "metaTitle": "Polymer and petrochemical prices",
+      "metaDescription": "Live polymer quotes: HDPE, PP, LLDPE, PVC, PET, with the change against the previous observation.",
+      "title": "Prices and analytics",
+      "subtitle": "The latest observation per product and its change against the previous one",
+      "unit": "Unit",
+      "observed": "Date"
+    },
+    "footer": {
+      "marketplace": "Marketplace",
+      "directories": "Directories",
+      "account": "Account",
+      "blurb": "A petrochemical raw materials marketplace with company verification and lab control.",
+      "legal": "IMEX AI. All rights reserved."
+    }
   }
 }

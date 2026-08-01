@@ -368,12 +368,14 @@ services:
       # Built static Telegram Web App served directly by nginx at the root of
       # ai-imex.com. Populate it with `make webapp-bundle`. See deployment-guide §4a.
       - webapp_static:/var/www/webapp:ro
-      # Built client portal (Vite) served at the root of cabinet.ai-imex.com.
-      # Populate it with `make portal-bundle`.
-      - portal_static:/var/www/portal:ro
+      # The portal is NO LONGER a static volume: cabinet.ai-imex.com is proxied
+      # to the `portal` service below, which server-renders the public
+      # marketplace routes. portal_static is kept only so an old volume can be
+      # pruned deliberately rather than silently orphaned.
     depends_on:
       - api
       - dashboard
+      - portal
 
   # ── Web App bundle builder (one-shot; profile-gated, never runs on `up`) ──────
   # Builds the Telegram Web App (Vite) and loads the static bundle into the shared
@@ -394,21 +396,40 @@ services:
     # Replace the bundle atomically-ish: clear, then copy the freshly built dist.
     command: sh -c "rm -rf /out/* && cp -a /dist/. /out/ && echo '[webapp-build] bundle loaded into webapp_static'"
 
-  # ── Portal bundle builder (one-shot; profile-gated, never runs on `up`) ───────
-  # Builds the client portal (Vite) and loads the static bundle into portal_static,
-  # which nginx serves at the root of cabinet.ai-imex.com. Run at deploy time and on
-  # every portal change:
-  #   docker compose -f deploy/docker-compose.yml --profile build run --rm --build portal-build
-  #   (or: make portal-bundle)
-  portal-build:
-    profiles: ["build"]
+  # ── Client portal / public marketplace (SSR) ─────────────────────────────────
+  # Long-running Node process, not a bundle builder. It renders the public
+  # marketplace routes (/, /market, the four directories, /prices, /news) to HTML
+  # so they can be crawled, and serves the app shell for everything behind the
+  # login. nginx proxies cabinet.ai-imex.com here.
+  #
+  # It reaches the API on the INTERNAL network. A render must not leave the
+  # network and come back through nginx: that is a slower round trip and it makes
+  # every render depend on the public hostname resolving from inside.
+  portal:
     image: ${IMAGE_PREFIX:-ghcr.io/orif-ismailov/polymer-intelligence}-portal:${IMAGE_TAG:-main}
     build:
       context: ../portal
       dockerfile: ../deploy/Dockerfile.portal
-    volumes:
-      - portal_static:/out
-    command: sh -c "rm -rf /out/* && cp -a /dist/. /out/ && echo '[portal-build] bundle loaded into portal_static'"
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      INTERNAL_API_ORIGIN: http://api:8000
+      # Absolute origin for canonical / og:url / sitemap.xml. Leave EMPTY to
+      # derive it per request from the forwarded Host, which is right for the dev
+      # stack. Set it in production: a canonical that varies by request header is
+      # a canonical a crawler cannot trust.
+      PUBLIC_SITE_ORIGIN: ${PUBLIC_SITE_ORIGIN:-}
+    depends_on:
+      - api
+    healthcheck:
+      # robots.txt is served without touching the API or the render path, so this
+      # answers "is the process up" without reporting the API's health as ours.
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/robots.txt').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
 volumes:
   postgres_data:

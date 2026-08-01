@@ -51,16 +51,21 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   (`LLM_REPORT_MODEL`, `REPORT_PROMPT_VERSION`), buyer-request AI (`REQUEST_AI_ANALYSIS_*`,
   `REQUEST_NOTIFY_CHAT_ID`, `NOTIFY_TOPIC_BUYERS/SELLERS`), UZEX LLM fallback
   (`UZEX_LLM_FALLBACK_ENABLED`), and browser Web-App login (`BOT_USERNAME`, `CLIENT_SESSION_TTL_SECONDS`).
-- **Client portal (R1)** is a Vite bundle in the `portal_static` volume: `make portal-bundle`
-  (= `docker compose --profile build run --rm --build portal-build`). nginx serves it at the root
-  of **cabinet.ai-imex.com** + proxies `/api/` → `api:8000` same-origin (server block in
-  `nginx.behind-proxy.conf`; the dev stack's is `dev-cabinet.ai-imex.com` in
-  `nginx.dev-server.behind-proxy.conf`). Prod needs DNS `cabinet.*` + a host cert (behind-proxy:
-  host nginx terminates TLS → docker nginx :8080).
-  **The bundle is in a VOLUME, not an image** — so it is refreshed only when `portal-build` runs.
-  CI now does that on every deploy (it pulls `…-portal:<branch>`, built by `build-images`, and
-  runs the one-shot service — nothing compiles on the 2-core box). A deploy that skips it leaves
-  the previous cabinet build; a fresh server with an empty volume answers **404**.
+- **Client portal (R1)** is a long-running Node SSR process — the `portal` service in
+  `docker-compose.yml`, built from `Dockerfile.portal` — not a static bundle. It server-renders
+  the public marketplace routes (`/`, `/market`, the directories, `/prices`, `/news`) so a
+  crawler gets real HTML instead of an empty `<div id="root">`, and serves the app shell for
+  everything behind the login. nginx **proxies** `cabinet.ai-imex.com` to the `portal` container
+  + proxies `/api/` → `api:8000` same-origin (server block in `nginx.behind-proxy.conf`; the dev
+  stack's is `dev-cabinet.ai-imex.com` in `nginx.dev-server.behind-proxy.conf`). Prod needs DNS
+  `cabinet.*` + a host cert (behind-proxy: host nginx terminates TLS → docker nginx :8080).
+  **There is no `portal-build` one-shot compose service and no `portal_static` volume flow
+  anymore** — `make portal-bundle` now runs `docker compose build portal && docker compose up -d
+  portal` to rebuild the image and restart the container in place. CI does that on every deploy
+  (it pulls `…-portal:<branch>`, built by `build-images`). The container reads
+  `INTERNAL_API_ORIGIN`/`PUBLIC_SITE_ORIGIN` at RUNTIME, so one image serves dev and prod. A
+  deploy where the `portal` container is dead or absent shows up as a **502** from nginx (proxy
+  to nothing), not a 404 from an empty volume.
   **Every public domain also needs a HOST-side vhost.** The inner nginx routes by `Host` and
   never sees a request for a name the host front door has no block for — that request just lands
   on the default site. `cabinet.*` was inner-only until now;
@@ -163,7 +168,7 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
 ```bash
 make smoke          # production-compose smoke test (synthetic data + placeholder env)
 make webapp-bundle  # build + load the Telegram Web App into the nginx-served volume
-make portal-bundle  # build + load the client cabinet into the portal_static volume (cabinet.*)
+make portal-bundle  # rebuild the portal image + restart the SSR container (cabinet.*)
 ```
 Both use `docker compose --env-file .env -f deploy/docker-compose.yml` — the `--env-file .env` is
 required so Compose interpolates from the repo-root `.env`.

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useLogout } from "@/entities/account";
 import { LanguageMenu } from "@/pages/login";
@@ -49,7 +49,12 @@ export function OnboardingPage() {
         />
 
         <div className="mt-6 flex flex-col items-center text-center">
-          <BrandLogo withTagline />
+          {/* Goes to the storefront, not to the cabinet: there is no cabinet to
+              reach yet, which is the whole reason this screen exists. The ✕
+              above still signs out. */}
+          <Link to="/" aria-label={t("common.appName")}>
+            <BrandLogo withTagline />
+          </Link>
           <h1 className="mt-6 text-3xl font-semibold leading-tight text-text">
             {t("onboarding.title")}{" "}
             <span className="text-brand">
@@ -82,7 +87,7 @@ export function OnboardingPage() {
           fullWidth
           size="lg"
           className="mt-6"
-          onClick={() => void navigate("/companies/new/1")}
+          onClick={() => void navigate("/cabinet/companies/new/1")}
           data-testid="onboarding-start"
         >
           {t("onboarding.start")}

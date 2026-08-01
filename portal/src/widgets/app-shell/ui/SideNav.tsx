@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 
 import { useTranslation } from "react-i18next";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 import { cn } from "@/shared/lib";
 
@@ -17,6 +17,7 @@ import {
   HomeIcon,
   ManufacturersIcon,
   NewsIcon,
+  PublicSiteIcon,
   SampleBoxIcon,
   StoreIcon,
   TagIcon,
@@ -30,20 +31,20 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: "/", labelKey: "nav.home", icon: HomeIcon, end: true },
-  { to: "/market", labelKey: "nav.market", icon: StoreIcon },
-  { to: "/manufacturers", labelKey: "nav.manufacturers", icon: ManufacturersIcon },
-  { to: "/market/favorites", labelKey: "nav.favorites", icon: HeartIcon },
-  { to: "/requests", labelKey: "nav.requests", icon: DocIcon },
-  { to: "/deals", labelKey: "nav.deals", icon: HandshakeIcon },
-  { to: "/inquiries", labelKey: "nav.inquiries", icon: ChatIcon },
-  { to: "/samples", labelKey: "nav.samples", icon: SampleBoxIcon },
-  { to: "/lab-orders", labelKey: "nav.labOrders", icon: FlaskNavIcon },
-  { to: "/news", labelKey: "nav.news", icon: NewsIcon },
-  { to: "/companies", labelKey: "nav.companies", icon: BuildingIcon },
-  { to: "/offers", labelKey: "nav.offers", icon: TagIcon },
-  { to: "/contracts", labelKey: "nav.contracts", icon: ContractIcon },
-  { to: "/settings", labelKey: "nav.settings", icon: CogIcon },
+  { to: "/cabinet", labelKey: "nav.home", icon: HomeIcon, end: true },
+  { to: "/cabinet/market", labelKey: "nav.market", icon: StoreIcon },
+  { to: "/cabinet/manufacturers", labelKey: "nav.manufacturers", icon: ManufacturersIcon },
+  { to: "/cabinet/market/favorites", labelKey: "nav.favorites", icon: HeartIcon },
+  { to: "/cabinet/requests", labelKey: "nav.requests", icon: DocIcon },
+  { to: "/cabinet/deals", labelKey: "nav.deals", icon: HandshakeIcon },
+  { to: "/cabinet/inquiries", labelKey: "nav.inquiries", icon: ChatIcon },
+  { to: "/cabinet/samples", labelKey: "nav.samples", icon: SampleBoxIcon },
+  { to: "/cabinet/lab-orders", labelKey: "nav.labOrders", icon: FlaskNavIcon },
+  { to: "/cabinet/news", labelKey: "nav.news", icon: NewsIcon },
+  { to: "/cabinet/companies", labelKey: "nav.companies", icon: BuildingIcon },
+  { to: "/cabinet/offers", labelKey: "nav.offers", icon: TagIcon },
+  { to: "/cabinet/contracts", labelKey: "nav.contracts", icon: ContractIcon },
+  { to: "/cabinet/settings", labelKey: "nav.settings", icon: CogIcon },
 ];
 
 interface SideNavProps {
@@ -73,6 +74,24 @@ export function SideNav({ onNavigate }: SideNavProps) {
           {t(item.labelKey)}
         </NavLink>
       ))}
+
+      {/*
+       * Out of the cabinet and onto the public storefront. A plain `Link`, not a
+       * `NavLink`: `/` is never the active route from in here, and `end` would
+       * only make that explicit rather than useful.
+       *
+       * It sits below the rule because it leaves the namespace every item above
+       * it stays inside — and because on phones this drawer is the only place it
+       * fits; the bottom bar's five slots are all primary destinations.
+       */}
+      <Link
+        to="/"
+        onClick={onNavigate}
+        className="mt-2 flex items-center gap-3 border-t border-border px-3 pb-2 pt-4 text-sm font-medium text-text-muted transition-colors hover:text-text"
+      >
+        {PublicSiteIcon}
+        {t("nav.marketplace")}
+      </Link>
     </nav>
   );
 }

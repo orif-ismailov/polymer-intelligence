@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import { BrandLogo, ShieldIcon } from "@/shared/ui";
 
@@ -31,7 +32,11 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
       <main className="flex flex-1 justify-center px-4 pb-16">
         <div className="w-full max-w-md space-y-6">
           <div className="flex flex-col items-center text-center">
-            <BrandLogo withTagline />
+            {/* Also the way back to the marketplace for someone who opened the
+                login by accident — this screen has no other exit. */}
+            <Link to="/" aria-label={t("common.appName")}>
+              <BrandLogo withTagline />
+            </Link>
             <h1 className="mt-6 text-2xl font-semibold leading-tight text-text sm:text-3xl">
               {title}
             </h1>

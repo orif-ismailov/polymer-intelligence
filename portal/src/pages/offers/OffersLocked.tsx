@@ -39,7 +39,7 @@ export function OffersLocked({ companyId, companyName }: OffersLockedProps) {
             <h2 className="text-lg font-semibold text-text">{t("offers.lockedTitle")}</h2>
             <p className="mx-auto mt-1 max-w-md text-sm text-text-muted">{t("offers.lockedBody")}</p>
           </div>
-          <LinkButton to={`/companies/${companyId}/verification`}>
+          <LinkButton to={`/cabinet/companies/${companyId}/verification`}>
             {t("offers.goToVerification")}
           </LinkButton>
         </CardBody>

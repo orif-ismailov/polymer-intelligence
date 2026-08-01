@@ -1,13 +1,19 @@
-# Polymer Intelligence — client portal static bundle builder
+# Polymer Intelligence — client portal (SSR server)
 # Build context: portal/
-# Usage (one-shot, via compose): see the `portal-build` service in
-#   deploy/docker-compose.yml (profile: build) and `make portal-bundle`.
 #
-# The portal calls the API at the relative path /api/v1 (proxied same-origin by
-# nginx in prod at cabinet.ai-imex.com), so the build needs no environment or
-# secrets. The final stage carries only the built bundle; the compose service
-# copies /dist into the shared portal_static volume nginx serves at the root of
-# cabinet.ai-imex.com.
+# The portal used to be a static bundle copied into the `portal_static` volume.
+# It is now a long-running Node process, because the public marketplace routes
+# are rendered on the server so a crawler receives real HTML instead of an empty
+# <div id="root">. See the `portal` service in deploy/docker-compose.yml.
+#
+# What changed operationally: nginx no longer serves files from portal_static,
+# it proxies to this container. A deploy that runs the old `portal-build`
+# one-shot and never starts this service leaves nginx proxying to nothing (502),
+# which is a different symptom from the old empty-volume 404 — see deploy/CLAUDE.md.
+#
+# Still no build-time secrets. The browser calls the relative /api/v1, and the
+# server reads INTERNAL_API_ORIGIN / PUBLIC_SITE_ORIGIN at RUNTIME, so one image
+# serves dev and prod and the storefront can change domain without a rebuild.
 
 FROM node:20-alpine AS build
 
@@ -17,10 +23,31 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --prefer-offline
 
-# Build the Vite bundle (npm run build = tsc -b && vite build → /app/dist).
+# Builds BOTH bundles: dist/client (browser) and dist/server (the render module
+# server.js imports). Either one alone is an incomplete deploy.
 COPY . .
 RUN npm run build
 
-# ── Export stage — just the static bundle ─────────────────────────────────────
-FROM alpine:3
-COPY --from=build /app/dist /dist
+# ── Runtime stage ─────────────────────────────────────────────────────────────
+FROM node:20-alpine AS runtime
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Production dependencies only: `--omit=dev` drops vite, typescript and the
+# eslint tree. The server itself needs express, compression and sirv.
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev --prefer-offline && npm cache clean --force
+
+COPY --from=build /app/dist ./dist
+COPY server.js ./
+
+# Unprivileged: the node image ships a `node` user for exactly this.
+USER node
+
+EXPOSE 3000
+
+# Exec form, not shell: PID 1 must be node so SIGTERM reaches it and compose can
+# stop the container without waiting out the kill timeout.
+CMD ["node", "server.js"]

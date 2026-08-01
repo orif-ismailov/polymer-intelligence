@@ -24,7 +24,7 @@ const EDITABLE_STATUSES = new Set(["draft", "pending_verification", "rejected"])
 /**
  * Owner-only registry editor (bank, docs, roles, licenses).
  *
- * The public-facing sheet lives at `/companies/:id` via `CompanyProfileView`;
+ * The public-facing sheet lives at `/cabinet/companies/:id` via `CompanyProfileView`;
  * this route is the place to mutate registry fields.
  */
 export function CompanyManagePage() {
@@ -51,7 +51,7 @@ export function CompanyManagePage() {
         retryLabel={notFound ? undefined : t("common.retry")}
         onRetry={notFound ? undefined : () => void query.refetch()}
       >
-        {notFound ? <LinkButton to="/companies">{t("nav.companies")}</LinkButton> : null}
+        {notFound ? <LinkButton to="/cabinet/companies">{t("nav.companies")}</LinkButton> : null}
       </ErrorView>
     );
   }
@@ -66,18 +66,18 @@ export function CompanyManagePage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        backTo={isVerified ? `/companies/${company.id}` : "/companies"}
+        backTo={isVerified ? `/cabinet/companies/${company.id}` : "/cabinet/companies"}
         backLabel={isVerified ? t("companyProfile.title") : t("nav.companies")}
         title={name}
         subtitle={`${t("companies.taxId")}: ${company.tax_id}`}
         badge={<CompanyStatusBadge status={company.status} />}
         actions={
           <>
-            <LinkButton variant="outline" to={`/companies/${company.id}/verification`}>
+            <LinkButton variant="outline" to={`/cabinet/companies/${company.id}/verification`}>
               {t("company.goToVerification")}
             </LinkButton>
             {isVerified ? (
-              <LinkButton to="/offers/new">{t("company.createOffer")}</LinkButton>
+              <LinkButton to="/cabinet/offers/new">{t("company.createOffer")}</LinkButton>
             ) : null}
           </>
         }

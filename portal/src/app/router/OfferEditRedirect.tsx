@@ -1,7 +1,7 @@
 import { Navigate, useParams } from "react-router-dom";
 
 /**
- * `/offers/:offerId` → the first sheet of the edit flow.
+ * `/cabinet/offers/:offerId` → the first sheet of the edit flow.
  *
  * The bare offer URL is what the list links to and what older links point at, so
  * it stays a valid address; it just resolves to the flow now instead of the
@@ -9,6 +9,7 @@ import { Navigate, useParams } from "react-router-dom";
  */
 export function OfferEditRedirect() {
   const { offerId } = useParams<{ offerId: string }>();
-  if (!offerId || !Number.isInteger(Number(offerId))) return <Navigate to="/offers" replace />;
-  return <Navigate to={`/offers/${offerId}/edit/1`} replace />;
+  if (!offerId || !Number.isInteger(Number(offerId)))
+    return <Navigate to="/cabinet/offers" replace />;
+  return <Navigate to={`/cabinet/offers/${offerId}/edit/1`} replace />;
 }
