@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { useCompanies } from "@/entities/company";
 import { usePublicCompanyProfile } from "@/entities/market";
-import { CompanyProfileView } from "@/features/company-profile";
+import { CabinetCompanyProfile } from "@/features/company-profile";
 import { ApiError } from "@/shared/api";
 import {
   Button,
@@ -45,7 +45,7 @@ export function CompanyViewPage() {
 
   if (publicQuery.isSuccess && publicQuery.data) {
     return (
-      <CompanyProfileView
+      <CabinetCompanyProfile
         companyId={validId}
         backTo="/cabinet/companies"
         ownerActions={

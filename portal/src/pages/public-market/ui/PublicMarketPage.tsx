@@ -128,7 +128,7 @@ export function PublicMarketPage() {
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
           {/* Filter rail. A real form region, labelled, keyboard-reachable. */}
-          <aside aria-label={t("public.market.filters")} className="min-w-0 space-y-6">
+          <aside aria-label={t("public.market.filters")} className="min-w-0 space-y-6 sticky top-0">
             <div>
               <label
                 htmlFor="market-q"
@@ -284,7 +284,7 @@ export function PublicMarketPage() {
             </p>
 
             {offers.isLoading ? (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <Skeleton className="h-72 w-full" />
                 <Skeleton className="h-72 w-full" />
                 <Skeleton className="h-72 w-full" />
@@ -295,7 +295,7 @@ export function PublicMarketPage() {
               </p>
             ) : offers.data && offers.data.items.length > 0 ? (
               <>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {offers.data.items.map((offer) => (
                     <PublicOfferTile key={offer.id} offer={offer} />
                   ))}

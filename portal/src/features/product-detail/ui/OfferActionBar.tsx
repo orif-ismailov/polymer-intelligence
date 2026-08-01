@@ -47,7 +47,7 @@ export function OfferActionBar({
   if (!canAct) return null;
 
   return (
-    <StickyActionBar className="!p-0 md:!p-0">
+    <StickyActionBar className="!p-0 md:!p-0 !bottom-0">
       <div
         className="flex w-full divide-x divide-border overflow-hidden rounded-md border border-border bg-surface md:rounded-lg"
         data-testid="product-detail-action-bar"

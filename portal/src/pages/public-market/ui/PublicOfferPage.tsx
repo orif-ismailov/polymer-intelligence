@@ -1,27 +1,76 @@
-import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
 
-import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
+import { useTranslation } from "react-i18next";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+
+import { useToggleFavorite } from "@/entities/market";
 import { publicOfferImageUrl, usePublicOffer } from "@/entities/public";
-import { publicSiteOrigin } from "@/shared/config";
+import {
+  OfferActionBar,
+  OfferCompatibilityPanel,
+  OfferDescriptionBlocks,
+  OfferDocuments,
+  OfferHero,
+  OfferInquiryCard,
+  OfferReviewsPanel,
+  OfferSpecs,
+  PRODUCT_DETAIL_TAB_IDS,
+  useOfferSession,
+  type ProductDetailTabId,
+} from "@/features/product-detail";
+import { SampleRequestForm } from "@/features/sample-request";
+import { offerDocumentFiles, offerPhotoFiles, publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { Seo, useCanonical } from "@/shared/seo";
-import { Badge, ImageIcon, LinkButton, Skeleton } from "@/shared/ui";
+import {
+  Button,
+  HeartIcon,
+  LinkButton,
+  SendIcon,
+  Skeleton,
+  Tabs,
+  type TabItem,
+} from "@/shared/ui";
 
 /**
  * `/market/:offerId` — a listing's public page, and the marketplace's main
  * search-landing surface.
  *
- * The same URL for everyone. Anonymous visitors get the full listing and a
- * prompt to sign in before contacting the seller; signed-in visitors get the
- * inquiry action. What is behind the login is the ability to ACT, not the
- * ability to read, which is the only version of this that can rank.
+ * The same URL and the same product sheet for everyone: this renders the exact
+ * components the cabinet sheets do (`features/product-detail`), not a
+ * simplified copy of them. Anonymous visitors get the full listing and a prompt
+ * to sign in before contacting the seller. What is behind the login is the
+ * ability to ACT, not the ability to read, which is the only version of this
+ * that can rank.
+ *
+ * There is no `/cabinet` twin any more — this is the only product sheet. Two
+ * things follow, and both are forced:
+ *
+ * 1. **Every panel is rendered, inactive ones behind `hidden`.** The whole sheet
+ *    has to reach a crawler in the server HTML, and specs is where the
+ *    manufacturer, HS code and applications live. `hidden` decides what is on
+ *    screen, not what shipped.
+ * 2. **The actions mount after hydration, never on the server** (`useOfferSession`).
+ *    Their enabled states answer "is YOUR company verified" — authenticated
+ *    questions — and this HTML is shared-cached (`s-maxage=60`) precisely
+ *    because nothing in it varies by visitor. The server render is deterministically
+ *    anonymous, so the actions arrive as a state change rather than as a
+ *    hydration mismatch, exactly the contract `PublicTopNav` already lives under.
  */
 export function PublicOfferPage() {
   const { t, i18n } = useTranslation();
   const { offerId } = useParams();
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Arrived from the manufacturers directory — swap the trader inquiry door for
+  // a direct chat + factory RFQ (`docs/new-design/manufacturer_flow.jpeg`).
+  const fromManufacturer = searchParams.get("fromManufacturer") === "1";
   const id = offerId && /^\d+$/.test(offerId) ? Number(offerId) : null;
+  const [tab, setTab] = useState<ProductDetailTabId>("description");
+  const [sampleSent, setSampleSent] = useState(false);
+
+  const session = useOfferSession(id);
+  const toggleFavorite = useToggleFavorite();
 
   const origin = publicSiteOrigin();
   const { canonical, alternates } = useCanonical(
@@ -62,7 +111,9 @@ export function PublicOfferPage() {
   }
 
   const title = offer.product_text ?? offer.grade_text ?? t("public.offer.untitled");
-  const photos = offer.files.filter((f) => f.kind === "photo");
+  const photos = offerPhotoFiles(offer.files);
+  const documents = offerDocumentFiles(offer.files);
+  const passport = offer.files.find((f) => f.kind === "lab_passport") ?? null;
   const location = [offer.warehouse_city, offer.country].filter(Boolean).join(", ");
   const metaTitle = t("public.offer.metaTitle", {
     name: title,
@@ -117,23 +168,86 @@ export function PublicOfferPage() {
     },
   ];
 
-  const specs: Array<{ label: string; value: string | null }> = [
-    { label: t("public.offer.grade"), value: offer.grade_text },
-    { label: t("public.offer.polymer"), value: offer.polymer_type },
-    { label: t("public.offer.cas"), value: offer.cas_number },
-    { label: t("public.offer.hs"), value: offer.hs_code },
-    { label: t("public.offer.manufacturer"), value: offer.manufacturer },
-    { label: t("public.offer.incoterms"), value: offer.incoterms },
-    {
-      label: t("public.offer.moq"),
-      value: offer.min_order_qty ? `${offer.min_order_qty} ${offer.qty_unit}` : null,
-    },
-    {
-      label: t("public.offer.leadTime"),
-      value: offer.lead_time_days == null ? null : String(offer.lead_time_days),
-    },
-    { label: t("public.offer.location"), value: location || null },
-  ];
+  const tabs: TabItem[] = PRODUCT_DETAIL_TAB_IDS.map((tabId) => ({
+    id: tabId,
+    label: t(`market.tabs.${tabId}`),
+    ...(tabId === "documents" && documents.length > 0 ? { count: documents.length } : {}),
+  }));
+
+  const canInquire = session != null && session.companyId != null && !session.offer.is_own;
+  const canSendRfq = canInquire && session?.offer.accepts_rfq === true;
+
+  // Both sides must be verified or POST /portal/contracts answers 422, and a TG-origin
+  // offer has no company to sign with at all. Say which of those it is, on the page,
+  // rather than letting the buyer discover it two screens later.
+  const contractBlockedReason = !session
+    ? null
+    : !session.offer.accepts_contract
+      ? t("market.detail.contractNotOffered")
+      : session.offer.seller_company_id == null || !session.offer.company_verified
+        ? t("market.detail.contractNeedsVerifiedSeller")
+        : session.activeCompany?.status !== "verified"
+          ? t("market.detail.contractNeedsVerifiedCompany")
+          : null;
+
+  function scrollTo(elementId: string): void {
+    document.getElementById(elementId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /*
+   * Reading is public; acting is not. There is no cabinet twin to send anyone to
+   * any more — this URL is both — so the anonymous CTA goes through the login and
+   * comes back to THIS page, where `session` will then be non-null and the real
+   * actions take its place.
+   */
+  const cta = session ? (
+    <>
+      <Button
+        size="lg"
+        fullWidth
+        disabled={!canSendRfq}
+        onClick={() => {
+          if (fromManufacturer && session.offer.seller_company_id != null) {
+            void navigate(
+              `/cabinet/manufacturers/${session.offer.seller_company_id}/rfq/${offer.id}`,
+            );
+            return;
+          }
+          setTab("description");
+          window.setTimeout(() => scrollTo("inquiry"), 50);
+        }}
+        data-testid="product-detail-rfq"
+      >
+        <SendIcon size={16} />
+        {t("market.detail.requestRfq")}
+      </Button>
+      <Button
+        size="lg"
+        variant="outline"
+        fullWidth
+        aria-pressed={session.offer.is_favorite}
+        onClick={() =>
+          toggleFavorite.mutate({ offerId: offer.id, next: !session.offer.is_favorite })
+        }
+        data-testid="product-detail-favorite"
+      >
+        <HeartIcon
+          size={16}
+          className={session.offer.is_favorite ? "text-danger" : undefined}
+        />
+        {t(session.offer.is_favorite ? "market.unfavorite" : "market.detail.addFavorite")}
+      </Button>
+    </>
+  ) : (
+    <LinkButton
+      size="lg"
+      fullWidth
+      to="/cabinet/login"
+      state={{ from: `/market/${offer.id}` }}
+    >
+      {t("public.offer.signInToContact")}
+    </LinkButton>
+  );
 
   return (
     <>
@@ -143,13 +257,19 @@ export function PublicOfferPage() {
         canonical={canonical}
         alternates={alternates}
         ogType="product"
-        ogImage={
-          photos[0] ? `${origin}${publicOfferImageUrl(offer.id, photos[0].id)}` : undefined
-        }
+        ogImage={photos[0] ? `${origin}${publicOfferImageUrl(offer.id, photos[0].id)}` : undefined}
         jsonLd={jsonLd}
       />
 
-      <div className="mx-auto max-w-[1440px] px-4 py-8 lg:px-6">
+      {/* `max-w-6xl`, not the storefront's usual `max-w-[1440px]`: the sheet is
+          laid out for the cabinet's column width (`AppShell`), and stretching it
+          to 1440 blows the gallery up and strands the fact column beside it. */}
+      {/* `pb-36 md:pb-0` whenever the sticky bar is up, or it covers the last
+          card — a failure mode no test can see. */}
+      <div
+        className={`mx-auto max-w-6xl px-4 py-8 lg:px-6 ${session ? "pb-36 md:pb-8" : ""}`}
+        data-testid="product-detail"
+      >
         <nav aria-label={t("public.offer.breadcrumb")} className="text-xs text-text-subtle">
           <Link to="/" className="hover:text-brand">
             {t("public.nav.home")}
@@ -160,179 +280,104 @@ export function PublicOfferPage() {
           </Link>
         </nav>
 
-        <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <div>
-            <div className="aspect-[4/3] overflow-hidden rounded-lg border border-border bg-surface-inset">
-              {photos[0] ? (
-                <img
-                  src={publicOfferImageUrl(offer.id, photos[0].id)}
-                  alt={title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-text-subtle">
-                  <ImageIcon size={40} />
-                </div>
-              )}
-            </div>
-            {photos.length > 1 ? (
-              <ul className="mt-3 grid grid-cols-4 gap-3">
-                {photos.slice(1, 5).map((photo) => (
-                  <li
-                    key={photo.id}
-                    className="aspect-square overflow-hidden rounded-md border border-border bg-surface-inset"
-                  >
-                    <img
-                      src={publicOfferImageUrl(offer.id, photo.id)}
-                      alt=""
-                      loading="lazy"
-                      className="h-full w-full object-cover"
+        <div className="mt-5 space-y-5">
+          <OfferHero offer={offer} photos={photos} actions={cta} />
+          {session ? null : (
+            <p className="-mt-3 text-xs text-text-subtle">{t("public.offer.contactHint")}</p>
+          )}
+
+          <Tabs
+            items={tabs}
+            value={tab}
+            onChange={(id) => setTab(id as ProductDetailTabId)}
+            variant="underlineGold"
+            label={title}
+          />
+
+          {/* All five panels ship in the HTML — see the note on this component. */}
+          <Panel active={tab === "description"}>
+            <OfferDescriptionBlocks
+              offer={offer}
+              documents={documents}
+              passport={passport}
+              sellerHref={
+                offer.seller_company_id != null
+                  ? `/manufacturers/${offer.seller_company_id}`
+                  : null
+              }
+              isOwn={session?.offer.is_own ?? false}
+              onRequestSample={session ? () => scrollTo("samples") : null}
+              sampleSlot={
+                session && session.companyId != null ? (
+                  sampleSent ? (
+                    <p className="text-sm text-success">{t("samples.sentOk")}</p>
+                  ) : (
+                    <SampleRequestForm
+                      offerId={offer.id}
+                      companyId={session.companyId}
+                      onSent={() => setSampleSent(true)}
                     />
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
+                  )
+                ) : null
+              }
+            />
+          </Panel>
+          <Panel active={tab === "specs"}>
+            <OfferSpecs offer={offer} />
+          </Panel>
+          <Panel active={tab === "documents"}>
+            <OfferDocuments offerId={offer.id} documents={documents} />
+          </Panel>
+          <Panel active={tab === "compatibility"}>
+            <OfferCompatibilityPanel />
+          </Panel>
+          <Panel active={tab === "reviews"}>
+            <OfferReviewsPanel />
+          </Panel>
 
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={offer.availability === "in_stock" ? "in-stock" : "on-order"}>
-                {t(`availability.${offer.availability}`)}
-              </Badge>
-              {offer.lab_verified ? (
-                <Badge variant="lab-verified">{t("public.offer.labVerified")}</Badge>
-              ) : offer.has_lab_passport ? (
-                <Badge tone="neutral">{t("public.offer.labPassport")}</Badge>
-              ) : null}
-              {offer.company_verified ? (
-                <Badge variant="verified">{t("public.offer.verified")}</Badge>
-              ) : null}
-            </div>
-
-            <h1 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-text">
-              {title}
-            </h1>
-
-            <p className="mt-4">
-              {offer.price == null ? (
-                <span className="text-xl font-semibold text-text-muted">
-                  {t("public.offer.onRequest")}
-                </span>
-              ) : (
-                <span className="num text-3xl font-semibold leading-tight text-brand">
-                  {offer.price}{" "}
-                  <span className="text-base font-medium text-text-muted">
-                    {offer.currency}
-                    {offer.qty_unit ? `/${offer.qty_unit}` : ""}
-                  </span>
-                </span>
-              )}
-            </p>
-
-            {offer.seller_company_id ? (
-              <p className="mt-3 text-sm text-text-muted">
-                {t("public.offer.soldBy")}{" "}
-                <Link
-                  to={`/manufacturers/${offer.seller_company_id}`}
-                  className="text-brand hover:underline"
-                >
-                  {offer.seller_display_name ?? offer.display_name}
-                </Link>
-              </p>
-            ) : offer.display_name ? (
-              <p className="mt-3 text-sm text-text-muted">
-                {t("public.offer.soldBy")} {offer.display_name}
-              </p>
-            ) : null}
-
-            {/*
-             * Reading is public; contacting the seller is not. Both branches
-             * therefore end up in the cabinet, where the inquiry form and the
-             * buyer's identity live — the difference is only whether the
-             * visitor stops at the login on the way. `state.from` is what
-             * carries them past it to THIS listing instead of the cabinet home
-             * (`LoginPage` forwards it to the OTP step, which navigates to it).
-             */}
-            <div className="mt-6">
-              {isAuthenticated ? (
-                <LinkButton to={`/cabinet/market/${offer.id}`}>
-                  {t("public.offer.sendInquiry")}
-                </LinkButton>
-              ) : (
-                <>
-                  <LinkButton
-                    to="/cabinet/login"
-                    state={{ from: `/cabinet/market/${offer.id}` }}
-                  >
-                    {t("public.offer.signInToContact")}
-                  </LinkButton>
-                  <p className="mt-2 text-xs text-text-subtle">
-                    {t("public.offer.contactHint")}
-                  </p>
-                </>
-              )}
-            </div>
-
-            <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-border pt-6">
-              {specs
-                .filter((s) => s.value)
-                .map((spec) => (
-                  <div key={spec.label}>
-                    <dt className="text-xs text-text-subtle">{spec.label}</dt>
-                    <dd className="num mt-0.5 text-sm text-text">{spec.value}</dd>
-                  </div>
-                ))}
-            </dl>
-
-            {offer.key_properties.length > 0 ? (
-              <div className="mt-6">
-                <h2 className="text-sm font-semibold text-text">
-                  {t("public.offer.properties")}
-                </h2>
-                <ul className="mt-2 flex flex-wrap gap-1.5">
-                  {offer.key_properties.map((prop) => (
-                    <li
-                      key={prop}
-                      className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-muted"
-                    >
-                      {prop}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {offer.applications.length > 0 ? (
-              <div className="mt-5">
-                <h2 className="text-sm font-semibold text-text">
-                  {t("public.offer.applications")}
-                </h2>
-                <ul className="mt-2 flex flex-wrap gap-1.5">
-                  {offer.applications.map((app) => (
-                    <li
-                      key={app}
-                      className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-muted"
-                    >
-                      {app}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {offer.description ? (
-              <div className="mt-6 border-t border-border pt-6">
-                <h2 className="text-sm font-semibold text-text">
-                  {t("public.offer.description")}
-                </h2>
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-text-muted">
-                  {offer.description}
-                </p>
-              </div>
-            ) : null}
-          </div>
+          {/* Everything below mounts only once there is a session — after
+              hydration, never in the cached HTML. */}
+          {session ? (
+            <>
+              <OfferInquiryCard offer={session.offer} companyId={session.companyId} />
+              <OfferActionBar
+                canAct={canInquire}
+                acceptsRfq={session.offer.accepts_rfq}
+                acceptsEscrow={session.offer.accepts_escrow}
+                contractBlockedReason={contractBlockedReason}
+                onMessage={() => {
+                  if (fromManufacturer && session.offer.seller_company_id != null) {
+                    void navigate(
+                      `/cabinet/manufacturers/${session.offer.seller_company_id}/chat`,
+                    );
+                    return;
+                  }
+                  setTab("description");
+                  window.setTimeout(() => scrollTo("inquiry"), 50);
+                }}
+                onContract={() =>
+                  void navigate(
+                    `/cabinet/contracts/new?offerId=${offer.id}&counterpartyId=${session.offer.seller_company_id}`,
+                  )
+                }
+              />
+            </>
+          ) : null}
         </div>
       </div>
     </>
   );
+}
+
+/**
+ * The `hidden` ATTRIBUTE, not a Tailwind `hidden` class: a `display` utility on
+ * the same element would override the attribute, and this wrapper carries no
+ * classes precisely so nothing can.
+ *
+ * No `role="tabpanel"` — `Tabs` is deliberately a `role="group"` of `aria-pressed`
+ * toggles rather than a tablist (see the primitive), and half a tab pattern is an
+ * axe violation where a plain toggle is not.
+ */
+function Panel({ active, children }: { active: boolean; children: React.ReactNode }) {
+  return <div hidden={!active}>{children}</div>;
 }

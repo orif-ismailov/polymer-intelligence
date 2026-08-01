@@ -2,17 +2,24 @@ import { useTranslation } from "react-i18next";
 import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-import type { OfferFileRef } from "@/entities/market";
 import { offerImageUrl } from "@/entities/market";
 import { Badge, ImageIcon } from "@/shared/ui";
+
+import type { ProductDetailFile } from "../model/types";
 
 import "swiper/css";
 import "swiper/css/pagination";
 
 interface OfferGalleryProps {
   offerId: number;
-  photos: OfferFileRef[];
+  photos: ProductDetailFile[];
   labVerified: boolean;
+  /**
+   * Alt text for every slide — the offer title, not the uploader's filename.
+   * `file_name` is absent on the public payload, and "IMG_4471.jpg" was never
+   * describing the product to a screen reader or to an image crawler anyway.
+   */
+  alt: string;
   onActiveIndexChange?: (index: number) => void;
 }
 
@@ -24,6 +31,7 @@ export function OfferGallery({
   offerId,
   photos,
   labVerified,
+  alt,
   onActiveIndexChange,
 }: OfferGalleryProps) {
   const { t } = useTranslation();
@@ -67,7 +75,7 @@ export function OfferGallery({
           <SwiperSlide key={photo.id} className="!h-full">
             <img
               src={offerImageUrl(offerId, photo.id)}
-              alt={photo.file_name}
+              alt={alt}
               className="h-full w-full object-cover"
               draggable={false}
             />

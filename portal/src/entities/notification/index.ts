@@ -31,7 +31,7 @@ export function notificationLink(
     case "inquiry":
       return `/cabinet/inquiries/${entityId}`;
     case "offer":
-      return `/cabinet/market/${entityId}`;
+      return `/market/${entityId}`;
     case "company":
       return `/cabinet/companies/${entityId}`;
     case "news":

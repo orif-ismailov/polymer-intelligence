@@ -118,7 +118,7 @@ export function InquiriesPage() {
           description={t("inquiries.emptyBody")}
           action={
             tab === "sent" ? (
-              <LinkButton to="/cabinet/market">{t("nav.market")}</LinkButton>
+              <LinkButton to="/market">{t("nav.market")}</LinkButton>
             ) : undefined
           }
         />

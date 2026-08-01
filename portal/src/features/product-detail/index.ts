@@ -1,5 +1,12 @@
 export { OfferHero } from "./ui/OfferHero";
 export { OfferGallery } from "./ui/OfferGallery";
 export { OfferDescriptionBlocks } from "./ui/OfferDescriptionBlocks";
+export { OfferSpecs } from "./ui/OfferSpecs";
+export { OfferDocuments } from "./ui/OfferDocuments";
+export { OfferCompatibilityPanel, OfferReviewsPanel } from "./ui/OfferPlaceholderPanels";
 export { OfferActionBar } from "./ui/OfferActionBar";
+export { OfferInquiryCard } from "./ui/OfferInquiryCard";
+export { useOfferSession, type OfferSession } from "./model/useOfferSession";
 export { SectionHeader } from "./ui/SectionHeader";
+export { PRODUCT_DETAIL_TAB_IDS, type ProductDetailTabId } from "./model/tabs";
+export type { ProductDetailFile, ProductDetailOffer } from "./model/types";

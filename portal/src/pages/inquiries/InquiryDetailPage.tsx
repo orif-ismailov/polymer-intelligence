@@ -92,7 +92,7 @@ export function InquiryDetailPage() {
             <CardTitle>{product}</CardTitle>
             <button
               type="button"
-              onClick={() => navigate(`/cabinet/market/${inquiry.offer_id}`)}
+              onClick={() => navigate(`/market/${inquiry.offer_id}`)}
               className="text-sm text-brand hover:underline"
             >
               {t("inquiries.viewOffer")}

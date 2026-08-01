@@ -1,101 +1,96 @@
 import { useState, type ReactNode } from "react";
 
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 
-import { useCompanies } from "@/entities/company";
-import { usePublicCompanyProfile } from "@/entities/market";
-import {
-  Alert,
-  LinkButton,
-  LoadingView,
-  StickyActionBar,
-  Tabs,
-  type TabItem,
-} from "@/shared/ui";
+import { Alert, Tabs, type TabItem } from "@/shared/ui";
+
+import { COMPANY_PROFILE_TAB_IDS, type CompanyProfileTabId } from "../model/tabs";
+import type { CompanyProfileCompany, CompanyProfileOffer } from "../model/types";
 
 import { ProfileAboutTab } from "./ProfileAboutTab";
-import { ProfileActionBar } from "./ProfileActionBar";
 import { ProfileDocumentsTab } from "./ProfileDocumentsTab";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileProductsTab } from "./ProfileProductsTab";
 import { ProfileReviewsTab } from "./ProfileReviewsTab";
 
-const TAB_IDS = ["about", "products", "reviews", "documents"] as const;
-type TabId = (typeof TAB_IDS)[number];
-
 export interface CompanyProfileViewProps {
-  companyId: number;
-  /** Offer the buyer came from — «Написать» returns to that inquiry form. */
-  fromOfferId?: number | null;
+  company: CompanyProfileCompany;
   /** Where the header back control goes. Defaults to browser history. */
   backTo?: string;
+  /** Where a product row links. */
+  productHref: (offer: CompanyProfileOffer) => string;
+  /** «Показать все» target when the company has more listings than shown. */
+  seeAllHref?: string;
   /**
-   * Extra footer when the viewer owns this company (manage / verification).
-   * Buyer Message/RFQ bar is hidden in that case.
+   * Tab state is LIFTED, not internal: the cabinet's footer buttons switch to
+   * «Продукты» («выберите позицию» is the honest answer to an RFQ with no offer
+   * picked), so the owner of those buttons has to own the tab too.
    */
-  ownerActions?: ReactNode;
+  tab: CompanyProfileTabId;
+  onTabChange: (id: CompanyProfileTabId) => void;
   /**
-   * `manufacturer` swaps the buyer footer's actions and labels for the
-   * factory flow (`docs/new-design/manufacturer_flow.jpeg`): Message opens a
-   * chat thread directly instead of scrolling to an offer's inquiry form, and
-   * product links carry `?fromManufacturer=1` so the offer page can route RFQ
-   * to the factory-RFQ wizard.
+   * The sticky footer, when there is one. A slot because every version of it is
+   * an answer to a question only a session can ask — "is this mine", "may I
+   * contact them" — and the storefront, whose HTML is shared-cached, must not
+   * ask any of them. It passes nothing and puts a single CTA in `headerActions`.
    */
-  mode?: "seller" | "manufacturer";
+  actionBar?: ReactNode;
+  /** Rendered under the header — the storefront's «Связаться» link lives here. */
+  headerActions?: ReactNode;
+  /** Rendered between the panels and the footer (the pick-an-offer hint). */
+  footerNote?: ReactNode;
+  /**
+   * Render every tab panel, hiding the inactive ones with the `hidden`
+   * attribute, instead of mounting only the active one.
+   *
+   * The storefront needs it: this sheet has to reach a crawler as HTML, and the
+   * company's facts live in the About panel. The cabinet leaves it off — nothing
+   * indexes `/cabinet`, and mounting one panel is cheaper.
+   */
+  renderAllPanels?: boolean;
 }
 
 /**
- * Shared public company profile sheet — `docs/new-design/company_profile.jpeg`.
+ * The company profile sheet — `docs/new-design/company_profile.jpeg`.
  *
- * Used by both `/cabinet/sellers/:id` and `/cabinet/companies/:id` so the two routes stay
- * visually identical without duplicating the tab chrome.
+ * Presentational on purpose. It is rendered by the cabinet's
+ * `/cabinet/sellers/:id` and `/cabinet/companies/:id` and by the public
+ * `/{directory}/:id`, which read from two different endpoints
+ * (`/portal/market/companies/{id}` behind auth,
+ * `/public/directories/{slug}/{id}` in front of it). Both payloads satisfy
+ * `CompanyProfileCompany` structurally, so the fetch belongs to the caller and
+ * this component never needs to know which tier it is in.
+ *
+ * `CabinetCompanyProfile` is the wrapper that does the authenticated fetch.
  */
 export function CompanyProfileView({
-  companyId,
-  fromOfferId = null,
+  company,
   backTo,
-  ownerActions,
-  mode = "seller",
+  productHref,
+  seeAllHref,
+  tab,
+  onTabChange,
+  actionBar,
+  headerActions,
+  footerNote,
+  renderAllPanels = false,
 }: CompanyProfileViewProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const profileQuery = usePublicCompanyProfile(companyId);
-  const companiesQuery = useCompanies();
-  const [tab, setTab] = useState<TabId>(TAB_IDS[0]);
   const [shareNote, setShareNote] = useState<string | null>(null);
 
-  const isOwner =
-    companiesQuery.data?.some((c) => c.id === companyId) === true;
+  const name = company.short_name ?? company.legal_name ?? t("companyProfile.title");
 
-  if (profileQuery.isLoading) return <LoadingView label={t("common.loading")} />;
-  if (profileQuery.isError || !profileQuery.data) {
-    return (
-      <div className="space-y-4">
-        <Alert tone="danger">{t("companyProfile.notFound")}</Alert>
-        <LinkButton to={backTo ?? "/cabinet/market"} variant="secondary">
-          {backTo ? t("common.back") : t("market.backToMarket")}
-        </LinkButton>
-      </div>
-    );
-  }
-
-  const profile = profileQuery.data;
-
-  const tabs: TabItem[] = TAB_IDS.map((id) => ({
+  const tabs: TabItem[] = COMPANY_PROFILE_TAB_IDS.map((id) => ({
     id,
     label: t(`companyProfile.tabs.${id}`),
-    count: id === "products" && profile.offer_count > 0 ? profile.offer_count : undefined,
+    count: id === "products" && company.offer_count > 0 ? company.offer_count : undefined,
   }));
 
   async function share(): Promise<void> {
     const url = window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({
-          title: profile.short_name ?? profile.legal_name ?? t("companyProfile.title"),
-          url,
-        });
+        await navigator.share({ title: name, url });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -106,93 +101,47 @@ export function CompanyProfileView({
     }
   }
 
-  function goMessage(): void {
-    if (mode === "manufacturer") {
-      void navigate(`/cabinet/manufacturers/${profile.id}/chat`);
-      return;
-    }
-    if (fromOfferId != null) {
-      void navigate(`/cabinet/market/${fromOfferId}#inquiry`);
-      return;
-    }
-    setTab("products");
+  function panel(id: CompanyProfileTabId, content: ReactNode): ReactNode {
+    if (!renderAllPanels) return tab === id ? content : null;
+    // The `hidden` ATTRIBUTE on a bare wrapper — a Tailwind `display` utility on
+    // the same element would override it.
+    return <div hidden={tab !== id}>{content}</div>;
   }
-
-  function goRfq(): void {
-    setTab("products");
-  }
-
-  const showBuyerBar = !isOwner;
-  const resolvedOwnerActions =
-    ownerActions ??
-    (isOwner ? (
-      <StickyActionBar>
-        <div className="flex w-full gap-2" data-testid="company-owner-actions">
-          <LinkButton
-            variant="outline"
-            size="lg"
-            className="min-w-0 flex-1"
-            to={`/cabinet/companies/${profile.id}/manage`}
-          >
-            {t("company.manage")}
-          </LinkButton>
-          <LinkButton size="lg" className="min-w-0 flex-[1.4]" to="/cabinet/offers/new">
-            {t("company.createOffer")}
-          </LinkButton>
-        </div>
-      </StickyActionBar>
-    ) : null);
-  const showOwnerBar = resolvedOwnerActions != null;
 
   return (
     <div
-      className={`space-y-5 ${showBuyerBar || showOwnerBar ? "pb-36 md:pb-0" : ""}`}
+      className={`space-y-5 ${actionBar ? "pb-36 md:pb-0" : ""}`}
       data-testid="company-profile"
     >
-      <ProfileHeader profile={profile} onShare={() => void share()} backTo={backTo} />
+      <ProfileHeader profile={company} onShare={() => void share()} backTo={backTo} />
 
       {shareNote ? <Alert tone="success">{shareNote}</Alert> : null}
+
+      {headerActions}
 
       <Tabs
         items={tabs}
         value={tab}
-        onChange={(id) => setTab(id as TabId)}
+        onChange={(id) => onTabChange(id as CompanyProfileTabId)}
         variant="underlineGold"
-        label={profile.short_name ?? profile.legal_name ?? t("companyProfile.title")}
+        label={name}
       />
 
-      {tab === "about" ? <ProfileAboutTab profile={profile} /> : null}
-      {tab === "products" ? (
+      {panel("about", <ProfileAboutTab profile={company} />)}
+      {panel(
+        "products",
         <ProfileProductsTab
-          offers={profile.offers}
-          offerCount={profile.offer_count}
-          onSeeAll={() => {
-            void navigate(`/cabinet/market?seller=${profile.id}`);
-          }}
-          linkQuery={mode === "manufacturer" ? "?fromManufacturer=1" : undefined}
-        />
-      ) : null}
-      {tab === "reviews" ? <ProfileReviewsTab /> : null}
-      {tab === "documents" ? <ProfileDocumentsTab /> : null}
+          offers={company.offers}
+          offerCount={company.offer_count}
+          productHref={productHref}
+          seeAllHref={seeAllHref}
+        />,
+      )}
+      {panel("reviews", <ProfileReviewsTab />)}
+      {panel("documents", <ProfileDocumentsTab />)}
 
-      {showBuyerBar && fromOfferId == null && tab === "products" ? (
-        <p className="text-center text-xs text-text-subtle">
-          {t("companyProfile.pickOfferHint")}
-        </p>
-      ) : null}
-
-      {showBuyerBar ? (
-        <ProfileActionBar
-          onMessage={goMessage}
-          onRfq={goRfq}
-          messageDisabled={
-            mode === "manufacturer" ? false : fromOfferId == null && profile.offer_count === 0
-          }
-          mode={mode}
-        />
-      ) : null}
-
-      {showOwnerBar ? resolvedOwnerActions : null}
+      {footerNote}
+      {actionBar}
     </div>
   );
 }

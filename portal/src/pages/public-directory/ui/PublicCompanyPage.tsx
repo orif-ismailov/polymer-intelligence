@@ -1,16 +1,34 @@
+import { useState } from "react";
+
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
-import { PublicOfferTile, usePublicCompany } from "@/entities/public";
+import { useCompanies } from "@/entities/company";
+import { usePublicCompany } from "@/entities/public";
+import {
+  COMPANY_PROFILE_TAB_IDS,
+  CompanyProfileView,
+  ProfileActionBar,
+  type CompanyProfileTabId,
+} from "@/features/company-profile";
 import { directoryBySlug, publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
-import { Seo, useCanonical } from "@/shared/seo";
-import { Badge, LinkButton, RegistryIcon, Skeleton } from "@/shared/ui";
 import { useTierBase } from "@/shared/lib";
+import { Seo, useCanonical } from "@/shared/seo";
+import { LinkButton, Skeleton, StickyActionBar } from "@/shared/ui";
 
 /**
  * `/{directory}/{companyId}` — a verified company's public profile.
+ *
+ * Renders the same sheet as the cabinet's `/cabinet/sellers/:id` and
+ * `/cabinet/sellers/:id` (`features/company-profile`), not a simplified copy of
+ * it. What the tiers do not share is what a session buys: the cabinet's footer
+ * opens a chat or an RFQ, and here there is one «Связаться» link that goes
+ * through the login when there is no session yet.
+ *
+ * Also mounted under `/cabinet` for the three non-manufacturer directories,
+ * which is why the internal links go through `useTierBase()`.
  *
  * A company confirmed as both a manufacturer and a trader is reachable at two
  * URLs. The canonical always points at the FIRST directory the company holds a
@@ -19,10 +37,15 @@ import { useTierBase } from "@/shared/lib";
 export function PublicCompanyPage({ slug }: { slug: string }) {
   const base = useTierBase();
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  // Gated on the session: this page server-renders for anonymous visitors, and
+  // an unguarded GET /portal/companies would fire from Node on every render.
+  const { data: companies = [] } = useCompanies(isAuthenticated);
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { companyId } = useParams();
   const directory = directoryBySlug(slug);
   const id = companyId && /^\d+$/.test(companyId) ? Number(companyId) : null;
+  const [tab, setTab] = useState<CompanyProfileTabId>(COMPANY_PROFILE_TAB_IDS[0]);
 
   const origin = publicSiteOrigin();
   const query = usePublicCompany(directory?.slug ?? "", directory ? id : null);
@@ -91,26 +114,6 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
   }
 
   const name = company.short_name ?? company.legal_name ?? t("public.company.untitled");
-  const facts: Array<{ label: string; value: string | null }> = [
-    { label: t("public.company.legalName"), value: company.legal_name },
-    { label: t("public.company.legalForm"), value: company.legal_form },
-    { label: t("public.company.address"), value: company.legal_address },
-    { label: t("public.company.jurisdiction"), value: company.jurisdiction },
-    {
-      label: t("public.company.founded"),
-      value: company.founded_year ? String(company.founded_year) : null,
-    },
-    {
-      label: t("public.company.employees"),
-      value: company.employees ? String(company.employees) : null,
-    },
-    { label: t("public.company.productionType"), value: company.production_type },
-    { label: t("public.company.iso"), value: company.iso_certification },
-    {
-      label: t("public.company.exportTo"),
-      value: company.export_countries.length ? company.export_countries.join(", ") : null,
-    },
-  ];
 
   const jsonLd: Array<Record<string, unknown>> = [
     {
@@ -147,19 +150,14 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
     },
   ];
 
-  /**
-   * Where «Связаться» goes once there is a session.
-   *
-   * Deliberately NOT the `/cabinet` twin of this page: for traders, logistics
-   * and laboratories that twin is this very component, so it would link to
-   * itself. The cabinet's own profile sheets are the ones carrying the action
-   * bar — the manufacturer route swaps it for chat + factory RFQ, every other
-   * role gets the seller route's buyer bar.
+  /*
+   * There is no `/cabinet` twin to send anyone to — this URL is the profile for
+   * everyone. Anonymous visitors go through the login and come back HERE, where
+   * `isOwner`/`isAuthenticated` then decide which footer they get.
    */
-  const contactTo =
-    slug === "manufacturers"
-      ? `/cabinet/manufacturers/${company.id}`
-      : `/cabinet/sellers/${company.id}`;
+  const isManufacturer = slug === "manufacturers";
+  const isOwner = companies.some((c) => c.id === company.id);
+  const selfHref = `${base}/${directory.slug}/${company.id}`;
 
   return (
     <>
@@ -176,7 +174,9 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
         jsonLd={jsonLd}
       />
 
-      <div className="mx-auto max-w-[1440px] px-4 py-8 lg:px-6">
+      {/* `max-w-6xl`, not the storefront's usual `max-w-[1440px]`: the sheet is
+          laid out for the cabinet's column width (`AppShell`). */}
+      <div className="mx-auto max-w-6xl px-4 py-8 lg:px-6">
         <nav aria-label={t("public.offer.breadcrumb")} className="text-xs text-text-subtle">
           <Link to={base || "/"} className="hover:text-brand">
             {t("public.nav.home")}
@@ -187,91 +187,80 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
           </Link>
         </nav>
 
-        <header className="mt-5 flex flex-wrap items-start gap-4 border-b border-border pb-8">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-inset">
-            {company.logo_url ? (
-              <img
-                src={company.logo_url}
-                alt=""
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              <RegistryIcon size={28} />
-            )}
-          </span>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-text">{name}</h1>
-            {company.legal_address ? (
-              <p className="mt-1 text-sm text-text-muted">{company.legal_address}</p>
-            ) : null}
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <Badge variant="verified">{t("public.offer.verified")}</Badge>
-              {company.roles.map((role) => (
-                <Badge key={role} tone="neutral">
-                  {t(`public.role.${role}`, { defaultValue: role })}
-                </Badge>
-              ))}
-            </div>
-          </div>
-          {/* Anonymous still goes through the login, but comes out at the same
-              place rather than at the cabinet home. */}
-          <LinkButton
-            to={isAuthenticated ? contactTo : "/cabinet/login"}
-            state={isAuthenticated ? undefined : { from: contactTo }}
-          >
-            {t("public.company.contact")}
-          </LinkButton>
-        </header>
-
-        <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <section aria-labelledby="company-offers">
-            <div className="flex items-baseline justify-between gap-4">
-              <h2 id="company-offers" className="text-lg font-semibold text-text">
-                {t("public.company.products")}
-              </h2>
-              {company.offer_count > company.offers.length ? (
-                <Link
-                  to={`${base}/market?seller_company_id=${company.id}`}
-                  className="shrink-0 text-sm text-brand hover:underline"
+        <div className="mt-5">
+          <CompanyProfileView
+            company={company}
+            backTo={`${base}/${directory.slug}`}
+            tab={tab}
+            onTabChange={setTab}
+            /* Not `${base}/market/…`: the cabinet twin of the product sheet is
+               gone, so there is one address for a listing in either tier.
+               `?fromManufacturer=1` is what makes that sheet offer factory chat
+               + RFQ instead of the trader inquiry form. */
+            productHref={(offer) =>
+              `/market/${offer.id}${isManufacturer ? "?fromManufacturer=1" : ""}`
+            }
+            seeAllHref={`/market?seller_company_id=${company.id}`}
+            // Every panel in the HTML: this is a company's landing page, and its
+            // facts live in the About panel.
+            renderAllPanels
+            headerActions={
+              /* Anonymous still goes through the login, but comes back to this
+                 same page rather than to the cabinet home. Replaced by the real
+                 footer once there is a session. */
+              isAuthenticated ? null : (
+                <LinkButton
+                  size="lg"
+                  fullWidth
+                  to="/cabinet/login"
+                  state={{ from: selfHref }}
                 >
-                  {t("public.home.seeAll")}
-                </Link>
-              ) : null}
-            </div>
-
-            {company.offers.length > 0 ? (
-              <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {company.offers.map((offer) => (
-                  <li key={offer.id} className="min-w-0">
-                    <PublicOfferTile offer={offer} />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-4 rounded-lg border border-border bg-surface px-4 py-10 text-center text-sm text-text-muted">
-                {t("public.company.noProducts")}
-              </p>
-            )}
-          </section>
-
-          <aside>
-            <h2 className="text-lg font-semibold text-text">{t("public.company.about")}</h2>
-            {company.main_products ? (
-              <p className="mt-3 text-sm leading-relaxed text-text-muted">
-                {company.main_products}
-              </p>
-            ) : null}
-            <dl className="mt-4 space-y-3 border-t border-border pt-4">
-              {facts
-                .filter((f) => f.value)
-                .map((fact) => (
-                  <div key={fact.label}>
-                    <dt className="text-xs text-text-subtle">{fact.label}</dt>
-                    <dd className="mt-0.5 text-sm text-text">{fact.value}</dd>
+                  {t("public.company.contact")}
+                </LinkButton>
+              )
+            }
+            /* Mounts after hydration only — see `useOfferSession`'s note; the
+               same reasoning applies to every authed surface on the storefront. */
+            actionBar={
+              !isAuthenticated ? null : isOwner ? (
+                <StickyActionBar>
+                  <div className="flex w-full gap-2" data-testid="company-owner-actions">
+                    <LinkButton
+                      variant="outline"
+                      size="lg"
+                      className="min-w-0 flex-1"
+                      to={`/cabinet/companies/${company.id}/manage`}
+                    >
+                      {t("company.manage")}
+                    </LinkButton>
+                    <LinkButton size="lg" className="min-w-0 flex-[1.4]" to="/cabinet/offers/new">
+                      {t("company.createOffer")}
+                    </LinkButton>
                   </div>
-                ))}
-            </dl>
-          </aside>
+                </StickyActionBar>
+              ) : (
+                <ProfileActionBar
+                  mode={isManufacturer ? "manufacturer" : "seller"}
+                  messageDisabled={!isManufacturer && company.offer_count === 0}
+                  onMessage={() => {
+                    if (isManufacturer) {
+                      void navigate(`/cabinet/manufacturers/${company.id}/chat`);
+                      return;
+                    }
+                    setTab("products");
+                  }}
+                  onRfq={() => setTab("products")}
+                />
+              )
+            }
+            footerNote={
+              isAuthenticated && !isOwner && tab === "products" ? (
+                <p className="text-center text-xs text-text-subtle">
+                  {t("companyProfile.pickOfferHint")}
+                </p>
+              ) : null
+            }
+          />
         </div>
       </div>
     </>

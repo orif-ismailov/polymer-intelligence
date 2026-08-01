@@ -32,8 +32,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/cabinet", labelKey: "nav.home", icon: HomeIcon, end: true },
-  { to: "/cabinet/market", labelKey: "nav.market", icon: StoreIcon },
-  { to: "/cabinet/manufacturers", labelKey: "nav.manufacturers", icon: ManufacturersIcon },
+  { to: "/market", labelKey: "nav.market", icon: StoreIcon },
+  { to: "/manufacturers", labelKey: "nav.manufacturers", icon: ManufacturersIcon },
   { to: "/cabinet/market/favorites", labelKey: "nav.favorites", icon: HeartIcon },
   { to: "/cabinet/requests", labelKey: "nav.requests", icon: DocIcon },
   { to: "/cabinet/deals", labelKey: "nav.deals", icon: HandshakeIcon },

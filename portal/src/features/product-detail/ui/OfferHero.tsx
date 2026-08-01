@@ -1,43 +1,40 @@
+import { type ReactNode } from "react";
+
 import { useTranslation } from "react-i18next";
 
 import { LabBadges } from "@/entities/lab";
-import type { MarketOfferDetail, OfferFileRef } from "@/entities/market";
 import { coerceLang } from "@/shared/i18n";
 import { countryName, formatMoney } from "@/shared/lib";
-import {
-  Badge,
-  Button,
-  Card,
-  CardBody,
-  CheckCircleIcon,
-  HeartIcon,
-  SendIcon,
-} from "@/shared/ui";
+import { Badge, Card, CardBody, CheckCircleIcon } from "@/shared/ui";
+
+import type { ProductDetailFile, ProductDetailOffer } from "../model/types";
 
 import { OfferGallery } from "./OfferGallery";
 
 interface OfferHeroProps {
-  offer: MarketOfferDetail;
-  photos: OfferFileRef[];
+  offer: ProductDetailOffer;
+  photos: ProductDetailFile[];
   onPhotoChange?: (index: number) => void;
-  onRequestRfq: () => void;
-  onToggleFavorite: () => void;
-  canInquire: boolean;
+  /**
+   * The CTA row under the gallery.
+   *
+   * A slot rather than derived state: the cabinet's two buttons read
+   * `is_favorite` and `accepts_rfq`, neither of which the public payload
+   * carries, and the storefront wants one sign-in link instead. Passing the
+   * buttons in is what keeps every session-dependent branch in the page and
+   * lets this component server-render on the storefront.
+   */
+  actions?: ReactNode;
 }
 
 /**
  * The product-detail hero (`docs/new-design/product_detail.jpeg`): swipeable
- * gallery, title / price / badges, and the two full-width CTAs under the strip
+ * gallery, title / price / badges, and the full-width CTAs under the strip
  * (not squeezed into the narrow side column).
+ *
+ * Renders the page's `<h1>` — a caller that adds its own has two.
  */
-export function OfferHero({
-  offer,
-  photos,
-  onPhotoChange,
-  onRequestRfq,
-  onToggleFavorite,
-  canInquire,
-}: OfferHeroProps) {
+export function OfferHero({ offer, photos, onPhotoChange, actions }: OfferHeroProps) {
   const { t, i18n } = useTranslation();
   const lang = coerceLang(i18n.language);
   const title = offer.product_text ?? offer.grade_text ?? "—";
@@ -53,6 +50,7 @@ export function OfferHero({
             offerId={offer.id}
             photos={photos}
             labVerified={offer.lab_verified}
+            alt={title}
             onActiveIndexChange={onPhotoChange}
           />
 
@@ -95,30 +93,12 @@ export function OfferHero({
         </div>
 
         {/* Full-width CTAs — matching the mockup row under the hero, not crammed
-            into the half-width info column beside the gallery. */}
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Button
-            size="lg"
-            fullWidth
-            disabled={!canInquire || !offer.accepts_rfq}
-            onClick={onRequestRfq}
-            data-testid="product-detail-rfq"
-          >
-            <SendIcon size={16} />
-            {t("market.detail.requestRfq")}
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            fullWidth
-            aria-pressed={offer.is_favorite}
-            onClick={onToggleFavorite}
-            data-testid="product-detail-favorite"
-          >
-            <HeartIcon size={16} className={offer.is_favorite ? "text-danger" : undefined} />
-            {t(offer.is_favorite ? "market.unfavorite" : "market.detail.addFavorite")}
-          </Button>
-        </div>
+            into the half-width info column beside the gallery. Flex rather than a
+            2-column grid so the row fits whatever the tier passes: the cabinet's
+            two buttons share it, the storefront's single CTA spans it. */}
+        {actions ? (
+          <div className="flex flex-col gap-2 sm:flex-row">{actions}</div>
+        ) : null}
       </CardBody>
     </Card>
   );

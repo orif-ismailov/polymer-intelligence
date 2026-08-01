@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { publicOfferImageUrl, type PublicOfferCard } from "@/entities/public";
+import { offerPhotoFiles } from "@/shared/config";
 import { countryFlag, countryName } from "@/shared/lib";
 import { ImageIcon } from "@/shared/ui";
 
@@ -20,7 +21,7 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
   const flag = countryFlag(offer.country);
   const title = offer.product_text ?? offer.grade_text ?? t("public.offer.untitled");
   const grade = offer.product_text && offer.grade_text ? offer.grade_text : null;
-  const cover = offer.files.find((f) => f.kind === "photo") ?? null;
+  const cover = offerPhotoFiles(offer.files)[0] ?? null;
   const seller = offer.display_name ?? t("public.company.untitled");
 
   return (

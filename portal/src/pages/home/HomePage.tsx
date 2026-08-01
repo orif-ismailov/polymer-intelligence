@@ -167,13 +167,13 @@ export function HomePage() {
         <h2 className="text-base font-semibold text-text">{t("home.quickActions")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <ModuleCard
-            to="/cabinet/market"
+            to="/market"
             title={t("nav.market")}
             hint={t("market.subtitle")}
             icon={<Store size={18} strokeWidth={1.75} aria-hidden />}
           />
           <ModuleCard
-            to="/cabinet/manufacturers"
+            to="/manufacturers"
             title={t("nav.manufacturers")}
             hint={t("manufacturers.subtitle")}
             icon={<Factory size={18} strokeWidth={1.75} aria-hidden />}

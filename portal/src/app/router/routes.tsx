@@ -14,15 +14,8 @@ import {
   FactoryRfqDonePage,
   FactoryRfqPage,
   ManufacturerChatPage,
-  ManufacturerDetailPage,
-  ManufacturersPage,
 } from "@/pages/manufacturers";
-import {
-  FavoritesPage,
-  MarketOfferPage,
-  MarketPage,
-  MarketRequestsPage,
-} from "@/pages/market";
+import { FavoritesPage, MarketRequestsPage } from "@/pages/market";
 import { NewsArticlePage, NewsPage } from "@/pages/news";
 import { NotificationsPage } from "@/pages/notifications";
 import { OfferCreatePage, OfferPublishedPage } from "@/pages/offer-create";
@@ -44,6 +37,7 @@ import { PublicShell } from "@/widgets/public-shell";
 
 import { NotFoundPage } from "./NotFoundPage";
 import { OfferEditRedirect } from "./OfferEditRedirect";
+import { RedirectToPublicCompany, RedirectToPublicOffer } from "./RedirectToPublic";
 import { RedirectIfAuthed } from "./RedirectIfAuthed";
 import { RequireAuth } from "./RequireAuth";
 import { RequireCompany } from "./RequireCompany";
@@ -144,19 +138,24 @@ export const routes: RouteObject[] = [
                 children: [
                   { index: true, element: <HomePage /> },
 
-                  // Marketplace. The literal-before-param ordering that used to
-                  // be load-bearing here is now just readability: nothing public
-                  // shares this namespace.
-                  { path: "market", element: <MarketPage /> },
+                  // Marketplace. Browsing a listing and reading a company are
+                  // PUBLIC — `/market`, `/market/:id`, `/manufacturers/:id` — and
+                  // the signed-in actions now mount on those same pages after
+                  // hydration. What survives here is what only exists with a
+                  // session: the buyer's own saved offers and RFQ inbox, and the
+                  // factory chat / RFQ flows.
+                  //
+                  // The two `:id` redirects are not decoration: notification
+                  // payloads and anything a buyer bookmarked still carry the old
+                  // cabinet URLs.
+                  { path: "market", element: <Navigate to="/market" replace /> },
                   { path: "market/favorites", element: <FavoritesPage /> },
                   { path: "market/requests", element: <MarketRequestsPage /> },
-                  { path: "market/:offerId", element: <MarketOfferPage /> },
+                  { path: "market/:offerId", element: <RedirectToPublicOffer /> },
 
-                  // Manufacturers: a real cabinet directory, plus the RFQ/chat
-                  // surfaces that only exist for a signed-in company.
-                  { path: "manufacturers", element: <ManufacturersPage /> },
+                  { path: "manufacturers", element: <Navigate to="/manufacturers" replace /> },
                   { path: "manufacturers/rfqs/:rfqId/done", element: <FactoryRfqDonePage /> },
-                  { path: "manufacturers/:companyId", element: <ManufacturerDetailPage /> },
+                  { path: "manufacturers/:companyId", element: <RedirectToPublicCompany /> },
                   { path: "manufacturers/:companyId/chat", element: <ManufacturerChatPage /> },
                   { path: "manufacturers/:companyId/rfq/:offerId", element: <FactoryRfqPage /> },
 
