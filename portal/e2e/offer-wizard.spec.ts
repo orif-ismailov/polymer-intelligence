@@ -30,18 +30,18 @@ function uniqueTaxId(): string {
 }
 
 async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
   await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
 
-  await page.waitForURL("**/login/code");
+  await page.waitForURL("**/cabinet/login/code");
   const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
   expect(res.ok()).toBeTruthy();
   const { code } = (await res.json()) as { code: string };
   await page.getByLabel(/code|код|kod/i).fill(code);
   await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
 
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
 }
 
 /** Walk sheet 1: name the product, then move on. */
@@ -72,7 +72,7 @@ test.describe("add-product flow", () => {
   });
 
   test("«Другое» reveals a manual name field, and the catalog choice hides it", async ({ page }) => {
-    await page.goto("/offers/new/1");
+    await page.goto("/cabinet/offers/new/1");
 
     // An unverified account never reaches the sheets — publishing is gated, and
     // the locked screen says so instead of wasting seven sheets of typing.
@@ -91,19 +91,19 @@ test.describe("add-product flow", () => {
   });
 
   test("the first sheet will not advance without a product name", async ({ page }) => {
-    await page.goto("/offers/new/1");
+    await page.goto("/cabinet/offers/new/1");
     if (await page.getByText(/не верифицирована|not verified|tekshirilmagan/i).isVisible()) {
       test.skip(true, "account has no verified company");
     }
 
     await page.getByTestId("offer-wizard-next").click();
     // Still on sheet 1, with the field flagged.
-    await expect(page).toHaveURL(/\/offers\/new\/1/);
+    await expect(page).toHaveURL(/\/cabinet\/offers\/new\/1/);
     await expect(page.getByTestId("offer-wizard-step-1")).toBeVisible();
   });
 
   test("a product walks all seven sheets and publishes", async ({ page }) => {
-    await page.goto("/offers/new/1");
+    await page.goto("/cabinet/offers/new/1");
     if (await page.getByText(/не верифицирована|not verified|tekshirilmagan/i).isVisible()) {
       test.skip(true, "account has no verified company");
     }
@@ -146,13 +146,13 @@ test.describe("add-product flow", () => {
     await expect(page.getByTestId("offer-wizard-preview-name")).toContainText("PP H030 GP");
     await page.getByTestId("offer-wizard-publish").click();
 
-    await page.waitForURL(/\/offers\/new\/done\/\d+/, { timeout: 30_000 });
+    await page.waitForURL(/\/cabinet\/offers\/new\/done\/\d+/, { timeout: 30_000 });
     await expect(page.getByTestId("offer-wizard-done")).toBeVisible();
     await expect(page.getByTestId("offer-wizard-public-id")).toContainText("#IMX-");
   });
 
   test("a lab passport is required once the seller says they have one", async ({ page }) => {
-    await page.goto("/offers/new/5");
+    await page.goto("/cabinet/offers/new/5");
     if (await page.getByText(/не верифицирована|not verified|tekshirilmagan/i).isVisible()) {
       test.skip(true, "account has no verified company");
     }

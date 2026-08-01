@@ -2,7 +2,7 @@
  * The factory RFQ flow (`docs/new-design/manufacturer_flow.jpeg`).
  *
  * Four sheets — basic terms, compliance documents, commercial terms, contact —
- * then the created RFQ hands off to `/manufacturers/rfqs/:rfqId/done`.
+ * then the created RFQ hands off to `/cabinet/manufacturers/rfqs/:rfqId/done`.
  */
 
 export const STEP_BASIC = 1;

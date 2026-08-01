@@ -437,7 +437,8 @@ flipped. Rollout (dev → prod):
 6. **Verify** (from outside the server, so the host front door is in the path):
    ```bash
    curl -sI https://cabinet.ai-imex.com/            | head -1   # 200, not 404/502
-   curl -s   https://cabinet.ai-imex.com/companies  -o /dev/null -w '%{http_code}\n'  # 200 — SPA fallback
+   curl -s   https://cabinet.ai-imex.com/cabinet    -o /dev/null -w '%{http_code}\n'  # 200 — cabinet shell
+   curl -sI  https://cabinet.ai-imex.com/companies  | head -1   # 301 → /cabinet/companies
    curl -s   https://cabinet.ai-imex.com/api/v1/health                                 # same-origin API
    ```
    A **502** means either the inner nginx is unreachable (check the `nginx` container), or —

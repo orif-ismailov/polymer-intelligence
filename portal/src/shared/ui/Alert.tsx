@@ -13,11 +13,19 @@ interface AlertProps {
   "data-testid"?: string;
 }
 
+/*
+ * `/10`, not the `/8` these shipped with. A BARE opacity modifier has to be a
+ * value from `theme.opacity`, which steps by 5 — `bg-info/8` compiles to no rule
+ * at all, so every Alert has been drawing its border and its dot with no tinted
+ * fill behind them since it was written. (The token colours themselves could not
+ * take an alpha at all until `tailwind.config.ts` grew `token()`; this is the
+ * second half of the same silent failure.)
+ */
 const tones: Record<AlertTone, string> = {
-  info: "bg-info/8 border-info/30 text-text",
-  success: "bg-success/8 border-success/30 text-text",
-  warning: "bg-warning/8 border-warning/30 text-text",
-  danger: "bg-danger/8 border-danger/30 text-text",
+  info: "bg-info/10 border-info/30 text-text",
+  success: "bg-success/10 border-success/30 text-text",
+  warning: "bg-warning/10 border-warning/30 text-text",
+  danger: "bg-danger/10 border-danger/30 text-text",
 };
 
 const dot: Record<AlertTone, string> = {

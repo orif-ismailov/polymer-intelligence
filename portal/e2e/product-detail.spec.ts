@@ -78,7 +78,7 @@ async function publishOffer(
   name: string,
   opts: { acceptsRfq?: boolean } = {},
 ): Promise<number> {
-  await page.goto("/offers/new/1");
+  await page.goto("/cabinet/offers/new/1");
   await expect(page.getByTestId("offer-wizard-step-1")).toBeVisible();
 
   // 1 — «Информация»
@@ -125,9 +125,9 @@ async function publishOffer(
   // 8 — preview → publish
   await expect(page.getByTestId("offer-wizard-step-preview")).toBeVisible();
   await page.getByTestId("offer-wizard-publish").click();
-  await page.waitForURL(/\/offers\/new\/done\/\d+/, { timeout: 30_000 });
+  await page.waitForURL(/\/cabinet\/offers\/new\/done\/\d+/, { timeout: 30_000 });
 
-  return Number(/\/offers\/new\/done\/(\d+)/.exec(page.url())?.[1]);
+  return Number(/\/cabinet\/offers\/new\/done\/(\d+)/.exec(page.url())?.[1]);
 }
 
 /** Staff approval — the only door that makes an offer public. */
@@ -158,7 +158,7 @@ async function openAsBuyer(
   await login(page, request, uniquePhone());
   await registerCompany(page, tax, { type: "buyer", sign: true });
 
-  await page.goto(`/market/${offerId}`);
+  await page.goto(`/cabinet/market/${offerId}`);
   await expect(page.getByTestId("product-detail")).toBeVisible();
   return { context, page };
 }
@@ -237,7 +237,7 @@ test("every control on the product sheet does what its label says", async ({ bro
 
   // Contract hands the seller over, so /contracts/new needs no name guessing.
   await cells.nth(1).click();
-  await page.waitForURL(/\/contracts\/new\?/);
+  await page.waitForURL(/\/cabinet\/contracts\/new\?/);
   const url = new URL(page.url());
   expect(url.searchParams.get("offerId")).toBe(String(offerId));
   expect(Number(url.searchParams.get("counterpartyId"))).toBeGreaterThan(0);

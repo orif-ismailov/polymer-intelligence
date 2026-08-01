@@ -56,7 +56,7 @@ export function RequestDetailPage() {
     return (
       <div className="space-y-4">
         <Alert tone="danger">{t("requests.notFound")}</Alert>
-        <LinkButton to="/requests" variant="secondary">
+        <LinkButton to="/cabinet/requests" variant="secondary">
           {t("requests.back")}
         </LinkButton>
       </div>
@@ -72,7 +72,7 @@ export function RequestDetailPage() {
     <div className="space-y-5 pb-36 md:pb-0">
       {/* Sheet …47 heads a request with its number and status, not a card. */}
       <PageHeader
-        backTo="/requests"
+        backTo="/cabinet/requests"
         backLabel={t("requests.back")}
         title={<span className="num">{r.number}</span>}
         badge={<Badge tone="info">{t(`requestStatus.${key}`)}</Badge>}

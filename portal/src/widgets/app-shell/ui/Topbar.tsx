@@ -26,6 +26,10 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           <Menu size={20} strokeWidth={1.75} aria-hidden="true" />
         </button>
 
+        {/* The lockup goes to the public home from everywhere it is drawn — in
+            the cabinet too. The cabinet home has its own nav entry (and the
+            phone bottom bar's first slot); the brand mark is the way out to the
+            marketplace. */}
         <Link to="/" aria-label={t("common.appName")} className="flex items-center">
           <BrandLogo className="[&>span:last-child]:hidden sm:[&>span:last-child]:block" />
         </Link>

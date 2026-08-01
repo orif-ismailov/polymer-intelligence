@@ -5,17 +5,17 @@ import { useActiveCompany } from "@/entities/company";
 import { FactoryRfqDone } from "@/features/factory-rfq";
 import { LoadingView } from "@/shared/ui";
 
-/** `/manufacturers/rfqs/:rfqId/done` — the closing sheet of the factory RFQ flow. */
+/** `/cabinet/manufacturers/rfqs/:rfqId/done` — the closing sheet of the factory RFQ flow. */
 export function FactoryRfqDonePage() {
   const { t } = useTranslation();
   const params = useParams<{ rfqId: string }>();
   const { activeCompany, isLoading } = useActiveCompany();
 
   if (isLoading) return <LoadingView label={t("common.loading")} />;
-  if (!activeCompany) return <Navigate to="/manufacturers" replace />;
+  if (!activeCompany) return <Navigate to="/cabinet/manufacturers" replace />;
 
   const rfqId = Number(params.rfqId);
-  if (!Number.isInteger(rfqId)) return <Navigate to="/manufacturers" replace />;
+  if (!Number.isInteger(rfqId)) return <Navigate to="/cabinet/manufacturers" replace />;
 
   return (
     <div className="mx-auto max-w-xl pb-10">

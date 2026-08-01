@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { PhoneForm } from "@/features/auth-by-otp";
 import { Card, CardBody } from "@/shared/ui";
@@ -11,6 +11,10 @@ import { AuthLayout } from "./AuthLayout";
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // Carry `state.from` through to the OTP step. `RequireAuth` writes it on the
+  // way in; without this hop the code screen never sees it and every sign-in
+  // lands on the cabinet home instead of the page the visitor asked for.
+  const returnState = useLocation().state as { from?: string } | null;
   const setPending = useAuthFlowStore((s) => s.setPending);
 
   return (
@@ -20,7 +24,7 @@ export function LoginPage() {
           <PhoneForm
             onSent={(phone, cooldown) => {
               setPending(phone, cooldown);
-              void navigate("/login/code");
+              void navigate("/cabinet/login/code", { state: returnState });
             }}
           />
         </CardBody>

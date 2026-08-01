@@ -27,7 +27,7 @@ function CompanyRow({ company, lang }: { company: CompanySummary; lang: string }
     label("companyStatus", companyStatus) === label("caseStatus", caseStatus);
   return (
     <Link
-      to={`/companies/${company.id}`}
+      to={`/cabinet/companies/${company.id}`}
       className="flex items-center justify-between gap-4 border-b border-border px-5 py-4 last:border-b-0 hover:bg-surface-2"
     >
       <div className="min-w-0">
@@ -75,7 +75,7 @@ export function CompaniesPage() {
         subtitle={t("companies.subtitle")}
         actions={
           (query.data?.length ?? 0) > 0 ? (
-            <LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>
+            <LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>
           ) : null
         }
       />
@@ -105,7 +105,7 @@ export function CompaniesPage() {
           icon={<RegistryIcon size={28} />}
           title={t("companies.empty")}
           description={t("companies.emptyBody")}
-          action={<LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>}
+          action={<LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>}
         />
       )}
     </div>

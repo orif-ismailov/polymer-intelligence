@@ -111,7 +111,7 @@ export function MarketOfferPage() {
     return (
       <div className="space-y-4">
         <Alert tone="danger">{t("market.notFound")}</Alert>
-        <LinkButton to="/market" variant="secondary">
+        <LinkButton to="/cabinet/market" variant="secondary">
           {t("market.backToMarket")}
         </LinkButton>
       </div>
@@ -216,7 +216,7 @@ export function MarketOfferPage() {
   return (
     <div className="space-y-5 pb-36 md:pb-0" data-testid="product-detail">
       <header className="flex items-center gap-2">
-        <IconButton label={t("market.backToMarket")} onClick={() => navigate("/market")}>
+        <IconButton label={t("market.backToMarket")} onClick={() => navigate("/cabinet/market")}>
           <ChevronLeftIcon size={20} />
         </IconButton>
         <div className="min-w-0 flex-1">
@@ -245,7 +245,7 @@ export function MarketOfferPage() {
         canInquire={canInquire}
         onRequestRfq={() => {
           if (fromManufacturer && offer.seller_company_id != null) {
-            void navigate(`/manufacturers/${offer.seller_company_id}/rfq/${offer.id}`);
+            void navigate(`/cabinet/manufacturers/${offer.seller_company_id}/rfq/${offer.id}`);
             return;
           }
           setTab("description");
@@ -391,7 +391,7 @@ export function MarketOfferPage() {
               <button
                 key={inq.id}
                 type="button"
-                onClick={() => navigate(`/inquiries/${inq.id}`)}
+                onClick={() => navigate(`/cabinet/inquiries/${inq.id}`)}
                 className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2 text-left text-sm hover:border-brand"
               >
                 <span className="text-text-muted">{inq.message ?? `#${inq.id}`}</span>
@@ -484,14 +484,14 @@ export function MarketOfferPage() {
         contractBlockedReason={contractBlockedReason}
         onMessage={() => {
           if (fromManufacturer && offer.seller_company_id != null) {
-            void navigate(`/manufacturers/${offer.seller_company_id}/chat`);
+            void navigate(`/cabinet/manufacturers/${offer.seller_company_id}/chat`);
             return;
           }
           scrollTo("inquiry");
         }}
         onContract={() =>
           navigate(
-            `/contracts/new?offerId=${offer.id}&counterpartyId=${offer.seller_company_id}`,
+            `/cabinet/contracts/new?offerId=${offer.id}&counterpartyId=${offer.seller_company_id}`,
           )
         }
       />

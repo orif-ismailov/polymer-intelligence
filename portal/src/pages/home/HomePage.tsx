@@ -142,14 +142,14 @@ export function HomePage() {
           ) : null}
 
           <div className="flex flex-wrap gap-3">
-            <LinkButton variant="outline" to={`/companies/${activeCompany.id}`}>
+            <LinkButton variant="outline" to={`/cabinet/companies/${activeCompany.id}`}>
               {t("companies.open")}
             </LinkButton>
-            <LinkButton variant="outline" to={`/companies/${activeCompany.id}/verification`}>
+            <LinkButton variant="outline" to={`/cabinet/companies/${activeCompany.id}/verification`}>
               {t("home.goToVerification")}
             </LinkButton>
             {activeCompany.status === "verified" ? (
-              <LinkButton to="/offers/new">{t("home.publishOffer")}</LinkButton>
+              <LinkButton to="/cabinet/offers/new">{t("home.publishOffer")}</LinkButton>
             ) : null}
           </div>
         </SectionCard>
@@ -158,7 +158,7 @@ export function HomePage() {
           title={t("home.noActiveCompany")}
           description={t("home.noActiveCompanyBody")}
           icon={<RegistryIcon size={28} />}
-          action={<LinkButton to="/companies/new/1">{t("home.createCompany")}</LinkButton>}
+          action={<LinkButton to="/cabinet/companies/new/1">{t("home.createCompany")}</LinkButton>}
         />
       )}
 
@@ -167,43 +167,43 @@ export function HomePage() {
         <h2 className="text-base font-semibold text-text">{t("home.quickActions")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <ModuleCard
-            to="/market"
+            to="/cabinet/market"
             title={t("nav.market")}
             hint={t("market.subtitle")}
             icon={<Store size={18} strokeWidth={1.75} aria-hidden />}
           />
           <ModuleCard
-            to="/manufacturers"
+            to="/cabinet/manufacturers"
             title={t("nav.manufacturers")}
             hint={t("manufacturers.subtitle")}
             icon={<Factory size={18} strokeWidth={1.75} aria-hidden />}
           />
           <ModuleCard
-            to="/requests"
+            to="/cabinet/requests"
             title={t("nav.requests")}
             hint={t("requests.subtitle")}
             icon={<ClipboardList size={18} strokeWidth={1.75} aria-hidden />}
           />
           <ModuleCard
-            to="/inquiries"
+            to="/cabinet/inquiries"
             title={t("nav.inquiries")}
             hint={t("inquiries.subtitle")}
             icon={<Inbox size={18} strokeWidth={1.75} aria-hidden />}
           />
           <ModuleCard
-            to="/deals"
+            to="/cabinet/deals"
             title={t("nav.deals")}
             hint={t("deals.subtitle")}
             icon={<Handshake size={18} strokeWidth={1.75} aria-hidden />}
           />
           <ModuleCard
-            to="/companies"
+            to="/cabinet/companies"
             title={t("home.companiesCard")}
             hint={t("home.companiesCardHint")}
             icon={<Building2 size={18} strokeWidth={1.75} aria-hidden />}
           />
           <ModuleCard
-            to="/offers"
+            to="/cabinet/offers"
             title={t("home.offersCard")}
             hint={t("home.offersCardHint")}
             icon={<Package size={18} strokeWidth={1.75} aria-hidden />}
@@ -215,7 +215,7 @@ export function HomePage() {
         <SectionCard
           title={t("home.latestNews")}
           action={
-            <Link to="/news" className="text-sm text-brand hover:underline">
+            <Link to="/cabinet/news" className="text-sm text-brand hover:underline">
               {t("notifications.viewAll")}
             </Link>
           }
@@ -224,7 +224,7 @@ export function HomePage() {
             {latestNews.map((a) => (
               <Link
                 key={a.id}
-                to={`/news/${a.id}`}
+                to={`/cabinet/news/${a.id}`}
                 className="block rounded-md border border-border px-3 py-2 text-sm transition-colors hover:border-brand-line hover:bg-surface-2"
               >
                 {a.headline}

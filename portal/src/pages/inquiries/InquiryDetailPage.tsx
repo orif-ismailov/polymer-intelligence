@@ -54,7 +54,7 @@ export function InquiryDetailPage() {
     return (
       <div className="space-y-4">
         <Alert tone="danger">{t("inquiries.notFound")}</Alert>
-        <LinkButton to="/inquiries" variant="secondary">
+        <LinkButton to="/cabinet/inquiries" variant="secondary">
           {t("inquiries.back")}
         </LinkButton>
       </div>
@@ -82,7 +82,7 @@ export function InquiryDetailPage() {
 
   return (
     <div className="space-y-6">
-      <LinkButton to="/inquiries" variant="ghost" className="text-sm">
+      <LinkButton to="/cabinet/inquiries" variant="ghost" className="text-sm">
         ← {t("inquiries.back")}
       </LinkButton>
 
@@ -92,7 +92,7 @@ export function InquiryDetailPage() {
             <CardTitle>{product}</CardTitle>
             <button
               type="button"
-              onClick={() => navigate(`/market/${inquiry.offer_id}`)}
+              onClick={() => navigate(`/cabinet/market/${inquiry.offer_id}`)}
               className="text-sm text-brand hover:underline"
             >
               {t("inquiries.viewOffer")}

@@ -48,7 +48,7 @@ export function SettingsPage() {
   function handleLogout(): void {
     logout.mutate(undefined, {
       onSettled: () => {
-        void navigate("/login", { replace: true });
+        void navigate("/cabinet/login", { replace: true });
       },
     });
   }

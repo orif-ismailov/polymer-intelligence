@@ -74,7 +74,7 @@ export function RequestsPage() {
       <PageHeader
         title={t("requests.title")}
         subtitle={t("requests.subtitle")}
-        actions={<LinkButton to="/requests/new">{t("requests.create")}</LinkButton>}
+        actions={<LinkButton to="/cabinet/requests/new">{t("requests.create")}</LinkButton>}
       />
 
       {requestsQuery.isLoading ? (
@@ -91,7 +91,7 @@ export function RequestsPage() {
       ) : requestsQuery.data && requestsQuery.data.length > 0 ? (
         <div className="space-y-3">
           {requestsQuery.data.map((r) => (
-            <RequestRow key={r.id} request={r} onOpen={() => navigate(`/requests/${r.id}`)} />
+            <RequestRow key={r.id} request={r} onOpen={() => navigate(`/cabinet/requests/${r.id}`)} />
           ))}
         </div>
       ) : (
@@ -99,7 +99,7 @@ export function RequestsPage() {
           icon={<ClipboardListIcon size={28} />}
           title={t("requests.empty")}
           description={t("requests.emptyBody")}
-          action={<LinkButton to="/requests/new">{t("requests.create")}</LinkButton>}
+          action={<LinkButton to="/cabinet/requests/new">{t("requests.create")}</LinkButton>}
         />
       )}
     </div>

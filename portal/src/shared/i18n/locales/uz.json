@@ -81,6 +81,7 @@
     "favorites": "Saralangan",
     "samples": "Namunalar",
     "labOrders": "Laboratoriya",
+    "marketplace": "Marketpleys",
     "openMenu": "Menyuni ochish"
   },
   "home": {
@@ -1982,5 +1983,274 @@
     "verified": "Tasdiqlangan",
     "failed": "Rad etilgan",
     "archived": "Arxivda"
+  },
+  "public": {
+    "nav": {
+      "primary": "Asosiy navigatsiya",
+      "home": "Bosh sahifa",
+      "catalog": "Katalog",
+      "traders": "Treyderlar",
+      "logistics": "Logistika",
+      "laboratories": "Laboratoriyalar",
+      "prices": "Narxlar va tahlil",
+      "news": "Yangiliklar",
+      "signIn": "Kirish",
+      "register": "Ro'yxatdan o'tish"
+    },
+    "role": {
+      "manufacturer": "Ishlab chiqaruvchi",
+      "trader": "Treyder",
+      "logistics_provider": "Logistika",
+      "laboratory": "Laboratoriya",
+      "importer": "Importchi",
+      "distributor": "Distribyutor",
+      "insurance_provider": "Sug'urta"
+    },
+    "home": {
+      "metaTitle": "IMEX AI: neftkimyo xomashyosi bozori",
+      "metaDescription": "Tekshirilgan ishlab chiqaruvchilar, treyderlar va laboratoriyalardan polimerlar. Dolzarb narxlar, laboratoriya pasportlari, xavfsiz bitimlar.",
+      "heroTitle": "Neftkimyo mahsulotlari uchun global marketpleys",
+      "heroSubtitle": "Ishlab chiqaruvchilar, treyderlar, logistika va laboratoriyalar bitta platformada",
+      "heroEyebrow": "Tekshirilgan kompaniyalar · ERI orqali bitimlar",
+      "heroCtaPrimary": "Ro'yxatdan o'tish",
+      "heroCtaPrimaryAuthed": "Kabinetga o'tish",
+      "heroCtaSecondary": "Katalogni ko'rish",
+      "searchLabel": "Katalog bo'ylab qidiruv",
+      "searchPlaceholder": "Mahsulot, marka, kompaniya, xizmatlarni qidirish...",
+      "searchAction": "Qidirish",
+      "popular": "Mashhur so'rovlar:",
+      "statsHeading": "Platforma raqamlarda",
+      "statLive": "Ma'lumotlar real vaqtda yangilanadi",
+      "directoriesHeading": "Kimni qidiryapsiz",
+      "companyCount_one": "{{count}} ta kompaniya",
+      "companyCount_other": "{{count}} ta kompaniya",
+      "seeAll": "Barchasini ko'rish",
+      "noOffers": "Hozircha e'lon qilingan takliflar yo'q",
+      "marketPrices": "Bozor narxlari",
+      "priceProduct": "Mahsulot",
+      "priceValue": "Narx",
+      "priceChange": "O'zg.",
+      "noHistory": "ma'lumot yo'q",
+      "noPrices": "Kotirovkalar birinchi kuzatuvlardan keyin paydo bo'ladi",
+      "industryNews": "Soha yangiliklari",
+      "noNews": "Hozircha yangiliklar yo'q",
+      "whyEyebrow": "Tekshirilgan B2B maydoncha",
+      "whyHeading": "Nima uchun IMEX AI ni tanlashadi",
+      "whySubtitle": "Har bir kompaniya davlat reestrlari bo'yicha tekshiruvdan o'tadi va hujjatlarni elektron imzo bilan imzolaydi — siz bitimni boshlashingizdan oldin.",
+      "why": {
+        "verified": {
+          "title": "Tekshirilgan kompaniyalar",
+          "body": "Nashrdan oldin davlat reestrlari va elektron imzo."
+        },
+        "prices": {
+          "title": "Dolzarb narxlar",
+          "body": "Kotirovkalar birja va soha manbalaridan har kuni yig'iladi."
+        },
+        "signing": {
+          "title": "Xavfsiz bitimlar",
+          "body": "Ikkala tomon shartnomani ERI orqali imzolaydi."
+        },
+        "international": {
+          "title": "Xalqaro platforma",
+          "body": "Turli mamlakatlardan yetkazib beruvchilar va xaridorlar."
+        },
+        "support": {
+          "title": "24/7 qo'llab-quvvatlash",
+          "body": "IMEX AI jamoasi bitimning har bir bosqichida yordam beradi."
+        }
+      },
+      "joinHeading": "IMEX AI ga qo'shiling",
+      "joinBody": "Biz bilan global neftkimyo bozorida biznesingizni kengaytiring",
+      "allQueries": "Barcha so'rovlar",
+      "searchScope": "Qidiruv doirasi",
+      "scope": {
+        "products": "Mahsulotlar",
+        "companies": "Kompaniyalar",
+        "services": "Xizmatlar"
+      },
+      "directoryCard": {
+        "manufacturersBody": "Zavodlardan to'g'ridan-to'g'ri yetkazib berish",
+        "tradersBody": "Tekshirilgan treyderlar va distributorlar",
+        "logisticsBody": "Yetkazib berish, bojxona, ombor",
+        "laboratoriesBody": "Laboratoriya tadqiqotlari va pasportlar",
+        "pricesBody": "Dolzarb narxlar va bozor tahlili",
+        "newsBody": "Soha yangiliklari va yangilanishlar",
+        "daily": "Har kuni"
+      },
+      "productCategories": "Mahsulot kategoriyalari",
+      "resetFilters": "Hammasini tozalash",
+      "filterCountry": "Kelib chiqish mamlakati",
+      "filterCountryPlaceholder": "Mamlakatni tanlang",
+      "filterIncoterms": "Yetkazib berish shartlari",
+      "filterCompany": "Ishlab chiqaruvchi / Kompaniya",
+      "filterCompanyPlaceholder": "Tanlang",
+      "showProducts": "Mahsulotlarni ko'rsatish",
+      "showProductsCount_one": "{{count}} ta mahsulotni ko'rsatish",
+      "showProductsCount_other": "{{count}} ta mahsulotni ko'rsatish",
+      "recommendedProducts": "Tavsiya etilgan mahsulotlar",
+      "verifiedManufacturers": "Tekshirilgan ishlab chiqaruvchilar",
+      "manufacturerOffers_one": "{{count}} ta taklif",
+      "manufacturerOffers_other": "{{count}} ta taklif",
+      "seeAllPeople": "Hammasini ko'rish",
+      "contact": "Bog'lanish",
+      "saveOffer": "Taklifni saqlash",
+      "offerForm": "Shakl",
+      "offerFormGranules": "Granulalar",
+      "offerTerms": "Shartlar",
+      "priceValueUsd": "Narx (USD/MT)",
+      "priceChange24h": "O'zgarish (24soat)",
+      "priceSource": "Manba: platforma bozor kuzatuvlari",
+      "priceUpdated": "Yangilangan: {{date}}",
+      "popularServices": "Mashhur xizmatlar",
+      "allServices": "Barcha xizmatlar",
+      "service": {
+        "logistics": {
+          "title": "Xalqaro logistika",
+          "body": "Kalitga topshirish yetkazib berish"
+        },
+        "customs": {
+          "title": "Bojxona rasmiylashtiruvi",
+          "body": "Eksport / Import"
+        },
+        "lab": {
+          "title": "Laboratoriya tadqiqotlari",
+          "body": "Tahlil va sifat pasportlari"
+        }
+      },
+      "registerCompany": "Kompaniyani ro'yxatdan o'tkazish",
+      "platformStat": {
+        "products": "Katalogdagi mahsulotlar",
+        "companies": "Kompaniyalar",
+        "countries": "Mamlakatlar",
+        "requests": "Kunlik so'rovlar",
+        "deals": "Muvaffaqiyatli bitimlar",
+        "satisfaction": "Qoniqish"
+      },
+      "fallbackCategory": {
+        "PE": "Polietilen (PE)",
+        "PP": "Polipropilen (PP)",
+        "PVC": "PVX (PVC)",
+        "PET": "PET",
+        "PS": "Polistirol (PS)",
+        "Rubber": "Kauchuklar",
+        "Solvents": "Erituvchilar",
+        "Additives": "Qo'shimchalar"
+      },
+      "popularTag": {
+        "rubber": "Kauchuk",
+        "solvents": "Erituvchilar"
+      }
+    },
+    "market": {
+      "metaTitle": "Neftkimyo xomashyosi katalogi",
+      "metaDescription": "Tekshirilgan yetkazib beruvchilardan polimerlar, erituvchilar va qo'shimchalar. Mahsulot, mavjudlik, mamlakat va laboratoriya pasporti bo'yicha filtrlar.",
+      "title": "Katalog",
+      "subtitle": "Tekshirilgan yetkazib beruvchilarning e'lon qilingan takliflari",
+      "filters": "Filtrlar",
+      "search": "Qidiruv",
+      "searchPlaceholder": "Marka yoki mahsulot",
+      "category": "Toifa",
+      "allCategories": "Barcha toifalar",
+      "availability": "Mavjudligi",
+      "any": "Har qanday",
+      "country": "Mamlakat",
+      "laboratory": "Laboratoriya",
+      "hasPassport": "Sifat pasporti bor",
+      "labVerified": "Platforma orqali tahlil",
+      "reset": "Filtrlarni tozalash",
+      "resultCount_one": "{{count}} ta taklif",
+      "resultCount_other": "{{count}} ta taklif",
+      "empty": "Bu shartlar bo'yicha hech narsa topilmadi",
+      "pagination": "Sahifalash",
+      "pageOf": "{{pages}} dan {{page}}-sahifa",
+      "anyPlural": "Har qanday"
+    },
+    "offer": {
+      "untitled": "Nomsiz",
+      "onRequest": "Narx so'rov bo'yicha",
+      "moq": "Min. partiya",
+      "leadTime": "Yetkazib berish muddati, kun",
+      "labVerified": "Laboratoriya tekshirgan",
+      "labPassport": "Pasport bor",
+      "verified": "Tekshirilgan",
+      "metaTitle": "{{name}}, {{seller}} dan sotib olish",
+      "metaDescription": "{{name}} mavjud. Jo'natish: {{location}}. IMEX AI dagi tekshirilgan yetkazib beruvchi.",
+      "notFound": "Taklif topilmadi",
+      "notFoundBody": "Ehtimol, u e'londan olib tashlangan.",
+      "breadcrumb": "Navigatsiya zanjiri",
+      "grade": "Marka",
+      "polymer": "Polimer turi",
+      "cas": "CAS",
+      "hs": "TIF TN",
+      "manufacturer": "Ishlab chiqaruvchi",
+      "incoterms": "Yetkazib berish shartlari",
+      "location": "Jo'natish",
+      "properties": "Xususiyatlar",
+      "applications": "Qo'llanilishi",
+      "description": "Tavsif",
+      "soldBy": "Yetkazib beruvchi:",
+      "sendInquiry": "So'rov yuborish",
+      "signInToContact": "Bog'lanish uchun kiring",
+      "contactHint": "Yetkazib beruvchi kontaktlari kirgandan keyin ochiladi."
+    },
+    "directory": {
+      "metaTitle": "{{name}}, tekshirilgan kompaniyalar",
+      "search": "Kompaniya qidirish",
+      "searchPlaceholder": "Nomi yoki manzili",
+      "resultCount_one": "{{count}} ta kompaniya",
+      "resultCount_other": "{{count}} ta kompaniya",
+      "empty": "Kompaniyalar topilmadi",
+      "notFound": "Bunday bo'lim yo'q"
+    },
+    "directories": {
+      "manufacturers": {
+        "subtitle": "Roli tasdiqlangan polimer zavodlari va ishlab chiqaruvchilar"
+      },
+      "traders": {
+        "subtitle": "Neftkimyo xomashyosi savdo uylari va distribyutorlari"
+      },
+      "logistics": {
+        "subtitle": "Tashish, bojxona rasmiylashtiruvi va ombor xizmatlari"
+      },
+      "laboratories": {
+        "subtitle": "Tahlil va sifat pasportlari uchun akkreditatsiyalangan laboratoriyalar"
+      }
+    },
+    "company": {
+      "untitled": "Nomsiz",
+      "notFound": "Kompaniya topilmadi",
+      "notFoundBody": "Ehtimol, u hali tekshiruvdan o'tmagan.",
+      "metaTitle": "{{name}}, {{directory}}",
+      "metaDescription": "{{name}}, {{country}}. IMEX AI bozoridagi tekshirilgan kompaniya.",
+      "offers": "Mahsulotlar",
+      "founded": "Tashkil etilgan",
+      "employees": "Xodimlar",
+      "iso": "ISO",
+      "legalName": "Yuridik nomi",
+      "legalForm": "Shakli",
+      "address": "Manzil",
+      "jurisdiction": "Yurisdiksiya",
+      "productionType": "Ishlab chiqarish turi",
+      "exportTo": "Eksport",
+      "products": "Kompaniya mahsulotlari",
+      "noProducts": "Kompaniyada hozircha e'lon qilingan mahsulot yo'q",
+      "about": "Kompaniya haqida",
+      "contact": "Bog'lanish"
+    },
+    "prices": {
+      "metaTitle": "Polimer va neftkimyo narxlari",
+      "metaDescription": "Polimerlar bo'yicha dolzarb kotirovkalar: HDPE, PP, LLDPE, PVC, PET. Oldingi kuzatuvga nisbatan o'zgarish.",
+      "title": "Narxlar va tahlil",
+      "subtitle": "Har bir mahsulot bo'yicha oxirgi kuzatuvlar va oldingisiga nisbatan o'zgarish",
+      "unit": "Birlik",
+      "observed": "Sana"
+    },
+    "footer": {
+      "marketplace": "Bozor",
+      "directories": "Ma'lumotnomalar",
+      "account": "Hisob",
+      "blurb": "Kompaniyalarni tekshirish va laboratoriya nazorati bilan neftkimyo xomashyosi bozori.",
+      "legal": "IMEX AI. Barcha huquqlar himoyalangan."
+    }
   }
 }

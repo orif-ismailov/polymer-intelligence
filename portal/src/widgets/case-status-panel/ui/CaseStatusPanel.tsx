@@ -130,7 +130,7 @@ export function CaseStatusPanel({ companyId, fallbackCase }: CaseStatusPanelProp
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => navigate(`/companies/new/${firstActionableStep(caseOut)}`)}
+                onClick={() => navigate(`/cabinet/companies/new/${firstActionableStep(caseOut)}`)}
               >
                 {t("verification.fixStep")}
               </Button>

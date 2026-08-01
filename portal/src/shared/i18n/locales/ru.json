@@ -81,6 +81,7 @@
     "favorites": "Избранное",
     "samples": "Образцы",
     "labOrders": "Лаборатория",
+    "marketplace": "Маркетплейс",
     "openMenu": "Открыть меню"
   },
   "home": {
@@ -1982,5 +1983,284 @@
     "verified": "Подтверждён",
     "failed": "Отклонён",
     "archived": "В архиве"
+  },
+  "public": {
+    "nav": {
+      "primary": "Основная навигация",
+      "home": "Главная",
+      "catalog": "Каталог",
+      "traders": "Трейдеры",
+      "logistics": "Логистика",
+      "laboratories": "Лаборатории",
+      "prices": "Цены и аналитика",
+      "news": "Новости",
+      "signIn": "Войти",
+      "register": "Регистрация"
+    },
+    "role": {
+      "manufacturer": "Производитель",
+      "trader": "Трейдер",
+      "logistics_provider": "Логистика",
+      "laboratory": "Лаборатория",
+      "importer": "Импортёр",
+      "distributor": "Дистрибьютор",
+      "insurance_provider": "Страхование"
+    },
+    "home": {
+      "metaTitle": "IMEX AI: маркетплейс нефтехимического сырья",
+      "metaDescription": "Полимеры и нефтехимия от проверенных производителей, трейдеров и лабораторий. Актуальные цены, лабораторные паспорта, безопасные сделки.",
+      "heroTitle": "Глобальный маркетплейс нефтехимической продукции",
+      "heroSubtitle": "Производители, трейдеры, логистика и лаборатории на одной платформе",
+      "heroEyebrow": "Проверенные компании · сделки через ЭЦП",
+      "heroCtaPrimary": "Зарегистрироваться",
+      "heroCtaPrimaryAuthed": "Перейти в кабинет",
+      "heroCtaSecondary": "Смотреть каталог",
+      "searchLabel": "Поиск по каталогу",
+      "searchPlaceholder": "Поиск продуктов, марок, компаний, услуг...",
+      "searchAction": "Найти",
+      "popular": "Популярные запросы:",
+      "statsHeading": "Платформа в цифрах",
+      "statLive": "Данные обновляются в реальном времени",
+      "directoriesHeading": "Кого вы ищете",
+      "companyCount_one": "{{count}} компания",
+      "companyCount_few": "{{count}} компании",
+      "companyCount_many": "{{count}} компаний",
+      "companyCount_other": "{{count}} компаний",
+      "seeAll": "Смотреть все",
+      "noOffers": "Пока нет опубликованных предложений",
+      "marketPrices": "Рыночные цены",
+      "priceProduct": "Продукт",
+      "priceValue": "Цена",
+      "priceChange": "Изм.",
+      "noHistory": "нет данных",
+      "noPrices": "Котировки появятся после первых наблюдений",
+      "industryNews": "Новости отрасли",
+      "noNews": "Новостей пока нет",
+      "whyEyebrow": "Проверенная B2B-площадка",
+      "whyHeading": "Почему выбирают IMEX AI",
+      "whySubtitle": "Каждая компания проходит проверку по государственным реестрам и подписывает документы электронной подписью — до того, как вы начнёте сделку.",
+      "why": {
+        "verified": {
+          "title": "Проверенные компании",
+          "body": "Регистрация в госреестрах и электронная подпись до публикации."
+        },
+        "prices": {
+          "title": "Актуальные цены и аналитика",
+          "body": "Котировки собираются из биржевых и отраслевых источников каждый день."
+        },
+        "signing": {
+          "title": "Безопасные сделки через D-Doc",
+          "body": "Договор подписывают обе стороны через ЭЦП, без бумаги."
+        },
+        "international": {
+          "title": "Международная платформа",
+          "body": "Поставщики и покупатели из разных стран на одной площадке."
+        },
+        "support": {
+          "title": "Поддержка 24/7",
+          "body": "Команда IMEX AI помогает на каждом этапе сделки."
+        }
+      },
+      "joinHeading": "Присоединяйтесь к IMEX AI",
+      "joinBody": "Расширяйте бизнес на глобальном рынке нефтехимии вместе с нами",
+      "allQueries": "Все запросы",
+      "searchScope": "Область поиска",
+      "scope": {
+        "products": "Продукты",
+        "companies": "Компании",
+        "services": "Услуги"
+      },
+      "directoryCard": {
+        "manufacturersBody": "Прямые поставки с заводов",
+        "tradersBody": "Проверенные трейдеры и дистрибьюторы",
+        "logisticsBody": "Доставка, таможня, складские услуги",
+        "laboratoriesBody": "Лабораторные исследования и паспорта",
+        "pricesBody": "Актуальные цены, аналитика рынка",
+        "newsBody": "Новости отрасли и обновления",
+        "daily": "Ежедневно"
+      },
+      "productCategories": "Категории продуктов",
+      "resetFilters": "Сбросить все",
+      "filterCountry": "Страна происхождения",
+      "filterCountryPlaceholder": "Выбрать страну",
+      "filterIncoterms": "Условия поставки",
+      "filterCompany": "Производитель / Компания",
+      "filterCompanyPlaceholder": "Выбрать",
+      "showProducts": "Показать продукты",
+      "showProductsCount_one": "Показать {{count}} продукт",
+      "showProductsCount_few": "Показать {{count}} продукта",
+      "showProductsCount_many": "Показать {{count}} продуктов",
+      "showProductsCount_other": "Показать {{count}} продуктов",
+      "recommendedProducts": "Рекомендуемые продукты",
+      "verifiedManufacturers": "Проверенные производители",
+      "manufacturerOffers_one": "{{count}} предложение",
+      "manufacturerOffers_few": "{{count}} предложения",
+      "manufacturerOffers_many": "{{count}} предложений",
+      "manufacturerOffers_other": "{{count}} предложений",
+      "seeAllPeople": "Смотреть всех",
+      "contact": "Связаться",
+      "saveOffer": "Сохранить предложение",
+      "offerForm": "Форма",
+      "offerFormGranules": "Гранулы",
+      "offerTerms": "Условия",
+      "priceValueUsd": "Цена (USD/MT)",
+      "priceChange24h": "Изм. (24ч)",
+      "priceSource": "Источник: рыночные наблюдения платформы",
+      "priceUpdated": "Обновлено: {{date}}",
+      "popularServices": "Популярные услуги",
+      "allServices": "Все услуги",
+      "service": {
+        "logistics": {
+          "title": "Международная логистика",
+          "body": "Доставка «под ключ»"
+        },
+        "customs": {
+          "title": "Таможенное оформление",
+          "body": "Экспорт / Импорт"
+        },
+        "lab": {
+          "title": "Лабораторные исследования",
+          "body": "Анализ и паспорта качества"
+        }
+      },
+      "registerCompany": "Регистрация компании",
+      "platformStat": {
+        "products": "Продуктов в каталоге",
+        "companies": "Компаний",
+        "countries": "Стран",
+        "requests": "Ежедневных запросов",
+        "deals": "Успешных сделок",
+        "satisfaction": "Удовлетворённость"
+      },
+      "fallbackCategory": {
+        "PE": "Полиэтилен (PE)",
+        "PP": "Полипропилен (PP)",
+        "PVC": "ПВХ (PVC)",
+        "PET": "ПЭТ (PET)",
+        "PS": "Полистирол (PS)",
+        "Rubber": "Каучуки",
+        "Solvents": "Растворители",
+        "Additives": "Добавки"
+      },
+      "popularTag": {
+        "rubber": "Каучук",
+        "solvents": "Растворители"
+      }
+    },
+    "market": {
+      "metaTitle": "Каталог нефтехимического сырья",
+      "metaDescription": "Полимеры, растворители и добавки от проверенных поставщиков. Фильтры по продукту, наличию, стране и лабораторному паспорту.",
+      "title": "Каталог",
+      "subtitle": "Опубликованные предложения проверенных поставщиков",
+      "filters": "Фильтры",
+      "search": "Поиск",
+      "searchPlaceholder": "Марка или продукт",
+      "category": "Категория",
+      "allCategories": "Все категории",
+      "availability": "Наличие",
+      "any": "Любое",
+      "country": "Страна",
+      "laboratory": "Лаборатория",
+      "hasPassport": "Есть паспорт качества",
+      "labVerified": "Анализ через платформу",
+      "reset": "Сбросить фильтры",
+      "resultCount_one": "{{count}} предложение",
+      "resultCount_few": "{{count}} предложения",
+      "resultCount_many": "{{count}} предложений",
+      "resultCount_other": "{{count}} предложений",
+      "empty": "По этим условиям ничего не найдено",
+      "pagination": "Постраничная навигация",
+      "pageOf": "Страница {{page}} из {{pages}}",
+      "anyPlural": "Любые"
+    },
+    "offer": {
+      "untitled": "Без названия",
+      "onRequest": "Цена по запросу",
+      "moq": "Мин. партия",
+      "leadTime": "Срок поставки, дней",
+      "labVerified": "Проверено лабораторией",
+      "labPassport": "Есть паспорт",
+      "verified": "Проверен",
+      "metaTitle": "{{name}}, купить у {{seller}}",
+      "metaDescription": "{{name}} в наличии. Отгрузка: {{location}}. Проверенный поставщик на IMEX AI.",
+      "notFound": "Предложение не найдено",
+      "notFoundBody": "Возможно, оно снято с публикации.",
+      "breadcrumb": "Навигационная цепочка",
+      "grade": "Марка",
+      "polymer": "Тип полимера",
+      "cas": "CAS",
+      "hs": "ТН ВЭД",
+      "manufacturer": "Производитель",
+      "incoterms": "Условия поставки",
+      "location": "Отгрузка",
+      "properties": "Характеристики",
+      "applications": "Применение",
+      "description": "Описание",
+      "soldBy": "Поставщик:",
+      "sendInquiry": "Отправить запрос",
+      "signInToContact": "Войти, чтобы связаться",
+      "contactHint": "Контакты поставщика доступны после входа."
+    },
+    "directory": {
+      "metaTitle": "{{name}}, проверенные компании",
+      "search": "Поиск компании",
+      "searchPlaceholder": "Название или адрес",
+      "resultCount_one": "{{count}} компания",
+      "resultCount_few": "{{count}} компании",
+      "resultCount_many": "{{count}} компаний",
+      "resultCount_other": "{{count}} компаний",
+      "empty": "Компании не найдены",
+      "notFound": "Такого раздела нет"
+    },
+    "directories": {
+      "manufacturers": {
+        "subtitle": "Заводы и производители полимеров с подтверждённой ролью"
+      },
+      "traders": {
+        "subtitle": "Торговые дома и дистрибьюторы нефтехимического сырья"
+      },
+      "logistics": {
+        "subtitle": "Перевозка, таможенное оформление и складские услуги"
+      },
+      "laboratories": {
+        "subtitle": "Аккредитованные лаборатории для анализа и паспортов качества"
+      }
+    },
+    "company": {
+      "untitled": "Без названия",
+      "notFound": "Компания не найдена",
+      "notFoundBody": "Возможно, она ещё не прошла проверку.",
+      "metaTitle": "{{name}}, {{directory}}",
+      "metaDescription": "{{name}}, {{country}}. Проверенная компания на маркетплейсе IMEX AI.",
+      "offers": "Товаров",
+      "founded": "Основана",
+      "employees": "Сотрудников",
+      "iso": "ISO",
+      "legalName": "Юридическое название",
+      "legalForm": "Форма",
+      "address": "Адрес",
+      "jurisdiction": "Юрисдикция",
+      "productionType": "Тип производства",
+      "exportTo": "Экспорт",
+      "products": "Товары компании",
+      "noProducts": "У компании пока нет опубликованных товаров",
+      "about": "О компании",
+      "contact": "Связаться"
+    },
+    "prices": {
+      "metaTitle": "Цены на полимеры и нефтехимию",
+      "metaDescription": "Актуальные котировки на полимеры: HDPE, PP, LLDPE, PVC, PET. Изменение к предыдущему наблюдению.",
+      "title": "Цены и аналитика",
+      "subtitle": "Последние наблюдения по каждому продукту и изменение к предыдущему",
+      "unit": "Единица",
+      "observed": "Дата"
+    },
+    "footer": {
+      "marketplace": "Маркетплейс",
+      "directories": "Справочники",
+      "account": "Аккаунт",
+      "blurb": "Маркетплейс нефтехимического сырья с проверкой компаний и лабораторным контролем.",
+      "legal": "IMEX AI. Все права защищены."
+    }
   }
 }

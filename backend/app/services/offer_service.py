@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 
 from sqlalchemy import func, or_, update
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Query, Session, joinedload, selectinload
 
 from app.core.time import utcnow
 from app.models.accounts import UserAccount
@@ -24,6 +24,7 @@ from app.models.enums import (
     CompanyStatus,
     OfferAvailability,
     OfferFileKind,
+    PriceBasis,
     SellerOfferStatus,
 )
 from app.models.marketplace import OfferFavorite, Seller, SellerOffer, SellerOfferFile
@@ -246,6 +247,116 @@ def matching_product_ids(db: Session, q: str) -> list[int]:
     return list(ids)
 
 
+def _catalog_query(
+    db: Session,
+    *,
+    product_id: int | None = None,
+    q: str | None = None,
+    availability: OfferAvailability | None = None,
+    country: str | None = None,
+    incoterms: PriceBasis | None = None,
+    exclude_seller_id: int | None = None,
+    exclude_company_id: int | None = None,
+    company_id: int | None = None,
+    has_lab_passport: bool | None = None,
+    lab_verified: bool | None = None,
+    eager: bool = True,
+) -> Query[SellerOffer]:
+    """The approved-offer catalog query, without ordering or pagination.
+
+    Extracted so :func:`list_catalog` and :func:`count_catalog` cannot drift: the
+    public marketplace prints "показать N товаров" beside the grid, and a count
+    computed from a second copy of these filters is a number that stops matching
+    the list the first time either copy is edited.
+
+    ``eager`` loads the company/roles/files a card renders. The count does not
+    render anything, so it passes ``False`` — eager loads on a COUNT are wasted
+    joins.
+    """
+    query = db.query(SellerOffer).filter(SellerOffer.status == SellerOfferStatus.approved)
+    if eager:
+        query = query.options(
+            joinedload(SellerOffer.company).selectinload(Company.business_roles),
+            selectinload(SellerOffer.files),
+        )
+    if exclude_seller_id is not None:
+        query = query.filter(SellerOffer.seller_id != exclude_seller_id)
+    if exclude_company_id is not None:
+        query = query.filter(
+            or_(
+                SellerOffer.company_id.is_(None),
+                SellerOffer.company_id != exclude_company_id,
+            )
+        )
+    if company_id is not None:
+        query = query.filter(SellerOffer.company_id == company_id)
+    if product_id is not None:
+        query = query.filter(SellerOffer.product_id == product_id)
+    if availability is not None:
+        query = query.filter(SellerOffer.availability == availability)
+    if country is not None:
+        query = query.filter(SellerOffer.country == country)
+    if incoterms is not None:
+        query = query.filter(SellerOffer.incoterms == incoterms)
+    if has_lab_passport:
+        # EXISTS rather than a cached column: `files` is already loaded for the
+        # card, and a `has_lab_passport` flag would be a second source of truth
+        # that every file deletion had to remember to update.
+        query = query.filter(
+            db.query(SellerOfferFile.id)
+            .filter(
+                SellerOfferFile.offer_id == SellerOffer.id,
+                SellerOfferFile.kind == OfferFileKind.lab_passport,
+            )
+            .exists()
+        )
+    if lab_verified:
+        query = query.filter(SellerOffer.lab_verified.is_(True))
+    if q:
+        like = f"%{q.strip()}%"
+        conditions = [
+            SellerOffer.product_text.ilike(like),
+            SellerOffer.grade_text.ilike(like),
+            SellerOffer.polymer_type.ilike(like),
+        ]
+        product_ids = matching_product_ids(db, q)
+        if product_ids:
+            conditions.append(SellerOffer.product_id.in_(product_ids))
+        query = query.filter(or_(*conditions))
+    return query
+
+
+def count_catalog(
+    db: Session,
+    *,
+    product_id: int | None = None,
+    q: str | None = None,
+    availability: OfferAvailability | None = None,
+    country: str | None = None,
+    incoterms: PriceBasis | None = None,
+    exclude_seller_id: int | None = None,
+    exclude_company_id: int | None = None,
+    company_id: int | None = None,
+    has_lab_passport: bool | None = None,
+    lab_verified: bool | None = None,
+) -> int:
+    """How many approved offers match these filters (the grid's result count)."""
+    return _catalog_query(
+        db,
+        product_id=product_id,
+        q=q,
+        availability=availability,
+        country=country,
+        incoterms=incoterms,
+        exclude_seller_id=exclude_seller_id,
+        exclude_company_id=exclude_company_id,
+        company_id=company_id,
+        has_lab_passport=has_lab_passport,
+        lab_verified=lab_verified,
+        eager=False,
+    ).count()
+
+
 def list_catalog(
     db: Session,
     *,
@@ -253,6 +364,7 @@ def list_catalog(
     q: str | None = None,
     availability: OfferAvailability | None = None,
     country: str | None = None,
+    incoterms: PriceBasis | None = None,
     exclude_seller_id: int | None = None,
     exclude_company_id: int | None = None,
     company_id: int | None = None,
@@ -284,61 +396,24 @@ def list_catalog(
     "My offers" and cannot inquire on them). ``exclude_company_id`` does the same for a
     portal company browsing the market (it can't inquire on its own offers).
     """
-    # Eager-load the company AND its roles: the card renders both, and the market
-    # list is the busiest screen in the portal — a lazy relationship here is one
-    # SELECT per card.
-    query = (
-        db.query(SellerOffer)
-        .options(
-            joinedload(SellerOffer.company).selectinload(Company.business_roles),
-            selectinload(SellerOffer.files),
-        )
-        .filter(SellerOffer.status == SellerOfferStatus.approved)
-    )
-    if exclude_seller_id is not None:
-        query = query.filter(SellerOffer.seller_id != exclude_seller_id)
-    if exclude_company_id is not None:
-        query = query.filter(
-            or_(
-                SellerOffer.company_id.is_(None),
-                SellerOffer.company_id != exclude_company_id,
-            )
-        )
-    if company_id is not None:
-        query = query.filter(SellerOffer.company_id == company_id)
-    if product_id is not None:
-        query = query.filter(SellerOffer.product_id == product_id)
-    if availability is not None:
-        query = query.filter(SellerOffer.availability == availability)
-    if country is not None:
-        query = query.filter(SellerOffer.country == country)
-    if has_lab_passport:
-        # EXISTS rather than a cached column: `files` is already loaded for the
-        # card, and a `has_lab_passport` flag would be a second source of truth
-        # that every file deletion had to remember to update.
-        query = query.filter(
-            db.query(SellerOfferFile.id)
-            .filter(
-                SellerOfferFile.offer_id == SellerOffer.id,
-                SellerOfferFile.kind == OfferFileKind.lab_passport,
-            )
-            .exists()
-        )
-    if lab_verified:
-        query = query.filter(SellerOffer.lab_verified.is_(True))
-    if q:
-        like = f"%{q.strip()}%"
-        conditions = [
-            SellerOffer.product_text.ilike(like),
-            SellerOffer.grade_text.ilike(like),
-            SellerOffer.polymer_type.ilike(like),
-        ]
-        product_ids = matching_product_ids(db, q)
-        if product_ids:
-            conditions.append(SellerOffer.product_id.in_(product_ids))
-        query = query.filter(or_(*conditions))
+    # The card renders the company AND its roles, and the market list is the
+    # busiest screen in the portal — a lazy relationship here is one SELECT per
+    # card, so `_catalog_query` eager-loads both.
     return (
-        query.order_by(SellerOffer.published_at.desc().nullslast())
+        _catalog_query(
+            db,
+            product_id=product_id,
+            q=q,
+            availability=availability,
+            country=country,
+            incoterms=incoterms,
+            exclude_seller_id=exclude_seller_id,
+            exclude_company_id=exclude_company_id,
+            company_id=company_id,
+            has_lab_passport=has_lab_passport,
+            lab_verified=lab_verified,
+        )
+        .order_by(SellerOffer.published_at.desc().nullslast())
         .limit(limit)
         .offset(offset)
         .all()

@@ -10,7 +10,7 @@ import { ApiError } from "@/shared/api";
 import { Card, CardBody, ErrorView, LinkButton, LoadingView, PageHeader } from "@/shared/ui";
 
 /**
- * `/manufacturers/:companyId/chat` — opens (or fetches) the 1:1 thread with a
+ * `/cabinet/manufacturers/:companyId/chat` — opens (or fetches) the 1:1 thread with a
  * manufacturer, then hands off to the chat UI.
  */
 export function ManufacturerChatPage() {
@@ -47,7 +47,7 @@ export function ManufacturerChatPage() {
   if (!activeCompany) {
     return (
       <ErrorView title={t("home.noActiveCompany")} message={t("home.noActiveCompanyBody")}>
-        <LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>
+        <LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>
       </ErrorView>
     );
   }
@@ -68,7 +68,7 @@ export function ManufacturerChatPage() {
               }
         }
       >
-        <LinkButton to={`/manufacturers/${manufacturerId}`}>{t("common.back")}</LinkButton>
+        <LinkButton to={`/cabinet/manufacturers/${manufacturerId}`}>{t("common.back")}</LinkButton>
       </ErrorView>
     );
   }
@@ -76,7 +76,7 @@ export function ManufacturerChatPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <PageHeader
-        backTo={`/manufacturers/${manufacturerId}`}
+        backTo={`/cabinet/manufacturers/${manufacturerId}`}
         backLabel={t("common.back")}
         title={thread.counterparty_name ?? t("manufacturerChat.title")}
         subtitle={t("manufacturerChat.subtitle")}

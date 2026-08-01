@@ -8,17 +8,17 @@ system-wide picture.
 The portal is the client cabinet: a React 18 + Vite app, server-side rendered, that serves two
 distinct surfaces from one codebase:
 
-- **A public marketplace** — anonymous storefront pages (`/`, `/market`, `/market/:offerId`,
+- **A public marketplace** — storefront pages (`/`, `/market`, `/market/:offerId`,
   the four company directories, `/prices`, `/news`) rendered to real HTML so search engines
   index them. These read the unauthenticated `/api/v1/public/*` API surface.
 - **The client cabinet** — phone-OTP login (`user_accounts`, distinct from the Telegram
   `webapp/` identity world), company registration + E-IMZO verification, offer/inquiry/request
   management, contracts and deals. These routes are client-rendered only and marked `noindex`.
 
-A handful of routes (`/`, `/market`, `/market/:offerId`, the `manufacturers` directory,
-`/news`) are **shared**: the same URL renders the storefront page to an anonymous visitor and
-the cabinet page to a signed-in one, so a listing has one address for both a buyer and a
-crawler.
+The storefront is open to **everyone**: a session is what lets you act (inquiry, RFQ, chat,
+publish), not what lets you read, so a listing has one address for a buyer, a seller and a
+crawler alike. Signing in swaps the chrome — «Войти»/«Регистрация» become a «Кабинет» link —
+and points the page's action CTAs into the cabinet; it does not move you off the page.
 
 For deep implementation notes (FSD import rules, the auth/token model, the design-system
 conventions, deploy topology) see [`portal/CLAUDE.md`](CLAUDE.md) — this README only covers
@@ -73,9 +73,9 @@ image and the `portal` compose service runs `node server.js` on port 3000; nginx
 
 | Layer | Contains |
 |---|---|
-| `app/` | providers (QueryClient, i18n, router, theme), route tree (`app/router/routes.tsx`), guards (`RequireAuth`, `RedirectIfAuthed`, `RequireCompany`, `SharedRoute`). |
+| `app/` | providers (QueryClient, i18n, router, theme), route tree (`app/router/routes.tsx`), guards (`RequireAuth`, `RedirectIfAuthed`, `RequireCompany`). |
 | `pages/` | route-level screens: `login`/`otp`, `onboarding` (registration gate), `home`, `companies`/`company-view`/`company-create`, `verification-status`, `offers`/`offer-create`, `settings`, `market`, `inquiries`, `requests`, `news`, `notifications`, `samples`, `lab-orders`, `deals`, `contracts`, plus the public counterparts `public-home`, `public-market`, `public-directory`, `public-prices`. |
-| `widgets/` | composed UI blocks: `app-shell` (cabinet topbar + company switcher), `public-shell` (the `AdaptiveShell` that swaps chrome between storefront and cabinet), `case-status-panel`. |
+| `widgets/` | composed UI blocks: `app-shell` (cabinet topbar + sidebar + company switcher), `public-shell` (storefront nav + footer, session-aware), `case-status-panel`. |
 | `features/` | user-facing flows: `auth-by-otp`, `company-profile`, `company-wizard`, `deal-room`, `eimzo-sign`, `factory-rfq`, `manufacturer-chat`, `notification-center`, `offer-wizard`, `product-detail`, `request-wizard`, `rfq-response`, `sample-request`, `submit-verification`, `switch-company`, `upload-document`. |
 | `entities/` | domain types + API hooks + zustand models: `account`, `company`, `compliance`, `contract`, `deal`, `inquiry`, `lab`, `manufacturer`, `market`, `news`, `notification`, `offer`, `product`, `request`, `sample`, `verification`, `public` (public-surface data). |
 | `shared/` | `api` (fetch client + auth bridge), `ui` (Tailwind primitives), `lib`, `config`, `i18n`, `seo`. |
@@ -89,22 +89,44 @@ FSD import rule: a layer may import only from layers below it —
 
 ## Routing: public vs. authenticated
 
-Defined in `src/app/router/routes.tsx`, in three tiers:
+Defined in `src/app/router/routes.tsx`, in two namespaces.
 
-1. **Shared** (`AdaptiveShell`, no guard): `/`, `/market`, `/market/:offerId`, `/prices`,
-   `/news`, `/news/:signalId`, and the four company directories
-   (`manufacturers`/`traders`/`logistics`/`laboratories`, each with a `/:companyId` profile —
-   the directory slugs come from `PUBLIC_DIRECTORIES` in
-   `src/shared/config/publicRoutes.ts`). Only `/`, `/market`(`/:offerId`), the `manufacturers`
-   directory, and `/news` actually render a different view per session via `SharedRoute`; the
-   other three directories and `/prices` always render the public view.
-2. **Auth screens** behind `RedirectIfAuthed`: `/login`, `/login/code`.
-3. **Cabinet**, behind `RequireAuth`: `/onboarding` and `/companies/new/*` (the registration
-   flow, deliberately outside the shell and outside `RequireCompany`), then everything else
-   behind `RequireAuth` + `RequireCompany` inside `AppShell` — `/offers`, `/deals`,
-   `/contracts`, `/inquiries`, `/requests`, `/samples`, `/lab-orders`, `/notifications`,
-   `/companies`, `/settings`, `/market/requests`, `/market/favorites`, `/sellers/:companyId`,
-   `/manufacturers/:companyId/chat`, `/manufacturers/:companyId/rfq/:offerId`.
+1. **Public storefront** at the root (`PublicShell`), open to everyone:
+   `/`, `/market`, `/market/:offerId`, `/prices`, `/news`, `/news/:signalId`, and the four
+   company directories (`manufacturers`/`traders`/`logistics`/`laboratories`, each with a
+   `/:companyId` profile — slugs come from `PUBLIC_DIRECTORIES` in
+   `src/shared/config/publicRoutes.ts`). These are the crawlable URLs and the only ones that
+   are server-rendered. **No guard sits on them**: a session changes the chrome and the
+   action CTAs, never the URL.
+2. **Cabinet** under `/cabinet`: auth screens (`/cabinet/login`, `/cabinet/login/code`)
+   behind `RedirectIfAuthed`; `/cabinet/onboarding` and `/cabinet/companies/new/*` (the
+   registration flow, deliberately outside the shell and outside `RequireCompany`); then
+   everything else behind `RequireAuth` + `RequireCompany` inside `AppShell`.
+
+The prefix exists to keep the two namespaces from colliding — `/market/favorites` no longer
+has to out-rank `/market/:offerId`, `/manufacturers/:id/chat` no longer has to out-rank the
+public directory's `:companyId`. The cabinet still **mirrors part of the storefront's shape**
+(`/cabinet/market/:offerId`, `/cabinet/prices`, `/cabinet/news`, `/cabinet/traders/:companyId`),
+a duplication that is being collapsed onto the public URL page by page. On top of it sit the
+cabinet-only surfaces:
+`/cabinet/offers`, `/deals`, `/contracts`, `/inquiries`, `/requests`, `/samples`,
+`/lab-orders`, `/notifications`, `/companies`, `/settings`, `/market/requests`,
+`/market/favorites`, `/sellers/:companyId`, `/manufacturers/:companyId/chat`,
+`/manufacturers/:companyId/rfq/:offerId` (all under `/cabinet`).
+
+Pages mounted in **both** namespaces (news, prices, the three read-only directories) are one
+component; their internal links go through `shared/lib/useTierBase()`.
+
+Crossing between the two: the storefront header shows a «Кабинет» link once there is a
+session (`PublicTopNav`), the cabinet sidebar has a «Маркетплейс» link back to `/`
+(`SideNav`), and the **brand lockup points at `/` from every surface that draws it** —
+cabinet topbar, login/OTP, onboarding, storefront footer. A public action CTA
+(«Отправить запрос», «Связаться») goes straight to its
+cabinet destination when signed in, and to `/cabinet/login` carrying that destination as
+`state.from` when not — so signing in from a listing returns you to *that listing*.
+
+Root-level cabinet URLs from before the prefix (`/login`, `/companies/…`, `/offers/…`)
+**301** to their `/cabinet` equivalent from `server.js`.
 
 `src/shared/config/publicRoutes.ts` also exports `SERVER_RENDERED_PATTERNS` /
 `isServerRenderedPath`, which `server.js` mirrors as a literal `PUBLIC_PATTERNS` regex list

@@ -135,14 +135,14 @@ export function RegistrationDone({ companyId }: RegistrationDoneProps) {
         <Button
           fullWidth
           size="lg"
-          onClick={() => void navigate("/")}
+          onClick={() => void navigate("/cabinet")}
           data-testid="wizard-done-cabinet"
         >
           {t("wizard.done.toCabinet")}
         </Button>
         <button
           type="button"
-          onClick={() => void navigate("/offers/new")}
+          onClick={() => void navigate("/cabinet/offers/new")}
           className="w-full rounded-sm py-2 text-sm font-medium text-text transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           {t("wizard.done.toPublish")}

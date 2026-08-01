@@ -76,6 +76,26 @@ export function countryName(code: string | null | undefined, lang = "ru"): strin
   }
 }
 
+/**
+ * Emoji flag for an ISO-3166 alpha-2 code, or `null` if there isn't one.
+ *
+ * The two letters map to the Unicode regional-indicator block, so this is pure
+ * arithmetic — no icon set, no sprite sheet, no new dependency for the flag the
+ * storefront cards show beside the country. Returns `null` rather than a
+ * placeholder glyph so a caller can omit the slot entirely; a tofu box next to a
+ * country name is worse than no flag.
+ */
+export function countryFlag(code: string | null | undefined): string | null {
+  if (!code || code.length !== 2 || !/^[a-z]{2}$/i.test(code)) return null;
+  const base = 0x1f1e6 - "A".charCodeAt(0);
+  return String.fromCodePoint(
+    ...code
+      .toUpperCase()
+      .split("")
+      .map((c) => base + c.charCodeAt(0)),
+  );
+}
+
 /** Human-readable byte size. */
 export function formatBytes(bytes: number | null | undefined): string {
   if (bytes == null) return "—";

@@ -119,16 +119,16 @@ function NavGlyph({ d }: { d: string }) {
 
 const NAV_ITEMS: readonly BottomNavItem[] = [
   {
-    to: "/",
+    to: "/cabinet",
     label: "Главная",
     end: true,
     icon: <NavGlyph d="M3 9l7-6 7 6v8a1 1 0 0 1-1 1h-4v-5H8v5H4a1 1 0 0 1-1-1V9z" />,
   },
-  { to: "/requests", label: "Заявки", icon: <NavGlyph d="M5 3h10v14H5zM8 7h4M8 10h4M8 13h3" /> },
-  { to: "/market", label: "Маркет", icon: <NavGlyph d="M3 7h14v9H3zM3 7l2-4h10l2 4" /> },
+  { to: "/cabinet/requests", label: "Заявки", icon: <NavGlyph d="M5 3h10v14H5zM8 7h4M8 10h4M8 13h3" /> },
+  { to: "/cabinet/market", label: "Маркет", icon: <NavGlyph d="M3 7h14v9H3zM3 7l2-4h10l2 4" /> },
   // Points at this page so exactly one destination is `aria-current` here.
   { to: "/dev/ui", label: "Сделки", badge: 3, icon: <NavGlyph d="M4 6h12v10H4zM7 9h6M7 12h4" /> },
-  { to: "/settings", label: "Профиль", icon: <NavGlyph d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 17c0-3 2.7-5 6-5s6 2 6 5" /> },
+  { to: "/cabinet/settings", label: "Профиль", icon: <NavGlyph d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 17c0-3 2.7-5 6-5s6 2 6 5" /> },
 ];
 
 const SECTION_TABS: readonly TabItem[] = [
@@ -183,6 +183,9 @@ export function UiKitPage() {
           <Button variant="outline">Связаться с продавцом</Button>
           <Button variant="secondary">Изменить заявку</Button>
           <Button variant="ghost">Отмена</Button>
+          <Button variant="glass" data-testid="ui-button-glass">
+            Смотреть каталог
+          </Button>
           <Button variant="danger" data-testid="ui-button-danger">
             Выйти
           </Button>

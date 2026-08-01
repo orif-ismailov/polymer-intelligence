@@ -10,8 +10,8 @@ import { OffersLocked } from "@/pages/offers";
 import { ErrorView, LinkButton, LoadingView } from "@/shared/ui";
 
 /**
- * Host for the add-product flow, at `/offers/new/:step` and
- * `/offers/:offerId/edit/:step`.
+ * Host for the add-product flow, at `/cabinet/offers/new/:step` and
+ * `/cabinet/offers/:offerId/edit/:step`.
  *
  * The step lives in the URL (the registration wizard's pattern): a reload, a
  * shared link and the browser's back button all land where they say they will,
@@ -33,7 +33,7 @@ export function OfferCreatePage() {
   const reset = useOfferDraft((s) => s.reset);
   const draftOfferId = useOfferDraft((s) => s.offerId);
 
-  const base = isEdit ? `/offers/${offerId}/edit` : "/offers/new";
+  const base = isEdit ? `/cabinet/offers/${offerId}/edit` : "/cabinet/offers/new";
 
   // Normalize an out-of-range / non-numeric step to a canonical URL.
   useEffect(() => {
@@ -70,7 +70,7 @@ export function OfferCreatePage() {
   if (!activeCompany) {
     return (
       <ErrorView title={t("home.noActiveCompany")} message={t("home.noActiveCompanyBody")}>
-        <LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>
+        <LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>
       </ErrorView>
     );
   }
@@ -102,12 +102,12 @@ export function OfferCreatePage() {
         isEdit={isEdit}
         step={step}
         onStepChange={(next) => navigate(`${base}/${next}`)}
-        onExit={() => navigate("/offers")}
+        onExit={() => navigate("/cabinet/offers")}
         onPublished={(offer) =>
-          navigate(isEdit ? "/offers" : `/offers/new/done/${offer.id}`, { replace: true })
+          navigate(isEdit ? "/cabinet/offers" : `/cabinet/offers/new/done/${offer.id}`, { replace: true })
         }
         onNotVerified={() =>
-          navigate(`/companies/${activeCompany.id}/verification`, { replace: true })
+          navigate(`/cabinet/companies/${activeCompany.id}/verification`, { replace: true })
         }
       />
     </div>

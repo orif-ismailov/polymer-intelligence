@@ -6,7 +6,7 @@ import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
 export function RedirectIfAuthed() {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/cabinet" replace />;
   }
   return <Outlet />;
 }

@@ -72,7 +72,7 @@ export function PublishDone({ companyId, requestId }: PublishDoneProps) {
       <div className="mb-4">
         <button
           type="button"
-          onClick={() => void navigate("/requests")}
+          onClick={() => void navigate("/cabinet/requests")}
           className="text-sm font-medium text-brand hover:underline"
           data-testid="request-wizard-done-close"
         >
@@ -136,7 +136,7 @@ export function PublishDone({ companyId, requestId }: PublishDoneProps) {
         <Button
           fullWidth
           size="lg"
-          onClick={() => void navigate("/requests")}
+          onClick={() => void navigate("/cabinet/requests")}
           data-testid="request-wizard-done-list"
         >
           {t("requestWizard.done.toRequests")}
@@ -145,7 +145,7 @@ export function PublishDone({ companyId, requestId }: PublishDoneProps) {
           fullWidth
           size="lg"
           variant="outline"
-          onClick={() => void navigate("/requests/new/1")}
+          onClick={() => void navigate("/cabinet/requests/new/1")}
           data-testid="request-wizard-done-another"
         >
           {t("requestWizard.done.createAnother")}

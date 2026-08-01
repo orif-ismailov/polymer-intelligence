@@ -8,7 +8,7 @@ import { FactoryRfqWizard, STEP_BASIC, useFactoryRfqDraft } from "@/features/fac
 import { ErrorView, LinkButton, LoadingView } from "@/shared/ui";
 
 /**
- * `/manufacturers/:companyId/rfq/:offerId` — the 4-step factory RFQ flow.
+ * `/cabinet/manufacturers/:companyId/rfq/:offerId` — the 4-step factory RFQ flow.
  *
  * The step lives in local state rather than the URL: the route contract for
  * this flow is a single addressable path, unlike the request/offer wizards.
@@ -40,7 +40,7 @@ export function FactoryRfqPage() {
   if (!activeCompany) {
     return (
       <ErrorView title={t("home.noActiveCompany")} message={t("home.noActiveCompanyBody")}>
-        <LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>
+        <LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>
       </ErrorView>
     );
   }
@@ -53,8 +53,8 @@ export function FactoryRfqPage() {
         offerId={offerId}
         step={step}
         onStepChange={setStep}
-        onExit={() => navigate(`/manufacturers/${manufacturerId}`)}
-        onSubmitted={(rfqId) => navigate(`/manufacturers/rfqs/${rfqId}/done`, { replace: true })}
+        onExit={() => navigate(`/cabinet/manufacturers/${manufacturerId}`)}
+        onSubmitted={(rfqId) => navigate(`/cabinet/manufacturers/rfqs/${rfqId}/done`, { replace: true })}
       />
     </div>
   );

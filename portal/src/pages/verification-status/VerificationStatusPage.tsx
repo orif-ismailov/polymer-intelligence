@@ -25,7 +25,7 @@ export function VerificationStatusPage() {
         retryLabel={notFound ? undefined : t("common.retry")}
         onRetry={notFound ? undefined : () => void query.refetch()}
       >
-        {notFound ? <LinkButton to="/companies">{t("nav.companies")}</LinkButton> : null}
+        {notFound ? <LinkButton to="/cabinet/companies">{t("nav.companies")}</LinkButton> : null}
       </ErrorView>
     );
   }
@@ -41,12 +41,12 @@ export function VerificationStatusPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        backTo="/companies"
+        backTo="/cabinet/companies"
         backLabel={t("nav.companies")}
         title={t("verification.title")}
         subtitle={t("verification.subtitle", { company: displayName })}
         actions={
-          <LinkButton variant="outline" to={`/companies/${company.id}`}>
+          <LinkButton variant="outline" to={`/cabinet/companies/${company.id}`}>
             {t("company.detailsTitle")}
           </LinkButton>
         }

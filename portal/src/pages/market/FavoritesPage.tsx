@@ -59,7 +59,7 @@ export function FavoritesPage() {
           icon={<HeartIcon size={28} />}
           title={t("market.favoritesEmpty")}
           description={t("market.favoritesEmptyBody")}
-          action={<LinkButton to="/market">{t("market.title")}</LinkButton>}
+          action={<LinkButton to="/cabinet/market">{t("market.title")}</LinkButton>}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -67,7 +67,7 @@ export function FavoritesPage() {
             <MarketOfferCard
               key={offer.id}
               offer={offer}
-              onOpen={() => navigate(`/market/${offer.id}`)}
+              onOpen={() => navigate(`/cabinet/market/${offer.id}`)}
             />
           ))}
         </div>

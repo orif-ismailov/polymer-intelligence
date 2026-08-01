@@ -12,6 +12,7 @@ import {
   Factory,
   FileCheck2,
   FlaskConical,
+  Globe,
   Handshake,
   Heart,
   Home,
@@ -44,3 +45,9 @@ export const HeartIcon = <Heart {...props} />;
 export const FlaskNavIcon = <FlaskConical {...props} />;
 /** Physical sample requests. */
 export const SampleBoxIcon = <PackageOpen {...props} />;
+/**
+ * The public storefront — the world-facing site, not the cabinet's own market
+ * screen. `Store` is already the cabinet catalog; reusing it here would say the
+ * two links go to the same place.
+ */
+export const PublicSiteIcon = <Globe {...props} />;

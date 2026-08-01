@@ -34,7 +34,7 @@ from app.models.manufacturers import (
     ManufacturerThread,
 )
 from app.models.marketplace import SellerOffer
-from app.services import company_service, storage_service
+from app.services import company_service, directory_service, storage_service
 
 logger = logging.getLogger(__name__)
 
@@ -107,37 +107,19 @@ def list_manufacturers(
     limit: int = 24,
     offset: int = 0,
 ) -> tuple[list[Company], int]:
-    """Verified companies with a confirmed manufacturer role."""
-    role_exists = (
-        db.query(CompanyBusinessRole.id)
-        .filter(
-            CompanyBusinessRole.company_id == Company.id,
-            CompanyBusinessRole.role == CompanyBusinessRoleEnum.manufacturer,
-            CompanyBusinessRole.status == BusinessRoleStatus.confirmed,
-        )
-        .exists()
+    """Verified companies with a confirmed manufacturer role.
+
+    Delegates to `directory_service`, which serves the same query to the three
+    other public directories. Kept as a named function because the cabinet's
+    manufacturers page, the factory-RFQ flow and the chat all call it.
+    """
+    return directory_service.list_by_role(
+        db,
+        role=CompanyBusinessRoleEnum.manufacturer,
+        q=q,
+        limit=limit,
+        offset=offset,
     )
-    query = db.query(Company).filter(
-        Company.status == CompanyStatus.verified,
-        role_exists,
-    )
-    if q:
-        needle = f"%{q.strip()}%"
-        query = query.filter(
-            sa.or_(
-                Company.legal_name.ilike(needle),
-                Company.short_name.ilike(needle),
-                Company.legal_address.ilike(needle),
-            )
-        )
-    total = query.count()
-    items = (
-        query.order_by(Company.short_name.asc().nullslast(), Company.id.asc())
-        .offset(offset)
-        .limit(limit)
-        .all()
-    )
-    return items, total
 
 
 def offer_count_for(db: Session, company_id: int) -> int:
