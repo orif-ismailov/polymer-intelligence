@@ -196,8 +196,8 @@ show `healthy` or `running`.
 - [ ] Alert the team: announce the recovery point (dump timestamp) so analysts
       know which time window may have data gaps
 - [ ] Re-enable any sources that were disabled before the incident (via
-      `POST /admin/sources/{id}/enable` — requires a passing test first, per
-      the source-enable invariant)
+      `PATCH /api/v1/sources/{source_id}` with `{"is_enabled": true}` — requires a
+      passing test first, per the source-enable invariant)
 
 ---
 

@@ -165,8 +165,10 @@ tolerate longer DE/EN/TR strings (no fixed-width labels). Numbers/prices: thin-s
 
 - **webapp/** (Vite): tokens in a global stylesheet (`src/styles/tokens.css`), `ThemeProvider`
   using `@telegram-apps/sdk` `colorScheme` + `themeChanged`, override persisted via profile API.
-- **dashboard/** (Next + Tailwind + shadcn): same token names in `globals.css`; shadcn theme
-  variables mapped onto them so primitives inherit the system. `system` follows `prefers-color-scheme`.
+- **dashboard/** (Next + Tailwind + shadcn): `globals.css` uses shadcn's own HSL-based token names
+  (`--background`, `--card`, `--primary`, etc.) — a different naming system from the webapp's
+  tokens — reconciled to the same locked Polymer Intelligence color values via `tailwind.config.ts`
+  (see the mapping table in `globals.css`'s own header comment). `system` follows `prefers-color-scheme`.
 - Tailwind `theme.extend.colors` references the CSS vars so utility classes resolve per-theme.
 - Acceptance for any new screen: renders pixel-faithful to its mockup in **both** themes, AA
   contrast on text/controls, and uses only `var(--token)` colors (lint rule: no raw hex in components).
@@ -196,7 +198,7 @@ Copy is verbatim from the sheets, in `webapp/src/i18n/{ru,uz,tr,en}.json` (ru = 
 > Added by `.planning/deal-lifecycle/P0-DESIGN-SYSTEM.md`. **Scope: `portal/` only.**
 > Everything above (Part I) governs `webapp/` (frozen) and `dashboard/` (internal, not
 > restyled) and is unchanged. The portal is the client-facing surface and follows the
-> IMEX AI mockups in **`docs/new-design/`** (7 sheets + README catalog).
+> IMEX AI mockups in **`docs/new-design/`** (12 sheets + README catalog).
 
 ## P1. Principles
 

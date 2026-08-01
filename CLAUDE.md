@@ -208,12 +208,15 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 - Domain enums (`app/models/enums.py`) are declared `(str, Enum)` (not `StrEnum`) to match the
   Postgres ENUM types verbatim; `str(member)` / f-string output is relied upon — don't switch to
   `StrEnum` (ruff `UP042` is disabled for this reason).
-- Migrations: `backend/alembic/versions/` (`0001`→`0021`; the chain grew past the original
+- Migrations: `backend/alembic/versions/` (`0001`→`0034`; the chain grew past the original
   Phase-6 `0005` with marketplace/sourcing `0007`–`0013`, `reports`/evening-report `0014`,
   `app_settings` `0015`, source groups `0016`, R1 verification/portal `0017`, R2 portal-parity
-  `0018`, market-list index `0019`, R3 E-IMZO rails `0020`, R3 contracts `0021`). Run
-  `alembic upgrade head` (or let `app/entrypoint.py` do it, advisory-locked, idempotent for
-  concurrent workers).
+  `0018`, market-list index `0019`, R3 E-IMZO rails `0020`, R3 contracts `0021`, then the deal-
+  lifecycle track's company logo `0022`, deals `0023`, escrow `0024`, offer sale fields `0025`,
+  RFQ push log `0026`, compliance `0027`, lab `0028`, gov registry `0029`, offer product facts
+  `0030`, and the manufacturer/logistics/laboratory company profiles `0031`–`0033` plus the
+  manufacturers module `0034`). Run `alembic upgrade head` (or let `app/entrypoint.py` do it,
+  advisory-locked, idempotent for concurrent workers).
 - Reference/seed data: `app/seed/` (`seed_reference`, `seed_staff`, `seed_sources`, `seed_demo`,
   `seed_contract_templates`), with JSON/HTML under `app/seed/data/`. Seeders are idempotent (`ON CONFLICT`).
 
