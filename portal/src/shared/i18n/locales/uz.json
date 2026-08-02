@@ -82,7 +82,9 @@
     "samples": "Namunalar",
     "labOrders": "Laboratoriya",
     "marketplace": "Marketpleys",
-    "openMenu": "Menyuni ochish"
+    "openMenu": "Menyuni ochish",
+    "logisticsRequests": "Logistika arizalari",
+    "labRequests": "Laboratoriyaga arizalar"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -159,7 +161,19 @@
       "ИП": "Yakka tartibdagi tadbirkor",
       "ГУП": "Davlat unitar korxonasi"
     },
-    "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana"
+    "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana",
+    "storefront": {
+      "title": "Vitrina",
+      "hint": "Bu matnni kompaniyaning ommaviy sahifasida barcha tashrifchilar ko‘radi. Rekvizitlar tekshiruvdan so‘ng o‘zgartirilmaydi, vitrina esa — ha.",
+      "description": "Kompaniya tavsifi",
+      "experience": "Ish tajribasi, yil",
+      "projects": "Amalga oshirilgan loyihalar",
+      "countInvalid": "Noldan kichik bo‘lmagan butun son kiriting",
+      "saveFailed": "Saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+      "cover": "Profil muqovasi",
+      "coverHint": "JPG yoki PNG, 8 MB gacha. Logotip ustida ko‘rsatiladi.",
+      "coverFailed": "Muqovani yuklab bo‘lmadi."
+    }
   },
   "wizard": {
     "title": "Kompaniyani ro‘yxatdan o‘tkazish",
@@ -1461,6 +1475,22 @@
     "sample_request_status": {
       "title": "Namuna holati",
       "body": "Namuna so‘rovi: holati o‘zgardi"
+    },
+    "logistics_request_new": {
+      "title": "Yangi tashish arizasi",
+      "body": "{{buyer}} tashuvchi qidirmoqda: {{cargo}}"
+    },
+    "logistics_message": {
+      "title": "Ariza bo‘yicha yangi xabar",
+      "body": "{{number}} arizasi — yangi xabar"
+    },
+    "lab_request_new": {
+      "title": "Yangi tadqiqot arizasi",
+      "body": "{{buyer}} laboratoriya qidirmoqda: {{product}}"
+    },
+    "lab_message": {
+      "title": "Ariza bo‘yicha yangi xabar",
+      "body": "{{number}} arizasi — yangi xabar"
     }
   },
   "contracts": {
@@ -1884,7 +1914,65 @@
     "requestRfq": "Taklif so‘rash (RFQ)",
     "messageManufacturer": "Zavod bilan bog‘lanish",
     "requestFactoryRfq": "Taklif so‘rash",
-    "pickOfferHint": "Sotuvchiga so‘rov yuborish uchun pastdan mahsulot tanlang"
+    "pickOfferHint": "Sotuvchiga so‘rov yuborish uchun pastdan mahsulot tanlang",
+    "logistics": {
+      "aboutTitle": "Kompaniya haqida",
+      "capabilitiesTitle": "Bizning imkoniyatlarimiz",
+      "detailsTitle": "Ish shartlari",
+      "countries": "Ish yuritiladigan davlatlar",
+      "services": "Xizmatlar",
+      "experience": "Ish tajribasi",
+      "projects": "Amalga oshirilgan loyihalar",
+      "cargo": "Yuk turlari",
+      "routes": "Ommabop yo‘nalishlar",
+      "tariff": "Tariflash",
+      "city": "Shahar",
+      "years_one": "{{count}} yil",
+      "years_other": "{{count}} yil",
+      "capabilityBlurb": {
+        "own_trucks": "Zamonaviy tortuvchilar va konteyner tashuvchilar",
+        "own_rail_wagons": "Shaxsiy vagon va sisternalar parki",
+        "sea_containers": "Dunyoning yirik portlari bilan ishlash",
+        "storage_facilities": "Yuklarni jamlash uchun ombor maydonlari",
+        "customs_warehouse": "Nazorat ostida saqlash uchun bojxona ombori",
+        "foreign_offices": "Jo‘natuvchi davlatlardagi vakolatxonalar",
+        "customs_brokers": "«Kalit topshirish» rasmiylashtiruvi uchun shtat brokerlari"
+      },
+      "projectsValue": "{{value}}+"
+    },
+    "reviewCount_one": "{{count}} sharh",
+    "reviewCount_other": "{{count}} sharh",
+    "reviewAnonymous": "Kompaniya",
+    "reviewTitle": "Sharh qoldirish",
+    "reviewRating": "Baho",
+    "reviewBody": "Izoh",
+    "reviewBodyPlaceholder": "Hamkorlik qanday o‘tdi?",
+    "reviewSubmit": "Sharhni yuborish",
+    "reviewErrors": {
+      "self": "O‘z kompaniyangizga sharh qoldira olmaysiz",
+      "ratingRequired": "1 dan 5 gacha baho bering"
+    },
+    "laboratory": {
+      "aboutTitle": "Laboratoriya haqida",
+      "methodsTitle": "Usullar va ko‘rsatkichlar",
+      "detailsTitle": "Aloqa",
+      "experience": "Bozorda yillar",
+      "studies": "Bajarilgan tadqiqotlar",
+      "turnaround": "O‘rtacha muddat",
+      "city": "Shahar",
+      "website": "Sayt",
+      "years_one": "{{count}} yil",
+      "years_other": "{{count}} yil",
+      "days_one": "{{count}} kun",
+      "days_other": "{{count}} kun",
+      "studiesValue": "{{value}}+",
+      "accreditationOptions": {
+        "iso_17025": "ISO/IEC 17025",
+        "national_accreditation": "Milliy akkreditatsiya",
+        "iso_9001": "ISO 9001",
+        "gost_certified": "GOST bo‘yicha attestatsiya"
+      }
+    }
   },
   "manufacturers": {
     "title": "Ishlab chiqaruvchilar",
@@ -2251,6 +2339,179 @@
       "account": "Hisob",
       "blurb": "Kompaniyalarni tekshirish va laboratoriya nazorati bilan neftkimyo xomashyosi bozori.",
       "legal": "IMEX AI. Barcha huquqlar himoyalangan."
+    }
+  },
+  "logisticsRequest": {
+    "title": "Logistika kompaniyasiga ariza",
+    "heroTitle": "Tezkor logistika arizasi",
+    "heroBody": "Ariza yuboring — mutaxassislarimiz siz uchun eng qulay logistika yechimlari va operatorlarini tanlaydi.",
+    "cargoTitle": "Yuk haqida ma’lumot",
+    "cargoName": "Yuk nomi",
+    "cargoNamePlaceholder": "Polipropilen (PP)",
+    "volume": "Hajmi",
+    "volumeHint": "tonnada",
+    "packaging": "Qadoq turi",
+    "packagingPlaceholder": "Turini tanlang",
+    "requirements": "Maxsus talablar",
+    "requirementsPlaceholder": "Xavfsiz tashish, ADR",
+    "routeTitle": "Yo‘nalish",
+    "from": "Qayerdan",
+    "to": "Qayerga",
+    "country": "Davlat",
+    "countryPlaceholder": "Davlatni tanlang",
+    "city": "Shahar",
+    "submit": "Arizani yuborish",
+    "privacy": "Ma’lumotlaringiz himoyalangan va faqat logistika yechimlarini tanlash uchun ishlatiladi.",
+    "number": "Ariza raqami",
+    "doneTitle": "Ariza yuborildi!",
+    "doneBody": "Tashuvchi arizangizni oldi. Javob bildirishnomalarga keladi, shoshilinch savollarni telefon orqali hal qilamiz.",
+    "backToDirectory": "Tashuvchilar ro‘yxatiga",
+    "toCabinet": "Kabinetga",
+    "packagingOptions": {
+      "containers": "Konteynerlar",
+      "big_bags": "Big-beglar",
+      "bags": "Qoplar",
+      "bulk": "Uyum holida",
+      "pallets": "Palletalar",
+      "iso_tank": "ISO-tank",
+      "drums": "Bochkalar",
+      "other": "Boshqa"
+    },
+    "lifecycle": {
+      "submitted": "Yuborilgan",
+      "in_progress": "Ishlanmoqda",
+      "quoted": "Taklif bor"
+    },
+    "errors": {
+      "cargoRequired": "Yuk nomini kiriting",
+      "volumeInvalid": "Noldan katta hajm kiriting",
+      "countryRequired": "Davlatni tanlang"
+    },
+    "listTitle": "Logistika arizalari",
+    "emptyTitle": "Hozircha arizalar yo‘q",
+    "emptySentBody": "Tashuvchi profilini oching va ariza yuboring — u shu yerda paydo bo‘ladi.",
+    "myRequests": "Mening arizalarim",
+    "buyer": "Xaridor",
+    "contact": "Aloqa telefoni",
+    "broadcastHint": "Arizani barcha tekshirilgan logistika kompaniyalari ko‘radi.",
+    "ctaFromProfile": "Tashish arizasini joylashtirish",
+    "newRequest": "Yangi ariza",
+    "poolTitle": "Tashish arizalari",
+    "poolSubtitle": "Yuk egalarining ochiq arizalari. Javob bering va chatda davom eting.",
+    "tabAll": "Barcha arizalar",
+    "tabMine": "Mening javoblarim",
+    "poolEmptyTitle": "Hozircha ochiq arizalar yo‘q",
+    "poolEmptyBody": "Yuk egasi ariza joylashtirishi bilan u shu yerda paydo bo‘ladi.",
+    "poolEmptyMineBody": "Arizaga javob bering — u shu yerda paydo bo‘ladi.",
+    "reply": "Javob berish",
+    "openChat": "Chatni ochish",
+    "responsesTitle": "Tashuvchilar javoblari",
+    "noResponses": "Hozircha javoblar yo‘q",
+    "noResponsesBody": "Tashuvchilar arizangizni ko‘rmoqda. Birinchi javob shu yerda paydo bo‘ladi.",
+    "responseCount_one": "{{count}} javob",
+    "responseCount_other": "{{count}} javob"
+  },
+  "threadChat": {
+    "title": "Yozishmalar",
+    "empty": "Hozircha xabarlar yo‘q. Birinchi bo‘lib yozing.",
+    "placeholder": "Xabaringiz…",
+    "send": "Yuborish",
+    "attach": "Fayl biriktirish"
+  },
+  "labRequest": {
+    "title": "Tadqiqot arizasi",
+    "heroTitle": "Laboratoriyaga yangi ariza",
+    "heroBody": "Nimani tekshirish kerakligini yozing. Arizani barcha tekshirilgan laboratoriyalar ko‘radi.",
+    "stepSubject": "Nimani tekshiramiz",
+    "stepDetails": "Ariza ma’lumotlari",
+    "product": "Nimani tekshiramiz?",
+    "productPlaceholder": "HDPE S5502 BN",
+    "grade": "Marka",
+    "studyType": "Tadqiqot turi",
+    "studyTypePlaceholder": "Turini tanlang",
+    "methods": "Kerakli tadqiqotlar",
+    "methodsHint": "Kamida bitta ko‘rsatkichni belgilang",
+    "sampleQty": "Namuna miqdori",
+    "sampleQtyHint": "masalan, 1 kg",
+    "comment": "Izoh",
+    "commentPlaceholder": "Izoh kiriting",
+    "contactName": "Aloqa uchun shaxs",
+    "contactEmail": "Email",
+    "contactPhone": "Telefon",
+    "contactPhoneHint": "Ko‘rsatilmasa — akkauntingiz raqami olinadi",
+    "purpose": "Tadqiqot maqsadi",
+    "purposePlaceholder": "Maqsadni tanlang",
+    "urgent": "Shoshilinch tahlil kerakmi?",
+    "desiredDate": "Tayyor bo‘lish sanasi",
+    "submit": "Arizani yuborish",
+    "ctaFromProfile": "Tadqiqot arizasini joylashtirish",
+    "newRequest": "Yangi ariza",
+    "listTitle": "Laboratoriyaga arizalar",
+    "myRequests": "Mening arizalarim",
+    "laboratory": "Laboratoriya",
+    "buyer": "Buyurtmachi",
+    "contact": "Aloqa",
+    "number": "Ariza raqami",
+    "emptyTitle": "Hozircha arizalar yo‘q",
+    "emptySentBody": "Nimani tekshirish kerakligini yozing — arizani barcha laboratoriyalar ko‘radi.",
+    "doneTitle": "Ariza yuborildi!",
+    "doneBody": "Laboratoriyalar arizangizni oldi. Javoblar bildirishnomalarga keladi, tafsilotlarni yozishmada kelishasiz.",
+    "backToDirectory": "Laboratoriyalar ro‘yxatiga",
+    "toCabinet": "Kabinetga",
+    "poolTitle": "Tadqiqot arizalari",
+    "poolSubtitle": "Buyurtmachilarning ochiq arizalari. Javob bering va chatda davom eting.",
+    "tabAll": "Barcha arizalar",
+    "tabMine": "Mening javoblarim",
+    "poolEmptyTitle": "Hozircha ochiq arizalar yo‘q",
+    "poolEmptyBody": "Buyurtmachi ariza joylashtirishi bilan u shu yerda paydo bo‘ladi.",
+    "poolEmptyMineBody": "Arizaga javob bering — u shu yerda paydo bo‘ladi.",
+    "reply": "Javob berish",
+    "openChat": "Chatni ochish",
+    "responsesTitle": "Laboratoriyalar javoblari",
+    "noResponses": "Hozircha javoblar yo‘q",
+    "noResponsesBody": "Laboratoriyalar arizangizni ko‘rmoqda. Birinchi javob shu yerda paydo bo‘ladi.",
+    "responseCount_one": "{{count}} javob",
+    "responseCount_other": "{{count}} javob",
+    "lifecycle": {
+      "submitted": "Yuborilgan",
+      "in_progress": "Ishlanmoqda",
+      "quoted": "Taklif bor"
+    },
+    "errors": {
+      "productRequired": "Nimani tekshirish kerakligini yozing",
+      "methodsRequired": "Kamida bitta ko‘rsatkichni belgilang"
+    },
+    "methodOptions": {
+      "mfi": "ETI (MFI)",
+      "density": "Zichlik",
+      "tensile_strength": "Cho‘zilishdagi mustahkamlik",
+      "elongation": "Nisbiy cho‘zilish",
+      "impact_strength": "Zarbga qarshilik",
+      "dsc": "DSK (DSC)",
+      "ftir": "IQ-spektroskopiya (FTIR)",
+      "tga": "TGA",
+      "ash_content": "Kullilik",
+      "moisture": "Namlik",
+      "vicat": "Vika bo‘yicha yumshash harorati",
+      "hardness": "Qattiqlik",
+      "melting_point": "Erish harorati",
+      "carbon_black": "Qora uglerod miqdori",
+      "oit": "OIT",
+      "rheology": "Reologiya"
+    },
+    "studyTypes": {
+      "full_passport": "To‘liq laboratoriya pasporti",
+      "single_method": "Alohida ko‘rsatkich",
+      "comparison": "Qiyosiy tahlil",
+      "incoming_control": "Kirish nazorati",
+      "certification": "Sertifikatlash uchun"
+    },
+    "purposes": {
+      "quality_and_compatibility": "Sifat va uskuna bilan moslikni baholash",
+      "supplier_check": "Yetkazib beruvchini tekshirish",
+      "certification": "Sertifikatlash",
+      "dispute": "Nizoni hal qilish",
+      "rnd": "ITTKI"
     }
   }
 }

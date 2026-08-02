@@ -10,3 +10,4 @@ export { ProfileDocumentsTab } from "./ui/ProfileDocumentsTab";
 export { ProfileActionBar } from "./ui/ProfileActionBar";
 export { COMPANY_PROFILE_TAB_IDS, type CompanyProfileTabId } from "./model/tabs";
 export type { CompanyProfileCompany, CompanyProfileOffer } from "./model/types";
+export { ReviewForm } from "./ui/ReviewForm";

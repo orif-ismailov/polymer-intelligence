@@ -315,3 +315,52 @@ def test_upload_and_delete_are_audited(api) -> None:  # noqa: ANN001
         ]
     assert "company.logo_upload" in actions
     assert "company.logo_delete" in actions
+
+
+# ── Cover + media (0037) ──────────────────────────────────────────────────────
+
+
+def test_cover_and_media_routes_registered() -> None:
+    from app.api.portal.companies import router as portal_router  # noqa: PLC0415
+    from app.api.webapp.market import router as market_router  # noqa: PLC0415
+
+    portal_paths = {r.path for r in portal_router.routes}  # type: ignore[attr-defined]
+    assert "/portal/companies/{company_id}/cover" in portal_paths
+    assert "/portal/companies/{company_id}/media" in portal_paths
+
+    market_paths = {r.path for r in market_router.routes}  # type: ignore[attr-defined]
+    assert "/webapp/market/companies/{company_id}/cover" in market_paths
+    assert "/webapp/market/companies/{company_id}/media/{media_id}" in market_paths
+
+
+def test_media_url_carries_the_owning_company() -> None:
+    """The company id is in the path so the route can require the two to match.
+
+    A bare `/media/{id}` would be a handle to every image in the bucket: media
+    ids are sequential, so enumerating one company's uploads would be trivial.
+    """
+    from app.services import storage_service  # noqa: PLC0415
+
+    assert (
+        storage_service.company_media_url(50, 7)
+        == "/api/v1/webapp/market/companies/50/media/7"
+    )
+
+
+def test_cover_url_is_a_proxy_path_not_a_presigned_link() -> None:
+    """`S3_ENDPOINT` is internal, so a signed URL is a broken `<img>`.
+
+    Same contract as the logo. Asserted because "just presign it" is the obvious
+    change to make here and it fails only in a browser, never in a test that
+    checks the response body.
+    """
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
+
+    company = Company(cover_storage_path="companies/50/cover/abc.jpg")
+    company.id = 50
+    url = storage_service.presign_company_cover(company)
+    assert url == "/api/v1/webapp/market/companies/50/cover"
+    assert "http" not in url
+
+    assert storage_service.presign_company_cover(Company(cover_storage_path=None)) is None

@@ -75,6 +75,67 @@ class PublicOfferListOut(BaseModel):
     offset: int = 0
 
 
+class PublicLogisticsSnippet(BaseModel):
+    """A carrier's questionnaire, as the public directory shows it.
+
+    Every field is registration data the company published about itself — what
+    it hauls, where, and with what fleet. Nothing here is a contact detail or a
+    requisite: `tests/test_public_api.py` asserts the anonymous payload carries
+    no way to reach a company off-platform, and this block must not become one.
+    """
+
+    city: str | None = None
+    description: str | None = None
+    services: list[str] = Field(default_factory=list)
+    from_countries: list[str] = Field(default_factory=list)
+    to_countries: list[str] = Field(default_factory=list)
+    popular_routes: list[str] = Field(default_factory=list)
+    cargo_types: list[str] = Field(default_factory=list)
+    capabilities: list[str] = Field(default_factory=list)
+    tariff_model: str | None = None
+    years_experience: int | None = None
+    projects_completed: int | None = None
+    #: `{capability_key: url}` — only the keys that actually have a picture, so
+    #: the client falls back to an icon for the rest rather than to a broken img.
+    capability_images: dict[str, str] = Field(default_factory=dict)
+
+
+class PublicLaboratorySnippet(BaseModel):
+    """A laboratory's questionnaire, as the public directory shows it.
+
+    Accreditations and methods are KEYS, resolved for display through the same
+    i18n tree the wizard writes them from. `email`/`phone` are deliberately
+    absent even though the cabinet payload has them: `tests/test_public_api.py`
+    holds that the anonymous surface carries no way to reach a company
+    off-platform, and a laboratory is no exception.
+    """
+
+    city: str | None = None
+    website: str | None = None
+    description: str | None = None
+    accreditations: list[str] = Field(default_factory=list)
+    methods: list[str] = Field(default_factory=list)
+    years_experience: int | None = None
+    studies_completed: int | None = None
+    avg_turnaround_days: int | None = None
+
+
+class PublicReviewOut(BaseModel):
+    """One published review, as a stranger reads it.
+
+    The AUTHOR COMPANY is named; the person who typed it is not. `author_account_id`
+    exists on the row for audit and must never reach this model — a review is a
+    company's position, and naming the individual would also make every reviewer's
+    identity scrapable.
+    """
+
+    id: int
+    rating: int
+    body: str | None = None
+    author_company_name: str | None = None
+    created_at: datetime.datetime
+
+
 class PublicCompanyCard(BaseModel):
     """A verified company as it appears in a public directory."""
 
@@ -85,6 +146,8 @@ class PublicCompanyCard(BaseModel):
     legal_address: str | None = None
     jurisdiction: str
     logo_url: str | None = None
+    #: Hero image behind the logo. NULL for a company that never uploaded one.
+    cover_url: str | None = None
     verified_at: datetime.datetime | None = None
     roles: list[str] = Field(default_factory=list)
     offer_count: int = 0
@@ -97,6 +160,18 @@ class PublicCompanyCard(BaseModel):
     founded_year: int | None = None
     export_countries: list[str] = Field(default_factory=list)
     iso_certification: str | None = None
+    #: Carrier questionnaire. NULL for a company that never filled one in, so the
+    #: storefront omits the whole block rather than rendering an empty card —
+    #: which is also why it is not flattened into the fields above the way the
+    #: manufacturer snippet is.
+    logistics: PublicLogisticsSnippet | None = None
+    #: Laboratory questionnaire. NULL for a company that never filled one in.
+    laboratory: PublicLaboratorySnippet | None = None
+    #: Published-review aggregate. `rating` is NULL — not 0 — for a company with
+    #: no reviews: «нет отзывов» and «оценка 0» are different sentences, and the
+    #: star line has to be able to tell them apart.
+    rating: float | None = None
+    review_count: int = 0
 
 
 class PublicCompanyListOut(BaseModel):
@@ -116,6 +191,10 @@ class PublicCompanyDetail(PublicCompanyCard):
     registration_date: datetime.date | None = None
     legal_form: str | None = None
     offers: list[PublicOfferCard] = Field(default_factory=list)
+    #: First page, inline rather than behind its own endpoint: the profile
+    #: server-renders every tab panel, so a separate call would put a spinner in
+    #: the crawled HTML. "Load more" is what a paginated endpoint would be for.
+    reviews: list[PublicReviewOut] = Field(default_factory=list)
 
 
 class PublicCategoryOut(BaseModel):

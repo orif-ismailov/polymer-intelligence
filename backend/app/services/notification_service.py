@@ -69,6 +69,20 @@ KIND_RFQ_MATCH = "rfq_match"
 KIND_LAB_ORDER_STATUS = "lab_order_status"
 KIND_SAMPLE_REQUEST_NEW = "sample_request_new"
 KIND_SAMPLE_REQUEST_STATUS = "sample_request_status"
+# Logistics (0035). The factory RFQ deliberately has no notification at all — its
+# submit is only a log line — and that is a gap, not a precedent: a carrier has
+# no other channel to learn a request arrived, and a form nobody is told about is
+# a form nobody answers. Deduped like the rest: a resubmitted identical request
+# should ring once.
+KIND_LOGISTICS_REQUEST_NEW = "logistics_request_new"
+#: A line in a buyer↔carrier conversation. Cooldown-deduped rather than
+#: unread-deduped, like the deal chat: once the reader opens the bell, the very
+#: next line typed would otherwise ring it again.
+KIND_LOGISTICS_MESSAGE = "logistics_message"
+# Laboratory analysis requests (0039). Same pair, same reasoning — and distinct
+# from `KIND_LAB_ORDER_STATUS`, which belongs to the staff-run P6 flow.
+KIND_LAB_REQUEST_NEW = "lab_request_new"
+KIND_LAB_MESSAGE = "lab_message"
 
 
 def keys_for(kind: str) -> tuple[str, str]:

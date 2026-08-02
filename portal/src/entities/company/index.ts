@@ -16,6 +16,9 @@ export { useActiveCompanyStore } from "./model/activeCompanyStore";
 export { useCompanies, useCompany, useActiveCompany } from "./model/hooks";
 export {
   useUpdateCompanyProfile,
+  useUpdateCompanyPublicProfile,
+  useSubmitCompanyReview,
+  useUploadCompanyCover,
   useSetCompanyRoles,
   useAddBankAccount,
   useRemoveBankAccount,
@@ -23,3 +26,4 @@ export {
   useRemoveCompanyDocument,
 } from "./model/mutations";
 export { CompanyStatusBadge } from "./ui/CompanyStatusBadge";
+export { isCarrierCompany, isLaboratoryCompany } from "./model/roles";

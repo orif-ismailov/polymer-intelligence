@@ -432,7 +432,12 @@ class TestSourceHealthDB:
                     record_fetch_failure(session, source_id, f"err {i + 1}")
                     session.commit()
 
-                today_str = datetime.date.today().isoformat()
+                # UTC, matching `raise_source_failure_alert` — which uses UTC
+                # precisely so the key is timezone-independent (WR-01). Asserting
+                # the SYSTEM-LOCAL date made this test fail, and only fail,
+                # between 19:00 UTC and midnight in Asia/Tashkent (UTC+5): the
+                # exact window the fix it guards was written for.
+                today_str = datetime.datetime.now(tz=datetime.UTC).date().isoformat()
                 expected_dedupe_key = f"source_failure:{source_id}:{today_str}"
 
                 row = session.execute(

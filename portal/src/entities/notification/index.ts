@@ -36,6 +36,20 @@ export function notificationLink(
       return `/cabinet/companies/${entityId}`;
     case "news":
       return `/cabinet/news/${entityId}`;
+    // The BUYER's own request page. Carriers are notified about a broadcast
+    // instead, which deep-links into their pool card — a different address for
+    // a different reader, so the two cases are separate.
+    case "logistics_request":
+      return `/cabinet/requests?request=${entityId}`;
+    // Its own page: a chat notification has one address and two possible
+    // readers, and neither the pool nor the buyer's request page serves both.
+    case "logistics_thread":
+      return `/cabinet/logistics/threads/${entityId}`;
+    // Analysis requests: the pool card for a lab, its own page for a thread.
+    case "lab_request":
+      return `/cabinet/requests?request=${entityId}`;
+    case "lab_thread":
+      return `/cabinet/lab/threads/${entityId}`;
     default:
       return null;
   }

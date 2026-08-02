@@ -53,6 +53,7 @@ from app.models.enums import (  # noqa: F401
     BusinessRoleStatus,
     CompanyMemberRole,
     CompanyMemberStatus,
+    CompanyReviewStatus,
     CompanyStatus,
     CounterpartyRole,
     DealActorKind,
@@ -65,7 +66,9 @@ from app.models.enums import (  # noqa: F401
     FactoryRfqDocumentKind,
     FactoryRfqStatus,
     LabOrderStatus,
+    LabRequestStatus,
     LicenseStatus,
+    LogisticsRequestStatus,
     OfferFileKind,
     OfferRequestStatus,
     OfferSaleMode,
@@ -97,6 +100,16 @@ from app.models.enums import (
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.lab import LabOrder, LabPartner, SampleRequest  # noqa: F401
+from app.models.laboratory import (  # noqa: F401
+    LabRequest,
+    LabRequestMessage,
+    LabRequestThread,
+)
+from app.models.logistics import (  # noqa: F401
+    LogisticsRequest,
+    LogisticsRequestMessage,
+    LogisticsRequestThread,
+)
 from app.models.manufacturers import (  # noqa: F401
     FactoryRfq,
     FactoryRfqDocument,
@@ -111,6 +124,7 @@ from app.models.marketplace import (  # noqa: F401
     SellerOffer,
     SellerOfferFile,
 )
+from app.models.media import CompanyMedia  # noqa: F401
 from app.models.notifications import PortalNotification  # noqa: F401
 from app.models.payments import EscrowPayment, ProviderEvent  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401
@@ -124,6 +138,7 @@ from app.models.reference import (  # noqa: F401
 from app.models.registry import RegistrySnapshot  # noqa: F401
 from app.models.reports import Report  # noqa: F401
 from app.models.requests import Client, Request, RequestFile, RequestStatusHistory  # noqa: F401
+from app.models.reviews import CompanyReview  # noqa: F401
 from app.models.signals import Signal  # noqa: F401
 from app.models.sources import ParseRun, RawItem, Source  # noqa: F401
 from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun  # noqa: F401
@@ -269,6 +284,20 @@ __all__ = [
     "FactoryRfqDocument",
     "ManufacturerThread",
     "ManufacturerMessage",
+    # Logistics directory + service requests
+    "LogisticsRequestStatus",
+    "LogisticsRequest",
+    "LogisticsRequestThread",
+    "LogisticsRequestMessage",
+    # Laboratory analysis requests
+    "LabRequestStatus",
+    "LabRequest",
+    "LabRequestThread",
+    "LabRequestMessage",
+    # Company reviews
+    "CompanyReviewStatus",
+    "CompanyReview",
+    "CompanyMedia",
     # State-registry evidence (R6 / P7.c)
     "RegistrySnapshot",
 ]

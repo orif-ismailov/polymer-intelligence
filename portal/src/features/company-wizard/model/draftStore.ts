@@ -181,6 +181,63 @@ export const emptyLaboratory: WizardLaboratoryProfile = {
  */
 const PERSIST_KEY = "imex.company-wizard.draft";
 
+/** The slices `partialize` writes — keep the two in step. */
+type PersistedDraft = Partial<
+  Pick<
+    WizardDraftState,
+    | "accountType"
+    | "identity"
+    | "bank"
+    | "manufacturer"
+    | "logistics"
+    | "laboratory"
+    | "companyId"
+    | "identityLocked"
+  >
+>;
+
+/**
+ * Rehydrate deeply, backfilling every slice from its defaults.
+ *
+ * zustand's default `merge` is one level deep, so a persisted `identity`
+ * REPLACES the default object wholesale rather than filling it in. Any field
+ * added to a slice after a draft was written therefore comes back `undefined`,
+ * and the first `identity.actual_address.trim()` throws — which is exactly what
+ * a draft saved before the manufacturer/logistics/laboratory flow shipped does:
+ * that change added `actual_address` + `registration_number` and two entirely
+ * new slices to a shape people already had sitting in localStorage, so opening
+ * the wizard crashed the whole route with «Cannot read properties of undefined».
+ *
+ * Rebuilding each slice over its `empty*` default makes the store tolerant of
+ * *added* fields by construction. That is why there is no `version`/`migrate`
+ * pair here: a migration would have to be remembered on every field addition —
+ * the same discipline that failed — and bumping `version` without one makes
+ * zustand discard the draft, throwing away work the persistence exists to save.
+ * A renamed or retyped field is the case that would still need `migrate`.
+ */
+function mergePersistedDraft(
+  persisted: unknown,
+  current: WizardDraftState,
+): WizardDraftState {
+  const saved = (persisted ?? {}) as PersistedDraft;
+  return {
+    ...current,
+    ...saved,
+    identity: { ...emptyIdentity, ...saved.identity },
+    bank: { ...emptyBank, ...saved.bank },
+    manufacturer: {
+      ...emptyManufacturer,
+      ...saved.manufacturer,
+      financial_requirements: {
+        ...emptyManufacturer.financial_requirements,
+        ...saved.manufacturer?.financial_requirements,
+      },
+    },
+    logistics: { ...emptyLogistics, ...saved.logistics },
+    laboratory: { ...emptyLaboratory, ...saved.laboratory },
+  };
+}
+
 export const useWizardDraft = create<WizardDraftState>()(
   persist(
     (set) => ({
@@ -300,6 +357,7 @@ export const useWizardDraft = create<WizardDraftState>()(
     }),
     {
       name: PERSIST_KEY,
+      merge: mergePersistedDraft,
       // Files are not serialisable — see the note on PERSIST_KEY.
       partialize: (s) => ({
         accountType: s.accountType,
