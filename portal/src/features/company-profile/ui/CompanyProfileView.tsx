@@ -40,6 +40,13 @@ export interface CompanyProfileViewProps {
   /** Rendered between the panels and the footer (the pick-an-offer hint). */
   footerNote?: ReactNode;
   /**
+   * Mounted at the top of the «Отзывы» panel — the review form, once there is
+   * a session to write one with. A slot for the same reason `actionBar` is one:
+   * the storefront's HTML is shared-cached, so anything that varies by visitor
+   * has to arrive after hydration rather than from this component.
+   */
+  reviewAction?: ReactNode;
+  /**
    * Render every tab panel, hiding the inactive ones with the `hidden`
    * attribute, instead of mounting only the active one.
    *
@@ -73,6 +80,7 @@ export function CompanyProfileView({
   actionBar,
   headerActions,
   footerNote,
+  reviewAction,
   renderAllPanels = false,
 }: CompanyProfileViewProps) {
   const { t } = useTranslation();
@@ -137,7 +145,15 @@ export function CompanyProfileView({
           seeAllHref={seeAllHref}
         />,
       )}
-      {panel("reviews", <ProfileReviewsTab />)}
+      {panel(
+        "reviews",
+        <ProfileReviewsTab
+          rating={company.rating}
+          reviewCount={company.review_count}
+          reviews={company.reviews}
+          action={reviewAction}
+        />,
+      )}
       {panel("documents", <ProfileDocumentsTab />)}
 
       {footerNote}

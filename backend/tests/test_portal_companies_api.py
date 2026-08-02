@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 from tests._verification_db import (
     clean,
     make_account,
+    make_company,
     make_engine,
     migrate_head,
     requires_real_db,
@@ -237,3 +238,137 @@ def test_document_upload_download_delete(api) -> None:  # noqa: ANN001
 
     # a pending_review document may be deleted
     assert client.delete(f"{_BASE}/{company_id}/documents/{document_id}", headers=auth).status_code == 204
+
+
+def _account(db, account_id: int):  # noqa: ANN001, ANN202
+    """Re-attach a seeded account to the session `make_company` will write in."""
+    from app.models.accounts import UserAccount  # noqa: PLC0415
+
+    return db.get(UserAccount, account_id)
+
+
+# ── Storefront copy on a verified company ─────────────────────────────────────
+
+
+def test_public_profile_route_registered() -> None:
+    from app.api.portal.companies import router  # noqa: PLC0415
+
+    paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
+    assert "/portal/companies/{company_id}/public-profile" in paths
+
+
+@requires_real_db
+def test_verified_company_can_edit_its_storefront_copy(api) -> None:  # noqa: ANN001
+    """The blocker this endpoint exists for.
+
+    `_assert_profile_editable` refuses anything past `draft`/undecided-case, and
+    `directory_service` only lists `verified` companies — so a carrier's public
+    page renders copy that `PATCH /{company_id}` can never again change. Both
+    halves are asserted: the ordinary route still 409s, and the narrow one works.
+    """
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+    client, session = api
+    account_id, auth = _seed_account(session, "+998900000401")
+
+    with session() as db:
+        account = _account(db, account_id)
+        company = make_company(
+            db,
+            account,
+            tax_id="401000401",
+            legal_name="Trans Asia Logistics",
+            status=CompanyStatus.verified,
+            logistics_profile={"services": ["rail"], "cargo_types": ["big_bags"]},
+        )
+        db.commit()
+        company_id = company.id
+
+    # The ordinary profile PATCH is closed on a verified company...
+    frozen = client.patch(
+        f"{_BASE}/{company_id}", json={"legal_address": "somewhere else"}, headers=auth
+    )
+    assert frozen.status_code == 409
+
+    # ...but the storefront copy is not.
+    res = client.patch(
+        f"{_BASE}/{company_id}/public-profile",
+        json={
+            "logistics": {
+                "description": "Международные перевозки нефтехимической продукции.",
+                "years_experience": 12,
+                "projects_completed": 1200,
+            }
+        },
+        headers=auth,
+    )
+    assert res.status_code == 200
+
+    profile = res.json()["logistics_profile"]
+    assert profile["years_experience"] == 12
+    assert profile["projects_completed"] == 1200
+    # The merge is the other half: an unsent key keeps what registration collected.
+    assert profile["services"] == ["rail"]
+    assert profile["cargo_types"] == ["big_bags"]
+
+
+@requires_real_db
+def test_public_profile_cannot_reach_a_requisite(api) -> None:  # noqa: ANN001
+    """Unknown keys are dropped, not merged.
+
+    The whole justification for skipping the editability gate is that this door
+    is narrow. A body naming `legal_name` must leave the verified column alone —
+    otherwise this endpoint is just `update_profile` with the check removed.
+    """
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+    client, session = api
+    account_id, auth = _seed_account(session, "+998900000402")
+
+    with session() as db:
+        account = _account(db, account_id)
+        company = make_company(
+            db,
+            account,
+            tax_id="401000402",
+            legal_name="Verified Name",
+            status=CompanyStatus.verified,
+            logistics_profile={"services": ["sea"]},
+        )
+        db.commit()
+        company_id = company.id
+
+    res = client.patch(
+        f"{_BASE}/{company_id}/public-profile",
+        json={"logistics": {"description": "ok", "legal_name": "Renamed By Client"}},
+        headers=auth,
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["legal_name"] == "Verified Name"
+    assert "legal_name" not in body["logistics_profile"]
+
+
+@requires_real_db
+def test_public_profile_is_owner_only(api) -> None:  # noqa: ANN001
+    """A non-member gets 404 (existence-hiding), never 403."""
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+    client, session = api
+    owner_id, _owner_auth = _seed_account(session, "+998900000403")
+    _outsider_id, outsider_auth = _seed_account(session, "+998900000404")
+
+    with session() as db:
+        owner = _account(db, owner_id)
+        company = make_company(
+            db, owner, tax_id="401000403", status=CompanyStatus.verified
+        )
+        db.commit()
+        company_id = company.id
+
+    res = client.patch(
+        f"{_BASE}/{company_id}/public-profile",
+        json={"logistics": {"description": "not mine"}},
+        headers=outsider_auth,
+    )
+    assert res.status_code == 404

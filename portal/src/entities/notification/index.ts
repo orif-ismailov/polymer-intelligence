@@ -36,6 +36,10 @@ export function notificationLink(
       return `/cabinet/companies/${entityId}`;
     case "news":
       return `/cabinet/news/${entityId}`;
+    // Readable by BOTH parties, so one address serves the buyer who sent it
+    // and the carrier the bell rang for.
+    case "logistics_request":
+      return `/cabinet/logistics/requests/${entityId}`;
     default:
       return null;
   }

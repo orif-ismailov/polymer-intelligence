@@ -56,6 +56,20 @@ export function ProfileHeader({ profile, onShare, backTo }: ProfileHeaderProps) 
         </IconButton>
       </header>
 
+      {/* Hero, when the company uploaded one. Absent rather than a grey
+          placeholder: a company with no cover should read as a plain profile,
+          not as one with a broken image. */}
+      {profile.cover_url ? (
+        <div className="overflow-hidden rounded-xl border border-border">
+          <img
+            src={profile.cover_url}
+            alt=""
+            className="h-40 w-full object-cover sm:h-52"
+            data-testid="company-cover"
+          />
+        </div>
+      ) : null}
+
       <div className="flex items-start gap-3">
         {profile.logo_url ? (
           <img
@@ -80,10 +94,26 @@ export function ProfileHeader({ profile, onShare, backTo }: ProfileHeaderProps) 
               {country}
             </p>
           ) : null}
-          <p className="mt-1.5 flex items-center gap-1 text-sm text-text-subtle">
-            <StarIcon size={14} className="text-gold" />
-            {t("market.detail.ratingPending")}
-          </p>
+          {/* The real score once anyone has left one; the placeholder is not a
+              stand-in for zero — a company with no reviews has not been rated
+              badly, it has not been rated. */}
+          {profile.rating != null && (profile.review_count ?? 0) > 0 ? (
+            <p
+              className="mt-1.5 flex items-center gap-1.5 text-sm text-text"
+              data-testid="company-rating"
+            >
+              <StarIcon size={14} className="text-gold" />
+              <span className="num font-semibold">{profile.rating.toFixed(1)}</span>
+              <span className="text-text-muted">
+                {t("companyProfile.reviewCount", { count: profile.review_count ?? 0 })}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1.5 flex items-center gap-1 text-sm text-text-subtle">
+              <StarIcon size={14} className="text-gold" />
+              {t("market.detail.ratingPending")}
+            </p>
+          )}
         </div>
       </div>
 

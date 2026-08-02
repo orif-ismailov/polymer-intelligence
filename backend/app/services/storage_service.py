@@ -36,6 +36,7 @@ from app.core.config import settings
 from app.models.companies import Company
 from app.models.enums import OfferFileKind, VerificationDocumentKind
 from app.models.marketplace import SellerOfferFile
+from app.models.media import CompanyMedia
 from app.models.requests import RequestFile
 from app.models.verification import VerificationDocument
 
@@ -670,3 +671,117 @@ def store_registry_evidence(
         extra={"company_id": company_id, "key": key, "mime": mime},
     )
     return key, hashlib.sha256(content).hexdigest()
+
+
+# ── Company cover + media (P6) ────────────────────────────────────────────────
+
+#: Hero images are wider than a logo and carry photographic detail, so the 5 MB
+#: logo cap is too tight; the generic 10 MB `validate_upload` ceiling applies.
+MAX_COVER_SIZE_BYTES = 8 * 1024 * 1024
+
+
+def _store_image(company_id: int, folder: str, content: bytes, filename: str) -> tuple[str, str]:
+    """Validate an image and put it in the bucket. Returns `(key, mime)`.
+
+    Shared by the cover and the capability thumbnails so there is one place that
+    decides what an image is: JPEG/PNG only, and the key built from a random
+    token plus the DETECTED mime, so the client's filename never reaches the
+    object store.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415 — deferred (no socket at import)
+
+    mime = validate_upload(content, filename)
+    if mime not in LOGO_MIMES:
+        logger.debug("storage_service._store_image.bad_mime", extra={"mime": mime})
+        raise ValueError("invalid_file_type")
+
+    key = f"companies/{company_id}/{folder}/{secrets.token_hex(8)}.{_LOGO_EXTENSIONS[mime]}"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET,
+        Key=key,
+        Body=content,
+        ContentType=mime,
+    )
+    return key, mime
+
+
+def upload_company_cover(
+    db: Session, company: Company, content: bytes, filename: str
+) -> str:
+    """Store a company cover image, replacing any previous one. Flush-only."""
+    if len(content) > MAX_COVER_SIZE_BYTES:
+        raise ValueError("file_too_large")
+
+    previous_key = company.cover_storage_path
+    key, mime = _store_image(company.id, "cover", content, filename)
+    company.cover_storage_path = key
+    db.flush()
+
+    # The same cleanup `upload_company_logo` does and `add_factory_rfq_document`
+    # forgets — a replaced cover would otherwise leak an object per edit.
+    if previous_key and previous_key != key:
+        discard_object(previous_key, context="cover_replace")
+
+    logger.info(
+        "storage_service.upload_company_cover.done",
+        extra={"company_id": company.id, "key": key, "mime": mime},
+    )
+    return key
+
+
+def delete_company_cover(db: Session, company: Company) -> None:
+    """Remove the cover. No-op when there isn't one (idempotent)."""
+    key = company.cover_storage_path
+    if not key:
+        return
+    company.cover_storage_path = None
+    db.flush()
+    discard_object(key, context="cover_delete")
+
+
+def presign_company_cover(company: Company, ttl: int = 600) -> str | None:
+    """Root-relative path to the cover bytes, or None.
+
+    Not a presigned S3 URL, for the reason spelled out on `presign_company_logo`:
+    `S3_ENDPOINT` is the internal address, so a signed link is a broken `<img>`.
+    """
+    if not company.cover_storage_path:
+        return None
+    return f"/api/v1/webapp/market/companies/{company.id}/cover"
+
+
+def upload_company_media(
+    db: Session, company: Company, content: bytes, filename: str
+) -> CompanyMedia:
+    """Store one company image and return its row. Flush-only.
+
+    The caller references the returned id from wherever it needs the picture —
+    for carriers, `logistics_profile.capability_images[<capability_key>]`.
+    """
+    if len(content) > MAX_COVER_SIZE_BYTES:
+        raise ValueError("file_too_large")
+
+    key, mime = _store_image(company.id, "media", content, filename)
+    media = CompanyMedia(
+        company_id=company.id,
+        storage_path=key,
+        mime_type=mime,
+        size_bytes=len(content),
+    )
+    db.add(media)
+    db.flush()
+    logger.info(
+        "storage_service.upload_company_media.done",
+        extra={"company_id": company.id, "media_id": media.id},
+    )
+    return media
+
+
+def company_media_url(company_id: int, media_id: int) -> str:
+    """Root-relative path to a media object's bytes.
+
+    The COMPANY id is in the path as well as the media id so the serving route
+    can require the two to match — otherwise the id alone would be a handle to
+    every image in the bucket.
+    """
+    return f"/api/v1/webapp/market/companies/{company_id}/media/{media_id}"

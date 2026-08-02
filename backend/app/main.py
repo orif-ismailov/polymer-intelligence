@@ -65,6 +65,7 @@ from app.api.portal.deals import router as portal_deals_router
 from app.api.portal.eimzo import router as portal_eimzo_router
 from app.api.portal.inquiries import router as portal_inquiries_router
 from app.api.portal.lab import router as portal_lab_router
+from app.api.portal.logistics import router as portal_logistics_router
 from app.api.portal.manufacturers import router as portal_manufacturers_router
 from app.api.portal.market import router as portal_market_router
 from app.api.portal.news import router as portal_news_router
@@ -243,6 +244,9 @@ def create_app() -> FastAPI:
     application.include_router(portal_market_router, prefix="/api/v1")
     # Manufacturers before any catch-all company/id routes that could shadow list paths.
     application.include_router(portal_manufacturers_router, prefix="/api/v1")
+    # `/portal/logistics` collides with nothing under `/portal/companies`, so
+    # registration order against that router does not matter here.
+    application.include_router(portal_logistics_router, prefix="/api/v1")
     application.include_router(portal_substances_router, prefix="/api/v1")
     application.include_router(portal_reference_router, prefix="/api/v1")
     application.include_router(portal_inquiries_router, prefix="/api/v1")

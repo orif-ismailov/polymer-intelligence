@@ -82,7 +82,8 @@
     "samples": "Samples",
     "labOrders": "Laboratory",
     "marketplace": "Marketplace",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "logisticsRequests": "Logistics requests"
   },
   "home": {
     "title": "Overview",
@@ -159,7 +160,19 @@
       "ИП": "Sole proprietor",
       "ГУП": "State unitary enterprise"
     },
-    "registrationDate": "Company registration date"
+    "registrationDate": "Company registration date",
+    "storefront": {
+      "title": "Storefront",
+      "hint": "Every visitor sees this text on the company's public page. Requisites are frozen after verification; storefront copy is not.",
+      "description": "Company description",
+      "experience": "Years in business",
+      "projects": "Completed projects",
+      "countInvalid": "Enter a whole number of zero or more",
+      "saveFailed": "Could not save. Please try again.",
+      "cover": "Profile cover",
+      "coverHint": "JPG or PNG, up to 8 MB. Shown above the logo.",
+      "coverFailed": "Could not upload the cover."
+    }
   },
   "wizard": {
     "title": "Register a company",
@@ -1461,6 +1474,10 @@
     "sample_request_status": {
       "title": "Sample status",
       "body": "Sample request: status changed"
+    },
+    "logistics_request_new": {
+      "title": "New logistics request",
+      "body": "{{buyer}} requested transport: {{cargo}}"
     }
   },
   "contracts": {
@@ -1884,7 +1901,44 @@
     "requestRfq": "Request quote (RFQ)",
     "messageManufacturer": "Contact the factory",
     "requestFactoryRfq": "Request a quote",
-    "pickOfferHint": "Pick a product below to send the seller a request"
+    "pickOfferHint": "Pick a product below to send the seller a request",
+    "logistics": {
+      "aboutTitle": "About the company",
+      "capabilitiesTitle": "Our capabilities",
+      "detailsTitle": "Terms of service",
+      "countries": "Countries served",
+      "services": "Services",
+      "experience": "Years in business",
+      "projects": "Completed projects",
+      "cargo": "Cargo types",
+      "routes": "Popular routes",
+      "tariff": "Pricing model",
+      "city": "City",
+      "years_one": "{{count}} year",
+      "years_other": "{{count}} years",
+      "capabilityBlurb": {
+        "own_trucks": "Modern tractor units and container carriers",
+        "own_rail_wagons": "Own fleet of wagons and tank cars",
+        "sea_containers": "Working with the world's largest ports",
+        "storage_facilities": "Warehouse space for cargo consolidation",
+        "customs_warehouse": "Bonded warehouse for supervised storage",
+        "foreign_offices": "Representative offices in origin countries",
+        "customs_brokers": "In-house brokers for end-to-end clearance"
+      },
+      "projectsValue": "{{value}}+"
+    },
+    "reviewCount_one": "{{count}} review",
+    "reviewCount_other": "{{count}} reviews",
+    "reviewAnonymous": "Company",
+    "reviewTitle": "Leave a review",
+    "reviewRating": "Rating",
+    "reviewBody": "Comment",
+    "reviewBodyPlaceholder": "How did the cooperation go?",
+    "reviewSubmit": "Submit review",
+    "reviewErrors": {
+      "self": "You cannot review your own company",
+      "ratingRequired": "Give a rating from 1 to 5"
+    }
   },
   "manufacturers": {
     "title": "Manufacturers",
@@ -2252,5 +2306,63 @@
       "blurb": "A petrochemical raw materials marketplace with company verification and lab control.",
       "legal": "IMEX AI. All rights reserved."
     }
+  },
+  "logisticsRequest": {
+    "title": "Logistics company request",
+    "heroTitle": "Quick logistics request",
+    "heroBody": "Send a request and our specialists will find the best logistics solutions and operators for you.",
+    "cargoTitle": "Cargo information",
+    "cargoName": "Cargo name",
+    "cargoNamePlaceholder": "Polypropylene (PP)",
+    "volume": "Volume",
+    "volumeHint": "in tonnes",
+    "packaging": "Packaging type",
+    "packagingPlaceholder": "Select a type",
+    "requirements": "Special requirements",
+    "requirementsPlaceholder": "Safe transport, ADR",
+    "routeTitle": "Route",
+    "from": "From",
+    "to": "To",
+    "country": "Country",
+    "countryPlaceholder": "Select a country",
+    "city": "City",
+    "submit": "Send request",
+    "privacy": "Your data is protected and used only to match logistics solutions.",
+    "number": "Request number",
+    "carrier": "Carrier",
+    "doneTitle": "Request sent!",
+    "doneBody": "The carrier has your request. The reply arrives in your notifications; anything urgent we settle by phone.",
+    "backToDirectory": "Back to carriers",
+    "toCabinet": "To the cabinet",
+    "packagingOptions": {
+      "containers": "Containers",
+      "big_bags": "Big bags",
+      "bags": "Bags",
+      "bulk": "Bulk",
+      "pallets": "Pallets",
+      "iso_tank": "ISO tank",
+      "drums": "Drums",
+      "other": "Other"
+    },
+    "lifecycle": {
+      "submitted": "Sent",
+      "in_progress": "In progress",
+      "quoted": "Quoted"
+    },
+    "errors": {
+      "cargoRequired": "Enter the cargo name",
+      "volumeInvalid": "Enter a volume greater than zero",
+      "countryRequired": "Select a country",
+      "selfRequest": "You cannot send a request to your own company"
+    },
+    "listTitle": "Logistics requests",
+    "tabSent": "Sent",
+    "tabIncoming": "Incoming",
+    "emptyTitle": "No requests yet",
+    "emptySentBody": "Open a carrier's profile and send a request — it will appear here.",
+    "emptyIncomingBody": "When a buyer sends you a transport request, it will appear here.",
+    "myRequests": "My requests",
+    "buyer": "Buyer",
+    "contact": "Contact phone"
   }
 }

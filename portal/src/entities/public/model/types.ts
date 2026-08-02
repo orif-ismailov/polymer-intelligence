@@ -58,6 +58,44 @@ export interface PublicOfferList {
   offset: number;
 }
 
+/**
+ * A carrier's questionnaire as the storefront receives it.
+ *
+ * Every list holds KEYS, not display strings — the same ones the registration
+ * wizard writes (`LOGISTICS_SERVICE_OPTIONS` and friends in
+ * `features/company-wizard/model/constants`), resolved for display through the
+ * `wizard.logistics.*` i18n tree. Rendering a raw value would print
+ * `international_road` on the page.
+ */
+export interface PublicLogisticsSnippet {
+  city: string | null;
+  description: string | null;
+  services: string[];
+  from_countries: string[];
+  to_countries: string[];
+  popular_routes: string[];
+  cargo_types: string[];
+  capabilities: string[];
+  tariff_model: string | null;
+  years_experience: number | null;
+  projects_completed: number | null;
+  /** `{capability_key: url}` — only the keys that actually have a picture. */
+  capability_images: Record<string, string>;
+}
+
+/**
+ * One published review. The author COMPANY is named; the person is not — a
+ * review is a company's position, and the backend deliberately never serialises
+ * `author_account_id`.
+ */
+export interface PublicReview {
+  id: number;
+  rating: number;
+  body: string | null;
+  author_company_name: string | null;
+  created_at: string;
+}
+
 export interface PublicCompanyCard {
   id: number;
   public_id: string;
@@ -66,6 +104,8 @@ export interface PublicCompanyCard {
   legal_address: string | null;
   jurisdiction: string;
   logo_url: string | null;
+  /** Hero image behind the logo; NULL when none was uploaded. */
+  cover_url: string | null;
   verified_at: string | null;
   roles: string[];
   offer_count: number;
@@ -75,6 +115,11 @@ export interface PublicCompanyCard {
   founded_year: number | null;
   export_countries: string[];
   iso_certification: string | null;
+  /** NULL for a company that never filled in a carrier questionnaire. */
+  logistics: PublicLogisticsSnippet | null;
+  /** NULL, not 0, when nobody has reviewed yet — «нет отзывов» ≠ «оценка 0». */
+  rating: number | null;
+  review_count: number;
 }
 
 export interface PublicCompanyList {
@@ -89,6 +134,8 @@ export interface PublicCompanyDetail extends PublicCompanyCard {
   registration_date: string | null;
   legal_form: string | null;
   offers: PublicOfferCard[];
+  /** First page, inline — see the backend note on why not a second endpoint. */
+  reviews: PublicReview[];
 }
 
 export interface PublicCategory {

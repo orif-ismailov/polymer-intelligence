@@ -642,3 +642,45 @@ class FactoryRfqDocumentKind(enum.StrEnum):
     tax_id = "tax_id"
     bank_details = "bank_details"
     import_export_license = "import_export_license"
+
+
+# ── Logistics directory + service requests ────────────────────────────────────
+
+
+class LogisticsRequestStatus(enum.StrEnum):
+    """Lifecycle of a buyer→carrier logistics request (PG type: logistics_request_status).
+
+    Same shape as `FactoryRfqStatus`, and deliberately so: both are "a buyer asked
+    a verified company for a price and is waiting". Carrier replies are out of
+    band for v1 — the storefront form is the ask, the quote comes back by phone.
+
+    The three dots on the mockup's request sheet are this, not form steps:
+    submitted → in_progress → quoted.
+    """
+
+    submitted = "submitted"
+    viewed = "viewed"
+    in_progress = "in_progress"
+    quoted = "quoted"
+    closed = "closed"
+    rejected = "rejected"
+
+
+class CompanyReviewStatus(enum.StrEnum):
+    """Visibility of a company review (PG type: review_status).
+
+    Two values, and no `pending`, on purpose. Everything moderated in this
+    platform — reports, offers, verification cases, lab orders — is OUR claim
+    about a third party, so a human signs it off. A review is the author's claim
+    about their own counterparty; we are not the publisher of record. What stops
+    abuse is eligibility (one per company pair, author ≠ subject, both verified),
+    not a queue.
+
+    Shipping `pending` as the default would have meant a review system whose
+    visible state on day one, and for as long as nobody staffed the queue, is the
+    empty list the Reviews tab already renders for free. `hidden` exists so a
+    takedown is an UPDATE rather than a migration.
+    """
+
+    published = "published"
+    hidden = "hidden"

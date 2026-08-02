@@ -411,6 +411,44 @@ COMPANIES: list[dict[str, object]] = [
         "archetype": "logistics",
         "products": [],
         "site": "transasialogistics.uz",
+        # Keys, not labels: the storefront resolves them through the same
+        # `wizard.logistics.*` i18n tree the registration wizard writes them from,
+        # so a demo carrier reads correctly in ru/uz/en. Inventing free text here
+        # would render as an untranslated raw string on the public profile.
+        "logistics_profile": {
+            "city": "Ташкент",
+            "description": (
+                "Международные перевозки нефтехимической продукции, таможенное "
+                "оформление и логистическая поддержка «под ключ»."
+            ),
+            "services": [
+                "international_road",
+                "sea",
+                "multimodal",
+                "customs_clearance",
+                "cargo_insurance",
+                "container_transport",
+            ],
+            "from_countries": ["CN", "IR", "RU", "KZ", "TR", "AE"],
+            "to_countries": ["UZ", "KZ", "TJ"],
+            "popular_routes": ["shanghai_tashkent", "bandar_abbas_tashkent", "moscow_tashkent"],
+            "cargo_types": [
+                "petrochemicals_polymers",
+                "dangerous_goods_adr",
+                "container_shipping",
+                "big_bags",
+            ],
+            "capabilities": [
+                "own_trucks",
+                "sea_containers",
+                "storage_facilities",
+                "customs_brokers",
+                "foreign_offices",
+            ],
+            "tariff_model": "per_container",
+            "years_experience": 12,
+            "projects_completed": 1200,
+        },
     },
     {
         "key": "rail_freight",
@@ -427,6 +465,25 @@ COMPANIES: list[dict[str, object]] = [
         "archetype": "logistics",
         "products": [],
         "site": "uzrailfreight.uz",
+        # Deliberately narrower than Trans Asia: a rail-only carrier with no
+        # fleet of its own is what a half-filled profile looks like on the
+        # storefront, and the block has to read well at both ends of that range.
+        "logistics_profile": {
+            "city": "Ташкент",
+            "description": (
+                "Железнодорожные перевозки полимеров и химического сырья "
+                "вагонами и контейнерами по маршрутам ЕАЭС и Китая."
+            ),
+            "services": ["rail", "multimodal", "export_clearance"],
+            "from_countries": ["CN", "RU", "KZ"],
+            "to_countries": ["UZ", "KZ", "KG"],
+            "popular_routes": ["moscow_tashkent", "kazan_tashkent"],
+            "cargo_types": ["petrochemicals_polymers", "big_bags"],
+            "capabilities": ["own_rail_wagons", "storage_facilities"],
+            "tariff_model": "per_ton",
+            "years_experience": 15,
+            "projects_completed": 640,
+        },
     },
     {
         "key": "cptl_lab",

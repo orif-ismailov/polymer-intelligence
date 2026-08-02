@@ -82,7 +82,8 @@
     "samples": "Namunalar",
     "labOrders": "Laboratoriya",
     "marketplace": "Marketpleys",
-    "openMenu": "Menyuni ochish"
+    "openMenu": "Menyuni ochish",
+    "logisticsRequests": "Logistika arizalari"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -159,7 +160,19 @@
       "ИП": "Yakka tartibdagi tadbirkor",
       "ГУП": "Davlat unitar korxonasi"
     },
-    "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana"
+    "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana",
+    "storefront": {
+      "title": "Vitrina",
+      "hint": "Bu matnni kompaniyaning ommaviy sahifasida barcha tashrifchilar ko‘radi. Rekvizitlar tekshiruvdan so‘ng o‘zgartirilmaydi, vitrina esa — ha.",
+      "description": "Kompaniya tavsifi",
+      "experience": "Ish tajribasi, yil",
+      "projects": "Amalga oshirilgan loyihalar",
+      "countInvalid": "Noldan kichik bo‘lmagan butun son kiriting",
+      "saveFailed": "Saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+      "cover": "Profil muqovasi",
+      "coverHint": "JPG yoki PNG, 8 MB gacha. Logotip ustida ko‘rsatiladi.",
+      "coverFailed": "Muqovani yuklab bo‘lmadi."
+    }
   },
   "wizard": {
     "title": "Kompaniyani ro‘yxatdan o‘tkazish",
@@ -1461,6 +1474,10 @@
     "sample_request_status": {
       "title": "Namuna holati",
       "body": "Namuna so‘rovi: holati o‘zgardi"
+    },
+    "logistics_request_new": {
+      "title": "Yangi logistika arizasi",
+      "body": "{{buyer}} tashishni so‘radi: {{cargo}}"
     }
   },
   "contracts": {
@@ -1884,7 +1901,44 @@
     "requestRfq": "Taklif so‘rash (RFQ)",
     "messageManufacturer": "Zavod bilan bog‘lanish",
     "requestFactoryRfq": "Taklif so‘rash",
-    "pickOfferHint": "Sotuvchiga so‘rov yuborish uchun pastdan mahsulot tanlang"
+    "pickOfferHint": "Sotuvchiga so‘rov yuborish uchun pastdan mahsulot tanlang",
+    "logistics": {
+      "aboutTitle": "Kompaniya haqida",
+      "capabilitiesTitle": "Bizning imkoniyatlarimiz",
+      "detailsTitle": "Ish shartlari",
+      "countries": "Ish yuritiladigan davlatlar",
+      "services": "Xizmatlar",
+      "experience": "Ish tajribasi",
+      "projects": "Amalga oshirilgan loyihalar",
+      "cargo": "Yuk turlari",
+      "routes": "Ommabop yo‘nalishlar",
+      "tariff": "Tariflash",
+      "city": "Shahar",
+      "years_one": "{{count}} yil",
+      "years_other": "{{count}} yil",
+      "capabilityBlurb": {
+        "own_trucks": "Zamonaviy tortuvchilar va konteyner tashuvchilar",
+        "own_rail_wagons": "Shaxsiy vagon va sisternalar parki",
+        "sea_containers": "Dunyoning yirik portlari bilan ishlash",
+        "storage_facilities": "Yuklarni jamlash uchun ombor maydonlari",
+        "customs_warehouse": "Nazorat ostida saqlash uchun bojxona ombori",
+        "foreign_offices": "Jo‘natuvchi davlatlardagi vakolatxonalar",
+        "customs_brokers": "«Kalit topshirish» rasmiylashtiruvi uchun shtat brokerlari"
+      },
+      "projectsValue": "{{value}}+"
+    },
+    "reviewCount_one": "{{count}} sharh",
+    "reviewCount_other": "{{count}} sharh",
+    "reviewAnonymous": "Kompaniya",
+    "reviewTitle": "Sharh qoldirish",
+    "reviewRating": "Baho",
+    "reviewBody": "Izoh",
+    "reviewBodyPlaceholder": "Hamkorlik qanday o‘tdi?",
+    "reviewSubmit": "Sharhni yuborish",
+    "reviewErrors": {
+      "self": "O‘z kompaniyangizga sharh qoldira olmaysiz",
+      "ratingRequired": "1 dan 5 gacha baho bering"
+    }
   },
   "manufacturers": {
     "title": "Ishlab chiqaruvchilar",
@@ -2252,5 +2306,63 @@
       "blurb": "Kompaniyalarni tekshirish va laboratoriya nazorati bilan neftkimyo xomashyosi bozori.",
       "legal": "IMEX AI. Barcha huquqlar himoyalangan."
     }
+  },
+  "logisticsRequest": {
+    "title": "Logistika kompaniyasiga ariza",
+    "heroTitle": "Tezkor logistika arizasi",
+    "heroBody": "Ariza yuboring — mutaxassislarimiz siz uchun eng qulay logistika yechimlari va operatorlarini tanlaydi.",
+    "cargoTitle": "Yuk haqida ma’lumot",
+    "cargoName": "Yuk nomi",
+    "cargoNamePlaceholder": "Polipropilen (PP)",
+    "volume": "Hajmi",
+    "volumeHint": "tonnada",
+    "packaging": "Qadoq turi",
+    "packagingPlaceholder": "Turini tanlang",
+    "requirements": "Maxsus talablar",
+    "requirementsPlaceholder": "Xavfsiz tashish, ADR",
+    "routeTitle": "Yo‘nalish",
+    "from": "Qayerdan",
+    "to": "Qayerga",
+    "country": "Davlat",
+    "countryPlaceholder": "Davlatni tanlang",
+    "city": "Shahar",
+    "submit": "Arizani yuborish",
+    "privacy": "Ma’lumotlaringiz himoyalangan va faqat logistika yechimlarini tanlash uchun ishlatiladi.",
+    "number": "Ariza raqami",
+    "carrier": "Tashuvchi",
+    "doneTitle": "Ariza yuborildi!",
+    "doneBody": "Tashuvchi arizangizni oldi. Javob bildirishnomalarga keladi, shoshilinch savollarni telefon orqali hal qilamiz.",
+    "backToDirectory": "Tashuvchilar ro‘yxatiga",
+    "toCabinet": "Kabinetga",
+    "packagingOptions": {
+      "containers": "Konteynerlar",
+      "big_bags": "Big-beglar",
+      "bags": "Qoplar",
+      "bulk": "Uyum holida",
+      "pallets": "Palletalar",
+      "iso_tank": "ISO-tank",
+      "drums": "Bochkalar",
+      "other": "Boshqa"
+    },
+    "lifecycle": {
+      "submitted": "Yuborilgan",
+      "in_progress": "Ishlanmoqda",
+      "quoted": "Taklif bor"
+    },
+    "errors": {
+      "cargoRequired": "Yuk nomini kiriting",
+      "volumeInvalid": "Noldan katta hajm kiriting",
+      "countryRequired": "Davlatni tanlang",
+      "selfRequest": "O‘z kompaniyangizga ariza yubora olmaysiz"
+    },
+    "listTitle": "Logistika arizalari",
+    "tabSent": "Yuborilgan",
+    "tabIncoming": "Kiruvchi",
+    "emptyTitle": "Hozircha arizalar yo‘q",
+    "emptySentBody": "Tashuvchi profilini oching va ariza yuboring — u shu yerda paydo bo‘ladi.",
+    "emptyIncomingBody": "Xaridor sizga tashish arizasini yuborganda, u shu yerda paydo bo‘ladi.",
+    "myRequests": "Mening arizalarim",
+    "buyer": "Xaridor",
+    "contact": "Aloqa telefoni"
   }
 }

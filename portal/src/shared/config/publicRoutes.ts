@@ -70,6 +70,25 @@ export function isCabinetPath(pathname: string): boolean {
 }
 
 /**
+ * May we send a freshly-signed-in visitor to this `state.from`?
+ *
+ * The test is "same-origin relative path", NOT "inside the cabinet". Two places
+ * decide where the login flow lands — `OtpPage` after a successful verify, and
+ * `RedirectIfAuthed` the moment the token appears — and they have to agree, or
+ * whichever renders second silently overrules the other. That is the shape the
+ * bug actually had: `OtpPage` tested `isCabinetPath`, so every storefront return
+ * path was dropped; and even once it accepted them, the guard still redirected
+ * to `/cabinet` regardless. One predicate, imported by both.
+ *
+ * `//evil.com` is a protocol-relative URL the browser resolves as another
+ * origin, so a leading `//` is rejected — this value arrives from router state a
+ * link supplied, and an open redirect is the one thing it must not become.
+ */
+export function isSafeReturnPath(path: string): boolean {
+  return path.startsWith("/") && !path.startsWith("//");
+}
+
+/**
  * Paths that are server-rendered.
  *
  * These are the marketplace's crawlable URLs and the one part of the route table

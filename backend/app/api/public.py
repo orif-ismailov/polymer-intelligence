@@ -37,10 +37,12 @@ from app.schemas.public import (
     PublicCompanyDetail,
     PublicCompanyListOut,
     PublicFacetOut,
+    PublicLogisticsSnippet,
     PublicOfferCard,
     PublicOfferDetail,
     PublicOfferListOut,
     PublicQuoteOut,
+    PublicReviewOut,
     PublicSitemapEntry,
     PublicSitemapOut,
     PublicStatsOut,
@@ -48,10 +50,12 @@ from app.schemas.public import (
 from app.schemas.reports import NewsArticleCard
 from app.services import (
     directory_service,
+    logistics_service,
     manufacturer_service,
     news_service,
     offer_service,
     public_market_service,
+    review_service,
     storage_service,
 )
 
@@ -78,8 +82,21 @@ def _role_or_404(slug: str) -> CompanyBusinessRoleEnum:
     return role
 
 
-def _company_card(db: Session, company: Company) -> PublicCompanyCard:
+def _company_card(
+    db: Session,
+    company: Company,
+    ratings: dict[int, tuple[float, int]] | None = None,
+) -> PublicCompanyCard:
+    """One directory row.
+
+    `ratings` is passed in, not looked up: this function already costs one
+    query per row for `offer_count_for`, and a per-company aggregate beside it
+    would double that on a 24-row page. Callers fetch the whole page's
+    aggregate in one grouped query and hand it down.
+    """
     snippet = manufacturer_service.profile_snippet(company)
+    logistics = logistics_service.logistics_profile_snippet(company)
+    rating, review_count = (ratings or {}).get(company.id, (None, 0))
     export_raw = snippet.get("export_countries")
     production = snippet.get("production_type")
     main_products = snippet.get("main_products")
@@ -94,6 +111,7 @@ def _company_card(db: Session, company: Company) -> PublicCompanyCard:
         legal_address=company.legal_address,
         jurisdiction=company.jurisdiction,
         logo_url=storage_service.presign_company_logo(company),
+        cover_url=storage_service.presign_company_cover(company),
         verified_at=company.verified_at,
         roles=directory_service.confirmed_roles(company),
         offer_count=manufacturer_service.offer_count_for(db, company.id),
@@ -103,7 +121,36 @@ def _company_card(db: Session, company: Company) -> PublicCompanyCard:
         founded_year=founded if isinstance(founded, int) else None,
         export_countries=[str(x) for x in export_raw] if isinstance(export_raw, list) else [],
         iso_certification=iso if isinstance(iso, str) else None,
+        logistics=PublicLogisticsSnippet(**logistics) if logistics is not None else None,
+        rating=rating,
+        review_count=review_count,
     )
+
+
+def _reviews_out(db: Session, company_id: int) -> list[PublicReviewOut]:
+    """First page of published reviews, with the author COMPANY resolved.
+
+    One extra query for the names rather than one per review — a profile with 20
+    reviews would otherwise be 20 round trips for a tab most visitors never open.
+    """
+    rows = review_service.list_published(db, company_id)
+    if not rows:
+        return []
+    author_ids = {r.author_company_id for r in rows}
+    names = {
+        c.id: (c.short_name or c.legal_name)
+        for c in db.query(Company).filter(Company.id.in_(author_ids)).all()
+    }
+    return [
+        PublicReviewOut(
+            id=r.id,
+            rating=r.rating,
+            body=r.body,
+            author_company_name=names.get(r.author_company_id),
+            created_at=r.created_at,
+        )
+        for r in rows
+    ]
 
 
 # ── Catalog ───────────────────────────────────────────────────────────────────
@@ -231,8 +278,9 @@ def list_public_directory(
     items, total = directory_service.list_by_role(
         db, role=role, q=q, country=country, limit=limit, offset=offset
     )
+    ratings = review_service.rating_summary_for(db, [c.id for c in items])
     return PublicCompanyListOut(
-        items=[_company_card(db, c) for c in items],
+        items=[_company_card(db, c, ratings) for c in items],
         total=total,
         limit=limit,
         offset=offset,
@@ -261,13 +309,15 @@ def get_public_company(
     if company is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
 
-    card = _company_card(db, company)
+    ratings = review_service.rating_summary_for(db, [company.id])
+    card = _company_card(db, company, ratings)
     offers = offer_service.list_catalog(db, company_id=company.id, limit=offers_limit, offset=0)
     return PublicCompanyDetail(
         **card.model_dump(),
         registration_date=company.registration_date,
         legal_form=company.legal_form,
         offers=[PublicOfferCard.model_validate(o) for o in offers],
+        reviews=_reviews_out(db, company.id),
     )
 
 

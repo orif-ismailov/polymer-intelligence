@@ -371,6 +371,82 @@ def update_profile(
     return company
 
 
+#: Keys on `logistics_profile` a company may edit once it is already verified.
+#:
+#: Everything a carrier says about ITSELF for the storefront — the blurb, its
+#: reach, what it hauls, its fleet, its pricing model. Deliberately NOT the
+#: requisites: nothing here was checked by anyone during verification, so nothing
+#: here can be falsified by changing it.
+_PUBLIC_LOGISTICS_KEYS = frozenset(
+    {
+        "city",
+        "description",
+        "services",
+        "from_countries",
+        "to_countries",
+        "popular_routes",
+        "cargo_types",
+        "capabilities",
+        "tariff_model",
+        "years_experience",
+        "projects_completed",
+        "capability_images",
+    }
+)
+
+
+def update_public_profile(
+    db: Session, company: Company, account: UserAccount, *, logistics: dict[str, object]
+) -> Company:
+    """Patch storefront copy on an ALREADY-VERIFIED company.
+
+    Separate from `update_profile` for one reason, and it is not stylistic:
+    `_assert_profile_editable` refuses anything past `draft`/undecided-case, while
+    `directory_service._base_query` requires `verified` to appear in a public
+    directory at all. Every carrier whose page this copy renders on is therefore
+    in the exact state where `update_profile` rejects the edit — the marketing
+    fields would have been writable only before verification and never again.
+
+    So this skips that gate ON PURPOSE, and narrows what it can reach instead:
+    only `_PUBLIC_LOGISTICS_KEYS`, never a requisite. `legal_name`,
+    `legal_address` and `registration_date` were checked by a human and stay
+    behind `update_profile`; relaxing the gate itself would have unfrozen them
+    too. Authorisation is the router's `_require_company_admin`.
+
+    Merges rather than replaces, because `Company.logistics_profile` is a plain
+    `mapped_column(JSONB)` — not `MutableDict.as_mutable` — so SQLAlchemy sees no
+    in-place key assignment, and a whole-blob `setattr` (what `update_profile`
+    does) would silently drop the `services`/`cargo_types` the wizard collected.
+    """
+    current = company.logistics_profile
+    merged: dict[str, object] = dict(current) if isinstance(current, dict) else {}
+
+    changed: list[str] = []
+    for key, value in logistics.items():
+        if key not in _PUBLIC_LOGISTICS_KEYS:
+            continue
+        if merged.get(key) != value:
+            merged[key] = value
+            changed.append(key)
+
+    if not changed:
+        return company
+
+    # A NEW dict, assigned — see the note above on why mutating `merged` in place
+    # would not have been persisted.
+    company.logistics_profile = merged
+    db.flush()
+    event_service.emit(
+        db, event_types.COMPANY_PROFILE_UPDATED, "company", company.id,
+        {"account_id": account.id, "fields": sorted(changed), "scope": "public_profile"},
+    )
+    audit_service.write_audit(
+        db, None, "company.update_public_profile", "companies", str(company.id),
+        {"account_id": account.id, "fields": sorted(changed)},
+    )
+    return company
+
+
 def assert_single_account_type(roles: list[CompanyBusinessRoleEnum]) -> None:
     """Raise InvalidBusinessRoles unless `roles` fit exactly one ACCOUNT_TYPES card.
 

@@ -9,6 +9,12 @@ import { UiKitPage } from "@/pages/dev-ui";
 import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
 import { LabOrdersPage } from "@/pages/lab-orders";
+import {
+  LogisticsRequestDetailPage,
+  LogisticsRequestDonePage,
+  LogisticsRequestPage,
+  LogisticsRequestsPage,
+} from "@/pages/logistics";
 import { LoginPage } from "@/pages/login";
 import {
   FactoryRfqDonePage,
@@ -42,8 +48,19 @@ import { RedirectIfAuthed } from "./RedirectIfAuthed";
 import { RequireAuth } from "./RequireAuth";
 import { RequireCompany } from "./RequireCompany";
 
-/** The three directories with no distinct cabinet page — read-only either way. */
-const REUSED_DIRECTORIES = PUBLIC_DIRECTORIES.filter((d) => d.slug !== "manufacturers");
+/**
+ * Directories that still render a cabinet twin — read-only either way.
+ *
+ * The list shrinks as directories collapse onto their public URL. `logistics`
+ * left when the carrier profile grew a session-aware «Связаться с компанией»
+ * CTA: a twin means that component renders at two addresses and `useTierBase()`
+ * makes every href tier-dependent, so the login round-trip has to be got right
+ * twice. Don't add to this list — see `portal/CLAUDE.md`.
+ */
+const COLLAPSED_DIRECTORIES = ["manufacturers", "logistics"];
+const REUSED_DIRECTORIES = PUBLIC_DIRECTORIES.filter(
+  (d) => !COLLAPSED_DIRECTORIES.includes(d.slug),
+);
 
 /**
  * Route tree, in two namespaces.
@@ -115,6 +132,24 @@ export const routes: RouteObject[] = [
   {
     path: "/cabinet",
     children: [
+      // ── Retired cabinet addresses ────────────────────────────────────────
+      //
+      // Directories that have collapsed onto their public URL. These are pure
+      // redirects to a page anyone may read, so they carry NO guard: declared
+      // deeper in the tree they sat behind `RequireAuth` + `RequireCompany`,
+      // and an old bookmark opened by someone with no company registered was
+      // answered with `/cabinet/onboarding` — a signed-in dead end in place of
+      // the public profile the link actually names.
+      { path: "manufacturers", element: <Navigate to="/manufacturers" replace /> },
+      {
+        path: "manufacturers/:companyId",
+        element: <RedirectToPublicCompany slug="manufacturers" />,
+      },
+      { path: "logistics", element: <Navigate to="/logistics" replace /> },
+      {
+        path: "logistics/:companyId",
+        element: <RedirectToPublicCompany slug="logistics" />,
+      },
       {
         element: <RedirectIfAuthed />,
         children: [
@@ -153,11 +188,26 @@ export const routes: RouteObject[] = [
                   { path: "market/requests", element: <MarketRequestsPage /> },
                   { path: "market/:offerId", element: <RedirectToPublicOffer /> },
 
-                  { path: "manufacturers", element: <Navigate to="/manufacturers" replace /> },
+                  // The directory redirects live at the unguarded top of
+                  // `/cabinet` — see the note there. What stays here is what
+                  // genuinely needs a session AND a company.
                   { path: "manufacturers/rfqs/:rfqId/done", element: <FactoryRfqDonePage /> },
-                  { path: "manufacturers/:companyId", element: <RedirectToPublicCompany /> },
                   { path: "manufacturers/:companyId/chat", element: <ManufacturerChatPage /> },
                   { path: "manufacturers/:companyId/rfq/:offerId", element: <FactoryRfqPage /> },
+
+                  // Reading a carrier is public; asking one for a price is
+                  // not. These two need a session AND a company, so unlike
+                  // the directory redirects above they stay inside the guards.
+                  { path: "logistics/requests", element: <LogisticsRequestsPage /> },
+                  {
+                    path: "logistics/requests/:requestId/done",
+                    element: <LogisticsRequestDonePage />,
+                  },
+                  {
+                    path: "logistics/requests/:requestId",
+                    element: <LogisticsRequestDetailPage />,
+                  },
+                  { path: "logistics/:companyId/request", element: <LogisticsRequestPage /> },
 
                   // Same components as the storefront, different chrome.
                   { path: "prices", element: <PublicPricesPage /> },

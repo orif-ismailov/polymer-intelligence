@@ -10,6 +10,7 @@ import {
   COMPANY_PROFILE_TAB_IDS,
   CompanyProfileView,
   ProfileActionBar,
+  ReviewForm,
   type CompanyProfileTabId,
 } from "@/features/company-profile";
 import { directoryBySlug, publicSiteOrigin } from "@/shared/config";
@@ -156,7 +157,11 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
    * `isOwner`/`isAuthenticated` then decide which footer they get.
    */
   const isManufacturer = slug === "manufacturers";
+  const isCarrier = slug === "logistics";
   const isOwner = companies.some((c) => c.id === company.id);
+  // First company the visitor belongs to. `noUncheckedIndexedAccess` is on, so
+  // a length check would not narrow `companies[0]` for the type system.
+  const authorCompany = companies[0];
   const selfHref = `${base}/${directory.slug}/${company.id}`;
 
   return (
@@ -222,7 +227,22 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
             /* Mounts after hydration only — see `useOfferSession`'s note; the
                same reasoning applies to every authed surface on the storefront. */
             actionBar={
-              !isAuthenticated ? null : isOwner ? (
+              !isAuthenticated ? null : isCarrier && !isOwner ? (
+                /* A carrier publishes no offers, so `ProfileActionBar`'s two
+                   buttons had nothing to point at: «Написать» switched to an
+                   empty products tab and was disabled by `offer_count === 0`
+                   anyway. One CTA that goes somewhere replaces both. */
+                <StickyActionBar>
+                  <LinkButton
+                    size="lg"
+                    fullWidth
+                    to={`/cabinet/logistics/${company.id}/request`}
+                    data-testid="logistics-request-cta"
+                  >
+                    {t("public.company.contact")}
+                  </LinkButton>
+                </StickyActionBar>
+              ) : isOwner ? (
                 <StickyActionBar>
                   <div className="flex w-full gap-2" data-testid="company-owner-actions">
                     <LinkButton
@@ -252,6 +272,19 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
                   onRfq={() => setTab("products")}
                 />
               )
+            }
+            /* Only with a session, only for someone who is not the company
+               itself, and only once an acting company has settled — the same
+               shape `useOfferSession` uses, so nothing here reaches the
+               anonymous server render. */
+            reviewAction={
+              isAuthenticated && !isOwner && authorCompany ? (
+                <ReviewForm
+                  companyId={company.id}
+                  authorCompanyId={authorCompany.id}
+                  onSubmitted={() => void query.refetch()}
+                />
+              ) : null
             }
             footerNote={
               isAuthenticated && !isOwner && tab === "products" ? (

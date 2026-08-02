@@ -53,9 +53,38 @@ _TEST_ENV: dict[str, str] = {
 # conftest is imported before any test module in its directory, so setting the
 # vars here is early enough. No restore: the values are only meant to outlive the
 # process, and pytest owns it.
+def _real_db_optin() -> str | None:
+    """A `DATABASE_URL` that explicitly names the localhost `test_polymer` database.
+
+    Pinning the env above is what keeps a developer's `.env` out of the `settings`
+    singleton — but it also made `DATABASE_URL` impossible to override, and that is
+    the ONE variable the real-Postgres suites key off (`_verification_db.IS_REAL_DB`,
+    which reads it at import time, after this module has already run). The result was
+    silent: all 424 `@requires_real_db` tests skipped unconditionally, including in a
+    session that set the variable on purpose, and reported themselves as "skipped"
+    exactly as they do on a machine with no Postgres at all.
+
+    This lets that single opt-in through, using the same predicate the guard applies
+    so the two cannot drift. CI has no `test_polymer`, so its behaviour is unchanged
+    and the suite stays hermetic there by default.
+    """
+    url = os.environ.get("DATABASE_URL", "")
+    return url if "localhost" in url and "test_polymer" in url else None
+
+
+_REAL_DB_URL = _real_db_optin()
+
 # Test values win over anything already exported, matching the fixture's
 # patch.dict(..., clear=False) semantics.
 os.environ.update(_TEST_ENV)
+if _REAL_DB_URL is not None:
+    os.environ["DATABASE_URL"] = _REAL_DB_URL
+
+#: What the fixture below restores — the pinned env, plus the real-DB opt-in when
+#: one was made, so the session cannot silently lose it at the first teardown.
+_SESSION_ENV: dict[str, str] = (
+    _TEST_ENV if _REAL_DB_URL is None else {**_TEST_ENV, "DATABASE_URL": _REAL_DB_URL}
+)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -65,7 +94,7 @@ def patch_env() -> Generator[None, None, None]:
     The values are already set at import time (see above) — this fixture exists so
     a test that deliberately mutates one of them is still rolled back at teardown.
     """
-    with patch.dict(os.environ, _TEST_ENV, clear=False):
+    with patch.dict(os.environ, _SESSION_ENV, clear=False):
         yield
 
 

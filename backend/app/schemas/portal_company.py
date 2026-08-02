@@ -91,6 +91,16 @@ class LogisticsProfileIn(BaseModel):
     cargo_types: list[str] = Field(default_factory=list, max_length=32)
     capabilities: list[str] = Field(default_factory=list, max_length=32)
     tariff_model: str | None = Field(default=None, max_length=100)
+    #: Storefront copy — the blurb and the two figures the public profile prints
+    #: as «Опыт работы» / «Реализованных проектов». Bounded so a typo cannot
+    #: render as «Опыт работы: 99999 лет»; the read side caps them again, since
+    #: the column is untyped JSONB that predates these keys.
+    description: str | None = Field(default=None, max_length=4000)
+    years_experience: int | None = Field(default=None, ge=0, le=200)
+    projects_completed: int | None = Field(default=None, ge=0, le=10_000_000)
+    #: `{capability_key: media_id}` from `POST /companies/{id}/media`. The JSONB
+    #: is the ordering authority; media rows are just bytes with an owner.
+    capability_images: dict[str, int] = Field(default_factory=dict)
 
     @field_validator(
         "services",
@@ -105,13 +115,71 @@ class LogisticsProfileIn(BaseModel):
     def _clean_string_lists(cls, value: list[str]) -> list[str]:
         return [item.strip() for item in value if item.strip()][:64]
 
-    @field_validator("city", "tariff_model", mode="after")
+    @field_validator("city", "tariff_model", "description", mode="after")
     @classmethod
     def _strip_optional(cls, value: str | None) -> str | None:
         if value is None:
             return None
         trimmed = value.strip()
         return trimmed or None
+
+
+class CompanyMediaOut(BaseModel):
+    """An uploaded image: its id and the root-relative URL to its bytes.
+
+    The storage key is never returned — it is an object-store path, and the only
+    thing a client needs is a `src`.
+    """
+
+    id: int
+    url: str
+    mime_type: str
+    size_bytes: int
+
+
+class CompanyReviewIn(BaseModel):
+    """A company's rating of a counterparty.
+
+    `company_id` is the AUTHOR's acting company, in the body for the same reason
+    every other company-scoped write puts it there: an account may belong to
+    several, and which one is speaking is the client's choice.
+    """
+
+    company_id: int
+    rating: int = Field(ge=1, le=5)
+    body: str | None = Field(default=None, max_length=4000)
+
+    @field_validator("body", mode="after")
+    @classmethod
+    def _strip_body(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
+
+class CompanyReviewOut(BaseModel):
+    """The author's own review, read back after writing it."""
+
+    id: int
+    company_id: int
+    author_company_id: int
+    rating: int
+    body: str | None = None
+    status: str
+    created_at: datetime.datetime
+
+
+class PublicProfileUpdateIn(BaseModel):
+    """Storefront copy a company may edit after it is verified.
+
+    Read with `exclude_unset=True`, never `exclude_none=True`: every field on
+    `LogisticsProfileIn` has a default, so a PATCH carrying only `description`
+    would otherwise arrive with `services=[]` and wipe the list the registration
+    wizard collected.
+    """
+
+    logistics: LogisticsProfileIn
 
 
 class LaboratoryProfileIn(BaseModel):
@@ -254,6 +322,7 @@ class CompanySummaryOut(BaseModel):
     #: URL for media (FR-M4), so this is minted per response and is None when the
     #: company has no logo.
     logo_url: str | None = None
+    cover_url: str | None = None
     active_case: CaseOut | None = None
 
 
@@ -279,6 +348,7 @@ class CompanyDetailOut(BaseModel):
     reverification_due_at: datetime.datetime | None = None
     #: See CompanySummaryOut.logo_url — presigned per response, never stored.
     logo_url: str | None = None
+    cover_url: str | None = None
     roles: list[BusinessRoleOut] = Field(default_factory=list)
     bank_accounts: list[BankAccountOut] = Field(default_factory=list)
     documents: list[DocumentOut] = Field(default_factory=list)

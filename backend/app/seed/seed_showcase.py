@@ -192,10 +192,11 @@ def seed_companies(db: Session) -> tuple[dict[str, int], dict[str, list[int]]]:
                                        registration_date, registry_status, status,
                                        verified_at, reverification_due_at,
                                        created_by_user_account_id, created_at, updated_at,
-                                       identity_locked)
+                                       identity_locked, logistics_profile)
                 VALUES ('UZ', :tax_id, :legal_name, :short_name, :legal_form, :address,
                         :director, :reg_date, :registry_status, :status, :verified_at,
-                        :reverify, :created_by, :created, :updated, :locked)
+                        :reverify, :created_by, :created, :updated, :locked,
+                        CAST(:logistics_profile AS jsonb))
                 RETURNING id
                 """
             ),
@@ -215,6 +216,14 @@ def seed_companies(db: Session) -> tuple[dict[str, int], dict[str, list[int]]]:
                 "created": created,
                 "updated": verified_at or created,
                 "locked": status == "verified",
+                # CAST(:name AS jsonb), not `:name::jsonb` — a `::` in a text()
+                # string collides with SQLAlchemy's bind-parameter parsing and
+                # fails at execute time with a syntax error on the colon.
+                "logistics_profile": (
+                    json.dumps(spec["logistics_profile"], ensure_ascii=False)
+                    if spec.get("logistics_profile")
+                    else None
+                ),
             },
         ).scalar_one()
         company_ids[key] = company_id

@@ -21,6 +21,7 @@ import {
 } from "@/shared/ui";
 
 import type { CompanyProfileCompany } from "../model/types";
+import { ProfileLogisticsBlock } from "./ProfileLogisticsBlock";
 
 interface ProfileAboutTabProps {
   profile: CompanyProfileCompany;
@@ -94,6 +95,11 @@ export function ProfileAboutTab({ profile }: ProfileAboutTabProps) {
           </div>
         </CardBody>
       </Card>
+
+      {/* Carrier facts, above the generic chrome: for a logistics company this
+          IS the profile, and the KPI/certificate placeholders below are the
+          least interesting thing on the page. Absent for everyone else. */}
+      {profile.logistics ? <ProfileLogisticsBlock logistics={profile.logistics} /> : null}
 
       <Card>
         <CardBody className="space-y-3">

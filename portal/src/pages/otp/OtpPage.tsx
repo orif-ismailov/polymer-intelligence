@@ -4,14 +4,14 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { OtpForm } from "@/features/auth-by-otp";
 import { AuthLayout } from "@/pages/login/AuthLayout";
 import { useAuthFlowStore } from "@/pages/login";
-import { isCabinetPath } from "@/shared/config";
+import { isSafeReturnPath } from "@/shared/config";
 import { Card, CardBody } from "@/shared/ui";
 
 /** OTP code entry screen — step 2 of the login flow. */
 export function OtpPage() {
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
-  const returnTo = from && isCabinetPath(from) ? from : "/cabinet";
+  const returnTo = from && isSafeReturnPath(from) ? from : "/cabinet";
   const { t } = useTranslation();
   const navigate = useNavigate();
   const phone = useAuthFlowStore((s) => s.phone);

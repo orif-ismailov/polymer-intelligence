@@ -16,6 +16,9 @@ export { useActiveCompanyStore } from "./model/activeCompanyStore";
 export { useCompanies, useCompany, useActiveCompany } from "./model/hooks";
 export {
   useUpdateCompanyProfile,
+  useUpdateCompanyPublicProfile,
+  useSubmitCompanyReview,
+  useUploadCompanyCover,
   useSetCompanyRoles,
   useAddBankAccount,
   useRemoveBankAccount,

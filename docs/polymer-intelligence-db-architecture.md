@@ -1457,8 +1457,127 @@ CREATE TABLE manufacturer_messages (
 CREATE INDEX ix_manufacturer_messages_thread ON manufacturer_messages(thread_id, id);
 ```
 
+### Логистические заявки (0035)
+
+Младший брат `factory_rfqs`. Заводскую RFQ считают по опубликованному офферу, поэтому
+у неё есть `offer_id`, документы и коммерческие условия. Перевозчик считает **маршрут** —
+привязывать заявку не к чему, и груз с двумя концами маршрута это всё, что нужно
+(`docs/new-design/logistics_request.png`, «Быстрая заявка на логистику»).
+
+`packaging_type` — text с пресетом на клиенте, а не PG-enum: по нему не фильтруют и не
+агрегируют, а добавление «Big-bag» не должно быть миграцией (тот же выбор, что у
+`factory_rfqs.incoterms` и `qty_unit`). Контактов в форме нет и не должно быть —
+отправитель состоит в верифицированной компании, поэтому `contact_phone` снимается
+снимком с аккаунта на сервере; имени и email нет по честной причине: у `user_accounts`
+имя nullable, а колонки email нет вовсе.
+
+```sql
+CREATE TYPE logistics_request_status AS ENUM (
+  'submitted','viewed','in_progress','quoted','closed','rejected'
+);
+
+CREATE TABLE logistics_requests (
+  id bigserial PRIMARY KEY,
+  public_id uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  number text NOT NULL UNIQUE,                 -- LRQ-YYYY-NNNNNN
+  buyer_company_id bigint NOT NULL REFERENCES companies(id),
+  logistics_company_id bigint NOT NULL REFERENCES companies(id),
+  created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  cargo_name text NOT NULL,
+  volume numeric(14,3) NOT NULL,
+  volume_unit text NOT NULL DEFAULT 'MT',
+  packaging_type text, special_requirements text,
+  from_country text NOT NULL, from_city text,
+  to_country text NOT NULL, to_city text,
+  contact_phone text,                          -- снимок с аккаунта, формой не собирается
+  status logistics_request_status NOT NULL DEFAULT 'submitted',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (buyer_company_id <> logistics_company_id),
+  CHECK (volume > 0)
+);
+CREATE INDEX ix_logistics_requests_buyer_status
+  ON logistics_requests(buyer_company_id, status);
+CREATE INDEX ix_logistics_requests_carrier_status
+  ON logistics_requests(logistics_company_id, status);
+```
+
+### Отзывы о компаниях (0036)
+
+Данные за «★ 4.8 · 128 отзывов» в шапке профиля и за вкладку «Отзывы», которая до
+сих пор рендерила пустое состояние.
+
+У `review_status` НЕТ значения `pending`, и это решение, а не упущение. Всё, что в
+платформе проходит модерацию — отчёты, офферы, кейсы верификации, лабораторные
+заказы — это НАШЕ утверждение о третьей стороне, поэтому его подписывает человек.
+Отзыв — утверждение автора о своём контрагенте; мы не издатель. Злоупотребления
+ограничивает не очередь, а **право оставить отзыв**: одна строка на пару
+(субъект, компания-автор), автор ≠ субъект, обе компании верифицированы.
+`hidden` существует, чтобы снятие было UPDATE, а не миграцией.
+
+Агрегат считается на чтении и НЕ денормализован в `companies`: кэш среднего — это
+второй источник истины, который расходится при первом же скрытии строки. Страница
+каталога и так делает по запросу на компанию (`offer_count`), поэтому один
+группирующий запрос на всю страницу дешевле, чем поддержание счётчика честным.
+
+```sql
+CREATE TYPE review_status AS ENUM ('published','hidden');
+
+CREATE TABLE company_reviews (
+  id bigserial PRIMARY KEY,
+  company_id bigint NOT NULL REFERENCES companies(id),          -- кого оценивают
+  author_company_id bigint NOT NULL REFERENCES companies(id),
+  author_account_id bigint NOT NULL REFERENCES user_accounts(id), -- для аудита; наружу не отдаётся
+  rating smallint NOT NULL,
+  body text,
+  status review_status NOT NULL DEFAULT 'published',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (company_id <> author_company_id),
+  CHECK (rating >= 1 AND rating <= 5),
+  UNIQUE (company_id, author_company_id)
+);
+CREATE INDEX ix_company_reviews_company_status ON company_reviews(company_id, status);
+```
+
+### Обложка компании и медиа (0037)
+
+Две разные формы под две разные задачи, и в этом весь смысл разделения: обложка
+1:1 с компанией, поэтому это **колонка** — таблица под однозначную связь ничего не
+даёт и стоит join'а; миниатюры «Наши возможности» бывают в количестве, поэтому это
+**строки**.
+
+`company_media` намеренно БЕЗ слотов. Ключ `(company_id, kind, slot)` заставил бы
+`slot` повторять индекс в JSONB-массиве возможностей — синхронизировать пришлось бы
+в двух местах, а любая перестановка осиротила бы строку. Вместо этого JSONB остаётся
+источником порядка и хранит `{capability_key: media_id}`, а строка медиа — это
+просто байты с владельцем.
+
+Отдаются байты, а не presigned-ссылка: `S3_ENDPOINT` — ВНУТРЕННИЙ адрес
+(`http://minio:9000`), подписанная ссылка ведёт на хост, который браузер не
+резолвит, и любой `<img src>` из неё — битая картинка. `company_id` стоит в пути
+рядом с `media_id` и сверяется со строкой: иначе один id был бы ручкой ко всем
+изображениям в бакете (id последовательные — перебор тривиален).
+
+```sql
+ALTER TABLE companies ADD COLUMN cover_storage_path text;
+
+CREATE TABLE company_media (
+  id bigserial PRIMARY KEY,
+  company_id bigint NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  storage_path text NOT NULL,
+  mime_type text NOT NULL,
+  size_bytes integer NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_company_media_company ON company_media(company_id, id);
+```
+
 ## История версий
 
+- v1.18 (02.08.2026): обложка профиля и медиа компании (миграция 0037_company_cover_and_media): `companies.cover_storage_path` + таблица `company_media` (ON DELETE CASCADE — медиа не имеет смысла без компании), без слотов; ссылка на картинку в `logistics_profile.capability_images` как `{capability_key: media_id}`. Байты отдаёт API, presigned-ссылок нет.
+- v1.17 (02.08.2026): отзывы о компаниях (миграция 0036_company_reviews): enum `review_status` (`published`/`hidden`, БЕЗ `pending` — см. раздел выше); таблица `company_reviews` с UNIQUE на пару (субъект, автор) как правилом «одно мнение на контрагента» и CHECK'ами на самоотзыв и диапазон 1..5. Агрегат — на чтении, одним группирующим запросом на страницу каталога.
+- v1.16 (02.08.2026): логистические заявки (миграция 0035_logistics_requests): enum `logistics_request_status`; таблица `logistics_requests` (CHECK parties distinct + volume > 0, номер `LRQ-YYYY-NNNNNN`, advisory-lock ключ 35_000 — не 34_000, который держат заводские RFQ). Без `offer_id`, без документов и без треда: перевозчик котирует маршрут, а лишний слот на форме — это повод её не отправить. Заодно `companies.logistics_profile` наконец отдаётся публично (схема не менялась, JSONB получил ключи `description` / `years_experience` / `projects_completed`), и появился узкий путь правки витрины у уже верифицированной компании.
 - v1.15 (30.07.2026): каталог заводов + factory RFQ + чат (миграция 0034_manufacturers_module): enum'ы `factory_rfq_status` / `factory_rfq_document_kind`; таблицы `factory_rfqs` (CHECK parties distinct + quantity > 0, номер `FRQ-YYYY-NNNNNN`), `factory_rfq_documents` (UNIQUE kind на RFQ), `manufacturer_threads` (UNIQUE пара buyer×manufacturer), `manufacturer_messages` (CHECK текст-или-файл, как deal chat).
 - v1.14 (30.07.2026): карточка товара (миграция 0030_offer_product_facts): `seller_offers += manufacturer / key_properties / applications` — три факта с листов «Добавление товара», которым не было места в строке оффера; чипы как JSONB-массивы (свободный текст, по значению не ищется), `manufacturer` текстом, а не ссылкой на `companies`; все колонки nullable, NULL читается схемой как `[]`.
 - v1.13 (28.07.2026): R6/P7 — гос-реестры (миграция 0029_gov_registry): `verification_check_type += gov_registry / vat_status`; таблица `registry_snapshots` — append-only (нет `updated_at`, нет UPDATE-пути), `source` различает ответ API и транскрипцию оператора, скриншот + sha256 как evidence, `fetched_at` отдельно от `created_at`. Заодно починен эвалюатор R1: `unavailable` перестаёт блокировать кейс после исчерпания ретраев (иначе мёртвый провайдер отключал ручной путь). P7.b (входящий контур эскроу) схемы не потребовал — `provider_events` и nullable `*_marked_by` приехали с P3.

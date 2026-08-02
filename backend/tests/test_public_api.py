@@ -116,6 +116,77 @@ def test_public_company_card_omits_bank_and_case_data() -> None:
         assert not (set(model.model_fields) & forbidden), model.__name__
 
 
+def test_public_logistics_snippet_carries_no_contact_route() -> None:
+    """The carrier block is capability data, not a way to reach the company.
+
+    It is the first nested object on the anonymous company payload, so the
+    field-name guard above does not see inside it. Everything a carrier fills in
+    during registration is safe to publish EXCEPT a direct line — the platform's
+    whole position is that contact happens through it.
+    """
+    from app.schemas.public import PublicLogisticsSnippet  # noqa: PLC0415
+
+    forbidden = {
+        "phone",
+        "email",
+        "website",
+        "contact_phone",
+        "contact_email",
+        "contact_name",
+        "director_name",
+        "tax_id",
+        "bank_accounts",
+    }
+    assert not (set(PublicLogisticsSnippet.model_fields) & forbidden)
+
+
+def test_logistics_snippet_is_none_without_a_profile() -> None:
+    """No questionnaire → no block, so the storefront omits the whole card.
+
+    `{}` and `None` are different answers here: a carrier that reached the step
+    and skipped it still gets a (blank) block, because "filled in nothing" and
+    "is not a carrier" are different facts about a company.
+    """
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.services import logistics_service  # noqa: PLC0415
+
+    assert logistics_service.logistics_profile_snippet(Company(logistics_profile=None)) is None
+    assert logistics_service.logistics_profile_snippet(Company(logistics_profile={})) is None
+
+
+def test_logistics_snippet_survives_a_malformed_blob() -> None:
+    """Untyped JSONB written by a wizard that has already changed shape once.
+
+    A value of the wrong type must read as absent rather than raise inside the
+    response serializer — one bad row would otherwise 500 a whole directory
+    page. `True` is called out because `bool` is an `int` subclass in Python, so
+    a stray flag would otherwise render as «Опыт работы: 1 год».
+    """
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.services import logistics_service  # noqa: PLC0415
+
+    snippet = logistics_service.logistics_profile_snippet(
+        Company(
+            logistics_profile={
+                "city": 42,
+                "services": "not-a-list",
+                "from_countries": ["CN", "", "  ", "RU"],
+                "years_experience": True,
+                "projects_completed": -5,
+                "tariff_model": "   ",
+            }
+        )
+    )
+
+    assert snippet is not None
+    assert snippet["city"] is None
+    assert snippet["services"] == []
+    assert snippet["from_countries"] == ["CN", "RU"]
+    assert snippet["years_experience"] is None
+    assert snippet["projects_completed"] is None
+    assert snippet["tariff_model"] is None
+
+
 # ── Live DB behaviour ────────────────────────────────────────────────────────
 
 
@@ -320,7 +391,7 @@ def test_unverified_company_is_absent_from_every_directory(api) -> None:  # noqa
             b_owner,
             tax_id="317000202",
             legal_name="Pending Lab",
-            status=CompanyStatus.pending,
+            status=CompanyStatus.pending_verification,
         )
         _confirm_role(db, unverified.id, Role.laboratory)
         db.commit()
@@ -433,3 +504,77 @@ def test_incoterms_filter_excludes_other_delivery_terms(api) -> None:  # noqa: A
         for i in client.get(f"{_BASE}/offers", params={"incoterms": "EXW"}).json()["items"]
     }
     assert "ONLY-CIF" not in grades
+
+
+@requires_real_db
+def test_carrier_questionnaire_reaches_the_anonymous_directory(api) -> None:  # noqa: ANN001
+    """The gap this whole surface exists to close.
+
+    `logistics_profile` was written by the registration wizard and stored, but
+    `_company_card` built every directory row from the MANUFACTURER snippet — so
+    a carrier's public page showed six blank production fields and none of what
+    it had actually filled in. Asserted on both the list row and the detail, and
+    with no credentials, because that is the only tier a crawler or a first-time
+    visitor ever sees.
+    """
+    from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+    client, session = api
+    with session() as db:
+        owner = make_account(db, "+998900007501")
+        carrier = make_company(
+            db,
+            owner,
+            tax_id="317000501",
+            legal_name="Trans Asia Logistics",
+            status=CompanyStatus.verified,
+            verified_at=datetime(2024, 6, 1, tzinfo=UTC),
+            logistics_profile={
+                "city": "Ташкент",
+                "description": "Международные перевозки нефтехимической продукции.",
+                "services": ["international_road", "sea"],
+                "from_countries": ["CN", "IR"],
+                "to_countries": ["UZ"],
+                "popular_routes": ["shanghai_tashkent"],
+                "cargo_types": ["petrochemicals_polymers"],
+                "capabilities": ["own_trucks", "sea_containers"],
+                "tariff_model": "per_container",
+                "years_experience": 12,
+                "projects_completed": 1200,
+            },
+        )
+        _confirm_role(db, carrier.id, Role.logistics_provider)
+
+        # A non-carrier in the same environment must stay untouched: the block
+        # is NULL for it, not an empty object the storefront would render.
+        plain_owner = make_account(db, "+998900007502")
+        plain = make_company(
+            db,
+            plain_owner,
+            tax_id="317000502",
+            legal_name="Silk Road Trading",
+            status=CompanyStatus.verified,
+            verified_at=datetime(2024, 6, 1, tzinfo=UTC),
+        )
+        _confirm_role(db, plain.id, Role.trader)
+        db.commit()
+        carrier_id, plain_id = carrier.id, plain.id
+
+    row = next(
+        i
+        for i in client.get(f"{_BASE}/directories/logistics").json()["items"]
+        if i["id"] == carrier_id
+    )
+    assert row["logistics"]["services"] == ["international_road", "sea"]
+    assert row["logistics"]["years_experience"] == 12
+
+    detail = client.get(f"{_BASE}/directories/logistics/{carrier_id}")
+    assert detail.status_code == 200
+    block = detail.json()["logistics"]
+    assert block["city"] == "Ташкент"
+    assert block["capabilities"] == ["own_trucks", "sea_containers"]
+    assert block["projects_completed"] == 1200
+    assert block["tariff_model"] == "per_container"
+
+    assert client.get(f"{_BASE}/directories/traders/{plain_id}").json()["logistics"] is None

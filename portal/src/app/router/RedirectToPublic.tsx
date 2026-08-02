@@ -21,9 +21,15 @@ export function RedirectToPublicOffer() {
   return <Navigate to={`/market/${offerId}${query ? `?${query}` : ""}`} replace />;
 }
 
-export function RedirectToPublicCompany() {
+/**
+ * `slug` is a prop rather than a hardcoded `/manufacturers` because each
+ * directory collapses onto its public URL on its own schedule, and a second
+ * copy of this component per directory is three lines of duplication that would
+ * then have to be kept in step.
+ */
+export function RedirectToPublicCompany({ slug }: { slug: string }) {
   const { companyId } = useParams<{ companyId: string }>();
   if (!companyId || !Number.isInteger(Number(companyId)))
-    return <Navigate to="/manufacturers" replace />;
-  return <Navigate to={`/manufacturers/${companyId}`} replace />;
+    return <Navigate to={`/${slug}`} replace />;
+  return <Navigate to={`/${slug}/${companyId}`} replace />;
 }

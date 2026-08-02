@@ -49,6 +49,8 @@ export interface CompanyDetail extends CompanySummary {
   laboratory_profile: LaboratoryProfile | null;
   identity_locked: boolean;
   reverification_due_at: string | null;
+  /** Hero image on the public profile; NULL when none was uploaded. */
+  cover_url: string | null;
   roles: CompanyRole[];
   bank_accounts: BankAccount[];
   documents: DocumentMeta[];
@@ -81,7 +83,40 @@ export interface LogisticsProfile {
   cargo_types?: string[];
   capabilities?: string[];
   tariff_model?: string | null;
+  /** Storefront copy — editable after verification, unlike the requisites. */
+  description?: string | null;
+  years_experience?: number | null;
+  projects_completed?: number | null;
 }
+
+export interface CompanyReviewPayload {
+  /** The AUTHOR's acting company — the subject is the path parameter. */
+  company_id: number;
+  rating: number;
+  body: string | null;
+}
+
+export interface CompanyReviewResult {
+  id: number;
+  company_id: number;
+  author_company_id: number;
+  rating: number;
+  body: string | null;
+  status: string;
+  created_at: string;
+}
+
+/**
+ * The subset of `LogisticsProfile` a VERIFIED company may still change.
+ *
+ * A partial on purpose: the endpoint merges, and an absent key means "leave it
+ * alone". Sending the whole profile back would make an untouched form field
+ * capable of clearing a list the registration wizard collected.
+ */
+export type PublicProfilePatch = Pick<
+  LogisticsProfile,
+  "description" | "years_experience" | "projects_completed"
+>;
 
 export interface LaboratoryProfile {
   city?: string | null;

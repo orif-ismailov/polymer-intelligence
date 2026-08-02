@@ -58,6 +58,17 @@ _TABLES = [
     "request_status_history",
     "request_files",
     "requests",
+    # Manufacturers module (0034). None of its FKs to companies/seller_offers
+    # carry an ondelete, so a factory RFQ left behind by one test makes the NEXT
+    # test's `DELETE FROM companies` fail on a foreign-key violation rather than
+    # on anything to do with what it was testing.
+    "factory_rfq_documents",
+    "manufacturer_messages",
+    "factory_rfqs",
+    "manufacturer_threads",
+    "logistics_requests",
+    "company_reviews",
+    "company_media",
     "seller_offer_files",
     "offer_requests",
     "seller_offers",
