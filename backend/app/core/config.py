@@ -317,6 +317,22 @@ class Settings(BaseSettings):
             raise ValueError("OTP_DEV_CODE must be empty or exactly 6 digits (e.g. 000000)")
         return v
 
+    @field_validator("OTP_RESEND_COOLDOWN_SECONDS", "OTP_TTL_SECONDS")
+    @classmethod
+    def _positive_seconds(cls, v: int) -> int:
+        """At least one second — Redis refuses a non-positive TTL.
+
+        `otp_service.request_code` passes these straight to `SET … EX`, and Redis
+        answers `invalid expire time` for anything ≤ 0. The result is a 500 on
+        every sign-in: the login is simply down, and nothing about the symptom
+        points at a number in `.env`. Someone reaching for "no cooldown" writes
+        `0` because it is the obvious way to say that, so this fails at startup
+        instead — the same bargain the required secrets make.
+        """
+        if v < 1:
+            raise ValueError("must be at least 1 second (Redis refuses a non-positive TTL)")
+        return v
+
     @model_validator(mode="after")
     def _reject_fixed_otp_with_real_sms(self) -> Self:
         """Refuse a fixed OTP alongside a real SMS provider.

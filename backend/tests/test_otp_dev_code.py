@@ -233,3 +233,24 @@ def test_the_fixed_code_is_not_logged_by_otp_service(caplog) -> None:  # noqa: A
         otp_service.request_code(MagicMock(), fake, _PHONE, "1.2.3.4")
 
     assert _ZEROS not in caplog.text
+
+
+def test_non_positive_otp_windows_are_refused_at_startup() -> None:
+    """A "no cooldown" of 0 must not be accepted.
+
+    `otp_service.request_code` passes these to Redis as `SET … EX`, which refuses
+    a non-positive TTL — so a 0 here is not "disabled", it is a 500 on every
+    sign-in with nothing in the symptom pointing at `.env`. Reaching for 0 is the
+    obvious way to write "off", which is exactly why it has to fail loudly.
+    """
+    import pydantic  # noqa: PLC0415
+
+    from app.core.config import Settings  # noqa: PLC0415
+
+    for field in ("OTP_RESEND_COOLDOWN_SECONDS", "OTP_TTL_SECONDS"):
+        for bad in (0, -1):
+            with pytest.raises(pydantic.ValidationError):
+                Settings(**{field: bad})  # type: ignore[arg-type]
+
+    # And the documented defaults still load.
+    assert Settings().OTP_RESEND_COOLDOWN_SECONDS >= 1
