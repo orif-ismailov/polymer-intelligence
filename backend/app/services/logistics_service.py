@@ -17,7 +17,8 @@ import decimal
 import logging
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.time import to_display_tz, utcnow
 from app.models.accounts import UserAccount
@@ -30,10 +31,17 @@ from app.models.enums import (
 from app.models.enums import (
     CompanyBusinessRole as CompanyBusinessRoleEnum,
 )
-from app.models.logistics import LogisticsRequest
+from app.models.logistics import (
+    LogisticsRequest,
+    LogisticsRequestMessage,
+    LogisticsRequestThread,
+)
 from app.services import company_service, storage_service
 
 logger = logging.getLogger(__name__)
+
+#: Same ceiling as the manufacturer chat — one shared expectation of "a file".
+MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024
 
 #: Caps on the list fields, mirroring the write-side limits in
 #: `schemas.portal_company.LogisticsProfileIn`. Applied again here because a row
@@ -127,7 +135,25 @@ def logistics_profile_snippet(company: Company) -> dict[str, object] | None:
     }
 
 
-# ── Logistics requests ────────────────────────────────────────────────────────
+# ── Logistics requests: the broadcast pool ───────────────────────────────────
+#
+# `is_visible_to` and `pool_clause` are TWINS and must stay that way. If the list
+# query and the per-row guard ever disagree, the carrier sees an «Ответить»
+# button the API then refuses — the same trap `rfq_response_service` documents at
+# the top of its module.
+#
+# Unlike the polymer RFQ pool, this one genuinely IS role-scoped: only a verified
+# company with a CONFIRMED `logistics_provider` role may read a shipper's cargo
+# and route.
+
+
+#: Statuses a carrier may still act on. `closed`/`rejected` drop out of the pool.
+OPEN_STATUSES: tuple[LogisticsRequestStatus, ...] = (
+    LogisticsRequestStatus.submitted,
+    LogisticsRequestStatus.viewed,
+    LogisticsRequestStatus.in_progress,
+    LogisticsRequestStatus.quoted,
+)
 
 
 class LogisticsCompanyNotFound(Exception):
@@ -135,11 +161,11 @@ class LogisticsCompanyNotFound(Exception):
 
 
 class NotLogisticsParticipant(Exception):
-    """The acting company is neither the buyer nor the carrier on this request."""
+    """The acting company is neither the buyer nor a carrier on this request."""
 
 
-class SelfLogisticsRequest(Exception):
-    """A company cannot send itself a transport request."""
+class NotACarrier(Exception):
+    """The acting company may not read or answer the carrier pool."""
 
 
 def generate_logistics_request_number(db: Session) -> str:
@@ -171,34 +197,82 @@ def _is_confirmed_carrier(db: Session, company_id: int) -> bool:
     return row is not None
 
 
-def get_verified_logistics_company(db: Session, company_id: int) -> Company:
-    """The carrier a request may be addressed to.
+def is_carrier(db: Session, company: Company) -> bool:
+    """Verified, with the logistics role CONFIRMED rather than merely declared.
 
-    Same bar as the public directory (`directory_service._base_query`): verified,
-    with the role CONFIRMED rather than merely declared. A request that could be
-    sent to a self-declared carrier would let any company collect cargo details
-    by ticking a box during registration.
+    `declared` is a tick-box during registration; treating it as sufficient would
+    let anybody read every shipper's cargo and route by claiming a role.
     """
-    company = (
-        db.query(Company)
-        .options(selectinload(Company.business_roles))
-        .filter(Company.id == company_id)
-        .first()
+    return company.status == CompanyStatus.verified and _is_confirmed_carrier(
+        db, company.id
     )
-    if (
-        company is None
-        or company.status != CompanyStatus.verified
-        or not _is_confirmed_carrier(db, company.id)
-    ):
-        raise LogisticsCompanyNotFound(str(company_id))
-    return company
+
+
+def list_carrier_companies(db: Session) -> list[Company]:
+    """Every company the pool is visible to — the broadcast's audience."""
+    return (
+        db.query(Company)
+        .join(CompanyBusinessRole, CompanyBusinessRole.company_id == Company.id)
+        .filter(
+            Company.status == CompanyStatus.verified,
+            CompanyBusinessRole.role == CompanyBusinessRoleEnum.logistics_provider,
+            CompanyBusinessRole.status == BusinessRoleStatus.confirmed,
+        )
+        .all()
+    )
+
+
+def is_visible_to(db: Session, request: LogisticsRequest, company: Company) -> bool:
+    """Whether `company` may see (and answer) this request as a CARRIER.
+
+    Mirrors `pool_clause`. A buyer never "sees" its own request through this
+    gate — that is its own list, handled by `list_logistics_requests_for`.
+    """
+    if request.buyer_company_id == company.id:
+        return False
+    if request.status not in OPEN_STATUSES:
+        return False
+    return is_carrier(db, company)
+
+
+def pool_clause(company: Company) -> ColumnElement[bool]:
+    """`is_visible_to` as SQL, minus the role check.
+
+    The role half is a plain Python boolean about the VIEWER, so the caller
+    short-circuits on it instead of compiling it into the query — the same shape
+    `rfq_response_service.visibility_clause` uses for `verified_only`, and it
+    keeps this one predicate indexable by `ix_logistics_requests_open`.
+    """
+    return sa.and_(
+        LogisticsRequest.status.in_(list(OPEN_STATUSES)),
+        LogisticsRequest.buyer_company_id != company.id,
+    )
+
+
+def list_open_requests_for_carrier(
+    db: Session, company: Company, *, limit: int = 50, offset: int = 0
+) -> list[LogisticsRequest]:
+    """The pool, newest first. Empty for anyone who is not a carrier.
+
+    Filtering is in SQL so LIMIT/OFFSET page over the visible set; a Python
+    post-filter would silently under-fill pages.
+    """
+    if not is_carrier(db, company):
+        return []
+    return (
+        db.query(LogisticsRequest)
+        .filter(pool_clause(company))
+        .order_by(LogisticsRequest.created_at.desc(), LogisticsRequest.id.desc())
+        .limit(max(1, min(limit, 200)))
+        .offset(max(0, offset))
+        .all()
+    )
 
 
 def create_logistics_request(
     db: Session,
     *,
     buyer: Company,
-    carrier: Company,
     account: UserAccount,
     cargo_name: str,
     volume: decimal.Decimal,
@@ -210,14 +284,15 @@ def create_logistics_request(
     to_country: str,
     to_city: str | None,
 ) -> LogisticsRequest:
-    """Record a buyer's transport request. Flushes; the caller owns the commit."""
-    if buyer.id == carrier.id:
-        raise SelfLogisticsRequest(str(buyer.id))
+    """Record a buyer's transport request. Flushes; the caller owns the commit.
 
+    No carrier argument: the request is broadcast. Which firms end up reading it
+    is decided at read time by `pool_clause`, so a carrier verified tomorrow sees
+    a request filed today.
+    """
     request = LogisticsRequest(
         number=generate_logistics_request_number(db),
         buyer_company_id=buyer.id,
-        logistics_company_id=carrier.id,
         created_by_user_account_id=account.id,
         cargo_name=cargo_name,
         volume=volume,
@@ -228,7 +303,7 @@ def create_logistics_request(
         from_city=from_city,
         to_country=to_country,
         to_city=to_city,
-        # Snapshot: the account may change its phone, and the carrier needs the
+        # Snapshot: the account may change its phone, and a carrier needs the
         # number that was current when the request was sent.
         contact_phone=account.phone,
         status=LogisticsRequestStatus.submitted,
@@ -237,11 +312,7 @@ def create_logistics_request(
     db.flush()
     logger.info(
         "logistics_service.create_logistics_request",
-        extra={
-            "request_id": request.id,
-            "buyer_company_id": buyer.id,
-            "logistics_company_id": carrier.id,
-        },
+        extra={"request_id": request.id, "buyer_company_id": buyer.id},
     )
     return request
 
@@ -249,7 +320,7 @@ def create_logistics_request(
 def get_logistics_request_for(
     db: Session, account: UserAccount, request_id: int, company_id: int
 ) -> LogisticsRequest:
-    """One request, as seen by a company the account actually belongs to.
+    """One request, as seen by the buyer who filed it or by any carrier.
 
     `get_company_for` raises `CompanyNotFound` for a non-member, so an outsider
     gets 404 rather than a 403 that would confirm the request exists.
@@ -258,23 +329,182 @@ def get_logistics_request_for(
     request = db.get(LogisticsRequest, request_id)
     if request is None:
         raise NotLogisticsParticipant(str(request_id))
-    if company.id not in (request.buyer_company_id, request.logistics_company_id):
-        raise NotLogisticsParticipant(str(request_id))
-    return request
+    if request.buyer_company_id == company.id:
+        return request
+    if is_visible_to(db, request, company):
+        return request
+    raise NotLogisticsParticipant(str(request_id))
 
 
 def list_logistics_requests_for(
-    db: Session, company_id: int, *, side: str = "sent"
+    db: Session, company_id: int
 ) -> list[LogisticsRequest]:
-    """`sent` = requests this company raised; `incoming` = ones addressed to it.
+    """A buyer company's own requests, newest first.
 
-    Takes a raw `company_id`: the router has already resolved membership through
-    `_company_or_404`, and re-resolving here would make the 404 depend on which
-    of two lookups ran first.
+    No `side` parameter any more: the carrier side is the POOL, which is a
+    different question with a different predicate.
     """
-    query = db.query(LogisticsRequest)
-    if side == "incoming":
-        query = query.filter(LogisticsRequest.logistics_company_id == company_id)
-    else:
-        query = query.filter(LogisticsRequest.buyer_company_id == company_id)
-    return query.order_by(LogisticsRequest.id.desc()).all()
+    return (
+        db.query(LogisticsRequest)
+        .filter(LogisticsRequest.buyer_company_id == company_id)
+        .order_by(LogisticsRequest.id.desc())
+        .all()
+    )
+
+
+# ── Conversations ─────────────────────────────────────────────────────────────
+
+
+def thread_party_role(
+    thread: LogisticsRequestThread, request: LogisticsRequest, company_id: int
+) -> str | None:
+    """`"buyer"` / `"carrier"` / None.
+
+    Takes the request as well as the thread because the buyer side is not stored
+    on the thread — it is `request.buyer_company_id`, and duplicating it would be
+    a second place for the same fact to go wrong.
+    """
+    if company_id == thread.carrier_company_id:
+        return "carrier"
+    if company_id == request.buyer_company_id:
+        return "buyer"
+    return None
+
+
+def open_or_get_thread(
+    db: Session, *, request: LogisticsRequest, carrier: Company, account: UserAccount
+) -> LogisticsRequestThread:
+    """Idempotent get-or-create of a carrier's conversation on a request.
+
+    Idempotent because the client calls it every time the chat screen mounts —
+    the carrier taps «Ответить» and should land in the same room each time.
+    """
+    existing = (
+        db.query(LogisticsRequestThread)
+        .filter(
+            LogisticsRequestThread.logistics_request_id == request.id,
+            LogisticsRequestThread.carrier_company_id == carrier.id,
+        )
+        .first()
+    )
+    if existing is not None:
+        return existing
+
+    thread = LogisticsRequestThread(
+        logistics_request_id=request.id,
+        carrier_company_id=carrier.id,
+        created_by_user_account_id=account.id,
+    )
+    db.add(thread)
+    db.flush()
+    logger.info(
+        "logistics_service.open_thread",
+        extra={"request_id": request.id, "carrier_company_id": carrier.id},
+    )
+    return thread
+
+
+def get_thread_for(
+    db: Session, account: UserAccount, thread_id: int, company_id: int
+) -> tuple[LogisticsRequestThread, LogisticsRequest]:
+    """A thread and its request, for a company that is actually in it.
+
+    A carrier sees ONLY its own thread: another carrier's conversation on the
+    same request is invisible, which is the whole reason threads are per-carrier
+    rather than one room on the request.
+    """
+    company = company_service.get_company_for(db, account, company_id)
+    thread = db.get(LogisticsRequestThread, thread_id)
+    if thread is None:
+        raise NotLogisticsParticipant(str(thread_id))
+    request = db.get(LogisticsRequest, thread.logistics_request_id)
+    if request is None:  # pragma: no cover — FK guarantees it
+        raise NotLogisticsParticipant(str(thread_id))
+    if thread_party_role(thread, request, company.id) is None:
+        raise NotLogisticsParticipant(str(thread_id))
+    return thread, request
+
+
+def list_threads_for_request(
+    db: Session, request_id: int
+) -> list[LogisticsRequestThread]:
+    """Every carrier conversation on one request — the BUYER's view."""
+    return (
+        db.query(LogisticsRequestThread)
+        .filter(LogisticsRequestThread.logistics_request_id == request_id)
+        .order_by(LogisticsRequestThread.updated_at.desc())
+        .all()
+    )
+
+
+def list_threads_for_company(
+    db: Session, company_id: int
+) -> list[LogisticsRequestThread]:
+    """Both sides at once: threads this company carries, plus those on its own requests."""
+    own_request_ids = (
+        sa.select(LogisticsRequest.id)
+        .where(LogisticsRequest.buyer_company_id == company_id)
+        .scalar_subquery()
+    )
+    return (
+        db.query(LogisticsRequestThread)
+        .filter(
+            sa.or_(
+                LogisticsRequestThread.carrier_company_id == company_id,
+                LogisticsRequestThread.logistics_request_id.in_(own_request_ids),
+            )
+        )
+        .order_by(LogisticsRequestThread.updated_at.desc())
+        .all()
+    )
+
+
+def post_message(
+    db: Session,
+    thread: LogisticsRequestThread,
+    account: UserAccount,
+    company: Company,
+    body: str = "",
+    *,
+    file_content: bytes | None = None,
+    file_name: str | None = None,
+) -> LogisticsRequestMessage:
+    """Append one message. Flushes; the caller owns the commit."""
+    text = (body or "").strip()
+    if not text and file_content is None:
+        raise ValueError("empty_message")
+
+    storage_path: str | None = None
+    if file_content is not None:
+        if len(file_content) > MAX_CHAT_FILE_BYTES:
+            raise ValueError("file_too_large")
+        storage_path, _mime = storage_service.store_logistics_chat_file(
+            thread.id, file_content, file_name or "attachment"
+        )
+
+    message = LogisticsRequestMessage(
+        thread_id=thread.id,
+        author_account_id=account.id,
+        author_company_id=company.id,
+        body=text,
+        file_storage_path=storage_path,
+        file_name=file_name if storage_path else None,
+    )
+    db.add(message)
+    # Bumped so `list_threads_for_company`'s ordering means "most recent
+    # activity" rather than "most recently opened".
+    thread.updated_at = utcnow()
+    db.flush()
+    return message
+
+
+def list_messages(
+    db: Session, thread: LogisticsRequestThread, *, after_id: int | None = None, limit: int = 100
+) -> list[LogisticsRequestMessage]:
+    """Append-only, so `after_id` is a safe delta cursor for the client's poll."""
+    query = db.query(LogisticsRequestMessage).filter(
+        LogisticsRequestMessage.thread_id == thread.id
+    )
+    if after_id is not None:
+        query = query.filter(LogisticsRequestMessage.id > after_id)
+    return query.order_by(LogisticsRequestMessage.id).limit(max(1, min(limit, 200))).all()

@@ -174,12 +174,15 @@ class PublicProfileUpdateIn(BaseModel):
     """Storefront copy a company may edit after it is verified.
 
     Read with `exclude_unset=True`, never `exclude_none=True`: every field on
-    `LogisticsProfileIn` has a default, so a PATCH carrying only `description`
-    would otherwise arrive with `services=[]` and wipe the list the registration
-    wizard collected.
+    these has a default, so a PATCH carrying only `description` would otherwise
+    arrive with `services=[]` and wipe the list the registration wizard
+    collected.
+
+    Both halves optional — a company sends the one matching its role.
     """
 
-    logistics: LogisticsProfileIn
+    logistics: LogisticsProfileIn | None = None
+    laboratory: LaboratoryProfileIn | None = None
 
 
 class LaboratoryProfileIn(BaseModel):
@@ -195,6 +198,21 @@ class LaboratoryProfileIn(BaseModel):
     email: str | None = Field(default=None, max_length=320)
     phone: str | None = Field(default=None, max_length=64)
     description: str | None = Field(default=None, max_length=4000)
+    #: Storefront copy — the chips and the three stat tiles on the public sheet.
+    #: Keys, not labels: `accreditations` and `methods` resolve through the same
+    #: i18n tree the registration wizard writes them from.
+    accreditations: list[str] = Field(default_factory=list, max_length=16)
+    methods: list[str] = Field(default_factory=list, max_length=48)
+    years_experience: int | None = Field(default=None, ge=0, le=200)
+    studies_completed: int | None = Field(default=None, ge=0, le=100_000_000)
+    avg_turnaround_days: int | None = Field(default=None, ge=0, le=365)
+
+    @field_validator("accreditations", "methods", mode="after")
+    @classmethod
+    def _clean_lab_lists(cls, value: list[str]) -> list[str]:
+        # No slice: `max_length` above is the bound, and stripping cannot grow a
+        # list — a second cap here would only look like one.
+        return [item.strip() for item in value if item.strip()]
 
     @field_validator("city", "website", "email", "phone", "description", mode="after")
     @classmethod
@@ -323,6 +341,16 @@ class CompanySummaryOut(BaseModel):
     #: company has no logo.
     logo_url: str | None = None
     cover_url: str | None = None
+    #: CONFIRMED business roles, as plain strings. On the summary and not just
+    #: the detail because the cabinet branches on them — `/cabinet/requests`
+    #: shows a carrier the broadcast pool instead of its own (always empty)
+    #: purchase requests — and `useActiveCompany()` is backed by the summary
+    #: list, so without this every such branch costs a second round-trip.
+    #:
+    #: NOT called `roles`: `CompanyDetailOut.roles` is a list of
+    #: `{role, status}` objects, and one name for two shapes is how a client
+    #: ends up reading `.role` off a string.
+    confirmed_roles: list[str] = Field(default_factory=list)
     active_case: CaseOut | None = None
 
 

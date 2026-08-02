@@ -158,6 +158,7 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
    */
   const isManufacturer = slug === "manufacturers";
   const isCarrier = slug === "logistics";
+  const isLab = slug === "laboratories";
   const isOwner = companies.some((c) => c.id === company.id);
   // First company the visitor belongs to. `noUncheckedIndexedAccess` is on, so
   // a length check would not narrow `companies[0]` for the type system.
@@ -227,19 +228,38 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
             /* Mounts after hydration only — see `useOfferSession`'s note; the
                same reasoning applies to every authed surface on the storefront. */
             actionBar={
-              !isAuthenticated ? null : isCarrier && !isOwner ? (
-                /* A carrier publishes no offers, so `ProfileActionBar`'s two
-                   buttons had nothing to point at: «Написать» switched to an
-                   empty products tab and was disabled by `offer_count === 0`
-                   anyway. One CTA that goes somewhere replaces both. */
+              !isAuthenticated ? null : isLab && !isOwner ? (
+                /* Same shape as the carrier CTA below: a laboratory publishes no
+                   offers either, so the two-button action bar has nothing to
+                   point at. It files a BROADCAST — every lab sees it — so the
+                   label says «разместить заявку», not «выбрать лабораторию». */
                 <StickyActionBar>
                   <LinkButton
                     size="lg"
                     fullWidth
-                    to={`/cabinet/logistics/${company.id}/request`}
+                    to="/cabinet/lab/requests/new"
+                    data-testid="lab-request-cta"
+                  >
+                    {t("labRequest.ctaFromProfile")}
+                  </LinkButton>
+                </StickyActionBar>
+              ) : isCarrier && !isOwner ? (
+                /* A carrier publishes no offers, so `ProfileActionBar`'s two
+                   buttons had nothing to point at: «Написать» switched to an
+                   empty products tab and was disabled by `offer_count === 0`
+                   anyway. One CTA that goes somewhere replaces both.
+                   It files a BROADCAST — the label says «разместить заявку»
+                   rather than «связаться» because this carrier will see it along
+                   with every other, and a button that implied otherwise would be
+                   lying about where the message goes. */
+                <StickyActionBar>
+                  <LinkButton
+                    size="lg"
+                    fullWidth
+                    to="/cabinet/logistics/requests/new"
                     data-testid="logistics-request-cta"
                   >
-                    {t("public.company.contact")}
+                    {t("logisticsRequest.ctaFromProfile")}
                   </LinkButton>
                 </StickyActionBar>
               ) : isOwner ? (

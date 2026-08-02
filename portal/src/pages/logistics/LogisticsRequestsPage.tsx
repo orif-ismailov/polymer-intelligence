@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -14,24 +12,23 @@ import {
   ErrorView,
   LoadingView,
   PageHeader,
-  Tabs,
+  LinkButton,
   TruckIcon,
 } from "@/shared/ui";
 
 /**
- * `/cabinet/logistics/requests` — both sides of the logistics requests.
+ * `/cabinet/logistics/requests` — the BUYER's own logistics requests.
  *
- * Exists because the carrier had nowhere to read one. The notification the
- * submit now raises deep-links into this page's detail, and without it that
- * bell rang for a row the recipient could not open — which is the same dead end
- * the profile's «Написать» used to be.
+ * Buyer-only since the broadcast change. A carrier does not read its incoming
+ * work here: it reads the whole pool at `/cabinet/requests`, which is the page
+ * that is otherwise permanently empty for a company that files no purchase
+ * requests of its own.
  */
 export function LogisticsRequestsPage() {
   const { t, i18n } = useTranslation();
   const lang = coerceLang(i18n.language);
-  const [side, setSide] = useState<"sent" | "incoming">("sent");
   const { activeCompany, isLoading } = useActiveCompany();
-  const query = useLogisticsRequests(activeCompany?.id ?? null, side);
+  const query = useLogisticsRequests(activeCompany?.id ?? null);
 
   if (isLoading) return <LoadingView label={t("common.loading")} />;
   if (!activeCompany) {
@@ -44,20 +41,15 @@ export function LogisticsRequestsPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={t("logisticsRequest.listTitle")} subtitle={activeCompany.legal_name ?? undefined} />
-
-      {/* `min-w-0` is mandatory on a column holding Tabs — see the design-system note. */}
-      <div className="min-w-0">
-        <Tabs
-          items={[
-            { id: "sent", label: t("logisticsRequest.tabSent") },
-            { id: "incoming", label: t("logisticsRequest.tabIncoming") },
-          ]}
-          value={side}
-          onChange={(id) => setSide(id as "sent" | "incoming")}
-          label={t("logisticsRequest.listTitle")}
-        />
-      </div>
+      <PageHeader
+        title={t("logisticsRequest.listTitle")}
+        subtitle={activeCompany.legal_name ?? undefined}
+        actions={
+          <LinkButton to="/cabinet/logistics/requests/new">
+            {t("logisticsRequest.newRequest")}
+          </LinkButton>
+        }
+      />
 
       {query.isLoading ? <LoadingView label={t("common.loading")} /> : null}
 
@@ -65,11 +57,7 @@ export function LogisticsRequestsPage() {
         <EmptyState
           icon={<TruckIcon size={24} />}
           title={t("logisticsRequest.emptyTitle")}
-          description={t(
-            side === "sent"
-              ? "logisticsRequest.emptySentBody"
-              : "logisticsRequest.emptyIncomingBody",
-          )}
+          description={t("logisticsRequest.emptySentBody")}
         />
       ) : null}
 
@@ -85,7 +73,7 @@ export function LogisticsRequestsPage() {
                       " → ",
                     )}
                     {" · "}
-                    {side === "sent" ? r.logistics_name : r.buyer_name}
+                    {t("logisticsRequest.responseCount", { count: r.thread_count })}
                   </p>
                 </div>
                 <div className="text-right">

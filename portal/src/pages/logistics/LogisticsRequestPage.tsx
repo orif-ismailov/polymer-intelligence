@@ -1,35 +1,25 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
-import { usePublicCompany } from "@/entities/public";
 import { LogisticsRequestForm } from "@/features/logistics-request";
 import { ErrorView, LinkButton, LoadingView, PageHeader } from "@/shared/ui";
 
 /**
- * `/cabinet/logistics/:companyId/request` — «Заявка логистической компании».
+ * `/cabinet/logistics/requests/new` — «Заявка логистической компании».
  *
- * A cabinet route rather than a slot on the public profile, for three reasons:
- * the sheet has its own chrome and header; `RequireAuth` + `RequireCompany`
- * already are the gate this flow needs, with the right onboarding redirect; and
- * the public profile's HTML is shared-cached (`s-maxage=60`), so anything
- * mounted there is something that must be proven never to reach the anonymous
- * render.
+ * A cabinet route rather than a slot on a carrier's public profile: the sheet
+ * has its own chrome, `RequireAuth` + `RequireCompany` already are the gate this
+ * flow needs, and the public profile's HTML is shared-cached (`s-maxage=60`), so
+ * anything mounted there must be proven never to reach the anonymous render.
  *
- * The carrier's name comes from the PUBLIC endpoint — it is the same company the
- * visitor was just reading, already in the query cache from the profile they
- * came from, so the header fills in without a second round trip.
+ * No carrier in the path any more — the request is broadcast to all of them.
  */
 export function LogisticsRequestPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const params = useParams<{ companyId: string }>();
-  const logisticsId = params.companyId ? Number(params.companyId) : NaN;
-
   const { activeCompany, isLoading } = useActiveCompany();
-  const carrier = usePublicCompany("logistics", Number.isFinite(logisticsId) ? logisticsId : null);
 
-  if (!Number.isFinite(logisticsId)) return null;
   if (isLoading) return <LoadingView label={t("common.loading")} />;
 
   if (!activeCompany) {
@@ -40,20 +30,16 @@ export function LogisticsRequestPage() {
     );
   }
 
-  const carrierName =
-    carrier.data?.short_name ?? carrier.data?.legal_name ?? t("logisticsRequest.title");
-
   return (
     <div className="mx-auto max-w-3xl pb-10">
       <PageHeader
-        backTo={`/logistics/${logisticsId}`}
-        backLabel={t("companyProfile.title")}
+        backTo="/cabinet/logistics/requests"
+        backLabel={t("logisticsRequest.myRequests")}
         title={t("logisticsRequest.title")}
-        subtitle={carrierName}
+        subtitle={t("logisticsRequest.broadcastHint")}
       />
       <div className="mt-5">
         <LogisticsRequestForm
-          logisticsId={logisticsId}
           companyId={activeCompany.id}
           onSent={(requestId) =>
             navigate(`/cabinet/logistics/requests/${requestId}/done`, { replace: true })

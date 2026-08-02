@@ -26,3 +26,4 @@ export {
   useRemoveCompanyDocument,
 } from "./model/mutations";
 export { CompanyStatusBadge } from "./ui/CompanyStatusBadge";
+export { isCarrierCompany, isLaboratoryCompany } from "./model/roles";

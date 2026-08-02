@@ -3,6 +3,11 @@ import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink } from "react-router-dom";
 
+import {
+  isCarrierCompany,
+  isLaboratoryCompany,
+  useActiveCompany,
+} from "@/entities/company";
 import { cn } from "@/shared/lib";
 
 import {
@@ -29,6 +34,10 @@ interface NavItem {
   labelKey: string;
   icon: ReactNode;
   end?: boolean;
+  /** Hidden for a company whose confirmed role is logistics. */
+  hideForCarrier?: boolean;
+  /** Hidden for a company whose confirmed role is laboratory. */
+  hideForLab?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -41,7 +50,22 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/cabinet/inquiries", labelKey: "nav.inquiries", icon: ChatIcon },
   { to: "/cabinet/samples", labelKey: "nav.samples", icon: SampleBoxIcon },
   { to: "/cabinet/lab-orders", labelKey: "nav.labOrders", icon: FlaskNavIcon },
-  { to: "/cabinet/logistics/requests", labelKey: "nav.logisticsRequests", icon: TruckNavIcon },
+  {
+    to: "/cabinet/lab/requests",
+    labelKey: "nav.labRequests",
+    icon: FlaskNavIcon,
+    // The buyer's own analysis requests. A laboratory reads the broadcast pool
+    // at «Заявки» instead, so this would only ever be an empty page for one.
+    hideForLab: true,
+  },
+  {
+    to: "/cabinet/logistics/requests",
+    labelKey: "nav.logisticsRequests",
+    icon: TruckNavIcon,
+    // The buyer's own logistics requests. A carrier reads the broadcast pool at
+    // «Заявки» instead, so this entry would only ever be an empty page for one.
+    hideForCarrier: true,
+  },
   { to: "/cabinet/news", labelKey: "nav.news", icon: NewsIcon },
   { to: "/cabinet/companies", labelKey: "nav.companies", icon: BuildingIcon },
   { to: "/cabinet/offers", labelKey: "nav.offers", icon: TagIcon },
@@ -55,9 +79,18 @@ interface SideNavProps {
 
 export function SideNav({ onNavigate }: SideNavProps) {
   const { t } = useTranslation();
+  // The only role-aware thing in the cabinet chrome, and it is one predicate:
+  // a carrier's own-requests page is always empty, because the pool it actually
+  // works from lives at «Заявки».
+  const { activeCompany } = useActiveCompany();
+  const carrier = isCarrierCompany(activeCompany);
+  const lab = isLaboratoryCompany(activeCompany);
+  const items = NAV_ITEMS.filter(
+    (item) => !(carrier && item.hideForCarrier) && !(lab && item.hideForLab),
+  );
   return (
     <nav className="flex flex-col gap-1" aria-label={t("common.cabinet")}>
-      {NAV_ITEMS.map((item) => (
+      {items.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}

@@ -37,6 +37,7 @@ from app.schemas.public import (
     PublicCompanyDetail,
     PublicCompanyListOut,
     PublicFacetOut,
+    PublicLaboratorySnippet,
     PublicLogisticsSnippet,
     PublicOfferCard,
     PublicOfferDetail,
@@ -50,6 +51,7 @@ from app.schemas.public import (
 from app.schemas.reports import NewsArticleCard
 from app.services import (
     directory_service,
+    laboratory_service,
     logistics_service,
     manufacturer_service,
     news_service,
@@ -96,6 +98,7 @@ def _company_card(
     """
     snippet = manufacturer_service.profile_snippet(company)
     logistics = logistics_service.logistics_profile_snippet(company)
+    laboratory = laboratory_service.laboratory_profile_snippet(company)
     rating, review_count = (ratings or {}).get(company.id, (None, 0))
     export_raw = snippet.get("export_countries")
     production = snippet.get("production_type")
@@ -122,6 +125,9 @@ def _company_card(
         export_countries=[str(x) for x in export_raw] if isinstance(export_raw, list) else [],
         iso_certification=iso if isinstance(iso, str) else None,
         logistics=PublicLogisticsSnippet(**logistics) if logistics is not None else None,
+        laboratory=(
+            PublicLaboratorySnippet(**laboratory) if laboratory is not None else None
+        ),
         rating=rating,
         review_count=review_count,
     )

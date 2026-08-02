@@ -192,11 +192,13 @@ def seed_companies(db: Session) -> tuple[dict[str, int], dict[str, list[int]]]:
                                        registration_date, registry_status, status,
                                        verified_at, reverification_due_at,
                                        created_by_user_account_id, created_at, updated_at,
-                                       identity_locked, logistics_profile)
+                                       identity_locked, logistics_profile,
+                                       laboratory_profile)
                 VALUES ('UZ', :tax_id, :legal_name, :short_name, :legal_form, :address,
                         :director, :reg_date, :registry_status, :status, :verified_at,
                         :reverify, :created_by, :created, :updated, :locked,
-                        CAST(:logistics_profile AS jsonb))
+                        CAST(:logistics_profile AS jsonb),
+                        CAST(:laboratory_profile AS jsonb))
                 RETURNING id
                 """
             ),
@@ -222,6 +224,11 @@ def seed_companies(db: Session) -> tuple[dict[str, int], dict[str, list[int]]]:
                 "logistics_profile": (
                     json.dumps(spec["logistics_profile"], ensure_ascii=False)
                     if spec.get("logistics_profile")
+                    else None
+                ),
+                "laboratory_profile": (
+                    json.dumps(spec["laboratory_profile"], ensure_ascii=False)
+                    if spec.get("laboratory_profile")
                     else None
                 ),
             },

@@ -33,6 +33,15 @@ export interface CompanySummary {
   short_name: string | null;
   status: CompanyStatus;
   verified_at: string | null;
+  /**
+   * CONFIRMED business roles as plain strings. On the summary, not just the
+   * detail, because the cabinet branches on them and `useActiveCompany()` is
+   * backed by the summary list — without this every branch costs a second
+   * round-trip.
+   *
+   * Distinct from `CompanyDetail.roles`, which is `{role, status}` objects.
+   */
+  confirmed_roles: string[];
   active_case: CaseOut | null;
 }
 

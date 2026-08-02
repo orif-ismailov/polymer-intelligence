@@ -46,6 +46,7 @@ from app.schemas.portal_company import (
 from app.services import (
     audit_service,
     company_service,
+    directory_service,
     rate_limit,
     review_service,
     storage_service,
@@ -130,6 +131,7 @@ def _summary_out(db: Session, company: Company) -> CompanySummaryOut:
         verified_at=company.verified_at,
         logo_url=storage_service.presign_company_logo(company),
         cover_url=storage_service.presign_company_cover(company),
+        confirmed_roles=directory_service.confirmed_roles(company),
         active_case=_case_out(db, active),
     )
 
@@ -293,7 +295,12 @@ def update_public_profile(
         company,
         account,
         # `exclude_unset`: an absent key means "leave it alone", not "clear it".
-        logistics=body.logistics.model_dump(exclude_unset=True),
+        logistics=(
+            body.logistics.model_dump(exclude_unset=True) if body.logistics else None
+        ),
+        laboratory=(
+            body.laboratory.model_dump(exclude_unset=True) if body.laboratory else None
+        ),
     )
     db.commit()
     return _detail_out(db, company)

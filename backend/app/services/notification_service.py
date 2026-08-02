@@ -75,6 +75,14 @@ KIND_SAMPLE_REQUEST_STATUS = "sample_request_status"
 # a form nobody answers. Deduped like the rest: a resubmitted identical request
 # should ring once.
 KIND_LOGISTICS_REQUEST_NEW = "logistics_request_new"
+#: A line in a buyer↔carrier conversation. Cooldown-deduped rather than
+#: unread-deduped, like the deal chat: once the reader opens the bell, the very
+#: next line typed would otherwise ring it again.
+KIND_LOGISTICS_MESSAGE = "logistics_message"
+# Laboratory analysis requests (0039). Same pair, same reasoning — and distinct
+# from `KIND_LAB_ORDER_STATUS`, which belongs to the staff-run P6 flow.
+KIND_LAB_REQUEST_NEW = "lab_request_new"
+KIND_LAB_MESSAGE = "lab_message"
 
 
 def keys_for(kind: str) -> tuple[str, str]:

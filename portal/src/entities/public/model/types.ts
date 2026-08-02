@@ -88,6 +88,24 @@ export interface PublicLogisticsSnippet {
  * review is a company's position, and the backend deliberately never serialises
  * `author_account_id`.
  */
+/**
+ * A laboratory's questionnaire as the storefront receives it.
+ *
+ * `accreditations` and `methods` are KEYS, resolved through the same i18n tree
+ * the registration wizard writes them from — rendering a raw value would print
+ * `iso_17025` on the page.
+ */
+export interface PublicLaboratorySnippet {
+  city: string | null;
+  website: string | null;
+  description: string | null;
+  accreditations: string[];
+  methods: string[];
+  years_experience: number | null;
+  studies_completed: number | null;
+  avg_turnaround_days: number | null;
+}
+
 export interface PublicReview {
   id: number;
   rating: number;
@@ -117,6 +135,8 @@ export interface PublicCompanyCard {
   iso_certification: string | null;
   /** NULL for a company that never filled in a carrier questionnaire. */
   logistics: PublicLogisticsSnippet | null;
+  /** NULL for a company that never filled in a laboratory questionnaire. */
+  laboratory: PublicLaboratorySnippet | null;
   /** NULL, not 0, when nobody has reviewed yet — «нет отзывов» ≠ «оценка 0». */
   rating: number | null;
   review_count: number;

@@ -83,7 +83,8 @@
     "labOrders": "Лаборатория",
     "marketplace": "Маркетплейс",
     "openMenu": "Открыть меню",
-    "logisticsRequests": "Логистика: заявки"
+    "logisticsRequests": "Логистика: заявки",
+    "labRequests": "Заявки в лабораторию"
   },
   "home": {
     "title": "Обзор",
@@ -1476,8 +1477,20 @@
       "body": "Запрос образца: статус изменён"
     },
     "logistics_request_new": {
-      "title": "Новая заявка на логистику",
-      "body": "{{buyer}} запросил перевозку: {{cargo}}"
+      "title": "Новая заявка на перевозку",
+      "body": "{{buyer}} ищет перевозчика: {{cargo}}"
+    },
+    "logistics_message": {
+      "title": "Новое сообщение по заявке",
+      "body": "Заявка {{number}} — есть новое сообщение"
+    },
+    "lab_request_new": {
+      "title": "Новая заявка на исследование",
+      "body": "{{buyer}} ищет лабораторию: {{product}}"
+    },
+    "lab_message": {
+      "title": "Новое сообщение по заявке",
+      "body": "Заявка {{number}} — есть новое сообщение"
     }
   },
   "contracts": {
@@ -1942,6 +1955,31 @@
     "reviewErrors": {
       "self": "Нельзя оставить отзыв собственной компании",
       "ratingRequired": "Поставьте оценку от 1 до 5"
+    },
+    "laboratory": {
+      "aboutTitle": "О лаборатории",
+      "methodsTitle": "Методы и показатели",
+      "detailsTitle": "Контакты",
+      "experience": "Лет на рынке",
+      "studies": "Выполнено исследований",
+      "turnaround": "Средний срок",
+      "city": "Город",
+      "website": "Сайт",
+      "years_one": "{{count}} год",
+      "years_few": "{{count}} года",
+      "years_many": "{{count}} лет",
+      "years_other": "{{count}} лет",
+      "days_one": "{{count}} день",
+      "days_few": "{{count}} дня",
+      "days_many": "{{count}} дней",
+      "days_other": "{{count}} дней",
+      "studiesValue": "{{value}}+",
+      "accreditationOptions": {
+        "iso_17025": "ISO/IEC 17025",
+        "national_accreditation": "Национальная аккредитация",
+        "iso_9001": "ISO 9001",
+        "gost_certified": "Аттестация по ГОСТ"
+      }
     }
   },
   "manufacturers": {
@@ -2343,7 +2381,6 @@
     "submit": "Отправить заявку",
     "privacy": "Данные защищены и используются только для подбора логистических решений.",
     "number": "Номер заявки",
-    "carrier": "Перевозчик",
     "doneTitle": "Заявка отправлена!",
     "doneBody": "Перевозчик получил вашу заявку. Ответ придёт в уведомления, а срочные вопросы решим по телефону.",
     "backToDirectory": "К списку перевозчиков",
@@ -2366,17 +2403,137 @@
     "errors": {
       "cargoRequired": "Укажите наименование груза",
       "volumeInvalid": "Укажите объём больше нуля",
-      "countryRequired": "Выберите страну",
-      "selfRequest": "Нельзя отправить заявку собственной компании"
+      "countryRequired": "Выберите страну"
     },
     "listTitle": "Логистические заявки",
-    "tabSent": "Отправленные",
-    "tabIncoming": "Входящие",
     "emptyTitle": "Заявок пока нет",
     "emptySentBody": "Откройте профиль перевозчика и отправьте заявку — она появится здесь.",
-    "emptyIncomingBody": "Когда покупатель отправит вам заявку на перевозку, она появится здесь.",
     "myRequests": "Мои заявки",
     "buyer": "Покупатель",
-    "contact": "Контактный телефон"
+    "contact": "Контактный телефон",
+    "broadcastHint": "Заявку увидят все проверенные логистические компании.",
+    "ctaFromProfile": "Разместить заявку на перевозку",
+    "newRequest": "Новая заявка",
+    "poolTitle": "Заявки на перевозку",
+    "poolSubtitle": "Открытые заявки грузовладельцев. Откликнитесь — и продолжите в чате.",
+    "tabAll": "Все заявки",
+    "tabMine": "Мои отклики",
+    "poolEmptyTitle": "Пока нет открытых заявок",
+    "poolEmptyBody": "Как только грузовладелец разместит заявку, она появится здесь.",
+    "poolEmptyMineBody": "Откликнитесь на заявку — и она появится здесь.",
+    "reply": "Откликнуться",
+    "openChat": "Открыть чат",
+    "responsesTitle": "Отклики перевозчиков",
+    "noResponses": "Откликов пока нет",
+    "noResponsesBody": "Перевозчики видят вашу заявку. Первый отклик появится здесь.",
+    "responseCount_one": "{{count}} отклик",
+    "responseCount_few": "{{count}} отклика",
+    "responseCount_many": "{{count}} откликов",
+    "responseCount_other": "{{count}} откликов"
+  },
+  "threadChat": {
+    "title": "Переписка",
+    "empty": "Сообщений пока нет. Напишите первым.",
+    "placeholder": "Ваше сообщение…",
+    "send": "Отправить",
+    "attach": "Прикрепить файл"
+  },
+  "labRequest": {
+    "title": "Заявка на исследование",
+    "heroTitle": "Новая заявка в лабораторию",
+    "heroBody": "Опишите, что нужно исследовать. Заявку увидят все проверенные лаборатории.",
+    "stepSubject": "Что исследуем",
+    "stepDetails": "Данные для заявки",
+    "product": "Что исследуем?",
+    "productPlaceholder": "HDPE S5502 BN",
+    "grade": "Марка",
+    "studyType": "Тип исследований",
+    "studyTypePlaceholder": "Выберите тип",
+    "methods": "Необходимые исследования",
+    "methodsHint": "Отметьте хотя бы один показатель",
+    "sampleQty": "Количество образца",
+    "sampleQtyHint": "например, 1 кг",
+    "comment": "Комментарий",
+    "commentPlaceholder": "Введите комментарий",
+    "contactName": "Контактное лицо",
+    "contactEmail": "Email",
+    "contactPhone": "Телефон",
+    "contactPhoneHint": "Если не указать — возьмём номер вашего аккаунта",
+    "purpose": "Цель исследования",
+    "purposePlaceholder": "Выберите цель",
+    "urgent": "Нужен ли срочный анализ?",
+    "desiredDate": "Желаемая дата готовности",
+    "submit": "Отправить заявку",
+    "ctaFromProfile": "Разместить заявку на исследование",
+    "newRequest": "Новая заявка",
+    "listTitle": "Заявки в лабораторию",
+    "myRequests": "Мои заявки",
+    "laboratory": "Лаборатория",
+    "buyer": "Заказчик",
+    "contact": "Контакт",
+    "number": "Номер заявки",
+    "emptyTitle": "Заявок пока нет",
+    "emptySentBody": "Опишите, что нужно исследовать — заявку увидят все лаборатории.",
+    "doneTitle": "Заявка отправлена!",
+    "doneBody": "Лаборатории получили вашу заявку. Ответы придут в уведомления, а обсудить детали можно в переписке.",
+    "backToDirectory": "К списку лабораторий",
+    "toCabinet": "В кабинет",
+    "poolTitle": "Заявки на исследования",
+    "poolSubtitle": "Открытые заявки заказчиков. Откликнитесь — и продолжите в чате.",
+    "tabAll": "Все заявки",
+    "tabMine": "Мои отклики",
+    "poolEmptyTitle": "Пока нет открытых заявок",
+    "poolEmptyBody": "Как только заказчик разместит заявку, она появится здесь.",
+    "poolEmptyMineBody": "Откликнитесь на заявку — и она появится здесь.",
+    "reply": "Откликнуться",
+    "openChat": "Открыть чат",
+    "responsesTitle": "Отклики лабораторий",
+    "noResponses": "Откликов пока нет",
+    "noResponsesBody": "Лаборатории видят вашу заявку. Первый отклик появится здесь.",
+    "responseCount_one": "{{count}} отклик",
+    "responseCount_few": "{{count}} отклика",
+    "responseCount_many": "{{count}} откликов",
+    "responseCount_other": "{{count}} откликов",
+    "lifecycle": {
+      "submitted": "Отправлена",
+      "in_progress": "В работе",
+      "quoted": "Есть предложение"
+    },
+    "errors": {
+      "productRequired": "Укажите, что нужно исследовать",
+      "methodsRequired": "Отметьте хотя бы один показатель"
+    },
+    "methodOptions": {
+      "mfi": "ПТР (MFI)",
+      "density": "Плотность",
+      "tensile_strength": "Прочность при растяжении",
+      "elongation": "Относительное удлинение",
+      "impact_strength": "Ударная вязкость",
+      "dsc": "ДСК (DSC)",
+      "ftir": "ИК-спектроскопия (FTIR)",
+      "tga": "ТГА (TGA)",
+      "ash_content": "Зольность",
+      "moisture": "Влажность",
+      "vicat": "Температура размягчения по Вика",
+      "hardness": "Твёрдость",
+      "melting_point": "Температура плавления",
+      "carbon_black": "Содержание сажи",
+      "oit": "OIT (стойкость к окислению)",
+      "rheology": "Реология"
+    },
+    "studyTypes": {
+      "full_passport": "Полный лабораторный паспорт",
+      "single_method": "Отдельный показатель",
+      "comparison": "Сравнительный анализ",
+      "incoming_control": "Входной контроль",
+      "certification": "Для сертификации"
+    },
+    "purposes": {
+      "quality_and_compatibility": "Оценка качества и совместимости с оборудованием",
+      "supplier_check": "Проверка поставщика",
+      "certification": "Сертификация",
+      "dispute": "Разрешение спора",
+      "rnd": "НИОКР"
+    }
   }
 }

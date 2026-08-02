@@ -66,6 +66,7 @@ from app.models.enums import (  # noqa: F401
     FactoryRfqDocumentKind,
     FactoryRfqStatus,
     LabOrderStatus,
+    LabRequestStatus,
     LicenseStatus,
     LogisticsRequestStatus,
     OfferFileKind,
@@ -99,7 +100,16 @@ from app.models.enums import (
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.lab import LabOrder, LabPartner, SampleRequest  # noqa: F401
-from app.models.logistics import LogisticsRequest  # noqa: F401
+from app.models.laboratory import (  # noqa: F401
+    LabRequest,
+    LabRequestMessage,
+    LabRequestThread,
+)
+from app.models.logistics import (  # noqa: F401
+    LogisticsRequest,
+    LogisticsRequestMessage,
+    LogisticsRequestThread,
+)
 from app.models.manufacturers import (  # noqa: F401
     FactoryRfq,
     FactoryRfqDocument,
@@ -277,6 +287,13 @@ __all__ = [
     # Logistics directory + service requests
     "LogisticsRequestStatus",
     "LogisticsRequest",
+    "LogisticsRequestThread",
+    "LogisticsRequestMessage",
+    # Laboratory analysis requests
+    "LabRequestStatus",
+    "LabRequest",
+    "LabRequestThread",
+    "LabRequestMessage",
     # Company reviews
     "CompanyReviewStatus",
     "CompanyReview",

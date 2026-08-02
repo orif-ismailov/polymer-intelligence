@@ -100,6 +100,26 @@ class PublicLogisticsSnippet(BaseModel):
     capability_images: dict[str, str] = Field(default_factory=dict)
 
 
+class PublicLaboratorySnippet(BaseModel):
+    """A laboratory's questionnaire, as the public directory shows it.
+
+    Accreditations and methods are KEYS, resolved for display through the same
+    i18n tree the wizard writes them from. `email`/`phone` are deliberately
+    absent even though the cabinet payload has them: `tests/test_public_api.py`
+    holds that the anonymous surface carries no way to reach a company
+    off-platform, and a laboratory is no exception.
+    """
+
+    city: str | None = None
+    website: str | None = None
+    description: str | None = None
+    accreditations: list[str] = Field(default_factory=list)
+    methods: list[str] = Field(default_factory=list)
+    years_experience: int | None = None
+    studies_completed: int | None = None
+    avg_turnaround_days: int | None = None
+
+
 class PublicReviewOut(BaseModel):
     """One published review, as a stranger reads it.
 
@@ -145,6 +165,8 @@ class PublicCompanyCard(BaseModel):
     #: which is also why it is not flattened into the fields above the way the
     #: manufacturer snippet is.
     logistics: PublicLogisticsSnippet | None = None
+    #: Laboratory questionnaire. NULL for a company that never filled one in.
+    laboratory: PublicLaboratorySnippet | None = None
     #: Published-review aggregate. `rating` is NULL — not 0 — for a company with
     #: no reviews: «нет отзывов» and «оценка 0» are different sentences, and the
     #: star line has to be able to tell them apart.

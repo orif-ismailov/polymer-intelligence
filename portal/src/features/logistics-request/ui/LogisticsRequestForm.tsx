@@ -29,8 +29,6 @@ import {
 } from "@/shared/ui";
 
 interface LogisticsRequestFormProps {
-  /** The carrier being asked. */
-  logisticsId: number;
   /** The buyer's acting company. */
   companyId: number;
   onSent: (requestId: number) => void;
@@ -44,17 +42,16 @@ interface LogisticsRequestFormProps {
  * is quick. `features/factory-rfq` splits across four steps because it collects
  * documents and commercial terms; there is nothing here to page through.
  *
+ * No carrier is chosen. The request is BROADCAST — a shipper does not know which
+ * of ten firms runs their lane, so they state the job and carriers come to them.
+ *
  * Consequently there is no zustand draft either — the draft store in the other
  * flows exists to survive step navigation, and one screen has none.
  */
-export function LogisticsRequestForm({
-  logisticsId,
-  companyId,
-  onSent,
-}: LogisticsRequestFormProps) {
+export function LogisticsRequestForm({ companyId, onSent }: LogisticsRequestFormProps) {
   const { t, i18n } = useTranslation();
   const lang = coerceLang(i18n.language);
-  const create = useCreateLogisticsRequest(logisticsId);
+  const create = useCreateLogisticsRequest();
   const [touched, setTouched] = useState(false);
 
   const [form, setForm] = useState({
@@ -76,15 +73,9 @@ export function LogisticsRequestForm({
   const routeOk = form.from_country !== "" && form.to_country !== "";
   const canSubmit = cargoOk && volumeOk && routeOk;
 
-  // The server codes its refusals (`detail: {code}`); `ApiError.code` carries
-  // that, while `.message` is only "Request failed with status 422" — matching
-  // on the message is the documented way to make every refusal read as generic.
-  const ERRORS: Record<string, string> = {
-    self_logistics_request: t("logisticsRequest.errors.selfRequest"),
-  };
-  const error = create.error
-    ? (ERRORS[create.error.code ?? ""] ?? t("errors.generic"))
-    : null;
+  // Nothing to map by code any more: the only coded refusal this form could get
+  // was `self_logistics_request`, and a broadcast has no addressee to be.
+  const error = create.error ? t("errors.generic") : null;
 
   const countryOptions = (codes: readonly string[]) =>
     codes.map((code) => ({

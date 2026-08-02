@@ -8,12 +8,20 @@ import { DealDetailPage, DealsPage } from "@/pages/deals";
 import { UiKitPage } from "@/pages/dev-ui";
 import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
+import {
+  LabRequestDetailPage,
+  LabRequestDonePage,
+  LabRequestPage,
+  LabRequestsPage,
+  LabThreadPage,
+} from "@/pages/lab";
 import { LabOrdersPage } from "@/pages/lab-orders";
 import {
   LogisticsRequestDetailPage,
   LogisticsRequestDonePage,
   LogisticsRequestPage,
   LogisticsRequestsPage,
+  LogisticsThreadPage,
 } from "@/pages/logistics";
 import { LoginPage } from "@/pages/login";
 import {
@@ -32,7 +40,7 @@ import { PublicCompanyPage, PublicDirectoryPage } from "@/pages/public-directory
 import { PublicHomePage } from "@/pages/public-home";
 import { PublicMarketPage, PublicOfferPage } from "@/pages/public-market";
 import { PublicPricesPage } from "@/pages/public-prices";
-import { RequestCreatePage, RequestDetailPage, RequestPublishedPage, RequestsPage } from "@/pages/requests";
+import { RequestCreatePage, RequestDetailPage, RequestPublishedPage } from "@/pages/requests";
 import { SamplesPage } from "@/pages/samples";
 import { SellerProfilePage } from "@/pages/sellers";
 import { SettingsPage } from "@/pages/settings";
@@ -42,6 +50,7 @@ import { AppShell } from "@/widgets/app-shell";
 import { PublicShell } from "@/widgets/public-shell";
 
 import { NotFoundPage } from "./NotFoundPage";
+import { RequestsRouteSwitch } from "./RequestsRouteSwitch";
 import { OfferEditRedirect } from "./OfferEditRedirect";
 import { RedirectToPublicCompany, RedirectToPublicOffer } from "./RedirectToPublic";
 import { RedirectIfAuthed } from "./RedirectIfAuthed";
@@ -198,7 +207,21 @@ export const routes: RouteObject[] = [
                   // Reading a carrier is public; asking one for a price is
                   // not. These two need a session AND a company, so unlike
                   // the directory redirects above they stay inside the guards.
+                  // Analysis requests. `/cabinet/lab-orders` beside this is the
+                  // STAFF-run partner-lab queue (P6) — different flow, kept.
+                  { path: "lab/requests", element: <LabRequestsPage /> },
+                  { path: "lab/requests/new", element: <LabRequestPage /> },
+                  { path: "lab/threads/:threadId", element: <LabThreadPage /> },
+                  {
+                    path: "lab/requests/:requestId/done",
+                    element: <LabRequestDonePage />,
+                  },
+                  { path: "lab/requests/:requestId", element: <LabRequestDetailPage /> },
+
                   { path: "logistics/requests", element: <LogisticsRequestsPage /> },
+                  // One address for a conversation, whichever side clicks it.
+                  { path: "logistics/threads/:threadId", element: <LogisticsThreadPage /> },
+                  { path: "logistics/requests/new", element: <LogisticsRequestPage /> },
                   {
                     path: "logistics/requests/:requestId/done",
                     element: <LogisticsRequestDonePage />,
@@ -207,7 +230,6 @@ export const routes: RouteObject[] = [
                     path: "logistics/requests/:requestId",
                     element: <LogisticsRequestDetailPage />,
                   },
-                  { path: "logistics/:companyId/request", element: <LogisticsRequestPage /> },
 
                   // Same components as the storefront, different chrome.
                   { path: "prices", element: <PublicPricesPage /> },
@@ -228,7 +250,9 @@ export const routes: RouteObject[] = [
                   { path: "inquiries/:inquiryId", element: <InquiryDetailPage /> },
                   { path: "samples", element: <SamplesPage /> },
                   { path: "lab-orders", element: <LabOrdersPage /> },
-                  { path: "requests", element: <RequestsPage /> },
+                  // «Заявки» means the buyer's purchase requests, or the
+                  // broadcast pool for a carrier — see RequestsRouteSwitch.
+                  { path: "requests", element: <RequestsRouteSwitch /> },
                   { path: "requests/new", element: <Navigate to="/cabinet/requests/new/1" replace /> },
                   { path: "requests/new/done/:requestId", element: <RequestPublishedPage /> },
                   { path: "requests/new/:step", element: <RequestCreatePage /> },

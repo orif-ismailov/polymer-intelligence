@@ -588,10 +588,16 @@ def store_factory_rfq_file(
     return key, mime
 
 
-def store_manufacturer_chat_file(
-    thread_id: int, content: bytes, filename: str
+def _store_chat_file(
+    prefix: str, thread_id: int, content: bytes, filename: str
 ) -> tuple[str, str]:
-    """Validate + store a manufacturer-thread chat attachment; return (key, mime)."""
+    """Validate + store a chat attachment under `prefix/`; return (key, mime).
+
+    Shared by every thread-shaped chat so there is one place that decides what an
+    attachment is and one shape of key. The client's filename is sanitised but
+    kept in the key — unlike a logo, an attachment is something a human asked for
+    by name, and a random key would strip that from the download.
+    """
     from app.core.storage import s3_client  # noqa: PLC0415
 
     mime = validate_upload(content, filename)
@@ -600,7 +606,7 @@ def store_manufacturer_chat_file(
 
     basename = os.path.basename(filename) or "upload"
     safe = basename.replace("/", "_").replace("\\", "_").replace("..", "__")
-    key = f"manufacturer-chat/{thread_id}/{secrets.token_hex(8)}-{safe}"
+    key = f"{prefix}/{thread_id}/{secrets.token_hex(8)}-{safe}"
 
     s3_client.put_object(  # type: ignore[attr-defined]
         Bucket=settings.S3_BUCKET,
@@ -609,6 +615,27 @@ def store_manufacturer_chat_file(
         ContentType=mime,
     )
     return key, mime
+
+
+def store_manufacturer_chat_file(
+    thread_id: int, content: bytes, filename: str
+) -> tuple[str, str]:
+    """Validate + store a manufacturer-thread chat attachment; return (key, mime)."""
+    return _store_chat_file("manufacturer-chat", thread_id, content, filename)
+
+
+def store_logistics_chat_file(
+    thread_id: int, content: bytes, filename: str
+) -> tuple[str, str]:
+    """Validate + store a logistics-thread chat attachment; return (key, mime)."""
+    return _store_chat_file("logistics-chat", thread_id, content, filename)
+
+
+def store_lab_chat_file(
+    thread_id: int, content: bytes, filename: str
+) -> tuple[str, str]:
+    """Validate + store a laboratory-thread chat attachment; return (key, mime)."""
+    return _store_chat_file("lab-chat", thread_id, content, filename)
 
 
 def get_object_bytes(key: str) -> bytes:

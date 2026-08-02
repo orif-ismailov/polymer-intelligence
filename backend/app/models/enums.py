@@ -684,3 +684,20 @@ class CompanyReviewStatus(enum.StrEnum):
 
     published = "published"
     hidden = "hidden"
+
+
+class LabRequestStatus(enum.StrEnum):
+    """Lifecycle of a buyer→laboratory analysis request (PG type: lab_request_status).
+
+    Same shape as `LogisticsRequestStatus`, and deliberately so: both are "a buyer
+    asked verified companies for a price and is waiting". Distinct from
+    `LabOrderStatus`, which drives the STAFF-run partner-lab machine (P6) and has
+    real operational states (`sample_awaited`, `in_analysis`) an operator moves.
+    """
+
+    submitted = "submitted"
+    viewed = "viewed"
+    in_progress = "in_progress"
+    quoted = "quoted"
+    closed = "closed"
+    rejected = "rejected"

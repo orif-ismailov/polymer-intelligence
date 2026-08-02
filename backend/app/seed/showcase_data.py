@@ -500,6 +500,64 @@ COMPANIES: list[dict[str, object]] = [
         "archetype": "lab",
         "products": [],
         "site": "cptl.uz",
+        # Keys, not labels — the storefront resolves them through the same
+        # `wizard.laboratory.*` i18n tree the registration wizard writes them from.
+        "laboratory_profile": {
+            "city": "Ташкент",
+            "website": "cptl.uz",
+            "email": "info@cptl.uz",
+            "phone": "+998 71 200 33 44",
+            "description": (
+                "Независимая аккредитованная лаборатория для анализа полимеров, "
+                "пластмасс и химического сырья. Современное оборудование и опытная "
+                "команда специалистов."
+            ),
+            "accreditations": ["iso_17025", "national_accreditation"],
+            "methods": [
+                "mfi", "density", "tensile_strength", "dsc", "ftir",
+                "ash_content", "moisture", "impact_strength",
+            ],
+            "years_experience": 12,
+            "studies_completed": 25000,
+            "avg_turnaround_days": 3,
+        },
+    },
+    {
+        # A SECOND laboratory. One is enough to render a directory and not enough
+        # to prove that a lab cannot read a competitor's conversation, which is
+        # the whole point of the per-lab thread.
+        "key": "polytest_lab",
+        "tax_id": "330527971",
+        "legal_name": 'ООО «PolyTest Laboratory»',
+        "short_name": "PolyTest Lab",
+        "legal_form": "ООО",
+        "address": "г. Ташкент, Юнусабадский р-н, ул. Амира Темура, 108",
+        "city": "Ташкент",
+        "director": "Дилшод Рустамович Ахмедов",
+        "reg_date": "2019-04-18",
+        "roles": ["laboratory"],
+        "status": "verified",
+        "archetype": "lab",
+        "products": [],
+        "site": "polytest.uz",
+        # Deliberately narrower than CPTL: a smaller lab with fewer methods is
+        # what a half-filled profile looks like, and the block has to read well
+        # at both ends of that range.
+        "laboratory_profile": {
+            "city": "Ташкент",
+            "website": "polytest.uz",
+            "email": "lab@polytest.uz",
+            "phone": "+998 71 244 15 90",
+            "description": (
+                "Испытательная лаборатория полимеров: физико-механические "
+                "показатели и входной контроль сырья."
+            ),
+            "accreditations": ["iso_17025"],
+            "methods": ["mfi", "density", "tensile_strength", "moisture"],
+            "years_experience": 6,
+            "studies_completed": 4200,
+            "avg_turnaround_days": 5,
+        },
     },
     # ── In-flight verification states (so the staff queue is never empty) ─────
     {
@@ -616,6 +674,7 @@ PEOPLE: dict[str, list[tuple[str, str, str, str]]] = {
     "trans_asia": [("+998901234528", "Равшан Джураев", "owner", "ru")],
     "rail_freight": [("+998901234529", "Илхом Назаров", "owner", "ru")],
     "cptl_lab": [("+998901234530", "Гулнора Каримова", "owner", "ru")],
+    "polytest_lab": [("+998901234540", "Дилшод Ахмедов", "owner", "ru")],
     "zarafshan": [("+998901234531", "Комил Ортиков", "owner", "uz")],
     "angren_recycling": [("+998901234532", "Шерзод Юлдашев", "owner", "ru")],
     "sirdaryo": [("+998901234533", "Азизбек Тошев", "owner", "uz")],

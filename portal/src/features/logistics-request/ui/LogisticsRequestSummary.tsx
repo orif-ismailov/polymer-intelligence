@@ -7,17 +7,18 @@ import { Card, CardBody, SpecItem, SpecList, Stepper } from "@/shared/ui";
 
 interface LogisticsRequestSummaryProps {
   request: LogisticsRequest;
-  /** Show the buyer instead of the carrier — the carrier's view of the row. */
-  perspective?: "buyer" | "carrier";
 }
 
 /**
  * One request, read back.
  *
- * Shared by the buyer's success sheet and both parties' detail page: the facts
- * are the same either way, and only the chrome around them differs (confetti and
- * CTAs there, a page header here). Two copies of this list would have drifted
- * the first time a field was added.
+ * Shared by the buyer's success sheet and their detail page: the facts are the
+ * same either way, and only the chrome around them differs (confetti and CTAs
+ * there, a page header here). Two copies of this list would have drifted the
+ * first time a field was added.
+ *
+ * BUYER-side only. A carrier reads a request through the pool, whose payload is
+ * a different model on purpose — it carries no `contact_phone`.
  *
  * The three dots are the request LIFECYCLE, which is what the mockup's stepper
  * actually depicts — the form is one screen, so a stepper above it would have
@@ -25,10 +26,7 @@ interface LogisticsRequestSummaryProps {
  */
 const LIFECYCLE = ["submitted", "in_progress", "quoted"] as const;
 
-export function LogisticsRequestSummary({
-  request,
-  perspective = "buyer",
-}: LogisticsRequestSummaryProps) {
+export function LogisticsRequestSummary({ request }: LogisticsRequestSummaryProps) {
   const { t, i18n } = useTranslation();
   const lang = coerceLang(i18n.language);
 
@@ -51,9 +49,6 @@ export function LogisticsRequestSummary({
       .filter(Boolean)
       .join(", ");
 
-  const counterparty =
-    perspective === "carrier" ? request.buyer_name : request.logistics_name;
-
   return (
     <div className="space-y-5">
       <Stepper
@@ -71,12 +66,8 @@ export function LogisticsRequestSummary({
           <SpecList>
             <SpecItem label={t("logisticsRequest.number")} value={request.number} numeric />
             <SpecItem
-              label={t(
-                perspective === "carrier"
-                  ? "logisticsRequest.buyer"
-                  : "logisticsRequest.carrier",
-              )}
-              value={counterparty ?? "—"}
+              label={t("logisticsRequest.buyer")}
+              value={request.buyer_name ?? "—"}
             />
             <SpecItem label={t("logisticsRequest.cargoName")} value={request.cargo_name} />
             <SpecItem
@@ -107,8 +98,7 @@ export function LogisticsRequestSummary({
                 span={2}
               />
             ) : null}
-            {/* Only useful to the side that has to call back. */}
-            {perspective === "carrier" && request.contact_phone ? (
+            {request.contact_phone ? (
               <SpecItem
                 label={t("logisticsRequest.contact")}
                 value={request.contact_phone}

@@ -83,7 +83,8 @@
     "labOrders": "Laboratory",
     "marketplace": "Marketplace",
     "openMenu": "Open menu",
-    "logisticsRequests": "Logistics requests"
+    "logisticsRequests": "Logistics requests",
+    "labRequests": "Laboratory requests"
   },
   "home": {
     "title": "Overview",
@@ -1476,8 +1477,20 @@
       "body": "Sample request: status changed"
     },
     "logistics_request_new": {
-      "title": "New logistics request",
-      "body": "{{buyer}} requested transport: {{cargo}}"
+      "title": "New transport request",
+      "body": "{{buyer}} is looking for a carrier: {{cargo}}"
+    },
+    "logistics_message": {
+      "title": "New message on a request",
+      "body": "Request {{number}} — new message"
+    },
+    "lab_request_new": {
+      "title": "New analysis request",
+      "body": "{{buyer}} is looking for a laboratory: {{product}}"
+    },
+    "lab_message": {
+      "title": "New message on a request",
+      "body": "Request {{number}} — new message"
     }
   },
   "contracts": {
@@ -1938,6 +1951,27 @@
     "reviewErrors": {
       "self": "You cannot review your own company",
       "ratingRequired": "Give a rating from 1 to 5"
+    },
+    "laboratory": {
+      "aboutTitle": "About the laboratory",
+      "methodsTitle": "Methods and tests",
+      "detailsTitle": "Contacts",
+      "experience": "Years on the market",
+      "studies": "Studies completed",
+      "turnaround": "Average turnaround",
+      "city": "City",
+      "website": "Website",
+      "years_one": "{{count}} year",
+      "years_other": "{{count}} years",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "studiesValue": "{{value}}+",
+      "accreditationOptions": {
+        "iso_17025": "ISO/IEC 17025",
+        "national_accreditation": "National accreditation",
+        "iso_9001": "ISO 9001",
+        "gost_certified": "GOST certified"
+      }
     }
   },
   "manufacturers": {
@@ -2329,7 +2363,6 @@
     "submit": "Send request",
     "privacy": "Your data is protected and used only to match logistics solutions.",
     "number": "Request number",
-    "carrier": "Carrier",
     "doneTitle": "Request sent!",
     "doneBody": "The carrier has your request. The reply arrives in your notifications; anything urgent we settle by phone.",
     "backToDirectory": "Back to carriers",
@@ -2352,17 +2385,133 @@
     "errors": {
       "cargoRequired": "Enter the cargo name",
       "volumeInvalid": "Enter a volume greater than zero",
-      "countryRequired": "Select a country",
-      "selfRequest": "You cannot send a request to your own company"
+      "countryRequired": "Select a country"
     },
     "listTitle": "Logistics requests",
-    "tabSent": "Sent",
-    "tabIncoming": "Incoming",
     "emptyTitle": "No requests yet",
     "emptySentBody": "Open a carrier's profile and send a request — it will appear here.",
-    "emptyIncomingBody": "When a buyer sends you a transport request, it will appear here.",
     "myRequests": "My requests",
     "buyer": "Buyer",
-    "contact": "Contact phone"
+    "contact": "Contact phone",
+    "broadcastHint": "Every verified logistics company will see this request.",
+    "ctaFromProfile": "Post a transport request",
+    "newRequest": "New request",
+    "poolTitle": "Transport requests",
+    "poolSubtitle": "Open requests from shippers. Reply and continue in chat.",
+    "tabAll": "All requests",
+    "tabMine": "My replies",
+    "poolEmptyTitle": "No open requests yet",
+    "poolEmptyBody": "As soon as a shipper posts a request, it will appear here.",
+    "poolEmptyMineBody": "Reply to a request and it will appear here.",
+    "reply": "Reply",
+    "openChat": "Open chat",
+    "responsesTitle": "Carrier replies",
+    "noResponses": "No replies yet",
+    "noResponsesBody": "Carriers can see your request. The first reply will appear here.",
+    "responseCount_one": "{{count}} reply",
+    "responseCount_other": "{{count}} replies"
+  },
+  "threadChat": {
+    "title": "Conversation",
+    "empty": "No messages yet. Write the first one.",
+    "placeholder": "Your message…",
+    "send": "Send",
+    "attach": "Attach a file"
+  },
+  "labRequest": {
+    "title": "Analysis request",
+    "heroTitle": "New laboratory request",
+    "heroBody": "Describe what needs testing. Every verified laboratory will see it.",
+    "stepSubject": "What to test",
+    "stepDetails": "Request details",
+    "product": "What are we testing?",
+    "productPlaceholder": "HDPE S5502 BN",
+    "grade": "Grade",
+    "studyType": "Study type",
+    "studyTypePlaceholder": "Select a type",
+    "methods": "Required tests",
+    "methodsHint": "Pick at least one",
+    "sampleQty": "Sample amount",
+    "sampleQtyHint": "e.g. 1 kg",
+    "comment": "Comment",
+    "commentPlaceholder": "Enter a comment",
+    "contactName": "Contact person",
+    "contactEmail": "Email",
+    "contactPhone": "Phone",
+    "contactPhoneHint": "Left blank, we use your account number",
+    "purpose": "Purpose",
+    "purposePlaceholder": "Select a purpose",
+    "urgent": "Is it urgent?",
+    "desiredDate": "Target completion date",
+    "submit": "Send request",
+    "ctaFromProfile": "Post an analysis request",
+    "newRequest": "New request",
+    "listTitle": "Laboratory requests",
+    "myRequests": "My requests",
+    "laboratory": "Laboratory",
+    "buyer": "Customer",
+    "contact": "Contact",
+    "number": "Request number",
+    "emptyTitle": "No requests yet",
+    "emptySentBody": "Describe what needs testing — every laboratory will see it.",
+    "doneTitle": "Request sent!",
+    "doneBody": "The laboratories have your request. Replies arrive in your notifications, and details are settled in the conversation.",
+    "backToDirectory": "Back to laboratories",
+    "toCabinet": "To the cabinet",
+    "poolTitle": "Analysis requests",
+    "poolSubtitle": "Open requests from customers. Reply and continue in chat.",
+    "tabAll": "All requests",
+    "tabMine": "My replies",
+    "poolEmptyTitle": "No open requests yet",
+    "poolEmptyBody": "As soon as a customer posts a request, it will appear here.",
+    "poolEmptyMineBody": "Reply to a request and it will appear here.",
+    "reply": "Reply",
+    "openChat": "Open chat",
+    "responsesTitle": "Laboratory replies",
+    "noResponses": "No replies yet",
+    "noResponsesBody": "Laboratories can see your request. The first reply will appear here.",
+    "responseCount_one": "{{count}} reply",
+    "responseCount_other": "{{count}} replies",
+    "lifecycle": {
+      "submitted": "Sent",
+      "in_progress": "In progress",
+      "quoted": "Quoted"
+    },
+    "errors": {
+      "productRequired": "Say what needs testing",
+      "methodsRequired": "Pick at least one test"
+    },
+    "methodOptions": {
+      "mfi": "MFI",
+      "density": "Density",
+      "tensile_strength": "Tensile strength",
+      "elongation": "Elongation at break",
+      "impact_strength": "Impact strength",
+      "dsc": "DSC",
+      "ftir": "FTIR",
+      "tga": "TGA",
+      "ash_content": "Ash content",
+      "moisture": "Moisture",
+      "vicat": "Vicat softening point",
+      "hardness": "Hardness",
+      "melting_point": "Melting point",
+      "carbon_black": "Carbon black content",
+      "oit": "OIT",
+      "rheology": "Rheology"
+    },
+    "studyTypes": {
+      "full_passport": "Full laboratory passport",
+      "single_method": "Single method",
+      "comparison": "Comparative analysis",
+      "incoming_control": "Incoming control",
+      "certification": "For certification"
+    },
+    "purposes": {
+      "quality_and_compatibility": "Quality and equipment compatibility",
+      "supplier_check": "Supplier check",
+      "certification": "Certification",
+      "dispute": "Dispute resolution",
+      "rnd": "R&D"
+    }
   }
 }

@@ -1573,8 +1573,150 @@ CREATE TABLE company_media (
 CREATE INDEX ix_company_media_company ON company_media(company_id, id);
 ```
 
+### Логистика: широковещательная заявка и переписка (0038)
+
+0035 адресовала заявку ОДНОМУ перевозчику и тем самым задавала грузовладельцу
+вопрос, на который он не может ответить: какая из десяти компаний возит именно
+этот маршрут. Теперь заявка формулируется один раз, а видят её все проверенные
+логистические компании — это же и наполняет для перевозчика страницу «Заявки»,
+которая для него иначе всегда пуста (перевозчик не подаёт закупочных заявок).
+
+Каждый заинтересованный перевозчик открывает СВОЙ разговор. Уникальный ключ —
+`(заявка, перевозчик)`, а не пара компаний, как у `manufacturer_threads`:
+предмет здесь — заявка, и те же две компании могут обсуждать несколько рейсов.
+Приватность на перевозчика — чтобы грузовладелец торговался отдельно и никто не
+читал условия конкурента.
+
+Колонки `visibility` у заявки НЕТ намеренно. У `requests` такая тройка есть
+(`visibility` / `visible_company_ids`), но из интерфейса она мертва — мастер
+покупателя сворачивает выбор в текст `comment`, — поэтому второй неиспользуемый
+механизм стоил бы миграции и не давал ничего. Заявку видит каждый перевожчик с
+подтверждённой ролью; ограничение — это миграция с экраном за ней.
+
+Миграция НЕОБРАТИМА: `downgrade()` возвращает `logistics_company_id` как
+NULLABLE и пустой — значения потеряны, а выдуманный перевозчик в существующей
+заявке хуже отсутствующего.
+
+```sql
+ALTER TABLE logistics_requests DROP COLUMN logistics_company_id;  -- + CHECK, + индекс
+CREATE INDEX ix_logistics_requests_open ON logistics_requests(status, created_at);
+
+CREATE TABLE logistics_request_threads (
+  id bigserial PRIMARY KEY,
+  logistics_request_id bigint NOT NULL
+    REFERENCES logistics_requests(id) ON DELETE CASCADE,
+  carrier_company_id bigint NOT NULL REFERENCES companies(id),
+  created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (logistics_request_id, carrier_company_id)   -- один разговор на перевозчика
+);
+
+CREATE TABLE logistics_request_messages (
+  id bigserial PRIMARY KEY,
+  thread_id bigint NOT NULL
+    REFERENCES logistics_request_threads(id) ON DELETE CASCADE,
+  author_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  author_company_id bigint NOT NULL REFERENCES companies(id),
+  body text NOT NULL DEFAULT '',
+  file_storage_path text, file_name text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (body <> '' OR file_storage_path IS NOT NULL)
+);
+CREATE INDEX ix_logistics_messages_thread ON logistics_request_messages(thread_id, id);
+```
+
+### Лаборатории: широковещательная заявка на исследование и переписка (0039)
+
+Та же форма, что и 0038, применённая ко второму справочнику: заказчик один раз
+описывает материал и нужные показатели, заявку видят все проверенные
+лаборатории, каждая заинтересованная открывает СВОЙ разговор. Причина та же —
+владелец партии не знает, какая из десяти лабораторий делает именно этот метод,
+а страница «Заявки» у лаборатории иначе всегда пуста.
+
+**Это НЕ `lab_orders` (P6, 0028) и её не трогает.** Тот поток ведёт персонал, он
+привязан к офферу или сделке, его выполняют партнёрские лаборатории, которым мы
+звоним, и он — единственный путь, ставящий `seller_offers.lab_verified`. У
+партнёрских лабораторий из `lab_partners` нет аккаунта, поэтому ответить на
+широковещательную заявку они физически не могут: отвечает компания с
+ПОДТВЕРЖДЁННОЙ ролью `laboratory`. Поэтому заявка адресована `companies`, а не
+`lab_partners`, и две ветки сосуществуют.
+
+Номер — `LBR-YYYY-NNNNNN`, ключ advisory-lock 39_000. Префикс `LAB-` намеренно
+не взят: он уже принадлежит `lab_orders` (`lab_service.generate_lab_number`), а
+два разных потока с одинаковым форматом номера — ловушка для поддержки.
+
+Контакты здесь СОБИРАЮТСЯ, а не снимаются с аккаунта, в отличие от
+`logistics_requests.contact_phone`: макет спрашивает имя, email и телефон явно, а
+у `user_accounts` имя nullable и колонки email нет вовсе — снимать было бы
+неоткуда. Пустой телефон падает на номер аккаунта; email остаётся пустым.
+Пул (`LabPoolItemOut`) контактный блок НЕ отдаёт: лаборатория получает работу, а
+не способ увести её с площадки.
+
+Денежной колонки нет: макет прямо оговаривает, что оплата идёт напрямую
+лаборатории и площадка платежей не принимает.
+
+`methods` — JSONB-список ключей, а не таблица связей: набор показателей задаётся
+на клиенте (`LAB_METHODS`), меняется вместе с интерфейсом и ни с чем не
+соединяется запросом. Справочник ради галочек стоил бы миграции на каждую
+правку прайса.
+
+```sql
+CREATE TYPE lab_request_status AS ENUM (
+  'submitted','viewed','in_progress','quoted','closed','rejected'
+);
+
+CREATE TABLE lab_requests (
+  id bigserial PRIMARY KEY,
+  public_id uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  number text NOT NULL UNIQUE,                        -- LBR-YYYY-NNNNNN
+  buyer_company_id bigint NOT NULL REFERENCES companies(id),
+  created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  product_id integer REFERENCES products(id),         -- если марка узнана
+  product_text text NOT NULL,
+  grade_text text, study_type text,
+  methods jsonb,                                      -- список ключей показателей
+  sample_qty text,                                    -- «1 кг» — число и единица в одном поле
+  comment text, purpose text,
+  is_urgent boolean NOT NULL DEFAULT false,
+  desired_date date,
+  contact_name text, contact_email text, contact_phone text,
+  status lab_request_status NOT NULL DEFAULT 'submitted',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_lab_requests_open ON lab_requests(status, created_at);
+CREATE INDEX ix_lab_requests_buyer_status ON lab_requests(buyer_company_id, status);
+
+CREATE TABLE lab_request_threads (
+  id bigserial PRIMARY KEY,
+  lab_request_id bigint NOT NULL REFERENCES lab_requests(id) ON DELETE CASCADE,
+  laboratory_company_id bigint NOT NULL REFERENCES companies(id),
+  created_by_user_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (lab_request_id, laboratory_company_id)   -- один разговор на лабораторию
+);
+
+CREATE TABLE lab_request_messages (
+  id bigserial PRIMARY KEY,
+  thread_id bigint NOT NULL REFERENCES lab_request_threads(id) ON DELETE CASCADE,
+  author_account_id bigint NOT NULL REFERENCES user_accounts(id),
+  author_company_id bigint NOT NULL REFERENCES companies(id),
+  body text NOT NULL DEFAULT '',
+  file_storage_path text, file_name text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (body <> '' OR file_storage_path IS NOT NULL)
+);
+CREATE INDEX ix_lab_messages_thread ON lab_request_messages(thread_id, id);
+```
+
+Миграция обратима: таблицы новые, ронять нечего.
+
 ## История версий
 
+- v1.20 (03.08.2026): лаборатории — широковещательная заявка на исследование и переписка (миграция 0039_lab_requests): enum `lab_request_status`; таблицы `lab_requests` (номер `LBR-YYYY-NNNNNN`, ключ advisory-lock 39_000 — не `LAB-`, который держат `lab_orders`; `methods` как JSONB-список ключей; контакты собираются, а не снимаются с аккаунта), `lab_request_threads` (UNIQUE на пару «заявка × лаборатория») и `lab_request_messages` (тот же CHECK «текст-или-файл»). Поток P6 `lab_orders` не затронут: он единственный ставит `seller_offers.lab_verified`, что закреплено тестом. Заодно `companies.laboratory_profile` отдаётся публично (`PublicLaboratorySnippet` — без email и телефона), а JSONB получил ключи `accreditations` / `methods` / `years_experience` / `studies_completed` / `avg_turnaround_days`.
+- v1.19 (03.08.2026): логистика — широковещательная заявка и переписка (миграция 0038_logistics_broadcast): у `logistics_requests` удалён `logistics_company_id` (вместе с CHECK и индексом перевозчика), добавлен `ix_logistics_requests_open` под запрос пула; таблицы `logistics_request_threads` (UNIQUE на пару «заявка × перевозчик») и `logistics_request_messages` (CHECK «текст-или-файл», как deal/manufacturer chat). Миграция необратима — см. раздел выше. Заодно `CompanySummaryOut.confirmed_roles`: кабинет ветвится по роли на `/cabinet/requests`, а список компаний — это summary.
 - v1.18 (02.08.2026): обложка профиля и медиа компании (миграция 0037_company_cover_and_media): `companies.cover_storage_path` + таблица `company_media` (ON DELETE CASCADE — медиа не имеет смысла без компании), без слотов; ссылка на картинку в `logistics_profile.capability_images` как `{capability_key: media_id}`. Байты отдаёт API, presigned-ссылок нет.
 - v1.17 (02.08.2026): отзывы о компаниях (миграция 0036_company_reviews): enum `review_status` (`published`/`hidden`, БЕЗ `pending` — см. раздел выше); таблица `company_reviews` с UNIQUE на пару (субъект, автор) как правилом «одно мнение на контрагента» и CHECK'ами на самоотзыв и диапазон 1..5. Агрегат — на чтении, одним группирующим запросом на страницу каталога.
 - v1.16 (02.08.2026): логистические заявки (миграция 0035_logistics_requests): enum `logistics_request_status`; таблица `logistics_requests` (CHECK parties distinct + volume > 0, номер `LRQ-YYYY-NNNNNN`, advisory-lock ключ 35_000 — не 34_000, который держат заводские RFQ). Без `offer_id`, без документов и без треда: перевозчик котирует маршрут, а лишний слот на форме — это повод её не отправить. Заодно `companies.logistics_profile` наконец отдаётся публично (схема не менялась, JSONB получил ключи `description` / `years_experience` / `projects_completed`), и появился узкий путь правки витрины у уже верифицированной компании.

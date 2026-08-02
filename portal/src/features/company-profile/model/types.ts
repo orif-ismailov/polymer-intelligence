@@ -66,6 +66,7 @@ export interface CompanyProfileCompany {
    * not carry it, and this interface is satisfied structurally by both.
    */
   logistics?: LogisticsProfileSnippet | null;
+  laboratory?: LaboratoryProfileSnippet | null;
 
   /**
    * Published-review aggregate and first page. Optional for the same reason as
@@ -83,6 +84,18 @@ export interface CompanyProfileReview {
   body: string | null;
   author_company_name: string | null;
   created_at: string;
+}
+
+/** Keys, not labels — see `PublicLaboratorySnippet` in `entities/public`. */
+export interface LaboratoryProfileSnippet {
+  city: string | null;
+  website: string | null;
+  description: string | null;
+  accreditations: string[];
+  methods: string[];
+  years_experience: number | null;
+  studies_completed: number | null;
+  avg_turnaround_days: number | null;
 }
 
 /** Keys, not labels — see `PublicLogisticsSnippet` in `entities/public`. */

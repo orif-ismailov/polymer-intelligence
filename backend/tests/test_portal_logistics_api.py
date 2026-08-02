@@ -1,7 +1,7 @@
-"""Logistics service requests (portal).
+"""Logistics requests: the broadcast pool and its per-carrier conversations.
 
-Reading a carrier is anonymous; asking one for a price is not. What this suite
-holds is that boundary — who may send, to whom, and who may read it back.
+A buyer states a job once and every verified carrier sees it. What this suite
+holds is who that "every" is, and that a carrier's conversation is its own.
 """
 
 from __future__ import annotations
@@ -26,21 +26,51 @@ _BASE = "/api/v1/portal/logistics"
 
 
 def test_routes_registered() -> None:
-    """Literal paths BEFORE the parameterised one.
+    """Literal paths BEFORE the parameterised ones.
 
-    `/portal/logistics/requests` and `/portal/logistics/{logistics_id}/requests`
-    both match `/portal/logistics/X/Y`, and FastAPI resolves first-registered —
-    so a reorder would silently route every list call into the create handler.
-    Asserting the order here is the only thing that catches that.
+    `/portal/logistics/pool` and `/portal/logistics/requests` would both be
+    swallowed by a `/{something}` route declared first — FastAPI resolves
+    first-registered — and the failure would be a silent misroute rather than an
+    error. Asserting the ORDER is the only thing that catches that.
     """
     from app.api.portal.logistics import router  # noqa: PLC0415
 
     paths = [r.path for r in router.routes]  # type: ignore[attr-defined]
-    assert "/portal/logistics/requests" in paths
-    assert "/portal/logistics/requests/{request_id}" in paths
-    assert "/portal/logistics/{logistics_id}/requests" in paths
+    for path in (
+        "/portal/logistics/requests",
+        "/portal/logistics/pool",
+        "/portal/logistics/requests/{request_id}",
+        "/portal/logistics/threads",
+        "/portal/logistics/threads/{thread_id}/messages",
+        "/portal/logistics/requests/{request_id}/threads",
+    ):
+        assert path in paths, path
+
     assert paths.index("/portal/logistics/requests") < paths.index(
-        "/portal/logistics/{logistics_id}/requests"
+        "/portal/logistics/requests/{request_id}"
+    )
+    assert paths.index("/portal/logistics/pool") < paths.index(
+        "/portal/logistics/requests/{request_id}"
+    )
+
+
+def test_pool_payload_omits_the_buyer_contact() -> None:
+    """A carrier gets the job, never the way to take it off-platform.
+
+    `MarketRequestOut` makes the same call for polymer RFQs. The pool is a
+    SEPARATE model rather than the buyer's minus a field, so that a field added
+    to the buyer's payload cannot silently become visible to every carrier.
+    """
+    from app.schemas.portal_logistics import (  # noqa: PLC0415
+        LogisticsPoolItemOut,
+        LogisticsRequestOut,
+    )
+
+    assert "contact_phone" in LogisticsRequestOut.model_fields
+    assert "contact_phone" not in LogisticsPoolItemOut.model_fields
+    assert not (
+        set(LogisticsPoolItemOut.model_fields)
+        & {"contact_name", "contact_email", "phone", "email"}
     )
 
 
@@ -63,10 +93,23 @@ def test_create_payload_rejects_blank_and_nonpositive() -> None:
         with pytest.raises(pydantic.ValidationError):
             LogisticsRequestCreateIn(**{**base, **bad})
 
-    # Blank optionals normalise to NULL rather than to an empty string.
     filled = LogisticsRequestCreateIn(**base, from_city="  ", packaging_type="")
     assert filled.from_city is None
     assert filled.packaging_type is None
+
+
+def test_create_payload_has_no_carrier_field() -> None:
+    """The broadcast is the model, not a default.
+
+    Re-introducing a target field here is how this quietly becomes addressed
+    again, with the pool still running beside it.
+    """
+    from app.schemas.portal_logistics import LogisticsRequestCreateIn  # noqa: PLC0415
+
+    assert not (
+        set(LogisticsRequestCreateIn.model_fields)
+        & {"logistics_company_id", "carrier_company_id", "logistics_id"}
+    )
 
 
 # ── real-DB API fixture ───────────────────────────────────────────────────────
@@ -106,18 +149,14 @@ def _auth(account_id: int) -> dict[str, str]:
     return {"Authorization": f"Bearer {create_portal_access_token(subject=str(account_id))}"}
 
 
-def _carrier(db, owner, tax_id: str, *, confirmed: bool = True):  # noqa: ANN001, ANN202
+def _carrier(db, owner, tax_id: str, name: str = "Trans Asia Logistics", *, confirmed: bool = True):  # noqa: ANN001, ANN202
     """A verified company with the logistics role confirmed (or merely declared)."""
     from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, CompanyStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 
     company = make_company(
-        db,
-        owner,
-        tax_id=tax_id,
-        legal_name="Trans Asia Logistics",
-        status=CompanyStatus.verified,
+        db, owner, tax_id=tax_id, legal_name=name, status=CompanyStatus.verified
     )
     db.add(
         CompanyBusinessRole(
@@ -143,211 +182,368 @@ _PAYLOAD = {
 
 
 @requires_real_db
-def test_buyer_sends_a_request_and_both_parties_read_it(api) -> None:  # noqa: ANN001
-    """The whole flow: send, then see it from each side.
+def test_a_request_reaches_every_carrier_and_nobody_else(api) -> None:  # noqa: ANN001
+    """The whole point of the change.
 
-    `sent` and `incoming` are the same rows from opposite ends, so asserting both
-    is what proves the filter is keyed on the right column — a swap would still
-    return one row to each party and look correct from either alone.
+    Four viewers, one request: two confirmed carriers see it, a company that only
+    DECLARED the role does not, and neither does the buyer who filed it — its own
+    request is its own list, not a job it can bid on.
     """
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+
     client, session = api
     with session() as db:
-        buyer_owner = make_account(db, "+998900008001")
-        buyer = make_company(db, buyer_owner, tax_id="380000001")
-        carrier_owner = make_account(db, "+998900008002")
-        carrier = _carrier(db, carrier_owner, "380000002")
+        buyer_owner = make_account(db, "+998900010001")
+        buyer = make_company(db, buyer_owner, tax_id="400000001", legal_name="Shurtan GCC")
+
+        c1_owner = make_account(db, "+998900010002")
+        carrier1 = _carrier(db, c1_owner, "400000002", "Trans Asia")
+        c2_owner = make_account(db, "+998900010003")
+        carrier2 = _carrier(db, c2_owner, "400000003", "Uzbek Rail")
+
+        # Declared, not confirmed — a tick-box during registration.
+        d_owner = make_account(db, "+998900010004")
+        declared = _carrier(db, d_owner, "400000004", "Says So", confirmed=False)
+
+        # Verified, but never claimed the role at all.
+        t_owner = make_account(db, "+998900010005")
+        trader = make_company(
+            db, t_owner, tax_id="400000005", status=CompanyStatus.verified
+        )
         db.commit()
-        buyer_id, carrier_id = buyer.id, carrier.id
-        buyer_account, carrier_account = buyer_owner.id, carrier_owner.id
+        buyer_id, buyer_account = buyer.id, buyer_owner.id
+        c1, c1_account = carrier1.id, c1_owner.id
+        c2, c2_account = carrier2.id, c2_owner.id
+        d_id, d_account = declared.id, d_owner.id
+        t_id, t_account = trader.id, t_owner.id
 
     created = client.post(
-        f"{_BASE}/{carrier_id}/requests",
+        f"{_BASE}/requests",
         json={**_PAYLOAD, "company_id": buyer_id},
         headers=_auth(buyer_account),
     )
     assert created.status_code == 201
     body = created.json()
     assert body["number"].startswith("LRQ-")
-    assert body["status"] == "submitted"
-    assert body["cargo_name"] == "Полипропилен (PP)"
-    assert body["from_city"] == "Шанхай"
-    # Snapshotted server-side, never sent by the form.
-    assert body["contact_phone"] == "+998900008001"
+    assert body["thread_count"] == 0
     request_id = body["id"]
 
-    sent = client.get(
-        f"{_BASE}/requests",
-        params={"company_id": buyer_id, "side": "sent"},
-        headers=_auth(buyer_account),
+    def pool(company_id: int, account_id: int) -> list[int]:
+        res = client.get(
+            f"{_BASE}/pool", params={"company_id": company_id}, headers=_auth(account_id)
+        )
+        assert res.status_code == 200
+        return [i["id"] for i in res.json()["items"]]
+
+    assert pool(c1, c1_account) == [request_id]
+    assert pool(c2, c2_account) == [request_id]
+    # Empty, not 403 — the page simply is not theirs.
+    assert pool(d_id, d_account) == []
+    assert pool(t_id, t_account) == []
+    assert pool(buyer_id, buyer_account) == []
+
+    # The buyer's own list is the other half of the split.
+    own = client.get(
+        f"{_BASE}/requests", params={"company_id": buyer_id}, headers=_auth(buyer_account)
     ).json()["items"]
-    assert [r["id"] for r in sent] == [request_id]
-
-    incoming = client.get(
-        f"{_BASE}/requests",
-        params={"company_id": carrier_id, "side": "incoming"},
-        headers=_auth(carrier_account),
-    ).json()["items"]
-    assert [r["id"] for r in incoming] == [request_id]
-
-    # ...and NOT the other way round.
-    assert (
-        client.get(
-            f"{_BASE}/requests",
-            params={"company_id": buyer_id, "side": "incoming"},
-            headers=_auth(buyer_account),
-        ).json()["items"]
-        == []
-    )
-
-    detail = client.get(
-        f"{_BASE}/requests/{request_id}",
-        params={"company_id": carrier_id},
-        headers=_auth(carrier_account),
-    )
-    assert detail.status_code == 200
-    assert detail.json()["logistics_name"] is not None
+    assert [r["id"] for r in own] == [request_id]
 
 
 @requires_real_db
-def test_request_is_invisible_to_a_third_company(api) -> None:  # noqa: ANN001
-    """A stranger gets 404, not 403 — the row's existence is not confirmed."""
+def test_visibility_guard_and_pool_query_agree(api) -> None:  # noqa: ANN001
+    """The twin invariant, asserted directly.
+
+    If `is_visible_to` and the pool list ever disagree, a carrier sees an
+    «Ответить» button the API then refuses — or worse, the reverse. Checking the
+    two against each other is the only way that stays true.
+    """
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+    from app.models.logistics import LogisticsRequest  # noqa: PLC0415
+    from app.services import logistics_service  # noqa: PLC0415
+
     client, session = api
     with session() as db:
-        buyer_owner = make_account(db, "+998900008011")
-        buyer = make_company(db, buyer_owner, tax_id="380000011")
-        carrier_owner = make_account(db, "+998900008012")
-        carrier = _carrier(db, carrier_owner, "380000012")
-        outsider_owner = make_account(db, "+998900008013")
-        outsider = make_company(db, outsider_owner, tax_id="380000013")
+        buyer_owner = make_account(db, "+998900010011")
+        buyer = make_company(db, buyer_owner, tax_id="400000011")
+        c_owner = make_account(db, "+998900010012")
+        carrier = _carrier(db, c_owner, "400000012")
+        t_owner = make_account(db, "+998900010013")
+        trader = make_company(
+            db, t_owner, tax_id="400000013", status=CompanyStatus.verified
+        )
         db.commit()
-        buyer_id, carrier_id = buyer.id, carrier.id
-        buyer_account = buyer_owner.id
-        outsider_id, outsider_account = outsider.id, outsider_owner.id
+        buyer_id, buyer_account = buyer.id, buyer_owner.id
+        carrier_id, trader_id = carrier.id, trader.id
+
+    client.post(
+        f"{_BASE}/requests",
+        json={**_PAYLOAD, "company_id": buyer_id},
+        headers=_auth(buyer_account),
+    )
+
+    with session() as db:
+        from app.models.companies import Company  # noqa: PLC0415
+
+        request = db.query(LogisticsRequest).one()
+        for company_id in (carrier_id, trader_id, buyer_id):
+            company = db.get(Company, company_id)
+            listed = request.id in {
+                r.id
+                for r in logistics_service.list_open_requests_for_carrier(db, company)
+            }
+            guarded = logistics_service.is_visible_to(db, request, company)
+            assert listed == guarded, company_id
+
+
+@requires_real_db
+def test_each_carrier_gets_its_own_private_thread(api) -> None:  # noqa: ANN001
+    """Per-carrier, not one room.
+
+    A shared thread would show every carrier its competitors' terms, which is the
+    single thing this shape exists to prevent — so it is asserted from both ends:
+    each carrier reads its own, and neither can read the other's.
+    """
+    client, session = api
+    with session() as db:
+        buyer_owner = make_account(db, "+998900010021")
+        buyer = make_company(db, buyer_owner, tax_id="400000021")
+        c1_owner = make_account(db, "+998900010022")
+        carrier1 = _carrier(db, c1_owner, "400000022", "Trans Asia")
+        c2_owner = make_account(db, "+998900010023")
+        carrier2 = _carrier(db, c2_owner, "400000023", "Uzbek Rail")
+        db.commit()
+        buyer_id, buyer_account = buyer.id, buyer_owner.id
+        c1, c1_account = carrier1.id, c1_owner.id
+        c2, c2_account = carrier2.id, c2_owner.id
 
     request_id = client.post(
-        f"{_BASE}/{carrier_id}/requests",
+        f"{_BASE}/requests",
         json={**_PAYLOAD, "company_id": buyer_id},
         headers=_auth(buyer_account),
     ).json()["id"]
 
-    # Acting as their own company: a real member, but not a party.
+    t1 = client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": c1},
+        headers=_auth(c1_account),
+    )
+    assert t1.status_code == 201
+    thread1 = t1.json()["id"]
+    assert t1.json()["my_role"] == "carrier"
+
+    # Idempotent: the chat screen calls this on every mount.
+    again = client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": c1},
+        headers=_auth(c1_account),
+    )
+    assert again.json()["id"] == thread1
+
+    thread2 = client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": c2},
+        headers=_auth(c2_account),
+    ).json()["id"]
+    assert thread2 != thread1
+
+    client.post(
+        f"{_BASE}/threads/{thread1}/messages",
+        data={"company_id": c1, "body": "1450 USD за контейнер"},
+        headers=_auth(c1_account),
+    )
+
+    # Carrier 2 cannot read carrier 1's room, and vice versa.
     assert (
         client.get(
-            f"{_BASE}/requests/{request_id}",
-            params={"company_id": outsider_id},
-            headers=_auth(outsider_account),
+            f"{_BASE}/threads/{thread1}/messages",
+            params={"company_id": c2},
+            headers=_auth(c2_account),
         ).status_code
         == 404
     )
-    # Claiming to act as the buyer's company: not a member at all.
     assert (
         client.get(
-            f"{_BASE}/requests/{request_id}",
-            params={"company_id": buyer_id},
-            headers=_auth(outsider_account),
+            f"{_BASE}/threads/{thread2}/messages",
+            params={"company_id": c1},
+            headers=_auth(c1_account),
         ).status_code
         == 404
     )
+
+    # The buyer reads both — they are the other party in each.
+    for thread_id in (thread1, thread2):
+        assert (
+            client.get(
+                f"{_BASE}/threads/{thread_id}/messages",
+                params={"company_id": buyer_id},
+                headers=_auth(buyer_account),
+            ).status_code
+            == 200
+        )
+
+    threads = client.get(
+        f"{_BASE}/threads", params={"company_id": buyer_id}, headers=_auth(buyer_account)
+    ).json()["items"]
+    assert {t["id"] for t in threads} == {thread1, thread2}
+    assert {t["my_role"] for t in threads} == {"buyer"}
+
+    # And the buyer's own list now shows the broadcast landed.
+    own = client.get(
+        f"{_BASE}/requests", params={"company_id": buyer_id}, headers=_auth(buyer_account)
+    ).json()["items"]
+    assert own[0]["thread_count"] == 2
 
 
 @requires_real_db
-def test_carrier_must_be_verified_with_a_confirmed_role(api) -> None:  # noqa: ANN001
-    """A self-declared carrier cannot collect cargo details.
+def test_pool_marks_the_carriers_own_thread(api) -> None:  # noqa: ANN001
+    """`my_thread_id` is what turns «Ответить» into «Открыть чат»."""
+    client, session = api
+    with session() as db:
+        buyer_owner = make_account(db, "+998900010031")
+        buyer = make_company(db, buyer_owner, tax_id="400000031")
+        c_owner = make_account(db, "+998900010032")
+        carrier = _carrier(db, c_owner, "400000032")
+        db.commit()
+        buyer_id, buyer_account = buyer.id, buyer_owner.id
+        carrier_id, carrier_account = carrier.id, c_owner.id
 
-    Same bar as the public directory. `declared` is a tick-box during
-    registration; only `confirmed` on a `verified` company is a carrier.
+    request_id = client.post(
+        f"{_BASE}/requests",
+        json={**_PAYLOAD, "company_id": buyer_id},
+        headers=_auth(buyer_account),
+    ).json()["id"]
+
+    before = client.get(
+        f"{_BASE}/pool", params={"company_id": carrier_id}, headers=_auth(carrier_account)
+    ).json()["items"]
+    assert before[0]["my_thread_id"] is None
+
+    thread_id = client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": carrier_id},
+        headers=_auth(carrier_account),
+    ).json()["id"]
+
+    after = client.get(
+        f"{_BASE}/pool", params={"company_id": carrier_id}, headers=_auth(carrier_account)
+    ).json()["items"]
+    assert after[0]["my_thread_id"] == thread_id
+
+
+@requires_real_db
+def test_a_non_carrier_cannot_open_a_thread(api) -> None:  # noqa: ANN001
+    """404 covers "no such request", "not a carrier" and "your own request".
+
+    One answer for all three: none of them is something the caller should be able
+    to tell apart by probing.
     """
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     client, session = api
     with session() as db:
-        buyer_owner = make_account(db, "+998900008021")
-        buyer = make_company(db, buyer_owner, tax_id="380000021")
-
-        declared_owner = make_account(db, "+998900008022")
-        declared = _carrier(db, declared_owner, "380000022", confirmed=False)
-
-        # Confirmed role, but the company itself is still awaiting verification.
-        unverified_owner = make_account(db, "+998900008023")
-        unverified = make_company(
-            db,
-            unverified_owner,
-            tax_id="380000023",
-            status=CompanyStatus.pending_verification,
+        buyer_owner = make_account(db, "+998900010041")
+        buyer = make_company(db, buyer_owner, tax_id="400000041")
+        t_owner = make_account(db, "+998900010042")
+        trader = make_company(
+            db, t_owner, tax_id="400000042", status=CompanyStatus.verified
         )
         db.commit()
         buyer_id, buyer_account = buyer.id, buyer_owner.id
-        declared_id, unverified_id = declared.id, unverified.id
+        trader_id, trader_account = trader.id, t_owner.id
 
-    for target in (declared_id, unverified_id, 999_999):
-        res = client.post(
-            f"{_BASE}/{target}/requests",
-            json={**_PAYLOAD, "company_id": buyer_id},
+    request_id = client.post(
+        f"{_BASE}/requests",
+        json={**_PAYLOAD, "company_id": buyer_id},
+        headers=_auth(buyer_account),
+    ).json()["id"]
+
+    # Not a carrier.
+    assert (
+        client.post(
+            f"{_BASE}/requests/{request_id}/threads",
+            json={"company_id": trader_id},
+            headers=_auth(trader_account),
+        ).status_code
+        == 404
+    )
+    # The buyer bidding on itself.
+    assert (
+        client.post(
+            f"{_BASE}/requests/{request_id}/threads",
+            json={"company_id": buyer_id},
             headers=_auth(buyer_account),
-        )
-        assert res.status_code == 404, target
+        ).status_code
+        == 404
+    )
 
 
 @requires_real_db
-def test_a_company_cannot_send_itself_a_request(api) -> None:  # noqa: ANN001
+def test_messages_reject_an_empty_body(api) -> None:  # noqa: ANN001
     client, session = api
     with session() as db:
-        owner = make_account(db, "+998900008031")
-        carrier = _carrier(db, owner, "380000031")
+        buyer_owner = make_account(db, "+998900010051")
+        buyer = make_company(db, buyer_owner, tax_id="400000051")
+        c_owner = make_account(db, "+998900010052")
+        carrier = _carrier(db, c_owner, "400000052")
         db.commit()
-        carrier_id, account_id = carrier.id, owner.id
+        buyer_id, buyer_account = buyer.id, buyer_owner.id
+        carrier_id, carrier_account = carrier.id, c_owner.id
+
+    request_id = client.post(
+        f"{_BASE}/requests",
+        json={**_PAYLOAD, "company_id": buyer_id},
+        headers=_auth(buyer_account),
+    ).json()["id"]
+    thread_id = client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": carrier_id},
+        headers=_auth(carrier_account),
+    ).json()["id"]
 
     res = client.post(
-        f"{_BASE}/{carrier_id}/requests",
-        json={**_PAYLOAD, "company_id": carrier_id},
-        headers=_auth(account_id),
+        f"{_BASE}/threads/{thread_id}/messages",
+        data={"company_id": carrier_id, "body": "   "},
+        headers=_auth(carrier_account),
     )
     assert res.status_code == 422
-    assert res.json()["detail"] == "self_logistics_request"
+    assert res.json()["detail"] == "empty_message"
 
 
 @requires_real_db
-def test_sending_requires_membership_in_the_asking_company(api) -> None:  # noqa: ANN001
-    """`company_id` is a claim in the body — it has to be checked."""
+def test_broadcast_notifies_every_carrier_but_not_the_buyer(api) -> None:  # noqa: ANN001
     client, session = api
     with session() as db:
-        buyer_owner = make_account(db, "+998900008041")
-        buyer = make_company(db, buyer_owner, tax_id="380000041")
-        carrier_owner = make_account(db, "+998900008042")
-        carrier = _carrier(db, carrier_owner, "380000042")
-        stranger = make_account(db, "+998900008043")
+        buyer_owner = make_account(db, "+998900010061")
+        buyer = make_company(db, buyer_owner, tax_id="400000061")
+        c1_owner = make_account(db, "+998900010062")
+        _carrier(db, c1_owner, "400000062", "Trans Asia")
+        c2_owner = make_account(db, "+998900010063")
+        _carrier(db, c2_owner, "400000063", "Uzbek Rail")
         db.commit()
-        buyer_id, carrier_id, stranger_id = buyer.id, carrier.id, stranger.id
+        buyer_id, buyer_account = buyer.id, buyer_owner.id
+        recipients = {c1_owner.id, c2_owner.id}
 
-    res = client.post(
-        f"{_BASE}/{carrier_id}/requests",
+    client.post(
+        f"{_BASE}/requests",
         json={**_PAYLOAD, "company_id": buyer_id},
-        headers=_auth(stranger_id),
+        headers=_auth(buyer_account),
     )
-    assert res.status_code == 404
 
-
-@requires_real_db
-def test_numbers_are_sequential_and_unique(api) -> None:  # noqa: ANN001
-    client, session = api
     with session() as db:
-        buyer_owner = make_account(db, "+998900008051")
-        buyer = make_company(db, buyer_owner, tax_id="380000051")
-        carrier_owner = make_account(db, "+998900008052")
-        carrier = _carrier(db, carrier_owner, "380000052")
-        db.commit()
-        buyer_id, carrier_id, account_id = buyer.id, carrier.id, buyer_owner.id
+        from app.models.notifications import PortalNotification  # noqa: PLC0415
+        from app.services import notification_service  # noqa: PLC0415
 
-    numbers = [
-        client.post(
-            f"{_BASE}/{carrier_id}/requests",
-            json={**_PAYLOAD, "company_id": buyer_id},
-            headers=_auth(account_id),
-        ).json()["number"]
-        for _ in range(3)
-    ]
-    assert len(set(numbers)) == 3
-    assert all(n.startswith("LRQ-") for n in numbers)
+        rows = (
+            db.query(PortalNotification)
+            .filter(
+                PortalNotification.kind
+                == notification_service.KIND_LOGISTICS_REQUEST_NEW
+            )
+            .all()
+        )
+
+    assert {r.user_account_id for r in rows} == recipients
+    assert all(r.entity == "logistics_request" for r in rows)
 
 
 @requires_real_db
@@ -355,65 +551,11 @@ def test_anonymous_and_wrong_audience_tokens_are_refused(api) -> None:  # noqa: 
     """Acting needs a PORTAL session — a staff token is a different audience."""
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    client, session = api
-    with session() as db:
-        owner = make_account(db, "+998900008061")
-        carrier = _carrier(db, owner, "380000061")
-        db.commit()
-        carrier_id = carrier.id
+    client, _session = api
 
-    assert client.post(f"{_BASE}/{carrier_id}/requests", json=_PAYLOAD).status_code == 401
-
+    assert client.get(f"{_BASE}/pool", params={"company_id": 1}).status_code == 401
     staff = {"Authorization": f"Bearer {create_access_token(subject='1', role='admin')}"}
     assert (
-        client.get(f"{_BASE}/requests", params={"company_id": 1}, headers=staff).status_code
+        client.get(f"{_BASE}/pool", params={"company_id": 1}, headers=staff).status_code
         == 401
     )
-
-
-@requires_real_db
-def test_submitting_notifies_the_carrier_not_the_sender(api) -> None:  # noqa: ANN001
-    """A form nobody is told about is a form nobody answers.
-
-    The factory RFQ raises no notification at all — its submit is only a log
-    line — so this is deliberately NOT copied from it. Written in the same
-    transaction as the insert: if the row commits, the bell rings.
-    """
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
-    from app.services import notification_service  # noqa: PLC0415
-
-    client, session = api
-    with session() as db:
-        buyer_owner = make_account(db, "+998900008071")
-        buyer = make_company(db, buyer_owner, tax_id="380000071")
-        carrier_owner = make_account(db, "+998900008072")
-        carrier = _carrier(db, carrier_owner, "380000072")
-        db.commit()
-        buyer_id, carrier_id = buyer.id, carrier.id
-        buyer_account, carrier_account = buyer_owner.id, carrier_owner.id
-
-    created = client.post(
-        f"{_BASE}/{carrier_id}/requests",
-        json={**_PAYLOAD, "company_id": buyer_id},
-        headers=_auth(buyer_account),
-    )
-    assert created.status_code == 201
-    request_id = created.json()["id"]
-
-    with session() as db:
-        rows = (
-            db.query(PortalNotification)
-            .filter(
-                PortalNotification.kind == notification_service.KIND_LOGISTICS_REQUEST_NEW
-            )
-            .all()
-        )
-
-    # The carrier's member is told; the buyer who sent it is not.
-    assert [r.user_account_id for r in rows] == [carrier_account]
-    row = rows[0]
-    assert row.entity == "logistics_request"
-    assert row.entity_id == str(request_id)
-    # Keys, never pre-rendered text — the reader's language decides at display.
-    assert row.title_key == "notifications.logistics_request_new.title"
-    assert row.params["cargo"] == "Полипропилен (PP)"
