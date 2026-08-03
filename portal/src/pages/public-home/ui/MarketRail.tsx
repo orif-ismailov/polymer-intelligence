@@ -48,7 +48,14 @@ export function MarketRail() {
   ];
 
   return (
-    <div className="space-y-2">
+    /*
+     * Vertical rail at `xl`, three-up strip at `lg`. Between 1024 and 1279 the
+     * page grid has no third column for this to live in, so the cards run
+     * side by side across the full width instead of stacking into a sliver —
+     * see the `lg:col-span-2` note in `PublicHomePage`. `items-start` so the
+     * three cards keep their own heights rather than stretching to the tallest.
+     */
+    <div className="space-y-3 lg:grid lg:grid-cols-3 lg:items-start lg:gap-3.5 lg:space-y-0 xl:block xl:space-y-2">
       <section
         aria-labelledby="rail-prices"
         className="rounded-md border border-border bg-surface"
@@ -83,7 +90,12 @@ export function MarketRail() {
                   <li key={row.product_id}>
                     <Link
                       to={`/market?product_id=${row.product_id}`}
-                      className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-3 px-3.5 py-[0.1875rem] transition-colors hover:bg-surface-2"
+                      /* 3px of padding is a 22px row — right for the 330px rail
+                         at `xl`, where the mockup runs these dense and a mouse
+                         is doing the pointing, and unusable on a phone. Below
+                         `xl` the rail is full width, so the rows take the
+                         height they need to be tappable. */
+                      className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-3 px-3.5 transition-colors hover:bg-surface-2 xl:min-h-0 xl:py-[0.1875rem]"
                     >
                       <span className="num truncate text-[12px] text-text">
                         {row.code}
@@ -129,8 +141,13 @@ export function MarketRail() {
             {/* Two-up footer, as in the mockup. The right side is the real
                 `observed_on` of the freshest quote — the mockup's "Обновлено:
                 10:30" against a daily observation would be a fake precision. */}
-            <div className="flex items-baseline justify-between gap-2 border-t border-border px-3.5 py-2 text-[10px] text-text-subtle">
-              <span className="truncate">{t("public.home.priceSource")}</span>
+            {/* Stacked until `xl`. Side by side, the source line had to
+                `truncate` to «Источник: рыночные наблюдения пла…» — a
+                provenance note that stops mid-word tells the reader less than
+                nothing. It only truly fits in the 330px rail at `xl`, which is
+                the one width that keeps the mockup's two-up footer. */}
+            <div className="flex flex-col gap-0.5 border-t border-border px-3.5 py-2 text-[10px] text-text-subtle xl:flex-row xl:items-baseline xl:justify-between xl:gap-2">
+              <span className="xl:truncate">{t("public.home.priceSource")}</span>
               {observedOn ? (
                 <span className="num shrink-0">
                   {t("public.home.priceUpdated", { date: formatDateShort(observedOn) })}
@@ -207,9 +224,9 @@ export function MarketRail() {
             <li key={service.key}>
               <Link
                 to={service.to}
-                className="flex gap-2.5 rounded-sm transition-colors hover:bg-surface-2"
+                className="flex min-h-11 items-center gap-2.5 rounded-sm py-1 transition-colors hover:bg-surface-2 xl:min-h-0 xl:items-start xl:py-0"
               >
-                <span className="mt-0.5 shrink-0 text-gold">{service.icon}</span>
+                <span className="shrink-0 text-gold xl:mt-0.5">{service.icon}</span>
                 <span className="min-w-0">
                   <span className="block text-[12px] font-medium leading-[1.35] text-text">
                     {service.title}
@@ -226,7 +243,7 @@ export function MarketRail() {
             full-width outline button at the card's foot. */}
         <Link
           to="/logistics"
-          className="mt-3 flex h-8 items-center justify-center rounded-sm border border-border-strong text-[12px] font-medium text-text transition-colors hover:border-brand-line hover:bg-brand-soft hover:text-brand"
+          className="mt-3 flex h-11 items-center justify-center rounded-sm border border-border-strong text-[12px] font-medium text-text transition-colors hover:border-brand-line hover:bg-brand-soft hover:text-brand xl:h-8"
         >
           {t("public.home.allServices")}
         </Link>

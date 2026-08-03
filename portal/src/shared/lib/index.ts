@@ -26,3 +26,4 @@ export { useTierBase } from "./useTierBase";
 export { useReveal, useIsomorphicLayoutEffect } from "./useReveal";
 export type { Reveal } from "./useReveal";
 export { useCountUp } from "./useCountUp";
+export { useParallax } from "./useParallax";

@@ -71,7 +71,7 @@ export function ProofBand() {
       data-revealed={revealed === null ? undefined : String(revealed)}
       className="mt-6 border-t border-border bg-surface/40 lg:mt-10"
     >
-      <div className="mx-auto w-full max-w-[1440px] px-4 py-14 sm:py-16 lg:px-6 xl:py-20">
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-11 sm:py-16 lg:px-6 xl:py-20">
         {/* Header. Seven of twelve so the measure stays readable at 1440 — a
             display line running the full container is a banner, not a sentence. */}
         <div className="max-w-[46rem]">
@@ -91,7 +91,7 @@ export function ProofBand() {
             id="why-heading"
             data-reveal
             style={{ "--reveal-delay": "60ms" } as CSSProperties}
-            className="mt-5 text-[1.625rem] font-semibold leading-[1.15] tracking-tight text-text sm:text-[2rem] xl:text-[2.375rem]"
+            className="mt-4 text-[1.625rem] font-semibold leading-[1.15] tracking-tight text-text sm:mt-5 sm:text-[2rem] xl:text-[2.375rem]"
           >
             {t("public.home.whyHeading")}
           </h2>
@@ -99,7 +99,13 @@ export function ProofBand() {
           <p
             data-reveal
             style={{ "--reveal-delay": "120ms" } as CSSProperties}
-            className="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-text-muted sm:text-base"
+            /* NOTE: `sm:text-base` carries a line-height and so overrides the
+               unprefixed `leading-relaxed` from `sm` up — the measure here is
+               1.5, not the 1.625 this reads as. That predates the mobile pass
+               and is deliberately left alone: correcting it would change the
+               desktop composition, which is a separate decision. Do not copy
+               the pattern; see `BenefitCard` for the repeat that fixes it. */
+            className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-text-muted sm:mt-4 sm:text-base"
           >
             {t("public.home.whySubtitle")}
           </p>
@@ -107,9 +113,11 @@ export function ProofBand() {
 
         {/* Bento. `verified` takes half the grid across both rows; the other
             four sit beside it as a 2x2. The asymmetry is what ranks them — the
-            type scale only follows. Below `xl` it degrades to a plain 1- then
-            2-column stack with the lead card spanning the full width. */}
-        <ul className="mt-10 grid gap-3.5 sm:grid-cols-2 lg:mt-12 xl:grid-cols-12">
+            type scale only follows. Below `xl` it degrades to the lead card
+            over a 2x2 of the rest — including on a phone, where five
+            full-width cards ran ~900px and gave four supporting claims the
+            same weight as the one that carries the section. */}
+        <ul className="mt-8 grid grid-cols-2 gap-2.5 sm:gap-3.5 lg:mt-12 xl:grid-cols-12">
           {BENEFITS.map((benefit, index) => {
             const isHero = index === 0;
             return (
@@ -123,7 +131,7 @@ export function ProofBand() {
                 body={t(`public.home.why.${benefit.key}.body`)}
                 emphasis={isHero ? "hero" : "default"}
                 delayMs={160 + index * 70}
-                className={isHero ? "sm:col-span-2 xl:col-span-6 xl:row-span-2" : "xl:col-span-3"}
+                className={isHero ? "col-span-2 xl:col-span-6 xl:row-span-2" : "xl:col-span-3"}
               />
             );
           })}
@@ -144,7 +152,7 @@ export function ProofBand() {
           // `items-start` while the panel is stacked: a flex column stretches
           // its children, which overrode the button's `sm:w-auto` and turned the
           // CTA into a full-bleed green bar from 640 to 1024.
-          className="mt-14 flex flex-col items-start gap-6 rounded-md border border-brand-line bg-surface px-6 py-7 sm:px-8 lg:mt-16 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:px-10"
+          className="mt-11 flex flex-col items-start gap-5 rounded-md border border-brand-line bg-surface px-5 py-6 sm:mt-14 sm:gap-6 sm:px-8 sm:py-7 lg:mt-16 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:px-10"
         >
           <div className="min-w-0">
             <h3 className="text-xl font-semibold tracking-tight text-brand sm:text-2xl">

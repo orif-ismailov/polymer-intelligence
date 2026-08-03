@@ -8,7 +8,7 @@ import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
 import { PUBLIC_DIRECTORIES } from "@/shared/config";
 import { SUPPORTED_LANGS, setLanguage, type Lang } from "@/shared/i18n";
 import { cn } from "@/shared/lib";
-import { BrandLogo, Button, LinkButton } from "@/shared/ui";
+import { BrandLogo, IconButton, LinkButton } from "@/shared/ui";
 
 interface NavEntry {
   to: string;
@@ -35,12 +35,17 @@ const NAV: NavEntry[] = [
 
 const LANG_LABELS: Record<Lang, string> = { ru: "RU", uz: "UZ", en: "EN" };
 
-function LanguageMenu() {
+/** The active language, falling back to `ru` for anything unrecognised. */
+function useCurrentLang(): Lang {
   const { i18n } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const current = (SUPPORTED_LANGS as readonly string[]).includes(i18n.language)
+  return (SUPPORTED_LANGS as readonly string[]).includes(i18n.language)
     ? (i18n.language as Lang)
     : "ru";
+}
+
+function LanguageMenu() {
+  const [open, setOpen] = useState(false);
+  const current = useCurrentLang();
 
   return (
     <div className="relative">
@@ -98,6 +103,7 @@ function LanguageMenu() {
 export function PublicTopNav() {
   const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const currentLang = useCurrentLang();
   // Deliberately the whole of the session on the storefront: one link, no bell,
   // no company switcher. Those would put an authenticated request on every
   // public page, and these pages are shared-cached (`s-maxage=60`) precisely
@@ -139,8 +145,19 @@ export function PublicTopNav() {
           ))}
         </nav>
 
+        {/*
+          Below `sm` the language control moves into the drawer. Measured at
+          320px the bar overflowed the viewport by 19px — `documentElement
+          .scrollWidth` 339 against a 320 client width, which scrolls the WHOLE
+          page sideways, not just the header. The globe + «RU» + chevron is ~76px
+          of that, and it is the one control here nobody reaches for on a phone;
+          the lockup, the account CTA and the menu are all load-bearing. It keeps
+          its place from `sm` up, where the width is there.
+        */}
         <div className="ms-auto flex items-center gap-1.5 sm:gap-2.5 xl:gap-5">
-          <LanguageMenu />
+          <span className="hidden sm:block">
+            <LanguageMenu />
+          </span>
           {isAuthenticated ? (
             <LinkButton to="/cabinet" size="sm" className="h-9 px-3.5">
               {t("common.cabinet")}
@@ -158,21 +175,24 @@ export function PublicTopNav() {
               </LinkButton>
             </>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={t("nav.openMenu")}
+          {/* 44x44, not the `Button size="sm"` 42x32 it replaces: this is the
+              only way to the nav on a phone, and a 32px-tall target misses the
+              44px floor every touch guideline sets. `IconButton` is the house
+              primitive for a bare glyph control — a `Button` carries padding
+              sized for a label this one does not have. */}
+          <IconButton
+            label={t("nav.openMenu")}
             aria-controls="public-nav-drawer"
             aria-expanded={drawerOpen}
             onClick={() => setDrawerOpen((v) => !v)}
-            className="xl:hidden"
+            className="h-11 w-11 xl:hidden"
           >
             {drawerOpen ? (
-              <X size={18} strokeWidth={1.75} aria-hidden />
+              <X size={20} strokeWidth={1.75} aria-hidden />
             ) : (
-              <Menu size={18} strokeWidth={1.75} aria-hidden />
+              <Menu size={20} strokeWidth={1.75} aria-hidden />
             )}
-          </Button>
+          </IconButton>
         </div>
       </div>
 
@@ -191,7 +211,9 @@ export function PublicTopNav() {
                   onClick={() => setDrawerOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      "block rounded-md px-2 py-2.5 text-sm font-medium transition-colors",
+                      // `min-h-11`, not `py-2.5`: the drawer rows measured 40px,
+                      // just under the 44px touch floor.
+                      "flex min-h-11 items-center rounded-md px-2 text-sm font-medium transition-colors",
                       isActive
                         ? "bg-brand-soft text-brand"
                         : "text-text hover:bg-surface-2",
@@ -210,12 +232,43 @@ export function PublicTopNav() {
                 <Link
                   to="/cabinet/login"
                   onClick={() => setDrawerOpen(false)}
-                  className="block rounded-md px-2 py-2.5 text-sm font-medium text-text"
+                  className="flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-text"
                 >
                   {t("public.nav.signIn")}
                 </Link>
               </li>
             )}
+
+            {/* The language control the bar drops below `sm`, in the one place
+                that is still reachable there. A row of three rather than the
+                bar's dropdown: a menu inside a menu is a worse affordance than
+                three 44px targets, and there are only ever three. */}
+            <li className="mt-1 flex items-center gap-2 border-t border-border pt-2 sm:hidden">
+              <span className="px-2 text-xs text-text-muted">
+                {t("public.nav.language")}
+              </span>
+              <span className="flex gap-1">
+                {SUPPORTED_LANGS.map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => {
+                      setLanguage(lang);
+                      setDrawerOpen(false);
+                    }}
+                    aria-current={lang === currentLang ? "true" : undefined}
+                    className={cn(
+                      "inline-flex h-11 min-w-11 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors",
+                      lang === currentLang
+                        ? "bg-brand-soft text-brand"
+                        : "text-text-muted hover:bg-surface-2 hover:text-text",
+                    )}
+                  >
+                    {LANG_LABELS[lang]}
+                  </button>
+                ))}
+              </span>
+            </li>
           </ul>
         </nav>
       ) : null}

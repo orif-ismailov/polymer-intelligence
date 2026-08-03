@@ -2083,7 +2083,8 @@
       "prices": "Prices and analytics",
       "news": "News",
       "signIn": "Sign in",
-      "register": "Register"
+      "register": "Register",
+      "language": "Language"
     },
     "role": {
       "manufacturer": "Manufacturer",

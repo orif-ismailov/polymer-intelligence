@@ -13,7 +13,8 @@ function ManufacturerTile({ company }: { company: PublicCompanyCard }) {
   return (
     <Link
       to={`/manufacturers/${company.id}`}
-      className="group flex min-w-0 flex-col rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      /* Fixed 136px on the phone rail, auto in the desktop grid. */
+      className="group flex w-[8.5rem] shrink-0 snap-start flex-col rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:w-auto md:min-w-0 md:shrink"
     >
       <span className="flex h-[4.5rem] w-full items-center justify-center overflow-hidden rounded-md bg-[color-mix(in_srgb,var(--text)_96%,transparent)] px-2">
         {company.logo_url ? (
@@ -30,7 +31,16 @@ function ManufacturerTile({ company }: { company: PublicCompanyCard }) {
         )}
       </span>
 
-      <span className="mt-2.5 line-clamp-2 text-[13px] font-semibold text-text group-hover:text-brand">
+      {/*
+        Two lines' worth of height whether the name needs them or not. Company
+        names run one line («Chirchiq Cable») or two («Andijan Polymer Pipe»),
+        and letting the box be content-height pushed everything under it up by
+        a line on the short ones — so across a row the flags, the offer counts
+        and the ruled «Производитель» footers all landed at different heights.
+        Reserving the taller case is what makes the row read as a row; it is
+        the same 2.375rem at every width, so the desktop grid squares up too.
+      */}
+      <span className="mt-2.5 line-clamp-2 min-h-[2.375rem] text-[13px] font-semibold leading-[1.15] text-text group-hover:text-brand">
         {name}
       </span>
       <span className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[11px] text-text-muted">
@@ -64,6 +74,22 @@ function ManufacturerTile({ company }: { company: PublicCompanyCard }) {
  * column, and the scroller this replaces clipped the last tile off the right
  * edge at every desktop width.
  */
+/*
+ * Snap rail on a phone, six-up grid from `md`.
+ *
+ * Three across at 390 gave each tile 105px, which is narrower than most of
+ * these names and forced the two-line wrap that made the rows ragged; two
+ * across would have run the block to three rows. Swiping one row of six is
+ * both shorter and the idiom a phone user already has for "a shelf of
+ * brands". `-mx-3.5 px-3.5` lets the scroll area reach the card's edges while
+ * the first tile still starts on the card's padding, so a mid-scroll tile
+ * bleeds off the edge instead of stopping short of it.
+ */
+const railClass =
+  "-mx-3.5 mt-3.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3.5 pb-1 " +
+  "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden " +
+  "md:mx-0 md:grid md:grid-cols-6 md:gap-3.5 md:overflow-visible md:px-0 md:pb-0";
+
 export function VerifiedManufacturers() {
   const { t } = useTranslation();
   const directory = usePublicDirectory("manufacturers", "", "", 0, 6);
@@ -87,13 +113,13 @@ export function VerifiedManufacturers() {
       </div>
 
       {directory.isLoading ? (
-        <div className="mt-3.5 grid grid-cols-3 gap-3.5 md:grid-cols-6">
+        <div className={railClass}>
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-40 w-full" />
+            <Skeleton key={i} className="h-40 w-[8.5rem] shrink-0 md:w-full" />
           ))}
         </div>
       ) : directory.data && directory.data.items.length > 0 ? (
-        <div className="mt-3.5 grid grid-cols-3 gap-3.5 md:grid-cols-6">
+        <div className={railClass}>
           {directory.data.items.map((company) => (
             <ManufacturerTile key={company.id} company={company} />
           ))}

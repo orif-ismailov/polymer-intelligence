@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 
 import { usePublicCategories, usePublicStats, type PublicFacet } from "@/entities/public";
+import { cn } from "@/shared/lib";
 import { Skeleton, buttonClasses } from "@/shared/ui";
 
 const FALLBACK_CATEGORIES = [
@@ -35,7 +36,7 @@ const AVAILABILITY_VALUES = ["in_stock", "on_order"] as const;
  * matches nothing. Categories drop their counts here: the mockup shows none, and
  * the count is still on `/market`.
  */
-export function CatalogSidebar() {
+export function CatalogSidebar({ className }: { className?: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const categories = usePublicCategories();
@@ -81,7 +82,7 @@ export function CatalogSidebar() {
   const total = stats.data?.offer_count ?? 0;
 
   return (
-    <aside className="space-y-3">
+    <aside className={cn("space-y-3", className)}>
       <section
         aria-labelledby="home-categories"
         className="rounded-md border border-border bg-surface p-4"
@@ -89,6 +90,14 @@ export function CatalogSidebar() {
         <h3 id="home-categories" className="text-sm font-semibold text-text">
           {t("public.home.productCategories")}
         </h3>
+        {/*
+          Categories are paired chips below `lg` and the mockup's vertical list
+          from `lg` up. As a list the rows measured 28px — well under a thumb —
+          and taking them to 44 would have run nine categories to ~490px. Two
+          columns of 44px targets is both tappable AND shorter than the 336px
+          list it replaces, and the sidebar is the last block on a phone now, so
+          this is the tail of the page rather than the gate in front of it.
+        */}
         {categories.isLoading ? (
           <div className="mt-3 space-y-2">
             <Skeleton className="h-7 w-full" />
@@ -96,18 +105,18 @@ export function CatalogSidebar() {
             <Skeleton className="h-7 w-full" />
           </div>
         ) : (
-          <ul className="mt-2.5">
+          <ul className="mt-2.5 grid grid-cols-2 gap-1.5 lg:block lg:gap-0">
             {list.map((item) => (
               <li key={item.key}>
                 <Link
                   to={item.to}
-                  className="flex items-center gap-2 rounded-sm px-1 py-[0.3125rem] text-[12px] text-text-muted transition-colors hover:bg-surface-2 hover:text-text"
+                  className="flex min-h-11 items-center gap-2 rounded-sm border border-border px-2 text-[12px] text-text-muted transition-colors hover:bg-surface-2 hover:text-text lg:min-h-0 lg:border-0 lg:px-1 lg:py-[0.3125rem]"
                 >
                   <ChevronRight
                     size={12}
                     strokeWidth={2}
                     aria-hidden
-                    className="shrink-0 text-text-subtle"
+                    className="hidden shrink-0 text-text-subtle lg:block"
                   />
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
                 </Link>
@@ -117,7 +126,7 @@ export function CatalogSidebar() {
         )}
         <Link
           to="/market"
-          className="mt-3 flex h-9 items-center justify-center rounded-sm border border-border-strong text-[12px] font-medium text-text transition-colors hover:border-brand-line hover:bg-brand-soft hover:text-brand"
+          className="mt-3 flex h-11 items-center justify-center rounded-sm border border-border-strong text-[12px] font-medium text-text transition-colors hover:border-brand-line hover:bg-brand-soft hover:text-brand lg:h-9"
         >
           {t("public.market.allCategories")}
         </Link>
@@ -127,14 +136,16 @@ export function CatalogSidebar() {
         aria-labelledby="home-filters"
         className="rounded-md border border-border bg-surface p-4"
       >
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 lg:items-baseline">
           <h3 id="home-filters" className="text-sm font-semibold text-text">
             {t("public.market.filters")}
           </h3>
+          {/* 17px tall as a bare link. The negative margin lets the target grow
+              to 44 without the header row growing with it. */}
           <button
             type="button"
             onClick={resetFilters}
-            className="text-[11px] font-medium text-brand underline underline-offset-2"
+            className="-mx-2 inline-flex min-h-11 items-center px-2 text-[11px] font-medium text-brand underline underline-offset-2 lg:mx-0 lg:min-h-0 lg:px-0"
           >
             {t("public.home.resetFilters")}
           </button>
@@ -183,7 +194,10 @@ export function CatalogSidebar() {
 
           <button
             type="submit"
-            className={buttonClasses({ fullWidth: true, className: "!h-10 !text-[13px]" })}
+            className={buttonClasses({
+              fullWidth: true,
+              className: "!h-11 !text-[13px] lg:!h-10",
+            })}
           >
             {stats.isLoading
               ? t("public.home.showProducts")
@@ -220,7 +234,10 @@ function FilterSelect({ id, label, placeholder, value, onChange, options }: Filt
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={options.length === 0}
-        className="h-[2.125rem] w-full rounded-sm border border-border bg-surface-inset px-2.5 text-[12px] text-text transition-colors focus:border-brand-line focus:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:text-text-subtle"
+        /* 34px is the mockup's dense sidebar well, and it is 10px short of a
+           touch target. The dense value returns at `lg`, where this column is
+           229px wide and mouse-driven. */
+        className="h-11 w-full rounded-sm border border-border bg-surface-inset px-2.5 text-[12px] text-text transition-colors focus:border-brand-line focus:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:text-text-subtle lg:h-[2.125rem]"
       >
         <option value="">{placeholder}</option>
         {options.map((o) => (
