@@ -47,15 +47,15 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
         <Link
           to={`/market/${offer.id}`}
           aria-label={t("public.home.saveOffer")}
-          className="absolute end-2 top-2 flex h-8 w-8 items-center justify-center rounded-md border border-border bg-bg/70 text-text-muted transition-colors hover:border-brand-line hover:text-brand"
+          className="absolute end-2 top-2 flex h-9 w-9 items-center justify-center rounded-md border border-border bg-bg/70 text-text-muted transition-colors hover:border-brand-line hover:text-brand sm:h-8 sm:w-8"
         >
           <Bookmark size={15} strokeWidth={1.75} aria-hidden />
         </Link>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col p-3">
+      <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-3">
         <Link to={`/market/${offer.id}`} className="min-w-0 focus-visible:outline-none">
-          <h3 className="truncate text-[15px] font-semibold text-text hover:text-brand">
+          <h3 className="truncate text-[13px] font-semibold text-text hover:text-brand sm:text-[15px]">
             {grade ? `${title}` : title}
             {grade ? (
               <span className="mt-0.5 block truncate text-[11px] font-normal text-text-muted">
@@ -64,9 +64,11 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
             ) : null}
           </h3>
         </Link>
-        <p className="mt-1.5 truncate text-[12px] text-text-muted">{seller}</p>
+        <p className="mt-1 truncate text-[11px] text-text-muted sm:mt-1.5 sm:text-[12px]">
+          {seller}
+        </p>
         {offer.country ? (
-          <p className="mt-2 flex items-center gap-1.5 truncate text-[11px] text-text-muted">
+          <p className="mt-1.5 flex items-center gap-1.5 truncate text-[11px] text-text-muted sm:mt-2">
             {flag ? (
               <span aria-hidden className="text-[13px] leading-none">
                 {flag}
@@ -76,20 +78,20 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
           </p>
         ) : null}
 
-        <dl className="mt-2.5 space-y-1 text-[11px] text-text-subtle">
+        <dl className="mt-2 space-y-0.5 text-[11px] text-text-subtle sm:mt-2.5 sm:space-y-1">
           <div className="flex gap-1">
             <dt>{t("public.home.offerForm")}:</dt>
-            <dd className="text-text-muted">{t("public.home.offerFormGranules")}</dd>
+            <dd className="truncate text-text-muted">{t("public.home.offerFormGranules")}</dd>
           </div>
           {offer.incoterms ? (
             <div className="flex gap-1">
               <dt>{t("public.home.offerTerms")}:</dt>
-              <dd className="text-text-muted">{offer.incoterms}</dd>
+              <dd className="truncate text-text-muted">{offer.incoterms}</dd>
             </div>
           ) : null}
         </dl>
 
-        <p className="num mt-3 text-[15px] font-semibold tracking-tight text-text">
+        <p className="num mt-2 text-[14px] font-semibold tracking-tight text-text sm:mt-3 sm:text-[15px]">
           {offer.price == null ? (
             <span className="text-sm text-text-muted">{t("public.offer.onRequest")}</span>
           ) : (
@@ -106,17 +108,24 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
           )}
         </p>
 
-        <div className="mt-auto flex items-center gap-2 pt-3">
+        <div className="mt-auto flex items-center gap-2 pt-2.5 sm:pt-3">
           <Link
             to={`/market/${offer.id}`}
-            className="inline-flex h-8 flex-1 items-center justify-center rounded-sm border border-brand text-[12px] font-medium text-brand transition-colors hover:bg-brand-soft active:scale-[0.98]"
+            className="inline-flex h-10 flex-1 items-center justify-center rounded-sm border border-brand text-[12px] font-medium text-brand transition-colors hover:bg-brand-soft active:scale-[0.98] sm:h-8"
           >
             {t("public.home.contact")}
           </Link>
+          {/*
+            Hidden on a phone, where the card is 174px wide and this is the
+            SECOND bookmark on it — the first sits over the photo, and both
+            resolve to the same listing. Two controls left the primary action
+            ~130px; one leaves it the full width. From `sm` the card is wide
+            enough for the pair the mockup draws, so desktop is untouched.
+          */}
           <Link
             to={`/market/${offer.id}`}
             aria-label={t("public.home.saveOffer")}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-brand text-brand transition-colors hover:bg-brand-soft"
+            className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-brand text-brand transition-colors hover:bg-brand-soft sm:inline-flex"
           >
             <Bookmark size={15} strokeWidth={1.75} aria-hidden />
           </Link>

@@ -62,8 +62,31 @@ export function DirectoryStrip() {
     },
   ];
 
+  /*
+   * Two-up on a phone, and the 115px floor lifts with it.
+   *
+   * Six of these stacked full-width measured 764px — nine tenths of a screen
+   * spent on six near-identical rows, each one a 32px glyph and two short lines
+   * of text held apart by `min-h` from a count sitting alone on the baseline.
+   * The floor exists to keep the mockup's 224x115 cell square-ish at 1440,
+   * where six sit in a row; at 390 it only manufactured dead space.
+   *
+   * Paired at 174px each they read as a set of entry points rather than a list
+   * to get past, and the block comes in around 440px.
+   */
   const cardClass =
-    "group flex min-h-[7.1875rem] flex-col justify-between rounded-md border border-border bg-surface p-4 transition-colors hover:border-brand-line hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
+    "group flex flex-col justify-between rounded-md border border-border bg-surface p-3.5 transition-colors hover:border-brand-line hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:min-h-[7.1875rem] sm:p-4";
+
+  /*
+   * The glyph leads the card on a phone instead of flanking the copy: a 32px
+   * icon plus its gutter takes 46 of the 150px of usable width, which left the
+   * two-line body clamping mid-word. Above the title it costs one 24px line and
+   * gives the copy the whole column. `[&_svg]` because the size is a lucide
+   * prop — an attribute, which a class overrides — and one class pair here
+   * beats threading a breakpoint through the icon map.
+   */
+  const headClass =
+    "flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3.5 [&_svg]:size-6 sm:[&_svg]:size-8";
 
   return (
     <section
@@ -73,21 +96,21 @@ export function DirectoryStrip() {
       <h2 id="directories-heading" className="sr-only">
         {t("public.home.directoriesHeading")}
       </h2>
-      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 xl:grid-cols-6">
         {PUBLIC_DIRECTORIES.map((dir) => {
           const count = stats.data?.directory_counts?.[dir.role] ?? 0;
           const bodyKey = DIRECTORY_BODY_KEYS[dir.slug];
           return (
             <Link key={dir.slug} to={`/${dir.slug}`} className={cardClass}>
-              <div className="flex items-start gap-3.5">
+              <div className={headClass}>
                 <span className="shrink-0 text-brand">
                   {DIRECTORY_ICONS[dir.slug]}
                 </span>
                 <div className="min-w-0">
-                  <h3 className="text-[15px] font-semibold leading-snug text-text">
+                  <h3 className="text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                     {t(dir.labelKey)}
                   </h3>
-                  <p className="mt-1.5 line-clamp-2 text-[11px] leading-[1.45] text-text-muted">
+                  <p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-text-muted sm:mt-1.5">
                     {bodyKey ? t(bodyKey) : t(dir.subtitleKey)}
                   </p>
                 </div>
@@ -113,11 +136,13 @@ export function DirectoryStrip() {
 
         {extras.map((item) => (
           <Link key={item.key} to={item.to} className={cardClass}>
-            <div className="flex items-start gap-3.5">
+            <div className={headClass}>
               <span className="shrink-0 text-brand">{item.icon}</span>
               <div className="min-w-0">
-                <h3 className="text-[15px] font-semibold leading-snug text-text">{item.title}</h3>
-                <p className="mt-1.5 line-clamp-2 text-[11px] leading-[1.45] text-text-muted">
+                <h3 className="text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
+                  {item.title}
+                </h3>
+                <p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-text-muted sm:mt-1.5">
                   {item.body}
                 </p>
               </div>

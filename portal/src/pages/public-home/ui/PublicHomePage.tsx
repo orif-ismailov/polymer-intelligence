@@ -62,16 +62,30 @@ export function PublicHomePage() {
 
       {/* 3. Marketplace body: categories+filters | products+manufacturers | rail */}
       <section aria-labelledby="catalog-heading" className="bg-bg">
-        <div className="mx-auto max-w-[1440px] px-4 py-4 lg:px-6">
+        {/* `pt-6` on a phone so the seam between the directory cards and the
+            catalog body matches the 24px the other bands use — at `py-4` it was
+            16px, tighter than the 14px gutter INSIDE the body, which made the
+            two blocks read as one run-on. The mockup's 16px returns at `lg`. */}
+        <div className="mx-auto max-w-[1440px] px-4 pb-6 pt-6 lg:px-6 lg:py-4">
           {/* 229 / 1fr / 330 with a 14px gutter — measured off the mockup's
-              sidebar 24→253, main 267→1075 and rail 1086→1416. */}
+              sidebar 24→253, main 267→1075 and rail 1086→1416.
+
+              Below `lg` the three columns become one, and DOM order is the
+              wrong reading order there: the sidebar is a 718px stack of a
+              category list and four filter dropdowns, so a phone visitor met
+              the filters — 0.85 of a screen of them — before the first product,
+              at y≈2268. Nobody filters a catalog they have not seen yet. The
+              `order-*` rules below re-rank the same three children for the
+              single-column case only, and reset at `lg`: browse the goods, meet
+              the suppliers, read the market, then refine. No DOM moves, so the
+              `<aside>` landmarks and the desktop grid are both untouched. */}
           <div className="grid gap-3.5 lg:grid-cols-[14.3125rem_minmax(0,1fr)] xl:grid-cols-[14.3125rem_minmax(0,1fr)_20.625rem]">
-            <CatalogSidebar />
+            <CatalogSidebar className="order-3 lg:order-none" />
 
             {/* Products and manufacturers are two panels stacked in the middle
                 column, each on the same `surface` tone as the cards inside it —
                 sampled off the mockup, where only the hairlines separate them. */}
-            <div className="min-w-0 space-y-3.5">
+            <div className="order-1 min-w-0 space-y-3.5 lg:order-none">
               <section className="rounded-md border border-border bg-surface p-3.5">
                 <div className="flex items-baseline justify-between gap-4">
                   <h2
@@ -90,14 +104,14 @@ export function PublicHomePage() {
                 </div>
 
                 {featured.isLoading ? (
-                  <div className="mt-3.5 grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
-                    <Skeleton className="h-[21rem] w-full" />
-                    <Skeleton className="h-[21rem] w-full" />
-                    <Skeleton className="h-[21rem] w-full" />
-                    <Skeleton className="h-[21rem] w-full" />
+                  <div className="mt-3.5 grid grid-cols-2 gap-2.5 sm:gap-3.5 xl:grid-cols-4">
+                    <Skeleton className="h-[19rem] w-full sm:h-[21rem]" />
+                    <Skeleton className="h-[19rem] w-full sm:h-[21rem]" />
+                    <Skeleton className="h-[19rem] w-full sm:h-[21rem]" />
+                    <Skeleton className="h-[19rem] w-full sm:h-[21rem]" />
                   </div>
                 ) : featured.data && featured.data.items.length > 0 ? (
-                  <div className="mt-3.5 grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-3.5 grid grid-cols-2 gap-2.5 sm:gap-3.5 xl:grid-cols-4">
                     {featured.data.items.slice(0, 4).map((offer) => (
                       <HomeOfferCard key={offer.id} offer={offer} />
                     ))}
@@ -112,7 +126,15 @@ export function PublicHomePage() {
               <VerifiedManufacturers />
             </div>
 
-            <aside className="min-w-0">
+            {/* `lg:col-span-2` is a bug fix, not a preference. The grid is TWO
+                columns between 1024 and 1279 but has three children, so the
+                rail wrapped into the 229px sidebar column and rendered as a
+                sliver with a ~770x700px void beside it — headings broken over
+                two lines, «Смотреть все» wrapped, the price source truncated to
+                «Источник: р…». Spanning the full width there turns it into a
+                three-up market strip (see `MarketRail`), and `xl` gets its
+                330px vertical rail back. */}
+            <aside className="order-2 min-w-0 lg:order-none lg:col-span-2 xl:col-span-1">
               <MarketRail />
             </aside>
           </div>

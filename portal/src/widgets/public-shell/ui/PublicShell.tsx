@@ -5,6 +5,7 @@ import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
 import { PUBLIC_DIRECTORIES } from "@/shared/config";
 import { BrandLogo } from "@/shared/ui";
 
+import { PublicMobileNav } from "./PublicMobileNav";
 import { PublicTopNav } from "./PublicTopNav";
 
 /**
@@ -27,6 +28,7 @@ export function PublicShell() {
         <Outlet />
       </main>
       <PublicFooter />
+      <PublicMobileNav />
     </div>
   );
 }
@@ -64,7 +66,14 @@ function PublicFooter() {
 
   return (
     <footer className="mt-16 border-t border-border bg-surface">
-      <div className="mx-auto max-w-[1440px] px-4 py-10 lg:px-6">
+      {/* `pb-24` below `md` reserves the fixed bottom bar's row. A fixed element
+          does not extend its parent's box, so without this the footer's last
+          links sit under the bar — the failure mode `BottomNav` documents and
+          that `AppShell` answers with the same `pb-24`. Putting it on the
+          FOOTER rather than the page root also means the bar's `bg-surface/95`
+          rests on the footer's own `bg-surface` instead of on a strip of page
+          background, so the seam does not show through the translucency. */}
+      <div className="mx-auto max-w-[1440px] px-4 pb-24 pt-10 md:pb-10 lg:px-6">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
             <Link to="/" aria-label={t("common.appName")} className="inline-flex">

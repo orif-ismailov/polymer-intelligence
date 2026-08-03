@@ -40,6 +40,8 @@ interface FigureProps {
   revealed: boolean;
   liveLabel: string;
   delayMs: number;
+  /** Close an odd row: the last cell takes both phone columns. */
+  spanRow?: boolean;
 }
 
 /**
@@ -48,7 +50,7 @@ interface FigureProps {
  * hooks the moment the row count changes, which is exactly what the floor below
  * makes it do.
  */
-function Figure({ spec, loading, revealed, liveLabel, delayMs }: FigureProps) {
+function Figure({ spec, loading, revealed, liveLabel, delayMs, spanRow }: FigureProps) {
   const { i18n } = useTranslation();
   const target = spec.value ?? 0;
   const shown = useCountUp(target, { enabled: revealed, decimals: spec.decimals ?? 0 });
@@ -57,7 +59,12 @@ function Figure({ spec, loading, revealed, liveLabel, delayMs }: FigureProps) {
     <div
       data-reveal
       style={{ "--reveal-delay": `${delayMs}ms` } as CSSProperties}
-      className="flex flex-col border-s border-t border-border bg-surface px-4 py-6 text-center sm:px-5 sm:py-7"
+      className={cn(
+        "flex flex-col border-s border-t border-border bg-surface px-4 py-5 text-center sm:px-5 sm:py-7",
+        // Only the phone grid is two-wide, so only it can strand a final cell;
+        // `sm` and up already divide evenly.
+        spanRow && "col-span-2 sm:col-span-1",
+      )}
     >
       {/* Flex `order` puts the figure above its label while the markup keeps the
           <dt>-before-<dd> sequence a <dl> requires — same arrangement the hero
@@ -176,7 +183,7 @@ export function PlatformFigures({ revealed }: { revealed: boolean }) {
     : specs.filter((spec) => !spec.live || (spec.value ?? 0) >= (spec.floor ?? 1));
 
   return (
-    <section aria-labelledby="platform-figures" className="mt-14 lg:mt-20">
+    <section aria-labelledby="platform-figures" className="mt-11 sm:mt-14 lg:mt-20">
       {/* Ruled label: the band's own section divider, and the first time this
           heading has been visible rather than `sr-only`. */}
       <div data-reveal className="flex items-center gap-4">
@@ -203,7 +210,7 @@ export function PlatformFigures({ revealed }: { revealed: boolean }) {
         which read as a rendering fault. Here an unfilled area is just the
         container's own `bg-surface`, i.e. invisible.
       */}
-      <div className="mt-8 overflow-hidden rounded-md border border-border bg-surface">
+      <div className="mt-6 overflow-hidden rounded-md border border-border bg-surface sm:mt-8">
         <dl className={cn("-ms-px -mt-px grid", COLUMNS[items.length] ?? COLUMNS[6])}>
           {items.map((spec, index) => (
             <Figure
@@ -213,6 +220,14 @@ export function PlatformFigures({ revealed }: { revealed: boolean }) {
               revealed={revealed}
               liveLabel={t("public.home.statLive")}
               delayMs={80 + index * 70}
+              /*
+               * The floor can drop a live figure, and an odd count in a
+               * two-column grid leaves the last one alone in a half-width cell
+               * with a hole beside it. `country_count` sits at 1 today, so the
+               * band publishes five and «99,8%» was that orphan — reading as a
+               * layout fault rather than as the row it closes.
+               */
+              spanRow={items.length % 2 === 1 && index === items.length - 1}
             />
           ))}
         </dl>

@@ -2,6 +2,7 @@ import { ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
+import { useParallax } from "@/shared/lib";
 import { LinkButton } from "@/shared/ui";
 
 import { HeroSearch } from "./HeroSearch";
@@ -55,6 +56,10 @@ export function HeroBanner() {
   // boot-time refresh resolves. Same contract the header runs on; nothing here
   // issues an authenticated request, so the page stays shared-cacheable.
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  // Drifts the photograph against the copy on scroll. Everything it needs is in
+  // the `<img>`'s own classes below; see `useParallax` for why the scale is CSS
+  // and the offset is JS.
+  const parallaxRef = useParallax<HTMLImageElement>();
 
   return (
     <section
@@ -69,6 +74,7 @@ export function HeroBanner() {
         already says what it says.
       */}
       <img
+        ref={parallaxRef}
         src="/banner_left_cleared.jpg"
         alt=""
         aria-hidden
@@ -80,8 +86,29 @@ export function HeroBanner() {
          * keeps the trade-route map whole: lower and РОССИЯ / КАЗАХСТАН get
          * sliced through, which reads as an accident rather than a crop. On a
          * phone the frame is nearly square, so it re-centres on the skyline.
+         *
+         * The parallax rides on top of that, and deliberately does NOT touch the
+         * element's box: growing `h-full` to make room would drop the frame
+         * below the image's own 1.87 aspect and flip `cover` from width-driven
+         * to height-driven, re-cropping the map sideways. A `scale()` leaves the
+         * box — and therefore every `object-*` decision above — exactly as it
+         * was and just magnifies what is already framed.
+         *
+         * 1.08, and the ceiling is the photograph, not taste. The slack a
+         * parallax can spend is (scale-1)/2 of the band's height, so a bigger
+         * number buys a longer drift — but it buys it by cropping, and this
+         * frame has labels at its edges. At 1.2 the visible area falls to 83%
+         * and the trade route loses РОССИЯ off the top and КИТАЙ off the side,
+         * which is precisely the "reads as an accident rather than a crop"
+         * failure the object-position note above exists to avoid. 1.08 keeps
+         * 93% of the frame — every label still whole — for ~26px of travel on
+         * the desktop hero and ~24px on a phone.
+         *
+         * `motion-safe:` on all three: without it a visitor who asked for
+         * reduced motion would still get the crop change, which is the part
+         * they can see standing still.
          */
-        className="absolute inset-0 -z-10 h-full w-full object-cover object-[62%_45%] lg:object-[50%_30%]"
+        className="absolute inset-0 -z-10 h-full w-full object-cover object-[62%_45%] lg:object-[50%_30%] motion-safe:[--parallax-scale:1.08] motion-safe:[transform:translate3d(0,var(--parallax-y,0px),0)_scale(var(--parallax-scale))] motion-safe:[will-change:transform]"
       />
 
       {/*
@@ -141,7 +168,7 @@ export function HeroBanner() {
       {/* Asymmetric bottom padding: the rail used to add ~72px of its own below
           the copy, and dropping it without giving that height back left the CTAs
           sitting on the hairline. */}
-      <div className="mx-auto w-full max-w-[1440px] px-4 pb-14 pt-10 sm:pb-20 sm:pt-14 lg:px-6 xl:pb-24 xl:pt-20">
+      <div className="mx-auto w-full max-w-[1440px] px-4 pb-11 pt-8 sm:pb-20 sm:pt-14 lg:px-6 xl:pb-24 xl:pt-20">
         {/* Seven of twelve, and the other five are deliberately empty: that is
             where the photo's focal point lives (the trade-route map and the
             skyline). The grid states the split rather than a `max-w` that just
@@ -159,16 +186,16 @@ export function HeroBanner() {
                 and there is exactly one of them in the app. */}
             <h1
               id="hero-heading"
-              className="mt-5 max-w-[22ch] text-[2rem] font-semibold leading-[1.1] tracking-tight text-text sm:text-[2.6rem] xl:text-[3.4rem] xl:leading-[1.06]"
+              className="mt-4 max-w-[22ch] text-[2rem] font-semibold leading-[1.1] tracking-tight text-text sm:mt-5 sm:text-[2.6rem] xl:text-[3.4rem] xl:leading-[1.06]"
             >
               {t("public.home.heroTitle")}
             </h1>
 
-            <p className="mt-4 max-w-[44ch] text-[15px] leading-relaxed text-text-muted sm:mt-5 sm:text-lg">
+            <p className="mt-3 max-w-[44ch] text-[15px] leading-relaxed text-text-muted sm:mt-5 sm:text-lg">
               {t("public.home.heroSubtitle")}
             </p>
 
-            <div className="mt-6 sm:mt-8">
+            <div className="mt-5 sm:mt-8">
               <HeroSearch />
             </div>
 
@@ -180,7 +207,7 @@ export function HeroBanner() {
               The primary swaps with the session — never to «Войти», which would
               put a sign-in link on a page the visitor is already signed into.
             */}
-            <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row sm:items-center">
+            <div className="mt-5 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-3">
               <LinkButton
                 to={isAuthenticated ? "/cabinet" : "/cabinet/login"}
                 size="lg"

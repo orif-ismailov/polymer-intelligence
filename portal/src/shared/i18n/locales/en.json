@@ -2083,7 +2083,9 @@
       "prices": "Prices and analytics",
       "news": "News",
       "signIn": "Sign in",
-      "register": "Register"
+      "register": "Register",
+      "language": "Language",
+      "pricesShort": "Prices"
     },
     "role": {
       "manufacturer": "Manufacturer",
@@ -2251,7 +2253,10 @@
       "empty": "Nothing matches these filters",
       "pagination": "Pagination",
       "pageOf": "Page {{page}} of {{pages}}",
-      "anyPlural": "Any"
+      "anyPlural": "Any",
+      "showResults": "Show results",
+      "showResultsCount_one": "Show {{count}} offer",
+      "showResultsCount_other": "Show {{count}} offers"
     },
     "offer": {
       "untitled": "Untitled",

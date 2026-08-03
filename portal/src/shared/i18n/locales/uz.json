@@ -2083,7 +2083,9 @@
       "prices": "Narxlar va tahlil",
       "news": "Yangiliklar",
       "signIn": "Kirish",
-      "register": "Ro'yxatdan o'tish"
+      "register": "Ro'yxatdan o'tish",
+      "language": "Til",
+      "pricesShort": "Narxlar"
     },
     "role": {
       "manufacturer": "Ishlab chiqaruvchi",
@@ -2251,7 +2253,10 @@
       "empty": "Bu shartlar bo'yicha hech narsa topilmadi",
       "pagination": "Sahifalash",
       "pageOf": "{{pages}} dan {{page}}-sahifa",
-      "anyPlural": "Har qanday"
+      "anyPlural": "Har qanday",
+      "showResults": "Natijalarni ko'rsatish",
+      "showResultsCount_one": "{{count}} ta taklifni ko'rsatish",
+      "showResultsCount_other": "{{count}} ta taklifni ko'rsatish"
     },
     "offer": {
       "untitled": "Nomsiz",

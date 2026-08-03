@@ -5,6 +5,8 @@ import { cn } from "@/shared/lib";
 
 import { Button } from "./Button";
 
+export type DialogPlacement = "center" | "sheet";
+
 interface DialogProps {
   open: boolean;
   onClose: () => void;
@@ -13,13 +15,33 @@ interface DialogProps {
   children?: ReactNode;
   footer?: ReactNode;
   className?: string;
+  /**
+   * `center` is the modal every cabinet flow uses. `sheet` anchors the panel to
+   * the bottom edge, full width, and lets its body scroll inside a capped
+   * height — the phone pattern for a control surface you pull up, act in, and
+   * dismiss, where a centred `max-w-md` card would waste the width it needs and
+   * put its footer in the middle of the screen.
+   */
+  placement?: DialogPlacement;
 }
 
 /**
  * Lightweight modal dialog. Traps focus to the panel, closes on Escape and
  * backdrop click, and restores focus to the previously-focused element.
+ *
+ * Both placements share every one of those behaviours — that is the reason a
+ * bottom sheet is a variant here rather than its own component.
  */
-export function Dialog({ open, onClose, title, description, children, footer, className }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  footer,
+  className,
+  placement = "center",
+}: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
@@ -42,9 +64,14 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
 
   if (!open) return null;
 
+  const isSheet = placement === "sheet";
+
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className={cn(
+        "fixed inset-0 z-50 flex justify-center",
+        isSheet ? "items-end" : "items-center p-4",
+      )}
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -60,17 +87,39 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
         ref={panelRef}
         tabIndex={-1}
         className={cn(
-          "relative z-10 w-full max-w-md animate-scale-in rounded-lg border border-border bg-surface shadow-lg focus:outline-none",
+          "relative z-10 w-full border border-border bg-surface shadow-lg focus:outline-none",
+          isSheet
+            ? // Rounded at the top only: the bottom edge is the screen edge, and
+              // a radius there would leave two slivers of backdrop under a panel
+              // that is supposed to be resting on it. Capped at 85dvh — `dvh`,
+              // not `vh`, so the sheet is not measured against a viewport that
+              // includes the mobile browser's retracted URL bar. The header and
+              // footer are `shrink-0` so only the body scrolls, which is what
+              // keeps the primary action reachable however long the body runs.
+              "max-h-[85dvh] animate-sheet-in flex-col rounded-t-lg pb-[env(safe-area-inset-bottom)]"
+            : "max-w-md animate-scale-in rounded-lg",
+          isSheet && "flex",
           className,
         )}
       >
-        <div className="border-b border-border px-5 py-4">
+        <div className={cn("border-b border-border px-5 py-4", isSheet && "shrink-0")}>
           <h2 className="text-base font-semibold text-text">{title}</h2>
           {description ? <p className="mt-1 text-sm text-text-muted">{description}</p> : null}
         </div>
-        {children ? <div className="px-5 py-4">{children}</div> : null}
+        {children ? (
+          <div className={cn("px-5 py-4", isSheet && "min-h-0 flex-1 overflow-y-auto")}>
+            {children}
+          </div>
+        ) : null}
         {footer ? (
-          <div className="flex justify-end gap-3 border-t border-border px-5 py-4">{footer}</div>
+          <div
+            className={cn(
+              "flex gap-3 border-t border-border px-5 py-4",
+              isSheet ? "shrink-0 items-center" : "justify-end",
+            )}
+          >
+            {footer}
+          </div>
         ) : null}
       </div>
     </div>,

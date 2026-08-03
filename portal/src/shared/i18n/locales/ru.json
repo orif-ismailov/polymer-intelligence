@@ -2091,7 +2091,9 @@
       "prices": "Цены и аналитика",
       "news": "Новости",
       "signIn": "Войти",
-      "register": "Регистрация"
+      "register": "Регистрация",
+      "language": "Язык",
+      "pricesShort": "Цены"
     },
     "role": {
       "manufacturer": "Производитель",
@@ -2267,7 +2269,12 @@
       "empty": "По этим условиям ничего не найдено",
       "pagination": "Постраничная навигация",
       "pageOf": "Страница {{page}} из {{pages}}",
-      "anyPlural": "Любые"
+      "anyPlural": "Любые",
+      "showResults": "Показать результаты",
+      "showResultsCount_one": "Показать {{count}} предложение",
+      "showResultsCount_few": "Показать {{count}} предложения",
+      "showResultsCount_many": "Показать {{count}} предложений",
+      "showResultsCount_other": "Показать {{count}} предложений"
     },
     "offer": {
       "untitled": "Без названия",
