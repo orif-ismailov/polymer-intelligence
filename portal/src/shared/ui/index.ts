@@ -35,6 +35,7 @@ export type { BadgeTone, BadgeVariant } from "./Badge";
 export { Alert } from "./Alert";
 export { EmptyState } from "./EmptyState";
 export { Dialog, ConfirmDialog } from "./Dialog";
+export type { DialogPlacement } from "./Dialog";
 export { Checkbox } from "./Checkbox";
 export { Radio } from "./Radio";
 export type { RadioProps } from "./Radio";

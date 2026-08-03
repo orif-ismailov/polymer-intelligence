@@ -2252,7 +2252,10 @@
       "empty": "Nothing matches these filters",
       "pagination": "Pagination",
       "pageOf": "Page {{page}} of {{pages}}",
-      "anyPlural": "Any"
+      "anyPlural": "Any",
+      "showResults": "Show results",
+      "showResultsCount_one": "Show {{count}} offer",
+      "showResultsCount_other": "Show {{count}} offers"
     },
     "offer": {
       "untitled": "Untitled",

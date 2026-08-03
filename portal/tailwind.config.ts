@@ -124,6 +124,16 @@ const config: Config = {
           from: { opacity: "0", transform: "scale(0.97)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        /*
+         * `Dialog placement="sheet"`. A bottom sheet arrives from the edge it is
+         * anchored to — `scale-in` reads as a centred modal no matter where the
+         * panel sits, which is exactly the tell that makes a repositioned dialog
+         * look like a bug rather than a sheet.
+         */
+        "sheet-in": {
+          from: { opacity: "0", transform: "translate3d(0, 1.5rem, 0)" },
+          to: { opacity: "1", transform: "translate3d(0, 0, 0)" },
+        },
         spin: {
           to: { transform: "rotate(360deg)" },
         },
@@ -148,6 +158,7 @@ const config: Config = {
       animation: {
         "fade-in": "fade-in 150ms ease-out",
         "scale-in": "scale-in 140ms ease-out",
+        "sheet-in": "sheet-in 180ms cubic-bezier(0.22, 1, 0.36, 1)",
         spin: "spin 0.8s linear infinite",
         "hero-drift": "hero-drift 22s ease-in-out infinite",
         "hero-rise": "hero-rise 500ms cubic-bezier(0.22, 1, 0.36, 1) both",
