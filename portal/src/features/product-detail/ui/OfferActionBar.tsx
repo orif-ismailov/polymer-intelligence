@@ -47,7 +47,16 @@ export function OfferActionBar({
   if (!canAct) return null;
 
   return (
-    <StickyActionBar className="!p-0 md:!p-0 !bottom-0">
+    /*
+     * The `!bottom-0` that used to be here is gone, and its removal is the
+     * point. `StickyActionBar` defaults to `bottom-14` precisely to clear
+     * `BottomNav`'s row; the override was correct only while the public shell
+     * had no bottom bar. It has one now, at `z-30` against this bar's `z-20`,
+     * so pinning to 0 would hide the three actions behind the navigation for
+     * exactly the visitors who can use them — signed in, on a listing.
+     * `PublicOfferPage` already reserves `pb-36` for the pair.
+     */
+    <StickyActionBar className="!p-0 md:!p-0">
       <div
         className="flex w-full divide-x divide-border overflow-hidden rounded-md border border-border bg-surface md:rounded-lg"
         data-testid="product-detail-action-bar"

@@ -2084,7 +2084,8 @@
       "news": "News",
       "signIn": "Sign in",
       "register": "Register",
-      "language": "Language"
+      "language": "Language",
+      "pricesShort": "Prices"
     },
     "role": {
       "manufacturer": "Manufacturer",

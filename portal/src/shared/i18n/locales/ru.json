@@ -2092,7 +2092,8 @@
       "news": "Новости",
       "signIn": "Войти",
       "register": "Регистрация",
-      "language": "Язык"
+      "language": "Язык",
+      "pricesShort": "Цены"
     },
     "role": {
       "manufacturer": "Производитель",

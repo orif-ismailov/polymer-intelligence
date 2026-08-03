@@ -2084,7 +2084,8 @@
       "news": "Yangiliklar",
       "signIn": "Kirish",
       "register": "Ro'yxatdan o'tish",
-      "language": "Til"
+      "language": "Til",
+      "pricesShort": "Narxlar"
     },
     "role": {
       "manufacturer": "Ishlab chiqaruvchi",
