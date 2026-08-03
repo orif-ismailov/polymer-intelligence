@@ -63,6 +63,46 @@ RESINS: dict[str, dict] = {
               "shape": "cyl", "bg": (154, 146, 130), "size": (61, 53)},
 }
 
+# ── Per-grade appearance ──────────────────────────────────────────────────────
+# A resin is not one colour. Pipe and cable compounds are carbon-black filled,
+# bottle PET is a blue-tinted chip, film grades are more translucent than
+# injection grades, and GPPS is glassy where HIPS is opaque. Rendering every
+# listing from the resin alone produced a catalogue of near-identical grey beds
+# — accurate for nothing and useless for telling two cards apart.
+#
+# Keys are `grade_text`; the value overrides fields of the resin spec above.
+GRADE_APPEARANCE: dict[str, dict] = {
+    # PE100 pressure-pipe resin — supplied black (carbon black is the UV package).
+    "F7000":    {"base": (38, 38, 40), "hi": (150, 152, 156), "alpha": 255,
+                 "bg": (24, 24, 26)},
+    # Cable compound — black for the same reason.
+    "SG-3":     {"base": (44, 44, 46), "hi": (158, 160, 164), "alpha": 255,
+                 "shape": "cyl", "bg": (26, 26, 28), "size": (58, 50)},
+    # Blow-moulding HDPE: opaque milky white.
+    "B5823":    {"base": (250, 250, 247), "alpha": 255, "bg": (168, 167, 162)},
+    # Injection HDPE: natural, slightly warmer.
+    "HD50200S": {"base": (243, 240, 232), "alpha": 250, "bg": (160, 156, 147)},
+    # Bottle PET — clear chips with the classic blue tint.
+    "BG-780":   {"base": (214, 230, 240), "hi": (255, 255, 255), "alpha": 178,
+                 "bg": (120, 138, 150)},
+    "BG-841":   {"base": (206, 226, 240), "hi": (255, 255, 255), "alpha": 170,
+                 "bg": (112, 132, 148)},
+    # GPPS is glassy; HIPS is opaque ivory.
+    "GPPS-525": {"base": (236, 240, 243), "hi": (255, 255, 255), "alpha": 158,
+                 "bg": (134, 140, 146)},
+    "HIPS-486": {"base": (245, 243, 236), "alpha": 255, "bg": (156, 153, 145)},
+    # ABS: one natural, one the darker heat-resistant compound.
+    "ABS-757":  {"base": (242, 234, 218), "alpha": 253, "bg": (158, 150, 134)},
+    "ABS-121H": {"base": (206, 196, 178), "alpha": 255, "bg": (128, 121, 108)},
+    # PP film grade — more translucent than the raffia/injection grades.
+    "PPH-FN04": {"base": (236, 238, 236), "alpha": 208, "bg": (146, 149, 146)},
+    # PP block copolymer for automotive — greyer natural.
+    "EP548R":   {"base": (230, 230, 227), "alpha": 240, "bg": (144, 143, 139)},
+    # Agricultural LDPE carries a UV masterbatch: faint blue-grey cast.
+    "153-02K":  {"base": (222, 230, 232), "alpha": 226, "bg": (136, 146, 150)},
+    # Suspension PVC for rigid profile stays the white powder of the resin spec.
+}
+
 
 def _pellet(spec: dict, rng: random.Random, scale: float) -> Image.Image:
     w = max(4, int(spec["size"][0] * scale))
@@ -98,9 +138,13 @@ def _pellet(spec: dict, rng: random.Random, scale: float) -> Image.Image:
         rng.uniform(0, 360), expand=True, resample=Image.BICUBIC)
 
 
-def render_master(code: str, seed: int) -> Image.Image:
-    """A large pellet bed, later cropped per offer so listings differ."""
-    spec = RESINS[code]
+def render_master(code: str, seed: int, appearance: dict | None = None) -> Image.Image:
+    """A large pellet bed, later cropped per offer so listings differ.
+
+    `appearance` overrides fields of the resin spec for a specific grade (a black
+    pipe compound, a blue-tinted PET chip) — see GRADE_APPEARANCE.
+    """
+    spec = {**RESINS[code], **(appearance or {})}
     rng = random.Random(seed)
     w, h = MASTER
     canvas = Image.new("RGB", (w, h), spec["bg"])
@@ -305,16 +349,28 @@ def seed_media(db: Session, *, force: bool = False) -> None:
     masters: dict[str, Image.Image] = {}
     photos = 0
     for offer in offers:
-        has_photo = any(f.kind == OfferFileKind.image for f in offer.files)
-        if has_photo and not force:
+        existing = [f for f in offer.files if f.kind == OfferFileKind.image]
+        if existing and not force:
             continue
+        # --force REPLACES: without this the old frames stay attached and the
+        # gallery just grows, so a re-render of the same offer would show both
+        # the previous look and the new one side by side.
+        for stale in existing:
+            db.delete(stale)
+        if existing:
+            db.flush()
         code = (offer.polymer_type or "PP").upper()
         if code not in RESINS:
             code = "PP"
-        if code not in masters:
-            masters[code] = render_master(code, seed=abs(hash(code)) % 10_000)
-            print(f"  rendered master {code}")
-        master = masters[code]
+        # A master per (resin, grade appearance) — grades that override nothing
+        # share the resin's master, so this stays a handful of renders.
+        grade = (offer.grade_text or "").strip()
+        key = f"{code}:{grade}" if grade in GRADE_APPEARANCE else code
+        if key not in masters:
+            masters[key] = render_master(code, seed=abs(hash(key)) % 10_000,
+                                         appearance=GRADE_APPEARANCE.get(grade))
+            print(f"  rendered master {key}")
+        master = masters[key]
 
         for n in range(2 if offer.id % 3 else 3):
             data = crop_variant(master, seed=offer.id * 17 + n)
