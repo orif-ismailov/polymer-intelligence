@@ -135,7 +135,7 @@ export function MarketRequestsPage() {
   if (!activeCompany) {
     return (
       <ErrorView title={t("home.noActiveCompany")} message={t("home.noActiveCompanyBody")}>
-        <LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>
+        <LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>
       </ErrorView>
     );
   }

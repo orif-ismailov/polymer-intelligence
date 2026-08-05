@@ -49,6 +49,33 @@ export default tseslint.config(
     },
   },
   {
+    // The SSR entry renders JSX but is not a component module: it exports a
+    // `render()` function that Node calls once per request. Fast Refresh never
+    // touches it, so the only-export-components warning has nothing to protect.
+    files: ["src/entry-server.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
+  {
+    // server.js is the Node process, not part of the browser bundle or the app
+    // TS project. Lint it syntactically with Node globals.
+    files: ["server.js"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      globals: { ...globals.node },
+      parserOptions: {
+        projectService: false,
+        project: false,
+      },
+    },
+    rules: {
+      // The server logs its boot banner and degraded-render warnings.
+      "no-console": "off",
+    },
+  },
+  {
     // Playwright specs run in a Node/test context. They aren't part of the app
     // TS project, so disable type-aware rules (which need the project service)
     // and lint them syntactically only.

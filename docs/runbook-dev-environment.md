@@ -16,7 +16,7 @@ production. Nothing here touches the live prod stack, volumes, bot, or userbot.
 | Deployed branch | `main` (prod CI job) | `dev` (dev CI job) |
 | Inner nginx port | `127.0.0.1:8080` | `127.0.0.1:8081` (`INNER_NGINX_PORT`) |
 | Inner nginx conf | `nginx.behind-proxy.conf` | `nginx.dev-server.behind-proxy.conf` (`INNER_NGINX_CONF`) |
-| Public domains | `ai-imex.com` / `admin.` / `api.` | `dev.ai-imex.com` / `dev-admin.` / `dev-api.` |
+| Public domains | `ai-imex.com` / `admin.` / `api.` | `dev.ai-imex.com` / `dev-admin.` / `dev-api.` / `dev-cabinet.` |
 | Telegram bot | prod BotFather token | **separate** dev BotFather token |
 | Userbot session | prod account session | **separate** account session |
 
@@ -35,7 +35,7 @@ Internet ─HTTPS─▶ HOST nginx (one front-door, systemd)
 
 ## Prerequisites (collect before you start)
 
-- [ ] **DNS control** for `ai-imex.com` to add three A-records (Phase 1).
+- [ ] **DNS control** for `ai-imex.com` to add four A-records (Phase 1).
 - [ ] **A separate dev bot** created in [@BotFather](https://t.me/BotFather) — new
       token, and run `/setdomain` → `dev.ai-imex.com` for its Login Widget.
 - [ ] **A separate Telegram account** for the dev userbot (a spare number). Same-account
@@ -50,18 +50,19 @@ Internet ─HTTPS─▶ HOST nginx (one front-door, systemd)
 
 ## Phase 1 — DNS (zero downtime)
 
-At your DNS provider add three A-records → **the same server IP prod already uses**:
+At your DNS provider add four A-records → **the same server IP prod already uses**:
 
 ```
-dev.ai-imex.com        A   <server-ip>
-dev-admin.ai-imex.com  A   <server-ip>
-dev-api.ai-imex.com    A   <server-ip>
+dev.ai-imex.com          A   <server-ip>
+dev-admin.ai-imex.com    A   <server-ip>
+dev-api.ai-imex.com      A   <server-ip>
+dev-cabinet.ai-imex.com  A   <server-ip>
 ```
 
 Verify before continuing (so certbot's HTTP-01 challenge will pass in Phase 4):
 
 ```bash
-dig +short dev.ai-imex.com dev-admin.ai-imex.com dev-api.ai-imex.com   # all → <server-ip>
+dig +short dev.ai-imex.com dev-admin.ai-imex.com dev-api.ai-imex.com dev-cabinet.ai-imex.com   # all → <server-ip>
 ```
 
 ---
@@ -168,10 +169,11 @@ sudo nginx -t && sudo systemctl reload nginx
 > the **main** `/etc/nginx/nginx.conf` `http { }` block (same fix prod needed):
 > `server_names_hash_bucket_size 64;` then `sudo nginx -t && sudo systemctl reload nginx`.
 
-Issue certs for the three dev domains (DNS from Phase 1 must already resolve here):
+Issue certs for the four dev domains (DNS from Phase 1 must already resolve here):
 
 ```bash
-sudo certbot --nginx -d dev.ai-imex.com -d dev-admin.ai-imex.com -d dev-api.ai-imex.com
+sudo certbot --nginx -d dev.ai-imex.com -d dev-admin.ai-imex.com -d dev-api.ai-imex.com \
+                     -d dev-cabinet.ai-imex.com
 # certbot rewrites the dev vhost in place: listen 443 ssl, cert paths, 80→443 redirect
 sudo systemctl reload nginx
 ```

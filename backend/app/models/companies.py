@@ -109,7 +109,11 @@ class Company(Base):
     identity_locked: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )                                                                             # R3: E-IMZO-confirmed requisites are frozen (reject PATCH)
-    logo_storage_path: Mapped[str | None] = mapped_column(Text, nullable=True)     # P1: S3 key only — the API presigns a short-lived URL per request
+    logo_storage_path: Mapped[str | None] = mapped_column(Text, nullable=True)     # P1: S3 key only — the API serves the bytes through a proxy route
+    #: Hero image behind the logo on the public profile. Same storage contract
+    #: as the logo: S3 key here, bytes served by the API (a presigned URL is
+    #: signed against the INTERNAL endpoint and is a broken `<img>`).
+    cover_storage_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     counterparty_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("counterparties.id"), nullable=True
     )                                                                             # bridge into the intelligence loop

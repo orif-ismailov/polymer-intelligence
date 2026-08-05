@@ -1,4 +1,4 @@
-export { default as i18n, SUPPORTED_LANGS, DEFAULT_LANG, detectLanguage, coerceLang, setLanguage } from "./i18n";
+export { default as i18n, SUPPORTED_LANGS, DEFAULT_LANG, detectLanguage, preferredLanguage, coerceLang, setLanguage } from "./i18n";
 export type { Lang } from "./i18n";
 export {
   COMPANY_STATUS_TONE,

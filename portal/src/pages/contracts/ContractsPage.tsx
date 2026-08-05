@@ -65,7 +65,7 @@ export function ContractsPage() {
         title={t("contracts.title")}
         subtitle={t("contracts.subtitle")}
         actions={
-          <Button onClick={() => navigate("/contracts/new")} data-testid="contracts-new">
+          <Button onClick={() => navigate("/cabinet/contracts/new")} data-testid="contracts-new">
             {t("contracts.create")}
           </Button>
         }
@@ -87,7 +87,7 @@ export function ContractsPage() {
           <Card key={c.id}>
             <CardBody
               className="flex cursor-pointer items-center justify-between gap-4"
-              onClick={() => navigate(`/contracts/${c.id}`)}
+              onClick={() => navigate(`/cabinet/contracts/${c.id}`)}
               data-testid="contract-row"
             >
               <div className="min-w-0">

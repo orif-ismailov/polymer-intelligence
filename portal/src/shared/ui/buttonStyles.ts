@@ -5,6 +5,7 @@ export type ButtonVariant =
   | "secondary"
   | "outline"
   | "ghost"
+  | "glass"
   | "danger"
   | "gold";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -32,6 +33,17 @@ const variants: Record<ButtonVariant, string> = {
   outline:
     "border border-border-strong bg-transparent text-text hover:border-brand-line hover:bg-brand-soft",
   ghost: "bg-transparent text-text hover:bg-surface-2",
+  /*
+   * The partner CTA when it sits on a photograph rather than on a surface — the
+   * storefront hero. `outline` is transparent by design, which is right on a
+   * card and wrong over an image: the label's contrast then depends on whatever
+   * pixel happens to be behind it. This keeps the same outlined silhouette but
+   * lays it on a blurred plate, so the pair reads as one control set and the
+   * label's backdrop is a known colour.
+   */
+  glass:
+    "border border-border-strong bg-surface/70 text-text backdrop-blur-sm " +
+    "hover:border-brand-line hover:bg-brand-soft",
   danger: "bg-danger text-danger-fg hover:brightness-110",
   /*
    * The publish moment. The mockups switch the CTA from neon green to gold at the

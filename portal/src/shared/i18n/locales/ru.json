@@ -81,7 +81,10 @@
     "favorites": "Избранное",
     "samples": "Образцы",
     "labOrders": "Лаборатория",
-    "openMenu": "Открыть меню"
+    "marketplace": "Маркетплейс",
+    "openMenu": "Открыть меню",
+    "logisticsRequests": "Логистика: заявки",
+    "labRequests": "Заявки в лабораторию"
   },
   "home": {
     "title": "Обзор",
@@ -158,7 +161,19 @@
       "ИП": "Индивидуальный предприниматель",
       "ГУП": "Государственное унитарное предприятие"
     },
-    "registrationDate": "Дата регистрации компании"
+    "registrationDate": "Дата регистрации компании",
+    "storefront": {
+      "title": "Витрина",
+      "hint": "Этот текст видят все посетители на публичной странице компании. Реквизиты после верификации не редактируются, витрина — да.",
+      "description": "Описание компании",
+      "experience": "Опыт работы, лет",
+      "projects": "Реализованных проектов",
+      "countInvalid": "Введите целое число не меньше нуля",
+      "saveFailed": "Не удалось сохранить. Попробуйте ещё раз.",
+      "cover": "Обложка профиля",
+      "coverHint": "JPG или PNG, до 8 МБ. Показывается над логотипом.",
+      "coverFailed": "Не удалось загрузить обложку."
+    }
   },
   "wizard": {
     "title": "Регистрация компании",
@@ -1460,6 +1475,22 @@
     "sample_request_status": {
       "title": "Статус образца",
       "body": "Запрос образца: статус изменён"
+    },
+    "logistics_request_new": {
+      "title": "Новая заявка на перевозку",
+      "body": "{{buyer}} ищет перевозчика: {{cargo}}"
+    },
+    "logistics_message": {
+      "title": "Новое сообщение по заявке",
+      "body": "Заявка {{number}} — есть новое сообщение"
+    },
+    "lab_request_new": {
+      "title": "Новая заявка на исследование",
+      "body": "{{buyer}} ищет лабораторию: {{product}}"
+    },
+    "lab_message": {
+      "title": "Новое сообщение по заявке",
+      "body": "Заявка {{number}} — есть новое сообщение"
     }
   },
   "contracts": {
@@ -1883,7 +1914,73 @@
     "requestRfq": "Запросить предложение (RFQ)",
     "messageManufacturer": "Связаться с заводом",
     "requestFactoryRfq": "Запросить предложение",
-    "pickOfferHint": "Выберите продукт ниже, чтобы отправить запрос продавцу"
+    "pickOfferHint": "Выберите продукт ниже, чтобы отправить запрос продавцу",
+    "logistics": {
+      "aboutTitle": "О компании",
+      "capabilitiesTitle": "Наши возможности",
+      "detailsTitle": "Условия работы",
+      "countries": "Страны работы",
+      "services": "Услуги",
+      "experience": "Опыт работы",
+      "projects": "Реализованных проектов",
+      "cargo": "Типы грузов",
+      "routes": "Популярные маршруты",
+      "tariff": "Тарификация",
+      "city": "Город",
+      "years_one": "{{count}} год",
+      "years_few": "{{count}} года",
+      "years_many": "{{count}} лет",
+      "years_other": "{{count}} лет",
+      "capabilityBlurb": {
+        "own_trucks": "Современные тягачи и контейнеровозы",
+        "own_rail_wagons": "Собственный парк вагонов и цистерн",
+        "sea_containers": "Работа с крупнейшими портами мира",
+        "storage_facilities": "Складские площади для консолидации грузов",
+        "customs_warehouse": "Таможенный склад для хранения под контролем",
+        "foreign_offices": "Представительства в странах отправления",
+        "customs_brokers": "Штатные брокеры для оформления «под ключ»"
+      },
+      "projectsValue": "{{value}}+"
+    },
+    "reviewCount_one": "{{count}} отзыв",
+    "reviewCount_few": "{{count}} отзыва",
+    "reviewCount_many": "{{count}} отзывов",
+    "reviewCount_other": "{{count}} отзывов",
+    "reviewAnonymous": "Компания",
+    "reviewTitle": "Оставить отзыв",
+    "reviewRating": "Оценка",
+    "reviewBody": "Комментарий",
+    "reviewBodyPlaceholder": "Как прошло сотрудничество?",
+    "reviewSubmit": "Отправить отзыв",
+    "reviewErrors": {
+      "self": "Нельзя оставить отзыв собственной компании",
+      "ratingRequired": "Поставьте оценку от 1 до 5"
+    },
+    "laboratory": {
+      "aboutTitle": "О лаборатории",
+      "methodsTitle": "Методы и показатели",
+      "detailsTitle": "Контакты",
+      "experience": "Лет на рынке",
+      "studies": "Выполнено исследований",
+      "turnaround": "Средний срок",
+      "city": "Город",
+      "website": "Сайт",
+      "years_one": "{{count}} год",
+      "years_few": "{{count}} года",
+      "years_many": "{{count}} лет",
+      "years_other": "{{count}} лет",
+      "days_one": "{{count}} день",
+      "days_few": "{{count}} дня",
+      "days_many": "{{count}} дней",
+      "days_other": "{{count}} дней",
+      "studiesValue": "{{value}}+",
+      "accreditationOptions": {
+        "iso_17025": "ISO/IEC 17025",
+        "national_accreditation": "Национальная аккредитация",
+        "iso_9001": "ISO 9001",
+        "gost_certified": "Аттестация по ГОСТ"
+      }
+    }
   },
   "manufacturers": {
     "title": "Производители",
@@ -1982,5 +2079,468 @@
     "verified": "Подтверждён",
     "failed": "Отклонён",
     "archived": "В архиве"
+  },
+  "public": {
+    "nav": {
+      "primary": "Основная навигация",
+      "home": "Главная",
+      "catalog": "Каталог",
+      "traders": "Трейдеры",
+      "logistics": "Логистика",
+      "laboratories": "Лаборатории",
+      "prices": "Цены и аналитика",
+      "news": "Новости",
+      "signIn": "Войти",
+      "register": "Регистрация",
+      "language": "Язык",
+      "pricesShort": "Цены"
+    },
+    "role": {
+      "manufacturer": "Производитель",
+      "trader": "Трейдер",
+      "logistics_provider": "Логистика",
+      "laboratory": "Лаборатория",
+      "importer": "Импортёр",
+      "distributor": "Дистрибьютор",
+      "insurance_provider": "Страхование"
+    },
+    "home": {
+      "metaTitle": "IMEX AI: маркетплейс нефтехимического сырья",
+      "metaDescription": "Полимеры и нефтехимия от проверенных производителей, трейдеров и лабораторий. Актуальные цены, лабораторные паспорта, безопасные сделки.",
+      "heroTitle": "Глобальный маркетплейс нефтехимической продукции",
+      "heroSubtitle": "Производители, трейдеры, логистика и лаборатории на одной платформе",
+      "heroEyebrow": "Проверенные компании · сделки через ЭЦП",
+      "heroCtaPrimary": "Зарегистрироваться",
+      "heroCtaPrimaryAuthed": "Перейти в кабинет",
+      "heroCtaSecondary": "Смотреть каталог",
+      "searchLabel": "Поиск по каталогу",
+      "searchPlaceholder": "Поиск продуктов, марок, компаний, услуг...",
+      "searchAction": "Найти",
+      "popular": "Популярные запросы:",
+      "statsHeading": "Платформа в цифрах",
+      "statLive": "Данные обновляются в реальном времени",
+      "directoriesHeading": "Кого вы ищете",
+      "companyCount_one": "{{count}} компания",
+      "companyCount_few": "{{count}} компании",
+      "companyCount_many": "{{count}} компаний",
+      "companyCount_other": "{{count}} компаний",
+      "seeAll": "Смотреть все",
+      "noOffers": "Пока нет опубликованных предложений",
+      "marketPrices": "Рыночные цены",
+      "priceProduct": "Продукт",
+      "priceValue": "Цена",
+      "priceChange": "Изм.",
+      "noHistory": "нет данных",
+      "noPrices": "Котировки появятся после первых наблюдений",
+      "industryNews": "Новости отрасли",
+      "noNews": "Новостей пока нет",
+      "whyEyebrow": "Проверенная B2B-площадка",
+      "whyHeading": "Почему выбирают IMEX AI",
+      "whySubtitle": "Каждая компания проходит проверку по государственным реестрам и подписывает документы электронной подписью — до того, как вы начнёте сделку.",
+      "why": {
+        "verified": {
+          "title": "Проверенные компании",
+          "body": "Регистрация в госреестрах и электронная подпись до публикации."
+        },
+        "prices": {
+          "title": "Актуальные цены и аналитика",
+          "body": "Котировки собираются из биржевых и отраслевых источников каждый день."
+        },
+        "signing": {
+          "title": "Безопасные сделки через D-Doc",
+          "body": "Договор подписывают обе стороны через ЭЦП, без бумаги."
+        },
+        "international": {
+          "title": "Международная платформа",
+          "body": "Поставщики и покупатели из разных стран на одной площадке."
+        },
+        "support": {
+          "title": "Поддержка 24/7",
+          "body": "Команда IMEX AI помогает на каждом этапе сделки."
+        }
+      },
+      "joinHeading": "Присоединяйтесь к IMEX AI",
+      "joinBody": "Расширяйте бизнес на глобальном рынке нефтехимии вместе с нами",
+      "allQueries": "Все запросы",
+      "searchScope": "Область поиска",
+      "scope": {
+        "products": "Продукты",
+        "companies": "Компании",
+        "services": "Услуги"
+      },
+      "directoryCard": {
+        "manufacturersBody": "Прямые поставки с заводов",
+        "tradersBody": "Проверенные трейдеры и дистрибьюторы",
+        "logisticsBody": "Доставка, таможня, складские услуги",
+        "laboratoriesBody": "Лабораторные исследования и паспорта",
+        "pricesBody": "Актуальные цены, аналитика рынка",
+        "newsBody": "Новости отрасли и обновления",
+        "daily": "Ежедневно"
+      },
+      "productCategories": "Категории продуктов",
+      "resetFilters": "Сбросить все",
+      "filterCountry": "Страна происхождения",
+      "filterCountryPlaceholder": "Выбрать страну",
+      "filterIncoterms": "Условия поставки",
+      "filterCompany": "Производитель / Компания",
+      "filterCompanyPlaceholder": "Выбрать",
+      "showProducts": "Показать продукты",
+      "showProductsCount_one": "Показать {{count}} продукт",
+      "showProductsCount_few": "Показать {{count}} продукта",
+      "showProductsCount_many": "Показать {{count}} продуктов",
+      "showProductsCount_other": "Показать {{count}} продуктов",
+      "recommendedProducts": "Рекомендуемые продукты",
+      "verifiedManufacturers": "Проверенные производители",
+      "manufacturerOffers_one": "{{count}} предложение",
+      "manufacturerOffers_few": "{{count}} предложения",
+      "manufacturerOffers_many": "{{count}} предложений",
+      "manufacturerOffers_other": "{{count}} предложений",
+      "seeAllPeople": "Смотреть всех",
+      "contact": "Связаться",
+      "saveOffer": "Сохранить предложение",
+      "offerForm": "Форма",
+      "offerFormGranules": "Гранулы",
+      "offerTerms": "Условия",
+      "priceValueUsd": "Цена (USD/MT)",
+      "priceChange24h": "Изм. (24ч)",
+      "priceSource": "Источник: рыночные наблюдения платформы",
+      "priceUpdated": "Обновлено: {{date}}",
+      "popularServices": "Популярные услуги",
+      "allServices": "Все услуги",
+      "service": {
+        "logistics": {
+          "title": "Международная логистика",
+          "body": "Доставка «под ключ»"
+        },
+        "customs": {
+          "title": "Таможенное оформление",
+          "body": "Экспорт / Импорт"
+        },
+        "lab": {
+          "title": "Лабораторные исследования",
+          "body": "Анализ и паспорта качества"
+        }
+      },
+      "registerCompany": "Регистрация компании",
+      "platformStat": {
+        "products": "Продуктов в каталоге",
+        "companies": "Компаний",
+        "countries": "Стран",
+        "requests": "Ежедневных запросов",
+        "deals": "Успешных сделок",
+        "satisfaction": "Удовлетворённость"
+      },
+      "fallbackCategory": {
+        "PE": "Полиэтилен (PE)",
+        "PP": "Полипропилен (PP)",
+        "PVC": "ПВХ (PVC)",
+        "PET": "ПЭТ (PET)",
+        "PS": "Полистирол (PS)",
+        "Rubber": "Каучуки",
+        "Solvents": "Растворители",
+        "Additives": "Добавки"
+      },
+      "popularTag": {
+        "rubber": "Каучук",
+        "solvents": "Растворители"
+      }
+    },
+    "market": {
+      "metaTitle": "Каталог нефтехимического сырья",
+      "metaDescription": "Полимеры, растворители и добавки от проверенных поставщиков. Фильтры по продукту, наличию, стране и лабораторному паспорту.",
+      "title": "Каталог",
+      "subtitle": "Опубликованные предложения проверенных поставщиков",
+      "filters": "Фильтры",
+      "search": "Поиск",
+      "searchPlaceholder": "Марка или продукт",
+      "category": "Категория",
+      "allCategories": "Все категории",
+      "availability": "Наличие",
+      "any": "Любое",
+      "country": "Страна",
+      "laboratory": "Лаборатория",
+      "hasPassport": "Есть паспорт качества",
+      "labVerified": "Анализ через платформу",
+      "reset": "Сбросить фильтры",
+      "resultCount_one": "{{count}} предложение",
+      "resultCount_few": "{{count}} предложения",
+      "resultCount_many": "{{count}} предложений",
+      "resultCount_other": "{{count}} предложений",
+      "empty": "По этим условиям ничего не найдено",
+      "pagination": "Постраничная навигация",
+      "pageOf": "Страница {{page}} из {{pages}}",
+      "anyPlural": "Любые",
+      "showResults": "Показать результаты",
+      "showResultsCount_one": "Показать {{count}} предложение",
+      "showResultsCount_few": "Показать {{count}} предложения",
+      "showResultsCount_many": "Показать {{count}} предложений",
+      "showResultsCount_other": "Показать {{count}} предложений"
+    },
+    "offer": {
+      "untitled": "Без названия",
+      "onRequest": "Цена по запросу",
+      "moq": "Мин. партия",
+      "leadTime": "Срок поставки, дней",
+      "labVerified": "Проверено лабораторией",
+      "labPassport": "Есть паспорт",
+      "verified": "Проверен",
+      "metaTitle": "{{name}}, купить у {{seller}}",
+      "metaDescription": "{{name}} в наличии. Отгрузка: {{location}}. Проверенный поставщик на IMEX AI.",
+      "notFound": "Предложение не найдено",
+      "notFoundBody": "Возможно, оно снято с публикации.",
+      "breadcrumb": "Навигационная цепочка",
+      "grade": "Марка",
+      "polymer": "Тип полимера",
+      "cas": "CAS",
+      "hs": "ТН ВЭД",
+      "manufacturer": "Производитель",
+      "incoterms": "Условия поставки",
+      "location": "Отгрузка",
+      "properties": "Характеристики",
+      "applications": "Применение",
+      "description": "Описание",
+      "soldBy": "Поставщик:",
+      "sendInquiry": "Отправить запрос",
+      "signInToContact": "Войти, чтобы связаться",
+      "contactHint": "Контакты поставщика доступны после входа."
+    },
+    "directory": {
+      "metaTitle": "{{name}}, проверенные компании",
+      "search": "Поиск компании",
+      "searchPlaceholder": "Название или адрес",
+      "resultCount_one": "{{count}} компания",
+      "resultCount_few": "{{count}} компании",
+      "resultCount_many": "{{count}} компаний",
+      "resultCount_other": "{{count}} компаний",
+      "empty": "Компании не найдены",
+      "notFound": "Такого раздела нет"
+    },
+    "directories": {
+      "manufacturers": {
+        "subtitle": "Заводы и производители полимеров с подтверждённой ролью"
+      },
+      "traders": {
+        "subtitle": "Торговые дома и дистрибьюторы нефтехимического сырья"
+      },
+      "logistics": {
+        "subtitle": "Перевозка, таможенное оформление и складские услуги"
+      },
+      "laboratories": {
+        "subtitle": "Аккредитованные лаборатории для анализа и паспортов качества"
+      }
+    },
+    "company": {
+      "untitled": "Без названия",
+      "notFound": "Компания не найдена",
+      "notFoundBody": "Возможно, она ещё не прошла проверку.",
+      "metaTitle": "{{name}}, {{directory}}",
+      "metaDescription": "{{name}}, {{country}}. Проверенная компания на маркетплейсе IMEX AI.",
+      "offers": "Товаров",
+      "founded": "Основана",
+      "employees": "Сотрудников",
+      "iso": "ISO",
+      "legalName": "Юридическое название",
+      "legalForm": "Форма",
+      "address": "Адрес",
+      "jurisdiction": "Юрисдикция",
+      "productionType": "Тип производства",
+      "exportTo": "Экспорт",
+      "products": "Товары компании",
+      "noProducts": "У компании пока нет опубликованных товаров",
+      "about": "О компании",
+      "contact": "Связаться"
+    },
+    "prices": {
+      "metaTitle": "Цены на полимеры и нефтехимию",
+      "metaDescription": "Актуальные котировки на полимеры: HDPE, PP, LLDPE, PVC, PET. Изменение к предыдущему наблюдению.",
+      "title": "Цены и аналитика",
+      "subtitle": "Последние наблюдения по каждому продукту и изменение к предыдущему",
+      "unit": "Единица",
+      "observed": "Дата"
+    },
+    "footer": {
+      "marketplace": "Маркетплейс",
+      "directories": "Справочники",
+      "account": "Аккаунт",
+      "blurb": "Маркетплейс нефтехимического сырья с проверкой компаний и лабораторным контролем.",
+      "legal": "IMEX AI. Все права защищены."
+    }
+  },
+  "logisticsRequest": {
+    "title": "Заявка логистической компании",
+    "heroTitle": "Быстрая заявка на логистику",
+    "heroBody": "Отправьте заявку, и наши специалисты подберут для вас оптимальные логистические решения и операторов.",
+    "cargoTitle": "Информация о грузе",
+    "cargoName": "Наименование груза",
+    "cargoNamePlaceholder": "Полипропилен (PP)",
+    "volume": "Объём",
+    "volumeHint": "в тоннах",
+    "packaging": "Тип упаковки",
+    "packagingPlaceholder": "Выберите тип",
+    "requirements": "Особые требования",
+    "requirementsPlaceholder": "Безопасная перевозка, ADR",
+    "routeTitle": "Маршрут",
+    "from": "Откуда",
+    "to": "Куда",
+    "country": "Страна",
+    "countryPlaceholder": "Выберите страну",
+    "city": "Город",
+    "submit": "Отправить заявку",
+    "privacy": "Данные защищены и используются только для подбора логистических решений.",
+    "number": "Номер заявки",
+    "doneTitle": "Заявка отправлена!",
+    "doneBody": "Перевозчик получил вашу заявку. Ответ придёт в уведомления, а срочные вопросы решим по телефону.",
+    "backToDirectory": "К списку перевозчиков",
+    "toCabinet": "В кабинет",
+    "packagingOptions": {
+      "containers": "Контейнеры",
+      "big_bags": "Биг-бэги",
+      "bags": "Мешки",
+      "bulk": "Навалом",
+      "pallets": "Паллеты",
+      "iso_tank": "ISO-танк",
+      "drums": "Бочки",
+      "other": "Другое"
+    },
+    "lifecycle": {
+      "submitted": "Отправлена",
+      "in_progress": "В работе",
+      "quoted": "Есть предложение"
+    },
+    "errors": {
+      "cargoRequired": "Укажите наименование груза",
+      "volumeInvalid": "Укажите объём больше нуля",
+      "countryRequired": "Выберите страну"
+    },
+    "listTitle": "Логистические заявки",
+    "emptyTitle": "Заявок пока нет",
+    "emptySentBody": "Откройте профиль перевозчика и отправьте заявку — она появится здесь.",
+    "myRequests": "Мои заявки",
+    "buyer": "Покупатель",
+    "contact": "Контактный телефон",
+    "broadcastHint": "Заявку увидят все проверенные логистические компании.",
+    "ctaFromProfile": "Разместить заявку на перевозку",
+    "newRequest": "Новая заявка",
+    "poolTitle": "Заявки на перевозку",
+    "poolSubtitle": "Открытые заявки грузовладельцев. Откликнитесь — и продолжите в чате.",
+    "tabAll": "Все заявки",
+    "tabMine": "Мои отклики",
+    "poolEmptyTitle": "Пока нет открытых заявок",
+    "poolEmptyBody": "Как только грузовладелец разместит заявку, она появится здесь.",
+    "poolEmptyMineBody": "Откликнитесь на заявку — и она появится здесь.",
+    "reply": "Откликнуться",
+    "openChat": "Открыть чат",
+    "responsesTitle": "Отклики перевозчиков",
+    "noResponses": "Откликов пока нет",
+    "noResponsesBody": "Перевозчики видят вашу заявку. Первый отклик появится здесь.",
+    "responseCount_one": "{{count}} отклик",
+    "responseCount_few": "{{count}} отклика",
+    "responseCount_many": "{{count}} откликов",
+    "responseCount_other": "{{count}} откликов"
+  },
+  "threadChat": {
+    "title": "Переписка",
+    "empty": "Сообщений пока нет. Напишите первым.",
+    "placeholder": "Ваше сообщение…",
+    "send": "Отправить",
+    "attach": "Прикрепить файл"
+  },
+  "labRequest": {
+    "title": "Заявка на исследование",
+    "heroTitle": "Новая заявка в лабораторию",
+    "heroBody": "Опишите, что нужно исследовать. Заявку увидят все проверенные лаборатории.",
+    "stepSubject": "Что исследуем",
+    "stepDetails": "Данные для заявки",
+    "product": "Что исследуем?",
+    "productPlaceholder": "HDPE S5502 BN",
+    "grade": "Марка",
+    "studyType": "Тип исследований",
+    "studyTypePlaceholder": "Выберите тип",
+    "methods": "Необходимые исследования",
+    "methodsHint": "Отметьте хотя бы один показатель",
+    "sampleQty": "Количество образца",
+    "sampleQtyHint": "например, 1 кг",
+    "comment": "Комментарий",
+    "commentPlaceholder": "Введите комментарий",
+    "contactName": "Контактное лицо",
+    "contactEmail": "Email",
+    "contactPhone": "Телефон",
+    "contactPhoneHint": "Если не указать — возьмём номер вашего аккаунта",
+    "purpose": "Цель исследования",
+    "purposePlaceholder": "Выберите цель",
+    "urgent": "Нужен ли срочный анализ?",
+    "desiredDate": "Желаемая дата готовности",
+    "submit": "Отправить заявку",
+    "ctaFromProfile": "Разместить заявку на исследование",
+    "newRequest": "Новая заявка",
+    "listTitle": "Заявки в лабораторию",
+    "myRequests": "Мои заявки",
+    "laboratory": "Лаборатория",
+    "buyer": "Заказчик",
+    "contact": "Контакт",
+    "number": "Номер заявки",
+    "emptyTitle": "Заявок пока нет",
+    "emptySentBody": "Опишите, что нужно исследовать — заявку увидят все лаборатории.",
+    "doneTitle": "Заявка отправлена!",
+    "doneBody": "Лаборатории получили вашу заявку. Ответы придут в уведомления, а обсудить детали можно в переписке.",
+    "backToDirectory": "К списку лабораторий",
+    "toCabinet": "В кабинет",
+    "poolTitle": "Заявки на исследования",
+    "poolSubtitle": "Открытые заявки заказчиков. Откликнитесь — и продолжите в чате.",
+    "tabAll": "Все заявки",
+    "tabMine": "Мои отклики",
+    "poolEmptyTitle": "Пока нет открытых заявок",
+    "poolEmptyBody": "Как только заказчик разместит заявку, она появится здесь.",
+    "poolEmptyMineBody": "Откликнитесь на заявку — и она появится здесь.",
+    "reply": "Откликнуться",
+    "openChat": "Открыть чат",
+    "responsesTitle": "Отклики лабораторий",
+    "noResponses": "Откликов пока нет",
+    "noResponsesBody": "Лаборатории видят вашу заявку. Первый отклик появится здесь.",
+    "responseCount_one": "{{count}} отклик",
+    "responseCount_few": "{{count}} отклика",
+    "responseCount_many": "{{count}} откликов",
+    "responseCount_other": "{{count}} откликов",
+    "lifecycle": {
+      "submitted": "Отправлена",
+      "in_progress": "В работе",
+      "quoted": "Есть предложение"
+    },
+    "errors": {
+      "productRequired": "Укажите, что нужно исследовать",
+      "methodsRequired": "Отметьте хотя бы один показатель"
+    },
+    "methodOptions": {
+      "mfi": "ПТР (MFI)",
+      "density": "Плотность",
+      "tensile_strength": "Прочность при растяжении",
+      "elongation": "Относительное удлинение",
+      "impact_strength": "Ударная вязкость",
+      "dsc": "ДСК (DSC)",
+      "ftir": "ИК-спектроскопия (FTIR)",
+      "tga": "ТГА (TGA)",
+      "ash_content": "Зольность",
+      "moisture": "Влажность",
+      "vicat": "Температура размягчения по Вика",
+      "hardness": "Твёрдость",
+      "melting_point": "Температура плавления",
+      "carbon_black": "Содержание сажи",
+      "oit": "OIT (стойкость к окислению)",
+      "rheology": "Реология"
+    },
+    "studyTypes": {
+      "full_passport": "Полный лабораторный паспорт",
+      "single_method": "Отдельный показатель",
+      "comparison": "Сравнительный анализ",
+      "incoming_control": "Входной контроль",
+      "certification": "Для сертификации"
+    },
+    "purposes": {
+      "quality_and_compatibility": "Оценка качества и совместимости с оборудованием",
+      "supplier_check": "Проверка поставщика",
+      "certification": "Сертификация",
+      "dispute": "Разрешение спора",
+      "rnd": "НИОКР"
+    }
   }
 }

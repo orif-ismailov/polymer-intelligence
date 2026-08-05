@@ -12,7 +12,7 @@ import {
   Skeleton,
   NewspaperIcon,
 } from "@/shared/ui";
-import { formatDate } from "@/shared/lib";
+import { formatDate, useTierBase } from "@/shared/lib";
 
 function ArticleCard({ article, onOpen }: { article: NewsArticle; onOpen: () => void }) {
   const { t } = useTranslation();
@@ -47,6 +47,7 @@ function ArticleCard({ article, onOpen }: { article: NewsArticle; onOpen: () => 
 export function NewsPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const base = useTierBase();
   const newsQuery = useNewsArticles({ lang: i18n.language });
 
   return (
@@ -68,7 +69,7 @@ export function NewsPage() {
       ) : newsQuery.data && newsQuery.data.length > 0 ? (
         <div className="space-y-3">
           {newsQuery.data.map((a) => (
-            <ArticleCard key={a.id} article={a} onOpen={() => navigate(`/news/${a.id}`)} />
+            <ArticleCard key={a.id} article={a} onOpen={() => navigate(`${base}/news/${a.id}`)} />
           ))}
         </div>
       ) : (

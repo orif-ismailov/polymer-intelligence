@@ -55,7 +55,7 @@ export function ContractDetailPage() {
   if (query.isError || !contract) {
     return (
       <ErrorView title={t("errors.loadFailed")} retryLabel={t("common.retry")} onRetry={() => void query.refetch()}>
-        <LinkButton to="/contracts">{t("contracts.title")}</LinkButton>
+        <LinkButton to="/cabinet/contracts">{t("contracts.title")}</LinkButton>
       </ErrorView>
     );
   }
@@ -159,7 +159,7 @@ export function ContractDetailPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        backTo="/contracts"
+        backTo="/cabinet/contracts"
         backLabel={t("contracts.title")}
         title={contract.title}
         subtitle={`${contract.initiator_name} → ${contract.counterparty_name}`}

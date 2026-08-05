@@ -31,14 +31,14 @@ async function readOtp(request: APIRequestContext, phone: string): Promise<strin
 }
 
 async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
   await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/login/code");
+  await page.waitForURL("**/cabinet/login/code");
   const code = await readOtp(request, phone);
   await page.getByLabel(/code|код|kod/i).fill(code);
   await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
 }
 
 
@@ -48,10 +48,10 @@ test("buyer creates a purchase request and browses the R2 surfaces", async ({ pa
   await registerCompany(page, uniqueTaxId());
 
   // ── Purchase request through the 5-step wizard ──────────────────────────────
-  await page.goto("/requests");
+  await page.goto("/cabinet/requests");
   // Two identical CTAs render on /requests (header + empty state) — take the header one.
   await page.getByRole("link", { name: /new request|новая заявка|yangi ariza/i }).first().click();
-  await page.waitForURL("**/requests/new/**");
+  await page.waitForURL("**/cabinet/requests/new/**");
 
   // Step 1 — pick manual product entry
   await page.getByTestId("request-wizard-manual").click();
@@ -73,19 +73,19 @@ test("buyer creates a purchase request and browses the R2 surfaces", async ({ pa
   await page.getByTestId("request-wizard-publish").click();
 
   // Lands on the published celebration, then the list still has the request.
-  await page.waitForURL(/\/requests\/new\/done\/\d+$/);
+  await page.waitForURL(/\/cabinet\/requests\/new\/done\/\d+$/);
   await expect(page.getByTestId("request-wizard-done")).toBeVisible();
   await page.getByTestId("request-wizard-done-list").click();
-  await page.waitForURL("**/requests");
+  await page.waitForURL("**/cabinet/requests");
   await expect(page.getByText(/REQ-|IMX-/).first()).toBeVisible();
 
   // ── Browse the other R2 surfaces (may be empty — headings must render) ──────
-  await page.goto("/market");
+  await page.goto("/cabinet/market");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-  await page.goto("/news");
+  await page.goto("/cabinet/news");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-  await page.goto("/notifications");
+  await page.goto("/cabinet/notifications");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });

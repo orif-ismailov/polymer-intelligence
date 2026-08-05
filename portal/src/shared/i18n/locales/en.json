@@ -81,7 +81,10 @@
     "favorites": "Favorites",
     "samples": "Samples",
     "labOrders": "Laboratory",
-    "openMenu": "Open menu"
+    "marketplace": "Marketplace",
+    "openMenu": "Open menu",
+    "logisticsRequests": "Logistics requests",
+    "labRequests": "Laboratory requests"
   },
   "home": {
     "title": "Overview",
@@ -158,7 +161,19 @@
       "ИП": "Sole proprietor",
       "ГУП": "State unitary enterprise"
     },
-    "registrationDate": "Company registration date"
+    "registrationDate": "Company registration date",
+    "storefront": {
+      "title": "Storefront",
+      "hint": "Every visitor sees this text on the company's public page. Requisites are frozen after verification; storefront copy is not.",
+      "description": "Company description",
+      "experience": "Years in business",
+      "projects": "Completed projects",
+      "countInvalid": "Enter a whole number of zero or more",
+      "saveFailed": "Could not save. Please try again.",
+      "cover": "Profile cover",
+      "coverHint": "JPG or PNG, up to 8 MB. Shown above the logo.",
+      "coverFailed": "Could not upload the cover."
+    }
   },
   "wizard": {
     "title": "Register a company",
@@ -1460,6 +1475,22 @@
     "sample_request_status": {
       "title": "Sample status",
       "body": "Sample request: status changed"
+    },
+    "logistics_request_new": {
+      "title": "New transport request",
+      "body": "{{buyer}} is looking for a carrier: {{cargo}}"
+    },
+    "logistics_message": {
+      "title": "New message on a request",
+      "body": "Request {{number}} — new message"
+    },
+    "lab_request_new": {
+      "title": "New analysis request",
+      "body": "{{buyer}} is looking for a laboratory: {{product}}"
+    },
+    "lab_message": {
+      "title": "New message on a request",
+      "body": "Request {{number}} — new message"
     }
   },
   "contracts": {
@@ -1883,7 +1914,65 @@
     "requestRfq": "Request quote (RFQ)",
     "messageManufacturer": "Contact the factory",
     "requestFactoryRfq": "Request a quote",
-    "pickOfferHint": "Pick a product below to send the seller a request"
+    "pickOfferHint": "Pick a product below to send the seller a request",
+    "logistics": {
+      "aboutTitle": "About the company",
+      "capabilitiesTitle": "Our capabilities",
+      "detailsTitle": "Terms of service",
+      "countries": "Countries served",
+      "services": "Services",
+      "experience": "Years in business",
+      "projects": "Completed projects",
+      "cargo": "Cargo types",
+      "routes": "Popular routes",
+      "tariff": "Pricing model",
+      "city": "City",
+      "years_one": "{{count}} year",
+      "years_other": "{{count}} years",
+      "capabilityBlurb": {
+        "own_trucks": "Modern tractor units and container carriers",
+        "own_rail_wagons": "Own fleet of wagons and tank cars",
+        "sea_containers": "Working with the world's largest ports",
+        "storage_facilities": "Warehouse space for cargo consolidation",
+        "customs_warehouse": "Bonded warehouse for supervised storage",
+        "foreign_offices": "Representative offices in origin countries",
+        "customs_brokers": "In-house brokers for end-to-end clearance"
+      },
+      "projectsValue": "{{value}}+"
+    },
+    "reviewCount_one": "{{count}} review",
+    "reviewCount_other": "{{count}} reviews",
+    "reviewAnonymous": "Company",
+    "reviewTitle": "Leave a review",
+    "reviewRating": "Rating",
+    "reviewBody": "Comment",
+    "reviewBodyPlaceholder": "How did the cooperation go?",
+    "reviewSubmit": "Submit review",
+    "reviewErrors": {
+      "self": "You cannot review your own company",
+      "ratingRequired": "Give a rating from 1 to 5"
+    },
+    "laboratory": {
+      "aboutTitle": "About the laboratory",
+      "methodsTitle": "Methods and tests",
+      "detailsTitle": "Contacts",
+      "experience": "Years on the market",
+      "studies": "Studies completed",
+      "turnaround": "Average turnaround",
+      "city": "City",
+      "website": "Website",
+      "years_one": "{{count}} year",
+      "years_other": "{{count}} years",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "studiesValue": "{{value}}+",
+      "accreditationOptions": {
+        "iso_17025": "ISO/IEC 17025",
+        "national_accreditation": "National accreditation",
+        "iso_9001": "ISO 9001",
+        "gost_certified": "GOST certified"
+      }
+    }
   },
   "manufacturers": {
     "title": "Manufacturers",
@@ -1982,5 +2071,452 @@
     "verified": "Verified",
     "failed": "Rejected",
     "archived": "Archived"
+  },
+  "public": {
+    "nav": {
+      "primary": "Primary navigation",
+      "home": "Home",
+      "catalog": "Catalog",
+      "traders": "Traders",
+      "logistics": "Logistics",
+      "laboratories": "Laboratories",
+      "prices": "Prices and analytics",
+      "news": "News",
+      "signIn": "Sign in",
+      "register": "Register",
+      "language": "Language",
+      "pricesShort": "Prices"
+    },
+    "role": {
+      "manufacturer": "Manufacturer",
+      "trader": "Trader",
+      "logistics_provider": "Logistics",
+      "laboratory": "Laboratory",
+      "importer": "Importer",
+      "distributor": "Distributor",
+      "insurance_provider": "Insurance"
+    },
+    "home": {
+      "metaTitle": "IMEX AI: petrochemical raw materials marketplace",
+      "metaDescription": "Polymers and petrochemicals from verified manufacturers, traders and laboratories. Live prices, lab passports, secured deals.",
+      "heroTitle": "Global marketplace for petrochemical products",
+      "heroSubtitle": "Manufacturers, traders, logistics and laboratories on one platform",
+      "heroEyebrow": "Verified companies · e-signed deals",
+      "heroCtaPrimary": "Create an account",
+      "heroCtaPrimaryAuthed": "Go to cabinet",
+      "heroCtaSecondary": "Browse the catalog",
+      "searchLabel": "Search the catalog",
+      "searchPlaceholder": "Search products, grades, companies, services...",
+      "searchAction": "Search",
+      "popular": "Popular queries:",
+      "statsHeading": "The platform in numbers",
+      "statLive": "Updated from live platform data",
+      "directoriesHeading": "Who are you looking for",
+      "companyCount_one": "{{count}} company",
+      "companyCount_other": "{{count}} companies",
+      "seeAll": "See all",
+      "noOffers": "No listings published yet",
+      "marketPrices": "Market prices",
+      "priceProduct": "Product",
+      "priceValue": "Price",
+      "priceChange": "Chg.",
+      "noHistory": "no data",
+      "noPrices": "Quotes appear after the first observations",
+      "industryNews": "Industry news",
+      "noNews": "No news yet",
+      "whyEyebrow": "A verified B2B marketplace",
+      "whyHeading": "Why companies choose IMEX AI",
+      "whySubtitle": "Every company is checked against state registries and signs its documents digitally — before you ever start a deal.",
+      "why": {
+        "verified": {
+          "title": "Verified companies",
+          "body": "Registry checks and a digital signature before a company can publish."
+        },
+        "prices": {
+          "title": "Current prices and analytics",
+          "body": "Quotes collected daily from exchange and industry sources."
+        },
+        "signing": {
+          "title": "Secure deals via D-Doc",
+          "body": "Both parties sign digitally. No paper, no couriers."
+        },
+        "international": {
+          "title": "International platform",
+          "body": "Suppliers and buyers from many countries on one marketplace."
+        },
+        "support": {
+          "title": "24/7 support",
+          "body": "The IMEX AI team helps at every step of the deal."
+        }
+      },
+      "joinHeading": "Join IMEX AI",
+      "joinBody": "Grow your petrochemical business on a global marketplace with us",
+      "allQueries": "All queries",
+      "searchScope": "Search scope",
+      "scope": {
+        "products": "Products",
+        "companies": "Companies",
+        "services": "Services"
+      },
+      "directoryCard": {
+        "manufacturersBody": "Direct supply from plants",
+        "tradersBody": "Verified traders and distributors",
+        "logisticsBody": "Delivery, customs, warehousing",
+        "laboratoriesBody": "Lab research and quality passports",
+        "pricesBody": "Live prices and market analytics",
+        "newsBody": "Industry news and updates",
+        "daily": "Updated daily"
+      },
+      "productCategories": "Product categories",
+      "resetFilters": "Reset all",
+      "filterCountry": "Country of origin",
+      "filterCountryPlaceholder": "Select country",
+      "filterIncoterms": "Delivery terms",
+      "filterCompany": "Manufacturer / Company",
+      "filterCompanyPlaceholder": "Select",
+      "showProducts": "Show products",
+      "showProductsCount_one": "Show {{count}} product",
+      "showProductsCount_other": "Show {{count}} products",
+      "recommendedProducts": "Recommended products",
+      "verifiedManufacturers": "Verified manufacturers",
+      "manufacturerOffers_one": "{{count}} offer",
+      "manufacturerOffers_other": "{{count}} offers",
+      "seeAllPeople": "See all",
+      "contact": "Contact",
+      "saveOffer": "Save listing",
+      "offerForm": "Form",
+      "offerFormGranules": "Granules",
+      "offerTerms": "Terms",
+      "priceValueUsd": "Price (USD/MT)",
+      "priceChange24h": "Chg. (24h)",
+      "priceSource": "Source: platform market observations",
+      "priceUpdated": "Updated: {{date}}",
+      "popularServices": "Popular services",
+      "allServices": "All services",
+      "service": {
+        "logistics": {
+          "title": "International logistics",
+          "body": "Turnkey delivery"
+        },
+        "customs": {
+          "title": "Customs clearance",
+          "body": "Export / Import"
+        },
+        "lab": {
+          "title": "Laboratory research",
+          "body": "Analysis and quality passports"
+        }
+      },
+      "registerCompany": "Company registration",
+      "platformStat": {
+        "products": "Products in catalog",
+        "companies": "Companies",
+        "countries": "Countries",
+        "requests": "Daily inquiries",
+        "deals": "Successful deals",
+        "satisfaction": "Satisfaction"
+      },
+      "fallbackCategory": {
+        "PE": "Polyethylene (PE)",
+        "PP": "Polypropylene (PP)",
+        "PVC": "PVC",
+        "PET": "PET",
+        "PS": "Polystyrene (PS)",
+        "Rubber": "Rubbers",
+        "Solvents": "Solvents",
+        "Additives": "Additives"
+      },
+      "popularTag": {
+        "rubber": "Rubber",
+        "solvents": "Solvents"
+      }
+    },
+    "market": {
+      "metaTitle": "Petrochemical raw materials catalog",
+      "metaDescription": "Polymers, solvents and additives from verified suppliers. Filter by product, availability, country and lab passport.",
+      "title": "Catalog",
+      "subtitle": "Published listings from verified suppliers",
+      "filters": "Filters",
+      "search": "Search",
+      "searchPlaceholder": "Grade or product",
+      "category": "Category",
+      "allCategories": "All categories",
+      "availability": "Availability",
+      "any": "Any",
+      "country": "Country",
+      "laboratory": "Laboratory",
+      "hasPassport": "Has a quality passport",
+      "labVerified": "Analysed via the platform",
+      "reset": "Clear filters",
+      "resultCount_one": "{{count}} listing",
+      "resultCount_other": "{{count}} listings",
+      "empty": "Nothing matches these filters",
+      "pagination": "Pagination",
+      "pageOf": "Page {{page}} of {{pages}}",
+      "anyPlural": "Any",
+      "showResults": "Show results",
+      "showResultsCount_one": "Show {{count}} offer",
+      "showResultsCount_other": "Show {{count}} offers"
+    },
+    "offer": {
+      "untitled": "Untitled",
+      "onRequest": "Price on request",
+      "moq": "Min. order",
+      "leadTime": "Lead time, days",
+      "labVerified": "Laboratory verified",
+      "labPassport": "Passport attached",
+      "verified": "Verified",
+      "metaTitle": "{{name}} from {{seller}}",
+      "metaDescription": "{{name}} available. Ships from {{location}}. Verified supplier on IMEX AI.",
+      "notFound": "Listing not found",
+      "notFoundBody": "It may have been withdrawn.",
+      "breadcrumb": "Breadcrumb",
+      "grade": "Grade",
+      "polymer": "Polymer type",
+      "cas": "CAS",
+      "hs": "HS code",
+      "manufacturer": "Manufacturer",
+      "incoterms": "Incoterms",
+      "location": "Ships from",
+      "properties": "Properties",
+      "applications": "Applications",
+      "description": "Description",
+      "soldBy": "Supplier:",
+      "sendInquiry": "Send an inquiry",
+      "signInToContact": "Sign in to contact",
+      "contactHint": "Supplier contacts open after you sign in."
+    },
+    "directory": {
+      "metaTitle": "{{name}}, verified companies",
+      "search": "Search companies",
+      "searchPlaceholder": "Name or address",
+      "resultCount_one": "{{count}} company",
+      "resultCount_other": "{{count}} companies",
+      "empty": "No companies found",
+      "notFound": "No such section"
+    },
+    "directories": {
+      "manufacturers": {
+        "subtitle": "Polymer plants and producers with a confirmed role"
+      },
+      "traders": {
+        "subtitle": "Trading houses and distributors of petrochemical raw materials"
+      },
+      "logistics": {
+        "subtitle": "Freight, customs clearance and warehousing"
+      },
+      "laboratories": {
+        "subtitle": "Accredited laboratories for analysis and quality passports"
+      }
+    },
+    "company": {
+      "untitled": "Untitled",
+      "notFound": "Company not found",
+      "notFoundBody": "It may not have passed verification yet.",
+      "metaTitle": "{{name}}, {{directory}}",
+      "metaDescription": "{{name}}, {{country}}. Verified company on the IMEX AI marketplace.",
+      "offers": "Listings",
+      "founded": "Founded",
+      "employees": "Employees",
+      "iso": "ISO",
+      "legalName": "Legal name",
+      "legalForm": "Legal form",
+      "address": "Address",
+      "jurisdiction": "Jurisdiction",
+      "productionType": "Production type",
+      "exportTo": "Exports to",
+      "products": "Company listings",
+      "noProducts": "This company has no published listings yet",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "prices": {
+      "metaTitle": "Polymer and petrochemical prices",
+      "metaDescription": "Live polymer quotes: HDPE, PP, LLDPE, PVC, PET, with the change against the previous observation.",
+      "title": "Prices and analytics",
+      "subtitle": "The latest observation per product and its change against the previous one",
+      "unit": "Unit",
+      "observed": "Date"
+    },
+    "footer": {
+      "marketplace": "Marketplace",
+      "directories": "Directories",
+      "account": "Account",
+      "blurb": "A petrochemical raw materials marketplace with company verification and lab control.",
+      "legal": "IMEX AI. All rights reserved."
+    }
+  },
+  "logisticsRequest": {
+    "title": "Logistics company request",
+    "heroTitle": "Quick logistics request",
+    "heroBody": "Send a request and our specialists will find the best logistics solutions and operators for you.",
+    "cargoTitle": "Cargo information",
+    "cargoName": "Cargo name",
+    "cargoNamePlaceholder": "Polypropylene (PP)",
+    "volume": "Volume",
+    "volumeHint": "in tonnes",
+    "packaging": "Packaging type",
+    "packagingPlaceholder": "Select a type",
+    "requirements": "Special requirements",
+    "requirementsPlaceholder": "Safe transport, ADR",
+    "routeTitle": "Route",
+    "from": "From",
+    "to": "To",
+    "country": "Country",
+    "countryPlaceholder": "Select a country",
+    "city": "City",
+    "submit": "Send request",
+    "privacy": "Your data is protected and used only to match logistics solutions.",
+    "number": "Request number",
+    "doneTitle": "Request sent!",
+    "doneBody": "The carrier has your request. The reply arrives in your notifications; anything urgent we settle by phone.",
+    "backToDirectory": "Back to carriers",
+    "toCabinet": "To the cabinet",
+    "packagingOptions": {
+      "containers": "Containers",
+      "big_bags": "Big bags",
+      "bags": "Bags",
+      "bulk": "Bulk",
+      "pallets": "Pallets",
+      "iso_tank": "ISO tank",
+      "drums": "Drums",
+      "other": "Other"
+    },
+    "lifecycle": {
+      "submitted": "Sent",
+      "in_progress": "In progress",
+      "quoted": "Quoted"
+    },
+    "errors": {
+      "cargoRequired": "Enter the cargo name",
+      "volumeInvalid": "Enter a volume greater than zero",
+      "countryRequired": "Select a country"
+    },
+    "listTitle": "Logistics requests",
+    "emptyTitle": "No requests yet",
+    "emptySentBody": "Open a carrier's profile and send a request — it will appear here.",
+    "myRequests": "My requests",
+    "buyer": "Buyer",
+    "contact": "Contact phone",
+    "broadcastHint": "Every verified logistics company will see this request.",
+    "ctaFromProfile": "Post a transport request",
+    "newRequest": "New request",
+    "poolTitle": "Transport requests",
+    "poolSubtitle": "Open requests from shippers. Reply and continue in chat.",
+    "tabAll": "All requests",
+    "tabMine": "My replies",
+    "poolEmptyTitle": "No open requests yet",
+    "poolEmptyBody": "As soon as a shipper posts a request, it will appear here.",
+    "poolEmptyMineBody": "Reply to a request and it will appear here.",
+    "reply": "Reply",
+    "openChat": "Open chat",
+    "responsesTitle": "Carrier replies",
+    "noResponses": "No replies yet",
+    "noResponsesBody": "Carriers can see your request. The first reply will appear here.",
+    "responseCount_one": "{{count}} reply",
+    "responseCount_other": "{{count}} replies"
+  },
+  "threadChat": {
+    "title": "Conversation",
+    "empty": "No messages yet. Write the first one.",
+    "placeholder": "Your message…",
+    "send": "Send",
+    "attach": "Attach a file"
+  },
+  "labRequest": {
+    "title": "Analysis request",
+    "heroTitle": "New laboratory request",
+    "heroBody": "Describe what needs testing. Every verified laboratory will see it.",
+    "stepSubject": "What to test",
+    "stepDetails": "Request details",
+    "product": "What are we testing?",
+    "productPlaceholder": "HDPE S5502 BN",
+    "grade": "Grade",
+    "studyType": "Study type",
+    "studyTypePlaceholder": "Select a type",
+    "methods": "Required tests",
+    "methodsHint": "Pick at least one",
+    "sampleQty": "Sample amount",
+    "sampleQtyHint": "e.g. 1 kg",
+    "comment": "Comment",
+    "commentPlaceholder": "Enter a comment",
+    "contactName": "Contact person",
+    "contactEmail": "Email",
+    "contactPhone": "Phone",
+    "contactPhoneHint": "Left blank, we use your account number",
+    "purpose": "Purpose",
+    "purposePlaceholder": "Select a purpose",
+    "urgent": "Is it urgent?",
+    "desiredDate": "Target completion date",
+    "submit": "Send request",
+    "ctaFromProfile": "Post an analysis request",
+    "newRequest": "New request",
+    "listTitle": "Laboratory requests",
+    "myRequests": "My requests",
+    "laboratory": "Laboratory",
+    "buyer": "Customer",
+    "contact": "Contact",
+    "number": "Request number",
+    "emptyTitle": "No requests yet",
+    "emptySentBody": "Describe what needs testing — every laboratory will see it.",
+    "doneTitle": "Request sent!",
+    "doneBody": "The laboratories have your request. Replies arrive in your notifications, and details are settled in the conversation.",
+    "backToDirectory": "Back to laboratories",
+    "toCabinet": "To the cabinet",
+    "poolTitle": "Analysis requests",
+    "poolSubtitle": "Open requests from customers. Reply and continue in chat.",
+    "tabAll": "All requests",
+    "tabMine": "My replies",
+    "poolEmptyTitle": "No open requests yet",
+    "poolEmptyBody": "As soon as a customer posts a request, it will appear here.",
+    "poolEmptyMineBody": "Reply to a request and it will appear here.",
+    "reply": "Reply",
+    "openChat": "Open chat",
+    "responsesTitle": "Laboratory replies",
+    "noResponses": "No replies yet",
+    "noResponsesBody": "Laboratories can see your request. The first reply will appear here.",
+    "responseCount_one": "{{count}} reply",
+    "responseCount_other": "{{count}} replies",
+    "lifecycle": {
+      "submitted": "Sent",
+      "in_progress": "In progress",
+      "quoted": "Quoted"
+    },
+    "errors": {
+      "productRequired": "Say what needs testing",
+      "methodsRequired": "Pick at least one test"
+    },
+    "methodOptions": {
+      "mfi": "MFI",
+      "density": "Density",
+      "tensile_strength": "Tensile strength",
+      "elongation": "Elongation at break",
+      "impact_strength": "Impact strength",
+      "dsc": "DSC",
+      "ftir": "FTIR",
+      "tga": "TGA",
+      "ash_content": "Ash content",
+      "moisture": "Moisture",
+      "vicat": "Vicat softening point",
+      "hardness": "Hardness",
+      "melting_point": "Melting point",
+      "carbon_black": "Carbon black content",
+      "oit": "OIT",
+      "rheology": "Rheology"
+    },
+    "studyTypes": {
+      "full_passport": "Full laboratory passport",
+      "single_method": "Single method",
+      "comparison": "Comparative analysis",
+      "incoming_control": "Incoming control",
+      "certification": "For certification"
+    },
+    "purposes": {
+      "quality_and_compatibility": "Quality and equipment compatibility",
+      "supplier_check": "Supplier check",
+      "certification": "Certification",
+      "dispute": "Dispute resolution",
+      "rnd": "R&D"
+    }
   }
 }

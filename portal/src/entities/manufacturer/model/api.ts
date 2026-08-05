@@ -92,6 +92,8 @@ export const manufacturerApi = {
 export const manufacturerKeys = {
   list: (q: string, offset: number) => ["manufacturers", "list", q, offset] as const,
   threads: (companyId: number | null) => ["manufacturers", "threads", companyId] as const,
+  thread: (manufacturerId: number | null, companyId: number | null) =>
+    ["manufacturers", "thread", manufacturerId, companyId] as const,
   messages: (threadId: number | null, companyId: number | null) =>
     ["manufacturers", "messages", threadId, companyId] as const,
   rfq: (rfqId: number | null, companyId: number | null) =>

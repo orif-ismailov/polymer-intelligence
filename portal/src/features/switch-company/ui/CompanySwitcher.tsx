@@ -37,7 +37,7 @@ export function CompanySwitcher() {
 
   if (companies.length === 0) {
     return (
-      <Button size="sm" variant="outline" onClick={() => navigate("/companies/new/1")}>
+      <Button size="sm" variant="outline" onClick={() => navigate("/cabinet/companies/new/1")}>
         {t("companies.create")}
       </Button>
     );
@@ -91,7 +91,7 @@ export function CompanySwitcher() {
               type="button"
               onClick={() => {
                 setOpen(false);
-                void navigate("/companies/new/1");
+                void navigate("/cabinet/companies/new/1");
               }}
               className="w-full rounded px-2.5 py-2 text-left text-sm font-medium text-brand hover:bg-surface-2"
             >

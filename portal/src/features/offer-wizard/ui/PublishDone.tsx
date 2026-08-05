@@ -100,7 +100,7 @@ export function PublishDone({ companyId, offerId }: PublishDoneProps) {
         <Button
           fullWidth
           size="lg"
-          onClick={() => void navigate("/offers")}
+          onClick={() => void navigate("/cabinet/offers")}
           data-testid="offer-wizard-done-list"
         >
           {t("offerWizard.done.toOffers")}
@@ -109,7 +109,7 @@ export function PublishDone({ companyId, offerId }: PublishDoneProps) {
           fullWidth
           size="lg"
           variant="outline"
-          onClick={() => void navigate("/offers/new/1")}
+          onClick={() => void navigate("/cabinet/offers/new/1")}
           data-testid="offer-wizard-done-another"
         >
           {t("offerWizard.done.createAnother")}

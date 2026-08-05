@@ -1,5 +1,5 @@
 import { api } from "@/shared/api";
-import { API_BASE } from "@/shared/config";
+import { API_BASE, offerPhotoFiles } from "@/shared/config";
 
 import type {
   MarketFilters,
@@ -72,5 +72,5 @@ export function offerImageUrl(offerId: number, fileId: number): string {
  * field to it would break that pin for no gain.
  */
 export function offerPhotos(files: readonly OfferFileRef[]): OfferFileRef[] {
-  return files.filter((f) => f.kind === "image");
+  return offerPhotoFiles(files);
 }

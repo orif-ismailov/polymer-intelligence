@@ -316,6 +316,63 @@ export const LOGISTICS_TARIFF_MODELS = [
 ] as const;
 export type LogisticsTariffModel = (typeof LOGISTICS_TARIFF_MODELS)[number];
 
+// ── Laboratory ────────────────────────────────────────────────────────────────
+//
+// Keys, resolved through `wizard.laboratory.*` / `labRequest.*`. Shared by the
+// registration wizard (what a lab OFFERS) and the request form (what a buyer
+// ASKS for) so the two vocabularies cannot drift apart — a lab that lists `dsc`
+// and a request that asks for `dsc` have to mean the same thing.
+
+/** «Необходимые исследования» / a laboratory's method list. */
+export const LAB_METHODS = [
+  "mfi",
+  "density",
+  "tensile_strength",
+  "elongation",
+  "impact_strength",
+  "dsc",
+  "ftir",
+  "tga",
+  "ash_content",
+  "moisture",
+  "vicat",
+  "hardness",
+  "melting_point",
+  "carbon_black",
+  "oit",
+  "rheology",
+] as const;
+export type LabMethod = (typeof LAB_METHODS)[number];
+
+/** «Тип исследований». */
+export const LAB_STUDY_TYPES = [
+  "full_passport",
+  "single_method",
+  "comparison",
+  "incoming_control",
+  "certification",
+] as const;
+export type LabStudyType = (typeof LAB_STUDY_TYPES)[number];
+
+/** «Цель исследования». */
+export const LAB_PURPOSES = [
+  "quality_and_compatibility",
+  "supplier_check",
+  "certification",
+  "dispute",
+  "rnd",
+] as const;
+export type LabPurpose = (typeof LAB_PURPOSES)[number];
+
+/** Accreditations a laboratory publishes on its profile. */
+export const LAB_ACCREDITATIONS = [
+  "iso_17025",
+  "national_accreditation",
+  "iso_9001",
+  "gost_certified",
+] as const;
+export type LabAccreditation = (typeof LAB_ACCREDITATIONS)[number];
+
 /** Deep-link map: which wizard step a failing verification check points back to. */
 export const CHECK_TO_STEP: Record<string, number> = {
   tax_id_format: WIZARD_STEP_DETAILS,

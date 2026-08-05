@@ -8,7 +8,7 @@ import { RequestWizard, clampStep, useRequestDraft } from "@/features/request-wi
 import { ErrorView, LinkButton, LoadingView } from "@/shared/ui";
 
 /**
- * Host for the new-purchase-request flow at `/requests/new/:step`.
+ * Host for the new-purchase-request flow at `/cabinet/requests/new/:step`.
  *
  * The step lives in the URL (same pattern as the add-product and registration
  * wizards): a reload and the browser back button land where they say they will,
@@ -24,7 +24,7 @@ export function RequestCreatePage() {
   const begin = useRequestDraft((s) => s.begin);
   const reset = useRequestDraft((s) => s.reset);
 
-  const base = "/requests/new";
+  const base = "/cabinet/requests/new";
 
   useEffect(() => {
     if (String(step) !== params.step) void navigate(`${base}/${step}`, { replace: true });
@@ -46,7 +46,7 @@ export function RequestCreatePage() {
   if (!activeCompany) {
     return (
       <ErrorView title={t("home.noActiveCompany")} message={t("home.noActiveCompanyBody")}>
-        <LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>
+        <LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>
       </ErrorView>
     );
   }
@@ -57,8 +57,8 @@ export function RequestCreatePage() {
         companyId={activeCompany.id}
         step={step}
         onStepChange={(next) => navigate(`${base}/${next}`)}
-        onExit={() => navigate("/requests")}
-        onPublished={(id) => navigate(`/requests/new/done/${id}`, { replace: true })}
+        onExit={() => navigate("/cabinet/requests")}
+        onPublished={(id) => navigate(`/cabinet/requests/new/done/${id}`, { replace: true })}
       />
     </div>
   );

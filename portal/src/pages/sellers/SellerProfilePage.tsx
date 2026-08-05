@@ -1,6 +1,6 @@
 import { useParams, useSearchParams } from "react-router-dom";
 
-import { CompanyProfileView } from "@/features/company-profile";
+import { CabinetCompanyProfile } from "@/features/company-profile";
 
 /**
  * Public seller company profile — `docs/new-design/company_profile.jpeg`.
@@ -9,7 +9,7 @@ import { CompanyProfileView } from "@/features/company-profile";
  * `?fromOffer=` carries the offer the buyer came from so «Написать» can return
  * to that offer's inquiry form.
  *
- * UI lives in `CompanyProfileView` so `/companies/:id` can reuse the same sheet.
+ * UI lives in `CabinetCompanyProfile` so `/cabinet/companies/:id` can reuse the same sheet.
  */
 export function SellerProfilePage() {
   const { companyId: rawId } = useParams<{ companyId: string }>();
@@ -21,6 +21,6 @@ export function SellerProfilePage() {
   if (!Number.isFinite(companyId)) return null;
 
   return (
-    <CompanyProfileView companyId={companyId} fromOfferId={fromOfferId} />
+    <CabinetCompanyProfile companyId={companyId} fromOfferId={fromOfferId} />
   );
 }

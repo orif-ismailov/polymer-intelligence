@@ -65,6 +65,8 @@ from app.api.portal.deals import router as portal_deals_router
 from app.api.portal.eimzo import router as portal_eimzo_router
 from app.api.portal.inquiries import router as portal_inquiries_router
 from app.api.portal.lab import router as portal_lab_router
+from app.api.portal.lab_requests import router as portal_lab_requests_router
+from app.api.portal.logistics import router as portal_logistics_router
 from app.api.portal.manufacturers import router as portal_manufacturers_router
 from app.api.portal.market import router as portal_market_router
 from app.api.portal.news import router as portal_news_router
@@ -75,6 +77,7 @@ from app.api.portal.requests import router as portal_requests_router
 from app.api.portal.samples import router as portal_samples_router
 from app.api.portal.substances import router as portal_substances_router
 from app.api.prices import router as prices_router
+from app.api.public import router as public_router
 from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
 from app.api.sourcing import router as sourcing_router
@@ -184,6 +187,11 @@ def create_app() -> FastAPI:
     application.include_router(health_router, prefix="/api/v1")
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(admin_sources_router, prefix="/api/v1")
+    # ── public marketplace storefront (anonymous — server-rendered for search) ─
+    # Deliberately first among the product routers: it is the only surface with
+    # no auth dependency, so it stays visible at the top rather than buried in
+    # the portal block where a reader would assume the account guard applies.
+    application.include_router(public_router, prefix="/api/v1")
     # ── dashboard routers (Phase 4 internal team dashboard) ──────────────────
     application.include_router(feed_router, prefix="/api/v1")
     application.include_router(dashboard_router, prefix="/api/v1")
@@ -237,6 +245,10 @@ def create_app() -> FastAPI:
     application.include_router(portal_market_router, prefix="/api/v1")
     # Manufacturers before any catch-all company/id routes that could shadow list paths.
     application.include_router(portal_manufacturers_router, prefix="/api/v1")
+    # `/portal/logistics` collides with nothing under `/portal/companies`, so
+    # registration order against that router does not matter here.
+    application.include_router(portal_logistics_router, prefix="/api/v1")
+    application.include_router(portal_lab_requests_router, prefix="/api/v1")
     application.include_router(portal_substances_router, prefix="/api/v1")
     application.include_router(portal_reference_router, prefix="/api/v1")
     application.include_router(portal_inquiries_router, prefix="/api/v1")

@@ -177,6 +177,55 @@ def get_company_logo(company_id: int, db: Session = Depends(get_db)) -> Response
     return Response(content=body, media_type=media_type)
 
 
+@router.get(
+    "/companies/{company_id}/cover",
+    summary="Stream a company cover image (public — for <img> tags)",
+)
+def get_company_cover(company_id: int, db: Session = Depends(get_db)) -> Response:
+    """GET a company cover's bytes — same proxy contract as the logo above."""
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if company is None or not company.cover_storage_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+    from app.core.config import settings  # noqa: PLC0415
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=company.cover_storage_path)  # type: ignore[attr-defined]
+    body = obj["Body"].read()
+    media_type = "image/png" if company.cover_storage_path.endswith(".png") else "image/jpeg"
+    return Response(content=body, media_type=media_type)
+
+
+@router.get(
+    "/companies/{company_id}/media/{media_id}",
+    summary="Stream a company media image (public — for <img> tags)",
+)
+def get_company_media(
+    company_id: int, media_id: int, db: Session = Depends(get_db)
+) -> Response:
+    """GET one of a company's images.
+
+    The company id is in the path AND checked against the row: without that, a
+    bare media id would be a handle to every image in the bucket regardless of
+    who owns it. The storage key still comes from the row, never the caller.
+    """
+    from app.models.media import CompanyMedia  # noqa: PLC0415
+
+    media = (
+        db.query(CompanyMedia)
+        .filter(CompanyMedia.id == media_id, CompanyMedia.company_id == company_id)
+        .first()
+    )
+    if media is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+    from app.core.config import settings  # noqa: PLC0415
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    obj = s3_client.get_object(Bucket=settings.S3_BUCKET, Key=media.storage_path)  # type: ignore[attr-defined]
+    return Response(content=obj["Body"].read(), media_type=media.mime_type)
+
+
 @router.post(
     "/offers/{offer_id}/request",
     response_model=OfferRequestOut,

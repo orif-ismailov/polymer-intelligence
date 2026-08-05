@@ -25,6 +25,8 @@
 6. [Userbot session setup](#6-userbot-session-setup)
 7. [Backup cron](#7-backup-cron)
 8. [Acceptance](#8-acceptance)
+9. [CI/CD deploy pipeline](#9-cicd-deploy-pipeline)
+10. [Related documentation & runbooks](#10-related-documentation--runbooks)
 
 ---
 
@@ -79,11 +81,18 @@ every `[SECRET]`. **All values below are placeholders.**
 
 ## 3. TLS Certificates via certbot
 
-The production nginx config (`deploy/nginx/nginx.conf`) is **TLS-terminating**: it
-listens on 443, redirects 80→443, and references Let's Encrypt cert paths. Out of the
-box it ships with the **placeholder** `server_name _;` and cert paths under
-`/etc/letsencrypt/live/example.com/`. You must (a) set your real domain and (b)
-obtain certs into the `letsencrypt` volume.
+> **Read the topology note at the end of this section first.** This repo ships two nginx
+> topologies, and a default `docker compose up` does **not** use the TLS-terminating config
+> described here. The prod compose file mounts
+> `./nginx/${INNER_NGINX_CONF:-nginx.behind-proxy.conf}` — the behind-proxy variant — so the
+> steps below apply only if you deliberately set `INNER_NGINX_CONF=nginx.conf` in `../.env`.
+
+`deploy/nginx/nginx.conf` is the **self-TLS** config: it listens on 443, redirects 80→443,
+and references Let's Encrypt cert paths. It does **not** ship with fill-in-the-blank
+placeholders — it is hardcoded to this project's production domains across four server
+blocks (`ai-imex.com`, `www.ai-imex.com`, `admin.ai-imex.com`, `api.ai-imex.com`), with all
+three cert pairs already pointing at `/etc/letsencrypt/live/ai-imex.com/`. Deploying a
+different domain means **rewriting** those values, not filling in blanks.
 
 ### Step 1: Point your domain at the VPS
 
@@ -92,15 +101,24 @@ requesting a certificate.
 
 ### Step 2: Set the real domain in nginx.conf
 
-Edit `deploy/nginx/nginx.conf`:
+Edit `deploy/nginx/nginx.conf` and replace the existing `ai-imex.com` values — there is no
+`_` or `example.com` placeholder to fill in:
 
-- Replace `server_name _;` with your domain (both the `:80` and `:443` server blocks).
-- Replace the two `example.com` cert paths with your domain:
+- Replace every `server_name` with your domain. There are four blocks: the `:80` redirect
+  block (which lists all domains on one line) and the three `:443` vhosts
+  (`api.`, `admin.`, and the apex + `www.`).
+- Replace all three `ssl_certificate` / `ssl_certificate_key` pairs — one per `:443` block:
 
   ```nginx
   ssl_certificate     /etc/letsencrypt/live/your-domain.example/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/your-domain.example/privkey.pem;
   ```
+
+Confirm you replaced them all before reloading:
+
+```bash
+grep -n 'server_name \|ssl_certificate ' deploy/nginx/nginx.conf
+```
 
 ### Step 3: Obtain the certificate (webroot / ACME http-01)
 
@@ -126,6 +144,31 @@ docker run --rm \
 Schedule `certbot renew` (e.g. a daily cron on the host using the same volume mounts);
 nginx serves renewals from the same `/var/www/certbot` webroot. Reload nginx after a
 successful renewal (`docker compose -f deploy/docker-compose.yml exec nginx nginx -s reload`).
+
+### Production topology note — behind-proxy variant
+
+<!-- VERIFY: which topology the live production host actually runs -->
+Everything above describes the **self-terminating TLS** config shipped as
+`deploy/nginx/nginx.conf` (this container's nginx holds the certs and listens directly on
+80/443). The repository also ships a **behind-proxy** variant that does not follow the
+steps above the same way:
+
+- `deploy/nginx/nginx.behind-proxy.conf` — this container's nginx listens **HTTP-only** on
+  `127.0.0.1:${INNER_NGINX_PORT:-8080}` (see the `nginx` service in
+  `deploy/docker-compose.yml`), and a **host-level** nginx process on the VPS (outside this
+  repo's containers) terminates TLS and forwards by `Host` header. An example host vhost
+  ships at `deploy/nginx/host-vhost.ai-imex.conf.example`.
+- `deploy/nginx/nginx.dev-server.behind-proxy.conf` is the equivalent for the shared
+  dev-server environment (`dev.*`/`dev-cabinet.*` hostnames, `INNER_NGINX_PORT=8081`) — see
+  [`docs/runbook-dev-environment.md`](./runbook-dev-environment.md).
+
+If the host you are deploying to runs the behind-proxy topology, certs are managed by the
+**host** nginx, not this container — the domain/cert-path edits in Steps 2–3 above do not
+apply to `nginx.conf` in that case (the host vhost file is the one to edit instead), and
+`INNER_NGINX_CONF` in `../.env` selects which inner config compose mounts. Also note: the
+`cabinet.ai-imex.com` (client cabinet / portal, §4b) server block exists **only** in the
+behind-proxy configs — it is not present in the self-TLS `nginx.conf`. Confirm which
+topology is actually in use on your host before following this section verbatim.
 
 ---
 
@@ -200,6 +243,61 @@ nginx), so the build needs no environment or secrets.
 
 ---
 
+## 4b. Client Cabinet / Portal (SSR service)
+
+The client cabinet (`cabinet.ai-imex.com`) is served by the `portal` compose service — **a
+long-running Node process, not a static bundle.** It is built from
+`deploy/Dockerfile.portal` (context `portal/`) and runs `node server.js` on port 3000
+inside the container. Unlike the webapp, there is no bundle-to-volume step: nginx
+**proxies** `cabinet.ai-imex.com` to `http://portal:3000` (the `cabinet.ai-imex.com` server
+block lives in `deploy/nginx/nginx.behind-proxy.conf` — see the topology note in §3)
+instead of serving files from a volume.
+
+The `portal_static` volume is still declared in `deploy/docker-compose.yml` so an old
+volume can be pruned deliberately, but it is **no longer read by nginx**.
+
+Two runtime env vars, both read by `portal/server.js`, neither baked into the image:
+
+| Var | Meaning |
+|-----|---------|
+| `INTERNAL_API_ORIGIN` | Where the render reaches the API. `http://api:8000` under compose — a render must not leave the docker network and come back through nginx. |
+| `PUBLIC_SITE_ORIGIN` | Absolute origin for canonical URLs / `og:url` / `sitemap.xml`. Empty derives it per request from the forwarded `Host` header (fine for dev). **Set it in production** — a canonical that varies by request header is one a crawler cannot trust. |
+
+The server renders the public marketplace routes (`/`, `/market`, `/market/:id`, `/prices`,
+`/news`, `/news/:id`, and the four company directories — `/manufacturers`, `/traders`,
+`/logistics`, `/laboratories` — plus their `/:id` profiles) to real HTML for crawlers.
+Every other route (the authenticated cabinet behind the OTP login) is sent the app shell
+only, marked `noindex,nofollow`, and rendered client-side. `robots.txt` and `sitemap.xml`
+are generated by `server.js` itself — the sitemap is fetched per request from
+`GET /api/v1/public/sitemap` and falls back to the static section alone if the API is
+unreachable (a partial sitemap beats a 500).
+
+### Rebuild / restart
+
+```bash
+make portal-bundle
+# equivalently:
+docker compose --env-file .env -f deploy/docker-compose.yml build portal
+docker compose --env-file .env -f deploy/docker-compose.yml up -d portal
+```
+
+`make portal-bundle` keeps its historical name, but it now **rebuilds the image and
+restarts the long-running service** — there is nothing to "load into a volume" anymore. On
+a normal CI-driven deploy (push to `main`/`dev`) you do not need to run this by hand: the
+deploy job pulls the prebuilt `…-portal` image and refreshes it via the same
+`docker compose pull` + `up -d` that refreshes every other long-running service (see §9).
+
+> **Failure mode changed with this topology.** A broken cabinet used to mean a **404** from
+> an empty `portal_static` volume. It is now a **502** from nginx's `proxy_pass` if the
+> `portal` container is down or unhealthy — check `docker compose ps portal` and its logs
+> first.
+
+DNS, TLS, and the required **host-level** nginx vhost for `cabinet.ai-imex.com` are the
+same three steps documented in step 5 of the "R1 — Company Verification & Portal rollout
+checklist" section below — this section does not duplicate them.
+
+---
+
 ## 5. Telegram Bot Webhook
 
 The bot runs as a **webhook endpoint inside the api container** (no separate bot
@@ -252,7 +350,9 @@ three customer-provided values: `TG_API_ID`, `TG_API_HASH`, and a one-time-gener
    EOF
    ```
 3. Paste the printed string into `../.env` as `TG_SESSION_STRING`. **Never commit it.**
-4. Restart the userbot: `docker compose -f deploy/docker-compose.yml up -d userbot`.
+4. Restart the userbot: `docker compose -f deploy/docker-compose.yml --profile userbot up -d userbot`.
+   The `userbot` service is declared with `profiles: ["userbot"]`, so it is opt-in — a plain
+   `up`/deploy will **not** start it, and omitting `--profile userbot` here is a no-op.
    It connects, subscribes to enabled `telegram_channel` sources, writes new messages
    to `raw_items`, and emits a Redis heartbeat. The `check_userbot_health` beat task
    raises a deduped admin alert if the heartbeat goes silent >5 min.
@@ -309,12 +409,14 @@ flipped. Rollout (dev → prod):
    `GET /portal/auth/otp/peek?phone=` → create 2 companies → submit → approve one from dashboard `/verification`, the
    other from the Telegram group → switch active company → publish an offer → moderate → offer
    appears in the public market with `company_verified: true`.
-3. **Bundle the frontends** — only needed for a MANUAL deploy: `make portal-bundle`
-   (+ `make webapp-bundle` if changed). On a push to `dev`/`main` the CI deploy job already
-   pulls the prebuilt `…-portal` image and runs `portal-build` itself, so nothing compiles on
-   the server. Either way the step is not optional: the bundle lives in the `portal_static`
-   volume, not in any long-running image, so a deploy that skips it serves the PREVIOUS
-   cabinet build — or, on a fresh server, an empty volume that answers 404.
+3. **Refresh the portal** — only needed for a MANUAL deploy: `make portal-bundle` (rebuilds
+   the `portal` image and restarts the long-running SSR service — the name is historical,
+   see §4b), plus `make webapp-bundle` if the webapp changed (that one is still a
+   bundle-into-volume one-shot). On a push to `dev`/`main` the CI deploy job already pulls
+   the prebuilt `…-portal` image and refreshes it via `docker compose pull && up -d` like
+   every other long-running service — there is no separate `portal-build` one-shot in
+   compose anymore, so nothing compiles on the server either way. Skipping a manual portal
+   refresh outside of a CI-driven deploy leaves the PREVIOUS cabinet build running.
 4. **Prod prep** (in the prod `../.env`, one level above the repo root):
    - `VERIFICATION_ENC_KEY` — a **new required secret** (≥32 urlsafe-b64 chars). Generate once and
      store securely; **rotating it makes existing encrypted bank numbers/PINFL undecryptable**.
@@ -335,13 +437,90 @@ flipped. Rollout (dev → prod):
 6. **Verify** (from outside the server, so the host front door is in the path):
    ```bash
    curl -sI https://cabinet.ai-imex.com/            | head -1   # 200, not 404/502
-   curl -s   https://cabinet.ai-imex.com/companies  -o /dev/null -w '%{http_code}\n'  # 200 — SPA fallback
+   curl -s   https://cabinet.ai-imex.com/cabinet    -o /dev/null -w '%{http_code}\n'  # 200 — cabinet shell
+   curl -sI  https://cabinet.ai-imex.com/companies  | head -1   # 301 → /cabinet/companies
    curl -s   https://cabinet.ai-imex.com/api/v1/health                                 # same-origin API
    ```
-   A **404 at the root** means `portal_static` is empty → run `portal-build`. A **502** means the
-   inner nginx is unreachable → check the container. **Landing on another site** means the host
-   vhost for `cabinet.*` is missing → step 5.
+   A **502** means either the inner nginx is unreachable (check the `nginx` container), or —
+   now that the cabinet is proxied to a live service rather than served from a volume — that
+   the `portal` container itself is down/unhealthy (check `docker compose ps portal` and its
+   logs; see §4b). **Landing on another site** means the host vhost for `cabinet.*` is
+   missing → step 5.
 7. **Announce**: verified companies now carry a «проверено» badge and can publish from the cabinet.
+
+---
+
+## 9. CI/CD Deploy Pipeline
+
+`.github/workflows/ci.yml` builds container images and, on `main`/`dev` pushes only, deploys
+them automatically. This is the machine-driven counterpart to the manual `docker compose`
+commands used elsewhere in this guide — read this section before assuming a deploy step
+needs to be run by hand.
+
+### Build & push (`build-images` job)
+
+Gated on the `backend`, `dashboard`, `webapp`, and `portal` jobs all passing. Builds four
+images with Docker Buildx and — **only on a real branch push**, never on a pull request
+(including from forks) — pushes them to GHCR:
+
+| Image | Dockerfile | Serves |
+|-------|------------|--------|
+| `ghcr.io/<owner>/<repo>-backend`   | `backend/Dockerfile`          | `api`, `worker`, `beat` (one shared image) |
+| `ghcr.io/<owner>/<repo>-dashboard` | `deploy/Dockerfile.dashboard` | `dashboard` |
+| `ghcr.io/<owner>/<repo>-webapp`    | `deploy/Dockerfile.webapp`    | the `webapp-build` one-shot (see §4a) |
+| `ghcr.io/<owner>/<repo>-portal`    | `deploy/Dockerfile.portal`    | `portal`, the SSR service (see §4b) |
+
+Each image is tagged with the branch name (`main` or `dev`) and the commit SHA; PR builds
+are tagged `pr-<number>` and never pushed — they only validate the Dockerfiles.
+
+### Deploy to production (`deploy` job)
+
+Triggers on a push to `main`, after `build-images` and every other CI job succeeds. Over SSH
+(`appleboy/ssh-action`, using the `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_SSH_KEY` /
+`DEPLOY_SSH_PASSPHRASE` / `DEPLOY_PORT` GitHub Actions secrets
+<!-- VERIFY: real values of the DEPLOY_* GitHub Actions secrets -->), on the server it:
+
+1. `git fetch origin && git reset --hard origin/main` in the repo checkout (path from the
+   `DEPLOY_PATH` secret; the script falls back to `/var/www/polymer-intelligence` if unset).
+2. Sets `IMAGE_TAG=main` and logs in to `ghcr.io` with a short-lived `GITHUB_TOKEN` (expires
+   when the job ends, so no lingering login is left on the server).
+3. `docker compose --env-file .env -f deploy/docker-compose.yml pull` then `up -d` — this
+   alone refreshes every long-running service, **including `portal`** (it is no longer a
+   bundle-to-volume step; see §4b).
+4. Refreshes the Telegram Web App bundle: `--profile build pull webapp-build` then
+   `--profile build run --rm webapp-build` (the one-shot copy into `webapp_static`, §4a).
+5. `restart nginx`, `docker compose ps`, `docker logout ghcr.io`.
+
+A `concurrency` group (`deploy-main`) prevents two prod deploy runs from overlapping.
+
+### Deploy to dev (`deploy-dev` job)
+
+Mirrors the prod job but triggers on a push to `dev` and targets a **separate compose
+project on the same server**: `-p polymer-dev` (isolated containers/volumes/network),
+checkout path from the `DEV_DEPLOY_PATH` secret (script fallback:
+`/opt/polymer-dev/polymer-intelligence`), `IMAGE_TAG=dev`, and its own repo-root `.env`
+supplying dev secrets plus `INNER_NGINX_PORT=8081` /
+`INNER_NGINX_CONF=nginx.dev-server.behind-proxy.conf` for compose interpolation. Reuses the
+same `DEPLOY_*` SSH secrets as prod. First bring-up on a brand-new dev server is manual
+(TLS, dev bot webhook, userbot session) — see
+[`docs/runbook-dev-environment.md`](./runbook-dev-environment.md). Concurrency group
+`deploy-dev`.
+
+---
+
+## 10. Related Documentation & Runbooks
+
+This guide covers first-run stand-up. For everything else:
+
+- **Environment variable reference** (every variable in `Settings`, required vs. optional,
+  defaults) → [`docs/CONFIGURATION.md`](./CONFIGURATION.md).
+- **System architecture** (components, data flow) → [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
+- **Restore from a backup dump** (≤2 h procedure) → [`docs/runbook-backup-restore.md`](./runbook-backup-restore.md).
+- **Stand up the shared dev-server environment** (auto-deploys from `dev`, separate compose
+  project, `dev.*`/`dev-cabinet.*` hostnames) → [`docs/runbook-dev-environment.md`](./runbook-dev-environment.md).
+- **Migrate production to a new server** (fresh stand-up, same domain, no data carried over)
+  → [`docs/runbook-server-migration.md`](./runbook-server-migration.md).
+- **Container/nginx/backup implementation details** → [`../deploy/CLAUDE.md`](../deploy/CLAUDE.md).
 
 ---
 

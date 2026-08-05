@@ -371,6 +371,138 @@ def update_profile(
     return company
 
 
+#: Keys on `logistics_profile` a company may edit once it is already verified.
+#:
+#: Everything a carrier says about ITSELF for the storefront — the blurb, its
+#: reach, what it hauls, its fleet, its pricing model. Deliberately NOT the
+#: requisites: nothing here was checked by anyone during verification, so nothing
+#: here can be falsified by changing it.
+_PUBLIC_LOGISTICS_KEYS = frozenset(
+    {
+        "city",
+        "description",
+        "services",
+        "from_countries",
+        "to_countries",
+        "popular_routes",
+        "cargo_types",
+        "capabilities",
+        "tariff_model",
+        "years_experience",
+        "projects_completed",
+        "capability_images",
+    }
+)
+
+#: Keys on `laboratory_profile` a company may edit once it is already verified.
+#:
+#: Same bargain as the carrier set: storefront copy about ITSELF, none of which
+#: verification checked, so none of which can be falsified by changing it. The
+#: contacts (`email`/`phone`) are here too — they are what a lab publishes for
+#: people to reach it, not a requisite.
+_PUBLIC_LABORATORY_KEYS = frozenset(
+    {
+        "city",
+        "website",
+        "email",
+        "phone",
+        "description",
+        "accreditations",
+        "methods",
+        "years_experience",
+        "studies_completed",
+        "avg_turnaround_days",
+    }
+)
+
+
+def update_public_profile(
+    db: Session,
+    company: Company,
+    account: UserAccount,
+    *,
+    logistics: dict[str, object] | None = None,
+    laboratory: dict[str, object] | None = None,
+) -> Company:
+    """Patch storefront copy on an ALREADY-VERIFIED company.
+
+    Separate from `update_profile` for one reason, and it is not stylistic:
+    `_assert_profile_editable` refuses anything past `draft`/undecided-case, while
+    `directory_service._base_query` requires `verified` to appear in a public
+    directory at all. Every carrier and laboratory whose page this copy renders on
+    is therefore in the exact state where `update_profile` rejects the edit — the
+    marketing fields would have been writable only before verification and never
+    again.
+
+    Both halves are optional and independent: a company patches the blob for the
+    role it actually holds, and passing neither is a no-op rather than a wipe.
+
+    So this skips that gate ON PURPOSE, and narrows what it can reach instead:
+    only `_PUBLIC_LOGISTICS_KEYS` / `_PUBLIC_LABORATORY_KEYS`, never a requisite.
+    `legal_name`,
+    `legal_address` and `registration_date` were checked by a human and stay
+    behind `update_profile`; relaxing the gate itself would have unfrozen them
+    too. Authorisation is the router's `_require_company_admin`.
+
+    Merges rather than replaces, because both profile columns are plain
+    `mapped_column(JSONB)` — not `MutableDict.as_mutable` — so SQLAlchemy sees no
+    in-place key assignment, and a whole-blob `setattr` (what `update_profile`
+    does) would silently drop the `services`/`cargo_types` (or the lab's
+    `licenses`) the wizard collected.
+    """
+    changed: list[str] = []
+
+    def _merge(
+        current: object, patch: dict[str, object], allowed: frozenset[str]
+    ) -> dict[str, object] | None:
+        """The merged blob, or None when the patch moved nothing.
+
+        None rather than the unchanged dict so the caller can skip the assignment
+        entirely: `company.laboratory_profile = <equal dict>` still marks the
+        attribute dirty, and a no-op PATCH would emit an UPDATE with no audit row
+        beside it to explain it.
+        """
+        merged: dict[str, object] = dict(current) if isinstance(current, dict) else {}
+        touched = False
+        for key, value in patch.items():
+            if key not in allowed:
+                continue
+            if merged.get(key) != value:
+                merged[key] = value
+                changed.append(key)
+                touched = True
+        return merged if touched else None
+
+    # A NEW dict, assigned — see the note above on why mutating one in place would
+    # not have been persisted.
+    if logistics is not None:
+        merged_logistics = _merge(
+            company.logistics_profile, logistics, _PUBLIC_LOGISTICS_KEYS
+        )
+        if merged_logistics is not None:
+            company.logistics_profile = merged_logistics
+    if laboratory is not None:
+        merged_laboratory = _merge(
+            company.laboratory_profile, laboratory, _PUBLIC_LABORATORY_KEYS
+        )
+        if merged_laboratory is not None:
+            company.laboratory_profile = merged_laboratory
+
+    if not changed:
+        return company
+
+    db.flush()
+    event_service.emit(
+        db, event_types.COMPANY_PROFILE_UPDATED, "company", company.id,
+        {"account_id": account.id, "fields": sorted(changed), "scope": "public_profile"},
+    )
+    audit_service.write_audit(
+        db, None, "company.update_public_profile", "companies", str(company.id),
+        {"account_id": account.id, "fields": sorted(changed)},
+    )
+    return company
+
+
 def assert_single_account_type(roles: list[CompanyBusinessRoleEnum]) -> None:
     """Raise InvalidBusinessRoles unless `roles` fit exactly one ACCOUNT_TYPES card.
 

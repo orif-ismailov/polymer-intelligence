@@ -107,7 +107,7 @@ export function InquiriesPage() {
             <InquiryRow
               key={inq.id}
               inquiry={inq}
-              onOpen={() => navigate(`/inquiries/${inq.id}`)}
+              onOpen={() => navigate(`/cabinet/inquiries/${inq.id}`)}
             />
           ))}
         </div>

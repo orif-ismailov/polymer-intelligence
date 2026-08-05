@@ -8,10 +8,10 @@ export async function login(
   request: APIRequestContext,
   phone: string,
 ): Promise<void> {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
   await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/login/code");
+  await page.waitForURL("**/cabinet/login/code");
 
   const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
   expect(res.ok()).toBeTruthy();
@@ -19,7 +19,7 @@ export async function login(
 
   await page.getByLabel(/code|код|kod/i).fill(code);
   await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
 }
 
 /**
@@ -38,7 +38,7 @@ export async function stepAccountType(
   page: Page,
   opts: { type?: string; sign?: boolean } = {},
 ): Promise<void> {
-  await page.goto("/companies/new/1");
+  await page.goto("/cabinet/companies/new/1");
   await page.getByTestId(`account-type-${opts.type ?? "distributor"}`).click();
 
   if (opts.sign) {
@@ -50,7 +50,7 @@ export async function stepAccountType(
   }
 
   await page.getByTestId("wizard-next").click();
-  await page.waitForURL("**/companies/new/2");
+  await page.waitForURL("**/cabinet/companies/new/2");
 }
 
 /**
@@ -73,13 +73,13 @@ export async function stepDetails(page: Page, taxId?: string): Promise<void> {
   await page.getByLabel(/ownership form|форма собственности|mulkchilik shakli/i).selectOption("ООО");
 
   await page.getByTestId("wizard-next").click();
-  await page.waitForURL("**/companies/new/3");
+  await page.waitForURL("**/cabinet/companies/new/3");
 }
 
 /** Step 3 — bank (skipped) and step 4 — the required registration certificate. */
 export async function stepBankAndDocuments(page: Page): Promise<void> {
   await page.getByRole("button", { name: SKIP }).click();
-  await page.waitForURL("**/companies/new/4");
+  await page.waitForURL("**/cabinet/companies/new/4");
 
   await page.setInputFiles('input[type="file"]', {
     name: "registration.pdf",
@@ -87,7 +87,7 @@ export async function stepBankAndDocuments(page: Page): Promise<void> {
     buffer: Buffer.from("%PDF-1.4 test document"),
   });
   await page.getByTestId("wizard-next").click();
-  await page.waitForURL("**/companies/new/5");
+  await page.waitForURL("**/cabinet/companies/new/5");
 }
 
 /**
@@ -99,10 +99,10 @@ export async function stepReview(page: Page): Promise<number> {
   await expect(submit).toBeEnabled({ timeout: 20_000 });
   await submit.click();
 
-  await page.waitForURL(/\/companies\/new\/done\/\d+/, { timeout: 15_000 });
+  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, { timeout: 15_000 });
   await expect(page.getByTestId("wizard-done")).toBeVisible();
 
-  const match = /\/companies\/new\/done\/(\d+)/.exec(page.url());
+  const match = /\/cabinet\/companies\/new\/done\/(\d+)/.exec(page.url());
   return Number(match?.[1]);
 }
 

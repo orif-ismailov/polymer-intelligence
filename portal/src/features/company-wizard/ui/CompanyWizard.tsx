@@ -190,12 +190,12 @@ export function CompanyWizard() {
 
   useEffect(() => {
     if (String(step) !== params.step) {
-      void navigate(`/companies/new/${step}`, { replace: true });
+      void navigate(`/cabinet/companies/new/${step}`, { replace: true });
     }
   }, [step, params.step, navigate]);
 
   const goTo = (next: number): void => {
-    void navigate(`/companies/new/${next}`);
+    void navigate(`/cabinet/companies/new/${next}`);
   };
 
   const steps: Step[] = manufacturer
@@ -248,7 +248,7 @@ export function CompanyWizard() {
         leading={
           <IconButton
             label={t("common.back")}
-            onClick={() => (step > WIZARD_FIRST_STEP ? goTo(step - 1) : void navigate("/companies"))}
+            onClick={() => (step > WIZARD_FIRST_STEP ? goTo(step - 1) : void navigate("/cabinet/companies"))}
           >
             <ChevronLeftIcon size={20} />
           </IconButton>
@@ -298,7 +298,7 @@ export function CompanyWizard() {
               <StepReview
                 onBack={() => goTo(MFR_STEP_BUYER)}
                 onComplete={(companyId) =>
-                  navigate(`/companies/new/done/${companyId}`, { replace: true })
+                  navigate(`/cabinet/companies/new/done/${companyId}`, { replace: true })
                 }
               />
             ) : null}
@@ -339,7 +339,7 @@ export function CompanyWizard() {
               <StepReview
                 onBack={() => goTo(LOG_STEP_TARIFFS_DOCS)}
                 onComplete={(companyId) =>
-                  navigate(`/companies/new/done/${companyId}`, { replace: true })
+                  navigate(`/cabinet/companies/new/done/${companyId}`, { replace: true })
                 }
               />
             ) : null}
@@ -362,7 +362,7 @@ export function CompanyWizard() {
               <StepReview
                 onBack={() => goTo(LAB_STEP_LICENSES)}
                 onComplete={(companyId) =>
-                  navigate(`/companies/new/done/${companyId}`, { replace: true })
+                  navigate(`/cabinet/companies/new/done/${companyId}`, { replace: true })
                 }
               />
             ) : null}
@@ -391,7 +391,7 @@ export function CompanyWizard() {
               <StepReview
                 onBack={() => goTo(WIZARD_STEP_DOCUMENTS)}
                 onComplete={(companyId) =>
-                  navigate(`/companies/new/done/${companyId}`, { replace: true })
+                  navigate(`/cabinet/companies/new/done/${companyId}`, { replace: true })
                 }
               />
             ) : null}

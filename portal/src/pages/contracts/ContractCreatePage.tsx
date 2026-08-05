@@ -117,7 +117,7 @@ export function ContractCreatePage() {
         variables,
         offer_id: offerId ? Number(offerId) : null,
       });
-      void navigate(`/contracts/${created.id}`);
+      void navigate(`/cabinet/contracts/${created.id}`);
     } catch (err) {
       if (err instanceof ApiError && err.status === 422) {
         setError(t("contracts.errors.invalid"));
@@ -146,7 +146,7 @@ export function ContractCreatePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <PageHeader
-        backTo="/contracts"
+        backTo="/cabinet/contracts"
         backLabel={t("contracts.title")}
         title={t("contracts.create")}
       />
@@ -251,7 +251,7 @@ export function ContractCreatePage() {
       {error ? <Alert tone="danger">{error}</Alert> : null}
 
       <div className="flex justify-end gap-3">
-        <Button variant="ghost" onClick={() => navigate("/contracts")}>
+        <Button variant="ghost" onClick={() => navigate("/cabinet/contracts")}>
           {t("common.cancel")}
         </Button>
         <Button disabled={!canSubmit} onClick={() => void submit()} data-testid="contract-submit">

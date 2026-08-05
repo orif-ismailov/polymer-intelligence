@@ -91,6 +91,16 @@ class LogisticsProfileIn(BaseModel):
     cargo_types: list[str] = Field(default_factory=list, max_length=32)
     capabilities: list[str] = Field(default_factory=list, max_length=32)
     tariff_model: str | None = Field(default=None, max_length=100)
+    #: Storefront copy — the blurb and the two figures the public profile prints
+    #: as «Опыт работы» / «Реализованных проектов». Bounded so a typo cannot
+    #: render as «Опыт работы: 99999 лет»; the read side caps them again, since
+    #: the column is untyped JSONB that predates these keys.
+    description: str | None = Field(default=None, max_length=4000)
+    years_experience: int | None = Field(default=None, ge=0, le=200)
+    projects_completed: int | None = Field(default=None, ge=0, le=10_000_000)
+    #: `{capability_key: media_id}` from `POST /companies/{id}/media`. The JSONB
+    #: is the ordering authority; media rows are just bytes with an owner.
+    capability_images: dict[str, int] = Field(default_factory=dict)
 
     @field_validator(
         "services",
@@ -105,13 +115,74 @@ class LogisticsProfileIn(BaseModel):
     def _clean_string_lists(cls, value: list[str]) -> list[str]:
         return [item.strip() for item in value if item.strip()][:64]
 
-    @field_validator("city", "tariff_model", mode="after")
+    @field_validator("city", "tariff_model", "description", mode="after")
     @classmethod
     def _strip_optional(cls, value: str | None) -> str | None:
         if value is None:
             return None
         trimmed = value.strip()
         return trimmed or None
+
+
+class CompanyMediaOut(BaseModel):
+    """An uploaded image: its id and the root-relative URL to its bytes.
+
+    The storage key is never returned — it is an object-store path, and the only
+    thing a client needs is a `src`.
+    """
+
+    id: int
+    url: str
+    mime_type: str
+    size_bytes: int
+
+
+class CompanyReviewIn(BaseModel):
+    """A company's rating of a counterparty.
+
+    `company_id` is the AUTHOR's acting company, in the body for the same reason
+    every other company-scoped write puts it there: an account may belong to
+    several, and which one is speaking is the client's choice.
+    """
+
+    company_id: int
+    rating: int = Field(ge=1, le=5)
+    body: str | None = Field(default=None, max_length=4000)
+
+    @field_validator("body", mode="after")
+    @classmethod
+    def _strip_body(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
+
+class CompanyReviewOut(BaseModel):
+    """The author's own review, read back after writing it."""
+
+    id: int
+    company_id: int
+    author_company_id: int
+    rating: int
+    body: str | None = None
+    status: str
+    created_at: datetime.datetime
+
+
+class PublicProfileUpdateIn(BaseModel):
+    """Storefront copy a company may edit after it is verified.
+
+    Read with `exclude_unset=True`, never `exclude_none=True`: every field on
+    these has a default, so a PATCH carrying only `description` would otherwise
+    arrive with `services=[]` and wipe the list the registration wizard
+    collected.
+
+    Both halves optional — a company sends the one matching its role.
+    """
+
+    logistics: LogisticsProfileIn | None = None
+    laboratory: LaboratoryProfileIn | None = None
 
 
 class LaboratoryProfileIn(BaseModel):
@@ -127,6 +198,21 @@ class LaboratoryProfileIn(BaseModel):
     email: str | None = Field(default=None, max_length=320)
     phone: str | None = Field(default=None, max_length=64)
     description: str | None = Field(default=None, max_length=4000)
+    #: Storefront copy — the chips and the three stat tiles on the public sheet.
+    #: Keys, not labels: `accreditations` and `methods` resolve through the same
+    #: i18n tree the registration wizard writes them from.
+    accreditations: list[str] = Field(default_factory=list, max_length=16)
+    methods: list[str] = Field(default_factory=list, max_length=48)
+    years_experience: int | None = Field(default=None, ge=0, le=200)
+    studies_completed: int | None = Field(default=None, ge=0, le=100_000_000)
+    avg_turnaround_days: int | None = Field(default=None, ge=0, le=365)
+
+    @field_validator("accreditations", "methods", mode="after")
+    @classmethod
+    def _clean_lab_lists(cls, value: list[str]) -> list[str]:
+        # No slice: `max_length` above is the bound, and stripping cannot grow a
+        # list — a second cap here would only look like one.
+        return [item.strip() for item in value if item.strip()]
 
     @field_validator("city", "website", "email", "phone", "description", mode="after")
     @classmethod
@@ -254,6 +340,17 @@ class CompanySummaryOut(BaseModel):
     #: URL for media (FR-M4), so this is minted per response and is None when the
     #: company has no logo.
     logo_url: str | None = None
+    cover_url: str | None = None
+    #: CONFIRMED business roles, as plain strings. On the summary and not just
+    #: the detail because the cabinet branches on them — `/cabinet/requests`
+    #: shows a carrier the broadcast pool instead of its own (always empty)
+    #: purchase requests — and `useActiveCompany()` is backed by the summary
+    #: list, so without this every such branch costs a second round-trip.
+    #:
+    #: NOT called `roles`: `CompanyDetailOut.roles` is a list of
+    #: `{role, status}` objects, and one name for two shapes is how a client
+    #: ends up reading `.role` off a string.
+    confirmed_roles: list[str] = Field(default_factory=list)
     active_case: CaseOut | None = None
 
 
@@ -279,6 +376,7 @@ class CompanyDetailOut(BaseModel):
     reverification_due_at: datetime.datetime | None = None
     #: See CompanySummaryOut.logo_url — presigned per response, never stored.
     logo_url: str | None = None
+    cover_url: str | None = None
     roles: list[BusinessRoleOut] = Field(default_factory=list)
     bank_accounts: list[BankAccountOut] = Field(default_factory=list)
     documents: list[DocumentOut] = Field(default_factory=list)

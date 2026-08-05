@@ -6,8 +6,11 @@ import type {
   CompanyProfilePatch,
   CompanySummary,
   CreateBankAccountPayload,
+  CompanyReviewPayload,
+  CompanyReviewResult,
   CreateCompanyPayload,
   DocumentMeta,
+  PublicProfilePatch,
 } from "./types";
 
 export const companyApi = {
@@ -21,6 +24,29 @@ export const companyApi = {
 
   updateProfile: (id: number, patch: CompanyProfilePatch): Promise<CompanyDetail> =>
     api.patch<CompanyDetail>(`/portal/companies/${id}`, patch),
+
+  /**
+   * Storefront copy, and the only profile write a verified company can make —
+   * `PATCH /portal/companies/{id}` is closed once verification decides.
+   */
+  updatePublicProfile: (id: number, patch: PublicProfilePatch): Promise<CompanyDetail> =>
+    api.patch<CompanyDetail>(`/portal/companies/${id}/public-profile`, { logistics: patch }),
+
+  uploadCover: (id: number, file: File): Promise<CompanyDetail> => {
+    const form = new FormData();
+    form.append("file", file);
+    return api.post<CompanyDetail>(`/portal/companies/${id}/cover`, form);
+  },
+
+  deleteCover: (id: number): Promise<void> =>
+    api.del<void>(`/portal/companies/${id}/cover`),
+
+  /** Rate a counterparty. Re-submitting replaces the author's existing review. */
+  submitReview: (
+    companyId: number,
+    payload: CompanyReviewPayload,
+  ): Promise<CompanyReviewResult> =>
+    api.post<CompanyReviewResult>(`/portal/companies/${companyId}/reviews`, payload),
 
   setRoles: (id: number, roles: string[]): Promise<CompanyDetail> =>
     api.put<CompanyDetail>(`/portal/companies/${id}/roles`, { roles }),

@@ -1,7 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import type { ApiError } from "@/shared/api";
+
 import { companyApi, companyKeys } from "./api";
-import type { CompanyDetail, CompanyProfilePatch, CreateBankAccountPayload } from "./types";
+import type {
+  CompanyDetail,
+  CompanyProfilePatch,
+  CompanyReviewPayload,
+  CompanyReviewResult,
+  CreateBankAccountPayload,
+  PublicProfilePatch,
+} from "./types";
 
 function useCompanyDetailMutation<TArgs>(
   companyId: number,
@@ -21,6 +30,35 @@ export function useUpdateCompanyProfile(companyId: number) {
   return useCompanyDetailMutation<CompanyProfilePatch>(companyId, (patch) =>
     companyApi.updateProfile(companyId, patch),
   );
+}
+
+export function useUpdateCompanyPublicProfile(companyId: number) {
+  return useCompanyDetailMutation<PublicProfilePatch>(companyId, (patch) =>
+    companyApi.updatePublicProfile(companyId, patch),
+  );
+}
+
+export function useUploadCompanyCover(companyId: number) {
+  return useCompanyDetailMutation<File>(companyId, (file) =>
+    companyApi.uploadCover(companyId, file),
+  );
+}
+
+/**
+ * Rate a counterparty.
+ *
+ * Not a `useCompanyDetailMutation`: that helper writes the response into the
+ * COMPANY detail cache, and a review's response is a review. It invalidates the
+ * public company query instead, which is where the aggregate lives.
+ */
+export function useSubmitCompanyReview(companyId: number) {
+  const qc = useQueryClient();
+  return useMutation<CompanyReviewResult, ApiError, CompanyReviewPayload>({
+    mutationFn: (payload) => companyApi.submitReview(companyId, payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["public", "company"] });
+    },
+  });
 }
 
 export function useSetCompanyRoles(companyId: number) {

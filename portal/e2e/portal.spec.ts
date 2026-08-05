@@ -30,16 +30,16 @@ async function readOtp(request: APIRequestContext, phone: string): Promise<strin
 }
 
 async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/login");
+  await page.goto("/cabinet/login");
   await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
   await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
 
-  await page.waitForURL("**/login/code");
+  await page.waitForURL("**/cabinet/login/code");
   const code = await readOtp(request, phone);
   await page.getByLabel(/code|код|kod/i).fill(code);
   await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
 
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
 }
 
 test("an account with no company is sent to registration", async ({ page, request }) => {
@@ -47,11 +47,11 @@ test("an account with no company is sent to registration", async ({ page, reques
 
   // The cabinet is company-scoped end to end, so the gate redirects rather than
   // rendering a shell of empty states the user cannot resolve.
-  await page.waitForURL("**/onboarding");
+  await page.waitForURL("**/cabinet/onboarding");
   await expect(page.getByTestId("onboarding-start")).toBeVisible();
 
   await page.getByTestId("onboarding-start").click();
-  await page.waitForURL("**/companies/new/1");
+  await page.waitForURL("**/cabinet/companies/new/1");
 });
 
 test("register a company and publish an offer", async ({ page, request }) => {
@@ -63,6 +63,6 @@ test("register a company and publish an offer", async ({ page, request }) => {
 
   // The success sheet leads into the cabinet.
   await page.getByTestId("wizard-done-cabinet").click();
-  await page.waitForURL((url) => url.pathname === "/");
+  await page.waitForURL((url) => url.pathname === "/cabinet");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });

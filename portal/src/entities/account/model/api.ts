@@ -9,7 +9,13 @@ export const accountApi = {
   verifyOtp: (payload: OtpVerifyPayload): Promise<AuthResult> =>
     api.post<AuthResult>("/portal/auth/otp/verify", payload),
 
-  refresh: (): Promise<AuthResult> => api.post<AuthResult>("/portal/auth/refresh"),
+  // `skipAuthRetry`: this IS the refresh. Without it a 401 here sent the client
+  // into its own 401-handler, which refreshed again, failed again, and then
+  // hard-redirected to /login — three requests to answer "no session". Harmless
+  // while every page was behind the login; on the public marketplace it threw
+  // anonymous visitors off the storefront on first paint.
+  refresh: (): Promise<AuthResult> =>
+    api.post<AuthResult>("/portal/auth/refresh", undefined, { skipAuthRetry: true }),
 
   logout: (): Promise<{ ok: boolean }> => api.post<{ ok: boolean }>("/portal/auth/logout"),
 

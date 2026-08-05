@@ -2,7 +2,6 @@ import { type ReactNode } from "react";
 
 import { useTranslation } from "react-i18next";
 
-import type { PublicCompanyProfile } from "@/entities/market";
 import { coerceLang } from "@/shared/i18n";
 import { formatDate } from "@/shared/lib";
 import {
@@ -21,8 +20,12 @@ import {
   SpecList,
 } from "@/shared/ui";
 
+import type { CompanyProfileCompany } from "../model/types";
+import { ProfileLaboratoryBlock } from "./ProfileLaboratoryBlock";
+import { ProfileLogisticsBlock } from "./ProfileLogisticsBlock";
+
 interface ProfileAboutTabProps {
-  profile: PublicCompanyProfile;
+  profile: CompanyProfileCompany;
 }
 
 function Stat({
@@ -94,9 +97,23 @@ export function ProfileAboutTab({ profile }: ProfileAboutTabProps) {
         </CardBody>
       </Card>
 
+      {/* Carrier facts, above the generic chrome: for a logistics company this
+          IS the profile, and the KPI/certificate placeholders below are the
+          least interesting thing on the page. Absent for everyone else. */}
+      {profile.logistics ? <ProfileLogisticsBlock logistics={profile.logistics} /> : null}
+      {profile.laboratory ? (
+        <ProfileLaboratoryBlock laboratory={profile.laboratory} />
+      ) : null}
+
       <Card>
         <CardBody className="space-y-3">
           <h3 className="text-sm font-semibold text-text">{t("companyProfile.about")}</h3>
+          {/* The company's own blurb, when the registration captured one. Only
+              the PUBLIC payload carries it — the cabinet's catalog endpoint does
+              not return it, so this block is simply absent there. */}
+          {profile.main_products ? (
+            <p className="text-sm leading-relaxed text-text">{profile.main_products}</p>
+          ) : null}
           {profile.legal_form || profile.legal_address ? (
             <p className="text-sm leading-relaxed text-text">
               {[
@@ -158,6 +175,38 @@ export function ProfileAboutTab({ profile }: ProfileAboutTabProps) {
               }
             />
             <SpecItem label={t("companyProfile.jurisdiction")} value={profile.jurisdiction} />
+            {/* Registration facts that only the public payload carries. Rendered
+                when present rather than gated on a tier flag, so the storefront
+                keeps every fact it showed before it adopted this sheet. */}
+            {profile.production_type ? (
+              <SpecItem
+                label={t("public.company.productionType")}
+                value={profile.production_type}
+              />
+            ) : null}
+            {profile.founded_year ? (
+              <SpecItem
+                label={t("public.company.founded")}
+                value={String(profile.founded_year)}
+                numeric
+              />
+            ) : null}
+            {profile.employees ? (
+              <SpecItem
+                label={t("public.company.employees")}
+                value={String(profile.employees)}
+                numeric
+              />
+            ) : null}
+            {profile.iso_certification ? (
+              <SpecItem label={t("public.company.iso")} value={profile.iso_certification} />
+            ) : null}
+            {profile.export_countries && profile.export_countries.length > 0 ? (
+              <SpecItem
+                label={t("public.company.exportTo")}
+                value={profile.export_countries.join(", ")}
+              />
+            ) : null}
           </SpecList>
         </CardBody>
       </Card>

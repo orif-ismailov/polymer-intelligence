@@ -81,7 +81,10 @@
     "favorites": "Saralangan",
     "samples": "Namunalar",
     "labOrders": "Laboratoriya",
-    "openMenu": "Menyuni ochish"
+    "marketplace": "Marketpleys",
+    "openMenu": "Menyuni ochish",
+    "logisticsRequests": "Logistika arizalari",
+    "labRequests": "Laboratoriyaga arizalar"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -158,7 +161,19 @@
       "ИП": "Yakka tartibdagi tadbirkor",
       "ГУП": "Davlat unitar korxonasi"
     },
-    "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana"
+    "registrationDate": "Kompaniya ro‘yxatdan o‘tgan sana",
+    "storefront": {
+      "title": "Vitrina",
+      "hint": "Bu matnni kompaniyaning ommaviy sahifasida barcha tashrifchilar ko‘radi. Rekvizitlar tekshiruvdan so‘ng o‘zgartirilmaydi, vitrina esa — ha.",
+      "description": "Kompaniya tavsifi",
+      "experience": "Ish tajribasi, yil",
+      "projects": "Amalga oshirilgan loyihalar",
+      "countInvalid": "Noldan kichik bo‘lmagan butun son kiriting",
+      "saveFailed": "Saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+      "cover": "Profil muqovasi",
+      "coverHint": "JPG yoki PNG, 8 MB gacha. Logotip ustida ko‘rsatiladi.",
+      "coverFailed": "Muqovani yuklab bo‘lmadi."
+    }
   },
   "wizard": {
     "title": "Kompaniyani ro‘yxatdan o‘tkazish",
@@ -1460,6 +1475,22 @@
     "sample_request_status": {
       "title": "Namuna holati",
       "body": "Namuna so‘rovi: holati o‘zgardi"
+    },
+    "logistics_request_new": {
+      "title": "Yangi tashish arizasi",
+      "body": "{{buyer}} tashuvchi qidirmoqda: {{cargo}}"
+    },
+    "logistics_message": {
+      "title": "Ariza bo‘yicha yangi xabar",
+      "body": "{{number}} arizasi — yangi xabar"
+    },
+    "lab_request_new": {
+      "title": "Yangi tadqiqot arizasi",
+      "body": "{{buyer}} laboratoriya qidirmoqda: {{product}}"
+    },
+    "lab_message": {
+      "title": "Ariza bo‘yicha yangi xabar",
+      "body": "{{number}} arizasi — yangi xabar"
     }
   },
   "contracts": {
@@ -1883,7 +1914,65 @@
     "requestRfq": "Taklif so‘rash (RFQ)",
     "messageManufacturer": "Zavod bilan bog‘lanish",
     "requestFactoryRfq": "Taklif so‘rash",
-    "pickOfferHint": "Sotuvchiga so‘rov yuborish uchun pastdan mahsulot tanlang"
+    "pickOfferHint": "Sotuvchiga so‘rov yuborish uchun pastdan mahsulot tanlang",
+    "logistics": {
+      "aboutTitle": "Kompaniya haqida",
+      "capabilitiesTitle": "Bizning imkoniyatlarimiz",
+      "detailsTitle": "Ish shartlari",
+      "countries": "Ish yuritiladigan davlatlar",
+      "services": "Xizmatlar",
+      "experience": "Ish tajribasi",
+      "projects": "Amalga oshirilgan loyihalar",
+      "cargo": "Yuk turlari",
+      "routes": "Ommabop yo‘nalishlar",
+      "tariff": "Tariflash",
+      "city": "Shahar",
+      "years_one": "{{count}} yil",
+      "years_other": "{{count}} yil",
+      "capabilityBlurb": {
+        "own_trucks": "Zamonaviy tortuvchilar va konteyner tashuvchilar",
+        "own_rail_wagons": "Shaxsiy vagon va sisternalar parki",
+        "sea_containers": "Dunyoning yirik portlari bilan ishlash",
+        "storage_facilities": "Yuklarni jamlash uchun ombor maydonlari",
+        "customs_warehouse": "Nazorat ostida saqlash uchun bojxona ombori",
+        "foreign_offices": "Jo‘natuvchi davlatlardagi vakolatxonalar",
+        "customs_brokers": "«Kalit topshirish» rasmiylashtiruvi uchun shtat brokerlari"
+      },
+      "projectsValue": "{{value}}+"
+    },
+    "reviewCount_one": "{{count}} sharh",
+    "reviewCount_other": "{{count}} sharh",
+    "reviewAnonymous": "Kompaniya",
+    "reviewTitle": "Sharh qoldirish",
+    "reviewRating": "Baho",
+    "reviewBody": "Izoh",
+    "reviewBodyPlaceholder": "Hamkorlik qanday o‘tdi?",
+    "reviewSubmit": "Sharhni yuborish",
+    "reviewErrors": {
+      "self": "O‘z kompaniyangizga sharh qoldira olmaysiz",
+      "ratingRequired": "1 dan 5 gacha baho bering"
+    },
+    "laboratory": {
+      "aboutTitle": "Laboratoriya haqida",
+      "methodsTitle": "Usullar va ko‘rsatkichlar",
+      "detailsTitle": "Aloqa",
+      "experience": "Bozorda yillar",
+      "studies": "Bajarilgan tadqiqotlar",
+      "turnaround": "O‘rtacha muddat",
+      "city": "Shahar",
+      "website": "Sayt",
+      "years_one": "{{count}} yil",
+      "years_other": "{{count}} yil",
+      "days_one": "{{count}} kun",
+      "days_other": "{{count}} kun",
+      "studiesValue": "{{value}}+",
+      "accreditationOptions": {
+        "iso_17025": "ISO/IEC 17025",
+        "national_accreditation": "Milliy akkreditatsiya",
+        "iso_9001": "ISO 9001",
+        "gost_certified": "GOST bo‘yicha attestatsiya"
+      }
+    }
   },
   "manufacturers": {
     "title": "Ishlab chiqaruvchilar",
@@ -1982,5 +2071,452 @@
     "verified": "Tasdiqlangan",
     "failed": "Rad etilgan",
     "archived": "Arxivda"
+  },
+  "public": {
+    "nav": {
+      "primary": "Asosiy navigatsiya",
+      "home": "Bosh sahifa",
+      "catalog": "Katalog",
+      "traders": "Treyderlar",
+      "logistics": "Logistika",
+      "laboratories": "Laboratoriyalar",
+      "prices": "Narxlar va tahlil",
+      "news": "Yangiliklar",
+      "signIn": "Kirish",
+      "register": "Ro'yxatdan o'tish",
+      "language": "Til",
+      "pricesShort": "Narxlar"
+    },
+    "role": {
+      "manufacturer": "Ishlab chiqaruvchi",
+      "trader": "Treyder",
+      "logistics_provider": "Logistika",
+      "laboratory": "Laboratoriya",
+      "importer": "Importchi",
+      "distributor": "Distribyutor",
+      "insurance_provider": "Sug'urta"
+    },
+    "home": {
+      "metaTitle": "IMEX AI: neftkimyo xomashyosi bozori",
+      "metaDescription": "Tekshirilgan ishlab chiqaruvchilar, treyderlar va laboratoriyalardan polimerlar. Dolzarb narxlar, laboratoriya pasportlari, xavfsiz bitimlar.",
+      "heroTitle": "Neftkimyo mahsulotlari uchun global marketpleys",
+      "heroSubtitle": "Ishlab chiqaruvchilar, treyderlar, logistika va laboratoriyalar bitta platformada",
+      "heroEyebrow": "Tekshirilgan kompaniyalar · ERI orqali bitimlar",
+      "heroCtaPrimary": "Ro'yxatdan o'tish",
+      "heroCtaPrimaryAuthed": "Kabinetga o'tish",
+      "heroCtaSecondary": "Katalogni ko'rish",
+      "searchLabel": "Katalog bo'ylab qidiruv",
+      "searchPlaceholder": "Mahsulot, marka, kompaniya, xizmatlarni qidirish...",
+      "searchAction": "Qidirish",
+      "popular": "Mashhur so'rovlar:",
+      "statsHeading": "Platforma raqamlarda",
+      "statLive": "Ma'lumotlar real vaqtda yangilanadi",
+      "directoriesHeading": "Kimni qidiryapsiz",
+      "companyCount_one": "{{count}} ta kompaniya",
+      "companyCount_other": "{{count}} ta kompaniya",
+      "seeAll": "Barchasini ko'rish",
+      "noOffers": "Hozircha e'lon qilingan takliflar yo'q",
+      "marketPrices": "Bozor narxlari",
+      "priceProduct": "Mahsulot",
+      "priceValue": "Narx",
+      "priceChange": "O'zg.",
+      "noHistory": "ma'lumot yo'q",
+      "noPrices": "Kotirovkalar birinchi kuzatuvlardan keyin paydo bo'ladi",
+      "industryNews": "Soha yangiliklari",
+      "noNews": "Hozircha yangiliklar yo'q",
+      "whyEyebrow": "Tekshirilgan B2B maydoncha",
+      "whyHeading": "Nima uchun IMEX AI ni tanlashadi",
+      "whySubtitle": "Har bir kompaniya davlat reestrlari bo'yicha tekshiruvdan o'tadi va hujjatlarni elektron imzo bilan imzolaydi — siz bitimni boshlashingizdan oldin.",
+      "why": {
+        "verified": {
+          "title": "Tekshirilgan kompaniyalar",
+          "body": "Nashrdan oldin davlat reestrlari va elektron imzo."
+        },
+        "prices": {
+          "title": "Dolzarb narxlar",
+          "body": "Kotirovkalar birja va soha manbalaridan har kuni yig'iladi."
+        },
+        "signing": {
+          "title": "Xavfsiz bitimlar",
+          "body": "Ikkala tomon shartnomani ERI orqali imzolaydi."
+        },
+        "international": {
+          "title": "Xalqaro platforma",
+          "body": "Turli mamlakatlardan yetkazib beruvchilar va xaridorlar."
+        },
+        "support": {
+          "title": "24/7 qo'llab-quvvatlash",
+          "body": "IMEX AI jamoasi bitimning har bir bosqichida yordam beradi."
+        }
+      },
+      "joinHeading": "IMEX AI ga qo'shiling",
+      "joinBody": "Biz bilan global neftkimyo bozorida biznesingizni kengaytiring",
+      "allQueries": "Barcha so'rovlar",
+      "searchScope": "Qidiruv doirasi",
+      "scope": {
+        "products": "Mahsulotlar",
+        "companies": "Kompaniyalar",
+        "services": "Xizmatlar"
+      },
+      "directoryCard": {
+        "manufacturersBody": "Zavodlardan to'g'ridan-to'g'ri yetkazib berish",
+        "tradersBody": "Tekshirilgan treyderlar va distributorlar",
+        "logisticsBody": "Yetkazib berish, bojxona, ombor",
+        "laboratoriesBody": "Laboratoriya tadqiqotlari va pasportlar",
+        "pricesBody": "Dolzarb narxlar va bozor tahlili",
+        "newsBody": "Soha yangiliklari va yangilanishlar",
+        "daily": "Har kuni"
+      },
+      "productCategories": "Mahsulot kategoriyalari",
+      "resetFilters": "Hammasini tozalash",
+      "filterCountry": "Kelib chiqish mamlakati",
+      "filterCountryPlaceholder": "Mamlakatni tanlang",
+      "filterIncoterms": "Yetkazib berish shartlari",
+      "filterCompany": "Ishlab chiqaruvchi / Kompaniya",
+      "filterCompanyPlaceholder": "Tanlang",
+      "showProducts": "Mahsulotlarni ko'rsatish",
+      "showProductsCount_one": "{{count}} ta mahsulotni ko'rsatish",
+      "showProductsCount_other": "{{count}} ta mahsulotni ko'rsatish",
+      "recommendedProducts": "Tavsiya etilgan mahsulotlar",
+      "verifiedManufacturers": "Tekshirilgan ishlab chiqaruvchilar",
+      "manufacturerOffers_one": "{{count}} ta taklif",
+      "manufacturerOffers_other": "{{count}} ta taklif",
+      "seeAllPeople": "Hammasini ko'rish",
+      "contact": "Bog'lanish",
+      "saveOffer": "Taklifni saqlash",
+      "offerForm": "Shakl",
+      "offerFormGranules": "Granulalar",
+      "offerTerms": "Shartlar",
+      "priceValueUsd": "Narx (USD/MT)",
+      "priceChange24h": "O'zgarish (24soat)",
+      "priceSource": "Manba: platforma bozor kuzatuvlari",
+      "priceUpdated": "Yangilangan: {{date}}",
+      "popularServices": "Mashhur xizmatlar",
+      "allServices": "Barcha xizmatlar",
+      "service": {
+        "logistics": {
+          "title": "Xalqaro logistika",
+          "body": "Kalitga topshirish yetkazib berish"
+        },
+        "customs": {
+          "title": "Bojxona rasmiylashtiruvi",
+          "body": "Eksport / Import"
+        },
+        "lab": {
+          "title": "Laboratoriya tadqiqotlari",
+          "body": "Tahlil va sifat pasportlari"
+        }
+      },
+      "registerCompany": "Kompaniyani ro'yxatdan o'tkazish",
+      "platformStat": {
+        "products": "Katalogdagi mahsulotlar",
+        "companies": "Kompaniyalar",
+        "countries": "Mamlakatlar",
+        "requests": "Kunlik so'rovlar",
+        "deals": "Muvaffaqiyatli bitimlar",
+        "satisfaction": "Qoniqish"
+      },
+      "fallbackCategory": {
+        "PE": "Polietilen (PE)",
+        "PP": "Polipropilen (PP)",
+        "PVC": "PVX (PVC)",
+        "PET": "PET",
+        "PS": "Polistirol (PS)",
+        "Rubber": "Kauchuklar",
+        "Solvents": "Erituvchilar",
+        "Additives": "Qo'shimchalar"
+      },
+      "popularTag": {
+        "rubber": "Kauchuk",
+        "solvents": "Erituvchilar"
+      }
+    },
+    "market": {
+      "metaTitle": "Neftkimyo xomashyosi katalogi",
+      "metaDescription": "Tekshirilgan yetkazib beruvchilardan polimerlar, erituvchilar va qo'shimchalar. Mahsulot, mavjudlik, mamlakat va laboratoriya pasporti bo'yicha filtrlar.",
+      "title": "Katalog",
+      "subtitle": "Tekshirilgan yetkazib beruvchilarning e'lon qilingan takliflari",
+      "filters": "Filtrlar",
+      "search": "Qidiruv",
+      "searchPlaceholder": "Marka yoki mahsulot",
+      "category": "Toifa",
+      "allCategories": "Barcha toifalar",
+      "availability": "Mavjudligi",
+      "any": "Har qanday",
+      "country": "Mamlakat",
+      "laboratory": "Laboratoriya",
+      "hasPassport": "Sifat pasporti bor",
+      "labVerified": "Platforma orqali tahlil",
+      "reset": "Filtrlarni tozalash",
+      "resultCount_one": "{{count}} ta taklif",
+      "resultCount_other": "{{count}} ta taklif",
+      "empty": "Bu shartlar bo'yicha hech narsa topilmadi",
+      "pagination": "Sahifalash",
+      "pageOf": "{{pages}} dan {{page}}-sahifa",
+      "anyPlural": "Har qanday",
+      "showResults": "Natijalarni ko'rsatish",
+      "showResultsCount_one": "{{count}} ta taklifni ko'rsatish",
+      "showResultsCount_other": "{{count}} ta taklifni ko'rsatish"
+    },
+    "offer": {
+      "untitled": "Nomsiz",
+      "onRequest": "Narx so'rov bo'yicha",
+      "moq": "Min. partiya",
+      "leadTime": "Yetkazib berish muddati, kun",
+      "labVerified": "Laboratoriya tekshirgan",
+      "labPassport": "Pasport bor",
+      "verified": "Tekshirilgan",
+      "metaTitle": "{{name}}, {{seller}} dan sotib olish",
+      "metaDescription": "{{name}} mavjud. Jo'natish: {{location}}. IMEX AI dagi tekshirilgan yetkazib beruvchi.",
+      "notFound": "Taklif topilmadi",
+      "notFoundBody": "Ehtimol, u e'londan olib tashlangan.",
+      "breadcrumb": "Navigatsiya zanjiri",
+      "grade": "Marka",
+      "polymer": "Polimer turi",
+      "cas": "CAS",
+      "hs": "TIF TN",
+      "manufacturer": "Ishlab chiqaruvchi",
+      "incoterms": "Yetkazib berish shartlari",
+      "location": "Jo'natish",
+      "properties": "Xususiyatlar",
+      "applications": "Qo'llanilishi",
+      "description": "Tavsif",
+      "soldBy": "Yetkazib beruvchi:",
+      "sendInquiry": "So'rov yuborish",
+      "signInToContact": "Bog'lanish uchun kiring",
+      "contactHint": "Yetkazib beruvchi kontaktlari kirgandan keyin ochiladi."
+    },
+    "directory": {
+      "metaTitle": "{{name}}, tekshirilgan kompaniyalar",
+      "search": "Kompaniya qidirish",
+      "searchPlaceholder": "Nomi yoki manzili",
+      "resultCount_one": "{{count}} ta kompaniya",
+      "resultCount_other": "{{count}} ta kompaniya",
+      "empty": "Kompaniyalar topilmadi",
+      "notFound": "Bunday bo'lim yo'q"
+    },
+    "directories": {
+      "manufacturers": {
+        "subtitle": "Roli tasdiqlangan polimer zavodlari va ishlab chiqaruvchilar"
+      },
+      "traders": {
+        "subtitle": "Neftkimyo xomashyosi savdo uylari va distribyutorlari"
+      },
+      "logistics": {
+        "subtitle": "Tashish, bojxona rasmiylashtiruvi va ombor xizmatlari"
+      },
+      "laboratories": {
+        "subtitle": "Tahlil va sifat pasportlari uchun akkreditatsiyalangan laboratoriyalar"
+      }
+    },
+    "company": {
+      "untitled": "Nomsiz",
+      "notFound": "Kompaniya topilmadi",
+      "notFoundBody": "Ehtimol, u hali tekshiruvdan o'tmagan.",
+      "metaTitle": "{{name}}, {{directory}}",
+      "metaDescription": "{{name}}, {{country}}. IMEX AI bozoridagi tekshirilgan kompaniya.",
+      "offers": "Mahsulotlar",
+      "founded": "Tashkil etilgan",
+      "employees": "Xodimlar",
+      "iso": "ISO",
+      "legalName": "Yuridik nomi",
+      "legalForm": "Shakli",
+      "address": "Manzil",
+      "jurisdiction": "Yurisdiksiya",
+      "productionType": "Ishlab chiqarish turi",
+      "exportTo": "Eksport",
+      "products": "Kompaniya mahsulotlari",
+      "noProducts": "Kompaniyada hozircha e'lon qilingan mahsulot yo'q",
+      "about": "Kompaniya haqida",
+      "contact": "Bog'lanish"
+    },
+    "prices": {
+      "metaTitle": "Polimer va neftkimyo narxlari",
+      "metaDescription": "Polimerlar bo'yicha dolzarb kotirovkalar: HDPE, PP, LLDPE, PVC, PET. Oldingi kuzatuvga nisbatan o'zgarish.",
+      "title": "Narxlar va tahlil",
+      "subtitle": "Har bir mahsulot bo'yicha oxirgi kuzatuvlar va oldingisiga nisbatan o'zgarish",
+      "unit": "Birlik",
+      "observed": "Sana"
+    },
+    "footer": {
+      "marketplace": "Bozor",
+      "directories": "Ma'lumotnomalar",
+      "account": "Hisob",
+      "blurb": "Kompaniyalarni tekshirish va laboratoriya nazorati bilan neftkimyo xomashyosi bozori.",
+      "legal": "IMEX AI. Barcha huquqlar himoyalangan."
+    }
+  },
+  "logisticsRequest": {
+    "title": "Logistika kompaniyasiga ariza",
+    "heroTitle": "Tezkor logistika arizasi",
+    "heroBody": "Ariza yuboring — mutaxassislarimiz siz uchun eng qulay logistika yechimlari va operatorlarini tanlaydi.",
+    "cargoTitle": "Yuk haqida ma’lumot",
+    "cargoName": "Yuk nomi",
+    "cargoNamePlaceholder": "Polipropilen (PP)",
+    "volume": "Hajmi",
+    "volumeHint": "tonnada",
+    "packaging": "Qadoq turi",
+    "packagingPlaceholder": "Turini tanlang",
+    "requirements": "Maxsus talablar",
+    "requirementsPlaceholder": "Xavfsiz tashish, ADR",
+    "routeTitle": "Yo‘nalish",
+    "from": "Qayerdan",
+    "to": "Qayerga",
+    "country": "Davlat",
+    "countryPlaceholder": "Davlatni tanlang",
+    "city": "Shahar",
+    "submit": "Arizani yuborish",
+    "privacy": "Ma’lumotlaringiz himoyalangan va faqat logistika yechimlarini tanlash uchun ishlatiladi.",
+    "number": "Ariza raqami",
+    "doneTitle": "Ariza yuborildi!",
+    "doneBody": "Tashuvchi arizangizni oldi. Javob bildirishnomalarga keladi, shoshilinch savollarni telefon orqali hal qilamiz.",
+    "backToDirectory": "Tashuvchilar ro‘yxatiga",
+    "toCabinet": "Kabinetga",
+    "packagingOptions": {
+      "containers": "Konteynerlar",
+      "big_bags": "Big-beglar",
+      "bags": "Qoplar",
+      "bulk": "Uyum holida",
+      "pallets": "Palletalar",
+      "iso_tank": "ISO-tank",
+      "drums": "Bochkalar",
+      "other": "Boshqa"
+    },
+    "lifecycle": {
+      "submitted": "Yuborilgan",
+      "in_progress": "Ishlanmoqda",
+      "quoted": "Taklif bor"
+    },
+    "errors": {
+      "cargoRequired": "Yuk nomini kiriting",
+      "volumeInvalid": "Noldan katta hajm kiriting",
+      "countryRequired": "Davlatni tanlang"
+    },
+    "listTitle": "Logistika arizalari",
+    "emptyTitle": "Hozircha arizalar yo‘q",
+    "emptySentBody": "Tashuvchi profilini oching va ariza yuboring — u shu yerda paydo bo‘ladi.",
+    "myRequests": "Mening arizalarim",
+    "buyer": "Xaridor",
+    "contact": "Aloqa telefoni",
+    "broadcastHint": "Arizani barcha tekshirilgan logistika kompaniyalari ko‘radi.",
+    "ctaFromProfile": "Tashish arizasini joylashtirish",
+    "newRequest": "Yangi ariza",
+    "poolTitle": "Tashish arizalari",
+    "poolSubtitle": "Yuk egalarining ochiq arizalari. Javob bering va chatda davom eting.",
+    "tabAll": "Barcha arizalar",
+    "tabMine": "Mening javoblarim",
+    "poolEmptyTitle": "Hozircha ochiq arizalar yo‘q",
+    "poolEmptyBody": "Yuk egasi ariza joylashtirishi bilan u shu yerda paydo bo‘ladi.",
+    "poolEmptyMineBody": "Arizaga javob bering — u shu yerda paydo bo‘ladi.",
+    "reply": "Javob berish",
+    "openChat": "Chatni ochish",
+    "responsesTitle": "Tashuvchilar javoblari",
+    "noResponses": "Hozircha javoblar yo‘q",
+    "noResponsesBody": "Tashuvchilar arizangizni ko‘rmoqda. Birinchi javob shu yerda paydo bo‘ladi.",
+    "responseCount_one": "{{count}} javob",
+    "responseCount_other": "{{count}} javob"
+  },
+  "threadChat": {
+    "title": "Yozishmalar",
+    "empty": "Hozircha xabarlar yo‘q. Birinchi bo‘lib yozing.",
+    "placeholder": "Xabaringiz…",
+    "send": "Yuborish",
+    "attach": "Fayl biriktirish"
+  },
+  "labRequest": {
+    "title": "Tadqiqot arizasi",
+    "heroTitle": "Laboratoriyaga yangi ariza",
+    "heroBody": "Nimani tekshirish kerakligini yozing. Arizani barcha tekshirilgan laboratoriyalar ko‘radi.",
+    "stepSubject": "Nimani tekshiramiz",
+    "stepDetails": "Ariza ma’lumotlari",
+    "product": "Nimani tekshiramiz?",
+    "productPlaceholder": "HDPE S5502 BN",
+    "grade": "Marka",
+    "studyType": "Tadqiqot turi",
+    "studyTypePlaceholder": "Turini tanlang",
+    "methods": "Kerakli tadqiqotlar",
+    "methodsHint": "Kamida bitta ko‘rsatkichni belgilang",
+    "sampleQty": "Namuna miqdori",
+    "sampleQtyHint": "masalan, 1 kg",
+    "comment": "Izoh",
+    "commentPlaceholder": "Izoh kiriting",
+    "contactName": "Aloqa uchun shaxs",
+    "contactEmail": "Email",
+    "contactPhone": "Telefon",
+    "contactPhoneHint": "Ko‘rsatilmasa — akkauntingiz raqami olinadi",
+    "purpose": "Tadqiqot maqsadi",
+    "purposePlaceholder": "Maqsadni tanlang",
+    "urgent": "Shoshilinch tahlil kerakmi?",
+    "desiredDate": "Tayyor bo‘lish sanasi",
+    "submit": "Arizani yuborish",
+    "ctaFromProfile": "Tadqiqot arizasini joylashtirish",
+    "newRequest": "Yangi ariza",
+    "listTitle": "Laboratoriyaga arizalar",
+    "myRequests": "Mening arizalarim",
+    "laboratory": "Laboratoriya",
+    "buyer": "Buyurtmachi",
+    "contact": "Aloqa",
+    "number": "Ariza raqami",
+    "emptyTitle": "Hozircha arizalar yo‘q",
+    "emptySentBody": "Nimani tekshirish kerakligini yozing — arizani barcha laboratoriyalar ko‘radi.",
+    "doneTitle": "Ariza yuborildi!",
+    "doneBody": "Laboratoriyalar arizangizni oldi. Javoblar bildirishnomalarga keladi, tafsilotlarni yozishmada kelishasiz.",
+    "backToDirectory": "Laboratoriyalar ro‘yxatiga",
+    "toCabinet": "Kabinetga",
+    "poolTitle": "Tadqiqot arizalari",
+    "poolSubtitle": "Buyurtmachilarning ochiq arizalari. Javob bering va chatda davom eting.",
+    "tabAll": "Barcha arizalar",
+    "tabMine": "Mening javoblarim",
+    "poolEmptyTitle": "Hozircha ochiq arizalar yo‘q",
+    "poolEmptyBody": "Buyurtmachi ariza joylashtirishi bilan u shu yerda paydo bo‘ladi.",
+    "poolEmptyMineBody": "Arizaga javob bering — u shu yerda paydo bo‘ladi.",
+    "reply": "Javob berish",
+    "openChat": "Chatni ochish",
+    "responsesTitle": "Laboratoriyalar javoblari",
+    "noResponses": "Hozircha javoblar yo‘q",
+    "noResponsesBody": "Laboratoriyalar arizangizni ko‘rmoqda. Birinchi javob shu yerda paydo bo‘ladi.",
+    "responseCount_one": "{{count}} javob",
+    "responseCount_other": "{{count}} javob",
+    "lifecycle": {
+      "submitted": "Yuborilgan",
+      "in_progress": "Ishlanmoqda",
+      "quoted": "Taklif bor"
+    },
+    "errors": {
+      "productRequired": "Nimani tekshirish kerakligini yozing",
+      "methodsRequired": "Kamida bitta ko‘rsatkichni belgilang"
+    },
+    "methodOptions": {
+      "mfi": "ETI (MFI)",
+      "density": "Zichlik",
+      "tensile_strength": "Cho‘zilishdagi mustahkamlik",
+      "elongation": "Nisbiy cho‘zilish",
+      "impact_strength": "Zarbga qarshilik",
+      "dsc": "DSK (DSC)",
+      "ftir": "IQ-spektroskopiya (FTIR)",
+      "tga": "TGA",
+      "ash_content": "Kullilik",
+      "moisture": "Namlik",
+      "vicat": "Vika bo‘yicha yumshash harorati",
+      "hardness": "Qattiqlik",
+      "melting_point": "Erish harorati",
+      "carbon_black": "Qora uglerod miqdori",
+      "oit": "OIT",
+      "rheology": "Reologiya"
+    },
+    "studyTypes": {
+      "full_passport": "To‘liq laboratoriya pasporti",
+      "single_method": "Alohida ko‘rsatkich",
+      "comparison": "Qiyosiy tahlil",
+      "incoming_control": "Kirish nazorati",
+      "certification": "Sertifikatlash uchun"
+    },
+    "purposes": {
+      "quality_and_compatibility": "Sifat va uskuna bilan moslikni baholash",
+      "supplier_check": "Yetkazib beruvchini tekshirish",
+      "certification": "Sertifikatlash",
+      "dispute": "Nizoni hal qilish",
+      "rnd": "ITTKI"
+    }
   }
 }

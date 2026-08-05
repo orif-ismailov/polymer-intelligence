@@ -346,7 +346,7 @@ jobs:
   #   ghcr.io/<owner>/<repo>-backend    (backend/Dockerfile — api, worker, beat)
   #   ghcr.io/<owner>/<repo>-dashboard  (deploy/Dockerfile.dashboard)
   #   ghcr.io/<owner>/<repo>-webapp     (deploy/Dockerfile.webapp — Vite bundle)
-  #   ghcr.io/<owner>/<repo>-portal     (deploy/Dockerfile.portal — Vite bundle)
+  #   ghcr.io/<owner>/<repo>-portal     (deploy/Dockerfile.portal — SSR server)
   build-images:
     name: Build & push container images
     runs-on: ubuntu-latest
@@ -430,8 +430,8 @@ jobs:
 
       - name: Build & push portal bundle
         # The client cabinet (cabinet.ai-imex.com). Same one-shot-bundle shape as
-        # the webapp: the image carries only /dist, and the `portal-build` compose
-        # service copies it into the nginx-served portal_static volume. Without
+        # the webapp, but the image is now a RUNNABLE Node server rather than a
+        # /dist carrier: compose runs it as the `portal` service. Without
         # this image the deploy job would have to compile Vite on the 2-core box.
         uses: docker/build-push-action@v6
         with:
@@ -491,13 +491,14 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             $COMPOSE pull
             $COMPOSE up -d
-            # Static bundles: pull the prebuilt images and run the one-shot copies into
-            # the nginx-served volumes (no --build → nothing compiles on the box).
-            # BOTH are required on every deploy — a stale portal_static serves the
-            # previous cabinet build, and an empty one serves 404 at cabinet.*.
-            $COMPOSE --profile build pull webapp-build portal-build
+            # Web App bundle: still a one-shot copy into the nginx-served volume
+            # (no --build → nothing compiles on the box). A stale webapp_static
+            # serves the previous build; an empty one serves 404 at ai-imex.com.
+            $COMPOSE --profile build pull webapp-build
             $COMPOSE --profile build run --rm webapp-build
-            $COMPOSE --profile build run --rm portal-build
+            # The portal is NOT in that list any more: it is a long-running SSR
+            # service, refreshed by the `$COMPOSE pull` + `up -d` above. Running a
+            # `portal-build` one-shot here would now fail on an undefined service.
             $COMPOSE restart nginx
             $COMPOSE ps
             docker logout ghcr.io || true
@@ -556,13 +557,14 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             $COMPOSE pull
             $COMPOSE up -d
-            # Static bundles: pull the prebuilt images and run the one-shot copies into
-            # the nginx-served volumes (no --build → nothing compiles on the box).
-            # BOTH are required on every deploy — a stale portal_static serves the
-            # previous cabinet build, and an empty one serves 404 at cabinet.*.
-            $COMPOSE --profile build pull webapp-build portal-build
+            # Web App bundle: still a one-shot copy into the nginx-served volume
+            # (no --build → nothing compiles on the box). A stale webapp_static
+            # serves the previous build; an empty one serves 404 at ai-imex.com.
+            $COMPOSE --profile build pull webapp-build
             $COMPOSE --profile build run --rm webapp-build
-            $COMPOSE --profile build run --rm portal-build
+            # The portal is NOT in that list any more: it is a long-running SSR
+            # service, refreshed by the `$COMPOSE pull` + `up -d` above. Running a
+            # `portal-build` one-shot here would now fail on an undefined service.
             $COMPOSE restart nginx
             $COMPOSE ps
             docker logout ghcr.io || true

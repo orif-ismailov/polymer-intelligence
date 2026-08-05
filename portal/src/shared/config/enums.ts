@@ -112,6 +112,42 @@ export const AVAILABILITY = ["in_stock", "on_order"] as const;
 export type Availability = (typeof AVAILABILITY)[number];
 
 /**
+ * The `OfferFileKind` that is a product photo. Everything else attached to an
+ * offer is a document (TDS, SDS, COA, certificate, lab passport).
+ *
+ * Named here rather than typed at each call site because it was got wrong: the
+ * whole storefront filtered for `"photo"`, which the backend never emits, so no
+ * public page displayed an offer photo and `og:image` was permanently absent.
+ * A string literal repeated in five files is a bug waiting for the sixth.
+ */
+export const OFFER_PHOTO_KIND = "image";
+
+/**
+ * The offer-file shape every tier can supply.
+ *
+ * `file_name` is optional because the public payload omits it (`PublicOfferFile`
+ * is `{id, kind}` — an uploader's filename is not a public register fact), while
+ * the cabinet's `OfferFileRef` always carries one. Lives in `shared` so both
+ * `features/product-detail` and `features/company-profile` can name it without
+ * importing each other.
+ */
+export interface OfferFileLike {
+  id: number;
+  kind: string;
+  file_name?: string;
+}
+
+/** Photos of an offer, in upload order (cover first). */
+export function offerPhotoFiles<T extends { kind: string }>(files: readonly T[]): T[] {
+  return files.filter((f) => f.kind === OFFER_PHOTO_KIND);
+}
+
+/** Everything on an offer that is NOT a photo — the documents strip and tab. */
+export function offerDocumentFiles<T extends { kind: string }>(files: readonly T[]): T[] {
+  return files.filter((f) => f.kind !== OFFER_PHOTO_KIND);
+}
+
+/**
  * How a seller trades an offer (backend `OfferSaleMode`). Orthogonal to
  * `AVAILABILITY`, which says whether the goods exist right now.
  */

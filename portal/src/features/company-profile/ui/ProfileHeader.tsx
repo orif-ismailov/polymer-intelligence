@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import type { PublicCompanyProfile } from "@/entities/market";
 import { BusinessRoleBadges } from "@/entities/market";
 import { coerceLang } from "@/shared/i18n";
 import { countryName, formatDate } from "@/shared/lib";
@@ -15,8 +14,10 @@ import {
   StarIcon,
 } from "@/shared/ui";
 
+import type { CompanyProfileCompany } from "../model/types";
+
 interface ProfileHeaderProps {
-  profile: PublicCompanyProfile;
+  profile: CompanyProfileCompany;
   onShare: () => void;
   /** Prefer a fixed back target when history may leave the cabinet flow. */
   backTo?: string;
@@ -43,13 +44,31 @@ export function ProfileHeader({ profile, onShare, backTo }: ProfileHeaderProps) 
         >
           <ChevronLeftIcon size={20} />
         </IconButton>
-        <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-text">
+        {/* The breadcrumb label, not the page heading. The company's NAME is the
+            `h1` below — on the storefront this sheet is a company's landing
+            page, and «Профиль компании» as its heading would be the same h1 on
+            every one of them. */}
+        <p className="min-w-0 flex-1 truncate text-base font-semibold text-text">
           {t("companyProfile.title")}
-        </h1>
+        </p>
         <IconButton label={t("market.detail.share")} onClick={onShare}>
           <ShareIcon size={18} />
         </IconButton>
       </header>
+
+      {/* Hero, when the company uploaded one. Absent rather than a grey
+          placeholder: a company with no cover should read as a plain profile,
+          not as one with a broken image. */}
+      {profile.cover_url ? (
+        <div className="overflow-hidden rounded-xl border border-border">
+          <img
+            src={profile.cover_url}
+            alt=""
+            className="h-40 w-full object-cover sm:h-52"
+            data-testid="company-cover"
+          />
+        </div>
+      ) : null}
 
       <div className="flex items-start gap-3">
         {profile.logo_url ? (
@@ -65,7 +84,7 @@ export function ProfileHeader({ profile, onShare, backTo }: ProfileHeaderProps) 
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <h2 className="text-xl font-semibold leading-tight text-text">{name}</h2>
+            <h1 className="text-xl font-semibold leading-tight text-text">{name}</h1>
             <CheckCircleIcon size={18} className="shrink-0 text-brand" />
           </div>
           <p className="mt-0.5 text-sm text-text-muted">{t("companyProfile.officialSupplier")}</p>
@@ -75,10 +94,26 @@ export function ProfileHeader({ profile, onShare, backTo }: ProfileHeaderProps) 
               {country}
             </p>
           ) : null}
-          <p className="mt-1.5 flex items-center gap-1 text-sm text-text-subtle">
-            <StarIcon size={14} className="text-gold" />
-            {t("market.detail.ratingPending")}
-          </p>
+          {/* The real score once anyone has left one; the placeholder is not a
+              stand-in for zero — a company with no reviews has not been rated
+              badly, it has not been rated. */}
+          {profile.rating != null && (profile.review_count ?? 0) > 0 ? (
+            <p
+              className="mt-1.5 flex items-center gap-1.5 text-sm text-text"
+              data-testid="company-rating"
+            >
+              <StarIcon size={14} className="text-gold" />
+              <span className="num font-semibold">{profile.rating.toFixed(1)}</span>
+              <span className="text-text-muted">
+                {t("companyProfile.reviewCount", { count: profile.review_count ?? 0 })}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1.5 flex items-center gap-1 text-sm text-text-subtle">
+              <StarIcon size={14} className="text-gold" />
+              {t("market.detail.ratingPending")}
+            </p>
+          )}
         </div>
       </div>
 

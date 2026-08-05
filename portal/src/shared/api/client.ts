@@ -8,12 +8,14 @@
  *    `/api/v1/portal`) travels with requests.
  *  - On a 401 it performs a single silent `POST /portal/auth/refresh`, swaps in
  *    the new token, and retries the original request exactly once. If refresh
- *    fails it clears auth and hard-navigates to `/login`.
+ *    fails it clears auth, and hard-navigates to `/cabinet/login` ONLY from a page that
+ *    requires a session — never from the public marketplace, where being signed
+ *    out is the normal state.
  *
  * The refresh is de-duplicated: concurrent 401s share one in-flight refresh.
  */
 
-import { API_BASE } from "@/shared/config";
+import { API_BASE, isCabinetPath, SERVER_API_ORIGIN } from "@/shared/config";
 
 import { clearAuth, getAuthToken, setAuthToken } from "./authBridge";
 
@@ -55,7 +57,10 @@ interface RequestOptions {
 const REFRESH_PATH = "/portal/auth/refresh";
 
 function buildUrl(path: string, query?: Query): string {
-  const url = `${API_BASE}${path}`;
+  // `SERVER_API_ORIGIN` is "" in the browser, so this is the same relative URL
+  // it has always been there; under SSR it becomes the internal API address,
+  // because Node cannot resolve a root-relative URL on its own.
+  const url = `${SERVER_API_ORIGIN}${API_BASE}${path}`;
   if (!query) return url;
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
@@ -136,11 +141,27 @@ function refreshOnce(): Promise<boolean> {
   return refreshInFlight;
 }
 
+/**
+ * Clear the session, and bounce to /login only from a page that needs one.
+ *
+ * A 401 means "you are not signed in". On a cabinet screen that is a dead end
+ * and the login form is the answer. On the public marketplace it is the normal
+ * state of most visitors, and navigating them away from the storefront because a
+ * background call needed a session would be a bug they experience as the site
+ * kicking them out.
+ *
+ * The test is "am I inside the cabinet", not "am I on a known public page".
+ * Those are not the same question: the old whitelist also bounced `/dev/ui` and
+ * every 404, because anything it did not recognise looked authenticated to it.
+ */
 function redirectToLogin(): void {
   clearAuth();
-  if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-    window.location.assign("/login");
-  }
+  if (typeof window === "undefined") return;
+
+  const path = window.location.pathname;
+  if (path === "/cabinet/login" || !isCabinetPath(path)) return;
+
+  window.location.assign("/cabinet/login");
 }
 
 // ── Core ─────────────────────────────────────────────────────────────────────

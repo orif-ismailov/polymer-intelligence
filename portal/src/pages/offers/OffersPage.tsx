@@ -107,7 +107,7 @@ function OfferCard({
 
         <div className="flex justify-end gap-3 border-t border-border pt-3">
           {offer.status === "approved" ? (
-            <LinkButton size="sm" variant="secondary" to={`/contracts/new?offerId=${offer.id}`}>
+            <LinkButton size="sm" variant="secondary" to={`/cabinet/contracts/new?offerId=${offer.id}`}>
               {t("contracts.create")}
             </LinkButton>
           ) : null}
@@ -144,7 +144,7 @@ export function OffersPage() {
           icon={<RegistryIcon size={28} />}
         title={t("home.noActiveCompany")}
         description={t("home.noActiveCompanyBody")}
-        action={<LinkButton to="/companies/new/1">{t("companies.create")}</LinkButton>}
+        action={<LinkButton to="/cabinet/companies/new/1">{t("companies.create")}</LinkButton>}
       />
     );
   }
@@ -160,7 +160,7 @@ export function OffersPage() {
       <PageHeader
         title={t("offers.title")}
         subtitle={t("offers.subtitle", { company: companyName })}
-        actions={<LinkButton to="/offers/new">{t("offers.create")}</LinkButton>}
+        actions={<LinkButton to="/cabinet/offers/new">{t("offers.create")}</LinkButton>}
       />
 
       {offersQuery.isLoading ? (
@@ -182,7 +182,7 @@ export function OffersPage() {
               offer={offer}
               lang={lang}
               onArchive={setArchiveId}
-              onEdit={(id) => navigate(`/offers/${id}`)}
+              onEdit={(id) => navigate(`/cabinet/offers/${id}`)}
             />
           ))}
         </div>
@@ -191,7 +191,7 @@ export function OffersPage() {
           icon={<BoxIcon size={28} />}
           title={t("offers.empty")}
           description={t("offers.emptyBody")}
-          action={<LinkButton to="/offers/new">{t("offers.create")}</LinkButton>}
+          action={<LinkButton to="/cabinet/offers/new">{t("offers.create")}</LinkButton>}
         />
       )}
 

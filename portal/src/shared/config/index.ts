@@ -1,7 +1,42 @@
 export * from "./enums";
 
+export * from "./publicRoutes";
+
 /** Relative base — the SPA calls the API same-origin (dev proxy / prod nginx). */
 export const API_BASE = "/api/v1";
+
+/**
+ * Origin to prefix onto {@link API_BASE} when a fetch runs OUTSIDE a browser.
+ *
+ * `fetch("/api/v1/…")` has no meaning in Node: there is no document to resolve
+ * the relative URL against, so the SSR render would throw on its first request.
+ * In the browser this stays `""` and every call remains same-origin, which is
+ * what keeps the httpOnly refresh cookie working and CORS out of the picture.
+ *
+ * The server value is the INTERNAL address of the API (`http://api:8000` under
+ * compose), never the public hostname — the render happens inside the network,
+ * so it should not leave it and come back through nginx.
+ */
+export const SERVER_API_ORIGIN: string =
+  typeof window === "undefined"
+    ? (globalThis as { __INTERNAL_API_ORIGIN__?: string }).__INTERNAL_API_ORIGIN__ ?? ""
+    : "";
+
+/**
+ * Public origin the storefront is served from, used to build absolute canonical
+ * / og:url / sitemap URLs.
+ *
+ * Injected by the SSR server from `PUBLIC_SITE_ORIGIN` and read from a global on
+ * the client, so moving the marketplace to another domain is one env var and no
+ * rebuild. Empty means "derive from the current location", which is right for
+ * dev and for a browser-only render.
+ */
+export function publicSiteOrigin(): string {
+  const injected = (globalThis as { __PUBLIC_SITE_ORIGIN__?: string }).__PUBLIC_SITE_ORIGIN__;
+  if (injected) return injected.replace(/\/+$/, "");
+  if (typeof window !== "undefined") return window.location.origin;
+  return "";
+}
 
 /** localStorage key for the last-selected active company id. */
 export const ACTIVE_COMPANY_KEY = "portal.activeCompanyId";

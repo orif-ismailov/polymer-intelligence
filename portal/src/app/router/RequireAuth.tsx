@@ -7,7 +7,8 @@ import { LoadingView } from "@/shared/ui";
 /**
  * Route guard for authenticated pages. While the boot-time session restore is
  * in flight it renders a spinner; once resolved, anonymous users are redirected
- * to /login (preserving the attempted path for post-login return).
+ * to /cabinet/login, carrying the attempted location so the OTP screen can
+ * return them to it.
  */
 export function RequireAuth() {
   const { t } = useTranslation();
@@ -24,7 +25,13 @@ export function RequireAuth() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return (
+      <Navigate
+        to="/cabinet/login"
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+      />
+    );
   }
 
   return <Outlet />;

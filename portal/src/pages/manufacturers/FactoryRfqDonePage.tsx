@@ -5,7 +5,7 @@ import { useActiveCompany } from "@/entities/company";
 import { FactoryRfqDone } from "@/features/factory-rfq";
 import { LoadingView } from "@/shared/ui";
 
-/** `/manufacturers/rfqs/:rfqId/done` — the closing sheet of the factory RFQ flow. */
+/** `/cabinet/manufacturers/rfqs/:rfqId/done` — the closing sheet of the factory RFQ flow. */
 export function FactoryRfqDonePage() {
   const { t } = useTranslation();
   const params = useParams<{ rfqId: string }>();

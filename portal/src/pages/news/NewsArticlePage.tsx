@@ -13,9 +13,10 @@ import {
   LoadingView,
   PageHeader,
 } from "@/shared/ui";
-import { formatDate } from "@/shared/lib";
+import { formatDate, useTierBase } from "@/shared/lib";
 
 export function NewsArticlePage() {
+  const base = useTierBase();
   const { t, i18n } = useTranslation();
   const { signalId: idParam } = useParams<{ signalId: string }>();
   const signalId = idParam ? Number(idParam) : null;
@@ -26,7 +27,7 @@ export function NewsArticlePage() {
     return (
       <div className="space-y-4">
         <Alert tone="danger">{t("news.notFound")}</Alert>
-        <LinkButton to="/news" variant="secondary">
+        <LinkButton to={`${base}/news`} variant="secondary">
           {t("news.back")}
         </LinkButton>
       </div>
@@ -39,7 +40,7 @@ export function NewsArticlePage() {
   return (
     <article className="space-y-6">
       <PageHeader
-        backTo="/news"
+        backTo={`${base}/news`}
         backLabel={t("news.back")}
         title={a.headline}
         badge={

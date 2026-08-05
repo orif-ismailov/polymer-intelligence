@@ -42,6 +42,16 @@
   --accent-gold: #eab308;
   --accent-gold-fg: #241a00;
 
+  /*
+   * The storefront hero's search field. Its own pair rather than a surface tone
+   * because the mockup puts a BRIGHT pill on the dark hero — that is the one
+   * control on the page that inverts on purpose. It used to be written at the
+   * call site as `color-mix(--text 97%)`, which silently flipped to a black bar
+   * in the light theme (a --text inversion is only "bright" while --text is).
+   */
+  --hero-field: #f2f6f3;
+  --hero-field-fg: #0c110e;
+
   --success: #22c55e;
   --warning: #eab308;
   --danger: #f05252;
@@ -53,6 +63,15 @@
 
   /* Accent glow behind brand CTAs / active nav — mockups light the green up. */
   --brand-glow: 0 0 24px color-mix(in srgb, var(--brand) 35%, transparent);
+
+  /*
+   * Lift under the hero's search shell, which floats on a photograph rather
+   * than on a surface. Themed because a shadow is a colour: the dark theme's
+   * 38% black is what separates the field from a night-lit skyline, and the
+   * same value on the light page cast a grey halo over the popular-query row
+   * below it — measured at 3.81:1 against `--text-muted`, under AA.
+   */
+  --hero-lift: 0 18px 50px rgb(0 0 0 / 0.38);
 
   --radius-lg: 1rem;
   --radius-md: 0.75rem;
@@ -83,7 +102,20 @@
   --accent-gold: #8a6100;
   --accent-gold-fg: #ffffff;
 
-  --success: #157f3c;
+  /* Light theme: the field is the page's brightest plane, so it stays white and
+     leans on the hairline the component draws rather than on a tone shift. */
+  --hero-field: #ffffff;
+  --hero-field-fg: #0d1210;
+
+  /*
+   * The same green as `--brand`, deliberately. Dark theme already makes them one
+   * colour (`#22c55e`); light theme darkened `--brand` for AA and left
+   * `--success` a step lighter, which was invisible for as long as `bg-success/10`
+   * compiled to nothing — the badge label was measured against plain white. Now
+   * that the tint paints, `#157f3c` on it lands at 4.44:1, just under AA. Same
+   * hardening, same reason, now applied to both.
+   */
+  --success: #0d6e31;
   --warning: #8a6100;
   --danger: #b91c1c;
   --danger-fg: #ffffff;
@@ -92,6 +124,10 @@
   --overlay: rgb(9 14 11 / 0.45);
 
   --brand-glow: 0 0 20px color-mix(in srgb, var(--brand) 22%, transparent);
+
+  /* Shorter throw and a fraction of the opacity: on a bright page the field is
+     already separated by its own edge, and depth is all this has to add. */
+  --hero-lift: 0 10px 26px rgb(9 14 11 / 0.1);
 
   color-scheme: light;
 }
@@ -138,6 +174,61 @@ body {
   .num {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
+  }
+
+  /*
+   * Blueprint grid behind the storefront hero's copy column — the one piece of
+   * decoration that is a pattern rather than a colour, so it cannot be expressed
+   * as a Tailwind class. Ruled in `--border`, i.e. the same hairline every card
+   * on the page is drawn with, so it reads as structure and not as texture.
+   *
+   * The mask fades it out before it reaches the photo; `black`/`transparent`
+   * here are alpha stops, not palette values — a mask discards the colour
+   * channels entirely.
+   */
+  .hero-grid {
+    background-image:
+      repeating-linear-gradient(to right, var(--border) 0 1px, transparent 1px 5.5rem),
+      repeating-linear-gradient(to bottom, var(--border) 0 1px, transparent 1px 5.5rem);
+    -webkit-mask-image: radial-gradient(115% 95% at 0% 45%, black 0%, transparent 60%);
+    mask-image: radial-gradient(115% 95% at 0% 45%, black 0%, transparent 60%);
+  }
+}
+
+/*
+ * Scroll-reveal, driven by `shared/lib/useReveal`. A section root carries
+ * `data-revealed`; anything inside it marked `data-reveal` animates in, offset
+ * by its own `--reveal-delay` for the stagger.
+ *
+ * The keyframe is declared HERE rather than in `tailwind.config.ts` on purpose:
+ * Tailwind only emits a keyframe when the matching `animate-*` utility is
+ * generated, and nothing references one — the rule below is the only consumer,
+ * so a config-side definition would be tree-shaken away and this would silently
+ * animate nothing.
+ *
+ * Both rules require `data-revealed` to exist, and the server never renders it
+ * (see the hook). No attribute, no match, content visible — which is the state
+ * a crawler and a JS-less visitor get.
+ */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.75rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-revealed="false"] [data-reveal] {
+    opacity: 0;
+  }
+
+  [data-revealed="true"] [data-reveal] {
+    animation: reveal-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
   }
 }
 

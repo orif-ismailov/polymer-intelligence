@@ -21,5 +21,9 @@ smoke: ## Run the full-stack production-compose smoke (D-02, synthetic data + pl
 webapp-bundle: ## Build the Telegram Web App and load it into the webapp_static volume (nginx serves /webapp/)
 	$(COMPOSE) --profile build run --rm --build webapp-build
 
-portal-bundle: ## Build the client portal and load it into the portal_static volume (nginx serves cabinet.*)
-	$(COMPOSE) --profile build run --rm --build portal-build
+portal-bundle: ## Rebuild + restart the SSR portal service (nginx proxies cabinet.*)
+	# The portal is no longer a bundle copied into a volume: it is a long-running
+	# Node process that server-renders the public marketplace routes. The target
+	# keeps its name so existing runbooks and muscle memory still work.
+	$(COMPOSE) build portal
+	$(COMPOSE) up -d portal

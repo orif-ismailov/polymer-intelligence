@@ -28,7 +28,7 @@ export function NotificationBell() {
     if (!n.read_at) markRead.mutate({ ids: [n.id] });
     setOpen(false);
     const to = notificationLink(n.entity, n.entity_id);
-    void navigate(to ?? "/notifications");
+    void navigate(to ?? "/cabinet/notifications");
   }
 
   return (
@@ -107,7 +107,7 @@ export function NotificationBell() {
                 type="button"
                 onClick={() => {
                   setOpen(false);
-                  void navigate("/notifications");
+                  void navigate("/cabinet/notifications");
                 }}
                 className="text-sm text-brand hover:underline"
               >

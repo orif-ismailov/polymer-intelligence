@@ -15,11 +15,11 @@ export function MobileNav() {
   const { t } = useTranslation();
 
   const items: BottomNavItem[] = [
-    { to: "/", label: t("nav.home"), icon: HomeIcon, end: true },
-    { to: "/requests", label: t("nav.requests"), icon: DocIcon },
+    { to: "/cabinet", label: t("nav.home"), icon: HomeIcon, end: true },
+    { to: "/cabinet/requests", label: t("nav.requests"), icon: DocIcon },
     { to: "/market", label: t("nav.market"), icon: StoreIcon },
-    { to: "/deals", label: t("nav.deals"), icon: HandshakeIcon },
-    { to: "/settings", label: t("nav.settings"), icon: CogIcon },
+    { to: "/cabinet/deals", label: t("nav.deals"), icon: HandshakeIcon },
+    { to: "/cabinet/settings", label: t("nav.settings"), icon: CogIcon },
   ];
 
   return <BottomNav items={items} />;

@@ -1,5 +1,20 @@
 # Polymer Intelligence — Спецификация реализации (для разработчиков)
 
+> **⚠️ Исторический документ.** Это спецификация исходного проектного замысла, написанная
+> до/во время первичной реализации. Она **не поддерживается** в актуальном состоянии и
+> **не отражает** текущее состояние кода. За точной информацией обращайтесь к актуальным
+> каноническим документам: [`docs/ARCHITECTURE.md`](ARCHITECTURE.md), [`docs/API.md`](API.md),
+> [`docs/CONFIGURATION.md`](CONFIGURATION.md), [`docs/DEVELOPMENT.md`](DEVELOPMENT.md),
+> [`docs/TESTING.md`](TESTING.md), [`docs/GETTING-STARTED.md`](GETTING-STARTED.md).
+>
+> Известные основные расхождения с текущим кодом: `parsing/` находится в `backend/parsing/`
+> (а не `backend/app/parsing/`), экстрактор называется `extractor.py` (а не `llm_extract.py`);
+> `telegram/` и `userbot/` — пакеты в корне репозитория (а не вложены в `backend/`);
+> `counterparty_service`, `price_service` и группа эндпоинтов `/counterparties*` так и не были
+> реализованы; `docs/runbook.md` и `deploy/restore.sh` не существуют; прогон eval-тестов
+> экстракции выполняется через `python -m parsing.eval_cli` (цели `make eval-extraction` нет);
+> dashboard работает на Next.js 16.2.6 (а не «14+»).
+
 Версия 1.0 · 12.06.2026
 Основание: клиентское ТЗ v1.0 (polymer-intelligence-tz.md) + схема БД (polymer-intelligence-db-architecture.md).
 Этот документ отвечает на вопрос «как строим», клиентское ТЗ — «что и зачем». При противоречии приоритет у клиентского ТЗ.

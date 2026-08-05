@@ -34,15 +34,21 @@ from app.schemas.portal_company import (
     CheckOut,
     CompanyCreateIn,
     CompanyDetailOut,
+    CompanyMediaOut,
     CompanyProfileUpdateIn,
+    CompanyReviewIn,
+    CompanyReviewOut,
     CompanySummaryOut,
     DocumentOut,
+    PublicProfileUpdateIn,
     RolesUpdateIn,
 )
 from app.services import (
     audit_service,
     company_service,
+    directory_service,
     rate_limit,
+    review_service,
     storage_service,
     verification_service,
 )
@@ -124,6 +130,8 @@ def _summary_out(db: Session, company: Company) -> CompanySummaryOut:
         status=str(company.status),
         verified_at=company.verified_at,
         logo_url=storage_service.presign_company_logo(company),
+        cover_url=storage_service.presign_company_cover(company),
+        confirmed_roles=directory_service.confirmed_roles(company),
         active_case=_case_out(db, active),
     )
 
@@ -164,6 +172,7 @@ def _detail_out(db: Session, company: Company) -> CompanyDetailOut:
         verified_at=company.verified_at,
         reverification_due_at=company.reverification_due_at,
         logo_url=storage_service.presign_company_logo(company),
+        cover_url=storage_service.presign_company_cover(company),
         roles=[BusinessRoleOut(role=str(r.role), status=str(r.status)) for r in company.business_roles],
         bank_accounts=[
             BankAccountOut(
@@ -260,6 +269,97 @@ def update_company(
         ) from exc
     db.commit()
     return _detail_out(db, company)
+
+
+@router.patch("/{company_id}/public-profile", response_model=CompanyDetailOut)
+def update_public_profile(
+    company_id: int,
+    body: PublicProfileUpdateIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> CompanyDetailOut:
+    """PATCH /portal/companies/{id}/public-profile — storefront copy, post-verification.
+
+    Deliberately NOT part of `PATCH /{company_id}`: that route is gated on the
+    company still being editable (`draft`, or a case still undecided), and a
+    carrier only reaches a public directory once it is `verified` — the one state
+    that gate refuses. See `company_service.update_public_profile` for why the
+    answer is a narrower door rather than a wider gate.
+
+    Owner/manager only: this is the text on the company's public page.
+    """
+    company = _company_or_404(db, account, company_id)
+    _require_company_admin(db, account, company_id)
+    company_service.update_public_profile(
+        db,
+        company,
+        account,
+        # `exclude_unset`: an absent key means "leave it alone", not "clear it".
+        logistics=(
+            body.logistics.model_dump(exclude_unset=True) if body.logistics else None
+        ),
+        laboratory=(
+            body.laboratory.model_dump(exclude_unset=True) if body.laboratory else None
+        ),
+    )
+    db.commit()
+    return _detail_out(db, company)
+
+
+@router.post(
+    "/{company_id}/reviews",
+    response_model=CompanyReviewOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def submit_review(
+    company_id: int,
+    body: CompanyReviewIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> CompanyReviewOut:
+    """POST /portal/companies/{id}/reviews — rate a counterparty.
+
+    A portal write, not a public one: `tests/test_public_api.py` asserts no route
+    on the anonymous router takes an account, and a review that anyone could post
+    without one would be a spam surface rather than a signal.
+
+    Re-submitting replaces the author company's existing review — a review is a
+    standing opinion per counterparty, so the second one is an edit, not a
+    duplicate the UI would have to explain.
+    """
+    author = _company_or_404(db, account, body.company_id)
+    try:
+        subject = review_service.get_reviewable_company(db, company_id)
+    except review_service.ReviewSubjectNotFound as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
+        ) from exc
+
+    try:
+        review = review_service.upsert_review(
+            db,
+            subject=subject,
+            author=author,
+            account=account,
+            rating=body.rating,
+            body=body.body,
+        )
+    except review_service.SelfReview as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="self_review"
+        ) from exc
+
+    db.commit()
+    db.refresh(review)
+    return CompanyReviewOut(
+        id=review.id,
+        company_id=review.company_id,
+        author_company_id=review.author_company_id,
+        rating=review.rating,
+        body=review.body,
+        status=str(review.status),
+        created_at=review.created_at,
+    )
 
 
 @router.put("/{company_id}/roles", response_model=CompanyDetailOut)
@@ -393,6 +493,103 @@ def delete_logo(
         )
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{company_id}/cover",
+    response_model=CompanyDetailOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload or replace the company cover image",
+)
+async def upload_cover(
+    company_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> CompanyDetailOut:
+    """JPEG/PNG ≤ 8 MB. Replacing deletes the previous object.
+
+    Available to a VERIFIED company, unlike the profile PATCH: a cover is brand
+    material, not a requisite anyone checked — the same reasoning as
+    `PATCH /public-profile`.
+    """
+    company = _company_or_404(db, account, company_id)
+    _require_company_admin(db, account, company_id)
+
+    content = await file.read()
+    try:
+        key = storage_service.upload_company_cover(db, company, content, file.filename or "cover")
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+
+    audit_service.write_audit(
+        db, None, "company.cover_upload", "company", str(company.id),
+        {"actor_account_id": account.id, "key": key},
+    )
+    db.commit()
+    return _detail_out(db, company)
+
+
+@router.delete(
+    "/{company_id}/cover",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove the company cover image",
+)
+def delete_cover(
+    company_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> Response:
+    """Idempotent — removing an absent cover is a 204, not a 404."""
+    company = _company_or_404(db, account, company_id)
+    _require_company_admin(db, account, company_id)
+
+    storage_service.delete_company_cover(db, company)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{company_id}/media",
+    response_model=CompanyMediaOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload one company image (capability thumbnails)",
+)
+async def upload_media(
+    company_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> CompanyMediaOut:
+    """Returns the media id + its URL; the caller stores the reference itself.
+
+    For carriers that reference is `logistics_profile.capability_images`, keyed by
+    capability — so the JSONB stays the ordering authority and a reorder cannot
+    orphan a row.
+    """
+    company = _company_or_404(db, account, company_id)
+    _require_company_admin(db, account, company_id)
+
+    content = await file.read()
+    try:
+        media = storage_service.upload_company_media(
+            db, company, content, file.filename or "image"
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+
+    db.commit()
+    db.refresh(media)
+    return CompanyMediaOut(
+        id=media.id,
+        url=storage_service.company_media_url(company.id, media.id),
+        mime_type=media.mime_type,
+        size_bytes=media.size_bytes,
+    )
 
 
 @router.post("/{company_id}/documents", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
