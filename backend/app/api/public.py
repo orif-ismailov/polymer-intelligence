@@ -24,6 +24,8 @@ not a per-route dependency here.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -48,7 +50,7 @@ from app.schemas.public import (
     PublicSitemapOut,
     PublicStatsOut,
 )
-from app.schemas.reports import NewsArticleCard
+from app.schemas.reports import NewsArticleCard, NewsArticleDetail, NewsFilterOptions
 from app.services import (
     directory_service,
     laboratory_service,
@@ -392,6 +394,99 @@ def list_public_news(
     """
     articles = news_service.list_news_articles(db, limit=limit, days=days, lang=lang)
     return [NewsArticleCard.model_validate(a) for a in articles]
+
+
+# ── The news reader ───────────────────────────────────────────────────────────
+#
+# `/news` above is the storefront home's three-card rail. These three are the
+# reader behind it: the same surface `/webapp/news/articles*` and
+# `/portal/news/articles*` serve, to a caller with no session.
+#
+# It is a third copy of those signatures, and that is the deliberate cost of the
+# rule this module opens with: a public route may not be a private route with the
+# dependency left off, because then the two differ by a line anyone can delete.
+# What is actually shared is everything below the router -- `news_service` decides
+# what a news article IS, and `NewsArticleCard` decides which of its fields leave
+# the building. Neither can be widened here.
+#
+# The portal's news page reads THESE, not `/portal/news/*`: `/news` is a public,
+# server-rendered, indexable URL, and a page a crawler must read cannot be behind
+# `get_current_account`.
+
+NewsScope = Literal["all", "uzbekistan", "global", "producers"]
+NewsSort = Literal["newest", "importance", "category", "products", "country", "company"]
+NewsImportanceFilter = Literal["high", "medium", "low"]
+
+
+@router.get(
+    "/news/articles",
+    response_model=list[NewsArticleCard],
+    summary="News article cards, filtered",
+)
+def list_public_news_articles(
+    limit: int = Query(default=30, ge=1, le=100),
+    days: int = Query(default=7, ge=1, le=30),
+    q: str | None = Query(default=None, max_length=100),
+    scope: NewsScope | None = Query(default=None),
+    category: str | None = Query(default=None, max_length=60),
+    country: str | None = Query(default=None, max_length=60),
+    company: str | None = Query(default=None, max_length=80),
+    product: str | None = Query(default=None, max_length=40),
+    importance: NewsImportanceFilter | None = Query(default=None),
+    source_id: int | None = Query(default=None, ge=1),
+    sort: NewsSort | None = Query(default=None),
+    lang: str | None = Query(default=None, max_length=8),
+    db: Session = Depends(get_db),
+) -> list[NewsArticleCard]:
+    """GET /public/news/articles -- the reader's list, with every filter."""
+    articles = news_service.list_news_articles(
+        db,
+        limit=limit,
+        days=days,
+        q=q,
+        # "all" is the tab's name for no scope at all, not a scope the service knows.
+        scope=None if scope == "all" else scope,
+        category=category,
+        country=country,
+        company=company,
+        product=product,
+        importance=importance,
+        source_id=source_id,
+        sort=sort,
+        lang=lang,
+    )
+    return [NewsArticleCard.model_validate(a) for a in articles]
+
+
+# Declared before /articles/{signal_id} so "filters" is not parsed as a signal id.
+@router.get(
+    "/news/articles/filters",
+    response_model=NewsFilterOptions,
+    summary="News filter facets",
+)
+def public_news_filters(
+    days: int = Query(default=30, ge=1, le=90),
+    db: Session = Depends(get_db),
+) -> NewsFilterOptions:
+    """GET /public/news/articles/filters -- the facet values, with counts."""
+    return NewsFilterOptions.model_validate(news_service.list_news_filter_options(db, days=days))
+
+
+@router.get(
+    "/news/articles/{signal_id}",
+    response_model=NewsArticleDetail,
+    summary="One news article",
+)
+def get_public_news_article(
+    signal_id: int,
+    lang: str | None = Query(default=None, max_length=8),
+    db: Session = Depends(get_db),
+) -> NewsArticleDetail:
+    """GET /public/news/articles/{id} -- one article, or 404."""
+    article = news_service.get_news_article(db, signal_id, lang=lang)
+    if article is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found")
+    return NewsArticleDetail.model_validate(article)
 
 
 # ── SEO ───────────────────────────────────────────────────────────────────────

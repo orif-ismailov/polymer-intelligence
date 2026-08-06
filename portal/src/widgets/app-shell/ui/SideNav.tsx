@@ -66,7 +66,8 @@ const NAV_ITEMS: NavItem[] = [
     // «Заявки» instead, so this entry would only ever be an empty page for one.
     hideForCarrier: true,
   },
-  { to: "/cabinet/news", labelKey: "nav.news", icon: NewsIcon },
+  // Out to the public reader — news has no cabinet twin any more.
+  { to: "/news", labelKey: "nav.news", icon: NewsIcon },
   { to: "/cabinet/companies", labelKey: "nav.companies", icon: BuildingIcon },
   { to: "/cabinet/offers", labelKey: "nav.offers", icon: TagIcon },
   { to: "/cabinet/contracts", labelKey: "nav.contracts", icon: ContractIcon },

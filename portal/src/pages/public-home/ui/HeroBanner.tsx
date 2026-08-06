@@ -1,4 +1,3 @@
-import { ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
@@ -44,10 +43,16 @@ const FETCH_PRIORITY_HIGH: Record<string, string> = { fetchpriority: "high" };
  *   four-cell rail, which restated products / companies / countries roughly a
  *   screen above the closing `ProofBand` that now states them at display size.
  *   One page saying the same three numbers twice weakens both, so the figures
- *   belong to the close and the hero keeps the qualitative promise: the eyebrow,
- *   the headline, the search. What the rail also provided was the seam into the
+ *   belong to the close and the hero keeps the qualitative promise: the
+ *   headline and the search. What the rail also provided was the seam into the
  *   directory cards — that job passes to this section's own bottom hairline,
  *   which reaches both viewport edges the same way the rail's did.
+ * - **The scrims fall off rather than thin out.** An earlier stack held a heavy
+ *   wash across the whole band, which bought contrast everywhere and cost the
+ *   photograph — the trade-route map that is the reason this image was chosen
+ *   was barely legible under it. What replaced it keeps the scrim strong where
+ *   the copy sits and drops it to nothing across the right, where no text is
+ *   painted. Same protection, applied where it is needed instead of uniformly.
  */
 export function HeroBanner() {
   const { t } = useTranslation();
@@ -117,40 +122,77 @@ export function HeroBanner() {
       */}
       {/* 1. Vertical: solid at both ends, thin through the middle. This is the
              layer that removes the seam under the header and the seam into the
-             rail, which is why its two END stops stay at `--bg` while the body
-             came down. */}
+             rail, which is why its two END stops stay at `--bg`.
+
+             The middle came down 30/20 → 20/15 and no further, and the ceiling
+             is measured rather than chosen. Because this layer spans the full
+             width it is the only one that veils the photo's focal points — the
+             tower at 51%vw, the map at 66%, the refinery at 87% — so every
+             point taken off it is a point the picture gains everywhere. It is
+             ALSO the only scrim over the subtitle's lower half. Taken to 10/5
+             the desktop subtitle measured 4.13:1 dark and 3.95:1 light, and
+             layer 3 could not recover it: the worst pixels sit at 29–36%vw,
+             already inside layer 3's held zone, so raising THAT bought 0.25 and
+             stalled. 20/15 is where both themes clear AA with the picture still
+             legible end to end.
+
+             `dark:to-bg` is not redundant with `to-bg`, and leaving it off is a
+             bug this band shipped with. A `via-*` utility ALSO writes
+             `--tw-gradient-to` (the transparent fallback a two-stop gradient
+             needs), and Tailwind emits variants after unprefixed utilities — so
+             `dark:via-bg/15` lands after `to-bg` and clobbers it. In the default
+             dark theme the end stop was resolving to `rgb(255 255 255 / 0)`,
+             i.e. the bottom of the hero faded to transparent white and never
+             met the page colour at all. Any `dark:via-*` needs a `dark:to-*`
+             beside it. */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-bg via-bg/30 to-bg dark:via-bg/20"
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-bg via-bg/20 to-bg dark:via-bg/15 dark:to-bg"
       />
       {/* 2. Phone/tablet: a flat scrim, because there is no side-by-side to
              separate — the copy sits ON the picture and needs a floor under it.
-             It is heavy (90%) because it has to hold `--text-muted` over the
-             brightest thing in the frame: sampled against the sunlit sky beside
-             the map, the subtitle measured 1.85:1 at 70%. Below `lg` the photo
-             is atmosphere, not information — the map is cropped out of frame
-             anyway — so there is nothing to protect by keeping it legible.
+             There is no falloff to tune here (the text spans the full width, so
+             a horizontal one would have nowhere to fall off TO), which is why
+             this layer alone is a straight reduction: 90% → 80%.
 
-             90 and not 88: a BARE opacity modifier has to come from
-             `theme.opacity`, which steps by 5. `bg-bg/88` compiles to nothing at
+             80 is the floor, not a preference. 65% put the subtitle at 3.85:1
+             dark / 4.03:1 light and the popular-query label at 4.33 / 3.79 —
+             the same failure the old note recorded at 70% (1.85:1 against the
+             sunlit sky), which is what the 90% was for. 75% still left the light
+             label at 4.35. At 80% the worst run on a phone is 4.77:1. Ten points
+             is a modest gain for the picture, and it is all a full-width scrim
+             under full-width text can give: the next move would be a text-shadow
+             or a local pad behind the copy, and the design system has neither.
+
+             80 and not 78: a BARE opacity modifier has to come from
+             `theme.opacity`, which steps by 5. `bg-bg/78` compiles to nothing at
              all, silently, exactly like an undefined colour would. */}
-      <div aria-hidden className="absolute inset-0 -z-10 bg-bg/90 lg:hidden" />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-bg/80 lg:hidden" />
       {/* 3. Desktop: the horizontal one that creates the two-part composition —
-             copy at the left, photo breathing at the right. Capped at 70% in
-             the default dark theme rather than a solid `--bg` start, so the
-             picture carries through behind the headline instead of stopping
-             dead at the copy column; every dark stop is the old one × 0.7.
+             copy at the left, photo breathing at the right. This is the layer
+             that protects text, and it is shaped to do only that.
 
-             Light needs more, and the reason is physical rather than a fudge: a
-             black scrim over a sunlit photo darkens everything under it, while a
-             WHITE one has to lift the picture's own bright regions past the text
-             sitting on them, which it cannot do at the same strength. At the
-             matching 70% the subtitle and the popular-query label measured
-             4.32:1 and 4.09:1 against the composited pixels — both under AA —
-             so light stops one step earlier. */}
+             The old ramp started falling immediately (70/55% by the midpoint,
+             still 15/5% at the far edge): weakest where the copy needed it, and
+             never absent where the photograph did. This one inverts both ends.
+             It HOLDS its anchor flat to 38%vw — past the right edge of both the
+             headline's `max-w-[22ch]` and the subtitle's `44ch` — then falls to
+             a true zero. So the copy sits on more scrim than it used to (95/80
+             against the old 85/70), while the five empty grid columns this
+             composition exists to show are clear from 60%vw out.
+
+             The anchor is stronger than the old one on purpose: it is the knob
+             that costs the picture nothing. Everything it darkens is left of
+             38%vw, where the design has already committed the space to text —
+             no focal point of the frame is in there. Reach for it before layer
+             1, whose every point is paid for across the whole band.
+
+             `to-bg/0` and not `to-transparent`: every stop in this stack is
+             `--bg` at some strength, and the bare keyword would fade toward
+             transparent BLACK instead of the page's own hue. */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-bg/85 from-15% via-bg/70 to-bg/15 lg:block dark:from-bg/70 dark:via-bg/55 dark:to-bg/5"
+        className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-bg/95 from-38% via-bg/45 via-60% to-bg/0 lg:block dark:from-bg/80 dark:via-bg/20 dark:to-bg/0"
       />
       {/* 4. Brand light behind the headline. The one warm element in the stack,
              drifting slowly so the band is not completely static. Kept weak on
@@ -175,18 +217,18 @@ export function HeroBanner() {
             happens to stop in the right place. */}
         <div className="grid items-center gap-10 xl:grid-cols-12">
           <div className="min-w-0 motion-safe:animate-hero-rise xl:col-span-7">
-            <p className="inline-flex items-center gap-2 rounded-full border border-brand-line bg-brand-soft px-3 py-1 text-[11px] font-medium text-brand sm:text-xs">
-              <ShieldCheck size={14} strokeWidth={2} aria-hidden />
-              {t("public.home.heroEyebrow")}
-            </p>
-
             {/* The display rung. It lives here rather than in `PageHeader`
                 because that primitive owns the *page title* scale (24px) — this
                 is a landing headline, the one place the storefront outranks it,
-                and there is exactly one of them in the app. */}
+                and there is exactly one of them in the app.
+
+                No top margin: an eyebrow chip used to sit above this, and the
+                `mt-4 sm:mt-5` that cleared it became a stray offset the moment
+                the chip went. The container's own `pt-8 sm:pt-14 xl:pt-20` is
+                what sets the headline off the header now. */}
             <h1
               id="hero-heading"
-              className="mt-4 max-w-[22ch] text-[2rem] font-semibold leading-[1.1] tracking-tight text-text sm:mt-5 sm:text-[2.6rem] xl:text-[3.4rem] xl:leading-[1.06]"
+              className="max-w-[22ch] text-[2rem] font-semibold leading-[1.1] tracking-tight text-text sm:text-[2.6rem] xl:text-[3.4rem] xl:leading-[1.06]"
             >
               {t("public.home.heroTitle")}
             </h1>

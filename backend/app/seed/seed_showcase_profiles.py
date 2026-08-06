@@ -758,13 +758,17 @@ def seed_logistics_requests(db: Session, companies: dict[str, dict]) -> None:
 # 6 — Laboratory requests + replies
 # ══════════════════════════════════════════════════════════════════════════════
 
+# (study_type, methods, purpose) — all three are KEYS, not prose: the UI renders
+# them through t("labRequest.studyTypes.<k>" / ".methodOptions.<k>" / ".purposes.<k>").
+# An invented key (this list previously carried "ptr", "ash", "tensile") reaches the
+# screen as itself — the request card showed a literal "ptr" next to "Плотность".
 _LAB_STUDIES = [
-    ("Входной контроль партии", ["ptr", "density"], "Подтвердить соответствие паспорту поставщика."),
-    ("Идентификация марки", ["ir_spectroscopy"], "Определить марку неизвестного сырья на складе."),
-    ("Полный анализ", ["ptr", "density", "ash", "moisture"], "Комплексная проверка перед годовым контрактом."),
-    ("Термический анализ", ["dsc"], "Проверить температуру плавления для настройки экструдера."),
-    ("Контроль влажности", ["moisture"], "Партия шла морем, есть подозрение на отсыревание."),
-    ("Механические испытания", ["tensile", "impact"], "Проверить прочность для трубной продукции."),
+    ("incoming_control", ["mfi", "density"], "supplier_check"),
+    ("single_method", ["ftir"], "quality_and_compatibility"),
+    ("full_passport", ["mfi", "density", "ash_content", "moisture"], "supplier_check"),
+    ("single_method", ["dsc"], "quality_and_compatibility"),
+    ("incoming_control", ["moisture"], "quality_and_compatibility"),
+    ("full_passport", ["tensile_strength", "impact_strength"], "certification"),
 ]
 _LAB_STATUS_PLAN = ["quoted", "in_progress", "viewed", "submitted", "closed", "rejected"]
 _LAB_CHAT = [
@@ -910,6 +914,7 @@ def seed_showcase_profiles(*, reset: bool = False, skip_media: bool = False) -> 
         seed_factory_rfqs(db, companies)
         seed_logistics_requests(db, companies)
         seed_lab_requests(db, companies)
+        ensure_service_coverage(db, companies)
     except Exception:
         db.rollback()
         raise
@@ -925,6 +930,281 @@ def main() -> int:
     seed_showcase_profiles(reset=args.reset, skip_media=args.skip_media)
     return 0
 
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 7 — Service-track coverage floor
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+def ensure_service_coverage(db: Session, companies: dict[str, dict]) -> None:
+    """Give every verified company at least one row on each service surface.
+
+    `seed_factory_rfqs` / `seed_logistics_requests` / `seed_lab_requests` write a
+    fixed-size set spread across the status enum — good for a status-filter demo,
+    but it leaves most companies with nothing. Whichever account is opened during
+    a demo then finds "Логистика: заявки" and "Заявки в лабораторию" empty, which
+    reads as an unfinished feature rather than as a quiet week.
+
+    Purely additive and safe to re-run: a company already holding a row on a
+    surface is skipped.
+    """
+    # Queried fresh rather than taken from `companies`: that dict is keyed by
+    # short_name, so two companies sharing one (or both NULL, which happens for
+    # half-finished registrations) collapse into a single entry and the other is
+    # silently skipped. A coverage floor that quietly misses rows is worse than none.
+    del companies
+    verified = [
+        dict(r) for r in db.execute(
+            sa.text(
+                """
+                SELECT c.id, c.short_name, c.status,
+                       (SELECT m.user_account_id FROM company_members m
+                         WHERE m.company_id = c.id ORDER BY m.id LIMIT 1) AS account_id,
+                       (SELECT a.name FROM company_members m
+                          JOIN user_accounts a ON a.id = m.user_account_id
+                         WHERE m.company_id = c.id ORDER BY m.id LIMIT 1) AS contact_name,
+                       (SELECT a.phone FROM company_members m
+                          JOIN user_accounts a ON a.id = m.user_account_id
+                         WHERE m.company_id = c.id ORDER BY m.id LIMIT 1) AS contact_phone,
+                       ARRAY(SELECT r.role::text FROM company_business_roles r
+                              WHERE r.company_id = c.id) AS roles
+                FROM companies c
+                WHERE c.status = 'verified'
+                ORDER BY c.id
+                """
+            )
+        ).mappings().all()
+    ]
+    verified = [c for c in verified if c["account_id"]]
+    carriers = [c for c in verified if "logistics_provider" in (c["roles"] or [])]
+    labs = [c for c in verified if "laboratory" in (c["roles"] or [])]
+    makers = [c for c in verified if "manufacturer" in (c["roles"] or [])]
+    if not verified:
+        return
+
+    year = _now().year
+    added = {"thread": 0, "logistics": 0, "lab": 0, "message": 0}
+
+    for idx, company in enumerate(verified):
+        cid = int(company["id"])
+        account_id = company["account_id"]
+
+        # ── one factory conversation ─────────────────────────────────────────
+        has_thread = db.execute(
+            sa.text(
+                """
+                SELECT 1 FROM manufacturer_threads
+                WHERE buyer_company_id = :c OR manufacturer_company_id = :c LIMIT 1
+                """
+            ),
+            {"c": cid},
+        ).first()
+        if not has_thread:
+            partner = next(
+                (m for m in makers[(idx * 3) % max(len(makers), 1):] + makers
+                 if int(m["id"]) != cid), None
+            )
+            if partner is not None and not db.execute(
+                sa.text(
+                    """
+                    SELECT 1 FROM manufacturer_threads
+                    WHERE buyer_company_id = :b AND manufacturer_company_id = :m
+                    """
+                ),
+                {"b": cid, "m": partner["id"]},
+            ).first():
+                opened = _ago(days=RNG.randrange(3, 70))
+                thread_id = db.execute(
+                    sa.text(
+                        """
+                        INSERT INTO manufacturer_threads (buyer_company_id, manufacturer_company_id,
+                                                          created_by_user_account_id,
+                                                          created_at, updated_at)
+                        VALUES (:b, :m, :account_id, :created, :created)
+                        RETURNING id
+                        """
+                    ),
+                    {"b": cid, "m": partner["id"], "account_id": account_id, "created": opened},
+                ).scalar_one()
+                added["thread"] += 1
+                stamp = opened
+                for side, body in _MFR_CHAT[: RNG.randrange(3, len(_MFR_CHAT) + 1)]:
+                    stamp += datetime.timedelta(hours=RNG.randrange(2, 20))
+                    db.execute(
+                        sa.text(
+                            """
+                            INSERT INTO manufacturer_messages (thread_id, author_account_id,
+                                                               author_company_id, body, created_at)
+                            VALUES (:t, :a, :co, :body, :created)
+                            """
+                        ),
+                        {
+                            "t": thread_id,
+                            "a": account_id if side == "buyer" else partner["account_id"],
+                            "co": cid if side == "buyer" else partner["id"],
+                            "body": body,
+                            "created": stamp,
+                        },
+                    )
+                    added["message"] += 1
+
+        # ── one freight enquiry (a carrier is the supply side, not the buyer) ─
+        is_carrier = "logistics_provider" in (company["roles"] or [])
+        if not is_carrier and not db.execute(
+            sa.text("SELECT 1 FROM logistics_requests WHERE buyer_company_id = :c LIMIT 1"),
+            {"c": cid},
+        ).first():
+            cargo, volume, packaging = _CARGO[idx % len(_CARGO)]
+            from_country, from_city, to_country, to_city = _ROUTES[idx % len(_ROUTES)]
+            created = _ago(days=RNG.randrange(2, 60), hours=RNG.randrange(0, 20))
+            status = RNG.choice(["submitted", "viewed", "in_progress", "quoted"])
+            request_id = db.execute(
+                sa.text(
+                    """
+                    INSERT INTO logistics_requests (
+                        number, buyer_company_id, created_by_user_account_id, cargo_name,
+                        volume, volume_unit, packaging_type, special_requirements,
+                        from_country, from_city, to_country, to_city, contact_phone,
+                        status, created_at, updated_at)
+                    VALUES (:number, :buyer, :account_id, :cargo, :volume, 'MT', :packaging,
+                            :special, :fc, :fcity, :tc, :tcity, :phone, :status, :created, :created)
+                    RETURNING id
+                    """
+                ),
+                {
+                    "number": f"LOG-{year}-{910000 + cid:06d}",
+                    "buyer": cid, "account_id": account_id, "cargo": cargo,
+                    "volume": volume, "packaging": packaging,
+                    "special": RNG.choice(_SPECIAL),
+                    "fc": from_country, "fcity": from_city, "tc": to_country, "tcity": to_city,
+                    "phone": company["contact_phone"], "status": status, "created": created,
+                },
+            ).scalar_one()
+            added["logistics"] += 1
+            if status != "submitted" and carriers:
+                carrier = carriers[idx % len(carriers)]
+                opened = created + datetime.timedelta(hours=RNG.randrange(2, 18))
+                thread_id = db.execute(
+                    sa.text(
+                        """
+                        INSERT INTO logistics_request_threads (logistics_request_id,
+                                                               carrier_company_id,
+                                                               created_by_user_account_id,
+                                                               created_at, updated_at)
+                        VALUES (:r, :c, :a, :created, :created)
+                        RETURNING id
+                        """
+                    ),
+                    {"r": request_id, "c": carrier["id"], "a": carrier["account_id"],
+                     "created": opened},
+                ).scalar_one()
+                stamp = opened
+                for side, body in _LOG_CHAT[: RNG.randrange(2, len(_LOG_CHAT) + 1)]:
+                    stamp += datetime.timedelta(hours=RNG.randrange(1, 14))
+                    db.execute(
+                        sa.text(
+                            """
+                            INSERT INTO logistics_request_messages (thread_id, author_account_id,
+                                                                    author_company_id, body, created_at)
+                            VALUES (:t, :a, :co, :body, :created)
+                            """
+                        ),
+                        {
+                            "t": thread_id,
+                            "a": account_id if side == "buyer" else carrier["account_id"],
+                            "co": cid if side == "buyer" else carrier["id"],
+                            "body": body, "created": stamp,
+                        },
+                    )
+                    added["message"] += 1
+
+        # ── one laboratory enquiry (a lab is the supply side) ────────────────
+        is_lab = "laboratory" in (company["roles"] or [])
+        if not is_lab and not db.execute(
+            sa.text("SELECT 1 FROM lab_requests WHERE buyer_company_id = :c LIMIT 1"),
+            {"c": cid},
+        ).first():
+            study, methods, purpose = _LAB_STUDIES[idx % len(_LAB_STUDIES)]
+            grade = db.execute(
+                sa.text("SELECT id, product_id, code FROM product_grades ORDER BY id LIMIT 1 OFFSET :o"),
+                {"o": idx % 11},
+            ).mappings().first()
+            created = _ago(days=RNG.randrange(2, 55), hours=RNG.randrange(0, 20))
+            status = RNG.choice(["submitted", "viewed", "in_progress", "quoted"])
+            request_id = db.execute(
+                sa.text(
+                    """
+                    INSERT INTO lab_requests (
+                        number, buyer_company_id, created_by_user_account_id, product_id,
+                        product_text, grade_text, study_type, methods, sample_qty, comment,
+                        purpose, is_urgent, desired_date, contact_name, contact_email,
+                        contact_phone, status, created_at, updated_at)
+                    VALUES (:number, :buyer, :a, :product_id, :ptext, :grade, :study,
+                            CAST(:methods AS jsonb), :qty, :comment, :purpose, :urgent,
+                            :desired, :cname, :email, :phone, :status, :created, :created)
+                    RETURNING id
+                    """
+                ),
+                {
+                    "number": f"LBR-{year}-{910000 + cid:06d}",
+                    "buyer": cid, "a": account_id,
+                    "product_id": int(grade["product_id"]) if grade else None,
+                    "ptext": f"Полимерное сырьё {grade['code']}" if grade else "Полимерное сырьё",
+                    "grade": str(grade["code"]) if grade else None,
+                    "study": study, "methods": json.dumps(methods),
+                    "qty": RNG.choice(["500 г", "1 кг"]),
+                    "comment": "Образец отобран из партии, упакован в двойной пакет.",
+                    "purpose": purpose, "urgent": idx % 4 == 0,
+                    "desired": (created + datetime.timedelta(days=RNG.randrange(3, 18))).date(),
+                    "cname": company["contact_name"],
+                    "email": f"lab@{str(company['short_name'] or 'company').split()[0].lower()}.uz",
+                    "phone": company["contact_phone"], "status": status, "created": created,
+                },
+            ).scalar_one()
+            added["lab"] += 1
+            if status != "submitted" and labs:
+                lab = labs[0]
+                opened = created + datetime.timedelta(hours=RNG.randrange(2, 16))
+                thread_id = db.execute(
+                    sa.text(
+                        """
+                        INSERT INTO lab_request_threads (lab_request_id, laboratory_company_id,
+                                                         created_by_user_account_id,
+                                                         created_at, updated_at)
+                        VALUES (:r, :l, :a, :created, :created)
+                        RETURNING id
+                        """
+                    ),
+                    {"r": request_id, "l": lab["id"], "a": lab["account_id"], "created": opened},
+                ).scalar_one()
+                stamp = opened
+                for side, body in _LAB_CHAT[: RNG.randrange(2, len(_LAB_CHAT) + 1)]:
+                    stamp += datetime.timedelta(hours=RNG.randrange(1, 12))
+                    db.execute(
+                        sa.text(
+                            """
+                            INSERT INTO lab_request_messages (thread_id, author_account_id,
+                                                              author_company_id, body, created_at)
+                            VALUES (:t, :a, :co, :body, :created)
+                            """
+                        ),
+                        {
+                            "t": thread_id,
+                            "a": account_id if side == "buyer" else lab["account_id"],
+                            "co": cid if side == "buyer" else lab["id"],
+                            "body": body, "created": stamp,
+                        },
+                    )
+                    added["message"] += 1
+
+        db.commit()
+
+    print(
+        f"service coverage: +{added['thread']} factory threads, "
+        f"+{added['logistics']} freight requests, +{added['lab']} lab requests, "
+        f"+{added['message']} messages"
+    )
 
 if __name__ == "__main__":
     sys.exit(main())

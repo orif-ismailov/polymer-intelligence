@@ -52,10 +52,15 @@ import { PublicShell } from "@/widgets/public-shell";
 import { NotFoundPage } from "./NotFoundPage";
 import { RequestsRouteSwitch } from "./RequestsRouteSwitch";
 import { OfferEditRedirect } from "./OfferEditRedirect";
-import { RedirectToPublicCompany, RedirectToPublicOffer } from "./RedirectToPublic";
+import {
+  RedirectToPublicCompany,
+  RedirectToPublicNewsArticle,
+  RedirectToPublicOffer,
+} from "./RedirectToPublic";
 import { RedirectIfAuthed } from "./RedirectIfAuthed";
 import { RequireAuth } from "./RequireAuth";
 import { RequireCompany } from "./RequireCompany";
+import { RootLayout } from "./RootLayout";
 
 /**
  * Directories that still render a cabinet twin — read-only either way.
@@ -111,7 +116,7 @@ const REUSED_DIRECTORIES = PUBLIC_DIRECTORIES.filter(
  * Exported as a plain array rather than a router so both entries can build their
  * own: `createBrowserRouter` in the browser, `createStaticHandler` on the server.
  */
-export const routes: RouteObject[] = [
+const appRoutes: RouteObject[] = [
   ...(import.meta.env.DEV ? [{ path: "/dev/ui", element: <UiKitPage /> }] : []),
 
   // ── Public storefront. Server-rendered, open to everyone. ──────────────────
@@ -159,6 +164,11 @@ export const routes: RouteObject[] = [
         path: "logistics/:companyId",
         element: <RedirectToPublicCompany slug="logistics" />,
       },
+      // News, for the same reason and with the same care about placement: the
+      // reader is public now, so an old `/cabinet/news/:id` out of a
+      // notification must land on the article, not on a login form.
+      { path: "news", element: <Navigate to="/news" replace /> },
+      { path: "news/:signalId", element: <RedirectToPublicNewsArticle /> },
       {
         element: <RedirectIfAuthed />,
         children: [
@@ -233,8 +243,9 @@ export const routes: RouteObject[] = [
 
                   // Same components as the storefront, different chrome.
                   { path: "prices", element: <PublicPricesPage /> },
-                  { path: "news", element: <NewsPage /> },
-                  { path: "news/:signalId", element: <NewsArticlePage /> },
+                  // News is NOT here any more — it collapsed onto its public URL
+                  // and its retired addresses redirect from the top of this
+                  // subtree, above the guards. See the note there.
                   ...REUSED_DIRECTORIES.flatMap((dir) => [
                     { path: dir.slug, element: <PublicDirectoryPage slug={dir.slug} /> },
                     {
@@ -290,3 +301,17 @@ export const routes: RouteObject[] = [
   // login screen instead of being told the page does not exist.
   { path: "*", element: <NotFoundPage /> },
 ];
+
+/**
+ * Everything above, under one pathless layout route.
+ *
+ * `RootLayout` renders `<ScrollRestoration>`, which has to sit inside the router
+ * to see the navigation — so it needs a route of its own, and it has to be THIS
+ * one: the storefront, the cabinet, the registration flow and the 404 are four
+ * separate top-level entries, and a shell-level mount would miss every page that
+ * deliberately renders outside a shell (login, onboarding, the wizards).
+ *
+ * Wrapping here rather than re-indenting the tree above keeps `appRoutes`
+ * readable as the route map it is.
+ */
+export const routes: RouteObject[] = [{ element: <RootLayout />, children: appRoutes }];

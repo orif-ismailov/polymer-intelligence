@@ -1376,7 +1376,58 @@
     "back": "К новостям",
     "analysis": "Анализ",
     "recommendation": "Рекомендация",
-    "readSource": "Читать в источнике →"
+    "readSource": "Читать в источнике →",
+    "metaTitle": "Новости нефтехимического рынка — IMEX AI",
+    "metaDescription": "Классифицированные новости нефтехимии и полимеров: остановки заводов, цены, поставки и регулирование по Узбекистану и миру.",
+    "search": "Поиск новостей",
+    "searchPlaceholder": "Заголовок, компания, продукт…",
+    "filters": "Фильтры",
+    "filterAny": "Все",
+    "filterCategory": "Категория",
+    "filterCountry": "Страна",
+    "relatedProducts": "Товары",
+    "countries": "Страны",
+    "companies": "Компании",
+    "sourcesLabel": "Источники",
+    "original": "первоисточник",
+    "reset": "Сбросить",
+    "noResults": "Ничего не найдено",
+    "noResultsBody": "Попробуйте изменить фильтры или поисковый запрос.",
+    "scopeLabel": "Охват",
+    "showResults": "Показать результаты",
+    "resultCount_one": "{{count}} новость",
+    "resultCount_few": "{{count}} новости",
+    "resultCount_many": "{{count}} новостей",
+    "resultCount_other": "{{count}} новостей",
+    "moreSources_one": "+{{count}} источник",
+    "moreSources_few": "+{{count}} источника",
+    "moreSources_many": "+{{count}} источников",
+    "moreSources_other": "+{{count}} источников",
+    "scope": {
+      "all": "Все",
+      "uzbekistan": "Узбекистан",
+      "global": "Мир",
+      "producers": "Производители"
+    },
+    "sort": {
+      "label": "Сортировка",
+      "newest": "Новые",
+      "importance": "Важность",
+      "category": "Категория",
+      "products": "Товары",
+      "country": "Страна",
+      "company": "Компания"
+    },
+    "importance": {
+      "high": "Важное",
+      "medium": "Заметное",
+      "low": "Фоновое"
+    },
+    "impact": {
+      "positive": "Рост",
+      "negative": "Падение",
+      "neutral": "Нейтрально"
+    }
   },
   "notifications": {
     "subtitle": "Обновления по заявкам, запросам, предложениям и проверке",
@@ -2109,7 +2160,6 @@
       "metaDescription": "Полимеры и нефтехимия от проверенных производителей, трейдеров и лабораторий. Актуальные цены, лабораторные паспорта, безопасные сделки.",
       "heroTitle": "Глобальный маркетплейс нефтехимической продукции",
       "heroSubtitle": "Производители, трейдеры, логистика и лаборатории на одной платформе",
-      "heroEyebrow": "Проверенные компании · сделки через ЭЦП",
       "heroCtaPrimary": "Зарегистрироваться",
       "heroCtaPrimaryAuthed": "Перейти в кабинет",
       "heroCtaSecondary": "Смотреть каталог",

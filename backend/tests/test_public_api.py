@@ -8,7 +8,10 @@ their own suites; what is tested here is the boundary.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import UTC, datetime
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 import sqlalchemy as sa
@@ -43,7 +46,141 @@ def test_public_routes_registered() -> None:
     assert "/public/stats" in paths
     assert "/public/prices" in paths
     assert "/public/news" in paths
+    assert "/public/news/articles" in paths
+    assert "/public/news/articles/filters" in paths
+    assert "/public/news/articles/{signal_id}" in paths
     assert "/public/sitemap" in paths
+
+
+def test_news_filters_route_is_declared_before_the_id_route() -> None:
+    """`/articles/filters` must win over `/articles/{signal_id}`.
+
+    Starlette matches in declaration order, so the id route declared first would
+    swallow "filters" and answer 422 on a path that has to work.
+    """
+    from app.api.public import router  # noqa: PLC0415
+
+    paths = [r.path for r in router.routes]  # type: ignore[attr-defined]
+    assert paths.index("/public/news/articles/filters") < paths.index(
+        "/public/news/articles/{signal_id}"
+    )
+
+
+def test_public_news_reader_matches_the_portal_surface() -> None:
+    """The three reader routes are the portal's, minus the session.
+
+    `/news` (the home rail) is deliberately excluded: it is a different endpoint
+    with its own narrower signature. These three exist so a public, indexable
+    page can render, and they must keep answering with the SAME models the
+    signed-in surfaces use -- a public schema that drifts is how a field nobody
+    audited becomes crawlable.
+    """
+    from app.api.portal.news import router as portal_router  # noqa: PLC0415
+    from app.api.public import router as public_router  # noqa: PLC0415
+
+    def models(router, prefix: str) -> dict[str, object]:  # noqa: ANN001
+        return {
+            r.path.removeprefix(prefix): r.response_model  # type: ignore[attr-defined]
+            for r in router.routes
+            if r.path.startswith(f"{prefix}/articles")  # type: ignore[attr-defined]
+        }
+
+    assert models(public_router, "/public/news") == models(portal_router, "/portal/news")
+
+
+# ── The news reader answers a stranger (DB mocked, auth NOT overridden) ───────
+#
+# The auth dependency is deliberately left un-overridden in this client. That is
+# the assertion: these requests carry no Authorization header and no cookie, and
+# they have to come back 200. The portal suite can only ever test the authed
+# path, so this is the one place the anonymous contract is exercised end to end.
+
+
+def _anon_client() -> TestClient:
+    from app.core.db import get_db  # noqa: PLC0415
+    from app.main import create_app  # noqa: PLC0415
+
+    def _override_db() -> Generator[Any, None, None]:
+        yield MagicMock()
+
+    app = create_app()
+    app.dependency_overrides[get_db] = _override_db
+    return TestClient(app, raise_server_exceptions=True)
+
+
+_NEWS_CARD = {
+    "id": 42,
+    "headline": "Shurtan останавливает PP-линию",
+    "category": "plant_shutdown",
+    "importance": "high",
+    "market_impact": "negative",
+    "summary": "Плановый ремонт сократит выпуск PP.",
+    "country": "UZ",
+    "companies": ["Shurtan GCC"],
+    "related_products": ["PP"],
+    "source_name": "PetroTG",
+    "published_at": "2026-07-18T08:00:00+00:00",
+    "image_url": None,
+}
+
+
+def test_news_articles_are_listed_without_any_credentials() -> None:
+    with patch("app.services.news_service.list_news_articles", return_value=[_NEWS_CARD]):
+        resp = _anon_client().get(f"{_BASE}/news/articles")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()[0]["headline"].startswith("Shurtan")
+
+
+def test_news_article_detail_and_facets_are_anonymous() -> None:
+    client = _anon_client()
+
+    facets = {
+        "categories": [{"value": "plant_shutdown", "count": 4}],
+        "countries": [{"value": "UZ", "count": 9}],
+        "products": [{"value": "PP", "count": 6}],
+    }
+    with patch("app.services.news_service.list_news_filter_options", return_value=facets):
+        resp = client.get(f"{_BASE}/news/articles/filters")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["countries"][0]["value"] == "UZ"
+
+    detail = {**_NEWS_CARD, "body": "…", "source_url": "https://example.test/a"}
+    with patch("app.services.news_service.get_news_article", return_value=detail):
+        resp = client.get(f"{_BASE}/news/articles/42")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["source_url"] == "https://example.test/a"
+
+    with patch("app.services.news_service.get_news_article", return_value=None):
+        resp = client.get(f"{_BASE}/news/articles/999")
+    assert resp.status_code == 404
+
+
+def test_public_news_forwards_every_filter_to_the_service() -> None:
+    """The reader is only as good as the params that survive the handler."""
+    with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+        resp = _anon_client().get(
+            f"{_BASE}/news/articles",
+            params={
+                "q": "shurtan", "scope": "producers", "category": "plant_shutdown",
+                "country": "UZ", "company": "Shurtan", "product": "PP",
+                "importance": "high", "source_id": 5, "sort": "newest",
+                "lang": "uz", "limit": 10, "days": 14,
+            },
+        )
+    assert resp.status_code == 200, resp.text
+    assert mock_list.call_args.kwargs == {
+        "limit": 10, "days": 14, "q": "shurtan", "scope": "producers",
+        "category": "plant_shutdown", "country": "UZ", "company": "Shurtan",
+        "product": "PP", "importance": "high", "source_id": 5, "sort": "newest",
+        "lang": "uz",
+    }
+
+
+def test_public_news_scope_all_means_no_scope() -> None:
+    with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+        resp = _anon_client().get(f"{_BASE}/news/articles", params={"scope": "all"})
+    assert resp.status_code == 200
+    assert mock_list.call_args.kwargs["scope"] is None
 
 
 def test_no_public_route_depends_on_an_account() -> None:
