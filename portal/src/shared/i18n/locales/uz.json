@@ -1376,7 +1376,54 @@
     "back": "Yangiliklarga",
     "analysis": "Tahlil",
     "recommendation": "Tavsiya",
-    "readSource": "Manbada o'qish →"
+    "readSource": "Manbada o'qish →",
+    "metaTitle": "Neftkimyo bozori yangiliklari — IMEX AI",
+    "metaDescription": "Klassifikatsiyalangan neftkimyo va polimer yangiliklari: zavod toʻxtashlari, narxlar, yetkazib berish va tartibga solish — Oʻzbekiston va dunyo boʻyicha.",
+    "search": "Yangiliklar qidirish",
+    "searchPlaceholder": "Sarlavha, kompaniya, mahsulot…",
+    "filters": "Filtrlar",
+    "filterAny": "Barchasi",
+    "filterCategory": "Turkum",
+    "filterCountry": "Davlat",
+    "relatedProducts": "Mahsulotlar",
+    "countries": "Davlatlar",
+    "companies": "Kompaniyalar",
+    "sourcesLabel": "Manbalar",
+    "original": "asl manba",
+    "reset": "Tozalash",
+    "noResults": "Hech narsa topilmadi",
+    "noResultsBody": "Filtrlar yoki qidiruv soʻrovini oʻzgartirib koʻring.",
+    "scopeLabel": "Qamrov",
+    "showResults": "Natijalarni koʻrsatish",
+    "resultCount_one": "{{count}} yangilik",
+    "resultCount_other": "{{count}} yangilik",
+    "moreSources_one": "+{{count}} manba",
+    "moreSources_other": "+{{count}} manba",
+    "scope": {
+      "all": "Barchasi",
+      "uzbekistan": "Oʻzbekiston",
+      "global": "Dunyo",
+      "producers": "Ishlab chiqaruvchilar"
+    },
+    "sort": {
+      "label": "Saralash",
+      "newest": "Yangi",
+      "importance": "Muhimlik",
+      "category": "Turkum",
+      "products": "Mahsulotlar",
+      "country": "Davlat",
+      "company": "Kompaniya"
+    },
+    "importance": {
+      "high": "Muhim",
+      "medium": "Sezilarli",
+      "low": "Fon"
+    },
+    "impact": {
+      "positive": "Oʻsish",
+      "negative": "Pasayish",
+      "neutral": "Neytral"
+    }
   },
   "notifications": {
     "subtitle": "Arizalar, so'rovlar, takliflar va tekshiruv bo'yicha yangilanishlar",

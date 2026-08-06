@@ -1376,7 +1376,54 @@
     "back": "Back to news",
     "analysis": "Analysis",
     "recommendation": "Recommendation",
-    "readSource": "Read at the source →"
+    "readSource": "Read at the source →",
+    "metaTitle": "Petrochemical market news — IMEX AI",
+    "metaDescription": "Classified petrochemical and polymer news: plant shutdowns, prices, supply and regulation across Uzbekistan and the world.",
+    "search": "Search news",
+    "searchPlaceholder": "Headline, company, product…",
+    "filters": "Filters",
+    "filterAny": "All",
+    "filterCategory": "Category",
+    "filterCountry": "Country",
+    "relatedProducts": "Products",
+    "countries": "Countries",
+    "companies": "Companies",
+    "sourcesLabel": "Sources",
+    "original": "original",
+    "reset": "Reset",
+    "noResults": "Nothing found",
+    "noResultsBody": "Try changing the filters or the search term.",
+    "scopeLabel": "Scope",
+    "showResults": "Show results",
+    "resultCount_one": "{{count}} article",
+    "resultCount_other": "{{count}} articles",
+    "moreSources_one": "+{{count}} source",
+    "moreSources_other": "+{{count}} sources",
+    "scope": {
+      "all": "All",
+      "uzbekistan": "Uzbekistan",
+      "global": "Global",
+      "producers": "Producers"
+    },
+    "sort": {
+      "label": "Sort",
+      "newest": "Newest",
+      "importance": "Importance",
+      "category": "Category",
+      "products": "Products",
+      "country": "Country",
+      "company": "Company"
+    },
+    "importance": {
+      "high": "High",
+      "medium": "Notable",
+      "low": "Background"
+    },
+    "impact": {
+      "positive": "Up",
+      "negative": "Down",
+      "neutral": "Neutral"
+    }
   },
   "notifications": {
     "subtitle": "Updates on your requests, inquiries, offers and verification",
