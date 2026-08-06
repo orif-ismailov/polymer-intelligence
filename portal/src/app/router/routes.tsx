@@ -56,6 +56,7 @@ import { RedirectToPublicCompany, RedirectToPublicOffer } from "./RedirectToPubl
 import { RedirectIfAuthed } from "./RedirectIfAuthed";
 import { RequireAuth } from "./RequireAuth";
 import { RequireCompany } from "./RequireCompany";
+import { RootLayout } from "./RootLayout";
 
 /**
  * Directories that still render a cabinet twin — read-only either way.
@@ -111,7 +112,7 @@ const REUSED_DIRECTORIES = PUBLIC_DIRECTORIES.filter(
  * Exported as a plain array rather than a router so both entries can build their
  * own: `createBrowserRouter` in the browser, `createStaticHandler` on the server.
  */
-export const routes: RouteObject[] = [
+const appRoutes: RouteObject[] = [
   ...(import.meta.env.DEV ? [{ path: "/dev/ui", element: <UiKitPage /> }] : []),
 
   // ── Public storefront. Server-rendered, open to everyone. ──────────────────
@@ -290,3 +291,17 @@ export const routes: RouteObject[] = [
   // login screen instead of being told the page does not exist.
   { path: "*", element: <NotFoundPage /> },
 ];
+
+/**
+ * Everything above, under one pathless layout route.
+ *
+ * `RootLayout` renders `<ScrollRestoration>`, which has to sit inside the router
+ * to see the navigation — so it needs a route of its own, and it has to be THIS
+ * one: the storefront, the cabinet, the registration flow and the 404 are four
+ * separate top-level entries, and a shell-level mount would miss every page that
+ * deliberately renders outside a shell (login, onboarding, the wizards).
+ *
+ * Wrapping here rather than re-indenting the tree above keeps `appRoutes`
+ * readable as the route map it is.
+ */
+export const routes: RouteObject[] = [{ element: <RootLayout />, children: appRoutes }];
