@@ -394,13 +394,42 @@ jobs:
             # Prod runs the images tagged `main` (built + pushed by the build-images job).
             export IMAGE_TAG=main
             COMPOSE="docker compose --env-file .env -f deploy/docker-compose.yml"
+            # A GHCR layer download that dies mid-stream must not end the deploy.
+            #
+            #   WARNING: Some service image(s) must be built from source by running:
+            #       docker compose build worker
+            #   failed to copy: read tcp …->185.199.108.154:443: connection reset by peer
+            #
+            # 185.199.108.154 is pkg-containers.githubusercontent.com, GHCR's blob
+            # storage — the reset is theirs, not ours, and it is not rare. Under
+            # `set -eu` that single reset failed the whole job, and the warning above
+            # it is a symptom rather than a second problem: `worker` shares one image
+            # with api/beat/userbot, so compose is only naming a service whose pull
+            # failed and which happens to carry a `build:` fallback. Nothing needs
+            # building on the box; the point of this job is that nothing ever does.
+            #
+            # A pull is idempotent and already-fetched layers stay in the local store,
+            # so a retry resumes rather than restarts. Backoff is linear because the
+            # failure is a dropped connection, not rate limiting.
+            retry_pull() {
+              n=1
+              until "$@"; do
+                if [ "$n" -ge 4 ]; then
+                  echo "::error::pull failed after 4 attempts: $*"
+                  return 1
+                fi
+                echo "pull attempt $n failed; retrying in $((n * 15))s"
+                sleep $((n * 15))
+                n=$((n + 1))
+              done
+            }
             # Log in to GHCR (private packages), then PULL — no more compiling on the box.
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            $COMPOSE pull
+            retry_pull $COMPOSE pull
             $COMPOSE up -d
             # Webapp bundle: pull the prebuilt image and run the one-shot copy into the
             # nginx-served webapp_static volume (no --build → nothing compiles on the box).
-            $COMPOSE --profile build pull webapp-build
+            retry_pull $COMPOSE --profile build pull webapp-build
             $COMPOSE --profile build run --rm webapp-build
             $COMPOSE restart nginx
             $COMPOSE ps
@@ -456,13 +485,26 @@ jobs:
             # supplies the dev secrets + INNER_NGINX_PORT=8081 + INNER_NGINX_CONF
             # (nginx.dev-server.behind-proxy.conf) for interpolation.
             COMPOSE="docker compose --env-file .env -p polymer-dev -f deploy/docker-compose.yml"
+            # Same GHCR blob-reset guard as the prod job — see the long note there.
+            retry_pull() {
+              n=1
+              until "$@"; do
+                if [ "$n" -ge 4 ]; then
+                  echo "::error::pull failed after 4 attempts: $*"
+                  return 1
+                fi
+                echo "pull attempt $n failed; retrying in $((n * 15))s"
+                sleep $((n * 15))
+                n=$((n + 1))
+              done
+            }
             # Log in to GHCR (private packages), then PULL — no more compiling on the box.
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            $COMPOSE pull
+            retry_pull $COMPOSE pull
             $COMPOSE up -d
             # Webapp bundle: pull the prebuilt image and run the one-shot copy into the
             # nginx-served webapp_static volume (no --build → nothing compiles on the box).
-            $COMPOSE --profile build pull webapp-build
+            retry_pull $COMPOSE --profile build pull webapp-build
             $COMPOSE --profile build run --rm webapp-build
             $COMPOSE restart nginx
             $COMPOSE ps
