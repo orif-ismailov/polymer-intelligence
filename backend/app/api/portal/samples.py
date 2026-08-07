@@ -16,14 +16,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404
+from app.api.portal.companies import _company_or_404, _require_business_role
 from app.core.db import get_db
 from app.models.accounts import UserAccount
 from app.models.companies import Company
 from app.models.enums import SampleRequestStatus
 from app.models.lab import SampleRequest
 from app.schemas.lab import SampleRequestIn, SampleRequestOut, SampleTransitionIn
-from app.services import offer_service, sample_service
+from app.services import company_service, offer_service, sample_service
 
 router = APIRouter(prefix="/portal", tags=["portal-samples"])
 
@@ -89,6 +89,7 @@ def request_sample(
 ) -> SampleRequestOut:
     """Ask the seller for a sample of a public offer."""
     company = _company_or_404(db, account, body.company_id)
+    _require_business_role(company, company_service.BUYER_CAPABLE_ROLES)
     offer = offer_service.get_catalog_offer(db, offer_id)
     if offer is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")

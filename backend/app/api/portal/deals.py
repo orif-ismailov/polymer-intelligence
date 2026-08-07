@@ -593,6 +593,10 @@ def submit_rfq_response(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="company_not_verified"
         ) from exc
+    except company_service.RoleNotAllowed as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail={"code": "role_not_allowed"}
+        ) from exc
     db.commit()
     db.refresh(response)
     return _response_out(db, response)

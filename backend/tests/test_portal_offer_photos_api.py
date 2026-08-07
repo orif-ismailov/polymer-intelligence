@@ -100,8 +100,15 @@ def _verified_company(session, client, auth: dict[str, str], tax_id: str) -> int
     assert created.status_code == 201, created.text
     company_id = int(created.json()["id"])
     with session() as db:
+        from app.models.enums import CompanyBusinessRole  # noqa: PLC0415
+        from app.services import company_service  # noqa: PLC0415
+
         company = db.get(Company, company_id)
         assert company is not None
+        # distributor+trader: publishes offers — the role gates (T-B) require it
+        company_service.set_business_roles(
+            db, company, [CompanyBusinessRole.distributor, CompanyBusinessRole.trader]
+        )
         company.status = CompanyStatus.verified
         db.commit()
     return company_id

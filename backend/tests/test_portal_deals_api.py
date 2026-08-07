@@ -116,12 +116,16 @@ def _account(session, phone):  # noqa: ANN001, ANN202
 
 def _verified_company(session, account_id, tax):  # noqa: ANN001, ANN202
     from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.models.enums import CompanyStatus  # noqa: PLC0415
+    from app.models.enums import CompanyBusinessRole, CompanyStatus  # noqa: PLC0415
     from app.services import company_service  # noqa: PLC0415
 
     with session() as db:
         account = db.get(UserAccount, account_id)
         company = company_service.create_company(db, account, "UZ", tax)
+        # distributor+trader: buys and sells — the role gates (T-B) require it
+        company_service.set_business_roles(
+            db, company, [CompanyBusinessRole.distributor, CompanyBusinessRole.trader]
+        )
         company.status = CompanyStatus.verified
         company.legal_name = f"OOO {tax}"
         db.commit()

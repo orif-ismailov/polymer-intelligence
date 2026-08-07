@@ -729,11 +729,15 @@ def create_company_offer(
     """Publish an offer on behalf of a VERIFIED company (seller_id NULL, company_id set).
 
     Enters the SAME `pending_moderation` machine as seller offers — no lifecycle
-    changes. Raises CompanyNotVerified if the company isn't verified yet. Does NOT
-    commit; also emits OFFER_PUBLISHED_BY_COMPANY.
+    changes. Raises CompanyNotVerified if the company isn't verified yet, and
+    RoleNotAllowed unless its account type sells (manufacturer / distributor-
+    trader). Does NOT commit; also emits OFFER_PUBLISHED_BY_COMPANY.
     """
+    from app.services import company_service  # noqa: PLC0415 — cycle-safe, keep local
+
     if company.status != CompanyStatus.verified:
         raise CompanyNotVerified(str(company.status))
+    company_service.require_business_role(company, company_service.SELLER_ROLES)
 
     offer = SellerOffer(
         seller_id=None,

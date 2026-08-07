@@ -3,11 +3,7 @@ import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink } from "react-router-dom";
 
-import {
-  isCarrierCompany,
-  isLaboratoryCompany,
-  useActiveCompany,
-} from "@/entities/company";
+import { companyHasFeature, useActiveCompany, type FeatureKey } from "@/entities/company";
 import { cn } from "@/shared/lib";
 
 import {
@@ -34,29 +30,32 @@ interface NavItem {
   labelKey: string;
   icon: ReactNode;
   end?: boolean;
-  /** Hidden for a company whose confirmed role is logistics. */
-  hideForCarrier?: boolean;
-  /** Hidden for a company whose confirmed role is laboratory. */
-  hideForLab?: boolean;
+  /**
+   * Shown only when the active company's account type has this feature
+   * (`entities/company/model/features.ts`). No key = universal entry.
+   */
+  feature?: FeatureKey;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/cabinet", labelKey: "nav.home", icon: HomeIcon, end: true },
   { to: "/market", labelKey: "nav.market", icon: StoreIcon },
   { to: "/manufacturers", labelKey: "nav.manufacturers", icon: ManufacturersIcon },
-  { to: "/cabinet/market/favorites", labelKey: "nav.favorites", icon: HeartIcon },
+  { to: "/cabinet/market/favorites", labelKey: "nav.favorites", icon: HeartIcon, feature: "favorites" },
+  // «Заявки» is universal on purpose: the buyer's purchase requests, or the
+  // broadcast pool for a carrier/lab — RequestsRouteSwitch picks the page.
   { to: "/cabinet/requests", labelKey: "nav.requests", icon: DocIcon },
   { to: "/cabinet/deals", labelKey: "nav.deals", icon: HandshakeIcon },
-  { to: "/cabinet/inquiries", labelKey: "nav.inquiries", icon: ChatIcon },
-  { to: "/cabinet/samples", labelKey: "nav.samples", icon: SampleBoxIcon },
-  { to: "/cabinet/lab-orders", labelKey: "nav.labOrders", icon: FlaskNavIcon },
+  { to: "/cabinet/inquiries", labelKey: "nav.inquiries", icon: ChatIcon, feature: "inquiries" },
+  { to: "/cabinet/samples", labelKey: "nav.samples", icon: SampleBoxIcon, feature: "samples" },
+  { to: "/cabinet/lab-orders", labelKey: "nav.labOrders", icon: FlaskNavIcon, feature: "labOrders" },
   {
     to: "/cabinet/lab/requests",
     labelKey: "nav.labRequests",
     icon: FlaskNavIcon,
     // The buyer's own analysis requests. A laboratory reads the broadcast pool
     // at «Заявки» instead, so this would only ever be an empty page for one.
-    hideForLab: true,
+    feature: "labOrdering",
   },
   {
     to: "/cabinet/logistics/requests",
@@ -64,12 +63,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: TruckNavIcon,
     // The buyer's own logistics requests. A carrier reads the broadcast pool at
     // «Заявки» instead, so this entry would only ever be an empty page for one.
-    hideForCarrier: true,
+    feature: "logisticsOrdering",
   },
   // Out to the public reader — news has no cabinet twin any more.
   { to: "/news", labelKey: "nav.news", icon: NewsIcon },
   { to: "/cabinet/companies", labelKey: "nav.companies", icon: BuildingIcon },
-  { to: "/cabinet/offers", labelKey: "nav.offers", icon: TagIcon },
+  { to: "/cabinet/offers", labelKey: "nav.offers", icon: TagIcon, feature: "offers" },
   { to: "/cabinet/contracts", labelKey: "nav.contracts", icon: ContractIcon },
   { to: "/cabinet/settings", labelKey: "nav.settings", icon: CogIcon },
 ];
@@ -80,14 +79,13 @@ interface SideNavProps {
 
 export function SideNav({ onNavigate }: SideNavProps) {
   const { t } = useTranslation();
-  // The only role-aware thing in the cabinet chrome, and it is one predicate:
-  // a carrier's own-requests page is always empty, because the pool it actually
-  // works from lives at «Заявки».
+  // The menu is shaped by the active company's account type: a laboratory has
+  // no «Предложения», a buyer no reason to see a supplier inbox. The same
+  // matrix drives the route guards, so a hidden entry is also an unreachable
+  // page — hiding here is presentation, not the enforcement.
   const { activeCompany } = useActiveCompany();
-  const carrier = isCarrierCompany(activeCompany);
-  const lab = isLaboratoryCompany(activeCompany);
   const items = NAV_ITEMS.filter(
-    (item) => !(carrier && item.hideForCarrier) && !(lab && item.hideForLab),
+    (item) => !item.feature || companyHasFeature(activeCompany, item.feature),
   );
   return (
     <nav className="flex flex-col gap-1" aria-label={t("common.cabinet")}>

@@ -26,14 +26,14 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404, _rate_limited
+from app.api.portal.companies import _company_or_404, _rate_limited, _require_business_role
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.models.accounts import UserAccount
 from app.models.requests import Request
 from app.schemas.portal_request import PortalRequestCreate
 from app.schemas.webapp import RequestDetailOut, RequestFileOut, RequestOut
-from app.services import rate_limit, request_service, storage_service
+from app.services import company_service, rate_limit, request_service, storage_service
 
 router = APIRouter(prefix="/portal/requests", tags=["portal-requests"])
 
@@ -60,6 +60,7 @@ def create_request(
     redis_client: redis.Redis = Depends(get_redis),
 ) -> RequestOut:
     company = _company_or_404(db, account, body.company_id)
+    _require_business_role(company, company_service.BUYER_CAPABLE_ROLES)
     try:
         rate_limit.enforce_daily(
             redis_client, "request_create", company.id, rate_limit.REQUEST_CREATE_PER_DAY

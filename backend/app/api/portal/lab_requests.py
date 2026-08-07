@@ -29,6 +29,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
+from app.api.portal.companies import _require_business_role
 from app.core.db import get_db
 from app.models.accounts import UserAccount
 from app.models.companies import Company
@@ -221,6 +222,7 @@ def create_request(
 ) -> LabRequestOut:
     """POST /portal/lab/requests — «Отправить заявку»."""
     buyer = _company_or_404(db, account, body.company_id)
+    _require_business_role(buyer, company_service.LAB_ORDERING_ROLES)
     request = laboratory_service.create_lab_request(
         db,
         buyer=buyer,

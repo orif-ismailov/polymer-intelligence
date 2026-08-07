@@ -57,6 +57,58 @@ ACCOUNT_TYPE_ROLE_SETS: tuple[frozenset[CompanyBusinessRoleEnum], ...] = (
     frozenset({CompanyBusinessRoleEnum.laboratory}),
 )
 
+# ── Business-role capability sets (role-based cabinet) ────────────────────────
+#
+# Which account types may drive which flows. The portal hides the same features
+# (`entities/company/model/features.ts` mirrors these sets); the API is where it
+# is enforced. Gates read the NON-REVOKED role set — `declared` counts, because
+# a draft company's cabinet is already shaped by what it registered as, and
+# requests/inquiries are open to unverified companies. `insurance_provider` is
+# not gateable: a company holding only unknown roles falls back to the buyer
+# view (fail open, matching the portal's RequireCompany philosophy).
+
+GATEABLE_ROLES: frozenset[CompanyBusinessRoleEnum] = frozenset(
+    {
+        CompanyBusinessRoleEnum.manufacturer,
+        CompanyBusinessRoleEnum.importer,
+        CompanyBusinessRoleEnum.trader,
+        CompanyBusinessRoleEnum.distributor,
+        CompanyBusinessRoleEnum.logistics_provider,
+        CompanyBusinessRoleEnum.laboratory,
+    }
+)
+
+#: May publish/edit offers and answer RFQs.
+SELLER_ROLES: frozenset[CompanyBusinessRoleEnum] = frozenset(
+    {
+        CompanyBusinessRoleEnum.manufacturer,
+        CompanyBusinessRoleEnum.distributor,
+        CompanyBusinessRoleEnum.trader,
+    }
+)
+
+#: May buy: purchase requests, inquiries, samples, factory chat/RFQ.
+#: Manufacturers keep the buy side (raw-material procurement).
+BUYER_CAPABLE_ROLES: frozenset[CompanyBusinessRoleEnum] = frozenset(
+    {
+        CompanyBusinessRoleEnum.importer,
+        CompanyBusinessRoleEnum.distributor,
+        CompanyBusinessRoleEnum.trader,
+        CompanyBusinessRoleEnum.manufacturer,
+    }
+)
+
+#: May order a laboratory analysis — everyone but the laboratories themselves
+#: (a carrier testing cargo is cross-service and legitimate).
+LAB_ORDERING_ROLES: frozenset[CompanyBusinessRoleEnum] = BUYER_CAPABLE_ROLES | {
+    CompanyBusinessRoleEnum.logistics_provider
+}
+
+#: May order shipping — everyone but the carriers themselves.
+LOGISTICS_ORDERING_ROLES: frozenset[CompanyBusinessRoleEnum] = BUYER_CAPABLE_ROLES | {
+    CompanyBusinessRoleEnum.laboratory
+}
+
 # ── Domain exceptions (no `Error` suffix — house style) ───────────────────────
 
 
@@ -106,6 +158,14 @@ class LastOwnerRemoval(Exception):
 
 class InsufficientCompanyRole(Exception):
     """The member is active but their role does not permit this action."""
+
+
+class RoleNotAllowed(Exception):
+    """The company's business roles do not include this capability (403 role_not_allowed).
+
+    A different axis from InsufficientCompanyRole: that one is about the PERSON's
+    standing inside the company, this one about the COMPANY's account type.
+    """
 
 
 # ── Company status machine (data, per ARCHITECTURE §6) ────────────────────────
@@ -526,9 +586,20 @@ def set_business_roles(
     """Replace the company's declared business roles with `roles` (deduped).
 
     Enforces account-type exclusivity — see `assert_single_account_type`.
+
+    A verified company's roles land as `confirmed` directly (verification already
+    vouched for the company; replace-then-declare would silently strip the
+    confirmation this endpoint's rows carried). `confirmed_by` stays NULL — this
+    is the portal path, there is no staff actor.
     """
     deduped = list(dict.fromkeys(roles))
     assert_single_account_type(deduped)
+
+    status = (
+        BusinessRoleStatus.confirmed
+        if company.status == CompanyStatus.verified
+        else BusinessRoleStatus.declared
+    )
 
     for existing in list(company.business_roles):
         db.delete(existing)
@@ -536,9 +607,7 @@ def set_business_roles(
 
     created: list[CompanyBusinessRole] = []
     for role in deduped:
-        row = CompanyBusinessRole(
-            company_id=company.id, role=role, status=BusinessRoleStatus.declared
-        )
+        row = CompanyBusinessRole(company_id=company.id, role=role, status=status)
         db.add(row)
         created.append(row)
     db.flush()
@@ -613,6 +682,30 @@ def require_company_role(
     )
     if member is None or member.member_role not in allowed:
         raise InsufficientCompanyRole(str(company_id))
+
+
+def active_business_roles(company: Company) -> frozenset[CompanyBusinessRoleEnum]:
+    """Non-revoked (declared OR confirmed) roles — what the company registered as."""
+    return frozenset(
+        r.role for r in company.business_roles if r.status != BusinessRoleStatus.revoked
+    )
+
+
+def require_business_role(
+    company: Company, allowed: frozenset[CompanyBusinessRoleEnum]
+) -> None:
+    """Raise RoleNotAllowed unless the company's account type permits this flow.
+
+    Same layering as require_company_role: membership (404) is the caller's job
+    and comes first, so a non-member never sees this 403. A company holding no
+    gateable roles at all (legacy rows, insurance_provider) counts as a buyer —
+    fail OPEN to the fullest non-seller view rather than locking a real customer
+    out of everything.
+    """
+    held = active_business_roles(company) & GATEABLE_ROLES
+    effective = held or frozenset({CompanyBusinessRoleEnum.importer})
+    if not (effective & allowed):
+        raise RoleNotAllowed(str(company.id))
 
 
 def _active_owner_count(db: Session, company_id: int) -> int:

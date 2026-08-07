@@ -115,3 +115,16 @@ def confirmed_roles(company: Company) -> list[str]:
     return [
         str(r.role) for r in company.business_roles if r.status == BusinessRoleStatus.confirmed
     ]
+
+
+def active_roles(company: Company) -> list[str]:
+    """Non-revoked (declared OR confirmed) roles as plain strings.
+
+    What the company registered as, independent of whether staff have vouched
+    for it yet — the cabinet shapes its feature set on this, so a draft company
+    already gets the right cabinet. `confirmed_roles` stays the staff-vouched
+    subset for public-facing surfaces (directories, badges).
+    """
+    return [
+        str(r.role) for r in company.business_roles if r.status != BusinessRoleStatus.revoked
+    ]

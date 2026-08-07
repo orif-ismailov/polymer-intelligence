@@ -144,10 +144,20 @@ def make_staff(db: Session, email: str = "staff@example.com"):  # noqa: ANN202
     return staff
 
 
-def make_company(db: Session, owner, tax_id: str = "301234567", **kwargs):  # noqa: ANN001, ANN202
-    """A company owned by `owner` (an active owner member is created)."""
-    from app.models.companies import Company, CompanyMember  # noqa: PLC0415
-    from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
+def make_company(db: Session, owner, tax_id: str = "301234567", *, roles=None, **kwargs):  # noqa: ANN001, ANN202
+    """A company owned by `owner` (an active owner member is created).
+
+    `roles` declares business roles (the account type picked at registration).
+    Since the role gates (T-B), a company that trades needs seller/buyer roles —
+    pass e.g. `roles=["distributor", "trader"]` for a fixture that does both.
+    """
+    from app.models.companies import Company, CompanyBusinessRole, CompanyMember  # noqa: PLC0415
+    from app.models.enums import (  # noqa: PLC0415
+        BusinessRoleStatus,
+        CompanyMemberRole,
+        CompanyMemberStatus,
+    )
+    from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
 
     company = Company(
         jurisdiction=kwargs.pop("jurisdiction", "UZ"),
@@ -165,6 +175,14 @@ def make_company(db: Session, owner, tax_id: str = "301234567", **kwargs):  # no
             status=CompanyMemberStatus.active,
         )
     )
+    for role in roles or []:
+        db.add(
+            CompanyBusinessRole(
+                company_id=company.id,
+                role=RoleEnum(role) if isinstance(role, str) else role,
+                status=BusinessRoleStatus.declared,
+            )
+        )
     db.flush()
     return company
 

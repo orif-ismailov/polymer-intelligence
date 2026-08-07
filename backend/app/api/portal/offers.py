@@ -13,14 +13,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, Upl
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404, _rate_limited
+from app.api.portal.companies import _company_or_404, _rate_limited, _require_business_role
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.models.accounts import UserAccount
 from app.models.enums import OfferFileKind, SellerOfferStatus
 from app.models.marketplace import SellerOffer, SellerOfferFile
 from app.schemas.portal_company import CompanyOfferIn, CompanyOfferOut
-from app.services import lab_service, offer_service, rate_limit, storage_service
+from app.services import company_service, lab_service, offer_service, rate_limit, storage_service
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-offers"])
 
@@ -67,6 +67,10 @@ def create_offer(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail={"code": "company_not_verified"}
         ) from exc
+    except company_service.RoleNotAllowed as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail={"code": "role_not_allowed"}
+        ) from exc
     db.commit()
     # A compliance-held offer is saved as a draft, not queued: there is nothing
     # for the team to moderate until the seller supplies what is missing.
@@ -96,6 +100,7 @@ def update_offer(
 ) -> SellerOffer:
     company = _company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
+    _require_business_role(company, company_service.SELLER_ROLES)
     offer, requeued = offer_service.update_company_offer(db, offer, body)
     db.commit()
     if requeued and offer.status == SellerOfferStatus.pending_moderation:

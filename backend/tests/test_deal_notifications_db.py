@@ -46,7 +46,8 @@ def _verified(db, tax, phone):  # noqa: ANN001, ANN202
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     account = make_account(db, phone)
-    company = make_company(db, account, tax_id=tax)
+    # distributor+trader: buys and sells — the role gates (T-B) require it
+    company = make_company(db, account, tax_id=tax, roles=["distributor", "trader"])
     company.status = CompanyStatus.verified
     company.legal_name = f"OOO {tax}"
     db.flush()

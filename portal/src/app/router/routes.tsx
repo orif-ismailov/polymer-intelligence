@@ -60,6 +60,7 @@ import {
 import { RedirectIfAuthed } from "./RedirectIfAuthed";
 import { RequireAuth } from "./RequireAuth";
 import { RequireCompany } from "./RequireCompany";
+import { RequireFeature } from "./RequireFeature";
 import { RootLayout } from "./RootLayout";
 
 /**
@@ -203,43 +204,74 @@ const appRoutes: RouteObject[] = [
                   // payloads and anything a buyer bookmarked still carry the old
                   // cabinet URLs.
                   { path: "market", element: <Navigate to="/market" replace /> },
-                  { path: "market/favorites", element: <FavoritesPage /> },
-                  { path: "market/requests", element: <MarketRequestsPage /> },
+                  // Role-gated groups (`RequireFeature`): a feature outside the
+                  // active company's account type redirects to /cabinet. The
+                  // matrix is entities/company/model/features.ts; the API
+                  // enforces the same sets with 403 role_not_allowed.
+                  {
+                    element: <RequireFeature feature="favorites" />,
+                    children: [{ path: "market/favorites", element: <FavoritesPage /> }],
+                  },
+                  {
+                    element: <RequireFeature feature="rfqInbox" />,
+                    children: [{ path: "market/requests", element: <MarketRequestsPage /> }],
+                  },
                   { path: "market/:offerId", element: <RedirectToPublicOffer /> },
 
                   // The directory redirects live at the unguarded top of
                   // `/cabinet` — see the note there. What stays here is what
                   // genuinely needs a session AND a company.
-                  { path: "manufacturers/rfqs/:rfqId/done", element: <FactoryRfqDonePage /> },
-                  { path: "manufacturers/:companyId/chat", element: <ManufacturerChatPage /> },
-                  { path: "manufacturers/:companyId/rfq/:offerId", element: <FactoryRfqPage /> },
+                  {
+                    element: <RequireFeature feature="factory" />,
+                    children: [
+                      { path: "manufacturers/rfqs/:rfqId/done", element: <FactoryRfqDonePage /> },
+                      { path: "manufacturers/:companyId/chat", element: <ManufacturerChatPage /> },
+                      { path: "manufacturers/:companyId/rfq/:offerId", element: <FactoryRfqPage /> },
+                    ],
+                  },
 
                   // Reading a carrier is public; asking one for a price is
                   // not. These two need a session AND a company, so unlike
                   // the directory redirects above they stay inside the guards.
                   // Analysis requests. `/cabinet/lab-orders` beside this is the
                   // STAFF-run partner-lab queue (P6) — different flow, kept.
-                  { path: "lab/requests", element: <LabRequestsPage /> },
-                  { path: "lab/requests/new", element: <LabRequestPage /> },
-                  { path: "lab/threads/:threadId", element: <LabThreadPage /> },
+                  //
+                  // `lab/threads` and `logistics/threads` stay OUTSIDE the
+                  // ordering gates on purpose: a thread is one address for both
+                  // sides, and the answering laboratory/carrier is exactly who
+                  // the gate excludes — walling the room off from the party the
+                  // notification invited would break the conversation.
                   {
-                    path: "lab/requests/:requestId/done",
-                    element: <LabRequestDonePage />,
+                    element: <RequireFeature feature="labOrdering" />,
+                    children: [
+                      { path: "lab/requests", element: <LabRequestsPage /> },
+                      { path: "lab/requests/new", element: <LabRequestPage /> },
+                      {
+                        path: "lab/requests/:requestId/done",
+                        element: <LabRequestDonePage />,
+                      },
+                      { path: "lab/requests/:requestId", element: <LabRequestDetailPage /> },
+                    ],
                   },
-                  { path: "lab/requests/:requestId", element: <LabRequestDetailPage /> },
+                  { path: "lab/threads/:threadId", element: <LabThreadPage /> },
 
-                  { path: "logistics/requests", element: <LogisticsRequestsPage /> },
+                  {
+                    element: <RequireFeature feature="logisticsOrdering" />,
+                    children: [
+                      { path: "logistics/requests", element: <LogisticsRequestsPage /> },
+                      { path: "logistics/requests/new", element: <LogisticsRequestPage /> },
+                      {
+                        path: "logistics/requests/:requestId/done",
+                        element: <LogisticsRequestDonePage />,
+                      },
+                      {
+                        path: "logistics/requests/:requestId",
+                        element: <LogisticsRequestDetailPage />,
+                      },
+                    ],
+                  },
                   // One address for a conversation, whichever side clicks it.
                   { path: "logistics/threads/:threadId", element: <LogisticsThreadPage /> },
-                  { path: "logistics/requests/new", element: <LogisticsRequestPage /> },
-                  {
-                    path: "logistics/requests/:requestId/done",
-                    element: <LogisticsRequestDonePage />,
-                  },
-                  {
-                    path: "logistics/requests/:requestId",
-                    element: <LogisticsRequestDetailPage />,
-                  },
 
                   // Same components as the storefront, different chrome.
                   { path: "prices", element: <PublicPricesPage /> },
@@ -257,31 +289,54 @@ const appRoutes: RouteObject[] = [
                   { path: "sellers/:companyId", element: <SellerProfilePage /> },
                   { path: "deals", element: <DealsPage /> },
                   { path: "deals/:dealId", element: <DealDetailPage /> },
-                  { path: "inquiries", element: <InquiriesPage /> },
-                  { path: "inquiries/:inquiryId", element: <InquiryDetailPage /> },
-                  { path: "samples", element: <SamplesPage /> },
-                  { path: "lab-orders", element: <LabOrdersPage /> },
+                  {
+                    element: <RequireFeature feature="inquiries" />,
+                    children: [
+                      { path: "inquiries", element: <InquiriesPage /> },
+                      { path: "inquiries/:inquiryId", element: <InquiryDetailPage /> },
+                    ],
+                  },
+                  {
+                    element: <RequireFeature feature="samples" />,
+                    children: [{ path: "samples", element: <SamplesPage /> }],
+                  },
+                  {
+                    element: <RequireFeature feature="labOrders" />,
+                    children: [{ path: "lab-orders", element: <LabOrdersPage /> }],
+                  },
                   // «Заявки» means the buyer's purchase requests, or the
-                  // broadcast pool for a carrier — see RequestsRouteSwitch.
+                  // broadcast pool for a carrier/lab — see RequestsRouteSwitch.
+                  // The index is NOT feature-gated: it IS the pool for the
+                  // service roles. Only the buyer wizard/detail below it is.
                   { path: "requests", element: <RequestsRouteSwitch /> },
-                  { path: "requests/new", element: <Navigate to="/cabinet/requests/new/1" replace /> },
-                  { path: "requests/new/done/:requestId", element: <RequestPublishedPage /> },
-                  { path: "requests/new/:step", element: <RequestCreatePage /> },
-                  { path: "requests/:requestId", element: <RequestDetailPage /> },
+                  {
+                    element: <RequireFeature feature="purchaseRequests" />,
+                    children: [
+                      { path: "requests/new", element: <Navigate to="/cabinet/requests/new/1" replace /> },
+                      { path: "requests/new/done/:requestId", element: <RequestPublishedPage /> },
+                      { path: "requests/new/:step", element: <RequestCreatePage /> },
+                      { path: "requests/:requestId", element: <RequestDetailPage /> },
+                    ],
+                  },
                   { path: "notifications", element: <NotificationsPage /> },
                   { path: "companies", element: <CompaniesPage /> },
                   { path: "companies/:companyId/manage", element: <CompanyManagePage /> },
                   { path: "companies/:companyId/verification", element: <VerificationStatusPage /> },
                   { path: "companies/:companyId", element: <CompanyViewPage /> },
-                  { path: "offers", element: <OffersPage /> },
                   // The add-product flow is URL-addressable by step. Literal
                   // segments before the `:offerId` param route, or "new" is read
                   // as an offer id.
-                  { path: "offers/new", element: <Navigate to="/cabinet/offers/new/1" replace /> },
-                  { path: "offers/new/done/:offerId", element: <OfferPublishedPage /> },
-                  { path: "offers/new/:step", element: <OfferCreatePage /> },
-                  { path: "offers/:offerId/edit/:step", element: <OfferCreatePage /> },
-                  { path: "offers/:offerId", element: <OfferEditRedirect /> },
+                  {
+                    element: <RequireFeature feature="offers" />,
+                    children: [
+                      { path: "offers", element: <OffersPage /> },
+                      { path: "offers/new", element: <Navigate to="/cabinet/offers/new/1" replace /> },
+                      { path: "offers/new/done/:offerId", element: <OfferPublishedPage /> },
+                      { path: "offers/new/:step", element: <OfferCreatePage /> },
+                      { path: "offers/:offerId/edit/:step", element: <OfferCreatePage /> },
+                      { path: "offers/:offerId", element: <OfferEditRedirect /> },
+                    ],
+                  },
                   { path: "contracts", element: <ContractsPage /> },
                   { path: "contracts/new", element: <ContractCreatePage /> },
                   { path: "contracts/:contractId", element: <ContractDetailPage /> },

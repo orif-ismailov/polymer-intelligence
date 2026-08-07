@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404
+from app.api.portal.companies import _company_or_404, _require_business_role
 from app.core.db import get_db
 from app.models.accounts import UserAccount
 from app.models.companies import Company
@@ -29,7 +29,7 @@ from app.schemas.portal_manufacturers import (
     ManufacturerThreadOpenIn,
     ManufacturerThreadOut,
 )
-from app.services import manufacturer_service, offer_service, storage_service
+from app.services import company_service, manufacturer_service, offer_service, storage_service
 
 router = APIRouter(prefix="/portal/manufacturers", tags=["portal-manufacturers"])
 
@@ -407,6 +407,7 @@ def open_thread(
     account: UserAccount = Depends(get_current_account),
 ) -> ManufacturerThreadOut:
     buyer = _company_or_404(db, account, body.company_id)
+    _require_business_role(buyer, company_service.BUYER_CAPABLE_ROLES)
     try:
         manufacturer = manufacturer_service.get_verified_manufacturer(
             db, manufacturer_id
@@ -440,6 +441,7 @@ def create_factory_rfq(
     account: UserAccount = Depends(get_current_account),
 ) -> FactoryRfqOut:
     buyer = _company_or_404(db, account, body.company_id)
+    _require_business_role(buyer, company_service.BUYER_CAPABLE_ROLES)
     try:
         manufacturer = manufacturer_service.get_verified_manufacturer(
             db, manufacturer_id
