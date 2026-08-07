@@ -16,6 +16,7 @@ import { login, registerCompany } from "./_registration";
 
 const LAB_PHONE = process.env.PORTAL_LAB_PHONE ?? "+998901234530";
 const CARRIER_PHONE = process.env.PORTAL_CARRIER_PHONE ?? "+998901234528";
+const MANUFACTURER_PHONE = process.env.PORTAL_MANUFACTURER_PHONE ?? "+998901234501";
 
 const OFFERS = /^(Предложения|Takliflar|Offers)$/;
 const FAVORITES = /^(Избранное|Saralangan|Favorites)$/;
@@ -95,4 +96,45 @@ test("a distributor sees the trade features, before verification", async ({
   // /cabinet/offers is theirs (locked until verified, but not redirected).
   await page.goto("/cabinet/offers");
   await expect(page).toHaveURL(/\/cabinet\/offers$/);
+});
+
+test("a manufacturer keeps BOTH sides: sell features and buyer features", async ({
+  page,
+  request,
+}) => {
+  await signIn(page, request, MANUFACTURER_PHONE);
+
+  // Sell side…
+  await expect(navLink(page, OFFERS).first()).toBeVisible();
+  // …and the buy side (raw-material procurement) at the same time.
+  await expect(navLink(page, FAVORITES).first()).toBeVisible();
+  await expect(navLink(page, INQUIRIES).first()).toBeVisible();
+  await expect(navLink(page, LAB_ORDERING).first()).toBeVisible();
+  await expect(navLink(page, LOGISTICS_ORDERING).first()).toBeVisible();
+
+  // The supplier RFQ inbox is theirs too — no redirect.
+  await page.goto("/cabinet/market/requests");
+  await expect(page).toHaveURL(/\/cabinet\/market\/requests$/);
+});
+
+test("a buyer buys but never sells: no offers, no supplier inbox", async ({
+  page,
+  request,
+}) => {
+  await login(page, request, uniquePhone());
+  await registerCompany(page, uniqueTaxId(), { type: "buyer" });
+  await page.goto("/cabinet");
+
+  // Buyer features are all there…
+  await expect(navLink(page, FAVORITES).first()).toBeVisible();
+  await expect(navLink(page, INQUIRIES).first()).toBeVisible();
+  await expect(navLink(page, LAB_ORDERING).first()).toBeVisible();
+  await expect(navLink(page, LOGISTICS_ORDERING).first()).toBeVisible();
+  // …the seller surface is not.
+  await expect(navLink(page, OFFERS)).toHaveCount(0);
+
+  await page.goto("/cabinet/offers");
+  await page.waitForURL((url) => url.pathname === "/cabinet");
+  await page.goto("/cabinet/market/requests");
+  await page.waitForURL((url) => url.pathname === "/cabinet");
 });
