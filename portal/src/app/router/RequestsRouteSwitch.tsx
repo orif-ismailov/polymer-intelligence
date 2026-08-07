@@ -23,7 +23,7 @@ import { LoadingView } from "@/shared/ui";
  *
  * Waits for the active company rather than defaulting to the buyer view —
  * rendering the wrong page and swapping it a tick later is a visible flash, and
- * `confirmed_roles` rides on the summary precisely so this costs no extra fetch.
+ * `declared_roles` rides on the summary precisely so this costs no extra fetch.
  *
  * A company can hold only one account type (`assert_single_account_type`), so
  * the two role arms cannot both match.

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { useAuthStore } from "@/entities/account";
-import { CompanyStatusBadge, useActiveCompany } from "@/entities/company";
+import { companyHasFeature, CompanyStatusBadge, useActiveCompany } from "@/entities/company";
 import { useNewsArticles } from "@/entities/news";
 import { useUnreadCount } from "@/entities/notification";
 import { useRequests } from "@/entities/request";
@@ -148,7 +148,8 @@ export function HomePage() {
             <LinkButton variant="outline" to={`/cabinet/companies/${activeCompany.id}/verification`}>
               {t("home.goToVerification")}
             </LinkButton>
-            {activeCompany.status === "verified" ? (
+            {activeCompany.status === "verified" &&
+            companyHasFeature(activeCompany, "offers") ? (
               <LinkButton to="/cabinet/offers/new">{t("home.publishOffer")}</LinkButton>
             ) : null}
           </div>
@@ -184,12 +185,14 @@ export function HomePage() {
             hint={t("requests.subtitle")}
             icon={<ClipboardList size={18} strokeWidth={1.75} aria-hidden />}
           />
-          <ModuleCard
-            to="/cabinet/inquiries"
-            title={t("nav.inquiries")}
-            hint={t("inquiries.subtitle")}
-            icon={<Inbox size={18} strokeWidth={1.75} aria-hidden />}
-          />
+          {companyHasFeature(activeCompany, "inquiries") ? (
+            <ModuleCard
+              to="/cabinet/inquiries"
+              title={t("nav.inquiries")}
+              hint={t("inquiries.subtitle")}
+              icon={<Inbox size={18} strokeWidth={1.75} aria-hidden />}
+            />
+          ) : null}
           <ModuleCard
             to="/cabinet/deals"
             title={t("nav.deals")}
@@ -202,12 +205,14 @@ export function HomePage() {
             hint={t("home.companiesCardHint")}
             icon={<Building2 size={18} strokeWidth={1.75} aria-hidden />}
           />
-          <ModuleCard
-            to="/cabinet/offers"
-            title={t("home.offersCard")}
-            hint={t("home.offersCardHint")}
-            icon={<Package size={18} strokeWidth={1.75} aria-hidden />}
-          />
+          {companyHasFeature(activeCompany, "offers") ? (
+            <ModuleCard
+              to="/cabinet/offers"
+              title={t("home.offersCard")}
+              hint={t("home.offersCardHint")}
+              icon={<Package size={18} strokeWidth={1.75} aria-hidden />}
+            />
+          ) : null}
         </div>
       </section>
 

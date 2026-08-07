@@ -27,3 +27,5 @@ export {
 } from "./model/mutations";
 export { CompanyStatusBadge } from "./ui/CompanyStatusBadge";
 export { isCarrierCompany, isLaboratoryCompany } from "./model/roles";
+export { companyHasFeature, effectiveRoles, FEATURE_ROLES } from "./model/features";
+export type { FeatureKey } from "./model/features";

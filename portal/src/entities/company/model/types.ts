@@ -42,6 +42,13 @@ export interface CompanySummary {
    * Distinct from `CompanyDetail.roles`, which is `{role, status}` objects.
    */
   confirmed_roles: string[];
+  /**
+   * NON-REVOKED (declared or confirmed) roles — what the company registered
+   * as. The role-based show/hide (`features.ts`) keys off this, not
+   * `confirmed_roles`, so a draft company already gets the right cabinet
+   * shape before staff have vouched for it.
+   */
+  declared_roles: string[];
   active_case: CaseOut | null;
 }
 

@@ -21,7 +21,7 @@ export function RolesSection({ company }: RolesSectionProps) {
         {company.roles.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {company.roles.map((role) => (
-              <Badge key={role.role} tone={role.status === "approved" ? "success" : "neutral"}>
+              <Badge key={role.role} tone={role.status === "confirmed" ? "success" : "neutral"}>
                 {label("businessRole", role.role)}
               </Badge>
             ))}
