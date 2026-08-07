@@ -526,9 +526,20 @@ def set_business_roles(
     """Replace the company's declared business roles with `roles` (deduped).
 
     Enforces account-type exclusivity — see `assert_single_account_type`.
+
+    A verified company's roles land as `confirmed` directly (verification already
+    vouched for the company; replace-then-declare would silently strip the
+    confirmation this endpoint's rows carried). `confirmed_by` stays NULL — this
+    is the portal path, there is no staff actor.
     """
     deduped = list(dict.fromkeys(roles))
     assert_single_account_type(deduped)
+
+    status = (
+        BusinessRoleStatus.confirmed
+        if company.status == CompanyStatus.verified
+        else BusinessRoleStatus.declared
+    )
 
     for existing in list(company.business_roles):
         db.delete(existing)
@@ -536,9 +547,7 @@ def set_business_roles(
 
     created: list[CompanyBusinessRole] = []
     for role in deduped:
-        row = CompanyBusinessRole(
-            company_id=company.id, role=role, status=BusinessRoleStatus.declared
-        )
+        row = CompanyBusinessRole(company_id=company.id, role=role, status=status)
         db.add(row)
         created.append(row)
     db.flush()

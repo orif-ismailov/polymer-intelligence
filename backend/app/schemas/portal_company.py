@@ -351,6 +351,12 @@ class CompanySummaryOut(BaseModel):
     #: `{role, status}` objects, and one name for two shapes is how a client
     #: ends up reading `.role` off a string.
     confirmed_roles: list[str] = Field(default_factory=list)
+    #: NON-REVOKED (declared or confirmed) roles, as plain strings — what the
+    #: company registered as. The cabinet's role-based show/hide keys off this,
+    #: not `confirmed_roles`, so a draft company already gets the right cabinet
+    #: shape before staff have vouched for it. Same not-`roles` naming rule as
+    #: above.
+    declared_roles: list[str] = Field(default_factory=list)
     active_case: CaseOut | None = None
 
 

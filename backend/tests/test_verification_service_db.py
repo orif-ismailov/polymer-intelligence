@@ -274,6 +274,77 @@ def test_reject_and_request_info(sf, monkeypatch) -> None:  # noqa: ANN001
         assert db.get(Company, company.id).status == CompanyStatus.rejected
 
 
+# ── declared → confirmed on approval ──────────────────────────────────────────
+
+
+def _declare_roles(db, company_id, roles) -> None:  # noqa: ANN001
+    from app.models.companies import Company  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
+
+    company_service.set_business_roles(db, db.get(Company, company_id), roles)
+    db.flush()
+
+
+def _role_rows(db, company_id):  # noqa: ANN001, ANN202
+    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+
+    return db.query(CompanyBusinessRole).filter_by(company_id=company_id).all()
+
+
+@requires_real_db
+def test_approve_confirms_declared_roles(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
+    from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
+    from app.services import verification_service  # noqa: PLC0415
+
+    with sf() as db:
+        staff_id = make_staff(db).id
+        company, case = _case_in_pending_review(db, monkeypatch, "+998900000001", "123456789")
+        _declare_roles(db, company.id, [RoleEnum.laboratory])
+        verification_service.approve(db, case, staff_user_id=staff_id)
+        db.commit()
+
+        rows = _role_rows(db, company.id)
+        assert [r.status for r in rows] == [BusinessRoleStatus.confirmed]
+        assert rows[0].confirmed_by == staff_id
+
+
+@requires_real_db
+def test_auto_approve_confirms_declared_roles(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.models.enums import BusinessRoleStatus, VerificationCheckStatus  # noqa: PLC0415
+    from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
+    from app.services import settings_service, verification_service  # noqa: PLC0415
+
+    with sf() as db:
+        settings_service.set_many(db, {"verification_auto_approve": True}, None)
+        _account, company, case = _submit(db, monkeypatch)
+        _declare_roles(db, company.id, [RoleEnum.distributor, RoleEnum.trader])
+        _set_automated(db, case.id, VerificationCheckStatus.passed)
+        verification_service.on_check_completed(db, case.id)
+        db.commit()
+
+        rows = _role_rows(db, company.id)
+        assert {r.status for r in rows} == {BusinessRoleStatus.confirmed}
+        assert {r.confirmed_by for r in rows} == {None}  # auto path — no staff actor
+
+
+@requires_real_db
+def test_reject_leaves_roles_declared(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
+    from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
+    from app.services import verification_service  # noqa: PLC0415
+
+    with sf() as db:
+        staff_id = make_staff(db).id
+        company, case = _case_in_pending_review(db, monkeypatch, "+998900000004", "444444444")
+        _declare_roles(db, company.id, [RoleEnum.manufacturer])
+        verification_service.reject(db, case, staff_user_id=staff_id, note="fake docs")
+        db.commit()
+
+        rows = _role_rows(db, company.id)
+        assert [r.status for r in rows] == [BusinessRoleStatus.declared]
+
+
 @requires_real_db
 def test_waive_check_requires_reason_and_reevaluates(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.models.enums import (  # noqa: PLC0415

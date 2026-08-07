@@ -162,6 +162,35 @@ def test_set_business_roles_replaces(sf) -> None:  # noqa: ANN001
 
 
 @requires_real_db
+def test_set_business_roles_status_follows_company_status(sf) -> None:  # noqa: ANN001
+    from app.models.enums import (  # noqa: PLC0415
+        BusinessRoleStatus,
+        CompanyBusinessRole,
+        CompanyStatus,
+    )
+    from app.services import company_service  # noqa: PLC0415
+
+    with sf() as db:
+        account = make_account(db, "+998900000001")
+        company = company_service.create_company(db, account, "UZ", "123456789")
+        db.commit()
+
+        # pre-verification: roles land as declared
+        company_service.set_business_roles(db, company, [CompanyBusinessRole.laboratory])
+        db.commit()
+        db.refresh(company)
+        assert [r.status for r in company.business_roles] == [BusinessRoleStatus.declared]
+
+        # post-verification: a role edit must not silently un-confirm the company
+        company.status = CompanyStatus.verified
+        db.flush()
+        company_service.set_business_roles(db, company, [CompanyBusinessRole.laboratory])
+        db.commit()
+        db.refresh(company)
+        assert [r.status for r in company.business_roles] == [BusinessRoleStatus.confirmed]
+
+
+@requires_real_db
 def test_set_business_roles_rejects_cross_account_type_mix(sf) -> None:  # noqa: ANN001
     from app.models.enums import CompanyBusinessRole  # noqa: PLC0415
     from app.services import company_service  # noqa: PLC0415

@@ -163,6 +163,40 @@ def test_profile_roles_and_bank_masking(api) -> None:  # noqa: ANN001
 
 
 @requires_real_db
+def test_summary_carries_declared_roles(api) -> None:  # noqa: ANN001
+    """The cabinet shapes itself on `declared_roles` (non-revoked declared+confirmed)."""
+    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
+
+    client, session = api
+    _aid, auth = _seed_account(session, "+998900000001")
+    company_id = client.post(_BASE, json={"tax_id": "123456789"}, headers=auth).json()["id"]
+    client.put(f"{_BASE}/{company_id}/roles", json={"roles": ["laboratory"]}, headers=auth)
+
+    summary = client.get(_BASE, headers=auth).json()[0]
+    assert summary["declared_roles"] == ["laboratory"]
+    assert summary["confirmed_roles"] == []  # not staff-vouched yet
+
+    # confirmed roles stay in declared_roles (it is the non-revoked set)
+    with session() as db:
+        row = db.query(CompanyBusinessRole).filter_by(company_id=company_id).one()
+        row.status = BusinessRoleStatus.confirmed
+        db.commit()
+    summary = client.get(_BASE, headers=auth).json()[0]
+    assert summary["declared_roles"] == ["laboratory"]
+    assert summary["confirmed_roles"] == ["laboratory"]
+
+    # revoked roles drop out of both
+    with session() as db:
+        row = db.query(CompanyBusinessRole).filter_by(company_id=company_id).one()
+        row.status = BusinessRoleStatus.revoked
+        db.commit()
+    summary = client.get(_BASE, headers=auth).json()[0]
+    assert summary["declared_roles"] == []
+    assert summary["confirmed_roles"] == []
+
+
+@requires_real_db
 def test_roles_reject_cross_account_type_mix(api) -> None:  # noqa: ANN001
     client, session = api
     _aid, auth = _seed_account(session, "+998900000011")

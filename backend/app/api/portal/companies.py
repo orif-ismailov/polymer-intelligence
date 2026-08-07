@@ -132,6 +132,7 @@ def _summary_out(db: Session, company: Company) -> CompanySummaryOut:
         logo_url=storage_service.presign_company_logo(company),
         cover_url=storage_service.presign_company_cover(company),
         confirmed_roles=directory_service.confirmed_roles(company),
+        declared_roles=directory_service.active_roles(company),
         active_case=_case_out(db, active),
     )
 

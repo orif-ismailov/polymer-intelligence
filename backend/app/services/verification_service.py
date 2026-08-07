@@ -25,8 +25,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.accounts import UserAccount
-from app.models.companies import Company
+from app.models.companies import Company, CompanyBusinessRole
 from app.models.enums import (
+    BusinessRoleStatus,
     CompanyStatus,
     VerificationCaseStatus,
     VerificationCaseType,
@@ -379,6 +380,19 @@ def _finalize_approval(
     company.reverification_due_at = now + datetime.timedelta(days=_REVERIFICATION_DAYS)
     company_service.transition(
         db, company, CompanyStatus.verified, staff_user_id=staff_user_id, actor=actor
+    )
+    # Verification vouches for what the company registered as: its declared
+    # business roles become confirmed here — the ONLY app-code writer of
+    # `confirmed` (the confirmed-gated surfaces — pools, directories, badges —
+    # all key off this transition). Auto-approve has no staff actor, so
+    # `confirmed_by` stays NULL on that path.
+    db.execute(
+        update(CompanyBusinessRole)
+        .where(
+            CompanyBusinessRole.company_id == company.id,
+            CompanyBusinessRole.status == BusinessRoleStatus.declared,
+        )
+        .values(status=BusinessRoleStatus.confirmed, confirmed_by=staff_user_id)
     )
     _resolve_manual_kyb(db, case.id, VerificationCheckStatus.passed, staff_user_id)
     event_service.emit(
