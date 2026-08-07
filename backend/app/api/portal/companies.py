@@ -74,6 +74,20 @@ def _company_or_404(db: Session, account: UserAccount, company_id: int) -> Compa
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found") from exc
 
 
+def _require_business_role(company: Company, allowed: frozenset[CompanyBusinessRole]) -> None:
+    """403 `role_not_allowed` unless the company's account type permits this flow.
+
+    Call AFTER `_company_or_404` (outsiders keep their 404). The typed-code shape
+    mirrors `company_not_verified` so the portal can branch on it.
+    """
+    try:
+        company_service.require_business_role(company, allowed)
+    except company_service.RoleNotAllowed as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail={"code": "role_not_allowed"}
+        ) from exc
+
+
 def _require_company_admin(db: Session, account: UserAccount, company_id: int) -> None:
     """Owner/manager only. Call AFTER `_company_or_404` so outsiders still get 404."""
     try:

@@ -97,7 +97,11 @@ def _scene(session, *, samples: bool = True):  # noqa: ANN001, ANN202
     with session() as db:
         seller_owner = make_account(db, "+998900000501")
         buyer_owner = make_account(db, "+998900000502")
-        seller = make_company(db, seller_owner, tax_id="300000501", short_name="Продавец")
+        # distributor+trader on the seller: it publishes offers (role gates, T-B)
+        seller = make_company(
+            db, seller_owner, tax_id="300000501", short_name="Продавец",
+            roles=["distributor", "trader"],
+        )
         buyer = make_company(db, buyer_owner, tax_id="300000502", short_name="Покупатель")
         seller.status = CompanyStatus.verified
         buyer.status = CompanyStatus.verified

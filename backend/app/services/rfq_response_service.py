@@ -155,13 +155,17 @@ def submit(
     """File this company's quote against an RFQ.
 
     Guard order matters: own-request first (the buyer is looking at their own
-    thing, not being denied access), then verified/visibility, then the
-    open-status check.
+    thing, not being denied access), then verified, then the seller-role gate
+    (role_not_allowed reveals nothing about THIS request, so it may precede
+    visibility), then visibility, then the open-status check.
     """
+    from app.services import company_service  # noqa: PLC0415 — cycle-safe, keep local
+
     if request.company_id is not None and request.company_id == company.id:
         raise CannotRespondOwnRequest(str(request.id))
     if company.status != CompanyStatus.verified:
         raise CompanyNotVerified(str(company.id))
+    company_service.require_business_role(company, company_service.SELLER_ROLES)
     if not is_visible_to(request, company):
         raise RfqNotVisible(str(request.id))
     if request.status not in OPEN_STATUSES:

@@ -26,6 +26,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
+from app.api.portal.companies import _require_business_role
 from app.core.db import get_db
 from app.models.accounts import UserAccount
 from app.models.companies import Company
@@ -215,6 +216,7 @@ def create_request(
 ) -> LogisticsRequestOut:
     """POST /portal/logistics/requests — «Отправить заявку»."""
     buyer = _company_or_404(db, account, body.company_id)
+    _require_business_role(buyer, company_service.LOGISTICS_ORDERING_ROLES)
     request = logistics_service.create_logistics_request(
         db,
         buyer=buyer,

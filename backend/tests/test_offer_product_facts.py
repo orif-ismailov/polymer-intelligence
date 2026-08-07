@@ -136,12 +136,16 @@ def _auth(account_id: int) -> dict[str, str]:
 
 
 def _verified_company(session, phone: str, tax: str):  # noqa: ANN001, ANN202
-    from app.models.enums import CompanyStatus
+    from app.models.enums import CompanyBusinessRole, CompanyStatus
     from app.services import company_service
 
     with session() as db:
         account = make_account(db, phone)
         company = company_service.create_company(db, account, "UZ", tax)
+        # distributor+trader: publishes offers — the role gates (T-B) require it
+        company_service.set_business_roles(
+            db, company, [CompanyBusinessRole.distributor, CompanyBusinessRole.trader]
+        )
         company.status = CompanyStatus.verified
         db.commit()
         return account.id, company.id
