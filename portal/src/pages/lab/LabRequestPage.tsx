@@ -33,7 +33,7 @@ export function LabRequestPage() {
   return (
     <div className="mx-auto max-w-3xl pb-10">
       <PageHeader
-        backTo="/cabinet/lab/requests"
+        backTo="/cabinet/lab"
         backLabel={t("labRequest.myRequests")}
         title={t("labRequest.title")}
         subtitle={t("labRequest.broadcastHint")}

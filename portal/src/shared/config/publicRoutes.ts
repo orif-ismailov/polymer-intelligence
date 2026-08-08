@@ -53,6 +53,23 @@ export function directoryBySlug(slug: string | undefined): PublicDirectory | nul
 }
 
 /**
+ * The directory a company's confirmed roles put it in, in `PUBLIC_DIRECTORIES`
+ * order — the same precedence the company page uses for its canonical URL.
+ *
+ * The API's profile endpoint is scoped to the directory in the path, so a link
+ * built with the wrong slug 404s: a trader's offer used to link its seller to
+ * `/manufacturers/:id`, which resolves for a manufacturer and for nobody else.
+ * Returns `null` when no confirmed role has a public directory (an importer /
+ * distributor-only company has no profile page to link to).
+ */
+export function directoryForRoles(
+  roles: readonly string[] | null | undefined,
+): PublicDirectory | null {
+  if (!roles || roles.length === 0) return null;
+  return PUBLIC_DIRECTORIES.find((d) => roles.includes(d.role)) ?? null;
+}
+
+/**
  * URL prefix every authenticated page lives under.
  *
  * One string, because three different things have to agree on it: the route

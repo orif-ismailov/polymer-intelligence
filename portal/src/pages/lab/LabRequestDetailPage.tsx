@@ -48,7 +48,7 @@ export function LabRequestDetailPage() {
   if (query.isError || !query.data) {
     return (
       <ErrorView title={t("errors.notFound")} message={t("errors.notFoundBody")}>
-        <LinkButton to="/cabinet/lab/requests">
+        <LinkButton to="/cabinet/lab">
           {t("labRequest.myRequests")}
         </LinkButton>
       </ErrorView>
@@ -63,7 +63,7 @@ export function LabRequestDetailPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        backTo="/cabinet/lab/requests"
+        backTo="/cabinet/lab"
         backLabel={t("labRequest.myRequests")}
         title={request.product_text}
         subtitle={request.number}

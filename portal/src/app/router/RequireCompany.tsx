@@ -19,7 +19,12 @@ export function RequireCompany() {
   const { t } = useTranslation();
   const query = useCompanies();
 
-  if (query.isLoading) {
+  // "Empty but revalidating" is loading, not "no companies": the registration
+  // wizard mounts OUTSIDE this guard, so its invalidation of the list only
+  // marks the cache stale — the refetch fires when this guard mounts. Judging
+  // the stale pre-registration [] bounced a freshly registered account
+  // straight back to onboarding.
+  if (query.isLoading || (query.isFetching && (query.data?.length ?? 0) === 0)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg">
         <LoadingView label={t("common.loading")} />

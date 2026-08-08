@@ -13,7 +13,7 @@ import {
   ReviewForm,
   type CompanyProfileTabId,
 } from "@/features/company-profile";
-import { directoryBySlug, publicSiteOrigin } from "@/shared/config";
+import { directoryBySlug, directoryForRoles, publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { useTierBase } from "@/shared/lib";
 import { Seo, useCanonical } from "@/shared/seo";
@@ -54,10 +54,7 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
 
   // Canonical is computed from the company's own roles, not from the URL that
   // was followed, so `/traders/12` and `/manufacturers/12` agree on one address.
-  const canonicalSlug =
-    company?.roles
-      ?.map((role) => (role === "manufacturer" ? "manufacturers" : role === "trader" ? "traders" : role === "logistics_provider" ? "logistics" : role === "laboratory" ? "laboratories" : null))
-      .find(Boolean) ?? directory?.slug ?? "";
+  const canonicalSlug = directoryForRoles(company?.roles)?.slug ?? directory?.slug ?? "";
   const { canonical, alternates } = useCanonical(
     origin,
     `/${canonicalSlug}/${id ?? ""}`,

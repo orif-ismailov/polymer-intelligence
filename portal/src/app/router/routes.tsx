@@ -9,13 +9,12 @@ import { UiKitPage } from "@/pages/dev-ui";
 import { HomePage } from "@/pages/home";
 import { InquiriesPage, InquiryDetailPage } from "@/pages/inquiries";
 import {
+  LabHubPage,
   LabRequestDetailPage,
   LabRequestDonePage,
   LabRequestPage,
-  LabRequestsPage,
   LabThreadPage,
 } from "@/pages/lab";
-import { LabOrdersPage } from "@/pages/lab-orders";
 import {
   LogisticsRequestDetailPage,
   LogisticsRequestDonePage,
@@ -233,8 +232,11 @@ const appRoutes: RouteObject[] = [
                   // Reading a carrier is public; asking one for a price is
                   // not. These two need a session AND a company, so unlike
                   // the directory redirects above they stay inside the guards.
-                  // Analysis requests. `/cabinet/lab-orders` beside this is the
-                  // STAFF-run partner-lab queue (P6) — different flow, kept.
+                  // The laboratory hub: marketplace analysis requests and the
+                  // staff-run partner-lab orders (P6), one page with two tabs.
+                  // The route sits behind the WIDER `labOrdering` gate; the
+                  // orders tab is shown by the page only for roles that also
+                  // hold `labOrders`. The retired list addresses redirect in.
                   //
                   // `lab/threads` and `logistics/threads` stay OUTSIDE the
                   // ordering gates on purpose: a thread is one address for both
@@ -244,7 +246,8 @@ const appRoutes: RouteObject[] = [
                   {
                     element: <RequireFeature feature="labOrdering" />,
                     children: [
-                      { path: "lab/requests", element: <LabRequestsPage /> },
+                      { path: "lab", element: <LabHubPage /> },
+                      { path: "lab/requests", element: <Navigate to="/cabinet/lab" replace /> },
                       { path: "lab/requests/new", element: <LabRequestPage /> },
                       {
                         path: "lab/requests/:requestId/done",
@@ -252,6 +255,12 @@ const appRoutes: RouteObject[] = [
                       },
                       { path: "lab/requests/:requestId", element: <LabRequestDetailPage /> },
                     ],
+                  },
+                  // Old bookmark; the hub's gate is wider, so the redirect can
+                  // sit outside it and let the target decide.
+                  {
+                    path: "lab-orders",
+                    element: <Navigate to="/cabinet/lab?tab=orders" replace />,
                   },
                   { path: "lab/threads/:threadId", element: <LabThreadPage /> },
 
@@ -299,10 +308,6 @@ const appRoutes: RouteObject[] = [
                   {
                     element: <RequireFeature feature="samples" />,
                     children: [{ path: "samples", element: <SamplesPage /> }],
-                  },
-                  {
-                    element: <RequireFeature feature="labOrders" />,
-                    children: [{ path: "lab-orders", element: <LabOrdersPage /> }],
                   },
                   // «Заявки» means the buyer's purchase requests, or the
                   // broadcast pool for a carrier/lab — see RequestsRouteSwitch.

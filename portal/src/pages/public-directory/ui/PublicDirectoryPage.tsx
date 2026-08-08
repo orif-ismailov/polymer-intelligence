@@ -6,7 +6,7 @@ import { directoryBySlug, publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { Seo, useCanonical } from "@/shared/seo";
 import { LinkButton, Skeleton } from "@/shared/ui";
-import { useTierBase } from "@/shared/lib";
+import { useSyncedDraft, useTierBase } from "@/shared/lib";
 
 const PAGE_SIZE = 24;
 
@@ -38,6 +38,12 @@ export function PublicDirectoryPage({ slug }: { slug: string }) {
   const country = (params.get("country") ?? "").toUpperCase();
   const offset = Math.max(0, Number(params.get("offset") ?? 0) || 0);
   const isFiltered = Boolean(q || country);
+
+  // Drafts re-sync when the URL changes underneath the inputs («Сбросить»,
+  // back/forward) — `defaultValue` kept showing the stale text, and the next
+  // blur silently re-applied it.
+  const [qDraft, setQDraft] = useSyncedDraft(q);
+  const [countryDraft, setCountryDraft] = useSyncedDraft(country);
 
   const query = usePublicDirectory(
     directory?.slug ?? "",
@@ -131,7 +137,8 @@ export function PublicDirectoryPage({ slug }: { slug: string }) {
             <input
               id="dir-q"
               type="search"
-              defaultValue={q}
+              value={qDraft}
+              onChange={(e) => setQDraft(e.target.value)}
               onBlur={(e) => setFilter("q", e.target.value.trim() || null)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -150,7 +157,8 @@ export function PublicDirectoryPage({ slug }: { slug: string }) {
               id="dir-country"
               type="text"
               maxLength={2}
-              defaultValue={country}
+              value={countryDraft}
+              onChange={(e) => setCountryDraft(e.target.value)}
               onBlur={(e) => setFilter("country", e.target.value.trim().toUpperCase() || null)}
               placeholder="UZ"
               className="num h-10 w-full rounded-md border border-border bg-surface-inset px-3 text-sm uppercase text-text placeholder:text-text-subtle focus:border-brand-line focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -158,13 +166,15 @@ export function PublicDirectoryPage({ slug }: { slug: string }) {
           </div>
         </div>
 
-        <p className="mt-5 text-sm text-text-muted" aria-live="polite">
+        {/* A <div>, not a <p>: the Skeleton renders a <div>, which is invalid
+            inside a paragraph and warns in development. */}
+        <div className="mt-5 text-sm text-text-muted" aria-live="polite">
           {query.isLoading ? (
             <Skeleton className="h-5 w-40" />
           ) : (
             t("public.directory.resultCount", { count: total })
           )}
-        </p>
+        </div>
 
         {query.isLoading ? (
           <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

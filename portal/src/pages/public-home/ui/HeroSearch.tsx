@@ -72,7 +72,7 @@ export function HeroSearch() {
          * control resting on the image. The ring lifts on focus-within so the
          * whole assembly answers the keyboard, not just the field inside it.
          */
-        className="rounded-lg border border-border/60 bg-bg/40 p-1.5 shadow-hero-lift backdrop-blur-sm transition-shadow focus-within:border-brand-line focus-within:shadow-glow sm:p-2.5"
+        className="rounded-[19px] sm:rounded-[24px] focus-within:border-brand-line focus-within:shadow-glow"
       >
         {/*
           One row at every width — the mockup's shape, and the only one that
@@ -91,8 +91,8 @@ export function HeroSearch() {
           44px, still the brightest thing in the assembly, just no longer the
           biggest. Between them the query field keeps ~284px of a 332px row.
         */}
-        <div className="flex min-w-0 flex-nowrap items-center rounded-md bg-hero-field p-1">
-          <div className="relative min-w-0 flex-1">
+        <div className="flex min-w-0 flex-nowrap items-center rounded-[22px]  sm:rounded-[24px] bg-hero-field p-1">
+          <div className="relative min-w-0 flex-1 ">
             <label htmlFor="hero-search" className="sr-only">
               {t("public.home.searchLabel")}
             </label>
@@ -102,7 +102,7 @@ export function HeroSearch() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("public.home.searchPlaceholder")}
-              className="h-11 w-full rounded-sm bg-transparent px-3 text-[15px] text-hero-field-fg placeholder:text-hero-field-fg/55 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand sm:h-[3.25rem] sm:px-4"
+              className="h-11 w-full bg-transparent px-3 text-[15px] text-hero-field-fg placeholder:text-hero-field-fg/55  sm:h-[3.25rem] sm:px-4"
             />
           </div>
 
@@ -133,7 +133,7 @@ export function HeroSearch() {
               id="hero-search-scope"
               value={scope}
               onChange={(e) => setScope(e.target.value as (typeof SEARCH_SCOPES)[number])}
-              className="h-[3.25rem] appearance-none rounded-sm bg-transparent pe-8 ps-4 text-sm font-medium text-hero-field-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
+              className="h-[3.25rem] appearance-none rounded-sm bg-transparent pe-8 ps-4 text-sm font-medium text-hero-field-fg "
             >
               {SEARCH_SCOPES.map((key) => (
                 <option key={key} value={key} className="bg-surface text-text">
@@ -155,7 +155,7 @@ export function HeroSearch() {
           <button
             type="submit"
             aria-label={t("public.home.searchAction")}
-            className="ms-1 inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-sm bg-brand text-[15px] font-semibold text-brand-fg transition-all hover:brightness-110 hover:shadow-glow active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-hero-field sm:ms-0 sm:h-[3.25rem] sm:w-auto sm:px-8"
+            className="ms-1 inline-flex h-11 w-11 shrink-0 items-center justify-center gap-2 rounded-[18px] sm:rounded-[22px] bg-brand text-[15px] font-semibold text-brand-fg transition-all hover:brightness-110 hover:shadow-glow active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-hero-field sm:ms-0 sm:h-[3.25rem] sm:w-auto sm:px-8"
           >
             <Search size={18} strokeWidth={2.25} aria-hidden />
             <span className="hidden sm:inline">{t("public.home.searchAction")}</span>

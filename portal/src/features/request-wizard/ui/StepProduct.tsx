@@ -52,7 +52,9 @@ export function StepProduct({ onNext }: StepProductProps) {
 
   const categoryOptions: SelectOption[] = [
     { value: "", label: t("requestWizard.product.allCategories") },
-    ...categories.map((c) => ({ value: c, label: c })),
+    // Translated with the stored value as fallback — the DB vocabulary is
+    // open-ended and a raw value still beats a raw i18n key.
+    ...categories.map((c) => ({ value: c, label: t(`productCategory.${c}`, c) })),
   ];
 
   const filtered = useMemo(() => {
@@ -163,7 +165,9 @@ export function StepProduct({ onNext }: StepProductProps) {
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-text-muted">
                       {p.code}
-                      {p.category ? ` · ${p.category}` : ""}
+                      {p.category
+                        ? ` · ${t(`productCategory.${p.category}`, p.category)}`
+                        : ""}
                     </span>
                   </span>
                   <ChevronRightIcon size={16} className="shrink-0 text-text-subtle" />

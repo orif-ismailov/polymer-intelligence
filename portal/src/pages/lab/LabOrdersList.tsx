@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { useActiveCompany } from "@/entities/company";
 import { LabOrderStatusBadge, useLabOrders, type LabOrder } from "@/entities/lab";
 import { formatDateTime } from "@/shared/lib";
 import {
@@ -9,13 +8,11 @@ import {
   CardBody,
   EmptyState,
   ErrorView,
+  FlaskIcon,
   LinkButton,
-  PageHeader,
   Skeleton,
   SpecItem,
   SpecList,
-  FlaskIcon,
-  RegistryIcon,
 } from "@/shared/ui";
 
 function LabOrderCard({ order, onOpen }: { order: LabOrder; onOpen: () => void }) {
@@ -66,61 +63,56 @@ function LabOrderCard({ order, onOpen }: { order: LabOrder; onOpen: () => void }
 }
 
 /**
- * The customer's own laboratory orders.
+ * The company's partner-lab orders — the «Анализы через IMEX» tab of the hub.
  *
  * Read-only by design: statuses are moved by an operator after talking to a
  * partner laboratory, and nothing a customer could press here would make one
  * work faster. What they need is the number to quote and where it has got to.
  */
-export function LabOrdersPage() {
+export function LabOrdersList({ companyId }: { companyId: number }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { activeCompany } = useActiveCompany();
-  const orders = useLabOrders(activeCompany?.id ?? null);
+  const orders = useLabOrders(companyId);
 
-  if (!activeCompany) {
+  if (orders.isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-28 w-full" />
+      </div>
+    );
+  }
+
+  if (orders.isError) {
+    return (
+      <ErrorView
+        title={t("errors.loadFailed")}
+        retryLabel={t("common.retry")}
+        onRetry={() => void orders.refetch()}
+      />
+    );
+  }
+
+  if (!orders.data || orders.data.length === 0) {
     return (
       <EmptyState
-          icon={<RegistryIcon size={28} />}
-        title={t("home.noActiveCompany")}
-        description={t("home.noActiveCompanyBody")}
+        icon={<FlaskIcon size={28} />}
+        title={t("lab.ordersEmpty")}
+        description={t("lab.ordersEmptyBody")}
+        action={<LinkButton to="/cabinet/offers">{t("nav.offers")}</LinkButton>}
       />
     );
   }
 
   return (
-    <div className="space-y-5">
-      <PageHeader title={t("lab.ordersTitle")} subtitle={t("lab.ordersSubtitle")} />
-
-      {orders.isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
-        </div>
-      ) : orders.isError ? (
-        <ErrorView
-          title={t("errors.loadFailed")}
-          retryLabel={t("common.retry")}
-          onRetry={() => void orders.refetch()}
+    <div className="space-y-3">
+      {orders.data.map((order) => (
+        <LabOrderCard
+          key={order.id}
+          order={order}
+          onOpen={() => navigate(`/cabinet/offers/${order.offer_id}`)}
         />
-      ) : orders.data && orders.data.length > 0 ? (
-        <div className="space-y-3">
-          {orders.data.map((order) => (
-            <LabOrderCard
-              key={order.id}
-              order={order}
-              onOpen={() => navigate(`/cabinet/offers/${order.offer_id}`)}
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon={<FlaskIcon size={28} />}
-          title={t("lab.ordersEmpty")}
-          description={t("lab.ordersEmptyBody")}
-          action={<LinkButton to="/cabinet/offers">{t("nav.offers")}</LinkButton>}
-        />
-      )}
+      ))}
     </div>
   );
 }

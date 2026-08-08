@@ -80,11 +80,10 @@
     "deals": "Сделки",
     "favorites": "Избранное",
     "samples": "Образцы",
-    "labOrders": "Лаборатория",
     "marketplace": "Маркетплейс",
     "openMenu": "Открыть меню",
     "logisticsRequests": "Логистика: заявки",
-    "labRequests": "Заявки в лабораторию"
+    "lab": "Лаборатория"
   },
   "home": {
     "title": "Обзор",
@@ -856,7 +855,9 @@
         "7-14": "7–14 дней",
         "14-30": "14–30 дней",
         "30-60": "30–60 дней"
-      }
+      },
+      "qtyInvalid": "Укажите положительное число",
+      "priceInvalid": "Укажите положительное число"
     },
     "documents": {
       "title": "Документы",
@@ -1427,6 +1428,42 @@
       "positive": "Рост",
       "negative": "Падение",
       "neutral": "Нейтрально"
+    },
+    "category": {
+      "demand": "Спрос",
+      "prices": "Цены",
+      "production": "Производство",
+      "investment": "Инвестиции",
+      "trade": "Торговля",
+      "feedstock": "Сырьё",
+      "logistics": "Логистика",
+      "macro": "Макроэкономика",
+      "regulation": "Регулирование",
+      "sustainability": "Устойчивое развитие",
+      "market_prices": "Рыночные цены",
+      "petrochemicals": "Нефтехимия",
+      "polymers": "Полимеры",
+      "polyethylene": "Полиэтилен",
+      "polypropylene": "Полипропилен",
+      "pvc": "ПВХ",
+      "pet": "ПЭТ",
+      "abs": "АБС",
+      "ps": "ПС",
+      "styrene": "Стирол",
+      "methanol": "Метанол",
+      "meg": "МЭГ",
+      "plant_shutdown": "Остановка производства",
+      "maintenance": "Обслуживание",
+      "refineries": "НПЗ",
+      "ports": "Порты",
+      "railways": "Железные дороги",
+      "customs": "Таможня",
+      "import": "Импорт",
+      "export": "Экспорт",
+      "technology": "Технологии",
+      "market_analysis": "Анализ рынка",
+      "factories": "Заводы",
+      "new_projects": "Новые проекты"
     }
   },
   "notifications": {
@@ -1848,6 +1885,12 @@
       "in_analysis": "В анализе",
       "done": "Готово",
       "rejected": "Отклонена"
+    },
+    "hub": {
+      "title": "Лаборатория",
+      "subtitle": "Запросы к лабораториям маркетплейса и ваши анализы через IMEX",
+      "tabRequests": "Заявки лабораториям",
+      "tabOrders": "Анализы через IMEX"
     }
   },
   "samples": {
@@ -2031,7 +2074,15 @@
         "iso_9001": "ISO 9001",
         "gost_certified": "Аттестация по ГОСТ"
       }
-    }
+    },
+    "statOffers_one": "{{count}} предложение",
+    "statOffers_few": "{{count}} предложения",
+    "statOffers_many": "{{count}} предложений",
+    "statOffers_other": "{{count}} предложений",
+    "advantageOffers_one": "{{count}} активное предложение на рынке",
+    "advantageOffers_few": "{{count}} активных предложения на рынке",
+    "advantageOffers_many": "{{count}} активных предложений на рынке",
+    "advantageOffers_other": "{{count}} активных предложений на рынке"
   },
   "manufacturers": {
     "title": "Производители",
@@ -2592,5 +2643,8 @@
       "dispute": "Разрешение спора",
       "rnd": "НИОКР"
     }
+  },
+  "productCategory": {
+    "polymer": "Полимеры"
   }
 }

@@ -164,7 +164,7 @@ export function OfferDescriptionBlocks({
             ) : null}
           </div>
           {offer.samples_available && !isOwn && sampleSlot ? (
-            <div id="samples" className="mt-4 border-t border-border pt-4">
+            <div id="samples" className="mt-4 scroll-mt-20 border-t border-border pt-4">
               {sampleSlot}
             </div>
           ) : null}

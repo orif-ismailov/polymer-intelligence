@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { type PublicCategory } from "@/entities/public";
-import { cn } from "@/shared/lib";
+import { cn, useSyncedDraft } from "@/shared/lib";
 import { Skeleton } from "@/shared/ui";
 
 export interface MarketFilterState {
@@ -62,6 +62,12 @@ export function MarketFilters({
   const { t } = useTranslation();
   const id = (name: string): string => `${idPrefix}-${name}`;
 
+  // Drafts re-sync when the URL changes underneath the inputs («Сбросить
+  // фильтры», back/forward) — a bare `defaultValue` kept showing the stale
+  // text, and the next blur silently re-applied it.
+  const [qDraft, setQDraft] = useSyncedDraft(state.q);
+  const [countryDraft, setCountryDraft] = useSyncedDraft(state.country);
+
   // 44px rows throughout. These measured 32px in the rail, which is fine under a
   // mouse and under the touch floor on the surface they now live on.
   const rowClass =
@@ -79,7 +85,8 @@ export function MarketFilters({
           <input
             id={id("q")}
             type="search"
-            defaultValue={state.q}
+            value={qDraft}
+            onChange={(e) => setQDraft(e.target.value)}
             onBlur={(e) => onChange("q", e.target.value.trim() || null)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -165,7 +172,8 @@ export function MarketFilters({
           id={id("country")}
           type="text"
           maxLength={2}
-          defaultValue={state.country}
+          value={countryDraft}
+          onChange={(e) => setCountryDraft(e.target.value)}
           onBlur={(e) => onChange("country", e.target.value.trim().toUpperCase() || null)}
           placeholder="UZ"
           className={cn(fieldClass, "num uppercase")}

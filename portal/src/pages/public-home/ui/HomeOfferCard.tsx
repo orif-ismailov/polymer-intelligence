@@ -1,4 +1,3 @@
-import { Bookmark } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -44,13 +43,6 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
             {offer.polymer_type}
           </span>
         ) : null}
-        <Link
-          to={`/market/${offer.id}`}
-          aria-label={t("public.home.saveOffer")}
-          className="absolute end-2 top-2 flex h-9 w-9 items-center justify-center rounded-md border border-border bg-bg/70 text-text-muted transition-colors hover:border-brand-line hover:text-brand sm:h-8 sm:w-8"
-        >
-          <Bookmark size={15} strokeWidth={1.75} aria-hidden />
-        </Link>
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-3">
@@ -114,20 +106,6 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
             className="inline-flex h-10 flex-1 items-center justify-center rounded-sm border border-brand text-[12px] font-medium text-brand transition-colors hover:bg-brand-soft active:scale-[0.98] sm:h-8"
           >
             {t("public.home.contact")}
-          </Link>
-          {/*
-            Hidden on a phone, where the card is 174px wide and this is the
-            SECOND bookmark on it — the first sits over the photo, and both
-            resolve to the same listing. Two controls left the primary action
-            ~130px; one leaves it the full width. From `sm` the card is wide
-            enough for the pair the mockup draws, so desktop is untouched.
-          */}
-          <Link
-            to={`/market/${offer.id}`}
-            aria-label={t("public.home.saveOffer")}
-            className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-brand text-brand transition-colors hover:bg-brand-soft sm:inline-flex"
-          >
-            <Bookmark size={15} strokeWidth={1.75} aria-hidden />
           </Link>
         </div>
       </div>

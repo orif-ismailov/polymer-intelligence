@@ -27,6 +27,25 @@ import { useOfferDraft } from "../model/draftStore";
 import { isAvailabilityValid } from "../model/validation";
 import { StepNav } from "./StepNav";
 
+/**
+ * The message for a number field, or `null`. Distinguishes empty from
+ * non-positive: `isAvailabilityValid` rejects both, and without the second
+ * message "-5" left «Далее» silently inert — the required-hint only covered
+ * the empty case.
+ */
+function numberError(
+  value: string,
+  t: (key: string) => string,
+  requiredKey: string,
+  invalidKey: string,
+): string | null {
+  const trimmed = value.trim();
+  if (trimmed === "") return t(requiredKey);
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) return t(invalidKey);
+  return null;
+}
+
 interface StepAvailabilityProps {
   onNext: () => void;
   onBack: () => void;
@@ -123,7 +142,14 @@ export function StepAvailability({ onNext, onBack }: StepAvailabilityProps) {
                 label={t("offerWizard.availability.qty")}
                 required
                 error={
-                  touched && draft.qty.trim() === "" ? t("offerWizard.availability.qtyRequired") : null
+                  touched
+                    ? numberError(
+                        draft.qty,
+                        t,
+                        "offerWizard.availability.qtyRequired",
+                        "offerWizard.availability.qtyInvalid",
+                      )
+                    : null
                 }
               >
                 {({ id, invalid, describedBy }) => (
@@ -156,8 +182,13 @@ export function StepAvailability({ onNext, onBack }: StepAvailabilityProps) {
                 label={t("offerWizard.availability.price")}
                 required
                 error={
-                  touched && draft.price.trim() === ""
-                    ? t("offerWizard.availability.priceRequired")
+                  touched
+                    ? numberError(
+                        draft.price,
+                        t,
+                        "offerWizard.availability.priceRequired",
+                        "offerWizard.availability.priceInvalid",
+                      )
                     : null
                 }
               >

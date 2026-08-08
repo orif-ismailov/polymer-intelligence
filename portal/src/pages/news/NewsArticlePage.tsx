@@ -81,7 +81,9 @@ export function NewsArticlePage() {
             {impact && impact !== "neutral" ? (
               <Badge tone={IMPACT_TONE[impact]}>{t(`news.impact.${impact}`)}</Badge>
             ) : null}
-            {a.category ? <Badge tone="info">{a.category}</Badge> : null}
+            {a.category ? (
+              <Badge tone="info">{t(`news.category.${a.category}`, a.category)}</Badge>
+            ) : null}
             {a.country ? <Badge tone="neutral">{a.country}</Badge> : null}
           </>
         }

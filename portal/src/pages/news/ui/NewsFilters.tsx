@@ -64,7 +64,15 @@ export function NewsFilters({
    * separate "any" row — but it gets one anyway, because on a list this long the
    * way back to unfiltered should not depend on remembering which row you tapped.
    */
-  function group(key: string, label: string, facets: NewsFacet[], selected: string | null) {
+  function group(
+    key: string,
+    label: string,
+    facets: NewsFacet[],
+    selected: string | null,
+    // Facet display text; country codes and product tickers read fine raw,
+    // category slugs do not.
+    format: (value: string) => string = (value) => value,
+  ) {
     if (!loading && facets.length === 0) return null;
     return (
       <div>
@@ -109,7 +117,7 @@ export function NewsFilters({
                       : "text-text-muted hover:bg-surface-2 hover:text-text",
                   )}
                 >
-                  <span className="truncate">{f.value}</span>
+                  <span className="truncate">{format(f.value)}</span>
                   <span className="num shrink-0 text-xs text-text-subtle">{f.count}</span>
                 </button>
               </li>
@@ -122,7 +130,9 @@ export function NewsFilters({
 
   return (
     <div className={cn("space-y-6", className)}>
-      {group("category", t("news.filterCategory"), options?.categories ?? [], state.category)}
+      {group("category", t("news.filterCategory"), options?.categories ?? [], state.category, (v) =>
+        t(`news.category.${v}`, v),
+      )}
       {group("country", t("news.filterCountry"), options?.countries ?? [], state.country)}
       {group("product", t("news.relatedProducts"), options?.products ?? [], state.product)}
     </div>

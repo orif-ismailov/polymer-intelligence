@@ -72,7 +72,9 @@ function ArticleCard({ article }: { article: NewsArticle }) {
           {impact && impact !== "neutral" ? (
             <Badge tone={IMPACT_TONE[impact]}>{t(`news.impact.${impact}`)}</Badge>
           ) : null}
-          {article.category ? <Badge tone="info">{article.category}</Badge> : null}
+          {article.category ? (
+            <Badge tone="info">{t(`news.category.${article.category}`, article.category)}</Badge>
+          ) : null}
         </div>
 
         {/*

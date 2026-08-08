@@ -78,6 +78,22 @@ def _qty(value: float) -> decimal.Decimal:
 #: pipeline tables (raw_items, signals, parse_runs, reports, fx_rates) are NOT
 #: touched — those hold genuinely ingested market data worth keeping.
 _PURGE_ORDER = [
+    # Service-track threads (manufacturer / lab / logistics) and factory RFQs
+    # arrived after the original list; without them the purge dies on the first
+    # FK into `companies`.
+    "manufacturer_messages",
+    "manufacturer_threads",
+    "lab_request_messages",
+    "lab_request_threads",
+    "lab_requests",
+    "logistics_request_messages",
+    "logistics_request_threads",
+    "logistics_requests",
+    "factory_rfq_documents",
+    "factory_rfqs",
+    "company_reviews",
+    "substance_suggestions",
+    "deliveries",
     "deal_messages",
     "deal_documents",
     "deal_status_history",
@@ -129,11 +145,15 @@ def purge(db: Session) -> None:
     db.execute(sa.text("DELETE FROM contracts"))
     db.execute(sa.text("DELETE FROM requests"))
     db.execute(sa.text("DELETE FROM seller_offers"))
-    db.execute(sa.text("DELETE FROM companies"))
-    db.execute(sa.text("DELETE FROM user_accounts"))
-    db.execute(sa.text("DELETE FROM counterparties"))
+    # The intel seeder links sellers/clients to companies, so they go first.
     db.execute(sa.text("DELETE FROM sellers"))
     db.execute(sa.text("DELETE FROM clients"))
+    db.execute(sa.text("DELETE FROM companies"))
+    db.execute(sa.text("DELETE FROM user_accounts"))
+    # Classified intel signals may point at demo counterparties; signals are
+    # pipeline data and stay, so detach rather than delete.
+    db.execute(sa.text("UPDATE signals SET counterparty_id = NULL WHERE counterparty_id IS NOT NULL"))
+    db.execute(sa.text("DELETE FROM counterparties"))
     # Numbering restarts with the data, so DEAL-2026-000001 is the first deal again.
     for seq in ("deal_seq", "lab_order_seq", "request_seq"):
         db.execute(sa.text(f"DROP SEQUENCE IF EXISTS {seq}_{NOW.year}"))
@@ -1626,15 +1646,20 @@ def seed_market_intel(db: Session, offers: list[dict[str, object]]) -> None:
 # 7 — Attention surfaces: notifications, alerts, settings
 # ══════════════════════════════════════════════════════════════════════════════
 
+# Real notification kinds only: the portal renders `notifications.<kind>.title`
+# / `.body` straight out of its locale files (`notification_service.keys_for`
+# is the runtime contract), so an invented kind shows up as a raw i18n key in
+# the bell. Bodies here interpolate at most {{number}} / {{title}}, both of
+# which the params below provide.
 _NOTIFICATIONS = [
-    ("inquiry_received", "notifications.inquiryReceived.title", "notifications.inquiryReceived.body"),
-    ("offer_approved", "notifications.offerApproved.title", "notifications.offerApproved.body"),
-    ("contract_signed", "notifications.contractSigned.title", "notifications.contractSigned.body"),
-    ("deal_status", "notifications.dealStatus.title", "notifications.dealStatus.body"),
-    ("verification_approved", "notifications.verificationApproved.title", "notifications.verificationApproved.body"),
-    ("rfq_response", "notifications.rfqResponse.title", "notifications.rfqResponse.body"),
-    ("sample_sent", "notifications.sampleSent.title", "notifications.sampleSent.body"),
-    ("lab_result", "notifications.labResult.title", "notifications.labResult.body"),
+    ("inquiry_approved", "notifications.inquiry_approved.title", "notifications.inquiry_approved.body"),
+    ("offer_moderated", "notifications.offer_moderated.title", "notifications.offer_moderated.body"),
+    ("contract_accepted", "notifications.contract_accepted.title", "notifications.contract_accepted.body"),
+    ("deal_status", "notifications.deal_status.title", "notifications.deal_status.body"),
+    ("verification_decided", "notifications.verification_decided.title", "notifications.verification_decided.body"),
+    ("rfq_response_new", "notifications.rfq_response_new.title", "notifications.rfq_response_new.body"),
+    ("sample_request_status", "notifications.sample_request_status.title", "notifications.sample_request_status.body"),
+    ("lab_order_status", "notifications.lab_order_status.title", "notifications.lab_order_status.body"),
 ]
 
 
@@ -1669,6 +1694,8 @@ def seed_attention(
                     "params": json.dumps(
                         {
                             "number": f"DEAL-{NOW.year}-{RNG.randrange(1, 30):06d}",
+                            # `contract_accepted` interpolates {{title}}.
+                            "title": f"Договор поставки № ДП-{NOW.year}-{RNG.randrange(1, 30):04d}",
                             "company": next(
                                 c["short_name"] for c in COMPANIES if c["key"] == key
                             ),

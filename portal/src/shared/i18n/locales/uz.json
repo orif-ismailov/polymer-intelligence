@@ -80,11 +80,10 @@
     "deals": "Bitimlar",
     "favorites": "Saralangan",
     "samples": "Namunalar",
-    "labOrders": "Laboratoriya",
     "marketplace": "Marketpleys",
     "openMenu": "Menyuni ochish",
     "logisticsRequests": "Logistika arizalari",
-    "labRequests": "Laboratoriyaga arizalar"
+    "lab": "Laboratoriya"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -856,7 +855,9 @@
         "7-14": "7–14 kun",
         "14-30": "14–30 kun",
         "30-60": "30–60 kun"
-      }
+      },
+      "qtyInvalid": "Musbat son kiriting",
+      "priceInvalid": "Musbat son kiriting"
     },
     "documents": {
       "title": "Hujjatlar",
@@ -1423,6 +1424,42 @@
       "positive": "Oʻsish",
       "negative": "Pasayish",
       "neutral": "Neytral"
+    },
+    "category": {
+      "demand": "Talab",
+      "prices": "Narxlar",
+      "production": "Ishlab chiqarish",
+      "investment": "Investitsiyalar",
+      "trade": "Savdo",
+      "feedstock": "Xomashyo",
+      "logistics": "Logistika",
+      "macro": "Makroiqtisodiyot",
+      "regulation": "Tartibga solish",
+      "sustainability": "Barqarorlik",
+      "market_prices": "Bozor narxlari",
+      "petrochemicals": "Neftkimyo",
+      "polymers": "Polimerlar",
+      "polyethylene": "Polietilen",
+      "polypropylene": "Polipropilen",
+      "pvc": "PVX",
+      "pet": "PET",
+      "abs": "ABS",
+      "ps": "PS",
+      "styrene": "Stirol",
+      "methanol": "Metanol",
+      "meg": "MEG",
+      "plant_shutdown": "Ishlab chiqarish to'xtashi",
+      "maintenance": "Texnik xizmat",
+      "refineries": "Neftni qayta ishlash zavodlari",
+      "ports": "Portlar",
+      "railways": "Temir yo'llar",
+      "customs": "Bojxona",
+      "import": "Import",
+      "export": "Eksport",
+      "technology": "Texnologiyalar",
+      "market_analysis": "Bozor tahlili",
+      "factories": "Zavodlar",
+      "new_projects": "Yangi loyihalar"
     }
   },
   "notifications": {
@@ -1844,6 +1881,12 @@
       "in_analysis": "Tahlilda",
       "done": "Tayyor",
       "rejected": "Rad etilgan"
+    },
+    "hub": {
+      "title": "Laboratoriya",
+      "subtitle": "Marketplace laboratoriyalariga arizalar va IMEX orqali tahlillaringiz",
+      "tabRequests": "Laboratoriyalarga arizalar",
+      "tabOrders": "IMEX orqali tahlillar"
     }
   },
   "samples": {
@@ -2019,7 +2062,11 @@
         "iso_9001": "ISO 9001",
         "gost_certified": "GOST bo‘yicha attestatsiya"
       }
-    }
+    },
+    "statOffers_one": "{{count}} ta taklif",
+    "statOffers_other": "{{count}} ta taklif",
+    "advantageOffers_one": "Bozorda {{count}} ta faol taklif",
+    "advantageOffers_other": "Bozorda {{count}} ta faol taklif"
   },
   "manufacturers": {
     "title": "Ishlab chiqaruvchilar",
@@ -2564,5 +2611,8 @@
       "dispute": "Nizoni hal qilish",
       "rnd": "ITTKI"
     }
+  },
+  "productCategory": {
+    "polymer": "Polimerlar"
   }
 }

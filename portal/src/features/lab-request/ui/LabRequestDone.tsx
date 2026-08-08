@@ -28,7 +28,7 @@ export function LabRequestDone({ request }: LabRequestDoneProps) {
       <LabRequestSummary request={request} />
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <LinkButton variant="outline" fullWidth to="/cabinet/lab/requests">
+        <LinkButton variant="outline" fullWidth to="/cabinet/lab">
           {t("labRequest.myRequests")}
         </LinkButton>
         <LinkButton fullWidth to="/laboratories">
