@@ -21,7 +21,9 @@ const MANUFACTURER_PHONE = process.env.PORTAL_MANUFACTURER_PHONE ?? "+9989012345
 const OFFERS = /^(Предложения|Takliflar|Offers)$/;
 const FAVORITES = /^(Избранное|Saralangan|Favorites)$/;
 const INQUIRIES = /^(Запросы|So.rovlar|Inquiries)$/;
-const LAB_ORDERING = /^(Заявки в лабораторию|Laboratoriyaga arizalar|Laboratory requests)$/;
+// The merged lab-hub entry (`nav.lab`) — one item where request-list and
+// partner-lab-orders entries used to sit, still gated on `labOrdering`.
+const LAB_ORDERING = /^(Лаборатория|Laboratoriya|Laboratory)$/;
 const LOGISTICS_ORDERING = /^(Логистика: заявки|Logistika arizalari|Logistics requests)$/;
 
 function uniquePhone(): string {

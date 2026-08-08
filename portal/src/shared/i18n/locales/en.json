@@ -80,11 +80,10 @@
     "deals": "Deals",
     "favorites": "Favorites",
     "samples": "Samples",
-    "labOrders": "Laboratory",
     "marketplace": "Marketplace",
     "openMenu": "Open menu",
     "logisticsRequests": "Logistics requests",
-    "labRequests": "Laboratory requests"
+    "lab": "Laboratory"
   },
   "home": {
     "title": "Overview",
@@ -856,7 +855,9 @@
         "7-14": "7–14 days",
         "14-30": "14–30 days",
         "30-60": "30–60 days"
-      }
+      },
+      "qtyInvalid": "Enter a positive number",
+      "priceInvalid": "Enter a positive number"
     },
     "documents": {
       "title": "Documents",
@@ -1423,6 +1424,42 @@
       "positive": "Up",
       "negative": "Down",
       "neutral": "Neutral"
+    },
+    "category": {
+      "demand": "Demand",
+      "prices": "Prices",
+      "production": "Production",
+      "investment": "Investment",
+      "trade": "Trade",
+      "feedstock": "Feedstock",
+      "logistics": "Logistics",
+      "macro": "Macroeconomics",
+      "regulation": "Regulation",
+      "sustainability": "Sustainability",
+      "market_prices": "Market prices",
+      "petrochemicals": "Petrochemicals",
+      "polymers": "Polymers",
+      "polyethylene": "Polyethylene",
+      "polypropylene": "Polypropylene",
+      "pvc": "PVC",
+      "pet": "PET",
+      "abs": "ABS",
+      "ps": "PS",
+      "styrene": "Styrene",
+      "methanol": "Methanol",
+      "meg": "MEG",
+      "plant_shutdown": "Plant shutdown",
+      "maintenance": "Maintenance",
+      "refineries": "Refineries",
+      "ports": "Ports",
+      "railways": "Railways",
+      "customs": "Customs",
+      "import": "Import",
+      "export": "Export",
+      "technology": "Technology",
+      "market_analysis": "Market analysis",
+      "factories": "Factories",
+      "new_projects": "New projects"
     }
   },
   "notifications": {
@@ -1844,6 +1881,12 @@
       "in_analysis": "In analysis",
       "done": "Done",
       "rejected": "Rejected"
+    },
+    "hub": {
+      "title": "Laboratory",
+      "subtitle": "Requests to marketplace laboratories and your analyses via IMEX",
+      "tabRequests": "Requests to labs",
+      "tabOrders": "Analyses via IMEX"
     }
   },
   "samples": {
@@ -2019,7 +2062,11 @@
         "iso_9001": "ISO 9001",
         "gost_certified": "GOST certified"
       }
-    }
+    },
+    "statOffers_one": "{{count}} listing",
+    "statOffers_other": "{{count}} listings",
+    "advantageOffers_one": "{{count}} active market listing",
+    "advantageOffers_other": "{{count}} active market listings"
   },
   "manufacturers": {
     "title": "Manufacturers",
@@ -2564,5 +2611,8 @@
       "dispute": "Dispute resolution",
       "rnd": "R&D"
     }
+  },
+  "productCategory": {
+    "polymer": "Polymers"
   }
 }

@@ -19,7 +19,12 @@ import {
   type ProductDetailTabId,
 } from "@/features/product-detail";
 import { SampleRequestForm } from "@/features/sample-request";
-import { offerDocumentFiles, offerPhotoFiles, publicSiteOrigin } from "@/shared/config";
+import {
+  directoryForRoles,
+  offerDocumentFiles,
+  offerPhotoFiles,
+  publicSiteOrigin,
+} from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { Seo, useCanonical } from "@/shared/seo";
 import {
@@ -111,6 +116,7 @@ export function PublicOfferPage() {
   }
 
   const title = offer.product_text ?? offer.grade_text ?? t("public.offer.untitled");
+  const sellerDirectory = directoryForRoles(offer.business_roles);
   const photos = offerPhotoFiles(offer.files);
   const documents = offerDocumentFiles(offer.files);
   const passport = offer.files.find((f) => f.kind === "lab_passport") ?? null;
@@ -191,7 +197,25 @@ export function PublicOfferPage() {
           : null;
 
   function scrollTo(elementId: string): void {
-    document.getElementById(elementId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // The smooth variant is an animation, and an animation can silently never
+    // run — hidden documents pause rAF, and a click racing a re-render can drop
+    // it — which left «Написать продавцу» looking dead. If nothing has moved
+    // shortly after, jump instantly instead.
+    const startY = window.scrollY;
+    window.setTimeout(() => {
+      if (
+        Math.abs(window.scrollY - startY) < 1 &&
+        Math.abs(el.getBoundingClientRect().top) > 80
+      ) {
+        el.scrollIntoView({ block: "start" });
+      }
+    }, 250);
+    // Land the cursor in the form the click promised: visible proof the tap
+    // did something, and the same landing a screen reader needs.
+    el.querySelector<HTMLElement>("input, textarea, select")?.focus({ preventScroll: true });
   }
 
   /*
@@ -301,8 +325,11 @@ export function PublicOfferPage() {
               documents={documents}
               passport={passport}
               sellerHref={
-                offer.seller_company_id != null
-                  ? `/manufacturers/${offer.seller_company_id}`
+                // The profile endpoint is scoped to the directory in the path,
+                // so the slug must come from the seller's own confirmed roles —
+                // a trader linked under /manufacturers 404s.
+                offer.seller_company_id != null && sellerDirectory
+                  ? `/${sellerDirectory.slug}/${offer.seller_company_id}`
                   : null
               }
               isOwn={session?.offer.is_own ?? false}

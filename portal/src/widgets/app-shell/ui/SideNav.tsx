@@ -48,13 +48,14 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/cabinet/deals", labelKey: "nav.deals", icon: HandshakeIcon },
   { to: "/cabinet/inquiries", labelKey: "nav.inquiries", icon: ChatIcon, feature: "inquiries" },
   { to: "/cabinet/samples", labelKey: "nav.samples", icon: SampleBoxIcon, feature: "samples" },
-  { to: "/cabinet/lab-orders", labelKey: "nav.labOrders", icon: FlaskNavIcon, feature: "labOrders" },
   {
-    to: "/cabinet/lab/requests",
-    labelKey: "nav.labRequests",
+    to: "/cabinet/lab",
+    labelKey: "nav.lab",
     icon: FlaskNavIcon,
-    // The buyer's own analysis requests. A laboratory reads the broadcast pool
-    // at «Заявки» instead, so this would only ever be an empty page for one.
+    // The lab hub: marketplace analysis requests + partner-lab orders in one
+    // page. Gated on the wider `labOrdering`; the page itself decides whether
+    // the orders tab exists. A laboratory reads the broadcast pool at «Заявки»
+    // instead, so this would only ever be an empty page for one.
     feature: "labOrdering",
   },
   {

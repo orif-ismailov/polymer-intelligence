@@ -2,7 +2,21 @@
  * Display formatters. Times are stored UTC and shown in Asia/Tashkent.
  */
 
+// The instance module directly (not the barrel): the barrel re-exports label
+// helpers that import shared/ui, which imports back into shared/lib — a cycle.
+import i18n from "@/shared/i18n/i18n";
+
 const TZ_DISPLAY = "Asia/Tashkent";
+
+/**
+ * The live UI language. Every formatter defaults to this rather than to a
+ * hardcoded "ru" — call sites that omitted the `lang` argument were printing
+ * Russian month names into the uz/en interfaces. An explicit argument still
+ * wins (some callers already thread `i18n.language` themselves).
+ */
+function currentLang(): string {
+  return i18n.language || "ru";
+}
 
 /** Locale tag Intl understands, derived from the app's i18n language. */
 function intlLocale(lang: string): string {
@@ -17,7 +31,7 @@ function intlLocale(lang: string): string {
 }
 
 /** Format an ISO datetime string as a localized date + time in Tashkent. */
-export function formatDateTime(iso: string | null | undefined, lang = "ru"): string {
+export function formatDateTime(iso: string | null | undefined, lang = currentLang()): string {
   if (!iso) return "—";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
@@ -29,7 +43,7 @@ export function formatDateTime(iso: string | null | undefined, lang = "ru"): str
 }
 
 /** Format an ISO datetime string as a localized date only. */
-export function formatDate(iso: string | null | undefined, lang = "ru"): string {
+export function formatDate(iso: string | null | undefined, lang = currentLang()): string {
   if (!iso) return "—";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
@@ -47,7 +61,7 @@ export function formatDate(iso: string | null | undefined, lang = "ru"): string 
  * "12 мар. 2020 г." is a different width in every month and the column stops
  * scanning. Prose keeps {@link formatDate}.
  */
-export function formatDateShort(iso: string | null | undefined, lang = "ru"): string {
+export function formatDateShort(iso: string | null | undefined, lang = currentLang()): string {
   if (!iso) return "—";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
@@ -67,7 +81,7 @@ export function formatDateShort(iso: string | null | undefined, lang = "ru"): st
  * hand-kept ru/uz/en list of country names is three files that drift. Falls back
  * to the code itself — an unknown or malformed value must still print.
  */
-export function countryName(code: string | null | undefined, lang = "ru"): string {
+export function countryName(code: string | null | undefined, lang = currentLang()): string {
   if (!code) return "—";
   try {
     return new Intl.DisplayNames([intlLocale(lang)], { type: "region" }).of(code) ?? code;
@@ -114,7 +128,7 @@ export function formatBytes(bytes: number | null | undefined): string {
 export function formatMoney(
   value: string | number | null | undefined,
   currency: string,
-  lang = "ru",
+  lang = currentLang(),
 ): string {
   if (value == null || value === "") return "—";
   const num = typeof value === "string" ? Number(value) : value;
@@ -134,7 +148,7 @@ export function formatMoney(
 export function formatQty(
   value: string | number | null | undefined,
   unit: string,
-  lang = "ru",
+  lang = currentLang(),
 ): string {
   if (value == null || value === "") return "—";
   const num = typeof value === "string" ? Number(value) : value;

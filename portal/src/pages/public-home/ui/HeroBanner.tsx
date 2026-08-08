@@ -69,7 +69,7 @@ export function HeroBanner() {
   return (
     <section
       aria-labelledby="hero-heading"
-      className="relative isolate overflow-hidden border-b border-border"
+      className="relative isolate overflow-hidden "
     >
       {/*
         A real <img>, not a CSS background. This page is server-rendered, so the
@@ -249,7 +249,7 @@ export function HeroBanner() {
               The primary swaps with the session — never to «Войти», which would
               put a sign-in link on a page the visitor is already signed into.
             */}
-            <div className="mt-5 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-3">
+            <div className="mt-5  hidden flex-col gap-2.5 sm:mt-7 sm:flex-row sm:items-center sm:gap-3">
               <LinkButton
                 to={isAuthenticated ? "/cabinet" : "/cabinet/login"}
                 size="lg"

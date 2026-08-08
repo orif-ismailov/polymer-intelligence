@@ -135,7 +135,8 @@ export function OfferInquiryCard({ offer, companyId }: OfferInquiryCardProps) {
         </Card>
       ) : null}
 
-      <Card id="inquiry">
+      {/* scroll-mt clears the sticky topbar when «Написать продавцу» jumps here. */}
+      <Card id="inquiry" className="scroll-mt-20">
         <CardHeader>
           <CardTitle>{t("market.detail.requestRfq")}</CardTitle>
         </CardHeader>

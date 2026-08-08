@@ -12,6 +12,7 @@ import {
 } from "@/entities/public";
 import { publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
+import { useSyncedDraft } from "@/shared/lib";
 import { Seo, useCanonical } from "@/shared/seo";
 import { Dialog, SearchIcon, Skeleton, buttonClasses } from "@/shared/ui";
 
@@ -75,6 +76,8 @@ export function PublicMarketPage() {
   const total = offers.data?.total ?? 0;
 
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Re-syncs when «Сбросить» or back/forward changes `q` under the sticky bar.
+  const [qDraft, setQDraft] = useSyncedDraft(q);
 
   const filterState: MarketFilterState = {
     q,
@@ -173,7 +176,8 @@ export function PublicMarketPage() {
             <input
               id="market-q-bar"
               type="search"
-              defaultValue={q}
+              value={qDraft}
+              onChange={(e) => setQDraft(e.target.value)}
               onBlur={(e) => setFilter("q", e.target.value.trim() || null)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {

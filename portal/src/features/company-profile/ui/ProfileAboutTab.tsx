@@ -181,7 +181,12 @@ export function ProfileAboutTab({ profile }: ProfileAboutTabProps) {
             {profile.production_type ? (
               <SpecItem
                 label={t("public.company.productionType")}
-                value={profile.production_type}
+                // The company wizard already localizes this vocabulary; an
+                // unknown value falls back to the stored string.
+                value={t(
+                  `wizard.production.types.${profile.production_type}`,
+                  profile.production_type,
+                )}
               />
             ) : null}
             {profile.founded_year ? (
@@ -199,7 +204,13 @@ export function ProfileAboutTab({ profile }: ProfileAboutTabProps) {
               />
             ) : null}
             {profile.iso_certification ? (
-              <SpecItem label={t("public.company.iso")} value={profile.iso_certification} />
+              <SpecItem
+                label={t("public.company.iso")}
+                value={t(
+                  `wizard.production.iso.${profile.iso_certification}`,
+                  profile.iso_certification,
+                )}
+              />
             ) : null}
             {profile.export_countries && profile.export_countries.length > 0 ? (
               <SpecItem
