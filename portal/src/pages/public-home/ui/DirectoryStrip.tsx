@@ -13,23 +13,29 @@ import { Skeleton } from "@/shared/ui";
  * detailed green renders on a transparent PNG, one per card. `alt=""` because
  * each glyph is decorative beside a real `<h3>` that already names the card.
  *
- * Boxed at the SAME square footprint the lucide glyphs held (`size-6 sm:size-8`)
- * with `object-contain`, not sized off the artwork's own 1.5:1 canvas. A
- * height-locked `w-auto` render measured ~72px wide at `sm` against the old
- * 32px square, and `Производители`/`Лаборатории` — single words with no space
- * to wrap at — ran straight through the card's padding and past its rounded
- * corner once that width came out of the text column's budget on a ~224px
- * mockup cell. The card was never re-measured for a wider glyph; this keeps
- * the glyph inside the box the layout was actually sized around.
+ * The `<span>` reserves the SAME square footprint the lucide glyphs held
+ * (`size-6 sm:size-8`) — that box is load-bearing: it's what a browser window
+ * right at 1280px (the `xl` breakpoint's own floor, before the row's
+ * `max-w-[1440px]` container catches up and widens every cell) has room for
+ * without truncating «Цены и аналитика». A wider reserved box measured worse
+ * at that width, not better — the previous, bigger render already had zero
+ * margin there before it grew any further.
+ *
+ * The `<img>` paints past that box on purpose: `absolute` takes it out of
+ * flow, so scaling it up costs the text column nothing — it bleeds into the
+ * row's own gap and the card's padding, both otherwise empty, rather than
+ * eating the width `truncate` on the heading is depending on.
  */
 function cardIcon(file: string): ReactNode {
   return (
-    <img
-      src={`/${file}`}
-      alt=""
-      aria-hidden
-      className="size-6 object-contain sm:size-8"
-    />
+    <span className="relative block size-6 shrink-0 sm:size-8">
+      <img
+        src={`/${file}`}
+        alt=""
+        aria-hidden
+        className="absolute -inset-2 h-auto w-auto object-contain sm:-inset-3"
+      />
+    </span>
   );
 }
 
@@ -98,9 +104,10 @@ export function DirectoryStrip() {
    * The glyph leads the card on a phone instead of flanking the copy: a 32px
    * icon plus its gutter takes 46 of the 150px of usable width, which left the
    * two-line body clamping mid-word. Above the title it costs one 24px line and
-   * gives the copy the whole column. The box itself lives on each `cardIcon()`
-   * `<img>` (`size-6 sm:size-8`), so every glyph shares the same footprint
-   * regardless of its own artwork's aspect ratio.
+   * gives the copy the whole column. The RESERVED box lives on `cardIcon()`'s
+   * own `<span>` (`size-6 sm:size-8`), so every glyph shares the same layout
+   * footprint regardless of its own artwork's aspect ratio — what actually
+   * paints can be bigger (see that function), but this row never finds out.
    */
   const headClass = "flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3.5";
 
@@ -119,7 +126,7 @@ export function DirectoryStrip() {
           return (
             <Link key={dir.slug} to={`/${dir.slug}`} className={cardClass}>
               <div className={headClass}>
-                <span className="shrink-0">{DIRECTORY_ICONS[dir.slug]}</span>
+                {DIRECTORY_ICONS[dir.slug]}
                 <div className="min-w-0">
                   <h3 className="truncate text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                     {t(dir.labelKey)}
@@ -151,7 +158,7 @@ export function DirectoryStrip() {
         {extras.map((item) => (
           <Link key={item.key} to={item.to} className={cardClass}>
             <div className={headClass}>
-              <span className="shrink-0">{item.icon}</span>
+              {item.icon}
               <div className="min-w-0">
                 <h3 className="truncate text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                   {item.title}
