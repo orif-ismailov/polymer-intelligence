@@ -288,10 +288,10 @@ export function PublicOfferPage() {
       {/* `max-w-6xl`, not the storefront's usual `max-w-[1440px]`: the sheet is
           laid out for the cabinet's column width (`AppShell`), and stretching it
           to 1440 blows the gallery up and strands the fact column beside it. */}
-      {/* `pb-36 md:pb-0` whenever the sticky bar is up, or it covers the last
+      {/* `pb-action-bar md:pb-0` whenever the sticky bar is up, or it covers the last
           card — a failure mode no test can see. */}
       <div
-        className={`mx-auto max-w-6xl px-4 py-8 lg:px-6 ${session ? "pb-36 md:pb-8" : ""}`}
+        className={`mx-auto max-w-6xl px-4 py-8 lg:px-6 ${session ? "pb-action-bar md:pb-8" : ""}`}
         data-testid="product-detail"
       >
         <nav aria-label={t("public.offer.breadcrumb")} className="text-xs text-text-subtle">

@@ -49,12 +49,18 @@ export function OfferActionBar({
   return (
     /*
      * The `!bottom-0` that used to be here is gone, and its removal is the
-     * point. `StickyActionBar` defaults to `bottom-14` precisely to clear
-     * `BottomNav`'s row; the override was correct only while the public shell
-     * had no bottom bar. It has one now, at `z-30` against this bar's `z-20`,
-     * so pinning to 0 would hide the three actions behind the navigation for
+     * point. `StickyActionBar` defaults to `bottom-nav` precisely to clear
+     * `BottomNav`; the override was correct only while the public shell had no
+     * bottom bar. It has one now, at `z-30` against this bar's `z-20`, so
+     * pinning to 0 would hide the three actions behind the navigation for
      * exactly the visitors who can use them — signed in, on a listing.
-     * `PublicOfferPage` already reserves `pb-36` for the pair.
+     * `PublicOfferPage` already reserves `pb-action-bar` for the pair.
+     *
+     * `!p-0` is why this bar broke on iOS first: it is a legitimate override —
+     * the three cells are full-bleed and own their own padding — but the safe-
+     * area correction used to live in `StickyActionBar`'s `padding-bottom`, so
+     * this line deleted it. The inset moved to `bottom`, which no `!p-*` can
+     * reach. Keep it that way.
      */
     <StickyActionBar className="!p-0 md:!p-0">
       <div

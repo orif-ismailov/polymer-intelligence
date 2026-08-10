@@ -118,7 +118,7 @@ export function CompanyProfileView({
 
   return (
     <div
-      className={`space-y-5 ${actionBar ? "pb-36 md:pb-0" : ""}`}
+      className={`space-y-5 ${actionBar ? "pb-action-bar md:pb-0" : ""}`}
       data-testid="company-profile"
     >
       <ProfileHeader profile={company} onShare={() => void share()} backTo={backTo} />

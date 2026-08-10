@@ -167,9 +167,9 @@ export function UiKitPage() {
   const [chips, setChips] = useState<string[]>(["MFI: 3.0 г/10мин", "Плотность: 0.90 г/см³"]);
 
   return (
-    // `pb-36` on phones, because this page renders a StickyActionBar — the rule
+    // `pb-action-bar` on phones, because this page renders a StickyActionBar — the rule
     // every page using that primitive follows.
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 pb-36 md:pb-8">
+    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 pb-action-bar md:pb-8">
       <header>
         <h1 className="text-2xl font-semibold text-text">UI kit</h1>
         <p className="mt-1 text-sm text-text-muted">

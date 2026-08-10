@@ -96,6 +96,28 @@ const config: Config = {
         info: token("var(--info)"),
         overlay: token("var(--overlay)"),
       },
+      /*
+       * The phone chrome's two real heights. Both END in an `env()` inset, and
+       * that is the whole reason they are tokens rather than the `bottom-14` /
+       * `pb-36` literals they replace.
+       *
+       * `BottomNav` is an `h-14` row PLUS `pb-[env(safe-area-inset-bottom)]`, so
+       * on any iPhone with a home indicator it is 90px tall, not 56. Every
+       * literal that tried to clear it was written against the row alone and was
+       * therefore 34px short on exactly the devices where the inset exists —
+       * which is why this only ever looked broken on iOS.
+       *
+       * - `nav`         — where a bar stacked ON the nav has to start
+       *   (`bottom-nav`).
+       * - `action-bar`  — how much a scrolling page must reserve to clear that
+       *   stacked bar AND the nav under it (`pb-action-bar`). It is the old
+       *   `pb-36` verbatim plus the inset, so the spacing every Android build
+       *   already had is unchanged and only the missing 34px is added.
+       */
+      spacing: {
+        nav: "calc(3.5rem + env(safe-area-inset-bottom))",
+        "action-bar": "calc(9rem + env(safe-area-inset-bottom))",
+      },
       boxShadow: {
         glow: "var(--brand-glow)",
         "hero-lift": "var(--hero-lift)",

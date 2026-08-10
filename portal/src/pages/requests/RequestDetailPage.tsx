@@ -69,7 +69,7 @@ export function RequestDetailPage() {
   const canCancel = CANCELLABLE.has(r.status);
 
   return (
-    <div className="space-y-5 pb-36 md:pb-0">
+    <div className="space-y-5 pb-action-bar md:pb-0">
       {/* Sheet …47 heads a request with its number and status, not a card. */}
       <PageHeader
         backTo="/cabinet/requests"

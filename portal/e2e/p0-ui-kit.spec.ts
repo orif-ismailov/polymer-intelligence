@@ -466,6 +466,45 @@ test("sticky action bar clears the bottom nav on phones and goes static on deskt
   const barTop = await bar.evaluate((el) => el.getBoundingClientRect().top);
   expect(lastContentBottom).toBeLessThanOrEqual(barTop);
 
+  /*
+   * The same two assertions again, with an iPhone's home-indicator inset.
+   *
+   * Everything above is measured under `env(safe-area-inset-bottom): 0`, which
+   * is what every desktop browser and every headless run reports — and under a
+   * zero inset the two bars cannot collide, so the checks pass whatever the
+   * arithmetic is. That is precisely how `bottom-14` shipped: it cleared
+   * `BottomNav`'s `h-14` ROW but not the row plus the `pb-[env(...)]` the nav
+   * also carries, so on a real iPhone 34px of the bar sat behind the nav and the
+   * action labels were sliced through. Nothing in this suite could see it.
+   *
+   * The inset cannot be set from Playwright (no `env()` override, and the iOS
+   * device descriptors report 0 too), so it is substituted into exactly the two
+   * declarations that read it. Not a mock of the bug — a mock of the DEVICE.
+   */
+  const INSET = 34; // iPhone 12–16, portrait
+  await page.setViewportSize({ width: 375, height: 780 });
+  await page.addStyleTag({
+    content: `
+      [data-testid="ui-bottom-nav"] { padding-bottom: ${INSET}px !important; }
+      .bottom-nav { bottom: calc(3.5rem + ${INSET}px) !important; }
+      .pb-action-bar { padding-bottom: calc(9rem + ${INSET}px) !important; }
+    `,
+  });
+
+  const inset = await bar.evaluate((el) => {
+    const nav = document.querySelector('[data-testid="ui-bottom-nav"]')!;
+    const navTop = nav.getBoundingClientRect().top;
+    const navBorder = parseFloat(getComputedStyle(nav).borderTopWidth);
+    // The deepest painted box inside the bar, not the bar's own edge: with
+    // `!p-0` (which `OfferActionBar` passes) those are the same, and the labels
+    // are what a visitor notices being cut.
+    const deepest = Math.max(
+      ...[...el.querySelectorAll("*")].map((n) => n.getBoundingClientRect().bottom),
+    );
+    return { overlap: deepest - (navTop + navBorder) };
+  });
+  expect(inset.overlap, "bar content behind the bottom nav with an iOS inset").toBeLessThanOrEqual(0);
+
   await page.setViewportSize({ width: 1280, height: 900 });
   expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
 });
