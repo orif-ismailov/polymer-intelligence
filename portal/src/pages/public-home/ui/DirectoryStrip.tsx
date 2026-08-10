@@ -25,6 +25,22 @@ import { Skeleton } from "@/shared/ui";
  * flow, so scaling it up costs the text column nothing — it bleeds into the
  * row's own gap and the card's padding, both otherwise empty, rather than
  * eating the width `truncate` on the heading is depending on.
+ *
+ * `size-10 sm:size-14`, not `-inset-*` with `h-auto w-auto`: an absolutely
+ * positioned replaced element with all four insets set and an auto size does
+ * NOT stretch both axes to match — a browser resolves one axis from the
+ * inset box and the OTHER from the intrinsic ratio against it, so cropping
+ * `lab_flask` to a taller, narrower frame (see below) rendered it at 24×48 on
+ * a phone next to every other glyph's 24×16. A fixed square, sized by hand to
+ * roughly the old box-plus-bleed, is what actually gives every icon the same
+ * bounding box regardless of its own art's aspect ratio — `object-contain`
+ * only fits the art inside that box, it does not size the box.
+ *
+ * `max-w-none`: preflight ships `img { max-width: 100% }`, and `max-width`
+ * composes with `width` rather than losing to it — an absolutely positioned
+ * element's percentage box resolves against its containing block, the 24px
+ * `span`, so every glyph rendered exactly 24px wide (whatever its `size-10`
+ * said) until this override.
  */
 function cardIcon(file: string): ReactNode {
   return (
@@ -33,7 +49,7 @@ function cardIcon(file: string): ReactNode {
         src={`/${file}`}
         alt=""
         aria-hidden
-        className="absolute -inset-2 h-auto w-auto object-contain sm:-inset-3"
+        className="absolute left-1/2 top-1/2 size-10 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain sm:size-14"
       />
     </span>
   );
