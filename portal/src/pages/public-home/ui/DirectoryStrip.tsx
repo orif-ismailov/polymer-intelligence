@@ -12,9 +12,25 @@ import { Skeleton } from "@/shared/ui";
  * The commissioned icon set replacing the lucide glyphs this row used to draw:
  * detailed green renders on a transparent PNG, one per card. `alt=""` because
  * each glyph is decorative beside a real `<h3>` that already names the card.
+ *
+ * Boxed at the SAME square footprint the lucide glyphs held (`size-6 sm:size-8`)
+ * with `object-contain`, not sized off the artwork's own 1.5:1 canvas. A
+ * height-locked `w-auto` render measured ~72px wide at `sm` against the old
+ * 32px square, and `Производители`/`Лаборатории` — single words with no space
+ * to wrap at — ran straight through the card's padding and past its rounded
+ * corner once that width came out of the text column's budget on a ~224px
+ * mockup cell. The card was never re-measured for a wider glyph; this keeps
+ * the glyph inside the box the layout was actually sized around.
  */
 function cardIcon(file: string): ReactNode {
-  return <img src={`/${file}`} alt="" aria-hidden className="h-9 w-auto sm:h-12" />;
+  return (
+    <img
+      src={`/${file}`}
+      alt=""
+      aria-hidden
+      className="size-6 object-contain sm:size-8"
+    />
+  );
 }
 
 const DIRECTORY_ICONS: Record<string, ReactNode> = {
@@ -79,12 +95,12 @@ export function DirectoryStrip() {
     "group flex flex-col justify-between rounded-md border border-border bg-surface p-3.5 transition-colors hover:border-brand-line hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:min-h-[7.1875rem] sm:p-4";
 
   /*
-   * The glyph leads the card on a phone instead of flanking the copy: a wide
-   * icon plus its gutter eats most of a 150px row, which left the two-line body
-   * clamping mid-word. Above the title it costs one line's height and gives the
-   * copy the whole column. The size itself lives on each `cardIcon()` `<img>` —
-   * fixed height, `w-auto` — so every glyph shares one baseline regardless of
-   * its own artwork's width.
+   * The glyph leads the card on a phone instead of flanking the copy: a 32px
+   * icon plus its gutter takes 46 of the 150px of usable width, which left the
+   * two-line body clamping mid-word. Above the title it costs one 24px line and
+   * gives the copy the whole column. The box itself lives on each `cardIcon()`
+   * `<img>` (`size-6 sm:size-8`), so every glyph shares the same footprint
+   * regardless of its own artwork's aspect ratio.
    */
   const headClass = "flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3.5";
 
@@ -105,7 +121,7 @@ export function DirectoryStrip() {
               <div className={headClass}>
                 <span className="shrink-0">{DIRECTORY_ICONS[dir.slug]}</span>
                 <div className="min-w-0">
-                  <h3 className="text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
+                  <h3 className="truncate text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                     {t(dir.labelKey)}
                   </h3>
                   <p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-text-muted sm:mt-1.5">
@@ -137,7 +153,7 @@ export function DirectoryStrip() {
             <div className={headClass}>
               <span className="shrink-0">{item.icon}</span>
               <div className="min-w-0">
-                <h3 className="text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
+                <h3 className="truncate text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                   {item.title}
                 </h3>
                 <p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-text-muted sm:mt-1.5">
