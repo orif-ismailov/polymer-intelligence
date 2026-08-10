@@ -20,9 +20,16 @@ const variants: Record<TabsVariant, { list: string; item: (active: boolean) => s
    * automatic minimum size is its content's min-content, so without this a row
    * of tabs silently widens its column past the viewport instead of scrolling.
    * A page that puts Tabs inside a grid column needs `min-w-0` on that column too.
+   *
+   * `overflow-y-hidden` alongside it is not decoration: setting only
+   * `overflow-x` leaves `overflow-y`'s USED value as `auto` per the CSS
+   * overflow spec (an axis left at `visible` while its sibling is not computes
+   * to `auto`, not `visible`), so this row was a vertical scroller too — a
+   * touch that started on the tab strip could drag the page instead of paging
+   * through the tabs.
    */
   underline: {
-    list: "flex min-w-0 max-w-full gap-2 overflow-x-auto border-b border-border",
+    list: "flex min-w-0 max-w-full gap-2 overflow-x-auto overflow-y-hidden border-b border-border",
     item: (active) =>
       cn(
         "-mb-px rounded-t-sm border-b-2 px-3 py-2 text-sm",
@@ -36,7 +43,7 @@ const variants: Record<TabsVariant, { list: string; item: (active: boolean) => s
    * gold, not brand green — the sheet's secondary accent for section chrome.
    */
   underlineGold: {
-    list: "flex min-w-0 max-w-full gap-2 overflow-x-auto border-b border-border",
+    list: "flex min-w-0 max-w-full gap-2 overflow-x-auto overflow-y-hidden border-b border-border",
     item: (active) =>
       cn(
         "-mb-px rounded-t-sm border-b-2 px-3 py-2 text-sm",
