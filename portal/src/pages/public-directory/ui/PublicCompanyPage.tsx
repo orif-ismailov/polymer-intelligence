@@ -259,6 +259,29 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
                     {t("logisticsRequest.ctaFromProfile")}
                   </LinkButton>
                 </StickyActionBar>
+              ) : isManufacturer && !isOwner && company.offer_count === 0 ? (
+                /* A factory that has published nothing is the third company in
+                   this list with no offers to point at — and the failure was
+                   worse here than it was for carriers, because the bar still
+                   rendered both buttons. «Запросить предложение» ran
+                   `setTab("products")`, so on the Продукты tab (where the green
+                   button is most likely to be pressed) the click changed
+                   nothing at all: same URL, same tab, same markup. There was no
+                   product to pick and no error to read.
+                   `factory_rfqs.offer_id` is NOT NULL, so an RFQ cannot exist
+                   without a listing — the chat is the one targeted channel that
+                   works without one, and it becomes the single CTA. Same shape
+                   the two branches above use, for the same reason. */
+                <StickyActionBar>
+                  <LinkButton
+                    size="lg"
+                    fullWidth
+                    to={`/cabinet/manufacturers/${company.id}/chat`}
+                    data-testid="manufacturer-chat-cta"
+                  >
+                    {t("companyProfile.messageManufacturer")}
+                  </LinkButton>
+                </StickyActionBar>
               ) : isOwner ? (
                 <StickyActionBar>
                   <div className="flex w-full gap-2" data-testid="company-owner-actions">
@@ -303,8 +326,13 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
                 />
               ) : null
             }
+            /* `offer_count > 0`, because the hint is an instruction: with an
+               empty products panel «Выберите продукт ниже» points at nothing,
+               and it was the line directly above the two dead buttons. Carriers
+               and laboratories publish no offers either, so the same guard
+               takes it off those three profiles as well. */
             footerNote={
-              isAuthenticated && !isOwner && tab === "products" ? (
+              isAuthenticated && !isOwner && tab === "products" && company.offer_count > 0 ? (
                 <p className="text-center text-xs text-text-subtle">
                   {t("companyProfile.pickOfferHint")}
                 </p>
