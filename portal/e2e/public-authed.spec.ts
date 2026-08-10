@@ -42,6 +42,22 @@ async function anyPublicOfferId(request: APIRequestContext): Promise<number | nu
   return body.items?.[0]?.id ?? null;
 }
 
+/**
+ * A factory that has published nothing, or null when every one has a listing.
+ *
+ * Most seeded manufacturers are in this state, which is why the dead action bar
+ * below went unnoticed: the two profiles anyone demos (Shurtan, Navoiyazot)
+ * both have offers, and the bar only misbehaves when there are none.
+ */
+async function emptyManufacturerId(request: APIRequestContext): Promise<number | null> {
+  const res = await request.get(`${API_BASE}/public/directories/manufacturers`, {
+    params: { limit: 50 },
+  });
+  if (!res.ok()) return null;
+  const body = (await res.json()) as { items?: { id: number; offer_count: number }[] };
+  return body.items?.find((c) => c.offer_count === 0)?.id ?? null;
+}
+
 test("anonymous visitors get the storefront and its two auth CTAs", async ({ page }) => {
   await page.goto("/");
 
@@ -90,6 +106,7 @@ test("an anonymous visitor reads a listing but gets no acting surface", async ({
  */
 test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
   const offerId = await anyPublicOfferId(request);
+  const emptyFactoryId = await emptyManufacturerId(request);
 
   // A company, not just a session: `RequireCompany` sends an account with none
   // to `/cabinet/onboarding`, which renders outside `AppShell` and so has no
@@ -120,6 +137,30 @@ test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
     await expect(
       page.getByRole("link", { name: /sign in to contact|войти, чтобы связаться/i }),
     ).toHaveCount(0);
+  }
+
+  /*
+   * A factory with nothing published gets ONE action, and that action goes
+   * somewhere.
+   *
+   * It used to render the full two-button bar, and the green «Запросить
+   * предложение» ran `setTab("products")` — so on the Продукты tab, which is
+   * where the button is most visible, the click produced no navigation, no tab
+   * change and no markup change at all. There was no product to pick, and
+   * `factory_rfqs.offer_id` is NOT NULL, so there was no RFQ to open either.
+   * `toHaveCount(0)` on the bar is the load-bearing half of this: a passing
+   * `manufacturer-chat-cta` alone would not notice the dead pair coming back.
+   */
+  if (emptyFactoryId !== null) {
+    await page.goto(`/manufacturers/${emptyFactoryId}`);
+    const chat = page.getByTestId("manufacturer-chat-cta");
+    await expect(chat).toBeVisible();
+    await expect(page.getByTestId("seller-profile-action-bar")).toHaveCount(0);
+    // Nor the hint that told the visitor to pick from an empty panel.
+    await expect(page.getByText(/выберите продукт ниже|pick a product|mahsulotni/i)).toHaveCount(0);
+
+    await chat.click();
+    await page.waitForURL(`**/cabinet/manufacturers/${emptyFactoryId}/chat`);
   }
 
   // ...and the two ways back out: the sidebar link and the brand lockup, which
