@@ -12,9 +12,47 @@ import { Skeleton } from "@/shared/ui";
  * The commissioned icon set replacing the lucide glyphs this row used to draw:
  * detailed green renders on a transparent PNG, one per card. `alt=""` because
  * each glyph is decorative beside a real `<h3>` that already names the card.
+ *
+ * The `<span>` reserves the SAME square footprint the lucide glyphs held
+ * (`size-6 sm:size-8`) — that box is load-bearing: it's what a browser window
+ * right at 1280px (the `xl` breakpoint's own floor, before the row's
+ * `max-w-[1440px]` container catches up and widens every cell) has room for
+ * without truncating «Цены и аналитика». A wider reserved box measured worse
+ * at that width, not better — the previous, bigger render already had zero
+ * margin there before it grew any further.
+ *
+ * The `<img>` paints past that box on purpose: `absolute` takes it out of
+ * flow, so scaling it up costs the text column nothing — it bleeds into the
+ * row's own gap and the card's padding, both otherwise empty, rather than
+ * eating the width `truncate` on the heading is depending on.
+ *
+ * `size-10 sm:size-14`, not `-inset-*` with `h-auto w-auto`: an absolutely
+ * positioned replaced element with all four insets set and an auto size does
+ * NOT stretch both axes to match — a browser resolves one axis from the
+ * inset box and the OTHER from the intrinsic ratio against it, so cropping
+ * `lab_flask` to a taller, narrower frame (see below) rendered it at 24×48 on
+ * a phone next to every other glyph's 24×16. A fixed square, sized by hand to
+ * roughly the old box-plus-bleed, is what actually gives every icon the same
+ * bounding box regardless of its own art's aspect ratio — `object-contain`
+ * only fits the art inside that box, it does not size the box.
+ *
+ * `max-w-none`: preflight ships `img { max-width: 100% }`, and `max-width`
+ * composes with `width` rather than losing to it — an absolutely positioned
+ * element's percentage box resolves against its containing block, the 24px
+ * `span`, so every glyph rendered exactly 24px wide (whatever its `size-10`
+ * said) until this override.
  */
 function cardIcon(file: string): ReactNode {
-  return <img src={`/${file}`} alt="" aria-hidden className="h-9 w-auto sm:h-12" />;
+  return (
+    <span className="relative block size-6 shrink-0 sm:size-8">
+      <img
+        src={`/${file}`}
+        alt=""
+        aria-hidden
+        className="absolute left-1/2 top-1/2 size-10 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain sm:size-14"
+      />
+    </span>
+  );
 }
 
 const DIRECTORY_ICONS: Record<string, ReactNode> = {
@@ -79,12 +117,13 @@ export function DirectoryStrip() {
     "group flex flex-col justify-between rounded-md border border-border bg-surface p-3.5 transition-colors hover:border-brand-line hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:min-h-[7.1875rem] sm:p-4";
 
   /*
-   * The glyph leads the card on a phone instead of flanking the copy: a wide
-   * icon plus its gutter eats most of a 150px row, which left the two-line body
-   * clamping mid-word. Above the title it costs one line's height and gives the
-   * copy the whole column. The size itself lives on each `cardIcon()` `<img>` —
-   * fixed height, `w-auto` — so every glyph shares one baseline regardless of
-   * its own artwork's width.
+   * The glyph leads the card on a phone instead of flanking the copy: a 32px
+   * icon plus its gutter takes 46 of the 150px of usable width, which left the
+   * two-line body clamping mid-word. Above the title it costs one 24px line and
+   * gives the copy the whole column. The RESERVED box lives on `cardIcon()`'s
+   * own `<span>` (`size-6 sm:size-8`), so every glyph shares the same layout
+   * footprint regardless of its own artwork's aspect ratio — what actually
+   * paints can be bigger (see that function), but this row never finds out.
    */
   const headClass = "flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3.5";
 
@@ -103,9 +142,9 @@ export function DirectoryStrip() {
           return (
             <Link key={dir.slug} to={`/${dir.slug}`} className={cardClass}>
               <div className={headClass}>
-                <span className="shrink-0">{DIRECTORY_ICONS[dir.slug]}</span>
+                {DIRECTORY_ICONS[dir.slug]}
                 <div className="min-w-0">
-                  <h3 className="text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
+                  <h3 className="truncate text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                     {t(dir.labelKey)}
                   </h3>
                   <p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-text-muted sm:mt-1.5">
@@ -135,9 +174,9 @@ export function DirectoryStrip() {
         {extras.map((item) => (
           <Link key={item.key} to={item.to} className={cardClass}>
             <div className={headClass}>
-              <span className="shrink-0">{item.icon}</span>
+              {item.icon}
               <div className="min-w-0">
-                <h3 className="text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
+                <h3 className="truncate text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                   {item.title}
                 </h3>
                 <p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-text-muted sm:mt-1.5">
