@@ -1,14 +1,6 @@
 import { type ReactNode } from "react";
 
-import {
-  BarChart3,
-  ChevronRight,
-  Factory,
-  FlaskConical,
-  Handshake,
-  Newspaper,
-  Truck,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -16,11 +8,20 @@ import { usePublicStats } from "@/entities/public";
 import { PUBLIC_DIRECTORIES } from "@/shared/config";
 import { Skeleton } from "@/shared/ui";
 
+/**
+ * The commissioned icon set replacing the lucide glyphs this row used to draw:
+ * detailed green renders on a transparent PNG, one per card. `alt=""` because
+ * each glyph is decorative beside a real `<h3>` that already names the card.
+ */
+function cardIcon(file: string): ReactNode {
+  return <img src={`/${file}`} alt="" aria-hidden className="h-9 w-auto sm:h-12" />;
+}
+
 const DIRECTORY_ICONS: Record<string, ReactNode> = {
-  manufacturers: <Factory size={32} strokeWidth={1.5} aria-hidden />,
-  traders: <Handshake size={32} strokeWidth={1.5} aria-hidden />,
-  logistics: <Truck size={32} strokeWidth={1.5} aria-hidden />,
-  laboratories: <FlaskConical size={32} strokeWidth={1.5} aria-hidden />,
+  manufacturers: cardIcon("factory_no_bg.png"),
+  traders: cardIcon("handshake_no_bg.png"),
+  logistics: cardIcon("truck_logistics_no_bg.png"),
+  laboratories: cardIcon("lab_flask_no_bg.png"),
 };
 
 const DIRECTORY_BODY_KEYS: Record<string, string> = {
@@ -32,7 +33,7 @@ const DIRECTORY_BODY_KEYS: Record<string, string> = {
 
 /**
  * Six equal entry cards under the hero (marketplace.jpeg §3): 224x115 on the
- * 1440 layout, 10px apart — a 30px brand glyph in a left column, title and a
+ * 1440 layout, 10px apart — a glyph in a left column, title and a
  * two-line body beside it, count/meta + chevron on the baseline. No hairline of
  * its own above the row: the hero section closes with one, and a second rule
  * 24px below it would read as a gap rather than a join. (That rule used to
@@ -47,7 +48,7 @@ export function DirectoryStrip() {
     {
       key: "prices",
       to: "/prices",
-      icon: <BarChart3 size={32} strokeWidth={1.5} aria-hidden />,
+      icon: cardIcon("growth_chart_no_bg.png"),
       title: t("public.nav.prices"),
       body: t("public.home.directoryCard.pricesBody"),
       meta: t("public.home.directoryCard.daily"),
@@ -55,7 +56,7 @@ export function DirectoryStrip() {
     {
       key: "news",
       to: "/news",
-      icon: <Newspaper size={32} strokeWidth={1.5} aria-hidden />,
+      icon: cardIcon("news_megaphone_no_bg.png"),
       title: t("public.nav.news"),
       body: t("public.home.directoryCard.newsBody"),
       meta: t("public.home.directoryCard.daily"),
@@ -78,15 +79,14 @@ export function DirectoryStrip() {
     "group flex flex-col justify-between rounded-md border border-border bg-surface p-3.5 transition-colors hover:border-brand-line hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg sm:min-h-[7.1875rem] sm:p-4";
 
   /*
-   * The glyph leads the card on a phone instead of flanking the copy: a 32px
-   * icon plus its gutter takes 46 of the 150px of usable width, which left the
-   * two-line body clamping mid-word. Above the title it costs one 24px line and
-   * gives the copy the whole column. `[&_svg]` because the size is a lucide
-   * prop — an attribute, which a class overrides — and one class pair here
-   * beats threading a breakpoint through the icon map.
+   * The glyph leads the card on a phone instead of flanking the copy: a wide
+   * icon plus its gutter eats most of a 150px row, which left the two-line body
+   * clamping mid-word. Above the title it costs one line's height and gives the
+   * copy the whole column. The size itself lives on each `cardIcon()` `<img>` —
+   * fixed height, `w-auto` — so every glyph shares one baseline regardless of
+   * its own artwork's width.
    */
-  const headClass =
-    "flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3.5 [&_svg]:size-6 sm:[&_svg]:size-8";
+  const headClass = "flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3.5";
 
   return (
     <section
@@ -103,9 +103,7 @@ export function DirectoryStrip() {
           return (
             <Link key={dir.slug} to={`/${dir.slug}`} className={cardClass}>
               <div className={headClass}>
-                <span className="shrink-0 text-brand">
-                  {DIRECTORY_ICONS[dir.slug]}
-                </span>
+                <span className="shrink-0">{DIRECTORY_ICONS[dir.slug]}</span>
                 <div className="min-w-0">
                   <h3 className="text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                     {t(dir.labelKey)}
@@ -137,7 +135,7 @@ export function DirectoryStrip() {
         {extras.map((item) => (
           <Link key={item.key} to={item.to} className={cardClass}>
             <div className={headClass}>
-              <span className="shrink-0 text-brand">{item.icon}</span>
+              <span className="shrink-0">{item.icon}</span>
               <div className="min-w-0">
                 <h3 className="text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                   {item.title}
