@@ -49,7 +49,7 @@ function cardIcon(file: string): ReactNode {
         src={`/${file}`}
         alt=""
         aria-hidden
-        className="absolute left-1/2 top-1/2 size-10 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain sm:size-14"
+        className="absolute left-1/2 top-1/2 size-12 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain sm:size-14"
       />
     </span>
   );

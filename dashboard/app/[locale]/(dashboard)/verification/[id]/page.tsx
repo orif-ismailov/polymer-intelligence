@@ -35,6 +35,7 @@ import {
   CheckStatusBadge,
 } from "@/components/verification/chips";
 import { CompanyStatusBadge, CompanyRoleBadge } from "@/components/verification/company-status";
+import { CompanyProfileSections } from "@/components/verification/company-profile-sections";
 
 // ─── Types (match backend response shapes exactly) ────────────────────────────
 
@@ -52,6 +53,11 @@ interface CompanyProfile {
   verified_at: string | null;
   reverification_due_at: string | null;
   roles: Array<{ role: string; status: string }>;
+  declared_roles: string[];
+  confirmed_roles: string[];
+  manufacturer_profile: Record<string, unknown> | null;
+  logistics_profile: Record<string, unknown> | null;
+  laboratory_profile: Record<string, unknown> | null;
 }
 
 interface BankAccount {
@@ -254,13 +260,20 @@ export default function VerificationCaseDetailPage() {
         </dl>
 
         {c.company.roles.length > 0 && (
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-3">
             <p className="text-xs text-foreground-muted">{t("profile.roles")}</p>
-            <div className="mt-1 flex flex-wrap gap-1.5">
-              {c.company.roles.map((r) => (
-                <CompanyRoleBadge key={r.role} role={r.role} status={r.status} />
-              ))}
-            </div>
+            <RoleGroup
+              title={t("profile.rolesConfirmed")}
+              roles={c.company.roles.filter((r) => r.status === "confirmed")}
+            />
+            <RoleGroup
+              title={t("profile.rolesDeclared")}
+              roles={c.company.roles.filter((r) => r.status === "declared")}
+            />
+            <RoleGroup
+              title={t("profile.rolesRevoked")}
+              roles={c.company.roles.filter((r) => r.status === "revoked")}
+            />
           </div>
         )}
 
@@ -278,6 +291,15 @@ export default function VerificationCaseDetailPage() {
           </div>
         )}
       </section>
+
+      {/* Account-type profile data — manufacturer capacity, carrier coverage,
+          lab accreditation. Only the section matching the company's account
+          type renders. */}
+      <CompanyProfileSections
+        manufacturerProfile={c.company.manufacturer_profile}
+        logisticsProfile={c.company.logistics_profile}
+        laboratoryProfile={c.company.laboratory_profile}
+      />
 
       {/* Checks */}
       <section className="rounded-lg border border-border bg-background-secondary p-4">
@@ -857,6 +879,26 @@ function Field({ label, value }: { label: string; value: string | null }) {
     <div>
       <dt className="text-xs text-foreground-muted">{label}</dt>
       <dd className="mt-1 text-sm text-foreground break-words">{value || "—"}</dd>
+    </div>
+  );
+}
+
+function RoleGroup({
+  title,
+  roles,
+}: {
+  title: string;
+  roles: Array<{ role: string; status: string }>;
+}) {
+  if (roles.length === 0) return null;
+  return (
+    <div>
+      <p className="text-xs text-foreground-muted">{title}</p>
+      <div className="mt-1 flex flex-wrap gap-1.5">
+        {roles.map((r) => (
+          <CompanyRoleBadge key={r.role} role={r.role} status={r.status} />
+        ))}
+      </div>
     </div>
   );
 }

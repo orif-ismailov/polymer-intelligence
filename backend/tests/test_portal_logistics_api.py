@@ -17,6 +17,7 @@ from tests._verification_db import (
     make_account,
     make_company,
     make_engine,
+    make_staff,
     migrate_head,
     requires_real_db,
     session_factory,
@@ -559,3 +560,101 @@ def test_anonymous_and_wrong_audience_tokens_are_refused(api) -> None:  # noqa: 
         client.get(f"{_BASE}/pool", params={"company_id": 1}, headers=staff).status_code
         == 401
     )
+
+
+# ── admin oversight (admin_logistics_requests.py) ───────────────────────────────
+
+_ADMIN_BASE = "/api/v1/admin/logistics-requests"
+
+
+def _staff_auth(session, role: str, email: str) -> dict[str, str]:  # noqa: ANN001
+    from app.core.security import create_access_token  # noqa: PLC0415
+    from app.models.enums import StaffRole  # noqa: PLC0415
+
+    with session() as db:
+        staff = make_staff(db, email)
+        staff.role = StaffRole(role)
+        db.commit()
+        staff_id = staff.id
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"}
+
+
+def test_admin_routes_registered() -> None:
+    from app.api.admin_logistics_requests import router  # noqa: PLC0415
+
+    paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
+    assert "/admin/logistics-requests" in paths
+    assert "/admin/logistics-requests/{request_id}" in paths
+
+
+@requires_real_db
+def test_admin_authz(api) -> None:  # noqa: ANN001
+    client, session = api
+    assert client.get(_ADMIN_BASE).status_code == 401
+    viewer = _staff_auth(session, "viewer", "log-viewer@x.com")
+    assert client.get(_ADMIN_BASE, headers=viewer).status_code == 403
+    trader = _staff_auth(session, "trader", "log-trader@x.com")
+    assert client.get(_ADMIN_BASE, headers=trader).status_code == 403
+    analyst = _staff_auth(session, "analyst", "log-analyst@x.com")
+    assert client.get(_ADMIN_BASE, headers=analyst).status_code == 200
+    admin = _staff_auth(session, "admin", "log-admin@x.com")
+    assert client.get(_ADMIN_BASE, headers=admin).status_code == 200
+
+
+@requires_real_db
+def test_admin_sees_every_carrier_thread(api) -> None:  # noqa: ANN001
+    """The whole board, not one carrier's scoped view.
+
+    A single carrier's portal view (test_each_carrier_gets_its_own_private_thread
+    above) only ever sees its own thread — that is the point of the shape. Staff
+    oversight is the other half: the admin detail endpoint must show every
+    carrier's thread on the request, not just one.
+    """
+    client, session = api
+    with session() as db:
+        buyer_owner = make_account(db, "+998900010031")
+        buyer = make_company(db, buyer_owner, tax_id="400000031")
+        c1_owner = make_account(db, "+998900010032")
+        carrier1 = _carrier(db, c1_owner, "400000032", "Trans Asia")
+        c2_owner = make_account(db, "+998900010033")
+        carrier2 = _carrier(db, c2_owner, "400000033", "Uzbek Rail")
+        db.commit()
+        buyer_id, buyer_account = buyer.id, buyer_owner.id
+        c1, c1_account = carrier1.id, c1_owner.id
+        c2, c2_account = carrier2.id, c2_owner.id
+
+    request_id = client.post(
+        f"{_BASE}/requests",
+        json={**_PAYLOAD, "company_id": buyer_id},
+        headers=_auth(buyer_account),
+    ).json()["id"]
+
+    client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": c1},
+        headers=_auth(c1_account),
+    )
+    client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": c2},
+        headers=_auth(c2_account),
+    )
+
+    analyst = _staff_auth(session, "analyst", "log-board@x.com")
+    resp = client.get(f"{_ADMIN_BASE}/{request_id}", headers=analyst)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["thread_count"] == 2
+    carrier_ids = {t["carrier_company_id"] for t in body["threads"]}
+    assert carrier_ids == {c1, c2}
+
+
+@requires_real_db
+def test_admin_list_bad_status_and_unknown_id(api) -> None:  # noqa: ANN001
+    client, session = api
+    analyst = _staff_auth(session, "analyst", "log-errors@x.com")
+    assert (
+        client.get(_ADMIN_BASE, params={"status": "bogus"}, headers=analyst).status_code
+        == 422
+    )
+    assert client.get(f"{_ADMIN_BASE}/999999999", headers=analyst).status_code == 404

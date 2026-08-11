@@ -32,7 +32,9 @@
       "escrow": "Eskrou",
       "substances": "Moddalar",
       "labOrders": "Laboratoriya",
-      "labPartners": "Laboratoriyalar"
+      "labPartners": "Laboratoriyalar",
+      "logisticsRequests": "Logistika so'rovlari",
+      "labRequests": "Laboratoriya so'rovlari"
     },
     "guest": "Mehmon",
     "openMenu": "Menyuni ochish",
@@ -880,7 +882,10 @@
       "verifiedAt": "Tekshirilgan",
       "roles": "Rollar",
       "bankAccounts": "Bank hisoblari",
-      "mfo": "MFO"
+      "mfo": "MFO",
+      "rolesConfirmed": "Tasdiqlangan rollar",
+      "rolesDeclared": "E'lon qilingan rollar",
+      "rolesRevoked": "Bekor qilingan rollar"
     },
     "checks": {
       "title": "Tekshiruvlar",
@@ -1029,7 +1034,10 @@
       "address": "Yuridik manzil",
       "verifiedAt": "Tekshirilgan",
       "reverificationDue": "Qayta tekshiruv",
-      "roles": "Rollar"
+      "roles": "Rollar",
+      "rolesConfirmed": "Tasdiqlangan rollar",
+      "rolesDeclared": "E'lon qilingan rollar",
+      "rolesRevoked": "Bekor qilingan rollar"
     },
     "role": {
       "buyer": "Xaridor",
@@ -1051,6 +1059,57 @@
       "distributor": "Distributor",
       "laboratory": "Laboratoriya",
       "insurance_provider": "Sug‘urta"
+    },
+    "roleStatus": {
+      "declared": "E'lon qilingan",
+      "confirmed": "Tasdiqlangan",
+      "revoked": "Bekor qilingan"
+    },
+    "profileSections": {
+      "manufacturer": {
+        "title": "Ishlab chiqaruvchi profili",
+        "productionType": "Ishlab chiqarish turi",
+        "mainProducts": "Asosiy mahsulotlar",
+        "annualCapacityTons": "Yillik quvvat, t",
+        "productionLines": "Ishlab chiqarish liniyalari",
+        "employees": "Xodimlar soni",
+        "foundedYear": "Tashkil topgan yili",
+        "isoCertification": "ISO sertifikati",
+        "moqTons": "Minimal buyurtma, t",
+        "minAnnualVolumeTons": "Yillik minimal hajm, t",
+        "additionalOther": "Boshqa talablar",
+        "markets": "Sotuv bozorlari",
+        "exportCountries": "Eksport davlatlari",
+        "additionalRequirements": "Qo'shimcha talablar",
+        "financialRequirements": "Moliyaviy talablar"
+      },
+      "logistics": {
+        "title": "Logistika kompaniyasi profili",
+        "city": "Shahar",
+        "tariffModel": "Tarif modeli",
+        "yearsExperience": "Tajriba, yil",
+        "projectsCompleted": "Yakunlangan loyihalar",
+        "description": "Tavsif",
+        "services": "Xizmatlar",
+        "fromCountries": "Jo'natish davlatlari",
+        "toCountries": "Yetkazish davlatlari",
+        "popularRoutes": "Mashhur yo'nalishlar",
+        "cargoTypes": "Yuk turlari",
+        "capabilities": "Imkoniyatlar"
+      },
+      "laboratory": {
+        "title": "Laboratoriya profili",
+        "city": "Shahar",
+        "website": "Veb-sayt",
+        "email": "Elektron pochta",
+        "phone": "Telefon",
+        "yearsExperience": "Tajriba, yil",
+        "studiesCompleted": "Bajarilgan tadqiqotlar",
+        "avgTurnaroundDays": "O'rtacha muddat, kun",
+        "description": "Tavsif",
+        "accreditations": "Akkreditatsiyalar",
+        "methods": "Tadqiqot usullari"
+      }
     }
   },
   "contracts": {
@@ -1387,5 +1446,99 @@
     "save": "Saqlash",
     "cancel": "Bekor qilish",
     "adminOnly": "Ma’lumotnomani administrator tahrirlaydi."
+  },
+  "logisticsRequests": {
+    "title": "Logistika so'rovlari",
+    "subtitle": "Xaridorlardan tashuvchilarga so'rovlar nazorati (faqat ko'rish).",
+    "loading": "Yuklanmoqda…",
+    "error": "Ma'lumotlarni yuklab bo'lmadi",
+    "empty": "Logistika so'rovlari topilmadi",
+    "filterAll": "Barcha holatlar",
+    "search": "Raqami yoki yuk bo'yicha qidirish…",
+    "colNumber": "Raqami",
+    "colRoute": "Yo'nalish",
+    "colCargo": "Yuk",
+    "colBuyer": "Xaridor",
+    "colStatus": "Holati",
+    "selectHint": "Ko'rish uchun so'rovni tanlang.",
+    "status": {
+      "submitted": "Yuborilgan",
+      "viewed": "Ko'rilgan",
+      "in_progress": "Jarayonda",
+      "quoted": "Taklif berilgan",
+      "closed": "Yopilgan",
+      "rejected": "Rad etilgan"
+    },
+    "detail": {
+      "number": "Raqami",
+      "buyer": "Xaridor",
+      "cargo": "Yuk",
+      "volume": "Hajm",
+      "packaging": "Qadoqlash",
+      "specialRequirements": "Maxsus talablar",
+      "route": "Yo'nalish",
+      "contactPhone": "Aloqa telefoni",
+      "createdAt": "Yaratilgan",
+      "updatedAt": "Yangilangan"
+    },
+    "threads": {
+      "title": "Tashuvchilar bilan yozishmalar",
+      "empty": "Hozircha hech bir tashuvchi javob bermagan",
+      "carrier": "Tashuvchi",
+      "messageCount": "Xabarlar",
+      "lastMessage": "Oxirgi xabar",
+      "never": "—"
+    }
+  },
+  "labRequests": {
+    "title": "Laboratoriya so'rovlari",
+    "subtitle": "Xaridorlardan laboratoriyalarga so'rovlar nazorati (faqat ko'rish).",
+    "loading": "Yuklanmoqda…",
+    "error": "Ma'lumotlarni yuklab bo'lmadi",
+    "empty": "Laboratoriya so'rovlari topilmadi",
+    "filterAll": "Barcha holatlar",
+    "search": "Raqami yoki mahsulot bo'yicha qidirish…",
+    "colNumber": "Raqami",
+    "colProduct": "Mahsulot",
+    "colStudyType": "Tadqiqot turi",
+    "colBuyer": "Xaridor",
+    "colStatus": "Holati",
+    "selectHint": "Ko'rish uchun so'rovni tanlang.",
+    "status": {
+      "submitted": "Yuborilgan",
+      "viewed": "Ko'rilgan",
+      "in_progress": "Jarayonda",
+      "quoted": "Taklif berilgan",
+      "closed": "Yopilgan",
+      "rejected": "Rad etilgan"
+    },
+    "detail": {
+      "number": "Raqami",
+      "buyer": "Xaridor",
+      "product": "Mahsulot",
+      "grade": "Marka",
+      "studyType": "Tadqiqot turi",
+      "methods": "Usullar",
+      "sampleQty": "Namuna miqdori",
+      "comment": "Izoh",
+      "purpose": "Maqsad",
+      "urgent": "Shoshilinch",
+      "urgentYes": "Ha",
+      "urgentNo": "Yo'q",
+      "desiredDate": "Istalgan sana",
+      "contactName": "Aloqa uchun shaxs",
+      "contactEmail": "Aloqa uchun email",
+      "contactPhone": "Aloqa telefoni",
+      "createdAt": "Yaratilgan",
+      "updatedAt": "Yangilangan"
+    },
+    "threads": {
+      "title": "Laboratoriyalar bilan yozishmalar",
+      "empty": "Hozircha hech bir laboratoriya javob bermagan",
+      "laboratory": "Laboratoriya",
+      "messageCount": "Xabarlar",
+      "lastMessage": "Oxirgi xabar",
+      "never": "—"
+    }
   }
 }

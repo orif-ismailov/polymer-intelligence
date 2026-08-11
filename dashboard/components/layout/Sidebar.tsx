@@ -27,6 +27,8 @@ import {
   ShoppingCart,
   SlidersHorizontal,
   Tag,
+  TestTube,
+  Truck,
   Users,
   Workflow,
   X,
@@ -74,6 +76,8 @@ const NAV_GROUPS: NavGroup[] = [
       { key: "substances", href: "/substances", icon: FlaskConical, minRole: "analyst" },
       { key: "labOrders", href: "/lab-orders", icon: Microscope, minRole: "analyst" },
       { key: "labPartners", href: "/lab-partners", icon: Building2, minRole: "analyst" },
+      { key: "logisticsRequests", href: "/logistics-requests", icon: Truck, minRole: "analyst" },
+      { key: "labRequests", href: "/lab-requests", icon: TestTube, minRole: "analyst" },
     ],
   },
   {
