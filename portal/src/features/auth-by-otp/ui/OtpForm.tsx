@@ -87,7 +87,13 @@ export function OtpForm({ phone, initialCooldown, onVerified, onChangePhone }: O
         )}
       </FormField>
 
-      <Button type="submit" fullWidth size="lg" loading={verify.isPending} disabled={!codeValid}>
+      <Button
+        type="submit"
+        fullWidth
+        size="lg"
+        loading={verify.isPending}
+        disabled={!codeValid || verify.isPending}
+      >
         {verify.isPending ? t("auth.verifying") : t("auth.verify")}
       </Button>
 

@@ -68,7 +68,13 @@ export function PhoneForm({ onSent, initialPhone = "" }: PhoneFormProps) {
         </Alert>
       ) : null}
 
-      <Button type="submit" fullWidth size="lg" loading={requestOtp.isPending} disabled={!valid}>
+      <Button
+        type="submit"
+        fullWidth
+        size="lg"
+        loading={requestOtp.isPending}
+        disabled={!valid || requestOtp.isPending}
+      >
         {requestOtp.isPending ? t("auth.requestingCode") : t("auth.requestCode")}
       </Button>
     </form>
