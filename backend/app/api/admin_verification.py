@@ -33,6 +33,7 @@ from app.models.staff import AuditLog, StaffUser
 from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
 from app.services import (
     company_service,
+    directory_service,
     registry_service,
     storage_service,
     verification_checks,
@@ -110,6 +111,15 @@ def _company_profile(company: Company) -> dict[str, Any]:
         "verified_at": company.verified_at,
         "reverification_due_at": company.reverification_due_at,
         "roles": [{"role": str(r.role), "status": str(r.status)} for r in company.business_roles],
+        # Portal-parity naming (schemas/portal_company.py CompanySummaryOut): a
+        # role is "declared" (non-revoked) from registration, "confirmed" only
+        # once staff verify the company — same distinction, staff side.
+        "declared_roles": directory_service.active_roles(company),
+        "confirmed_roles": directory_service.confirmed_roles(company),
+        # Raw JSONB, unvalidated — other account types leave these NULL.
+        "manufacturer_profile": company.manufacturer_profile,
+        "logistics_profile": company.logistics_profile,
+        "laboratory_profile": company.laboratory_profile,
     }
 
 

@@ -32,7 +32,9 @@
       "escrow": "امانی",
       "substances": "مواد",
       "labOrders": "آزمایشگاه",
-      "labPartners": "آزمایشگاه‌ها"
+      "labPartners": "آزمایشگاه‌ها",
+      "logisticsRequests": "درخواست‌های لجستیک",
+      "labRequests": "درخواست‌های آزمایشگاه"
     },
     "guest": "مهمان",
     "openMenu": "باز کردن منو",
@@ -865,7 +867,10 @@
       "verifiedAt": "تأیید‌شده",
       "roles": "نقش‌ها",
       "bankAccounts": "حساب‌های بانکی",
-      "mfo": "کد بانک"
+      "mfo": "کد بانک",
+      "rolesConfirmed": "نقش‌های تأییدشده",
+      "rolesDeclared": "نقش‌های اعلام‌شده",
+      "rolesRevoked": "نقش‌های لغوشده"
     },
     "checks": {
       "title": "بررسی‌ها",
@@ -1014,7 +1019,10 @@
       "address": "آدرس قانونی",
       "verifiedAt": "تأییدشده",
       "reverificationDue": "بازبینی مجدد",
-      "roles": "نقش‌ها"
+      "roles": "نقش‌ها",
+      "rolesConfirmed": "نقش‌های تأییدشده",
+      "rolesDeclared": "نقش‌های اعلام‌شده",
+      "rolesRevoked": "نقش‌های لغوشده"
     },
     "role": {
       "buyer": "خریدار",
@@ -1036,6 +1044,57 @@
       "distributor": "توزیع‌کننده",
       "laboratory": "آزمایشگاه",
       "insurance_provider": "بیمه"
+    },
+    "roleStatus": {
+      "declared": "اعلام‌شده",
+      "confirmed": "تأییدشده",
+      "revoked": "لغوشده"
+    },
+    "profileSections": {
+      "manufacturer": {
+        "title": "پروفایل تولیدکننده",
+        "productionType": "نوع تولید",
+        "mainProducts": "محصولات اصلی",
+        "annualCapacityTons": "ظرفیت سالانه (تن)",
+        "productionLines": "خطوط تولید",
+        "employees": "تعداد کارکنان",
+        "foundedYear": "سال تأسیس",
+        "isoCertification": "گواهی ایزو",
+        "moqTons": "حداقل سفارش (تن)",
+        "minAnnualVolumeTons": "حداقل حجم سالانه (تن)",
+        "additionalOther": "سایر الزامات",
+        "markets": "بازارها",
+        "exportCountries": "کشورهای صادراتی",
+        "additionalRequirements": "الزامات اضافی",
+        "financialRequirements": "الزامات مالی"
+      },
+      "logistics": {
+        "title": "پروفایل شرکت لجستیک",
+        "city": "شهر",
+        "tariffModel": "مدل تعرفه",
+        "yearsExperience": "سابقه کار (سال)",
+        "projectsCompleted": "پروژه‌های تکمیل‌شده",
+        "description": "توضیحات",
+        "services": "خدمات",
+        "fromCountries": "کشورهای مبدأ",
+        "toCountries": "کشورهای مقصد",
+        "popularRoutes": "مسیرهای پرتردد",
+        "cargoTypes": "انواع محموله",
+        "capabilities": "قابلیت‌ها"
+      },
+      "laboratory": {
+        "title": "پروفایل آزمایشگاه",
+        "city": "شهر",
+        "website": "وب‌سایت",
+        "email": "ایمیل",
+        "phone": "تلفن",
+        "yearsExperience": "سابقه کار (سال)",
+        "studiesCompleted": "مطالعات انجام‌شده",
+        "avgTurnaroundDays": "میانگین زمان انجام (روز)",
+        "description": "توضیحات",
+        "accreditations": "اعتبارنامه‌ها",
+        "methods": "روش‌های آزمایش"
+      }
     }
   },
   "contracts": {
@@ -1372,5 +1431,99 @@
     "save": "ذخیره",
     "cancel": "انصراف",
     "adminOnly": "فهرست را مدیر ویرایش می‌کند."
+  },
+  "logisticsRequests": {
+    "title": "درخواست‌های لجستیک",
+    "subtitle": "نظارت فقط‌خواندنی بر تابلوی درخواست خریدار به حمل‌کننده.",
+    "loading": "در حال بارگذاری…",
+    "error": "بارگذاری داده‌ها ناموفق بود",
+    "empty": "درخواست لجستیکی یافت نشد",
+    "filterAll": "همه وضعیت‌ها",
+    "search": "جستجو بر اساس شماره یا محموله…",
+    "colNumber": "شماره",
+    "colRoute": "مسیر",
+    "colCargo": "محموله",
+    "colBuyer": "خریدار",
+    "colStatus": "وضعیت",
+    "selectHint": "برای مشاهده یک درخواست را انتخاب کنید.",
+    "status": {
+      "submitted": "ارسال‌شده",
+      "viewed": "مشاهده‌شده",
+      "in_progress": "در حال انجام",
+      "quoted": "پیشنهاد داده‌شده",
+      "closed": "بسته‌شده",
+      "rejected": "ردشده"
+    },
+    "detail": {
+      "number": "شماره",
+      "buyer": "خریدار",
+      "cargo": "محموله",
+      "volume": "حجم",
+      "packaging": "بسته‌بندی",
+      "specialRequirements": "الزامات ویژه",
+      "route": "مسیر",
+      "contactPhone": "تلفن تماس",
+      "createdAt": "ایجادشده",
+      "updatedAt": "به‌روزشده"
+    },
+    "threads": {
+      "title": "گفتگوهای حمل‌کننده",
+      "empty": "هنوز هیچ حمل‌کننده‌ای پاسخ نداده است",
+      "carrier": "حمل‌کننده",
+      "messageCount": "پیام‌ها",
+      "lastMessage": "آخرین پیام",
+      "never": "—"
+    }
+  },
+  "labRequests": {
+    "title": "درخواست‌های آزمایشگاه",
+    "subtitle": "نظارت فقط‌خواندنی بر تابلوی درخواست خریدار به آزمایشگاه.",
+    "loading": "در حال بارگذاری…",
+    "error": "بارگذاری داده‌ها ناموفق بود",
+    "empty": "درخواست آزمایشگاهی یافت نشد",
+    "filterAll": "همه وضعیت‌ها",
+    "search": "جستجو بر اساس شماره یا محصول…",
+    "colNumber": "شماره",
+    "colProduct": "محصول",
+    "colStudyType": "نوع مطالعه",
+    "colBuyer": "خریدار",
+    "colStatus": "وضعیت",
+    "selectHint": "برای مشاهده یک درخواست را انتخاب کنید.",
+    "status": {
+      "submitted": "ارسال‌شده",
+      "viewed": "مشاهده‌شده",
+      "in_progress": "در حال انجام",
+      "quoted": "پیشنهاد داده‌شده",
+      "closed": "بسته‌شده",
+      "rejected": "ردشده"
+    },
+    "detail": {
+      "number": "شماره",
+      "buyer": "خریدار",
+      "product": "محصول",
+      "grade": "گرید",
+      "studyType": "نوع مطالعه",
+      "methods": "روش‌ها",
+      "sampleQty": "مقدار نمونه",
+      "comment": "نظر",
+      "purpose": "هدف",
+      "urgent": "فوری",
+      "urgentYes": "بله",
+      "urgentNo": "خیر",
+      "desiredDate": "تاریخ مدنظر",
+      "contactName": "نام تماس",
+      "contactEmail": "ایمیل تماس",
+      "contactPhone": "تلفن تماس",
+      "createdAt": "ایجادشده",
+      "updatedAt": "به‌روزشده"
+    },
+    "threads": {
+      "title": "گفتگوهای آزمایشگاه",
+      "empty": "هنوز هیچ آزمایشگاهی پاسخ نداده است",
+      "laboratory": "آزمایشگاه",
+      "messageCount": "پیام‌ها",
+      "lastMessage": "آخرین پیام",
+      "never": "—"
+    }
   }
 }

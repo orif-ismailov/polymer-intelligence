@@ -33,6 +33,8 @@ interface CompanyProfile {
   verified_at: string | null;
   reverification_due_at: string | null;
   roles: Array<{ role: string; status: string }>;
+  declared_roles: string[];
+  confirmed_roles: string[];
 }
 
 const COMPANY_STATUS_FILTERS = [
@@ -171,22 +173,20 @@ export default function CompaniesPage() {
                   {/* Confirmed roles only: a declared role is a claim the company
                       made about itself, and staff read this column to check claims. */}
                   <td className="px-4 py-3 text-foreground-muted">
-                    {(() => {
-                      const confirmed = company.roles.filter((r) => r.status === "confirmed");
-                      if (confirmed.length === 0) return "—";
-                      return (
-                        <span className="flex flex-wrap gap-1">
-                          {confirmed.map((r) => (
-                            <span
-                              key={r.role}
-                              className="rounded bg-background-tertiary px-1.5 py-0.5 text-xs"
-                            >
-                              {t(`roles.${r.role}`)}
-                            </span>
-                          ))}
-                        </span>
-                      );
-                    })()}
+                    {company.confirmed_roles.length === 0 ? (
+                      "—"
+                    ) : (
+                      <span className="flex flex-wrap gap-1">
+                        {company.confirmed_roles.map((role) => (
+                          <span
+                            key={role}
+                            className="rounded bg-background-tertiary px-1.5 py-0.5 text-xs"
+                          >
+                            {t(`roles.${role}`)}
+                          </span>
+                        ))}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <CompanyStatusBadge status={company.status} />

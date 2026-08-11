@@ -19,6 +19,7 @@ import { formatTashkent } from "@/lib/tz";
 import { useAuth } from "@/hooks/useAuth";
 import { CompanyStatusBadge, CompanyRoleBadge } from "@/components/verification/company-status";
 import { CompanyLicenses } from "@/components/verification/company-licenses";
+import { CompanyProfileSections } from "@/components/verification/company-profile-sections";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,11 @@ interface CompanyProfile {
   verified_at: string | null;
   reverification_due_at: string | null;
   roles: Array<{ role: string; status: string }>;
+  declared_roles: string[];
+  confirmed_roles: string[];
+  manufacturer_profile: Record<string, unknown> | null;
+  logistics_profile: Record<string, unknown> | null;
+  laboratory_profile: Record<string, unknown> | null;
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -159,7 +165,8 @@ export default function CompanyDetailPage() {
       {/* Licences (P5) — what this company may actually trade, per regime. */}
       <CompanyLicenses companyId={companyId} />
 
-      {/* Roles */}
+      {/* Roles — split by confirmation state so staff can tell a claim from a
+          vouched-for fact at a glance. */}
       <section className="rounded-lg border border-border bg-background-secondary p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground-muted">
           {t("profile.roles")}
@@ -167,21 +174,58 @@ export default function CompanyDetailPage() {
         {company.roles.length === 0 ? (
           <p className="mt-3 text-sm text-foreground-muted">{t("noRoles")}</p>
         ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {company.roles.map((r) => (
-              <li key={r.role} className="flex items-center gap-3">
-                <CompanyRoleBadge role={r.role} status={r.status} />
-                <span className="text-xs text-foreground-muted">{r.status}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-3 flex flex-col gap-4">
+            <RoleGroup
+              title={t("profile.rolesConfirmed")}
+              roles={company.roles.filter((r) => r.status === "confirmed")}
+            />
+            <RoleGroup
+              title={t("profile.rolesDeclared")}
+              roles={company.roles.filter((r) => r.status === "declared")}
+            />
+            <RoleGroup
+              title={t("profile.rolesRevoked")}
+              roles={company.roles.filter((r) => r.status === "revoked")}
+            />
+          </div>
         )}
       </section>
+
+      {/* Account-type profile data — manufacturer capacity, carrier coverage,
+          lab accreditation. Only the section matching the company's account
+          type renders. */}
+      <CompanyProfileSections
+        manufacturerProfile={company.manufacturer_profile}
+        logisticsProfile={company.logistics_profile}
+        laboratoryProfile={company.laboratory_profile}
+      />
     </div>
   );
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function RoleGroup({
+  title,
+  roles,
+}: {
+  title: string;
+  roles: Array<{ role: string; status: string }>;
+}) {
+  if (roles.length === 0) return null;
+  return (
+    <div>
+      <h3 className="text-xs font-semibold text-foreground-muted">{title}</h3>
+      <ul className="mt-2 flex flex-wrap gap-2">
+        {roles.map((r) => (
+          <li key={r.role}>
+            <CompanyRoleBadge role={r.role} status={r.status} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 function Field({ label, value }: { label: string; value: string | null }) {
   return (

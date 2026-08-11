@@ -32,7 +32,9 @@
       "escrow": "Emanet",
       "substances": "Maddeler",
       "labOrders": "Laboratuvar",
-      "labPartners": "Laboratuvarlar"
+      "labPartners": "Laboratuvarlar",
+      "logisticsRequests": "Lojistik talepleri",
+      "labRequests": "Laboratuvar talepleri"
     },
     "guest": "Misafir",
     "openMenu": "Menüyü aç",
@@ -880,7 +882,10 @@
       "verifiedAt": "Doğrulandı",
       "roles": "Roller",
       "bankAccounts": "Banka hesapları",
-      "mfo": "MFO"
+      "mfo": "MFO",
+      "rolesConfirmed": "Onaylanan roller",
+      "rolesDeclared": "Beyan edilen roller",
+      "rolesRevoked": "İptal edilen roller"
     },
     "checks": {
       "title": "Kontroller",
@@ -1029,7 +1034,10 @@
       "address": "Yasal adres",
       "verifiedAt": "Doğrulandı",
       "reverificationDue": "Yeniden doğrulama",
-      "roles": "Roller"
+      "roles": "Roller",
+      "rolesConfirmed": "Onaylanan roller",
+      "rolesDeclared": "Beyan edilen roller",
+      "rolesRevoked": "İptal edilen roller"
     },
     "role": {
       "buyer": "Alıcı",
@@ -1051,6 +1059,57 @@
       "distributor": "Distribütör",
       "laboratory": "Laboratuvar",
       "insurance_provider": "Sigorta"
+    },
+    "roleStatus": {
+      "declared": "Beyan edildi",
+      "confirmed": "Onaylandı",
+      "revoked": "İptal edildi"
+    },
+    "profileSections": {
+      "manufacturer": {
+        "title": "Üretici profili",
+        "productionType": "Üretim türü",
+        "mainProducts": "Ana ürünler",
+        "annualCapacityTons": "Yıllık kapasite, t",
+        "productionLines": "Üretim hatları",
+        "employees": "Çalışan sayısı",
+        "foundedYear": "Kuruluş yılı",
+        "isoCertification": "ISO sertifikası",
+        "moqTons": "Min. sipariş miktarı, t",
+        "minAnnualVolumeTons": "Min. yıllık hacim, t",
+        "additionalOther": "Diğer gereksinimler",
+        "markets": "Pazarlar",
+        "exportCountries": "İhracat ülkeleri",
+        "additionalRequirements": "Ek gereksinimler",
+        "financialRequirements": "Finansal gereksinimler"
+      },
+      "logistics": {
+        "title": "Lojistik profili",
+        "city": "Şehir",
+        "tariffModel": "Tarife modeli",
+        "yearsExperience": "Deneyim (yıl)",
+        "projectsCompleted": "Tamamlanan projeler",
+        "description": "Açıklama",
+        "services": "Hizmetler",
+        "fromCountries": "Çıkış ülkeleri",
+        "toCountries": "Varış ülkeleri",
+        "popularRoutes": "Popüler güzergahlar",
+        "cargoTypes": "Kargo türleri",
+        "capabilities": "Yetenekler"
+      },
+      "laboratory": {
+        "title": "Laboratuvar profili",
+        "city": "Şehir",
+        "website": "Web sitesi",
+        "email": "E-posta",
+        "phone": "Telefon",
+        "yearsExperience": "Deneyim (yıl)",
+        "studiesCompleted": "Tamamlanan analizler",
+        "avgTurnaroundDays": "Ortalama süre (gün)",
+        "description": "Açıklama",
+        "accreditations": "Akreditasyonlar",
+        "methods": "Analiz yöntemleri"
+      }
     }
   },
   "contracts": {
@@ -1387,5 +1446,99 @@
     "save": "Kaydet",
     "cancel": "İptal",
     "adminOnly": "Dizini yönetici düzenler."
+  },
+  "logisticsRequests": {
+    "title": "Lojistik talepleri",
+    "subtitle": "Alıcıdan taşıyıcıya yayın panosunun salt okunur gözetimi.",
+    "loading": "Yükleniyor…",
+    "error": "Veriler yüklenemedi",
+    "empty": "Lojistik talebi yok",
+    "filterAll": "Tüm durumlar",
+    "search": "Numara veya kargoya göre ara…",
+    "colNumber": "Numara",
+    "colRoute": "Güzergah",
+    "colCargo": "Kargo",
+    "colBuyer": "Alıcı",
+    "colStatus": "Durum",
+    "selectHint": "Görüntülemek için bir talep seçin.",
+    "status": {
+      "submitted": "Gönderildi",
+      "viewed": "Görüntülendi",
+      "in_progress": "İşlemde",
+      "quoted": "Teklif verildi",
+      "closed": "Kapatıldı",
+      "rejected": "Reddedildi"
+    },
+    "detail": {
+      "number": "Numara",
+      "buyer": "Alıcı",
+      "cargo": "Kargo",
+      "volume": "Hacim",
+      "packaging": "Ambalaj",
+      "specialRequirements": "Özel gereksinimler",
+      "route": "Güzergah",
+      "contactPhone": "İletişim telefonu",
+      "createdAt": "Oluşturulma",
+      "updatedAt": "Güncellenme"
+    },
+    "threads": {
+      "title": "Taşıyıcı görüşmeleri",
+      "empty": "Henüz hiçbir taşıyıcı yanıt vermedi",
+      "carrier": "Taşıyıcı",
+      "messageCount": "Mesajlar",
+      "lastMessage": "Son mesaj",
+      "never": "—"
+    }
+  },
+  "labRequests": {
+    "title": "Laboratuvar talepleri",
+    "subtitle": "Alıcıdan laboratuvara yayın panosunun salt okunur gözetimi.",
+    "loading": "Yükleniyor…",
+    "error": "Veriler yüklenemedi",
+    "empty": "Laboratuvar talebi yok",
+    "filterAll": "Tüm durumlar",
+    "search": "Numara veya ürüne göre ara…",
+    "colNumber": "Numara",
+    "colProduct": "Ürün",
+    "colStudyType": "Analiz türü",
+    "colBuyer": "Alıcı",
+    "colStatus": "Durum",
+    "selectHint": "Görüntülemek için bir talep seçin.",
+    "status": {
+      "submitted": "Gönderildi",
+      "viewed": "Görüntülendi",
+      "in_progress": "İşlemde",
+      "quoted": "Teklif verildi",
+      "closed": "Kapatıldı",
+      "rejected": "Reddedildi"
+    },
+    "detail": {
+      "number": "Numara",
+      "buyer": "Alıcı",
+      "product": "Ürün",
+      "grade": "Kalite/Tip",
+      "studyType": "Analiz türü",
+      "methods": "Yöntemler",
+      "sampleQty": "Numune miktarı",
+      "comment": "Yorum",
+      "purpose": "Amaç",
+      "urgent": "Acil",
+      "urgentYes": "Evet",
+      "urgentNo": "Hayır",
+      "desiredDate": "İstenen tarih",
+      "contactName": "İletişim kişisi",
+      "contactEmail": "İletişim e-postası",
+      "contactPhone": "İletişim telefonu",
+      "createdAt": "Oluşturulma",
+      "updatedAt": "Güncellenme"
+    },
+    "threads": {
+      "title": "Laboratuvar görüşmeleri",
+      "empty": "Henüz hiçbir laboratuvar yanıt vermedi",
+      "laboratory": "Laboratuvar",
+      "messageCount": "Mesajlar",
+      "lastMessage": "Son mesaj",
+      "never": "—"
+    }
   }
 }

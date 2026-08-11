@@ -22,6 +22,16 @@ const COMPANY_STATUS_CLASSES: Record<string, string> = {
 
 const FALLBACK_CLASS = "bg-background-tertiary text-foreground-muted";
 
+// A role's status is `declared`/`confirmed`/`revoked` (BusinessRoleStatus),
+// never `active`/`verified`/`approved` — those are company-status values from
+// a different enum that used to be checked here by mistake, so every role
+// badge rendered identically regardless of confirmation state.
+const ROLE_STATUS_CLASSES: Record<string, string> = {
+  confirmed: "bg-accent/20 text-accent",
+  declared: "bg-amber-500/20 text-amber-400",
+  revoked: "bg-background-tertiary text-foreground-subtle line-through",
+};
+
 const baseChip =
   "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap";
 
@@ -35,14 +45,13 @@ export function CompanyStatusBadge({ status }: { status: string }) {
 
 export function CompanyRoleBadge({ role, status }: { role: string; status: string }) {
   const t = useTranslations("companies");
-  const key = `role.${role}`;
-  const roleLabel = t.has(key) ? t(key) : role;
-  const active = status === "active" || status === "verified" || status === "approved";
-  const cls = active
-    ? "bg-accent/20 text-accent"
-    : "bg-background-tertiary text-foreground-muted";
+  const roleKey = `role.${role}`;
+  const roleLabel = t.has(roleKey) ? t(roleKey) : role;
+  const statusKey = `roleStatus.${status}`;
+  const statusLabel = t.has(statusKey) ? t(statusKey) : status;
+  const cls = ROLE_STATUS_CLASSES[status] ?? FALLBACK_CLASS;
   return (
-    <span className={`${baseChip} ${cls}`} title={`${roleLabel}: ${status}`}>
+    <span className={`${baseChip} ${cls}`} title={`${roleLabel}: ${statusLabel}`}>
       {roleLabel}
     </span>
   );

@@ -32,7 +32,9 @@
       "escrow": "Эскроу",
       "substances": "Вещества",
       "labOrders": "Лаборатория",
-      "labPartners": "Лаборатории"
+      "labPartners": "Лаборатории",
+      "logisticsRequests": "Логистические заявки",
+      "labRequests": "Заявки в лабораторию"
     },
     "guest": "Гость",
     "openMenu": "Открыть меню",
@@ -880,7 +882,10 @@
       "verifiedAt": "Проверена",
       "roles": "Роли",
       "bankAccounts": "Банковские счета",
-      "mfo": "МФО"
+      "mfo": "МФО",
+      "rolesConfirmed": "Подтверждённые роли",
+      "rolesDeclared": "Заявленные роли",
+      "rolesRevoked": "Отозванные роли"
     },
     "checks": {
       "title": "Проверки",
@@ -1029,7 +1034,10 @@
       "address": "Юридический адрес",
       "verifiedAt": "Проверена",
       "reverificationDue": "Повторная проверка",
-      "roles": "Роли"
+      "roles": "Роли",
+      "rolesConfirmed": "Подтверждённые роли",
+      "rolesDeclared": "Заявленные роли",
+      "rolesRevoked": "Отозванные роли"
     },
     "role": {
       "buyer": "Покупатель",
@@ -1051,6 +1059,57 @@
       "distributor": "Дистрибьютор",
       "laboratory": "Лаборатория",
       "insurance_provider": "Страхование"
+    },
+    "roleStatus": {
+      "declared": "Заявлена",
+      "confirmed": "Подтверждена",
+      "revoked": "Отозвана"
+    },
+    "profileSections": {
+      "manufacturer": {
+        "title": "Профиль производителя",
+        "productionType": "Тип производства",
+        "mainProducts": "Основная продукция",
+        "annualCapacityTons": "Годовая мощность, т",
+        "productionLines": "Производственные линии",
+        "employees": "Сотрудники",
+        "foundedYear": "Год основания",
+        "isoCertification": "ISO-сертификация",
+        "moqTons": "Мин. партия, т",
+        "minAnnualVolumeTons": "Мин. годовой объём, т",
+        "additionalOther": "Прочие требования",
+        "markets": "Рынки сбыта",
+        "exportCountries": "Страны экспорта",
+        "additionalRequirements": "Дополнительные требования",
+        "financialRequirements": "Финансовые требования"
+      },
+      "logistics": {
+        "title": "Профиль логистической компании",
+        "city": "Город",
+        "tariffModel": "Модель тарификации",
+        "yearsExperience": "Опыт работы, лет",
+        "projectsCompleted": "Реализованных проектов",
+        "description": "Описание",
+        "services": "Услуги",
+        "fromCountries": "Страны отправления",
+        "toCountries": "Страны назначения",
+        "popularRoutes": "Популярные маршруты",
+        "cargoTypes": "Типы грузов",
+        "capabilities": "Возможности"
+      },
+      "laboratory": {
+        "title": "Профиль лаборатории",
+        "city": "Город",
+        "website": "Веб-сайт",
+        "email": "Эл. почта",
+        "phone": "Телефон",
+        "yearsExperience": "Опыт работы, лет",
+        "studiesCompleted": "Выполненных исследований",
+        "avgTurnaroundDays": "Средний срок, дней",
+        "description": "Описание",
+        "accreditations": "Аккредитации",
+        "methods": "Методы исследования"
+      }
     }
   },
   "contracts": {
@@ -1387,5 +1446,99 @@
     "save": "Сохранить",
     "cancel": "Отмена",
     "adminOnly": "Справочник правит администратор."
+  },
+  "logisticsRequests": {
+    "title": "Логистические заявки",
+    "subtitle": "Оверсайт заявок покупателей к перевозчикам (только чтение).",
+    "loading": "Загрузка…",
+    "error": "Не удалось загрузить данные",
+    "empty": "Логистических заявок нет",
+    "filterAll": "Все статусы",
+    "search": "Поиск по номеру или грузу…",
+    "colNumber": "Номер",
+    "colRoute": "Маршрут",
+    "colCargo": "Груз",
+    "colBuyer": "Покупатель",
+    "colStatus": "Статус",
+    "selectHint": "Выберите заявку для просмотра.",
+    "status": {
+      "submitted": "Отправлена",
+      "viewed": "Просмотрена",
+      "in_progress": "В работе",
+      "quoted": "Есть предложение",
+      "closed": "Закрыта",
+      "rejected": "Отклонена"
+    },
+    "detail": {
+      "number": "Номер",
+      "buyer": "Покупатель",
+      "cargo": "Груз",
+      "volume": "Объём",
+      "packaging": "Упаковка",
+      "specialRequirements": "Особые требования",
+      "route": "Маршрут",
+      "contactPhone": "Контактный телефон",
+      "createdAt": "Создана",
+      "updatedAt": "Обновлена"
+    },
+    "threads": {
+      "title": "Переписки с перевозчиками",
+      "empty": "Пока ни один перевозчик не откликнулся",
+      "carrier": "Перевозчик",
+      "messageCount": "Сообщений",
+      "lastMessage": "Последнее сообщение",
+      "never": "—"
+    }
+  },
+  "labRequests": {
+    "title": "Заявки в лабораторию",
+    "subtitle": "Оверсайт заявок покупателей в лаборатории (только чтение).",
+    "loading": "Загрузка…",
+    "error": "Не удалось загрузить данные",
+    "empty": "Заявок в лабораторию нет",
+    "filterAll": "Все статусы",
+    "search": "Поиск по номеру или продукту…",
+    "colNumber": "Номер",
+    "colProduct": "Продукт",
+    "colStudyType": "Тип исследования",
+    "colBuyer": "Покупатель",
+    "colStatus": "Статус",
+    "selectHint": "Выберите заявку для просмотра.",
+    "status": {
+      "submitted": "Отправлена",
+      "viewed": "Просмотрена",
+      "in_progress": "В работе",
+      "quoted": "Есть предложение",
+      "closed": "Закрыта",
+      "rejected": "Отклонена"
+    },
+    "detail": {
+      "number": "Номер",
+      "buyer": "Покупатель",
+      "product": "Продукт",
+      "grade": "Марка",
+      "studyType": "Тип исследования",
+      "methods": "Методы",
+      "sampleQty": "Количество образца",
+      "comment": "Комментарий",
+      "purpose": "Цель",
+      "urgent": "Срочно",
+      "urgentYes": "Да",
+      "urgentNo": "Нет",
+      "desiredDate": "Желаемая дата",
+      "contactName": "Контактное лицо",
+      "contactEmail": "Эл. почта для связи",
+      "contactPhone": "Контактный телефон",
+      "createdAt": "Создана",
+      "updatedAt": "Обновлена"
+    },
+    "threads": {
+      "title": "Переписки с лабораториями",
+      "empty": "Пока ни одна лаборатория не откликнулась",
+      "laboratory": "Лаборатория",
+      "messageCount": "Сообщений",
+      "lastMessage": "Последнее сообщение",
+      "never": "—"
+    }
   }
 }

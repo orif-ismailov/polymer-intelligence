@@ -24,6 +24,7 @@ from tests._verification_db import (
     make_account,
     make_company,
     make_engine,
+    make_staff,
     migrate_head,
     requires_real_db,
     session_factory,
@@ -682,3 +683,96 @@ def test_anonymous_and_wrong_audience_tokens_are_refused(api) -> None:  # noqa: 
         client.get(f"{_BASE}/pool", params={"company_id": 1}, headers=staff).status_code
         == 401
     )
+
+
+# ── admin oversight (admin_lab_requests.py) ─────────────────────────────────────
+
+_ADMIN_BASE = "/api/v1/admin/lab-requests"
+
+
+def _staff_auth(session, role: str, email: str) -> dict[str, str]:  # noqa: ANN001
+    from app.core.security import create_access_token  # noqa: PLC0415
+    from app.models.enums import StaffRole  # noqa: PLC0415
+
+    with session() as db:
+        staff = make_staff(db, email)
+        staff.role = StaffRole(role)
+        db.commit()
+        staff_id = staff.id
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"}
+
+
+def test_admin_routes_registered() -> None:
+    from app.api.admin_lab_requests import router  # noqa: PLC0415
+
+    paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
+    assert "/admin/lab-requests" in paths
+    assert "/admin/lab-requests/{request_id}" in paths
+
+
+@requires_real_db
+def test_admin_authz(api) -> None:  # noqa: ANN001
+    client, session = api
+    assert client.get(_ADMIN_BASE).status_code == 401
+    viewer = _staff_auth(session, "viewer", "lab-viewer@x.com")
+    assert client.get(_ADMIN_BASE, headers=viewer).status_code == 403
+    trader = _staff_auth(session, "trader", "lab-trader@x.com")
+    assert client.get(_ADMIN_BASE, headers=trader).status_code == 403
+    analyst = _staff_auth(session, "analyst", "lab-analyst@x.com")
+    assert client.get(_ADMIN_BASE, headers=analyst).status_code == 200
+    admin = _staff_auth(session, "admin", "lab-admin@x.com")
+    assert client.get(_ADMIN_BASE, headers=admin).status_code == 200
+
+
+@requires_real_db
+def test_admin_sees_every_laboratory_thread(api) -> None:  # noqa: ANN001
+    """The whole board, not one laboratory's scoped view — the admin twin of
+    test_each_lab_gets_its_own_private_thread above."""
+    client, session = api
+    with session() as db:
+        buyer_owner = make_account(db, "+998900020041")
+        buyer = make_company(db, buyer_owner, tax_id="410000041")
+        l1_owner = make_account(db, "+998900020042")
+        lab1 = _lab(db, l1_owner, "410000042", "Central Polymer Lab")
+        l2_owner = make_account(db, "+998900020043")
+        lab2 = _lab(db, l2_owner, "410000043", "PolyTest Lab")
+        db.commit()
+        buyer_id, buyer_account = buyer.id, buyer_owner.id
+        l1, l1_account = lab1.id, l1_owner.id
+        l2, l2_account = lab2.id, l2_owner.id
+
+    request_id = client.post(
+        f"{_BASE}/requests",
+        json={**_PAYLOAD, "company_id": buyer_id},
+        headers=_auth(buyer_account),
+    ).json()["id"]
+
+    client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": l1},
+        headers=_auth(l1_account),
+    )
+    client.post(
+        f"{_BASE}/requests/{request_id}/threads",
+        json={"company_id": l2},
+        headers=_auth(l2_account),
+    )
+
+    analyst = _staff_auth(session, "analyst", "lab-board@x.com")
+    resp = client.get(f"{_ADMIN_BASE}/{request_id}", headers=analyst)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["thread_count"] == 2
+    lab_ids = {t["laboratory_company_id"] for t in body["threads"]}
+    assert lab_ids == {l1, l2}
+
+
+@requires_real_db
+def test_admin_list_bad_status_and_unknown_id(api) -> None:  # noqa: ANN001
+    client, session = api
+    analyst = _staff_auth(session, "analyst", "lab-errors@x.com")
+    assert (
+        client.get(_ADMIN_BASE, params={"status": "bogus"}, headers=analyst).status_code
+        == 422
+    )
+    assert client.get(f"{_ADMIN_BASE}/999999999", headers=analyst).status_code == 404

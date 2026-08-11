@@ -32,7 +32,9 @@
       "escrow": "托管",
       "substances": "物质",
       "labOrders": "实验室",
-      "labPartners": "合作实验室"
+      "labPartners": "合作实验室",
+      "logisticsRequests": "物流请求",
+      "labRequests": "实验室请求"
     },
     "guest": "访客",
     "openMenu": "打开菜单",
@@ -865,7 +867,10 @@
       "verifiedAt": "已验证",
       "roles": "角色",
       "bankAccounts": "银行账户",
-      "mfo": "银行代码"
+      "mfo": "银行代码",
+      "rolesConfirmed": "已确认角色",
+      "rolesDeclared": "已声明角色",
+      "rolesRevoked": "已撤销角色"
     },
     "checks": {
       "title": "检查",
@@ -1014,7 +1019,10 @@
       "address": "法定地址",
       "verifiedAt": "已验证",
       "reverificationDue": "重新验证",
-      "roles": "角色"
+      "roles": "角色",
+      "rolesConfirmed": "已确认角色",
+      "rolesDeclared": "已声明角色",
+      "rolesRevoked": "已撤销角色"
     },
     "role": {
       "buyer": "买方",
@@ -1036,6 +1044,57 @@
       "distributor": "分销商",
       "laboratory": "实验室",
       "insurance_provider": "保险"
+    },
+    "roleStatus": {
+      "declared": "已声明",
+      "confirmed": "已确认",
+      "revoked": "已撤销"
+    },
+    "profileSections": {
+      "manufacturer": {
+        "title": "制造商资料",
+        "productionType": "生产类型",
+        "mainProducts": "主要产品",
+        "annualCapacityTons": "年产能（吨）",
+        "productionLines": "生产线数量",
+        "employees": "员工人数",
+        "foundedYear": "成立年份",
+        "isoCertification": "ISO认证",
+        "moqTons": "最小起订量（吨）",
+        "minAnnualVolumeTons": "最小年采购量（吨）",
+        "additionalOther": "其他要求",
+        "markets": "销售市场",
+        "exportCountries": "出口国家",
+        "additionalRequirements": "附加要求",
+        "financialRequirements": "财务要求"
+      },
+      "logistics": {
+        "title": "物流公司资料",
+        "city": "城市",
+        "tariffModel": "计费模式",
+        "yearsExperience": "从业年限",
+        "projectsCompleted": "已完成项目数",
+        "description": "描述",
+        "services": "服务",
+        "fromCountries": "起运国家",
+        "toCountries": "目的国家",
+        "popularRoutes": "热门路线",
+        "cargoTypes": "货物类型",
+        "capabilities": "能力"
+      },
+      "laboratory": {
+        "title": "实验室资料",
+        "city": "城市",
+        "website": "网站",
+        "email": "电子邮箱",
+        "phone": "电话",
+        "yearsExperience": "从业年限",
+        "studiesCompleted": "已完成检测数",
+        "avgTurnaroundDays": "平均周期（天）",
+        "description": "描述",
+        "accreditations": "认证资质",
+        "methods": "检测方法"
+      }
     }
   },
   "contracts": {
@@ -1372,5 +1431,99 @@
     "save": "保存",
     "cancel": "取消",
     "adminOnly": "名录由管理员维护。"
+  },
+  "logisticsRequests": {
+    "title": "物流请求",
+    "subtitle": "买家向承运商广播板的只读监督。",
+    "loading": "加载中…",
+    "error": "数据加载失败",
+    "empty": "暂无物流请求",
+    "filterAll": "所有状态",
+    "search": "按编号或货物搜索…",
+    "colNumber": "编号",
+    "colRoute": "路线",
+    "colCargo": "货物",
+    "colBuyer": "买家",
+    "colStatus": "状态",
+    "selectHint": "选择一个请求以查看。",
+    "status": {
+      "submitted": "已提交",
+      "viewed": "已查看",
+      "in_progress": "处理中",
+      "quoted": "已报价",
+      "closed": "已关闭",
+      "rejected": "已拒绝"
+    },
+    "detail": {
+      "number": "编号",
+      "buyer": "买家",
+      "cargo": "货物",
+      "volume": "数量",
+      "packaging": "包装",
+      "specialRequirements": "特殊要求",
+      "route": "路线",
+      "contactPhone": "联系电话",
+      "createdAt": "创建时间",
+      "updatedAt": "更新时间"
+    },
+    "threads": {
+      "title": "承运商会话",
+      "empty": "暂无承运商响应",
+      "carrier": "承运商",
+      "messageCount": "消息数",
+      "lastMessage": "最新消息",
+      "never": "—"
+    }
+  },
+  "labRequests": {
+    "title": "实验室请求",
+    "subtitle": "买家向实验室广播板的只读监督。",
+    "loading": "加载中…",
+    "error": "数据加载失败",
+    "empty": "暂无实验室请求",
+    "filterAll": "所有状态",
+    "search": "按编号或产品搜索…",
+    "colNumber": "编号",
+    "colProduct": "产品",
+    "colStudyType": "检测类型",
+    "colBuyer": "买家",
+    "colStatus": "状态",
+    "selectHint": "选择一个请求以查看。",
+    "status": {
+      "submitted": "已提交",
+      "viewed": "已查看",
+      "in_progress": "处理中",
+      "quoted": "已报价",
+      "closed": "已关闭",
+      "rejected": "已拒绝"
+    },
+    "detail": {
+      "number": "编号",
+      "buyer": "买家",
+      "product": "产品",
+      "grade": "牌号",
+      "studyType": "检测类型",
+      "methods": "检测方法",
+      "sampleQty": "样品数量",
+      "comment": "备注",
+      "purpose": "目的",
+      "urgent": "是否紧急",
+      "urgentYes": "是",
+      "urgentNo": "否",
+      "desiredDate": "期望日期",
+      "contactName": "联系人",
+      "contactEmail": "联系邮箱",
+      "contactPhone": "联系电话",
+      "createdAt": "创建时间",
+      "updatedAt": "更新时间"
+    },
+    "threads": {
+      "title": "实验室会话",
+      "empty": "暂无实验室响应",
+      "laboratory": "实验室",
+      "messageCount": "消息数",
+      "lastMessage": "最新消息",
+      "never": "—"
+    }
   }
 }
