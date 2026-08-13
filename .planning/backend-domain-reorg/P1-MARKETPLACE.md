@@ -46,10 +46,15 @@ repo-wide updated in the same change, full gate green, one commit. No behavior c
   `app/api/portal/{inquiries,market}.py`, `app/api/webapp/market.py`, plus 6 test files
   (dashboard_origin_badges_db, marketplace_api, moderation_race_db,
   offer_request_dual_origin_db, offer_requests, portal_inquiries_api, portal_market_api).
-- **`offer_compliance_service`** (~5 files): `app/api/moderation.py`,
-  `app/api/portal/compliance.py`, `app/integrations/chem_registry/client.py`,
-  `app/services/offer_service.py`, plus 2 test files (offer_compliance_gate_db,
-  offer_compliance_verdicts).
+- **`offer_compliance_service`** (~4 files): `app/api/moderation.py`,
+  `app/api/portal/compliance.py`, `app/services/offer_service.py`, plus 2 test files
+  (offer_compliance_gate_db, offer_compliance_verdicts). Note `offer_service.py` imports it
+  **function-locally** at lines 492 and 677 (`# noqa: PLC0415 — cycle`) — an intentional cycle
+  between the two, which stays intra-domain after this move.
+  > Corrected while planning P6: `app/integrations/chem_registry/client.py` was listed here and
+  > is **not** a call site. Its only occurrence of the name is prose in the module docstring
+  > (line 10); its sole `app.` import is `from app.services import settings_service`. Nothing to
+  > change in that file.
 - **`app.schemas.marketplace`**: `app/schemas/{compliance,portal_company,portal_market,
   public}.py` plus the API/service files above that also import schemas.
 - **`app/main.py`** lines 61, 76: `from app.api.offer_requests import router as
