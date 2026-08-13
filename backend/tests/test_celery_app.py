@@ -120,3 +120,91 @@ def test_task_track_started() -> None:
     from app.tasks.celery_app import celery_app  # noqa: PLC0415
 
     assert celery_app.conf.task_track_started is True
+
+
+def _declared_task_modules() -> dict[str, list[str]]:
+    """Statically find every `app/tasks/*.py` that declares an @celery_app.task.
+
+    Deliberately parses the source with `ast` instead of importing the modules:
+    importing them would register their tasks as a side effect, which is exactly
+    the state this check exists to detect the absence of.
+    """
+    import ast  # noqa: PLC0415
+    import pathlib  # noqa: PLC0415
+
+    import app.tasks  # noqa: PLC0415
+
+    tasks_dir = pathlib.Path(app.tasks.__file__).parent
+    declared: dict[str, list[str]] = {}
+    for path in sorted(tasks_dir.glob("*.py")):
+        names: list[str] = []
+        for node in ast.walk(ast.parse(path.read_text())):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            for dec in node.decorator_list:
+                if not isinstance(dec, ast.Call):
+                    continue
+                if not ast.unparse(dec.func).endswith("celery_app.task"):
+                    continue
+                explicit = next(
+                    (
+                        kw.value.value
+                        for kw in dec.keywords
+                        if kw.arg == "name" and isinstance(kw.value, ast.Constant)
+                    ),
+                    None,
+                )
+                names.append(explicit or f"app.tasks.{path.stem}.{node.name}")
+        if names:
+            declared[f"app.tasks.{path.stem}"] = names
+    return declared
+
+
+def test_every_task_declaring_module_is_listed_in_task_modules() -> None:
+    """Every module defining an @celery_app.task must appear in _TASK_MODULES.
+
+    autodiscover_tasks() is a no-op in this project (see the comment above
+    _TASK_MODULES), so the include list is the *only* thing that makes a task
+    resolvable on the worker. An unlisted module still dispatches fine from the
+    producer — `apply_async` just publishes a name — and then dies on the worker
+    as "Received unregistered task", which no other test in this suite can see.
+
+    Regression: `app.tasks.request_analysis` was routed in task_routes but absent
+    from this list, so `analyze_request_ai` was undeliverable.
+    """
+    from app.tasks.celery_app import _TASK_MODULES  # noqa: PLC0415
+
+    missing = sorted(set(_declared_task_modules()) - set(_TASK_MODULES))
+    assert not missing, (
+        f"Task modules missing from _TASK_MODULES: {missing!r}. "
+        "Their tasks dispatch from the API but are unregistered on the worker."
+    )
+
+
+def test_task_modules_all_declare_tasks() -> None:
+    """The reverse: no stale entry naming a module that no longer defines tasks."""
+    from app.tasks.celery_app import _TASK_MODULES  # noqa: PLC0415
+
+    stale = sorted(set(_TASK_MODULES) - set(_declared_task_modules()))
+    assert not stale, f"_TASK_MODULES entries declaring no task: {stale!r}"
+
+
+def test_routed_task_names_are_registered() -> None:
+    """Every literal task_routes key must resolve to a task the worker registers.
+
+    `import_default_modules()` is what the worker itself calls at boot to import
+    the `include=` list, so this asserts against the same registry a real worker
+    would build. A routed name with no registered task is the signature of the
+    bug above: routing was configured, registration was not.
+
+    Glob keys (`app.tasks.parse.*`) are skipped — they match by prefix and have
+    no single task to resolve to.
+    """
+    from app.tasks.celery_app import celery_app  # noqa: PLC0415
+
+    celery_app.loader.import_default_modules()
+    registered = set(celery_app.tasks.keys())
+    routed = {key for key in celery_app.conf.task_routes if "*" not in key}
+    assert not routed - registered, (
+        f"Routed but unregistered task names: {sorted(routed - registered)!r}"
+    )

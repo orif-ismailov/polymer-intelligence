@@ -47,6 +47,7 @@ _TASK_MODULES = [
     "app.tasks.ingest_rss",
     "app.tasks.parse",
     "app.tasks.parse_telegram",
+    "app.tasks.request_analysis",
     "app.tasks.notify",
     "app.tasks.userbot_health",
     "app.tasks.nightly_catchup",

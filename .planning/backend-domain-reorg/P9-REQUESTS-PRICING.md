@@ -7,17 +7,17 @@
 > starts.**
 
 **Goal:** the buyer-request domain and the pricing domain move out of the technical-layer folders,
-as **two separate folders**. Full gate green. No behavior change from the migration itself — plus
-one deliberate behavior change, in its own commit, described below.
+as **two separate folders**. Full gate green. No behavior change.
 
-## Three things this phase carries
+## What this phase carries
 
 1. **Requests** — the big one. `models/requests.py` has **33 importing files**, second only to
    `models/companies.py` in P3.
 2. **Pricing** — tiny and unrelated (3 files). Split into its own folder, same reasoning as P7.
-3. **The `analyze_request_ai` bug** — parked here by decision. Full write-up:
-   `.planning/todos/pending/analyze-request-ai-unregistered-on-worker.md`. **Its own commit, never
-   bundled into a migration commit** (see below).
+3. ~~**The `analyze_request_ai` bug**~~ — **already fixed, ahead of this phase.** See
+   `.planning/todos/done/analyze-request-ai-unregistered-on-worker.md`. This phase no longer
+   carries it; the section below is kept as the record of what was done and what is still
+   unverified.
 
 ## Scope decisions
 
@@ -91,14 +91,16 @@ requests, recent offers). It is not a requests service. It belongs with `api/das
 `api/feed.py` and `schemas/dashboard.py` as a **dashboard grouping decided in P11** — either a
 `dashboard` domain or explicit shared kernel. This plan only asserts it is not P9's.
 
-## The `analyze_request_ai` fix — separate commit, and verify it on staging
+## The `analyze_request_ai` fix — DONE (landed ahead of this phase)
 
-`app/tasks/request_analysis.py` defines `analyze_request_ai`, `task_routes` routes it
-(`celery_app.py:134`), but `"app.tasks.request_analysis"` is **absent from `_TASK_MODULES`** and
-nothing imports it at module level — so the worker cannot resolve the message.
-`REQUEST_AI_ANALYSIS_ENABLED` defaults `True`.
+`app/tasks/request_analysis.py` defines `analyze_request_ai` and `task_routes` routed it, but
+`"app.tasks.request_analysis"` was **absent from `_TASK_MODULES`** and nothing imported it at
+module level — so the worker could not resolve the message, with `REQUEST_AI_ANALYSIS_ENABLED`
+defaulting `True`.
 
-Rules for this phase:
+**This has been fixed** — `"app.tasks.request_analysis"` is in `_TASK_MODULES` and
+`tests/test_celery_app.py` carries three guarding tests. Skip step 1 below; the phase is **two
+commits, not three**. The reasoning is retained because the last bullet is still outstanding.
 
 - **Its own commit.** Migration commits are behavior-free by this track's rule; this one starts a
   dead feature running. Bundling them makes the diff unreviewable and un-revertable
@@ -210,10 +212,9 @@ stays behind under the bare prefix until P11 takes `client_service`.
 
 ## Steps
 
-Three commits: **(a)** the Celery fix, **(b)** pricing, **(c)** requests.
+Two commits: **(b)** pricing, **(c)** requests. (Commit **(a)**, the Celery fix, already landed.)
 
-1. **Commit (a):** add `"app.tasks.request_analysis"` to `_TASK_MODULES`, add the registry test,
-   full gate green, commit. Do not touch anything else.
+1. ~~**Commit (a):** the Celery fix.~~ **Already landed** — start at step 2.
 2. Re-run the grep inventory against the post-P8 tree.
 3. **Commit (b) — pricing:** create `app/domains/pricing/__init__.py`, `git mv` the 3 files, fix
    internal imports, update the barrel line for `prices.py` (130), replace call sites, update
@@ -269,7 +270,5 @@ Three commits: **(a)** the Celery fix, **(b)** pricing, **(c)** requests.
   before and after — byte-identical, after each of the three commits.
 - **`Base.metadata` parity:** `sorted(Base.metadata.tables)` before and after — identical.
   `models/marketplace.py` holds an FK into `requests`.
-- **Registry check (commit a):** `analyze_request_ai` present in `celery_app.tasks`, and every
-  `task_routes` key resolves to a registered task.
 - `uv run uvicorn app.main:app --reload` boots without import errors.
 - `grep -rn "app\.models\.requests\|app\.models\.prices\|app\.schemas\.webapp\|app\.schemas\.portal_request\|app\.schemas\.request_analysis\|app\.services\.request_service\|app\.services\.request_analysis_service\|app\.services\.rfq_push_service\|app\.services\.supplier_matching_service\|app\.services\.price_analysis_service\|app\.api\.dashboard_requests\|app\.api\.prices\|app\.api\.portal\.requests\|app\.api\.webapp\.requests\|app\.api\.webapp\.files" backend/app backend/tests` returns nothing.
