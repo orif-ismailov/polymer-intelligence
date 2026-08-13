@@ -24,7 +24,7 @@ from tests._claims import claim_update
 def test_offer_request_create_requires_qty_or_message() -> None:
     from pydantic import ValidationError  # noqa: PLC0415
 
-    from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestCreate  # noqa: PLC0415
 
     with pytest.raises(ValidationError):
         OfferRequestCreate()  # neither quantity nor message
@@ -39,9 +39,9 @@ def test_offer_request_create_requires_qty_or_message() -> None:
 
 
 def test_create_offer_request_rejects_non_approved_offer() -> None:
+    from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestCreate  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
-    from app.services import offer_request_service  # noqa: PLC0415
 
     db = MagicMock()
     # pending offer → not public → ValueError
@@ -57,9 +57,9 @@ def test_create_offer_request_rejects_non_approved_offer() -> None:
 
 def test_create_offer_request_blocks_own_offer() -> None:
     """A seller cannot inquire on its own listing (buyer == seller Telegram identity)."""
+    from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestCreate  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
-    from app.services import offer_request_service  # noqa: PLC0415
 
     db = MagicMock()
     offer = SimpleNamespace(
@@ -79,9 +79,9 @@ def test_create_offer_request_blocks_own_offer() -> None:
 
 def test_create_offer_request_allows_other_sellers_offer() -> None:
     """An inquiry on a DIFFERENT seller's approved offer is created normally."""
+    from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestCreate  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
-    from app.services import offer_request_service  # noqa: PLC0415
 
     db = MagicMock()
     offer = SimpleNamespace(
@@ -98,12 +98,12 @@ def test_create_offer_request_allows_other_sellers_offer() -> None:
 
 
 def test_moderate_offer_request_approve_sets_forwarded_and_audits() -> None:
+    from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
     from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-    from app.services import offer_request_service  # noqa: PLC0415
 
     req = MagicMock()
     db = MagicMock()
-    with patch("app.services.offer_request_service.write_audit") as mock_audit:
+    with patch("app.domains.marketplace.requests.write_audit") as mock_audit:
         offer_request_service.moderate_offer_request(db, req, 3, approve=True, note=None)
 
     # The decision is a guarded UPDATE, not a read-then-write (QA #1).
@@ -118,12 +118,12 @@ def test_moderate_offer_request_approve_sets_forwarded_and_audits() -> None:
 
 
 def test_moderate_offer_request_reject_no_forward() -> None:
+    from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
     from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-    from app.services import offer_request_service  # noqa: PLC0415
 
     req = MagicMock()
     db = MagicMock()
-    with patch("app.services.offer_request_service.write_audit"):
+    with patch("app.domains.marketplace.requests.write_audit"):
         offer_request_service.moderate_offer_request(db, req, 3, approve=False, note="dup")
 
     values, where = claim_update(db, "offer_requests")
@@ -135,14 +135,14 @@ def test_moderate_offer_request_reject_no_forward() -> None:
 
 def test_moderate_offer_request_losing_the_race_raises() -> None:
     """0 rows updated = another reviewer already claimed the inquiry (QA #1)."""
-    from app.services import offer_request_service  # noqa: PLC0415
+    from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
 
     req = MagicMock()
     db = MagicMock()
     db.execute.return_value.rowcount = 0
 
     with (
-        patch("app.services.offer_request_service.write_audit"),
+        patch("app.domains.marketplace.requests.write_audit"),
         pytest.raises(offer_request_service.AlreadyModerated),
     ):
         offer_request_service.moderate_offer_request(db, req, 3, approve=True, note=None)
@@ -159,7 +159,7 @@ def _run_apply(status_value: object) -> dict[str, object]:
     with (
         patch("sqlalchemy.orm.Session") as mock_session_cls,
         patch("app.core.db.engine"),
-        patch("app.services.offer_request_service.moderate_offer_request_via_telegram") as mock_mod,
+        patch("app.domains.marketplace.requests.moderate_offer_request_via_telegram") as mock_mod,
     ):
         mock_session = MagicMock()
         mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
@@ -394,7 +394,7 @@ def _editable_req(status: object, **overrides: object) -> SimpleNamespace:
 def test_offer_request_update_inherits_qty_or_message_rule() -> None:
     from pydantic import ValidationError  # noqa: PLC0415
 
-    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestUpdate  # noqa: PLC0415
 
     with pytest.raises(ValidationError):
         OfferRequestUpdate()  # neither quantity nor message
@@ -404,14 +404,14 @@ def test_offer_request_update_inherits_qty_or_message_rule() -> None:
 def test_update_offer_request_records_edit_and_builds_diff() -> None:
     import decimal  # noqa: PLC0415
 
+    from app.domains.marketplace import requests as svc  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestUpdate  # noqa: PLC0415
     from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
-    from app.services import offer_request_service as svc  # noqa: PLC0415
 
     req = _editable_req(OfferRequestStatus.pending)
     db = MagicMock()
     # Full-replacement edit: resend the current values, change only the quantity.
-    with patch("app.services.offer_request_service.write_audit") as mock_audit:
+    with patch("app.domains.marketplace.requests.write_audit") as mock_audit:
         _, changes = svc.update_offer_request(
             db,
             req,
@@ -435,13 +435,13 @@ def test_update_offer_request_records_edit_and_builds_diff() -> None:
 
 
 def test_update_offer_request_approved_resets_to_pending() -> None:
+    from app.domains.marketplace import requests as svc  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestUpdate  # noqa: PLC0415
     from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
-    from app.services import offer_request_service as svc  # noqa: PLC0415
 
     req = _editable_req(OfferRequestStatus.approved)
     db = MagicMock()
-    with patch("app.services.offer_request_service.write_audit"):
+    with patch("app.domains.marketplace.requests.write_audit"):
         svc.update_offer_request(db, req, OfferRequestUpdate(message="Новое сообщение"))
 
     assert req.status == OfferRequestStatus.pending  # re-review policy
@@ -451,9 +451,9 @@ def test_update_offer_request_approved_resets_to_pending() -> None:
 
 
 def test_update_offer_request_rejected_raises() -> None:
+    from app.domains.marketplace import requests as svc  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestUpdate  # noqa: PLC0415
     from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
-    from app.services import offer_request_service as svc  # noqa: PLC0415
 
     req = _editable_req(OfferRequestStatus.rejected)
     with pytest.raises(ValueError, match="rejected"):
@@ -463,12 +463,12 @@ def test_update_offer_request_rejected_raises() -> None:
 def test_update_offer_request_noop_returns_empty() -> None:
     import decimal  # noqa: PLC0415
 
+    from app.domains.marketplace import requests as svc  # noqa: PLC0415
+    from app.domains.marketplace.schemas import OfferRequestUpdate  # noqa: PLC0415
     from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-    from app.schemas.marketplace import OfferRequestUpdate  # noqa: PLC0415
-    from app.services import offer_request_service as svc  # noqa: PLC0415
 
     req = _editable_req(OfferRequestStatus.pending)
-    with patch("app.services.offer_request_service.write_audit") as mock_audit:
+    with patch("app.domains.marketplace.requests.write_audit") as mock_audit:
         _, changes = svc.update_offer_request(
             MagicMock(),
             req,

@@ -36,9 +36,9 @@ from dataclasses import dataclass
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.domains.marketplace.models import SellerOffer
 from app.models.compliance import Substance
 from app.models.enums import RegulationLevel, RegulationRegime
-from app.models.marketplace import SellerOffer
 from app.schemas.compliance import ComplianceOut, MissingOut
 from app.schemas.substance import SubstanceBrief
 from app.services import company_license_service, settings_service, substance_service

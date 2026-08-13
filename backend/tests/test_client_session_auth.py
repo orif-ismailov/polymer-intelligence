@@ -287,7 +287,7 @@ def _fake_offer(offer_id: int) -> SimpleNamespace:
 def test_featured_public_no_auth_and_no_contact(client: TestClient) -> None:
     """GET /webapp/market/featured is public and never leaks seller contact fields."""
     with patch(
-        "app.services.offer_service.list_catalog",
+        "app.domains.marketplace.service.list_catalog",
         return_value=[_fake_offer(1), _fake_offer(2)],
     ):
         resp = client.get("/api/v1/webapp/market/featured")

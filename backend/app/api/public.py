@@ -30,6 +30,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
+from app.domains.marketplace import service as offer_service
 from app.models.companies import Company
 from app.models.enums import CompanyBusinessRole as CompanyBusinessRoleEnum
 from app.models.enums import OfferAvailability, PriceBasis
@@ -57,7 +58,6 @@ from app.services import (
     logistics_service,
     manufacturer_service,
     news_service,
-    offer_service,
     public_market_service,
     review_service,
     storage_service,

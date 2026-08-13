@@ -13,10 +13,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
-from app.models.marketplace import OfferRequest
+from app.domains.marketplace import requests as offer_request_service
+from app.domains.marketplace.models import OfferRequest
+from app.domains.marketplace.schemas import AdminOfferRequestOut, ModerationDecision
 from app.models.staff import StaffUser
-from app.schemas.marketplace import AdminOfferRequestOut, ModerationDecision
-from app.services import offer_request_service
 
 router = APIRouter(prefix="/admin/offer-requests", tags=["offer-requests"])
 

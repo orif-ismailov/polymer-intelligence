@@ -39,6 +39,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.time import to_display_tz, utcnow
+from app.domains.marketplace.models import OfferRequest, SellerOffer
 from app.models.accounts import UserAccount
 from app.models.companies import Company, CompanyMember
 from app.models.contracts import Contract
@@ -52,7 +53,6 @@ from app.models.enums import (
     DealStatus,
     RfqResponseStatus,
 )
-from app.models.marketplace import OfferRequest, SellerOffer
 from app.models.requests import Request
 from app.services import (
     audit_service,

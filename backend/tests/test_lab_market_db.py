@@ -60,8 +60,8 @@ def db(engine: sa.Engine) -> Session:
 
 
 def _passport(db: Session, offer) -> None:  # noqa: ANN001
+    from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
     from app.models.enums import OfferFileKind  # noqa: PLC0415
-    from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
 
     db.add(
         SellerOfferFile(
@@ -88,7 +88,7 @@ def _three_offers(db: Session):  # noqa: ANN202
 
 class TestFilters:
     def test_unfiltered_returns_everything(self, db: Session) -> None:
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         _three_offers(db)
         assert len(offer_service.list_catalog(db)) == 3
@@ -96,14 +96,14 @@ class TestFilters:
     def test_the_passport_filter_finds_both_kinds(self, db: Session) -> None:
         """Independently verified material has a passport too — the narrower
         filter must not hide it from the broader one."""
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         _plain, with_passport, verified = _three_offers(db)
         found = offer_service.list_catalog(db, has_lab_passport=True)
         assert {o.id for o in found} == {with_passport.id, verified.id}
 
     def test_the_verified_filter_is_narrower(self, db: Session) -> None:
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         _plain, _with_passport, verified = _three_offers(db)
         found = offer_service.list_catalog(db, lab_verified=True)
@@ -113,14 +113,14 @@ class TestFilters:
         """`False` from an unchecked checkbox must mean "don't filter", not
         "show me offers WITHOUT a passport" — otherwise unticking the box empties
         the market."""
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         _three_offers(db)
         assert len(offer_service.list_catalog(db, has_lab_passport=False)) == 3
         assert len(offer_service.list_catalog(db, lab_verified=False)) == 3
 
     def test_the_filters_compose_with_the_others(self, db: Session) -> None:
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         _plain, with_passport, _verified = _three_offers(db)
         found = offer_service.list_catalog(db, q="passport", has_lab_passport=True)
@@ -129,8 +129,8 @@ class TestFilters:
     def test_a_deleted_passport_leaves_the_filter(self, db: Session) -> None:
         """The reason there is no cached column: this is the update a cache would
         have to remember to make."""
-        from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
 
         _plain, with_passport, _verified = _three_offers(db)
         file_row = (
@@ -147,7 +147,9 @@ class TestFilters:
 
 class TestCardFields:
     def test_the_card_carries_both_flags(self, db: Session) -> None:
-        from app.schemas.portal_market import PortalMarketOfferOut  # noqa: PLC0415
+        from app.domains.marketplace.portal_market_schemas import (
+            PortalMarketOfferOut,  # noqa: PLC0415
+        )
 
         plain, with_passport, verified = _three_offers(db)
         cards = {
@@ -170,7 +172,9 @@ class TestCardFields:
     def test_the_sample_terms_are_on_the_card(self, db: Session) -> None:
         import decimal  # noqa: PLC0415
 
-        from app.schemas.portal_market import PortalMarketOfferOut  # noqa: PLC0415
+        from app.domains.marketplace.portal_market_schemas import (
+            PortalMarketOfferOut,  # noqa: PLC0415
+        )
 
         owner = make_account(db, "+998900000602")
         company = make_company(db, owner, tax_id="300000602")
@@ -188,7 +192,7 @@ class TestCardFields:
     def test_the_mini_app_card_is_untouched(self, db: Session) -> None:
         """`webapp/` is frozen: the shared `CatalogOfferOut` must not grow P6
         fields, exactly as P4 decided for its badges."""
-        from app.schemas.marketplace import CatalogOfferOut  # noqa: PLC0415
+        from app.domains.marketplace.schemas import CatalogOfferOut  # noqa: PLC0415
 
         for field in (
             "has_lab_passport",
@@ -262,7 +266,7 @@ class TestSupplierScoringHook:
         buyer = make_company(db, buyer_owner, tax_id="300000630")
         plain = self._supplier(db, "+998900000631", "300000631", passport=True)
         verified = self._supplier(db, "+998900000632", "300000632", passport=True)
-        from app.models.marketplace import SellerOffer  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
 
         db.query(SellerOffer).filter(SellerOffer.company_id == verified.id).update(
             {"lab_verified": True}
@@ -282,7 +286,7 @@ class TestModerationCard:
     show it — found in the browser, not by the suite."""
 
     def test_the_card_says_whether_a_passport_is_attached(self, db: Session) -> None:
-        from app.schemas.marketplace import ModerationOfferOut  # noqa: PLC0415
+        from app.domains.marketplace.schemas import ModerationOfferOut  # noqa: PLC0415
 
         _plain, with_passport, verified = _three_offers(db)
         card = ModerationOfferOut.model_validate(with_passport)
@@ -293,7 +297,7 @@ class TestModerationCard:
         assert independent.lab_verified is True
 
     def test_a_plain_offer_claims_neither(self, db: Session) -> None:
-        from app.schemas.marketplace import ModerationOfferOut  # noqa: PLC0415
+        from app.domains.marketplace.schemas import ModerationOfferOut  # noqa: PLC0415
 
         plain, _with_passport, _verified = _three_offers(db)
         card = ModerationOfferOut.model_validate(plain)

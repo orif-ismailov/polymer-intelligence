@@ -12,16 +12,17 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.enums import OfferFileKind, SellerOfferStatus
-from app.models.marketplace import Seller, SellerOffer, SellerOfferFile
-from app.models.requests import Client
-from app.schemas.marketplace import (
+from app.domains.marketplace import service as offer_service
+from app.domains.marketplace.models import Seller, SellerOffer, SellerOfferFile
+from app.domains.marketplace.schemas import (
     OfferFileRef,
     SellerOfferCreate,
     SellerOfferOut,
     SellerOfferUpdate,
 )
-from app.services import offer_service, storage_service
+from app.models.enums import OfferFileKind, SellerOfferStatus
+from app.models.requests import Client
+from app.services import storage_service
 from app.services.storage_service import MAX_OFFER_FILES
 
 router = APIRouter(prefix="/webapp/seller", tags=["webapp-seller"])

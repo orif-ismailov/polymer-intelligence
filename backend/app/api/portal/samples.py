@@ -18,12 +18,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_account
 from app.api.portal.companies import _company_or_404, _require_business_role
 from app.core.db import get_db
+from app.domains.marketplace import service as offer_service
 from app.models.accounts import UserAccount
 from app.models.companies import Company
 from app.models.enums import SampleRequestStatus
 from app.models.lab import SampleRequest
 from app.schemas.lab import SampleRequestIn, SampleRequestOut, SampleTransitionIn
-from app.services import company_service, offer_service, sample_service
+from app.services import company_service, sample_service
 
 router = APIRouter(prefix="/portal", tags=["portal-samples"])
 

@@ -13,11 +13,12 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_account
 from app.api.portal.companies import _company_or_404, _require_business_role
 from app.core.db import get_db
+from app.domains.marketplace import service as offer_service
+from app.domains.marketplace.models import SellerOffer
 from app.models.accounts import UserAccount
 from app.models.companies import Company
 from app.models.enums import FactoryRfqDocumentKind
 from app.models.manufacturers import FactoryRfq, ManufacturerMessage, ManufacturerThread
-from app.models.marketplace import SellerOffer
 from app.schemas.portal_manufacturers import (
     FactoryRfqCreateIn,
     FactoryRfqDocumentOut,
@@ -29,7 +30,7 @@ from app.schemas.portal_manufacturers import (
     ManufacturerThreadOpenIn,
     ManufacturerThreadOut,
 )
-from app.services import company_service, manufacturer_service, offer_service, storage_service
+from app.services import company_service, manufacturer_service, storage_service
 
 router = APIRouter(prefix="/portal/manufacturers", tags=["portal-manufacturers"])
 

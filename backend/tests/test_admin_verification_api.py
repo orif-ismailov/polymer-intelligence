@@ -168,9 +168,9 @@ def test_waive_requires_admin(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_suspend_archives_approved_offers(api) -> None:  # noqa: ANN001
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import CompanyStatus, SellerOfferStatus  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
     from app.services import company_service, event_types  # noqa: PLC0415
     from app.tasks.verification import archive_company_offers  # noqa: PLC0415
 

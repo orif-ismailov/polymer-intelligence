@@ -18,6 +18,8 @@ from sqlalchemy import func, or_, update
 from sqlalchemy.orm import Query, Session, joinedload, selectinload
 
 from app.core.time import utcnow
+from app.domains.marketplace.models import OfferFavorite, Seller, SellerOffer, SellerOfferFile
+from app.domains.marketplace.schemas import CategoryCount, SellerOfferCreate, SellerOfferUpdate
 from app.models.accounts import UserAccount
 from app.models.companies import Company
 from app.models.enums import (
@@ -27,9 +29,7 @@ from app.models.enums import (
     PriceBasis,
     SellerOfferStatus,
 )
-from app.models.marketplace import OfferFavorite, Seller, SellerOffer, SellerOfferFile
 from app.models.reference import Product, ProductSynonym
-from app.schemas.marketplace import CategoryCount, SellerOfferCreate, SellerOfferUpdate
 from app.schemas.portal_company import CompanyOfferIn
 from app.services import event_service, event_types, notification_service
 from app.services.audit_service import write_audit
@@ -489,7 +489,9 @@ def _notify_company_offer_moderated(
 
 def _assert_compliant_for_publication(db: Session, offer: SellerOffer) -> None:
     """Guard both approval paths (dashboard and Telegram) with one check."""
-    from app.services import offer_compliance_service  # noqa: PLC0415 — cycle
+    from app.domains.marketplace import (
+        compliance as offer_compliance_service,  # noqa: PLC0415 — cycle
+    )
 
     offer_compliance_service.assert_publishable(db, offer)
 
@@ -674,7 +676,9 @@ def apply_publish_gate(db: Session, offer: SellerOffer) -> bool:
     With `dangerous_check_enforced` off (the default) nothing is held, but the
     verdict is still cached so staff can see what a flip would block.
     """
-    from app.services import offer_compliance_service  # noqa: PLC0415 — cycle
+    from app.domains.marketplace import (
+        compliance as offer_compliance_service,  # noqa: PLC0415 — cycle
+    )
 
     was_held = offer.compliance_ok is False
     verdict = offer_compliance_service.evaluate_and_stamp(db, offer)

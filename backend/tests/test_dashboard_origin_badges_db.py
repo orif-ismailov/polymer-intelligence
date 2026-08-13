@@ -112,8 +112,8 @@ def test_requests_list_origin_fields_and_filter(api) -> None:  # noqa: ANN001
 def test_to_admin_out_handles_portal_and_company_parties(api) -> None:  # noqa: ANN001
     _client, session = api
     with session() as db:
-        from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
-        from app.services import offer_request_service  # noqa: PLC0415
+        from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+        from app.domains.marketplace.schemas import OfferRequestCreate  # noqa: PLC0415
 
         # company-origin offer + portal buyer inquiry
         seller_owner = make_account(db, "+998900009100")
@@ -140,16 +140,16 @@ def test_to_admin_out_handles_portal_and_company_parties(api) -> None:  # noqa: 
 def test_to_admin_out_still_works_for_tg_parties(api) -> None:  # noqa: ANN001
     _client, session = api
     with session() as db:
+        from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
         from app.models.requests import Client  # noqa: PLC0415
-        from app.services import offer_request_service  # noqa: PLC0415
 
         seller = make_seller(db, telegram_user_id=9001, company_name="TG Seller")
         offer = make_seller_offer(db, seller=seller)
         tg_buyer = Client(telegram_user_id=8001, company_name="TG Buyer", contact_name="Ivan")
         db.add(tg_buyer)
         db.flush()
+        from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
         from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-        from app.models.marketplace import OfferRequest  # noqa: PLC0415
         req = OfferRequest(
             offer_id=offer.id, client_id=tg_buyer.id, qty_unit="MT",
             status=OfferRequestStatus.pending, message="hi",

@@ -62,8 +62,11 @@ uv sync --frozen --extra dev        # install exact locked deps (uv.lock is auth
 
 # CI gates (must pass — see .github/workflows/ci.yml):
 ruff check .                         # lint
-mypy app/services --ignore-missing-imports   # type-check (scoped to services/ + schemas/)
-mypy app/schemas  --ignore-missing-imports
+# type-check (scoped to services/ + schemas/, plus the domain folders already migrated)
+mypy app/services app/domains/marketplace/service.py app/domains/marketplace/requests.py \
+     app/domains/marketplace/compliance.py --ignore-missing-imports
+mypy app/schemas  app/domains/marketplace/schemas.py \
+     app/domains/marketplace/portal_market_schemas.py --ignore-missing-imports
 pytest tests/ -q                     # full backend suite
 
 # Single test / file / pattern:
@@ -251,7 +254,12 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 
 - **Time**: store UTC, display `Asia/Tashkent` (`TZ_DISPLAY`). Time helpers in `app/core/time.py`
   (backend) and `lib/tz.ts` (dashboard).
-- **mypy is strict** for `app/services` and `app/schemas` (the CI-gated scope). Business logic
+- **Domain folders**: bounded contexts are migrating out of the technical-layer folders into
+  `app/domains/<name>/` (models + schemas + service + routers together), one domain per change,
+  no back-compat shims. `marketplace` has moved; the rest still live in `app/models|schemas|
+  services|api/`. Plans and the binding rules are in `.planning/backend-domain-reorg/`.
+- **mypy is strict** for `app/services` and `app/schemas` plus the migrated domains' service and
+  schema modules (the CI-gated scope). Business logic
   lives in `app/services/`; keep it typed.
 - Dependency versions are deliberately pinned: `uv.lock` is authoritative (`uv sync --frozen`),
   `fastapi`/`starlette` are tightly bounded (route registration is version-sensitive), and

@@ -322,7 +322,7 @@ def test_upload_and_delete_are_audited(api) -> None:  # noqa: ANN001
 
 def test_cover_and_media_routes_registered() -> None:
     from app.api.portal.companies import router as portal_router  # noqa: PLC0415
-    from app.api.webapp.market import router as market_router  # noqa: PLC0415
+    from app.domains.marketplace.api_webapp_market import router as market_router  # noqa: PLC0415
 
     portal_paths = {r.path for r in portal_router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/cover" in portal_paths

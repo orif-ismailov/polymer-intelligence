@@ -60,7 +60,7 @@ def db(engine: sa.Engine) -> Session:
 @pytest.fixture
 def stub_s3(monkeypatch) -> None:  # noqa: ANN001
     """No socket in tests: keep the validation, skip the bucket."""
-    from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
 
     def fake_offer_upload(db, offer_id, content, filename, kind):  # noqa: ANN001, ANN202
@@ -418,7 +418,7 @@ class TestDealSideResult:
     ) -> None:
         """There is no offer in play: the badge belongs to a listing, and a deal
         is not one."""
-        from app.models.marketplace import SellerOffer  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
         from app.services import lab_service  # noqa: PLC0415
 
         order, _deal, _buyer, staff = self._deal_order(db)
@@ -482,8 +482,8 @@ class TestResultProtection:
             lab_service.assert_result_unlocked(db, order.result_offer_file_id)
 
     def test_a_self_uploaded_passport_is_removable(self, db: Session) -> None:
+        from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
         from app.models.enums import OfferFileKind  # noqa: PLC0415
-        from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
         from app.services import lab_service  # noqa: PLC0415
 
         _company, _owner, offer, _staff = _scene(db)
@@ -497,8 +497,8 @@ class TestResultProtection:
     def test_removing_the_last_passport_drops_the_verification(
         self, db: Session
     ) -> None:
+        from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
         from app.models.enums import OfferFileKind  # noqa: PLC0415
-        from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
         from app.services import lab_service  # noqa: PLC0415
 
         _company, _owner, offer, _staff = _scene(db)

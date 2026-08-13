@@ -20,12 +20,13 @@ from app.api.deps import get_current_account
 from app.api.portal.companies import _company_or_404, _rate_limited, _require_business_role
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.marketplace import requests as offer_request_service
+from app.domains.marketplace.models import OfferRequest, SellerOffer
+from app.domains.marketplace.portal_market_schemas import PortalInquiryCreate, PortalInquiryUpdate
+from app.domains.marketplace.schemas import OfferRequestOut
 from app.models.accounts import UserAccount
 from app.models.enums import OfferRequestStatus, SellerOfferStatus
-from app.models.marketplace import OfferRequest, SellerOffer
-from app.schemas.marketplace import OfferRequestOut
-from app.schemas.portal_market import PortalInquiryCreate, PortalInquiryUpdate
-from app.services import company_service, offer_request_service, rate_limit
+from app.services import company_service, rate_limit
 
 router = APIRouter(prefix="/portal", tags=["portal-inquiries"])
 

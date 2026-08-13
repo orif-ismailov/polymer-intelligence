@@ -13,6 +13,7 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.domains.marketplace.schemas import OfferFileRef
 from app.models.enums import (
     OfferAvailability,
     OfferSaleMode,
@@ -21,7 +22,6 @@ from app.models.enums import (
     SellerOfferStatus,
 )
 from app.schemas.compliance import MissingOut
-from app.schemas.marketplace import OfferFileRef
 from app.schemas.substance import SubstanceBrief
 
 # ── Inputs ────────────────────────────────────────────────────────────────────

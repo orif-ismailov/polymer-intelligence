@@ -12,10 +12,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.companies import Company
-from app.models.marketplace import SellerOfferFile
-from app.models.requests import Client
-from app.schemas.marketplace import (
+from app.domains.marketplace import requests as offer_request_service
+from app.domains.marketplace import service as offer_service
+from app.domains.marketplace.models import SellerOfferFile
+from app.domains.marketplace.schemas import (
     CatalogOfferOut,
     CategoryCount,
     OfferRequestCreate,
@@ -23,7 +23,8 @@ from app.schemas.marketplace import (
     OfferRequestUpdate,
     PublicFeaturedOffer,
 )
-from app.services import offer_request_service, offer_service
+from app.models.companies import Company
+from app.models.requests import Client
 
 router = APIRouter(prefix="/webapp/market", tags=["webapp-market"])
 

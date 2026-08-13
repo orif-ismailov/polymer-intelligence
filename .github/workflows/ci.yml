@@ -70,12 +70,24 @@ jobs:
         run: ruff check .
 
       # ── Type-check: mypy scoped to services/ and schemas/ ──────────────────
-      # Per dev-spec §7: mypy targets backend/app/services + backend/app/schemas
+      # Per dev-spec §7: mypy targets backend/app/services + backend/app/schemas.
+      # As the domain reorg moves a bounded context into app/domains/<name>/, that
+      # domain's service and schema modules are appended here so the gate follows
+      # the code instead of shrinking as directories empty out.
       - name: Type-check (mypy — app/services)
-        run: mypy app/services --ignore-missing-imports
+        run: >
+          mypy app/services
+          app/domains/marketplace/service.py
+          app/domains/marketplace/requests.py
+          app/domains/marketplace/compliance.py
+          --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
-        run: mypy app/schemas --ignore-missing-imports
+        run: >
+          mypy app/schemas
+          app/domains/marketplace/schemas.py
+          app/domains/marketplace/portal_market_schemas.py
+          --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────
       - name: Run pytest

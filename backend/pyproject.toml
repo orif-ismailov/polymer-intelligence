@@ -140,6 +140,19 @@ disallow_untyped_defs = true
 disallow_any_explicit = true
 
 [[tool.mypy.overrides]]
+# Domain service modules carry the app.services.* bar with them as each bounded
+# context moves into app/domains/<name>/ (backend domain reorg). Listed per module
+# rather than as app.domains.* so a domain's schemas keep the app.schemas.* rules
+# below instead of this stricter set.
+module = [
+    "app.domains.marketplace.service",
+    "app.domains.marketplace.requests",
+    "app.domains.marketplace.compliance",
+]
+disallow_untyped_defs = true
+disallow_any_explicit = true
+
+[[tool.mypy.overrides]]
 # The CI mypy gate targets app/services + app/schemas only (dev-spec §7); parsing/ is
 # not directly type-checked. When an app/services module transitively imports a parsing
 # helper (e.g. request_analysis_service -> parsing.budget), the parsing file's own
@@ -153,6 +166,16 @@ ignore_errors = true
 # and other class-vars; disallow_any_explicit would flag our schemas for pydantic's
 # internal stubs (false positive). Only disallow_untyped_defs is enforced here.
 module = ["app.schemas.*"]
+disallow_untyped_defs = true
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+# Same carve-out as app.schemas.* above, for schema modules that have moved into a
+# domain folder (backend domain reorg).
+module = [
+    "app.domains.marketplace.schemas",
+    "app.domains.marketplace.portal_market_schemas",
+]
 disallow_untyped_defs = true
 disallow_any_explicit = false
 

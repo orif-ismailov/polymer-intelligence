@@ -590,8 +590,8 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import OfferFileKind  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
     from app.models.reference import Product  # noqa: PLC0415
 
     chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
@@ -782,7 +782,7 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
 
     chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
     if chat_id is None:
@@ -887,7 +887,7 @@ def send_offer_request_to_seller(offer_request_id: int) -> dict[str, Any]:
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
 
     logger.info("notify.offer_request_to_seller.start", extra={"offer_request_id": offer_request_id})
 

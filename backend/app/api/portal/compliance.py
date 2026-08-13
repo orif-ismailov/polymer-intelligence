@@ -18,8 +18,9 @@ from app.api.deps import get_current_account
 from app.api.portal.companies import _company_or_404, _rate_limited
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.marketplace import compliance as offer_compliance_service
+from app.domains.marketplace.models import SellerOffer
 from app.models.accounts import UserAccount
-from app.models.marketplace import SellerOffer
 from app.schemas.compliance import CompanyLicenseOut, ComplianceOut
 from app.schemas.substance import SubstanceBrief
 from app.schemas.substance_match import (
@@ -29,7 +30,6 @@ from app.schemas.substance_match import (
 )
 from app.services import (
     company_license_service,
-    offer_compliance_service,
     rate_limit,
     substance_ai_service,
 )

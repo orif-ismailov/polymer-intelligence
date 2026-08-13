@@ -38,7 +38,7 @@ class TestWaterfall:
 
         # Each db.query(Model) returns an object whose filter/all yields the right rows.
         def _query(model: Any):
-            from app.models.marketplace import SellerOffer
+            from app.domains.marketplace.models import SellerOffer
             from app.models.sourcing import InventoryItem, PartnerSupplier
 
             q = MagicMock()

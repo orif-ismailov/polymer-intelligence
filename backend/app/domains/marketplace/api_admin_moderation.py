@@ -12,10 +12,11 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
-from app.models.marketplace import SellerOffer
+from app.domains.marketplace import compliance as offer_compliance_service
+from app.domains.marketplace import service as offer_service
+from app.domains.marketplace.models import SellerOffer
+from app.domains.marketplace.schemas import ModerationDecision, ModerationOfferOut, SellerOfferOut
 from app.models.staff import StaffUser
-from app.schemas.marketplace import ModerationDecision, ModerationOfferOut, SellerOfferOut
-from app.services import offer_compliance_service, offer_service
 
 router = APIRouter(prefix="/admin/moderation", tags=["moderation"])
 

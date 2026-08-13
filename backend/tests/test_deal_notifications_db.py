@@ -242,7 +242,7 @@ def test_the_cooldown_survives_the_reader_opening_the_bell(sf) -> None:  # noqa:
 
 @requires_real_db
 def test_the_cooldown_is_per_deal(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:

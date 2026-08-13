@@ -599,8 +599,8 @@ def test_revocation_is_not_repeatable(sf, monkeypatch) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_open_from_company_inquiry(sf) -> None:  # noqa: ANN001
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
     from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
@@ -625,7 +625,7 @@ def test_open_from_company_inquiry(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_telegram_inquiry_cannot_become_a_deal(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
     from app.services import deal_service  # noqa: PLC0415
     from tests._verification_db import make_seller  # noqa: PLC0415
 
@@ -649,7 +649,7 @@ def test_telegram_inquiry_cannot_become_a_deal(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_inquiry_cannot_open_two_live_deals(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
     from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:

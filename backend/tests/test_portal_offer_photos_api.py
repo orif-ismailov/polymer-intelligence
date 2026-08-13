@@ -34,7 +34,7 @@ _PDF = b"%PDF-1.4 not a picture"
 
 
 def test_routes_registered() -> None:
-    from app.api.portal.offers import router  # noqa: PLC0415
+    from app.domains.marketplace.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/offers/{offer_id}/files" in paths
@@ -61,7 +61,7 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     session = session_factory(engine)
     fake_redis = FakeRedis()
     # Moderation notifications must not reach a broker.
-    monkeypatch.setattr("app.services.offer_service.enqueue_offer_group_notify", lambda *a, **k: None)
+    monkeypatch.setattr("app.domains.marketplace.service.enqueue_offer_group_notify", lambda *a, **k: None)
     app = create_app()
 
     def _override_db():  # noqa: ANN202
@@ -137,8 +137,8 @@ def _upload(client, auth, company_id: int, offer_id: int, content: bytes, name: 
 
 
 def _set_status(session, offer_id: int, status_value: str) -> None:  # noqa: ANN001
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
 
     with session() as db:
         offer = db.get(SellerOffer, offer_id)

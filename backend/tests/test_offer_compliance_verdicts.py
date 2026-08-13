@@ -31,8 +31,8 @@ import pytest
 
 
 def _decide(**kwargs):  # noqa: ANN003, ANN202
+    from app.domains.marketplace import compliance as svc  # noqa: PLC0415
     from app.models.enums import RegulationLevel  # noqa: PLC0415
-    from app.services import offer_compliance_service as svc  # noqa: PLC0415
 
     params = {
         "level": RegulationLevel.free,

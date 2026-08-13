@@ -18,13 +18,13 @@ import uuid
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.models.enums import OfferSaleMode
-from app.schemas.marketplace import (
+from app.domains.marketplace.schemas import (
     CatalogOfferOut,
     OfferRequestCreate,
     OfferRequestOut,
     OfferRequestUpdate,
 )
+from app.models.enums import OfferSaleMode
 
 
 class PortalMarketOfferOut(CatalogOfferOut):

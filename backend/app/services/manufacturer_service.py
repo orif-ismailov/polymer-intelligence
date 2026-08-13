@@ -15,6 +15,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.time import to_display_tz, utcnow
+from app.domains.marketplace.models import SellerOffer
 from app.models.accounts import UserAccount
 from app.models.companies import Company, CompanyBusinessRole
 from app.models.enums import (
@@ -33,7 +34,6 @@ from app.models.manufacturers import (
     ManufacturerMessage,
     ManufacturerThread,
 )
-from app.models.marketplace import SellerOffer
 from app.services import company_service, directory_service, storage_service
 
 logger = logging.getLogger(__name__)

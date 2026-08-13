@@ -17,6 +17,14 @@ This file must be imported by alembic/env.py so that
 `target_metadata = Base.metadata` includes all 20 tables.
 """
 
+from app.domains.marketplace.models import (  # noqa: F401
+    OfferFavorite,
+    OfferRequest,
+    RfqPushLog,
+    Seller,
+    SellerOffer,
+    SellerOfferFile,
+)
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
@@ -115,14 +123,6 @@ from app.models.manufacturers import (  # noqa: F401
     FactoryRfqDocument,
     ManufacturerMessage,
     ManufacturerThread,
-)
-from app.models.marketplace import (  # noqa: F401
-    OfferFavorite,
-    OfferRequest,
-    RfqPushLog,
-    Seller,
-    SellerOffer,
-    SellerOfferFile,
 )
 from app.models.media import CompanyMedia  # noqa: F401
 from app.models.notifications import PortalNotification  # noqa: F401

@@ -72,7 +72,7 @@ class TestMatchingProductIds:
     """offer_service.matching_product_ids control flow — no DB required."""
 
     def test_unions_and_dedups_product_and_synonym_hits(self) -> None:
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         db = _fake_db([(1,), (2,)], [(2,), (3,)])  # 2 is a shared hit
         ids = offer_service.matching_product_ids(db, "полипропилен")
@@ -80,7 +80,7 @@ class TestMatchingProductIds:
         assert db.query.call_count == 2  # Product + ProductSynonym
 
     def test_empty_term_short_circuits_without_querying(self) -> None:
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         db = MagicMock()
         assert offer_service.matching_product_ids(db, "   ") == []
@@ -88,7 +88,7 @@ class TestMatchingProductIds:
 
     def test_single_char_term_skips_synonym_query(self) -> None:
         """A 1-char term is too noisy for the synonym dictionary — only Product is queried."""
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         db = _fake_db([(5,)])  # only the Product query is provided
         ids = offer_service.matching_product_ids(db, "п")
@@ -97,7 +97,7 @@ class TestMatchingProductIds:
 
     def test_two_char_abbreviation_resolves_via_synonyms(self) -> None:
         """The reported case: "ПП" matches nothing by product name but resolves via synonyms."""
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         db = _fake_db([], [(7,)])  # no name hit; synonym dictionary resolves it
         ids = offer_service.matching_product_ids(db, "ПП")
@@ -128,8 +128,8 @@ def seeded_catalog(engine):
     from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
     from app.core.time import utcnow  # noqa: PLC0415
+    from app.domains.marketplace.models import Seller, SellerOffer  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import Seller, SellerOffer  # noqa: PLC0415
     from app.models.reference import Product  # noqa: PLC0415
     from app.seed.seed_reference import seed_all  # noqa: PLC0415
 
@@ -177,7 +177,7 @@ class TestCrossLanguageCatalogSearch:
     def _search(self, engine, q: str):
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services import offer_service  # noqa: PLC0415
+        from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
         with sessionmaker(bind=engine)() as session:
             return [o.id for o in offer_service.list_catalog(session, q=q)]

@@ -97,9 +97,9 @@ class TestLabOrderConstraints:
             db.flush()
 
     def test_done_with_the_offer_file_is_accepted(self, db: Session) -> None:
+        from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
         from app.models.enums import LabOrderStatus, OfferFileKind  # noqa: PLC0415
         from app.models.lab import LabOrder  # noqa: PLC0415
-        from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
 
         seller, _buyer, owner, offer = _scene(db)
         passport = SellerOfferFile(
@@ -205,8 +205,8 @@ class TestSellerOfferDefaults:
         assert offer.sample_dispatch_days is None
 
     def test_has_lab_passport_follows_the_files(self, db: Session) -> None:
+        from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
         from app.models.enums import OfferFileKind  # noqa: PLC0415
-        from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
 
         _seller, _buyer, _owner, offer = _scene(db)
         assert offer.has_lab_passport is False

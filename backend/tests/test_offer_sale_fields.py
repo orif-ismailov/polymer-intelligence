@@ -94,8 +94,8 @@ class TestExistingRulesAreNotRetightened:
         qty/price to null for on_order and requires them for in_stock. It must
         NOT gain the lead-time requirement: the frozen client cannot send the
         field, so requiring it would break offer creation from Telegram."""
+        from app.domains.marketplace.schemas import SellerOfferCreate  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.marketplace import SellerOfferCreate  # noqa: PLC0415
 
         body = SellerOfferCreate(
             product_text="HDPE film", availability=OfferAvailability.on_order
@@ -116,8 +116,10 @@ class TestMarketCardCarriesTheNewFields:
     def test_portal_card_is_a_superset_of_the_webapp_contract(self) -> None:
         """The Mini App card contract stays byte-identical (webapp/ is frozen);
         the portal card extends it, so P4's badges never drift the shared shape."""
-        from app.schemas.marketplace import CatalogOfferOut  # noqa: PLC0415
-        from app.schemas.portal_market import PortalMarketOfferOut  # noqa: PLC0415
+        from app.domains.marketplace.portal_market_schemas import (
+            PortalMarketOfferOut,  # noqa: PLC0415
+        )
+        from app.domains.marketplace.schemas import CatalogOfferOut  # noqa: PLC0415
 
         webapp = set(CatalogOfferOut.model_fields)
         portal = set(PortalMarketOfferOut.model_fields)
@@ -201,7 +203,7 @@ def _approved_offer(session):  # noqa: ANN001, ANN202
 
 
 def test_favorite_routes_registered() -> None:
-    from app.api.portal.market import router  # noqa: PLC0415
+    from app.domains.marketplace.api_portal_market import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/market/offers/{offer_id}/favorite" in paths

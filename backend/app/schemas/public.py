@@ -27,7 +27,7 @@ import uuid
 
 from pydantic import BaseModel, Field
 
-from app.schemas.marketplace import PublicFeaturedOffer
+from app.domains.marketplace.schemas import PublicFeaturedOffer
 
 
 class PublicOfferCard(PublicFeaturedOffer):

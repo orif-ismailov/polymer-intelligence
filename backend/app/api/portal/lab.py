@@ -19,10 +19,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_account
 from app.api.portal.companies import _company_or_404
 from app.core.db import get_db
+from app.domains.marketplace.models import SellerOffer
 from app.models.accounts import UserAccount
 from app.models.deals import Deal
 from app.models.lab import LabOrder
-from app.models.marketplace import SellerOffer
 from app.schemas.lab import LabOrderIn, LabOrderOut
 from app.services import lab_service
 

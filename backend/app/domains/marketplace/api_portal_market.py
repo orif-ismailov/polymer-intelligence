@@ -17,6 +17,15 @@ from sqlalchemy.orm import Session, selectinload
 from app.api.deps import get_current_account
 from app.api.portal.companies import _company_or_404
 from app.core.db import get_db
+from app.domains.marketplace import requests as offer_request_service
+from app.domains.marketplace import service as offer_service
+from app.domains.marketplace.models import SellerOffer
+from app.domains.marketplace.portal_market_schemas import (
+    PortalMarketOfferDetail,
+    PortalMarketOfferOut,
+    PublicCompanyProfileOut,
+)
+from app.domains.marketplace.schemas import OfferRequestOut
 from app.models.accounts import UserAccount
 from app.models.companies import Company
 from app.models.enums import (
@@ -25,14 +34,7 @@ from app.models.enums import (
     OfferAvailability,
     SellerOfferStatus,
 )
-from app.models.marketplace import SellerOffer
-from app.schemas.marketplace import OfferRequestOut
-from app.schemas.portal_market import (
-    PortalMarketOfferDetail,
-    PortalMarketOfferOut,
-    PublicCompanyProfileOut,
-)
-from app.services import offer_request_service, offer_service, storage_service
+from app.services import storage_service
 
 router = APIRouter(prefix="/portal/market", tags=["portal-market"])
 

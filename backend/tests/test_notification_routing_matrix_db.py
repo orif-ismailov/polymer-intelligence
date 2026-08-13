@@ -125,9 +125,9 @@ def test_verification_consumer_registered_for_all_decisions() -> None:
 
 @requires_real_db
 def test_company_offer_moderation_notifies_members(sf) -> None:  # noqa: ANN001
+    from app.domains.marketplace import service as offer_service  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
-    from app.services import offer_service  # noqa: PLC0415
     from tests._verification_db import make_seller_offer  # noqa: PLC0415
 
     with sf() as db:

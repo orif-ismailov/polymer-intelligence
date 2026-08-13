@@ -57,23 +57,18 @@ from app.api.dashboard_requests import router as dashboard_requests_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
 from app.api.health import router as health_router
-from app.api.moderation import router as moderation_router
-from app.api.offer_requests import router as offer_requests_router
 from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.companies import router as portal_companies_router
 from app.api.portal.compliance import router as portal_compliance_router
 from app.api.portal.contracts import router as portal_contracts_router
 from app.api.portal.deals import router as portal_deals_router
 from app.api.portal.eimzo import router as portal_eimzo_router
-from app.api.portal.inquiries import router as portal_inquiries_router
 from app.api.portal.lab import router as portal_lab_router
 from app.api.portal.lab_requests import router as portal_lab_requests_router
 from app.api.portal.logistics import router as portal_logistics_router
 from app.api.portal.manufacturers import router as portal_manufacturers_router
-from app.api.portal.market import router as portal_market_router
 from app.api.portal.news import router as portal_news_router
 from app.api.portal.notifications import router as portal_notifications_router
-from app.api.portal.offers import router as portal_offers_router
 from app.api.portal.reference import router as portal_reference_router
 from app.api.portal.requests import router as portal_requests_router
 from app.api.portal.samples import router as portal_samples_router
@@ -86,15 +81,20 @@ from app.api.sourcing import router as sourcing_router
 from app.api.telegram_webhook import router as telegram_webhook_router
 from app.api.webapp.auth import router as webapp_auth_router
 from app.api.webapp.files import router as webapp_files_router
-from app.api.webapp.market import router as webapp_market_router
 from app.api.webapp.me import router as webapp_me_router
 from app.api.webapp.news import router as webapp_news_router
 from app.api.webapp.reference import router as webapp_reference_router
 from app.api.webapp.requests import router as webapp_requests_router
-from app.api.webapp.seller import router as webapp_seller_router
 from app.api.webhooks_escrow import router as webhooks_escrow_router
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.domains.marketplace.api_admin import router as offer_requests_router
+from app.domains.marketplace.api_admin_moderation import router as moderation_router
+from app.domains.marketplace.api_portal import router as portal_offers_router
+from app.domains.marketplace.api_portal_inquiries import router as portal_inquiries_router
+from app.domains.marketplace.api_portal_market import router as portal_market_router
+from app.domains.marketplace.api_webapp_market import router as webapp_market_router
+from app.domains.marketplace.api_webapp_seller import router as webapp_seller_router
 from app.models.staff import StaffUser
 
 logger = logging.getLogger(__name__)

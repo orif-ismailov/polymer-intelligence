@@ -85,8 +85,8 @@ def engine() -> sa.Engine:
 def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     from app.core.db import get_db  # noqa: PLC0415
     from app.core.redis import get_redis  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
-    from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
     from tests._fake_redis import FakeRedis  # noqa: PLC0415
 
@@ -375,7 +375,7 @@ class TestAdminLabQueue:
         assert body["result_offer_file_id"] is not None
         assert body["available_transitions"] == []
 
-        from app.models.marketplace import SellerOffer  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
 
         with session() as db:
             offer = db.get(SellerOffer, scene["offer_id"])
@@ -481,7 +481,7 @@ class TestSellerPassportUpload:
         assert response.status_code == 201, response.text
         assert response.json()["status"] == "pending_moderation"
 
-        from app.models.marketplace import SellerOffer  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
 
         with session() as db:
             offer = db.get(SellerOffer, scene["offer_id"])

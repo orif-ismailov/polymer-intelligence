@@ -106,7 +106,7 @@ def market_client() -> Generator[TestClient, None, None]:
 
 class TestCatalog:
     def test_list_offers_200(self, market_client: TestClient):
-        with patch("app.api.webapp.market.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_service") as svc:
             svc.list_catalog.return_value = [_mock_offer()]
             resp = market_client.get("/api/v1/webapp/market/offers")
         assert resp.status_code == 200, resp.text
@@ -115,15 +115,15 @@ class TestCatalog:
         assert data[0]["seller"]["company_name"] == "Chem Trade LLC"
 
     def test_offer_detail_404_when_not_approved(self, market_client: TestClient):
-        with patch("app.api.webapp.market.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_service") as svc:
             svc.get_catalog_offer.return_value = None
             resp = market_client.get("/api/v1/webapp/market/offers/999")
         assert resp.status_code == 404, resp.text
 
     def test_categories_200(self, market_client: TestClient):
-        from app.schemas.marketplace import CategoryCount  # noqa: PLC0415
+        from app.domains.marketplace.schemas import CategoryCount  # noqa: PLC0415
 
-        with patch("app.api.webapp.market.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_service") as svc:
             svc.category_counts.return_value = [CategoryCount(code="HDPE", count=3)]
             resp = market_client.get("/api/v1/webapp/market/categories")
         assert resp.status_code == 200, resp.text
@@ -146,7 +146,7 @@ class TestCatalog:
 
     def test_list_offers_excludes_own_seller(self, market_client: TestClient):
         """The caller's own listings are filtered out of the catalog they browse."""
-        with patch("app.api.webapp.market.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_service") as svc:
             svc.seller_id_for.return_value = 7
             svc.list_catalog.return_value = []
             resp = market_client.get("/api/v1/webapp/market/offers")
@@ -154,7 +154,7 @@ class TestCatalog:
         assert svc.list_catalog.call_args.kwargs["exclude_seller_id"] == 7
 
     def test_categories_exclude_own_seller(self, market_client: TestClient):
-        with patch("app.api.webapp.market.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_service") as svc:
             svc.seller_id_for.return_value = 7
             svc.category_counts.return_value = []
             resp = market_client.get("/api/v1/webapp/market/categories")
@@ -164,7 +164,7 @@ class TestCatalog:
     def test_offer_detail_sets_is_own_for_owner(self, market_client: TestClient):
         offer = _mock_offer(status="approved")
         offer.seller_id = 7
-        with patch("app.api.webapp.market.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_service") as svc:
             svc.get_catalog_offer.return_value = offer
             svc.seller_id_for.return_value = 7  # caller owns seller 7
             resp = market_client.get("/api/v1/webapp/market/offers/11")
@@ -174,7 +174,7 @@ class TestCatalog:
     def test_offer_detail_is_own_false_for_others(self, market_client: TestClient):
         offer = _mock_offer(status="approved")
         offer.seller_id = 7
-        with patch("app.api.webapp.market.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_service") as svc:
             svc.get_catalog_offer.return_value = offer
             svc.seller_id_for.return_value = 999  # someone else
             resp = market_client.get("/api/v1/webapp/market/offers/11")
@@ -186,7 +186,7 @@ class TestCatalog:
 
 class TestSellerOffers:
     def test_create_offer_201(self, market_client: TestClient):
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_or_create_seller.return_value = _mock_seller()
             svc.create_offer.return_value = _mock_offer(status="pending_moderation")
             resp = market_client.post(
@@ -211,7 +211,7 @@ class TestSellerOffers:
         """Omitting availability parses to the in_stock default in the create schema."""
         from app.models.enums import OfferAvailability  # noqa: PLC0415
 
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_or_create_seller.return_value = _mock_seller()
             svc.create_offer.return_value = _mock_offer(status="pending_moderation")
             resp = market_client.post(
@@ -227,7 +227,7 @@ class TestSellerOffers:
         """availability='on_order' is accepted and forwarded to the service verbatim."""
         from app.models.enums import OfferAvailability  # noqa: PLC0415
 
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_or_create_seller.return_value = _mock_seller()
             svc.create_offer.return_value = _mock_offer(status="pending_moderation")
             resp = market_client.post(
@@ -399,7 +399,7 @@ def _mock_own_inquiry(client_id: int = 1) -> MagicMock:
 class TestEditInquiry:
     def test_patch_foreign_inquiry_404(self, market_client: TestClient):
         """A buyer cannot edit an inquiry that isn't theirs (IDOR → 404)."""
-        with patch("app.api.webapp.market.offer_request_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_request_service") as svc:
             svc.get_offer_request.return_value = _mock_own_inquiry(client_id=999)
             resp = market_client.patch(
                 "/api/v1/webapp/market/my-requests/5", json={"quantity": "10"}
@@ -410,7 +410,7 @@ class TestEditInquiry:
     def test_patch_own_inquiry_200_and_reposts(self, market_client: TestClient):
         """Editing one's own inquiry returns 200 and re-posts to the team group."""
         own = _mock_own_inquiry(client_id=1)  # market_client's caller is id=1
-        with patch("app.api.webapp.market.offer_request_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_request_service") as svc:
             svc.get_offer_request.return_value = own
             svc.update_offer_request.return_value = (
                 own,
@@ -423,7 +423,7 @@ class TestEditInquiry:
         svc.enqueue_offer_request_to_group.assert_called_once_with(5)
 
     def test_patch_missing_inquiry_404(self, market_client: TestClient):
-        with patch("app.api.webapp.market.offer_request_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_market.offer_request_service") as svc:
             svc.get_offer_request.return_value = None
             resp = market_client.patch(
                 "/api/v1/webapp/market/my-requests/999", json={"message": "hi"}
@@ -438,14 +438,14 @@ class TestSellerOfferEdit:
     _BODY = {"product_id": 2, "qty_available": "150", "price": "1300"}
 
     def test_get_own_offer_200(self, market_client: TestClient):
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_own_offer.return_value = _mock_offer(status="approved")
             resp = market_client.get("/api/v1/webapp/seller/offers/11")
         assert resp.status_code == 200, resp.text
         assert resp.json()["id"] == 11
 
     def test_get_absent_offer_404(self, market_client: TestClient):
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_own_offer.return_value = None  # not the caller's / doesn't exist
             resp = market_client.get("/api/v1/webapp/seller/offers/999")
         assert resp.status_code == 404, resp.text
@@ -453,7 +453,7 @@ class TestSellerOfferEdit:
     def test_patch_own_offer_200_requeues_group(self, market_client: TestClient):
         """Editing a public offer re-enters moderation → re-posts to the team group."""
         offer = _mock_offer(status="pending_moderation")
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_own_offer.return_value = offer
             svc.update_offer.return_value = (offer, True)  # requeued
             resp = market_client.patch("/api/v1/webapp/seller/offers/11", json=self._BODY)
@@ -464,7 +464,7 @@ class TestSellerOfferEdit:
     def test_patch_own_offer_no_requeue_skips_group(self, market_client: TestClient):
         """Editing a draft/pending offer stays in place → no group re-notify."""
         offer = _mock_offer(status="pending_moderation")
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_own_offer.return_value = offer
             svc.update_offer.return_value = (offer, False)
             resp = market_client.patch("/api/v1/webapp/seller/offers/11", json=self._BODY)
@@ -472,7 +472,7 @@ class TestSellerOfferEdit:
         svc.enqueue_offer_group_notify.assert_not_called()
 
     def test_patch_absent_offer_404(self, market_client: TestClient):
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_own_offer.return_value = None
             resp = market_client.patch("/api/v1/webapp/seller/offers/999", json=self._BODY)
         assert resp.status_code == 404, resp.text
@@ -480,7 +480,7 @@ class TestSellerOfferEdit:
 
     def test_patch_invalid_body_422(self, market_client: TestClient):
         """Full-replacement validation still applies (price must be > 0)."""
-        with patch("app.api.webapp.seller.offer_service") as svc:
+        with patch("app.domains.marketplace.api_webapp_seller.offer_service") as svc:
             svc.get_own_offer.return_value = _mock_offer(status="approved")
             resp = market_client.patch(
                 "/api/v1/webapp/seller/offers/11",

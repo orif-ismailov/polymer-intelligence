@@ -121,7 +121,7 @@ def _fire(request_id: int) -> dict:
 
 @requires_real_db
 def test_the_gate_is_off_by_default(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import RfqPushLog  # noqa: PLC0415
+    from app.domains.marketplace.models import RfqPushLog  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
@@ -137,7 +137,7 @@ def test_the_gate_is_off_by_default(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_a_matched_supplier_is_logged_and_notified(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import RfqPushLog  # noqa: PLC0415
+    from app.domains.marketplace.models import RfqPushLog  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
     from app.services import notification_service  # noqa: PLC0415
 
@@ -172,7 +172,7 @@ def test_a_matched_supplier_is_logged_and_notified(sf) -> None:  # noqa: ANN001
 def test_running_it_twice_notifies_nobody_twice(sf) -> None:  # noqa: ANN001
     """FR-A2. The unique index is the guard, not the task's memory — so a retry
     after a crash mid-run is safe too."""
-    from app.models.marketplace import RfqPushLog  # noqa: PLC0415
+    from app.domains.marketplace.models import RfqPushLog  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
@@ -192,7 +192,7 @@ def test_running_it_twice_notifies_nobody_twice(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_top_n_caps_the_blast(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import RfqPushLog  # noqa: PLC0415
+    from app.domains.marketplace.models import RfqPushLog  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")

@@ -229,8 +229,8 @@ def archive_company_offers(
     from sqlalchemy import update
 
     from app.core.db import SessionLocal
+    from app.domains.marketplace.models import SellerOffer
     from app.models.enums import SellerOfferStatus
-    from app.models.marketplace import SellerOffer
 
     company_id = (payload or {}).get("company_id") or (int(aggregate_id) if aggregate_id else None)
     if company_id is None:

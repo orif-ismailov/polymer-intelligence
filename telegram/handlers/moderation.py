@@ -50,9 +50,9 @@ def _apply_moderation(offer_id: int, telegram_user_id: int, *, approve: bool) ->
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.marketplace import service as offer_service  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
-    from app.services import offer_service  # noqa: PLC0415
 
     with Session(engine) as session:
         offer = session.get(SellerOffer, offer_id)
@@ -181,9 +181,9 @@ def _apply_offer_request_moderation(
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
     from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
-    from app.services import offer_request_service  # noqa: PLC0415
 
     with Session(engine) as session:
         req = session.get(OfferRequest, offer_request_id)
@@ -242,7 +242,7 @@ async def on_offer_request_moderation(callback: CallbackQuery) -> None:
 
     # Approved → forward the inquiry to the seller (buyer contact withheld).
     if approve:
-        from app.services import offer_request_service  # noqa: PLC0415
+        from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
 
         offer_request_service.enqueue_offer_request_to_seller(offer_request_id)
 

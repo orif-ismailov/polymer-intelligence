@@ -113,7 +113,7 @@ def test_attach_links_the_deal_to_the_contract(sf) -> None:  # noqa: ANN001
 def test_a_contract_cannot_serve_two_deals(sf) -> None:  # noqa: ANN001
     """The partial unique index is what lets the consumer look a deal up by
     contract_id and be sure of the answer."""
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:

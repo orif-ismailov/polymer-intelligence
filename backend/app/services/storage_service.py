@@ -33,9 +33,9 @@ import secrets
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domains.marketplace.models import SellerOfferFile
 from app.models.companies import Company
 from app.models.enums import OfferFileKind, VerificationDocumentKind
-from app.models.marketplace import SellerOfferFile
 from app.models.media import CompanyMedia
 from app.models.requests import RequestFile
 from app.models.verification import VerificationDocument
