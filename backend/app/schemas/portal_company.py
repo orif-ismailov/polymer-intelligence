@@ -14,6 +14,7 @@ import uuid
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.domains.marketplace.schemas import OfferFileRef
+from app.domains.verification.schemas import CaseOut, DocumentOut
 from app.models.enums import (
     OfferAvailability,
     OfferSaleMode,
@@ -287,21 +288,10 @@ class BankAccountIn(BaseModel):
     currency: str = "UZS"
 
 
-# ── Company / verification views ──────────────────────────────────────────────
-
-
-class CheckOut(BaseModel):
-    check_type: str
-    status: str
-    detail: dict[str, object] | None = None  # user-safe subset (e.g. missing docs)
-
-
-class CaseOut(BaseModel):
-    id: int
-    case_type: str
-    status: str
-    submitted_at: datetime.datetime | None = None
-    checks: list[CheckOut] = Field(default_factory=list)
+# ── Company views ─────────────────────────────────────────────────────────────
+#
+# CheckOut/CaseOut/DocumentOut moved to app/domains/verification/schemas.py; the
+# company views below still embed them, so they are imported rather than redefined.
 
 
 class BusinessRoleOut(BaseModel):
@@ -316,15 +306,6 @@ class BankAccountOut(BaseModel):
     account_masked: str
     currency: str
     status: str
-
-
-class DocumentOut(BaseModel):
-    id: int
-    kind: str
-    mime_type: str | None = None
-    size_bytes: int | None = None
-    status: str
-    created_at: datetime.datetime
 
 
 class CompanySummaryOut(BaseModel):

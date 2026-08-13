@@ -14,10 +14,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _case_out
 from app.api.portal.deps import company_or_404
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.verification.api_portal import case_out
 from app.integrations.eimzo import ProviderUnavailable
 from app.models.accounts import UserAccount
 from app.schemas.portal_eimzo import ChallengeOut, VerifyIn, VerifyOut
@@ -72,11 +72,11 @@ def eimzo_verify(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="eimzo_unavailable"
         ) from exc
     db.commit()
-    case_out = _case_out(db, outcome.case)
-    assert case_out is not None
+    case_payload = case_out(db, outcome.case)
+    assert case_payload is not None
     return VerifyOut(
         ok=outcome.ok,
         reason=outcome.reason,
         holder_masked=outcome.holder_masked,
-        case=case_out,
+        case=case_payload,
     )

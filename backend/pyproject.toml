@@ -140,15 +140,13 @@ disallow_untyped_defs = true
 disallow_any_explicit = true
 
 [[tool.mypy.overrides]]
-# Domain service modules carry the app.services.* bar with them as each bounded
-# context moves into app/domains/<name>/ (backend domain reorg). Listed per module
-# rather than as app.domains.* so a domain's schemas keep the app.schemas.* rules
-# below instead of this stricter set.
-module = [
-    "app.domains.marketplace.service",
-    "app.domains.marketplace.requests",
-    "app.domains.marketplace.compliance",
-]
+# Domain modules carry the app.services.* bar with them as each bounded context moves
+# into app/domains/<name>/ (backend domain reorg). Global [tool.mypy] strict already
+# implies disallow_untyped_defs, but `disallow_any_explicit` is NOT part of strict —
+# without this block a service file would silently lose the explicit-Any ban simply by
+# changing directory. The schema carve-out below must stay AFTER this block: mypy
+# applies the last matching override.
+module = ["app.domains.*"]
 disallow_untyped_defs = true
 disallow_any_explicit = true
 
@@ -170,11 +168,27 @@ disallow_untyped_defs = true
 disallow_any_explicit = false
 
 [[tool.mypy.overrides]]
-# Same carve-out as app.schemas.* above, for schema modules that have moved into a
-# domain folder (backend domain reorg).
+# Same pydantic carve-out as app.schemas.* above, for schema modules that have moved
+# into a domain folder. Must come AFTER the app.domains.* block — mypy applies the
+# last matching override, so this is what relaxes explicit-Any back off for schemas.
+# The second entry is listed by name because mypy's module patterns wildcard whole
+# components: `app.domains.*.schemas` does not match `...portal_market_schemas`.
 module = [
-    "app.domains.marketplace.schemas",
+    "app.domains.*.schemas",
     "app.domains.marketplace.portal_market_schemas",
+]
+disallow_untyped_defs = true
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+# ORM models, same placement rule as the schemas block above. A JSONB column is typed
+# `Mapped[dict[str, Any]]` — that is the shape SQLAlchemy gives you, not a lazy
+# annotation. These modules sat in app/models/ under no explicit-Any ban before the
+# domain reorg, and moving a file between directories must not change what the type
+# checker demands of it.
+module = [
+    "app.domains.*.models",
+    "app.domains.verification.registry_models",
 ]
 disallow_untyped_defs = true
 disallow_any_explicit = false

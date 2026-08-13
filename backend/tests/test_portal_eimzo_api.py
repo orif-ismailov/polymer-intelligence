@@ -53,7 +53,7 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     clean(engine)
     session = session_factory(engine)
     fake_redis = FakeRedis()
-    monkeypatch.setattr("app.services.verification_service._dispatch_checks", lambda case_id: None)
+    monkeypatch.setattr("app.domains.verification.service._dispatch_checks", lambda case_id: None)
 
     app = create_app()
 
@@ -76,7 +76,8 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
 
 def _seed_company(session, phone: str, tax: str = "301234567"):  # noqa: ANN001, ANN202
     from app.core.security import create_portal_access_token  # noqa: PLC0415
-    from app.services import company_service, verification_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
 
     with session() as db:
         account = make_account(db, phone)

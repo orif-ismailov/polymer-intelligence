@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from app.schemas.portal_company import CaseOut
+from app.domains.verification.schemas import CaseOut
 
 
 class ChallengeOut(BaseModel):

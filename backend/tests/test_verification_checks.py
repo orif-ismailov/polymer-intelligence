@@ -27,8 +27,8 @@ def _bank(mfo: str = "00014", number: str = "20208000900040041234"):  # noqa: AN
 
 
 def _doc(kind, status=None):  # noqa: ANN001, ANN202
+    from app.domains.verification.models import VerificationDocument  # noqa: PLC0415
     from app.models.enums import DocumentReviewStatus  # noqa: PLC0415
-    from app.models.verification import VerificationDocument  # noqa: PLC0415
 
     return VerificationDocument(
         kind=kind,
@@ -53,7 +53,7 @@ def _doc(kind, status=None):  # noqa: ANN001, ANN202
     ],
 )
 def test_check_tax_id_format(jurisdiction: str, tax_id: str, expected: str) -> None:
-    from app.services.verification_checks import check_tax_id_format  # noqa: PLC0415
+    from app.domains.verification.checks import check_tax_id_format  # noqa: PLC0415
 
     result = check_tax_id_format(_company(jurisdiction, tax_id))
     assert result.status.value == expected
@@ -63,7 +63,7 @@ def test_check_tax_id_format(jurisdiction: str, tax_id: str, expected: str) -> N
 
 
 def test_bank_requisites_no_account_is_warning() -> None:
-    from app.services.verification_checks import check_bank_requisites  # noqa: PLC0415
+    from app.domains.verification.checks import check_bank_requisites  # noqa: PLC0415
 
     result = check_bank_requisites(_company(), [])
     assert result.status.value == "warning"
@@ -71,7 +71,7 @@ def test_bank_requisites_no_account_is_warning() -> None:
 
 
 def test_bank_requisites_valid_account_passes() -> None:
-    from app.services.verification_checks import check_bank_requisites  # noqa: PLC0415
+    from app.domains.verification.checks import check_bank_requisites  # noqa: PLC0415
 
     result = check_bank_requisites(_company(), [_bank()])
     assert result.status.value == "passed"
@@ -79,7 +79,7 @@ def test_bank_requisites_valid_account_passes() -> None:
 
 
 def test_bank_requisites_bad_mfo_and_length_fail_without_leaking_number() -> None:
-    from app.services.verification_checks import check_bank_requisites  # noqa: PLC0415
+    from app.domains.verification.checks import check_bank_requisites  # noqa: PLC0415
 
     result = check_bank_requisites(
         _company(), [_bank(mfo="123", number="123456789")]  # short MFO + short number
@@ -95,7 +95,7 @@ def test_bank_requisites_bad_mfo_and_length_fail_without_leaking_number() -> Non
 
 
 def test_documents_registration_certificate_always_required() -> None:
-    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
 
     result = check_documents_complete(_company(), [], [], has_bank_account=False)
     assert result.status.value == "failed"
@@ -103,8 +103,8 @@ def test_documents_registration_certificate_always_required() -> None:
 
 
 def test_documents_reg_cert_only_passes_without_bank() -> None:
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
     from app.models.enums import VerificationDocumentKind  # noqa: PLC0415
-    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
 
     docs = [_doc(VerificationDocumentKind.registration_certificate)]
     result = check_documents_complete(_company(), docs, [], has_bank_account=False)
@@ -113,7 +113,7 @@ def test_documents_reg_cert_only_passes_without_bank() -> None:
 
 def test_documents_eimzo_supersedes_registration_certificate() -> None:
     # R3 TA1.5: a passed E-IMZO signature drops the reg-cert requirement.
-    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
 
     result = check_documents_complete(
         _company(), [], [], has_bank_account=False, eimzo_passed=True
@@ -125,7 +125,7 @@ def test_documents_eimzo_supersedes_registration_certificate() -> None:
 
 def test_documents_eimzo_does_not_relax_bank_letter() -> None:
     # bank_letter rule is unchanged by E-IMZO (TA1.5).
-    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
 
     result = check_documents_complete(
         _company(), [], [], has_bank_account=True, eimzo_passed=True
@@ -135,8 +135,8 @@ def test_documents_eimzo_does_not_relax_bank_letter() -> None:
 
 
 def test_documents_bank_letter_required_when_bank_present() -> None:
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
     from app.models.enums import VerificationDocumentKind  # noqa: PLC0415
-    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
 
     docs = [_doc(VerificationDocumentKind.registration_certificate)]
     result = check_documents_complete(_company(), docs, [], has_bank_account=True)
@@ -149,8 +149,8 @@ def test_documents_bank_letter_required_when_bank_present() -> None:
 
 
 def test_documents_role_specific_requirements() -> None:
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole, VerificationDocumentKind  # noqa: PLC0415
-    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
 
     docs = [_doc(VerificationDocumentKind.registration_certificate)]
     # insurance_provider needs a license
@@ -168,8 +168,8 @@ def test_documents_role_specific_requirements() -> None:
 
 
 def test_documents_rejected_docs_do_not_count() -> None:
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
     from app.models.enums import DocumentReviewStatus, VerificationDocumentKind  # noqa: PLC0415
-    from app.services.verification_checks import check_documents_complete  # noqa: PLC0415
 
     docs = [_doc(VerificationDocumentKind.registration_certificate, DocumentReviewStatus.rejected)]
     result = check_documents_complete(_company(), docs, [], has_bank_account=False)
@@ -177,6 +177,6 @@ def test_documents_rejected_docs_do_not_count() -> None:
 
 
 def test_manual_kyb_is_pending() -> None:
-    from app.services.verification_checks import check_manual_kyb  # noqa: PLC0415
+    from app.domains.verification.checks import check_manual_kyb  # noqa: PLC0415
 
     assert check_manual_kyb().status.value == "pending"

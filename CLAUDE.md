@@ -63,10 +63,10 @@ uv sync --frozen --extra dev        # install exact locked deps (uv.lock is auth
 # CI gates (must pass — see .github/workflows/ci.yml):
 ruff check .                         # lint
 # type-check (scoped to services/ + schemas/, plus the domain folders already migrated)
-mypy app/services app/domains/marketplace/service.py app/domains/marketplace/requests.py \
-     app/domains/marketplace/compliance.py --ignore-missing-imports
-mypy app/schemas  app/domains/marketplace/schemas.py \
-     app/domains/marketplace/portal_market_schemas.py --ignore-missing-imports
+mypy app/services app/domains/marketplace/{service,requests,compliance}.py \
+     app/domains/verification/{service,checks,registry}.py --ignore-missing-imports
+mypy app/schemas  app/domains/marketplace/{schemas,portal_market_schemas}.py \
+     app/domains/verification/schemas.py --ignore-missing-imports
 pytest tests/ -q                     # full backend suite
 
 # Single test / file / pattern:

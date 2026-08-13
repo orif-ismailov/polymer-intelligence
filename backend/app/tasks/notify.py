@@ -1069,8 +1069,12 @@ def send_verification_case_to_group(
     from telegram.bot import bot, verification_moderation_keyboard  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.verification.models import (
+        VerificationCase,
+        VerificationCheck,
+        VerificationDocument,
+    )
     from app.models.companies import Company  # noqa: PLC0415
-    from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
 
     try:
         with Session(engine) as session:

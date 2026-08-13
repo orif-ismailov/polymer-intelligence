@@ -10,29 +10,28 @@ requirements only (no reviewer identity or internals).
 from __future__ import annotations
 
 import redis
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404, rate_limited, require_company_admin
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.verification import service as verification_service
+from app.domains.verification.api_portal import case_out, latest_case
+from app.domains.verification.models import (
+    VerificationDocument,
+)
 from app.models.accounts import UserAccount
 from app.models.companies import Company, CompanyBankAccount
 from app.models.enums import (
     BankAccountStatus,
     CompanyBusinessRole,
-    DocumentReviewStatus,
-    VerificationDocumentKind,
 )
-from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
 from app.schemas.portal_company import (
     BankAccountIn,
     BankAccountOut,
     BusinessRoleOut,
-    CaseOut,
-    CheckOut,
     CompanyCreateIn,
     CompanyDetailOut,
     CompanyMediaOut,
@@ -51,7 +50,6 @@ from app.services import (
     rate_limit,
     review_service,
     storage_service,
-    verification_service,
 )
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-companies"])
@@ -60,40 +58,8 @@ router = APIRouter(prefix="/portal/companies", tags=["portal-companies"])
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 
-def _check_out(check: VerificationCheck) -> CheckOut:
-    # check.result is user-safe by construction (missing kinds, reasons, masked last4).
-    return CheckOut(check_type=str(check.check_type), status=str(check.status), detail=check.result)
-
-
-def _case_out(db: Session, case: VerificationCase | None) -> CaseOut | None:
-    if case is None:
-        return None
-    checks = (
-        db.query(VerificationCheck)
-        .filter(VerificationCheck.case_id == case.id)
-        .order_by(VerificationCheck.id)
-        .all()
-    )
-    return CaseOut(
-        id=case.id,
-        case_type=str(case.case_type),
-        status=str(case.status),
-        submitted_at=case.submitted_at,
-        checks=[_check_out(c) for c in checks],
-    )
-
-
-def _latest_case(db: Session, company_id: int) -> VerificationCase | None:
-    return (
-        db.query(VerificationCase)
-        .filter(VerificationCase.company_id == company_id)
-        .order_by(VerificationCase.id.desc())
-        .first()
-    )
-
-
 def _summary_out(db: Session, company: Company) -> CompanySummaryOut:
-    active = verification_service._open_case_for(db, company.id)
+    active = verification_service.open_case_for(db, company.id)
     return CompanySummaryOut(
         id=company.id,
         public_id=company.public_id,
@@ -107,7 +73,7 @@ def _summary_out(db: Session, company: Company) -> CompanySummaryOut:
         cover_url=storage_service.presign_company_cover(company),
         confirmed_roles=directory_service.confirmed_roles(company),
         declared_roles=directory_service.active_roles(company),
-        active_case=_case_out(db, active),
+        active_case=case_out(db, active),
     )
 
 
@@ -171,7 +137,7 @@ def _detail_out(db: Session, company: Company) -> CompanyDetailOut:
             )
             for d in documents
         ],
-        case=_case_out(db, _latest_case(db, company.id)),
+        case=case_out(db, latest_case(db, company.id)),
     )
 
 
@@ -565,111 +531,3 @@ async def upload_media(
         mime_type=media.mime_type,
         size_bytes=media.size_bytes,
     )
-
-
-@router.post("/{company_id}/documents", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
-async def upload_document(
-    company_id: int,
-    kind: str = Form(...),
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
-) -> DocumentOut:
-    company = company_or_404(db, account, company_id)
-    try:
-        rate_limit.enforce_daily(
-            redis_client, "doc_upload", account.id, rate_limit.DOCUMENT_UPLOAD_PER_DAY
-        )
-    except rate_limit.RateLimited as exc:
-        raise rate_limited(exc) from exc
-    try:
-        doc_kind = VerificationDocumentKind(kind)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unknown document kind") from exc
-    content = await file.read()
-    try:
-        document = storage_service.upload_verification_document(
-            db, company, account.id, doc_kind, content, file.filename or "upload"
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
-    db.commit()
-    return DocumentOut(
-        id=document.id, kind=str(document.kind), mime_type=document.mime_type,
-        size_bytes=document.size_bytes, status=str(document.status), created_at=document.created_at,
-    )
-
-
-@router.get("/{company_id}/documents/{document_id}/download")
-def download_document(
-    company_id: int,
-    document_id: int,
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-) -> RedirectResponse:
-    company = company_or_404(db, account, company_id)
-    document = _document_or_404(db, company.id, document_id)
-    url = storage_service.presign_verification_document(document, ttl=600)
-    return RedirectResponse(url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-
-
-@router.delete("/{company_id}/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_document(
-    company_id: int,
-    document_id: int,
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-) -> None:
-    company = company_or_404(db, account, company_id)
-    document = _document_or_404(db, company.id, document_id)
-    if document.status != DocumentReviewStatus.pending_review:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Document already reviewed")
-    db.delete(document)
-    db.commit()
-
-
-def _document_or_404(db: Session, company_id: int, document_id: int) -> VerificationDocument:
-    document = (
-        db.query(VerificationDocument)
-        .filter(VerificationDocument.id == document_id, VerificationDocument.company_id == company_id)
-        .first()
-    )
-    if document is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
-    return document
-
-
-# ── verification ──────────────────────────────────────────────────────────────
-
-
-@router.post("/{company_id}/verification/submit", response_model=CaseOut)
-def submit_verification(
-    company_id: int,
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-) -> CaseOut:
-    company = company_or_404(db, account, company_id)
-    try:
-        case = verification_service.submit_case(db, company, account)
-    except verification_service.NoOpenCase as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No open case") from exc
-    except verification_service.CaseNotSubmittable as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Case not submittable") from exc
-    db.commit()
-    out = _case_out(db, case)
-    assert out is not None
-    return out
-
-
-@router.get("/{company_id}/verification", response_model=CaseOut)
-def get_verification(
-    company_id: int,
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-) -> CaseOut:
-    company = company_or_404(db, account, company_id)
-    out = _case_out(db, _latest_case(db, company.id))
-    if out is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No verification case")
-    return out

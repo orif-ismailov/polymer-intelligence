@@ -67,8 +67,8 @@ def _snapshot_payload():  # noqa: ANN202
 
 @requires_real_db
 def test_a_manual_snapshot_carries_its_author(sf) -> None:  # noqa: ANN001
-    from app.models.registry import SNAPSHOT_SOURCE_MANUAL  # noqa: PLC0415
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
+    from app.domains.verification.registry_models import SNAPSHOT_SOURCE_MANUAL  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -94,8 +94,8 @@ def test_a_manual_snapshot_carries_its_author(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_an_automatic_snapshot_has_no_author(sf) -> None:  # noqa: ANN001
     """Nobody asserted it — the registry did."""
-    from app.models.registry import SNAPSHOT_SOURCE_REGISTRY  # noqa: PLC0415
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
+    from app.domains.verification.registry_models import SNAPSHOT_SOURCE_REGISTRY  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -109,8 +109,8 @@ def test_an_automatic_snapshot_has_no_author(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_recording_is_audited_in_the_same_transaction(sf) -> None:  # noqa: ANN001
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
     from app.models.staff import AuditLog  # noqa: PLC0415
-    from app.services import registry_service  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -129,7 +129,7 @@ def test_recording_is_audited_in_the_same_transaction(sf) -> None:  # noqa: ANN0
 @requires_real_db
 def test_an_unknown_kind_is_refused_before_the_database_sees_it(sf) -> None:  # noqa: ANN001
     """The CHECK is the backstop; the typed error is the message an operator reads."""
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -142,7 +142,7 @@ def test_an_unknown_kind_is_refused_before_the_database_sees_it(sf) -> None:  # 
 
 @requires_real_db
 def test_an_unknown_source_is_refused(sf) -> None:  # noqa: ANN001
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -157,7 +157,7 @@ def test_an_unknown_source_is_refused(sf) -> None:  # noqa: ANN001
 def test_a_caller_supplied_observation_time_is_kept(sf) -> None:  # noqa: ANN001
     """An operator may transcribe a page they read yesterday; `fetched_at` is
     when the observation happened, `created_at` is when we wrote it down."""
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
 
     observed = datetime.datetime(2026, 7, 1, 9, 30, tzinfo=datetime.UTC)
     with sf() as db:
@@ -176,8 +176,8 @@ def test_a_caller_supplied_observation_time_is_kept(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_re_checking_appends_history_and_latest_wins(sf) -> None:  # noqa: ANN001
-    from app.models.registry import RegistrySnapshot  # noqa: PLC0415
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
+    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -200,7 +200,7 @@ def test_re_checking_appends_history_and_latest_wins(sf) -> None:  # noqa: ANN00
 
 @requires_real_db
 def test_latest_is_per_kind(sf) -> None:  # noqa: ANN001
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -221,7 +221,7 @@ def test_latest_is_per_kind(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_latest_for_a_company_with_nothing_recorded_is_none(sf) -> None:  # noqa: ANN001
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -235,8 +235,8 @@ def test_latest_for_a_company_with_nothing_recorded_is_none(sf) -> None:  # noqa
 @requires_real_db
 def test_an_unreachable_registry_records_nothing_and_does_not_raise(sf) -> None:  # noqa: ANN001
     """The R1 invariant: provider unavailability never blocks the manual path."""
-    from app.models.registry import RegistrySnapshot  # noqa: PLC0415
-    from app.services import registry_service  # noqa: PLC0415
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
+    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
 
     with sf() as db:
         company = _company(db)
@@ -252,8 +252,8 @@ def test_an_unreachable_registry_records_nothing_and_does_not_raise(sf) -> None:
 def test_a_reachable_registry_is_recorded_as_source_registry(sf) -> None:  # noqa: ANN001
     from unittest.mock import patch  # noqa: PLC0415
 
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
     from app.integrations.gov_registry import CompanySnapshot  # noqa: PLC0415
-    from app.services import registry_service  # noqa: PLC0415
 
     class _Live:
         def lookup_company(self, inn: str) -> CompanySnapshot:
@@ -285,8 +285,8 @@ def test_a_reachable_registry_is_recorded_as_source_registry(sf) -> None:  # noq
 def test_the_licences_lookup_records_a_list(sf) -> None:  # noqa: ANN001
     from unittest.mock import patch  # noqa: PLC0415
 
+    from app.domains.verification import registry as registry_service  # noqa: PLC0415
     from app.integrations.gov_registry import LicenseSnapshot  # noqa: PLC0415
-    from app.services import registry_service  # noqa: PLC0415
 
     class _Live:
         def lookup_company(self, inn: str):  # noqa: ANN202

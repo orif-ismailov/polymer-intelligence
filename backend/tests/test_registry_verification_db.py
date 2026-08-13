@@ -59,7 +59,8 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _submit(db, monkeypatch=None, phone="+998900000001", tax="301234567"):  # noqa: ANN001, ANN202
-    from app.services import company_service, verification_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
 
     account = make_account(db, phone)
     company = company_service.create_company(db, account, "UZ", tax)
@@ -72,7 +73,7 @@ def _submit(db, monkeypatch=None, phone="+998900000001", tax="301234567"):  # no
 
 
 def _check_types(db, case_id) -> set[str]:  # noqa: ANN001
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
 
     return {
         c.check_type.value
@@ -82,8 +83,8 @@ def _check_types(db, case_id) -> set[str]:  # noqa: ANN001
 
 def _resolve_automated(db, case_id, status) -> None:  # noqa: ANN001
     """Put every non-manual check into `status` (the R1 helper, reused)."""
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import VerificationCheckType  # noqa: PLC0415
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
 
     for check in db.query(VerificationCheck).filter(VerificationCheck.case_id == case_id).all():
         if check.check_type != VerificationCheckType.manual_kyb:
@@ -97,13 +98,13 @@ def _resolve_automated(db, case_id, status) -> None:  # noqa: ANN001
 @requires_real_db
 def test_an_unavailable_check_with_retries_left_still_holds_the_case(sf) -> None:  # noqa: ANN001
     """Mid-retry is genuinely "not finished" — the case must wait."""
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         VerificationCaseStatus,
         VerificationCheckStatus,
         VerificationCheckType,
     )
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         _account, _company, case = _submit(db)
@@ -132,13 +133,13 @@ def test_an_exhausted_unavailable_check_no_longer_pins_the_case(sf) -> None:  # 
     """The R1 latent bug: five failed attempts used to lock the case in
     `checks_running`, where `approve()` cannot reach it — so a dead provider
     silently disabled the manual path it was supposed to leave open."""
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         VerificationCaseStatus,
         VerificationCheckStatus,
         VerificationCheckType,
     )
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         _account, _company, case = _submit(db)
@@ -167,13 +168,13 @@ def test_an_exhausted_unavailable_check_no_longer_pins_the_case(sf) -> None:  # 
 @requires_real_db
 def test_a_case_a_dead_provider_left_behind_can_be_approved(sf) -> None:  # noqa: ANN001
     """The invariant end to end: manual verification still completes."""
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         CompanyStatus,
         VerificationCheckStatus,
         VerificationCheckType,
     )
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         _account, company, case = _submit(db)
@@ -203,7 +204,7 @@ def test_a_case_a_dead_provider_left_behind_can_be_approved(sf) -> None:  # noqa
 @requires_real_db
 def test_the_retry_budget_is_one_number_in_one_place(sf) -> None:  # noqa: ANN001
     """The task's `max_retries` and the evaluator's cut-off must not drift."""
-    from app.services import verification_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.tasks.verification import run_single_check  # noqa: PLC0415
 
     assert run_single_check.max_retries == verification_service.MAX_CHECK_ATTEMPTS
@@ -298,7 +299,7 @@ _PNG = (
 
 
 def test_the_route_is_registered() -> None:
-    from app.api.admin_verification import router  # noqa: PLC0415
+    from app.domains.verification.api_admin import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/verification/cases/{case_id}/registry-check" in paths
@@ -306,9 +307,9 @@ def test_the_route_is_registered() -> None:
 
 @requires_real_db
 def test_an_operator_records_a_company_check_and_the_case_reevaluates(api) -> None:  # noqa: ANN001
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
+    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
     from app.models.enums import VerificationCheckStatus  # noqa: PLC0415
-    from app.models.registry import RegistrySnapshot  # noqa: PLC0415
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
 
     client, session = api
     scene = _case(session)
@@ -350,11 +351,11 @@ def test_an_operator_records_a_company_check_and_the_case_reevaluates(api) -> No
 
 @requires_real_db
 def test_a_liquidated_company_fails_the_check_and_the_case_needs_info(api) -> None:  # noqa: ANN001
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         VerificationCaseStatus,
         VerificationCheckStatus,
     )
-    from app.models.verification import VerificationCase  # noqa: PLC0415
 
     client, session = api
     scene = _case(session)
@@ -381,7 +382,7 @@ def test_a_liquidated_company_fails_the_check_and_the_case_needs_info(api) -> No
 
 @requires_real_db
 def test_a_vat_check_records_the_certificate(api) -> None:  # noqa: ANN001
-    from app.models.registry import RegistrySnapshot  # noqa: PLC0415
+    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
 
     client, session = api
     scene = _case(session)
@@ -417,7 +418,7 @@ def test_a_company_that_is_not_a_vat_payer_is_a_warning(api) -> None:  # noqa: A
 @requires_real_db
 def test_a_screenshot_is_stored_with_its_hash(api) -> None:  # noqa: ANN001
     """The operator's evidence gets the same treatment as a PKCS#7."""
-    from app.models.registry import RegistrySnapshot  # noqa: PLC0415
+    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
 
     client, session = api
     scene = _case(session)
@@ -444,7 +445,7 @@ def test_a_screenshot_is_stored_with_its_hash(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_an_unacceptable_screenshot_is_refused(api) -> None:  # noqa: ANN001
-    from app.models.registry import RegistrySnapshot  # noqa: PLC0415
+    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
 
     client, session = api
     scene = _case(session)
@@ -464,7 +465,7 @@ def test_an_unacceptable_screenshot_is_refused(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_re_checking_appends_a_second_snapshot(api) -> None:  # noqa: ANN001
-    from app.models.registry import RegistrySnapshot  # noqa: PLC0415
+    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
 
     client, session = api
     scene = _case(session)

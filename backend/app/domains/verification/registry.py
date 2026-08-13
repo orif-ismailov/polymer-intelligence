@@ -32,9 +32,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
-from app.integrations import gov_registry
-from app.models.companies import Company
-from app.models.registry import (
+from app.domains.verification.registry_models import (
     SNAPSHOT_KIND_COMPANY,
     SNAPSHOT_KIND_LICENSES,
     SNAPSHOT_KIND_VAT,
@@ -44,6 +42,8 @@ from app.models.registry import (
     SNAPSHOT_SOURCES,
     RegistrySnapshot,
 )
+from app.integrations import gov_registry
+from app.models.companies import Company
 from app.services import audit_service
 
 logger = logging.getLogger(__name__)

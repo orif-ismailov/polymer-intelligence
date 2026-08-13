@@ -48,7 +48,6 @@ from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
 from app.api.admin_substances import router as admin_substances_router
 from app.api.admin_users import router as admin_users_router
-from app.api.admin_verification import router as admin_verification_router
 from app.api.alert_rules import alerts_router
 from app.api.alert_rules import router as alert_rules_router
 from app.api.auth import router as auth_router
@@ -95,6 +94,8 @@ from app.domains.marketplace.api_portal_inquiries import router as portal_inquir
 from app.domains.marketplace.api_portal_market import router as portal_market_router
 from app.domains.marketplace.api_webapp_market import router as webapp_market_router
 from app.domains.marketplace.api_webapp_seller import router as webapp_seller_router
+from app.domains.verification.api_admin import router as admin_verification_router
+from app.domains.verification.api_portal import router as portal_verification_router
 from app.models.staff import StaffUser
 
 logger = logging.getLogger(__name__)
@@ -242,6 +243,10 @@ def create_app() -> FastAPI:
     application.include_router(portal_lab_router, prefix="/api/v1")
     application.include_router(portal_samples_router, prefix="/api/v1")
     application.include_router(portal_companies_router, prefix="/api/v1")
+    # Applicant-side verification, split out of the companies router (P2). Its paths
+    # all sit one segment below /portal/companies/{company_id}, so they can neither
+    # shadow nor be shadowed by that param route — position here is not load-bearing.
+    application.include_router(portal_verification_router, prefix="/api/v1")
     application.include_router(portal_eimzo_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
     application.include_router(portal_market_router, prefix="/api/v1")

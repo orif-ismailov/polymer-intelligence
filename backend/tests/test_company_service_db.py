@@ -106,8 +106,8 @@ def test_membership_isolation_returns_not_found_for_non_member(sf) -> None:  # n
 
 @requires_real_db
 def test_update_profile_gating(sf) -> None:  # noqa: ANN001
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
-    from app.models.verification import VerificationCase  # noqa: PLC0415
     from app.services import company_service  # noqa: PLC0415
 
     with sf() as db:

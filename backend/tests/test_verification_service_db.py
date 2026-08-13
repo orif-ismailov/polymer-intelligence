@@ -44,7 +44,7 @@ def _company(db, phone="+998900000001", tax="123456789"):  # noqa: ANN001, ANN20
 
 
 def _submit(db, monkeypatch, phone="+998900000001", tax="123456789"):  # noqa: ANN001, ANN202
-    from app.services import verification_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
 
     account, company = _company(db, phone, tax)
     verification_service.open_case(db, company)
@@ -54,8 +54,8 @@ def _submit(db, monkeypatch, phone="+998900000001", tax="123456789"):  # noqa: A
 
 
 def _set_automated(db, case_id, status) -> None:  # noqa: ANN001
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import VerificationCheckType  # noqa: PLC0415
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
 
     checks = db.query(VerificationCheck).filter(VerificationCheck.case_id == case_id).all()
     for check in checks:
@@ -69,8 +69,8 @@ def _set_automated(db, case_id, status) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_open_case_only_for_draft_or_rejected(sf) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         _account, company = _company(db)
@@ -92,9 +92,9 @@ def test_open_case_only_for_draft_or_rejected(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_submit_case_spawns_checks_and_transitions_company(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
     from app.services import event_types  # noqa: PLC0415
 
     with sf() as db:
@@ -126,8 +126,8 @@ def test_submit_case_spawns_checks_and_transitions_company(sf, monkeypatch) -> N
 
 @requires_real_db
 def test_evaluator_failed_check_moves_to_needs_info(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import VerificationCaseStatus, VerificationCheckStatus  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         _account, _company, case = _submit(db, monkeypatch)
@@ -139,8 +139,8 @@ def test_evaluator_failed_check_moves_to_needs_info(sf, monkeypatch) -> None:  #
 
 @requires_real_db
 def test_evaluator_pending_check_stays_checks_running(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import VerificationCaseStatus  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         _account, _company, case = _submit(db, monkeypatch)
@@ -152,8 +152,8 @@ def test_evaluator_pending_check_stays_checks_running(sf, monkeypatch) -> None: 
 
 @requires_real_db
 def test_evaluator_all_pass_goes_pending_review(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import VerificationCaseStatus, VerificationCheckStatus  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         _account, _company, case = _submit(db, monkeypatch)
@@ -165,6 +165,7 @@ def test_evaluator_all_pass_goes_pending_review(sf, monkeypatch) -> None:  # noq
 
 @requires_real_db
 def test_evaluator_auto_approve_verifies_company(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.companies import Company  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         CompanyStatus,
@@ -172,7 +173,7 @@ def test_evaluator_auto_approve_verifies_company(sf, monkeypatch) -> None:  # no
         VerificationCheckStatus,
     )
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.services import event_types, settings_service, verification_service  # noqa: PLC0415
+    from app.services import event_types, settings_service  # noqa: PLC0415
 
     with sf() as db:
         settings_service.set_many(db, {"verification_auto_approve": True}, None)
@@ -199,8 +200,8 @@ def test_evaluator_auto_approve_verifies_company(sf, monkeypatch) -> None:  # no
 
 
 def _case_in_pending_review(db, monkeypatch, phone, tax):  # noqa: ANN001, ANN202
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import VerificationCheckStatus  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     _account, company, case = _submit(db, monkeypatch, phone, tax)
     _set_automated(db, case.id, VerificationCheckStatus.passed)
@@ -211,9 +212,9 @@ def _case_in_pending_review(db, monkeypatch, phone, tax):  # noqa: ANN001, ANN20
 
 @requires_real_db
 def test_approve_verifies_company_and_sets_reverification(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.companies import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         company, case = _case_in_pending_review(db, monkeypatch, "+998900000001", "123456789")
@@ -230,8 +231,8 @@ def test_approve_verifies_company_and_sets_reverification(sf, monkeypatch) -> No
 
 @requires_real_db
 def test_double_approve_across_sessions_is_idempotent(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.models.verification import VerificationCase  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
 
     with sf() as db:
         staff_id = make_staff(db).id
@@ -253,9 +254,9 @@ def test_double_approve_across_sessions_is_idempotent(sf, monkeypatch) -> None: 
 
 @requires_real_db
 def test_reject_and_request_info(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.companies import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         staff_id = make_staff(db, "a@example.com").id
@@ -293,9 +294,9 @@ def _role_rows(db, company_id):  # noqa: ANN001, ANN202
 
 @requires_real_db
 def test_approve_confirms_declared_roles(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         staff_id = make_staff(db).id
@@ -311,9 +312,10 @@ def test_approve_confirms_declared_roles(sf, monkeypatch) -> None:  # noqa: ANN0
 
 @requires_real_db
 def test_auto_approve_confirms_declared_roles(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, VerificationCheckStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
-    from app.services import settings_service, verification_service  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
     with sf() as db:
         settings_service.set_many(db, {"verification_auto_approve": True}, None)
@@ -330,9 +332,9 @@ def test_auto_approve_confirms_declared_roles(sf, monkeypatch) -> None:  # noqa:
 
 @requires_real_db
 def test_reject_leaves_roles_declared(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         staff_id = make_staff(db).id
@@ -347,13 +349,13 @@ def test_reject_leaves_roles_declared(sf, monkeypatch) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_waive_check_requires_reason_and_reevaluates(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         VerificationCaseStatus,
         VerificationCheckStatus,
         VerificationCheckType,
     )
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
 
     with sf() as db:
         staff_id = make_staff(db).id

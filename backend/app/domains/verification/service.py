@@ -24,6 +24,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.domains.verification.models import VerificationCase, VerificationCheck
 from app.models.accounts import UserAccount
 from app.models.companies import Company, CompanyBusinessRole
 from app.models.enums import (
@@ -34,7 +35,6 @@ from app.models.enums import (
     VerificationCheckStatus,
     VerificationCheckType,
 )
-from app.models.verification import VerificationCase, VerificationCheck
 from app.services import (
     audit_service,
     company_service,
@@ -112,7 +112,7 @@ class WaiveReasonRequired(Exception):
 # ── Case lifecycle ────────────────────────────────────────────────────────────
 
 
-def _open_case_for(db: Session, company_id: int) -> VerificationCase | None:
+def open_case_for(db: Session, company_id: int) -> VerificationCase | None:
     return (
         db.query(VerificationCase)
         .filter(
@@ -155,7 +155,7 @@ def open_case(
 
 def submit_case(db: Session, company: Company, account: UserAccount) -> VerificationCase:
     """(Re)spawn the R1 checks, move the case to checks_running, dispatch the verify task."""
-    case = _open_case_for(db, company.id)
+    case = open_case_for(db, company.id)
     if case is None:
         raise NoOpenCase(str(company.id))
     if case.status not in {VerificationCaseStatus.draft, VerificationCaseStatus.needs_info}:

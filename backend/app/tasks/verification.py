@@ -16,9 +16,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.domains.verification.checks import CheckResult
+from app.domains.verification.service import MAX_CHECK_ATTEMPTS
 from app.services import company_service
-from app.services.verification_checks import CheckResult
-from app.services.verification_service import MAX_CHECK_ATTEMPTS
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -31,10 +31,14 @@ _CONTENTION_RETRY_SECONDS = 2
 
 def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-layer glue
     """Execute the pure check function for `check`, gathering its inputs from the DB."""
+    from app.domains.verification import checks as verification_checks
+    from app.domains.verification.models import (
+        VerificationCase,
+        VerificationCheck,
+        VerificationDocument,
+    )
     from app.models.companies import Company, CompanyBankAccount, CompanyBusinessRole
     from app.models.enums import VerificationCheckStatus, VerificationCheckType
-    from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
-    from app.services import verification_checks
 
     case = db.get(VerificationCase, check.case_id)
     company = db.get(Company, case.company_id)
@@ -95,8 +99,11 @@ def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-lay
         VerificationCheckType.gov_registry,
         VerificationCheckType.vat_status,
     }:
-        from app.models.registry import SNAPSHOT_KIND_COMPANY, SNAPSHOT_KIND_VAT
-        from app.services import registry_service
+        from app.domains.verification import registry as registry_service
+        from app.domains.verification.registry_models import (
+            SNAPSHOT_KIND_COMPANY,
+            SNAPSHOT_KIND_VAT,
+        )
 
         kind = (
             SNAPSHOT_KIND_COMPANY
@@ -125,9 +132,10 @@ def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celer
     from sqlalchemy.exc import OperationalError
 
     from app.core.db import SessionLocal
+    from app.domains.verification import service as verification_service
+    from app.domains.verification.models import VerificationCheck
     from app.models.enums import VerificationCheckStatus
-    from app.models.verification import VerificationCheck
-    from app.services import event_service, event_types, verification_service
+    from app.services import event_service, event_types
 
     try:
         with SessionLocal() as db:
@@ -188,8 +196,8 @@ def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celer
 def run_verification_checks(case_id: int) -> dict[str, Any]:
     """Dispatch run_single_check for every pending check of a case (verify queue)."""
     from app.core.db import SessionLocal
+    from app.domains.verification.models import VerificationCheck
     from app.models.enums import VerificationCheckStatus
-    from app.models.verification import VerificationCheck
 
     with SessionLocal() as db:
         check_ids = [

@@ -132,7 +132,7 @@ class TestRegistrySnapshots:
 
     def test_the_three_kinds_are_the_three_lookups(self) -> None:
         """One kind per `GovRegistryClient` method — company, licences, VAT."""
-        from app.models.registry import SNAPSHOT_KINDS  # noqa: PLC0415
+        from app.domains.verification.registry_models import SNAPSHOT_KINDS  # noqa: PLC0415
 
         assert set(SNAPSHOT_KINDS) == {"company", "licenses", "vat"}
 

@@ -40,8 +40,8 @@ def test_png_is_now_accepted() -> None:
 def test_upload_verification_document_stores_sha256_and_safe_key() -> None:
     import hashlib
 
+    from app.domains.verification.models import VerificationDocument  # noqa: PLC0415
     from app.models.enums import VerificationDocumentKind  # noqa: PLC0415
-    from app.models.verification import VerificationDocument  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
 
     db = _db(existing_docs=0)
@@ -93,7 +93,7 @@ def test_upload_enforces_per_company_cap() -> None:
 
 
 def test_presign_returns_url() -> None:
-    from app.models.verification import VerificationDocument  # noqa: PLC0415
+    from app.domains.verification.models import VerificationDocument  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
 
     document = VerificationDocument(

@@ -60,7 +60,8 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 @requires_real_db
 def test_sends_card_with_keyboard(engine: sa.Engine, sf, monkeypatch) -> None:  # noqa: ANN001
     from app.core.config import settings  # noqa: PLC0415
-    from app.services import company_service, verification_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
     from app.tasks import notify  # noqa: PLC0415
 
     with sf() as db:

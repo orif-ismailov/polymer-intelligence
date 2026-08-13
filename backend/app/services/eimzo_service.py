@@ -30,6 +30,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.crypto import encrypt_pii
+from app.domains.verification import service as verification_service
+from app.domains.verification.models import VerificationCase, VerificationCheck
 from app.integrations.eimzo import EimzoSigner, EimzoVerifyResult, verify_pkcs7
 from app.models.accounts import UserAccount
 from app.models.companies import Company, CompanyMember
@@ -43,14 +45,12 @@ from app.models.enums import (
     VerificationCheckStatus,
     VerificationCheckType,
 )
-from app.models.verification import VerificationCase, VerificationCheck
 from app.services import (
     audit_service,
     company_service,
     event_service,
     event_types,
     storage_service,
-    verification_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -150,7 +150,7 @@ def _pop_challenge(
 
 
 def _open_or_create_case(db: Session, company: Company) -> VerificationCase:
-    case = verification_service._open_case_for(db, company.id)
+    case = verification_service.open_case_for(db, company.id)
     if case is not None:
         return case
     # No open case (e.g. a verified company re-confirming) → a targeted case.

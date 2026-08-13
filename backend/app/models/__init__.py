@@ -13,6 +13,12 @@ Import order respects FK dependency:
 9. alerts (depends on signals, requests)
 10. reports (depends on staff)
 
+That grouping is documentation, not a constraint: the import block is sorted by ruff's
+isort and SQLAlchemy resolves foreign keys from `Base.metadata` once every model has
+loaded, not in Python import order. What matters here is **completeness**, not
+sequence — which is why models that move into `app/domains/<name>/` during the domain
+reorg keep their line in this barrel rather than dropping out of it.
+
 This file must be imported by alembic/env.py so that
 `target_metadata = Base.metadata` includes all 20 tables.
 """
@@ -25,6 +31,12 @@ from app.domains.marketplace.models import (  # noqa: F401
     SellerOffer,
     SellerOfferFile,
 )
+from app.domains.verification.models import (  # noqa: F401
+    VerificationCase,
+    VerificationCheck,
+    VerificationDocument,
+)
+from app.domains.verification.registry_models import RegistrySnapshot  # noqa: F401
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
@@ -135,7 +147,6 @@ from app.models.reference import (  # noqa: F401
     ProductGrade,
     ProductSynonym,
 )
-from app.models.registry import RegistrySnapshot  # noqa: F401
 from app.models.reports import Report  # noqa: F401
 from app.models.requests import Client, Request, RequestFile, RequestStatusHistory  # noqa: F401
 from app.models.reviews import CompanyReview  # noqa: F401
@@ -143,11 +154,6 @@ from app.models.signals import Signal  # noqa: F401
 from app.models.sources import ParseRun, RawItem, Source  # noqa: F401
 from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun  # noqa: F401
 from app.models.staff import AuditLog, StaffUser  # noqa: F401
-from app.models.verification import (  # noqa: F401
-    VerificationCase,
-    VerificationCheck,
-    VerificationDocument,
-)
 
 __all__ = [
     # Enums

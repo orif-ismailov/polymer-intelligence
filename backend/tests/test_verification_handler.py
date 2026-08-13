@@ -99,9 +99,10 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _pending_review(sf, monkeypatch, phone: str, tax: str) -> tuple[int, int]:  # noqa: ANN001
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import VerificationCheckStatus, VerificationCheckType  # noqa: PLC0415
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
-    from app.services import company_service, verification_service  # noqa: PLC0415
+    from app.services import company_service  # noqa: PLC0415
 
     with sf() as db:
         account = make_account(db, phone)
@@ -141,8 +142,8 @@ def test_apply_decision_approve_verifies_company(engine: sa.Engine, sf, monkeypa
 def test_apply_decision_request_info(engine: sa.Engine, sf, monkeypatch) -> None:  # noqa: ANN001
     from telegram.handlers.verification import _apply_decision  # noqa: PLC0415
 
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
     from app.models.enums import VerificationCaseStatus  # noqa: PLC0415
-    from app.models.verification import VerificationCase  # noqa: PLC0415
 
     _company_id, case_id = _pending_review(sf, monkeypatch, "+998900000002", "222222222")
     monkeypatch.setattr("app.core.db.engine", engine)

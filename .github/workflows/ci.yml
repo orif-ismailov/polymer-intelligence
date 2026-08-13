@@ -80,6 +80,9 @@ jobs:
           app/domains/marketplace/service.py
           app/domains/marketplace/requests.py
           app/domains/marketplace/compliance.py
+          app/domains/verification/service.py
+          app/domains/verification/checks.py
+          app/domains/verification/registry.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -87,6 +90,7 @@ jobs:
           mypy app/schemas
           app/domains/marketplace/schemas.py
           app/domains/marketplace/portal_market_schemas.py
+          app/domains/verification/schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

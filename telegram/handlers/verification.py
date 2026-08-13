@@ -75,8 +75,8 @@ def _apply_decision(case_id: int, telegram_user_id: int, action: str) -> dict[st
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.verification import VerificationCase  # noqa: PLC0415
-    from app.services import verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
 
     with Session(engine) as session:
         case = session.get(VerificationCase, case_id)

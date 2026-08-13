@@ -44,8 +44,8 @@ class _Snapshot:
 
 def test_no_snapshot_is_unavailable_not_a_failure() -> None:
     """Missing our integration must never look like a finding about the company."""
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_gov_registry(_Company(), None)
 
@@ -54,8 +54,8 @@ def test_no_snapshot_is_unavailable_not_a_failure() -> None:
 
 
 def test_an_active_company_with_a_matching_name_passes() -> None:
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     company = _Company(legal_name='ООО "ПОЛИМЕР ТРЕЙД"')
     snapshot = _Snapshot(
@@ -80,8 +80,8 @@ def test_an_active_company_with_a_matching_name_passes() -> None:
 def test_harmless_name_differences_are_not_flagged(ours: str, theirs: str) -> None:
     """A legal name is written differently by every source. Only a real
     difference is worth an operator's attention."""
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_gov_registry(
         _Company(legal_name=ours),
@@ -98,8 +98,8 @@ def test_harmless_name_differences_are_not_flagged(ours: str, theirs: str) -> No
 def test_a_genuinely_different_name_is_a_warning() -> None:
     """The registry is authoritative, but our record may be a trading name —
     a human compares, we do not reject."""
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_gov_registry(
         _Company(legal_name='ООО "ПОЛИМЕР ТРЕЙД"'),
@@ -113,8 +113,8 @@ def test_a_genuinely_different_name_is_a_warning() -> None:
 
 def test_a_registry_with_no_name_still_passes() -> None:
     """Nothing to compare is not a mismatch."""
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_gov_registry(
         _Company(legal_name='ООО "ПОЛИМЕР ТРЕЙД"'),
@@ -124,8 +124,8 @@ def test_a_registry_with_no_name_still_passes() -> None:
 
 
 def test_a_company_we_have_no_name_for_still_passes() -> None:
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_gov_registry(
         _Company(legal_name=None),
@@ -139,8 +139,8 @@ def test_a_liquidated_or_suspended_company_fails(status: str) -> None:
     """Neither is a company we may verify without an explicit human override,
     which is what `waive_check` exists for. `warning` would let
     `verification_auto_approve` wave one through."""
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_gov_registry(
         _Company(), _Snapshot({"inn": "301234567", "status": status})
@@ -152,8 +152,8 @@ def test_a_liquidated_or_suspended_company_fails(status: str) -> None:
 
 def test_an_unstated_registry_status_is_a_warning() -> None:
     """The registry answered but said nothing about the state — not a pass."""
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_gov_registry(
         _Company(), _Snapshot({"inn": "301234567"})
@@ -164,8 +164,8 @@ def test_an_unstated_registry_status_is_a_warning() -> None:
 def test_a_snapshot_about_a_different_company_fails() -> None:
     """Either the wrong company was looked up or the registry disagrees about the
     tax id. Both are hard stops, not warnings."""
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_gov_registry(
         _Company(tax_id="301234567"),
@@ -178,7 +178,7 @@ def test_a_snapshot_about_a_different_company_fails() -> None:
 
 def test_the_raw_registry_wording_is_carried_into_the_result() -> None:
     """An auditor asks what the registry actually said, not what we mapped it to."""
-    from app.services import verification_checks
+    from app.domains.verification import checks as verification_checks
 
     result = verification_checks.check_gov_registry(
         _Company(),
@@ -193,16 +193,16 @@ def test_the_raw_registry_wording_is_carried_into_the_result() -> None:
 
 
 def test_no_vat_snapshot_is_unavailable() -> None:
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_vat_status(_Company(), None)
     assert result.status == VerificationCheckStatus.unavailable
 
 
 def test_a_registered_vat_payer_passes() -> None:
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_vat_status(
         _Company(),
@@ -216,8 +216,8 @@ def test_a_registered_vat_payer_passes() -> None:
 def test_not_being_a_vat_payer_is_a_warning_not_a_failure() -> None:
     """Not every Uzbek company is obliged to register for VAT. Failing here
     would refuse verification on a legally wrong ground."""
+    from app.domains.verification import checks as verification_checks
     from app.models.enums import VerificationCheckStatus
-    from app.services import verification_checks
 
     result = verification_checks.check_vat_status(
         _Company(), _Snapshot({"registered": False})
@@ -228,7 +228,7 @@ def test_not_being_a_vat_payer_is_a_warning_not_a_failure() -> None:
 
 
 def test_the_vat_certificate_number_is_never_invented() -> None:
-    from app.services import verification_checks
+    from app.domains.verification import checks as verification_checks
 
     result = verification_checks.check_vat_status(
         _Company(), _Snapshot({"registered": True})

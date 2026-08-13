@@ -18,6 +18,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.crypto import encrypt_pii
+from app.domains.verification.models import VerificationCase
 from app.models.accounts import UserAccount
 from app.models.companies import (
     Company,
@@ -36,7 +37,6 @@ from app.models.enums import (
 from app.models.enums import (
     CompanyBusinessRole as CompanyBusinessRoleEnum,
 )
-from app.models.verification import VerificationCase
 from app.services import audit_service, event_service, event_types
 
 # ── Account-type exclusivity ──────────────────────────────────────────────────

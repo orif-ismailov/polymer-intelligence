@@ -28,14 +28,26 @@ _BASE = "/api/v1/portal/companies"
 
 
 def test_routes_registered() -> None:
+    """Both routers that serve `/portal/companies`, asserted together.
+
+    P2 carved the documents + verification routes out of the companies router into
+    the verification domain. The URL contract is unchanged — both routers share the
+    `/portal/companies` prefix — so this test now names which router owns what,
+    rather than assuming one owns everything.
+    """
     from app.api.portal.companies import router  # noqa: PLC0415
+    from app.domains.verification.api_portal import router as verification_router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies" in paths
     assert "/portal/companies/{company_id}" in paths
-    assert "/portal/companies/{company_id}/verification/submit" in paths
     assert "/portal/companies/{company_id}/bank-accounts" in paths
-    assert "/portal/companies/{company_id}/documents/{document_id}/download" in paths
+
+    verification_paths = {r.path for r in verification_router.routes}  # type: ignore[attr-defined]
+    assert "/portal/companies/{company_id}/verification/submit" in verification_paths
+    assert "/portal/companies/{company_id}/verification" in verification_paths
+    assert "/portal/companies/{company_id}/documents" in verification_paths
+    assert "/portal/companies/{company_id}/documents/{document_id}/download" in verification_paths
 
 
 # ── real-DB API fixture ───────────────────────────────────────────────────────
@@ -58,7 +70,7 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     session = session_factory(engine)
     fake_redis = FakeRedis()
     # the verify-task dispatch on submit must not hit a broker
-    monkeypatch.setattr("app.services.verification_service._dispatch_checks", lambda case_id: None)
+    monkeypatch.setattr("app.domains.verification.service._dispatch_checks", lambda case_id: None)
 
     app = create_app()
 
