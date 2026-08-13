@@ -154,18 +154,28 @@ green, before any `git mv` — so that if the domain move needs backing out, the
   sed-replaced: the shared-kernel names (`audit_service`, `storage_service`) stay on the
   `app.services` line, the moved ones become separate aliased imports.
 
-## Known cross-domain reach (accept, do not fix here)
+## Known cross-domain reach — promote `_open_case_for` here
 
-`app/services/eimzo_service.py:153` calls `verification_service._open_case_for(db, company.id)` —
-a **private** function reached across what will become a domain boundary. Contracts (P4) owns
-`eimzo_service`. Options considered:
+`verification_service._open_case_for` is a **private** function with three callers, two of them
+across what become domain boundaries:
 
-- Promote `_open_case_for` to a public `open_case_for` in `app/domains/verification/service.py`.
-- Leave the private call and accept it.
+| Caller | Domain | Phase that moves it |
+|---|---|---|
+| `app/services/verification_service.py:158` | verification (internal) | — |
+| `app/api/portal/companies.py:136` (inside `_summary_out`) | companies | **P3** |
+| `app/services/eimzo_service.py:153` | contracts | **P4** |
 
-**Decision for P2: leave it.** Renaming it here means an unrelated behavioral-surface change
-inside a phase whose whole value is "mechanical, no behavior change". Flag it in the P4 plan —
-that is the phase that owns the calling side and can make the call properly.
+**Decision: promote it in this phase.** Rename to a public `open_case_for` in
+`app/domains/verification/service.py` and update all three call sites as part of the move.
+
+The reasoning: P2 owns the definition, and P2 is the phase that *creates* the boundary the other
+two will cross. Deferring means P3 and P4 each move a call site that reaches into another
+domain's privates, and whichever of them eventually does the rename touches verification's
+internals from outside its own phase. A three-call-site rename inside the folder that owns the
+function is smaller and lands in the right place.
+
+> An earlier draft of this plan deferred this to P4 on the basis of two callers. That grep missed
+> `portal/companies.py:136` — P3 crosses the boundary first. Corrected here.
 
 Likewise `eimzo_service.py:201` does a function-local `from app.tasks.verification import
 _run_check` (task-layer glue, already `# noqa: PLC0415`). `app/tasks/` is **not** moved by this
@@ -209,11 +219,15 @@ after the general `app.domains.*` block.
    `git mv` — history for the extracted lines is not preserved, which is accepted.
 5. Fix internal imports within the moved files (`verification_service` ↔ `verification_checks`,
    `registry_service` → `registry_models`, `api_admin` → all three services).
-6. Update the `app/models/__init__.py` barrel lines for `verification.py` (146) and `registry.py`
+6. Rename `_open_case_for` → `open_case_for` in `app/domains/verification/service.py` and update
+   its three callers (the internal one at `service.py:158`, `app/api/portal/companies.py:136`,
+   `app/services/eimzo_service.py:153`). Confirm with
+   `grep -rn "_open_case_for" backend/app backend/tests` returning nothing.
+7. Update the `app/models/__init__.py` barrel lines for `verification.py` (146) and `registry.py`
    (138), preserving their positions in the FK-ordered list. The `__all__` entries
    (`VerificationCase`, `VerificationCheck`, `VerificationDocument`, `RegistrySnapshot`) are
    name-only and need no edit.
-7. Grep-and-replace every call site:
+8. Grep-and-replace every call site:
    - `app.models.verification` → `app.domains.verification.models`
    - `app.models.registry` → `app.domains.verification.registry_models`
    - `app.services.verification_service` → `app.domains.verification.service`
@@ -221,18 +235,18 @@ after the general `app.domains.*` block.
    - `app.services.registry_service` → `app.domains.verification.registry`
    - `app.api.admin_verification` → `app.domains.verification.api_admin`
    Then handle the `from app.services import (…)` blocks by hand (split + alias, per above).
-8. Update `app/main.py`: line 51 import path; add the portal-verification router import and its
+9. Update `app/main.py`: line 51 import path; add the portal-verification router import and its
    `include_router` call. **Do not reorder existing includes.**
-9. Update `backend/pyproject.toml` mypy overrides (the `app.domains.*` blocks above) **and** the
+10. Update `backend/pyproject.toml` mypy overrides (the `app.domains.*` blocks above) **and** the
    mypy invocations — local commands + `.github/workflows/ci.yml` lines 75 and 78 — adding
    `app/domains/verification/{service,checks,registry}.py` to the services check and
    `app/domains/verification/schemas.py` to the schemas check.
-10. Run the full gate and fix anything red:
+11. Run the full gate and fix anything red:
     - `cd backend && ruff check .`
     - `cd backend && mypy app/services app/domains/marketplace/*.py app/domains/verification/{service,checks,registry}.py --ignore-missing-imports`
     - `cd backend && mypy app/schemas app/domains/marketplace/schemas.py app/domains/verification/schemas.py --ignore-missing-imports`
     - `cd backend && pytest tests/ -q` (full suite, not a subset)
-11. **Commit 2 (the move)** once everything is green.
+12. **Commit 2 (the move)** once everything is green.
 
 ## Verification
 

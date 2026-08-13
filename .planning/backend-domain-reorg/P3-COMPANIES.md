@@ -87,6 +87,14 @@ plus helpers `_summary_out` (135) and `_detail_out` (154). Re-derive these line 
 post-P2 file — **do not trust the numbers above after P2 lands**; they are here to show shape and
 size, not as edit coordinates.
 
+> **Depends on a P2 amendment.** `_summary_out` calls
+> `verification_service._open_case_for(db, company.id)` at line 136 — a private function in
+> another domain. P2 promotes it to a public `open_case_for` precisely so this phase does not
+> carry a privates-crossing-boundaries call into `app/domains/companies/`. Verify before starting:
+> `grep -rn "_open_case_for" backend/app backend/tests` must return nothing. If it does not, P2
+> shipped without the amendment — do the promotion first, as its own commit, rather than moving
+> the private call.
+
 ## Call sites to update
 
 ### `app.models.companies` — 76 files
