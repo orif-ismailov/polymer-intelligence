@@ -69,11 +69,11 @@ Checked by model ownership, the same test that reassigned services in P5, P7, P8
   past `USERBOT_SILENCE_SECONDS`. That is the same job `source_health_service` does for sources,
   and P10 already owns that one — they belong side by side. Its only non-test consumer is
   `app/tasks/userbot_health.py`, which stays in `app/tasks/`.
-- **`review_service` + `models/reviews.py` + `models/media.py` → P3 (companies).**
-  `P3-COMPANIES.md` already recommends pulling these in and flags that the roadmap defers them
-  here. `review_service`'s only consumers are `app/api/public.py` and `app/api/portal/companies.py`.
-  If P3 took the recommendation, they are gone already; if it did not, **P11 takes them** rather
-  than leaving `CompanyReview`/`CompanyMedia` orphaned in `app/models/`.
+- **`review_service` + `models/reviews.py` + `models/media.py` — this phase owns them.**
+  P3 argued for pulling them in early; the decision was to leave them here, and `P3-COMPANIES.md`
+  records that as settled. They are **not** conditional and not a reassignment — they are P11 work,
+  and they are the reason the companies domain is incomplete between P3 and this phase.
+  See "Finding 4" below for the move itself.
 
 ## Finding 3 — client identity joins requests, resolving P9's squatters
 
@@ -93,6 +93,30 @@ This also **resolves P9's open item**: the `ClientProfileOut` / `ClientProfilePa
 left in `app/domains/requests/webapp_schemas.py` as "client-domain squatters" are not squatters
 after all — their consumer now lives in the same folder. Delete that caveat from P9 when this
 lands; no extraction is needed.
+
+## Finding 4 — completing the companies domain (decided: deferred from P3)
+
+`CompanyReview` and `CompanyMedia` are company-owned — one review row per *(subject company,
+author company)* pair, and images a *company's* public profile references. P3 leaves them in
+`app/models/` by decision, so from P3 until this phase "everything about companies" is not yet one
+folder. This is where that is closed:
+
+| From | To |
+|---|---|
+| `app/models/reviews.py` | `app/domains/companies/review_models.py` |
+| `app/models/media.py` | `app/domains/companies/media_models.py` |
+| `app/services/review_service.py` | `app/domains/companies/reviews.py` |
+
+Call sites are few: `review_service` is imported only by `app/api/public.py` (→
+`app/domains/storefront/api.py` in this phase — sequence this move **after** storefront, or update
+the import twice) and by `app/domains/companies/api_portal.py`. `models/media.py` is additionally
+read by `app/seed/seed_showcase_media.py`, which stays in `app/seed/`. Barrel lines: `media.py`
+127, `reviews.py` 141 — preserve FK-order position.
+
+Two things P3 deliberately left in a temporary state that this phase now tidies:
+`_summary_out`/`_detail_out` reaching back into `app/models/reviews.py`, and
+`api_portal.py` importing `review_service` from `app.services`. Both become intra-domain imports.
+**That is the whole cleanup** — do not take it as licence to restructure the review routes.
 
 ## The domains this phase creates
 
@@ -231,7 +255,7 @@ with `webapp/requests` and `webapp/files` without collision, and after this phas
 
 ## Steps
 
-Six commits, each independently gate-green. Order is smallest-blast-radius first:
+Seven commits, each independently gate-green. Order is smallest-blast-radius first:
 
 1. **Marketplace router sweep** — only if P1 shipped without the amendment (Finding 1).
 2. **Reassignments** — `lead_score_recompute_service` and `userbot_health_service` → signals,
@@ -241,6 +265,9 @@ Six commits, each independently gate-green. Order is smallest-blast-radius first
 4. **`alerts`** (3 files) — **with the `pyproject.toml` override rename.**
 5. **`storefront`** (3 files).
 6. **`accounts`** (4 files) + **`reference`** (8 files) + **client-into-requests** (3 files).
+7. **`companies` completion** (3 files — Finding 4). Last, because `review_service`'s other
+   consumer is `app/api/public.py`, which becomes `app/domains/storefront/api.py` in step 5 —
+   doing this after storefront means that import is rewritten once instead of twice.
 
 For each: create `__init__.py` (with the docstrings called out above), `git mv`, fix internal
 imports, update the `app/models/__init__.py` barrel line preserving FK order, replace call sites,
@@ -271,7 +298,7 @@ cd backend && pytest tests/ -q
 - **`Base.metadata` parity:** `sorted(Base.metadata.tables)` identical after each commit.
 - **Final sweep — the point of the whole phase.** After the last commit, these must all be true:
   - `ls app/models/` contains only `__init__.py`, `enums.py`, `staff.py`, `events.py`,
-    `integration.py`, `app_settings.py`.
+    `integration.py`, `app_settings.py` — **no `reviews.py`, no `media.py`** (Finding 4).
   - `ls app/schemas/` contains only `__init__.py`, `auth.py`, `dashboard.py`, `admin_settings.py`.
   - `ls app/services/` contains only the declared kernel: `audit_service`, `auth_service`,
     `event_service`, `event_types`, `notification_service`, `storage_service`, `settings_service`,

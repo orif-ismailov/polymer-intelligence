@@ -28,15 +28,22 @@ roughly 2.5× the marketplace pilot. Two consequences:
 - **`directory_service` — included** (deferred here from P2; see that plan's rationale). It queries
   `Company` by confirmed `CompanyBusinessRole` and is the single source of truth behind all four
   public directories. It lands as `app/domains/companies/directory.py`.
-- **`review_service` + `models/reviews.py` + `models/media.py` — recommended for inclusion, but
-  the roadmap defers them to P11.** `CompanyReview` and `CompanyMedia` are both company-owned
-  (one row per *(subject company, author company)* pair; images a *company's* public profile
-  references), and `portal/companies.py` already imports `review_service` and `storage_service`
-  side by side for the public-profile routes. Leaving them in `app/models/` means the companies
-  domain is visibly incomplete for eight more phases, and `_summary_out`/`_detail_out` will reach
-  back into `app/models/` for review aggregates.
-  **Recommendation: pull them in.** They add ~3 files and a handful of call sites to a phase that
-  is already touching 76. Decide before starting — do not discover this mid-phase.
+- **`review_service` + `models/reviews.py` + `models/media.py` — excluded. DECIDED: P11 takes
+  them.** They were argued for here — `CompanyReview` and `CompanyMedia` are company-owned (one row
+  per *(subject company, author company)* pair; images a *company's* public profile references),
+  and `portal/companies.py` already imports `review_service` and `storage_service` side by side for
+  the public-profile routes. The call was made to keep the roadmap's placement and leave them to
+  P11, which lands them in `app/domains/companies/` as a follow-on commit.
+
+  Two consequences to expect and accept in this phase, neither a defect:
+  - The companies domain is **visibly incomplete until P11** — `CompanyReview` and `CompanyMedia`
+    stay in `app/models/`, so "everything about companies" is not yet one folder.
+  - `_summary_out` / `_detail_out` will reach back into `app/models/reviews.py` for review
+    aggregates, and `portal/companies.py` will keep importing `review_service` from
+    `app.services`. Leave both alone; do not add a shim or pre-move a single file to tidy the
+    import.
+
+  This is settled — do not re-litigate it mid-phase.
 - **`otp_service` — still excluded** (see `P2-VERIFICATION.md`). It upserts `user_accounts`, not
   companies. It belongs with `models/accounts.py` in the P11 accounts/auth grouping.
 - **`models/accounts.py` — excluded.** `UserAccount` is the portal *identity*; a company is a thing
@@ -52,13 +59,9 @@ roughly 2.5× the marketplace pilot. Two consequences:
 | `app/api/portal/companies.py` *(post-P2 remainder)* | `app/domains/companies/api_portal.py` |
 | `app/schemas/portal_company.py` *(post-P2 remainder)* | `app/domains/companies/schemas.py` |
 
-If the `review_service` recommendation above is accepted, add:
-
-| From | To |
-|---|---|
-| `app/models/reviews.py` | `app/domains/companies/review_models.py` |
-| `app/models/media.py` | `app/domains/companies/media_models.py` |
-| `app/services/review_service.py` | `app/domains/companies/reviews.py` |
+That is the complete list. `models/reviews.py`, `models/media.py` and `review_service` are
+**not** part of this phase — see the scope decision above; P11 moves them into this same folder
+later.
 
 **No admin router moves.** There is no `app/api/admin_companies.py` — staff-side company
 administration lives inside `app/api/admin_verification.py`, which P2 already moved to
@@ -192,8 +195,8 @@ grep -rn "from app.api.portal.companies import _" backend/app backend/tests   # 
    the plan, this document is the map.**
 2. Create `app/domains/companies/__init__.py`.
 3. `git mv` `models/companies.py`, `services/company_service.py`, `services/directory_service.py`,
-   `api/portal/companies.py`, `schemas/portal_company.py` (and the three review/media files if
-   that recommendation was accepted) to their new paths.
+   `api/portal/companies.py`, `schemas/portal_company.py` to their new paths. **Five files — not
+   the review/media trio**, which P11 owns.
 4. Fix internal imports within the moved files.
 5. Update the `app/models/__init__.py` barrel line for `companies.py` (line 23), preserving its
    position in the FK-ordered list.
