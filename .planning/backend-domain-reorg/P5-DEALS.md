@@ -76,8 +76,14 @@ that mentions neither fact. Reorder the includes for any unrelated reason and
 route that used to work.
 
 **Do this instead:** move `list_market_requests` and its `MarketRequestListOut` schema into
-`app/domains/marketplace/api_portal.py` (P1's output), declared **above** the `/{offer_id}` route.
-Within-router declaration order settles it with no include-order dependency at all.
+**`app/domains/marketplace/api_portal_market.py`** — the file P1 produces from
+`app/api/portal/market.py`, which is the router that owns `/{offer_id}`. (Not `api_portal.py`;
+that is `portal/offers.py`.) Declare it **above** `/{offer_id}`. Since that router is prefixed
+`/portal/market`, the decorator path becomes `"/requests"`, not `"/market/requests"` — the full
+path is unchanged. Within-router declaration order settles it with no include-order dependency.
+
+> `api_portal_market.py` already relies on `/{offer_id}` being declared last (P1 flags this). Add
+> `/requests` above it, with the other literals — do not append it at the end of the file.
 
 The cost is a cross-domain import: the marketplace portal router will import
 `rfq_response_service` (→ `app.domains.deals.rfq`) and `RfqResponse`. That is a normal
@@ -162,7 +168,9 @@ again in P7 — unavoidable given the ordering, and cheap.
 2. Create `app/domains/deals/__init__.py`.
 3. `git mv` the 10 files to their new paths (preserves history).
 4. **Extract `list_market_requests` + `MarketRequestListOut`** into
-   `app/domains/marketplace/api_portal.py`, declared above the `/{offer_id}` route. Its
+   `app/domains/marketplace/api_portal_market.py`, declared above the `/{offer_id}` route, with
+   its decorator path rewritten from `"/market/requests"` to `"/requests"` (the router's prefix
+   already supplies `/portal/market`). Its
    `_company_or_404` call becomes `deps.company_or_404` (P2's shared portal kernel). Add the
    cross-domain import of `app.domains.deals.rfq`.
 5. Fix internal imports within the moved files (`escrow.py` → `service`, `payment_models`;

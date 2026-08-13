@@ -18,7 +18,7 @@ Re-run that subtraction before starting — it is the only reliable inventory fo
 # after P1-P10 and confirm it appears somewhere below.
 ```
 
-## Finding 1 — P1 under-claims five marketplace routers. Amend P1, don't sweep here.
+## Finding 1 — P1 under-claimed five marketplace routers. **RESOLVED: P1 amended.**
 
 `P1-MARKETPLACE.md` moves `app/api/portal/offers.py` and `app/api/offer_requests.py`. It leaves
 **five more routers whose subject is unambiguously marketplace**:
@@ -38,15 +38,17 @@ files that move. The result is that after the pilot phase, `app/api/` still hold
 surfaces, which directly undercuts the track's stated goal: finding "everything about offers"
 would still mean visiting two directories.
 
-**Recommendation: amend `P1-MARKETPLACE.md` before it runs.** As of this writing `app/domains/`
-does not exist, so P1 has not executed and the fix is free — add the five routers plus
-`schemas/portal_market.py` to P1's "Files moving" table as `api_moderation.py`,
-`api_portal_market.py`, `api_portal_inquiries.py`, `api_webapp_market.py`, `api_webapp_seller.py`
-and `portal_market_schemas.py`.
+**This has been applied.** `P1-MARKETPLACE.md` now moves all seven marketplace routers plus
+`schemas/portal_market.py` — 13 files instead of 7 — and carries the two gotchas the extra files
+bring with them: `portal/market.py`'s load-bearing intra-file route order (`/{offer_id}` declared
+last on purpose), and the fact that `portal/market.py` and `portal/inquiries.py` import P2's
+shared portal helpers, which P1 must leave alone because it runs first.
 
-If P1 has already shipped by the time you read this, **P11 sweeps them into
-`app/domains/marketplace/` as its own commit** — a late move is much better than a permanent
-residue. Either way, do not leave them in `app/api/`.
+**So there is nothing to sweep here** — unless P1 somehow shipped from an older copy of its plan.
+Confirm before starting:
+`grep -rln "SellerOffer\|schemas\.marketplace" backend/app/api` should return nothing. If it
+returns those five routers, sweep them into `app/domains/marketplace/` as this phase's first
+commit; a late move beats a permanent residue.
 
 > Worth generalizing: P1 was written before the router-inventory habit that P2–P10 adopted.
 > Before starting this phase, spot-check each earlier domain folder for the same shape — a
