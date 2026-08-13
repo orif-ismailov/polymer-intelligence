@@ -62,6 +62,11 @@ in P11. Moving them now would mean splitting a file to satisfy a domain that doe
 leaving them means the requests folder briefly hosts two client schemas. Take the second, and
 **record it in P11's plan** so `client_service`'s phase extracts them rather than discovering them.
 
+> **Resolved in P11.** `client_service` and `app/api/webapp/me.py` move *into this folder* in P11
+> (the `Client` model is already here, declared in `models/requests.py`), so the two classes stop
+> being squatters without being extracted. Nothing to do in P9 beyond moving the file whole; drop
+> this caveat once P11 lands.
+
 ### `schemas/dashboard.py` — stays in `app/schemas/`, deliberately
 
 This one does **not** move, and the reason is worth stating so nobody "finishes the job" later.
