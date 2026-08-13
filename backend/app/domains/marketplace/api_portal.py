@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, Upl
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404, _rate_limited, _require_business_role
+from app.api.portal.deps import company_or_404, rate_limited, require_business_role
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.marketplace import service as offer_service
@@ -43,7 +43,7 @@ def list_offers(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> list[SellerOffer]:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     return offer_service.list_company_offers(db, company.id)
 
 
@@ -55,13 +55,13 @@ def create_offer(
     account: UserAccount = Depends(get_current_account),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> SellerOffer:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     try:
         rate_limit.enforce_daily(
             redis_client, "offer_create", company.id, rate_limit.OFFER_CREATE_PER_DAY
         )
     except rate_limit.RateLimited as exc:
-        raise _rate_limited(exc) from exc
+        raise rate_limited(exc) from exc
     try:
         offer = offer_service.create_company_offer(db, company, account, body)
     except offer_service.CompanyNotVerified as exc:
@@ -87,7 +87,7 @@ def get_offer(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> SellerOffer:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     return _offer_or_404(db, company.id, offer_id)
 
 
@@ -99,9 +99,9 @@ def update_offer(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> SellerOffer:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
-    _require_business_role(company, company_service.SELLER_ROLES)
+    require_business_role(company, company_service.SELLER_ROLES)
     offer, requeued = offer_service.update_company_offer(db, offer, body)
     db.commit()
     if requeued and offer.status == SellerOfferStatus.pending_moderation:
@@ -116,7 +116,7 @@ def archive_offer(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> SellerOffer:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
     offer.status = SellerOfferStatus.archived
     offer.published_at = None
@@ -142,7 +142,7 @@ async def upload_offer_file(
     SDS, which only feeds the compliance verdict, it puts a public badge on the
     market card, so it is part of what was approved too.
     """
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
     try:
         file_kind = OfferFileKind(kind)
@@ -217,7 +217,7 @@ def get_offer_file(
     this a seller could not see the photos on their own draft. Company-scoped, and
     404 (not 403) for everyone else — consistent with the rest of the portal.
     """
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
     f = (
         db.query(SellerOfferFile)
@@ -254,7 +254,7 @@ def delete_offer_file(
     Returns the updated offer so the client re-renders the gallery (and the promoted
     cover) from one response.
     """
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
     f = (
         db.query(SellerOfferFile)

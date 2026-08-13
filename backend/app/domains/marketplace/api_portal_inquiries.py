@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404, _rate_limited, _require_business_role
+from app.api.portal.deps import company_or_404, rate_limited, require_business_role
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.marketplace import requests as offer_request_service
@@ -56,14 +56,14 @@ def create_inquiry(
     redis_client: redis.Redis = Depends(get_redis),
 ) -> OfferRequestOut:
     """POST /portal/market/{offer_id}/inquiries — pending inquiry → staff moderation."""
-    company = _company_or_404(db, account, body.company_id)
-    _require_business_role(company, company_service.BUYER_CAPABLE_ROLES)
+    company = company_or_404(db, account, body.company_id)
+    require_business_role(company, company_service.BUYER_CAPABLE_ROLES)
     try:
         rate_limit.enforce_daily(
             redis_client, "inquiry_create", company.id, rate_limit.INQUIRY_CREATE_PER_DAY
         )
     except rate_limit.RateLimited as exc:
-        raise _rate_limited(exc) from exc
+        raise rate_limited(exc) from exc
     offer = (
         db.query(SellerOffer)
         .filter(SellerOffer.id == offer_id, SellerOffer.status == SellerOfferStatus.approved)
@@ -98,7 +98,7 @@ def list_sent(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> list[OfferRequestOut]:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     rows = offer_request_service.list_for_company(db, company.id)
     return [OfferRequestOut.model_validate(r) for r in rows]
 
@@ -113,7 +113,7 @@ def list_incoming(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> list[OfferRequestOut]:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     rows = offer_request_service.list_incoming_for_company(db, company.id)
     return [OfferRequestOut.model_validate(r) for r in rows]
 
@@ -159,7 +159,7 @@ def update_inquiry(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> OfferRequestOut:
-    _company_or_404(db, account, body.company_id)
+    company_or_404(db, account, body.company_id)
     req = _inquiry_or_404(db, inquiry_id)
     # Only the sending company may edit its own inquiry.
     if req.company_id != body.company_id:

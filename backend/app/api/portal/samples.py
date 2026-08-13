@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404, _require_business_role
+from app.api.portal.deps import company_or_404, require_business_role
 from app.core.db import get_db
 from app.domains.marketplace import service as offer_service
 from app.models.accounts import UserAccount
@@ -70,7 +70,7 @@ def list_samples(
     account: UserAccount = Depends(get_current_account),
 ) -> list[SampleRequestOut]:
     """`incoming` — requests to answer; `sent` — requests we made."""
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     return [
         _out(db, sample, company_id=company.id)
         for sample in sample_service.list_for_company(db, company.id, side=side)
@@ -89,8 +89,8 @@ def request_sample(
     account: UserAccount = Depends(get_current_account),
 ) -> SampleRequestOut:
     """Ask the seller for a sample of a public offer."""
-    company = _company_or_404(db, account, body.company_id)
-    _require_business_role(company, company_service.BUYER_CAPABLE_ROLES)
+    company = company_or_404(db, account, body.company_id)
+    require_business_role(company, company_service.BUYER_CAPABLE_ROLES)
     offer = offer_service.get_catalog_offer(db, offer_id)
     if offer is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
@@ -137,7 +137,7 @@ def transition_sample(
     `invalid_transition`, `not_your_move`, `reason_required`,
     `shipment_details_required`.
     """
-    company = _company_or_404(db, account, body.company_id)
+    company = company_or_404(db, account, body.company_id)
     sample = db.get(SampleRequest, sample_id)
     if sample is None or sample.party_role(company.id) is None:
         # 404 for a request the caller's company is not part of: the same answer

@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404
+from app.api.portal.deps import company_or_404
 from app.core.db import get_db
 from app.domains.marketplace import requests as offer_request_service
 from app.domains.marketplace import service as offer_service
@@ -90,7 +90,7 @@ def list_market(
     """
     exclude_company_id: int | None = None
     if company_id is not None:
-        exclude_company_id = _company_or_404(db, account, company_id).id
+        exclude_company_id = company_or_404(db, account, company_id).id
     offers = offer_service.list_catalog(
         db,
         product_id=product_id,
@@ -248,7 +248,7 @@ def get_market_offer(
     out.seller_company_id = offer.company_id
     out.seller_legal_name = offer.company.legal_name if offer.company is not None else None
     if company_id is not None:
-        company = _company_or_404(db, account, company_id)
+        company = company_or_404(db, account, company_id)
         out.is_own = offer.company_id is not None and offer.company_id == company.id
         out.my_inquiries = [
             OfferRequestOut.model_validate(i)

@@ -14,7 +14,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _case_out, _company_or_404
+from app.api.portal.companies import _case_out
+from app.api.portal.deps import company_or_404
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.integrations.eimzo import ProviderUnavailable
@@ -32,7 +33,7 @@ def eimzo_challenge(
     account: UserAccount = Depends(get_current_account),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> ChallengeOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     challenge = eimzo_service.issue_challenge(redis_client, company.id, account.id)
     return ChallengeOut(challenge=challenge)
 
@@ -45,7 +46,7 @@ def eimzo_verify(
     account: UserAccount = Depends(get_current_account),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> VerifyOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     try:
         outcome = eimzo_service.verify(db, redis_client, company, account, body.pkcs7)
     except eimzo_service.ChallengeExpired as exc:

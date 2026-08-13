@@ -502,7 +502,7 @@ def update_public_profile(
     `legal_name`,
     `legal_address` and `registration_date` were checked by a human and stay
     behind `update_profile`; relaxing the gate itself would have unfrozen them
-    too. Authorisation is the router's `_require_company_admin`.
+    too. Authorisation is the router's `require_company_admin`.
 
     Merges rather than replaces, because both profile columns are plain
     `mapped_column(JSONB)` — not `MutableDict.as_mutable` — so SQLAlchemy sees no

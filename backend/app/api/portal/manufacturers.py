@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404, _require_business_role
+from app.api.portal.deps import company_or_404, require_business_role
 from app.core.db import get_db
 from app.domains.marketplace import service as offer_service
 from app.domains.marketplace.models import SellerOffer
@@ -188,7 +188,7 @@ def list_my_factory_rfqs(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> list[FactoryRfqOut]:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     return [
         _rfq_out(db, rfq)
         for rfq in manufacturer_service.list_factory_rfqs_for(
@@ -276,7 +276,7 @@ def list_threads(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> list[ManufacturerThreadOut]:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     return [
         _thread_out(db, thread, company_id=company.id)
         for thread in manufacturer_service.list_threads_for(db, company.id)
@@ -407,8 +407,8 @@ def open_thread(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> ManufacturerThreadOut:
-    buyer = _company_or_404(db, account, body.company_id)
-    _require_business_role(buyer, company_service.BUYER_CAPABLE_ROLES)
+    buyer = company_or_404(db, account, body.company_id)
+    require_business_role(buyer, company_service.BUYER_CAPABLE_ROLES)
     try:
         manufacturer = manufacturer_service.get_verified_manufacturer(
             db, manufacturer_id
@@ -441,8 +441,8 @@ def create_factory_rfq(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> FactoryRfqOut:
-    buyer = _company_or_404(db, account, body.company_id)
-    _require_business_role(buyer, company_service.BUYER_CAPABLE_ROLES)
+    buyer = company_or_404(db, account, body.company_id)
+    require_business_role(buyer, company_service.BUYER_CAPABLE_ROLES)
     try:
         manufacturer = manufacturer_service.get_verified_manufacturer(
             db, manufacturer_id

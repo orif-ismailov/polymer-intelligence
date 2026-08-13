@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404
+from app.api.portal.deps import company_or_404
 from app.core.db import get_db
 from app.domains.marketplace.models import SellerOffer
 from app.models.accounts import UserAccount
@@ -52,7 +52,7 @@ def list_lab_orders(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> list[LabOrderOut]:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     return [_out(order) for order in lab_service.list_for_company(db, company.id)]
 
 
@@ -68,7 +68,7 @@ def create_lab_order(
     account: UserAccount = Depends(get_current_account),
 ) -> LabOrderOut:
     """Raise a request for an analysis, about one of your offers or your deals."""
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
 
     offer = db.get(SellerOffer, body.offer_id) if body.offer_id is not None else None
     deal = db.get(Deal, body.deal_id) if body.deal_id is not None else None
@@ -111,5 +111,5 @@ def get_lab_order(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> LabOrderOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     return _out(_order_or_404(db, company.id, order_id))

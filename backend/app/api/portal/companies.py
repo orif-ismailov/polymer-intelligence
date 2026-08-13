@@ -15,6 +15,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
+from app.api.portal.deps import company_or_404, rate_limited, require_company_admin
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.models.accounts import UserAccount
@@ -56,48 +57,7 @@ from app.services import (
 router = APIRouter(prefix="/portal/companies", tags=["portal-companies"])
 
 
-def _rate_limited(exc: rate_limit.RateLimited) -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        detail="Daily limit reached",
-        headers={"Retry-After": str(exc.retry_after)},
-    )
-
-
 # ── helpers ───────────────────────────────────────────────────────────────────
-
-
-def _company_or_404(db: Session, account: UserAccount, company_id: int) -> Company:
-    try:
-        return company_service.get_company_for(db, account, company_id)
-    except company_service.CompanyNotFound as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found") from exc
-
-
-def _require_business_role(company: Company, allowed: frozenset[CompanyBusinessRole]) -> None:
-    """403 `role_not_allowed` unless the company's account type permits this flow.
-
-    Call AFTER `_company_or_404` (outsiders keep their 404). The typed-code shape
-    mirrors `company_not_verified` so the portal can branch on it.
-    """
-    try:
-        company_service.require_business_role(company, allowed)
-    except company_service.RoleNotAllowed as exc:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail={"code": "role_not_allowed"}
-        ) from exc
-
-
-def _require_company_admin(db: Session, account: UserAccount, company_id: int) -> None:
-    """Owner/manager only. Call AFTER `_company_or_404` so outsiders still get 404."""
-    try:
-        company_service.require_company_role(
-            db, account, company_id, company_service.COMPANY_ADMIN_ROLES
-        )
-    except company_service.InsufficientCompanyRole as exc:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="insufficient_company_role"
-        ) from exc
 
 
 def _check_out(check: VerificationCheck) -> CheckOut:
@@ -239,7 +199,7 @@ def create_company(
             redis_client, "company_create", account.id, rate_limit.COMPANY_CREATE_PER_DAY
         )
     except rate_limit.RateLimited as exc:
-        raise _rate_limited(exc) from exc
+        raise rate_limited(exc) from exc
     try:
         company = company_service.create_company(db, account, jurisdiction, tax_id)
         verification_service.open_case(db, company)  # auto-open a draft case
@@ -263,7 +223,7 @@ def get_company(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> CompanyDetailOut:
-    return _detail_out(db, _company_or_404(db, account, company_id))
+    return _detail_out(db, company_or_404(db, account, company_id))
 
 
 @router.patch("/{company_id}", response_model=CompanyDetailOut)
@@ -273,7 +233,7 @@ def update_company(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> CompanyDetailOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     try:
         company_service.update_profile(db, company, account, **body.model_dump(exclude_none=True))
     except company_service.ProfileNotEditable as exc:
@@ -303,8 +263,8 @@ def update_public_profile(
 
     Owner/manager only: this is the text on the company's public page.
     """
-    company = _company_or_404(db, account, company_id)
-    _require_company_admin(db, account, company_id)
+    company = company_or_404(db, account, company_id)
+    require_company_admin(db, account, company_id)
     company_service.update_public_profile(
         db,
         company,
@@ -342,7 +302,7 @@ def submit_review(
     standing opinion per counterparty, so the second one is an edit, not a
     duplicate the UI would have to explain.
     """
-    author = _company_or_404(db, account, body.company_id)
+    author = company_or_404(db, account, body.company_id)
     try:
         subject = review_service.get_reviewable_company(db, company_id)
     except review_service.ReviewSubjectNotFound as exc:
@@ -384,7 +344,7 @@ def set_roles(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> CompanyDetailOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     try:
         roles = [CompanyBusinessRole(r) for r in body.roles]
     except ValueError as exc:
@@ -410,7 +370,7 @@ def add_bank_account(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> CompanyDetailOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     try:
         company_service.add_bank_account(
             db, company, body.bank_mfo, body.account_number,
@@ -429,7 +389,7 @@ def archive_bank_account(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> CompanyDetailOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     bank = (
         db.query(CompanyBankAccount)
         .filter(CompanyBankAccount.id == account_id, CompanyBankAccount.company_id == company.id)
@@ -461,8 +421,8 @@ async def upload_logo(
     account: UserAccount = Depends(get_current_account),
 ) -> CompanyDetailOut:
     """JPEG/PNG ≤ 5 MB (FR-M1). Replacing deletes the previous object."""
-    company = _company_or_404(db, account, company_id)
-    _require_company_admin(db, account, company_id)
+    company = company_or_404(db, account, company_id)
+    require_company_admin(db, account, company_id)
 
     content = await file.read()
     try:
@@ -496,8 +456,8 @@ def delete_logo(
     account: UserAccount = Depends(get_current_account),
 ) -> Response:
     """Idempotent — removing an absent logo is a 204, not a 404."""
-    company = _company_or_404(db, account, company_id)
-    _require_company_admin(db, account, company_id)
+    company = company_or_404(db, account, company_id)
+    require_company_admin(db, account, company_id)
 
     had_logo = bool(company.logo_storage_path)
     storage_service.delete_company_logo(db, company)
@@ -528,8 +488,8 @@ async def upload_cover(
     material, not a requisite anyone checked — the same reasoning as
     `PATCH /public-profile`.
     """
-    company = _company_or_404(db, account, company_id)
-    _require_company_admin(db, account, company_id)
+    company = company_or_404(db, account, company_id)
+    require_company_admin(db, account, company_id)
 
     content = await file.read()
     try:
@@ -558,8 +518,8 @@ def delete_cover(
     account: UserAccount = Depends(get_current_account),
 ) -> Response:
     """Idempotent — removing an absent cover is a 204, not a 404."""
-    company = _company_or_404(db, account, company_id)
-    _require_company_admin(db, account, company_id)
+    company = company_or_404(db, account, company_id)
+    require_company_admin(db, account, company_id)
 
     storage_service.delete_company_cover(db, company)
     db.commit()
@@ -584,8 +544,8 @@ async def upload_media(
     capability — so the JSONB stays the ordering authority and a reorder cannot
     orphan a row.
     """
-    company = _company_or_404(db, account, company_id)
-    _require_company_admin(db, account, company_id)
+    company = company_or_404(db, account, company_id)
+    require_company_admin(db, account, company_id)
 
     content = await file.read()
     try:
@@ -616,13 +576,13 @@ async def upload_document(
     account: UserAccount = Depends(get_current_account),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> DocumentOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     try:
         rate_limit.enforce_daily(
             redis_client, "doc_upload", account.id, rate_limit.DOCUMENT_UPLOAD_PER_DAY
         )
     except rate_limit.RateLimited as exc:
-        raise _rate_limited(exc) from exc
+        raise rate_limited(exc) from exc
     try:
         doc_kind = VerificationDocumentKind(kind)
     except ValueError as exc:
@@ -648,7 +608,7 @@ def download_document(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> RedirectResponse:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     document = _document_or_404(db, company.id, document_id)
     url = storage_service.presign_verification_document(document, ttl=600)
     return RedirectResponse(url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
@@ -661,7 +621,7 @@ def delete_document(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> None:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     document = _document_or_404(db, company.id, document_id)
     if document.status != DocumentReviewStatus.pending_review:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Document already reviewed")
@@ -689,7 +649,7 @@ def submit_verification(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> CaseOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     try:
         case = verification_service.submit_case(db, company, account)
     except verification_service.NoOpenCase as exc:
@@ -708,7 +668,7 @@ def get_verification(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> CaseOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     out = _case_out(db, _latest_case(db, company.id))
     if out is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No verification case")

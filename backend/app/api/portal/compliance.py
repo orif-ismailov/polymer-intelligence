@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404, _rate_limited
+from app.api.portal.deps import company_or_404, rate_limited
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.marketplace import compliance as offer_compliance_service
@@ -48,7 +48,7 @@ def my_licenses(
     account: UserAccount = Depends(get_current_account),
 ) -> list[CompanyLicenseOut]:
     """Read-only: licences are registered by staff from an accepted document."""
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     return company_license_service.list_for(db, company.id)  # type: ignore[return-value]
 
 
@@ -63,7 +63,7 @@ def offer_compliance(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> ComplianceOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     offer = (
         db.query(SellerOffer)
         .filter(SellerOffer.id == offer_id, SellerOffer.company_id == company.id)
@@ -105,13 +105,13 @@ def suggest_substance(
     budget is spent): the form has to be able to tell "no hint" from "the hint
     failed", and neither is an error the seller can act on.
     """
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     try:
         rate_limit.enforce_daily(
             redis_client, "substance_suggest", company.id, rate_limit.SUBSTANCE_SUGGEST_PER_DAY
         )
     except rate_limit.RateLimited as exc:
-        raise _rate_limited(exc) from exc
+        raise rate_limited(exc) from exc
 
     suggestion = substance_ai_service.suggest(
         db, text=body.text, company_id=company.id, offer_id=body.offer_id
@@ -137,7 +137,7 @@ def decide_substance_suggestion(
     account: UserAccount = Depends(get_current_account),
 ) -> SubstanceSuggestionOut:
     """The seller's answer (FR-C3). Rejection is recorded, not discarded."""
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     suggestion = substance_ai_service.get_for_company(db, suggestion_id, company.id)
     if suggestion is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Suggestion not found")

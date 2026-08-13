@@ -26,7 +26,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.companies import _company_or_404, _rate_limited, _require_business_role
+from app.api.portal.deps import company_or_404, rate_limited, require_business_role
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.models.accounts import UserAccount
@@ -59,14 +59,14 @@ def create_request(
     account: UserAccount = Depends(get_current_account),
     redis_client: redis.Redis = Depends(get_redis),
 ) -> RequestOut:
-    company = _company_or_404(db, account, body.company_id)
-    _require_business_role(company, company_service.BUYER_CAPABLE_ROLES)
+    company = company_or_404(db, account, body.company_id)
+    require_business_role(company, company_service.BUYER_CAPABLE_ROLES)
     try:
         rate_limit.enforce_daily(
             redis_client, "request_create", company.id, rate_limit.REQUEST_CREATE_PER_DAY
         )
     except rate_limit.RateLimited as exc:
-        raise _rate_limited(exc) from exc
+        raise rate_limited(exc) from exc
     req = request_service.create_company_request(db, company, account, body)
     db.commit()
     return RequestOut.model_validate(req)
@@ -85,7 +85,7 @@ def upload_file(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> RequestFileOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     req = _request_or_404(db, company.id, request_id)
     if len(req.files or []) >= _MAX_FILES:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Too many files")
@@ -104,7 +104,7 @@ def list_requests(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> list[RequestOut]:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     rows = request_service.list_company_requests(db, company.id)
     return [RequestOut.model_validate(r) for r in rows]
 
@@ -120,7 +120,7 @@ def get_request(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> RequestDetailOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     req = _request_or_404(db, company.id, request_id)
     history = sorted(req.status_history, key=lambda h: h.created_at)
     return RequestDetailOut(
@@ -163,7 +163,7 @@ def cancel_request(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> RequestOut:
-    company = _company_or_404(db, account, company_id)
+    company = company_or_404(db, account, company_id)
     req = _request_or_404(db, company.id, request_id)
     try:
         request_service.cancel_request(db, req)
