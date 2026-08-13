@@ -228,6 +228,14 @@ grep -rn "from app.api.portal.companies import _" backend/app backend/tests   # 
 
 ## Verification
 
+- **Test integrity — see `00-CONTEXT.md` § "Test integrity across the migration".** Green is not
+  enough: capture the baseline (`pytest --collect-only` count + passed/skipped/deselected) before
+  starting, re-run the gate after **each step** rather than only before the commit, and confirm
+  all four numbers are **identical** afterwards. A dropped collected count or a risen skip count
+  is a regression even though pytest prints it in green. Sweep the `patch("app...")` target
+  strings — they are invisible to ruff, mypy and every import tool — and change import *paths*
+  only, never import *style*, or a patch can silently stop applying and leave a test passing
+  vacuously.
 - `ruff check .` — no new lint errors.
 - Both `mypy` invocations — clean.
 - `pytest tests/ -q` — full suite green. Highest-signal files:

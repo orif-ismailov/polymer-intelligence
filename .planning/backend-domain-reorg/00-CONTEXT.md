@@ -53,6 +53,108 @@ context's models/schemas/service/api together — nothing tactical.
 - Full test suite (`pytest tests/ -q`, not a subset), `ruff check .`, and both `mypy` invocations
   must be green before every commit in this track — same standing rule as the rest of the repo.
 
+## Test integrity across the migration (binding for every phase)
+
+The standing rule above says the full suite must be green before every commit. **Green is not
+sufficient.** These phases rewrite imports inside `tests/` as well as `app/`, so the suite is part
+of the change — and a suite that is green because a test stopped running is a regression wearing a
+disguise. Every phase must therefore prove *nothing broke*, not just *nothing is red*.
+
+### Capture a baseline first, compare after every step
+
+Before touching anything in a phase, record the numbers **in the environment you will compare in**
+(they differ — locally the DB-backed tests skip for want of Postgres; on CI they run):
+
+```bash
+cd backend
+uv run pytest tests/ -q --collect-only 2>&1 | tail -1   # collected / deselected
+uv run pytest tests/ -q 2>&1 | tail -1                   # passed / skipped / deselected
+```
+
+Baseline at the time this section was written (local, no Postgres):
+**2598 collected, 4 deselected · 1851 passed, 747 skipped.**
+
+After each step — not only before the commit — re-run and compare. **All four numbers must be
+identical.** Specifically:
+
+- **Collected count drops** → a test file failed to import and its tests silently vanished from
+  the run. Collection errors are reported, but a partial collection still exits green if the
+  remaining tests pass. This is the single most likely way a phase "succeeds" while deleting
+  coverage.
+- **Skipped count rises** → something now skips that used to run (a missing import guarded by
+  `pytest.importorskip`, a fixture that stopped resolving). A rise in skips is a failure, even
+  though pytest prints it in green.
+- **Passed count drops without failures** → tests moved into the skipped or deselected bucket.
+
+Do not "fix" a mismatch by updating the baseline. Find the test that stopped running.
+
+### Run the gate per step, not per phase
+
+Each phase's Steps section ends with the full gate, but the gate is cheap (~80 s locally) and the
+failure modes compound. Run at minimum after each of these, and fix before continuing:
+
+1. after the `git mv` block (expect failures — this confirms *which* call sites exist),
+2. after fixing internal imports within the moved files,
+3. after the call-site sweep,
+4. after the `app/main.py` and `pyproject.toml`/CI edits,
+5. before the commit.
+
+Step 1 is deliberately run in a broken state: the set of failures it produces is the real
+call-site inventory, and it will be more accurate than any grep list written in advance.
+
+### The 616 invisible references
+
+`tests/` contains **616** `patch("app...")` / `setattr("app...")` target **strings**
+(`app/` itself contains none). They are plain strings: ruff, mypy, IDE refactors and import
+graphs are all blind to them.
+
+Two shapes, and only one is safe:
+
+- **Prefixed by the moved module** — e.g. `patch("app.services.request_service.write_audit")`.
+  The path sed catches these.
+- **Prefixed by the *consumer* module** — e.g.
+  `patch("app.api.admin_settings.news_service.list_pending_news")`, which patches the name
+  `news_service` *as bound inside* `admin_settings.py`. A sed keyed on `app.services.news_service`
+  does **not** match this string. Where the consumer also moves (e.g.
+  `patch("app.api.admin_sources.source_service.list_source_groups")`), the router-path sed fixes
+  the prefix; where the consumer stays (`admin_settings.py` is shared kernel), the string stays
+  valid **only because of the import-alias technique**.
+
+Sweep them explicitly in every phase, before the commit. Two greps — the narrow one is the
+check, the broad one is the safety net:
+
+```bash
+# 1. THE CHECK — must return nothing. Substitute this phase's moved module paths.
+grep -rnE '(patch|setattr)\(\s*"app\.(services\.offer_service|models\.marketplace)' backend/tests
+
+# 2. THE NET — a review list, NOT an assertion. Read it for targets whose prefix is a
+#    module this phase moved.
+grep -rnE '(patch|setattr)\(\s*"app\.' backend/tests | grep -vE '"app\.(core|domains)\.'
+```
+
+Grep 2 returns **525 lines today** and will never reach zero: targets prefixed
+`app.api.*`, `app.tasks.*` and `app.ingest.*` are legitimate — those layers largely stay put, and
+`app/tasks/` is never moved by this track at all. Do not chase it to empty. Its job is to make the
+consumer-prefixed shape visible so you can spot the ones whose prefix *did* move (a router, for
+instance). Grep 1 is the one that must come back clean.
+
+Note `_patch(...)` aliases exist in the suite and are matched by both patterns — that is
+intentional, not a false positive.
+
+### Preserve import *style*, not just import paths
+
+This is what keeps the consumer-prefixed patch targets working. `from app.services import
+news_service` → `from app.domains.news import service as news_service` keeps the module object
+bound to the same name, so `patch("app.api.admin_settings.news_service...")` still resolves.
+
+Rewriting it to a direct-name import (`from app.domains.news.service import list_pending_news`)
+would break that binding. If the patch target no longer exists you get a loud
+`ModuleNotFoundError`; if it exists but the code under test now reads a different binding, **the
+patch silently does nothing and the test passes without testing anything**. That is the one
+failure mode none of the counts above will catch.
+
+So: change import **paths**, never import **style**, and never "tidy" an import while moving it.
+
 ## Target convention
 
 Each domain becomes `backend/app/domains/<name>/`, e.g.:
