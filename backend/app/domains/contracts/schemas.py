@@ -73,11 +73,3 @@ class ContractDetailOut(ContractSummaryOut):
     document_sha256: str | None = None
     signatures: list[SignatureOut] = Field(default_factory=list)
 
-
-class DirectoryCompanyOut(BaseModel):
-    id: int
-    public_id: uuid.UUID
-    legal_name: str | None = None
-    tax_id: str
-    roles: list[str] = Field(default_factory=list)
-    verified: bool = True

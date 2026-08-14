@@ -513,3 +513,18 @@ class CompanyOfferOut(BaseModel):
         """The columns are nullable (0030 backfilled nothing), and a client that
         has to tell `null` from `[]` will eventually get it wrong."""
         return value or []
+
+
+class DirectoryCompanyOut(BaseModel):
+    """One row of the verified-company picker (`GET /portal/companies/directory`).
+
+    Moved here from the contracts schemas in P4: the query behind it is a pure
+    companies query and never touched a contract table.
+    """
+
+    id: int
+    public_id: uuid.UUID
+    legal_name: str | None = None
+    tax_id: str
+    roles: list[str] = Field(default_factory=list)
+    verified: bool = True

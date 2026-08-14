@@ -34,15 +34,26 @@ _A = "/api/v1/admin"
 
 
 def test_routes_registered() -> None:
-    from app.api.admin_contracts import router as admin_router  # noqa: PLC0415
-    from app.api.portal.contracts import router as portal_router  # noqa: PLC0415
+    from app.domains.contracts.api_admin import router as admin_router  # noqa: PLC0415
+    from app.domains.contracts.api_portal import router as portal_router  # noqa: PLC0415
 
     p = {r.path for r in portal_router.routes}  # type: ignore[attr-defined]
     assert "/portal/contracts" in p
     assert "/portal/contracts/{contract_id}/sign" in p
     assert "/portal/contracts/{contract_id}/bundle" in p
-    assert "/portal/companies/directory" in p
     assert "/portal/contract-templates" in p
+    # The counterparty picker is a pure companies query and moved to the companies
+    # router in P4. Same path, different owner — and it is now protected by
+    # declaration order inside that one file rather than by include-order between two
+    # routers, so assert the ordering here: a literal before its param sibling.
+    assert "/portal/companies/directory" not in p
+    from app.domains.companies.api_portal import router as companies_router  # noqa: PLC0415
+
+    company_paths = [r.path for r in companies_router.routes]  # type: ignore[attr-defined]
+    assert "/portal/companies/directory" in company_paths
+    assert company_paths.index("/portal/companies/directory") < company_paths.index(
+        "/portal/companies/{company_id}"
+    ), "/directory must be declared before /{company_id} or the param route swallows it"
     a = {r.path for r in admin_router.routes}  # type: ignore[attr-defined]
     assert "/admin/contracts" in a
     assert "/admin/contracts/{contract_id}" in a
@@ -60,9 +71,11 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
 
     from app.core.db import get_db  # noqa: PLC0415
     from app.core.redis import get_redis  # noqa: PLC0415
+    from app.domains.contracts import render as contract_render  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
     from app.integrations.eimzo import EimzoSigner, EimzoVerifyResult  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
-    from app.services import contract_render, contract_service, storage_service  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
 
     clean(engine)
     session = session_factory(engine)
@@ -145,7 +158,7 @@ def _staff(session, role, email):  # noqa: ANN001, ANN202
 
 
 def _template_id(session):  # noqa: ANN001, ANN202
-    from app.models.contracts import ContractTemplate  # noqa: PLC0415
+    from app.domains.contracts.models import ContractTemplate  # noqa: PLC0415
 
     with session() as db:
         tpl = ContractTemplate(

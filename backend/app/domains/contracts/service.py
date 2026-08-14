@@ -31,10 +31,12 @@ from app.core.config import settings
 from app.core.crypto import decrypt_pii
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBankAccount
+from app.domains.contracts import render as contract_render
+from app.domains.contracts.eimzo import CertCompanyMismatch
+from app.domains.contracts.eimzo_models import SignatureEvidence
+from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
 from app.integrations.eimzo import verify_pkcs7
 from app.models.accounts import UserAccount
-from app.models.contracts import Contract, ContractSignature, ContractTemplate
-from app.models.eimzo import SignatureEvidence
 from app.models.enums import (
     BankAccountStatus,
     CompanyStatus,
@@ -42,12 +44,10 @@ from app.models.enums import (
 )
 from app.services import (
     audit_service,
-    contract_render,
     event_service,
     event_types,
     storage_service,
 )
-from app.services.eimzo_service import CertCompanyMismatch
 
 logger = logging.getLogger(__name__)
 
@@ -401,7 +401,7 @@ def sign(
         raise SignatureVerificationFailed(result.error or "signature_invalid")
     cert_inn = result.signer.org_inn if result.signer else None
     if cert_inn and company.tax_id and cert_inn != company.tax_id:
-        from app.services.eimzo_service import _mask_inn  # noqa: PLC0415
+        from app.domains.contracts.eimzo import _mask_inn  # noqa: PLC0415
 
         raise CertCompanyMismatch(_mask_inn(cert_inn), _mask_inn(company.tax_id))
 

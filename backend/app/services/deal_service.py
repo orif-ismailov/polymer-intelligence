@@ -40,9 +40,9 @@ from sqlalchemy.orm import Session
 
 from app.core.time import to_display_tz, utcnow
 from app.domains.companies.models import Company, CompanyMember
+from app.domains.contracts.models import Contract
 from app.domains.marketplace.models import OfferRequest, SellerOffer
 from app.models.accounts import UserAccount
-from app.models.contracts import Contract
 from app.models.deals import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
 from app.models.enums import (
     CompanyMemberRole,

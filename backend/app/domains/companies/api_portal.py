@@ -10,8 +10,9 @@ requirements only (no reviewer identity or internals).
 from __future__ import annotations
 
 import redis
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
+from sqlalchemy import or_
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404, rate_limited, require_company_admin
@@ -31,6 +32,7 @@ from app.domains.companies.schemas import (
     CompanyReviewIn,
     CompanyReviewOut,
     CompanySummaryOut,
+    DirectoryCompanyOut,
     DocumentOut,
     PublicProfileUpdateIn,
     RolesUpdateIn,
@@ -43,7 +45,9 @@ from app.domains.verification.models import (
 from app.models.accounts import UserAccount
 from app.models.enums import (
     BankAccountStatus,
+    BusinessRoleStatus,
     CompanyBusinessRole,
+    CompanyStatus,
 )
 from app.services import (
     audit_service,
@@ -181,6 +185,68 @@ def list_companies(
     account: UserAccount = Depends(get_current_account),
 ) -> list[CompanySummaryOut]:
     return [_summary_out(db, c) for c in company_service.list_my_companies(db, account)]
+
+
+@router.get("/directory", response_model=list[DirectoryCompanyOut])
+def company_directory(
+    q: str = Query(default="", max_length=200),
+    company_id: int | None = Query(
+        default=None, description="Resolve exactly this company (verified-only still applies)"
+    ),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> list[DirectoryCompanyOut]:
+    """Search verified companies by name/STIR, or resolve one by id.
+
+    The id lookup is what the product page hands over when a buyer taps «Запросить
+    контракт»: preselecting the seller by name would depend on its legal name
+    matching the ilike, and a company trading under a short name never would.
+
+    DECLARATION ORDER IS LOAD-BEARING: this literal path must stay above the
+    `/{company_id}` route below, or that param route swallows it and "directory"
+    arrives as a company id. It used to live on the contracts router purely so that
+    router could be included first; declaring it here as a sibling removes the
+    cross-router include-order dependency entirely (P4).
+    """
+    try:
+        rate_limit.enforce_window(
+            redis_client, "directory", account.id, rate_limit.DIRECTORY_SEARCH_PER_MIN, 60
+        )
+    except rate_limit.RateLimited as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many searches",
+            headers={"Retry-After": str(exc.retry_after)},
+        ) from exc
+    query = (
+        db.query(Company)
+        # Eager-load the roles: 20 rows would otherwise be 20 extra SELECTs.
+        .options(selectinload(Company.business_roles))
+        .filter(Company.status == CompanyStatus.verified)
+    )
+    if company_id is not None:
+        query = query.filter(Company.id == company_id)
+    term = q.strip()
+    if term:
+        like = f"%{term}%"
+        query = query.filter(or_(Company.legal_name.ilike(like), Company.tax_id.ilike(like)))
+    rows = query.order_by(Company.legal_name).limit(20).all()
+    return [
+        DirectoryCompanyOut(
+            id=c.id, public_id=c.public_id, legal_name=c.legal_name, tax_id=c.tax_id,
+            # CONFIRMED only (P4 W2): this picker chooses a contract counterparty,
+            # and a self-declared "manufacturer" is exactly the claim the reader is
+            # using the badge to check.
+            roles=[
+                str(r.role)
+                for r in c.business_roles
+                if r.status == BusinessRoleStatus.confirmed
+            ],
+            verified=True,
+        )
+        for c in rows
+    ]
 
 
 @router.get("/{company_id}", response_model=CompanyDetailOut)

@@ -36,7 +36,6 @@ import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
-from app.api.admin_contracts import router as admin_contracts_router
 from app.api.admin_deals import router as admin_deals_router
 from app.api.admin_escrow import router as admin_escrow_router
 from app.api.admin_lab import router as admin_lab_router
@@ -58,9 +57,7 @@ from app.api.feed import router as feed_router
 from app.api.health import router as health_router
 from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.compliance import router as portal_compliance_router
-from app.api.portal.contracts import router as portal_contracts_router
 from app.api.portal.deals import router as portal_deals_router
-from app.api.portal.eimzo import router as portal_eimzo_router
 from app.api.portal.lab import router as portal_lab_router
 from app.api.portal.lab_requests import router as portal_lab_requests_router
 from app.api.portal.logistics import router as portal_logistics_router
@@ -87,6 +84,9 @@ from app.api.webhooks_escrow import router as webhooks_escrow_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.domains.companies.api_portal import router as portal_companies_router
+from app.domains.contracts.api_admin import router as admin_contracts_router
+from app.domains.contracts.api_portal import router as portal_contracts_router
+from app.domains.contracts.api_portal_eimzo import router as portal_eimzo_router
 from app.domains.marketplace.api_admin import router as offer_requests_router
 from app.domains.marketplace.api_admin_moderation import router as moderation_router
 from app.domains.marketplace.api_portal import router as portal_offers_router
@@ -232,11 +232,10 @@ def create_app() -> FastAPI:
     application.include_router(webhooks_escrow_router, prefix="/api/v1")
     # ── portal (client cabinet — passwordless OTP accounts, R1 W3) ─────────────
     application.include_router(portal_auth_router, prefix="/api/v1")
-    # Contracts router first: its literal /portal/companies/directory must win over the
-    # companies router's /portal/companies/{company_id} param route.
     application.include_router(portal_contracts_router, prefix="/api/v1")
-    # Deals before companies for the same reason: its literal
-    # /portal/companies/{company_id}/deals routes must be matched by this router.
+    # Deals before companies: its literal /portal/companies/{company_id}/deals routes
+    # must be matched by this router rather than falling into the companies router's
+    # /{company_id} param route.
     application.include_router(portal_deals_router, prefix="/api/v1")
     application.include_router(portal_compliance_router, prefix="/api/v1")
     # Lab orders hang off /portal/companies/{id}/lab-orders — same reason again.

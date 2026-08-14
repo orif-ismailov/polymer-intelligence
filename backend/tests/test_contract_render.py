@@ -11,7 +11,7 @@ import hashlib
 
 import pytest
 
-from app.services import contract_render
+from app.domains.contracts import render as contract_render
 
 _TEMPLATE = (
     "<h1>{{ title }} № {{ contract_public_id }}</h1>"

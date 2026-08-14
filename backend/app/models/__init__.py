@@ -41,6 +41,12 @@ import app.domains.companies.models  # noqa: F401
 import app.domains.marketplace.models  # noqa: F401
 import app.domains.verification.models  # noqa: F401
 import app.domains.verification.registry_models  # noqa: F401
+from app.domains.contracts.eimzo_models import CompanyPersonData, SignatureEvidence  # noqa: F401
+from app.domains.contracts.models import (  # noqa: F401
+    Contract,
+    ContractSignature,
+    ContractTemplate,
+)
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
@@ -48,11 +54,6 @@ from app.models.compliance import (  # noqa: F401
     CompanyLicense,
     Substance,
     SubstanceSuggestion,
-)
-from app.models.contracts import (  # noqa: F401
-    Contract,
-    ContractSignature,
-    ContractTemplate,
 )
 from app.models.counterparties import Counterparty, CounterpartyAlias  # noqa: F401
 from app.models.deals import (  # noqa: F401
@@ -62,7 +63,6 @@ from app.models.deals import (  # noqa: F401
     DealStatusHistory,
     RfqResponse,
 )
-from app.models.eimzo import CompanyPersonData, SignatureEvidence  # noqa: F401
 from app.models.enums import (  # noqa: F401
     AccountStatus,
     AlertKind,

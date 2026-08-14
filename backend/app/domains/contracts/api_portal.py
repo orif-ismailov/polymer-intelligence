@@ -2,9 +2,15 @@
 
 All routes require a portal account. Contract access is party-scoped: the account
 must be an active member of the initiator OR counterparty company (else 404 — never
-reveal existence). The counterparty directory exposes only verified companies'
-public fields and is rate-limited. Registered BEFORE the companies router so the
-literal `/portal/companies/directory` wins over `/portal/companies/{company_id}`.
+reveal existence).
+
+This router used to also serve the counterparty picker at
+`/portal/companies/directory`, which forced it to be included before the companies
+router so that literal path could beat `/portal/companies/{company_id}`. P4 moved
+that route to the companies router — a pure companies query belongs there — where
+being declared above `/{company_id}` in the same file settles the match with no
+cross-router include-order dependency at all. Nothing here depends on registration
+order any more.
 """
 
 from __future__ import annotations
@@ -17,32 +23,32 @@ import redis
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from sqlalchemy import or_, select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
-from app.integrations.eimzo import ProviderUnavailable
-from app.models.accounts import UserAccount
-from app.models.contracts import Contract, ContractSignature, ContractTemplate
-from app.models.eimzo import SignatureEvidence
-from app.models.enums import BusinessRoleStatus, CompanyStatus, ContractStatus
-from app.schemas.portal_contract import (
+from app.domains.contracts import service as contract_service
+from app.domains.contracts.eimzo import CertCompanyMismatch
+from app.domains.contracts.eimzo_models import SignatureEvidence
+from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
+from app.domains.contracts.schemas import (
     ContractCreateIn,
     ContractDetailOut,
     ContractSummaryOut,
     DeclineIn,
-    DirectoryCompanyOut,
     SignatureOut,
     SignChallengeOut,
     SignIn,
     TemplateOut,
     VariablesUpdateIn,
 )
-from app.services import contract_service, rate_limit, storage_service
-from app.services.eimzo_service import CertCompanyMismatch
+from app.integrations.eimzo import ProviderUnavailable
+from app.models.accounts import UserAccount
+from app.models.enums import CompanyStatus, ContractStatus
+from app.services import storage_service
 
 router = APIRouter(prefix="/portal", tags=["portal-contracts"])
 
@@ -128,7 +134,7 @@ def _detail_out(db: Session, contract: Contract, my_ids: set[int]) -> ContractDe
     )
 
 
-# ── templates + directory ─────────────────────────────────────────────────────
+# ── templates ─────────────────────────────────────────────────────────────────
 
 
 @router.get("/contract-templates", response_model=list[TemplateOut])
@@ -148,62 +154,6 @@ def list_templates(
             version=t.version, variables_schema=t.variables_schema,
         )
         for t in rows
-    ]
-
-
-@router.get("/companies/directory", response_model=list[DirectoryCompanyOut])
-def company_directory(
-    q: str = Query(default="", max_length=200),
-    company_id: int | None = Query(
-        default=None, description="Resolve exactly this company (verified-only still applies)"
-    ),
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
-) -> list[DirectoryCompanyOut]:
-    """Search verified companies by name/STIR, or resolve one by id.
-
-    The id lookup is what the product page hands over when a buyer taps «Запросить
-    контракт»: preselecting the seller by name would depend on its legal name
-    matching the ilike, and a company trading under a short name never would.
-    """
-    try:
-        rate_limit.enforce_window(
-            redis_client, "directory", account.id, rate_limit.DIRECTORY_SEARCH_PER_MIN, 60
-        )
-    except rate_limit.RateLimited as exc:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many searches",
-            headers={"Retry-After": str(exc.retry_after)},
-        ) from exc
-    query = (
-        db.query(Company)
-        # Eager-load the roles: 20 rows would otherwise be 20 extra SELECTs.
-        .options(selectinload(Company.business_roles))
-        .filter(Company.status == CompanyStatus.verified)
-    )
-    if company_id is not None:
-        query = query.filter(Company.id == company_id)
-    term = q.strip()
-    if term:
-        like = f"%{term}%"
-        query = query.filter(or_(Company.legal_name.ilike(like), Company.tax_id.ilike(like)))
-    rows = query.order_by(Company.legal_name).limit(20).all()
-    return [
-        DirectoryCompanyOut(
-            id=c.id, public_id=c.public_id, legal_name=c.legal_name, tax_id=c.tax_id,
-            # CONFIRMED only (P4 W2): this picker chooses a contract counterparty,
-            # and a self-declared "manufacturer" is exactly the claim the reader is
-            # using the badge to check.
-            roles=[
-                str(r.role)
-                for r in c.business_roles
-                if r.status == BusinessRoleStatus.confirmed
-            ],
-            verified=True,
-        )
-        for c in rows
     ]
 
 

@@ -32,7 +32,7 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _contract(db, status, **kw):  # noqa: ANN001, ANN202
-    from app.models.contracts import Contract, ContractTemplate  # noqa: PLC0415
+    from app.domains.contracts.models import Contract, ContractTemplate  # noqa: PLC0415
 
     owner = make_account(db, kw.pop("phone_a", "+998900000001"))
     owner2 = make_account(db, kw.pop("phone_b", "+998900000002"))
@@ -56,7 +56,7 @@ def _contract(db, status, **kw):  # noqa: ANN001, ANN202
 
 @requires_real_db
 def test_expire_stale_contracts(engine, sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.models.contracts import Contract  # noqa: PLC0415
+    from app.domains.contracts.models import Contract  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
     from app.tasks import contracts as contracts_task  # noqa: PLC0415
 

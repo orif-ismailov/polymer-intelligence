@@ -32,11 +32,11 @@ from app.core.config import settings
 from app.core.crypto import encrypt_pii
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyMember
+from app.domains.contracts.eimzo_models import CompanyPersonData, SignatureEvidence
 from app.domains.verification import service as verification_service
 from app.domains.verification.models import VerificationCase, VerificationCheck
 from app.integrations.eimzo import EimzoSigner, EimzoVerifyResult, verify_pkcs7
 from app.models.accounts import UserAccount
-from app.models.eimzo import CompanyPersonData, SignatureEvidence
 from app.models.enums import (
     CompanyMemberRole,
     CompanyMemberStatus,

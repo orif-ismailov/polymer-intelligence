@@ -20,7 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
-from app.models.contracts import ContractTemplate
+from app.domains.contracts.models import ContractTemplate
 from app.services import storage_service
 
 _DATA_DIR = Path(__file__).parent / "data" / "contract_templates"

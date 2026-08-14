@@ -55,7 +55,7 @@ def _verified(db, tax, phone):  # noqa: ANN001, ANN202
 
 def _deal_with_contract(db):  # noqa: ANN001, ANN202
     """A deal in negotiation with a draft contract attached."""
-    from app.models.contracts import Contract, ContractTemplate  # noqa: PLC0415
+    from app.domains.contracts.models import Contract, ContractTemplate  # noqa: PLC0415
     from app.models.deals import RfqResponse  # noqa: PLC0415
     from app.services import deal_service  # noqa: PLC0415
 
@@ -130,7 +130,7 @@ def test_a_contract_cannot_serve_two_deals(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_attach_refuses_a_contract_between_other_companies(sf) -> None:  # noqa: ANN001
-    from app.models.contracts import Contract  # noqa: PLC0415
+    from app.domains.contracts.models import Contract  # noqa: PLC0415
     from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:

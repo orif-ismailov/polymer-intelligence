@@ -29,7 +29,7 @@ _PKCS7 = base64.b64encode(b"fake-pkcs7-blob").decode()
 
 
 def test_routes_registered() -> None:
-    from app.api.portal.eimzo import router  # noqa: PLC0415
+    from app.domains.contracts.api_portal_eimzo import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/eimzo/challenge" in paths
@@ -90,12 +90,13 @@ def _seed_company(session, phone: str, tax: str = "301234567"):  # noqa: ANN001,
 
 
 def _patch_eimzo(monkeypatch, *, ok=True, org_inn="301234567", raises=False):  # noqa: ANN001
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.integrations.eimzo import (  # noqa: PLC0415
         EimzoSigner,
         EimzoVerifyResult,
         ProviderUnavailable,
     )
-    from app.services import eimzo_service, storage_service  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
 
     result = EimzoVerifyResult(
         ok=ok,

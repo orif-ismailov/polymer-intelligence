@@ -22,9 +22,10 @@ logger = logging.getLogger(__name__)
 def verify_contract_integrity() -> dict[str, Any]:
     """Recompute stored-PDF sha256 vs document_sha256 for active contracts; alert on drift."""
     from app.core.db import SessionLocal  # noqa: PLC0415
-    from app.models.contracts import Contract  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
+    from app.domains.contracts.models import Contract  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
-    from app.services import audit_service, contract_service, storage_service  # noqa: PLC0415
+    from app.services import audit_service, storage_service  # noqa: PLC0415
 
     checked = 0
     mismatches: list[int] = []
@@ -89,9 +90,10 @@ def _alert_integrity(contract_ids: list[int]) -> None:
 def expire_stale_contracts() -> dict[str, Any]:
     """Expire pending contracts inactive longer than contract_pending_ttl_days."""
     from app.core.db import SessionLocal  # noqa: PLC0415
-    from app.models.contracts import Contract  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
+    from app.domains.contracts.models import Contract  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
-    from app.services import contract_service, settings_service  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
     expired: list[int] = []
     with SessionLocal() as db:

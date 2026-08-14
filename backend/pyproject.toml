@@ -176,6 +176,7 @@ disallow_any_explicit = false
 module = [
     "app.domains.*.schemas",
     "app.domains.marketplace.portal_market_schemas",
+    "app.domains.contracts.eimzo_schemas",
 ]
 disallow_untyped_defs = true
 disallow_any_explicit = false
@@ -189,6 +190,7 @@ disallow_any_explicit = false
 module = [
     "app.domains.*.models",
     "app.domains.verification.registry_models",
+    "app.domains.contracts.eimzo_models",
 ]
 disallow_untyped_defs = true
 disallow_any_explicit = false

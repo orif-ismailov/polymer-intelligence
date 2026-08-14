@@ -77,8 +77,9 @@ def _company(db, tax="301234567", phone="+998900000001"):  # noqa: ANN001, ANN20
 
 
 def _patch(monkeypatch, result=None, raises=None):  # noqa: ANN001
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.integrations.eimzo import ProviderUnavailable  # noqa: PLC0415
-    from app.services import eimzo_service, storage_service  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
 
     def fake_verify(pkcs7, challenge):  # noqa: ANN001, ANN202
         if raises is not None:
@@ -99,15 +100,19 @@ def _patch(monkeypatch, result=None, raises=None):  # noqa: ANN001
 @requires_real_db
 def test_valid_signature_auto_approves(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import (  # noqa: PLC0415
+        CompanyPersonData,
+        SignatureEvidence,
+    )
     from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
-    from app.models.eimzo import CompanyPersonData, SignatureEvidence  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         CompanyStatus,
         VerificationCaseStatus,
         VerificationCheckStatus,
         VerificationCheckType,
     )
-    from app.services import eimzo_service, settings_service  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
     _patch(monkeypatch, result=_result())
     with sf() as db:
@@ -168,8 +173,8 @@ def test_evidence_signed_at_is_the_signing_moment_not_cert_issuance(sf, monkeypa
     """
     import datetime  # noqa: PLC0415
 
-    from app.models.eimzo import SignatureEvidence  # noqa: PLC0415
-    from app.services import eimzo_service  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import SignatureEvidence  # noqa: PLC0415
 
     issued = datetime.datetime(2019, 3, 4, tzinfo=datetime.UTC)
     result = _result()
@@ -193,8 +198,8 @@ def test_evidence_signed_at_is_the_signing_moment_not_cert_issuance(sf, monkeypa
 @requires_real_db
 def test_locked_requisites_reject_manual_patch(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.services import eimzo_service  # noqa: PLC0415
 
     _patch(monkeypatch, result=_result())
     with sf() as db:
@@ -219,8 +224,8 @@ def test_locked_requisites_reject_manual_patch(sf, monkeypatch) -> None:  # noqa
 @requires_real_db
 def test_valid_signature_pending_review_when_auto_approve_off(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
-    from app.services import eimzo_service  # noqa: PLC0415
 
     _patch(monkeypatch, result=_result())
     with sf() as db:
@@ -242,8 +247,8 @@ def test_valid_signature_pending_review_when_auto_approve_off(sf, monkeypatch) -
 @requires_real_db
 def test_inn_mismatch_raises_and_stores_no_evidence(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.models.eimzo import SignatureEvidence  # noqa: PLC0415
-    from app.services import eimzo_service  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import SignatureEvidence  # noqa: PLC0415
 
     _patch(monkeypatch, result=_result(org_inn="300000000"))  # cert INN ≠ company tax_id
     with sf() as db:
@@ -263,7 +268,7 @@ def test_inn_mismatch_raises_and_stores_no_evidence(sf, monkeypatch) -> None:  #
 
 @requires_real_db
 def test_missing_challenge_raises_expired(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.services import eimzo_service  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
 
     _patch(monkeypatch, result=_result())
     with sf() as db:
@@ -275,7 +280,7 @@ def test_missing_challenge_raises_expired(sf, monkeypatch) -> None:  # noqa: ANN
 
 @requires_real_db
 def test_replayed_challenge_is_single_use(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.services import eimzo_service  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
 
     _patch(monkeypatch, result=_result())
     with sf() as db:
@@ -292,9 +297,9 @@ def test_replayed_challenge_is_single_use(sf, monkeypatch) -> None:  # noqa: ANN
 @requires_real_db
 def test_revoked_cert_records_failed_check(sf, monkeypatch) -> None:  # noqa: ANN001
     from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import VerificationCheckStatus, VerificationCheckType  # noqa: PLC0415
-    from app.services import eimzo_service  # noqa: PLC0415
 
     _patch(monkeypatch, result=_result(ok=False, revoked=True, error="cert_revoked"))
     with sf() as db:
@@ -318,10 +323,10 @@ def test_revoked_cert_records_failed_check(sf, monkeypatch) -> None:  # noqa: AN
 
 @requires_real_db
 def test_sidecar_down_propagates_and_manual_path_still_works(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.integrations.eimzo import ProviderUnavailable  # noqa: PLC0415
     from app.models.enums import VerificationCaseStatus  # noqa: PLC0415
-    from app.services import eimzo_service  # noqa: PLC0415
 
     _patch(monkeypatch, raises=True)
     monkeypatch.setattr(verification_service, "_dispatch_checks", lambda case_id: None)

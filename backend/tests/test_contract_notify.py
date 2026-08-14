@@ -61,7 +61,7 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 @requires_real_db
 def test_sends_card_for_active_contract(engine: sa.Engine, sf, monkeypatch) -> None:  # noqa: ANN001
     from app.core.config import settings  # noqa: PLC0415
-    from app.models.contracts import Contract, ContractTemplate  # noqa: PLC0415
+    from app.domains.contracts.models import Contract, ContractTemplate  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
     from app.tasks import notify  # noqa: PLC0415
 

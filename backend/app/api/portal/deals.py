@@ -25,8 +25,8 @@ from app.api.deps import get_current_account
 from app.core.db import get_db
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
+from app.domains.contracts.models import Contract
 from app.models.accounts import UserAccount
-from app.models.contracts import Contract
 from app.models.deals import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
 from app.models.enums import (
     CompanyStatus,

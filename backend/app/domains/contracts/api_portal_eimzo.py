@@ -18,11 +18,11 @@ from app.api.portal.deps import company_or_404
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.companies import service as company_service
+from app.domains.contracts import eimzo as eimzo_service
+from app.domains.contracts.eimzo_schemas import ChallengeOut, VerifyIn, VerifyOut
 from app.domains.verification.api_portal import case_out
 from app.integrations.eimzo import ProviderUnavailable
 from app.models.accounts import UserAccount
-from app.schemas.portal_eimzo import ChallengeOut, VerifyIn, VerifyOut
-from app.services import eimzo_service
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-eimzo"])
 
