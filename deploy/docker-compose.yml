@@ -37,6 +37,13 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    # The stock ceiling is 100, which the api alone can now reach: API_WORKERS
+    # uvicorn processes plus CELERY_CONCURRENCY worker processes each hold their
+    # own SQLAlchemy pool (DB_POOL_SIZE + DB_MAX_OVERFLOW). At the defaults that
+    # is 8 x 15 = 120 before beat and the userbot. Exhaustion surfaces as
+    # `FATAL: sorry, too many clients already` under load, not as slowness.
+    # Raise together with the worker counts, never one without the other.
+    command: postgres -c max_connections=${POSTGRES_MAX_CONNECTIONS:-200}
     env_file:
       - path: ../.env
         required: false   # static `config` validation runs without a real .env;
@@ -197,7 +204,7 @@ services:
     # Migrate + seed (reference, staff, sources) BEFORE serving — idempotent
     # pre-start steps so a fresh deploy comes up fully provisioned with no manual
     # step. NO --reload in production (immutable image, no bind-mount watcher).
-    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_sources && python -m app.seed.seed_contract_templates && python -m app.seed.seed_substances && uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-proxy-headers"
+    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_sources && python -m app.seed.seed_contract_templates && python -m app.seed.seed_substances && uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-proxy-headers --workers ${API_WORKERS:-4}"
     # No host ports — only nginx reaches the api over the docker network (T-06-10).
     # No source bind-mount — the image is the single source of truth in prod.
     healthcheck:
@@ -240,7 +247,11 @@ services:
       # worker consumes) lazily imports userbot.heartbeat. Repo-root package, not in
       # the image, so mount it read-only at /app/userbot (WORKDIR is /app) too.
       - ../userbot:/app/userbot:ro
-    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default,verify
+    # --concurrency is PINNED, not left to default. Celery defaults to one worker
+    # process per CPU core, and each builds its own SQLAlchemy pool — so on a
+    # bigger host the connection ceiling moved with the hardware, silently. See
+    # the arithmetic in backend/app/core/db.py.
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-4} -Q ingest,parse,notify,default,verify
     # No host ports.
 
   # ── Celery Beat (scheduler) ───────────────────────────────────────────────
