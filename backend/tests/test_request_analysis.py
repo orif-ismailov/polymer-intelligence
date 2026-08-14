@@ -168,7 +168,7 @@ class TestAnalyzeEndpoint:
         with patch(
             "app.services.request_analysis_service.analyze_request", side_effect=fake_analyze
         ), patch(
-            "app.services.price_analysis_service.compute_price_analysis", return_value=None
+            "app.domains.pricing.analysis.compute_price_analysis", return_value=None
         ):
             resp = client.post("/api/v1/requests/42/analyze", headers=_auth_headers(1, "admin"))
 

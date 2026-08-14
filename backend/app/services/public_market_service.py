@@ -23,8 +23,8 @@ from sqlalchemy.orm import InstrumentedAttribute, Session
 from app.domains.companies import directory as directory_service
 from app.domains.companies.models import Company
 from app.domains.marketplace.models import SellerOffer
+from app.domains.pricing.models import PricePoint
 from app.models.enums import CompanyStatus, SellerOfferStatus
-from app.models.prices import PricePoint
 from app.models.reference import Product
 
 

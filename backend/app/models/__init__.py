@@ -49,6 +49,7 @@ import app.domains.logistics.models  # noqa: F401
 import app.domains.manufacturers.models  # noqa: F401
 import app.domains.marketplace.models  # noqa: F401
 import app.domains.news.models  # noqa: F401
+import app.domains.pricing.models  # noqa: F401
 import app.domains.verification.models  # noqa: F401
 import app.domains.verification.registry_models  # noqa: F401
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
@@ -111,7 +112,6 @@ from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.media import CompanyMedia  # noqa: F401
 from app.models.notifications import PortalNotification  # noqa: F401
-from app.models.prices import PricePoint  # noqa: F401
 from app.models.reference import (  # noqa: F401
     FxRate,
     ManualClassificationItem,
@@ -184,7 +184,6 @@ __all__ = [
     "RequestFile",
     "RequestStatusHistory",
     # Prices
-    "PricePoint",
     # Alerts
     "AlertRule",
     "Alert",

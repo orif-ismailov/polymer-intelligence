@@ -32,9 +32,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.paths import PROMPTS_DIR
+from app.domains.pricing import analysis as price_analysis_service
 from app.models.requests import Request
 from app.schemas.request_analysis import RequestAnalysisResult
-from app.services import price_analysis_service
 from parsing.budget import check_and_reserve_tokens, record_actual_tokens
 from parsing.schemas import BudgetExceeded
 

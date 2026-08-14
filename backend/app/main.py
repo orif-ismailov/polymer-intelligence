@@ -52,7 +52,6 @@ from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.notifications import router as portal_notifications_router
 from app.api.portal.reference import router as portal_reference_router
 from app.api.portal.requests import router as portal_requests_router
-from app.api.prices import router as prices_router
 from app.api.public import router as public_router
 from app.api.sources import router as sources_router
 from app.api.sourcing import router as sourcing_router
@@ -94,6 +93,7 @@ from app.domains.marketplace.api_webapp_seller import router as webapp_seller_ro
 from app.domains.news.api_admin import router as reports_router
 from app.domains.news.api_portal import router as portal_news_router
 from app.domains.news.api_webapp import router as webapp_news_router
+from app.domains.pricing.api_admin import router as prices_router
 from app.domains.verification.api_admin import router as admin_verification_router
 from app.domains.verification.api_portal import router as portal_verification_router
 from app.models.staff import StaffUser

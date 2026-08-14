@@ -46,6 +46,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_staff_user, require_role
 from app.core.db import get_db
+from app.domains.pricing import analysis as price_analysis_service
 from app.models.enums import RequestStatus, StaffRole
 from app.models.requests import Request
 from app.models.staff import StaffUser
@@ -56,7 +57,6 @@ from app.schemas.dashboard import (
     RequestPatch,
 )
 from app.services import (
-    price_analysis_service,
     request_analysis_service,
     request_service,
     rfq_push_service,

@@ -20,7 +20,8 @@ mypy app/services app/domains/marketplace/{service,requests,compliance}.py \
      app/domains/compliance/{substances,substance_ai,licenses}.py \
      app/domains/{logistics,laboratory,manufacturers}/service.py \
      app/domains/lab_orders/{service,samples}.py \
-     app/domains/news/{service,dedup,reports}.py --ignore-missing-imports
+     app/domains/news/{service,dedup,reports}.py \
+     app/domains/pricing/analysis.py --ignore-missing-imports
 mypy app/schemas  app/domains/marketplace/{schemas,portal_market_schemas}.py \
      app/domains/{verification,companies}/schemas.py \
      app/domains/contracts/{schemas,eimzo_schemas}.py \

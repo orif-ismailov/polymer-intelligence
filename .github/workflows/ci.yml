@@ -102,6 +102,7 @@ jobs:
           app/domains/news/service.py
           app/domains/news/dedup.py
           app/domains/news/reports.py
+          app/domains/pricing/analysis.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)

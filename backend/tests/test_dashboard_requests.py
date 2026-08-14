@@ -315,7 +315,7 @@ class TestGetRequestDetail:
         client = TestClient(app, raise_server_exceptions=False)
 
         with patch("app.services.request_service.transition_status") as mock_transition, \
-             patch("app.services.price_analysis_service.compute_price_analysis", return_value=None), \
+             patch("app.domains.pricing.analysis.compute_price_analysis", return_value=None), \
              patch("app.tasks.notify.send_status_change_notification", create=True) as mock_notify:
             mock_notify.apply_async = MagicMock()
             mock_transition.return_value = req
