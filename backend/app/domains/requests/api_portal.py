@@ -30,11 +30,12 @@ from app.api.portal.deps import company_or_404, rate_limited, require_business_r
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.companies import service as company_service
+from app.domains.requests import service as request_service
+from app.domains.requests.models import Request
+from app.domains.requests.schemas import PortalRequestCreate
+from app.domains.requests.webapp_schemas import RequestDetailOut, RequestFileOut, RequestOut
 from app.models.accounts import UserAccount
-from app.models.requests import Request
-from app.schemas.portal_request import PortalRequestCreate
-from app.schemas.webapp import RequestDetailOut, RequestFileOut, RequestOut
-from app.services import rate_limit, request_service, storage_service
+from app.services import rate_limit, storage_service
 
 router = APIRouter(prefix="/portal/requests", tags=["portal-requests"])
 

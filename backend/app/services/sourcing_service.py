@@ -23,8 +23,8 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.domains.marketplace.models import SellerOffer
+from app.domains.requests.models import Request
 from app.models.enums import SellerOfferStatus
-from app.models.requests import Request
 from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun
 from app.schemas.sourcing import MarketIntelRow
 

@@ -128,7 +128,7 @@ def sla_client() -> Generator[TestClient, None, None]:
         with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_apply:
             mock_apply.apply_async = MagicMock()
             # Patch create_request to use the mocked service
-            with patch("app.api.webapp.requests.request_service") as mock_svc:
+            with patch("app.domains.requests.api_webapp.request_service") as mock_svc:
                 mock_svc.create_request.return_value = mock_req
                 yield tc
 
@@ -194,8 +194,8 @@ def test_status_change_enqueues_notify_promptly() -> None:
       - apply_async is called exactly once with queue="notify"
       - no countdown or eta keyword argument is passed (immediate dispatch)
     """
+    from app.domains.requests.service import transition_status  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
-    from app.services.request_service import transition_status  # noqa: PLC0415
 
     db = _make_mock_db()
     # TG-origin request with status=new (valid transition: new → viewed). TG-origin
@@ -207,7 +207,7 @@ def test_status_change_enqueues_notify_promptly() -> None:
     mock_request.created_by_user_account_id = None
 
     # Mock write_audit so the staff path doesn't break (no DB needed)
-    with patch("app.services.request_service.write_audit"), patch(
+    with patch("app.domains.requests.service.write_audit"), patch(
         "app.tasks.notify.send_status_change_notification",
         create=True,
     ) as mock_task:

@@ -254,8 +254,8 @@ def test_concurrent_accepts_produce_exactly_one_deal(sf) -> None:  # noqa: ANN00
 
     def accept(response_id: int) -> None:
         from app.domains.deals.models import RfqResponse  # noqa: PLC0415
+        from app.domains.requests.models import Request  # noqa: PLC0415
         from app.models.accounts import UserAccount  # noqa: PLC0415
-        from app.models.requests import Request  # noqa: PLC0415
 
         with sf() as session:
             req = session.get(Request, request_id)
@@ -633,7 +633,7 @@ def test_telegram_inquiry_cannot_become_a_deal(sf) -> None:  # noqa: ANN001
         _buyer_acc, _buyer, seller_acc, seller = _parties(db)
         offer = make_seller_offer(db, company=seller, created_by=seller_acc.id)
         tg_seller = make_seller(db, telegram_user_id=42)
-        from app.models.requests import Client  # noqa: PLC0415
+        from app.domains.requests.models import Client  # noqa: PLC0415
 
         client = Client(telegram_user_id=99)
         db.add(client)

@@ -112,12 +112,10 @@ def test_raising_the_invoice_rings_both_bells(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_every_movement_rings_both_bells(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.services import (  # noqa: PLC0415
-        deal_service,
-        escrow_service,
-        notification_service,
-    )
+    from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, buyer, seller_acc, seller = _signed_deal(db)

@@ -26,7 +26,7 @@ import urllib.parse
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.requests import Client
+from app.domains.requests.models import Client
 
 logger = logging.getLogger(__name__)
 

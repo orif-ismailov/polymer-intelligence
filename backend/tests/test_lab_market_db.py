@@ -227,7 +227,9 @@ class TestSupplierScoringHook:
     def test_a_supplier_with_a_passport_outranks_an_identical_one_without(
         self, db: Session
     ) -> None:
-        from app.services import supplier_matching_service  # noqa: PLC0415
+        from app.domains.requests import (
+            supplier_matching as supplier_matching_service,  # noqa: PLC0415
+        )
 
         buyer_owner = make_account(db, "+998900000610")
         buyer = make_company(db, buyer_owner, tax_id="300000610")
@@ -242,7 +244,9 @@ class TestSupplierScoringHook:
         assert by_company[with_passport.id].rank < by_company[without.id].rank
 
     def test_the_bonus_is_the_declared_weight(self, db: Session) -> None:
-        from app.services import supplier_matching_service  # noqa: PLC0415
+        from app.domains.requests import (
+            supplier_matching as supplier_matching_service,  # noqa: PLC0415
+        )
 
         buyer_owner = make_account(db, "+998900000620")
         buyer = make_company(db, buyer_owner, tax_id="300000620")
@@ -260,7 +264,9 @@ class TestSupplierScoringHook:
     def test_lab_verified_alone_does_not_score(self, db: Session) -> None:
         """A `lab_verified` offer always has a passport, so there is nothing to
         add on top — the weight is counted once, for the analysis."""
-        from app.services import supplier_matching_service  # noqa: PLC0415
+        from app.domains.requests import (
+            supplier_matching as supplier_matching_service,  # noqa: PLC0415
+        )
 
         buyer_owner = make_account(db, "+998900000630")
         buyer = make_company(db, buyer_owner, tax_id="300000630")

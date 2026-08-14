@@ -47,7 +47,7 @@ from app.models.enums import (
 if TYPE_CHECKING:
     from app.domains.companies.models import Company
     from app.domains.compliance.models import Substance
-    from app.models.requests import Client
+    from app.domains.requests.models import Client
 
 
 class Seller(Base):

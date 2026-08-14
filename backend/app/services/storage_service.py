@@ -35,10 +35,10 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.domains.companies.models import Company
 from app.domains.marketplace.models import SellerOfferFile
+from app.domains.requests.models import RequestFile
 from app.domains.verification.models import VerificationDocument
 from app.models.enums import OfferFileKind, VerificationDocumentKind
 from app.models.media import CompanyMedia
-from app.models.requests import RequestFile
 
 logger = logging.getLogger(__name__)
 

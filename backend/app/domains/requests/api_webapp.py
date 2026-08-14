@@ -21,9 +21,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.requests import Client, Request
-from app.schemas.webapp import RequestCreate, RequestDetailOut, RequestOut
-from app.services import request_service
+from app.domains.requests import service as request_service
+from app.domains.requests.models import Client, Request
+from app.domains.requests.webapp_schemas import RequestCreate, RequestDetailOut, RequestOut
 
 router = APIRouter(prefix="/webapp", tags=["webapp"])
 

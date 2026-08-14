@@ -20,8 +20,8 @@ from app.domains.marketplace.schemas import (
     SellerOfferOut,
     SellerOfferUpdate,
 )
+from app.domains.requests.models import Client
 from app.models.enums import OfferFileKind, SellerOfferStatus
-from app.models.requests import Client
 from app.services import storage_service
 from app.services.storage_service import MAX_OFFER_FILES
 

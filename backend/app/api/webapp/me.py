@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.requests import Client
-from app.schemas.webapp import ClientProfileOut, ClientProfilePatch
+from app.domains.requests.models import Client
+from app.domains.requests.webapp_schemas import ClientProfileOut, ClientProfilePatch
 
 router = APIRouter(prefix="/webapp", tags=["webapp"])
 

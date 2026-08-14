@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
-from app.models.requests import Request
+from app.domains.requests.models import Request
 from app.models.sourcing import InventoryItem, PartnerSupplier
 from app.models.staff import StaffUser
 from app.schemas.sourcing import (

@@ -103,6 +103,10 @@ jobs:
           app/domains/news/dedup.py
           app/domains/news/reports.py
           app/domains/pricing/analysis.py
+          app/domains/requests/service.py
+          app/domains/requests/analysis.py
+          app/domains/requests/rfq_push.py
+          app/domains/requests/supplier_matching.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -123,6 +127,9 @@ jobs:
           app/domains/manufacturers/schemas.py
           app/domains/lab_orders/schemas.py
           app/domains/news/schemas.py
+          app/domains/requests/schemas.py
+          app/domains/requests/webapp_schemas.py
+          app/domains/requests/analysis_schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

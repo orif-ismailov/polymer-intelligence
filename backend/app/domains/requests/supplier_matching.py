@@ -38,6 +38,7 @@ from sqlalchemy.orm import Session
 from app.core.time import utcnow
 from app.domains.companies.models import Company, CompanyBusinessRole
 from app.domains.marketplace.models import SellerOffer, SellerOfferFile
+from app.domains.requests.models import Request
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,
@@ -47,7 +48,6 @@ from app.models.enums import (
 from app.models.enums import (
     CompanyBusinessRole as RoleEnum,
 )
-from app.models.requests import Request
 
 logger = logging.getLogger(__name__)
 

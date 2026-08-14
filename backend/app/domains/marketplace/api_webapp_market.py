@@ -24,7 +24,7 @@ from app.domains.marketplace.schemas import (
     OfferRequestUpdate,
     PublicFeaturedOffer,
 )
-from app.models.requests import Client
+from app.domains.requests.models import Client
 
 router = APIRouter(prefix="/webapp/market", tags=["webapp-market"])
 

@@ -212,6 +212,29 @@ failure mode none of the counts above will catch.
 
 So: change import **paths**, never import **style**, and never "tidy" an import while moving it.
 
+### Parenthesized `from app.services import (...)` blocks hide from naive detectors
+
+Every phase splits these by hand, so every phase needs to *find* them all. A detector
+anchored on `^\s*from app\.services import \($` misses
+`from app.services import (  # noqa: PLC0415` — the trailing comment means the line does
+not end at the paren. That gap reported "0 blocks" for two real ones, and one of them
+(`tests/test_escrow_notifications_db.py`, holding `deal_service` + `escrow_service`) went
+stale in **P5 and stayed stale through P9**, because the test is `@requires_real_db` and
+skips locally — it would only have failed on CI.
+
+Match `^\s*from app\.services import \(` with no end anchor, and audit the whole repo
+rather than only this phase's names:
+
+```python
+# every paren block whose body names ANY already-migrated service
+for line in file:
+    if re.match(r"^\s*from app\.services import \(", line): ...
+```
+
+Two lessons beyond the regex: a locally-skipped test is not covered by "the suite is
+green", and mypy caught this one when grep did not — the `Module "app.services" has no
+attribute "x"` error is worth reading carefully rather than assuming it is a stub gap.
+
 ### A moved module's `__file__`-relative paths break silently
 
 A module that computes a path with `Path(__file__).parent.parent.parent` hard-codes how

@@ -47,19 +47,17 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_staff_user, require_role
 from app.core.db import get_db
 from app.domains.pricing import analysis as price_analysis_service
+from app.domains.requests import analysis as request_analysis_service
+from app.domains.requests import rfq_push as rfq_push_service
+from app.domains.requests import service as request_service
+from app.domains.requests.models import Request
 from app.models.enums import RequestStatus, StaffRole
-from app.models.requests import Request
 from app.models.staff import StaffUser
 from app.schemas.dashboard import (
     RequestDetailOut,
     RequestFileOut,
     RequestListOut,
     RequestPatch,
-)
-from app.services import (
-    request_analysis_service,
-    request_service,
-    rfq_push_service,
 )
 
 router = APIRouter(prefix="/requests", tags=["dashboard-requests"])

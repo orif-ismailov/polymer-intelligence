@@ -22,9 +22,9 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.security import decode_token
+from app.domains.requests.models import Client
 from app.models.accounts import UserAccount
 from app.models.enums import AccountStatus, StaffRole
-from app.models.requests import Client
 from app.models.staff import StaffUser
 
 # HTTP Bearer token extractor — auto_error=False so we can return 401 (not 403) on missing header

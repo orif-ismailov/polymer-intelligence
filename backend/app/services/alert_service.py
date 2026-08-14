@@ -134,7 +134,7 @@ def _load_entity(
             raise ValueError(f"Signal {signal_id} not found")
         return signal
     elif request_id is not None:
-        from app.models.requests import Request  # noqa: PLC0415
+        from app.domains.requests.models import Request  # noqa: PLC0415
         request = db.get(Request, request_id)
         if request is None:
             raise ValueError(f"Request {request_id} not found")

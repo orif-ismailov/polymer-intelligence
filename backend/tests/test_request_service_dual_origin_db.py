@@ -43,8 +43,8 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _payload():  # noqa: ANN202
+    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
     from app.models.enums import PriceBasis, Urgency  # noqa: PLC0415
-    from app.schemas.webapp import RequestCreate  # noqa: PLC0415
 
     return RequestCreate(
         product_id=None,
@@ -64,10 +64,10 @@ def _payload():  # noqa: ANN202
 
 @requires_real_db
 def test_create_company_request_is_portal_origin(sf) -> None:  # noqa: ANN001
+    from app.domains.requests import service as request_service  # noqa: PLC0415
+    from app.domains.requests.models import Request, RequestStatusHistory  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
-    from app.models.requests import Request, RequestStatusHistory  # noqa: PLC0415
-    from app.services import request_service  # noqa: PLC0415
 
     with sf() as db:
         owner = make_account(db, "+998900001001")
@@ -98,9 +98,9 @@ def test_create_company_request_is_portal_origin(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_transition_portal_request_notifies_creator_in_portal(sf) -> None:  # noqa: ANN001
+    from app.domains.requests import service as request_service  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
-    from app.services import request_service  # noqa: PLC0415
 
     with sf() as db:
         owner = make_account(db, "+998900001002")
@@ -110,7 +110,7 @@ def test_transition_portal_request_notifies_creator_in_portal(sf) -> None:  # no
 
         # Staff moves new -> viewed. No TG DM should be enqueued for a portal request.
         with patch(
-            "app.services.request_service._enqueue_notify_soft"
+            "app.domains.requests.service._enqueue_notify_soft"
         ) as tg_enqueue:
             request_service.transition_status(
                 db, req, RequestStatus.viewed, changed_by=None
@@ -131,10 +131,10 @@ def test_transition_portal_request_notifies_creator_in_portal(sf) -> None:  # no
 
 @requires_real_db
 def test_transition_tg_request_uses_tg_dm_not_portal(sf) -> None:  # noqa: ANN001
+    from app.domains.requests import service as request_service  # noqa: PLC0415
+    from app.domains.requests.models import Client, Request  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
-    from app.models.requests import Client, Request  # noqa: PLC0415
-    from app.services import request_service  # noqa: PLC0415
 
     with sf() as db:
         client = Client(telegram_user_id=555001, language="ru")
@@ -153,7 +153,7 @@ def test_transition_tg_request_uses_tg_dm_not_portal(sf) -> None:  # noqa: ANN00
         db.flush()
 
         with patch(
-            "app.services.request_service._enqueue_notify_soft"
+            "app.domains.requests.service._enqueue_notify_soft"
         ) as tg_enqueue:
             request_service.transition_status(
                 db, req, RequestStatus.viewed, changed_by=None

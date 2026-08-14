@@ -31,9 +31,9 @@ from app.domains.marketplace.schemas import (
     OfferRequestCreate,
     OfferRequestUpdate,
 )
+from app.domains.requests.models import Client
 from app.models.accounts import UserAccount
 from app.models.enums import OfferRequestStatus, SellerOfferStatus
-from app.models.requests import Client
 from app.services import notification_service
 from app.services.audit_service import write_audit
 

@@ -50,6 +50,7 @@ import app.domains.manufacturers.models  # noqa: F401
 import app.domains.marketplace.models  # noqa: F401
 import app.domains.news.models  # noqa: F401
 import app.domains.pricing.models  # noqa: F401
+import app.domains.requests.models  # noqa: F401
 import app.domains.verification.models  # noqa: F401
 import app.domains.verification.registry_models  # noqa: F401
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
@@ -119,7 +120,6 @@ from app.models.reference import (  # noqa: F401
     ProductGrade,
     ProductSynonym,
 )
-from app.models.requests import Client, Request, RequestFile, RequestStatusHistory  # noqa: F401
 from app.models.reviews import CompanyReview  # noqa: F401
 from app.models.signals import Signal  # noqa: F401
 from app.models.sources import ParseRun, RawItem, Source  # noqa: F401
@@ -179,10 +179,6 @@ __all__ = [
     # Signals
     "Signal",
     # Clients / requests
-    "Client",
-    "Request",
-    "RequestFile",
-    "RequestStatusHistory",
     # Prices
     # Alerts
     "AlertRule",

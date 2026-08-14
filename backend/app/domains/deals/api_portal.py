@@ -45,6 +45,7 @@ from app.domains.deals.schemas import (
     TimelineEntryOut,
     TransitionIn,
 )
+from app.domains.requests.models import Request
 from app.models.accounts import UserAccount
 from app.models.enums import (
     CompanyStatus,
@@ -52,7 +53,6 @@ from app.models.enums import (
     DealStatus,
     PriceBasis,
 )
-from app.models.requests import Request
 from app.services import storage_service
 
 router = APIRouter(prefix="/portal", tags=["portal-deals"])

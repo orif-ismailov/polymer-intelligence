@@ -214,8 +214,8 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.requests import Request  # noqa: PLC0415
-    from app.services.request_service import client_facing_status  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
+    from app.domains.requests.service import client_facing_status  # noqa: PLC0415
 
     logger.info("notify.status_change.start", extra={"request_id": request_id})
 
@@ -482,8 +482,8 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
     from app.models.reference import Product  # noqa: PLC0415
-    from app.models.requests import Request  # noqa: PLC0415
 
     chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
     if chat_id is None:

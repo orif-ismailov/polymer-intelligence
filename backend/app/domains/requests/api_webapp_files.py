@@ -19,8 +19,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.requests import Client, Request, RequestFile
-from app.schemas.webapp import RequestFileOut
+from app.domains.requests.models import Client, Request, RequestFile
+from app.domains.requests.webapp_schemas import RequestFileOut
 from app.services import storage_service
 from app.services.storage_service import MAX_FILES
 

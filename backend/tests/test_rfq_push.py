@@ -260,8 +260,8 @@ def test_a_missing_request_never_raises(sf) -> None:  # noqa: ANN001
 def test_publishing_an_rfq_enqueues_the_push(sf) -> None:  # noqa: ANN001
     """The trigger point: a company filing an RFQ. Enqueue is fail-soft — a
     broker outage must not break request creation."""
-    from app.schemas.webapp import RequestCreate  # noqa: PLC0415
-    from app.services import request_service  # noqa: PLC0415
+    from app.domains.requests import service as request_service  # noqa: PLC0415
+    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -285,8 +285,8 @@ def test_publishing_an_rfq_enqueues_the_push(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_a_broker_outage_does_not_break_rfq_creation(sf) -> None:  # noqa: ANN001
-    from app.schemas.webapp import RequestCreate  # noqa: PLC0415
-    from app.services import request_service  # noqa: PLC0415
+    from app.domains.requests import service as request_service  # noqa: PLC0415
+    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -313,7 +313,7 @@ def test_a_broker_outage_does_not_break_rfq_creation(sf) -> None:  # noqa: ANN00
 @requires_real_db
 def test_staff_can_see_who_was_notified(sf) -> None:  # noqa: ANN001
     """T3.4: without this the push is invisible to the team supporting it."""
-    from app.services import rfq_push_service  # noqa: PLC0415
+    from app.domains.requests import rfq_push as rfq_push_service  # noqa: PLC0415
 
     with sf() as db:
         request, supplier, _acc = _scene(db)

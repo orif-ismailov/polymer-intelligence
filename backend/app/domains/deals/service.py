@@ -43,6 +43,7 @@ from app.domains.companies.models import Company, CompanyMember
 from app.domains.contracts.models import Contract
 from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
 from app.domains.marketplace.models import OfferRequest, SellerOffer
+from app.domains.requests.models import Request
 from app.models.accounts import UserAccount
 from app.models.enums import (
     CompanyMemberRole,
@@ -53,7 +54,6 @@ from app.models.enums import (
     DealStatus,
     RfqResponseStatus,
 )
-from app.models.requests import Request
 from app.services import (
     audit_service,
     event_service,

@@ -53,7 +53,7 @@ def _make_request_create(**kwargs) -> MagicMock:
     """Return a RequestCreate schema instance with sane defaults."""
     import decimal
 
-    from app.schemas.webapp import RequestCreate  # noqa: PLC0415
+    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
     data = {
         "product_id": 1,
         "grade_text": "HDPE 2420D",
@@ -70,7 +70,7 @@ class TestGenerateRequestNumber:
 
     def test_number_format_matches_regex(self):
         """Number matches REQ-YYYY-MM-DD-NNNNN pattern exactly."""
-        from app.services.request_service import generate_request_number  # noqa: PLC0415
+        from app.domains.requests.service import generate_request_number  # noqa: PLC0415
 
         db = _make_mock_db()
         # Mock the execute result for CREATE SEQUENCE IF NOT EXISTS and SELECT nextval
@@ -85,7 +85,7 @@ class TestGenerateRequestNumber:
 
     def test_number_counter_increments(self):
         """Consecutive calls with mock nextval 1 then 2 yield NNNNN and NNNNN+1."""
-        from app.services.request_service import generate_request_number  # noqa: PLC0415
+        from app.domains.requests.service import generate_request_number  # noqa: PLC0415
 
         db = _make_mock_db()
         # Return 1 then 2 for nextval; CREATE SEQUENCE IF NOT EXISTS is a side-effect call
@@ -113,7 +113,7 @@ class TestGenerateRequestNumber:
 
     def test_number_five_digit_zero_padded(self):
         """Counter is zero-padded to 5 digits (e.g. 00007 not 7)."""
-        from app.services.request_service import generate_request_number  # noqa: PLC0415
+        from app.domains.requests.service import generate_request_number  # noqa: PLC0415
 
         db = _make_mock_db()
         mock_result = MagicMock()
@@ -133,20 +133,20 @@ class TestValidTransitions:
     """VALID_TRANSITIONS dict encodes the dev-spec §3 status machine exactly."""
 
     def test_new_can_only_go_to_viewed(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert VALID_TRANSITIONS[RequestStatus.new] == {RequestStatus.viewed}
 
     def test_viewed_can_only_go_to_in_progress(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert VALID_TRANSITIONS[RequestStatus.viewed] == {RequestStatus.in_progress}
 
     def test_in_progress_allowed_targets(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         expected = {
             RequestStatus.offer_sent,
@@ -157,8 +157,8 @@ class TestValidTransitions:
         assert VALID_TRANSITIONS[RequestStatus.in_progress] == expected
 
     def test_offer_sent_allowed_targets(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         expected = {
             RequestStatus.matched,
@@ -168,32 +168,32 @@ class TestValidTransitions:
         assert VALID_TRANSITIONS[RequestStatus.offer_sent] == expected
 
     def test_matched_can_only_go_to_closed(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert VALID_TRANSITIONS[RequestStatus.matched] == {RequestStatus.closed}
 
     def test_closed_has_no_transitions(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert VALID_TRANSITIONS[RequestStatus.closed] == set()
 
     def test_cancelled_has_no_transitions(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert VALID_TRANSITIONS[RequestStatus.cancelled] == set()
 
     def test_new_to_closed_is_rejected(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert RequestStatus.closed not in VALID_TRANSITIONS[RequestStatus.new]
 
     def test_in_progress_to_offer_sent_is_allowed(self):
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert RequestStatus.offer_sent in VALID_TRANSITIONS[RequestStatus.in_progress]
 
@@ -205,7 +205,7 @@ class TestCreateRequest:
 
     def test_create_request_adds_request_and_history_to_db(self):
         """create_request calls db.add() at least twice (Request + history row)."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         mock_result = MagicMock()
@@ -223,7 +223,7 @@ class TestCreateRequest:
 
     def test_create_request_calls_flush_to_get_id(self):
         """create_request calls db.flush() (not db.commit()) to get the id."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         mock_result = MagicMock()
@@ -241,7 +241,7 @@ class TestCreateRequest:
 
     def test_create_request_never_commits(self):
         """create_request NEVER calls db.commit() — service-never-commits axiom."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         mock_result = MagicMock()
@@ -259,7 +259,7 @@ class TestCreateRequest:
 
     def test_create_request_enqueues_notify_task_with_queue(self):
         """create_request calls apply_async with queue='notify'."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         mock_result = MagicMock()
@@ -288,8 +288,8 @@ class TestTransitionStatus:
 
     def test_invalid_transition_raises_value_error(self):
         """new → closed raises ValueError."""
+        from app.domains.requests.service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request("new")
@@ -299,8 +299,8 @@ class TestTransitionStatus:
 
     def test_valid_transition_updates_status(self):
         """in_progress → offer_sent updates request.status."""
+        from app.domains.requests.service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
@@ -314,8 +314,8 @@ class TestTransitionStatus:
 
     def test_valid_transition_writes_history_row(self):
         """transition_status adds a RequestStatusHistory row."""
+        from app.domains.requests.service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
@@ -328,8 +328,8 @@ class TestTransitionStatus:
 
     def test_transition_enqueues_notify(self):
         """transition_status enqueues send_status_change_notification."""
+        from app.domains.requests.service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
@@ -342,14 +342,14 @@ class TestTransitionStatus:
 
     def test_transition_writes_audit_when_changed_by_staff(self):
         """transition_status writes audit_log when changed_by is set."""
+        from app.domains.requests.service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
 
         with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task, \
-             patch("app.services.request_service.write_audit") as mock_audit:
+             patch("app.domains.requests.service.write_audit") as mock_audit:
             mock_task.apply_async = MagicMock()
             transition_status(db=db, request=req, to_status=RequestStatus.offer_sent, changed_by=5)
 
@@ -359,14 +359,14 @@ class TestTransitionStatus:
 
     def test_transition_no_audit_when_changed_by_none(self):
         """transition_status does NOT write audit when changed_by is None."""
+        from app.domains.requests.service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
 
         with patch("app.tasks.notify.send_status_change_notification", create=True) as mock_task, \
-             patch("app.services.request_service.write_audit") as mock_audit:
+             patch("app.domains.requests.service.write_audit") as mock_audit:
             mock_task.apply_async = MagicMock()
             transition_status(db=db, request=req, to_status=RequestStatus.offer_sent, changed_by=None)
 
@@ -374,8 +374,8 @@ class TestTransitionStatus:
 
     def test_transition_never_commits(self):
         """transition_status never calls db.commit()."""
+        from app.domains.requests.service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request("in_progress", id=10)
@@ -393,38 +393,38 @@ class TestClientFacingStatus:
     """client_facing_status maps all 7 RequestStatus values to D-10 keys."""
 
     def test_new_maps_to_new(self):
+        from app.domains.requests.service import client_facing_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import client_facing_status  # noqa: PLC0415
         assert client_facing_status(RequestStatus.new) == "new"
 
     def test_viewed_maps_to_in_review(self):
+        from app.domains.requests.service import client_facing_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import client_facing_status  # noqa: PLC0415
         assert client_facing_status(RequestStatus.viewed) == "in_review"
 
     def test_in_progress_maps_to_in_review(self):
+        from app.domains.requests.service import client_facing_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import client_facing_status  # noqa: PLC0415
         assert client_facing_status(RequestStatus.in_progress) == "in_review"
 
     def test_offer_sent_maps_to_offer_received(self):
+        from app.domains.requests.service import client_facing_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import client_facing_status  # noqa: PLC0415
         assert client_facing_status(RequestStatus.offer_sent) == "offer_received"
 
     def test_matched_maps_to_matched(self):
+        from app.domains.requests.service import client_facing_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import client_facing_status  # noqa: PLC0415
         assert client_facing_status(RequestStatus.matched) == "matched"
 
     def test_closed_maps_to_closed(self):
+        from app.domains.requests.service import client_facing_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import client_facing_status  # noqa: PLC0415
         assert client_facing_status(RequestStatus.closed) == "closed"
 
     def test_cancelled_maps_to_cancelled(self):
+        from app.domains.requests.service import client_facing_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import client_facing_status  # noqa: PLC0415
         assert client_facing_status(RequestStatus.cancelled) == "cancelled"
 
 
@@ -434,15 +434,15 @@ class TestClientStatusMap:
     """CLIENT_STATUS_MAP dict contains entries for all 7 RequestStatus values."""
 
     def test_client_status_map_has_all_statuses(self):
+        from app.domains.requests.service import CLIENT_STATUS_MAP  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import CLIENT_STATUS_MAP  # noqa: PLC0415
 
         for status in RequestStatus:
             assert status in CLIENT_STATUS_MAP, f"Status {status} missing from CLIENT_STATUS_MAP"
 
     def test_client_status_map_contains_expected_keys(self):
+        from app.domains.requests.service import CLIENT_STATUS_MAP  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import CLIENT_STATUS_MAP  # noqa: PLC0415
 
         assert CLIENT_STATUS_MAP[RequestStatus.new] == "new"
         assert CLIENT_STATUS_MAP[RequestStatus.viewed] == "in_review"

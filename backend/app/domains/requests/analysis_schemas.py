@@ -2,7 +2,7 @@
 Schemas for the request AI analysis feature (Phase 5).
 
 RequestAnalysisResult is the instructor `response_model` for the LLM call in
-app.services.request_analysis_service — it lives here (app.schemas) because
+app.domains.requests.analysis — it lives here (app.schemas) because
 disallow_any_explicit is relaxed for schemas (pydantic's Field is Any-typed), unlike
 the strict app.services scope.
 """

@@ -28,7 +28,7 @@ from app.domains.news.schemas import (
     ReportPublicOut,
     ReportPublicSummary,
 )
-from app.models.requests import Client
+from app.domains.requests.models import Client
 
 router = APIRouter(prefix="/webapp/news", tags=["webapp-news"])
 

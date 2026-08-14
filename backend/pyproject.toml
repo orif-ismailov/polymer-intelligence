@@ -179,6 +179,8 @@ module = [
     "app.domains.contracts.eimzo_schemas",
     "app.domains.compliance.substance_schemas",
     "app.domains.compliance.substance_match_schemas",
+    "app.domains.requests.webapp_schemas",
+    "app.domains.requests.analysis_schemas",
 ]
 disallow_untyped_defs = true
 disallow_any_explicit = false

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.requests import Client
+from app.domains.requests.models import Client
 from app.schemas.reference import ProductOut
 from app.services import product_service
 

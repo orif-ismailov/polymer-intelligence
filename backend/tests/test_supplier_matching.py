@@ -128,7 +128,7 @@ _CASES = [
 
 @pytest.mark.parametrize(("kind", "verified", "fresh", "roles", "expected"), _CASES)
 def test_score_table(kind, verified, fresh, roles, expected) -> None:  # noqa: ANN001
-    from app.services.supplier_matching_service import score_candidate  # noqa: PLC0415
+    from app.domains.requests.supplier_matching import score_candidate  # noqa: PLC0415
 
     got = score_candidate(
         match_kind=kind, verified=verified, fresh_offer=fresh, roles=roles
@@ -140,7 +140,7 @@ def test_a_manufacturer_can_outrank_a_trader_with_a_better_match() -> None:
     """The whole point of the role multiplier: who you are can beat what you
     listed. A manufacturer matching on polymer type outranks a trader matching
     the exact product — a buyer would rather hear from the plant."""
-    from app.services.supplier_matching_service import score_candidate  # noqa: PLC0415
+    from app.domains.requests.supplier_matching import score_candidate  # noqa: PLC0415
 
     plant = score_candidate(
         match_kind="type", verified=True, fresh_offer=True, roles=("manufacturer",)
@@ -155,7 +155,7 @@ def test_the_lab_passport_term_is_wired_but_inert_until_p6() -> None:
     """P6 adds lab passports. The weight exists so the ranking does not need
     re-deriving then, but it must contribute NOTHING today — otherwise every
     score silently shifts when P6 lands."""
-    from app.services import supplier_matching_service as matching  # noqa: PLC0415
+    from app.domains.requests import supplier_matching as matching  # noqa: PLC0415
 
     assert matching.W_LAB_PASSPORT > 0
     with_flag = matching.score_candidate(
@@ -215,8 +215,8 @@ def _supplier(db, tax, phone, *, roles=(), verified=True, **offer_kw):  # noqa: 
 
 @requires_real_db
 def test_matches_by_product_text_and_ranks_by_role(sf) -> None:  # noqa: ANN001
+    from app.domains.requests import supplier_matching as supplier_matching_service  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
-    from app.services import supplier_matching_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -241,7 +241,7 @@ def test_matches_by_product_text_and_ranks_by_role(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_the_rfq_author_is_never_matched(sf) -> None:  # noqa: ANN001
     """A company must not be pushed its own RFQ."""
-    from app.services import supplier_matching_service  # noqa: PLC0415
+    from app.domains.requests import supplier_matching as supplier_matching_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -262,8 +262,8 @@ def test_unverified_companies_and_tg_sellers_are_not_candidates(sf) -> None:  # 
     """The push says "a buyer wants what you sell" — it must only go to companies
     the platform has actually verified, and a Telegram seller has no portal
     account to notify at all."""
+    from app.domains.requests import supplier_matching as supplier_matching_service  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import supplier_matching_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -283,7 +283,7 @@ def test_a_stale_offer_drops_out_of_the_candidate_set(sf) -> None:  # noqa: ANN0
     import datetime  # noqa: PLC0415
 
     from app.core.time import utcnow  # noqa: PLC0415
-    from app.services import supplier_matching_service  # noqa: PLC0415
+    from app.domains.requests import supplier_matching as supplier_matching_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -300,8 +300,8 @@ def test_a_stale_offer_drops_out_of_the_candidate_set(sf) -> None:  # noqa: ANN0
 def test_one_row_per_company_even_with_several_matching_offers(sf) -> None:  # noqa: ANN001
     """A supplier with five matching listings is still one supplier to notify."""
     from app.core.time import utcnow  # noqa: PLC0415
+    from app.domains.requests import supplier_matching as supplier_matching_service  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import supplier_matching_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -323,7 +323,7 @@ def test_one_row_per_company_even_with_several_matching_offers(sf) -> None:  # n
 def test_a_request_with_nothing_to_match_on_returns_nothing(sf) -> None:  # noqa: ANN001
     """No product id, no polymer type, no text — matching everyone would be worse
     than matching no one."""
-    from app.services import supplier_matching_service  # noqa: PLC0415
+    from app.domains.requests import supplier_matching as supplier_matching_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")

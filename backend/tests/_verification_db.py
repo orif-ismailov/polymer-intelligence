@@ -244,7 +244,7 @@ def make_request(db: Session, *, company=None, account=None, **kwargs):  # noqa:
     """A portal-origin (company) purchase request — the RFQ suppliers respond to."""
     import decimal  # noqa: PLC0415
 
-    from app.models.requests import Request  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
 
     request = Request(
         number=kwargs.pop("number", f"REQ-TEST-{id(db) % 100000}-{kwargs.pop('n', 1)}"),

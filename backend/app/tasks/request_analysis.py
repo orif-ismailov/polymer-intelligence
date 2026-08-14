@@ -29,8 +29,8 @@ def analyze_request_ai(request_id: int) -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.requests import Request  # noqa: PLC0415
-    from app.services import request_analysis_service  # noqa: PLC0415
+    from app.domains.requests import analysis as request_analysis_service  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
 
     try:
         with Session(engine) as session:

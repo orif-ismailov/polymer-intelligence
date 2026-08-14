@@ -8,7 +8,7 @@ so a portal-origin request serializes exactly like a TG-origin one.
 
 from __future__ import annotations
 
-from app.schemas.webapp import RequestCreate
+from app.domains.requests.webapp_schemas import RequestCreate
 
 
 class PortalRequestCreate(RequestCreate):
