@@ -32,6 +32,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.domains.companies import directory as directory_service
 from app.domains.companies.models import Company
+from app.domains.laboratory import service as laboratory_service
 from app.domains.logistics import service as logistics_service
 from app.domains.marketplace import service as offer_service
 from app.models.enums import CompanyBusinessRole as CompanyBusinessRoleEnum
@@ -55,7 +56,6 @@ from app.schemas.public import (
 )
 from app.schemas.reports import NewsArticleCard, NewsArticleDetail, NewsFilterOptions
 from app.services import (
-    laboratory_service,
     manufacturer_service,
     news_service,
     public_market_service,

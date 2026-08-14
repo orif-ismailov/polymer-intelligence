@@ -23,6 +23,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from app.core.time import to_display_tz, utcnow
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBusinessRole
+from app.domains.laboratory.models import LabRequest, LabRequestMessage, LabRequestThread
 from app.models.accounts import UserAccount
 from app.models.enums import (
     BusinessRoleStatus,
@@ -32,7 +33,6 @@ from app.models.enums import (
 from app.models.enums import (
     CompanyBusinessRole as CompanyBusinessRoleEnum,
 )
-from app.models.laboratory import LabRequest, LabRequestMessage, LabRequestThread
 from app.services import storage_service
 
 logger = logging.getLogger(__name__)

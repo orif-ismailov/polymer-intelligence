@@ -33,13 +33,13 @@ from app.api.portal.deps import require_business_role
 from app.core.db import get_db
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
-from app.models.accounts import UserAccount
-from app.models.laboratory import (
+from app.domains.laboratory import service as laboratory_service
+from app.domains.laboratory.models import (
     LabRequest,
     LabRequestMessage,
     LabRequestThread,
 )
-from app.schemas.portal_laboratory import (
+from app.domains.laboratory.schemas import (
     LabMessageOut,
     LabMessagePageOut,
     LabPoolItemOut,
@@ -51,8 +51,8 @@ from app.schemas.portal_laboratory import (
     LabThreadOpenIn,
     LabThreadOut,
 )
+from app.models.accounts import UserAccount
 from app.services import (
-    laboratory_service,
     notification_service,
     storage_service,
 )

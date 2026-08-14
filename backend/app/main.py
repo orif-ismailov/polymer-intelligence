@@ -37,7 +37,6 @@ import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_ch
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
 from app.api.admin_lab import router as admin_lab_router
-from app.api.admin_lab_requests import router as admin_lab_requests_router
 from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
@@ -52,7 +51,6 @@ from app.api.feed import router as feed_router
 from app.api.health import router as health_router
 from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.lab import router as portal_lab_router
-from app.api.portal.lab_requests import router as portal_lab_requests_router
 from app.api.portal.manufacturers import router as portal_manufacturers_router
 from app.api.portal.news import router as portal_news_router
 from app.api.portal.notifications import router as portal_notifications_router
@@ -85,6 +83,8 @@ from app.domains.deals.api_admin import router as admin_deals_router
 from app.domains.deals.api_admin_escrow import router as admin_escrow_router
 from app.domains.deals.api_portal import router as portal_deals_router
 from app.domains.deals.api_webhooks import router as webhooks_escrow_router
+from app.domains.laboratory.api_admin import router as admin_lab_requests_router
+from app.domains.laboratory.api_portal import router as portal_lab_requests_router
 from app.domains.logistics.api_admin import router as admin_logistics_requests_router
 from app.domains.logistics.api_portal import router as portal_logistics_router
 from app.domains.marketplace.api_admin import router as offer_requests_router

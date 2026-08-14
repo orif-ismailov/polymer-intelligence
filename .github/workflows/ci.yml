@@ -95,6 +95,7 @@ jobs:
           app/domains/compliance/substance_ai.py
           app/domains/compliance/licenses.py
           app/domains/logistics/service.py
+          app/domains/laboratory/service.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -111,6 +112,7 @@ jobs:
           app/domains/compliance/substance_schemas.py
           app/domains/compliance/substance_match_schemas.py
           app/domains/logistics/schemas.py
+          app/domains/laboratory/schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

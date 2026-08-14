@@ -40,7 +40,7 @@ def test_routes_registered() -> None:
     `/{something}` route declared first — FastAPI resolves first-registered — and
     the failure would be a silent misroute rather than an error.
     """
-    from app.api.portal.lab_requests import router  # noqa: PLC0415
+    from app.domains.laboratory.api_portal import router  # noqa: PLC0415
 
     paths = [r.path for r in router.routes]  # type: ignore[attr-defined]
     for path in (
@@ -68,7 +68,8 @@ def test_prefix_does_not_collide_with_the_p6_lab_order_family() -> None:
     against an offer, this is a client↔laboratory channel. The prefixes must not
     converge, and the P6 routes must still be mounted after this one was added.
     """
-    from app.api.portal import lab, lab_requests  # noqa: PLC0415
+    from app.api.portal import lab  # noqa: PLC0415
+    from app.domains.laboratory import api_portal as lab_requests  # noqa: PLC0415
 
     p6 = {r.path for r in lab.router.routes}  # type: ignore[attr-defined]
     new = {r.path for r in lab_requests.router.routes}  # type: ignore[attr-defined]
@@ -112,7 +113,7 @@ def test_pool_payload_omits_the_buyer_contact() -> None:
     SEPARATE model rather than the buyer's minus three fields, so a field added
     upstream cannot silently become visible to every laboratory.
     """
-    from app.schemas.portal_laboratory import (  # noqa: PLC0415
+    from app.domains.laboratory.schemas import (  # noqa: PLC0415
         LabPoolItemOut,
         LabRequestOut,
     )
@@ -129,7 +130,7 @@ def test_create_payload_bounds_and_trims() -> None:
     """Bounds live on the schema, so a non-browser client cannot skip them."""
     import pydantic  # noqa: PLC0415
 
-    from app.schemas.portal_laboratory import LabRequestCreateIn  # noqa: PLC0415
+    from app.domains.laboratory.schemas import LabRequestCreateIn  # noqa: PLC0415
 
     base = {"company_id": 1, "product_text": "HDPE S5502 BN"}
     assert LabRequestCreateIn(**base).methods == []
@@ -157,7 +158,7 @@ def test_create_payload_has_no_laboratory_field() -> None:
     a target field is how this quietly becomes addressed again, with the pool
     still running beside it.
     """
-    from app.schemas.portal_laboratory import LabRequestCreateIn  # noqa: PLC0415
+    from app.domains.laboratory.schemas import LabRequestCreateIn  # noqa: PLC0415
 
     assert not (
         set(LabRequestCreateIn.model_fields)
@@ -343,9 +344,9 @@ def test_visibility_guard_and_pool_query_agree(api) -> None:  # noqa: ANN001
     If `is_visible_to` and the pool list ever disagree, a laboratory sees an
     «Ответить» button the API then refuses — or worse, the reverse.
     """
+    from app.domains.laboratory import service as laboratory_service  # noqa: PLC0415
+    from app.domains.laboratory.models import LabRequest  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.models.laboratory import LabRequest  # noqa: PLC0415
-    from app.services import laboratory_service  # noqa: PLC0415
 
     client, session = api
     with session() as db:
@@ -703,7 +704,7 @@ def _staff_auth(session, role: str, email: str) -> dict[str, str]:  # noqa: ANN0
 
 
 def test_admin_routes_registered() -> None:
-    from app.api.admin_lab_requests import router  # noqa: PLC0415
+    from app.domains.laboratory.api_admin import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/lab-requests" in paths

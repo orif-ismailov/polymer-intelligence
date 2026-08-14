@@ -69,13 +69,13 @@ mypy app/services app/domains/marketplace/{service,requests,compliance}.py \
      app/domains/contracts/{service,render,eimzo}.py \
      app/domains/deals/{service,escrow,rfq}.py \
      app/domains/compliance/{substances,substance_ai,licenses}.py \
-     app/domains/logistics/service.py --ignore-missing-imports
+     app/domains/{logistics,laboratory}/service.py --ignore-missing-imports
 mypy app/schemas  app/domains/marketplace/{schemas,portal_market_schemas}.py \
      app/domains/{verification,companies}/schemas.py \
      app/domains/contracts/{schemas,eimzo_schemas}.py \
      app/domains/deals/schemas.py \
      app/domains/compliance/{schemas,substance_schemas,substance_match_schemas}.py \
-     app/domains/logistics/schemas.py --ignore-missing-imports
+     app/domains/{logistics,laboratory}/schemas.py --ignore-missing-imports
 pytest tests/ -q                     # full backend suite
 
 # Single test / file / pattern:
