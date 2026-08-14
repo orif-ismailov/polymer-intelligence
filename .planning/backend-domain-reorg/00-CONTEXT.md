@@ -339,12 +339,12 @@ research), confirmed with the user:
 3. **Companies** — **DONE** (`P3-COMPANIES.md`). `company_service` + `directory_service` + `models/companies.py`. Highest fan-in (8 other domains
    depend on it) — moved once several dependents already exist as domains, so "update every call
    site" happens once at scale.
-4. **Contracts** — `contract_service`, `contract_render`, `eimzo_service`.
-5. **Deals/Escrow/RFQ** — `deal_service`, `escrow_service`, `rfq_response_service`,
+4. **Contracts** — **DONE** (`P4-CONTRACTS.md`). `contract_service`, `contract_render`, `eimzo_service`.
+5. **Deals/Escrow/RFQ** — **DONE** (`P5-DEALS.md`). `deal_service`, `escrow_service`, `rfq_response_service`,
    `rfq_push_service`, `supplier_matching_service`.
-6. **Compliance/Substances** — `substance_service`, `substance_ai_service`,
+6. **Compliance/Substances** — **DONE** (`P6-COMPLIANCE.md`). `substance_service`, `substance_ai_service`,
    `company_license_service`.
-7. **Lab/Logistics/Manufacturers** — `lab_service`, `laboratory_service`, `logistics_service`,
+7. **Lab/Logistics/Manufacturers** — **DONE** (`P7-…md`, four folders). `lab_service`, `laboratory_service`, `logistics_service`,
    `manufacturer_service`, `sample_service`.
 8. **News/Reports** — **DONE** (`P8-NEWS-REPORTS.md`). `news_service`, `news_dedup`, `report_service`, `ai_signal_service`,
    `relevance_service`, `grade_service`.
