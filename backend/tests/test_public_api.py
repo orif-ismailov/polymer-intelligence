@@ -285,7 +285,7 @@ def test_logistics_snippet_is_none_without_a_profile() -> None:
     "is not a carrier" are different facts about a company.
     """
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.services import logistics_service  # noqa: PLC0415
+    from app.domains.logistics import service as logistics_service  # noqa: PLC0415
 
     assert logistics_service.logistics_profile_snippet(Company(logistics_profile=None)) is None
     assert logistics_service.logistics_profile_snippet(Company(logistics_profile={})) is None
@@ -300,7 +300,7 @@ def test_logistics_snippet_survives_a_malformed_blob() -> None:
     a stray flag would otherwise render as «Опыт работы: 1 год».
     """
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.services import logistics_service  # noqa: PLC0415
+    from app.domains.logistics import service as logistics_service  # noqa: PLC0415
 
     snippet = logistics_service.logistics_profile_snippet(
         Company(

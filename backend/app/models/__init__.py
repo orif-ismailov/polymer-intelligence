@@ -60,6 +60,11 @@ from app.domains.deals.models import (  # noqa: F401
     RfqResponse,
 )
 from app.domains.deals.payment_models import EscrowPayment, ProviderEvent  # noqa: F401
+from app.domains.logistics.models import (  # noqa: F401
+    LogisticsRequest,
+    LogisticsRequestMessage,
+    LogisticsRequestThread,
+)
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
@@ -123,11 +128,6 @@ from app.models.laboratory import (  # noqa: F401
     LabRequest,
     LabRequestMessage,
     LabRequestThread,
-)
-from app.models.logistics import (  # noqa: F401
-    LogisticsRequest,
-    LogisticsRequestMessage,
-    LogisticsRequestThread,
 )
 from app.models.manufacturers import (  # noqa: F401
     FactoryRfq,

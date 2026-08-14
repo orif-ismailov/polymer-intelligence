@@ -21,10 +21,14 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
 from app.domains.companies.models import Company
+from app.domains.logistics import service as logistics_service
+from app.domains.logistics.models import (
+    LogisticsRequest,
+    LogisticsRequestMessage,
+    LogisticsRequestThread,
+)
 from app.models.enums import LogisticsRequestStatus
-from app.models.logistics import LogisticsRequest, LogisticsRequestMessage, LogisticsRequestThread
 from app.models.staff import StaffUser
-from app.services import logistics_service
 
 router = APIRouter(prefix="/admin", tags=["admin-logistics-requests"])
 

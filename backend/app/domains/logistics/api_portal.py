@@ -30,13 +30,13 @@ from app.api.portal.deps import require_business_role
 from app.core.db import get_db
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
-from app.models.accounts import UserAccount
-from app.models.logistics import (
+from app.domains.logistics import service as logistics_service
+from app.domains.logistics.models import (
     LogisticsRequest,
     LogisticsRequestMessage,
     LogisticsRequestThread,
 )
-from app.schemas.portal_logistics import (
+from app.domains.logistics.schemas import (
     LogisticsMessageOut,
     LogisticsMessagePageOut,
     LogisticsPoolItemOut,
@@ -48,8 +48,8 @@ from app.schemas.portal_logistics import (
     LogisticsThreadOpenIn,
     LogisticsThreadOut,
 )
+from app.models.accounts import UserAccount
 from app.services import (
-    logistics_service,
     notification_service,
     storage_service,
 )

@@ -23,6 +23,11 @@ from sqlalchemy.sql.elements import ColumnElement
 from app.core.time import to_display_tz, utcnow
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBusinessRole
+from app.domains.logistics.models import (
+    LogisticsRequest,
+    LogisticsRequestMessage,
+    LogisticsRequestThread,
+)
 from app.models.accounts import UserAccount
 from app.models.enums import (
     BusinessRoleStatus,
@@ -31,11 +36,6 @@ from app.models.enums import (
 )
 from app.models.enums import (
     CompanyBusinessRole as CompanyBusinessRoleEnum,
-)
-from app.models.logistics import (
-    LogisticsRequest,
-    LogisticsRequestMessage,
-    LogisticsRequestThread,
 )
 from app.services import storage_service
 
