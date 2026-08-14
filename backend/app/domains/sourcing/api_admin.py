@@ -11,9 +11,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
 from app.domains.requests.models import Request
-from app.models.sourcing import InventoryItem, PartnerSupplier
-from app.models.staff import StaffUser
-from app.schemas.sourcing import (
+from app.domains.sourcing import service as sourcing_service
+from app.domains.sourcing.models import InventoryItem, PartnerSupplier
+from app.domains.sourcing.schemas import (
     InventoryItemIn,
     InventoryItemOut,
     InventoryItemPatch,
@@ -23,7 +23,7 @@ from app.schemas.sourcing import (
     PartnerSupplierPatch,
     SourcingRunOut,
 )
-from app.services import sourcing_service
+from app.models.staff import StaffUser
 
 router = APIRouter(prefix="/admin", tags=["sourcing"])
 

@@ -19,8 +19,8 @@ from fastapi.testclient import TestClient
 
 class TestWaterfall:
     def test_recommended_prefers_inventory_over_cheaper_marketplace(self):
+        from app.domains.sourcing import service as sourcing_service
         from app.models.enums import SellerOfferStatus
-        from app.services import sourcing_service
 
         # Inventory at 1200, a cheaper marketplace offer at 1000. Priority wins:
         # inventory (priority 1) must be recommended despite the higher price.
@@ -39,7 +39,7 @@ class TestWaterfall:
         # Each db.query(Model) returns an object whose filter/all yields the right rows.
         def _query(model: Any):
             from app.domains.marketplace.models import SellerOffer
-            from app.models.sourcing import InventoryItem, PartnerSupplier
+            from app.domains.sourcing.models import InventoryItem, PartnerSupplier
 
             q = MagicMock()
             q.filter.return_value = q
@@ -104,11 +104,11 @@ class TestBrokerApi:
         assert resp.status_code == 401, resp.text
 
     def test_market_intel_200(self):
-        from app.schemas.sourcing import MarketIntelRow
+        from app.domains.sourcing.schemas import MarketIntelRow
 
         application = _staff_app(MagicMock())
         with patch("app.api.health._check_redis", return_value="ok"), patch(
-            "app.api.sourcing.sourcing_service"
+            "app.domains.sourcing.api_admin.sourcing_service"
         ) as svc, TestClient(application) as tc:
             svc.market_overview.return_value = [
                 MarketIntelRow(code="HDPE", buyers=14, sellers=8, avg_seller_price=1085.0, avg_buyer_target=1045.0, spread=40.0)

@@ -107,6 +107,7 @@ jobs:
           app/domains/requests/analysis.py
           app/domains/requests/rfq_push.py
           app/domains/requests/supplier_matching.py
+          app/domains/sourcing/service.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -130,6 +131,7 @@ jobs:
           app/domains/requests/schemas.py
           app/domains/requests/webapp_schemas.py
           app/domains/requests/analysis_schemas.py
+          app/domains/sourcing/schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

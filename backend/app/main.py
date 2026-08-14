@@ -52,7 +52,6 @@ from app.api.portal.notifications import router as portal_notifications_router
 from app.api.portal.reference import router as portal_reference_router
 from app.api.public import router as public_router
 from app.api.sources import router as sources_router
-from app.api.sourcing import router as sourcing_router
 from app.api.telegram_webhook import router as telegram_webhook_router
 from app.api.webapp.auth import router as webapp_auth_router
 from app.api.webapp.me import router as webapp_me_router
@@ -94,6 +93,7 @@ from app.domains.requests.api_admin import router as dashboard_requests_router
 from app.domains.requests.api_portal import router as portal_requests_router
 from app.domains.requests.api_webapp import router as webapp_requests_router
 from app.domains.requests.api_webapp_files import router as webapp_files_router
+from app.domains.sourcing.api_admin import router as sourcing_router
 from app.domains.verification.api_admin import router as admin_verification_router
 from app.domains.verification.api_portal import router as portal_verification_router
 from app.models.staff import StaffUser

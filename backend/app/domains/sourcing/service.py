@@ -24,9 +24,9 @@ from sqlalchemy.orm import Session
 
 from app.domains.marketplace.models import SellerOffer
 from app.domains.requests.models import Request
+from app.domains.sourcing.models import InventoryItem, PartnerSupplier, SourcingRun
+from app.domains.sourcing.schemas import MarketIntelRow
 from app.models.enums import SellerOfferStatus
-from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun
-from app.schemas.sourcing import MarketIntelRow
 
 logger = logging.getLogger(__name__)
 
