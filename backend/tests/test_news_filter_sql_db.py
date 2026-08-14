@@ -94,9 +94,9 @@ def seeded_news(engine: sa.Engine):  # noqa: ANN201 — module fixture
 
     from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
+    from app.domains.signals.models import Signal  # noqa: PLC0415
+    from app.domains.signals.source_models import Source  # noqa: PLC0415
     from app.models.enums import PriceBasis, SignalKind, SourceKind  # noqa: PLC0415
-    from app.models.signals import Signal  # noqa: PLC0415
-    from app.models.sources import Source  # noqa: PLC0415
 
     now = datetime.datetime.now(tz=datetime.UTC)
     session_factory = sessionmaker(bind=engine)
@@ -348,8 +348,8 @@ class TestApprovalDb:
     def _insert_pending(self, engine: sa.Engine) -> int:
         import datetime as _dt  # noqa: PLC0415
 
+        from app.domains.signals.models import Signal  # noqa: PLC0415
         from app.models.enums import PriceBasis, SignalKind  # noqa: PLC0415
-        from app.models.signals import Signal  # noqa: PLC0415
 
         with _open(engine) as s:
             sig = Signal(
@@ -442,7 +442,7 @@ class TestRssFetchDueDb:
 @_requires_real_db
 class TestSourceGroupsDb:
     def test_assign_list_and_clear(self, seeded_news: sa.Engine) -> None:
-        from app.services import source_service  # noqa: PLC0415
+        from app.domains.signals import sources as source_service  # noqa: PLC0415
 
         with _open(seeded_news) as s:
             assert source_service.set_source_group(s, 901, "Uzbek news") is True
@@ -461,7 +461,7 @@ class TestSourceGroupsDb:
             assert next(b for b in source_service.list_sources_brief(s) if b["id"] == 901)["group_name"] is None
 
     def test_missing_source_returns_false(self, seeded_news: sa.Engine) -> None:
-        from app.services import source_service  # noqa: PLC0415
+        from app.domains.signals import sources as source_service  # noqa: PLC0415
 
         with _open(seeded_news) as s:
             assert source_service.set_source_group(s, 99999, "X") is False
@@ -473,9 +473,9 @@ class TestLocalMarketDb:
         import datetime as _dt  # noqa: PLC0415
 
         from app.domains.news import reports as report_service  # noqa: PLC0415
+        from app.domains.signals.models import Signal  # noqa: PLC0415
+        from app.domains.signals.source_models import Source  # noqa: PLC0415
         from app.models.enums import PriceBasis, SignalKind, SourceKind  # noqa: PLC0415
-        from app.models.signals import Signal  # noqa: PLC0415
-        from app.models.sources import Source  # noqa: PLC0415
 
         with _open(seeded_news) as s:
             s.execute(sa.text(
@@ -505,7 +505,7 @@ class TestLocalMarketDb:
 @_requires_real_db
 class TestNewsActivityDb:
     def test_activity_lists_news_sources_with_yield(self, seeded_news: sa.Engine) -> None:
-        from app.services import source_service  # noqa: PLC0415
+        from app.domains.signals import sources as source_service  # noqa: PLC0415
 
         with _open(seeded_news) as s:
             names = source_service.enabled_rss_source_names(s)

@@ -108,6 +108,11 @@ jobs:
           app/domains/requests/rfq_push.py
           app/domains/requests/supplier_matching.py
           app/domains/sourcing/service.py
+          app/domains/signals/service.py
+          app/domains/signals/ai.py
+          app/domains/signals/raw_pipeline.py
+          app/domains/signals/sources.py
+          app/domains/signals/source_health.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)

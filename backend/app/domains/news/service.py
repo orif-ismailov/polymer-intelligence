@@ -20,12 +20,12 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from app.domains.news.dedup import cluster_articles
+from app.domains.signals.models import Signal
 from app.models.enums import PriceBasis, SignalKind
-from app.models.signals import Signal
 from app.services.relevance_service import match_product
 
 if TYPE_CHECKING:
-    from app.models.sources import RawItem
+    from app.domains.signals.source_models import RawItem
     from parsing.news_schemas import NewsArticle
 
 

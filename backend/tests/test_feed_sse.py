@@ -85,7 +85,7 @@ class TestFeedSSE:
         client = _make_sse_client()
 
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
             resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
 
         assert resp.status_code == 200, resp.text
@@ -99,7 +99,7 @@ class TestFeedSSE:
         client = _make_sse_client()
 
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
             resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
 
         assert resp.status_code == 200, resp.text
@@ -113,7 +113,7 @@ class TestFeedSSE:
         client = _make_sse_client()
 
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
             resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
 
         assert resp.status_code == 200, resp.text
@@ -126,7 +126,7 @@ class TestFeedSSE:
         client = _make_sse_client()
 
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
             resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
 
         body = resp.text

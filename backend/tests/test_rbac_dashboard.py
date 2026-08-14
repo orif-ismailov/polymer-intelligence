@@ -114,7 +114,7 @@ class TestReadEndpointsAllowedForAllRoles:
             __import__("app.core.db", fromlist=["get_db"]).get_db
         ]
 
-        with patch("app.api.feed.get_feed") as _:
+        with patch("app.domains.signals.api_feed.get_feed") as _:
             # We patch at a higher level — just check the auth gate
             pass
 
@@ -288,7 +288,7 @@ class TestSourcesPatchAdminOnly:
         _make_rbac_client(user)
 
         # Mock the Source ORM lookup so the patch doesn't 404
-        from app.models.sources import Source
+        from app.domains.signals.source_models import Source
 
         mock_source = MagicMock(spec=Source)
         mock_source.id = 1

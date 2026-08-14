@@ -94,7 +94,7 @@ def fetch_cbu_rates() -> dict[str, Any]:
     try:
         with Session(engine) as session:
             if source_id is not None:
-                from app.models.sources import Source  # noqa: PLC0415
+                from app.domains.signals.source_models import Source  # noqa: PLC0415
 
                 source_obj = session.get(Source, source_id)
                 if source_obj is not None:

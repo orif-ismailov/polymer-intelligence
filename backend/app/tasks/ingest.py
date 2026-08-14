@@ -38,8 +38,8 @@ from typing import Any
 
 import sqlalchemy as sa
 
-from app.services.raw_pipeline import save_raw_items
-from app.services.source_health_service import record_fetch_failure, record_fetch_success
+from app.domains.signals.raw_pipeline import save_raw_items
+from app.domains.signals.source_health import record_fetch_failure, record_fetch_success
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 def _load_enabled_sources(session: Any, adapter_name: str) -> list[Any]:
     """Load all enabled Source rows for a given adapter type."""
-    from app.models.sources import Source  # noqa: PLC0415
+    from app.domains.signals.source_models import Source  # noqa: PLC0415
 
     result: list[Any] = (
         session.query(Source)

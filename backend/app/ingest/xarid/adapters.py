@@ -50,7 +50,7 @@ from app.ingest.base import RawItemDraft, TestResult
 from app.ingest.registry import register_adapter
 
 if TYPE_CHECKING:
-    from app.models.sources import Source
+    from app.domains.signals.source_models import Source
 
 logger = logging.getLogger(__name__)
 

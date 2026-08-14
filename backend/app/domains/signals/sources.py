@@ -13,7 +13,7 @@ from __future__ import annotations
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from app.models.sources import Source
+from app.domains.signals.source_models import Source
 
 
 def list_source_groups(db: Session) -> list[dict[str, object]]:

@@ -195,6 +195,9 @@ module = [
     "app.domains.*.models",
     "app.domains.verification.registry_models",
     "app.domains.contracts.eimzo_models",
+    "app.domains.deals.payment_models",
+    "app.domains.signals.source_models",
+    "app.domains.signals.counterparty_models",
 ]
 disallow_untyped_defs = true
 disallow_any_explicit = false

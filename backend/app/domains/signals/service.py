@@ -30,11 +30,11 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
+from app.domains.signals.models import Signal
 from app.models.enums import PriceBasis, SignalKind
-from app.models.signals import Signal
 
 if TYPE_CHECKING:
-    from app.models.sources import RawItem
+    from app.domains.signals.source_models import RawItem
 
 logger = logging.getLogger(__name__)
 

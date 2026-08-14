@@ -28,10 +28,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.config import settings
 from app.core.db import get_db
+from app.domains.signals import sources as source_service
 from app.ingest.registry import list_adapters
 from app.models.staff import StaffUser
 from app.schemas.admin_settings import SourceBrief, SourceGroup, SourceGroupUpdate
-from app.services import source_service
 from parsing.budget import per_source_spend
 
 router = APIRouter(prefix="/admin", tags=["admin-sources"])

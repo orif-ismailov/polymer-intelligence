@@ -164,7 +164,7 @@ def check_source_health() -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.services.source_health_service import check_all_sources_health  # noqa: PLC0415
+    from app.domains.signals.source_health import check_all_sources_health  # noqa: PLC0415
 
     logger.info("check_source_health.start")
 

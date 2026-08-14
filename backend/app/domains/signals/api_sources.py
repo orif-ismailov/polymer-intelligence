@@ -31,8 +31,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_staff_user, require_admin
 from app.core.db import get_db
+from app.domains.signals.source_models import Source
 from app.models.enums import SourceKind
-from app.models.sources import Source
 from app.models.staff import StaffUser
 from app.schemas.dashboard import (
     SourceCreate,

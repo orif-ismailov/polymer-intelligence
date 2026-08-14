@@ -48,35 +48,35 @@ class TestComputeContentHash:
     """compute_content_hash must be deterministic and return 32 bytes."""
 
     def test_deterministic_same_inputs(self) -> None:
-        from app.services.raw_pipeline import compute_content_hash
+        from app.domains.signals.raw_pipeline import compute_content_hash
 
         h1 = compute_content_hash(source_id=1, external_id="lot-42", content="foo bar")
         h2 = compute_content_hash(source_id=1, external_id="lot-42", content="foo bar")
         assert h1 == h2, "same inputs must produce identical bytes"
 
     def test_returns_32_bytes(self) -> None:
-        from app.services.raw_pipeline import compute_content_hash
+        from app.domains.signals.raw_pipeline import compute_content_hash
 
         h = compute_content_hash(source_id=99, external_id="x", content="test content")
         assert isinstance(h, bytes)
         assert len(h) == 32, f"SHA-256 digest must be 32 bytes, got {len(h)}"
 
     def test_different_content_different_hash(self) -> None:
-        from app.services.raw_pipeline import compute_content_hash
+        from app.domains.signals.raw_pipeline import compute_content_hash
 
         h1 = compute_content_hash(source_id=1, external_id="id", content="content A")
         h2 = compute_content_hash(source_id=1, external_id="id", content="content B")
         assert h1 != h2
 
     def test_different_source_id_different_hash(self) -> None:
-        from app.services.raw_pipeline import compute_content_hash
+        from app.domains.signals.raw_pipeline import compute_content_hash
 
         h1 = compute_content_hash(source_id=1, external_id="id", content="content")
         h2 = compute_content_hash(source_id=2, external_id="id", content="content")
         assert h1 != h2
 
     def test_different_external_id_different_hash(self) -> None:
-        from app.services.raw_pipeline import compute_content_hash
+        from app.domains.signals.raw_pipeline import compute_content_hash
 
         h1 = compute_content_hash(source_id=1, external_id="lot-1", content="content")
         h2 = compute_content_hash(source_id=1, external_id="lot-2", content="content")
@@ -84,7 +84,7 @@ class TestComputeContentHash:
 
     def test_none_external_id_handled(self) -> None:
         """external_id=None must not crash and must be deterministic."""
-        from app.services.raw_pipeline import compute_content_hash
+        from app.domains.signals.raw_pipeline import compute_content_hash
 
         h1 = compute_content_hash(source_id=1, external_id=None, content="content")
         h2 = compute_content_hash(source_id=1, external_id=None, content="content")
@@ -93,7 +93,7 @@ class TestComputeContentHash:
 
     def test_whitespace_normalization(self) -> None:
         """Content with equivalent whitespace must hash the same."""
-        from app.services.raw_pipeline import compute_content_hash
+        from app.domains.signals.raw_pipeline import compute_content_hash
 
         h1 = compute_content_hash(source_id=1, external_id="id", content="foo  bar")
         h2 = compute_content_hash(source_id=1, external_id="id", content="foo bar")
@@ -177,9 +177,9 @@ class TestSaveRawItemsDeduplication:
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
         engine = _live_engine()
+        from app.domains.signals.raw_pipeline import save_raw_items  # noqa: PLC0415
+        from app.domains.signals.source_models import Source  # noqa: PLC0415
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
-        from app.models.sources import Source  # noqa: PLC0415
-        from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
 
         with Session(engine) as session:
             source_id = self._make_source(session)
@@ -212,9 +212,9 @@ class TestSaveRawItemsDeduplication:
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
         engine = _live_engine()
+        from app.domains.signals.raw_pipeline import save_raw_items  # noqa: PLC0415
+        from app.domains.signals.source_models import Source  # noqa: PLC0415
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
-        from app.models.sources import Source  # noqa: PLC0415
-        from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
 
         with Session(engine) as session:
             source_id = self._make_source(session)
@@ -252,9 +252,9 @@ class TestSaveRawItemsDeduplication:
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
         engine = _live_engine()
+        from app.domains.signals.raw_pipeline import save_raw_items  # noqa: PLC0415
+        from app.domains.signals.source_models import Source  # noqa: PLC0415
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
-        from app.models.sources import Source  # noqa: PLC0415
-        from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
 
         with Session(engine) as session:
             source_id = self._make_source(session)
@@ -302,9 +302,9 @@ class TestSaveRawItemsDeduplication:
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
         engine = _live_engine()
+        from app.domains.signals.raw_pipeline import save_raw_items  # noqa: PLC0415
+        from app.domains.signals.source_models import Source  # noqa: PLC0415
         from app.ingest.base import RawItemDraft  # noqa: PLC0415
-        from app.models.sources import Source  # noqa: PLC0415
-        from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
 
         with Session(engine) as session:
             source_id = self._make_source(session)
@@ -348,12 +348,13 @@ class TestImmutabilityContract:
         import pathlib  # noqa: PLC0415
         import re  # noqa: PLC0415
 
-        pipeline_path = (
-            pathlib.Path(__file__).parent.parent
-            / "app"
-            / "services"
-            / "raw_pipeline.py"
-        )
+        # Resolved from the module itself rather than a hard-coded path: this file
+        # moved to app/domains/signals/ in the domain reorg, and a literal path would
+        # need editing every time. `read_text` on a stale path raises, so this at
+        # least failed loudly — but the module reference cannot go stale at all.
+        from app.domains.signals import raw_pipeline  # noqa: PLC0415
+
+        pipeline_path = pathlib.Path(raw_pipeline.__file__)
         source = pipeline_path.read_text(encoding="utf-8")
 
         # Check that there's no literal UPDATE raw_items statement

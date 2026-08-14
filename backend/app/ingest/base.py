@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from app.models.sources import Source
+    from app.domains.signals.source_models import Source
 
 
 @dataclass

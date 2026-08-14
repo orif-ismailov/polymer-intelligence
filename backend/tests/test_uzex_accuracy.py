@@ -97,8 +97,8 @@ def _compute_accuracy(
         - per_field_counts: {field: {"correct": N, "total": N}}
         - failures: list of dicts describing mismatches
     """
+    from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
     from app.services.grade_service import extract_grade  # noqa: PLC0415
-    from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
 
     per_field: dict[str, dict[str, int]] = {
         f: {"correct": 0, "total": 0} for f in CHECKED_FIELDS

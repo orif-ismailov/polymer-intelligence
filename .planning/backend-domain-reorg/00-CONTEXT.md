@@ -212,6 +212,21 @@ failure mode none of the counts above will catch.
 
 So: change import **paths**, never import **style**, and never "tidy" an import while moving it.
 
+### Submodule-namespace imports exist on `app.api` too, not just `app.services`
+
+The finding above documents `from app.services import offer_service`. The same shape
+occurs on the router packages — `from app.api.portal import lab, lab_requests` (P7) and
+`from app.api import feed as feed_module` (P10) — and a sweep that only handles
+`app.services` is blind to both. Neither dotted-path sed nor the namespace rule fires;
+they surface as an ImportError in whichever test happens to use them.
+
+Grep all three package roots before moving a router:
+
+```bash
+grep -rnE "^\s*from app\.(api|api\.portal|services|models|schemas) import [a-z]" \
+    backend/app backend/tests telegram userbot
+```
+
 ### Parenthesized `from app.services import (...)` blocks hide from naive detectors
 
 Every phase splits these by hand, so every phase needs to *find* them all. A detector
@@ -316,11 +331,11 @@ research), confirmed with the user:
    `company_license_service`.
 7. **Lab/Logistics/Manufacturers** — `lab_service`, `laboratory_service`, `logistics_service`,
    `manufacturer_service`, `sample_service`.
-8. **News/Reports** — `news_service`, `news_dedup`, `report_service`, `ai_signal_service`,
+8. **News/Reports** — **DONE** (`P8-NEWS-REPORTS.md`). `news_service`, `news_dedup`, `report_service`, `ai_signal_service`,
    `relevance_service`, `grade_service`.
-9. **Requests/Pricing** — `request_service`, `request_analysis_service`, `price_analysis_service`,
+9. **Requests/Pricing** — **DONE** (`P9-REQUESTS-PRICING.md`, two folders). `request_service`, `request_analysis_service`, `price_analysis_service`,
    `dashboard_summary_service`.
-10. **Signals/Ingest** — `signal_service`, `raw_pipeline`, `source_service`,
+10. **Signals/Ingest** — **DONE** (`P10-SIGNALS-SOURCING.md`, signals + sourcing). `signal_service`, `raw_pipeline`, `source_service`,
     `source_health_service`, `sourcing_service` (`app/ingest/` adapter package already has its
     own per-type structure and is left as-is).
 11. Remaining small isolated services (`alert_service`, `auth_service`, `client_service`,

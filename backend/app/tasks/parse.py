@@ -80,7 +80,7 @@ def queue_for_classification(
 
 def create_signal_from_parse(session: Any, raw_item: Any, parsed: Mapping[str, object]) -> Any:
     """Wrapper: route through signal_service.create_signal_from_parse."""
-    from app.services.signal_service import (  # noqa: PLC0415
+    from app.domains.signals.service import (  # noqa: PLC0415
         create_signal_from_parse as _create,
     )
 
@@ -150,7 +150,7 @@ def release_reserved_tokens(reserved: int) -> None:
 
 def write_parse_run(session: Any, raw_item_id: int, **kwargs: Any) -> int:
     """Wrapper: call ai_signal_service.write_parse_run."""
-    from app.services.ai_signal_service import write_parse_run as _write  # noqa: PLC0415
+    from app.domains.signals.ai import write_parse_run as _write  # noqa: PLC0415
 
     return _write(session, raw_item_id, **kwargs)
 
@@ -159,7 +159,7 @@ def create_signal_from_extraction(
     session: Any, raw_item: Any, result: Any, journal: dict, **kwargs: Any
 ) -> Any:
     """Wrapper: call ai_signal_service.create_signal_from_extraction."""
-    from app.services.ai_signal_service import (  # noqa: PLC0415
+    from app.domains.signals.ai import (  # noqa: PLC0415
         create_signal_from_extraction as _create,
     )
 
@@ -285,7 +285,7 @@ def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
         - already parsed → immediate return (idempotency guard)
         - error          → parse_runs status='error', parse_status='failed'
     """
-    from app.models.sources import ParseRun, RawItem  # noqa: PLC0415
+    from app.domains.signals.source_models import ParseRun, RawItem  # noqa: PLC0415
     from app.services.grade_service import extract_grade  # noqa: PLC0415
 
     with get_session() as session:
@@ -453,11 +453,11 @@ def parse_xarid_item(raw_item_id: int) -> dict[str, Any]:
     """
     from instructor.core import InstructorRetryException  # noqa: PLC0415
 
-    from app.models.sources import RawItem  # noqa: PLC0415
-    from app.services.grade_service import extract_grade  # noqa: PLC0415
-    from app.services.signal_service import (  # noqa: PLC0415
+    from app.domains.signals.service import (  # noqa: PLC0415
         create_buy_request_signal_from_xarid,
     )
+    from app.domains.signals.source_models import RawItem  # noqa: PLC0415
+    from app.services.grade_service import extract_grade  # noqa: PLC0415
     from parsing.budget import BudgetExceeded  # noqa: PLC0415
     from parsing.text_prep import prepare_message_text  # noqa: PLC0415
 
@@ -615,7 +615,7 @@ def parse_news_item(raw_item_id: int) -> dict[str, Any]:
     from instructor.core import InstructorRetryException  # noqa: PLC0415
 
     from app.domains.news.service import create_news_signal_from_article  # noqa: PLC0415
-    from app.models.sources import RawItem  # noqa: PLC0415
+    from app.domains.signals.source_models import RawItem  # noqa: PLC0415
     from parsing.budget import BudgetExceeded  # noqa: PLC0415
     from parsing.news_schemas import NEWS_CONFIDENCE_REVIEW_THRESHOLD  # noqa: PLC0415
     from parsing.text_prep import prepare_message_text  # noqa: PLC0415

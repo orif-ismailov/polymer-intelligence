@@ -318,7 +318,7 @@ class TestDedupe:
 
         with patch("app.services.alert_service.Alert") as mock_alert_cls, \
              patch("app.services.alert_service.Delivery"), \
-             patch("app.models.signals.Signal"):
+             patch("app.domains.signals.models.Signal"):
 
             # Simulate: signal entity returned by _load_entity
             with patch("app.services.alert_service._load_entity", return_value=signal):

@@ -221,7 +221,7 @@ def test_feed_keyset_no_seq_scan(seeded_feed_db):
 
     import sqlalchemy as sa
 
-    # Mirror the exact keyset query from app.api.feed — no cursor (first page)
+    # Mirror the exact keyset query from app.domains.signals.api_feed — no cursor (first page)
     keyset_query = sa.text(
         """
         EXPLAIN ANALYZE

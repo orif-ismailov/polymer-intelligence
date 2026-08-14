@@ -163,7 +163,7 @@ class TestParseRunORMModel:
 
     def test_parse_run_has_latency_ms_attribute(self) -> None:
         """ParseRun model has a latency_ms attribute."""
-        from app.models.sources import ParseRun
+        from app.domains.signals.source_models import ParseRun
 
         assert hasattr(ParseRun, "latency_ms"), (
             "ParseRun model must have a latency_ms attribute (added in migration 0003)"
@@ -171,7 +171,7 @@ class TestParseRunORMModel:
 
     def test_latency_ms_maps_to_integer_column(self) -> None:
         """ParseRun.latency_ms is mapped to an Integer column."""
-        from app.models.sources import ParseRun
+        from app.domains.signals.source_models import ParseRun
 
         # Access the SQLAlchemy mapped property
         mapper = ParseRun.__mapper__
@@ -185,7 +185,7 @@ class TestParseRunORMModel:
 
     def test_latency_ms_is_nullable(self) -> None:
         """ParseRun.latency_ms is nullable (NULL for rule-based runs)."""
-        from app.models.sources import ParseRun
+        from app.domains.signals.source_models import ParseRun
 
         mapper = ParseRun.__mapper__
         latency_col = mapper.columns.get("latency_ms")

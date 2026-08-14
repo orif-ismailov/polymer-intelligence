@@ -46,7 +46,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session
 
-from app.models.signals import Signal
+from app.domains.signals.models import Signal
 from parsing.lead_scoring import SCORING_PROMPT_VERSION, compute_lead_score
 from parsing.schemas import (
     ExtractionResult,

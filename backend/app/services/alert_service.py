@@ -128,7 +128,7 @@ def _load_entity(
             is not found.
     """
     if signal_id is not None:
-        from app.models.signals import Signal  # noqa: PLC0415
+        from app.domains.signals.models import Signal  # noqa: PLC0415
         signal = db.get(Signal, signal_id)
         if signal is None:
             raise ValueError(f"Signal {signal_id} not found")

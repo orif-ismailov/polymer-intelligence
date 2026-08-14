@@ -36,8 +36,8 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 if TYPE_CHECKING:
+    from app.domains.signals.source_models import Source
     from app.ingest.base import RawItemDraft
-    from app.models.sources import Source
 
 logger = logging.getLogger(__name__)
 
