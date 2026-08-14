@@ -163,9 +163,11 @@ def test_request_id_reaches_a_log_line_from_inside_the_handler() -> None:
     depends on `configure_logging`'s processor order, which lives in a different
     module and could change without this middleware changing at all.
 
-    (Note this covers APP loggers. Uvicorn configures `uvicorn.access` with
-    propagate=False, so its access lines bypass the structlog chain entirely and
-    stay plain text — pre-existing, and out of scope here.)
+    (This covers APP loggers. Uvicorn configures its own `uvicorn.access` /
+    `uvicorn.error` with propagate=False, so those lines bypass the structlog
+    chain and stay plain text. That is uvicorn's output, not the app's, and it
+    does NOT mean app logging is unstructured — see the rendered-output test
+    below, which checks the JSON the app actually writes.)
     """
     from fastapi import FastAPI  # noqa: PLC0415
 
@@ -203,6 +205,61 @@ def test_request_id_reaches_a_log_line_from_inside_the_handler() -> None:
         "merge_contextvars missing from the structlog chain — request_id would be "
         "bound but never rendered onto any log line"
     )
+
+
+def test_request_id_appears_in_the_rendered_json_log_line() -> None:
+    """End of the chain: the id is actually IN the JSON that gets written.
+
+    The two tests above cover the halves — the id reaches the handler's context,
+    and `merge_contextvars` is configured to fold it in. Neither proves the
+    RENDERED output contains it, and that gap produced a wrong conclusion once: a
+    manual check of a running server found no `request_id` in the log and was
+    written up as "JSON logging is broken under uvicorn". It was not. Nothing had
+    logged — the code path being exercised logs from the CELERY WORKER, which was
+    not running. Re-checked properly, uvicorn renders app logs as JSON with the id
+    present, for both sync and async handlers; the plain-text lines are uvicorn's
+    OWN loggers, which set propagate=False and never reach this chain.
+
+    So this asserts the whole pipeline through the real formatter — the claim
+    anyone actually cares about, and cheap to keep honest.
+    """
+    import io  # noqa: PLC0415
+    import json  # noqa: PLC0415
+    import logging  # noqa: PLC0415
+
+    from fastapi import FastAPI  # noqa: PLC0415
+
+    from app.core.logging import configure_logging  # noqa: PLC0415
+    from app.core.middleware import RequestIdMiddleware  # noqa: PLC0415
+
+    configure_logging()
+    root = logging.getLogger()
+    original = root.handlers
+
+    stream = io.StringIO()
+    capture = logging.StreamHandler(stream)
+    capture.setFormatter(original[0].formatter)  # the real ProcessorFormatter
+    root.handlers = [capture]
+
+    app = FastAPI()
+    app.add_middleware(RequestIdMiddleware)
+    log = logging.getLogger("probe.rendered")
+
+    @app.get("/emit")
+    def emit() -> dict[str, str]:
+        log.info("probe.emitted")
+        return {"ok": "yes"}
+
+    try:
+        with TestClient(app) as c:
+            c.get("/emit", headers={REQUEST_ID_HEADER: "rendered-trace-9"})
+    finally:
+        root.handlers = original
+
+    lines = [ln for ln in stream.getvalue().splitlines() if "probe.emitted" in ln]
+    assert lines, f"nothing rendered: {stream.getvalue()!r}"
+    record = json.loads(lines[0])
+    assert record["request_id"] == "rendered-trace-9", record
 
 
 # ── The streaming guarantee ───────────────────────────────────────────────────
