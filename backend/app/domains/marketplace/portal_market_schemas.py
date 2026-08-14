@@ -16,7 +16,7 @@ import datetime
 import decimal
 import uuid
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from app.domains.marketplace.schemas import (
     CatalogOfferOut,
@@ -117,3 +117,44 @@ class PublicCompanyProfileOut(BaseModel):
     #: First page of approved offers for the Products tab (caller may fetch more
     #: via GET /portal/market?seller_company_id=…).
     offers: list[PortalMarketOfferOut] = Field(default_factory=list)
+
+
+# ── Supplier-side RFQ views ───────────────────────────────────────────────────
+#
+# Moved here from the deals schemas in P5, with the `GET /portal/market/requests`
+# route: it is served by the portal-market router, which owns `/{offer_id}` and so
+# has to declare this literal above it.
+
+
+class MarketRequestOut(BaseModel):
+    """A buyer RFQ as a supplier sees it — trade terms only.
+
+    Deliberately omits `requests.company_name` / `contact_name` / `phone` /
+    `legal_address`: the platform stays the intermediary until a deal is open.
+    """
+
+    id: int
+    product: str | None = None
+    grade: str | None = None
+    volume: decimal.Decimal
+    volume_unit: str
+    incoterms: str
+    destination_country: str
+    port_or_city: str | None = None
+    desired_date: datetime.date | None = None
+    validity_days: int
+    urgency: str
+    required_docs: list[str] = Field(default_factory=list)
+    created_at: datetime.datetime
+    #: This company's own response to it, when there is one — so the UI shows
+    #: "Responded" instead of a button the API would then reject.
+    my_response_id: int | None = None
+    my_response_status: str | None = None
+
+    @field_serializer("volume")
+    def _volume(self, value: decimal.Decimal) -> str:
+        return format(value.normalize(), "f")
+
+
+class MarketRequestListOut(BaseModel):
+    items: list[MarketRequestOut]

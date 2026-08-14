@@ -1204,7 +1204,7 @@ def _deal_card(deal_id_raw: str | None, headline: str, extra: list[str] | None =
 
     from app.core.db import engine  # noqa: PLC0415
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
 
     def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
         company = session.get(Company, company_id)

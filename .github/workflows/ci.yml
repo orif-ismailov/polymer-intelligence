@@ -88,6 +88,9 @@ jobs:
           app/domains/contracts/service.py
           app/domains/contracts/render.py
           app/domains/contracts/eimzo.py
+          app/domains/deals/service.py
+          app/domains/deals/escrow.py
+          app/domains/deals/rfq.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -99,6 +102,7 @@ jobs:
           app/domains/companies/schemas.py
           app/domains/contracts/schemas.py
           app/domains/contracts/eimzo_schemas.py
+          app/domains/deals/schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

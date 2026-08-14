@@ -32,11 +32,12 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.db import get_db
 from app.domains.companies.models import Company
-from app.models.deals import Deal
+from app.domains.deals import escrow as escrow_service
+from app.domains.deals import service as deal_service
+from app.domains.deals.models import Deal
+from app.domains.deals.payment_models import EscrowPayment
 from app.models.enums import DealStatus, EscrowStatus
-from app.models.payments import EscrowPayment
 from app.models.staff import StaffUser
-from app.services import deal_service, escrow_service
 
 router = APIRouter(prefix="/admin", tags=["admin-escrow"])
 

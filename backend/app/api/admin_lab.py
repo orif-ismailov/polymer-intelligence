@@ -25,11 +25,12 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.db import get_db
 from app.domains.companies.models import Company
+from app.domains.deals import service as deal_service
 from app.models.enums import LabOrderStatus
 from app.models.lab import LabOrder, LabPartner
 from app.models.staff import StaffUser
 from app.schemas.lab import LabPartnerIn, LabPartnerOut
-from app.services import deal_service, lab_service
+from app.services import lab_service
 
 router = APIRouter(prefix="/admin", tags=["admin-lab"])
 

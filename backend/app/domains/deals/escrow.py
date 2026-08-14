@@ -47,14 +47,19 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.domains.deals import service as deal_service
+from app.domains.deals.models import Deal
+from app.domains.deals.payment_models import (
+    ESCROW_MODE_LIVE,
+    ESCROW_MODE_STUB,
+    EscrowPayment,
+    ProviderEvent,
+)
 from app.integrations.escrow import events as provider_events_map
-from app.models.deals import Deal
 from app.models.enums import DealActorKind, DealStatus, EscrowStatus
-from app.models.payments import ESCROW_MODE_LIVE, ESCROW_MODE_STUB, EscrowPayment, ProviderEvent
 from app.models.staff import StaffUser
 from app.services import (
     audit_service,
-    deal_service,
     event_service,
     event_types,
     notification_service,

@@ -22,8 +22,9 @@ from sqlalchemy.orm import Query, Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.domains.companies.models import Company, CompanyMember
+from app.domains.deals.models import RfqResponse
+from app.domains.deals.service import CompanyNotVerified, ResponseNotOpen
 from app.models.accounts import UserAccount
-from app.models.deals import RfqResponse
 from app.models.enums import (
     CompanyMemberStatus,
     CompanyStatus,
@@ -34,7 +35,6 @@ from app.models.enums import (
 )
 from app.models.requests import Request
 from app.services import audit_service, event_service, event_types, notification_service
-from app.services.deal_service import CompanyNotVerified, ResponseNotOpen
 
 logger = logging.getLogger(__name__)
 

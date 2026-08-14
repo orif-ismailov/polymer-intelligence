@@ -62,7 +62,7 @@ def _scene(db):  # noqa: ANN001, ANN202
 
 
 def _quote(db, request, company, account, price="1250.00"):  # noqa: ANN001, ANN202
-    from app.services import rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
 
     return rfq_response_service.submit(
         db, request, company, account,
@@ -109,7 +109,7 @@ def test_the_supplier_is_not_notified_of_their_own_quote(sf) -> None:  # noqa: A
 
 @requires_real_db
 def test_accept_notifies_the_winner_and_the_losers_differently(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)
@@ -126,7 +126,7 @@ def test_accept_notifies_the_winner_and_the_losers_differently(sf) -> None:  # n
 
 @requires_real_db
 def test_opening_a_deal_notifies_both_sides(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)
@@ -144,7 +144,7 @@ def test_opening_a_deal_notifies_both_sides(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_every_active_member_of_a_party_is_notified(sf) -> None:  # noqa: ANN001
     """A plain member reads the room, so they get the bell too."""
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller, request = _scene(db)
@@ -161,8 +161,8 @@ def test_every_active_member_of_a_party_is_notified(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_a_party_transition_notifies_the_other_side_only(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)
@@ -188,8 +188,8 @@ def test_a_party_transition_notifies_the_other_side_only(sf) -> None:  # noqa: A
 @requires_real_db
 def test_a_system_transition_notifies_both_sides(sf) -> None:  # noqa: ANN001
     """Nobody clicked, so nobody already knows."""
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)
@@ -209,7 +209,7 @@ def test_a_system_transition_notifies_both_sides(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_chat_notification_has_a_cooldown(sf) -> None:  # noqa: ANN001
     """A busy room must not ring the bell on every line typed."""
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)
@@ -226,7 +226,8 @@ def test_chat_notification_has_a_cooldown(sf) -> None:  # noqa: ANN001
 def test_the_cooldown_survives_the_reader_opening_the_bell(sf) -> None:  # noqa: ANN001
     """Plain unread-dedup would fire again the moment the counterparty reads it;
     the cooldown is a time window, so it does not."""
-    from app.services import deal_service, notification_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)
@@ -242,8 +243,8 @@ def test_the_cooldown_survives_the_reader_opening_the_bell(sf) -> None:  # noqa:
 
 @requires_real_db
 def test_the_cooldown_is_per_deal(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller, request = _scene(db)
@@ -264,7 +265,7 @@ def test_the_cooldown_is_per_deal(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_the_author_is_not_notified_of_their_own_message(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)
@@ -279,8 +280,9 @@ def test_the_author_is_not_notified_of_their_own_message(sf) -> None:  # noqa: A
 def test_a_document_notifies_the_other_side(sf) -> None:  # noqa: ANN001
     import hashlib  # noqa: PLC0415
 
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealDocumentKind  # noqa: PLC0415
-    from app.services import deal_service, storage_service  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)
@@ -308,8 +310,8 @@ def test_a_document_notifies_the_other_side(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_a_rolled_back_deal_leaves_no_bell_entry(sf) -> None:  # noqa: ANN001
     """Inline notification means the bell shares the deal's fate."""
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)

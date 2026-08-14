@@ -43,7 +43,7 @@ EXPECTED_DEAL_EFFECT: dict[str, str] = {
 
 def _table() -> dict[str, set[str]]:
     """_TRANSITIONS flattened to plain strings."""
-    from app.services.escrow_service import _TRANSITIONS  # noqa: PLC0415
+    from app.domains.deals.escrow import _TRANSITIONS  # noqa: PLC0415
 
     return {frm.value: {to.value for to in tos} for frm, tos in _TRANSITIONS.items()}
 
@@ -86,7 +86,7 @@ class TestDealEffects:
     def test_every_move_drags_the_deal(self) -> None:
         """No escrow move is silent: each one asserts a deal status, in the same
         transaction (see the DB suite)."""
-        from app.services.escrow_service import _DEAL_EFFECT  # noqa: PLC0415
+        from app.domains.deals.escrow import _DEAL_EFFECT  # noqa: PLC0415
 
         assert {
             status.value: deal_status.value for status, deal_status in _DEAL_EFFECT.items()
@@ -95,8 +95,8 @@ class TestDealEffects:
     def test_the_effects_are_real_deal_transitions(self) -> None:
         """The deal statuses escrow asserts must be reachable from where the deal
         actually is when the money moves — otherwise `mark` would always 409."""
+        from app.domains.deals.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import DealStatus  # noqa: PLC0415
-        from app.services.deal_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert DealStatus.paid_escrow in VALID_TRANSITIONS[DealStatus.payment_pending]
         assert DealStatus.completed in VALID_TRANSITIONS[DealStatus.delivered]
@@ -107,8 +107,8 @@ class TestDealEffects:
         """FR-D8 in the money path: once funded, the deal cannot simply be
         cancelled — staff must dispute it, which is what makes the refund a
         recorded decision rather than a quiet reversal."""
+        from app.domains.deals.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import DealStatus  # noqa: PLC0415
-        from app.services.deal_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         for frm in (DealStatus.paid_escrow, DealStatus.shipped, DealStatus.delivered):
             assert DealStatus.cancelled not in VALID_TRANSITIONS[frm], (

@@ -14,8 +14,6 @@ A third company gets 404, never 403: a 403 would confirm the deal exists.
 
 from __future__ import annotations
 
-import decimal
-
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from sqlalchemy import or_
@@ -26,17 +24,11 @@ from app.core.db import get_db
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
 from app.domains.contracts.models import Contract
-from app.models.accounts import UserAccount
-from app.models.deals import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
-from app.models.enums import (
-    CompanyStatus,
-    DealDocumentKind,
-    DealStatus,
-    PriceBasis,
-    RfqResponseStatus,
-)
-from app.models.requests import Request
-from app.schemas.portal_deal import (
+from app.domains.deals import escrow as escrow_service
+from app.domains.deals import rfq as rfq_response_service
+from app.domains.deals import service as deal_service
+from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
+from app.domains.deals.schemas import (
     DealCountersOut,
     DealDetailOut,
     DealDocumentOut,
@@ -45,8 +37,6 @@ from app.schemas.portal_deal import (
     DealMessageOut,
     DealMessagePageOut,
     DealSummaryOut,
-    MarketRequestListOut,
-    MarketRequestOut,
     PartyOut,
     RevokeIn,
     RfqResponseIn,
@@ -55,12 +45,15 @@ from app.schemas.portal_deal import (
     TimelineEntryOut,
     TransitionIn,
 )
-from app.services import (
-    deal_service,
-    escrow_service,
-    rfq_response_service,
-    storage_service,
+from app.models.accounts import UserAccount
+from app.models.enums import (
+    CompanyStatus,
+    DealDocumentKind,
+    DealStatus,
+    PriceBasis,
 )
+from app.models.requests import Request
+from app.services import storage_service
 
 router = APIRouter(prefix="/portal", tags=["portal-deals"])
 
@@ -712,53 +705,3 @@ def withdraw_rfq_response(
 
 
 # ── supplier-facing RFQ market ────────────────────────────────────────────────
-
-
-@router.get("/market/requests", response_model=MarketRequestListOut)
-def list_market_requests(
-    company_id: int = Query(...),
-    limit: int = Query(default=50, ge=1, le=200),
-    offset: int = Query(default=0, ge=0),
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-) -> MarketRequestListOut:
-    """Open RFQs this supplier company may answer — trade terms only.
-
-    Buyer contact details are never included: the platform stays the
-    intermediary until a deal is open.
-    """
-    company = _company_or_404(db, account, company_id)
-    rows = rfq_response_service.list_open_requests(db, company, limit=limit, offset=offset)
-
-    mine = {
-        r.request_id: r
-        for r in db.query(RfqResponse)
-        .filter(
-            RfqResponse.company_id == company.id,
-            RfqResponse.request_id.in_([r.id for r in rows] or [0]),
-            RfqResponse.status != RfqResponseStatus.withdrawn,
-        )
-        .all()
-    }
-    return MarketRequestListOut(
-        items=[
-            MarketRequestOut(
-                id=r.id,
-                product=r.product_text,
-                grade=r.grade_text,
-                volume=r.volume if r.volume is not None else decimal.Decimal(0),
-                volume_unit=r.volume_unit,
-                incoterms=str(r.incoterms),
-                destination_country=r.destination_country,
-                port_or_city=r.port_or_city,
-                desired_date=r.desired_date,
-                validity_days=r.validity_days,
-                urgency=str(r.urgency),
-                required_docs=list(r.required_docs or []),
-                created_at=r.created_at,
-                my_response_id=mine[r.id].id if r.id in mine else None,
-                my_response_status=str(mine[r.id].status) if r.id in mine else None,
-            )
-            for r in rows
-        ]
-    )

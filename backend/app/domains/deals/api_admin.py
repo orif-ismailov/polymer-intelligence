@@ -24,10 +24,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.db import get_db
 from app.domains.companies.models import Company
-from app.models.deals import Deal, DealDocument, DealMessage, DealStatusHistory
+from app.domains.deals import service as deal_service
+from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory
 from app.models.enums import DealActorKind, DealStatus
 from app.models.staff import StaffUser
-from app.services import deal_service
 
 router = APIRouter(prefix="/admin", tags=["admin-deals"])
 

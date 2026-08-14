@@ -47,6 +47,14 @@ from app.domains.contracts.models import (  # noqa: F401
     ContractSignature,
     ContractTemplate,
 )
+from app.domains.deals.models import (  # noqa: F401
+    Deal,
+    DealDocument,
+    DealMessage,
+    DealStatusHistory,
+    RfqResponse,
+)
+from app.domains.deals.payment_models import EscrowPayment, ProviderEvent  # noqa: F401
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
@@ -56,13 +64,6 @@ from app.models.compliance import (  # noqa: F401
     SubstanceSuggestion,
 )
 from app.models.counterparties import Counterparty, CounterpartyAlias  # noqa: F401
-from app.models.deals import (  # noqa: F401
-    Deal,
-    DealDocument,
-    DealMessage,
-    DealStatusHistory,
-    RfqResponse,
-)
 from app.models.enums import (  # noqa: F401
     AccountStatus,
     AlertKind,
@@ -136,7 +137,6 @@ from app.models.manufacturers import (  # noqa: F401
 )
 from app.models.media import CompanyMedia  # noqa: F401
 from app.models.notifications import PortalNotification  # noqa: F401
-from app.models.payments import EscrowPayment, ProviderEvent  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401
 from app.models.reference import (  # noqa: F401
     FxRate,

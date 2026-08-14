@@ -362,7 +362,7 @@ class TestDealSideResult:
     """
 
     def _deal_order(self, db: Session):  # noqa: ANN202
-        from app.models.deals import Deal  # noqa: PLC0415
+        from app.domains.deals.models import Deal  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
         from app.services import lab_service  # noqa: PLC0415
 
@@ -394,7 +394,7 @@ class TestDealSideResult:
     def test_the_passport_lands_in_the_trade_room(
         self, db: Session, stub_s3: None
     ) -> None:
-        from app.models.deals import DealDocument  # noqa: PLC0415
+        from app.domains.deals.models import DealDocument  # noqa: PLC0415
         from app.models.enums import DealDocumentKind, LabOrderStatus  # noqa: PLC0415
         from app.services import lab_service  # noqa: PLC0415
 
@@ -431,7 +431,7 @@ class TestDealSideResult:
     def test_a_company_cannot_order_an_analysis_of_a_deal_it_is_not_in(
         self, db: Session
     ) -> None:
-        from app.models.deals import Deal  # noqa: PLC0415
+        from app.domains.deals.models import Deal  # noqa: PLC0415
         from app.services import lab_service  # noqa: PLC0415
 
         buyer_owner = make_account(db, "+998900000213")

@@ -71,9 +71,10 @@ _QUOTE = {
 
 @requires_real_db
 def test_submit_happy_path(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import RfqResponseStatus  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.services import event_types, rfq_response_service  # noqa: PLC0415
+    from app.services import event_types  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)
@@ -88,8 +89,9 @@ def test_submit_happy_path(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_unverified_supplier_cannot_respond(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import deal_service, rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)
@@ -101,7 +103,7 @@ def test_unverified_supplier_cannot_respond(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_buyer_cannot_respond_to_their_own_rfq(sf) -> None:  # noqa: ANN001
-    from app.services import rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, _sa, _s, request = _setup(db)
@@ -111,7 +113,7 @@ def test_buyer_cannot_respond_to_their_own_rfq(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_second_response_from_the_same_company_is_refused(sf) -> None:  # noqa: ANN001
-    from app.services import rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)
@@ -123,7 +125,7 @@ def test_second_response_from_the_same_company_is_refused(sf) -> None:  # noqa: 
 @requires_real_db
 def test_the_session_survives_a_duplicate(sf) -> None:  # noqa: ANN001
     """The unique-violation must not poison the surrounding transaction."""
-    from app.services import rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)
@@ -137,8 +139,8 @@ def test_the_session_survives_a_duplicate(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_withdrawing_frees_the_slot(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import RfqResponseStatus  # noqa: PLC0415
-    from app.services import rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)
@@ -156,7 +158,7 @@ def test_withdrawing_frees_the_slot(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_only_the_author_company_may_withdraw(sf) -> None:  # noqa: ANN001
-    from app.services import rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)
@@ -168,7 +170,8 @@ def test_only_the_author_company_may_withdraw(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_cannot_withdraw_after_acceptance(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service, rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _b, seller_acc, seller, request = _setup(db)
@@ -180,8 +183,8 @@ def test_cannot_withdraw_after_acceptance(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_closed_rfq_takes_no_responses(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
-    from app.services import rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)
@@ -205,8 +208,8 @@ def test_verified_only_is_the_default(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_unverified_company_cannot_see_a_verified_only_rfq(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, _sa, seller, request = _setup(db)
@@ -217,8 +220,8 @@ def test_unverified_company_cannot_see_a_verified_only_rfq(sf) -> None:  # noqa:
 
 @requires_real_db
 def test_selected_visibility_admits_only_the_listed_companies(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import RfqVisibility  # noqa: PLC0415
-    from app.services import rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)
@@ -237,8 +240,8 @@ def test_selected_visibility_admits_only_the_listed_companies(sf) -> None:  # no
 
 @requires_real_db
 def test_visibility_all_admits_an_unverified_company(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus, RfqVisibility  # noqa: PLC0415
-    from app.services import rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, _sa, seller, request = _setup(db)
@@ -253,8 +256,8 @@ def test_visibility_all_admits_an_unverified_company(sf) -> None:  # noqa: ANN00
 def test_market_list_hides_what_the_supplier_may_not_answer(sf) -> None:  # noqa: ANN001
     """The query and the submit guard must agree — otherwise the UI offers a
     'Respond' button that the API then refuses."""
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import RfqVisibility  # noqa: PLC0415
-    from app.services import rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, _sa, seller, own = _setup(db)
@@ -285,8 +288,8 @@ def test_market_list_pages_over_the_visible_set(sf) -> None:  # noqa: ANN001
     Filtering visibility after LIMIT (rather than in SQL) silently under-fills
     pages whenever hidden RFQs are interleaved — asking for 2 returns 1.
     """
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import RfqVisibility  # noqa: PLC0415
-    from app.services import rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, _sa, seller, _own = _setup(db)
@@ -310,7 +313,7 @@ def test_market_list_pages_over_the_visible_set(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_market_list_excludes_the_viewers_own_rfqs(sf) -> None:  # noqa: ANN001
-    from app.services import rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, buyer, _sa, _seller, own = _setup(db)
@@ -319,8 +322,8 @@ def test_market_list_excludes_the_viewers_own_rfqs(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_market_list_excludes_closed_rfqs(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
-    from app.services import rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, _sa, seller, request = _setup(db)
@@ -336,7 +339,7 @@ def test_market_list_excludes_closed_rfqs(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_required_docs_keep_only_known_codes(sf) -> None:  # noqa: ANN001
-    from app.models.deals import normalize_required_docs  # noqa: PLC0415
+    from app.domains.deals.models import normalize_required_docs  # noqa: PLC0415
 
     assert normalize_required_docs(["coa", "sds", "coa", "nonsense"]) == ["coa", "sds"]
     assert normalize_required_docs([]) is None
@@ -348,7 +351,7 @@ def test_required_docs_keep_only_known_codes(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_supplier_sees_only_their_own_response(sf) -> None:  # noqa: ANN001
-    from app.services import rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
 
     with sf() as db:
         _ba, _b, seller_acc, seller, request = _setup(db)

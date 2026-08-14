@@ -42,8 +42,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.db import get_db
+from app.domains.deals import escrow as escrow_service
 from app.integrations.escrow import events as escrow_events
-from app.services import escrow_service
 
 logger = logging.getLogger(__name__)
 

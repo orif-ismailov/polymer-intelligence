@@ -11,6 +11,8 @@ company-scoped: pass ``company_id`` (membership enforced → 404 for non-members
 
 from __future__ import annotations
 
+import decimal
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session, selectinload
 
@@ -18,10 +20,14 @@ from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404
 from app.core.db import get_db
 from app.domains.companies.models import Company
+from app.domains.deals import rfq as rfq_response_service
+from app.domains.deals.models import RfqResponse
 from app.domains.marketplace import requests as offer_request_service
 from app.domains.marketplace import service as offer_service
 from app.domains.marketplace.models import SellerOffer
 from app.domains.marketplace.portal_market_schemas import (
+    MarketRequestListOut,
+    MarketRequestOut,
     PortalMarketOfferDetail,
     PortalMarketOfferOut,
     PublicCompanyProfileOut,
@@ -32,6 +38,7 @@ from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,
     OfferAvailability,
+    RfqResponseStatus,
     SellerOfferStatus,
 )
 from app.services import storage_service
@@ -109,8 +116,65 @@ def list_market(
 
 # ── Literal paths BEFORE /{offer_id} ──────────────────────────────────────────
 #
-# Favorites and the public company profile must win over the parameter route —
-# the same ordering rule the contracts router relies on for /directory.
+# Favorites, the supplier RFQ list and the public company profile must all win
+# over the parameter route. Same rule the companies router applies to /directory:
+# a literal sibling declared first beats /{offer_id}, with no dependency on the
+# order routers are included in app/main.py.
+
+
+@router.get("/requests", response_model=MarketRequestListOut)
+def list_market_requests(
+    company_id: int = Query(...),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> MarketRequestListOut:
+    """Open RFQs this supplier company may answer — trade terms only.
+
+    Buyer contact details are never included: the platform stays the
+    intermediary until a deal is open.
+
+    Served by THIS router, not the deals router, even though the data is a deals
+    concern: the full path is /portal/market/requests, which `/{offer_id}` below
+    would otherwise match. Declared here it is settled by declaration order; on the
+    deals router it silently depended on that router being registered first (P5).
+    """
+    company = company_or_404(db, account, company_id)
+    rows = rfq_response_service.list_open_requests(db, company, limit=limit, offset=offset)
+
+    mine = {
+        r.request_id: r
+        for r in db.query(RfqResponse)
+        .filter(
+            RfqResponse.company_id == company.id,
+            RfqResponse.request_id.in_([r.id for r in rows] or [0]),
+            RfqResponse.status != RfqResponseStatus.withdrawn,
+        )
+        .all()
+    }
+    return MarketRequestListOut(
+        items=[
+            MarketRequestOut(
+                id=r.id,
+                product=r.product_text,
+                grade=r.grade_text,
+                volume=r.volume if r.volume is not None else decimal.Decimal(0),
+                volume_unit=r.volume_unit,
+                incoterms=str(r.incoterms),
+                destination_country=r.destination_country,
+                port_or_city=r.port_or_city,
+                desired_date=r.desired_date,
+                validity_days=r.validity_days,
+                urgency=str(r.urgency),
+                required_docs=list(r.required_docs or []),
+                created_at=r.created_at,
+                my_response_id=mine[r.id].id if r.id in mine else None,
+                my_response_status=str(mine[r.id].status) if r.id in mine else None,
+            )
+            for r in rows
+        ]
+    )
 
 
 @router.get(

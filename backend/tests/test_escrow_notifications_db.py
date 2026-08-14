@@ -56,9 +56,9 @@ def _verified(db, tax, phone):  # noqa: ANN001, ANN202
 
 
 def _signed_deal(db):  # noqa: ANN001, ANN202
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     buyer_acc, buyer = _verified(db, "301111111", "+998900000001")
     seller_acc, seller = _verified(db, "302222222", "+998900000002")
@@ -93,7 +93,8 @@ def _bells(db, kind):  # noqa: ANN001, ANN202
 
 @requires_real_db
 def test_raising_the_invoice_rings_both_bells(sf) -> None:  # noqa: ANN001
-    from app.services import escrow_service, notification_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, buyer, seller_acc, seller = _signed_deal(db)
@@ -144,9 +145,9 @@ def test_every_movement_rings_both_bells(sf) -> None:  # noqa: ANN001
 def test_a_rolled_back_mark_leaves_no_bell(sf) -> None:  # noqa: ANN001
     """The bell shares the movement's fate: nobody may be told money moved when
     the transaction that moved it was discarded."""
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
     from app.models.notifications import PortalNotification  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _signed_deal(db)
@@ -168,7 +169,8 @@ def test_a_rolled_back_mark_leaves_no_bell(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_the_bell_names_the_deal_so_the_portal_can_link_to_it(sf) -> None:  # noqa: ANN001
-    from app.services import escrow_service, notification_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _signed_deal(db)
@@ -184,8 +186,9 @@ def test_the_bell_names_the_deal_so_the_portal_can_link_to_it(sf) -> None:  # no
 
 @requires_real_db
 def test_every_active_member_of_both_parties_hears_about_money(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
-    from app.services import escrow_service, notification_service  # noqa: PLC0415
+    from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, buyer, seller_acc, seller = _signed_deal(db)

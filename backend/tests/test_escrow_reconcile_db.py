@@ -91,9 +91,10 @@ def _verified(db, tax, phone):  # noqa: ANN001, ANN202
 
 
 def _payment(db, *, mode="live", ref="ESC-1", amount=decimal.Decimal("25000.00")):  # noqa: ANN001, ANN202
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service, escrow_service  # noqa: PLC0415
 
     buyer_acc, buyer = _verified(db, "301111111", "+998900000001")
     seller_acc, seller = _verified(db, "302222222", "+998900000002")
@@ -121,8 +122,8 @@ def _payment(db, *, mode="live", ref="ESC-1", amount=decimal.Decimal("25000.00")
 
 
 def _deliver(db, deal, buyer_acc, buyer, seller_acc, seller):  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     deal_service.transition_by_party(db, deal, seller_acc, DealStatus.shipped, company_id=seller.id)
     deal_service.transition_by_party(db, deal, buyer_acc, DealStatus.delivered, company_id=buyer.id)
@@ -133,8 +134,8 @@ def _deliver(db, deal, buyer_acc, buyer, seller_acc, seller):  # noqa: ANN001
 
 @requires_real_db
 def test_agreement_changes_nothing_and_writes_no_event(sf) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     with sf() as db:
         _payment(db)
@@ -152,9 +153,9 @@ def test_agreement_changes_nothing_and_writes_no_event(sf) -> None:  # noqa: ANN
 
 @requires_real_db
 def test_a_funded_status_is_applied_through_the_same_door_as_a_webhook(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         payment, deal, *_ = _payment(db)
@@ -178,8 +179,8 @@ def test_a_funded_status_is_applied_through_the_same_door_as_a_webhook(sf) -> No
 
 @requires_real_db
 def test_re_polling_an_unchanged_status_is_inert(sf) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     with sf() as db:
         _payment(db)
@@ -203,8 +204,8 @@ def test_re_polling_an_unchanged_status_is_inert(sf) -> None:  # noqa: ANN001
 def test_a_release_before_delivery_is_reported_not_applied(sf) -> None:  # noqa: ANN001
     """The skeleton's acceptance criterion, verbatim: bank released, deal not
     delivered → an alert, not an auto-transition."""
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         payment, *_ = _payment(db)
@@ -225,8 +226,8 @@ def test_a_release_before_delivery_is_reported_not_applied(sf) -> None:  # noqa:
 
 @requires_real_db
 def test_a_refund_status_is_reported_not_applied(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         payment, *_ = _payment(db)
@@ -245,7 +246,7 @@ def test_a_refund_status_is_reported_not_applied(sf) -> None:  # noqa: ANN001
 def test_a_standing_divergence_is_reported_once_not_every_poll(sf) -> None:  # noqa: ANN001
     """Deterministic synthetic ids mean an unresolved disagreement does not
     alert every five minutes — it alerts once and then lives in the queue."""
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
 
     with sf() as db:
         _payment(db)
@@ -265,8 +266,8 @@ def test_a_standing_divergence_is_reported_once_not_every_poll(sf) -> None:  # n
 
 @requires_real_db
 def test_an_unmodelled_provider_status_is_counted_not_guessed(sf) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     with sf() as db:
         _payment(db)
@@ -284,7 +285,7 @@ def test_an_unmodelled_provider_status_is_counted_not_guessed(sf) -> None:  # no
 
 @requires_real_db
 def test_a_provider_that_knows_nothing_about_the_reference_is_skipped(sf) -> None:  # noqa: ANN001
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
 
     with sf() as db:
         _payment(db)
@@ -302,7 +303,7 @@ def test_a_provider_that_knows_nothing_about_the_reference_is_skipped(sf) -> Non
 @requires_real_db
 def test_stub_rail_payments_are_never_polled(sf) -> None:  # noqa: ANN001
     """An operator is reconciling those by hand; a bank must not be asked."""
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
 
     with sf() as db:
         _payment(db, mode="stub")
@@ -319,7 +320,7 @@ def test_stub_rail_payments_are_never_polled(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_terminal_payments_are_never_polled(sf) -> None:  # noqa: ANN001
     """A released payment is a finished bank operation; there is nothing to learn."""
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
 
     with sf() as db:
         payment, deal, buyer_acc, buyer, seller_acc, seller = _payment(db)
@@ -339,7 +340,7 @@ def test_terminal_payments_are_never_polled(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_a_payment_with_no_provider_reference_is_never_polled(sf) -> None:  # noqa: ANN001
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
 
     with sf() as db:
         payment, *_ = _payment(db)
@@ -358,8 +359,8 @@ def test_a_payment_with_no_provider_reference_is_never_polled(sf) -> None:  # no
 @requires_real_db
 def test_a_dead_provider_stops_the_sweep_without_touching_anything(sf) -> None:  # noqa: ANN001
     """Provider unavailability degrades; it never moves or blocks a deal."""
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         payment, *_ = _payment(db)
@@ -413,8 +414,8 @@ def test_the_beat_is_a_noop_on_the_live_rail_with_no_adapter(sf) -> None:  # noq
 
 @requires_real_db
 def test_the_beat_runs_the_rules_when_a_client_exists(sf) -> None:  # noqa: ANN001
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
     from app.services import settings_service  # noqa: PLC0415
     from app.tasks.payments import reconcile_escrow_payments  # noqa: PLC0415
 

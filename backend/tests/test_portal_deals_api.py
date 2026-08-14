@@ -36,7 +36,7 @@ _P = "/api/v1/portal"
 
 
 def test_routes_registered() -> None:
-    from app.api.portal.deals import router  # noqa: PLC0415
+    from app.domains.deals.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     for path in (
@@ -46,9 +46,21 @@ def test_routes_registered() -> None:
         "/portal/companies/{company_id}/deals/{deal_id}/messages",
         "/portal/companies/{company_id}/deals/{deal_id}/documents",
         "/portal/companies/{company_id}/requests/{request_id}/responses",
-        "/portal/market/requests",
     ):
         assert path in paths, f"{path} not registered"
+
+    # The supplier RFQ list moved to the portal-market router in P5. Its full path
+    # (/portal/market/requests) collides with that router's /{offer_id}, so it has to
+    # be declared there, above the param route — previously it only resolved because
+    # main.py happened to include the deals router first, which nothing recorded.
+    from app.domains.marketplace.api_portal_market import router as market_router  # noqa: PLC0415
+
+    assert "/portal/market/requests" not in paths
+    market_paths = [r.path for r in market_router.routes]  # type: ignore[attr-defined]
+    assert "/portal/market/requests" in market_paths
+    assert market_paths.index("/portal/market/requests") < market_paths.index(
+        "/portal/market/{offer_id}"
+    ), "/requests must be declared before /{offer_id} or the param route swallows it"
 
 
 @pytest.fixture(scope="module")
@@ -135,9 +147,9 @@ def _verified_company(session, account_id, tax):  # noqa: ANN001, ANN202
 def _scene(session):  # noqa: ANN001, ANN202
     """Buyer with an RFQ, seller with a response, and an accepted deal."""
     from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.models.deals import RfqResponse  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     buyer_id, buyer_h = _account(session, "+998900000001")
     seller_id, seller_h = _account(session, "+998900000002")
@@ -246,9 +258,9 @@ def test_available_transitions_are_role_aware(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_seller_ships_and_buyer_confirms_over_http(api) -> None:  # noqa: ANN001
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     client, session = api
     s = _scene(session)
@@ -281,9 +293,9 @@ def test_seller_ships_and_buyer_confirms_over_http(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_buyer_cannot_declare_a_shipment_over_http(api) -> None:  # noqa: ANN001
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     client, session = api
     s = _scene(session)
@@ -692,9 +704,10 @@ def test_market_rfq_list_flags_my_existing_response(api) -> None:  # noqa: ANN00
 
 def _open_escrow(session, deal_id):  # noqa: ANN001, ANN202
     """Walk the deal to contract_signed and raise its escrow, as the event would."""
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service, escrow_service  # noqa: PLC0415
 
     with session() as db:
         deal = db.get(Deal, deal_id)
@@ -737,9 +750,9 @@ def test_the_escrow_block_follows_the_payment(api) -> None:  # noqa: ANN001
     s = _scene(session)
     payment_id = _open_escrow(session, s["deal_id"])
 
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with session() as db:
         staff = make_staff(db, "ops@example.com")
@@ -761,7 +774,7 @@ def test_the_escrow_block_follows_the_payment(api) -> None:  # noqa: ANN001
 def test_the_parties_have_no_way_to_move_the_money(api) -> None:  # noqa: ANN001
     """Escrow is moved by the bank/operator alone. There must be no portal
     mutation at all — not a forbidden one, none."""
-    from app.api.portal.deals import router  # noqa: PLC0415
+    from app.domains.deals.api_portal import router  # noqa: PLC0415
 
     for route in router.routes:  # type: ignore[attr-defined]
         assert "escrow" not in route.path, f"{route.path} exposes escrow to a party"

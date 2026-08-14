@@ -33,7 +33,7 @@ _A = "/api/v1/admin"
 
 
 def test_routes_registered() -> None:
-    from app.api.admin_escrow import router  # noqa: PLC0415
+    from app.domains.deals.api_admin_escrow import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/escrow" in paths
@@ -42,7 +42,7 @@ def test_routes_registered() -> None:
 
 def test_there_is_no_delete_or_edit_path() -> None:
     """A payment record is evidence. It is marked forward, never rewritten."""
-    from app.api.admin_escrow import router  # noqa: PLC0415
+    from app.domains.deals.api_admin_escrow import router  # noqa: PLC0415
 
     methods = {m for r in router.routes for m in r.methods}  # type: ignore[attr-defined]
     assert methods <= {"GET", "POST"}, f"unexpected methods: {methods}"
@@ -99,9 +99,10 @@ def _staff_headers(session, role, email):  # noqa: ANN001, ANN202
 def _scene(session, *, amount=decimal.Decimal("25000.00"), open_escrow: bool = True):  # noqa: ANN001, ANN202
     """A deal at contract_signed, optionally with its escrow already raised."""
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.enums import CompanyStatus, DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service, escrow_service  # noqa: PLC0415
 
     with session() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -331,8 +332,8 @@ def test_refunding_funded_money_without_a_dispute_is_a_conflict(api) -> None:  #
     assert response.status_code == 409
     assert response.json()["detail"] == "deal_transition_blocked"
 
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
 
     with session() as db:
         assert db.get(EscrowPayment, scene["payment_id"]).status == EscrowStatus.funded
@@ -358,7 +359,7 @@ def test_a_missing_payment_is_a_404(api) -> None:  # noqa: ANN001
 
 
 def test_provider_events_route_is_registered() -> None:
-    from app.api.admin_escrow import router  # noqa: PLC0415
+    from app.domains.deals.api_admin_escrow import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/escrow/provider-events" in paths
@@ -367,7 +368,7 @@ def test_provider_events_route_is_registered() -> None:
 def test_provider_events_is_declared_before_the_payment_detail_route() -> None:
     """`/escrow/{payment_id}` types the id as int, so a literal segment declared
     after it would 422 instead of matching. Order is the contract here."""
-    from app.api.admin_escrow import router  # noqa: PLC0415
+    from app.domains.deals.api_admin_escrow import router  # noqa: PLC0415
 
     paths = [r.path for r in router.routes]  # type: ignore[attr-defined]
     assert paths.index("/admin/escrow/provider-events") < paths.index("/admin/escrow/{payment_id}")
@@ -375,8 +376,8 @@ def test_provider_events_is_declared_before_the_payment_detail_route() -> None:
 
 def _hold_a_refund(session, payment_id):  # noqa: ANN001, ANN202
     """Put the payment on the live rail, fund it, then have the bank say refunded."""
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
 
     with session() as db:
         payment = db.get(EscrowPayment, payment_id)

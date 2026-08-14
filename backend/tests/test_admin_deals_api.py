@@ -32,7 +32,7 @@ _A = "/api/v1/admin"
 
 
 def test_routes_registered() -> None:
-    from app.api.admin_deals import router  # noqa: PLC0415
+    from app.domains.deals.api_admin import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/deals" in paths
@@ -43,7 +43,7 @@ def test_routes_registered() -> None:
 
 def test_no_staff_write_path_into_the_chat() -> None:
     """The room is the parties' record. Staff read it; they never post to it."""
-    from app.api.admin_deals import router  # noqa: PLC0415
+    from app.domains.deals.api_admin import router  # noqa: PLC0415
 
     for route in router.routes:  # type: ignore[attr-defined]
         if route.path.endswith("/messages"):
@@ -100,9 +100,9 @@ def _staff_headers(session, role, email):  # noqa: ANN001, ANN202
 
 def _scene(session, *, disputed: bool = False):  # noqa: ANN001, ANN202
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.enums import CompanyStatus, DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with session() as db:
         buyer_acc = make_account(db, "+998900000001")

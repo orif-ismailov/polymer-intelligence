@@ -35,9 +35,9 @@ from sqlalchemy.orm import Session
 
 from app.core.time import to_display_tz, utcnow
 from app.domains.companies.models import Company
+from app.domains.deals.models import Deal, DealDocument
 from app.domains.marketplace.models import SellerOffer, SellerOfferFile
 from app.models.accounts import UserAccount
-from app.models.deals import Deal, DealDocument
 from app.models.enums import DealDocumentKind, LabOrderStatus, OfferFileKind
 from app.models.lab import LabOrder, LabPartner
 from app.models.staff import StaffUser
@@ -474,7 +474,7 @@ def _attach_to_deal(
     and it belongs to them — staff merely carried it. Who actually uploaded it is
     in the audit row.
     """
-    from app.services import deal_service  # noqa: PLC0415 — cross-context, lazy
+    from app.domains.deals import service as deal_service  # noqa: PLC0415 — cross-context, lazy
 
     deal = db.get(Deal, order.deal_id)
     account = db.get(UserAccount, order.created_by_user_account_id)
