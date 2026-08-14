@@ -45,6 +45,8 @@ from app.api.health import router as health_router
 from app.api.telegram_webhook import router as telegram_webhook_router
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.core.middleware import RequestIdMiddleware
+from app.core.observability import init_sentry
 from app.domains.accounts.api_portal import router as portal_auth_router
 from app.domains.alerts.api_admin import alerts_router
 from app.domains.alerts.api_admin import router as alert_rules_router
@@ -142,11 +144,13 @@ def create_app() -> FastAPI:
 
     Steps:
     1. Configure structlog JSON logging (REQ-nfr-observability).
-    2. Create FastAPI instance.
-    3. Mount CORS middleware.
-    4. Include routers under /api/v1.
+    2. Initialise Sentry when SENTRY_DSN is set (no-op otherwise).
+    3. Create FastAPI instance.
+    4. Mount CORS + request-id middleware.
+    5. Include routers under /api/v1.
     """
     configure_logging()
+    init_sentry("api")
 
     # WR-03: gate OpenAPI docs behind settings.DEBUG so the full API schema
     # (endpoints, request/response models, security requirements) is not publicly
@@ -182,8 +186,24 @@ def create_app() -> FastAPI:
         allow_origins=settings.CORS_ALLOWED_ORIGINS,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allow_headers=["Authorization", "Content-Type", "X-Telegram-Init-Data"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "X-Telegram-Init-Data",
+            # Lets a browser client propagate a trace id it already has.
+            "X-Request-ID",
+        ],
+        # So a client can READ the id off the response and quote it in a bug report.
+        expose_headers=["X-Request-ID"],
     )
+
+    # ── Request correlation ───────────────────────────────────────────────────
+    # Added AFTER CORS, which means it runs OUTSIDE it: Starlette applies
+    # middleware in reverse registration order, so the id is bound before CORS
+    # and is therefore present on the logs of a rejected pre-flight too.
+    # A raw ASGI middleware on purpose — see app/core/middleware.py for why
+    # BaseHTTPMiddleware would break the SSE feed.
+    application.add_middleware(RequestIdMiddleware)
 
     # ── Routers ───────────────────────────────────────────────────────────────
     # All API routes are mounted under /api/v1 per dev-spec §3.2.
