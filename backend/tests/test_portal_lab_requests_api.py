@@ -204,7 +204,7 @@ def _auth(account_id: int) -> dict[str, str]:
 
 def _lab(db, owner, tax_id: str, name: str = "Central Polymer Lab", *, confirmed: bool = True):  # noqa: ANN001, ANN202
     """A verified company with the laboratory role confirmed (or merely declared)."""
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, CompanyStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 
@@ -368,7 +368,7 @@ def test_visibility_guard_and_pool_query_agree(api) -> None:  # noqa: ANN001
     )
 
     with session() as db:
-        from app.models.companies import Company  # noqa: PLC0415
+        from app.domains.companies.models import Company  # noqa: PLC0415
 
         request = db.query(LabRequest).one()
         for company_id in (lab_id, trader_id, declared_id, buyer_id):

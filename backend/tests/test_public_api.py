@@ -205,7 +205,7 @@ def test_no_public_route_depends_on_an_account() -> None:
 def test_directory_slugs_cover_every_public_role() -> None:
     """The nav promises four directories; the slug map must serve all four."""
     from app.api.public import DIRECTORY_SLUGS  # noqa: PLC0415
-    from app.services.directory_service import PUBLIC_DIRECTORY_ROLES  # noqa: PLC0415
+    from app.domains.companies.directory import PUBLIC_DIRECTORY_ROLES  # noqa: PLC0415
 
     assert set(DIRECTORY_SLUGS.values()) == set(PUBLIC_DIRECTORY_ROLES)
 
@@ -284,7 +284,7 @@ def test_logistics_snippet_is_none_without_a_profile() -> None:
     and skipped it still gets a (blank) block, because "filled in nothing" and
     "is not a carrier" are different facts about a company.
     """
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.services import logistics_service  # noqa: PLC0415
 
     assert logistics_service.logistics_profile_snippet(Company(logistics_profile=None)) is None
@@ -299,7 +299,7 @@ def test_logistics_snippet_survives_a_malformed_blob() -> None:
     page. `True` is called out because `bool` is an `int` subclass in Python, so
     a stray flag would otherwise render as «Опыт работы: 1 год».
     """
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.services import logistics_service  # noqa: PLC0415
 
     snippet = logistics_service.logistics_profile_snippet(
@@ -358,7 +358,7 @@ def api(engine: sa.Engine):  # noqa: ANN201
 
 
 def _confirm_role(db, company_id: int, role) -> None:  # noqa: ANN001
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
 
     db.add(
@@ -497,7 +497,7 @@ def test_directory_serves_each_role_and_scopes_the_profile(api) -> None:  # noqa
 @requires_real_db
 def test_unverified_company_is_absent_from_every_directory(api) -> None:  # noqa: ANN001
     """`declared` is a self-claim. Only `confirmed` on a verified company lists."""
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, CompanyStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 

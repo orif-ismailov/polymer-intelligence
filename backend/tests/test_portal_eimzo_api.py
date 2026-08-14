@@ -76,8 +76,8 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
 
 def _seed_company(session, phone: str, tax: str = "301234567"):  # noqa: ANN001, ANN202
     from app.core.security import create_portal_access_token  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     with session() as db:
         account = make_account(db, phone)

@@ -11,8 +11,8 @@ import logging
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
+from app.domains.companies.models import Company
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.enums import CompanyReviewStatus, CompanyStatus
 from app.models.reviews import CompanyReview
 

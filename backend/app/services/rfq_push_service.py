@@ -18,8 +18,8 @@ from dataclasses import dataclass
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from app.domains.companies.models import Company
 from app.domains.marketplace.models import RfqPushLog
-from app.models.companies import Company
 
 logger = logging.getLogger(__name__)
 

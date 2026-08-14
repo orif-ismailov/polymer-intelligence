@@ -313,9 +313,9 @@ class TestPublishGate:
     def test_with_the_gate_off_a_blocked_offer_still_reaches_moderation(
         self, db: Session
     ) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         substance = _substance(db)
         account, company = _verified_company(db)
@@ -329,9 +329,9 @@ class TestPublishGate:
         assert offer.compliance_ok is False
 
     def test_with_the_gate_on_the_offer_is_held_as_a_draft(self, db: Session) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         substance = _substance(db)
         account, company = _verified_company(db)
@@ -346,9 +346,9 @@ class TestPublishGate:
         assert offer.compliance_ok is False
 
     def test_a_compliant_offer_is_unaffected(self, db: Session) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import RegulationRegime, SellerOfferStatus  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
         from app.services import company_license_service  # noqa: PLC0415
 
         staff = make_staff(db)
@@ -366,9 +366,9 @@ class TestPublishGate:
         assert offer.status == SellerOfferStatus.pending_moderation
 
     def test_a_low_concentration_publishes_without_a_licence(self, db: Session) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         substance = _substance(db, threshold_concentration_pct=decimal.Decimal("60"))
         account, company = _verified_company(db)
@@ -386,9 +386,9 @@ class TestPublishGate:
 
     def test_editing_re_evaluates(self, db: Session) -> None:
         """FR-C6: a live offer edited into a regulated substance is pulled back."""
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         substance = _substance(db)
         account, company = _verified_company(db)
@@ -410,13 +410,13 @@ class TestPublishGate:
     def test_attaching_the_missing_document_releases_the_draft(self, db: Session) -> None:
         """A docs_required offer can only get its documents once it exists, so
         the upload path is what promotes it into the queue."""
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import (  # noqa: PLC0415
             RegulationLevel,
             RegulationRegime,
             SellerOfferStatus,
         )
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         substance = _substance(
             db,
@@ -447,9 +447,9 @@ class TestPublishGate:
         """The other half of the demo. A licence lives on the COMPANY, so a held
         offer cannot be fixed by attaching anything to it — re-saving is the
         seller's only move, and it has to work or the offer is stuck forever."""
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import RegulationRegime, SellerOfferStatus  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
         from app.services import company_license_service  # noqa: PLC0415
 
         staff = make_staff(db)
@@ -472,9 +472,9 @@ class TestPublishGate:
         self, db: Session
     ) -> None:
         """An operator switching enforcement off must not leave offers stranded."""
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         substance = _substance(db)
         account, company = _verified_company(db)
@@ -488,13 +488,13 @@ class TestPublishGate:
         assert offer.status == SellerOfferStatus.pending_moderation
 
     def test_a_prohibited_substance_is_never_released(self, db: Session) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import (  # noqa: PLC0415
             RegulationLevel,
             RegulationRegime,
             SellerOfferStatus,
         )
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         substance = _substance(
             db,

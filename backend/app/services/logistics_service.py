@@ -21,8 +21,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.time import to_display_tz, utcnow
+from app.domains.companies import service as company_service
+from app.domains.companies.models import Company, CompanyBusinessRole
 from app.models.accounts import UserAccount
-from app.models.companies import Company, CompanyBusinessRole
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,
@@ -36,7 +37,7 @@ from app.models.logistics import (
     LogisticsRequestMessage,
     LogisticsRequestThread,
 )
-from app.services import company_service, storage_service
+from app.services import storage_service
 
 logger = logging.getLogger(__name__)
 

@@ -69,7 +69,7 @@ def _auth(account_id: int) -> dict[str, str]:
 
 
 def _confirm_manufacturer(db: object, company_id: int) -> None:  # noqa: ANN001
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         BusinessRoleStatus,
     )

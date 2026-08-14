@@ -273,7 +273,7 @@ def test_send_offer_request_to_group_portal_origin_shows_company() -> None:
         sent.append({"chat_id": chat_id, "text": text})
 
     from app.core.config import settings  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
 
     req = _make_offer_request()
     req.company_id = 88

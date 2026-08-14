@@ -34,9 +34,9 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from app.core.time import to_display_tz, utcnow
+from app.domains.companies.models import Company
 from app.domains.marketplace.models import SellerOffer, SellerOfferFile
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.deals import Deal, DealDocument
 from app.models.enums import DealDocumentKind, LabOrderStatus, OfferFileKind
 from app.models.lab import LabOrder, LabPartner

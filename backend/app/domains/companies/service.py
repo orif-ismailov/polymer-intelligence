@@ -18,14 +18,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.crypto import encrypt_pii
-from app.domains.verification.models import VerificationCase
-from app.models.accounts import UserAccount
-from app.models.companies import (
+from app.domains.companies.models import (
     Company,
     CompanyBankAccount,
     CompanyBusinessRole,
     CompanyMember,
 )
+from app.domains.verification.models import VerificationCase
+from app.models.accounts import UserAccount
 from app.models.enums import (
     BankAccountStatus,
     BusinessRoleStatus,

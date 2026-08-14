@@ -48,8 +48,8 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _verified_company(db, tax, phone, **kw):  # noqa: ANN001, ANN202
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     account = make_account(db, phone)
     company = company_service.create_company(db, account, "UZ", tax)
@@ -233,8 +233,8 @@ def test_concurrent_final_signatures_activate_exactly_once(sf, monkeypatch) -> N
     errors: list[BaseException] = []
 
     def _sign(company_id: int, account_id: int, tax: str, challenge: str) -> None:
+        from app.domains.companies.models import Company  # noqa: PLC0415
         from app.models.accounts import UserAccount  # noqa: PLC0415
-        from app.models.companies import Company  # noqa: PLC0415
 
         try:
             with sf() as s:

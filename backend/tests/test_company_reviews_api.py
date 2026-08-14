@@ -28,7 +28,7 @@ _PUBLIC = "/api/v1/public"
 
 
 def test_review_route_registered() -> None:
-    from app.api.portal.companies import router  # noqa: PLC0415
+    from app.domains.companies.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/reviews" in paths
@@ -98,7 +98,7 @@ def _auth(account_id: int) -> dict[str, str]:
 
 
 def _verified(db, owner, tax_id: str, name: str, *, role=None):  # noqa: ANN001, ANN202
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, CompanyStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 

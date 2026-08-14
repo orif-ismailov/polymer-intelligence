@@ -28,8 +28,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_account
 from app.api.portal.deps import require_business_role
 from app.core.db import get_db
+from app.domains.companies import service as company_service
+from app.domains.companies.models import Company
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.logistics import (
     LogisticsRequest,
     LogisticsRequestMessage,
@@ -48,7 +49,6 @@ from app.schemas.portal_logistics import (
     LogisticsThreadOut,
 )
 from app.services import (
-    company_service,
     logistics_service,
     notification_service,
     storage_service,

@@ -27,9 +27,9 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from app.core.crypto import decrypt_pii
+from app.domains.companies.models import Company, CompanyBankAccount
 from app.domains.verification.models import VerificationDocument
 from app.integrations import gov_registry
-from app.models.companies import Company, CompanyBankAccount
 from app.models.enums import (
     CompanyBusinessRole,
     DocumentReviewStatus,

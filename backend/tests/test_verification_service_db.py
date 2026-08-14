@@ -36,7 +36,7 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _company(db, phone="+998900000001", tax="123456789"):  # noqa: ANN001, ANN202
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     account = make_account(db, phone)
     company = company_service.create_company(db, account, "UZ", tax)
@@ -165,8 +165,8 @@ def test_evaluator_all_pass_goes_pending_review(sf, monkeypatch) -> None:  # noq
 
 @requires_real_db
 def test_evaluator_auto_approve_verifies_company(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         CompanyStatus,
         VerificationCaseStatus,
@@ -212,8 +212,8 @@ def _case_in_pending_review(db, monkeypatch, phone, tax):  # noqa: ANN001, ANN20
 
 @requires_real_db
 def test_approve_verifies_company_and_sets_reverification(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
 
     with sf() as db:
@@ -254,8 +254,8 @@ def test_double_approve_across_sessions_is_idempotent(sf, monkeypatch) -> None: 
 
 @requires_real_db
 def test_reject_and_request_info(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
 
     with sf() as db:
@@ -279,15 +279,15 @@ def test_reject_and_request_info(sf, monkeypatch) -> None:  # noqa: ANN001
 
 
 def _declare_roles(db, company_id, roles) -> None:  # noqa: ANN001
-    from app.models.companies import Company  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
 
     company_service.set_business_roles(db, db.get(Company, company_id), roles)
     db.flush()
 
 
 def _role_rows(db, company_id):  # noqa: ANN001, ANN202
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
 
     return db.query(CompanyBusinessRole).filter_by(company_id=company_id).all()
 

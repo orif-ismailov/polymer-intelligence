@@ -32,8 +32,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.time import to_display_tz, utcnow
+from app.domains.companies.models import Company
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.enums import RequestStatus
 from app.models.requests import Request, RequestStatusHistory
 from app.schemas.webapp import RequestCreate

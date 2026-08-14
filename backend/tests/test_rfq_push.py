@@ -78,7 +78,7 @@ def _enable(db, **overrides) -> None:  # noqa: ANN001, ANN003
 
 def _supplier(db, tax, phone, *, roles=()):  # noqa: ANN001, ANN202
     from app.core.time import utcnow  # noqa: PLC0415
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         BusinessRoleStatus,
         CompanyStatus,

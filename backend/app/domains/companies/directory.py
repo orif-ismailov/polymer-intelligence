@@ -22,7 +22,7 @@ from __future__ import annotations
 import sqlalchemy as sa
 from sqlalchemy.orm import Session, selectinload
 
-from app.models.companies import Company, CompanyBusinessRole
+from app.domains.companies.models import Company, CompanyBusinessRole
 from app.models.enums import BusinessRoleStatus, CompanyStatus
 from app.models.enums import CompanyBusinessRole as CompanyBusinessRoleEnum
 

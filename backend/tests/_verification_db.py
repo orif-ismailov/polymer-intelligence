@@ -151,7 +151,11 @@ def make_company(db: Session, owner, tax_id: str = "301234567", *, roles=None, *
     Since the role gates (T-B), a company that trades needs seller/buyer roles —
     pass e.g. `roles=["distributor", "trader"]` for a fixture that does both.
     """
-    from app.models.companies import Company, CompanyBusinessRole, CompanyMember  # noqa: PLC0415
+    from app.domains.companies.models import (  # noqa: PLC0415
+        Company,
+        CompanyBusinessRole,
+        CompanyMember,
+    )
     from app.models.enums import (  # noqa: PLC0415
         BusinessRoleStatus,
         CompanyMemberRole,
@@ -189,7 +193,7 @@ def make_company(db: Session, owner, tax_id: str = "301234567", *, roles=None, *
 
 def make_member(db: Session, company, account, *, status=None, role=None):  # noqa: ANN001, ANN202
     """Add `account` to `company` (defaults: active member)."""
-    from app.models.companies import CompanyMember  # noqa: PLC0415
+    from app.domains.companies.models import CompanyMember  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
 
     member = CompanyMember(

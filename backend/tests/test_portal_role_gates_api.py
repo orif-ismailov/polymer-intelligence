@@ -83,7 +83,7 @@ _TAX_SEQ = iter(f"42{n:07d}" for n in range(1, 1000))
 
 def _company_with_roles(db, phone, roles, *, verified=True):  # noqa: ANN001, ANN202
     """A company holding `roles` (as declared+confirmed mix doesn't matter to the gate)."""
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, CompanyStatus  # noqa: PLC0415
 
     owner = make_account(db, phone)
@@ -176,7 +176,7 @@ def test_offer_create_zero_roles_falls_back_to_buyer_and_is_refused(api) -> None
 @requires_real_db
 def test_offer_update_is_seller_only(api) -> None:  # noqa: ANN001
     """A pre-gating offer row owned by a non-seller can no longer be edited."""
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 
     client, session = api
@@ -197,7 +197,7 @@ def test_offer_update_is_seller_only(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_rfq_response_is_seller_only(api) -> None:  # noqa: ANN001
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 
     client, session = api
@@ -259,7 +259,7 @@ def test_purchase_request_is_refused_for_service_roles(api) -> None:  # noqa: AN
 
 @requires_real_db
 def test_inquiry_is_refused_for_service_roles(api) -> None:  # noqa: ANN001
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 
     client, session = api

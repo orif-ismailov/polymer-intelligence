@@ -47,7 +47,7 @@ from app.core.db import Base
 from app.models.enums import LicenseStatus, RegulationLevel, RegulationRegime
 
 if TYPE_CHECKING:
-    from app.models.companies import Company
+    from app.domains.companies.models import Company
 
 
 class Substance(Base):

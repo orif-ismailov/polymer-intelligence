@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
-from app.models.companies import Company
+from app.domains.companies.models import Company
 from app.models.enums import LogisticsRequestStatus
 from app.models.logistics import LogisticsRequest, LogisticsRequestMessage, LogisticsRequestThread
 from app.models.staff import StaffUser

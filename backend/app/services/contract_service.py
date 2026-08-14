@@ -29,9 +29,10 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.crypto import decrypt_pii
+from app.domains.companies import service as company_service
+from app.domains.companies.models import Company, CompanyBankAccount
 from app.integrations.eimzo import verify_pkcs7
 from app.models.accounts import UserAccount
-from app.models.companies import Company, CompanyBankAccount
 from app.models.contracts import Contract, ContractSignature, ContractTemplate
 from app.models.eimzo import SignatureEvidence
 from app.models.enums import (
@@ -41,7 +42,6 @@ from app.models.enums import (
 )
 from app.services import (
     audit_service,
-    company_service,
     contract_render,
     event_service,
     event_types,
@@ -502,7 +502,7 @@ def _maybe_activate(db: Session, contract: Contract) -> None:
 
 def _notify_company(db: Session, company_id: int, kind: str, contract: Contract) -> None:
     """Notify a company's active owner/manager members (in-portal, i18n-keyed)."""
-    from app.models.companies import CompanyMember  # noqa: PLC0415
+    from app.domains.companies.models import CompanyMember  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
     from app.services import notification_service  # noqa: PLC0415
 

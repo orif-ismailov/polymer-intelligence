@@ -16,9 +16,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.domains.companies import service as company_service
 from app.domains.verification.checks import CheckResult
 from app.domains.verification.service import MAX_CHECK_ATTEMPTS
-from app.services import company_service
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -31,13 +31,13 @@ _CONTENTION_RETRY_SECONDS = 2
 
 def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-layer glue
     """Execute the pure check function for `check`, gathering its inputs from the DB."""
+    from app.domains.companies.models import Company, CompanyBankAccount, CompanyBusinessRole
     from app.domains.verification import checks as verification_checks
     from app.domains.verification.models import (
         VerificationCase,
         VerificationCheck,
         VerificationDocument,
     )
-    from app.models.companies import Company, CompanyBankAccount, CompanyBusinessRole
     from app.models.enums import VerificationCheckStatus, VerificationCheckType
 
     case = db.get(VerificationCase, check.case_id)

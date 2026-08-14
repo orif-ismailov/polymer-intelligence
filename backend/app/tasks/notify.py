@@ -507,7 +507,7 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
             # Origin line for portal-originated requests (R2 W4 T4.2); TG requests
             # keep the card byte-identical (no line added).
             if request.company_id is not None:
-                from app.models.companies import Company  # noqa: PLC0415
+                from app.domains.companies.models import Company  # noqa: PLC0415
 
                 company = session.get(Company, request.company_id)
                 if company is not None:
@@ -830,7 +830,7 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
             buyer_label = "Покупатель:"
             if req.company_id is not None:
                 # Portal-origin inquiry (R2 W4 T4.2): show the buyer company + origin.
-                from app.models.companies import Company  # noqa: PLC0415
+                from app.domains.companies.models import Company  # noqa: PLC0415
 
                 company = session.get(Company, req.company_id)
                 if company is not None:
@@ -1069,12 +1069,12 @@ def send_verification_case_to_group(
     from telegram.bot import bot, verification_moderation_keyboard  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.verification.models import (
         VerificationCase,
         VerificationCheck,
         VerificationDocument,
     )
-    from app.models.companies import Company  # noqa: PLC0415
 
     try:
         with Session(engine) as session:
@@ -1154,7 +1154,7 @@ def send_contract_activated_to_group(
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.contracts import Contract  # noqa: PLC0415
 
     def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
@@ -1203,7 +1203,7 @@ def _deal_card(deal_id_raw: str | None, headline: str, extra: list[str] | None =
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.deals import Deal  # noqa: PLC0415
 
     def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
@@ -1332,7 +1332,7 @@ def send_lab_order_to_group(
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.lab import LabOrder  # noqa: PLC0415
 
     try:

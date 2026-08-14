@@ -35,7 +35,7 @@ def test_routes_registered() -> None:
     `/portal/companies` prefix — so this test now names which router owns what,
     rather than assuming one owns everything.
     """
-    from app.api.portal.companies import router  # noqa: PLC0415
+    from app.domains.companies.api_portal import router  # noqa: PLC0415
     from app.domains.verification.api_portal import router as verification_router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
@@ -177,7 +177,7 @@ def test_profile_roles_and_bank_masking(api) -> None:  # noqa: ANN001
 @requires_real_db
 def test_summary_carries_declared_roles(api) -> None:  # noqa: ANN001
     """The cabinet shapes itself on `declared_roles` (non-revoked declared+confirmed)."""
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
 
     client, session = api
@@ -297,7 +297,7 @@ def _account(db, account_id: int):  # noqa: ANN001, ANN202
 
 
 def test_public_profile_route_registered() -> None:
-    from app.api.portal.companies import router  # noqa: PLC0415
+    from app.domains.companies.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/public-profile" in paths

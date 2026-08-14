@@ -24,10 +24,11 @@ from __future__ import annotations
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.domains.companies import service as company_service
+from app.domains.companies.models import Company
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.enums import CompanyBusinessRole
-from app.services import company_service, rate_limit
+from app.services import rate_limit
 
 
 def rate_limited(exc: rate_limit.RateLimited) -> HTTPException:

@@ -66,8 +66,8 @@ def _result(ok=True, revoked=False, error=None, **signer_kw):  # noqa: ANN001, A
 
 
 def _company(db, tax="301234567", phone="+998900000001"):  # noqa: ANN001, ANN202
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     account = make_account(db, phone)
     company = company_service.create_company(db, account, "UZ", tax)
@@ -98,8 +98,8 @@ def _patch(monkeypatch, result=None, raises=None):  # noqa: ANN001
 
 @requires_real_db
 def test_valid_signature_auto_approves(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
     from app.models.eimzo import CompanyPersonData, SignatureEvidence  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         CompanyStatus,
@@ -192,8 +192,9 @@ def test_evidence_signed_at_is_the_signing_moment_not_cert_issuance(sf, monkeypa
 
 @requires_real_db
 def test_locked_requisites_reject_manual_patch(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.services import company_service, eimzo_service  # noqa: PLC0415
+    from app.services import eimzo_service  # noqa: PLC0415
 
     _patch(monkeypatch, result=_result())
     with sf() as db:
@@ -217,7 +218,7 @@ def test_locked_requisites_reject_manual_patch(sf, monkeypatch) -> None:  # noqa
 
 @requires_real_db
 def test_valid_signature_pending_review_when_auto_approve_off(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
     from app.services import eimzo_service  # noqa: PLC0415
 
@@ -240,7 +241,7 @@ def test_valid_signature_pending_review_when_auto_approve_off(sf, monkeypatch) -
 
 @requires_real_db
 def test_inn_mismatch_raises_and_stores_no_evidence(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.eimzo import SignatureEvidence  # noqa: PLC0415
     from app.services import eimzo_service  # noqa: PLC0415
 
@@ -290,8 +291,8 @@ def test_replayed_challenge_is_single_use(sf, monkeypatch) -> None:  # noqa: ANN
 
 @requires_real_db
 def test_revoked_cert_records_failed_check(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
     from app.models.enums import VerificationCheckStatus, VerificationCheckType  # noqa: PLC0415
     from app.services import eimzo_service  # noqa: PLC0415
 

@@ -93,15 +93,15 @@ def _auth(session, phone: str) -> dict[str, str]:  # noqa: ANN001
 
 def _verified_company(session, client, auth: dict[str, str], tax_id: str) -> int:  # noqa: ANN001
     """A company must be verified before it may publish offers (R1 gate)."""
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     created = client.post(_BASE, json={"tax_id": tax_id}, headers=auth)
     assert created.status_code == 201, created.text
     company_id = int(created.json()["id"])
     with session() as db:
+        from app.domains.companies import service as company_service  # noqa: PLC0415
         from app.models.enums import CompanyBusinessRole  # noqa: PLC0415
-        from app.services import company_service  # noqa: PLC0415
 
         company = db.get(Company, company_id)
         assert company is not None

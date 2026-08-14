@@ -13,10 +13,11 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404, require_business_role
 from app.core.db import get_db
+from app.domains.companies import service as company_service
+from app.domains.companies.models import Company
 from app.domains.marketplace import service as offer_service
 from app.domains.marketplace.models import SellerOffer
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.enums import FactoryRfqDocumentKind
 from app.models.manufacturers import FactoryRfq, ManufacturerMessage, ManufacturerThread
 from app.schemas.portal_manufacturers import (
@@ -30,7 +31,7 @@ from app.schemas.portal_manufacturers import (
     ManufacturerThreadOpenIn,
     ManufacturerThreadOut,
 )
-from app.services import company_service, manufacturer_service, storage_service
+from app.services import manufacturer_service, storage_service
 
 router = APIRouter(prefix="/portal/manufacturers", tags=["portal-manufacturers"])
 
@@ -204,7 +205,7 @@ def get_factory_rfq(
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> FactoryRfqOut:
-    from app.services import company_service
+    from app.domains.companies import service as company_service
 
     try:
         rfq = manufacturer_service.get_factory_rfq_for(db, account, rfq_id, company_id)

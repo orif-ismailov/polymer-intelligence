@@ -10,14 +10,14 @@ import pytest
 
 
 def _company(jurisdiction: str = "UZ", tax_id: str = "123456789"):  # noqa: ANN202
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
 
     return Company(jurisdiction=jurisdiction, tax_id=tax_id)
 
 
 def _bank(mfo: str = "00014", number: str = "20208000900040041234"):  # noqa: ANN202
     from app.core.crypto import encrypt_pii  # noqa: PLC0415
-    from app.models.companies import CompanyBankAccount  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBankAccount  # noqa: PLC0415
 
     return CompanyBankAccount(
         bank_mfo=mfo,

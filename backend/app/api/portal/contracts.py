@@ -22,9 +22,10 @@ from sqlalchemy.orm import Session, selectinload
 from app.api.deps import get_current_account
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.companies import service as company_service
+from app.domains.companies.models import Company
 from app.integrations.eimzo import ProviderUnavailable
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.contracts import Contract, ContractSignature, ContractTemplate
 from app.models.eimzo import SignatureEvidence
 from app.models.enums import BusinessRoleStatus, CompanyStatus, ContractStatus
@@ -40,7 +41,7 @@ from app.schemas.portal_contract import (
     TemplateOut,
     VariablesUpdateIn,
 )
-from app.services import company_service, contract_service, rate_limit, storage_service
+from app.services import contract_service, rate_limit, storage_service
 from app.services.eimzo_service import CertCompanyMismatch
 
 router = APIRouter(prefix="/portal", tags=["portal-contracts"])

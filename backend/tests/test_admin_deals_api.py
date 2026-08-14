@@ -99,9 +99,10 @@ def _staff_headers(session, role, email):  # noqa: ANN001, ANN202
 
 
 def _scene(session, *, disputed: bool = False):  # noqa: ANN001, ANN202
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.deals import RfqResponse  # noqa: PLC0415
     from app.models.enums import CompanyStatus, DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import company_service, deal_service  # noqa: PLC0415
+    from app.services import deal_service  # noqa: PLC0415
 
     with session() as db:
         buyer_acc = make_account(db, "+998900000001")

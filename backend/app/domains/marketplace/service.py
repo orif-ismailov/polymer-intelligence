@@ -18,10 +18,11 @@ from sqlalchemy import func, or_, update
 from sqlalchemy.orm import Query, Session, joinedload, selectinload
 
 from app.core.time import utcnow
+from app.domains.companies.models import Company
+from app.domains.companies.schemas import CompanyOfferIn
 from app.domains.marketplace.models import OfferFavorite, Seller, SellerOffer, SellerOfferFile
 from app.domains.marketplace.schemas import CategoryCount, SellerOfferCreate, SellerOfferUpdate
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.enums import (
     CompanyStatus,
     OfferAvailability,
@@ -30,7 +31,6 @@ from app.models.enums import (
     SellerOfferStatus,
 )
 from app.models.reference import Product, ProductSynonym
-from app.schemas.portal_company import CompanyOfferIn
 from app.services import event_service, event_types, notification_service
 from app.services.audit_service import write_audit
 from app.services.relevance_service import normalize_term
@@ -737,7 +737,9 @@ def create_company_offer(
     RoleNotAllowed unless its account type sells (manufacturer / distributor-
     trader). Does NOT commit; also emits OFFER_PUBLISHED_BY_COMPANY.
     """
-    from app.services import company_service  # noqa: PLC0415 — cycle-safe, keep local
+    from app.domains.companies import (
+        service as company_service,  # noqa: PLC0415 — cycle-safe, keep local
+    )
 
     if company.status != CompanyStatus.verified:
         raise CompanyNotVerified(str(company.status))

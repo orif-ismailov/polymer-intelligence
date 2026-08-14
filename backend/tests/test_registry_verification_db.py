@@ -59,8 +59,8 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _submit(db, monkeypatch=None, phone="+998900000001", tax="301234567"):  # noqa: ANN001, ANN202
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     account = make_account(db, phone)
     company = company_service.create_company(db, account, "UZ", tax)

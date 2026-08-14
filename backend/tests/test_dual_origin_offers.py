@@ -20,7 +20,7 @@ def _seller(company_name: str = "Chem Trade LLC", is_verified: bool = True):  # 
 
 
 def _company(short_name=None, legal_name="OOO Long Name", status="verified"):  # noqa: ANN001, ANN202
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     company = Company(

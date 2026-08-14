@@ -57,7 +57,6 @@ from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
 from app.api.health import router as health_router
 from app.api.portal.auth import router as portal_auth_router
-from app.api.portal.companies import router as portal_companies_router
 from app.api.portal.compliance import router as portal_compliance_router
 from app.api.portal.contracts import router as portal_contracts_router
 from app.api.portal.deals import router as portal_deals_router
@@ -87,6 +86,7 @@ from app.api.webapp.requests import router as webapp_requests_router
 from app.api.webhooks_escrow import router as webhooks_escrow_router
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.domains.companies.api_portal import router as portal_companies_router
 from app.domains.marketplace.api_admin import router as offer_requests_router
 from app.domains.marketplace.api_admin_moderation import router as moderation_router
 from app.domains.marketplace.api_portal import router as portal_offers_router

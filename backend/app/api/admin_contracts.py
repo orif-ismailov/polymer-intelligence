@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
-from app.models.companies import Company
+from app.domains.companies.models import Company
 from app.models.contracts import Contract, ContractSignature, ContractTemplate
 from app.models.staff import AuditLog, StaffUser
 from app.services import storage_service

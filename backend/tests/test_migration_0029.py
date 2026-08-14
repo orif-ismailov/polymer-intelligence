@@ -171,7 +171,15 @@ class TestMigrationMatchesTheModel:
             assert f'"{column.name}"' in source, f"{column.name} missing from the migration"
 
     def test_the_model_is_registered_for_alembic(self) -> None:
-        """`app/models/__init__.py` must import it or autogenerate cannot see it."""
-        import app.models as models  # noqa: PLC0415
+        """`app/models/__init__.py` must import it or autogenerate cannot see it.
 
-        assert hasattr(models, "RegistrySnapshot")
+        Asserted on `Base.metadata` rather than on an attribute of `app.models`,
+        because that is what alembic actually reads. Since the domain reorg the barrel
+        imports relocated models as modules (`import app.domains.…`) instead of by
+        name — binding the class on the barrel would reintroduce a circular import —
+        so a `hasattr` check would now fail while autogenerate still works fine.
+        """
+        import app.models  # noqa: F401, PLC0415  — populates Base.metadata
+        from app.core.db import Base  # noqa: PLC0415
+
+        assert "registry_snapshots" in Base.metadata.tables

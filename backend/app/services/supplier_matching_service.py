@@ -36,8 +36,8 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.domains.companies.models import Company, CompanyBusinessRole
 from app.domains.marketplace.models import SellerOffer, SellerOfferFile
-from app.models.companies import Company, CompanyBusinessRole
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,

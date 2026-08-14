@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from app.domains.companies.service import InvalidBusinessRoles, assert_single_account_type
 from app.models.enums import CompanyBusinessRole
-from app.services.company_service import InvalidBusinessRoles, assert_single_account_type
 
 
 @pytest.mark.parametrize(

@@ -45,7 +45,7 @@ from app.models.enums import (
 )
 
 if TYPE_CHECKING:
-    from app.models.companies import Company
+    from app.domains.companies.models import Company
     from app.models.compliance import Substance
     from app.models.requests import Client
 

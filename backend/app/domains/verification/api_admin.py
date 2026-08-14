@@ -25,6 +25,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.db import get_db
+from app.domains.companies import directory as directory_service
+from app.domains.companies import service as company_service
+from app.domains.companies.models import Company, CompanyBankAccount
 from app.domains.verification import checks as verification_checks
 from app.domains.verification import registry as registry_service
 from app.domains.verification import service as verification_service
@@ -35,12 +38,9 @@ from app.domains.verification.models import (
 )
 from app.domains.verification.registry_models import RegistrySnapshot
 from app.integrations import gov_registry
-from app.models.companies import Company, CompanyBankAccount
 from app.models.enums import CompanyStatus, VerificationCaseStatus, VerificationCheckType
 from app.models.staff import AuditLog, StaffUser
 from app.services import (
-    company_service,
-    directory_service,
     storage_service,
 )
 

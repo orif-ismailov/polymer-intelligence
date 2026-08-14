@@ -16,12 +16,13 @@ from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404, rate_limited, require_business_role
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.companies import service as company_service
+from app.domains.companies.schemas import CompanyOfferIn, CompanyOfferOut
 from app.domains.marketplace import service as offer_service
 from app.domains.marketplace.models import SellerOffer, SellerOfferFile
 from app.models.accounts import UserAccount
 from app.models.enums import OfferFileKind, SellerOfferStatus
-from app.schemas.portal_company import CompanyOfferIn, CompanyOfferOut
-from app.services import company_service, lab_service, rate_limit, storage_service
+from app.services import lab_service, rate_limit, storage_service
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-offers"])
 

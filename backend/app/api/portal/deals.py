@@ -23,8 +23,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
+from app.domains.companies import service as company_service
+from app.domains.companies.models import Company
 from app.models.accounts import UserAccount
-from app.models.companies import Company
 from app.models.contracts import Contract
 from app.models.deals import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
 from app.models.enums import (
@@ -55,7 +56,6 @@ from app.schemas.portal_deal import (
     TransitionIn,
 )
 from app.services import (
-    company_service,
     deal_service,
     escrow_service,
     rfq_response_service,

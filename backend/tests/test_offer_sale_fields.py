@@ -41,8 +41,8 @@ class TestMadeToOrderNeedsALeadTime:
         time either, the card says nothing a buyer can plan around."""
         import pydantic  # noqa: PLC0415
 
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         with pytest.raises(pydantic.ValidationError, match="lead_time_days"):
             CompanyOfferIn(
@@ -51,8 +51,8 @@ class TestMadeToOrderNeedsALeadTime:
             )
 
     def test_on_order_with_a_lead_time_is_accepted(self) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         body = CompanyOfferIn(
             product_text="HDPE film",
@@ -63,8 +63,8 @@ class TestMadeToOrderNeedsALeadTime:
         assert body.price is None, "a made-to-order offer is priced on request"
 
     def test_in_stock_needs_no_lead_time(self) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         body = CompanyOfferIn(
             product_text="HDPE film",
@@ -77,8 +77,8 @@ class TestMadeToOrderNeedsALeadTime:
     def test_a_negative_lead_time_is_rejected(self) -> None:
         import pydantic  # noqa: PLC0415
 
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         with pytest.raises(pydantic.ValidationError):
             CompanyOfferIn(
@@ -104,7 +104,7 @@ class TestExistingRulesAreNotRetightened:
         assert body.qty_available is None
 
     def test_readiness_flags_default_to_rfq_only(self) -> None:
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
 
         body = CompanyOfferIn(product_text="HDPE film", qty_available="1", price="1")
         assert body.accepts_rfq is True

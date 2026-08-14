@@ -21,8 +21,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy.sql.elements import ColumnElement
 
+from app.domains.companies.models import Company, CompanyMember
 from app.models.accounts import UserAccount
-from app.models.companies import Company, CompanyMember
 from app.models.deals import RfqResponse
 from app.models.enums import (
     CompanyMemberStatus,
@@ -159,7 +159,9 @@ def submit(
     (role_not_allowed reveals nothing about THIS request, so it may precede
     visibility), then visibility, then the open-status check.
     """
-    from app.services import company_service  # noqa: PLC0415 — cycle-safe, keep local
+    from app.domains.companies import (
+        service as company_service,  # noqa: PLC0415 — cycle-safe, keep local
+    )
 
     if request.company_id is not None and request.company_id == company.id:
         raise CannotRespondOwnRequest(str(request.id))
