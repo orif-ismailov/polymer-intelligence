@@ -33,12 +33,12 @@ import secrets
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domains.companies.media_models import CompanyMedia
 from app.domains.companies.models import Company
 from app.domains.marketplace.models import SellerOfferFile
 from app.domains.requests.models import RequestFile
 from app.domains.verification.models import VerificationDocument
 from app.models.enums import OfferFileKind, VerificationDocumentKind
-from app.models.media import CompanyMedia
 
 logger = logging.getLogger(__name__)
 

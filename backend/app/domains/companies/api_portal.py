@@ -20,6 +20,7 @@ from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.accounts.models import UserAccount
 from app.domains.companies import directory as directory_service
+from app.domains.companies import reviews as review_service
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBankAccount
 from app.domains.companies.schemas import (
@@ -52,7 +53,6 @@ from app.models.enums import (
 from app.services import (
     audit_service,
     rate_limit,
-    review_service,
     storage_service,
 )
 

@@ -39,7 +39,9 @@ This file must be imported by alembic/env.py so that
 # barrel exists to guarantee.
 import app.domains.accounts.models  # noqa: F401
 import app.domains.alerts.models  # noqa: F401
+import app.domains.companies.media_models  # noqa: F401
 import app.domains.companies.models  # noqa: F401
+import app.domains.companies.review_models  # noqa: F401
 import app.domains.compliance.models  # noqa: F401
 import app.domains.contracts.eimzo_models  # noqa: F401
 import app.domains.contracts.models  # noqa: F401
@@ -116,8 +118,6 @@ from app.models.enums import (
 )
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
-from app.models.media import CompanyMedia  # noqa: F401
-from app.models.reviews import CompanyReview  # noqa: F401
 from app.models.staff import AuditLog, StaffUser  # noqa: F401
 
 __all__ = [
@@ -200,7 +200,5 @@ __all__ = [
     "LabRequestStatus",
     # Company reviews
     "CompanyReviewStatus",
-    "CompanyReview",
-    "CompanyMedia",
     # State-registry evidence (R6 / P7.c)
 ]

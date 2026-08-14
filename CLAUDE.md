@@ -275,12 +275,14 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 
 - **Time**: store UTC, display `Asia/Tashkent` (`TZ_DISPLAY`). Time helpers in `app/core/time.py`
   (backend) and `lib/tz.ts` (dashboard).
-- **Domain folders**: bounded contexts are migrating out of the technical-layer folders into
-  `app/domains/<name>/` (models + schemas + service + routers together), one domain per change,
-  no back-compat shims. `marketplace`, `verification`, `companies`, `contracts`, `deals`, `compliance`, `lab_orders`,
-  `laboratory`, `logistics`, `manufacturers`, `news`, `pricing`, `requests`, `signals` and `sourcing` have moved; the rest
-  still live in
-  `app/models|schemas|services|api/`. Plans and the binding rules are in `.planning/backend-domain-reorg/`.
+- **Domain folders**: the backend reorg is **complete**. Every bounded context lives in
+  `backend/app/domains/<name>/` (models + schemas + service + routers together) — 20 of them:
+  accounts, alerts, companies, compliance, contracts, deals, lab_orders, laboratory, logistics,
+  manufacturers, marketplace, news, notifications, pricing, reference, requests, signals,
+  sourcing, storefront, verification. What remains in `app/services|schemas|models|api/` is a
+  **closed shared kernel**, declared in those packages' `__init__.py` docstrings — "still in
+  `app/services/`" means kernel, not unmigrated. Plans and the binding rules (including the
+  models-barrel module-import rule) are in `.planning/backend-domain-reorg/`.
 - **mypy is strict** for `app/services` and `app/schemas` plus the migrated domains' service and
   schema modules (the CI-gated scope). Business logic
   lives in `app/services/`; keep it typed.

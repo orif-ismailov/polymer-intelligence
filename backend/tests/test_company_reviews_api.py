@@ -274,8 +274,8 @@ def test_review_requires_membership_and_a_session(api) -> None:  # noqa: ANN001
 @requires_real_db
 def test_hidden_reviews_leave_the_aggregate_and_the_list(api) -> None:  # noqa: ANN001
     """`hidden` is the takedown path — and it must move the score, not just the list."""
+    from app.domains.companies.review_models import CompanyReview  # noqa: PLC0415
     from app.models.enums import CompanyReviewStatus  # noqa: PLC0415
-    from app.models.reviews import CompanyReview  # noqa: PLC0415
 
     client, session = api
     with session() as db:

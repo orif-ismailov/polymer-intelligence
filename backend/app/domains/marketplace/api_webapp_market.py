@@ -210,7 +210,7 @@ def get_company_media(
     bare media id would be a handle to every image in the bucket regardless of
     who owns it. The storage key still comes from the row, never the caller.
     """
-    from app.models.media import CompanyMedia  # noqa: PLC0415
+    from app.domains.companies.media_models import CompanyMedia  # noqa: PLC0415
 
     media = (
         db.query(CompanyMedia)

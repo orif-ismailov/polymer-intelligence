@@ -71,9 +71,16 @@ jobs:
 
       # ── Type-check: mypy scoped to services/ and schemas/ ──────────────────
       # Per dev-spec §7: mypy targets backend/app/services + backend/app/schemas.
-      # As the domain reorg moves a bounded context into app/domains/<name>/, that
-      # domain's service and schema modules are appended here so the gate follows
-      # the code instead of shrinking as directories empty out.
+      # The domain reorg moved every bounded context into app/domains/<name>/, so each
+      # domain's service and schema modules are listed here explicitly — the gate
+      # follows the code instead of shrinking as directories empty out.
+      #
+      # These lists are long and look like they want collapsing to `app/domains`.
+      # DON'T. That directory also holds each domain's api_*.py routers, which lived in
+      # app/api/ and were never type-gated: passing the directory checks 177 files
+      # instead of 56 and reports ~122 explicit-Any errors in code that only changed
+      # folder. Widening the gate to routers may be worth doing — as a deliberate
+      # decision with its own commit, not as a side effect of tidying an argument list.
       - name: Type-check (mypy — app/services)
         run: >
           mypy app/services

@@ -44,7 +44,7 @@ async def cmd_start(message: Message) -> None:
     - Renders telegram/templates/{lang}/start.txt via load_template().
     - Attaches web_app_keyboard(lang) with the localized Web App button.
     """
-    from app.services.client_service import get_or_create_client  # noqa: PLC0415
+    from app.domains.requests.clients import get_or_create_client  # noqa: PLC0415
     from telegram.bot import load_template, web_app_keyboard  # noqa: PLC0415
 
     if message.from_user is None:

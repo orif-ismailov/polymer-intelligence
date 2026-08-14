@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company
+from app.domains.companies.review_models import CompanyReview
 from app.models.enums import CompanyReviewStatus, CompanyStatus
-from app.models.reviews import CompanyReview
 
 logger = logging.getLogger(__name__)
 

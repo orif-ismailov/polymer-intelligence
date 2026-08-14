@@ -31,6 +31,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.domains.companies import directory as directory_service
+from app.domains.companies import reviews as review_service
 from app.domains.companies.models import Company
 from app.domains.laboratory import service as laboratory_service
 from app.domains.logistics import service as logistics_service
@@ -58,10 +59,7 @@ from app.domains.storefront.schemas import (
 )
 from app.models.enums import CompanyBusinessRole as CompanyBusinessRoleEnum
 from app.models.enums import OfferAvailability, PriceBasis
-from app.services import (
-    review_service,
-    storage_service,
-)
+from app.services import storage_service
 
 router = APIRouter(prefix="/public", tags=["public"])
 

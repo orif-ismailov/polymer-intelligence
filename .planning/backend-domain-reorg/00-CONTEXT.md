@@ -285,6 +285,21 @@ definition and call sites moved together) but five private helpers silently beca
 and the resulting duplicate public names were more confusing than the problem being fixed.
 Caught by reading a diff, not by any gate: ruff, mypy and the suite were all green.
 
+## Status: complete
+
+All eleven phases have landed. `backend/app/` now holds 20 domain folders under
+`app/domains/` plus an explicitly closed shared kernel, recorded in the docstrings of
+`app/services/__init__.py` and `app/api/__init__.py`. "Still in `app/services/`" now
+means *kernel*, not *not yet moved*.
+
+One thing P11 floated and this track declined: collapsing the accumulated per-file mypy
+arguments to `app/domains` as a directory. That directory also contains each domain's
+routers, which lived in `app/api/` and were never type-gated — passing the directory
+checks 177 files instead of 56 and reports ~122 explicit-Any errors in code that only
+changed folder. Widening the gate to routers is a defensible thing to want, but it is a
+policy decision with its own commit, not a side effect of shortening an argument list.
+The reasoning is in `.github/workflows/ci.yml` next to the lists.
+
 ## Target convention
 
 Each domain becomes `backend/app/domains/<name>/`, e.g.:
@@ -338,7 +353,7 @@ research), confirmed with the user:
 10. **Signals/Ingest** — **DONE** (`P10-SIGNALS-SOURCING.md`, signals + sourcing). `signal_service`, `raw_pipeline`, `source_service`,
     `source_health_service`, `sourcing_service` (`app/ingest/` adapter package already has its
     own per-type structure and is left as-is).
-11. Remaining small isolated services (`alert_service`, `auth_service`, `client_service`,
+11. **DONE** (`P11-REMAINDER.md`). Remaining small isolated services (`alert_service`, `auth_service`, `client_service`,
     `fx_service`, `lead_score_recompute_service`, `rate_limit`, `review_service`,
     `userbot_health_service`, `product_service`) grouped into 2-3 small domains at the end.
 
