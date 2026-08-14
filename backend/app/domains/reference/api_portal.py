@@ -18,11 +18,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
-from app.domains.accounts.models import UserAccount
 from app.domains.reference import service as product_service
 from app.domains.reference.schemas import ProductOut
 
-router = APIRouter(prefix="/portal/reference", tags=["portal-reference"])
+router = APIRouter(prefix="/portal/reference", tags=["portal-reference"], dependencies=[Depends(get_current_account)])
 
 
 @router.get(
@@ -32,7 +31,6 @@ router = APIRouter(prefix="/portal/reference", tags=["portal-reference"])
 )
 def list_products(
     db: Session = Depends(get_db),
-    _account: UserAccount = Depends(get_current_account),
 ) -> list[ProductOut]:
     """GET /portal/reference/products — active products, ordered for the dropdown."""
     return product_service.list_active(db)  # type: ignore[return-value]

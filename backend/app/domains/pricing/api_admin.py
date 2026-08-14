@@ -29,12 +29,11 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_staff_user
 from app.core.db import get_db
-from app.models.staff import StaffUser
 from app.schemas.dashboard import PriceSeriesOut
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/prices", tags=["prices"])
+router = APIRouter(prefix="/prices", tags=["prices"], dependencies=[Depends(get_current_staff_user)])
 
 # Threshold for switching from daily to weekly downsampling (dev-spec §3.1)
 _DOWNSAMPLE_THRESHOLD_DAYS = 365
@@ -47,7 +46,6 @@ def get_price_series(
     date_from: datetime.date | None = Query(default=None, description="Start date (inclusive)"),
     date_to: datetime.date | None = Query(default=None, description="End date (inclusive)"),
     db: Session = Depends(get_db),
-    _: StaffUser = Depends(get_current_staff_user),
 ) -> list[PriceSeriesOut]:
     """Return price_points series for the given filters.
 

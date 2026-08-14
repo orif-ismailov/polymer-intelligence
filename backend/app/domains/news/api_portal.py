@@ -16,7 +16,6 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
-from app.domains.accounts.models import UserAccount
 from app.domains.news import reports as report_service
 from app.domains.news import service as news_service
 from app.domains.news.schemas import (
@@ -27,7 +26,7 @@ from app.domains.news.schemas import (
     ReportPublicSummary,
 )
 
-router = APIRouter(prefix="/portal/news", tags=["portal-news"])
+router = APIRouter(prefix="/portal/news", tags=["portal-news"], dependencies=[Depends(get_current_account)])
 
 NewsScope = Literal["all", "uzbekistan", "global", "producers"]
 NewsSort = Literal["newest", "importance", "category", "products", "country", "company"]
@@ -49,7 +48,6 @@ def list_articles(
     sort: NewsSort | None = Query(default=None),
     lang: str | None = Query(default=None, max_length=8),
     db: Session = Depends(get_db),
-    _account: UserAccount = Depends(get_current_account),
 ) -> list[NewsArticleCard]:
     articles = news_service.list_news_articles(
         db,
@@ -73,7 +71,6 @@ def list_articles(
 def article_filters(
     days: int = Query(default=30, ge=1, le=90),
     db: Session = Depends(get_db),
-    _account: UserAccount = Depends(get_current_account),
 ) -> NewsFilterOptions:
     return NewsFilterOptions.model_validate(news_service.list_news_filter_options(db, days=days))
 
@@ -83,7 +80,6 @@ def get_article(
     signal_id: int,
     lang: str | None = Query(default=None, max_length=8),
     db: Session = Depends(get_db),
-    _account: UserAccount = Depends(get_current_account),
 ) -> NewsArticleDetail:
     article = news_service.get_news_article(db, signal_id, lang=lang)
     if article is None:
@@ -95,7 +91,6 @@ def get_article(
 def list_reports(
     limit: int = Query(default=30, ge=1, le=100),
     db: Session = Depends(get_db),
-    _account: UserAccount = Depends(get_current_account),
 ) -> list[ReportPublicSummary]:
     return report_service.list_published(db, limit=limit)  # type: ignore[return-value]
 
@@ -104,7 +99,6 @@ def list_reports(
 def get_report(
     report_id: int,
     db: Session = Depends(get_db),
-    _account: UserAccount = Depends(get_current_account),
 ) -> ReportPublicOut:
     report = report_service.get_published(db, report_id)
     if report is None:

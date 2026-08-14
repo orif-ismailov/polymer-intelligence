@@ -20,10 +20,10 @@ from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
 from app.domains.companies.models import Company
 from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
-from app.models.staff import AuditLog, StaffUser
+from app.models.staff import AuditLog
 from app.services import storage_service
 
-router = APIRouter(prefix="/admin", tags=["admin-contracts"])
+router = APIRouter(prefix="/admin", tags=["admin-contracts"], dependencies=[Depends(require_analyst_or_admin)])
 
 
 class AdminSignatureOut(BaseModel):
@@ -95,7 +95,6 @@ def list_contracts(
     contract_status: str | None = Query(default=None, alias="status"),
     q: str | None = Query(default=None, max_length=200),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
 ) -> list[AdminContractOut]:
     stmt = select(Contract)
     if contract_status:
@@ -113,7 +112,6 @@ def list_contracts(
 def get_contract(
     contract_id: int,
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
 ) -> AdminContractDetailOut:
     contract = db.get(Contract, contract_id)
     if contract is None:
@@ -149,7 +147,6 @@ def contract_document(
     contract_id: int,
     as_: str = Query(default="redirect", alias="as"),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
 ) -> Response:
     contract = db.get(Contract, contract_id)
     if contract is None or not contract.generated_document_path:

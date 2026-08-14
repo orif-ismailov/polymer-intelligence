@@ -28,9 +28,8 @@ from app.domains.news.schemas import (
     ReportPublicOut,
     ReportPublicSummary,
 )
-from app.domains.requests.models import Client
 
-router = APIRouter(prefix="/webapp/news", tags=["webapp-news"])
+router = APIRouter(prefix="/webapp/news", tags=["webapp-news"], dependencies=[Depends(get_current_client)])
 
 NewsScope = Literal["all", "uzbekistan", "global", "producers"]
 NewsSort = Literal["newest", "importance", "category", "products", "country", "company"]
@@ -55,7 +54,6 @@ def list_articles(
     sort: NewsSort | None = Query(default=None, description="Default: importance→recency."),
     lang: str | None = Query(default=None, max_length=8, description="Localize display fields (ru/uz/en)."),
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
 ) -> list[NewsArticleCard]:
     articles = news_service.list_news_articles(
         db,
@@ -79,7 +77,6 @@ def list_articles(
 def article_filters(
     days: int = Query(default=30, ge=1, le=90),
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
 ) -> NewsFilterOptions:
     return NewsFilterOptions.model_validate(news_service.list_news_filter_options(db, days=days))
 
@@ -89,7 +86,6 @@ def get_article(
     signal_id: int,
     lang: str | None = Query(default=None, max_length=8, description="Localize display fields (ru/uz/en)."),
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
 ) -> NewsArticleDetail:
     article = news_service.get_news_article(db, signal_id, lang=lang)
     if article is None:
@@ -103,7 +99,6 @@ def get_article(
 def list_news(
     limit: int = Query(default=30, ge=1, le=100),
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
 ) -> list[ReportPublicSummary]:
     return report_service.list_published(db, limit=limit)  # type: ignore[return-value]
 
@@ -112,7 +107,6 @@ def list_news(
 def get_news(
     report_id: int,
     db: Session = Depends(get_db),
-    _client: Client = Depends(get_current_client),
 ) -> ReportPublicOut:
     report = report_service.get_published(db, report_id)
     if report is None:

@@ -20,9 +20,8 @@ from app.api.deps import require_admin
 from app.core.db import get_db
 from app.domains.reference import service as product_service
 from app.domains.reference.schemas import ProductCreate, ProductOut, ProductUpdate
-from app.models.staff import StaffUser
 
-router = APIRouter(prefix="/admin", tags=["admin-products"])
+router = APIRouter(prefix="/admin", tags=["admin-products"], dependencies=[Depends(require_admin)])
 
 
 @router.get(
@@ -31,7 +30,6 @@ router = APIRouter(prefix="/admin", tags=["admin-products"])
     summary="List all products (admin-only)",
 )
 def list_products(
-    _admin: StaffUser = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> list[ProductOut]:
     """GET /admin/products — every product, active and inactive."""
@@ -46,7 +44,6 @@ def list_products(
 )
 def create_product(
     payload: ProductCreate,
-    _admin: StaffUser = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> ProductOut:
     """POST /admin/products — add a product. 409 if the code already exists."""
@@ -69,7 +66,6 @@ def create_product(
 def update_product(
     product_id: int,
     payload: ProductUpdate,
-    _admin: StaffUser = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> ProductOut:
     """PATCH /admin/products/{id} — partial update; 404 if not found."""

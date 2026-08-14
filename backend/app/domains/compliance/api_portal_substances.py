@@ -16,18 +16,16 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
-from app.domains.accounts.models import UserAccount
 from app.domains.compliance import substances as substance_service
 from app.domains.compliance.substance_schemas import SubstanceBrief
 
-router = APIRouter(prefix="/portal/substances", tags=["portal-compliance"])
+router = APIRouter(prefix="/portal/substances", tags=["portal-compliance"], dependencies=[Depends(get_current_account)])
 
 
 @router.get("", response_model=list[SubstanceBrief], summary="Search the substance registry")
 def search_substances(
     q: str = Query(default="", max_length=120),
     db: Session = Depends(get_db),
-    _account: UserAccount = Depends(get_current_account),
 ) -> list[SubstanceBrief]:
     """Active substances matching name / synonym / CAS / HS code (empty q → [])."""
     return substance_service.search(db, q)  # type: ignore[return-value]

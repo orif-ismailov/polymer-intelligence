@@ -23,9 +23,8 @@ from app.domains.sourcing.schemas import (
     PartnerSupplierPatch,
     SourcingRunOut,
 )
-from app.models.staff import StaffUser
 
-router = APIRouter(prefix="/admin", tags=["sourcing"])
+router = APIRouter(prefix="/admin", tags=["sourcing"], dependencies=[Depends(require_analyst_or_admin)])
 
 
 # ── Inventory CRUD ───────────────────────────────────────────────────────────────
@@ -33,7 +32,6 @@ router = APIRouter(prefix="/admin", tags=["sourcing"])
 @router.get("/inventory", response_model=list[InventoryItemOut])
 def list_inventory(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> list[InventoryItemOut]:
     return db.query(InventoryItem).order_by(InventoryItem.product_id).all()  # type: ignore[return-value]
 
@@ -42,7 +40,6 @@ def list_inventory(
 def create_inventory(
     body: InventoryItemIn,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> InventoryItemOut:
     item = InventoryItem(**body.model_dump())
     db.add(item)
@@ -55,7 +52,6 @@ def update_inventory(
     item_id: int,
     body: InventoryItemPatch,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> InventoryItemOut:
     item = db.get(InventoryItem, item_id)
     if item is None:
@@ -70,7 +66,6 @@ def update_inventory(
 def delete_inventory(
     item_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> None:
     item = db.get(InventoryItem, item_id)
     if item is not None:
@@ -83,7 +78,6 @@ def delete_inventory(
 @router.get("/partners", response_model=list[PartnerSupplierOut])
 def list_partners(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> list[PartnerSupplierOut]:
     return db.query(PartnerSupplier).order_by(PartnerSupplier.name).all()  # type: ignore[return-value]
 
@@ -92,7 +86,6 @@ def list_partners(
 def create_partner(
     body: PartnerSupplierIn,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> PartnerSupplierOut:
     partner = PartnerSupplier(**body.model_dump())
     db.add(partner)
@@ -105,7 +98,6 @@ def update_partner(
     partner_id: int,
     body: PartnerSupplierPatch,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> PartnerSupplierOut:
     partner = db.get(PartnerSupplier, partner_id)
     if partner is None:
@@ -120,7 +112,6 @@ def update_partner(
 def delete_partner(
     partner_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> None:
     partner = db.get(PartnerSupplier, partner_id)
     if partner is not None:
@@ -134,7 +125,6 @@ def delete_partner(
 def source_request(
     request_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> SourcingRunOut:
     request = db.get(Request, request_id)
     if request is None:
@@ -148,7 +138,6 @@ def source_request(
 def get_sourcing(
     request_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> SourcingRunOut:
     run = sourcing_service.latest_sourcing_run(db, request_id)
     if run is None:
@@ -161,6 +150,5 @@ def get_sourcing(
 @router.get("/intel/market", response_model=list[MarketIntelRow])
 def market_intel(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
 ) -> list[MarketIntelRow]:
     return sourcing_service.market_overview(db)

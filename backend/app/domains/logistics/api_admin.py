@@ -28,9 +28,8 @@ from app.domains.logistics.models import (
     LogisticsRequestThread,
 )
 from app.models.enums import LogisticsRequestStatus
-from app.models.staff import StaffUser
 
-router = APIRouter(prefix="/admin", tags=["admin-logistics-requests"])
+router = APIRouter(prefix="/admin", tags=["admin-logistics-requests"], dependencies=[Depends(require_analyst_or_admin)])
 
 
 class AdminLogisticsRequestOut(BaseModel):
@@ -138,7 +137,6 @@ def list_logistics_requests(
     request_status: str | None = Query(default=None, alias="status"),
     q: str | None = Query(default=None, max_length=200),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
 ) -> list[AdminLogisticsRequestOut]:
     stmt = select(LogisticsRequest)
     if request_status:
@@ -158,7 +156,6 @@ def list_logistics_requests(
 def get_logistics_request(
     request_id: int,
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
 ) -> AdminLogisticsRequestDetailOut:
     request = db.get(LogisticsRequest, request_id)
     if request is None:

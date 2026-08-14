@@ -24,9 +24,8 @@ from app.domains.companies.models import Company
 from app.domains.laboratory import service as laboratory_service
 from app.domains.laboratory.models import LabRequest, LabRequestMessage, LabRequestThread
 from app.models.enums import LabRequestStatus
-from app.models.staff import StaffUser
 
-router = APIRouter(prefix="/admin", tags=["admin-lab-requests"])
+router = APIRouter(prefix="/admin", tags=["admin-lab-requests"], dependencies=[Depends(require_analyst_or_admin)])
 
 
 class AdminLabRequestOut(BaseModel):
@@ -136,7 +135,6 @@ def list_lab_requests(
     request_status: str | None = Query(default=None, alias="status"),
     q: str | None = Query(default=None, max_length=200),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
 ) -> list[AdminLabRequestOut]:
     stmt = select(LabRequest)
     if request_status:
@@ -156,7 +154,6 @@ def list_lab_requests(
 def get_lab_request(
     request_id: int,
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
 ) -> AdminLabRequestDetailOut:
     request = db.get(LabRequest, request_id)
     if request is None:
