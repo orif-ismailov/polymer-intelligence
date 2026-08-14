@@ -90,7 +90,7 @@ def _document_or_404(db: Session, company_id: int, document_id: int) -> Verifica
 
 
 @router.post("/{company_id}/documents", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
-async def upload_document(
+def upload_document(
     company_id: int,
     kind: str = Form(...),
     file: UploadFile = File(...),
@@ -98,6 +98,13 @@ async def upload_document(
     account: UserAccount = Depends(get_current_account),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> DocumentOut:
+    """Attach a verification document to a company.
+
+    Sync `def` on purpose: the body is a Redis rate-limit round-trip, a blocking
+    boto3 PUT and a commit. As `async def` those ran on the event loop and stalled
+    every other request in the process. `file.file` is the underlying
+    SpooledTemporaryFile, so no `await` is needed to read it.
+    """
     company = company_or_404(db, account, company_id)
     try:
         rate_limit.enforce_daily(
@@ -109,7 +116,7 @@ async def upload_document(
         doc_kind = VerificationDocumentKind(kind)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Unknown document kind") from exc
-    content = await file.read()
+    content = file.file.read()
     try:
         document = storage_service.upload_verification_document(
             db, company, account.id, doc_kind, content, file.filename or "upload"

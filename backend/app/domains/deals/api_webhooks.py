@@ -37,6 +37,7 @@ import logging
 import re
 from typing import Any
 
+from anyio import to_thread
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
@@ -89,15 +90,29 @@ async def escrow_callback(
     )
     external_id = escrow_events.extract_external_id(provider, parsed, raw)
 
-    event = escrow_service.record_provider_event(db, provider, external_id, payload)
-    db.commit()
+    # This handler has to be a coroutine — `await request.body()` is the only way
+    # to read a body of unknown content type. But everything after it is blocking
+    # (a DB insert + commit, then a Redis dispatch), and on the event loop that
+    # stalls every other request in the process, SSE streams included. So the
+    # blocking half goes to a worker thread. The ORDER the docstring promises is
+    # unchanged: record, commit, then enqueue — the two calls stay separate so a
+    # failed dispatch still costs latency rather than evidence.
+    event_id = await to_thread.run_sync(_record, db, provider, external_id, payload)
     logger.info(
         "escrow.webhook.recorded",
-        extra={"provider": provider, "external_id": external_id, "event_id": event.id},
+        extra={"provider": provider, "external_id": external_id, "event_id": event_id},
     )
 
-    _schedule(event.id)
+    await to_thread.run_sync(_schedule, event_id)
     return {"ok": True}
+
+
+def _record(db: Session, provider: str, external_id: str, payload: dict[str, object]) -> int:
+    """Persist the callback and commit. Returns the row id."""
+    event = escrow_service.record_provider_event(db, provider, external_id, payload)
+    db.commit()
+    event_id: int = event.id
+    return event_id
 
 
 def _parse(raw: bytes) -> object | None:

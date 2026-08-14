@@ -231,7 +231,7 @@ def transition_lab_order(
 
 
 @router.post("/lab-orders/{order_id}/result", response_model=LabOrderAdminOut)
-async def upload_lab_result(
+def upload_lab_result(
     order_id: int,
     file: UploadFile = File(...),
     note: str | None = Form(default=None),
@@ -242,9 +242,14 @@ async def upload_lab_result(
 
     The document lands on the offer (and flips its `lab_verified`) or in the
     deal's Trade Room, depending on what the order was about.
+
+    Sync `def` on purpose: `complete_with_result` stores the PDF and repoints the
+    order in one transaction — a blocking boto3 PUT plus DB work that, as
+    `async def`, ran on the event loop and stalled every other request. Reading
+    `file.file` (the underlying SpooledTemporaryFile) needs no await.
     """
     order = _order_or_404(db, order_id)
-    content = await file.read()
+    content = file.file.read()
 
     try:
         lab_service.complete_with_result(

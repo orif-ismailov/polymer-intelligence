@@ -127,7 +127,7 @@ def archive_offer(
 
 
 @router.post("/{company_id}/offers/{offer_id}/files", response_model=CompanyOfferOut, status_code=status.HTTP_201_CREATED)
-async def upload_offer_file(
+def upload_offer_file(
     company_id: int,
     offer_id: int,
     kind: str = Form("image"),
@@ -143,6 +143,14 @@ async def upload_offer_file(
     A `lab_passport` (P6) must be a PDF and also re-enters moderation: unlike an
     SDS, which only feeds the compliance verdict, it puts a public badge on the
     market card, so it is part of what was approved too.
+
+    Deliberately sync `def` (see also the two sibling upload endpoints). The body
+    is three DB queries, a blocking boto3 PUT and a commit; as `async def` all of
+    that ran ON the event loop, so one slow S3 write stalled every other request
+    in the process — including the SSE feed streams. As `def`, FastAPI runs the
+    whole handler in the threadpool, like the other ~287 handlers here. The file
+    is read via `file.file` (the underlying SpooledTemporaryFile) rather than
+    `await file.read()`, which is the only reason this was a coroutine at all.
     """
     company = company_or_404(db, account, company_id)
     offer = _offer_or_404(db, company.id, offer_id)
@@ -160,7 +168,7 @@ async def upload_offer_file(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="too_many_files"
         )
 
-    content = await file.read()
+    content = file.file.read()
 
     # Detect the type BEFORE writing anything: `kind=image` must really be an image
     # (the generic allow-list also passes PDFs and spreadsheets, which are valid

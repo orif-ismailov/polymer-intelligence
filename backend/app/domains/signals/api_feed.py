@@ -30,11 +30,12 @@ from __future__ import annotations
 
 import datetime
 import decimal
+from collections.abc import AsyncIterable
 from typing import Any
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import StreamingResponse
+from fastapi.sse import EventSourceResponse, ServerSentEvent
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_staff_user, get_current_staff_user_sse
@@ -283,6 +284,7 @@ def get_feed(
 
 @router.get(
     "/stream",
+    response_class=EventSourceResponse,
     summary="SSE stream: new entity IDs from the live feed",
     description=(
         "Server-Sent Events stream delivering new signal/request IDs as they arrive. "
@@ -294,34 +296,41 @@ def get_feed(
 )
 async def feed_stream(
     _current_user: StaffUser = Depends(get_current_staff_user_sse),
-) -> StreamingResponse:
+) -> AsyncIterable[ServerSentEvent]:
     """Stream new entity IDs via Server-Sent Events.
 
-    Each message from the `feed:new` Redis pub/sub channel is emitted as:
-        data: {entity_ref}\\n\\n
+    Each message from the `feed:new` Redis pub/sub channel is emitted as
+    ``data: {entity_ref}``. The browser hook calls
+    ``queryClient.invalidateQueries(['feed'])`` on each one.
 
-    The browser-side SSE hook calls queryClient.invalidateQueries(['feed'])
-    on each message to trigger a feed refresh.
+    Uses FastAPI's `EventSourceResponse` rather than a hand-rolled
+    `StreamingResponse`, for one behavioural reason: it emits a keep-alive comment
+    frame (`: ping`) every 15s while the generator is idle. Without that, a feed
+    with no traffic hit nginx's `proxy_read_timeout 60s` and was dropped, so every
+    open dashboard tab silently reconnected once a minute — each reconnect paying
+    for a JWT decode, a StaffUser lookup and a fresh Redis connection. Note this
+    reproduces only behind nginx; against a bare dev server the stream just sits
+    open, which is why the symptom went unnoticed.
 
-    Headers:
-    - Cache-Control: no-cache — prevents browser/proxy caching
-    - X-Accel-Buffering: no — prevents nginx from buffering SSE frames (Pitfall 3)
+    Framing is now the response class's job, which also removes the manual CR/LF
+    sanitisation the old hand-built `f"data: {...}"` needed: `ServerSentEvent`
+    rejects a newline in a single-line field outright. The length cap stays — the
+    contract is a short entity ref, and a pathological payload should not become a
+    multi-megabyte frame.
+
+    `Cache-Control: no-cache` and `X-Accel-Buffering: no` are no longer set here
+    because FastAPI's SSE path sets both itself (`fastapi/routing.py`). They are
+    still required — without the second one nginx buffers the stream and the feed
+    stops being live — so `test_feed_sse` asserts them on the response rather than
+    trusting that this stays true across upgrades.
     """
-
-    async def event_generator() -> Any:
-        async for msg in subscribe_feed_events():
-            # WR-01: sanitize before framing. A CR/LF in the payload would break
-            # SSE framing (a stray "\n\n" terminates the event early or injects a
-            # fake event). The contract is a bare entity ref, so strip CR/LF and
-            # cap the length defensively.
-            safe = str(msg).replace("\r", "").replace("\n", "")[:128]
-            yield f"data: {safe}\n\n"
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    async for msg in subscribe_feed_events():
+        # `raw_data`, NOT `data`: ServerSentEvent JSON-encodes `data` even for
+        # plain strings, so `data="signal:42"` would go out as `data: "signal:42"`
+        # — quoted. The wire format here predates this change and is a contract
+        # with the dashboard hook, so it is kept byte-identical. (Today's consumer
+        # ignores the payload and just invalidates the query, but an unannounced
+        # format change is not something to leave lying around for the next one.)
+        yield ServerSentEvent(
+            raw_data=str(msg).replace("\r", "").replace("\n", "")[:128]
+        )
