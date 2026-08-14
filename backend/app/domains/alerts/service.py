@@ -28,7 +28,7 @@ from typing import Any
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.alerts import Alert, AlertRule, Delivery
+from app.domains.alerts.models import Alert, AlertRule, Delivery
 from app.models.enums import DeliveryChannel, DeliveryStatus
 
 logger = logging.getLogger(__name__)

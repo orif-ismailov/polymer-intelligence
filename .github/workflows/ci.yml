@@ -116,6 +116,8 @@ jobs:
           app/domains/signals/lead_score_recompute.py
           app/domains/signals/userbot_health.py
           app/domains/pricing/fx.py
+          app/domains/alerts/service.py
+          app/domains/storefront/service.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -140,6 +142,8 @@ jobs:
           app/domains/requests/webapp_schemas.py
           app/domains/requests/analysis_schemas.py
           app/domains/sourcing/schemas.py
+          app/domains/notifications/schemas.py
+          app/domains/storefront/schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

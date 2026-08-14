@@ -101,7 +101,7 @@ def prune_portal_notifications() -> dict[str, Any]:
 
     from app.core.db import engine  # noqa: PLC0415
     from app.core.time import utcnow  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
 
     now = utcnow()
     read_cutoff = now - datetime.timedelta(days=_RETENTION_READ_DAYS)

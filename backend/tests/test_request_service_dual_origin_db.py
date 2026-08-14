@@ -64,10 +64,10 @@ def _payload():  # noqa: ANN202
 
 @requires_real_db
 def test_create_company_request_is_portal_origin(sf) -> None:  # noqa: ANN001
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.domains.requests import service as request_service  # noqa: PLC0415
     from app.domains.requests.models import Request, RequestStatusHistory  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         owner = make_account(db, "+998900001001")
@@ -98,9 +98,9 @@ def test_create_company_request_is_portal_origin(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_transition_portal_request_notifies_creator_in_portal(sf) -> None:  # noqa: ANN001
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.domains.requests import service as request_service  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         owner = make_account(db, "+998900001002")
@@ -131,10 +131,10 @@ def test_transition_portal_request_notifies_creator_in_portal(sf) -> None:  # no
 
 @requires_real_db
 def test_transition_tg_request_uses_tg_dm_not_portal(sf) -> None:  # noqa: ANN001
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.domains.requests import service as request_service  # noqa: PLC0415
     from app.domains.requests.models import Client, Request  # noqa: PLC0415
     from app.models.enums import RequestStatus  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         client = Client(telegram_user_id=555001, language="ru")

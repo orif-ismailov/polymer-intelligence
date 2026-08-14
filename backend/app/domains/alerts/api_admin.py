@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_staff_user, require_admin
 from app.core.db import get_db
-from app.models.alerts import Alert, AlertRule
+from app.domains.alerts.models import Alert, AlertRule
 from app.models.enums import AlertKind
 from app.models.staff import StaffUser
 from app.schemas.dashboard import (

@@ -23,7 +23,7 @@ _BASE = "/api/v1/portal/notifications"
 
 
 def test_notification_routes_registered() -> None:
-    from app.api.portal.notifications import router  # noqa: PLC0415
+    from app.domains.notifications.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/notifications" in paths

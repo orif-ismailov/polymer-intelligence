@@ -72,7 +72,7 @@ def _quote(db, request, company, account, price="1250.00"):  # noqa: ANN001, ANN
 
 
 def _bell(db, account_id, kind=None):  # noqa: ANN001, ANN202
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
 
     query = db.query(PortalNotification).filter(
         PortalNotification.user_account_id == account_id
@@ -311,7 +311,7 @@ def test_a_document_notifies_the_other_side(sf) -> None:  # noqa: ANN001
 def test_a_rolled_back_deal_leaves_no_bell_entry(sf) -> None:  # noqa: ANN001
     """Inline notification means the bell shares the deal's fate."""
     from app.domains.deals import service as deal_service  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, _buyer, seller_acc, seller, request = _scene(db)

@@ -234,8 +234,8 @@ class TestTransitions:
     def test_each_step_rings_the_customers_bell(self, db: Session) -> None:
         """dedup=False: two steps on one order are two different sentences."""
         from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
         from app.services import notification_service  # noqa: PLC0415
 
         order, staff, _company = self._submitted(db)

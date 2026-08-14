@@ -40,7 +40,7 @@ def test_public_review_never_names_the_person() -> None:
     `author_account_id` is on the row for audit. Serialising it would both
     misattribute the opinion and make every reviewer's identity scrapable.
     """
-    from app.schemas.public import PublicReviewOut  # noqa: PLC0415
+    from app.domains.storefront.schemas import PublicReviewOut  # noqa: PLC0415
 
     fields = set(PublicReviewOut.model_fields)
     assert "author_account_id" not in fields

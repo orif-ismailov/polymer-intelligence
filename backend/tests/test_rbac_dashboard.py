@@ -490,8 +490,8 @@ class TestAlertRulesDeleteAdminOnly:
     def test_admin_delete_existing_rule_returns_204(self):
         """Admin DELETE on existing rule returns 204 No Content."""
         from app.core.db import get_db
+        from app.domains.alerts.models import AlertRule
         from app.main import create_app
-        from app.models.alerts import AlertRule
 
         user = _make_staff_user(id=1, role="admin")
 

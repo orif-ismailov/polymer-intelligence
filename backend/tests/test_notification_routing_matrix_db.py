@@ -50,7 +50,7 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 @requires_real_db
 def test_notifications_never_carry_prerendered_text(sf) -> None:  # noqa: ANN001
     """Every notify_* producer stores keys/params, not rendered strings."""
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
@@ -71,8 +71,8 @@ def test_notifications_never_carry_prerendered_text(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_verification_decision_consumer_notifies_company_members(sf) -> None:  # noqa: ANN001
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
     from app.services import event_types  # noqa: PLC0415
     from app.tasks.portal_notify import notify_company_of_verification_decision  # noqa: PLC0415
 
@@ -126,8 +126,8 @@ def test_verification_consumer_registered_for_all_decisions() -> None:
 @requires_real_db
 def test_company_offer_moderation_notifies_members(sf) -> None:  # noqa: ANN001
     from app.domains.marketplace import service as offer_service  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
     from tests._verification_db import make_seller_offer  # noqa: PLC0415
 
     with sf() as db:
@@ -151,7 +151,7 @@ def test_company_offer_moderation_notifies_members(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_prune_deletes_old_read_and_unread(sf) -> None:  # noqa: ANN001
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.tasks.portal_notify import prune_portal_notifications  # noqa: PLC0415
 
     now = datetime.datetime.now(datetime.UTC)

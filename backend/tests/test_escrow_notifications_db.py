@@ -83,7 +83,7 @@ def _signed_deal(db):  # noqa: ANN001, ANN202
 
 
 def _bells(db, kind):  # noqa: ANN001, ANN202
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
 
     return db.query(PortalNotification).filter(PortalNotification.kind == kind).all()
 
@@ -144,8 +144,8 @@ def test_a_rolled_back_mark_leaves_no_bell(sf) -> None:  # noqa: ANN001
     """The bell shares the movement's fate: nobody may be told money moved when
     the transaction that moved it was discarded."""
     from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _signed_deal(db)

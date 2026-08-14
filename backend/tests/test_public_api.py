@@ -35,7 +35,7 @@ _BASE = "/api/v1/public"
 
 
 def test_public_routes_registered() -> None:
-    from app.api.public import router  # noqa: PLC0415
+    from app.domains.storefront.api import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/public/offers" in paths
@@ -58,7 +58,7 @@ def test_news_filters_route_is_declared_before_the_id_route() -> None:
     Starlette matches in declaration order, so the id route declared first would
     swallow "filters" and answer 422 on a path that has to work.
     """
-    from app.api.public import router  # noqa: PLC0415
+    from app.domains.storefront.api import router  # noqa: PLC0415
 
     paths = [r.path for r in router.routes]  # type: ignore[attr-defined]
     assert paths.index("/public/news/articles/filters") < paths.index(
@@ -75,8 +75,8 @@ def test_public_news_reader_matches_the_portal_surface() -> None:
     signed-in surfaces use -- a public schema that drifts is how a field nobody
     audited becomes crawlable.
     """
-    from app.api.public import router as public_router  # noqa: PLC0415
     from app.domains.news.api_portal import router as portal_router  # noqa: PLC0415
+    from app.domains.storefront.api import router as public_router  # noqa: PLC0415
 
     def models(router, prefix: str) -> dict[str, object]:  # noqa: ANN001
         return {
@@ -193,7 +193,7 @@ def test_no_public_route_depends_on_an_account() -> None:
     later.
     """
     from app.api.deps import get_current_account, get_current_client  # noqa: PLC0415
-    from app.api.public import router  # noqa: PLC0415
+    from app.domains.storefront.api import router  # noqa: PLC0415
 
     guarded = {get_current_account, get_current_client}
     for route in router.routes:
@@ -204,8 +204,8 @@ def test_no_public_route_depends_on_an_account() -> None:
 
 def test_directory_slugs_cover_every_public_role() -> None:
     """The nav promises four directories; the slug map must serve all four."""
-    from app.api.public import DIRECTORY_SLUGS  # noqa: PLC0415
     from app.domains.companies.directory import PUBLIC_DIRECTORY_ROLES  # noqa: PLC0415
+    from app.domains.storefront.api import DIRECTORY_SLUGS  # noqa: PLC0415
 
     assert set(DIRECTORY_SLUGS.values()) == set(PUBLIC_DIRECTORY_ROLES)
 
@@ -216,7 +216,7 @@ def test_public_offer_card_omits_seller_contact() -> None:
     Contact reveal is what the authenticated inquiry flow is for; leaking it
     here would also make every supplier's number scrapable.
     """
-    from app.schemas.public import PublicOfferCard, PublicOfferDetail  # noqa: PLC0415
+    from app.domains.storefront.schemas import PublicOfferCard, PublicOfferDetail  # noqa: PLC0415
 
     forbidden = {"seller", "contact", "phone", "telegram", "telegram_username", "email"}
     for model in (PublicOfferCard, PublicOfferDetail):
@@ -224,7 +224,7 @@ def test_public_offer_card_omits_seller_contact() -> None:
 
 
 def test_public_offer_detail_omits_moderation_internals() -> None:
-    from app.schemas.public import PublicOfferDetail  # noqa: PLC0415
+    from app.domains.storefront.schemas import PublicOfferDetail  # noqa: PLC0415
 
     forbidden = {
         "status",
@@ -239,7 +239,10 @@ def test_public_offer_detail_omits_moderation_internals() -> None:
 
 
 def test_public_company_card_omits_bank_and_case_data() -> None:
-    from app.schemas.public import PublicCompanyCard, PublicCompanyDetail  # noqa: PLC0415
+    from app.domains.storefront.schemas import (  # noqa: PLC0415
+        PublicCompanyCard,
+        PublicCompanyDetail,
+    )
 
     forbidden = {
         "bank_accounts",
@@ -261,7 +264,7 @@ def test_public_logistics_snippet_carries_no_contact_route() -> None:
     during registration is safe to publish EXCEPT a direct line — the platform's
     whole position is that contact happens through it.
     """
-    from app.schemas.public import PublicLogisticsSnippet  # noqa: PLC0415
+    from app.domains.storefront.schemas import PublicLogisticsSnippet  # noqa: PLC0415
 
     forbidden = {
         "phone",

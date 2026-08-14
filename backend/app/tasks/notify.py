@@ -359,7 +359,7 @@ def send_delivery(alert_id: int) -> dict[str, Any]:
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.alerts import Alert, Delivery  # noqa: PLC0415
+    from app.domains.alerts.models import Alert, Delivery  # noqa: PLC0415
     from app.models.enums import DeliveryChannel, DeliveryStatus  # noqa: PLC0415
 
     logger.info("notify.send_delivery.start", extra={"alert_id": alert_id})

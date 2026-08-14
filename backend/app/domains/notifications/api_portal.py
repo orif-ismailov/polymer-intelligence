@@ -12,12 +12,12 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
-from app.models.accounts import UserAccount
-from app.schemas.portal_notification import (
+from app.domains.notifications.schemas import (
     MarkReadIn,
     PortalNotificationOut,
     PortalNotificationPage,
 )
+from app.models.accounts import UserAccount
 from app.services import notification_service
 
 router = APIRouter(prefix="/portal/notifications", tags=["portal-notifications"])

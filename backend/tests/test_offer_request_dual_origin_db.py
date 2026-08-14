@@ -123,8 +123,8 @@ def test_create_company_inquiry_rejects_unapproved_offer(sf) -> None:  # noqa: A
 @requires_real_db
 def test_approve_company_offer_inquiry_notifies_selling_members(sf) -> None:  # noqa: ANN001
     from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.models.enums import CompanyMemberStatus  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         seller_owner = make_account(db, "+998900002100")
@@ -159,7 +159,7 @@ def test_approve_company_offer_inquiry_notifies_selling_members(sf) -> None:  # 
 @requires_real_db
 def test_approve_tg_seller_offer_inquiry_makes_no_portal_notification(sf) -> None:  # noqa: ANN001
     from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         seller = make_seller(db, telegram_user_id=999001)
@@ -183,7 +183,7 @@ def test_approve_tg_seller_offer_inquiry_makes_no_portal_notification(sf) -> Non
 @requires_real_db
 def test_reject_company_offer_inquiry_does_not_forward(sf) -> None:  # noqa: ANN001
     from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         seller_owner = make_account(db, "+998900002300")

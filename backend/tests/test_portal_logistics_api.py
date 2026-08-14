@@ -531,7 +531,7 @@ def test_broadcast_notifies_every_carrier_but_not_the_buyer(api) -> None:  # noq
     )
 
     with session() as db:
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.services import notification_service  # noqa: PLC0415
 
         rows = (

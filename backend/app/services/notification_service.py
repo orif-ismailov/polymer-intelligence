@@ -31,8 +31,8 @@ from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
 from app.domains.companies.models import CompanyMember
+from app.domains.notifications.models import PortalNotification
 from app.models.enums import CompanyMemberStatus
-from app.models.notifications import PortalNotification
 
 logger = logging.getLogger(__name__)
 

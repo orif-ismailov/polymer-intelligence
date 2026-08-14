@@ -184,7 +184,7 @@ class TestRequesting:
 
     def test_the_seller_is_told(self, db: Session) -> None:
         from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.services import notification_service  # noqa: PLC0415
 
         seller, buyer, buyer_owner, offer = _scene(db)
@@ -313,8 +313,8 @@ class TestMoving:
 
     def test_each_move_tells_the_other_side(self, db: Session) -> None:
         from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
         from app.services import notification_service  # noqa: PLC0415
         from tests._verification_db import make_member  # noqa: PLC0415
 
@@ -343,8 +343,8 @@ class TestMoving:
     def test_two_moves_produce_two_bells(self, db: Session) -> None:
         """dedup=False: "accepted" and "shipped" are different sentences."""
         from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
         from app.services import notification_service  # noqa: PLC0415
 
         sample, seller, _buyer = self._requested(db)
