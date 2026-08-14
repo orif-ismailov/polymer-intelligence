@@ -19,15 +19,16 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
-from app.models.requests import Client
-from app.schemas.reports import (
+from app.domains.news import reports as report_service
+from app.domains.news import service as news_service
+from app.domains.news.schemas import (
     NewsArticleCard,
     NewsArticleDetail,
     NewsFilterOptions,
     ReportPublicOut,
     ReportPublicSummary,
 )
-from app.services import news_service, report_service
+from app.models.requests import Client
 
 router = APIRouter(prefix="/webapp/news", tags=["webapp-news"])
 

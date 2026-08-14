@@ -57,6 +57,13 @@ context's models/schemas/service/api together — nothing tactical.
   settled: classes under `app/domains/` are no longer bound on `app.models` (harmless —
   there are zero `from app.models import X` call sites; the barrel is pure alembic
   infrastructure), and `__all__` lists only what is still bound.
+  > **Apply this to EVERY phase, not just the one that discovers it.** P3 fixed the four
+  > barrel lines that existed then and wrote this rule down; P4-P8 each re-introduced a
+  > name-import, because the mechanical path sed rewrites
+  > `from app.models.x import Foo` into `from app.domains.y.models import Foo` and the
+  > gate stays green — the cycle only fires when a domain model is the first app module
+  > imported in a process. P8 hit it and converted all ten. After moving a model, grep
+  > `^from app\.domains` in the barrel: it must return nothing.
 - **Assert `Base.metadata`, not barrel attributes.** Any test checking "alembic can see this
   model" must assert `"<table>" in Base.metadata.tables`, not
   `hasattr(app.models, "<Class>")`. The latter is a proxy that the rule above breaks while
@@ -204,6 +211,24 @@ patch silently does nothing and the test passes without testing anything**. That
 failure mode none of the counts above will catch.
 
 So: change import **paths**, never import **style**, and never "tidy" an import while moving it.
+
+### A moved module's `__file__`-relative paths break silently
+
+A module that computes a path with `Path(__file__).parent.parent.parent` hard-codes how
+deep it sits. Moving it one directory deeper repoints it at somewhere that does not
+exist — and nothing in the gate notices, because the file it wanted is still on disk and
+the test that checks for it usually computes its own path rather than asking the module.
+
+This shipped twice: `substance_ai` (P6) and `report_service` (P8) both went a level
+deeper and lost `parsing/prompts/`. `report_service._load_prompt` returns `""` for a
+missing file, so reports would have rendered against an empty prompt; `substance_ai`
+raises, so every AI substance suggestion would have thrown. P6's went out undetected.
+
+Fixed at the class level in P8: `app/core/paths.py` exports `BACKEND_ROOT` and
+`PROMPTS_DIR`, anchored in shared kernel that this track never moves. **Before moving any
+module, grep it for `__file__`** — and if a test asserts a file exists, make it load
+through the module rather than off a path it computes itself, or it will stay green while
+the module is broken.
 
 ### Census before any identifier rename
 

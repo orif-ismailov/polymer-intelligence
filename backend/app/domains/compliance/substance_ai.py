@@ -28,13 +28,13 @@ import functools
 import json
 import logging
 import time
-from pathlib import Path
 
 import anthropic
 import instructor
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.paths import PROMPTS_DIR
 from app.core.time import utcnow
 from app.domains.compliance import substances as substance_service
 from app.domains.compliance.models import SubstanceSuggestion
@@ -45,7 +45,7 @@ from parsing.schemas import BudgetExceeded
 
 logger = logging.getLogger(__name__)
 
-_PROMPTS_DIR = Path(__file__).resolve().parent.parent.parent / "parsing" / "prompts"
+_PROMPTS_DIR = PROMPTS_DIR
 
 #: Immutable + versioned, like the other four prompt families. A change means a
 #: new `substance_match_v{N+1}.md` and a bump here — the version is journalled

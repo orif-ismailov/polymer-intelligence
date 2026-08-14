@@ -16,15 +16,16 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
-from app.models.accounts import UserAccount
-from app.schemas.reports import (
+from app.domains.news import reports as report_service
+from app.domains.news import service as news_service
+from app.domains.news.schemas import (
     NewsArticleCard,
     NewsArticleDetail,
     NewsFilterOptions,
     ReportPublicOut,
     ReportPublicSummary,
 )
-from app.services import news_service, report_service
+from app.models.accounts import UserAccount
 
 router = APIRouter(prefix="/portal/news", tags=["portal-news"])
 

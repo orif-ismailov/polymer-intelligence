@@ -24,7 +24,6 @@ import decimal
 import functools
 import logging
 import time
-from pathlib import Path
 
 import anthropic
 import instructor
@@ -32,6 +31,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.paths import PROMPTS_DIR
 from app.models.requests import Request
 from app.schemas.request_analysis import RequestAnalysisResult
 from app.services import price_analysis_service
@@ -40,7 +40,7 @@ from parsing.schemas import BudgetExceeded
 
 logger = logging.getLogger(__name__)
 
-_PROMPTS_DIR = Path(__file__).resolve().parent.parent.parent / "parsing" / "prompts"
+_PROMPTS_DIR = PROMPTS_DIR
 
 # Module-level singleton clients — constructed once at import, patched in tests
 # (AI-SPEC Pitfall 1). Construction needs no network, only the API key from settings.

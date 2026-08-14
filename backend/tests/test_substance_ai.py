@@ -75,6 +75,11 @@ class TestPromptFamily:
 
         assert svc.PROMPT_VERSION == "v1"
         assert (_PROMPTS / "substance_match_v1.md").exists()
+        # Load it through the SERVICE, not just off a path this test computes for
+        # itself. The two diverged when the domain reorg moved this module a directory
+        # deeper: the file was still there, `_PROMPTS_DIR` pointed somewhere else, and
+        # every suggest() raised FileNotFoundError while this assertion stayed green.
+        assert svc._load_prompt(svc.PROMPT_VERSION).strip()
 
     def test_the_prompt_asks_for_a_candidate_not_a_decision(self) -> None:
         """The model proposes; the seller decides. A prompt that told it to

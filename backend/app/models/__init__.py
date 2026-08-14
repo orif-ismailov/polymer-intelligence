@@ -38,45 +38,19 @@ This file must be imported by alembic/env.py so that
 # themselves on Base.metadata as the module finishes executing, which is all this
 # barrel exists to guarantee.
 import app.domains.companies.models  # noqa: F401
+import app.domains.compliance.models  # noqa: F401
+import app.domains.contracts.eimzo_models  # noqa: F401
+import app.domains.contracts.models  # noqa: F401
+import app.domains.deals.models  # noqa: F401
+import app.domains.deals.payment_models  # noqa: F401
+import app.domains.lab_orders.models  # noqa: F401
+import app.domains.laboratory.models  # noqa: F401
+import app.domains.logistics.models  # noqa: F401
+import app.domains.manufacturers.models  # noqa: F401
 import app.domains.marketplace.models  # noqa: F401
+import app.domains.news.models  # noqa: F401
 import app.domains.verification.models  # noqa: F401
 import app.domains.verification.registry_models  # noqa: F401
-from app.domains.compliance.models import (  # noqa: F401
-    CompanyLicense,
-    Substance,
-    SubstanceSuggestion,
-)
-from app.domains.contracts.eimzo_models import CompanyPersonData, SignatureEvidence  # noqa: F401
-from app.domains.contracts.models import (  # noqa: F401
-    Contract,
-    ContractSignature,
-    ContractTemplate,
-)
-from app.domains.deals.models import (  # noqa: F401
-    Deal,
-    DealDocument,
-    DealMessage,
-    DealStatusHistory,
-    RfqResponse,
-)
-from app.domains.deals.payment_models import EscrowPayment, ProviderEvent  # noqa: F401
-from app.domains.lab_orders.models import LabOrder, LabPartner, SampleRequest  # noqa: F401
-from app.domains.laboratory.models import (  # noqa: F401
-    LabRequest,
-    LabRequestMessage,
-    LabRequestThread,
-)
-from app.domains.logistics.models import (  # noqa: F401
-    LogisticsRequest,
-    LogisticsRequestMessage,
-    LogisticsRequestThread,
-)
-from app.domains.manufacturers.models import (  # noqa: F401
-    FactoryRfq,
-    FactoryRfqDocument,
-    ManufacturerMessage,
-    ManufacturerThread,
-)
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
@@ -145,7 +119,6 @@ from app.models.reference import (  # noqa: F401
     ProductGrade,
     ProductSynonym,
 )
-from app.models.reports import Report  # noqa: F401
 from app.models.requests import Client, Request, RequestFile, RequestStatusHistory  # noqa: F401
 from app.models.reviews import CompanyReview  # noqa: F401
 from app.models.signals import Signal  # noqa: F401
@@ -217,7 +190,6 @@ __all__ = [
     "Alert",
     "Delivery",
     # Reports
-    "Report",
     # Runtime settings (Phase 8d)
     "AppSetting",
     # Marketplace (Phase 2)
@@ -233,58 +205,30 @@ __all__ = [
     # Portal notifications (R2)
     "PortalNotification",
     # E-IMZO evidence + integration gateway (R3)
-    "SignatureEvidence",
-    "CompanyPersonData",
     "IntegrationCallLog",
     # Contracts (R3 Stage B)
-    "ContractTemplate",
-    "Contract",
-    "ContractSignature",
     # Deals (R4 / P2 — Deal Lifecycle core)
     "DealStatus",
     "DealActorKind",
     "DealDocumentKind",
     "RfqResponseStatus",
     "RfqVisibility",
-    "Deal",
-    "DealStatusHistory",
-    "DealMessage",
-    "DealDocument",
-    "RfqResponse",
     # Payments / escrow (R4 / P3)
     "EscrowStatus",
-    "EscrowPayment",
-    "ProviderEvent",
     # Chemical compliance (R5 / P5)
     "RegulationLevel",
     "RegulationRegime",
     "LicenseStatus",
-    "Substance",
-    "CompanyLicense",
-    "SubstanceSuggestion",
     # Labs and samples (R5 / P6)
     "LabOrderStatus",
     "SampleRequestStatus",
-    "LabPartner",
-    "LabOrder",
-    "SampleRequest",
     # Manufacturers directory + factory RFQ
     "FactoryRfqStatus",
     "FactoryRfqDocumentKind",
-    "FactoryRfq",
-    "FactoryRfqDocument",
-    "ManufacturerThread",
-    "ManufacturerMessage",
     # Logistics directory + service requests
     "LogisticsRequestStatus",
-    "LogisticsRequest",
-    "LogisticsRequestThread",
-    "LogisticsRequestMessage",
     # Laboratory analysis requests
     "LabRequestStatus",
-    "LabRequest",
-    "LabRequestThread",
-    "LabRequestMessage",
     # Company reviews
     "CompanyReviewStatus",
     "CompanyReview",

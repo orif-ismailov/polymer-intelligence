@@ -37,7 +37,7 @@ def _db_returning(rows: list[dict]) -> MagicMock:
 
 
 def test_top_news_ranked_by_importance_then_recency() -> None:
-    from app.services.report_service import _snapshot_top_news
+    from app.domains.news.reports import _snapshot_top_news
 
     rows = [
         _news_row("Low but newest", "low", "polymers", "neutral", when=59),
@@ -56,7 +56,7 @@ def test_top_news_ranked_by_importance_then_recency() -> None:
 
 
 def test_top_news_merges_cross_source_duplicates() -> None:
-    from app.services.report_service import _snapshot_top_news
+    from app.domains.news.reports import _snapshot_top_news
 
     rows = [
         _news_row("Shurtan останавливает PP-линию на ремонт", "high", "plant_shutdown", "negative", when=10, source="TG-A"),
@@ -71,7 +71,7 @@ def test_top_news_merges_cross_source_duplicates() -> None:
 
 
 def test_top_news_themes_grouping() -> None:
-    from app.services.report_service import _snapshot_top_news
+    from app.domains.news.reports import _snapshot_top_news
 
     rows = [
         _news_row("Plant halts", "high", "plant_shutdown", "negative", when=10),
@@ -86,7 +86,7 @@ def test_top_news_themes_grouping() -> None:
 
 
 def test_render_includes_top_news_and_themes() -> None:
-    from app.services.report_service import render_markdown
+    from app.domains.news.reports import render_markdown
 
     snapshot = {
         "date": "2026-07-18",
@@ -110,7 +110,7 @@ def test_render_includes_top_news_and_themes() -> None:
 
 
 def test_render_without_top_news_is_unchanged() -> None:
-    from app.services.report_service import render_markdown
+    from app.domains.news.reports import render_markdown
 
     md = render_markdown({"date": "2026-07-18", "products": []}, "s", None)
     assert "📰 *Топ новостей" not in md       # section skipped when absent

@@ -15,10 +15,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_analyst_or_admin
 from app.core.db import get_db
-from app.models.reports import Report
+from app.domains.news import reports as report_service
+from app.domains.news.models import Report
+from app.domains.news.schemas import ReportAdminOut
 from app.models.staff import StaffUser
-from app.schemas.reports import ReportAdminOut
-from app.services import report_service
 
 logger = logging.getLogger(__name__)
 

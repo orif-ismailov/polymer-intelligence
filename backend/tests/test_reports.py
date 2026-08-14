@@ -30,7 +30,7 @@ class TestRender:
         }
 
     def test_rule_based_summary_directional(self):
-        from app.services.report_service import _rule_based_summary
+        from app.domains.news.reports import _rule_based_summary
 
         up = {"products": [{"delta": 5.0}, {"delta": 2.0}, {"delta": -1.0}]}
         down = {"products": [{"delta": -5.0}, {"delta": -2.0}, {"delta": 1.0}]}
@@ -40,7 +40,7 @@ class TestRender:
 
     def test_rule_based_summary_weaves_local_market_and_sections(self):
         """Fallback (LLM down) still reports UZEX activity + which sections carry news."""
-        from app.services.report_service import _rule_based_summary
+        from app.domains.news.reports import _rule_based_summary
 
         snap = {
             "products": [{"delta": 5.0}, {"delta": 2.0}],
@@ -58,13 +58,13 @@ class TestRender:
         assert "производители" not in out  # empty producers section not listed
 
     def test_report_prompt_v6_ships(self):
-        from app.services.report_service import _load_prompt
+        from app.domains.news.reports import _load_prompt
 
         prompt = _load_prompt("v6")
         assert prompt and "summary" in prompt and "briefs" in prompt
 
     def test_render_markdown_contains_products_and_summary(self):
-        from app.services.report_service import render_markdown
+        from app.domains.news.reports import render_markdown
 
         md = render_markdown(self._snapshot(), "Тестовое резюме.")
         assert "Ежедневный обзор рынка" in md
@@ -75,7 +75,7 @@ class TestRender:
         assert "запросы — 14" in md
 
     def test_render_markdown_shows_explored_count_above_summary(self):
-        from app.services.report_service import render_markdown
+        from app.domains.news.reports import render_markdown
 
         snap = {**self._snapshot(), "news_explored_count": 63}
         md = render_markdown(snap, "Резюме.")
@@ -85,7 +85,7 @@ class TestRender:
         assert md.index("обработано новостей: 63") < md.index("Резюме.")
 
     def test_render_markdown_omits_count_line_when_absent(self):
-        from app.services.report_service import render_markdown
+        from app.domains.news.reports import render_markdown
 
         md = render_markdown(self._snapshot(), "Резюме.")  # no news_explored_count
         assert "обработано новостей" not in md
@@ -101,7 +101,7 @@ class TestRender:
         return base
 
     def test_render_markdown_three_sections(self):
-        from app.services.report_service import render_markdown
+        from app.domains.news.reports import render_markdown
 
         snap = {
             **self._snapshot(),
@@ -125,7 +125,7 @@ class TestRender:
         assert "Мировая нефтехимия" not in md
 
     def test_render_sections_dedupes_across_sections(self):
-        from app.services.report_service import _render_sections
+        from app.domains.news.reports import _render_sections
 
         # same story in two sections → rendered once (first section that claims it)
         dup = self._card(headline="Салават остановлен")
@@ -135,7 +135,7 @@ class TestRender:
         assert out.count("Салават остановлен") == 1
 
     def test_render_telegram_digest_sections(self):
-        from app.services.report_service import render_telegram_digest
+        from app.domains.news.reports import render_telegram_digest
 
         snap = {
             "date": "2026-07-21",
@@ -149,7 +149,7 @@ class TestRender:
 
 class TestLocalMarket:
     def test_render_fx_and_exchange(self):
-        from app.services.report_service import _render_local_market
+        from app.domains.news.reports import _render_local_market
 
         lm = {
             "fx": [
@@ -168,14 +168,14 @@ class TestLocalMarket:
         assert "Карбамид" not in out
 
     def test_render_empty_when_no_data(self):
-        from app.services.report_service import _render_local_market
+        from app.domains.news.reports import _render_local_market
 
         assert _render_local_market(
             {"fx": [], "exchange": {"deals": 0, "quotes": 0, "offers": 0, "top_products": []}}
         ) == []
 
     def test_render_fx_only(self):
-        from app.services.report_service import _render_local_market
+        from app.domains.news.reports import _render_local_market
 
         out = "\n".join(_render_local_market({"fx": [{"ccy": "USD", "rate": 12000.0}], "exchange": {}}))
         assert "USD 12,000" in out
@@ -184,7 +184,7 @@ class TestLocalMarket:
 
 class TestSectionBriefs:
     def test_render_briefs_paragraph_per_section(self):
-        from app.services.report_service import _render_section_briefs
+        from app.domains.news.reports import _render_section_briefs
 
         sections = {"uzbekistan": [{"headline": "x"}], "producers": [], "global": [{"headline": "y"}]}
         briefs = {
@@ -198,7 +198,7 @@ class TestSectionBriefs:
         assert "🏭" not in out  # producers: no news + empty brief → not shown
 
     def test_render_markdown_prefers_briefs_over_item_list(self):
-        from app.services.report_service import render_markdown
+        from app.domains.news.reports import render_markdown
 
         snap = {
             "date": "2026-07-21", "products": [],
@@ -215,7 +215,7 @@ class TestSectionBriefs:
         assert "Проект полимеров из угля" not in md  # per-item headline list NOT used when briefs exist
 
     def test_render_markdown_falls_back_to_headlines_without_briefs(self):
-        from app.services.report_service import render_markdown
+        from app.domains.news.reports import render_markdown
 
         snap = {
             "date": "2026-07-21", "products": [],
@@ -232,8 +232,8 @@ class TestSectionBriefs:
 
 class TestSessionMeta:
     def test_morning_and_evening_map_to_kind_and_title(self):
+        from app.domains.news.reports import _session_meta
         from app.models.enums import ReportKind
-        from app.services.report_service import _session_meta
 
         assert _session_meta("morning", "2026-07-21") == (
             ReportKind.morning, "Утренний обзор рынка — 2026-07-21")
@@ -241,8 +241,8 @@ class TestSessionMeta:
             ReportKind.evening, "Вечерний обзор рынка — 2026-07-21")
 
     def test_unknown_session_defaults_to_morning(self):
+        from app.domains.news.reports import _session_meta
         from app.models.enums import ReportKind
-        from app.services.report_service import _session_meta
 
         kind, title = _session_meta("weird", "2026-07-21")
         assert kind is ReportKind.morning
@@ -251,7 +251,7 @@ class TestSessionMeta:
 
 class TestBreakingAlert:
     def test_renders_breaking_story(self):
-        from app.services.report_service import render_breaking_alert
+        from app.domains.news.reports import render_breaking_alert
 
         card = {
             "headline": "Взрыв на заводе SIBUR", "market_impact": "negative",
@@ -306,14 +306,14 @@ def news_client() -> Generator[TestClient, None, None]:
 
 class TestNewsApi:
     def test_list_published_200(self, news_client: TestClient):
-        with patch("app.api.webapp.news.report_service") as svc:
+        with patch("app.domains.news.api_webapp.report_service") as svc:
             svc.list_published.return_value = [_mock_report()]
             resp = news_client.get("/api/v1/webapp/news")
         assert resp.status_code == 200, resp.text
         assert resp.json()[0]["title"].startswith("Обзор")
 
     def test_detail_404_when_not_published(self, news_client: TestClient):
-        with patch("app.api.webapp.news.report_service") as svc:
+        with patch("app.domains.news.api_webapp.report_service") as svc:
             svc.get_published.return_value = None
             resp = news_client.get("/api/v1/webapp/news/999")
         assert resp.status_code == 404, resp.text
@@ -362,7 +362,7 @@ class TestReportsAdminApi:
         application.dependency_overrides[get_db] = _db
         application.dependency_overrides[require_analyst_or_admin] = lambda: MagicMock(id=3)
         with patch("app.api.health._check_redis", return_value="ok"), patch(
-            "app.api.reports.report_service"
+            "app.domains.news.api_admin.report_service"
         ) as svc, TestClient(application) as tc:
             svc.get_report.return_value = _mock_report(status="approved")
             svc.publish_report.return_value = _mock_report(status="published")

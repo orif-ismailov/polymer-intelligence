@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 
 from app.core.db import SessionLocal
-from app.services import report_service
+from app.domains.news import reports as report_service
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)

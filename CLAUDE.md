@@ -70,13 +70,14 @@ mypy app/services app/domains/marketplace/{service,requests,compliance}.py \
      app/domains/deals/{service,escrow,rfq}.py \
      app/domains/compliance/{substances,substance_ai,licenses}.py \
      app/domains/{logistics,laboratory,manufacturers}/service.py \
-     app/domains/lab_orders/{service,samples}.py --ignore-missing-imports
+     app/domains/lab_orders/{service,samples}.py \
+     app/domains/news/{service,dedup,reports}.py --ignore-missing-imports
 mypy app/schemas  app/domains/marketplace/{schemas,portal_market_schemas}.py \
      app/domains/{verification,companies}/schemas.py \
      app/domains/contracts/{schemas,eimzo_schemas}.py \
      app/domains/deals/schemas.py \
      app/domains/compliance/{schemas,substance_schemas,substance_match_schemas}.py \
-     app/domains/{logistics,laboratory,manufacturers,lab_orders}/schemas.py --ignore-missing-imports
+     app/domains/{logistics,laboratory,manufacturers,lab_orders,news}/schemas.py --ignore-missing-imports
 pytest tests/ -q                     # full backend suite
 
 # Single test / file / pattern:
@@ -267,7 +268,7 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 - **Domain folders**: bounded contexts are migrating out of the technical-layer folders into
   `app/domains/<name>/` (models + schemas + service + routers together), one domain per change,
   no back-compat shims. `marketplace`, `verification`, `companies`, `contracts`, `deals`, `compliance`, `lab_orders`,
-  `laboratory`, `logistics` and `manufacturers` have moved; the rest still live in
+  `laboratory`, `logistics`, `manufacturers` and `news` have moved; the rest still live in
   `app/models|schemas|services|api/`. Plans and the binding rules are in `.planning/backend-domain-reorg/`.
 - **mypy is strict** for `app/services` and `app/schemas` plus the migrated domains' service and
   schema modules (the CI-gated scope). Business logic

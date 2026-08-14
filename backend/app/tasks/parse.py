@@ -614,8 +614,8 @@ def parse_news_item(raw_item_id: int) -> dict[str, Any]:
     """
     from instructor.core import InstructorRetryException  # noqa: PLC0415
 
+    from app.domains.news.service import create_news_signal_from_article  # noqa: PLC0415
     from app.models.sources import RawItem  # noqa: PLC0415
-    from app.services.news_service import create_news_signal_from_article  # noqa: PLC0415
     from parsing.budget import BudgetExceeded  # noqa: PLC0415
     from parsing.news_schemas import NEWS_CONFIDENCE_REVIEW_THRESHOLD  # noqa: PLC0415
     from parsing.text_prep import prepare_message_text  # noqa: PLC0415

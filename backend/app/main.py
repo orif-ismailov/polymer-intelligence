@@ -49,20 +49,17 @@ from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
 from app.api.health import router as health_router
 from app.api.portal.auth import router as portal_auth_router
-from app.api.portal.news import router as portal_news_router
 from app.api.portal.notifications import router as portal_notifications_router
 from app.api.portal.reference import router as portal_reference_router
 from app.api.portal.requests import router as portal_requests_router
 from app.api.prices import router as prices_router
 from app.api.public import router as public_router
-from app.api.reports import router as reports_router
 from app.api.sources import router as sources_router
 from app.api.sourcing import router as sourcing_router
 from app.api.telegram_webhook import router as telegram_webhook_router
 from app.api.webapp.auth import router as webapp_auth_router
 from app.api.webapp.files import router as webapp_files_router
 from app.api.webapp.me import router as webapp_me_router
-from app.api.webapp.news import router as webapp_news_router
 from app.api.webapp.reference import router as webapp_reference_router
 from app.api.webapp.requests import router as webapp_requests_router
 from app.core.config import settings
@@ -94,6 +91,9 @@ from app.domains.marketplace.api_portal_inquiries import router as portal_inquir
 from app.domains.marketplace.api_portal_market import router as portal_market_router
 from app.domains.marketplace.api_webapp_market import router as webapp_market_router
 from app.domains.marketplace.api_webapp_seller import router as webapp_seller_router
+from app.domains.news.api_admin import router as reports_router
+from app.domains.news.api_portal import router as portal_news_router
+from app.domains.news.api_webapp import router as webapp_news_router
 from app.domains.verification.api_admin import router as admin_verification_router
 from app.domains.verification.api_portal import router as portal_verification_router
 from app.models.staff import StaffUser

@@ -36,6 +36,8 @@ from app.domains.laboratory import service as laboratory_service
 from app.domains.logistics import service as logistics_service
 from app.domains.manufacturers import service as manufacturer_service
 from app.domains.marketplace import service as offer_service
+from app.domains.news import service as news_service
+from app.domains.news.schemas import NewsArticleCard, NewsArticleDetail, NewsFilterOptions
 from app.models.enums import CompanyBusinessRole as CompanyBusinessRoleEnum
 from app.models.enums import OfferAvailability, PriceBasis
 from app.schemas.public import (
@@ -55,9 +57,7 @@ from app.schemas.public import (
     PublicSitemapOut,
     PublicStatsOut,
 )
-from app.schemas.reports import NewsArticleCard, NewsArticleDetail, NewsFilterOptions
 from app.services import (
-    news_service,
     public_market_service,
     review_service,
     storage_service,

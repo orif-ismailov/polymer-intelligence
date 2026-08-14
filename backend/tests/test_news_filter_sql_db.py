@@ -163,7 +163,7 @@ class TestNewsFilterSqlDb:
         return sessionmaker(bind=engine)()
 
     def test_no_filter_returns_all_news(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             cards = news_service.list_news_articles(s, days=1)
@@ -172,7 +172,7 @@ class TestNewsFilterSqlDb:
         assert cards[0]["importance"] == "high"
 
     def test_scope_uzbekistan(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             cards = news_service.list_news_articles(s, days=1, scope="uzbekistan")
@@ -180,7 +180,7 @@ class TestNewsFilterSqlDb:
         assert len(cards) == 2
 
     def test_scope_global_excludes_uz(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             cards = news_service.list_news_articles(s, days=1, scope="global")
@@ -188,7 +188,7 @@ class TestNewsFilterSqlDb:
         assert len(cards) == 2
 
     def test_scope_producers_matches_companies_or_category(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             cards = news_service.list_news_articles(s, days=1, scope="producers")
@@ -198,7 +198,7 @@ class TestNewsFilterSqlDb:
         assert not any("Brent" in h for h in heads)  # no company, non-producer category
 
     def test_search_matches_headline_and_company(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             by_head = news_service.list_news_articles(s, days=1, q="shurtan")
@@ -207,7 +207,7 @@ class TestNewsFilterSqlDb:
         assert _headlines(by_company) == ["SIBUR expands ethylene capacity"]
 
     def test_filter_category_matches_primary_or_tag(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             primary = news_service.list_news_articles(s, days=1, category="oil")
@@ -216,7 +216,7 @@ class TestNewsFilterSqlDb:
         assert any("Shurtan" in h for h in _headlines(via_tag))  # 'production' is a tag
 
     def test_filter_country_and_importance(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             ru = news_service.list_news_articles(s, days=1, country="Russia")
@@ -225,7 +225,7 @@ class TestNewsFilterSqlDb:
         assert _headlines(high) == ["Shurtan останавливает PP-линию на ремонт"]
 
     def test_sort_newest(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             cards = news_service.list_news_articles(s, days=1, sort="newest")
@@ -233,7 +233,7 @@ class TestNewsFilterSqlDb:
         assert cards[0]["headline"] == "Shurtan останавливает PP-линию на ремонт"
 
     def test_localizes_display_fields_to_lang(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             uz = news_service.list_news_articles(s, days=1, q="shurtan", lang="uz")
@@ -248,7 +248,7 @@ class TestNewsFilterSqlDb:
         assert detail_uz["headline"] == "Shurtan PP liniyasini ta'mirlash uchun to'xtatadi"
 
     def test_filter_options_facets(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         with self._session(seeded_news) as s:
             opts = news_service.list_news_filter_options(s, days=1)
@@ -271,7 +271,7 @@ def _open(engine: sa.Engine):  # noqa: ANN202
 @_requires_real_db
 class TestReportSectionsDb:
     def test_three_section_bucketing(self, seeded_news: sa.Engine) -> None:
-        from app.services import report_service  # noqa: PLC0415
+        from app.domains.news import reports as report_service  # noqa: PLC0415
 
         with _open(seeded_news) as s:
             sections = report_service._snapshot_sections(s)
@@ -366,7 +366,7 @@ class TestApprovalDb:
             return int(sig.id)
 
     def test_pending_hidden_until_approved(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         sig_id = self._insert_pending(seeded_news)
         with _open(seeded_news) as s:
@@ -385,7 +385,7 @@ class TestApprovalDb:
             assert news_service.get_news_article(s, sig_id) is not None
 
     def test_reject_hides_permanently(self, seeded_news: sa.Engine) -> None:
-        from app.services import news_service  # noqa: PLC0415
+        from app.domains.news import service as news_service  # noqa: PLC0415
 
         sig_id = self._insert_pending(seeded_news)
         with _open(seeded_news) as s:
@@ -400,7 +400,7 @@ class TestApprovalDb:
 @_requires_real_db
 class TestBreakingNewsDb:
     def test_pending_then_mark_excludes(self, seeded_news: sa.Engine) -> None:
-        from app.services import report_service  # noqa: PLC0415
+        from app.domains.news import reports as report_service  # noqa: PLC0415
 
         with _open(seeded_news) as s:
             pending = report_service.pending_breaking_news(s, minutes=180)
@@ -472,10 +472,10 @@ class TestLocalMarketDb:
     def test_snapshot_local_market(self, seeded_news: sa.Engine) -> None:
         import datetime as _dt  # noqa: PLC0415
 
+        from app.domains.news import reports as report_service  # noqa: PLC0415
         from app.models.enums import PriceBasis, SignalKind, SourceKind  # noqa: PLC0415
         from app.models.signals import Signal  # noqa: PLC0415
         from app.models.sources import Source  # noqa: PLC0415
-        from app.services import report_service  # noqa: PLC0415
 
         with _open(seeded_news) as s:
             s.execute(sa.text(

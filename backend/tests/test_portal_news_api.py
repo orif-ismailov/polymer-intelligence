@@ -27,7 +27,7 @@ def _routes(router):  # noqa: ANN001, ANN202
 
 
 def test_news_routes_registered() -> None:
-    from app.api.portal.news import router  # noqa: PLC0415
+    from app.domains.news.api_portal import router  # noqa: PLC0415
 
     paths = set(_routes(router))
     assert "/portal/news/articles" in paths
@@ -40,8 +40,8 @@ def test_news_routes_registered() -> None:
 def test_response_models_match_webapp() -> None:
     """Parity: every portal news endpoint returns the SAME response model as its
     webapp twin — the surface cannot drift from the Mini App."""
-    from app.api.portal.news import router as portal_router  # noqa: PLC0415
-    from app.api.webapp.news import router as webapp_router  # noqa: PLC0415
+    from app.domains.news.api_portal import router as portal_router  # noqa: PLC0415
+    from app.domains.news.api_webapp import router as webapp_router  # noqa: PLC0415
 
     def models(router, prefix):  # noqa: ANN001, ANN202
         out = {}

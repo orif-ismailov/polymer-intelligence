@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import functools
 import logging
-from pathlib import Path
 
 import anthropic
 import sqlalchemy as sa
@@ -26,14 +25,15 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.languages import SUPPORTED_LANGUAGES
+from app.core.paths import PROMPTS_DIR
 from app.core.time import to_display_tz, utcnow
+from app.domains.news.dedup import cluster_articles
+from app.domains.news.models import Report
 from app.models.enums import ReportKind, ReportStatus
-from app.models.reports import Report
-from app.services.news_dedup import cluster_articles
 
 logger = logging.getLogger(__name__)
 
-_PROMPTS_DIR = Path(__file__).resolve().parent.parent.parent / "parsing" / "prompts"
+_PROMPTS_DIR = PROMPTS_DIR
 
 # Module-level Anthropic client (built once at import; constructing it performs no
 # network I/O — only stores the key, so it is safe under CI/tests). _ai_summary
@@ -415,7 +415,9 @@ _OFF_DOMAIN_CATEGORIES = frozenset({"oil", "natural_gas", "energy", "refineries"
 def _snapshot_sections(db: Session) -> dict[str, object]:
     """Build the 🇺🇿 Uzbekistan / 🏭 Producer / 🌍 Global sections (≤10 cards each),
     dropping any off-domain (oil/energy) items that slipped through classification."""
-    from app.services import news_service  # noqa: PLC0415 — avoid import cycle at module load
+    from app.domains.news import (
+        service as news_service,  # noqa: PLC0415 — avoid import cycle at module load
+    )
 
     out: dict[str, object] = {}
     for key, scope in _REPORT_SECTIONS:
@@ -1043,7 +1045,9 @@ def pending_breaking_news(
     Returns a list of {"card": <ru-localized card>, "ids": [signal ids in the cluster]}.
     Marking every id in the cluster prevents re-pushing the same event from a second source.
     """
-    from app.services import news_service  # noqa: PLC0415 — avoid import cycle at module load
+    from app.domains.news import (
+        service as news_service,  # noqa: PLC0415 — avoid import cycle at module load
+    )
 
     rows = (
         db.execute(

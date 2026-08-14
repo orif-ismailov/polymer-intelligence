@@ -75,8 +75,8 @@ def test_public_news_reader_matches_the_portal_surface() -> None:
     signed-in surfaces use -- a public schema that drifts is how a field nobody
     audited becomes crawlable.
     """
-    from app.api.portal.news import router as portal_router  # noqa: PLC0415
     from app.api.public import router as public_router  # noqa: PLC0415
+    from app.domains.news.api_portal import router as portal_router  # noqa: PLC0415
 
     def models(router, prefix: str) -> dict[str, object]:  # noqa: ANN001
         return {
@@ -125,7 +125,7 @@ _NEWS_CARD = {
 
 
 def test_news_articles_are_listed_without_any_credentials() -> None:
-    with patch("app.services.news_service.list_news_articles", return_value=[_NEWS_CARD]):
+    with patch("app.domains.news.service.list_news_articles", return_value=[_NEWS_CARD]):
         resp = _anon_client().get(f"{_BASE}/news/articles")
     assert resp.status_code == 200, resp.text
     assert resp.json()[0]["headline"].startswith("Shurtan")
@@ -139,25 +139,25 @@ def test_news_article_detail_and_facets_are_anonymous() -> None:
         "countries": [{"value": "UZ", "count": 9}],
         "products": [{"value": "PP", "count": 6}],
     }
-    with patch("app.services.news_service.list_news_filter_options", return_value=facets):
+    with patch("app.domains.news.service.list_news_filter_options", return_value=facets):
         resp = client.get(f"{_BASE}/news/articles/filters")
     assert resp.status_code == 200, resp.text
     assert resp.json()["countries"][0]["value"] == "UZ"
 
     detail = {**_NEWS_CARD, "body": "…", "source_url": "https://example.test/a"}
-    with patch("app.services.news_service.get_news_article", return_value=detail):
+    with patch("app.domains.news.service.get_news_article", return_value=detail):
         resp = client.get(f"{_BASE}/news/articles/42")
     assert resp.status_code == 200, resp.text
     assert resp.json()["source_url"] == "https://example.test/a"
 
-    with patch("app.services.news_service.get_news_article", return_value=None):
+    with patch("app.domains.news.service.get_news_article", return_value=None):
         resp = client.get(f"{_BASE}/news/articles/999")
     assert resp.status_code == 404
 
 
 def test_public_news_forwards_every_filter_to_the_service() -> None:
     """The reader is only as good as the params that survive the handler."""
-    with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+    with patch("app.domains.news.service.list_news_articles", return_value=[]) as mock_list:
         resp = _anon_client().get(
             f"{_BASE}/news/articles",
             params={
@@ -177,7 +177,7 @@ def test_public_news_forwards_every_filter_to_the_service() -> None:
 
 
 def test_public_news_scope_all_means_no_scope() -> None:
-    with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+    with patch("app.domains.news.service.list_news_articles", return_value=[]) as mock_list:
         resp = _anon_client().get(f"{_BASE}/news/articles", params={"scope": "all"})
     assert resp.status_code == 200
     assert mock_list.call_args.kwargs["scope"] is None

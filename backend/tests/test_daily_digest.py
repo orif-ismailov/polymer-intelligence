@@ -41,7 +41,7 @@ def _digest_snapshot() -> dict[str, Any]:
 
 class TestRenderDigest:
     def test_renders_all_sections(self) -> None:
-        from app.services.report_service import render_markdown  # noqa: PLC0415
+        from app.domains.news.reports import render_markdown  # noqa: PLC0415
 
         md = render_markdown(_digest_snapshot(), "Резюме.", "Прогноз: рост вероятен.")
         assert "Биржа и тендеры (24ч)" in md and "новых позиций: 3" in md
@@ -55,7 +55,7 @@ class TestRenderDigest:
 
     def test_backward_compatible_with_old_snapshot(self) -> None:
         """A pre-digest snapshot (no 24h keys) renders without the new sections."""
-        from app.services.report_service import render_markdown  # noqa: PLC0415
+        from app.domains.news.reports import render_markdown  # noqa: PLC0415
 
         old = {
             "date": "2026-06-28",
@@ -69,7 +69,7 @@ class TestRenderDigest:
         assert "🔮" not in md  # no forecast argument → no forecast section
 
     def test_empty_sections_are_skipped(self) -> None:
-        from app.services.report_service import render_markdown  # noqa: PLC0415
+        from app.domains.news.reports import render_markdown  # noqa: PLC0415
 
         snap = _digest_snapshot()
         snap["tenders_24h"] = {"count": 0, "items": []}
@@ -94,7 +94,7 @@ class TestAiDigest:
 
     def test_parses_strict_json_all_platform_languages(self) -> None:
         from app.core.languages import SUPPORTED_LANGUAGES  # noqa: PLC0415
-        from app.services import report_service  # noqa: PLC0415
+        from app.domains.news import reports as report_service  # noqa: PLC0415
 
         payload = (
             '{"summary": {"ru": "Рынок стабилен.", "en": "Market is stable.", "tr": "Piyasa istikrarlı.",'
@@ -115,7 +115,7 @@ class TestAiDigest:
 
     def test_tolerates_markdown_fences(self) -> None:
         from app.core.languages import SUPPORTED_LANGUAGES  # noqa: PLC0415
-        from app.services import report_service  # noqa: PLC0415
+        from app.domains.news import reports as report_service  # noqa: PLC0415
 
         payload = '```json\n{"summary": {"ru": "Ок."}, "forecast": {}}\n```'
         with patch.object(report_service._client, "messages") as mock_msgs:
@@ -126,14 +126,14 @@ class TestAiDigest:
         assert digest["forecast"] == dict.fromkeys(SUPPORTED_LANGUAGES, "")
 
     def test_garbage_returns_none(self) -> None:
-        from app.services import report_service  # noqa: PLC0415
+        from app.domains.news import reports as report_service  # noqa: PLC0415
 
         with patch.object(report_service._client, "messages") as mock_msgs:
             mock_msgs.create.return_value = self._resp("Сегодня рынок стабилен (не JSON).")
             assert report_service._ai_digest({}) is None
 
     def test_missing_ru_summary_returns_none(self) -> None:
-        from app.services import report_service  # noqa: PLC0415
+        from app.domains.news import reports as report_service  # noqa: PLC0415
 
         with patch.object(report_service._client, "messages") as mock_msgs:
             mock_msgs.create.return_value = self._resp('{"summary": {"en": "only en"}, "forecast": {}}')
@@ -142,7 +142,7 @@ class TestAiDigest:
 
 class TestGenerateReport:
     def test_llm_success_stores_i18n_and_forecast(self) -> None:
-        from app.services import report_service  # noqa: PLC0415
+        from app.domains.news import reports as report_service  # noqa: PLC0415
 
         db = MagicMock()
         digest = {
@@ -161,7 +161,7 @@ class TestGenerateReport:
         assert "rule_based" not in (report.generated_by or "")
 
     def test_llm_failure_degrades_to_rule_based(self) -> None:
-        from app.services import report_service  # noqa: PLC0415
+        from app.domains.news import reports as report_service  # noqa: PLC0415
 
         db = MagicMock()
         with (
