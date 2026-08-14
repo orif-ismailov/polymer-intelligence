@@ -69,96 +69,18 @@ jobs:
       - name: Lint (ruff check)
         run: ruff check .
 
-      # ── Type-check: mypy scoped to services/ and schemas/ ──────────────────
-      # Per dev-spec §7: mypy targets backend/app/services + backend/app/schemas.
-      # The domain reorg moved every bounded context into app/domains/<name>/, so each
-      # domain's service and schema modules are listed here explicitly — the gate
-      # follows the code instead of shrinking as directories empty out.
+      # ── Type-check: mypy over the whole app package ────────────────────────
+      # This used to be two hand-maintained lists of ~90 file paths, duplicated in
+      # CLAUDE.md and backend/CLAUDE.md. It failed OPEN: a new module was unchecked
+      # until someone remembered to add it in three places, and "absent from the
+      # list" was indistinguishable from "checked and clean".
       #
-      # These lists are long and look like they want collapsing to `app/domains`.
-      # DON'T. That directory also holds each domain's api_*.py routers, which lived in
-      # app/api/ and were never type-gated: passing the directory checks 177 files
-      # instead of 56 and reports ~122 explicit-Any errors in code that only changed
-      # folder. Widening the gate to routers may be worth doing — as a deliberate
-      # decision with its own commit, not as a side effect of tidying an argument list.
-      - name: Type-check (mypy — app/services)
-        run: >
-          mypy app/services
-          app/domains/marketplace/service.py
-          app/domains/marketplace/requests.py
-          app/domains/marketplace/compliance.py
-          app/domains/verification/service.py
-          app/domains/verification/checks.py
-          app/domains/verification/registry.py
-          app/domains/companies/service.py
-          app/domains/companies/directory.py
-          app/domains/contracts/service.py
-          app/domains/contracts/render.py
-          app/domains/contracts/eimzo.py
-          app/domains/deals/service.py
-          app/domains/deals/escrow.py
-          app/domains/deals/rfq.py
-          app/domains/compliance/substances.py
-          app/domains/compliance/substance_ai.py
-          app/domains/compliance/licenses.py
-          app/domains/logistics/service.py
-          app/domains/laboratory/service.py
-          app/domains/manufacturers/service.py
-          app/domains/lab_orders/service.py
-          app/domains/lab_orders/samples.py
-          app/domains/news/service.py
-          app/domains/news/dedup.py
-          app/domains/news/reports.py
-          app/domains/pricing/analysis.py
-          app/domains/requests/service.py
-          app/domains/requests/analysis.py
-          app/domains/requests/rfq_push.py
-          app/domains/requests/supplier_matching.py
-          app/domains/sourcing/service.py
-          app/domains/signals/service.py
-          app/domains/signals/ai.py
-          app/domains/signals/raw_pipeline.py
-          app/domains/signals/sources.py
-          app/domains/signals/source_health.py
-          app/domains/signals/lead_score_recompute.py
-          app/domains/signals/userbot_health.py
-          app/domains/pricing/fx.py
-          app/domains/alerts/service.py
-          app/domains/storefront/service.py
-          app/domains/accounts/otp.py
-          app/domains/reference/service.py
-          app/domains/reference/relevance.py
-          app/domains/reference/grades.py
-          app/domains/requests/clients.py
-          --ignore-missing-imports
-
-      - name: Type-check (mypy — app/schemas)
-        run: >
-          mypy app/schemas
-          app/domains/marketplace/schemas.py
-          app/domains/marketplace/portal_market_schemas.py
-          app/domains/verification/schemas.py
-          app/domains/companies/schemas.py
-          app/domains/contracts/schemas.py
-          app/domains/contracts/eimzo_schemas.py
-          app/domains/deals/schemas.py
-          app/domains/compliance/schemas.py
-          app/domains/compliance/substance_schemas.py
-          app/domains/compliance/substance_match_schemas.py
-          app/domains/logistics/schemas.py
-          app/domains/laboratory/schemas.py
-          app/domains/manufacturers/schemas.py
-          app/domains/lab_orders/schemas.py
-          app/domains/news/schemas.py
-          app/domains/requests/schemas.py
-          app/domains/requests/webapp_schemas.py
-          app/domains/requests/analysis_schemas.py
-          app/domains/sourcing/schemas.py
-          app/domains/notifications/schemas.py
-          app/domains/storefront/schemas.py
-          app/domains/accounts/schemas.py
-          app/domains/reference/schemas.py
-          --ignore-missing-imports
+      # Now the whole package is checked and the modules that do not pass yet are
+      # named in pyproject.toml's burn-down override. A new file is gated by
+      # default; exempting one is a visible edit in a reviewed file. That block
+      # should only ever shrink.
+      - name: Type-check (mypy — app)
+        run: mypy app --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────
       - name: Run pytest

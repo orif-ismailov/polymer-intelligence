@@ -84,7 +84,8 @@ def _contract_and_role(
     else:
         acting = db.get(Company, contract.counterparty_company_id)
         role = "counterparty"
-    assert acting is not None  # FK guarantees
+    if acting is None:  # pragma: no cover — the FK guarantees the row exists
+        raise RuntimeError(f"contract {contract.id} references a missing company")
     return contract, acting, role
 
 
@@ -452,7 +453,8 @@ def contract_bundle(
                     storage_service.get_object_bytes(evidence.pkcs7_storage_path),
                 )
                 signers = info["signers"]
-                assert isinstance(signers, list)
+                if not isinstance(signers, list):  # pragma: no cover — set as a list above
+                    raise RuntimeError("signature info 'signers' is not a list")
                 signers.append(
                     {
                         "company_id": sig.company_id,

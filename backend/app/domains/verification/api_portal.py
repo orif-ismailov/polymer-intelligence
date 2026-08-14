@@ -176,7 +176,8 @@ def submit_verification(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Case not submittable") from exc
     db.commit()
     out = case_out(db, case)
-    assert out is not None
+    if out is None:  # pragma: no cover — submit_case always yields a case
+        raise RuntimeError("case_out returned None for a just-submitted case")
     return out
 
 

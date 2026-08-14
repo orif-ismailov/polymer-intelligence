@@ -74,7 +74,8 @@ def eimzo_verify(
         ) from exc
     db.commit()
     case_payload = case_out(db, outcome.case)
-    assert case_payload is not None
+    if case_payload is None:  # pragma: no cover — outcome.case is always present here
+        raise RuntimeError("case_out returned None for a verified case")
     return VerifyOut(
         ok=outcome.ok,
         reason=outcome.reason,

@@ -62,32 +62,9 @@ uv sync --frozen --extra dev        # install exact locked deps (uv.lock is auth
 
 # CI gates (must pass — see .github/workflows/ci.yml):
 ruff check .                         # lint
-# type-check (scoped to services/ + schemas/, plus the domain folders already migrated)
-mypy app/services app/domains/marketplace/{service,requests,compliance}.py \
-     app/domains/verification/{service,checks,registry}.py \
-     app/domains/companies/{service,directory}.py \
-     app/domains/contracts/{service,render,eimzo}.py \
-     app/domains/deals/{service,escrow,rfq}.py \
-     app/domains/compliance/{substances,substance_ai,licenses}.py \
-     app/domains/{logistics,laboratory,manufacturers}/service.py \
-     app/domains/lab_orders/{service,samples}.py \
-     app/domains/news/{service,dedup,reports}.py \
-     app/domains/pricing/analysis.py \
-     app/domains/requests/{service,analysis,rfq_push,supplier_matching}.py \
-     app/domains/sourcing/service.py \
-     app/domains/signals/{service,ai,raw_pipeline,sources,source_health,lead_score_recompute,userbot_health}.py \
-     app/domains/pricing/fx.py \
-     app/domains/{alerts,storefront}/service.py \
-     app/domains/accounts/otp.py app/domains/reference/{service,relevance,grades}.py \
-     app/domains/requests/clients.py --ignore-missing-imports
-mypy app/schemas  app/domains/marketplace/{schemas,portal_market_schemas}.py \
-     app/domains/{verification,companies}/schemas.py \
-     app/domains/contracts/{schemas,eimzo_schemas}.py \
-     app/domains/deals/schemas.py \
-     app/domains/compliance/{schemas,substance_schemas,substance_match_schemas}.py \
-     app/domains/{logistics,laboratory,manufacturers,lab_orders,news}/schemas.py \
-     app/domains/requests/{schemas,webapp_schemas,analysis_schemas}.py \
-     app/domains/{sourcing,notifications,storefront,accounts,reference}/schemas.py --ignore-missing-imports
+# type-check — the WHOLE app package. Modules that don't pass yet are named in
+# pyproject.toml's burn-down override; that list should only ever shrink.
+mypy app --ignore-missing-imports
 pytest tests/ -q                     # full backend suite
 
 # Single test / file / pattern:
@@ -283,9 +260,11 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
   **closed shared kernel**, declared in those packages' `__init__.py` docstrings — "still in
   `app/services/`" means kernel, not unmigrated. Plans and the binding rules (including the
   models-barrel module-import rule) are in `.planning/backend-domain-reorg/`.
-- **mypy is strict** for `app/services` and `app/schemas` plus the migrated domains' service and
-  schema modules (the CI-gated scope). Business logic
-  lives in `app/services/`; keep it typed.
+- **mypy is strict over all of `app/`.** CI runs `mypy app`, so a new module is type-checked by
+  default; the modules that don't pass yet are named in a burn-down override in
+  `pyproject.toml`, and that list should only ever shrink. (It replaced a hand-maintained
+  list of ~90 file paths that had to be kept in sync across three files, and that silently
+  left anything not on it unchecked.)
 - Dependency versions are deliberately pinned: `uv.lock` is authoritative (`uv sync --frozen`),
   `fastapi`/`starlette` are tightly bounded (route registration is version-sensitive), and
   `ruff==0.15.17` / `mypy==2.1.0` are pinned for a reproducible gate. Don't bump without re-running

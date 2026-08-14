@@ -167,6 +167,23 @@ def _localize(card: dict[str, object], lang: str | None) -> dict[str, object]:
 # callers then keep only as many representative stories as they need.
 _CLUSTER_ROW_CAP = 200
 
+#: Card query template. Hoisted out of the function so the one interpolation it
+#: needs (`{where}`) happens on a single line, which can then carry its own lint
+#: suppression and the reasoning for it — a multi-line f-string cannot.
+_ARTICLE_ROWS_SQL = """
+    SELECT s.id AS id, s.event_at AS event_at, s.ai AS ai,
+           src.name AS source_name, src.country AS country
+    FROM signals s
+    JOIN sources src ON src.id = s.source_id
+    WHERE {where}
+    ORDER BY (
+        CASE s.ai->'news'->>'importance'
+            WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0
+        END
+    ) DESC, s.event_at DESC
+    LIMIT :cap
+"""
+
 
 def _recent_article_rows(
     session: Session,
@@ -195,19 +212,12 @@ def _recent_article_rows(
         where.extend(extra_where)
     if extra_params:
         params.update(extra_params)
-    sql = f"""
-        SELECT s.id AS id, s.event_at AS event_at, s.ai AS ai,
-               src.name AS source_name, src.country AS country
-        FROM signals s
-        JOIN sources src ON src.id = s.source_id
-        WHERE {" AND ".join(where)}
-        ORDER BY (
-            CASE s.ai->'news'->>'importance'
-                WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0
-            END
-        ) DESC, s.event_at DESC
-        LIMIT :cap
-    """
+    # `where` holds only clause TEMPLATES — the literals above plus `extra_where`
+    # from `_news_filter_sql`, which appends fixed strings and puts every
+    # caller-supplied value into `params` as a BOUND parameter (:q, :category,
+    # :country, …). Nothing a caller sends is interpolated. Checked by hand when
+    # flake8-bandit was first switched on; if you add a clause, keep values bound.
+    sql = _ARTICLE_ROWS_SQL.format(where=" AND ".join(where))  # noqa: S608
     return list(session.execute(sa.text(sql), params).mappings().all())
 
 
@@ -505,13 +515,16 @@ def list_news_filter_options(session: Session, *, days: int = 30) -> dict[str, o
         days,
     )
     # Companies/products live in JSONB arrays — unnest with LATERAL (WHERE before it).
+    # `array_where` and the JSONB paths below are fixed literals; the only value
+    # that varies is `days`, bound as :days by `_facet_rows`. The noqa marks
+    # interpolation of a CONSTANT, not of anything a caller supplies.
     array_where = (
         "WHERE s.kind = 'news' AND s.ai -> 'news' IS NOT NULL "
         "AND s.event_at >= now() - make_interval(days => :days)"
     )
     companies = _facet_rows(
         session,
-        "SELECT elem AS value, count(*) AS count FROM signals s "
+        "SELECT elem AS value, count(*) AS count FROM signals s "  # noqa: S608
         "CROSS JOIN LATERAL jsonb_array_elements_text(s.ai->'news'->'companies') AS elem "
         f"{array_where} AND jsonb_typeof(s.ai->'news'->'companies') = 'array' "
         "GROUP BY 1 ORDER BY count DESC, value ASC LIMIT 50",
@@ -519,7 +532,7 @@ def list_news_filter_options(session: Session, *, days: int = 30) -> dict[str, o
     )
     products = _facet_rows(
         session,
-        "SELECT elem AS value, count(*) AS count FROM signals s "
+        "SELECT elem AS value, count(*) AS count FROM signals s "  # noqa: S608
         "CROSS JOIN LATERAL jsonb_array_elements_text(s.ai->'news'->'related_products') AS elem "
         f"{array_where} AND jsonb_typeof(s.ai->'news'->'related_products') = 'array' "
         "GROUP BY 1 ORDER BY count DESC, value ASC LIMIT 50",

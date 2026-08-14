@@ -70,7 +70,8 @@ def _card(db: Session, company: Company) -> ManufacturerCardOut:
 def _doc_out(doc: object) -> FactoryRfqDocumentOut:
     from app.domains.manufacturers.models import FactoryRfqDocument
 
-    assert isinstance(doc, FactoryRfqDocument)
+    if not isinstance(doc, FactoryRfqDocument):  # pragma: no cover — callers pass the model
+        raise TypeError(f"expected FactoryRfqDocument, got {type(doc).__name__}")
     return FactoryRfqDocumentOut(
         id=doc.id,
         kind=str(doc.kind),

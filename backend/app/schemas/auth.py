@@ -33,5 +33,6 @@ class TokenResponse(BaseModel):
     """
 
     access_token: str
-    token_type: str = "bearer"
+    # noqa S105: "bearer" is the RFC 6750 scheme name, not a credential.
+    token_type: str = "bearer"  # noqa: S105
     role: str  # The staff_role value — useful for the dashboard UI routing

@@ -10,33 +10,11 @@ FastAPI + Celery + SQLAlchemy 2, Python 3.12, **uv**-managed. Run all commands f
 ```bash
 uv sync --frozen --extra dev        # install exact locked deps (uv.lock is authoritative)
 ruff check .                         # lint  (config in pyproject.toml)
-# strict type-check (CI-gated scope). Each domain moved into app/domains/<name>/ appends
-# its service/schema modules here so the gate follows the code — keep in sync with ci.yml.
-mypy app/services app/domains/marketplace/{service,requests,compliance}.py \
-     app/domains/verification/{service,checks,registry}.py \
-     app/domains/companies/{service,directory}.py \
-     app/domains/contracts/{service,render,eimzo}.py \
-     app/domains/deals/{service,escrow,rfq}.py \
-     app/domains/compliance/{substances,substance_ai,licenses}.py \
-     app/domains/{logistics,laboratory,manufacturers}/service.py \
-     app/domains/lab_orders/{service,samples}.py \
-     app/domains/news/{service,dedup,reports}.py \
-     app/domains/pricing/analysis.py \
-     app/domains/requests/{service,analysis,rfq_push,supplier_matching}.py \
-     app/domains/sourcing/service.py \
-     app/domains/signals/{service,ai,raw_pipeline,sources,source_health,lead_score_recompute,userbot_health}.py \
-     app/domains/pricing/fx.py \
-     app/domains/{alerts,storefront}/service.py \
-     app/domains/accounts/otp.py app/domains/reference/{service,relevance,grades}.py \
-     app/domains/requests/clients.py --ignore-missing-imports
-mypy app/schemas  app/domains/marketplace/{schemas,portal_market_schemas}.py \
-     app/domains/{verification,companies}/schemas.py \
-     app/domains/contracts/{schemas,eimzo_schemas}.py \
-     app/domains/deals/schemas.py \
-     app/domains/compliance/{schemas,substance_schemas,substance_match_schemas}.py \
-     app/domains/{logistics,laboratory,manufacturers,lab_orders,news}/schemas.py \
-     app/domains/requests/{schemas,webapp_schemas,analysis_schemas}.py \
-     app/domains/{sourcing,notifications,storefront,accounts,reference}/schemas.py --ignore-missing-imports
+# strict type-check over the WHOLE app package. Modules that don't pass yet are listed
+# in pyproject.toml's burn-down override (48 at the time of writing: routers, ingest
+# adapters, seeders, task modules — none of which the old file-list gate covered either).
+# A NEW file is checked by default; exempting one is a deliberate edit to that list.
+mypy app --ignore-missing-imports
 pytest tests/ -q                     # full suite
 pytest tests/test_feed_api.py::test_name -q  # single test
 pytest -k "telegram and not accuracy" -q     # by pattern
