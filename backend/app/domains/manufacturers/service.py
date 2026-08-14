@@ -14,6 +14,7 @@ import logging
 import sqlalchemy as sa
 from sqlalchemy.orm import Session, selectinload
 
+from app.core import numbering
 from app.core.time import to_display_tz, utcnow
 from app.domains.accounts.models import UserAccount
 from app.domains.companies import directory as directory_service
@@ -66,10 +67,9 @@ def generate_factory_rfq_number(db: Session) -> str:
     if not year.isdigit():  # pragma: no cover
         raise RuntimeError(f"Unexpected non-digit year: {year!r}")
 
-    seq_name = f"factory_rfq_seq_{year}"
-    db.execute(sa.text("SELECT pg_advisory_xact_lock(:k)"), {"k": int(year) + 34_000})
-    db.execute(sa.text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name}"))  # noqa: S608
-    nextval: int = db.execute(sa.text(f"SELECT nextval('{seq_name}')")).scalar()  # type: ignore[assignment]
+    nextval = numbering.next_in_sequence(
+        db, f"factory_rfq_seq_{year}", numbering.LOCK_BASE_FACTORY_RFQ + int(year)
+    )
     return f"FRQ-{year}-{nextval:06d}"
 
 

@@ -63,6 +63,35 @@ def _make_request_create(**kwargs) -> MagicMock:
     return RequestCreate(**data)
 
 
+def _sequence_db(nextvals: list[int]) -> MagicMock:
+    """Mock session that answers `nextval` with `nextvals`, in order.
+
+    Dispatches on the SQL TEXT rather than on call ORDER. The previous version
+    scripted an exact three-execute sequence (advisory lock, CREATE SEQUENCE,
+    nextval) and so broke the moment `numbering.next_in_sequence` stopped taking
+    the lock on every call — even though the behaviour under test, that
+    consecutive numbers increment, never changed. A test that fails when the
+    implementation is refactored but the behaviour is identical is testing the
+    wrong thing.
+    """
+    db = _make_mock_db()
+    remaining = list(nextvals)
+
+    def _execute(stmt, *_args, **_kwargs):  # noqa: ANN001, ANN202
+        sql = str(stmt)
+        result = MagicMock()
+        if "nextval" in sql:
+            result.scalar.return_value = remaining.pop(0)
+        elif "to_regclass" in sql:
+            result.scalar.return_value = "already_exists"  # skip the create branch
+        else:
+            result.scalar.return_value = None
+        return result
+
+    db.execute.side_effect = _execute
+    return db
+
+
 # ── Number generation ──────────────────────────────────────────────────────────
 
 class TestGenerateRequestNumber:
@@ -87,22 +116,7 @@ class TestGenerateRequestNumber:
         """Consecutive calls with mock nextval 1 then 2 yield NNNNN and NNNNN+1."""
         from app.domains.requests.service import generate_request_number  # noqa: PLC0415
 
-        db = _make_mock_db()
-        # Return 1 then 2 for nextval; CREATE SEQUENCE IF NOT EXISTS is a side-effect call
-        mock_result_1 = MagicMock()
-        mock_result_1.scalar.return_value = 1
-        mock_result_2 = MagicMock()
-        mock_result_2.scalar.return_value = 2
-        # Three execute calls per generate_request_number:
-        # pg_advisory_xact_lock + CREATE SEQUENCE + SELECT nextval
-        db.execute.side_effect = [
-            MagicMock(),          # pg_advisory_xact_lock call 1
-            MagicMock(),          # CREATE SEQUENCE IF NOT EXISTS call 1
-            mock_result_1,        # SELECT nextval call 1
-            MagicMock(),          # pg_advisory_xact_lock call 2
-            MagicMock(),          # CREATE SEQUENCE IF NOT EXISTS call 2
-            mock_result_2,        # SELECT nextval call 2
-        ]
+        db = _sequence_db([1, 2])
 
         n1 = generate_request_number(db)
         n2 = generate_request_number(db)

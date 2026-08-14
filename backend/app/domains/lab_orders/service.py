@@ -30,9 +30,9 @@ from __future__ import annotations
 
 import logging
 
-import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
+from app.core import numbering
 from app.core.time import to_display_tz, utcnow
 from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company
@@ -129,19 +129,16 @@ class LabResultLocked(Exception):
 def generate_lab_number(db: Session) -> str:
     """Next LAB-YYYY-NNNNNN for the current year in Asia/Tashkent.
 
-    Per-year PostgreSQL sequence with the same first-use race guard as
-    `deal_service.generate_deal_number`: the advisory lock serializes the first
-    CREATE SEQUENCE of the year, which is otherwise not concurrency safe. The
-    year is server-derived and validated digits-only before interpolation.
+    Per-year PostgreSQL sequence; the create-on-first-use race and the lock-key
+    registry live in `app.core.numbering`.
     """
     year = to_display_tz(utcnow(), "Asia/Tashkent").strftime("%Y")
     if not year.isdigit():  # pragma: no cover — defensive
         raise RuntimeError(f"Unexpected non-digit year: {year!r}")
 
-    seq_name = f"lab_order_seq_{year}"
-    db.execute(sa.text("SELECT pg_advisory_xact_lock(:k)"), {"k": int(year) + 1})
-    db.execute(sa.text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name}"))  # noqa: S608
-    nextval: int = db.execute(sa.text(f"SELECT nextval('{seq_name}')")).scalar()  # type: ignore[assignment]
+    nextval = numbering.next_in_sequence(
+        db, f"lab_order_seq_{year}", numbering.LOCK_BASE_LAB_ORDER + int(year)
+    )
     return f"LAB-{year}-{nextval:06d}"
 
 

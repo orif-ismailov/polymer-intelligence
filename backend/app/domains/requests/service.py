@@ -27,9 +27,9 @@ from __future__ import annotations
 import logging
 from datetime import date
 
-import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
+from app.core import numbering
 from app.core.config import settings
 from app.core.time import to_display_tz, utcnow
 from app.domains.accounts.models import UserAccount
@@ -200,11 +200,10 @@ def generate_request_number(db: Session) -> str:
     Returns:
         A string in the format "REQ-YYYY-MM-DD-NNNNN" (e.g. "REQ-2026-06-16-00001").
 
-    Security note:
-        The sequence name is built from a YYYYMMDD string derived SERVER-SIDE
-        from the current time — there is no user-supplied input in this path,
-        so SQL injection is not a concern.  The string is still validated as
-        digits-only before embedding.
+    The create-on-first-use race, the lock-key registry, and the reason the lock
+    is no longer taken on every call all live in `app.core.numbering`. The lock
+    key here is the full YYYYMMDD, which is why it cannot collide with the
+    year-based keys the other five callers use.
     """
     # Get today's date in Asia/Tashkent (DEC-tz-handling)
     today: date = to_display_tz(utcnow(), "Asia/Tashkent").date()
@@ -214,19 +213,9 @@ def generate_request_number(db: Session) -> str:
     if not yyyymmdd.isdigit():
         raise RuntimeError(f"Unexpected non-digit date string: {yyyymmdd!r}")
 
-    seq_name = f"req_seq_{yyyymmdd}"
-
-    # `CREATE SEQUENCE IF NOT EXISTS` is NOT concurrency-safe for the FIRST create
-    # of the day: two simultaneous first-submits race on the catalog and one errors
-    # (duplicate pg_type / "tuple concurrently updated") -> the request 500s. Take a
-    # per-date transaction advisory lock so the create is serialized; the date int
-    # is the lock key. Subsequent same-day calls take the lock briefly then no-op.
-    db.execute(sa.text("SELECT pg_advisory_xact_lock(:k)"), {"k": int(yyyymmdd)})
-    db.execute(sa.text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name}"))  # noqa: S608
-
-    # nextval is atomic — concurrency-safe counter
-    result = db.execute(sa.text(f"SELECT nextval('{seq_name}')"))
-    nextval: int = result.scalar()  # type: ignore[assignment]
+    nextval = numbering.next_in_sequence(
+        db, f"req_seq_{yyyymmdd}", numbering.LOCK_BASE_REQUEST + int(yyyymmdd)
+    )
 
     yyyy = today.strftime("%Y")
     mm = today.strftime("%m")
@@ -236,7 +225,7 @@ def generate_request_number(db: Session) -> str:
 
     logger.debug(
         "request_service.generate_request_number",
-        extra={"number": number, "seq_name": seq_name},
+        extra={"number": number, "seq_name": f"req_seq_{yyyymmdd}"},
     )
     return number
 
