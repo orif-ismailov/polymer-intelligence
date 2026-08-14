@@ -51,8 +51,8 @@ from app.models.enums import LabOrderStatus, SampleRequestStatus
 
 if TYPE_CHECKING:
     from app.domains.companies.models import Company
+    from app.domains.compliance.models import Substance
     from app.domains.marketplace.models import SellerOffer
-    from app.models.compliance import Substance
 
 
 class LabPartner(Base):

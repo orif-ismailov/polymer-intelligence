@@ -36,12 +36,14 @@ from dataclasses import dataclass
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.domains.compliance import licenses as company_license_service
+from app.domains.compliance import substances as substance_service
+from app.domains.compliance.models import Substance
+from app.domains.compliance.schemas import ComplianceOut, MissingOut
+from app.domains.compliance.substance_schemas import SubstanceBrief
 from app.domains.marketplace.models import SellerOffer
-from app.models.compliance import Substance
 from app.models.enums import RegulationLevel, RegulationRegime
-from app.schemas.compliance import ComplianceOut, MissingOut
-from app.schemas.substance import SubstanceBrief
-from app.services import company_license_service, settings_service, substance_service
+from app.services import settings_service
 
 logger = logging.getLogger(__name__)
 

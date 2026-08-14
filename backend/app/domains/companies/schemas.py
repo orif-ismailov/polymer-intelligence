@@ -13,6 +13,8 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.domains.compliance.schemas import MissingOut
+from app.domains.compliance.substance_schemas import SubstanceBrief
 from app.domains.marketplace.schemas import OfferFileRef
 from app.domains.verification.schemas import CaseOut, DocumentOut
 from app.models.enums import (
@@ -22,8 +24,6 @@ from app.models.enums import (
     RegulationLevel,
     SellerOfferStatus,
 )
-from app.schemas.compliance import MissingOut
-from app.schemas.substance import SubstanceBrief
 
 # ── Inputs ────────────────────────────────────────────────────────────────────
 

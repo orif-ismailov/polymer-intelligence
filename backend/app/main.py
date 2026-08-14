@@ -38,12 +38,10 @@ import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/d
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
 from app.api.admin_lab import router as admin_lab_router
 from app.api.admin_lab_requests import router as admin_lab_requests_router
-from app.api.admin_licenses import router as admin_licenses_router
 from app.api.admin_logistics_requests import router as admin_logistics_requests_router
 from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sources import router as admin_sources_router
-from app.api.admin_substances import router as admin_substances_router
 from app.api.admin_users import router as admin_users_router
 from app.api.alert_rules import alerts_router
 from app.api.alert_rules import router as alert_rules_router
@@ -54,7 +52,6 @@ from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.feed import router as feed_router
 from app.api.health import router as health_router
 from app.api.portal.auth import router as portal_auth_router
-from app.api.portal.compliance import router as portal_compliance_router
 from app.api.portal.lab import router as portal_lab_router
 from app.api.portal.lab_requests import router as portal_lab_requests_router
 from app.api.portal.logistics import router as portal_logistics_router
@@ -64,7 +61,6 @@ from app.api.portal.notifications import router as portal_notifications_router
 from app.api.portal.reference import router as portal_reference_router
 from app.api.portal.requests import router as portal_requests_router
 from app.api.portal.samples import router as portal_samples_router
-from app.api.portal.substances import router as portal_substances_router
 from app.api.prices import router as prices_router
 from app.api.public import router as public_router
 from app.api.reports import router as reports_router
@@ -80,6 +76,10 @@ from app.api.webapp.requests import router as webapp_requests_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.domains.companies.api_portal import router as portal_companies_router
+from app.domains.compliance.api_admin_licenses import router as admin_licenses_router
+from app.domains.compliance.api_admin_substances import router as admin_substances_router
+from app.domains.compliance.api_portal import router as portal_compliance_router
+from app.domains.compliance.api_portal_substances import router as portal_substances_router
 from app.domains.contracts.api_admin import router as admin_contracts_router
 from app.domains.contracts.api_portal import router as portal_contracts_router
 from app.domains.contracts.api_portal_eimzo import router as portal_eimzo_router

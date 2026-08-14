@@ -17,10 +17,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.db import get_db
+from app.domains.compliance import substances as substance_service
+from app.domains.compliance.substance_schemas import SubstanceIn, SubstanceOut
 from app.models.enums import RegulationLevel
 from app.models.staff import StaffUser
-from app.schemas.substance import SubstanceIn, SubstanceOut
-from app.services import substance_service
 
 router = APIRouter(prefix="/admin/substances", tags=["compliance"])
 

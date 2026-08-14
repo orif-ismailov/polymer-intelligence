@@ -68,7 +68,7 @@ def db(engine: sa.Engine) -> Session:
 
 
 def _substance(db: Session, **kwargs):  # noqa: ANN003, ANN202
-    from app.models.compliance import Substance  # noqa: PLC0415
+    from app.domains.compliance.models import Substance  # noqa: PLC0415
     from app.models.enums import RegulationLevel, RegulationRegime  # noqa: PLC0415
 
     row = Substance(
@@ -118,8 +118,8 @@ def _enforce(db: Session, on: bool) -> None:
 
 class TestLicences:
     def test_register_creates_an_active_licence_and_audits(self, db: Session) -> None:
+        from app.domains.compliance import licenses as svc  # noqa: PLC0415
         from app.models.enums import LicenseStatus, RegulationRegime  # noqa: PLC0415
-        from app.services import company_license_service as svc  # noqa: PLC0415
 
         staff = make_staff(db)
         _, company = _verified_company(db)
@@ -137,8 +137,8 @@ class TestLicences:
         assert actions == ["license.register"]
 
     def test_active_for_matches_the_regime_only(self, db: Session) -> None:
+        from app.domains.compliance import licenses as svc  # noqa: PLC0415
         from app.models.enums import RegulationRegime  # noqa: PLC0415
-        from app.services import company_license_service as svc  # noqa: PLC0415
 
         staff = make_staff(db)
         _, company = _verified_company(db)
@@ -151,8 +151,8 @@ class TestLicences:
 
     def test_an_expired_licence_is_not_active(self, db: Session) -> None:
         """`status='active'` with a past date is an expired licence nobody swept."""
+        from app.domains.compliance import licenses as svc  # noqa: PLC0415
         from app.models.enums import RegulationRegime  # noqa: PLC0415
-        from app.services import company_license_service as svc  # noqa: PLC0415
 
         staff = make_staff(db)
         _, company = _verified_company(db)
@@ -166,8 +166,8 @@ class TestLicences:
         assert svc.active_for(db, company.id, RegulationRegime.precursor_list_iv) is None
 
     def test_a_licence_expiring_today_still_counts(self, db: Session) -> None:
+        from app.domains.compliance import licenses as svc  # noqa: PLC0415
         from app.models.enums import RegulationRegime  # noqa: PLC0415
-        from app.services import company_license_service as svc  # noqa: PLC0415
 
         staff = make_staff(db)
         _, company = _verified_company(db)
@@ -181,8 +181,8 @@ class TestLicences:
         assert svc.active_for(db, company.id, RegulationRegime.precursor_list_iv) is not None
 
     def test_revoking_takes_it_out_immediately(self, db: Session) -> None:
+        from app.domains.compliance import licenses as svc  # noqa: PLC0415
         from app.models.enums import LicenseStatus, RegulationRegime  # noqa: PLC0415
-        from app.services import company_license_service as svc  # noqa: PLC0415
 
         staff = make_staff(db)
         _, company = _verified_company(db)
@@ -196,8 +196,8 @@ class TestLicences:
 
     def test_category_must_match_when_the_substance_names_one(self, db: Session) -> None:
         """A licence for one category of a regime does not cover another."""
+        from app.domains.compliance import licenses as svc  # noqa: PLC0415
         from app.models.enums import RegulationRegime  # noqa: PLC0415
-        from app.services import company_license_service as svc  # noqa: PLC0415
 
         staff = make_staff(db)
         _, company = _verified_company(db)
@@ -242,9 +242,9 @@ class TestEvaluate:
         assert verdict.ok is False
 
     def test_the_companys_licence_satisfies_the_offer(self, db: Session) -> None:
+        from app.domains.compliance import licenses as company_license_service  # noqa: PLC0415
         from app.domains.marketplace import compliance as svc  # noqa: PLC0415
         from app.models.enums import RegulationRegime  # noqa: PLC0415
-        from app.services import company_license_service  # noqa: PLC0415
 
         staff = make_staff(db)
         substance = _substance(db)
@@ -347,9 +347,9 @@ class TestPublishGate:
 
     def test_a_compliant_offer_is_unaffected(self, db: Session) -> None:
         from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
+        from app.domains.compliance import licenses as company_license_service  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import RegulationRegime, SellerOfferStatus  # noqa: PLC0415
-        from app.services import company_license_service  # noqa: PLC0415
 
         staff = make_staff(db)
         substance = _substance(db)
@@ -448,9 +448,9 @@ class TestPublishGate:
         offer cannot be fixed by attaching anything to it — re-saving is the
         seller's only move, and it has to work or the offer is stuck forever."""
         from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
+        from app.domains.compliance import licenses as company_license_service  # noqa: PLC0415
         from app.domains.marketplace import service as offer_service  # noqa: PLC0415
         from app.models.enums import RegulationRegime, SellerOfferStatus  # noqa: PLC0415
-        from app.services import company_license_service  # noqa: PLC0415
 
         staff = make_staff(db)
         substance = _substance(db)

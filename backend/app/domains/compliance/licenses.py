@@ -26,7 +26,7 @@ import logging
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
-from app.models.compliance import CompanyLicense
+from app.domains.compliance.models import CompanyLicense
 from app.models.enums import LicenseStatus, RegulationRegime
 from app.services.audit_service import write_audit
 

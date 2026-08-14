@@ -24,9 +24,9 @@ import logging
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from app.models.compliance import Substance
+from app.domains.compliance.models import Substance
+from app.domains.compliance.substance_schemas import SubstanceIn
 from app.models.enums import RegulationLevel
-from app.schemas.substance import SubstanceIn
 from app.services.audit_service import write_audit
 
 logger = logging.getLogger(__name__)

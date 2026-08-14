@@ -91,6 +91,9 @@ jobs:
           app/domains/deals/service.py
           app/domains/deals/escrow.py
           app/domains/deals/rfq.py
+          app/domains/compliance/substances.py
+          app/domains/compliance/substance_ai.py
+          app/domains/compliance/licenses.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -103,6 +106,9 @@ jobs:
           app/domains/contracts/schemas.py
           app/domains/contracts/eimzo_schemas.py
           app/domains/deals/schemas.py
+          app/domains/compliance/schemas.py
+          app/domains/compliance/substance_schemas.py
+          app/domains/compliance/substance_match_schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

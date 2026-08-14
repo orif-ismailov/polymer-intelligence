@@ -38,7 +38,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
-from app.models.compliance import Substance
+from app.domains.compliance.models import Substance
 from app.models.enums import RegulationLevel, RegulationRegime
 
 logger = logging.getLogger(__name__)

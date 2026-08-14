@@ -36,9 +36,10 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.time import utcnow
-from app.models.compliance import SubstanceSuggestion
-from app.schemas.substance_match import SubstanceMatchResult
-from app.services import settings_service, substance_service
+from app.domains.compliance import substances as substance_service
+from app.domains.compliance.models import SubstanceSuggestion
+from app.domains.compliance.substance_match_schemas import SubstanceMatchResult
+from app.services import settings_service
 from parsing.budget import check_and_reserve_tokens, record_actual_tokens
 from parsing.schemas import BudgetExceeded
 

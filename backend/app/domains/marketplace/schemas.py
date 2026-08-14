@@ -17,6 +17,7 @@ import decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.domains.compliance.schemas import ComplianceOut
 from app.models.enums import (
     OfferAvailability,
     OfferFileKind,
@@ -24,7 +25,6 @@ from app.models.enums import (
     PriceBasis,
     SellerOfferStatus,
 )
-from app.schemas.compliance import ComplianceOut
 
 # ── Create ──────────────────────────────────────────────────────────────────────
 

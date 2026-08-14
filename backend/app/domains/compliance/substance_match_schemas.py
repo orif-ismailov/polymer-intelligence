@@ -12,7 +12,7 @@ import decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-from app.schemas.substance import SubstanceBrief
+from app.domains.compliance.substance_schemas import SubstanceBrief
 
 
 class SubstanceMatchResult(BaseModel):

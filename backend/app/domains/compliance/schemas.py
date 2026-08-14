@@ -12,8 +12,8 @@ import decimal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer
 
+from app.domains.compliance.substance_schemas import SubstanceBrief
 from app.models.enums import LicenseStatus, RegulationLevel, RegulationRegime
-from app.schemas.substance import SubstanceBrief
 
 
 class MissingOut(BaseModel):
