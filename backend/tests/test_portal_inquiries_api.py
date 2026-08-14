@@ -27,7 +27,7 @@ _BASE = "/api/v1/portal"
 
 
 def test_inquiry_routes_registered() -> None:
-    from app.api.portal.inquiries import router  # noqa: PLC0415
+    from app.domains.marketplace.api_portal_inquiries import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/market/{offer_id}/inquiries" in paths
@@ -138,9 +138,9 @@ def test_edit_inquiry_reenters_moderation(api) -> None:  # noqa: ANN001
         offer = make_seller_offer(db, company=selling_co)
         buyer_owner = make_account(db, "+998900005201")
         buyer_co = make_company(db, buyer_owner, tax_id="315000201")
+        from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+        from app.domains.marketplace.schemas import OfferRequestCreate  # noqa: PLC0415
         from app.models.enums import OfferRequestStatus  # noqa: PLC0415
-        from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
-        from app.services import offer_request_service  # noqa: PLC0415
 
         req = offer_request_service.create_company_inquiry(
             db, buyer_co, buyer_owner, offer, OfferRequestCreate(quantity=None, message="v1"),
@@ -196,8 +196,8 @@ def test_incoming_shows_approved_only(api) -> None:  # noqa: ANN001
         offer = make_seller_offer(db, company=selling_co)
         buyer_owner = make_account(db, "+998900005301")
         buyer_co = make_company(db, buyer_owner, tax_id="315000301")
-        from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
-        from app.services import offer_request_service  # noqa: PLC0415
+        from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+        from app.domains.marketplace.schemas import OfferRequestCreate  # noqa: PLC0415
 
         pending = offer_request_service.create_company_inquiry(
             db, buyer_co, buyer_owner, offer, OfferRequestCreate(quantity=None, message="pending"),

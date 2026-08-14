@@ -12,11 +12,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_staff_user
 from app.core.db import get_db
-from app.models.staff import StaffUser
 from app.schemas.dashboard import DashboardSummary
 from app.services.dashboard_summary_service import get_dashboard_summary
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+router = APIRouter(prefix="/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_staff_user)])
 
 
 @router.get(
@@ -26,7 +25,6 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 )
 def dashboard_summary(
     db: Session = Depends(get_db),
-    _: StaffUser = Depends(get_current_staff_user),
 ) -> DashboardSummary:
     """Return the overview payload for the dashboard home page."""
     return get_dashboard_summary(db)

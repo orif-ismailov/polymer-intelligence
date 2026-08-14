@@ -55,7 +55,7 @@ class TestConvertAmountUnit:
 
     def test_convert_amount_basic_math(self) -> None:
         """convert_amount returns amount * rate."""
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         session = self._make_session_with_rate(decimal.Decimal("12736.68"))
         result = convert_amount(
@@ -70,7 +70,7 @@ class TestConvertAmountUnit:
 
     def test_convert_amount_missing_rate_returns_none(self) -> None:
         """convert_amount returns None when no rate exists for the ccy/date."""
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         session = self._make_session_with_rate(None)
         result = convert_amount(
@@ -84,7 +84,7 @@ class TestConvertAmountUnit:
 
     def test_convert_amount_returns_decimal(self) -> None:
         """convert_amount result is a Decimal (not float) to preserve money precision."""
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         session = self._make_session_with_rate(decimal.Decimal("12736.68"))
         result = convert_amount(
@@ -102,7 +102,7 @@ class TestConvertAmountUnit:
         """convert_amount must not call session.execute with INSERT/UPDATE (read-only)."""
         from unittest.mock import MagicMock  # noqa: PLC0415
 
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         session = MagicMock()
         mock_row = MagicMock()
@@ -176,7 +176,7 @@ class TestConvertAmountDB:
         """convert_amount returns correct figure for exact-date rate."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         with Session(seeded_db) as session:
             result = convert_amount(
@@ -193,7 +193,7 @@ class TestConvertAmountDB:
         """convert_amount uses most-recent rate ≤ on_date (not strictly equal)."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         # 2024-02-03 > 2024-02-01 (our only seeded rate) → should still resolve
         with Session(seeded_db) as session:
@@ -213,7 +213,7 @@ class TestConvertAmountDB:
         """convert_amount returns None if on_date is before all available rates."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         # 2020-01-01 is before any seeded rate → None
         with Session(seeded_db) as session:
@@ -233,7 +233,7 @@ class TestConvertAmountDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         rate_date = datetime.date(2024, 2, 1)
 
@@ -267,7 +267,7 @@ class TestConvertAmountDB:
         """convert_amount returns None for a ccy with no rates at all."""
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.fx_service import convert_amount  # noqa: PLC0415
+        from app.domains.pricing.fx import convert_amount  # noqa: PLC0415
 
         with Session(seeded_db) as session:
             result = convert_amount(

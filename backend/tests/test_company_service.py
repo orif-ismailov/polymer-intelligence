@@ -36,7 +36,7 @@ _LEGAL = {
 
 
 def _company(status, company_id: int = 1):  # noqa: ANN001, ANN202
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
 
     company = Company(jurisdiction="UZ", tax_id="123456789", status=status)
     company.id = company_id
@@ -46,8 +46,8 @@ def _company(status, company_id: int = 1):  # noqa: ANN001, ANN202
 @pytest.mark.parametrize("frm_name", _STATUS_NAMES)
 @pytest.mark.parametrize("to_name", _STATUS_NAMES)
 def test_transition_matrix(frm_name: str, to_name: str) -> None:
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     frm, to = CompanyStatus[frm_name], CompanyStatus[to_name]
     company = _company(frm)
@@ -64,9 +64,9 @@ def test_transition_matrix(frm_name: str, to_name: str) -> None:
 
 @pytest.mark.parametrize("tax_id", ["123456789", " 123456789 "])
 def test_create_company_accepts_valid_uz_tax_id(tax_id: str) -> None:
-    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     account = UserAccount(phone="+998901234567")
     account.id = 1
@@ -78,8 +78,8 @@ def test_create_company_accepts_valid_uz_tax_id(tax_id: str) -> None:
 
 @pytest.mark.parametrize("tax_id", ["12345", "1234567890", "abcdefghi", ""])
 def test_create_company_rejects_bad_uz_tax_id(tax_id: str) -> None:
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     account = UserAccount(phone="+998901234567")
     account.id = 1
@@ -103,8 +103,8 @@ def test_create_company_rejects_non_ascii_digit_tax_id(tax_id: str) -> None:
     homoglyph forms bypassed the duplicate guard and one legal entity could hold
     several company rows (and would never match its E-IMZO certificate INN).
     """
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     assert tax_id.isdigit() and len(tax_id) == 9, "fixture must defeat the old check"
     account = UserAccount(phone="+998901234567")
@@ -121,8 +121,8 @@ def test_create_company_rejects_non_two_letter_jurisdiction(jurisdiction: str) -
     The step-2 «Страна регистрации» select shipped an `other` option, so a
     first-class UI choice crashed the endpoint with StringDataRightTruncation.
     """
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     account = UserAccount(phone="+998901234567")
     account.id = 1
@@ -132,7 +132,7 @@ def test_create_company_rejects_non_two_letter_jurisdiction(jurisdiction: str) -
 
 def test_normalize_new_company_is_db_free_and_normalizes() -> None:
     """The endpoint validates through this BEFORE spending the daily quota."""
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     assert company_service.normalize_new_company(" uz ", " 123456789 ") == ("UZ", "123456789")
     # An empty jurisdiction still defaults to UZ (unchanged behaviour).
@@ -140,10 +140,10 @@ def test_normalize_new_company_is_db_free_and_normalizes() -> None:
 
 
 def test_create_company_makes_creator_an_owner_member() -> None:
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.models.companies import CompanyMember  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.companies.models import CompanyMember  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     account = UserAccount(phone="+998901234567")
     account.id = 42
@@ -161,8 +161,8 @@ def test_create_company_makes_creator_an_owner_member() -> None:
 
 @pytest.mark.parametrize("mfo", ["1234", "123456", "abcde", ""])
 def test_add_bank_account_rejects_bad_mfo(mfo: str) -> None:
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     with pytest.raises(company_service.InvalidBankMfo):
         company_service.add_bank_account(
@@ -172,8 +172,8 @@ def test_add_bank_account_rejects_bad_mfo(mfo: str) -> None:
 
 def test_add_bank_account_encrypts_number_and_keeps_last4() -> None:
     from app.core.crypto import decrypt_pii  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     row = company_service.add_bank_account(
         MagicMock(), _company(CompanyStatus.draft), "00014", "2020 8000 9000 4004 1234"
@@ -195,8 +195,8 @@ def test_update_profile_persists_registration_date() -> None:
     """
     import datetime  # noqa: PLC0415
 
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     company = _company(CompanyStatus.draft)
     company_service.update_profile(
@@ -208,7 +208,10 @@ def test_update_profile_persists_registration_date() -> None:
 def test_profile_update_schema_accepts_registration_date() -> None:
     import datetime  # noqa: PLC0415
 
-    from app.schemas.portal_company import CompanyDetailOut, CompanyProfileUpdateIn  # noqa: PLC0415
+    from app.domains.companies.schemas import (  # noqa: PLC0415
+        CompanyDetailOut,
+        CompanyProfileUpdateIn,
+    )
 
     parsed = CompanyProfileUpdateIn(registration_date="2020-03-12")  # type: ignore[arg-type]
     assert parsed.registration_date == datetime.date(2020, 3, 12)
@@ -222,7 +225,7 @@ def test_profile_update_schema_caps_string_lengths() -> None:
     """These columns are unbounded `text`; a 100 000-char name used to be a 200."""
     import pydantic  # noqa: PLC0415
 
-    from app.schemas.portal_company import CompanyProfileUpdateIn  # noqa: PLC0415
+    from app.domains.companies.schemas import CompanyProfileUpdateIn  # noqa: PLC0415
 
     with pytest.raises(pydantic.ValidationError):
         CompanyProfileUpdateIn(legal_name="A" * 100_000)
@@ -231,13 +234,13 @@ def test_profile_update_schema_caps_string_lengths() -> None:
 @pytest.mark.parametrize("blank", ["   ", "\t", "\n ", ""])
 def test_profile_update_schema_treats_blank_as_absent(blank: str) -> None:
     """A whitespace-only legal name used to be stored verbatim."""
-    from app.schemas.portal_company import CompanyProfileUpdateIn  # noqa: PLC0415
+    from app.domains.companies.schemas import CompanyProfileUpdateIn  # noqa: PLC0415
 
     assert CompanyProfileUpdateIn(legal_name=blank).legal_name is None
 
 
 def test_profile_update_schema_trims_surrounding_whitespace() -> None:
-    from app.schemas.portal_company import CompanyProfileUpdateIn  # noqa: PLC0415
+    from app.domains.companies.schemas import CompanyProfileUpdateIn  # noqa: PLC0415
 
     assert CompanyProfileUpdateIn(legal_name="  ООО «Тест»  ").legal_name == "ООО «Тест»"
 
@@ -248,7 +251,7 @@ def test_profile_update_schema_rejects_future_registration_date() -> None:
 
     import pydantic  # noqa: PLC0415
 
-    from app.schemas.portal_company import CompanyProfileUpdateIn  # noqa: PLC0415
+    from app.domains.companies.schemas import CompanyProfileUpdateIn  # noqa: PLC0415
 
     tomorrow = datetime.datetime.now(datetime.UTC).date() + datetime.timedelta(days=1)
     for bad in (tomorrow, datetime.date(2099, 12, 31), datetime.date(9999, 12, 31)):
@@ -281,8 +284,8 @@ def test_profile_editable_while_case_undecided(case_status_name: str, editable: 
     409 `Profile not editable now`, silently dropping the legal address,
     registration date and ownership form the user had entered.
     """
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     company = _company(CompanyStatus.pending_verification)
     case_status = VerificationCaseStatus[case_status_name]

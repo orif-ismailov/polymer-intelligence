@@ -48,8 +48,8 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _verified_company(db, tax, phone, **kw):  # noqa: ANN001, ANN202
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     account = make_account(db, phone)
     company = company_service.create_company(db, account, "UZ", tax)
@@ -60,7 +60,7 @@ def _verified_company(db, tax, phone, **kw):  # noqa: ANN001, ANN202
 
 
 def _template(db):  # noqa: ANN001, ANN202
-    from app.models.contracts import ContractTemplate  # noqa: PLC0415
+    from app.domains.contracts.models import ContractTemplate  # noqa: PLC0415
 
     tpl = ContractTemplate(
         code="SUPPLY_TEST",
@@ -77,8 +77,10 @@ def _template(db):  # noqa: ANN001, ANN202
 
 def _patch(monkeypatch):  # noqa: ANN001
     """Stub S3 + WeasyPrint + the E-IMZO adapter for the service under test."""
+    from app.domains.contracts import render as contract_render  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
     from app.integrations.eimzo import EimzoSigner, EimzoVerifyResult  # noqa: PLC0415
-    from app.services import contract_render, contract_service, storage_service  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
 
     monkeypatch.setattr(storage_service, "get_object_text", lambda path: "<p>{{ title }}</p>")
     monkeypatch.setattr(contract_render, "render_contract_pdf", lambda *a, **k: b"%PDF-fake-doc")
@@ -112,8 +114,8 @@ def _pkcs7(challenge: str, tin: str) -> str:
 
 @requires_real_db
 def test_create_requires_both_verified(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import contract_service  # noqa: PLC0415
 
     _patch(monkeypatch)
     with sf() as db:
@@ -128,7 +130,7 @@ def test_create_requires_both_verified(sf, monkeypatch) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_create_invalid_variables_typed(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.services import contract_service  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
 
     _patch(monkeypatch)
     with sf() as db:
@@ -145,7 +147,7 @@ def test_create_invalid_variables_typed(sf, monkeypatch) -> None:  # noqa: ANN00
 
 
 def _make_sent_pending(db, monkeypatch):  # noqa: ANN001, ANN202
-    from app.services import contract_service  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
 
     acc_a, comp_a = _verified_company(db, "301111111", "+998900000001")
     acc_b, comp_b = _verified_company(db, "302222222", "+998900000002")
@@ -158,8 +160,8 @@ def _make_sent_pending(db, monkeypatch):  # noqa: ANN001, ANN202
 
 @requires_real_db
 def test_transition_table_and_illegal(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
-    from app.services import contract_service  # noqa: PLC0415
 
     _patch(monkeypatch)
     with sf() as db:
@@ -172,9 +174,10 @@ def test_transition_table_and_illegal(sf, monkeypatch) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_full_sign_activates(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.services import contract_service, event_types  # noqa: PLC0415
+    from app.services import event_types  # noqa: PLC0415
 
     _patch(monkeypatch)
     with sf() as db:
@@ -212,10 +215,11 @@ def test_concurrent_final_signatures_activate_exactly_once(sf, monkeypatch) -> N
     """
     import threading  # noqa: PLC0415
 
-    from app.models.contracts import Contract  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
+    from app.domains.contracts.models import Contract  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.services import contract_service, event_types  # noqa: PLC0415
+    from app.services import event_types  # noqa: PLC0415
 
     _patch(monkeypatch)
     with sf() as db:
@@ -233,8 +237,8 @@ def test_concurrent_final_signatures_activate_exactly_once(sf, monkeypatch) -> N
     errors: list[BaseException] = []
 
     def _sign(company_id: int, account_id: int, tax: str, challenge: str) -> None:
-        from app.models.accounts import UserAccount  # noqa: PLC0415
-        from app.models.companies import Company  # noqa: PLC0415
+        from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+        from app.domains.companies.models import Company  # noqa: PLC0415
 
         try:
             with sf() as s:
@@ -275,8 +279,8 @@ def test_concurrent_final_signatures_activate_exactly_once(sf, monkeypatch) -> N
 
 @requires_real_db
 def test_sign_inn_mismatch_rejected(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.services import contract_service  # noqa: PLC0415
-    from app.services.eimzo_service import CertCompanyMismatch  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
+    from app.domains.contracts.eimzo import CertCompanyMismatch  # noqa: PLC0415
 
     _patch(monkeypatch)
     with sf() as db:
@@ -289,7 +293,7 @@ def test_sign_inn_mismatch_rejected(sf, monkeypatch) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_rerender_invalidates_challenge(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.services import contract_service  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
 
     _patch(monkeypatch)
     with sf() as db:
@@ -305,7 +309,7 @@ def test_rerender_invalidates_challenge(sf, monkeypatch) -> None:  # noqa: ANN00
 
 @requires_real_db
 def test_cancel_blocked_after_signature(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.services import contract_service  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
 
     _patch(monkeypatch)
     with sf() as db:

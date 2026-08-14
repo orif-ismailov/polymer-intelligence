@@ -52,9 +52,9 @@ def _verified(db, tax, phone):  # noqa: ANN001, ANN202
 
 
 def _signed_deal(db, *, amount=decimal.Decimal("25000.00")):  # noqa: ANN001, ANN202
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     buyer_acc, buyer = _verified(db, "301111111", "+998900000001")
     seller_acc, seller = _verified(db, "302222222", "+998900000002")
@@ -96,9 +96,9 @@ def _fire(deal_id: int, to_status: str = "contract_signed") -> dict:
 def test_signing_a_contract_raises_the_escrow_by_itself(sf) -> None:  # noqa: ANN001
     """The DoD line: nobody calls escrow — the deal reaches payment_pending with
     a pending payment against it because the status event fired."""
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
 
     with sf() as db:
         deal = _signed_deal(db)
@@ -117,7 +117,7 @@ def test_signing_a_contract_raises_the_escrow_by_itself(sf) -> None:  # noqa: AN
 
 @requires_real_db
 def test_redelivery_does_not_open_a_second_escrow(sf) -> None:  # noqa: ANN001
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
 
     with sf() as db:
         deal = _signed_deal(db)
@@ -137,7 +137,7 @@ def test_other_status_changes_are_ignored(sf) -> None:  # noqa: ANN001
     """Every transition emits DEAL_STATUS_CHANGED and the dispatcher routes by
     type alone, so the consumer filters on the payload — anything but
     contract_signed must not raise an invoice."""
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
 
     with sf() as db:
         deal = _signed_deal(db)
@@ -155,9 +155,9 @@ def test_other_status_changes_are_ignored(sf) -> None:  # noqa: ANN001
 def test_a_deal_with_no_amount_is_reported_not_crashed(sf) -> None:  # noqa: ANN001
     """A consumer that raises keeps its event unpublished and has the dispatcher
     retry it forever. This one records the blockage and returns."""
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
 
     with sf() as db:
         deal = _signed_deal(db, amount=None)

@@ -111,11 +111,11 @@ class TestAddNote:
 
     def test_add_note_writes_audit(self):
         """add_note calls write_audit with action='request.add_note'."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
 
-        with patch("app.services.request_service.write_audit") as mock_audit:
+        with patch("app.domains.requests.service.write_audit") as mock_audit:
             request_service.add_note(db, request_id=42, note_text="Test note", staff_user_id=1)
 
             mock_audit.assert_called_once()
@@ -124,22 +124,22 @@ class TestAddNote:
 
     def test_add_note_never_commits(self):
         """add_note never calls db.commit()."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
 
-        with patch("app.services.request_service.write_audit"):
+        with patch("app.domains.requests.service.write_audit"):
             request_service.add_note(db, request_id=42, note_text="Test note", staff_user_id=1)
 
         db.commit.assert_not_called()
 
     def test_add_note_calls_write_audit(self):
         """add_note delegates to write_audit (which internally calls db.flush)."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
 
-        with patch("app.services.request_service.write_audit") as mock_audit:
+        with patch("app.domains.requests.service.write_audit") as mock_audit:
             request_service.add_note(db, request_id=42, note_text="Note", staff_user_id=1)
 
         # write_audit must have been called — it owns db.flush internally
@@ -151,24 +151,24 @@ class TestAssignOwner:
 
     def test_assign_owner_sets_assigned_to(self):
         """assign_owner sets request.assigned_to = staff_user_id."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request()
 
-        with patch("app.services.request_service.write_audit"):
+        with patch("app.domains.requests.service.write_audit"):
             request_service.assign_owner(db, request=req, staff_user_id=5, changed_by=1)
 
         assert req.assigned_to == 5
 
     def test_assign_owner_writes_audit(self):
         """assign_owner calls write_audit with action='request.assign_owner'."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request()
 
-        with patch("app.services.request_service.write_audit") as mock_audit:
+        with patch("app.domains.requests.service.write_audit") as mock_audit:
             request_service.assign_owner(db, request=req, staff_user_id=5, changed_by=1)
 
             mock_audit.assert_called_once()
@@ -177,12 +177,12 @@ class TestAssignOwner:
 
     def test_assign_owner_never_commits(self):
         """assign_owner never calls db.commit()."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request()
 
-        with patch("app.services.request_service.write_audit"):
+        with patch("app.domains.requests.service.write_audit"):
             request_service.assign_owner(db, request=req, staff_user_id=5, changed_by=1)
 
         db.commit.assert_not_called()
@@ -193,14 +193,14 @@ class TestLogContactBuyer:
 
     def test_log_contact_buyer_transitions_from_new_to_in_progress(self):
         """From 'new' status, log_contact_buyer calls transition_status -> in_progress."""
+        from app.domains.requests import service as request_service  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services import request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request(status_val="new")
 
-        with patch("app.services.request_service.transition_status") as mock_transition, \
-             patch("app.services.request_service.write_audit"):
+        with patch("app.domains.requests.service.transition_status") as mock_transition, \
+             patch("app.domains.requests.service.write_audit"):
             request_service.log_contact_buyer(db, request=req, staff_user_id=1)
 
             mock_transition.assert_called_once()
@@ -210,12 +210,12 @@ class TestLogContactBuyer:
 
     def test_log_contact_buyer_writes_audit(self):
         """log_contact_buyer calls write_audit with action='request.contact_buyer'."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request(status_val="in_progress")  # already in_progress, skip transition
 
-        with patch("app.services.request_service.write_audit") as mock_audit:
+        with patch("app.domains.requests.service.write_audit") as mock_audit:
             request_service.log_contact_buyer(db, request=req, staff_user_id=1)
 
             mock_audit.assert_called_once()
@@ -224,12 +224,12 @@ class TestLogContactBuyer:
 
     def test_log_contact_buyer_never_commits(self):
         """log_contact_buyer never calls db.commit()."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request(status_val="in_progress")
 
-        with patch("app.services.request_service.write_audit"):
+        with patch("app.domains.requests.service.write_audit"):
             request_service.log_contact_buyer(db, request=req, staff_user_id=1)
 
         db.commit.assert_not_called()
@@ -314,8 +314,8 @@ class TestGetRequestDetail:
         app.dependency_overrides[get_db] = override_db
         client = TestClient(app, raise_server_exceptions=False)
 
-        with patch("app.services.request_service.transition_status") as mock_transition, \
-             patch("app.services.price_analysis_service.compute_price_analysis", return_value=None), \
+        with patch("app.domains.requests.service.transition_status") as mock_transition, \
+             patch("app.domains.pricing.analysis.compute_price_analysis", return_value=None), \
              patch("app.tasks.notify.send_status_change_notification", create=True) as mock_notify:
             mock_notify.apply_async = MagicMock()
             mock_transition.return_value = req
@@ -438,13 +438,13 @@ class TestAuditTrail:
 
     def test_status_change_writes_audit(self):
         """transition_status with changed_by calls write_audit (tested via service)."""
+        from app.domains.requests.service import transition_status  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import transition_status  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request(status_val="in_progress")
 
-        with patch("app.services.request_service.write_audit") as mock_audit, \
+        with patch("app.domains.requests.service.write_audit") as mock_audit, \
              patch("app.tasks.notify.send_status_change_notification", create=True) as mock_notify:
             mock_notify.apply_async = MagicMock()
             transition_status(db=db, request=req, to_status=RequestStatus.offer_sent, changed_by=1)
@@ -453,11 +453,11 @@ class TestAuditTrail:
 
     def test_add_note_writes_audit(self):
         """add_note calls write_audit with action='request.add_note'."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
 
-        with patch("app.services.request_service.write_audit") as mock_audit:
+        with patch("app.domains.requests.service.write_audit") as mock_audit:
             request_service.add_note(db, request_id=42, note_text="A note", staff_user_id=1)
 
             mock_audit.assert_called_once()
@@ -466,12 +466,12 @@ class TestAuditTrail:
 
     def test_assign_owner_writes_audit(self):
         """assign_owner calls write_audit with action='request.assign_owner'."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request()
 
-        with patch("app.services.request_service.write_audit") as mock_audit:
+        with patch("app.domains.requests.service.write_audit") as mock_audit:
             request_service.assign_owner(db, request=req, staff_user_id=5, changed_by=1)
 
             mock_audit.assert_called_once()
@@ -480,12 +480,12 @@ class TestAuditTrail:
 
     def test_contact_buyer_writes_audit(self):
         """log_contact_buyer calls write_audit with action='request.contact_buyer'."""
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         db = _make_mock_db()
         req = _make_mock_request(status_val="in_progress")
 
-        with patch("app.services.request_service.write_audit") as mock_audit:
+        with patch("app.domains.requests.service.write_audit") as mock_audit:
             request_service.log_contact_buyer(db, request=req, staff_user_id=1)
 
             mock_audit.assert_called_once()

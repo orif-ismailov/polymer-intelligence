@@ -12,7 +12,7 @@ import decimal
 
 
 def _seller(company_name: str = "Chem Trade LLC", is_verified: bool = True):  # noqa: ANN202
-    from app.models.marketplace import Seller  # noqa: PLC0415
+    from app.domains.marketplace.models import Seller  # noqa: PLC0415
 
     seller = Seller(company_name=company_name, is_verified=is_verified)
     seller.id = 5
@@ -20,7 +20,7 @@ def _seller(company_name: str = "Chem Trade LLC", is_verified: bool = True):  # 
 
 
 def _company(short_name=None, legal_name="OOO Long Name", status="verified"):  # noqa: ANN001, ANN202
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     company = Company(
@@ -32,8 +32,8 @@ def _company(short_name=None, legal_name="OOO Long Name", status="verified"):  #
 
 
 def _offer(**kw):  # noqa: ANN003, ANN202
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import OfferAvailability, PriceBasis, SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
 
     offer = SellerOffer(
         product_id=2, grade_text="HDPE 5502", availability=OfferAvailability.in_stock,
@@ -80,7 +80,7 @@ def test_company_origin_unverified_badge_is_false() -> None:
 
 
 def test_catalog_seller_origin_keeps_seller_block_and_adds_fields() -> None:
-    from app.schemas.marketplace import CatalogOfferOut  # noqa: PLC0415
+    from app.domains.marketplace.schemas import CatalogOfferOut  # noqa: PLC0415
 
     offer = _offer(seller_id=5, seller=_seller(), company_id=None, company=None)
     out = CatalogOfferOut.model_validate(offer).model_dump()
@@ -96,7 +96,7 @@ def test_catalog_seller_origin_keeps_seller_block_and_adds_fields() -> None:
 
 
 def test_catalog_company_origin_has_no_seller_block() -> None:
-    from app.schemas.marketplace import CatalogOfferOut  # noqa: PLC0415
+    from app.domains.marketplace.schemas import CatalogOfferOut  # noqa: PLC0415
 
     offer = _offer(company_id=9, company=_company(short_name="ShortCo"), seller_id=None, seller=None)
     out = CatalogOfferOut.model_validate(offer).model_dump()
@@ -108,7 +108,7 @@ def test_catalog_company_origin_has_no_seller_block() -> None:
 
 
 def test_moderation_serialization_dual_origin() -> None:
-    from app.schemas.marketplace import ModerationOfferOut  # noqa: PLC0415
+    from app.domains.marketplace.schemas import ModerationOfferOut  # noqa: PLC0415
 
     seller_offer = _offer(seller_id=5, seller=_seller(), company_id=None, company=None)
     seller_offer.created_at = __import__("datetime").datetime(2026, 1, 1)

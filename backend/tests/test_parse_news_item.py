@@ -49,10 +49,10 @@ def _raw_item(content: str = "Shurtan raised PP prices today.") -> MagicMock:
 
 class TestCreateNewsSignal:
     def test_maps_article_to_news_signal(self) -> None:
+        from app.domains.news.service import create_news_signal_from_article
         from app.models.enums import SignalKind
-        from app.services.news_service import create_news_signal_from_article
 
-        with patch("app.services.news_service.match_product", return_value=7):
+        with patch("app.domains.news.service.match_product", return_value=7):
             sig = create_news_signal_from_article(
                 MagicMock(), _raw_item(), _article(), {"model": "haiku", "prompt_version": "v1"},
                 needs_review=False,
@@ -71,7 +71,7 @@ class TestCreateNewsSignal:
 
     def test_stores_analysis_recommendation_and_i18n(self) -> None:
         """Phase 8b/8f: the news block carries analysis/recommendation/language + ru/uz/en."""
-        from app.services.news_service import create_news_signal_from_article
+        from app.domains.news.service import create_news_signal_from_article
         from parsing.news_schemas import NewsI18n, NewsLocalized
 
         article = _article(
@@ -84,7 +84,7 @@ class TestCreateNewsSignal:
                 uz=NewsLocalized(headline="Shurtan PP narxini oshirdi"),
             ),
         )
-        with patch("app.services.news_service.match_product", return_value=None):
+        with patch("app.domains.news.service.match_product", return_value=None):
             sig = create_news_signal_from_article(
                 MagicMock(), _raw_item(), article, {"model": "haiku", "prompt_version": "v2"},
                 needs_review=False,
@@ -121,7 +121,7 @@ class TestParseNewsItem:
             patch("app.tasks.parse.record_actual_tokens"),
             patch("app.tasks.parse.news_extract_signal", return_value=(_article(), {"parser": "news_extract_tools", "model": "haiku"})),
             patch("app.tasks.parse.write_parse_run"),
-            patch("app.services.news_service.create_news_signal_from_article") as mock_create,
+            patch("app.domains.news.service.create_news_signal_from_article") as mock_create,
         ):
             _patch_session(mock_gs, raw_item)
             mock_create.return_value = MagicMock(id=1)
@@ -141,7 +141,7 @@ class TestParseNewsItem:
             patch("app.tasks.parse.get_session") as mock_gs,
             patch("app.tasks.parse.check_and_reserve_tokens", side_effect=BudgetExceeded("no budget")),
             patch("app.tasks.parse.write_parse_run"),
-            patch("app.services.news_service.create_news_signal_from_article") as mock_create,
+            patch("app.domains.news.service.create_news_signal_from_article") as mock_create,
         ):
             _patch_session(mock_gs, raw_item)
             result = parse_news_item(501)
@@ -160,7 +160,7 @@ class TestParseNewsItem:
             patch("app.tasks.parse.record_actual_tokens"),
             patch("app.tasks.parse.news_extract_signal", return_value=(_article(is_relevant=False), {})),
             patch("app.tasks.parse.write_parse_run"),
-            patch("app.services.news_service.create_news_signal_from_article") as mock_create,
+            patch("app.domains.news.service.create_news_signal_from_article") as mock_create,
         ):
             session = _patch_session(mock_gs, raw_item)
             result = parse_news_item(501)

@@ -51,8 +51,8 @@ def fetch_cbu_rates() -> dict[str, Any]:
     import asyncio  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.pricing.fx import upsert_fx_rates  # noqa: PLC0415
     from app.ingest.cbu_rates.adapter import CbuRatesAdapter  # noqa: PLC0415
-    from app.services.fx_service import upsert_fx_rates  # noqa: PLC0415
 
     logger.info("fetch_cbu_rates.start")
     now = datetime.datetime.now(tz=datetime.UTC)
@@ -94,7 +94,7 @@ def fetch_cbu_rates() -> dict[str, Any]:
     try:
         with Session(engine) as session:
             if source_id is not None:
-                from app.models.sources import Source  # noqa: PLC0415
+                from app.domains.signals.source_models import Source  # noqa: PLC0415
 
                 source_obj = session.get(Source, source_id)
                 if source_obj is not None:

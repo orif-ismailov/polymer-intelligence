@@ -85,7 +85,7 @@ class TestFeedSSE:
         client = _make_sse_client()
 
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
             resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
 
         assert resp.status_code == 200, resp.text
@@ -99,7 +99,7 @@ class TestFeedSSE:
         client = _make_sse_client()
 
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
             resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
 
         assert resp.status_code == 200, resp.text
@@ -113,7 +113,7 @@ class TestFeedSSE:
         client = _make_sse_client()
 
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
             resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
 
         assert resp.status_code == 200, resp.text
@@ -126,11 +126,65 @@ class TestFeedSSE:
         client = _make_sse_client()
 
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
             resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
 
         body = resp.text
         assert "signal:42" in body, f"Expected 'signal:42' in SSE body, got: {body!r}"
+
+    def test_sse_returns_no_cache_header(self) -> None:
+        """GET /feed/stream returns Cache-Control: no-cache.
+
+        Set by FastAPI's SSE layer rather than by our handler, which is exactly
+        why it is asserted here: the route no longer names it, so nothing else
+        would notice if an upgrade stopped emitting it and a proxy began caching
+        a stream that must never be cached.
+        """
+        client = _make_sse_client()
+
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+            resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
+
+        assert "no-cache" in resp.headers.get("cache-control", "").lower()
+
+    def test_sse_emits_keepalive_while_idle(self) -> None:
+        """An idle stream emits a comment frame instead of going silent.
+
+        This is the behaviour the endpoint was switched to `EventSourceResponse`
+        for. A feed with no traffic used to send nothing at all, so nginx's
+        `proxy_read_timeout 60s` closed it and every open dashboard tab silently
+        reconnected once a minute — paying a JWT decode, a StaffUser load and a
+        new Redis connection each time. It reproduces only behind nginx, so a
+        test is the only place it is cheaply observable.
+
+        `_PING_INTERVAL` is documented in `fastapi/sse.py` as private-but-
+        importable precisely so tests can shorten it.
+        """
+        client = _make_sse_client()
+
+        async def _idle_then_stop() -> Any:
+            """Idle long enough for one ping, then end the stream."""
+            import anyio  # noqa: PLC0415
+
+            await anyio.sleep(0.05)
+            yield "signal:7"
+
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             patch("fastapi.routing._PING_INTERVAL", 0.01), \
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_idle_then_stop()):
+            resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
+
+        assert resp.status_code == 200, resp.text
+        # A comment frame is a line starting with ':' — invisible to EventSource
+        # consumers but enough to keep the connection alive through a proxy.
+        # Match the line exactly: a substring check for ":" also matches
+        # "data: signal:7" and would pass on a stream with no keep-alive at all.
+        lines = resp.text.split("\n")
+        assert any(ln.startswith(": ") for ln in lines), (
+            f"expected a keep-alive comment frame in an idle stream, got: {resp.text!r}"
+        )
+        assert "data: signal:7" in resp.text  # and the real event still arrives
 
 
 # ── GET /api/v1/feed/stream — 401 without token ───────────────────────────────

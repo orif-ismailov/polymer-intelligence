@@ -44,7 +44,7 @@ ALL_STATUSES = list(EXPECTED)
 
 
 def _samples():  # noqa: ANN202
-    from app.services import sample_service  # noqa: PLC0415
+    from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
 
     return sample_service
 

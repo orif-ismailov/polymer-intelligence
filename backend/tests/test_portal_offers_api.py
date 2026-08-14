@@ -24,7 +24,7 @@ _BASE = "/api/v1/portal/companies"
 
 
 def test_offer_routes_registered() -> None:
-    from app.api.portal.offers import router  # noqa: PLC0415
+    from app.domains.marketplace.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/offers" in paths
@@ -76,8 +76,8 @@ def _auth(account_id: int) -> dict[str, str]:
 
 
 def _company(session, phone: str, tax: str, *, verified: bool):  # noqa: ANN001, ANN202
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole, CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     with session() as db:
         account = make_account(db, phone)
@@ -122,8 +122,8 @@ def test_unverified_company_offer_is_403_typed(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_edit_approved_offer_requeues_to_moderation(api) -> None:  # noqa: ANN001
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
 
     client, session = api
     account_id, company_id = _company(session, "+998900000001", "123456789", verified=True)

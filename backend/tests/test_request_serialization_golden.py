@@ -39,13 +39,13 @@ def _build_canonical_tg_request() -> Any:
     Fixed ids / datetimes / decimals so the serialization is reproducible; the
     frozen shape is pinned by the golden fixture.
     """
-    from app.models.enums import PriceBasis, RequestStatus, Urgency  # noqa: PLC0415
-    from app.models.requests import (  # noqa: PLC0415
+    from app.domains.requests.models import (  # noqa: PLC0415
         Client,
         Request,
         RequestFile,
         RequestStatusHistory,
     )
+    from app.models.enums import PriceBasis, RequestStatus, Urgency  # noqa: PLC0415
 
     client = Client(
         id=42,
@@ -117,7 +117,7 @@ def _build_canonical_tg_request() -> Any:
 
 def _serialize_like_get_request(req: Any) -> dict:
     """Reproduce exactly what GET /webapp/requests/{id} builds + returns."""
-    from app.schemas.webapp import RequestDetailOut  # noqa: PLC0415
+    from app.domains.requests.webapp_schemas import RequestDetailOut  # noqa: PLC0415
 
     history = sorted(req.status_history, key=lambda h: h.created_at)
     detail = RequestDetailOut(
@@ -154,24 +154,24 @@ class TestStatusMachineAudit:
     """T1.2: the machines/maps are unchanged and reusable by the portal."""
 
     def test_client_status_map_covers_every_request_status(self) -> None:
+        from app.domains.requests.service import CLIENT_STATUS_MAP  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import CLIENT_STATUS_MAP  # noqa: PLC0415
 
         # Reuse (don't fork) requires CLIENT_STATUS_MAP be total over RequestStatus.
         assert set(CLIENT_STATUS_MAP) == set(RequestStatus)
 
     def test_valid_transitions_declared_for_every_status(self) -> None:
+        from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import VALID_TRANSITIONS  # noqa: PLC0415
 
         assert set(VALID_TRANSITIONS) == set(RequestStatus)
 
     def test_client_facing_status_resolves_every_status(self) -> None:
-        from app.models.enums import RequestStatus  # noqa: PLC0415
-        from app.services.request_service import (  # noqa: PLC0415
+        from app.domains.requests.service import (  # noqa: PLC0415
             CLIENT_STATUS_MAP,
             client_facing_status,
         )
+        from app.models.enums import RequestStatus  # noqa: PLC0415
 
         for status in RequestStatus:
             assert client_facing_status(status) == CLIENT_STATUS_MAP[status]

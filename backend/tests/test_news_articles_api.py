@@ -49,7 +49,7 @@ _CARD = {
 
 class TestNewsArticlesApi:
     def test_list_articles_returns_cards(self) -> None:
-        with patch("app.services.news_service.list_news_articles", return_value=[_CARD]) as mock_list:
+        with patch("app.domains.news.service.list_news_articles", return_value=[_CARD]) as mock_list:
             resp = _client().get("/api/v1/webapp/news/articles")
         assert resp.status_code == 200, resp.text
         body = resp.json()
@@ -65,7 +65,7 @@ class TestNewsArticlesApi:
 
     def test_list_articles_forwards_filters(self) -> None:
         """Search/scope/sort/facet query params reach the service verbatim."""
-        with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+        with patch("app.domains.news.service.list_news_articles", return_value=[]) as mock_list:
             resp = _client().get(
                 "/api/v1/webapp/news/articles",
                 params={
@@ -85,7 +85,7 @@ class TestNewsArticlesApi:
 
     def test_scope_all_becomes_no_filter(self) -> None:
         """scope=all is the unfiltered default — the service receives scope=None."""
-        with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+        with patch("app.domains.news.service.list_news_articles", return_value=[]) as mock_list:
             resp = _client().get("/api/v1/webapp/news/articles", params={"scope": "all"})
         assert resp.status_code == 200
         assert mock_list.call_args.kwargs["scope"] is None
@@ -101,7 +101,7 @@ class TestNewsArticlesApi:
             "companies": [{"value": "Shurtan GCC", "count": 3}],
             "products": [{"value": "PP", "count": 6}],
         }
-        with patch("app.services.news_service.list_news_filter_options", return_value=options) as mock_opts:
+        with patch("app.domains.news.service.list_news_filter_options", return_value=options) as mock_opts:
             resp = _client().get("/api/v1/webapp/news/articles/filters")
         assert resp.status_code == 200, resp.text
         body = resp.json()
@@ -111,8 +111,8 @@ class TestNewsArticlesApi:
 
     def test_filters_route_not_swallowed_by_article_id(self) -> None:
         """/articles/filters resolves to the facets route, not GET /articles/{id}."""
-        with patch("app.services.news_service.list_news_filter_options", return_value={}) as mock_opts, \
-             patch("app.services.news_service.get_news_article") as mock_get:
+        with patch("app.domains.news.service.list_news_filter_options", return_value={}) as mock_opts, \
+             patch("app.domains.news.service.get_news_article") as mock_get:
             resp = _client().get("/api/v1/webapp/news/articles/filters")
         assert resp.status_code == 200
         mock_opts.assert_called_once()
@@ -120,8 +120,8 @@ class TestNewsArticlesApi:
 
     def test_articles_route_not_swallowed_by_report_id(self) -> None:
         """The /articles path resolves to list_articles, not GET /{report_id}."""
-        with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list, \
-             patch("app.services.report_service.get_published") as mock_report:
+        with patch("app.domains.news.service.list_news_articles", return_value=[]) as mock_list, \
+             patch("app.domains.news.reports.get_published") as mock_report:
             resp = _client().get("/api/v1/webapp/news/articles")
         assert resp.status_code == 200
         mock_list.assert_called_once()
@@ -138,7 +138,7 @@ class TestNewsArticlesApi:
                 {"id": 42, "name": "PetroTG", "published_at": "2026-07-18T08:00:00+00:00"},
             ],
         }
-        with patch("app.services.news_service.list_news_articles", return_value=[merged]):
+        with patch("app.domains.news.service.list_news_articles", return_value=[merged]):
             resp = _client().get("/api/v1/webapp/news/articles")
         assert resp.status_code == 200, resp.text
         body = resp.json()[0]
@@ -147,7 +147,7 @@ class TestNewsArticlesApi:
 
     def test_get_article_detail(self) -> None:
         detail = {**_CARD, "body": "Полный текст новости…", "source_url": "https://t.me/petro/1"}
-        with patch("app.services.news_service.get_news_article", return_value=detail):
+        with patch("app.domains.news.service.get_news_article", return_value=detail):
             resp = _client().get("/api/v1/webapp/news/articles/42")
         assert resp.status_code == 200, resp.text
         body = resp.json()
@@ -155,7 +155,7 @@ class TestNewsArticlesApi:
         assert body["body"].startswith("Полный текст")
 
     def test_get_article_404(self) -> None:
-        with patch("app.services.news_service.get_news_article", return_value=None):
+        with patch("app.domains.news.service.get_news_article", return_value=None):
             resp = _client().get("/api/v1/webapp/news/articles/999")
         assert resp.status_code == 404
 
@@ -164,7 +164,7 @@ class TestArticleCardMapping:
     def test_article_card_reads_ai_news_block(self) -> None:
         import datetime  # noqa: PLC0415
 
-        from app.services.news_service import _article_card  # noqa: PLC0415
+        from app.domains.news.service import _article_card  # noqa: PLC0415
 
         row = {
             "id": 7,
@@ -197,7 +197,7 @@ class TestNewsFilterSql:
     """The WHERE-clause builder keeps every user value in bound params (injection-safe)."""
 
     def test_no_filters_is_empty(self) -> None:
-        from app.services.news_service import _news_filter_sql  # noqa: PLC0415
+        from app.domains.news.service import _news_filter_sql  # noqa: PLC0415
 
         clauses, params = _news_filter_sql(
             q=None, scope=None, category=None, country=None,
@@ -207,7 +207,7 @@ class TestNewsFilterSql:
         assert params == {}
 
     def test_search_binds_wildcarded_param(self) -> None:
-        from app.services.news_service import _news_filter_sql  # noqa: PLC0415
+        from app.domains.news.service import _news_filter_sql  # noqa: PLC0415
 
         clauses, params = _news_filter_sql(
             q="shurtan", scope=None, category=None, country=None,
@@ -218,7 +218,7 @@ class TestNewsFilterSql:
         assert "shurtan" not in " ".join(clauses)  # value never inlined into SQL
 
     def test_scope_producers_uses_static_category_list(self) -> None:
-        from app.services.news_service import _news_filter_sql  # noqa: PLC0415
+        from app.domains.news.service import _news_filter_sql  # noqa: PLC0415
 
         clauses, params = _news_filter_sql(
             q=None, scope="producers", category=None, country=None,
@@ -228,7 +228,7 @@ class TestNewsFilterSql:
         assert "plant_shutdown" in clauses[0]
 
     def test_all_facets_bind(self) -> None:
-        from app.services.news_service import _news_filter_sql  # noqa: PLC0415
+        from app.domains.news.service import _news_filter_sql  # noqa: PLC0415
 
         _, params = _news_filter_sql(
             q=None, scope="global", category="oil", country="UZ",
@@ -250,26 +250,26 @@ class TestSortCards:
         ]
 
     def test_default_keeps_sql_order(self) -> None:
-        from app.services.news_service import _sort_cards  # noqa: PLC0415
+        from app.domains.news.service import _sort_cards  # noqa: PLC0415
 
         cards = self._cards()
         assert _sort_cards(cards, None) == cards
         assert _sort_cards(cards, "importance") == cards
 
     def test_newest_orders_by_published_desc(self) -> None:
-        from app.services.news_service import _sort_cards  # noqa: PLC0415
+        from app.domains.news.service import _sort_cards  # noqa: PLC0415
 
         out = _sort_cards(self._cards(), "newest")
         assert [c["published_at"] for c in out] == ["2026-07-20", "2026-07-18"]
 
     def test_category_sorts_alphabetically(self) -> None:
-        from app.services.news_service import _sort_cards  # noqa: PLC0415
+        from app.domains.news.service import _sort_cards  # noqa: PLC0415
 
         out = _sort_cards(self._cards(), "category")
         assert [c["category"] for c in out] == ["abs", "oil"]
 
     def test_company_sorts_by_first_company(self) -> None:
-        from app.services.news_service import _sort_cards  # noqa: PLC0415
+        from app.domains.news.service import _sort_cards  # noqa: PLC0415
 
         out = _sort_cards(self._cards(), "company")
         assert [c["companies"] for c in out] == [["Alpha"], ["Zeta"]]
@@ -288,7 +288,7 @@ class TestLocalize:
         }
 
     def test_localizes_all_present_fields(self) -> None:
-        from app.services.news_service import _localize  # noqa: PLC0415
+        from app.domains.news.service import _localize  # noqa: PLC0415
 
         out = _localize(self._card(), "uz")
         assert out["headline"] == "Shurtan PP liniyasini to'xtatdi"
@@ -296,14 +296,14 @@ class TestLocalize:
         assert out["recommendation"] == "UZ tavsiya"
 
     def test_missing_fields_fall_back_to_canonical(self) -> None:
-        from app.services.news_service import _localize  # noqa: PLC0415
+        from app.domains.news.service import _localize  # noqa: PLC0415
 
         out = _localize(self._card(), "ru")
         assert out["headline"] == "Shurtan остановил PP"
         assert out["summary"] == "EN summary"  # ru variant had no summary → canonical
 
     def test_no_lang_or_missing_lang_is_noop(self) -> None:
-        from app.services.news_service import _localize  # noqa: PLC0415
+        from app.domains.news.service import _localize  # noqa: PLC0415
 
         assert _localize(self._card(), None)["headline"] == "Shurtan halts PP line"
         assert _localize(self._card(), "fa")["headline"] == "Shurtan halts PP line"

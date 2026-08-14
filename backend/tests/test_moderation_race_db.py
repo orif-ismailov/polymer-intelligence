@@ -83,9 +83,9 @@ def _pending_offer(db: Session):  # noqa: ANN202
 
 def test_concurrent_approve_and_reject_leaves_one_coherent_row(engine: sa.Engine, db: Session) -> None:
     """Two moderators, two sessions, one pending offer: exactly one decision lands."""
+    from app.domains.marketplace import service as offer_service  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
-    from app.services import offer_service  # noqa: PLC0415
 
     staff = make_staff(db, email="race@example.com")
     staff_id = staff.id
@@ -125,9 +125,9 @@ def test_concurrent_approve_and_reject_leaves_one_coherent_row(engine: sa.Engine
 
 def test_a_second_decision_on_a_settled_offer_is_refused(engine: sa.Engine, db: Session) -> None:
     """Not just concurrency — a retry minutes later must not re-decide either."""
+    from app.domains.marketplace import service as offer_service  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
-    from app.services import offer_service  # noqa: PLC0415
 
     staff = make_staff(db, email="retry@example.com")
     offer = _pending_offer(db)
@@ -196,9 +196,9 @@ def test_api_returns_409_when_the_offer_already_left_the_queue(
 
 def test_offer_request_second_decision_is_refused(db: Session) -> None:
     """The inquiry queue shares the offer queue's shape — and now its guard."""
+    from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
     from app.models.enums import OfferRequestStatus, SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
-    from app.services import offer_request_service  # noqa: PLC0415
 
     staff = make_staff(db, email="inq@example.com")
     account, company = _verified_company(db)

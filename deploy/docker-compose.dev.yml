@@ -117,7 +117,7 @@ services:
     # writing bytecode into /app makes the watcher restart uvicorn mid-migration.
     # The lifespan hook (RUN_MIGRATIONS_ON_STARTUP, default false) stays available
     # for prod/no-reload.
-    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_contract_templates && python -m app.seed.seed_substances && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "python -m app.entrypoint && python -m app.seed.seed_reference && python -m app.seed.seed_staff && python -m app.seed.seed_contract_templates && python -m app.seed.seed_substances && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --no-proxy-headers"
     volumes:
       - ../backend:/app  # live reload in dev
     healthcheck:
@@ -147,7 +147,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ingest,parse,notify,default,verify
+    # Pinned for the same reason as prod (see docker-compose.yml): Celery's
+    # default is one process per core, and each one opens its own DB pool, so on
+    # a developer machine with many cores the pool ceiling scales with the laptop.
+    # The api here runs --reload (single process), so dev needs no max_connections bump.
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-4} -Q ingest,parse,notify,default,verify
     volumes:
       - ../backend:/app
 

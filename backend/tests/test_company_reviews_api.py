@@ -28,7 +28,7 @@ _PUBLIC = "/api/v1/public"
 
 
 def test_review_route_registered() -> None:
-    from app.api.portal.companies import router  # noqa: PLC0415
+    from app.domains.companies.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/reviews" in paths
@@ -40,7 +40,7 @@ def test_public_review_never_names_the_person() -> None:
     `author_account_id` is on the row for audit. Serialising it would both
     misattribute the opinion and make every reviewer's identity scrapable.
     """
-    from app.schemas.public import PublicReviewOut  # noqa: PLC0415
+    from app.domains.storefront.schemas import PublicReviewOut  # noqa: PLC0415
 
     fields = set(PublicReviewOut.model_fields)
     assert "author_account_id" not in fields
@@ -98,7 +98,7 @@ def _auth(account_id: int) -> dict[str, str]:
 
 
 def _verified(db, owner, tax_id: str, name: str, *, role=None):  # noqa: ANN001, ANN202
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, CompanyStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 
@@ -274,8 +274,8 @@ def test_review_requires_membership_and_a_session(api) -> None:  # noqa: ANN001
 @requires_real_db
 def test_hidden_reviews_leave_the_aggregate_and_the_list(api) -> None:  # noqa: ANN001
     """`hidden` is the takedown path — and it must move the score, not just the list."""
+    from app.domains.companies.review_models import CompanyReview  # noqa: PLC0415
     from app.models.enums import CompanyReviewStatus  # noqa: PLC0415
-    from app.models.reviews import CompanyReview  # noqa: PLC0415
 
     client, session = api
     with session() as db:

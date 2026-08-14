@@ -59,14 +59,14 @@ def _verified(db, tax, phone):  # noqa: ANN001, ANN202
 
 def _deal_at_contract_signed(db, *, amount=decimal.Decimal("25000.00")):  # noqa: ANN001, ANN202
     """A real deal walked negotiation → contract_pending → contract_signed."""
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     buyer_acc, buyer = _verified(db, "301111111", "+998900000001")
     seller_acc, seller = _verified(db, "302222222", "+998900000002")
     request = make_request(db, company=buyer, account=buyer_acc)
 
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
 
     response = RfqResponse(
         request_id=request.id,
@@ -94,8 +94,8 @@ def _deal_at_contract_signed(db, *, amount=decimal.Decimal("25000.00")):  # noqa
 
 def _walk_to_delivered(db, deal, buyer_acc, seller_acc, buyer, seller):  # noqa: ANN001
     """paid_escrow → shipped (seller) → delivered (buyer), through the real service."""
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     deal_service.transition_by_party(
         db, deal, seller_acc, DealStatus.shipped, company_id=seller.id
@@ -110,8 +110,8 @@ def _walk_to_delivered(db, deal, buyer_acc, seller_acc, buyer, seller):  # noqa:
 
 @requires_real_db
 def test_open_creates_a_pending_payment_and_moves_the_deal(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -129,8 +129,8 @@ def test_open_creates_a_pending_payment_and_moves_the_deal(sf) -> None:  # noqa:
 @requires_real_db
 def test_open_is_idempotent(sf) -> None:  # noqa: ANN001
     """Outbox delivery is at-least-once, so this runs twice in the real world."""
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -145,7 +145,8 @@ def test_open_is_idempotent(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_open_freezes_the_mode_the_setting_had(sf) -> None:  # noqa: ANN001
-    from app.services import escrow_service, settings_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -165,9 +166,9 @@ def test_open_without_an_amount_leaves_the_deal_alone(sf) -> None:  # noqa: ANN0
     """A deal opened from an inquiry may carry no agreed total. Escrow cannot
     invent one, so the deal waits at contract_signed for staff — it must NOT
     advance to payment_pending with no invoice behind it."""
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db, amount=None)
@@ -184,9 +185,10 @@ def test_open_without_an_amount_leaves_the_deal_alone(sf) -> None:  # noqa: ANN0
 
 @requires_real_db
 def test_open_refuses_a_deal_that_has_not_signed_a_contract(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
-    from app.services import deal_service, escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -206,8 +208,8 @@ def test_open_refuses_a_deal_that_has_not_signed_a_contract(sf) -> None:  # noqa
 @requires_real_db
 def test_only_one_payment_row_can_exist_per_deal(sf) -> None:  # noqa: ANN001
     """The DB, not just the service, enforces it — every money lookup goes by deal."""
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -227,8 +229,8 @@ def test_only_one_payment_row_can_exist_per_deal(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_funding_records_who_and_when_and_moves_the_deal(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -251,10 +253,11 @@ def test_funding_records_who_and_when_and_moves_the_deal(sf) -> None:  # noqa: A
 
 @requires_real_db
 def test_marking_writes_the_event_and_the_audit_entry(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
     from app.models.staff import AuditLog  # noqa: PLC0415
-    from app.services import escrow_service, event_types  # noqa: PLC0415
+    from app.services import event_types  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -278,8 +281,8 @@ def test_marking_writes_the_event_and_the_audit_entry(sf) -> None:  # noqa: ANN0
 def test_a_note_is_mandatory(sf) -> None:  # noqa: ANN001
     """The note is the operator's link to the bank record. Without it the row is
     an unfalsifiable claim that money moved."""
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -299,8 +302,8 @@ def test_a_note_is_mandatory(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_an_invalid_escrow_move_is_refused(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -317,8 +320,8 @@ def test_an_invalid_escrow_move_is_refused(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_a_terminal_payment_cannot_be_marked_again(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, buyer, seller_acc, seller = _deal_at_contract_signed(db)
@@ -342,8 +345,8 @@ def test_a_terminal_payment_cannot_be_marked_again(sf) -> None:  # noqa: ANN001
 def test_release_before_delivery_is_refused(sf) -> None:  # noqa: ANN001
     """Paying the seller out before the buyer confirms delivery is the failure
     this whole feature exists to prevent."""
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, buyer, seller_acc, seller = _deal_at_contract_signed(db)
@@ -365,7 +368,7 @@ def test_release_before_delivery_is_refused(sf) -> None:  # noqa: ANN001
         assert deal.status == DealStatus.paid_escrow
 
         # Ship it: still not delivered, still refused.
-        from app.services import deal_service  # noqa: PLC0415
+        from app.domains.deals import service as deal_service  # noqa: PLC0415
 
         deal_service.transition_by_party(
             db, deal, seller_acc, DealStatus.shipped, company_id=seller.id
@@ -381,8 +384,8 @@ def test_release_before_delivery_is_refused(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_release_after_delivery_completes_the_deal(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, buyer, seller_acc, seller = _deal_at_contract_signed(db)
@@ -409,8 +412,8 @@ def test_release_after_delivery_completes_the_deal(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_refund_before_funding_cancels_the_deal(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -436,8 +439,9 @@ def test_refunding_funded_money_requires_a_dispute_first(sf) -> None:  # noqa: A
     """FR-D8 in the money path. Once the money is in escrow the deal cannot just
     be cancelled — staff must dispute it, which makes the refund a recorded
     decision. The refused mark must leave the payment untouched."""
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.services import deal_service, escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, buyer, _seller_acc, _seller = _deal_at_contract_signed(db)
@@ -480,9 +484,9 @@ def test_two_simultaneous_funding_marks_apply_once(sf, engine) -> None:  # noqa:
     """Two operators clicking "funded" at the same moment. The row lock must make
     the second one see `funded` and refuse, or the deal would be transitioned
     twice and the timeline would show a move that never happened."""
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
@@ -520,7 +524,7 @@ def test_two_simultaneous_funding_marks_apply_once(sf, engine) -> None:  # noqa:
     assert outcomes.count("ok") == 1, f"exactly one mark must win, got {outcomes}"
 
     with sf() as db:
-        from app.models.deals import Deal, DealStatusHistory  # noqa: PLC0415
+        from app.domains.deals.models import Deal, DealStatusHistory  # noqa: PLC0415
 
         assert db.get(EscrowPayment, payment_id).status == EscrowStatus.funded
         assert db.get(Deal, deal_id).status == DealStatus.paid_escrow
@@ -540,8 +544,8 @@ def test_two_simultaneous_funding_marks_apply_once(sf, engine) -> None:  # noqa:
 
 @requires_real_db
 def test_a_retried_provider_callback_is_recorded_once(sf) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     with sf() as db:
         first = escrow_service.record_provider_event(
@@ -559,8 +563,8 @@ def test_a_retried_provider_callback_is_recorded_once(sf) -> None:  # noqa: ANN0
 
 @requires_real_db
 def test_a_different_operation_id_is_a_different_row(sf) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     with sf() as db:
         escrow_service.record_provider_event(db, "bank", "op-1", {})
@@ -581,7 +585,7 @@ def test_applying_an_event_from_an_unmapped_provider_is_recorded_and_held(sf) ->
     because silently leaving it unprocessed would grow the inbox forever with no
     trace of why. The full rail is covered in `test_escrow_provider_events_db.py`.
     """
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
 
     with sf() as db:
         event = escrow_service.record_provider_event(db, "bank", "op-9", {"status": "funded"})

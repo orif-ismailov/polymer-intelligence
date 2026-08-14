@@ -78,7 +78,7 @@ def _make_mock_row(
 
 def test_feed_filters_by_needs_review_true():
     """When needs_review=True is passed, SQL query includes the filter param."""
-    from app.api.feed import get_feed  # noqa: PLC0415
+    from app.domains.signals.api_feed import get_feed  # noqa: PLC0415
     from app.schemas.dashboard import FeedPage  # noqa: PLC0415
 
     needs_review_row = _make_mock_row(id_=1, needs_review=True)
@@ -122,7 +122,7 @@ def test_feed_filters_by_needs_review_true():
 
 def test_feed_needs_review_param_is_bound_not_interpolated():
     """SQL must use bound parameters for needs_review (T-05-19 / T-04-02)."""
-    from app.api import feed as feed_module  # noqa: PLC0415
+    from app.domains.signals import api_feed as feed_module  # noqa: PLC0415
 
     captured_sql = []
     captured_params = []
@@ -173,7 +173,7 @@ def test_feed_needs_review_param_is_bound_not_interpolated():
 
 def test_row_to_feed_item_maps_needs_review():
     """_row_to_feed_item correctly maps the needs_review field from a row."""
-    from app.api.feed import _row_to_feed_item  # noqa: PLC0415
+    from app.domains.signals.api_feed import _row_to_feed_item  # noqa: PLC0415
 
     row = _make_mock_row(needs_review=True)
     item = _row_to_feed_item(row)
@@ -183,7 +183,7 @@ def test_row_to_feed_item_maps_needs_review():
 
 def test_row_to_feed_item_needs_review_false():
     """_row_to_feed_item maps needs_review=False correctly."""
-    from app.api.feed import _row_to_feed_item  # noqa: PLC0415
+    from app.domains.signals.api_feed import _row_to_feed_item  # noqa: PLC0415
 
     row = _make_mock_row(needs_review=False)
     item = _row_to_feed_item(row)
@@ -193,7 +193,7 @@ def test_row_to_feed_item_needs_review_false():
 
 def test_row_to_feed_item_needs_review_default_false():
     """_row_to_feed_item defaults needs_review to False when attribute missing."""
-    from app.api.feed import _row_to_feed_item  # noqa: PLC0415
+    from app.domains.signals.api_feed import _row_to_feed_item  # noqa: PLC0415
 
     row = _make_mock_row()
     # Remove the needs_review attribute to simulate old rows without it

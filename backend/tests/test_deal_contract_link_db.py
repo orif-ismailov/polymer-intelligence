@@ -55,9 +55,9 @@ def _verified(db, tax, phone):  # noqa: ANN001, ANN202
 
 def _deal_with_contract(db):  # noqa: ANN001, ANN202
     """A deal in negotiation with a draft contract attached."""
-    from app.models.contracts import Contract, ContractTemplate  # noqa: PLC0415
-    from app.models.deals import RfqResponse  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.contracts.models import Contract, ContractTemplate  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
 
     buyer_acc, buyer = _verified(db, "301111111", "+998900000001")
     seller_acc, seller = _verified(db, "302222222", "+998900000002")
@@ -113,8 +113,8 @@ def test_attach_links_the_deal_to_the_contract(sf) -> None:  # noqa: ANN001
 def test_a_contract_cannot_serve_two_deals(sf) -> None:  # noqa: ANN001
     """The partial unique index is what lets the consumer look a deal up by
     contract_id and be sure of the answer."""
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
 
     with sf() as db:
         _deal, contract, buyer_acc, buyer, seller_acc, seller = _deal_with_contract(db)
@@ -130,8 +130,8 @@ def test_a_contract_cannot_serve_two_deals(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_attach_refuses_a_contract_between_other_companies(sf) -> None:  # noqa: ANN001
-    from app.models.contracts import Contract  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.contracts.models import Contract  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, contract, buyer_acc, buyer, _sa, _s = _deal_with_contract(db)
@@ -155,7 +155,7 @@ def test_attach_refuses_a_contract_between_other_companies(sf) -> None:  # noqa:
 
 @requires_real_db
 def test_attach_is_idempotent_for_the_same_contract(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, contract, buyer_acc, *_ = _deal_with_contract(db)
@@ -174,7 +174,7 @@ def _fire(task, contract_id: int) -> dict:  # noqa: ANN001
 
 @requires_real_db
 def test_sending_a_contract_moves_the_deal_to_contract_pending(sf) -> None:  # noqa: ANN001
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
     from app.tasks.deals import advance_deal_on_contract_sent  # noqa: PLC0415
 
@@ -192,7 +192,7 @@ def test_sending_a_contract_moves_the_deal_to_contract_pending(sf) -> None:  # n
 @requires_real_db
 def test_both_signatures_advance_the_deal_without_anyone_calling_it(sf) -> None:  # noqa: ANN001
     """The DoD line: two parties sign, the deal reaches contract_signed by event."""
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
     from app.tasks.deals import (  # noqa: PLC0415
         advance_deal_on_contract_activated,
@@ -214,7 +214,7 @@ def test_both_signatures_advance_the_deal_without_anyone_calling_it(sf) -> None:
 @requires_real_db
 def test_redelivery_does_not_transition_twice(sf) -> None:  # noqa: ANN001
     """Outbox delivery is at-least-once; a replayed activation must be a no-op."""
-    from app.models.deals import Deal, DealStatusHistory  # noqa: PLC0415
+    from app.domains.deals.models import Deal, DealStatusHistory  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
     from app.tasks.deals import (  # noqa: PLC0415
         advance_deal_on_contract_activated,
@@ -246,7 +246,7 @@ def test_redelivery_does_not_transition_twice(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_declining_a_contract_returns_the_deal_to_negotiation(sf) -> None:  # noqa: ANN001
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
     from app.tasks.deals import (  # noqa: PLC0415
         advance_deal_on_contract_sent,
@@ -270,7 +270,7 @@ def test_declining_a_contract_returns_the_deal_to_negotiation(sf) -> None:  # no
 @requires_real_db
 def test_rollback_after_signature_is_ignored(sf) -> None:  # noqa: ANN001
     """A cancelled/expired event arriving late must not undo a signed deal."""
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
     from app.tasks.deals import (  # noqa: PLC0415
         advance_deal_on_contract_activated,
@@ -311,7 +311,7 @@ def test_contract_without_a_deal_is_a_noop(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_prefill_carries_the_agreed_terms(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_with_contract(db)
@@ -327,9 +327,9 @@ def test_prefill_carries_the_agreed_terms(sf) -> None:  # noqa: ANN001
 def test_prefill_drops_values_a_template_would_reject(sf) -> None:  # noqa: ANN001
     """FOB is a real Incoterm and a real PriceBasis, but SUPPLY_V1 does not list
     it. Prefilling it would fail validation and block the entire form."""
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.enums import PriceBasis  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _deal_with_contract(db)

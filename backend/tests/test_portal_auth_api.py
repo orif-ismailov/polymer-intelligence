@@ -52,7 +52,7 @@ def portal_app() -> Iterator[tuple[TestClient, FakeRedis, MagicMock]]:
 
 
 def _account(account_id: int, status: str = "active"):  # noqa: ANN202
-    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.models.enums import AccountStatus  # noqa: PLC0415
 
     acct = UserAccount(phone=_PHONE, language="ru", status=AccountStatus(status))
@@ -65,14 +65,14 @@ def _account(account_id: int, status: str = "active"):  # noqa: ANN202
 
 def test_otp_request_returns_204(portal_app) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
-    with patch("app.services.otp_service._enqueue_sms"):
+    with patch("app.domains.accounts.otp._enqueue_sms"):
         resp = client.post(_REQUEST, json={"phone": _PHONE})
     assert resp.status_code == 204
 
 
 def test_otp_request_second_call_is_rate_limited_with_retry_after(portal_app) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
-    with patch("app.services.otp_service._enqueue_sms"):
+    with patch("app.domains.accounts.otp._enqueue_sms"):
         client.post(_REQUEST, json={"phone": _PHONE})
         resp = client.post(_REQUEST, json={"phone": _PHONE})
     assert resp.status_code == 429
@@ -81,7 +81,7 @@ def test_otp_request_second_call_is_rate_limited_with_retry_after(portal_app) ->
 
 def test_otp_request_invalid_phone_returns_422(portal_app) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
-    with patch("app.services.otp_service._enqueue_sms"):
+    with patch("app.domains.accounts.otp._enqueue_sms"):
         resp = client.post(_REQUEST, json={"phone": "not-a-phone"})
     assert resp.status_code == 422
 
@@ -89,7 +89,7 @@ def test_otp_request_invalid_phone_returns_422(portal_app) -> None:  # noqa: ANN
 def test_otp_request_enqueues_send_sms_without_logging_the_code(portal_app, caplog) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
     with (
-        patch("app.services.otp_service._generate_code", return_value="654321"),
+        patch("app.domains.accounts.otp._generate_code", return_value="654321"),
         patch("app.tasks.notify.send_sms.apply_async") as apply_async,
         caplog.at_level("DEBUG"),
     ):
@@ -104,23 +104,88 @@ def test_otp_request_enqueues_send_sms_without_logging_the_code(portal_app, capl
     assert "654321" not in caplog.text  # … but is never logged
 
 
+# ── Per-IP cap: which header identifies the caller ────────────────────────────
+# The cap is only worth as much as the header it keys on. nginx APPENDS to
+# X-Forwarded-For (`$proxy_add_x_forwarded_for`) and OVERWRITES X-Real-IP
+# (`proxy_set_header`), so only the latter is caller-proof. These two tests pin
+# that: one proves a forged header buys nothing, the other proves the trusted
+# header still separates real callers (so the fix isn't "ignore all headers").
+#
+# Distinct phones throughout — the per-phone cooldown would otherwise 429 first
+# and both tests would pass without ever reaching the per-IP bucket.
+
+_CAP = 5  # settings.OTP_MAX_SENDS_PER_DAY, pinned in tests/conftest.py
+
+
+def _request_from(client, phone: str, headers: dict[str, str]):  # noqa: ANN001, ANN202
+    with patch("app.domains.accounts.otp._enqueue_sms"):
+        return client.post(_REQUEST, json={"phone": phone}, headers=headers)
+
+
+def test_forged_x_forwarded_for_cannot_escape_the_per_ip_cap(portal_app) -> None:  # noqa: ANN001
+    """A caller rotating X-Forwarded-For stays in one bucket.
+
+    Regression test for the spoofable-IP bug: `_client_ip` used to return
+    `xff.split(",")[0]`, which is the value the CALLER sent (nginx appends its
+    own after it). Every forged value therefore minted a fresh bucket and the
+    cap never fired — unlimited OTP breadth across phone numbers on a metered
+    SMS account. Each request below carries a different forged XFF; the cap must
+    still fire on schedule.
+    """
+    client, _fake, _db = portal_app
+
+    for i in range(_CAP):
+        resp = _request_from(
+            client, f"+99890000{i:04d}", {"X-Forwarded-For": f"10.0.0.{i}, 203.0.113.9"}
+        )
+        assert resp.status_code == 204, f"request {i} should be under the cap"
+
+    over = _request_from(
+        client, "+998909999999", {"X-Forwarded-For": "10.0.0.99, 203.0.113.9"}
+    )
+    assert over.status_code == 429
+    assert int(over.headers["Retry-After"]) > 0
+
+
+def test_x_real_ip_keys_the_per_ip_bucket(portal_app) -> None:  # noqa: ANN001
+    """Two different X-Real-IP values get independent buckets.
+
+    The counterpart to the test above: the fix must not degrade into "ignore
+    every header", which would collapse all traffic behind a proxy into a single
+    bucket and rate-limit the whole internet as one caller.
+    """
+    client, _fake, _db = portal_app
+
+    for i in range(_CAP):
+        resp = _request_from(client, f"+99891000{i:04d}", {"X-Real-IP": "198.51.100.7"})
+        assert resp.status_code == 204
+
+    assert _request_from(
+        client, "+998918888888", {"X-Real-IP": "198.51.100.7"}
+    ).status_code == 429
+    # A genuinely different client is unaffected by the first one's exhaustion.
+    assert _request_from(
+        client, "+998917777777", {"X-Real-IP": "198.51.100.8"}
+    ).status_code == 204
+
+
 # ── OTP verify ────────────────────────────────────────────────────────────────
 
 
 def test_otp_verify_wrong_code_returns_400(portal_app) -> None:  # noqa: ANN001
-    from app.services.otp_service import OtpInvalid  # noqa: PLC0415
+    from app.domains.accounts.otp import OtpInvalid  # noqa: PLC0415
 
     client, _fake, _db = portal_app
-    with patch("app.api.portal.auth.verify_code", side_effect=OtpInvalid("wrong")):
+    with patch("app.domains.accounts.api_portal.verify_code", side_effect=OtpInvalid("wrong")):
         resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "000000"})
     assert resp.status_code == 400
 
 
 def test_otp_verify_lockout_returns_429(portal_app) -> None:  # noqa: ANN001
-    from app.services.otp_service import OtpLocked  # noqa: PLC0415
+    from app.domains.accounts.otp import OtpLocked  # noqa: PLC0415
 
     client, _fake, _db = portal_app
-    with patch("app.api.portal.auth.verify_code", side_effect=OtpLocked("locked")):
+    with patch("app.domains.accounts.api_portal.verify_code", side_effect=OtpLocked("locked")):
         resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "000000"})
     assert resp.status_code == 429
 
@@ -129,7 +194,7 @@ def test_otp_verify_success_issues_token_and_cookie(portal_app) -> None:  # noqa
     from app.core.security import decode_token  # noqa: PLC0415
 
     client, _fake, _db = portal_app
-    with patch("app.api.portal.auth.verify_code", return_value=_account(7)):
+    with patch("app.domains.accounts.api_portal.verify_code", return_value=_account(7)):
         resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "123456"})
 
     assert resp.status_code == 200
@@ -143,7 +208,7 @@ def test_otp_verify_success_issues_token_and_cookie(portal_app) -> None:  # noqa
 
 def test_otp_verify_blocked_account_returns_403(portal_app) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
-    with patch("app.api.portal.auth.verify_code", return_value=_account(8, status="blocked")):
+    with patch("app.domains.accounts.api_portal.verify_code", return_value=_account(8, status="blocked")):
         resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "123456"})
     assert resp.status_code == 403
 

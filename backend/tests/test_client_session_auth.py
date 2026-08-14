@@ -58,7 +58,7 @@ def _valid_widget(telegram_user_id: int = 12345) -> dict[str, Any]:
 # ── Unit: verify_login_widget ──────────────────────────────────────────────────
 
 def test_verify_login_widget_valid_returns_dict() -> None:
-    from app.services.client_service import verify_login_widget
+    from app.domains.requests.clients import verify_login_widget
 
     payload = _valid_widget(telegram_user_id=777)
     result = verify_login_widget({k: str(v) for k, v in payload.items()})
@@ -68,7 +68,7 @@ def test_verify_login_widget_valid_returns_dict() -> None:
 
 
 def test_verify_login_widget_bad_hash_raises() -> None:
-    from app.services.client_service import verify_login_widget
+    from app.domains.requests.clients import verify_login_widget
 
     payload = _valid_widget()
     payload["hash"] = "deadbeef" * 8  # 64 hex chars, wrong
@@ -78,7 +78,7 @@ def test_verify_login_widget_bad_hash_raises() -> None:
 
 def test_verify_login_widget_tampered_field_raises() -> None:
     """Mutating a signed field after signing must invalidate the hash."""
-    from app.services.client_service import verify_login_widget
+    from app.domains.requests.clients import verify_login_widget
 
     payload = _valid_widget(telegram_user_id=1)
     payload["id"] = 999  # tamper — hash no longer matches
@@ -87,7 +87,7 @@ def test_verify_login_widget_tampered_field_raises() -> None:
 
 
 def test_verify_login_widget_expired_raises() -> None:
-    from app.services.client_service import verify_login_widget
+    from app.domains.requests.clients import verify_login_widget
 
     payload = _sign_widget({"id": 5, "first_name": "X"}, auth_date=int(time.time()) - 25 * 3600)
     with pytest.raises(ValueError, match="expired"):
@@ -95,7 +95,7 @@ def test_verify_login_widget_expired_raises() -> None:
 
 
 def test_verify_login_widget_future_raises() -> None:
-    from app.services.client_service import verify_login_widget
+    from app.domains.requests.clients import verify_login_widget
 
     payload = _sign_widget({"id": 5, "first_name": "X"}, auth_date=int(time.time()) + 1_000_000)
     with pytest.raises(ValueError, match="future"):
@@ -103,7 +103,7 @@ def test_verify_login_widget_future_raises() -> None:
 
 
 def test_verify_login_widget_empty_raises() -> None:
-    from app.services.client_service import verify_login_widget
+    from app.domains.requests.clients import verify_login_widget
 
     with pytest.raises(ValueError):
         verify_login_widget({})
@@ -227,7 +227,7 @@ def test_login_telegram_valid_sets_cookie(client: TestClient) -> None:
     created = SimpleNamespace(id=1, telegram_user_id=321, language="ru")
 
     with patch.object(settings, "BOT_USERNAME", "imex_ai_bot"), patch(
-        "app.services.client_service.get_or_create_client", return_value=created
+        "app.domains.requests.clients.get_or_create_client", return_value=created
     ):
         resp = client.post("/api/v1/webapp/auth/telegram", json=payload)
 
@@ -287,7 +287,7 @@ def _fake_offer(offer_id: int) -> SimpleNamespace:
 def test_featured_public_no_auth_and_no_contact(client: TestClient) -> None:
     """GET /webapp/market/featured is public and never leaks seller contact fields."""
     with patch(
-        "app.services.offer_service.list_catalog",
+        "app.domains.marketplace.service.list_catalog",
         return_value=[_fake_offer(1), _fake_offer(2)],
     ):
         resp = client.get("/api/v1/webapp/market/featured")

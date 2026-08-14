@@ -47,23 +47,23 @@ class TestSourceHealthServiceImports:
 
     def test_module_importable(self) -> None:
         """source_health_service is importable without a live DB."""
-        from app.services import source_health_service  # noqa: PLC0415
+        from app.domains.signals import source_health as source_health_service  # noqa: PLC0415
         assert source_health_service is not None
 
     def test_exports_record_fetch_success(self) -> None:
-        from app.services.source_health_service import record_fetch_success  # noqa: PLC0415
+        from app.domains.signals.source_health import record_fetch_success  # noqa: PLC0415
         assert callable(record_fetch_success)
 
     def test_exports_record_fetch_failure(self) -> None:
-        from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
+        from app.domains.signals.source_health import record_fetch_failure  # noqa: PLC0415
         assert callable(record_fetch_failure)
 
     def test_exports_raise_source_failure_alert(self) -> None:
-        from app.services.source_health_service import raise_source_failure_alert  # noqa: PLC0415
+        from app.domains.signals.source_health import raise_source_failure_alert  # noqa: PLC0415
         assert callable(raise_source_failure_alert)
 
     def test_exports_check_all_sources_health(self) -> None:
-        from app.services.source_health_service import check_all_sources_health  # noqa: PLC0415
+        from app.domains.signals.source_health import check_all_sources_health  # noqa: PLC0415
         assert callable(check_all_sources_health)
 
 
@@ -146,7 +146,7 @@ class TestSourceHealthDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.source_health_service import record_fetch_success  # noqa: PLC0415
+        from app.domains.signals.source_health import record_fetch_success  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             source_id = self._make_source(session)
@@ -199,7 +199,7 @@ class TestSourceHealthDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
+        from app.domains.signals.source_health import record_fetch_failure  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             source_id = self._make_source(session)
@@ -238,7 +238,7 @@ class TestSourceHealthDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
+        from app.domains.signals.source_health import record_fetch_failure  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             source_id = self._make_source(session)
@@ -269,7 +269,7 @@ class TestSourceHealthDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
+        from app.domains.signals.source_health import record_fetch_failure  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             source_id = self._make_source(session)
@@ -297,7 +297,7 @@ class TestSourceHealthDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.source_health_service import (  # noqa: PLC0415
+        from app.domains.signals.source_health import (  # noqa: PLC0415
             record_fetch_failure,
             record_fetch_success,
         )
@@ -348,7 +348,7 @@ class TestSourceHealthDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.source_health_service import check_all_sources_health  # noqa: PLC0415
+        from app.domains.signals.source_health import check_all_sources_health  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             source_id = self._make_source(session)
@@ -388,7 +388,7 @@ class TestSourceHealthDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.source_health_service import check_all_sources_health  # noqa: PLC0415
+        from app.domains.signals.source_health import check_all_sources_health  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             source_id = self._make_source(session, unique_suffix="disabled")
@@ -423,7 +423,7 @@ class TestSourceHealthDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.services.source_health_service import record_fetch_failure  # noqa: PLC0415
+        from app.domains.signals.source_health import record_fetch_failure  # noqa: PLC0415
 
         with Session(migrated_db) as session:
             source_id = self._make_source(session)

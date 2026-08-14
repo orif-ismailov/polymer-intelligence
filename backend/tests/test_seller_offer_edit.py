@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 
 def _update_body(**overrides: object) -> object:
-    from app.schemas.marketplace import SellerOfferUpdate  # noqa: PLC0415
+    from app.domains.marketplace.schemas import SellerOfferUpdate  # noqa: PLC0415
 
     base: dict[str, object] = {
         "product_id": 2,
@@ -55,12 +55,12 @@ def _offer(status: object) -> SimpleNamespace:
 
 
 def test_update_offer_approved_reenters_moderation() -> None:
+    from app.domains.marketplace import service as svc  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import offer_service as svc  # noqa: PLC0415
 
     offer = _offer(SellerOfferStatus.approved)
     db = MagicMock()
-    with patch("app.services.offer_service.write_audit") as audit:
+    with patch("app.domains.marketplace.service.write_audit") as audit:
         result, requeued = svc.update_offer(db, offer, _update_body(grade_text="new grade"))
 
     assert result is offer
@@ -81,11 +81,11 @@ def test_update_offer_approved_reenters_moderation() -> None:
 
 
 def test_update_offer_draft_stays_in_place() -> None:
+    from app.domains.marketplace import service as svc  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import offer_service as svc  # noqa: PLC0415
 
     offer = _offer(SellerOfferStatus.draft)
-    with patch("app.services.offer_service.write_audit"):
+    with patch("app.domains.marketplace.service.write_audit"):
         _, requeued = svc.update_offer(MagicMock(), offer, _update_body())
 
     assert requeued is False
@@ -95,11 +95,11 @@ def test_update_offer_draft_stays_in_place() -> None:
 
 
 def test_update_offer_pending_stays_pending() -> None:
+    from app.domains.marketplace import service as svc  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import offer_service as svc  # noqa: PLC0415
 
     offer = _offer(SellerOfferStatus.pending_moderation)
-    with patch("app.services.offer_service.write_audit"):
+    with patch("app.domains.marketplace.service.write_audit"):
         _, requeued = svc.update_offer(MagicMock(), offer, _update_body())
 
     assert requeued is False
@@ -107,11 +107,11 @@ def test_update_offer_pending_stays_pending() -> None:
 
 
 def test_update_offer_rejected_reenters_moderation() -> None:
+    from app.domains.marketplace import service as svc  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import offer_service as svc  # noqa: PLC0415
 
     offer = _offer(SellerOfferStatus.rejected)
-    with patch("app.services.offer_service.write_audit"):
+    with patch("app.domains.marketplace.service.write_audit"):
         _, requeued = svc.update_offer(MagicMock(), offer, _update_body())
 
     assert requeued is True
@@ -120,6 +120,6 @@ def test_update_offer_rejected_reenters_moderation() -> None:
 
 
 def test_seller_id_for_none_without_telegram_id() -> None:
-    from app.services import offer_service as svc  # noqa: PLC0415
+    from app.domains.marketplace import service as svc  # noqa: PLC0415
 
     assert svc.seller_id_for(MagicMock(), None) is None

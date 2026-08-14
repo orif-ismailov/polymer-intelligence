@@ -33,8 +33,8 @@ def _pydantic_models(module) -> list[type]:  # noqa: ANN001
 
 
 def test_portal_response_schemas_expose_no_secret_fields() -> None:
-    import app.schemas.portal as portal  # noqa: PLC0415
-    import app.schemas.portal_company as portal_company  # noqa: PLC0415
+    import app.domains.accounts.schemas as portal  # noqa: PLC0415
+    import app.domains.companies.schemas as portal_company  # noqa: PLC0415
 
     for module in (portal, portal_company):
         for model in _pydantic_models(module):
@@ -45,7 +45,7 @@ def test_portal_response_schemas_expose_no_secret_fields() -> None:
 
 
 def test_bank_account_out_masks_the_number() -> None:
-    from app.schemas.portal_company import BankAccountOut  # noqa: PLC0415
+    from app.domains.companies.schemas import BankAccountOut  # noqa: PLC0415
 
     fields = set(BankAccountOut.model_fields)
     assert "account_masked" in fields
@@ -53,7 +53,7 @@ def test_bank_account_out_masks_the_number() -> None:
 
 
 def test_document_out_hides_internal_storage_path() -> None:
-    from app.schemas.portal_company import DocumentOut  # noqa: PLC0415
+    from app.domains.companies.schemas import DocumentOut  # noqa: PLC0415
 
     assert "storage_path" not in DocumentOut.model_fields
 
@@ -67,6 +67,6 @@ def test_presign_ttl_default_bounded_to_600s() -> None:
 
 def test_account_out_never_exposes_telegram_bridge() -> None:
     # telegram_user_id is a dormant bridge column — never surface it to the client.
-    from app.schemas.portal import AccountOut  # noqa: PLC0415
+    from app.domains.accounts.schemas import AccountOut  # noqa: PLC0415
 
     assert "telegram_user_id" not in AccountOut.model_fields

@@ -164,7 +164,7 @@ def check_source_health() -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.services.source_health_service import check_all_sources_health  # noqa: PLC0415
+    from app.domains.signals.source_health import check_all_sources_health  # noqa: PLC0415
 
     logger.info("check_source_health.start")
 
@@ -214,8 +214,8 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.requests import Request  # noqa: PLC0415
-    from app.services.request_service import client_facing_status  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
+    from app.domains.requests.service import client_facing_status  # noqa: PLC0415
 
     logger.info("notify.status_change.start", extra={"request_id": request_id})
 
@@ -359,7 +359,7 @@ def send_delivery(alert_id: int) -> dict[str, Any]:
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.alerts import Alert, Delivery  # noqa: PLC0415
+    from app.domains.alerts.models import Alert, Delivery  # noqa: PLC0415
     from app.models.enums import DeliveryChannel, DeliveryStatus  # noqa: PLC0415
 
     logger.info("notify.send_delivery.start", extra={"alert_id": alert_id})
@@ -482,8 +482,8 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.reference import Product  # noqa: PLC0415
-    from app.models.requests import Request  # noqa: PLC0415
+    from app.domains.reference.models import Product  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
 
     chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
     if chat_id is None:
@@ -507,7 +507,7 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
             # Origin line for portal-originated requests (R2 W4 T4.2); TG requests
             # keep the card byte-identical (no line added).
             if request.company_id is not None:
-                from app.models.companies import Company  # noqa: PLC0415
+                from app.domains.companies.models import Company  # noqa: PLC0415
 
                 company = session.get(Company, request.company_id)
                 if company is not None:
@@ -590,9 +590,9 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
+    from app.domains.reference.models import Product  # noqa: PLC0415
     from app.models.enums import OfferFileKind  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
-    from app.models.reference import Product  # noqa: PLC0415
 
     chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
     if chat_id is None:
@@ -736,7 +736,7 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
 
 def _offer_product_label(session: object, offer: Any) -> str:
     """Resolve a human product label for an offer (product name, else free text)."""
-    from app.models.reference import Product  # noqa: PLC0415
+    from app.domains.reference.models import Product  # noqa: PLC0415
 
     if offer.product_id is not None:
         product = session.get(Product, offer.product_id)  # type: ignore[attr-defined]
@@ -782,7 +782,7 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
 
     chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
     if chat_id is None:
@@ -830,7 +830,7 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
             buyer_label = "Покупатель:"
             if req.company_id is not None:
                 # Portal-origin inquiry (R2 W4 T4.2): show the buyer company + origin.
-                from app.models.companies import Company  # noqa: PLC0415
+                from app.domains.companies.models import Company  # noqa: PLC0415
 
                 company = session.get(Company, req.company_id)
                 if company is not None:
@@ -887,7 +887,7 @@ def send_offer_request_to_seller(offer_request_id: int) -> dict[str, Any]:
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
 
     logger.info("notify.offer_request_to_seller.start", extra={"offer_request_id": offer_request_id})
 
@@ -982,7 +982,7 @@ def _write_sms_log(
     the send task.
     """
     from app.core.db import SessionLocal  # noqa: PLC0415
-    from app.models.accounts import SmsSendLog  # noqa: PLC0415
+    from app.domains.accounts.models import SmsSendLog  # noqa: PLC0415
 
     try:
         with SessionLocal() as db:
@@ -1069,8 +1069,12 @@ def send_verification_case_to_group(
     from telegram.bot import bot, verification_moderation_keyboard  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
-    from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.verification.models import (
+        VerificationCase,
+        VerificationCheck,
+        VerificationDocument,
+    )
 
     try:
         with Session(engine) as session:
@@ -1150,8 +1154,8 @@ def send_contract_activated_to_group(
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
-    from app.models.contracts import Contract  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts.models import Contract  # noqa: PLC0415
 
     def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
         c = session.get(Company, company_id)
@@ -1199,8 +1203,8 @@ def _deal_card(deal_id_raw: str | None, headline: str, extra: list[str] | None =
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
 
     def _name(session: Any, company_id: int) -> str:  # noqa: ANN401
         company = session.get(Company, company_id)
@@ -1328,8 +1332,8 @@ def send_lab_order_to_group(
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.companies import Company  # noqa: PLC0415
-    from app.models.lab import LabOrder  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.lab_orders.models import LabOrder  # noqa: PLC0415
 
     try:
         with Session(engine) as session:

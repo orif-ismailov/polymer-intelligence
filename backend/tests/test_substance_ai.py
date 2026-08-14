@@ -56,7 +56,7 @@ def _completion(tokens_in: int = 400, tokens_out: int = 60) -> MagicMock:
 
 
 def _result(**kwargs: Any) -> Any:  # noqa: ANN401
-    from app.schemas.substance_match import SubstanceMatchResult  # noqa: PLC0415
+    from app.domains.compliance.substance_match_schemas import SubstanceMatchResult  # noqa: PLC0415
 
     payload = {
         "name": "Ацетон",
@@ -71,10 +71,15 @@ def _result(**kwargs: Any) -> Any:  # noqa: ANN401
 
 class TestPromptFamily:
     def test_v1_exists_and_is_the_pinned_version(self) -> None:
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
 
         assert svc.PROMPT_VERSION == "v1"
         assert (_PROMPTS / "substance_match_v1.md").exists()
+        # Load it through the SERVICE, not just off a path this test computes for
+        # itself. The two diverged when the domain reorg moved this module a directory
+        # deeper: the file was still there, `_PROMPTS_DIR` pointed somewhere else, and
+        # every suggest() raised FileNotFoundError while this assertion stayed green.
+        assert svc._load_prompt(svc.PROMPT_VERSION).strip()
 
     def test_the_prompt_asks_for_a_candidate_not_a_decision(self) -> None:
         """The model proposes; the seller decides. A prompt that told it to
@@ -121,7 +126,7 @@ def db(engine: sa.Engine) -> Session:
 
 
 def _acetone(db: Session):  # noqa: ANN202
-    from app.models.compliance import Substance  # noqa: PLC0415
+    from app.domains.compliance.models import Substance  # noqa: PLC0415
     from app.models.enums import RegulationLevel, RegulationRegime  # noqa: PLC0415
 
     row = Substance(
@@ -150,7 +155,7 @@ def _company(db: Session):  # noqa: ANN202
 @requires_real_db
 class TestSuggest:
     def test_resolves_the_candidate_and_journals_the_run(self, db: Session) -> None:
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
 
         substance = _acetone(db)
         _, company = _company(db)
@@ -168,7 +173,7 @@ class TestSuggest:
         assert row.accepted is None, "nobody has decided yet"
 
     def test_an_unknown_candidate_is_still_journalled(self, db: Session) -> None:
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
 
         _, company = _company(db)
         with patch.object(svc, "_client") as client:
@@ -183,9 +188,9 @@ class TestSuggest:
         assert row.suggested_name == "Неизвестное вещество"
 
     def test_disabled_makes_no_call_and_no_row(self, db: Session) -> None:
-        from app.models.compliance import SubstanceSuggestion  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
+        from app.domains.compliance.models import SubstanceSuggestion  # noqa: PLC0415
         from app.services import settings_service  # noqa: PLC0415
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
 
         _, company = _company(db)
         settings_service.set_many(db, {"substance_ai_enabled": False}, None)
@@ -195,8 +200,8 @@ class TestSuggest:
         assert db.query(SubstanceSuggestion).count() == 0
 
     def test_an_exhausted_budget_degrades_quietly(self, db: Session) -> None:
-        from app.models.compliance import SubstanceSuggestion  # noqa: PLC0415
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
+        from app.domains.compliance.models import SubstanceSuggestion  # noqa: PLC0415
         from parsing.schemas import BudgetExceeded  # noqa: PLC0415
 
         _, company = _company(db)
@@ -209,7 +214,7 @@ class TestSuggest:
         assert db.query(SubstanceSuggestion).count() == 0
 
     def test_an_llm_error_releases_the_reservation(self, db: Session) -> None:
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
 
         _, company = _company(db)
         with (
@@ -222,7 +227,7 @@ class TestSuggest:
 
     def test_the_offer_is_never_written_by_the_suggestion(self, db: Session) -> None:
         """FR-C3: no auto-write, ever. Only the seller's decision moves data."""
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
         from tests._verification_db import make_seller_offer  # noqa: PLC0415
 
         _acetone(db)
@@ -240,7 +245,7 @@ class TestSuggest:
 @requires_real_db
 class TestDecision:
     def test_accepting_is_journalled(self, db: Session) -> None:
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
 
         _acetone(db)
         account, company = _company(db)
@@ -255,7 +260,7 @@ class TestDecision:
         assert row.decided_by_user_account_id == account.id
 
     def test_rejecting_is_a_different_state_from_undecided(self, db: Session) -> None:
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
 
         _acetone(db)
         account, company = _company(db)
@@ -310,7 +315,7 @@ def _headers(account_id: int) -> dict[str, str]:
 @requires_real_db
 class TestApi:
     def test_suggest_then_accept(self, api) -> None:  # noqa: ANN001
-        from app.services import substance_ai_service as svc  # noqa: PLC0415
+        from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
 
         client, session = api
         with session() as db:
@@ -340,7 +345,7 @@ class TestApi:
         assert decided.json()["accepted"] is True
 
     def test_another_companys_suggestion_is_not_decidable(self, api) -> None:  # noqa: ANN001
-        from app.models.compliance import SubstanceSuggestion  # noqa: PLC0415
+        from app.domains.compliance.models import SubstanceSuggestion  # noqa: PLC0415
 
         client, session = api
         with session() as db:

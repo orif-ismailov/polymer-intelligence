@@ -19,7 +19,7 @@ _XLSX = b"PK\x03\x04" + b"\x00" * 32
 
 
 def _company(company_id: int = 7, logo: str | None = None):  # noqa: ANN202
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
 
     company = Company(jurisdiction="UZ", tax_id="123456789")
     company.id = company_id

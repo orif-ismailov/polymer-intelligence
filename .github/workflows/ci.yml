@@ -69,13 +69,18 @@ jobs:
       - name: Lint (ruff check)
         run: ruff check .
 
-      # ── Type-check: mypy scoped to services/ and schemas/ ──────────────────
-      # Per dev-spec §7: mypy targets backend/app/services + backend/app/schemas
-      - name: Type-check (mypy — app/services)
-        run: mypy app/services --ignore-missing-imports
-
-      - name: Type-check (mypy — app/schemas)
-        run: mypy app/schemas --ignore-missing-imports
+      # ── Type-check: mypy over the whole app package ────────────────────────
+      # This used to be two hand-maintained lists of ~90 file paths, duplicated in
+      # CLAUDE.md and backend/CLAUDE.md. It failed OPEN: a new module was unchecked
+      # until someone remembered to add it in three places, and "absent from the
+      # list" was indistinguishable from "checked and clean".
+      #
+      # Now the whole package is checked and the modules that do not pass yet are
+      # named in pyproject.toml's burn-down override. A new file is gated by
+      # default; exempting one is a visible edit in a reviewed file. That block
+      # should only ever shrink.
+      - name: Type-check (mypy — app)
+        run: mypy app --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────
       - name: Run pytest

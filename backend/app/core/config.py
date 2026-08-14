@@ -27,6 +27,12 @@ class Settings(BaseSettings):
 
     # ── Database ──────────────────────────────────────────────────────────────
     DATABASE_URL: str
+    # SQLAlchemy pool size, PER PROCESS. Multiply by (api workers + celery
+    # workers) before comparing against Postgres `max_connections` — see the
+    # arithmetic in app/core/db.py. Lower than the pre-multi-worker default of
+    # 10/20 precisely because there are now several processes rather than one.
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
 
     # ── Redis / Celery ────────────────────────────────────────────────────────
     REDIS_URL: str

@@ -13,38 +13,57 @@ Import order respects FK dependency:
 9. alerts (depends on signals, requests)
 10. reports (depends on staff)
 
+That grouping is documentation, not a constraint: the import block is sorted by ruff's
+isort and SQLAlchemy resolves foreign keys from `Base.metadata` once every model has
+loaded, not in Python import order. What matters here is **completeness**, not
+sequence — which is why models that move into `app/domains/<name>/` during the domain
+reorg keep their line in this barrel rather than dropping out of it.
+
+Nothing imports names from this module (`from app.models import X` has no call
+sites), so `__all__` lists only what is still bound here; classes that moved into
+a domain folder are imported from that folder directly.
+
 This file must be imported by alembic/env.py so that
 `target_metadata = Base.metadata` includes all 20 tables.
 """
 
-from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
-from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
+# Models that have moved into app/domains/ are imported as MODULES, not by name.
+#
+# A domain model module starts with `from app.models.enums import ...`, which
+# initializes this package and runs this barrel. If the barrel then asked that same
+# module for a class by name, the name would not exist yet — the module is still on
+# its first import line — and Python raises "cannot import name ... from partially
+# initialized module". Importing the module only needs its sys.modules entry, which
+# already exists by then, so the cycle resolves. The mapper classes still register
+# themselves on Base.metadata as the module finishes executing, which is all this
+# barrel exists to guarantee.
+import app.domains.accounts.models  # noqa: F401
+import app.domains.alerts.models  # noqa: F401
+import app.domains.companies.media_models  # noqa: F401
+import app.domains.companies.models  # noqa: F401
+import app.domains.companies.review_models  # noqa: F401
+import app.domains.compliance.models  # noqa: F401
+import app.domains.contracts.eimzo_models  # noqa: F401
+import app.domains.contracts.models  # noqa: F401
+import app.domains.deals.models  # noqa: F401
+import app.domains.deals.payment_models  # noqa: F401
+import app.domains.lab_orders.models  # noqa: F401
+import app.domains.laboratory.models  # noqa: F401
+import app.domains.logistics.models  # noqa: F401
+import app.domains.manufacturers.models  # noqa: F401
+import app.domains.marketplace.models  # noqa: F401
+import app.domains.news.models  # noqa: F401
+import app.domains.notifications.models  # noqa: F401
+import app.domains.pricing.models  # noqa: F401
+import app.domains.reference.models  # noqa: F401
+import app.domains.requests.models  # noqa: F401
+import app.domains.signals.counterparty_models  # noqa: F401
+import app.domains.signals.models  # noqa: F401
+import app.domains.signals.source_models  # noqa: F401
+import app.domains.sourcing.models  # noqa: F401
+import app.domains.verification.models  # noqa: F401
+import app.domains.verification.registry_models  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
-from app.models.companies import (  # noqa: F401
-    Company,
-    CompanyBankAccount,
-    CompanyBusinessRole,
-    CompanyMember,
-)
-from app.models.compliance import (  # noqa: F401
-    CompanyLicense,
-    Substance,
-    SubstanceSuggestion,
-)
-from app.models.contracts import (  # noqa: F401
-    Contract,
-    ContractSignature,
-    ContractTemplate,
-)
-from app.models.counterparties import Counterparty, CounterpartyAlias  # noqa: F401
-from app.models.deals import (  # noqa: F401
-    Deal,
-    DealDocument,
-    DealMessage,
-    DealStatusHistory,
-    RfqResponse,
-)
-from app.models.eimzo import CompanyPersonData, SignatureEvidence  # noqa: F401
 from app.models.enums import (  # noqa: F401
     AccountStatus,
     AlertKind,
@@ -99,55 +118,7 @@ from app.models.enums import (
 )
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
-from app.models.lab import LabOrder, LabPartner, SampleRequest  # noqa: F401
-from app.models.laboratory import (  # noqa: F401
-    LabRequest,
-    LabRequestMessage,
-    LabRequestThread,
-)
-from app.models.logistics import (  # noqa: F401
-    LogisticsRequest,
-    LogisticsRequestMessage,
-    LogisticsRequestThread,
-)
-from app.models.manufacturers import (  # noqa: F401
-    FactoryRfq,
-    FactoryRfqDocument,
-    ManufacturerMessage,
-    ManufacturerThread,
-)
-from app.models.marketplace import (  # noqa: F401
-    OfferFavorite,
-    OfferRequest,
-    RfqPushLog,
-    Seller,
-    SellerOffer,
-    SellerOfferFile,
-)
-from app.models.media import CompanyMedia  # noqa: F401
-from app.models.notifications import PortalNotification  # noqa: F401
-from app.models.payments import EscrowPayment, ProviderEvent  # noqa: F401
-from app.models.prices import PricePoint  # noqa: F401
-from app.models.reference import (  # noqa: F401
-    FxRate,
-    ManualClassificationItem,
-    Product,
-    ProductGrade,
-    ProductSynonym,
-)
-from app.models.registry import RegistrySnapshot  # noqa: F401
-from app.models.reports import Report  # noqa: F401
-from app.models.requests import Client, Request, RequestFile, RequestStatusHistory  # noqa: F401
-from app.models.reviews import CompanyReview  # noqa: F401
-from app.models.signals import Signal  # noqa: F401
-from app.models.sources import ParseRun, RawItem, Source  # noqa: F401
-from app.models.sourcing import InventoryItem, PartnerSupplier, SourcingRun  # noqa: F401
 from app.models.staff import AuditLog, StaffUser  # noqa: F401
-from app.models.verification import (  # noqa: F401
-    VerificationCase,
-    VerificationCheck,
-    VerificationDocument,
-)
 
 __all__ = [
     # Enums
@@ -184,120 +155,50 @@ __all__ = [
     "VerificationDocumentKind",
     "DocumentReviewStatus",
     # Reference
-    "Product",
-    "ProductGrade",
-    "FxRate",
-    "ProductSynonym",
-    "ManualClassificationItem",
     # Sources / raw
-    "Source",
-    "RawItem",
-    "ParseRun",
     # Counterparties
-    "Counterparty",
-    "CounterpartyAlias",
     # Staff / audit
     "StaffUser",
     "AuditLog",
     # Signals
-    "Signal",
     # Clients / requests
-    "Client",
-    "Request",
-    "RequestFile",
-    "RequestStatusHistory",
     # Prices
-    "PricePoint",
     # Alerts
-    "AlertRule",
-    "Alert",
-    "Delivery",
     # Reports
-    "Report",
     # Runtime settings (Phase 8d)
     "AppSetting",
     # Marketplace (Phase 2)
-    "Seller",
-    "SellerOffer",
-    "SellerOfferFile",
-    "OfferRequest",
-    "OfferFavorite",
     "OfferSaleMode",
-    "RfqPushLog",
     # Sourcing (Phase 4)
-    "InventoryItem",
-    "PartnerSupplier",
-    "SourcingRun",
     # Company verification & portal (R1)
-    "UserAccount",
-    "SmsSendLog",
-    "Company",
-    "CompanyMember",
-    "CompanyBusinessRole",
-    "CompanyBankAccount",
-    "VerificationCase",
-    "VerificationCheck",
-    "VerificationDocument",
     "DomainEvent",
     # Portal notifications (R2)
-    "PortalNotification",
     # E-IMZO evidence + integration gateway (R3)
-    "SignatureEvidence",
-    "CompanyPersonData",
     "IntegrationCallLog",
     # Contracts (R3 Stage B)
-    "ContractTemplate",
-    "Contract",
-    "ContractSignature",
     # Deals (R4 / P2 — Deal Lifecycle core)
     "DealStatus",
     "DealActorKind",
     "DealDocumentKind",
     "RfqResponseStatus",
     "RfqVisibility",
-    "Deal",
-    "DealStatusHistory",
-    "DealMessage",
-    "DealDocument",
-    "RfqResponse",
     # Payments / escrow (R4 / P3)
     "EscrowStatus",
-    "EscrowPayment",
-    "ProviderEvent",
     # Chemical compliance (R5 / P5)
     "RegulationLevel",
     "RegulationRegime",
     "LicenseStatus",
-    "Substance",
-    "CompanyLicense",
-    "SubstanceSuggestion",
     # Labs and samples (R5 / P6)
     "LabOrderStatus",
     "SampleRequestStatus",
-    "LabPartner",
-    "LabOrder",
-    "SampleRequest",
     # Manufacturers directory + factory RFQ
     "FactoryRfqStatus",
     "FactoryRfqDocumentKind",
-    "FactoryRfq",
-    "FactoryRfqDocument",
-    "ManufacturerThread",
-    "ManufacturerMessage",
     # Logistics directory + service requests
     "LogisticsRequestStatus",
-    "LogisticsRequest",
-    "LogisticsRequestThread",
-    "LogisticsRequestMessage",
     # Laboratory analysis requests
     "LabRequestStatus",
-    "LabRequest",
-    "LabRequestThread",
-    "LabRequestMessage",
     # Company reviews
     "CompanyReviewStatus",
-    "CompanyReview",
-    "CompanyMedia",
     # State-registry evidence (R6 / P7.c)
-    "RegistrySnapshot",
 ]

@@ -36,8 +36,8 @@ from PIL import Image, ImageEnhance
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
+from app.domains.marketplace.models import SellerOffer
 from app.models.enums import OfferFileKind
-from app.models.marketplace import SellerOffer
 from app.services import storage_service
 
 RNG = random.Random(20260803)

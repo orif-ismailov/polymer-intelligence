@@ -29,12 +29,12 @@ def notify_matched_suppliers(request_id: int) -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.requests import Request  # noqa: PLC0415
+    from app.domains.requests import rfq_push as rfq_push_service  # noqa: PLC0415
+    from app.domains.requests import supplier_matching as supplier_matching_service  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
     from app.services import (  # noqa: PLC0415
         notification_service,
-        rfq_push_service,
         settings_service,
-        supplier_matching_service,
     )
 
     try:

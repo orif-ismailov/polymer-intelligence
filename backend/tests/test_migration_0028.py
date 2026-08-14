@@ -251,8 +251,8 @@ class TestOfferModelHelpers:
     def test_has_lab_passport_reads_the_files(self) -> None:
         """Not a cached column: the catalog query already selectinloads files,
         and a second source of truth for "is there a PDF attached" would drift."""
+        from app.domains.marketplace.models import SellerOffer, SellerOfferFile  # noqa: PLC0415
         from app.models.enums import OfferFileKind  # noqa: PLC0415
-        from app.models.marketplace import SellerOffer, SellerOfferFile  # noqa: PLC0415
 
         offer = SellerOffer()
         offer.files = []

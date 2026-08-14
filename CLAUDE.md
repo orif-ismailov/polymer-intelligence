@@ -62,8 +62,9 @@ uv sync --frozen --extra dev        # install exact locked deps (uv.lock is auth
 
 # CI gates (must pass — see .github/workflows/ci.yml):
 ruff check .                         # lint
-mypy app/services --ignore-missing-imports   # type-check (scoped to services/ + schemas/)
-mypy app/schemas  --ignore-missing-imports
+# type-check — the WHOLE app package. Modules that don't pass yet are named in
+# pyproject.toml's burn-down override; that list should only ever shrink.
+mypy app --ignore-missing-imports
 pytest tests/ -q                     # full backend suite
 
 # Single test / file / pattern:
@@ -251,8 +252,19 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 
 - **Time**: store UTC, display `Asia/Tashkent` (`TZ_DISPLAY`). Time helpers in `app/core/time.py`
   (backend) and `lib/tz.ts` (dashboard).
-- **mypy is strict** for `app/services` and `app/schemas` (the CI-gated scope). Business logic
-  lives in `app/services/`; keep it typed.
+- **Domain folders**: the backend reorg is **complete**. Every bounded context lives in
+  `backend/app/domains/<name>/` (models + schemas + service + routers together) — 20 of them:
+  accounts, alerts, companies, compliance, contracts, deals, lab_orders, laboratory, logistics,
+  manufacturers, marketplace, news, notifications, pricing, reference, requests, signals,
+  sourcing, storefront, verification. What remains in `app/services|schemas|models|api/` is a
+  **closed shared kernel**, declared in those packages' `__init__.py` docstrings — "still in
+  `app/services/`" means kernel, not unmigrated. Plans and the binding rules (including the
+  models-barrel module-import rule) are in `.planning/backend-domain-reorg/`.
+- **mypy is strict over all of `app/`.** CI runs `mypy app`, so a new module is type-checked by
+  default; the modules that don't pass yet are named in a burn-down override in
+  `pyproject.toml`, and that list should only ever shrink. (It replaced a hand-maintained
+  list of ~90 file paths that had to be kept in sync across three files, and that silently
+  left anything not on it unchecked.)
 - Dependency versions are deliberately pinned: `uv.lock` is authoritative (`uv sync --frozen`),
   `fastapi`/`starlette` are tightly bounded (route registration is version-sensitive), and
   `ruff==0.15.17` / `mypy==2.1.0` are pinned for a reproducible gate. Don't bump without re-running

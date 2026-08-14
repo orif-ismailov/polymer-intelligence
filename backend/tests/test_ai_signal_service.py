@@ -94,7 +94,7 @@ def _make_journal(
 class TestWriteParseRun:
     def test_inserts_parse_run_and_flushes(self):
         """write_parse_run inserts a ParseRun with correct fields and calls session.flush()."""
-        from app.services.ai_signal_service import write_parse_run  # noqa: PLC0415
+        from app.domains.signals.ai import write_parse_run  # noqa: PLC0415
 
         mock_session = MagicMock()
         added = []
@@ -108,7 +108,7 @@ class TestWriteParseRun:
         mock_session.flush.side_effect = flush_side_effect
 
         # Make ParseRun return an instance with id=None by default
-        from app.models.sources import ParseRun  # noqa: PLC0415
+        from app.domains.signals.source_models import ParseRun  # noqa: PLC0415
 
         write_parse_run(
             mock_session,
@@ -144,7 +144,7 @@ class TestWriteParseRun:
 
     def test_write_parse_run_null_model_for_rule_based(self):
         """write_parse_run with model=None (rule-based path) works correctly."""
-        from app.services.ai_signal_service import write_parse_run  # noqa: PLC0415
+        from app.domains.signals.ai import write_parse_run  # noqa: PLC0415
 
         mock_session = MagicMock()
         added = []
@@ -171,7 +171,7 @@ class TestWriteParseRun:
 
     def test_write_parse_run_error_status(self):
         """write_parse_run with status='error' captures error field."""
-        from app.services.ai_signal_service import write_parse_run  # noqa: PLC0415
+        from app.domains.signals.ai import write_parse_run  # noqa: PLC0415
 
         mock_session = MagicMock()
         added = []
@@ -203,7 +203,7 @@ class TestWriteParseRun:
 
 class TestCreateSignalFromExtraction:
     def _call(self, result, journal, *, needs_review=False, raw_item=None, session=None):
-        from app.services.ai_signal_service import create_signal_from_extraction  # noqa: PLC0415
+        from app.domains.signals.ai import create_signal_from_extraction  # noqa: PLC0415
 
         if raw_item is None:
             raw_item = _make_raw_item()
@@ -211,8 +211,8 @@ class TestCreateSignalFromExtraction:
             session = MagicMock()
 
         with (
-            patch("app.services.ai_signal_service.match_product", return_value=7),
-            patch("app.services.ai_signal_service.extract_grade", return_value=(None, "T30S")),
+            patch("app.domains.signals.ai.match_product", return_value=7),
+            patch("app.domains.signals.ai.extract_grade", return_value=(None, "T30S")),
         ):
             return create_signal_from_extraction(
                 session,
@@ -224,7 +224,7 @@ class TestCreateSignalFromExtraction:
 
     def test_creates_signal_with_ai_jsonb(self):
         """create_signal_from_extraction returns a Signal with ai JSONB stamped."""
-        from app.models.signals import Signal  # noqa: PLC0415
+        from app.domains.signals.models import Signal  # noqa: PLC0415
 
         result = _make_extraction_result()
         journal = _make_journal()
@@ -402,7 +402,7 @@ class TestCreateSignalFromExtraction:
 class TestRaiseBudgetExceededAlert:
     def test_inserts_deduped_alert(self):
         """raise_budget_exceeded_alert inserts a custom/warning alert with ON CONFLICT DO NOTHING."""
-        from app.services.ai_signal_service import raise_budget_exceeded_alert  # noqa: PLC0415
+        from app.domains.signals.ai import raise_budget_exceeded_alert  # noqa: PLC0415
 
         mock_session = MagicMock()
         mock_execute = MagicMock()
@@ -419,7 +419,7 @@ class TestRaiseBudgetExceededAlert:
 
     def test_alert_dedupe_key_contains_today(self):
         """dedupe_key must contain today's UTC date in YYYY-MM-DD format."""
-        from app.services.ai_signal_service import raise_budget_exceeded_alert  # noqa: PLC0415
+        from app.domains.signals.ai import raise_budget_exceeded_alert  # noqa: PLC0415
 
         mock_session = MagicMock()
 
@@ -443,7 +443,7 @@ class TestRaiseBudgetExceededAlert:
 
     def test_alert_has_on_conflict_do_nothing(self):
         """SQL must contain ON CONFLICT DO NOTHING for deduplication."""
-        from app.services.ai_signal_service import raise_budget_exceeded_alert  # noqa: PLC0415
+        from app.domains.signals.ai import raise_budget_exceeded_alert  # noqa: PLC0415
 
         mock_session = MagicMock()
         captured_sql = []

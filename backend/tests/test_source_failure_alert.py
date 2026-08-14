@@ -361,7 +361,7 @@ class TestFailureIsolationDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.models.sources import Source  # noqa: PLC0415
+        from app.domains.signals.source_models import Source  # noqa: PLC0415
         from app.tasks.ingest import run_source_fetch_isolated  # noqa: PLC0415
 
         with Session(migrated_db) as session:
@@ -428,7 +428,7 @@ class TestFailureIsolationDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
-        from app.models.sources import Source  # noqa: PLC0415
+        from app.domains.signals.source_models import Source  # noqa: PLC0415
         from app.tasks.ingest import run_source_fetch_isolated  # noqa: PLC0415
 
         with Session(migrated_db) as session:

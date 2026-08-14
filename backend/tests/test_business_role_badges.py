@@ -87,8 +87,8 @@ def _seller_with_roles(session, account_id, tax, roles):  # noqa: ANN001, ANN202
     `roles` is a list of (role, status) so a test can mix confirmed and declared.
     """
     from app.core.time import utcnow  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import CompanyStatus, SellerOfferStatus  # noqa: PLC0415
 
     with session() as db:

@@ -124,7 +124,7 @@ def session_factory(engine: sa.Engine) -> sessionmaker[Session]:
 
 
 def make_account(db: Session, phone: str):  # noqa: ANN202
-    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
 
     account = UserAccount(phone=phone)
     db.add(account)
@@ -151,7 +151,11 @@ def make_company(db: Session, owner, tax_id: str = "301234567", *, roles=None, *
     Since the role gates (T-B), a company that trades needs seller/buyer roles —
     pass e.g. `roles=["distributor", "trader"]` for a fixture that does both.
     """
-    from app.models.companies import Company, CompanyBusinessRole, CompanyMember  # noqa: PLC0415
+    from app.domains.companies.models import (  # noqa: PLC0415
+        Company,
+        CompanyBusinessRole,
+        CompanyMember,
+    )
     from app.models.enums import (  # noqa: PLC0415
         BusinessRoleStatus,
         CompanyMemberRole,
@@ -189,7 +193,7 @@ def make_company(db: Session, owner, tax_id: str = "301234567", *, roles=None, *
 
 def make_member(db: Session, company, account, *, status=None, role=None):  # noqa: ANN001, ANN202
     """Add `account` to `company` (defaults: active member)."""
-    from app.models.companies import CompanyMember  # noqa: PLC0415
+    from app.domains.companies.models import CompanyMember  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
 
     member = CompanyMember(
@@ -205,7 +209,7 @@ def make_member(db: Session, company, account, *, status=None, role=None):  # no
 
 def make_seller(db: Session, telegram_user_id: int | None = None, **kwargs):  # noqa: ANN003, ANN202
     """A TG-origin marketplace seller."""
-    from app.models.marketplace import Seller  # noqa: PLC0415
+    from app.domains.marketplace.models import Seller  # noqa: PLC0415
 
     seller = Seller(
         telegram_user_id=telegram_user_id,
@@ -219,8 +223,8 @@ def make_seller(db: Session, telegram_user_id: int | None = None, **kwargs):  # 
 
 def make_seller_offer(db: Session, *, company=None, seller=None, status=None, **kwargs):  # noqa: ANN001, ANN003, ANN202
     """A seller_offers row — company-origin (pass `company`) or TG-origin (pass `seller`)."""
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
 
     offer = SellerOffer(
         seller_id=seller.id if seller is not None else None,
@@ -240,7 +244,7 @@ def make_request(db: Session, *, company=None, account=None, **kwargs):  # noqa:
     """A portal-origin (company) purchase request — the RFQ suppliers respond to."""
     import decimal  # noqa: PLC0415
 
-    from app.models.requests import Request  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
 
     request = Request(
         number=kwargs.pop("number", f"REQ-TEST-{id(db) % 100000}-{kwargs.pop('n', 1)}"),

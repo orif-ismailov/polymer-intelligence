@@ -58,8 +58,8 @@ def _raw_item(payload: dict[str, Any], *, raw_item_id: int = 101, source_id: int
 
 class TestCreateBuyRequestSignal:
     def test_maps_structured_payload_to_buy_request(self) -> None:
+        from app.domains.signals.service import create_buy_request_signal_from_xarid
         from app.models.enums import SignalKind
-        from app.services.signal_service import create_buy_request_signal_from_xarid
 
         session = MagicMock()
         sig = create_buy_request_signal_from_xarid(
@@ -80,7 +80,7 @@ class TestCreateBuyRequestSignal:
         assert sig.event_at.year == 2026 and sig.event_at.month == 7
 
     def test_grade_text_falls_back_to_product_text(self) -> None:
-        from app.services.signal_service import create_buy_request_signal_from_xarid
+        from app.domains.signals.service import create_buy_request_signal_from_xarid
 
         sig = create_buy_request_signal_from_xarid(
             MagicMock(), _raw_item(XARID_PAYLOAD), product_id=2, grade_id=None, grade_text=None
@@ -111,7 +111,7 @@ class TestParseXaridItemRouting:
             patch("app.tasks.parse.match_product", return_value=7),
             patch("app.tasks.parse.write_parse_run"),
             patch("app.tasks.parse.llm_extract_signal") as mock_llm,
-            patch("app.services.grade_service.extract_grade", return_value=(None, "HDPE")),
+            patch("app.domains.reference.grades.extract_grade", return_value=(None, "HDPE")),
         ):
             session = _patch_session(mock_get_session, raw_item)
             result = parse_xarid_item(101)
@@ -144,7 +144,7 @@ class TestParseXaridItemRouting:
                 return_value=(llm_result, {"parser": "llm_extract_tools", "model": "haiku"}),
             ),
             patch("app.tasks.parse.write_parse_run"),
-            patch("app.services.grade_service.extract_grade", return_value=(None, "HDPE")),
+            patch("app.domains.reference.grades.extract_grade", return_value=(None, "HDPE")),
         ):
             session = _patch_session(mock_get_session, raw_item)
             result = parse_xarid_item(101)

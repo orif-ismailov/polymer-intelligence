@@ -41,8 +41,8 @@ class TestMadeToOrderNeedsALeadTime:
         time either, the card says nothing a buyer can plan around."""
         import pydantic  # noqa: PLC0415
 
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         with pytest.raises(pydantic.ValidationError, match="lead_time_days"):
             CompanyOfferIn(
@@ -51,8 +51,8 @@ class TestMadeToOrderNeedsALeadTime:
             )
 
     def test_on_order_with_a_lead_time_is_accepted(self) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         body = CompanyOfferIn(
             product_text="HDPE film",
@@ -63,8 +63,8 @@ class TestMadeToOrderNeedsALeadTime:
         assert body.price is None, "a made-to-order offer is priced on request"
 
     def test_in_stock_needs_no_lead_time(self) -> None:
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         body = CompanyOfferIn(
             product_text="HDPE film",
@@ -77,8 +77,8 @@ class TestMadeToOrderNeedsALeadTime:
     def test_a_negative_lead_time_is_rejected(self) -> None:
         import pydantic  # noqa: PLC0415
 
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
 
         with pytest.raises(pydantic.ValidationError):
             CompanyOfferIn(
@@ -94,8 +94,8 @@ class TestExistingRulesAreNotRetightened:
         qty/price to null for on_order and requires them for in_stock. It must
         NOT gain the lead-time requirement: the frozen client cannot send the
         field, so requiring it would break offer creation from Telegram."""
+        from app.domains.marketplace.schemas import SellerOfferCreate  # noqa: PLC0415
         from app.models.enums import OfferAvailability  # noqa: PLC0415
-        from app.schemas.marketplace import SellerOfferCreate  # noqa: PLC0415
 
         body = SellerOfferCreate(
             product_text="HDPE film", availability=OfferAvailability.on_order
@@ -104,7 +104,7 @@ class TestExistingRulesAreNotRetightened:
         assert body.qty_available is None
 
     def test_readiness_flags_default_to_rfq_only(self) -> None:
-        from app.schemas.portal_company import CompanyOfferIn  # noqa: PLC0415
+        from app.domains.companies.schemas import CompanyOfferIn  # noqa: PLC0415
 
         body = CompanyOfferIn(product_text="HDPE film", qty_available="1", price="1")
         assert body.accepts_rfq is True
@@ -116,8 +116,10 @@ class TestMarketCardCarriesTheNewFields:
     def test_portal_card_is_a_superset_of_the_webapp_contract(self) -> None:
         """The Mini App card contract stays byte-identical (webapp/ is frozen);
         the portal card extends it, so P4's badges never drift the shared shape."""
-        from app.schemas.marketplace import CatalogOfferOut  # noqa: PLC0415
-        from app.schemas.portal_market import PortalMarketOfferOut  # noqa: PLC0415
+        from app.domains.marketplace.portal_market_schemas import (
+            PortalMarketOfferOut,  # noqa: PLC0415
+        )
+        from app.domains.marketplace.schemas import CatalogOfferOut  # noqa: PLC0415
 
         webapp = set(CatalogOfferOut.model_fields)
         portal = set(PortalMarketOfferOut.model_fields)
@@ -201,7 +203,7 @@ def _approved_offer(session):  # noqa: ANN001, ANN202
 
 
 def test_favorite_routes_registered() -> None:
-    from app.api.portal.market import router  # noqa: PLC0415
+    from app.domains.marketplace.api_portal_market import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/market/offers/{offer_id}/favorite" in paths

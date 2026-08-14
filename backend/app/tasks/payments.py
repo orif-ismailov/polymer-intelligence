@@ -49,8 +49,8 @@ def open_escrow_on_deal_signed(
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.deals import Deal  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
 
     data = payload if isinstance(payload, dict) else {}
     if data.get("to") != DealStatus.contract_signed.value:
@@ -108,8 +108,8 @@ def apply_escrow_provider_event(event_id: int) -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     try:
         with Session(engine) as db:
@@ -137,8 +137,8 @@ def sweep_provider_events(limit: int = 100) -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     processed = 0
     outcomes: dict[str, int] = {}
@@ -193,8 +193,8 @@ def reconcile_escrow_payments(limit: int = 100) -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.integrations.escrow import client as escrow_client  # noqa: PLC0415
-    from app.services import escrow_service  # noqa: PLC0415
 
     try:
         with Session(engine) as db:

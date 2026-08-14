@@ -34,7 +34,7 @@ def test_routes_registered() -> None:
     first-registered — and the failure would be a silent misroute rather than an
     error. Asserting the ORDER is the only thing that catches that.
     """
-    from app.api.portal.logistics import router  # noqa: PLC0415
+    from app.domains.logistics.api_portal import router  # noqa: PLC0415
 
     paths = [r.path for r in router.routes]  # type: ignore[attr-defined]
     for path in (
@@ -62,7 +62,7 @@ def test_pool_payload_omits_the_buyer_contact() -> None:
     SEPARATE model rather than the buyer's minus a field, so that a field added
     to the buyer's payload cannot silently become visible to every carrier.
     """
-    from app.schemas.portal_logistics import (  # noqa: PLC0415
+    from app.domains.logistics.schemas import (  # noqa: PLC0415
         LogisticsPoolItemOut,
         LogisticsRequestOut,
     )
@@ -79,7 +79,7 @@ def test_create_payload_rejects_blank_and_nonpositive() -> None:
     """Bounds live on the schema, so a non-browser client cannot skip them."""
     import pydantic  # noqa: PLC0415
 
-    from app.schemas.portal_logistics import LogisticsRequestCreateIn  # noqa: PLC0415
+    from app.domains.logistics.schemas import LogisticsRequestCreateIn  # noqa: PLC0415
 
     base = {
         "company_id": 1,
@@ -105,7 +105,7 @@ def test_create_payload_has_no_carrier_field() -> None:
     Re-introducing a target field here is how this quietly becomes addressed
     again, with the pool still running beside it.
     """
-    from app.schemas.portal_logistics import LogisticsRequestCreateIn  # noqa: PLC0415
+    from app.domains.logistics.schemas import LogisticsRequestCreateIn  # noqa: PLC0415
 
     assert not (
         set(LogisticsRequestCreateIn.model_fields)
@@ -152,7 +152,7 @@ def _auth(account_id: int) -> dict[str, str]:
 
 def _carrier(db, owner, tax_id: str, name: str = "Trans Asia Logistics", *, confirmed: bool = True):  # noqa: ANN001, ANN202
     """A verified company with the logistics role confirmed (or merely declared)."""
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, CompanyStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 
@@ -258,9 +258,9 @@ def test_visibility_guard_and_pool_query_agree(api) -> None:  # noqa: ANN001
     «Ответить» button the API then refuses — or worse, the reverse. Checking the
     two against each other is the only way that stays true.
     """
+    from app.domains.logistics import service as logistics_service  # noqa: PLC0415
+    from app.domains.logistics.models import LogisticsRequest  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.models.logistics import LogisticsRequest  # noqa: PLC0415
-    from app.services import logistics_service  # noqa: PLC0415
 
     client, session = api
     with session() as db:
@@ -283,7 +283,7 @@ def test_visibility_guard_and_pool_query_agree(api) -> None:  # noqa: ANN001
     )
 
     with session() as db:
-        from app.models.companies import Company  # noqa: PLC0415
+        from app.domains.companies.models import Company  # noqa: PLC0415
 
         request = db.query(LogisticsRequest).one()
         for company_id in (carrier_id, trader_id, buyer_id):
@@ -531,7 +531,7 @@ def test_broadcast_notifies_every_carrier_but_not_the_buyer(api) -> None:  # noq
     )
 
     with session() as db:
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.services import notification_service  # noqa: PLC0415
 
         rows = (
@@ -580,7 +580,7 @@ def _staff_auth(session, role: str, email: str) -> dict[str, str]:  # noqa: ANN0
 
 
 def test_admin_routes_registered() -> None:
-    from app.api.admin_logistics_requests import router  # noqa: PLC0415
+    from app.domains.logistics.api_admin import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/logistics-requests" in paths

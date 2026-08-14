@@ -78,7 +78,7 @@ def _enable(db, **overrides) -> None:  # noqa: ANN001, ANN003
 
 def _supplier(db, tax, phone, *, roles=()):  # noqa: ANN001, ANN202
     from app.core.time import utcnow  # noqa: PLC0415
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         BusinessRoleStatus,
         CompanyStatus,
@@ -121,8 +121,8 @@ def _fire(request_id: int) -> dict:
 
 @requires_real_db
 def test_the_gate_is_off_by_default(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import RfqPushLog  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.marketplace.models import RfqPushLog  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         request, _supplier_co, _acc = _scene(db)
@@ -137,8 +137,8 @@ def test_the_gate_is_off_by_default(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_a_matched_supplier_is_logged_and_notified(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import RfqPushLog  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.marketplace.models import RfqPushLog  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
@@ -172,8 +172,8 @@ def test_a_matched_supplier_is_logged_and_notified(sf) -> None:  # noqa: ANN001
 def test_running_it_twice_notifies_nobody_twice(sf) -> None:  # noqa: ANN001
     """FR-A2. The unique index is the guard, not the task's memory — so a retry
     after a crash mid-run is safe too."""
-    from app.models.marketplace import RfqPushLog  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.marketplace.models import RfqPushLog  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
 
     with sf() as db:
         request, _supplier_co, _acc = _scene(db)
@@ -192,7 +192,7 @@ def test_running_it_twice_notifies_nobody_twice(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_top_n_caps_the_blast(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import RfqPushLog  # noqa: PLC0415
+    from app.domains.marketplace.models import RfqPushLog  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -214,8 +214,8 @@ def test_top_n_caps_the_blast(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_every_active_member_of_a_matched_supplier_hears(sf) -> None:  # noqa: ANN001
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
     from tests._verification_db import make_member  # noqa: PLC0415
 
     with sf() as db:
@@ -260,8 +260,8 @@ def test_a_missing_request_never_raises(sf) -> None:  # noqa: ANN001
 def test_publishing_an_rfq_enqueues_the_push(sf) -> None:  # noqa: ANN001
     """The trigger point: a company filing an RFQ. Enqueue is fail-soft — a
     broker outage must not break request creation."""
-    from app.schemas.webapp import RequestCreate  # noqa: PLC0415
-    from app.services import request_service  # noqa: PLC0415
+    from app.domains.requests import service as request_service  # noqa: PLC0415
+    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -285,8 +285,8 @@ def test_publishing_an_rfq_enqueues_the_push(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_a_broker_outage_does_not_break_rfq_creation(sf) -> None:  # noqa: ANN001
-    from app.schemas.webapp import RequestCreate  # noqa: PLC0415
-    from app.services import request_service  # noqa: PLC0415
+    from app.domains.requests import service as request_service  # noqa: PLC0415
+    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -313,7 +313,7 @@ def test_a_broker_outage_does_not_break_rfq_creation(sf) -> None:  # noqa: ANN00
 @requires_real_db
 def test_staff_can_see_who_was_notified(sf) -> None:  # noqa: ANN001
     """T3.4: without this the push is invisible to the team supporting it."""
-    from app.services import rfq_push_service  # noqa: PLC0415
+    from app.domains.requests import rfq_push as rfq_push_service  # noqa: PLC0415
 
     with sf() as db:
         request, supplier, _acc = _scene(db)

@@ -58,12 +58,17 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 @requires_real_db
 def test_run_single_check_pipeline_reaches_pending_review(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies import service as company_service
+    from app.domains.verification import service as verification_service
+    from app.domains.verification.models import (
+        VerificationCase,
+        VerificationCheck,
+        VerificationDocument,
+    )
     from app.models.enums import (  # noqa: PLC0415
         VerificationCaseStatus,
         VerificationDocumentKind,
     )
-    from app.models.verification import VerificationCase, VerificationCheck, VerificationDocument
-    from app.services import company_service, verification_service
     from tests._verification_db import make_account
 
     monkeypatch.setattr("app.core.db.SessionLocal", sf)
@@ -102,9 +107,10 @@ def test_run_single_check_pipeline_reaches_pending_review(sf, monkeypatch) -> No
 
 @requires_real_db
 def test_run_single_check_marks_unavailable_and_retries_on_error(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies import service as company_service
+    from app.domains.verification import service as verification_service
+    from app.domains.verification.models import VerificationCheck
     from app.models.enums import VerificationCheckStatus, VerificationCheckType  # noqa: PLC0415
-    from app.models.verification import VerificationCheck
-    from app.services import company_service, verification_service
     from tests._verification_db import make_account
 
     monkeypatch.setattr("app.core.db.SessionLocal", sf)

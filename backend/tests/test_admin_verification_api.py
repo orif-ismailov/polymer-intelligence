@@ -23,7 +23,7 @@ from tests._verification_db import (
 
 
 def test_routes_and_settings_registered() -> None:
-    from app.api.admin_verification import router  # noqa: PLC0415
+    from app.domains.verification.api_admin import router  # noqa: PLC0415
     from app.services.settings_service import _SPECS  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
@@ -48,7 +48,7 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
 
     clean(engine)
     session = session_factory(engine)
-    monkeypatch.setattr("app.services.verification_service._dispatch_checks", lambda case_id: None)
+    monkeypatch.setattr("app.domains.verification.service._dispatch_checks", lambda case_id: None)
     monkeypatch.setattr("app.core.db.SessionLocal", session)  # for the archive task
     app = create_app()
 
@@ -81,9 +81,10 @@ def _staff_auth(session, role: str, email: str) -> dict[str, str]:  # noqa: ANN0
 
 
 def _pending_review_case(session, phone: str, tax: str) -> tuple[int, int]:  # noqa: ANN001
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import VerificationCheckStatus, VerificationCheckType  # noqa: PLC0415
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
-    from app.services import company_service, verification_service  # noqa: PLC0415
 
     with session() as db:
         account = make_account(db, phone)
@@ -114,7 +115,7 @@ def test_cases_authz(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_approve_case_verifies_company(api) -> None:  # noqa: ANN001
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     client, session = api
@@ -140,8 +141,8 @@ def test_approve_case_verifies_company(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_waive_requires_admin(api) -> None:  # noqa: ANN001
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import VerificationCheckType  # noqa: PLC0415
-    from app.models.verification import VerificationCheck  # noqa: PLC0415
 
     client, session = api
     _company_id, case_id = _pending_review_case(session, "+998900000002", "222222222")
@@ -168,10 +169,11 @@ def test_waive_requires_admin(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_suspend_archives_approved_offers(api) -> None:  # noqa: ANN001
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import CompanyStatus, SellerOfferStatus  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
-    from app.services import company_service, event_types  # noqa: PLC0415
+    from app.services import event_types  # noqa: PLC0415
     from app.tasks.verification import archive_company_offers  # noqa: PLC0415
 
     client, session = api
@@ -213,7 +215,7 @@ def test_suspend_archives_approved_offers(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_company_detail_splits_declared_and_confirmed_roles(api) -> None:  # noqa: ANN001
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
 

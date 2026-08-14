@@ -30,7 +30,7 @@ _BASE = "/api/v1/portal/market"
 
 
 def test_market_routes_registered() -> None:
-    from app.api.portal.market import router  # noqa: PLC0415
+    from app.domains.marketplace.api_portal_market import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/market" in paths
@@ -42,7 +42,7 @@ def test_market_routes_registered() -> None:
 def test_list_card_fields_match_webapp_catalog_contract() -> None:
     """Parity: the portal list serializer IS the webapp CatalogOfferOut — the field
     set must not drift from the Mini App market card."""
-    from app.schemas.marketplace import CatalogOfferOut  # noqa: PLC0415
+    from app.domains.marketplace.schemas import CatalogOfferOut  # noqa: PLC0415
 
     fields = set(CatalogOfferOut.model_fields)
     expected = {
@@ -123,8 +123,8 @@ def test_detail_includes_my_company_inquiries(api) -> None:  # noqa: ANN001
         offer = make_seller_offer(db, company=selling_co)
         buyer_owner = make_account(db, "+998900004101")
         buyer_co = make_company(db, buyer_owner, tax_id="314000101")
-        from app.schemas.marketplace import OfferRequestCreate  # noqa: PLC0415
-        from app.services import offer_request_service  # noqa: PLC0415
+        from app.domains.marketplace import requests as offer_request_service  # noqa: PLC0415
+        from app.domains.marketplace.schemas import OfferRequestCreate  # noqa: PLC0415
         offer_request_service.create_company_inquiry(
             db, buyer_co, buyer_owner, offer,
             OfferRequestCreate(quantity=None, message="hi"),

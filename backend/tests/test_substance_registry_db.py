@@ -57,7 +57,7 @@ def db(engine: sa.Engine) -> Session:
 
 
 def _substance(db: Session, **kwargs):  # noqa: ANN003, ANN202
-    from app.models.compliance import Substance  # noqa: PLC0415
+    from app.domains.compliance.models import Substance  # noqa: PLC0415
     from app.models.enums import RegulationLevel  # noqa: PLC0415
 
     row = Substance(
@@ -84,7 +84,7 @@ class TestSeed:
 
     def test_every_seeded_row_carries_its_act_and_revision(self, db: Session) -> None:
         """A row nobody can trace back to a ПКМ is a row a lawyer cannot check."""
-        from app.models.compliance import Substance  # noqa: PLC0415
+        from app.domains.compliance.models import Substance  # noqa: PLC0415
         from app.seed.seed_substances import REVISION, seed_substances  # noqa: PLC0415
 
         seed_substances(db)
@@ -97,7 +97,7 @@ class TestSeed:
         """PP/PE/PVC/PET/PS are in none of the four lists (INTEGRATIONS.md §4).
         If the seed ever marked them regulated, the whole marketplace would stop
         publishing the day the gate is switched on."""
-        from app.models.compliance import Substance  # noqa: PLC0415
+        from app.domains.compliance.models import Substance  # noqa: PLC0415
         from app.models.enums import RegulationLevel  # noqa: PLC0415
         from app.seed.seed_substances import seed_substances  # noqa: PLC0415
 
@@ -112,7 +112,7 @@ class TestSeed:
     ) -> None:
         """Список IV regulates acetone at ≥60% with a ≤12 kg/year exemption. A
         level without the threshold would block ordinary solvent trade."""
-        from app.models.compliance import Substance  # noqa: PLC0415
+        from app.domains.compliance.models import Substance  # noqa: PLC0415
         from app.models.enums import RegulationLevel, RegulationRegime  # noqa: PLC0415
         from app.seed.seed_substances import seed_substances  # noqa: PLC0415
 
@@ -124,7 +124,7 @@ class TestSeed:
         assert acetone.exemption_annual_limit == decimal.Decimal("12.000")
 
     def test_a_new_revision_updates_rows_the_seed_owns(self, db: Session) -> None:
-        from app.models.compliance import Substance  # noqa: PLC0415
+        from app.domains.compliance.models import Substance  # noqa: PLC0415
         from app.seed.seed_substances import seed_substances  # noqa: PLC0415
 
         seed_substances(db)
@@ -142,7 +142,7 @@ class TestSeed:
         """`substance_service.update` clears `seed_revision`; that NULL is the
         row's "hands off" flag. Losing an operator's correction on the next
         deploy would make the admin panel untrustworthy."""
-        from app.models.compliance import Substance  # noqa: PLC0415
+        from app.domains.compliance.models import Substance  # noqa: PLC0415
         from app.seed.seed_substances import seed_substances  # noqa: PLC0415
 
         seed_substances(db)
@@ -161,28 +161,28 @@ class TestSearch:
     def test_finds_by_synonym(self, db: Session) -> None:
         """A seller types "ПНД", not "Полиэтилен" — and one is not a substring
         of the other."""
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
 
         _substance(db, code="pe", name_ru="Полиэтилен", synonyms=["ПНД", "HDPE"])
         found = substance_service.search(db, "пнд")
         assert [s.code for s in found] == ["pe"]
 
     def test_finds_by_cas_and_hs_code(self, db: Session) -> None:
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
 
         _substance(db, code="acetone", cas="67-64-1", hs_code="2914.11")
         assert [s.code for s in substance_service.search(db, "67-64-1")] == ["acetone"]
         assert [s.code for s in substance_service.search(db, "2914")] == ["acetone"]
 
     def test_inactive_rows_stay_out_of_the_picker(self, db: Session) -> None:
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
 
         _substance(db, code="old", name_ru="Устаревшее", is_active=False)
         assert substance_service.search(db, "устар") == []
         assert [s.code for s in substance_service.list_all(db, include_inactive=True)] == ["old"]
 
     def test_blank_query_returns_nothing(self, db: Session) -> None:
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
 
         _substance(db)
         assert substance_service.search(db, "   ") == []
@@ -192,7 +192,7 @@ class TestResolve:
     def test_cas_wins_over_name(self, db: Session) -> None:
         """CAS is exact; a name is a guess. When the AI gives both, the exact
         identifier decides."""
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
 
         _substance(db, code="acetone", name_ru="Ацетон", cas="67-64-1")
         _substance(db, code="toluene", name_ru="Толуол", cas="108-88-3", hs_code="2902.30")
@@ -200,22 +200,22 @@ class TestResolve:
         assert found is not None and found.code == "toluene"
 
     def test_resolves_by_synonym_when_there_is_no_identifier(self, db: Session) -> None:
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
 
         _substance(db, code="acetone", name_ru="Ацетон", synonyms=["Диметилкетон", "propanone"])
         found = substance_service.resolve(db, name="propanone")
         assert found is not None and found.code == "acetone"
 
     def test_unknown_resolves_to_none(self, db: Session) -> None:
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
 
         assert substance_service.resolve(db, cas="000-00-0", name="Неизвестное") is None
 
 
 class TestAdminWrites:
     def test_create_audits_and_stamps_no_seed_revision(self, db: Session) -> None:
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
 
         staff = make_staff(db)
         row = substance_service.create(
@@ -230,8 +230,8 @@ class TestAdminWrites:
         assert audit == ["substance.create"]
 
     def test_update_takes_the_row_out_of_the_seeds_hands(self, db: Session) -> None:
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
 
         staff = make_staff(db)
         row = _substance(db, code="acetone", seed_revision="v1-provisional")
@@ -245,8 +245,8 @@ class TestAdminWrites:
         assert row.name_ru == "Ацетон (правка)"
 
     def test_duplicate_code_is_a_domain_error_not_a_500(self, db: Session) -> None:
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
 
         staff = make_staff(db)
         _substance(db, code="acetone")
@@ -260,8 +260,8 @@ class TestAdminWrites:
     def test_duplicate_cas_is_a_domain_error_too(self, db: Session) -> None:
         """Two rows for one CAS would give two different verdicts for the same
         chemical."""
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
 
         staff = make_staff(db)
         _substance(db, code="acetone", cas="67-64-1")
@@ -275,7 +275,7 @@ class TestAdminWrites:
     def test_deactivate_keeps_the_row(self, db: Session) -> None:
         """Deleting a substance would orphan the offers pointing at it and erase
         why they were once blocked."""
-        from app.services import substance_service  # noqa: PLC0415
+        from app.domains.compliance import substances as substance_service  # noqa: PLC0415
 
         staff = make_staff(db)
         row = _substance(db, code="acetone")

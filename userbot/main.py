@@ -58,8 +58,8 @@ async def run_userbot() -> None:
     from app.core.config import settings  # noqa: PLC0415
     from app.core.db import SessionLocal  # noqa: PLC0415
     from app.ingest.base import RawItemDraft  # noqa: PLC0415
-    from app.models.sources import Source  # noqa: PLC0415
-    from app.services.raw_pipeline import save_raw_items  # noqa: PLC0415
+    from app.domains.signals.source_models import Source  # noqa: PLC0415
+    from app.domains.signals.raw_pipeline import save_raw_items  # noqa: PLC0415
     from userbot.channel_registry import load_enabled_channel_sources  # noqa: PLC0415
     from userbot.heartbeat import write_heartbeat  # noqa: PLC0415
     from userbot.session import build_client  # noqa: PLC0415

@@ -166,7 +166,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_stale_signals_are_rescored(self) -> None:
         """Stale signals get new scoring_prompt_version stamped on their ai JSONB."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -189,7 +189,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_rescored_ai_overwritten_in_place(self) -> None:
         """signals.ai is overwritten with new version + preserves model/prompt_version."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -210,7 +210,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_returned_count_matches_rescored(self) -> None:
         """Returned count exactly matches the number of re-scored signals."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -224,7 +224,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_empty_ai_signals_are_skipped(self) -> None:
         """Signals with empty ai JSONB are skipped (no extraction yet)."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -248,7 +248,7 @@ class TestRescoreOnPromptVersionChange:
         predicate the service applies) so the OFFSET-skip bug would be caught:
         an advancing OFFSET would skip whole batches of not-yet-processed rows.
         """
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -268,7 +268,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_session_flush_called(self) -> None:
         """session.flush() is called after each batch (service-never-commits)."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -282,7 +282,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_session_commit_never_called(self) -> None:
         """session.commit() is NEVER called (service-never-commits axiom)."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -296,7 +296,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_scored_at_is_fresh_iso_timestamp(self) -> None:
         """Re-scored signal has a fresh scored_at ISO-8601 timestamp."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -312,7 +312,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_large_volume_signal_gets_hot_classification(self) -> None:
         """A signal with >100 MT volume + deal kind gets HOT classification."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -334,7 +334,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_news_signal_gets_low_classification(self) -> None:
         """A news signal with no volume/counterparty gets LOW classification."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 
@@ -357,7 +357,7 @@ class TestRescoreOnPromptVersionChange:
 
     def test_none_ai_signals_are_skipped(self) -> None:
         """Signals with ai=None are skipped (not crashed)."""
-        from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+        from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
             rescore_on_prompt_version_change,
         )
 

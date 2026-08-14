@@ -119,7 +119,7 @@ class TestExtractGrade:
 
     def test_extract_grade_regex_match(self) -> None:
         """extract_grade finds a grade token via regex when no DB match."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         session = self._make_session_with_grade(None)
         grade_id, grade_text = extract_grade("PP T30S 300 MT", session)
@@ -129,7 +129,7 @@ class TestExtractGrade:
 
     def test_extract_grade_db_match(self) -> None:
         """extract_grade returns (grade_id, grade_text) when product_grades has a match."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         session = self._make_session_with_grade(42)
         grade_id, grade_text = extract_grade("T30S", session)
@@ -139,7 +139,7 @@ class TestExtractGrade:
 
     def test_extract_grade_no_match_returns_none_none(self) -> None:
         """extract_grade returns (None, None) when neither regex nor DB match."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         session = self._make_session_with_grade(None)
         grade_id, grade_text = extract_grade("some product with no grade info", session)
@@ -150,7 +150,7 @@ class TestExtractGrade:
 
     def test_extract_grade_regex_patterns(self) -> None:
         """Grade regex matches common polymer grade codes."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         grades_to_test = [
             ("T30S", "T30S"),
@@ -170,7 +170,7 @@ class TestExtractGrade:
 
     def test_extract_grade_empty_text(self) -> None:
         """extract_grade handles empty string without raising."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         session = self._make_session_with_grade(None)
         grade_id, grade_text = extract_grade("", session)
@@ -201,8 +201,8 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_sell_offer(self) -> None:
         """create_signal_from_parse creates sell_offer signal for offers section."""
+        from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
         from app.models.enums import SignalKind  # noqa: PLC0415
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_POLYMER, source_id=5, raw_item_id=10)
@@ -225,8 +225,8 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_deal(self) -> None:
         """create_signal_from_parse creates deal signal for deals section."""
+        from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
         from app.models.enums import SignalKind  # noqa: PLC0415
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_DEAL, source_id=3, raw_item_id=20)
@@ -238,8 +238,8 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_price_quote(self) -> None:
         """create_signal_from_parse creates price_quote signal for contracts section."""
+        from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
         from app.models.enums import SignalKind  # noqa: PLC0415
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_PRICE_QUOTE, source_id=2, raw_item_id=30)
@@ -251,7 +251,7 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_volume_none_on_missing(self) -> None:
         """create_signal_from_parse sets volume=None when payload has no volume."""
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
+        from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
 
         payload_no_volume = {**PAYLOAD_PRICE_QUOTE, "volume": None}
         session = MagicMock()
@@ -264,7 +264,7 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_malformed_price_yields_none(self) -> None:
         """create_signal_from_parse handles malformed price string → None (T-02-15)."""
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
+        from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
 
         payload_bad_price = {**PAYLOAD_POLYMER, "price": "not_a_number"}
         session = MagicMock()
@@ -277,7 +277,7 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_counterparty_text(self) -> None:
         """create_signal_from_parse copies counterparty_text from payload."""
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
+        from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_POLYMER, source_id=1, raw_item_id=60)
@@ -289,7 +289,7 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_event_at_from_payload(self) -> None:
         """create_signal_from_parse sets event_at from payload event_date."""
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
+        from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_POLYMER, source_id=1, raw_item_id=70)
@@ -301,7 +301,7 @@ class TestCreateSignalFromParse:
 
     def test_create_signal_status_new(self) -> None:
         """create_signal_from_parse sets status='new'."""
-        from app.services.signal_service import create_signal_from_parse  # noqa: PLC0415
+        from app.domains.signals.service import create_signal_from_parse  # noqa: PLC0415
 
         session = MagicMock()
         raw_item = self._make_raw_item(PAYLOAD_POLYMER, source_id=1, raw_item_id=80)
@@ -519,7 +519,7 @@ class TestParseRawItemRouting:
             parse_raw_item(5)
 
         # Check that a ParseRun ORM object was added with model=NULL
-        from app.models.sources import ParseRun  # noqa: PLC0415
+        from app.domains.signals.source_models import ParseRun  # noqa: PLC0415
 
         parse_run_added = None
         for obj in added_objects:

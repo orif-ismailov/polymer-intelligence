@@ -38,7 +38,7 @@ _P = "/api/v1/portal"
 
 
 def test_admin_routes_registered() -> None:
-    from app.api.admin_substances import router  # noqa: PLC0415
+    from app.domains.compliance.api_admin_substances import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/substances" in paths
@@ -46,7 +46,7 @@ def test_admin_routes_registered() -> None:
 
 
 def test_portal_route_registered() -> None:
-    from app.api.portal.substances import router  # noqa: PLC0415
+    from app.domains.compliance.api_portal_substances import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/substances" in paths
@@ -55,7 +55,7 @@ def test_portal_route_registered() -> None:
 def test_the_registry_is_never_deleted_from_the_api() -> None:
     """Offers point at substances and a blocked offer's history has to stay
     explainable, so the admin deactivates instead of deleting."""
-    from app.api.admin_substances import router  # noqa: PLC0415
+    from app.domains.compliance.api_admin_substances import router  # noqa: PLC0415
 
     methods = {m for r in router.routes for m in r.methods}  # type: ignore[attr-defined]
     assert "DELETE" not in methods
@@ -63,8 +63,8 @@ def test_the_registry_is_never_deleted_from_the_api() -> None:
 
 class TestSchemaRules:
     def test_a_regulated_substance_needs_a_regime(self) -> None:
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
         from app.models.enums import RegulationLevel  # noqa: PLC0415
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
 
         with pytest.raises(ValidationError, match="regulation_regime"):
             SubstanceIn(
@@ -75,14 +75,14 @@ class TestSchemaRules:
             )
 
     def test_free_substances_need_no_regime(self) -> None:
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
 
         row = SubstanceIn(code="pp", name_ru="Полипропилен", hs_code="3902")
         assert row.regulation_regime is None
 
     def test_docs_required_must_name_the_documents(self) -> None:
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
         from app.models.enums import RegulationLevel, RegulationRegime  # noqa: PLC0415
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
 
         with pytest.raises(ValidationError, match="required_docs"):
             SubstanceIn(
@@ -95,8 +95,8 @@ class TestSchemaRules:
             )
 
     def test_required_docs_must_be_uploadable_kinds(self) -> None:
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
         from app.models.enums import RegulationLevel, RegulationRegime  # noqa: PLC0415
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
 
         with pytest.raises(ValidationError):
             SubstanceIn(
@@ -109,8 +109,8 @@ class TestSchemaRules:
             )
 
     def test_a_photo_is_not_a_compliance_document(self) -> None:
+        from app.domains.compliance.substance_schemas import SubstanceIn  # noqa: PLC0415
         from app.models.enums import RegulationLevel, RegulationRegime  # noqa: PLC0415
-        from app.schemas.substance import SubstanceIn  # noqa: PLC0415
 
         with pytest.raises(ValidationError):
             SubstanceIn(

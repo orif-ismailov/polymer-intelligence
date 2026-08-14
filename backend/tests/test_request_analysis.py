@@ -51,8 +51,8 @@ def _patch_service_internals(svc, result, completion=None):
 
 class TestAnalyzeRequestService:
     def test_populates_request_ai(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from app.schemas.request_analysis import RequestAnalysisResult  # noqa: PLC0415
-        from app.services import request_analysis_service as svc  # noqa: PLC0415
+        from app.domains.requests import analysis as svc  # noqa: PLC0415
+        from app.domains.requests.analysis_schemas import RequestAnalysisResult  # noqa: PLC0415
 
         monkeypatch.setattr(svc.settings, "REQUEST_AI_ANALYSIS_ENABLED", True)
         result = RequestAnalysisResult(
@@ -85,7 +85,7 @@ class TestAnalyzeRequestService:
         assert rec.call_args.args[1] == 160  # tokens_in + tokens_out
 
     def test_disabled_flag_returns_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from app.services import request_analysis_service as svc  # noqa: PLC0415
+        from app.domains.requests import analysis as svc  # noqa: PLC0415
 
         monkeypatch.setattr(svc.settings, "REQUEST_AI_ANALYSIS_ENABLED", False)
         db, req = MagicMock(), MagicMock(id=1)
@@ -94,7 +94,7 @@ class TestAnalyzeRequestService:
         llm.assert_not_called()  # no LLM spend when disabled
 
     def test_budget_exceeded_returns_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from app.services import request_analysis_service as svc  # noqa: PLC0415
+        from app.domains.requests import analysis as svc  # noqa: PLC0415
         from parsing.schemas import BudgetExceeded  # noqa: PLC0415
 
         monkeypatch.setattr(svc.settings, "REQUEST_AI_ANALYSIS_ENABLED", True)
@@ -108,7 +108,7 @@ class TestAnalyzeRequestService:
     def test_llm_error_releases_reservation_and_returns_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from app.services import request_analysis_service as svc  # noqa: PLC0415
+        from app.domains.requests import analysis as svc  # noqa: PLC0415
 
         monkeypatch.setattr(svc.settings, "REQUEST_AI_ANALYSIS_ENABLED", True)
         with patch.object(svc, "_build_market_context", return_value={}), \
@@ -166,9 +166,9 @@ class TestAnalyzeEndpoint:
 
         client = _client_with_lookup(admin, req)
         with patch(
-            "app.services.request_analysis_service.analyze_request", side_effect=fake_analyze
+            "app.domains.requests.analysis.analyze_request", side_effect=fake_analyze
         ), patch(
-            "app.services.price_analysis_service.compute_price_analysis", return_value=None
+            "app.domains.pricing.analysis.compute_price_analysis", return_value=None
         ):
             resp = client.post("/api/v1/requests/42/analyze", headers=_auth_headers(1, "admin"))
 
@@ -194,7 +194,7 @@ class TestAnalyzeEndpoint:
         req = _make_mock_request(id=42)
         client = _client_with_lookup(admin, req)
         with patch(
-            "app.services.request_analysis_service.analyze_request", return_value=None
+            "app.domains.requests.analysis.analyze_request", return_value=None
         ):
             resp = client.post("/api/v1/requests/42/analyze", headers=_auth_headers(1, "admin"))
         assert resp.status_code == 503
@@ -205,7 +205,7 @@ class TestAnalyzeEndpoint:
 
 class TestAnalysisTrigger:
     def test_enqueue_soft_dispatches_when_enabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         monkeypatch.setattr(request_service.settings, "REQUEST_AI_ANALYSIS_ENABLED", True)
         with patch("app.tasks.request_analysis.analyze_request_ai") as task:
@@ -214,7 +214,7 @@ class TestAnalysisTrigger:
         assert task.apply_async.call_args.kwargs["queue"] == "parse"
 
     def test_enqueue_soft_noop_when_disabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         monkeypatch.setattr(request_service.settings, "REQUEST_AI_ANALYSIS_ENABLED", False)
         with patch("app.tasks.request_analysis.analyze_request_ai") as task:
@@ -222,7 +222,7 @@ class TestAnalysisTrigger:
         task.apply_async.assert_not_called()
 
     def test_enqueue_soft_swallows_broker_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from app.services import request_service  # noqa: PLC0415
+        from app.domains.requests import service as request_service  # noqa: PLC0415
 
         monkeypatch.setattr(request_service.settings, "REQUEST_AI_ANALYSIS_ENABLED", True)
         with patch("app.tasks.request_analysis.analyze_request_ai") as task:

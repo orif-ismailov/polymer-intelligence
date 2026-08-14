@@ -39,14 +39,14 @@ def _mock_db_no_account() -> MagicMock:
     ],
 )
 def test_normalize_phone_valid(raw: str, expected: str) -> None:
-    from app.services.otp_service import normalize_phone  # noqa: PLC0415
+    from app.domains.accounts.otp import normalize_phone  # noqa: PLC0415
 
     assert normalize_phone(raw) == expected
 
 
 @pytest.mark.parametrize("raw", ["", "abc", "12345", "+", "++998", "9012"])
 def test_normalize_phone_invalid(raw: str) -> None:
-    from app.services.otp_service import InvalidPhone, normalize_phone  # noqa: PLC0415
+    from app.domains.accounts.otp import InvalidPhone, normalize_phone  # noqa: PLC0415
 
     with pytest.raises(InvalidPhone):
         normalize_phone(raw)
@@ -56,7 +56,7 @@ def test_normalize_phone_invalid(raw: str) -> None:
 
 
 def test_request_code_stores_hash_resets_attempts_and_enqueues() -> None:
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     fake.set(otp_service._attempts_key(_PHONE), "3")  # stale attempts must be cleared
@@ -74,7 +74,7 @@ def test_request_code_stores_hash_resets_attempts_and_enqueues() -> None:
 
 
 def test_request_code_cooldown_raises_rate_limited() -> None:
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     with patch.object(otp_service, "_enqueue_sms"):
@@ -86,7 +86,7 @@ def test_request_code_cooldown_raises_rate_limited() -> None:
 
 
 def test_request_code_daily_cap_per_phone() -> None:
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     with patch.object(otp_service, "_enqueue_sms"):
@@ -100,7 +100,7 @@ def test_request_code_daily_cap_per_phone() -> None:
 
 
 def test_request_code_daily_cap_per_ip_across_phones() -> None:
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     ip = "9.9.9.9"
@@ -113,7 +113,7 @@ def test_request_code_daily_cap_per_ip_across_phones() -> None:
 
 
 def test_request_code_never_logs_the_code(caplog) -> None:  # noqa: ANN001
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     with (
@@ -131,7 +131,7 @@ def test_request_code_never_logs_the_code(caplog) -> None:  # noqa: ANN001
 
 
 def test_verify_code_no_pending_code_is_invalid() -> None:
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     with pytest.raises(otp_service.OtpInvalid):
@@ -139,7 +139,7 @@ def test_verify_code_no_pending_code_is_invalid() -> None:
 
 
 def test_verify_code_wrong_code_is_invalid_and_counts_attempt() -> None:
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     fake.setex(otp_service._code_key(_PHONE), 300, otp_service._hash_code("111111"))
@@ -151,7 +151,7 @@ def test_verify_code_wrong_code_is_invalid_and_counts_attempt() -> None:
 
 
 def test_verify_code_locks_out_after_max_attempts() -> None:
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     fake.setex(otp_service._code_key(_PHONE), 300, otp_service._hash_code("111111"))
@@ -168,8 +168,8 @@ def test_verify_code_locks_out_after_max_attempts() -> None:
 
 
 def test_verify_code_success_creates_account() -> None:
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
 
     fake = FakeRedis()
     fake.setex(otp_service._code_key(_PHONE), 300, otp_service._hash_code("123456"))
@@ -187,8 +187,8 @@ def test_verify_code_success_creates_account() -> None:
 
 
 def test_verify_code_success_updates_existing_account() -> None:
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
 
     fake = FakeRedis()
     fake.setex(otp_service._code_key(_PHONE), 300, otp_service._hash_code("123456"))

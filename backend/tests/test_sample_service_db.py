@@ -62,8 +62,8 @@ def _scene(db: Session, *, samples: bool = True):  # noqa: ANN202
 
 class TestRequesting:
     def test_a_buyer_asks_for_a_sample(self, db: Session) -> None:
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus  # noqa: PLC0415
-        from app.services import sample_service  # noqa: PLC0415
 
         seller, buyer, buyer_owner, offer = _scene(db)
         sample = sample_service.request(
@@ -80,7 +80,7 @@ class TestRequesting:
         assert sample.seller_company_id == seller.id
 
     def test_an_offer_without_samples_is_refused(self, db: Session) -> None:
-        from app.services import sample_service  # noqa: PLC0415
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
 
         _seller, buyer, buyer_owner, offer = _scene(db, samples=False)
         with pytest.raises(sample_service.SamplesNotAvailable):
@@ -95,7 +95,7 @@ class TestRequesting:
     def test_a_telegram_sellers_offer_cannot_be_sampled(self, db: Session) -> None:
         """There is no portal account behind it to accept or enter a tracking
         number, so the request would have nowhere to go."""
-        from app.services import sample_service  # noqa: PLC0415
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
 
         _seller, buyer, buyer_owner, _offer = _scene(db)
         tg_seller = make_seller(db, telegram_user_id=555001)
@@ -112,7 +112,7 @@ class TestRequesting:
             )
 
     def test_a_company_cannot_sample_its_own_offer(self, db: Session) -> None:
-        from app.services import sample_service  # noqa: PLC0415
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
 
         seller, _buyer, _buyer_owner, offer = _scene(db)
         seller_owner = make_account(db, "+998900000403")
@@ -130,7 +130,7 @@ class TestRequesting:
     ) -> None:
         """The partial unique index IS the rule; the savepoint keeps a lost race
         from poisoning the caller's transaction."""
-        from app.services import sample_service  # noqa: PLC0415
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
 
         _seller, buyer, buyer_owner, offer = _scene(db)
         sample_service.request(
@@ -150,13 +150,13 @@ class TestRequesting:
             )
         # The session is still usable — that is the point of the savepoint. A
         # poisoned transaction would raise PendingRollbackError here instead.
-        from app.models.lab import SampleRequest  # noqa: PLC0415
+        from app.domains.lab_orders.models import SampleRequest  # noqa: PLC0415
 
         assert db.query(SampleRequest).count() == 1
 
     def test_after_a_decline_the_buyer_may_ask_again(self, db: Session) -> None:
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus  # noqa: PLC0415
-        from app.services import sample_service  # noqa: PLC0415
 
         seller, buyer, buyer_owner, offer = _scene(db)
         first = sample_service.request(
@@ -183,8 +183,9 @@ class TestRequesting:
         assert again.id != first.id
 
     def test_the_seller_is_told(self, db: Session) -> None:
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
-        from app.services import notification_service, sample_service  # noqa: PLC0415
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
+        from app.services import notification_service  # noqa: PLC0415
 
         seller, buyer, buyer_owner, offer = _scene(db)
         sample_service.request(
@@ -208,7 +209,7 @@ class TestRequesting:
 
 class TestMoving:
     def _requested(self, db: Session):  # noqa: ANN202
-        from app.services import sample_service  # noqa: PLC0415
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
 
         seller, buyer, buyer_owner, offer = _scene(db)
         sample = sample_service.request(
@@ -221,8 +222,8 @@ class TestMoving:
         return sample, seller, buyer
 
     def test_the_full_round_trip(self, db: Session) -> None:
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.services import sample_service  # noqa: PLC0415
 
         sample, seller, buyer = self._requested(db)
 
@@ -247,8 +248,8 @@ class TestMoving:
 
     def test_a_seller_cannot_confirm_the_delivery(self, db: Session) -> None:
         """The move this table exists to prevent: it would close their own dispute."""
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.services import sample_service  # noqa: PLC0415
 
         sample, seller, _buyer = self._requested(db)
         sample_service.transition(db, sample, S.accepted, acting_company_id=seller.id)
@@ -264,8 +265,8 @@ class TestMoving:
             sample_service.transition(db, sample, S.received, acting_company_id=seller.id)
 
     def test_a_buyer_cannot_invent_a_shipment(self, db: Session) -> None:
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.services import sample_service  # noqa: PLC0415
 
         sample, seller, buyer = self._requested(db)
         sample_service.transition(db, sample, S.accepted, acting_company_id=seller.id)
@@ -282,8 +283,8 @@ class TestMoving:
     def test_shipping_without_a_tracking_reference_is_refused(
         self, db: Session
     ) -> None:
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.services import sample_service  # noqa: PLC0415
 
         sample, seller, _buyer = self._requested(db)
         sample_service.transition(db, sample, S.accepted, acting_company_id=seller.id)
@@ -293,16 +294,16 @@ class TestMoving:
             )
 
     def test_declining_without_a_reason_is_refused(self, db: Session) -> None:
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.services import sample_service  # noqa: PLC0415
 
         sample, seller, _buyer = self._requested(db)
         with pytest.raises(sample_service.ReasonRequired):
             sample_service.transition(db, sample, S.declined, acting_company_id=seller.id)
 
     def test_an_outsider_cannot_touch_it(self, db: Session) -> None:
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.services import sample_service  # noqa: PLC0415
 
         sample, _seller, _buyer = self._requested(db)
         outsider_owner = make_account(db, "+998900000404")
@@ -311,9 +312,10 @@ class TestMoving:
             sample_service.transition(db, sample, S.accepted, acting_company_id=outsider.id)
 
     def test_each_move_tells_the_other_side(self, db: Session) -> None:
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
-        from app.services import notification_service, sample_service  # noqa: PLC0415
+        from app.services import notification_service  # noqa: PLC0415
         from tests._verification_db import make_member  # noqa: PLC0415
 
         sample, seller, buyer = self._requested(db)
@@ -340,9 +342,10 @@ class TestMoving:
 
     def test_two_moves_produce_two_bells(self, db: Session) -> None:
         """dedup=False: "accepted" and "shipped" are different sentences."""
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.models.enums import SampleRequestStatus as S  # noqa: PLC0415
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
-        from app.services import notification_service, sample_service  # noqa: PLC0415
+        from app.services import notification_service  # noqa: PLC0415
 
         sample, seller, _buyer = self._requested(db)
         sample_service.transition(db, sample, S.accepted, acting_company_id=seller.id)
@@ -368,7 +371,7 @@ class TestMoving:
 
 class TestLists:
     def test_each_side_sees_its_own_column(self, db: Session) -> None:
-        from app.services import sample_service  # noqa: PLC0415
+        from app.domains.lab_orders import samples as sample_service  # noqa: PLC0415
 
         seller, buyer, buyer_owner, offer = _scene(db)
         sample = sample_service.request(

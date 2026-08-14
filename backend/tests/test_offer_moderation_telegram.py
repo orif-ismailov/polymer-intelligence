@@ -17,8 +17,8 @@ from tests._claims import claim_update
 
 
 def test_moderate_via_telegram_approve_sets_public_and_audits() -> None:
+    from app.domains.marketplace import service as offer_service  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import offer_service  # noqa: PLC0415
 
     offer = MagicMock()
     # No chemistry on this offer: a bare MagicMock would answer "yes" to having
@@ -28,7 +28,7 @@ def test_moderate_via_telegram_approve_sets_public_and_audits() -> None:
     offer.hs_code = None
     db = MagicMock()
 
-    with patch("app.services.offer_service.write_audit") as mock_audit:
+    with patch("app.domains.marketplace.service.write_audit") as mock_audit:
         offer_service.moderate_offer_via_telegram(db, offer, 555, approve=True)
 
     # The decision is a guarded UPDATE, not a read-then-write (QA #1): the SET
@@ -47,13 +47,13 @@ def test_moderate_via_telegram_approve_sets_public_and_audits() -> None:
 
 
 def test_moderate_via_telegram_reject_sets_rejected() -> None:
+    from app.domains.marketplace import service as offer_service  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import offer_service  # noqa: PLC0415
 
     offer = MagicMock()
     db = MagicMock()
 
-    with patch("app.services.offer_service.write_audit"):
+    with patch("app.domains.marketplace.service.write_audit"):
         offer_service.moderate_offer_via_telegram(db, offer, 555, approve=False, note="spam")
 
     values, where = claim_update(db, "seller_offers")
@@ -66,14 +66,14 @@ def test_moderate_via_telegram_losing_the_race_raises() -> None:
     """0 rows updated = another decision already claimed the offer (QA #1)."""
     import pytest  # noqa: PLC0415
 
-    from app.services import offer_service  # noqa: PLC0415
+    from app.domains.marketplace import service as offer_service  # noqa: PLC0415
 
     offer = MagicMock()
     db = MagicMock()
     db.execute.return_value.rowcount = 0
 
     with (
-        patch("app.services.offer_service.write_audit"),
+        patch("app.domains.marketplace.service.write_audit"),
         pytest.raises(offer_service.AlreadyModerated),
     ):
         offer_service.moderate_offer_via_telegram(db, offer, 555, approve=False)
@@ -83,8 +83,8 @@ def test_apply_moderation_reports_already_when_the_claim_loses() -> None:
     """A stale pre-check must not become a second verdict — the tap reports 'already'."""
     from telegram.handlers import moderation  # noqa: PLC0415
 
+    from app.domains.marketplace import service as offer_service  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.services import offer_service  # noqa: PLC0415
 
     offer = MagicMock()
     offer.status = SellerOfferStatus.pending_moderation  # stale read: it just left
@@ -93,7 +93,7 @@ def test_apply_moderation_reports_already_when_the_claim_loses() -> None:
         patch("sqlalchemy.orm.Session") as mock_session_cls,
         patch("app.core.db.engine"),
         patch(
-            "app.services.offer_service.moderate_offer_via_telegram",
+            "app.domains.marketplace.service.moderate_offer_via_telegram",
             side_effect=offer_service.AlreadyModerated(11, "approved"),
         ),
     ):
@@ -122,7 +122,7 @@ def _run_apply(offer_status: object, *, approve: bool = True) -> dict[str, objec
     with (
         patch("sqlalchemy.orm.Session") as mock_session_cls,
         patch("app.core.db.engine"),
-        patch("app.services.offer_service.moderate_offer_via_telegram") as mock_moderate,
+        patch("app.domains.marketplace.service.moderate_offer_via_telegram") as mock_moderate,
     ):
         mock_session = MagicMock()
         mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)

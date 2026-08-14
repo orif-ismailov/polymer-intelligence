@@ -157,7 +157,7 @@ class TestCreateRequest:
         """Valid body + initData dep override → 201 + {id, number, status}."""
         mock_req = _make_mock_request(id=42)
 
-        with patch("app.api.webapp.requests.request_service") as mock_svc:
+        with patch("app.domains.requests.api_webapp.request_service") as mock_svc:
             mock_svc.create_request.return_value = mock_req
             resp = webapp_client.post(
                 "/api/v1/webapp/requests",
@@ -457,9 +457,9 @@ class TestFileUpload:
         mock_req_file = _make_mock_request_file(id=1, request_id=42)
         application = self._make_file_tc(mock_req=mock_req, file_count=0)
 
-        # Patch upload_request_file in app.api.webapp.files where it's called via storage_service
+        # Patch upload_request_file in app.domains.requests.api_webapp_files where it's called via storage_service
         with patch("app.api.health._check_redis", return_value="ok"), \
-             patch("app.api.webapp.files.storage_service") as mock_storage, \
+             patch("app.domains.requests.api_webapp_files.storage_service") as mock_storage, \
              TestClient(application, raise_server_exceptions=True) as tc:
             mock_storage.upload_request_file.return_value = mock_req_file
             mock_storage.MAX_FILES = 5

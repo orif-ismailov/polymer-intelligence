@@ -40,7 +40,7 @@ _JPEG = b"\xff\xd8\xff\xe0 not a document"
 
 
 def test_portal_lab_routes_registered() -> None:
-    from app.api.portal.lab import router  # noqa: PLC0415
+    from app.domains.lab_orders.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/lab-orders" in paths
@@ -48,7 +48,7 @@ def test_portal_lab_routes_registered() -> None:
 
 
 def test_admin_lab_routes_registered() -> None:
-    from app.api.admin_lab import router  # noqa: PLC0415
+    from app.domains.lab_orders.api_admin import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     for path in (
@@ -66,7 +66,7 @@ def test_admin_lab_routes_registered() -> None:
 def test_the_customer_cannot_drive_the_status() -> None:
     """Statuses are staff's — nothing a customer could press makes a laboratory
     work faster, and a self-served `done` would forge a passport."""
-    from app.api.portal.lab import router  # noqa: PLC0415
+    from app.domains.lab_orders.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert not any("transition" in p or "result" in p for p in paths)
@@ -85,8 +85,8 @@ def engine() -> sa.Engine:
 def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     from app.core.db import get_db  # noqa: PLC0415
     from app.core.redis import get_redis  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
-    from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
     from tests._fake_redis import FakeRedis  # noqa: PLC0415
 
@@ -375,7 +375,7 @@ class TestAdminLabQueue:
         assert body["result_offer_file_id"] is not None
         assert body["available_transitions"] == []
 
-        from app.models.marketplace import SellerOffer  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
 
         with session() as db:
             offer = db.get(SellerOffer, scene["offer_id"])
@@ -481,7 +481,7 @@ class TestSellerPassportUpload:
         assert response.status_code == 201, response.text
         assert response.json()["status"] == "pending_moderation"
 
-        from app.models.marketplace import SellerOffer  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
 
         with session() as db:
             offer = db.get(SellerOffer, scene["offer_id"])

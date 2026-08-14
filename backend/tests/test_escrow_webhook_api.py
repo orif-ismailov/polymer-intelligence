@@ -47,7 +47,7 @@ _URL = "/api/v1/webhooks/escrow/generic"
 
 
 def test_route_registered() -> None:
-    from app.api.webhooks_escrow import router  # noqa: PLC0415
+    from app.domains.deals.api_webhooks import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/webhooks/escrow/{provider}" in paths
@@ -55,7 +55,7 @@ def test_route_registered() -> None:
 
 def test_route_is_post_only() -> None:
     """No GET: a callback inbox that answers GETs invites probing."""
-    from app.api.webhooks_escrow import router  # noqa: PLC0415
+    from app.domains.deals.api_webhooks import router  # noqa: PLC0415
 
     methods = {m for r in router.routes for m in r.methods}  # type: ignore[attr-defined]
     assert methods == {"POST"}
@@ -63,7 +63,7 @@ def test_route_is_post_only() -> None:
 
 def test_route_is_absent_from_the_openapi_schema() -> None:
     """An external contour is not part of our published API surface."""
-    from app.api.webhooks_escrow import router  # noqa: PLC0415
+    from app.domains.deals.api_webhooks import router  # noqa: PLC0415
 
     assert all(
         getattr(route, "include_in_schema", True) is False
@@ -106,7 +106,7 @@ def api(engine: sa.Engine):  # noqa: ANN201
     app.dependency_overrides[get_redis] = _override_redis
     with (
         patch("app.api.health._check_redis", return_value="ok"),
-        patch("app.api.webhooks_escrow.settings.ESCROW_WEBHOOK_SECRET", _SECRET),
+        patch("app.domains.deals.api_webhooks.settings.ESCROW_WEBHOOK_SECRET", _SECRET),
         TestClient(app) as client,
     ):
         yield client, session
@@ -115,9 +115,11 @@ def api(engine: sa.Engine):  # noqa: ANN201
 
 def _live_payment(session, *, ref="ESC-1", amount=decimal.Decimal("25000.00")):  # noqa: ANN001, ANN202
     """A deal at contract_signed with escrow opened on the live rail."""
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.enums import CompanyStatus, DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import company_service, deal_service, escrow_service  # noqa: PLC0415
 
     with session() as db:
         buyer_acc = make_account(db, "+998900000001")
@@ -177,14 +179,14 @@ def test_a_wrong_token_is_rejected(api) -> None:  # noqa: ANN001
 def test_an_unconfigured_secret_hides_the_endpoint(api) -> None:  # noqa: ANN001
     """404, not 401 — a deployment without escrow should not advertise the rail."""
     client, _ = api
-    with patch("app.api.webhooks_escrow.settings.ESCROW_WEBHOOK_SECRET", ""):
+    with patch("app.domains.deals.api_webhooks.settings.ESCROW_WEBHOOK_SECRET", ""):
         resp = client.post(_URL, json=_body(), headers={"X-Escrow-Token": _SECRET})
     assert resp.status_code == 404
 
 
 @requires_real_db
 def test_a_rejected_callback_records_nothing(api) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
     client.post(_URL, json=_body(), headers={"X-Escrow-Token": "nope"})
@@ -197,7 +199,7 @@ def test_a_rejected_callback_records_nothing(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_an_authenticated_callback_is_recorded_and_acknowledged(api) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
     _live_payment(session)
@@ -218,7 +220,7 @@ def test_an_authenticated_callback_is_recorded_and_acknowledged(api) -> None:  #
 
 @requires_real_db
 def test_a_replayed_callback_yields_exactly_one_row(api) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
     _live_payment(session)
@@ -239,7 +241,7 @@ def test_an_unreadable_body_is_still_stored_and_acknowledged(api) -> None:  # no
     Refusing it would make the bank retry forever against a parser that will
     never accept it, and we would have no record of what it actually sent.
     """
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
 
@@ -259,7 +261,7 @@ def test_an_unreadable_body_is_still_stored_and_acknowledged(api) -> None:  # no
 
 @requires_real_db
 def test_a_replayed_unreadable_body_still_collapses_to_one_row(api) -> None:  # noqa: ANN001
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
     raw = b"<callback>funded</callback>"
@@ -279,7 +281,7 @@ def test_a_replayed_unreadable_body_still_collapses_to_one_row(api) -> None:  # 
 @requires_real_db
 def test_a_json_array_body_is_wrapped_rather_than_refused(api) -> None:  # noqa: ANN001
     """`payload` is JSONB of an object; a top-level array is kept verbatim as raw."""
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
 
@@ -294,7 +296,7 @@ def test_a_json_array_body_is_wrapped_rather_than_refused(api) -> None:  # noqa:
 @requires_real_db
 def test_an_oversized_body_is_refused(api) -> None:  # noqa: ANN001
     """A callback inbox is not a file upload endpoint."""
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
     resp = client.post(
@@ -312,7 +314,7 @@ def test_an_oversized_body_is_refused(api) -> None:  # noqa: ANN001
 def test_a_broker_outage_does_not_lose_the_callback(api) -> None:  # noqa: ANN001
     """The row is committed before the task is enqueued, and the sweeper is the
     reason that split exists: a Redis blip must cost latency, not evidence."""
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
     _live_payment(session)
@@ -332,7 +334,7 @@ def test_a_broker_outage_does_not_lose_the_callback(api) -> None:  # noqa: ANN00
 @requires_real_db
 def test_an_unmapped_provider_is_recorded_not_refused(api) -> None:  # noqa: ANN001
     """Evidence first. `apply_provider_event` holds it with `unknown_provider`."""
-    from app.models.payments import ProviderEvent  # noqa: PLC0415
+    from app.domains.deals.payment_models import ProviderEvent  # noqa: PLC0415
 
     client, session = api
 
@@ -366,9 +368,9 @@ def test_a_junk_provider_name_is_refused(api) -> None:  # noqa: ANN001
 @requires_real_db
 def test_the_callback_reaches_the_payment_through_the_task(api) -> None:  # noqa: ANN001
     """End to end with the Celery task called synchronously: bank → 200 → payment."""
-    from app.models.deals import Deal  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
+    from app.domains.deals.payment_models import EscrowPayment, ProviderEvent  # noqa: PLC0415
     from app.models.enums import DealStatus, EscrowStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment, ProviderEvent  # noqa: PLC0415
     from app.tasks.payments import apply_escrow_provider_event  # noqa: PLC0415
 
     client, session = api
@@ -396,8 +398,8 @@ def test_the_callback_reaches_the_payment_through_the_task(api) -> None:  # noqa
 
 @requires_real_db
 def test_the_sweeper_picks_up_what_the_broker_dropped(api) -> None:  # noqa: ANN001
+    from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.models.payments import EscrowPayment  # noqa: PLC0415
     from app.tasks.payments import sweep_provider_events  # noqa: PLC0415
 
     client, session = api

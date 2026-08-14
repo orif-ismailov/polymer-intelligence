@@ -42,7 +42,7 @@ EXPECTED: dict[str, set[str]] = {
 
 def _table() -> dict[str, set[str]]:
     """VALID_TRANSITIONS flattened to plain strings."""
-    from app.services.deal_service import VALID_TRANSITIONS  # noqa: PLC0415
+    from app.domains.deals.service import VALID_TRANSITIONS  # noqa: PLC0415
 
     return {
         frm.value: {to.value for to in targets} for frm, targets in VALID_TRANSITIONS.items()
@@ -50,8 +50,8 @@ def _table() -> dict[str, set[str]]:
 
 
 def _actors(frm: str, to: str) -> set[str]:
+    from app.domains.deals.service import allowed_actors  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.services.deal_service import allowed_actors  # noqa: PLC0415
 
     return {a.value for a in allowed_actors(DealStatus(frm), DealStatus(to))}
 

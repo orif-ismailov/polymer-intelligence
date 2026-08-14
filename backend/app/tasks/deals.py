@@ -39,7 +39,7 @@ def _advance(contract_id_raw: str | None, to_status: DealStatus, expect: DealSta
     from sqlalchemy.orm import Session  # noqa: PLC0415
 
     from app.core.db import engine  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     if contract_id_raw is None:
         return {"status": "skipped", "error": "no contract id"}

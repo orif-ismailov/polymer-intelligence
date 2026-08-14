@@ -35,7 +35,7 @@ _BASE = "/api/v1/public"
 
 
 def test_public_routes_registered() -> None:
-    from app.api.public import router  # noqa: PLC0415
+    from app.domains.storefront.api import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/public/offers" in paths
@@ -58,7 +58,7 @@ def test_news_filters_route_is_declared_before_the_id_route() -> None:
     Starlette matches in declaration order, so the id route declared first would
     swallow "filters" and answer 422 on a path that has to work.
     """
-    from app.api.public import router  # noqa: PLC0415
+    from app.domains.storefront.api import router  # noqa: PLC0415
 
     paths = [r.path for r in router.routes]  # type: ignore[attr-defined]
     assert paths.index("/public/news/articles/filters") < paths.index(
@@ -75,8 +75,8 @@ def test_public_news_reader_matches_the_portal_surface() -> None:
     signed-in surfaces use -- a public schema that drifts is how a field nobody
     audited becomes crawlable.
     """
-    from app.api.portal.news import router as portal_router  # noqa: PLC0415
-    from app.api.public import router as public_router  # noqa: PLC0415
+    from app.domains.news.api_portal import router as portal_router  # noqa: PLC0415
+    from app.domains.storefront.api import router as public_router  # noqa: PLC0415
 
     def models(router, prefix: str) -> dict[str, object]:  # noqa: ANN001
         return {
@@ -125,7 +125,7 @@ _NEWS_CARD = {
 
 
 def test_news_articles_are_listed_without_any_credentials() -> None:
-    with patch("app.services.news_service.list_news_articles", return_value=[_NEWS_CARD]):
+    with patch("app.domains.news.service.list_news_articles", return_value=[_NEWS_CARD]):
         resp = _anon_client().get(f"{_BASE}/news/articles")
     assert resp.status_code == 200, resp.text
     assert resp.json()[0]["headline"].startswith("Shurtan")
@@ -139,25 +139,25 @@ def test_news_article_detail_and_facets_are_anonymous() -> None:
         "countries": [{"value": "UZ", "count": 9}],
         "products": [{"value": "PP", "count": 6}],
     }
-    with patch("app.services.news_service.list_news_filter_options", return_value=facets):
+    with patch("app.domains.news.service.list_news_filter_options", return_value=facets):
         resp = client.get(f"{_BASE}/news/articles/filters")
     assert resp.status_code == 200, resp.text
     assert resp.json()["countries"][0]["value"] == "UZ"
 
     detail = {**_NEWS_CARD, "body": "…", "source_url": "https://example.test/a"}
-    with patch("app.services.news_service.get_news_article", return_value=detail):
+    with patch("app.domains.news.service.get_news_article", return_value=detail):
         resp = client.get(f"{_BASE}/news/articles/42")
     assert resp.status_code == 200, resp.text
     assert resp.json()["source_url"] == "https://example.test/a"
 
-    with patch("app.services.news_service.get_news_article", return_value=None):
+    with patch("app.domains.news.service.get_news_article", return_value=None):
         resp = client.get(f"{_BASE}/news/articles/999")
     assert resp.status_code == 404
 
 
 def test_public_news_forwards_every_filter_to_the_service() -> None:
     """The reader is only as good as the params that survive the handler."""
-    with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+    with patch("app.domains.news.service.list_news_articles", return_value=[]) as mock_list:
         resp = _anon_client().get(
             f"{_BASE}/news/articles",
             params={
@@ -177,7 +177,7 @@ def test_public_news_forwards_every_filter_to_the_service() -> None:
 
 
 def test_public_news_scope_all_means_no_scope() -> None:
-    with patch("app.services.news_service.list_news_articles", return_value=[]) as mock_list:
+    with patch("app.domains.news.service.list_news_articles", return_value=[]) as mock_list:
         resp = _anon_client().get(f"{_BASE}/news/articles", params={"scope": "all"})
     assert resp.status_code == 200
     assert mock_list.call_args.kwargs["scope"] is None
@@ -193,7 +193,7 @@ def test_no_public_route_depends_on_an_account() -> None:
     later.
     """
     from app.api.deps import get_current_account, get_current_client  # noqa: PLC0415
-    from app.api.public import router  # noqa: PLC0415
+    from app.domains.storefront.api import router  # noqa: PLC0415
 
     guarded = {get_current_account, get_current_client}
     for route in router.routes:
@@ -204,8 +204,8 @@ def test_no_public_route_depends_on_an_account() -> None:
 
 def test_directory_slugs_cover_every_public_role() -> None:
     """The nav promises four directories; the slug map must serve all four."""
-    from app.api.public import DIRECTORY_SLUGS  # noqa: PLC0415
-    from app.services.directory_service import PUBLIC_DIRECTORY_ROLES  # noqa: PLC0415
+    from app.domains.companies.directory import PUBLIC_DIRECTORY_ROLES  # noqa: PLC0415
+    from app.domains.storefront.api import DIRECTORY_SLUGS  # noqa: PLC0415
 
     assert set(DIRECTORY_SLUGS.values()) == set(PUBLIC_DIRECTORY_ROLES)
 
@@ -216,7 +216,7 @@ def test_public_offer_card_omits_seller_contact() -> None:
     Contact reveal is what the authenticated inquiry flow is for; leaking it
     here would also make every supplier's number scrapable.
     """
-    from app.schemas.public import PublicOfferCard, PublicOfferDetail  # noqa: PLC0415
+    from app.domains.storefront.schemas import PublicOfferCard, PublicOfferDetail  # noqa: PLC0415
 
     forbidden = {"seller", "contact", "phone", "telegram", "telegram_username", "email"}
     for model in (PublicOfferCard, PublicOfferDetail):
@@ -224,7 +224,7 @@ def test_public_offer_card_omits_seller_contact() -> None:
 
 
 def test_public_offer_detail_omits_moderation_internals() -> None:
-    from app.schemas.public import PublicOfferDetail  # noqa: PLC0415
+    from app.domains.storefront.schemas import PublicOfferDetail  # noqa: PLC0415
 
     forbidden = {
         "status",
@@ -239,7 +239,10 @@ def test_public_offer_detail_omits_moderation_internals() -> None:
 
 
 def test_public_company_card_omits_bank_and_case_data() -> None:
-    from app.schemas.public import PublicCompanyCard, PublicCompanyDetail  # noqa: PLC0415
+    from app.domains.storefront.schemas import (  # noqa: PLC0415
+        PublicCompanyCard,
+        PublicCompanyDetail,
+    )
 
     forbidden = {
         "bank_accounts",
@@ -261,7 +264,7 @@ def test_public_logistics_snippet_carries_no_contact_route() -> None:
     during registration is safe to publish EXCEPT a direct line — the platform's
     whole position is that contact happens through it.
     """
-    from app.schemas.public import PublicLogisticsSnippet  # noqa: PLC0415
+    from app.domains.storefront.schemas import PublicLogisticsSnippet  # noqa: PLC0415
 
     forbidden = {
         "phone",
@@ -284,8 +287,8 @@ def test_logistics_snippet_is_none_without_a_profile() -> None:
     and skipped it still gets a (blank) block, because "filled in nothing" and
     "is not a carrier" are different facts about a company.
     """
-    from app.models.companies import Company  # noqa: PLC0415
-    from app.services import logistics_service  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.logistics import service as logistics_service  # noqa: PLC0415
 
     assert logistics_service.logistics_profile_snippet(Company(logistics_profile=None)) is None
     assert logistics_service.logistics_profile_snippet(Company(logistics_profile={})) is None
@@ -299,8 +302,8 @@ def test_logistics_snippet_survives_a_malformed_blob() -> None:
     page. `True` is called out because `bool` is an `int` subclass in Python, so
     a stray flag would otherwise render as «Опыт работы: 1 год».
     """
-    from app.models.companies import Company  # noqa: PLC0415
-    from app.services import logistics_service  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.logistics import service as logistics_service  # noqa: PLC0415
 
     snippet = logistics_service.logistics_profile_snippet(
         Company(
@@ -358,7 +361,7 @@ def api(engine: sa.Engine):  # noqa: ANN201
 
 
 def _confirm_role(db, company_id: int, role) -> None:  # noqa: ANN001
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
 
     db.add(
@@ -497,7 +500,7 @@ def test_directory_serves_each_role_and_scopes_the_profile(api) -> None:  # noqa
 @requires_real_db
 def test_unverified_company_is_absent_from_every_directory(api) -> None:  # noqa: ANN001
     """`declared` is a self-claim. Only `confirmed` on a verified company lists."""
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, CompanyStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as Role  # noqa: PLC0415
 

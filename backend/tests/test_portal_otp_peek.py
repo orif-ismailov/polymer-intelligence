@@ -50,7 +50,7 @@ def test_peek_404_when_eskiz_even_if_debug() -> None:
 
 def test_peek_returns_code_when_console_and_debug() -> None:
     from app.core.config import settings  # noqa: PLC0415
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     with (

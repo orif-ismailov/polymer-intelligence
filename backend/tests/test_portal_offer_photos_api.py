@@ -34,7 +34,7 @@ _PDF = b"%PDF-1.4 not a picture"
 
 
 def test_routes_registered() -> None:
-    from app.api.portal.offers import router  # noqa: PLC0415
+    from app.domains.marketplace.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/offers/{offer_id}/files" in paths
@@ -61,7 +61,7 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     session = session_factory(engine)
     fake_redis = FakeRedis()
     # Moderation notifications must not reach a broker.
-    monkeypatch.setattr("app.services.offer_service.enqueue_offer_group_notify", lambda *a, **k: None)
+    monkeypatch.setattr("app.domains.marketplace.service.enqueue_offer_group_notify", lambda *a, **k: None)
     app = create_app()
 
     def _override_db():  # noqa: ANN202
@@ -93,15 +93,15 @@ def _auth(session, phone: str) -> dict[str, str]:  # noqa: ANN001
 
 def _verified_company(session, client, auth: dict[str, str], tax_id: str) -> int:  # noqa: ANN001
     """A company must be verified before it may publish offers (R1 gate)."""
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     created = client.post(_BASE, json={"tax_id": tax_id}, headers=auth)
     assert created.status_code == 201, created.text
     company_id = int(created.json()["id"])
     with session() as db:
+        from app.domains.companies import service as company_service  # noqa: PLC0415
         from app.models.enums import CompanyBusinessRole  # noqa: PLC0415
-        from app.services import company_service  # noqa: PLC0415
 
         company = db.get(Company, company_id)
         assert company is not None
@@ -137,8 +137,8 @@ def _upload(client, auth, company_id: int, offer_id: int, content: bytes, name: 
 
 
 def _set_status(session, offer_id: int, status_value: str) -> None:  # noqa: ANN001
+    from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.marketplace import SellerOffer  # noqa: PLC0415
 
     with session() as db:
         offer = db.get(SellerOffer, offer_id)

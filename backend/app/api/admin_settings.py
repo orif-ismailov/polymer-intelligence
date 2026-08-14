@@ -17,6 +17,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.core.db import get_db
+from app.domains.news import reports as report_service
+from app.domains.news import service as news_service
+from app.domains.signals import sources as source_service
 from app.models.staff import StaffUser
 from app.schemas.admin_settings import (
     NewsStats,
@@ -25,7 +28,7 @@ from app.schemas.admin_settings import (
     SettingItem,
     SourceActivity,
 )
-from app.services import news_service, report_service, settings_service, source_service
+from app.services import settings_service
 
 logger = logging.getLogger(__name__)
 

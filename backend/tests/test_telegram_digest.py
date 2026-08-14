@@ -14,7 +14,7 @@ def _news(headline: str, importance: str = "high", impact: str = "negative", sou
 
 
 def test_footer_always_present() -> None:
-    from app.services.report_service import render_telegram_digest
+    from app.domains.news.reports import render_telegram_digest
 
     md = render_telegram_digest({"date": "2026-07-18", "products": []})
     assert md.endswith("🤖 Powered by IMEX AI")
@@ -22,7 +22,7 @@ def test_footer_always_present() -> None:
 
 
 def test_never_exceeds_limit_even_with_many_items() -> None:
-    from app.services.report_service import TELEGRAM_DIGEST_LIMIT, render_telegram_digest
+    from app.domains.news.reports import TELEGRAM_DIGEST_LIMIT, render_telegram_digest
 
     snapshot = {
         "date": "2026-07-18",
@@ -43,7 +43,7 @@ def test_never_exceeds_limit_even_with_many_items() -> None:
 
 
 def test_includes_top_news_with_markers() -> None:
-    from app.services.report_service import render_telegram_digest
+    from app.domains.news.reports import render_telegram_digest
 
     snapshot = {
         "date": "2026-07-18",
@@ -66,7 +66,7 @@ def test_includes_top_news_with_markers() -> None:
 
 
 def test_prefers_i18n_summary_over_rule_based() -> None:
-    from app.services.report_service import render_telegram_digest
+    from app.domains.news.reports import render_telegram_digest
 
     snapshot = {
         "date": "2026-07-18",
@@ -79,7 +79,7 @@ def test_prefers_i18n_summary_over_rule_based() -> None:
 
 
 def test_empty_snapshot_is_valid_short_message() -> None:
-    from app.services.report_service import TELEGRAM_DIGEST_LIMIT, render_telegram_digest
+    from app.domains.news.reports import TELEGRAM_DIGEST_LIMIT, render_telegram_digest
 
     md = render_telegram_digest({"date": "2026-07-18", "products": []})
     assert len(md) <= TELEGRAM_DIGEST_LIMIT
@@ -88,7 +88,7 @@ def test_empty_snapshot_is_valid_short_message() -> None:
 
 
 def test_price_movers_line_when_room() -> None:
-    from app.services.report_service import render_telegram_digest
+    from app.domains.news.reports import render_telegram_digest
 
     snapshot = {
         "date": "2026-07-18",

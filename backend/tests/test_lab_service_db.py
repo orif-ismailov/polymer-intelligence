@@ -60,7 +60,7 @@ def db(engine: sa.Engine) -> Session:
 @pytest.fixture
 def stub_s3(monkeypatch) -> None:  # noqa: ANN001
     """No socket in tests: keep the validation, skip the bucket."""
-    from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
+    from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
 
     def fake_offer_upload(db, offer_id, content, filename, kind):  # noqa: ANN001, ANN202
@@ -101,8 +101,8 @@ def _scene(db: Session):  # noqa: ANN202
 
 class TestCreateOrder:
     def test_an_order_gets_a_number_and_lands_submitted(self, db: Session) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         company, owner, offer, _staff = _scene(db)
         order = lab_service.create_order(
@@ -113,7 +113,7 @@ class TestCreateOrder:
         assert order.number.count("-") == 2
 
     def test_numbers_do_not_repeat(self, db: Session) -> None:
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         company, owner, offer, _staff = _scene(db)
         numbers = {
@@ -125,7 +125,7 @@ class TestCreateOrder:
     def test_an_order_about_nothing_is_refused_before_the_database(
         self, db: Session
     ) -> None:
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         company, owner, _offer, _staff = _scene(db)
         with pytest.raises(lab_service.LabOrderTargetMissing):
@@ -134,7 +134,7 @@ class TestCreateOrder:
     def test_a_company_cannot_order_an_analysis_of_someone_elses_offer(
         self, db: Session
     ) -> None:
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         _company, _owner, offer, _staff = _scene(db)
         outsider_owner = make_account(db, "+998900000202")
@@ -145,8 +145,9 @@ class TestCreateOrder:
             )
 
     def test_the_submission_is_journalled_for_the_staff_card(self, db: Session) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.events import DomainEvent  # noqa: PLC0415
-        from app.services import event_types, lab_service  # noqa: PLC0415
+        from app.services import event_types  # noqa: PLC0415
 
         company, owner, offer, _staff = _scene(db)
         order = lab_service.create_order(db, company=company, account=owner, offer=offer)
@@ -162,15 +163,15 @@ class TestCreateOrder:
 
 class TestTransitions:
     def _submitted(self, db: Session):  # noqa: ANN202
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         company, owner, offer, staff = _scene(db)
         order = lab_service.create_order(db, company=company, account=owner, offer=offer)
         return order, staff, company
 
     def test_the_operator_walks_it_forward(self, db: Session) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, staff, _company = self._submitted(db)
         for target in (
@@ -183,8 +184,8 @@ class TestTransitions:
         assert order.handled_by == staff.id
 
     def test_skipping_a_step_is_refused(self, db: Session) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, staff, _company = self._submitted(db)
         with pytest.raises(lab_service.InvalidLabTransition):
@@ -195,8 +196,8 @@ class TestTransitions:
     def test_done_cannot_be_set_by_hand(self, db: Session) -> None:
         """It needs the passport. A typed error beats the IntegrityError the
         schema CHECK would otherwise raise in the operator's face."""
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, staff, _company = self._submitted(db)
         lab_service.transition(db, order, LabOrderStatus.accepted, staff_user=staff)
@@ -206,8 +207,8 @@ class TestTransitions:
             lab_service.transition(db, order, LabOrderStatus.done, staff_user=staff)
 
     def test_rejecting_without_a_reason_is_refused(self, db: Session) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, staff, _company = self._submitted(db)
         with pytest.raises(lab_service.ReasonRequired):
@@ -220,8 +221,8 @@ class TestTransitions:
         assert order.rejected_reason == "лаборатория занята"
 
     def test_a_finished_order_does_not_move_again(self, db: Session) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, staff, _company = self._submitted(db)
         lab_service.transition(
@@ -232,9 +233,10 @@ class TestTransitions:
 
     def test_each_step_rings_the_customers_bell(self, db: Session) -> None:
         """dedup=False: two steps on one order are two different sentences."""
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
+        from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.models.notifications import PortalNotification  # noqa: PLC0415
-        from app.services import lab_service, notification_service  # noqa: PLC0415
+        from app.services import notification_service  # noqa: PLC0415
 
         order, staff, _company = self._submitted(db)
         lab_service.transition(db, order, LabOrderStatus.accepted, staff_user=staff)
@@ -255,8 +257,8 @@ class TestTransitions:
 
 class TestCompleteWithResult:
     def _ready(self, db: Session):  # noqa: ANN202
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         company, owner, offer, staff = _scene(db)
         order = lab_service.create_order(db, company=company, account=owner, offer=offer)
@@ -271,8 +273,8 @@ class TestCompleteWithResult:
     def test_the_passport_lands_on_the_offer_and_verifies_it(
         self, db: Session, stub_s3: None
     ) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus, OfferFileKind  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, offer, staff = self._ready(db)
         lab_service.complete_with_result(
@@ -291,8 +293,8 @@ class TestCompleteWithResult:
         self, db: Session, stub_s3: None
     ) -> None:
         """A JPEG passes the generic allow-list; it is not a laboratory passport."""
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, offer, staff = self._ready(db)
         with pytest.raises(lab_service.InvalidResultFile):
@@ -308,7 +310,7 @@ class TestCompleteWithResult:
     def test_it_cannot_finish_an_order_that_is_not_being_analysed(
         self, db: Session, stub_s3: None
     ) -> None:
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         company, owner, offer, staff = _scene(db)
         order = lab_service.create_order(db, company=company, account=owner, offer=offer)
@@ -323,8 +325,8 @@ class TestCompleteWithResult:
         """Staff produced this document and have seen it. Re-queueing would
         un-publish a live offer as a reward for finishing the analysis — unlike a
         SELLER uploading a passport, which does re-enter the queue."""
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, offer, staff = self._ready(db)
         assert offer.status == SellerOfferStatus.approved
@@ -336,8 +338,9 @@ class TestCompleteWithResult:
         assert offer.status == SellerOfferStatus.approved
 
     def test_the_completion_is_journalled(self, db: Session, stub_s3: None) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.events import DomainEvent  # noqa: PLC0415
-        from app.services import event_types, lab_service  # noqa: PLC0415
+        from app.services import event_types  # noqa: PLC0415
 
         order, _offer, staff = self._ready(db)
         lab_service.complete_with_result(
@@ -362,9 +365,9 @@ class TestDealSideResult:
     """
 
     def _deal_order(self, db: Session):  # noqa: ANN202
-        from app.models.deals import Deal  # noqa: PLC0415
+        from app.domains.deals.models import Deal  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         buyer_owner = make_account(db, "+998900000211")
         seller_owner = make_account(db, "+998900000212")
@@ -394,9 +397,9 @@ class TestDealSideResult:
     def test_the_passport_lands_in_the_trade_room(
         self, db: Session, stub_s3: None
     ) -> None:
-        from app.models.deals import DealDocument  # noqa: PLC0415
+        from app.domains.deals.models import DealDocument  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import DealDocumentKind, LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         order, deal, buyer, staff = self._deal_order(db)
         lab_service.complete_with_result(
@@ -418,8 +421,8 @@ class TestDealSideResult:
     ) -> None:
         """There is no offer in play: the badge belongs to a listing, and a deal
         is not one."""
-        from app.models.marketplace import SellerOffer  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
 
         order, _deal, _buyer, staff = self._deal_order(db)
         lab_service.complete_with_result(
@@ -431,8 +434,8 @@ class TestDealSideResult:
     def test_a_company_cannot_order_an_analysis_of_a_deal_it_is_not_in(
         self, db: Session
     ) -> None:
-        from app.models.deals import Deal  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.deals.models import Deal  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         buyer_owner = make_account(db, "+998900000213")
         seller_owner = make_account(db, "+998900000214")
@@ -461,7 +464,7 @@ class TestResultProtection:
     ) -> None:
         """It is the evidence behind "Laboratory Verified"; deleting it would
         leave the badge standing on nothing."""
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         company, owner, offer, staff = _scene(db)
         order = lab_service.create_order(db, company=company, account=owner, offer=offer)
@@ -482,9 +485,9 @@ class TestResultProtection:
             lab_service.assert_result_unlocked(db, order.result_offer_file_id)
 
     def test_a_self_uploaded_passport_is_removable(self, db: Session) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
         from app.models.enums import OfferFileKind  # noqa: PLC0415
-        from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         _company, _owner, offer, _staff = _scene(db)
         own = SellerOfferFile(
@@ -497,9 +500,9 @@ class TestResultProtection:
     def test_removing_the_last_passport_drops_the_verification(
         self, db: Session
     ) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
+        from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
         from app.models.enums import OfferFileKind  # noqa: PLC0415
-        from app.models.marketplace import SellerOfferFile  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         _company, _owner, offer, _staff = _scene(db)
         own = SellerOfferFile(
@@ -520,7 +523,7 @@ class TestResultProtection:
 
 class TestPartnerDirectory:
     def test_a_partner_is_retired_not_deleted(self, db: Session) -> None:
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         staff = make_staff(db, email="admin-lab@example.com")
         partner = lab_service.create_partner(
@@ -535,8 +538,8 @@ class TestPartnerDirectory:
         assert lab_service.list_partners(db, active_only=True) == []
 
     def test_assigning_a_partner_is_not_a_status_change(self, db: Session) -> None:
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.services import lab_service  # noqa: PLC0415
 
         company, owner, offer, staff = _scene(db)
         order = lab_service.create_order(db, company=company, account=owner, offer=offer)
@@ -550,7 +553,7 @@ class TestQueue:
     def test_the_queue_is_oldest_first(self, db: Session) -> None:
         """Everything else in the dashboard is newest-first; a work list is the
         exception — the order waiting longest is the one to pick up."""
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         company, owner, offer, _staff = _scene(db)
         first = lab_service.create_order(db, company=company, account=owner, offer=offer)
@@ -559,7 +562,7 @@ class TestQueue:
         assert [o.id for o in lab_service.list_queue(db)] == [first.id, second.id]
 
     def test_a_company_sees_only_its_own_orders(self, db: Session) -> None:
-        from app.services import lab_service  # noqa: PLC0415
+        from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
         company, owner, offer, _staff = _scene(db)
         mine = lab_service.create_order(db, company=company, account=owner, offer=offer)

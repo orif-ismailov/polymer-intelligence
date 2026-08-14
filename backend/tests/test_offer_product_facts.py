@@ -26,7 +26,7 @@ _BASE = "/api/v1/portal/companies"
 
 
 def test_chips_default_to_empty_lists() -> None:
-    from app.schemas.portal_company import CompanyOfferIn
+    from app.domains.companies.schemas import CompanyOfferIn
 
     payload = CompanyOfferIn(product_text="PP H030 GP")
     assert payload.key_properties == []
@@ -35,7 +35,7 @@ def test_chips_default_to_empty_lists() -> None:
 
 
 def test_chips_are_trimmed_and_blanks_dropped() -> None:
-    from app.schemas.portal_company import CompanyOfferIn
+    from app.domains.companies.schemas import CompanyOfferIn
 
     payload = CompanyOfferIn(
         product_text="PP H030 GP",
@@ -48,7 +48,7 @@ def test_chips_are_trimmed_and_blanks_dropped() -> None:
 
 def test_a_chip_is_capped_at_eighty_characters() -> None:
     """A pill is a phrase. Truncating beats rejecting: the seller keeps the save."""
-    from app.schemas.portal_company import CompanyOfferIn
+    from app.domains.companies.schemas import CompanyOfferIn
 
     payload = CompanyOfferIn(product_text="PP", key_properties=["x" * 200])
     assert payload.key_properties == ["x" * 80]
@@ -57,7 +57,7 @@ def test_a_chip_is_capped_at_eighty_characters() -> None:
 def test_too_many_chips_is_rejected() -> None:
     from pydantic import ValidationError
 
-    from app.schemas.portal_company import CompanyOfferIn
+    from app.domains.companies.schemas import CompanyOfferIn
 
     with pytest.raises(ValidationError):
         CompanyOfferIn(product_text="PP", applications=[f"use {i}" for i in range(13)])
@@ -69,8 +69,8 @@ def test_out_schema_reads_null_columns_as_empty_lists() -> None:
     apart from "the seller cleared the chips"."""
     import datetime
 
+    from app.domains.companies.schemas import CompanyOfferOut
     from app.models.enums import OfferAvailability, PriceBasis, SellerOfferStatus
-    from app.schemas.portal_company import CompanyOfferOut
 
     class _Row:
         id = 1
@@ -136,8 +136,8 @@ def _auth(account_id: int) -> dict[str, str]:
 
 
 def _verified_company(session, phone: str, tax: str):  # noqa: ANN001, ANN202
+    from app.domains.companies import service as company_service
     from app.models.enums import CompanyBusinessRole, CompanyStatus
-    from app.services import company_service
 
     with session() as db:
         account = make_account(db, phone)

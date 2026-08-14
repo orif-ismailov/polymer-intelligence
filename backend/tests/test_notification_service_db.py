@@ -39,7 +39,7 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 @requires_real_db
 def test_notify_account_inserts_unread_row_with_i18n_keys(sf) -> None:  # noqa: ANN001
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
@@ -72,7 +72,7 @@ def test_notify_account_inserts_unread_row_with_i18n_keys(sf) -> None:  # noqa: 
 
 @requires_real_db
 def test_notify_account_dedupes_identical_unread(sf) -> None:  # noqa: ANN001
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
@@ -94,7 +94,7 @@ def test_notify_account_dedupes_identical_unread(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_dedup_does_not_apply_once_read(sf) -> None:  # noqa: ANN001
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:
@@ -119,8 +119,8 @@ def test_dedup_does_not_apply_once_read(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_notify_company_fans_out_to_active_members_only(sf) -> None:  # noqa: ANN001
+    from app.domains.notifications.models import PortalNotification  # noqa: PLC0415
     from app.models.enums import CompanyMemberStatus  # noqa: PLC0415
-    from app.models.notifications import PortalNotification  # noqa: PLC0415
     from app.services import notification_service  # noqa: PLC0415
 
     with sf() as db:

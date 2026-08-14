@@ -35,9 +35,9 @@ from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
 from app.core.storage import ensure_bucket
-from app.models.companies import Company
+from app.domains.companies.models import Company
+from app.domains.marketplace.models import SellerOffer
 from app.models.enums import OfferFileKind
-from app.models.marketplace import SellerOffer
 from app.services import storage_service
 
 MASTER = (2000, 1500)

@@ -34,15 +34,26 @@ _A = "/api/v1/admin"
 
 
 def test_routes_registered() -> None:
-    from app.api.admin_contracts import router as admin_router  # noqa: PLC0415
-    from app.api.portal.contracts import router as portal_router  # noqa: PLC0415
+    from app.domains.contracts.api_admin import router as admin_router  # noqa: PLC0415
+    from app.domains.contracts.api_portal import router as portal_router  # noqa: PLC0415
 
     p = {r.path for r in portal_router.routes}  # type: ignore[attr-defined]
     assert "/portal/contracts" in p
     assert "/portal/contracts/{contract_id}/sign" in p
     assert "/portal/contracts/{contract_id}/bundle" in p
-    assert "/portal/companies/directory" in p
     assert "/portal/contract-templates" in p
+    # The counterparty picker is a pure companies query and moved to the companies
+    # router in P4. Same path, different owner — and it is now protected by
+    # declaration order inside that one file rather than by include-order between two
+    # routers, so assert the ordering here: a literal before its param sibling.
+    assert "/portal/companies/directory" not in p
+    from app.domains.companies.api_portal import router as companies_router  # noqa: PLC0415
+
+    company_paths = [r.path for r in companies_router.routes]  # type: ignore[attr-defined]
+    assert "/portal/companies/directory" in company_paths
+    assert company_paths.index("/portal/companies/directory") < company_paths.index(
+        "/portal/companies/{company_id}"
+    ), "/directory must be declared before /{company_id} or the param route swallows it"
     a = {r.path for r in admin_router.routes}  # type: ignore[attr-defined]
     assert "/admin/contracts" in a
     assert "/admin/contracts/{contract_id}" in a
@@ -60,9 +71,11 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
 
     from app.core.db import get_db  # noqa: PLC0415
     from app.core.redis import get_redis  # noqa: PLC0415
+    from app.domains.contracts import render as contract_render  # noqa: PLC0415
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
     from app.integrations.eimzo import EimzoSigner, EimzoVerifyResult  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
-    from app.services import contract_render, contract_service, storage_service  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
 
     clean(engine)
     session = session_factory(engine)
@@ -119,9 +132,9 @@ def _account(session, phone):  # noqa: ANN001, ANN202
 
 
 def _verified_company(session, account_id, tax):  # noqa: ANN001, ANN202
-    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     with session() as db:
         acc = db.get(UserAccount, account_id)
@@ -145,7 +158,7 @@ def _staff(session, role, email):  # noqa: ANN001, ANN202
 
 
 def _template_id(session):  # noqa: ANN001, ANN202
-    from app.models.contracts import ContractTemplate  # noqa: PLC0415
+    from app.domains.contracts.models import ContractTemplate  # noqa: PLC0415
 
     with session() as db:
         tpl = ContractTemplate(
@@ -172,8 +185,8 @@ def test_directory_hides_non_verified(api) -> None:  # noqa: ANN001
     _verified_company(session, aid, "301111111")            # verified → listed
     # a draft company (not verified) must not appear
     bid, _ = _account(session, "+998900000002")
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     with session() as db:
         company_service.create_company(db, db.get(UserAccount, bid), "UZ", "309999999")
@@ -199,8 +212,8 @@ def test_directory_lookup_by_id(api) -> None:  # noqa: ANN001
     verified_id = _verified_company(session, aid, "301111111")
 
     bid, _ = _account(session, "+998900000002")
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     with session() as db:
         draft = company_service.create_company(db, db.get(UserAccount, bid), "UZ", "309999999")
@@ -312,8 +325,8 @@ def test_sign_inn_mismatch_422(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_create_counterparty_must_be_verified_422(api) -> None:  # noqa: ANN001
-    from app.models.accounts import UserAccount  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     client, session = api
     a_id, a_auth = _account(session, "+998900000001")

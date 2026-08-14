@@ -35,7 +35,7 @@ _WIZARD = {
 
 
 def test_request_routes_registered() -> None:
-    from app.api.portal.requests import router  # noqa: PLC0415
+    from app.domains.requests.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/requests" in paths
@@ -109,7 +109,7 @@ def test_create_and_detail(api) -> None:  # noqa: ANN001
 
     # appears in the dashboard exactly like a TG request (company_id set, client NULL)
     with session() as db:
-        from app.models.requests import Request  # noqa: PLC0415
+        from app.domains.requests.models import Request  # noqa: PLC0415
         row = db.get(Request, rid)
         assert row.company_id == company_id
         assert row.client_id is None

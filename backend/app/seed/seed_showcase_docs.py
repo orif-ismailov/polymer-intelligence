@@ -28,8 +28,8 @@ from sqlalchemy.orm import Session
 from weasyprint import HTML
 
 from app.core.db import SessionLocal
+from app.domains.marketplace.models import SellerOffer
 from app.models.enums import OfferFileKind
-from app.models.marketplace import SellerOffer
 from app.seed.showcase_data import GRADE_SPECS
 from app.services import storage_service
 

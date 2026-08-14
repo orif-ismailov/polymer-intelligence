@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 
 def test_source_health_item_has_token_spend_7d():
     """SourceHealthItem (admin/sources/health response) must have token_spend_7d: int field."""
-    from app.api.admin_sources import SourceHealthItem  # noqa: PLC0415
+    from app.domains.signals.api_admin import SourceHealthItem  # noqa: PLC0415
 
     fields = SourceHealthItem.model_fields
     assert "token_spend_7d" in fields, (
@@ -42,7 +42,7 @@ def test_source_health_item_has_token_spend_7d():
 
 def test_ai_source_returns_token_spend_7d():
     """get_sources_health returns token_spend_7d > 0 for telegram_channel sources."""
-    from app.api.admin_sources import get_sources_health  # noqa: PLC0415
+    from app.domains.signals.api_admin import get_sources_health  # noqa: PLC0415
 
     mock_db = MagicMock()
     # Simulate one telegram_channel source row
@@ -59,7 +59,7 @@ def test_ai_source_returns_token_spend_7d():
     mock_db.execute.return_value.fetchall.return_value = [mock_row]
     mock_user = MagicMock()
 
-    with patch("app.api.admin_sources.per_source_spend", return_value=1500) as mock_spend:
+    with patch("app.domains.signals.api_admin.per_source_spend", return_value=1500) as mock_spend:
         items = get_sources_health(_current_user=mock_user, db=mock_db)
 
     assert len(items) == 1
@@ -70,7 +70,7 @@ def test_ai_source_returns_token_spend_7d():
 
 def test_non_ai_source_returns_zero_token_spend():
     """get_sources_health returns token_spend_7d=0 for non-AI sources."""
-    from app.api.admin_sources import get_sources_health  # noqa: PLC0415
+    from app.domains.signals.api_admin import get_sources_health  # noqa: PLC0415
 
     mock_db = MagicMock()
     # Simulate one UZEX source row
@@ -87,7 +87,7 @@ def test_non_ai_source_returns_zero_token_spend():
     mock_db.execute.return_value.fetchall.return_value = [mock_row]
     mock_user = MagicMock()
 
-    with patch("app.api.admin_sources.per_source_spend", return_value=9999):
+    with patch("app.domains.signals.api_admin.per_source_spend", return_value=9999):
         items = get_sources_health(_current_user=mock_user, db=mock_db)
 
     assert len(items) == 1
@@ -98,7 +98,7 @@ def test_non_ai_source_returns_zero_token_spend():
 
 def test_llm_page_source_returns_token_spend():
     """llm_page adapter is also an AI source type — should return real spend."""
-    from app.api.admin_sources import get_sources_health  # noqa: PLC0415
+    from app.domains.signals.api_admin import get_sources_health  # noqa: PLC0415
 
     mock_db = MagicMock()
     mock_row = (
@@ -113,7 +113,7 @@ def test_llm_page_source_returns_token_spend():
     )
     mock_db.execute.return_value.fetchall.return_value = [mock_row]
 
-    with patch("app.api.admin_sources.per_source_spend", return_value=800) as mock_spend:
+    with patch("app.domains.signals.api_admin.per_source_spend", return_value=800) as mock_spend:
         items = get_sources_health(_current_user=MagicMock(), db=mock_db)
 
     assert items[0].token_spend_7d == 800

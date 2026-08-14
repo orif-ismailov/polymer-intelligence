@@ -33,6 +33,13 @@ dependencies = [
     "selectolax>=0.3.21",
     # Logging
     "structlog>=24.1.0",
+    # Error tracking. SENTRY_DSN has been in the env contract since Phase 1 but was
+    # never wired to anything, so production had no error reporting at all — an
+    # unhandled 500 left a JSON log line and nothing tying it to a user or request.
+    # The [fastapi,celery] extras pull in the ASGI + task integrations so a failure
+    # inside a Celery task is attributed rather than lost.
+    # pypi.org/project/sentry-sdk (Sentry official SDK)
+    "sentry-sdk[fastapi,celery]>=2.0,<3.0",
     # Security
     "argon2-cffi>=23.1.0",
     "python-jose[cryptography]>=3.3.0",
@@ -86,7 +93,12 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+# "S" is flake8-bandit. It was NOT selected before, which made the dozen
+# `# noqa: S608` comments scattered through the codebase dead suppressions for a
+# rule that never ran — the codebase read as if SQL-injection linting was active
+# when no security lint existed at all. "ASYNC" catches blocking calls inside
+# async functions, the class of bug the upload handlers had.
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "S", "ASYNC"]
 ignore = [
     "E501",
     # UP042: the domain enums are declared `(str, Enum)` to match their PostgreSQL
@@ -98,6 +110,18 @@ ignore = [
     # convention rather than rename 50+ references across 12 files.
     "N818",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert; that is what they are for. S105-S107 fire on the obviously-fake
+# credentials every auth test needs. Scoped to tests/ so the same rules stay live
+# in app/ where a hardcoded secret would actually mean something.
+"tests/**" = ["S101", "S105", "S106", "S107"]
+# The showcase seeders generate DEMO DATA — company names, photo picks, fake
+# volumes. `random` is correct there and `secrets` would be a false precision;
+# the real security-sensitive randomness (OTP codes, JWT jti, E-IMZO challenges)
+# uses `secrets` and is NOT exempt here.
+"app/seed/**" = ["S311", "S608", "S108"]
+"scripts/**" = ["S101", "S311", "S608"]
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI requires Depends()/Query()/Cookie() in parameter defaults for its DI system.
@@ -140,6 +164,17 @@ disallow_untyped_defs = true
 disallow_any_explicit = true
 
 [[tool.mypy.overrides]]
+# Domain modules carry the app.services.* bar with them as each bounded context moves
+# into app/domains/<name>/ (backend domain reorg). Global [tool.mypy] strict already
+# implies disallow_untyped_defs, but `disallow_any_explicit` is NOT part of strict —
+# without this block a service file would silently lose the explicit-Any ban simply by
+# changing directory. The schema carve-out below must stay AFTER this block: mypy
+# applies the last matching override.
+module = ["app.domains.*"]
+disallow_untyped_defs = true
+disallow_any_explicit = true
+
+[[tool.mypy.overrides]]
 # The CI mypy gate targets app/services + app/schemas only (dev-spec §7); parsing/ is
 # not directly type-checked. When an app/services module transitively imports a parsing
 # helper (e.g. request_analysis_service -> parsing.budget), the parsing file's own
@@ -157,13 +192,49 @@ disallow_untyped_defs = true
 disallow_any_explicit = false
 
 [[tool.mypy.overrides]]
-# alert_service is a polymorphic JSONB predicate interpreter: evaluate_condition reads
+# Same pydantic carve-out as app.schemas.* above, for schema modules that have moved
+# into a domain folder. Must come AFTER the app.domains.* block — mypy applies the
+# last matching override, so this is what relaxes explicit-Any back off for schemas.
+# The second entry is listed by name because mypy's module patterns wildcard whole
+# components: `app.domains.*.schemas` does not match `...portal_market_schemas`.
+module = [
+    "app.domains.*.schemas",
+    "app.domains.marketplace.portal_market_schemas",
+    "app.domains.contracts.eimzo_schemas",
+    "app.domains.compliance.substance_schemas",
+    "app.domains.compliance.substance_match_schemas",
+    "app.domains.requests.webapp_schemas",
+    "app.domains.requests.analysis_schemas",
+]
+disallow_untyped_defs = true
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+# ORM models, same placement rule as the schemas block above. A JSONB column is typed
+# `Mapped[dict[str, Any]]` — that is the shape SQLAlchemy gives you, not a lazy
+# annotation. These modules sat in app/models/ under no explicit-Any ban before the
+# domain reorg, and moving a file between directories must not change what the type
+# checker demands of it.
+module = [
+    "app.domains.*.models",
+    "app.domains.verification.registry_models",
+    "app.domains.contracts.eimzo_models",
+    "app.domains.deals.payment_models",
+    "app.domains.signals.source_models",
+    "app.domains.signals.counterparty_models",
+]
+disallow_untyped_defs = true
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+# alerts.service (was app/services/alert_service.py) is a polymorphic JSONB predicate
+# interpreter: evaluate_condition reads
 # heterogeneous condition values (lists, numbers) and entity attributes that differ
 # between Signal and Request (kind/ai only exist on Signal), using genuinely dynamic
 # `in`/`<` operations. Forcing explicit types here would mean casts/isinstance guards
 # inside security-sensitive predicate code (T-04-24) — riskier than this scoped, more
 # specific carve-out. disallow_untyped_defs stays enforced; only explicit-Any is relaxed.
-module = ["app.services.alert_service"]
+module = ["app.domains.alerts.service"]
 disallow_untyped_defs = true
 disallow_any_explicit = false
 
@@ -178,6 +249,77 @@ ignore_missing_imports = true
 # pypi.org/project/telethon — T-05-SC approved (package legitimacy verified).
 module = ["telethon", "telethon.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# ── The burn-down list ────────────────────────────────────────────────────────
+# The CI gate used to be a hand-maintained list of ~40 FILE PATHS, duplicated in
+# ci.yml and both CLAUDE.md files. That list failed OPEN: a new module was
+# unchecked until somebody remembered to add it in three places, and "not in the
+# list" was indistinguishable from "checked and clean".
+#
+# It is now inverted. CI runs `mypy app`, so everything is checked, and the
+# modules below are the ones that do not pass YET. A new file is gated by
+# default; exempting one is an explicit edit here that a reviewer can see.
+#
+# Listed individually rather than as `app.tasks.*` / `app.seed.*` wildcards on
+# purpose: a wildcard would also exempt the modules in those packages that
+# currently pass, which is exactly the fail-open behaviour this replaces.
+#
+# 48 modules at the time of writing (201 errors), mostly routers, ingest
+# adapters, seeders and task modules — none of which were in the old gate
+# either, so this is strictly MORE coverage than before, not less. Delete
+# entries as they are cleaned up; the list should only ever shrink.
+module = [
+    "app.api.deps",
+    "app.core.feed_bus",
+    "app.core.logging",
+    "app.domains.alerts.api_admin",
+    "app.domains.companies.api_portal",
+    "app.domains.compliance.api_admin_substances",
+    "app.domains.compliance.api_portal",
+    "app.domains.contracts.api_admin",
+    "app.domains.deals.api_admin",
+    "app.domains.deals.api_admin_escrow",
+    "app.domains.deals.api_webhooks",
+    "app.domains.lab_orders.api_admin",
+    "app.domains.laboratory.api_admin",
+    "app.domains.logistics.api_admin",
+    "app.domains.marketplace.api_portal_inquiries",
+    "app.domains.pricing.api_admin",
+    "app.domains.requests.api_admin",
+    "app.domains.requests.api_portal",
+    "app.domains.requests.api_webapp",
+    "app.domains.requests.api_webapp_auth",
+    "app.domains.signals.api_admin",
+    "app.domains.signals.api_feed",
+    "app.domains.signals.api_sources",
+    "app.domains.storefront.api",
+    "app.domains.verification.api_admin",
+    "app.ingest.html_table.adapter",
+    "app.ingest.llm_page.adapter",
+    "app.ingest.rss.adapter",
+    "app.ingest.uzex.adapters",
+    "app.ingest.xarid.adapters",
+    "app.main",
+    "app.seed.seed_reference",
+    "app.seed.seed_showcase",
+    "app.seed.seed_showcase_docs",
+    "app.seed.seed_showcase_intel",
+    "app.seed.seed_showcase_media",
+    "app.seed.seed_showcase_news",
+    "app.seed.seed_showcase_photos",
+    "app.seed.seed_showcase_profiles",
+    "app.tasks.celery_app",
+    "app.tasks.contracts",
+    "app.tasks.ingest_cbu",
+    "app.tasks.parse",
+    "app.tasks.parse_telegram",
+    "app.tasks.portal_notify",
+    "app.tasks.reports",
+    "app.tasks.rescore",
+    "app.tasks.userbot_health",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

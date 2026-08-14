@@ -1,5 +1,5 @@
 """
-Tests for Phase 7f — semantic cross-source news dedup (app.services.news_dedup).
+Tests for Phase 7f — semantic cross-source news dedup (app.domains.news.dedup).
 
 cluster_articles groups same-story news dicts (headline Jaccard, boosted by shared
 companies/products) so the feed, cards, and digest show one canonical article per
@@ -19,7 +19,7 @@ def _art(headline: str, *, importance: str = "medium", companies=None, products=
 
 
 def test_identical_headlines_different_sources_merge() -> None:
-    from app.services.news_dedup import cluster_articles
+    from app.domains.news.dedup import cluster_articles
 
     arts = [
         _art("Brent crude climbs on OPEC output cuts"),
@@ -31,7 +31,7 @@ def test_identical_headlines_different_sources_merge() -> None:
 
 
 def test_entity_boost_merges_partial_overlap() -> None:
-    from app.services.news_dedup import cluster_articles
+    from app.domains.news.dedup import cluster_articles
 
     arts = [
         _art("Shurtan GCC halts line", companies=["Shurtan"], products=["PP"]),
@@ -42,7 +42,7 @@ def test_entity_boost_merges_partial_overlap() -> None:
 
 
 def test_distinct_stories_stay_separate() -> None:
-    from app.services.news_dedup import cluster_articles
+    from app.domains.news.dedup import cluster_articles
 
     arts = [
         _art("Brent crude rises on supply worries"),
@@ -53,7 +53,7 @@ def test_distinct_stories_stay_separate() -> None:
 
 
 def test_no_entity_overlap_does_not_merge_on_weak_headline() -> None:
-    from app.services.news_dedup import cluster_articles
+    from app.domains.news.dedup import cluster_articles
 
     # Some shared generic words but no shared company/product and low Jaccard → separate.
     arts = [
@@ -65,7 +65,7 @@ def test_no_entity_overlap_does_not_merge_on_weak_headline() -> None:
 
 
 def test_representative_is_first_seen() -> None:
-    from app.services.news_dedup import cluster_articles
+    from app.domains.news.dedup import cluster_articles
 
     arts = [
         _art("Shurtan halts PP line for maintenance", importance="high", companies=["Shurtan"], products=["PP"]),
@@ -77,6 +77,6 @@ def test_representative_is_first_seen() -> None:
 
 
 def test_empty_input() -> None:
-    from app.services.news_dedup import cluster_articles
+    from app.domains.news.dedup import cluster_articles
 
     assert cluster_articles([]) == []

@@ -100,14 +100,14 @@ def extract_signal(prepared_text: str) -> tuple[Any, dict]:
 
 def write_parse_run(session: Any, raw_item_id: int, **kwargs: Any) -> int:
     """Wrapper: call ai_signal_service.write_parse_run."""
-    from app.services.ai_signal_service import write_parse_run as _write  # noqa: PLC0415
+    from app.domains.signals.ai import write_parse_run as _write  # noqa: PLC0415
 
     return _write(session, raw_item_id, **kwargs)
 
 
 def create_signal_from_extraction(session: Any, raw_item: Any, result: Any, journal: dict, **kwargs: Any) -> Any:
     """Wrapper: call ai_signal_service.create_signal_from_extraction."""
-    from app.services.ai_signal_service import (  # noqa: PLC0415
+    from app.domains.signals.ai import (  # noqa: PLC0415
         create_signal_from_extraction as _create,
     )
 
@@ -116,7 +116,7 @@ def create_signal_from_extraction(session: Any, raw_item: Any, result: Any, jour
 
 def raise_budget_exceeded_alert(session: Any) -> None:
     """Wrapper: call ai_signal_service.raise_budget_exceeded_alert."""
-    from app.services.ai_signal_service import (  # noqa: PLC0415
+    from app.domains.signals.ai import (  # noqa: PLC0415
         raise_budget_exceeded_alert as _raise,
     )
 
@@ -134,7 +134,7 @@ def delete_existing_signals(session: Any, raw_item_id: int) -> int:
 
     Returns the number of rows deleted.
     """
-    from app.models.signals import Signal  # noqa: PLC0415
+    from app.domains.signals.models import Signal  # noqa: PLC0415
 
     deleted = (
         session.query(Signal)
@@ -151,14 +151,14 @@ def delete_existing_signals(session: Any, raw_item_id: int) -> int:
 
 def match_product(session: Any, text_: str) -> int | None:
     """Wrapper: call relevance_service.match_product."""
-    from app.services.relevance_service import match_product as _match  # noqa: PLC0415
+    from app.domains.reference.relevance import match_product as _match  # noqa: PLC0415
 
     return _match(session, text_)
 
 
 def extract_grade(text_: str, session: Any) -> tuple[int | None, str | None]:
     """Wrapper: call grade_service.extract_grade."""
-    from app.services.grade_service import extract_grade as _extract  # noqa: PLC0415
+    from app.domains.reference.grades import extract_grade as _extract  # noqa: PLC0415
 
     return _extract(text_, session)
 
@@ -209,7 +209,7 @@ def parse_telegram_item(raw_item_id: int) -> dict[str, Any]:
         - BudgetExceeded                        → rule_based fallback + deferred + alert (G4)
         - already parsed (double-parse guard)   → immediate return (idempotency)
     """
-    from app.models.sources import RawItem  # noqa: PLC0415
+    from app.domains.signals.source_models import RawItem  # noqa: PLC0415
 
     with get_session() as session:
         # ── Load raw_item ──────────────────────────────────────────────────────

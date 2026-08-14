@@ -79,7 +79,7 @@ def _parties(db):  # noqa: ANN001, ANN202
 
 
 def _response(db, request, company, account, **kw):  # noqa: ANN001, ANN003, ANN202
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
 
     row = RfqResponse(
         request_id=request.id,
@@ -98,7 +98,7 @@ def _response(db, request, company, account, **kw):  # noqa: ANN001, ANN003, ANN
 
 def _open_deal(db, monkeypatch=None):  # noqa: ANN001, ANN202
     """The standard fixture deal: buyer's RFQ, seller's response, accepted."""
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     buyer_acc, buyer, seller_acc, seller = _parties(db)
     request = make_request(db, company=buyer, account=buyer_acc)
@@ -125,7 +125,7 @@ def test_open_from_response_sets_number_amount_and_accepts(sf) -> None:  # noqa:
         assert deal.amount == decimal.Decimal("25000.00")
         assert deal.currency == "USD"
 
-        from app.models.deals import RfqResponse  # noqa: PLC0415
+        from app.domains.deals.models import RfqResponse  # noqa: PLC0415
 
         accepted = db.query(RfqResponse).filter(RfqResponse.request_id == deal.request_id).one()
         assert accepted.status == RfqResponseStatus.accepted
@@ -134,7 +134,7 @@ def test_open_from_response_sets_number_amount_and_accepts(sf) -> None:  # noqa:
 
 @requires_real_db
 def test_open_writes_the_opening_history_row(sf) -> None:  # noqa: ANN001
-    from app.models.deals import DealStatusHistory  # noqa: PLC0415
+    from app.domains.deals.models import DealStatusHistory  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
 
     with sf() as db:
@@ -161,8 +161,8 @@ def test_open_emits_deal_opened(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_unverified_party_is_refused(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller = _parties(db)
@@ -177,7 +177,7 @@ def test_unverified_party_is_refused(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_rfq_without_a_buyer_company_cannot_become_a_deal(sf) -> None:  # noqa: ANN001
     """A Telegram-origin request has no company to make a party of."""
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         _buyer_acc, _buyer, seller_acc, seller = _parties(db)
@@ -190,9 +190,9 @@ def test_rfq_without_a_buyer_company_cannot_become_a_deal(sf) -> None:  # noqa: 
 
 @requires_real_db
 def test_competing_responses_are_retired_on_accept(sf) -> None:  # noqa: ANN001
-    from app.models.deals import RfqResponse  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import RfqResponse  # noqa: PLC0415
     from app.models.enums import RfqResponseStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller = _parties(db)
@@ -216,7 +216,7 @@ def test_competing_responses_are_retired_on_accept(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_second_accept_on_the_same_rfq_is_refused(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller = _parties(db)
@@ -237,8 +237,8 @@ def test_second_accept_on_the_same_rfq_is_refused(sf) -> None:  # noqa: ANN001
 def test_concurrent_accepts_produce_exactly_one_deal(sf) -> None:  # noqa: ANN001
     """Two suppliers accepted at the same instant: the FOR UPDATE lock on the
     RFQ row serializes them, so the loser sees the winner and backs out."""
-    from app.models.deals import Deal  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller = _parties(db)
@@ -253,9 +253,9 @@ def test_concurrent_accepts_produce_exactly_one_deal(sf) -> None:  # noqa: ANN00
     outcomes: list[str] = []
 
     def accept(response_id: int) -> None:
-        from app.models.accounts import UserAccount  # noqa: PLC0415
-        from app.models.deals import RfqResponse  # noqa: PLC0415
-        from app.models.requests import Request  # noqa: PLC0415
+        from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+        from app.domains.deals.models import RfqResponse  # noqa: PLC0415
+        from app.domains.requests.models import Request  # noqa: PLC0415
 
         with sf() as session:
             req = session.get(Request, request_id)
@@ -286,8 +286,8 @@ def test_concurrent_accepts_produce_exactly_one_deal(sf) -> None:  # noqa: ANN00
 
 @requires_real_db
 def test_seller_ships_and_buyer_confirms_delivery(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, _buyer, seller_acc, _seller = _open_deal(db)
@@ -308,8 +308,8 @@ def test_seller_ships_and_buyer_confirms_delivery(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_buyer_cannot_declare_a_shipment(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, _b, _sa, _s = _open_deal(db)
@@ -327,8 +327,8 @@ def test_buyer_cannot_declare_a_shipment(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_a_party_cannot_forge_a_system_transition(sf) -> None:  # noqa: ANN001
     """contract_signed follows from E-IMZO activation, never from an HTTP call."""
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, *_ = _open_deal(db)
@@ -341,8 +341,8 @@ def test_a_party_cannot_forge_a_system_transition(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_illegal_pair_is_refused(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _open_deal(db)
@@ -352,8 +352,8 @@ def test_illegal_pair_is_refused(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_cancel_requires_a_reason_and_records_it(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, *_ = _open_deal(db)
@@ -369,8 +369,8 @@ def test_cancel_requires_a_reason_and_records_it(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_no_unilateral_cancel_once_money_is_in_escrow(sf) -> None:  # noqa: ANN001
     """FR-D8: after paid_escrow the only way out is a dispute."""
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, *_ = _open_deal(db)
@@ -394,8 +394,8 @@ def test_no_unilateral_cancel_once_money_is_in_escrow(sf) -> None:  # noqa: ANN0
 
 @requires_real_db
 def test_only_staff_resolves_a_dispute(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, *_ = _open_deal(db)
@@ -420,9 +420,9 @@ def test_only_staff_resolves_a_dispute(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_every_transition_appends_to_the_timeline(sf) -> None:  # noqa: ANN001
-    from app.models.deals import DealStatusHistory  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import DealStatusHistory  # noqa: PLC0415
     from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _open_deal(db)
@@ -450,7 +450,7 @@ def test_every_transition_appends_to_the_timeline(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_message_records_the_side_that_wrote_it(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, buyer, seller_acc, seller = _open_deal(db)
@@ -462,7 +462,7 @@ def test_message_records_the_side_that_wrote_it(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_outsider_cannot_post(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, *_ = _open_deal(db)
@@ -474,7 +474,7 @@ def test_outsider_cannot_post(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_plain_member_of_a_party_is_read_only(sf) -> None:  # noqa: ANN001
     """A `member` may read the room but not speak for the company in it."""
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, _buyer_acc, buyer, *_ = _open_deal(db)
@@ -487,7 +487,7 @@ def test_plain_member_of_a_party_is_read_only(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_empty_message_is_refused(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, *_ = _open_deal(db)
@@ -497,7 +497,7 @@ def test_empty_message_is_refused(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_message_with_a_file(sf, monkeypatch) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     _stub_s3(monkeypatch)
     with sf() as db:
@@ -512,7 +512,7 @@ def test_message_with_a_file(sf, monkeypatch) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_chat_poll_is_incremental(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         deal, buyer_acc, *_ = _open_deal(db)
@@ -529,8 +529,8 @@ def test_chat_poll_is_incremental(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_document_is_hashed_and_attributed(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealDocumentKind  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     _stub_s3(monkeypatch)
     with sf() as db:
@@ -545,8 +545,8 @@ def test_document_is_hashed_and_attributed(sf, monkeypatch) -> None:  # noqa: AN
 
 @requires_real_db
 def test_document_rejects_an_unsupported_type(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealDocumentKind  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     _stub_s3(monkeypatch)
     with sf() as db:
@@ -559,8 +559,8 @@ def test_document_rejects_an_unsupported_type(sf, monkeypatch) -> None:  # noqa:
 
 @requires_real_db
 def test_only_the_uploader_may_revoke(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealDocumentKind  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     _stub_s3(monkeypatch)
     with sf() as db:
@@ -580,8 +580,8 @@ def test_only_the_uploader_may_revoke(sf, monkeypatch) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_revocation_is_not_repeatable(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.models.enums import DealDocumentKind  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     _stub_s3(monkeypatch)
     with sf() as db:
@@ -599,9 +599,9 @@ def test_revocation_is_not_repeatable(sf, monkeypatch) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_open_from_company_inquiry(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
     from app.models.enums import DealStatus  # noqa: PLC0415
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller = _parties(db)
@@ -625,15 +625,15 @@ def test_open_from_company_inquiry(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_telegram_inquiry_cannot_become_a_deal(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
     from tests._verification_db import make_seller  # noqa: PLC0415
 
     with sf() as db:
         _buyer_acc, _buyer, seller_acc, seller = _parties(db)
         offer = make_seller_offer(db, company=seller, created_by=seller_acc.id)
         tg_seller = make_seller(db, telegram_user_id=42)
-        from app.models.requests import Client  # noqa: PLC0415
+        from app.domains.requests.models import Client  # noqa: PLC0415
 
         client = Client(telegram_user_id=99)
         db.add(client)
@@ -649,8 +649,8 @@ def test_telegram_inquiry_cannot_become_a_deal(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_inquiry_cannot_open_two_live_deals(sf) -> None:  # noqa: ANN001
-    from app.models.marketplace import OfferRequest  # noqa: PLC0415
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller = _parties(db)
@@ -671,7 +671,7 @@ def test_inquiry_cannot_open_two_live_deals(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_deal_numbers_are_sequential_within_the_year(sf) -> None:  # noqa: ANN001
-    from app.services import deal_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
 
     with sf() as db:
         first = deal_service.generate_deal_number(db)

@@ -1,5 +1,5 @@
 """
-Tests for app.services.price_analysis_service.compute_price_analysis.
+Tests for app.domains.pricing.analysis.compute_price_analysis.
 
 TDD RED phase: these tests are written BEFORE the implementation.
 They will fail until price_analysis_service.py is created.
@@ -40,7 +40,7 @@ class TestComputePriceAnalysis:
 
     def test_returns_none_when_target_price_is_none(self):
         """Returns None when target_price is None (buyer didn't specify a price)."""
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
+        from app.domains.pricing.analysis import compute_price_analysis  # noqa: PLC0415
 
         db = _make_mock_db()
         result = compute_price_analysis(db, product_id=1, target_price=None, currency="USD")
@@ -49,7 +49,7 @@ class TestComputePriceAnalysis:
 
     def test_returns_none_when_no_price_points_row(self):
         """Returns None when price_points has no row for this product+market='UZ'."""
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
+        from app.domains.pricing.analysis import compute_price_analysis  # noqa: PLC0415
 
         db = _make_mock_db()
         mock_execute_result = MagicMock()
@@ -64,7 +64,7 @@ class TestComputePriceAnalysis:
 
     def test_target_above_market_returns_positive_delta(self):
         """target_price > market_avg gives positive delta_pct and 'above' label."""
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
+        from app.domains.pricing.analysis import compute_price_analysis  # noqa: PLC0415
 
         db = _make_mock_db()
         market_avg = decimal.Decimal("1000.0")
@@ -86,7 +86,7 @@ class TestComputePriceAnalysis:
 
     def test_target_below_market_returns_negative_delta(self):
         """target_price < market_avg gives negative delta_pct and 'below' label."""
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
+        from app.domains.pricing.analysis import compute_price_analysis  # noqa: PLC0415
 
         db = _make_mock_db()
         market_avg = decimal.Decimal("1000.0")
@@ -106,7 +106,7 @@ class TestComputePriceAnalysis:
 
     def test_delta_pct_rounded_to_one_decimal(self):
         """delta_pct is rounded to 1 decimal place."""
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
+        from app.domains.pricing.analysis import compute_price_analysis  # noqa: PLC0415
 
         db = _make_mock_db()
         # 1000 / 300 gives 3.333... — should round to 3.3% delta
@@ -132,7 +132,7 @@ class TestComputePriceAnalysis:
 
     def test_result_contains_all_required_fields(self):
         """Result dict contains target_price, market_avg, delta_pct, label."""
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
+        from app.domains.pricing.analysis import compute_price_analysis  # noqa: PLC0415
 
         db = _make_mock_db()
         market_avg = decimal.Decimal("1000.0")
@@ -156,7 +156,7 @@ class TestComputePriceAnalysis:
         """The SQL query selects FROM price_points with market='UZ'."""
         import inspect
 
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
+        from app.domains.pricing.analysis import compute_price_analysis  # noqa: PLC0415
 
         source = inspect.getsource(compute_price_analysis)
         assert "price_points" in source, "Function must query price_points table"
@@ -164,7 +164,7 @@ class TestComputePriceAnalysis:
 
     def test_never_commits(self):
         """compute_price_analysis is read-only — never calls db.commit()."""
-        from app.services.price_analysis_service import compute_price_analysis  # noqa: PLC0415
+        from app.domains.pricing.analysis import compute_price_analysis  # noqa: PLC0415
 
         db = _make_mock_db()
         mock_execute_result = MagicMock()

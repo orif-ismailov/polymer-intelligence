@@ -81,7 +81,7 @@ class TestEvaluateCondition:
 
     def test_empty_condition_always_matches(self) -> None:
         """Empty condition dict → always returns True (match everything)."""
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal()
         assert evaluate_condition({}, signal) is True
@@ -89,19 +89,19 @@ class TestEvaluateCondition:
     # ── kind predicate ────────────────────────────────────────────────────────
 
     def test_kind_in_list_matches(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(kind="sell_offer")
         assert evaluate_condition({"kind": ["sell_offer", "buy_request"]}, signal) is True
 
     def test_kind_not_in_list_no_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(kind="news")
         assert evaluate_condition({"kind": ["sell_offer", "buy_request"]}, signal) is False
 
     def test_kind_exact_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(kind="buy_request")
         assert evaluate_condition({"kind": ["buy_request"]}, signal) is True
@@ -109,19 +109,19 @@ class TestEvaluateCondition:
     # ── product_id predicate ──────────────────────────────────────────────────
 
     def test_product_id_in_list_matches(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(product_id=2)
         assert evaluate_condition({"product_id": [1, 2, 3]}, signal) is True
 
     def test_product_id_not_in_list_no_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(product_id=5)
         assert evaluate_condition({"product_id": [1, 2, 3]}, signal) is False
 
     def test_product_id_none_no_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(product_id=None)
         assert evaluate_condition({"product_id": [1, 2]}, signal) is False
@@ -129,25 +129,25 @@ class TestEvaluateCondition:
     # ── volume_gte predicate ──────────────────────────────────────────────────
 
     def test_volume_gte_at_threshold_matches(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(volume=200.0)
         assert evaluate_condition({"volume_gte": 200.0}, signal) is True
 
     def test_volume_gte_above_threshold_matches(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(volume=500.0)
         assert evaluate_condition({"volume_gte": 200.0}, signal) is True
 
     def test_volume_gte_below_threshold_no_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(volume=100.0)
         assert evaluate_condition({"volume_gte": 200.0}, signal) is False
 
     def test_volume_gte_none_no_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(volume=None)
         assert evaluate_condition({"volume_gte": 200.0}, signal) is False
@@ -155,19 +155,19 @@ class TestEvaluateCondition:
     # ── urgency_in predicate ──────────────────────────────────────────────────
 
     def test_urgency_in_list_matches(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(urgency_value="high")
         assert evaluate_condition({"urgency_in": ["high", "medium"]}, signal) is True
 
     def test_urgency_in_list_no_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(urgency_value="low")
         assert evaluate_condition({"urgency_in": ["high"]}, signal) is False
 
     def test_urgency_none_no_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(urgency_value=None)
         assert evaluate_condition({"urgency_in": ["high"]}, signal) is False
@@ -175,13 +175,13 @@ class TestEvaluateCondition:
     # ── source_kind predicate ─────────────────────────────────────────────────
 
     def test_source_kind_in_list_matches(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(source_kind="exchange")
         assert evaluate_condition({"source_kind": ["exchange", "telegram_channel"]}, signal) is True
 
     def test_source_kind_not_in_list_no_match(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(source_kind="website")
         assert evaluate_condition({"source_kind": ["exchange"]}, signal) is False
@@ -190,21 +190,21 @@ class TestEvaluateCondition:
 
     def test_lead_score_gte_no_ai_never_matches(self) -> None:
         """Phase 4: entity.ai is empty dict → lead_score is None → never matches."""
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(ai={})
         assert evaluate_condition({"lead_score_gte": 0.5}, signal) is False
 
     def test_lead_score_gte_ai_none_never_matches(self) -> None:
         """Phase 4: entity.ai is None → lead_score is None → never matches."""
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(ai=None)
         assert evaluate_condition({"lead_score_gte": 0.0}, signal) is False
 
     def test_lead_score_gte_no_lead_score_key_never_matches(self) -> None:
         """Phase 4: ai dict has no lead_score key → never matches."""
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(ai={"demand_level": "high"})
         assert evaluate_condition({"lead_score_gte": 0.1}, signal) is False
@@ -213,7 +213,7 @@ class TestEvaluateCondition:
 
     def test_unknown_key_is_ignored(self) -> None:
         """Unknown condition keys should be silently ignored (no-op)."""
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal()
         # "future_field" is not in the known predicate set → ignored
@@ -222,7 +222,7 @@ class TestEvaluateCondition:
     # ── multiple predicates ───────────────────────────────────────────────────
 
     def test_all_predicates_pass(self) -> None:
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(
             kind="sell_offer",
@@ -243,7 +243,7 @@ class TestEvaluateCondition:
 
     def test_one_predicate_fails_no_match(self) -> None:
         """If any predicate fails, the whole condition returns False."""
-        from app.services.alert_service import evaluate_condition  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_condition  # noqa: PLC0415
 
         signal = _make_signal(
             kind="sell_offer",
@@ -261,15 +261,17 @@ class TestEvaluateCondition:
     # ── security: no eval() ───────────────────────────────────────────────────
 
     def test_no_eval_in_alert_service(self) -> None:
-        """T-04-24: alert_service.py must contain zero eval() calls."""
-        import os  # noqa: PLC0415
+        """T-04-24: the predicate interpreter must contain zero eval() calls."""
+        import pathlib  # noqa: PLC0415
 
-        alert_service_path = os.path.join(
-            os.path.dirname(__file__), "..", "app", "services", "alert_service.py"
-        )
-        with open(alert_service_path) as f:
-            source = f.read()
-        assert "eval(" not in source, "T-04-24: alert_service.py contains eval() — forbidden!"
+        # Resolved from the module, not a literal path: this file moved to
+        # app/domains/alerts/ in the domain reorg. A hard-coded path makes a security
+        # assertion depend on a directory layout, which is the wrong thing for it to
+        # depend on.
+        from app.domains.alerts import service as alert_service  # noqa: PLC0415
+
+        source = pathlib.Path(alert_service.__file__).read_text(encoding="utf-8")
+        assert "eval(" not in source, "T-04-24: the alerts service contains eval() — forbidden!"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -284,7 +286,7 @@ class TestDedupe:
         """Same rule+entity fires twice: second IntegrityError is caught, only one alert."""
         from sqlalchemy.exc import IntegrityError  # noqa: PLC0415
 
-        from app.services.alert_service import evaluate_alert_rules  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_alert_rules  # noqa: PLC0415
 
         rule = _make_rule(rule_id=1, condition={})
 
@@ -316,12 +318,12 @@ class TestDedupe:
         alert_mock = MagicMock()
         alert_mock.id = 99
 
-        with patch("app.services.alert_service.Alert") as mock_alert_cls, \
-             patch("app.services.alert_service.Delivery"), \
-             patch("app.models.signals.Signal"):
+        with patch("app.domains.alerts.service.Alert") as mock_alert_cls, \
+             patch("app.domains.alerts.service.Delivery"), \
+             patch("app.domains.signals.models.Signal"):
 
             # Simulate: signal entity returned by _load_entity
-            with patch("app.services.alert_service._load_entity", return_value=signal):
+            with patch("app.domains.alerts.service._load_entity", return_value=signal):
                 mock_alert_cls.return_value = alert_mock
 
                 with patch("app.tasks.notify.send_delivery") as mock_send_delivery:
@@ -340,7 +342,7 @@ class TestDedupe:
         """
         from sqlalchemy.exc import IntegrityError  # noqa: PLC0415
 
-        from app.services.alert_service import evaluate_alert_rules  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_alert_rules  # noqa: PLC0415
 
         rule = _make_rule(rule_id=2, condition={})
         signal = _make_signal()
@@ -360,8 +362,8 @@ class TestDedupe:
         # re-raises it → caught by the service's except IntegrityError block.
         mock_db.flush = MagicMock(side_effect=IntegrityError("unique", {}, Exception()))
 
-        with patch("app.services.alert_service._load_entity", return_value=signal), \
-             patch("app.services.alert_service.Alert"), \
+        with patch("app.domains.alerts.service._load_entity", return_value=signal), \
+             patch("app.domains.alerts.service.Alert"), \
              patch("app.tasks.notify.send_delivery") as mock_send_delivery:
             mock_send_delivery.apply_async = MagicMock()
 
@@ -385,7 +387,7 @@ class TestDeliveryDispatch:
 
     def test_delivery_dispatch(self) -> None:
         """On rule match: one Delivery per channel, send_delivery.apply_async(queue='notify')."""
-        from app.services.alert_service import evaluate_alert_rules  # noqa: PLC0415
+        from app.domains.alerts.service import evaluate_alert_rules  # noqa: PLC0415
 
         channels = [
             {"type": "telegram_dm", "chat_id": -100111},
@@ -411,9 +413,9 @@ class TestDeliveryDispatch:
 
         # Lazy import inside evaluate_alert_rules resolves to app.tasks.notify.send_delivery
         # Patch at the source module so the lazy import picks up the mock.
-        with patch("app.services.alert_service._load_entity", return_value=signal), \
-             patch("app.services.alert_service.Alert", return_value=alert_mock), \
-             patch("app.services.alert_service.Delivery", side_effect=capture_delivery), \
+        with patch("app.domains.alerts.service._load_entity", return_value=signal), \
+             patch("app.domains.alerts.service.Alert", return_value=alert_mock), \
+             patch("app.domains.alerts.service.Delivery", side_effect=capture_delivery), \
              patch("app.tasks.notify.send_delivery") as mock_sd:
             mock_sd.apply_async = MagicMock()
 

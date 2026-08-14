@@ -24,7 +24,7 @@ Design notes:
 
 from __future__ import annotations
 
-from celery import Celery
+from celery import Celery, signals
 from kombu import Queue
 
 from app.core.config import settings
@@ -47,6 +47,7 @@ _TASK_MODULES = [
     "app.tasks.ingest_rss",
     "app.tasks.parse",
     "app.tasks.parse_telegram",
+    "app.tasks.request_analysis",
     "app.tasks.notify",
     "app.tasks.userbot_health",
     "app.tasks.nightly_catchup",
@@ -156,3 +157,18 @@ celery_app.conf.update(
 from app.tasks.schedule import BEAT_SCHEDULE  # noqa: E402
 
 celery_app.conf.beat_schedule = BEAT_SCHEDULE
+
+
+# ── Error tracking ────────────────────────────────────────────────────────────
+# The worker is a SEPARATE PROCESS from the api, so `create_app()`'s init does
+# not reach it. Without this, exactly the failures that are hardest to notice —
+# a task dying in the background with no user watching — would be the ones Sentry
+# never heard about.
+#
+# Hooked on `celeryd_init` rather than at import time: importing this module must
+# stay side-effect-free for the api process, which imports it only to enqueue.
+@signals.celeryd_init.connect  # type: ignore[misc]
+def _init_worker_observability(**_kwargs: object) -> None:
+    from app.core.observability import init_sentry  # noqa: PLC0415
+
+    init_sentry("worker")

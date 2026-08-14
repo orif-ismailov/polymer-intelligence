@@ -29,12 +29,24 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from app.core.config import settings
 
 # ── Engine ────────────────────────────────────────────────────────────────────
+# The pool is PER PROCESS, and there are many processes: uvicorn forks
+# API_WORKERS of them, and each Celery worker process builds its own too. So the
+# ceiling that matters is (processes x (pool_size + max_overflow)) against
+# Postgres `max_connections`, not the numbers here read on their own.
+#
+# With the compose defaults — 4 API workers, 4 Celery workers, 5 + 10 each —
+# that is 8 x 15 = 120, plus beat and the userbot, against the
+# `max_connections=200` the compose postgres is started with. The previous
+# values (10 + 20, hardcoded) came from a single-process deployment: four
+# uvicorn workers of those would alone have reached 120 against a default
+# ceiling of 100, and the failure mode is `FATAL: sorry, too many clients` under
+# load rather than anything gradual. Raising worker count without lowering the
+# per-process pool is the mistake this comment exists to prevent.
 engine = create_engine(
     settings.DATABASE_URL,
-    # Pool settings tuned for a single-VPS FastAPI deployment (DEC-deploy-single-vps).
     pool_pre_ping=True,   # detect stale connections before using them
-    pool_size=10,
-    max_overflow=20,
+    pool_size=settings.DB_POOL_SIZE,
+    max_overflow=settings.DB_MAX_OVERFLOW,
     echo=False,           # set echo=True for SQL debug output during development
 )
 

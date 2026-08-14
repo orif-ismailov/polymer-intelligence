@@ -429,7 +429,7 @@ class TestTelegramChannelClose:
         def _real_signal(session: Any, ri: Any, res: Any, jrnl: dict, **kwargs: Any) -> Any:
             # Build a real Signal via the production service so the produced object
             # carries the true source_id + extracted-field mapping (no fabrication).
-            from app.services.ai_signal_service import (  # noqa: PLC0415
+            from app.domains.signals.ai import (  # noqa: PLC0415
                 create_signal_from_extraction as _create,
             )
 
@@ -459,9 +459,9 @@ class TestTelegramChannelClose:
                 side_effect=_real_signal,
             ),
             # Resolve product/grade deterministically without a DB (key-free).
-            patch("app.services.ai_signal_service.match_product", return_value=7),
+            patch("app.domains.signals.ai.match_product", return_value=7),
             patch(
-                "app.services.ai_signal_service.extract_grade",
+                "app.domains.signals.ai.extract_grade",
                 return_value=(None, "T30S"),
             ),
         ):
@@ -527,7 +527,7 @@ class TestTelegramChannelClose:
         # Build a v_live_feed-shaped row from the produced signal. v_live_feed
         # selects: id, origin, kind, product_id, grade_text, volume, price,
         # currency, region, urgency, status, event_at (+ needs_review from ai).
-        from app.api.feed import _row_to_feed_item  # noqa: PLC0415
+        from app.domains.signals.api_feed import _row_to_feed_item  # noqa: PLC0415
 
         feed_row = MagicMock()
         feed_row.id = 1001
@@ -579,7 +579,7 @@ class TestTelegramChannelClose:
         assert signal.ai.get("needs_review") is True
 
         # The needs_review signal still maps to a FeedItem (appears in the stream).
-        from app.api.feed import _row_to_feed_item  # noqa: PLC0415
+        from app.domains.signals.api_feed import _row_to_feed_item  # noqa: PLC0415
 
         feed_row = MagicMock()
         feed_row.id = 1002

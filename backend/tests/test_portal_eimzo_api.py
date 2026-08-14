@@ -29,7 +29,7 @@ _PKCS7 = base64.b64encode(b"fake-pkcs7-blob").decode()
 
 
 def test_routes_registered() -> None:
-    from app.api.portal.eimzo import router  # noqa: PLC0415
+    from app.domains.contracts.api_portal_eimzo import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/eimzo/challenge" in paths
@@ -53,7 +53,7 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     clean(engine)
     session = session_factory(engine)
     fake_redis = FakeRedis()
-    monkeypatch.setattr("app.services.verification_service._dispatch_checks", lambda case_id: None)
+    monkeypatch.setattr("app.domains.verification.service._dispatch_checks", lambda case_id: None)
 
     app = create_app()
 
@@ -76,7 +76,8 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
 
 def _seed_company(session, phone: str, tax: str = "301234567"):  # noqa: ANN001, ANN202
     from app.core.security import create_portal_access_token  # noqa: PLC0415
-    from app.services import company_service, verification_service  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
 
     with session() as db:
         account = make_account(db, phone)
@@ -89,12 +90,13 @@ def _seed_company(session, phone: str, tax: str = "301234567"):  # noqa: ANN001,
 
 
 def _patch_eimzo(monkeypatch, *, ok=True, org_inn="301234567", raises=False):  # noqa: ANN001
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.integrations.eimzo import (  # noqa: PLC0415
         EimzoSigner,
         EimzoVerifyResult,
         ProviderUnavailable,
     )
-    from app.services import eimzo_service, storage_service  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
 
     result = EimzoVerifyResult(
         ok=ok,

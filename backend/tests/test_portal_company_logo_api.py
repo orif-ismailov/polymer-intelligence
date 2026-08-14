@@ -31,7 +31,7 @@ _PDF = b"%PDF-1.4 not a picture"
 
 
 def test_routes_registered() -> None:
-    from app.api.portal.companies import router  # noqa: PLC0415
+    from app.domains.companies.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/logo" in paths
@@ -87,7 +87,7 @@ def _seed_account(session, phone: str) -> tuple[int, dict[str, str]]:  # noqa: A
 
 
 def _add_member(session, company_id: int, account_id: int, role: str) -> None:  # noqa: ANN001
-    from app.models.companies import CompanyMember  # noqa: PLC0415
+    from app.domains.companies.models import CompanyMember  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
 
     with session() as db:
@@ -321,8 +321,8 @@ def test_upload_and_delete_are_audited(api) -> None:  # noqa: ANN001
 
 
 def test_cover_and_media_routes_registered() -> None:
-    from app.api.portal.companies import router as portal_router  # noqa: PLC0415
-    from app.api.webapp.market import router as market_router  # noqa: PLC0415
+    from app.domains.companies.api_portal import router as portal_router  # noqa: PLC0415
+    from app.domains.marketplace.api_webapp_market import router as market_router  # noqa: PLC0415
 
     portal_paths = {r.path for r in portal_router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/cover" in portal_paths
@@ -354,7 +354,7 @@ def test_cover_url_is_a_proxy_path_not_a_presigned_link() -> None:
     change to make here and it fails only in a browser, never in a test that
     checks the response body.
     """
-    from app.models.companies import Company  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
 
     company = Company(cover_storage_path="companies/50/cover/abc.jpg")

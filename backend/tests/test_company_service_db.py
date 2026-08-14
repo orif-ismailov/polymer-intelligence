@@ -37,11 +37,12 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 @requires_real_db
 def test_create_company_persists_owner_member_and_event(sf) -> None:  # noqa: ANN001
-    from app.models.companies import Company, CompanyMember  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.companies.models import Company, CompanyMember  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole, CompanyStatus  # noqa: PLC0415
     from app.models.events import DomainEvent  # noqa: PLC0415
     from app.models.staff import AuditLog  # noqa: PLC0415
-    from app.services import company_service, event_types  # noqa: PLC0415
+    from app.services import event_types  # noqa: PLC0415
 
     with sf() as db:
         account = make_account(db, "+998900000001")
@@ -71,7 +72,7 @@ def test_create_company_persists_owner_member_and_event(sf) -> None:  # noqa: AN
 
 @requires_real_db
 def test_duplicate_tax_id_raises_and_session_stays_usable(sf) -> None:  # noqa: ANN001
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     with sf() as db:
         account = make_account(db, "+998900000001")
@@ -89,7 +90,7 @@ def test_duplicate_tax_id_raises_and_session_stays_usable(sf) -> None:  # noqa: 
 
 @requires_real_db
 def test_membership_isolation_returns_not_found_for_non_member(sf) -> None:  # noqa: ANN001
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
 
     with sf() as db:
         account_a = make_account(db, "+998900000001")
@@ -106,9 +107,9 @@ def test_membership_isolation_returns_not_found_for_non_member(sf) -> None:  # n
 
 @requires_real_db
 def test_update_profile_gating(sf) -> None:  # noqa: ANN001
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
     from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
-    from app.models.verification import VerificationCase  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     with sf() as db:
         account = make_account(db, "+998900000001")
@@ -136,8 +137,8 @@ def test_update_profile_gating(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_set_business_roles_replaces(sf) -> None:  # noqa: ANN001
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     with sf() as db:
         account = make_account(db, "+998900000001")
@@ -163,12 +164,12 @@ def test_set_business_roles_replaces(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_set_business_roles_status_follows_company_status(sf) -> None:  # noqa: ANN001
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import (  # noqa: PLC0415
         BusinessRoleStatus,
         CompanyBusinessRole,
         CompanyStatus,
     )
-    from app.services import company_service  # noqa: PLC0415
 
     with sf() as db:
         account = make_account(db, "+998900000001")
@@ -192,8 +193,8 @@ def test_set_business_roles_status_follows_company_status(sf) -> None:  # noqa: 
 
 @requires_real_db
 def test_set_business_roles_rejects_cross_account_type_mix(sf) -> None:  # noqa: ANN001
+    from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     with sf() as db:
         account = make_account(db, "+998900000001")
@@ -211,8 +212,8 @@ def test_set_business_roles_rejects_cross_account_type_mix(sf) -> None:  # noqa:
 @requires_real_db
 def test_add_bank_account_persists_encrypted(sf) -> None:  # noqa: ANN001
     from app.core.crypto import decrypt_pii  # noqa: PLC0415
-    from app.models.companies import CompanyBankAccount  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBankAccount  # noqa: PLC0415
 
     with sf() as db:
         account = make_account(db, "+998900000001")
@@ -229,9 +230,9 @@ def test_add_bank_account_persists_encrypted(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_last_owner_guard(sf) -> None:  # noqa: ANN001
-    from app.models.companies import CompanyMember  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.companies.models import CompanyMember  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole, CompanyMemberStatus  # noqa: PLC0415
-    from app.services import company_service  # noqa: PLC0415
 
     with sf() as db:
         account_a = make_account(db, "+998900000001")

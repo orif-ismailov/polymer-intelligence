@@ -28,14 +28,26 @@ _BASE = "/api/v1/portal/companies"
 
 
 def test_routes_registered() -> None:
-    from app.api.portal.companies import router  # noqa: PLC0415
+    """Both routers that serve `/portal/companies`, asserted together.
+
+    P2 carved the documents + verification routes out of the companies router into
+    the verification domain. The URL contract is unchanged — both routers share the
+    `/portal/companies` prefix — so this test now names which router owns what,
+    rather than assuming one owns everything.
+    """
+    from app.domains.companies.api_portal import router  # noqa: PLC0415
+    from app.domains.verification.api_portal import router as verification_router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies" in paths
     assert "/portal/companies/{company_id}" in paths
-    assert "/portal/companies/{company_id}/verification/submit" in paths
     assert "/portal/companies/{company_id}/bank-accounts" in paths
-    assert "/portal/companies/{company_id}/documents/{document_id}/download" in paths
+
+    verification_paths = {r.path for r in verification_router.routes}  # type: ignore[attr-defined]
+    assert "/portal/companies/{company_id}/verification/submit" in verification_paths
+    assert "/portal/companies/{company_id}/verification" in verification_paths
+    assert "/portal/companies/{company_id}/documents" in verification_paths
+    assert "/portal/companies/{company_id}/documents/{document_id}/download" in verification_paths
 
 
 # ── real-DB API fixture ───────────────────────────────────────────────────────
@@ -58,7 +70,7 @@ def api(engine: sa.Engine, monkeypatch):  # noqa: ANN001, ANN201
     session = session_factory(engine)
     fake_redis = FakeRedis()
     # the verify-task dispatch on submit must not hit a broker
-    monkeypatch.setattr("app.services.verification_service._dispatch_checks", lambda case_id: None)
+    monkeypatch.setattr("app.domains.verification.service._dispatch_checks", lambda case_id: None)
 
     app = create_app()
 
@@ -165,7 +177,7 @@ def test_profile_roles_and_bank_masking(api) -> None:  # noqa: ANN001
 @requires_real_db
 def test_summary_carries_declared_roles(api) -> None:  # noqa: ANN001
     """The cabinet shapes itself on `declared_roles` (non-revoked declared+confirmed)."""
-    from app.models.companies import CompanyBusinessRole  # noqa: PLC0415
+    from app.domains.companies.models import CompanyBusinessRole  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus  # noqa: PLC0415
 
     client, session = api
@@ -276,7 +288,7 @@ def test_document_upload_download_delete(api) -> None:  # noqa: ANN001
 
 def _account(db, account_id: int):  # noqa: ANN001, ANN202
     """Re-attach a seeded account to the session `make_company` will write in."""
-    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
 
     return db.get(UserAccount, account_id)
 
@@ -285,7 +297,7 @@ def _account(db, account_id: int):  # noqa: ANN001, ANN202
 
 
 def test_public_profile_route_registered() -> None:
-    from app.api.portal.companies import router  # noqa: PLC0415
+    from app.domains.companies.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/public-profile" in paths

@@ -286,7 +286,8 @@ async def fetch_url(
             continue
 
     # All retries exhausted
-    assert last_exc is not None
+    if last_exc is None:  # pragma: no cover — the loop always sets it before falling through
+        raise RuntimeError(f"retries exhausted for {url!r} with no recorded error")
     raise last_exc
 
 
