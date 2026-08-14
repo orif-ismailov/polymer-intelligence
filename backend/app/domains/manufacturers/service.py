@@ -18,6 +18,12 @@ from app.core.time import to_display_tz, utcnow
 from app.domains.companies import directory as directory_service
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBusinessRole
+from app.domains.manufacturers.models import (
+    FactoryRfq,
+    FactoryRfqDocument,
+    ManufacturerMessage,
+    ManufacturerThread,
+)
 from app.domains.marketplace.models import SellerOffer
 from app.models.accounts import UserAccount
 from app.models.enums import (
@@ -29,12 +35,6 @@ from app.models.enums import (
 )
 from app.models.enums import (
     CompanyBusinessRole as CompanyBusinessRoleEnum,
-)
-from app.models.manufacturers import (
-    FactoryRfq,
-    FactoryRfqDocument,
-    ManufacturerMessage,
-    ManufacturerThread,
 )
 from app.services import storage_service
 

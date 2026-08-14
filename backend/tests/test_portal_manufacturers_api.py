@@ -24,7 +24,7 @@ _BASE = "/api/v1/portal/manufacturers"
 
 
 def test_manufacturer_routes_registered() -> None:
-    from app.api.portal.manufacturers import router  # noqa: PLC0415
+    from app.domains.manufacturers.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/manufacturers" in paths

@@ -15,12 +15,9 @@ from app.api.portal.deps import company_or_404, require_business_role
 from app.core.db import get_db
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
-from app.domains.marketplace import service as offer_service
-from app.domains.marketplace.models import SellerOffer
-from app.models.accounts import UserAccount
-from app.models.enums import FactoryRfqDocumentKind
-from app.models.manufacturers import FactoryRfq, ManufacturerMessage, ManufacturerThread
-from app.schemas.portal_manufacturers import (
+from app.domains.manufacturers import service as manufacturer_service
+from app.domains.manufacturers.models import FactoryRfq, ManufacturerMessage, ManufacturerThread
+from app.domains.manufacturers.schemas import (
     FactoryRfqCreateIn,
     FactoryRfqDocumentOut,
     FactoryRfqOut,
@@ -31,7 +28,11 @@ from app.schemas.portal_manufacturers import (
     ManufacturerThreadOpenIn,
     ManufacturerThreadOut,
 )
-from app.services import manufacturer_service, storage_service
+from app.domains.marketplace import service as offer_service
+from app.domains.marketplace.models import SellerOffer
+from app.models.accounts import UserAccount
+from app.models.enums import FactoryRfqDocumentKind
+from app.services import storage_service
 
 router = APIRouter(prefix="/portal/manufacturers", tags=["portal-manufacturers"])
 
@@ -67,7 +68,7 @@ def _card(db: Session, company: Company) -> ManufacturerCardOut:
 
 
 def _doc_out(doc: object) -> FactoryRfqDocumentOut:
-    from app.models.manufacturers import FactoryRfqDocument
+    from app.domains.manufacturers.models import FactoryRfqDocument
 
     assert isinstance(doc, FactoryRfqDocument)
     return FactoryRfqDocumentOut(

@@ -51,7 +51,6 @@ from app.api.feed import router as feed_router
 from app.api.health import router as health_router
 from app.api.portal.auth import router as portal_auth_router
 from app.api.portal.lab import router as portal_lab_router
-from app.api.portal.manufacturers import router as portal_manufacturers_router
 from app.api.portal.news import router as portal_news_router
 from app.api.portal.notifications import router as portal_notifications_router
 from app.api.portal.reference import router as portal_reference_router
@@ -87,6 +86,7 @@ from app.domains.laboratory.api_admin import router as admin_lab_requests_router
 from app.domains.laboratory.api_portal import router as portal_lab_requests_router
 from app.domains.logistics.api_admin import router as admin_logistics_requests_router
 from app.domains.logistics.api_portal import router as portal_logistics_router
+from app.domains.manufacturers.api_portal import router as portal_manufacturers_router
 from app.domains.marketplace.api_admin import router as offer_requests_router
 from app.domains.marketplace.api_admin_moderation import router as moderation_router
 from app.domains.marketplace.api_portal import router as portal_offers_router

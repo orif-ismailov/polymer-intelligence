@@ -70,6 +70,12 @@ from app.domains.logistics.models import (  # noqa: F401
     LogisticsRequestMessage,
     LogisticsRequestThread,
 )
+from app.domains.manufacturers.models import (  # noqa: F401
+    FactoryRfq,
+    FactoryRfqDocument,
+    ManufacturerMessage,
+    ManufacturerThread,
+)
 from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.alerts import Alert, AlertRule, Delivery  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
@@ -129,12 +135,6 @@ from app.models.enums import (
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.lab import LabOrder, LabPartner, SampleRequest  # noqa: F401
-from app.models.manufacturers import (  # noqa: F401
-    FactoryRfq,
-    FactoryRfqDocument,
-    ManufacturerMessage,
-    ManufacturerThread,
-)
 from app.models.media import CompanyMedia  # noqa: F401
 from app.models.notifications import PortalNotification  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401
