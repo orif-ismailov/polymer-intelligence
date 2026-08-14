@@ -27,14 +27,45 @@ context's models/schemas/service/api together — nothing tactical.
 - ~1800 `app.services.X` / `app.models.X` / `app.schemas.X` / `app.api.X` import references
   repo-wide (`app/` + `tests/`), all literal strings — mechanical (grep+sed), not a logic
   rewrite, but real volume per domain.
+- **"Repo-wide" means the repo root, not `backend/`.** `telegram/` and `userbot/` are
+  repo-root packages that import backend modules, and they are mounted read-only into the
+  containers rather than vendored — so nothing about `backend/`'s own import graph reveals
+  them. Every sweep, grep and inventory in this track must cover
+  `backend/app backend/tests telegram userbot`. *Added after P1 scoped its inventory to
+  `app/` + `tests/` and missed five call sites in `telegram/handlers/moderation.py`; the
+  worker and bot would have broken at runtime, and it surfaced only as seven test failures.
+  P2 and P3 each hit the same files again (`telegram/handlers/verification.py`).* Known
+  reach as of P3: `telegram/` imports `app.services.client_service` (P11) and
+  `app.core.languages`; `userbot/` imports `app.services.raw_pipeline`, `app.models.sources`
+  and `app.ingest.base` (P10).
 - `app/models/__init__.py` is a genuine barrel (imports every model in FK order, feeds
   `Base.metadata` for alembic). Moving a model file just means updating its barrel line in
-  place, preserving relative order — SQLAlchemy resolves FKs from `Base.metadata` after all
-  models load, not from Python import order, so this is safe.
+  place — SQLAlchemy resolves FKs from `Base.metadata` after all models load, not from Python
+  import order, and ruff's isort sorts the block anyway, so relative order is not something
+  to preserve.
+- **The barrel must import relocated models as MODULES, never by name.** Use
+  `import app.domains.<name>.models  # noqa: F401`, not
+  `from app.domains.<name>.models import Company`. A domain model module opens with
+  `from app.models.enums import ...`, which initializes the `app.models` package and runs
+  this barrel; if the barrel then asks that same half-executed module for a class, Python
+  raises `cannot import name ... from partially initialized module`. The module form needs
+  only the `sys.modules` entry, which exists by then, and the mappers still register on
+  `Base.metadata` as the module finishes executing — which is the only thing the barrel is
+  for. *Added in P3. The cycle was already latent for marketplace (P1) and verification
+  (P2): it fires only when a domain model is the FIRST app module imported in a process, so
+  it stayed invisible until a test happened to import one directly.* Consequences, both
+  settled: classes under `app/domains/` are no longer bound on `app.models` (harmless —
+  there are zero `from app.models import X` call sites; the barrel is pure alembic
+  infrastructure), and `__all__` lists only what is still bound.
+- **Assert `Base.metadata`, not barrel attributes.** Any test checking "alembic can see this
+  model" must assert `"<table>" in Base.metadata.tables`, not
+  `hasattr(app.models, "<Class>")`. The latter is a proxy that the rule above breaks while
+  autogenerate keeps working. One such test existed (`test_migration_0029`) and was
+  converted in P3.
 - `app/services/__init__.py`, `app/schemas/__init__.py`, `app/api/__init__.py` are empty — no
   existing re-export shim to lean on. **No backward-compat shims are added during this
-  migration** — each domain move is atomic: move the files, update every call site (`app/` +
-  `tests/`) in the same change, get the full gate green, then commit. Leaving old-path shim
+  migration** — each domain move is atomic: move the files, update every call site (repo-wide,
+  per the scan-scope finding above) in the same change, get the full gate green, then commit. Leaving old-path shim
   files would recreate the "why does this exist in two places" confusion the reorg exists to
   fix.
 - A `from app.services import offer_service` (submodule-as-namespace) style is used ~62 times
@@ -44,8 +75,23 @@ context's models/schemas/service/api together — nothing tactical.
 - CI runs two explicit directory-path mypy invocations: `mypy app/services --ignore-missing-imports`
   and `mypy app/schemas --ignore-missing-imports` (plus matching `[[tool.mypy.overrides]]` blocks
   in `backend/pyproject.toml` keyed by `app.services.*` / `app.schemas.*`). Each phase must add
-  its new domain's service/schema files to these invocations (both the local command and
-  `.github/workflows/ci.yml`) as part of that phase's change.
+  its new domain's service/schema files to these invocations — `.github/workflows/ci.yml` **and**
+  the copies documented in the root and `backend/` `CLAUDE.md` — as part of that phase's change.
+- **The override module keys matter as much as the invocation paths.** Global `[tool.mypy]`
+  is `strict = true`, but `disallow_any_explicit` is **not** part of `strict` — it comes from
+  the `app.services.*` override. A service file moved to `app/domains/` silently loses the
+  explicit-`Any` ban unless a matching override exists. The settled structure, in this order
+  (mypy applies the **last** matching override):
+  1. `module = ["app.domains.*"]` — `disallow_untyped_defs`, `disallow_any_explicit` on.
+  2. `module = ["app.domains.*.schemas", …]` — `disallow_any_explicit` **off** (the pydantic
+     carve-out that `app.schemas.*` already had).
+  3. `module = ["app.domains.*.models", …]` — `disallow_any_explicit` **off**.
+  Block 3 was added in P3's phase: a JSONB column is `Mapped[dict[str, Any]]`, which is what
+  SQLAlchemy gives you, and those models sat under no such ban in `app/models/`. **Moving a
+  file between directories must not change what the type checker demands of it** — if a
+  phase's mypy run reports new errors in a file it only *moved*, the override is wrong, not
+  the code. Note mypy's patterns wildcard whole components, so `app.domains.*.schemas` does
+  not match `portal_market_schemas` — list irregular names explicitly.
 - Circular FKs exist between `companies.py`↔`verification.py` and `marketplace.py`↔`compliance.py`
   models. This does not block a folder split (FK resolution is metadata-based, not
   import-order-based) — it's accepted as a tolerated two-way relationship between those domain
@@ -130,6 +176,10 @@ grep -rnE '(patch|setattr)\(\s*"app\.(services\.offer_service|models\.marketplac
 # 2. THE NET — a review list, NOT an assertion. Read it for targets whose prefix is a
 #    module this phase moved.
 grep -rnE '(patch|setattr)\(\s*"app\.' backend/tests | grep -vE '"app\.(core|domains)\.'
+
+# 3. And the stale-path sweep for the phase, over the REPO ROOT (see the scan-scope
+#    finding above) — not just backend/.
+grep -rn --include=*.py -E '<this phase.s old module paths>' backend/app backend/tests telegram userbot
 ```
 
 Grep 2 returns **525 lines today** and will never reach zero: targets prefixed
@@ -154,6 +204,23 @@ patch silently does nothing and the test passes without testing anything**. That
 failure mode none of the counts above will catch.
 
 So: change import **paths**, never import **style**, and never "tidy" an import while moving it.
+
+### Census before any identifier rename
+
+A phase that renames a *symbol* (not a module path) must first list every **definition** of
+that name, not just the call sites:
+
+```bash
+git grep -n "def <name>" -- 'backend/*.py'
+```
+
+*Added after P2's `deps.py` extraction.* That step moved `_company_or_404` out of
+`portal/companies.py` and renamed it public. Six functions named `_company_or_404` existed —
+five of them unrelated local helpers in other routers, two with a different signature
+entirely — and a `\b_company_or_404\b` sweep renamed all six. Behavior survived (each file's
+definition and call sites moved together) but five private helpers silently became public,
+and the resulting duplicate public names were more confusing than the problem being fixed.
+Caught by reading a diff, not by any gate: ruff, mypy and the suite were all green.
 
 ## Target convention
 
@@ -183,15 +250,15 @@ existing indefinitely, shrinking as more domains move out.
 Ordered by lowest external fan-in / least shared-kernel entanglement first (from the coupling
 research), confirmed with the user:
 
-1. **Marketplace/offers** — `P1-MARKETPLACE.md`. Lowest external fan-in of the two initial
+1. **Marketplace/offers** — `P1-MARKETPLACE.md`. **DONE.** Lowest external fan-in of the two initial
    candidates (marketplace vs. verification) — no other domain's *services* reach into
    marketplace, only `offer_compliance_service` reaches out to substances/compliance. Pilot:
    establishes the folder convention, the import-alias technique, and the CI-glob pattern reused
    by every later phase.
-2. **Verification** — `verification_service`, `verification_checks`, `registry_service`,
+2. **Verification** — **DONE** (`P2-VERIFICATION.md`). `verification_service`, `verification_checks`, `registry_service`,
    `otp_service`, `directory_service` + `models/verification.py`. More entangled: contracts'
    `eimzo_service` depends on it, circular FK with companies.
-3. **Companies** — `company_service` + `models/companies.py`. Highest fan-in (8 other domains
+3. **Companies** — **DONE** (`P3-COMPANIES.md`). `company_service` + `directory_service` + `models/companies.py`. Highest fan-in (8 other domains
    depend on it) — moved once several dependents already exist as domains, so "update every call
    site" happens once at scale.
 4. **Contracts** — `contract_service`, `contract_render`, `eimzo_service`.
