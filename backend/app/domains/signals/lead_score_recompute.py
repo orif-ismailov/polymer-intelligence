@@ -22,7 +22,7 @@ Background:
       attributable to the new algorithm (T-05-24 mitigated).
 
 Usage:
-    from app.services.lead_score_recompute_service import rescore_on_prompt_version_change
+    from app.domains.signals.lead_score_recompute import rescore_on_prompt_version_change
 
     with SessionLocal() as session:
         count = rescore_on_prompt_version_change(session, new_version="lead_v2")

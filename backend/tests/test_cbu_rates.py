@@ -257,8 +257,8 @@ class TestUpsertFxRatesDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
+        from app.domains.pricing.fx import upsert_fx_rates  # noqa: PLC0415
         from app.ingest.cbu_rates.adapter import CbuRateRow  # noqa: PLC0415
-        from app.services.fx_service import upsert_fx_rates  # noqa: PLC0415
 
         rate_date = datetime.date(2024, 3, 1)
         rates = [
@@ -285,8 +285,8 @@ class TestUpsertFxRatesDB:
         import sqlalchemy as sa  # noqa: PLC0415
         from sqlalchemy.orm import Session  # noqa: PLC0415
 
+        from app.domains.pricing.fx import upsert_fx_rates  # noqa: PLC0415
         from app.ingest.cbu_rates.adapter import CbuRateRow  # noqa: PLC0415
-        from app.services.fx_service import upsert_fx_rates  # noqa: PLC0415
 
         rate_date = datetime.date(2024, 3, 2)
         rates = [

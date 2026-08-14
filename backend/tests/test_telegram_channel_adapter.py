@@ -228,7 +228,7 @@ class TestCheckUserbotHeartbeat:
 
     def test_stale_heartbeat_inserts_alert(self) -> None:
         """A stale heartbeat (older than 300s) inserts a source_failure alert."""
-        from app.services.userbot_health_service import check_userbot_heartbeat
+        from app.domains.signals.userbot_health import check_userbot_heartbeat
 
         # Heartbeat 10 minutes ago (> 300s)
         stale_ts = time.time() - 600
@@ -250,7 +250,7 @@ class TestCheckUserbotHeartbeat:
 
     def test_absent_heartbeat_inserts_alert(self) -> None:
         """An absent heartbeat (key not set) inserts a source_failure alert."""
-        from app.services.userbot_health_service import check_userbot_heartbeat
+        from app.domains.signals.userbot_health import check_userbot_heartbeat
 
         mock_redis = MagicMock()
         mock_redis.get.return_value = None
@@ -263,7 +263,7 @@ class TestCheckUserbotHeartbeat:
 
     def test_fresh_heartbeat_does_not_insert_alert(self) -> None:
         """A fresh heartbeat (< 300s old) does NOT insert an alert."""
-        from app.services.userbot_health_service import check_userbot_heartbeat
+        from app.domains.signals.userbot_health import check_userbot_heartbeat
 
         # Heartbeat 30 seconds ago — well within 300s threshold
         fresh_ts = time.time() - 30
@@ -280,7 +280,7 @@ class TestCheckUserbotHeartbeat:
         """The dedupe_key must be 'userbot_silent:{utc_date}'."""
         import re
 
-        from app.services.userbot_health_service import check_userbot_heartbeat
+        from app.domains.signals.userbot_health import check_userbot_heartbeat
 
         mock_redis = MagicMock()
         mock_redis.get.return_value = None  # absent heartbeat
@@ -304,7 +304,7 @@ class TestCheckUserbotHeartbeat:
         that our SQL includes the dedup clause so that two worker-beat runs on the
         same day cannot produce two alert rows.
         """
-        from app.services.userbot_health_service import check_userbot_heartbeat
+        from app.domains.signals.userbot_health import check_userbot_heartbeat
 
         mock_redis = MagicMock()
         mock_redis.get.return_value = None  # absent

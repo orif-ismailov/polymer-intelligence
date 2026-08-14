@@ -67,7 +67,7 @@ def rescore_signals_for_prompt_version(
           - status (str): "ok" or "error".
     """
     from app.core.db import SessionLocal  # noqa: PLC0415
-    from app.services.lead_score_recompute_service import (  # noqa: PLC0415
+    from app.domains.signals.lead_score_recompute import (  # noqa: PLC0415
         rescore_on_prompt_version_change,
     )
 

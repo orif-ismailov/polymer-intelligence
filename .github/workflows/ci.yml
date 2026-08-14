@@ -113,6 +113,9 @@ jobs:
           app/domains/signals/raw_pipeline.py
           app/domains/signals/sources.py
           app/domains/signals/source_health.py
+          app/domains/signals/lead_score_recompute.py
+          app/domains/signals/userbot_health.py
+          app/domains/pricing/fx.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)

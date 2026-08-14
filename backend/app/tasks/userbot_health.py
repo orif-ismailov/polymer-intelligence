@@ -22,7 +22,7 @@ import redis as redis_lib
 
 from app.core.config import settings
 from app.core.db import SessionLocal
-from app.services.userbot_health_service import check_userbot_heartbeat
+from app.domains.signals.userbot_health import check_userbot_heartbeat
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
