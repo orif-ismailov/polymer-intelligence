@@ -18,6 +18,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.crypto import encrypt_pii
+from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import (
     Company,
     CompanyBankAccount,
@@ -25,7 +26,6 @@ from app.domains.companies.models import (
     CompanyMember,
 )
 from app.domains.verification.models import VerificationCase
-from app.models.accounts import UserAccount
 from app.models.enums import (
     BankAccountStatus,
     BusinessRoleStatus,

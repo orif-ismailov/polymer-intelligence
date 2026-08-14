@@ -132,8 +132,8 @@ def _account(session, phone):  # noqa: ANN001, ANN202
 
 
 def _verified_company(session, account_id, tax):  # noqa: ANN001, ANN202
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     with session() as db:
@@ -185,8 +185,8 @@ def test_directory_hides_non_verified(api) -> None:  # noqa: ANN001
     _verified_company(session, aid, "301111111")            # verified → listed
     # a draft company (not verified) must not appear
     bid, _ = _account(session, "+998900000002")
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     with session() as db:
         company_service.create_company(db, db.get(UserAccount, bid), "UZ", "309999999")
@@ -212,8 +212,8 @@ def test_directory_lookup_by_id(api) -> None:  # noqa: ANN001
     verified_id = _verified_company(session, aid, "301111111")
 
     bid, _ = _account(session, "+998900000002")
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     with session() as db:
         draft = company_service.create_company(db, db.get(UserAccount, bid), "UZ", "309999999")
@@ -325,8 +325,8 @@ def test_sign_inn_mismatch_422(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_create_counterparty_must_be_verified_422(api) -> None:  # noqa: ANN001
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     client, session = api
     a_id, a_auth = _account(session, "+998900000001")

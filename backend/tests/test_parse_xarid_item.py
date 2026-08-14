@@ -111,7 +111,7 @@ class TestParseXaridItemRouting:
             patch("app.tasks.parse.match_product", return_value=7),
             patch("app.tasks.parse.write_parse_run"),
             patch("app.tasks.parse.llm_extract_signal") as mock_llm,
-            patch("app.services.grade_service.extract_grade", return_value=(None, "HDPE")),
+            patch("app.domains.reference.grades.extract_grade", return_value=(None, "HDPE")),
         ):
             session = _patch_session(mock_get_session, raw_item)
             result = parse_xarid_item(101)
@@ -144,7 +144,7 @@ class TestParseXaridItemRouting:
                 return_value=(llm_result, {"parser": "llm_extract_tools", "model": "haiku"}),
             ),
             patch("app.tasks.parse.write_parse_run"),
-            patch("app.services.grade_service.extract_grade", return_value=(None, "HDPE")),
+            patch("app.domains.reference.grades.extract_grade", return_value=(None, "HDPE")),
         ):
             session = _patch_session(mock_get_session, raw_item)
             result = parse_xarid_item(101)

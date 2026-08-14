@@ -32,10 +32,10 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.time import to_display_tz, utcnow
+from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company
 from app.domains.requests.models import Request, RequestStatusHistory
 from app.domains.requests.webapp_schemas import RequestCreate
-from app.models.accounts import UserAccount
 from app.models.enums import RequestStatus
 from app.services import notification_service
 from app.services.audit_service import write_audit

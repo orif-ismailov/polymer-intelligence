@@ -20,6 +20,7 @@ from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company
 from app.domains.marketplace.models import OfferRequest, SellerOffer
 from app.domains.marketplace.schemas import (
@@ -32,7 +33,6 @@ from app.domains.marketplace.schemas import (
     OfferRequestUpdate,
 )
 from app.domains.requests.models import Client
-from app.models.accounts import UserAccount
 from app.models.enums import OfferRequestStatus, SellerOfferStatus
 from app.services import notification_service
 from app.services.audit_service import write_audit

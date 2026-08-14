@@ -18,9 +18,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
-from app.models.accounts import UserAccount
-from app.schemas.reference import ProductOut
-from app.services import product_service
+from app.domains.accounts.models import UserAccount
+from app.domains.reference import service as product_service
+from app.domains.reference.schemas import ProductOut
 
 router = APIRouter(prefix="/portal/reference", tags=["portal-reference"])
 

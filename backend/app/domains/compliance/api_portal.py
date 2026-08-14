@@ -18,6 +18,7 @@ from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404, rate_limited
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.accounts.models import UserAccount
 from app.domains.compliance import licenses as company_license_service
 from app.domains.compliance import substance_ai as substance_ai_service
 from app.domains.compliance.schemas import CompanyLicenseOut, ComplianceOut
@@ -29,7 +30,6 @@ from app.domains.compliance.substance_match_schemas import (
 from app.domains.compliance.substance_schemas import SubstanceBrief
 from app.domains.marketplace import compliance as offer_compliance_service
 from app.domains.marketplace.models import SellerOffer
-from app.models.accounts import UserAccount
 from app.services import rate_limit
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-compliance"])

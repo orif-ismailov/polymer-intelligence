@@ -22,21 +22,8 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.core.security import create_portal_access_token, decode_token
-from app.models.accounts import UserAccount
-from app.models.enums import AccountStatus
-from app.schemas.portal import (
-    AccountOut,
-    MeUpdateIn,
-    OtpRequestIn,
-    OtpVerifyIn,
-    PortalTokenResponse,
-)
-from app.services.auth_service import (
-    clear_portal_session_cookie,
-    get_portal_session_cookie_name,
-    set_portal_session_cookie,
-)
-from app.services.otp_service import (
+from app.domains.accounts.models import UserAccount
+from app.domains.accounts.otp import (
     InvalidPhone,
     OtpInvalid,
     OtpLocked,
@@ -45,6 +32,19 @@ from app.services.otp_service import (
     peek_key,
     request_code,
     verify_code,
+)
+from app.domains.accounts.schemas import (
+    AccountOut,
+    MeUpdateIn,
+    OtpRequestIn,
+    OtpVerifyIn,
+    PortalTokenResponse,
+)
+from app.models.enums import AccountStatus
+from app.services.auth_service import (
+    clear_portal_session_cookie,
+    get_portal_session_cookie_name,
+    set_portal_session_cookie,
 )
 
 router = APIRouter(prefix="/portal", tags=["portal-auth"])

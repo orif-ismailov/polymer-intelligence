@@ -22,8 +22,8 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.security import decode_token
+from app.domains.accounts.models import UserAccount
 from app.domains.requests.models import Client
-from app.models.accounts import UserAccount
 from app.models.enums import AccountStatus, StaffRole
 from app.models.staff import StaffUser
 
@@ -294,7 +294,7 @@ def get_current_client(
     # A truthy header selects this path; an empty string (sent by the browser client)
     # is treated as absent so it falls through to the cookie path.
     if x_telegram_init_data:
-        from app.services.client_service import (  # noqa: PLC0415
+        from app.domains.requests.clients import (  # noqa: PLC0415
             InvalidInitData,
             get_or_create_client,  # noqa: PLC0415
             verify_init_data,

@@ -79,21 +79,21 @@ class TestNormalizeTerm:
 
     def test_lowercase(self) -> None:
         """normalize_term lowercases input."""
-        from app.services.relevance_service import normalize_term  # noqa: PLC0415
+        from app.domains.reference.relevance import normalize_term  # noqa: PLC0415
 
         assert normalize_term("HDPE") == "hdpe"
         assert normalize_term("Полипропилен") == "полипропилен"
 
     def test_strips_leading_trailing_whitespace(self) -> None:
         """normalize_term strips surrounding whitespace."""
-        from app.services.relevance_service import normalize_term  # noqa: PLC0415
+        from app.domains.reference.relevance import normalize_term  # noqa: PLC0415
 
         assert normalize_term("  пп  ") == "пп"
         assert normalize_term("\tPP\n") == "pp"
 
     def test_collapses_internal_whitespace(self) -> None:
         """normalize_term collapses internal whitespace runs to single spaces."""
-        from app.services.relevance_service import normalize_term  # noqa: PLC0415
+        from app.domains.reference.relevance import normalize_term  # noqa: PLC0415
 
         assert normalize_term("полиэтилен  высокой   плотности") == (
             "полиэтилен высокой плотности"
@@ -101,7 +101,7 @@ class TestNormalizeTerm:
 
     def test_deterministic(self) -> None:
         """normalize_term returns the same output for the same input every call."""
-        from app.services.relevance_service import normalize_term  # noqa: PLC0415
+        from app.domains.reference.relevance import normalize_term  # noqa: PLC0415
 
         term = "  ПолиПропилен  "
         result1 = normalize_term(term)
@@ -110,20 +110,20 @@ class TestNormalizeTerm:
 
     def test_mixed_case_and_spaces(self) -> None:
         """Full round-trip: mixed case + extra spaces → normalized form."""
-        from app.services.relevance_service import normalize_term  # noqa: PLC0415
+        from app.domains.reference.relevance import normalize_term  # noqa: PLC0415
 
         assert normalize_term("  ПолиПропилен ") == "полипропилен"
 
     def test_empty_string(self) -> None:
         """normalize_term handles empty string without raising."""
-        from app.services.relevance_service import normalize_term  # noqa: PLC0415
+        from app.domains.reference.relevance import normalize_term  # noqa: PLC0415
 
         result = normalize_term("")
         assert result == ""
 
     def test_already_normalized(self) -> None:
         """normalize_term is idempotent — already-normalized strings are unchanged."""
-        from app.services.relevance_service import normalize_term  # noqa: PLC0415
+        from app.domains.reference.relevance import normalize_term  # noqa: PLC0415
 
         term = "полипропилен"
         assert normalize_term(normalize_term(term)) == normalize_term(term)
@@ -140,8 +140,8 @@ class TestMatchProduct:
         """match_product resolves 'полипропилен' to the PP product_id."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
+        from app.domains.reference.relevance import match_product  # noqa: PLC0415
         from app.seed.seed_reference import seed_synonyms  # noqa: PLC0415
-        from app.services.relevance_service import match_product  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
         with session_factory() as session:
@@ -155,7 +155,7 @@ class TestMatchProduct:
         """match_product is case-insensitive: 'ПолиПропилен' resolves to PP."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services.relevance_service import match_product  # noqa: PLC0415
+        from app.domains.reference.relevance import match_product  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
         with session_factory() as session:
@@ -167,7 +167,7 @@ class TestMatchProduct:
         """match_product trims spaces: '  полипропилен  ' resolves to PP."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services.relevance_service import match_product  # noqa: PLC0415
+        from app.domains.reference.relevance import match_product  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
         with session_factory() as session:
@@ -179,7 +179,7 @@ class TestMatchProduct:
         """match_product returns None for unrecognized goods ('цемент')."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services.relevance_service import match_product  # noqa: PLC0415
+        from app.domains.reference.relevance import match_product  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
         with session_factory() as session:
@@ -191,7 +191,7 @@ class TestMatchProduct:
         """Admin-added synonym row is picked up live — no code change needed (SC#4)."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services.relevance_service import match_product, normalize_term  # noqa: PLC0415
+        from app.domains.reference.relevance import match_product, normalize_term  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
         new_synonym = "тестовый_полимер_xyz"
@@ -298,7 +298,7 @@ class TestQueueForClassification:
         """queue_for_classification inserts one row into manual_classification_queue."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services.relevance_service import queue_for_classification  # noqa: PLC0415
+        from app.domains.reference.relevance import queue_for_classification  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
 
@@ -346,7 +346,7 @@ class TestQueueForClassification:
         """queue_for_classification with same raw_item_id inserts 0 on second call (ON CONFLICT)."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services.relevance_service import queue_for_classification  # noqa: PLC0415
+        from app.domains.reference.relevance import queue_for_classification  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
 
@@ -404,7 +404,7 @@ class TestQueueForClassification:
         """queue_for_classification never modifies sources.consecutive_failures (REQ-uzex-parser)."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services.relevance_service import queue_for_classification  # noqa: PLC0415
+        from app.domains.reference.relevance import queue_for_classification  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
 
@@ -456,7 +456,7 @@ class TestQueueForClassification:
         """product_text is truncated to 512 chars (T-02-05: DoS via oversized text)."""
         from sqlalchemy.orm import sessionmaker  # noqa: PLC0415
 
-        from app.services.relevance_service import queue_for_classification  # noqa: PLC0415
+        from app.domains.reference.relevance import queue_for_classification  # noqa: PLC0415
 
         session_factory = sessionmaker(bind=migrated_seeded_db)
 

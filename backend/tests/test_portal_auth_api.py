@@ -52,7 +52,7 @@ def portal_app() -> Iterator[tuple[TestClient, FakeRedis, MagicMock]]:
 
 
 def _account(account_id: int, status: str = "active"):  # noqa: ANN202
-    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.models.enums import AccountStatus  # noqa: PLC0415
 
     acct = UserAccount(phone=_PHONE, language="ru", status=AccountStatus(status))
@@ -65,14 +65,14 @@ def _account(account_id: int, status: str = "active"):  # noqa: ANN202
 
 def test_otp_request_returns_204(portal_app) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
-    with patch("app.services.otp_service._enqueue_sms"):
+    with patch("app.domains.accounts.otp._enqueue_sms"):
         resp = client.post(_REQUEST, json={"phone": _PHONE})
     assert resp.status_code == 204
 
 
 def test_otp_request_second_call_is_rate_limited_with_retry_after(portal_app) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
-    with patch("app.services.otp_service._enqueue_sms"):
+    with patch("app.domains.accounts.otp._enqueue_sms"):
         client.post(_REQUEST, json={"phone": _PHONE})
         resp = client.post(_REQUEST, json={"phone": _PHONE})
     assert resp.status_code == 429
@@ -81,7 +81,7 @@ def test_otp_request_second_call_is_rate_limited_with_retry_after(portal_app) ->
 
 def test_otp_request_invalid_phone_returns_422(portal_app) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
-    with patch("app.services.otp_service._enqueue_sms"):
+    with patch("app.domains.accounts.otp._enqueue_sms"):
         resp = client.post(_REQUEST, json={"phone": "not-a-phone"})
     assert resp.status_code == 422
 
@@ -89,7 +89,7 @@ def test_otp_request_invalid_phone_returns_422(portal_app) -> None:  # noqa: ANN
 def test_otp_request_enqueues_send_sms_without_logging_the_code(portal_app, caplog) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
     with (
-        patch("app.services.otp_service._generate_code", return_value="654321"),
+        patch("app.domains.accounts.otp._generate_code", return_value="654321"),
         patch("app.tasks.notify.send_sms.apply_async") as apply_async,
         caplog.at_level("DEBUG"),
     ):
@@ -108,19 +108,19 @@ def test_otp_request_enqueues_send_sms_without_logging_the_code(portal_app, capl
 
 
 def test_otp_verify_wrong_code_returns_400(portal_app) -> None:  # noqa: ANN001
-    from app.services.otp_service import OtpInvalid  # noqa: PLC0415
+    from app.domains.accounts.otp import OtpInvalid  # noqa: PLC0415
 
     client, _fake, _db = portal_app
-    with patch("app.api.portal.auth.verify_code", side_effect=OtpInvalid("wrong")):
+    with patch("app.domains.accounts.api_portal.verify_code", side_effect=OtpInvalid("wrong")):
         resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "000000"})
     assert resp.status_code == 400
 
 
 def test_otp_verify_lockout_returns_429(portal_app) -> None:  # noqa: ANN001
-    from app.services.otp_service import OtpLocked  # noqa: PLC0415
+    from app.domains.accounts.otp import OtpLocked  # noqa: PLC0415
 
     client, _fake, _db = portal_app
-    with patch("app.api.portal.auth.verify_code", side_effect=OtpLocked("locked")):
+    with patch("app.domains.accounts.api_portal.verify_code", side_effect=OtpLocked("locked")):
         resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "000000"})
     assert resp.status_code == 429
 
@@ -129,7 +129,7 @@ def test_otp_verify_success_issues_token_and_cookie(portal_app) -> None:  # noqa
     from app.core.security import decode_token  # noqa: PLC0415
 
     client, _fake, _db = portal_app
-    with patch("app.api.portal.auth.verify_code", return_value=_account(7)):
+    with patch("app.domains.accounts.api_portal.verify_code", return_value=_account(7)):
         resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "123456"})
 
     assert resp.status_code == 200
@@ -143,7 +143,7 @@ def test_otp_verify_success_issues_token_and_cookie(portal_app) -> None:  # noqa
 
 def test_otp_verify_blocked_account_returns_403(portal_app) -> None:  # noqa: ANN001
     client, _fake, _db = portal_app
-    with patch("app.api.portal.auth.verify_code", return_value=_account(8, status="blocked")):
+    with patch("app.domains.accounts.api_portal.verify_code", return_value=_account(8, status="blocked")):
         resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "123456"})
     assert resp.status_code == 403
 

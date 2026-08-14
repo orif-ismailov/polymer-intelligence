@@ -288,7 +288,7 @@ def test_document_upload_download_delete(api) -> None:  # noqa: ANN001
 
 def _account(db, account_id: int):  # noqa: ANN001, ANN202
     """Re-attach a seeded account to the session `make_company` will write in."""
-    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
 
     return db.get(UserAccount, account_id)
 

@@ -24,8 +24,8 @@ from app.domains.companies import directory as directory_service
 from app.domains.companies.models import Company
 from app.domains.marketplace.models import SellerOffer
 from app.domains.pricing.models import PricePoint
+from app.domains.reference.models import Product
 from app.models.enums import CompanyStatus, SellerOfferStatus
-from app.models.reference import Product
 
 
 def _label(

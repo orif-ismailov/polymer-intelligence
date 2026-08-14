@@ -33,10 +33,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.time import utcnow
+from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company
 from app.domains.lab_orders.models import SampleRequest
 from app.domains.marketplace.models import SellerOffer
-from app.models.accounts import UserAccount
 from app.models.enums import SampleRequestStatus, SellerOfferStatus
 from app.services import (
     audit_service,

@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404
 from app.core.db import get_db
+from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company
 from app.domains.deals import rfq as rfq_response_service
 from app.domains.deals.models import RfqResponse
@@ -33,7 +34,6 @@ from app.domains.marketplace.portal_market_schemas import (
     PublicCompanyProfileOut,
 )
 from app.domains.marketplace.schemas import OfferRequestOut
-from app.models.accounts import UserAccount
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,

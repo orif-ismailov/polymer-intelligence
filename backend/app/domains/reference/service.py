@@ -10,8 +10,8 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.reference import Product
-from app.schemas.reference import ProductCreate, ProductUpdate
+from app.domains.reference.models import Product
+from app.domains.reference.schemas import ProductCreate, ProductUpdate
 
 
 def list_active(db: Session) -> list[Product]:

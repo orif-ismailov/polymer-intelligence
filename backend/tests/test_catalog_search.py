@@ -129,8 +129,8 @@ def seeded_catalog(engine):
 
     from app.core.time import utcnow  # noqa: PLC0415
     from app.domains.marketplace.models import Seller, SellerOffer  # noqa: PLC0415
+    from app.domains.reference.models import Product  # noqa: PLC0415
     from app.models.enums import SellerOfferStatus  # noqa: PLC0415
-    from app.models.reference import Product  # noqa: PLC0415
     from app.seed.seed_reference import seed_all  # noqa: PLC0415
 
     session_factory = sessionmaker(bind=engine)

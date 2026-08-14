@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
+from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
 from app.domains.contracts.models import Contract
@@ -46,7 +47,6 @@ from app.domains.deals.schemas import (
     TransitionIn,
 )
 from app.domains.requests.models import Request
-from app.models.accounts import UserAccount
 from app.models.enums import (
     CompanyStatus,
     DealDocumentKind,

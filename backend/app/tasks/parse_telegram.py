@@ -151,14 +151,14 @@ def delete_existing_signals(session: Any, raw_item_id: int) -> int:
 
 def match_product(session: Any, text_: str) -> int | None:
     """Wrapper: call relevance_service.match_product."""
-    from app.services.relevance_service import match_product as _match  # noqa: PLC0415
+    from app.domains.reference.relevance import match_product as _match  # noqa: PLC0415
 
     return _match(session, text_)
 
 
 def extract_grade(text_: str, session: Any) -> tuple[int | None, str | None]:
     """Wrapper: call grade_service.extract_grade."""
-    from app.services.grade_service import extract_grade as _extract  # noqa: PLC0415
+    from app.domains.reference.grades import extract_grade as _extract  # noqa: PLC0415
 
     return _extract(text_, session)
 

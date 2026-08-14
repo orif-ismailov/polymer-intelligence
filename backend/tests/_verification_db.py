@@ -124,7 +124,7 @@ def session_factory(engine: sa.Engine) -> sessionmaker[Session]:
 
 
 def make_account(db: Session, phone: str):  # noqa: ANN202
-    from app.models.accounts import UserAccount  # noqa: PLC0415
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
 
     account = UserAccount(phone=phone)
     db.add(account)

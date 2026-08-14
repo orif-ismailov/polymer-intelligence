@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
+from app.domains.accounts.models import UserAccount
 from app.domains.news import reports as report_service
 from app.domains.news import service as news_service
 from app.domains.news.schemas import (
@@ -25,7 +26,6 @@ from app.domains.news.schemas import (
     ReportPublicOut,
     ReportPublicSummary,
 )
-from app.models.accounts import UserAccount
 
 router = APIRouter(prefix="/portal/news", tags=["portal-news"])
 

@@ -482,8 +482,8 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
 
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
+    from app.domains.reference.models import Product  # noqa: PLC0415
     from app.domains.requests.models import Request  # noqa: PLC0415
-    from app.models.reference import Product  # noqa: PLC0415
 
     chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
     if chat_id is None:
@@ -591,8 +591,8 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
     from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
     from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
+    from app.domains.reference.models import Product  # noqa: PLC0415
     from app.models.enums import OfferFileKind  # noqa: PLC0415
-    from app.models.reference import Product  # noqa: PLC0415
 
     chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
     if chat_id is None:
@@ -736,7 +736,7 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
 
 def _offer_product_label(session: object, offer: Any) -> str:
     """Resolve a human product label for an offer (product name, else free text)."""
-    from app.models.reference import Product  # noqa: PLC0415
+    from app.domains.reference.models import Product  # noqa: PLC0415
 
     if offer.product_id is not None:
         product = session.get(Product, offer.product_id)  # type: ignore[attr-defined]
@@ -982,7 +982,7 @@ def _write_sms_log(
     the send task.
     """
     from app.core.db import SessionLocal  # noqa: PLC0415
-    from app.models.accounts import SmsSendLog  # noqa: PLC0415
+    from app.domains.accounts.models import SmsSendLog  # noqa: PLC0415
 
     try:
         with SessionLocal() as db:

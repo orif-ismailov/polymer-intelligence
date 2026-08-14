@@ -77,7 +77,7 @@ def _make_init_data(
 
 def test_verify_init_data_valid_returns_dict() -> None:
     """Valid HMAC-signed initData with fresh auth_date returns the parsed dict."""
-    from app.services.client_service import verify_init_data
+    from app.domains.requests.clients import verify_init_data
 
     raw = _make_init_data(telegram_user_id=99, language_code="uz")
     result = verify_init_data(raw)
@@ -89,7 +89,7 @@ def test_verify_init_data_valid_returns_dict() -> None:
 
 def test_verify_init_data_bad_hash_raises() -> None:
     """initData with a tampered hash raises a ValueError subclass."""
-    from app.services.client_service import verify_init_data
+    from app.domains.requests.clients import verify_init_data
 
     raw = _make_init_data()
     # Corrupt the hash
@@ -103,7 +103,7 @@ def test_verify_init_data_bad_hash_raises() -> None:
 
 def test_verify_init_data_expired_auth_date_raises() -> None:
     """initData with auth_date older than 86400 s raises a ValueError subclass."""
-    from app.services.client_service import verify_init_data
+    from app.domains.requests.clients import verify_init_data
 
     # 25 hours ago
     expired_ts = int(time.time()) - 25 * 3600
@@ -115,7 +115,7 @@ def test_verify_init_data_expired_auth_date_raises() -> None:
 
 def test_verify_init_data_empty_string_raises() -> None:
     """Empty/blank initData raises ValueError."""
-    from app.services.client_service import verify_init_data
+    from app.domains.requests.clients import verify_init_data
 
     with pytest.raises(ValueError):
         verify_init_data("")
@@ -123,7 +123,7 @@ def test_verify_init_data_empty_string_raises() -> None:
 
 def test_verify_init_data_malformed_raises() -> None:
     """Completely malformed initData raises ValueError."""
-    from app.services.client_service import verify_init_data
+    from app.domains.requests.clients import verify_init_data
 
     with pytest.raises(ValueError):
         verify_init_data("not=valid&initdata=true")
@@ -136,7 +136,7 @@ def test_verify_init_data_future_auth_date_raises() -> None:
     Without the guard, age_seconds = -1_000_000 would pass the
     `age_seconds > INIT_DATA_TTL_SECONDS` check silently.
     """
-    from app.services.client_service import verify_init_data
+    from app.domains.requests.clients import verify_init_data
 
     # 1 000 000 seconds in the future — clearly illegitimate
     future_ts = int(time.time()) + 1_000_000
@@ -155,14 +155,14 @@ def test_verify_init_data_ttl_patchable_via_settings() -> None:
     """
     from unittest.mock import patch as _patch
 
-    from app.services.client_service import verify_init_data
+    from app.domains.requests.clients import verify_init_data
 
     # Token signed 5 seconds ago — normally well within the 86 400 s default TTL
     slightly_old_ts = int(time.time()) - 5
     raw = _make_init_data(auth_date=slightly_old_ts)
 
     # Patch settings to a 1-second TTL — the 5-second-old token must now be rejected
-    with _patch("app.services.client_service.settings") as mock_settings:
+    with _patch("app.domains.requests.clients.settings") as mock_settings:
         mock_settings.BOT_TOKEN = _BOT_TOKEN
         mock_settings.TELEGRAM_INIT_DATA_TTL_SECONDS = 1
         with pytest.raises(ValueError, match="expired"):
@@ -173,7 +173,7 @@ def test_verify_init_data_ttl_patchable_via_settings() -> None:
 
 def test_get_or_create_client_maps_ru_language() -> None:
     """Language code 'ru' is stored as 'ru'."""
-    from app.services.client_service import get_or_create_client
+    from app.domains.requests.clients import get_or_create_client
 
     mock_db = MagicMock()
     # Simulate no existing client (SELECT returns None), then INSERT sets id
@@ -209,7 +209,7 @@ def test_get_or_create_client_maps_ru_language() -> None:
 
 def test_get_or_create_client_maps_uz_language() -> None:
     """Language code 'uz' is stored as 'uz'."""
-    from app.services.client_service import get_or_create_client
+    from app.domains.requests.clients import get_or_create_client
 
     mock_db = MagicMock()
     existing = MagicMock()
@@ -223,7 +223,7 @@ def test_get_or_create_client_maps_uz_language() -> None:
 
 def test_get_or_create_client_unknown_language_defaults_to_ru() -> None:
     """Language code outside 'ru'/'uz' defaults to 'ru'."""
-    from app.services.client_service import get_or_create_client
+    from app.domains.requests.clients import get_or_create_client
 
     mock_db = MagicMock()
     # No existing client

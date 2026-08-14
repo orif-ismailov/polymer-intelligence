@@ -37,6 +37,7 @@ This file must be imported by alembic/env.py so that
 # already exists by then, so the cycle resolves. The mapper classes still register
 # themselves on Base.metadata as the module finishes executing, which is all this
 # barrel exists to guarantee.
+import app.domains.accounts.models  # noqa: F401
 import app.domains.alerts.models  # noqa: F401
 import app.domains.companies.models  # noqa: F401
 import app.domains.compliance.models  # noqa: F401
@@ -52,6 +53,7 @@ import app.domains.marketplace.models  # noqa: F401
 import app.domains.news.models  # noqa: F401
 import app.domains.notifications.models  # noqa: F401
 import app.domains.pricing.models  # noqa: F401
+import app.domains.reference.models  # noqa: F401
 import app.domains.requests.models  # noqa: F401
 import app.domains.signals.counterparty_models  # noqa: F401
 import app.domains.signals.models  # noqa: F401
@@ -59,7 +61,6 @@ import app.domains.signals.source_models  # noqa: F401
 import app.domains.sourcing.models  # noqa: F401
 import app.domains.verification.models  # noqa: F401
 import app.domains.verification.registry_models  # noqa: F401
-from app.models.accounts import SmsSendLog, UserAccount  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401
 from app.models.enums import (  # noqa: F401
     AccountStatus,
@@ -116,13 +117,6 @@ from app.models.enums import (
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
 from app.models.media import CompanyMedia  # noqa: F401
-from app.models.reference import (  # noqa: F401
-    FxRate,
-    ManualClassificationItem,
-    Product,
-    ProductGrade,
-    ProductSynonym,
-)
 from app.models.reviews import CompanyReview  # noqa: F401
 from app.models.staff import AuditLog, StaffUser  # noqa: F401
 
@@ -161,11 +155,6 @@ __all__ = [
     "VerificationDocumentKind",
     "DocumentReviewStatus",
     # Reference
-    "Product",
-    "ProductGrade",
-    "FxRate",
-    "ProductSynonym",
-    "ManualClassificationItem",
     # Sources / raw
     # Counterparties
     # Staff / audit
@@ -182,8 +171,6 @@ __all__ = [
     "OfferSaleMode",
     # Sourcing (Phase 4)
     # Company verification & portal (R1)
-    "UserAccount",
-    "SmsSendLog",
     "DomainEvent",
     # Portal notifications (R2)
     # E-IMZO evidence + integration gateway (R3)

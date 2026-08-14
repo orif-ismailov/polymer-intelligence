@@ -64,8 +64,8 @@ def test_transition_matrix(frm_name: str, to_name: str) -> None:
 
 @pytest.mark.parametrize("tax_id", ["123456789", " 123456789 "])
 def test_create_company_accepts_valid_uz_tax_id(tax_id: str) -> None:
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
     from app.models.enums import CompanyStatus  # noqa: PLC0415
 
     account = UserAccount(phone="+998901234567")
@@ -78,8 +78,8 @@ def test_create_company_accepts_valid_uz_tax_id(tax_id: str) -> None:
 
 @pytest.mark.parametrize("tax_id", ["12345", "1234567890", "abcdefghi", ""])
 def test_create_company_rejects_bad_uz_tax_id(tax_id: str) -> None:
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     account = UserAccount(phone="+998901234567")
     account.id = 1
@@ -103,8 +103,8 @@ def test_create_company_rejects_non_ascii_digit_tax_id(tax_id: str) -> None:
     homoglyph forms bypassed the duplicate guard and one legal entity could hold
     several company rows (and would never match its E-IMZO certificate INN).
     """
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     assert tax_id.isdigit() and len(tax_id) == 9, "fixture must defeat the old check"
     account = UserAccount(phone="+998901234567")
@@ -121,8 +121,8 @@ def test_create_company_rejects_non_two_letter_jurisdiction(jurisdiction: str) -
     The step-2 «Страна регистрации» select shipped an `other` option, so a
     first-class UI choice crashed the endpoint with StringDataRightTruncation.
     """
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     account = UserAccount(phone="+998901234567")
     account.id = 1
@@ -140,9 +140,9 @@ def test_normalize_new_company_is_db_free_and_normalizes() -> None:
 
 
 def test_create_company_makes_creator_an_owner_member() -> None:
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
     from app.domains.companies.models import CompanyMember  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
     from app.models.enums import CompanyMemberRole  # noqa: PLC0415
 
     account = UserAccount(phone="+998901234567")

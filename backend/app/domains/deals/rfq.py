@@ -21,11 +21,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Query, Session
 from sqlalchemy.sql.elements import ColumnElement
 
+from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company, CompanyMember
 from app.domains.deals.models import RfqResponse
 from app.domains.deals.service import CompanyNotVerified, ResponseNotOpen
 from app.domains.requests.models import Request
-from app.models.accounts import UserAccount
 from app.models.enums import (
     CompanyMemberStatus,
     CompanyStatus,

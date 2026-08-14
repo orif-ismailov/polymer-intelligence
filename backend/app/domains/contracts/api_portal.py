@@ -28,6 +28,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_account
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
 from app.domains.contracts import service as contract_service
@@ -46,7 +47,6 @@ from app.domains.contracts.schemas import (
     VariablesUpdateIn,
 )
 from app.integrations.eimzo import ProviderUnavailable
-from app.models.accounts import UserAccount
 from app.models.enums import CompanyStatus, ContractStatus
 from app.services import storage_service
 

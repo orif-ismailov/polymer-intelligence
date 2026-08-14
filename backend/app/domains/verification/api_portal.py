@@ -26,6 +26,7 @@ from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404, rate_limited
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.accounts.models import UserAccount
 from app.domains.verification import service as verification_service
 from app.domains.verification.models import (
     VerificationCase,
@@ -33,7 +34,6 @@ from app.domains.verification.models import (
     VerificationDocument,
 )
 from app.domains.verification.schemas import CaseOut, CheckOut, DocumentOut
-from app.models.accounts import UserAccount
 from app.models.enums import DocumentReviewStatus, VerificationDocumentKind
 from app.services import rate_limit, storage_service
 

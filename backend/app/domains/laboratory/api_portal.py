@@ -31,6 +31,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_account
 from app.api.portal.deps import require_business_role
 from app.core.db import get_db
+from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
 from app.domains.laboratory import service as laboratory_service
@@ -51,7 +52,6 @@ from app.domains.laboratory.schemas import (
     LabThreadOpenIn,
     LabThreadOut,
 )
-from app.models.accounts import UserAccount
 from app.services import (
     notification_service,
     storage_service,

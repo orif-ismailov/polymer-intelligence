@@ -55,7 +55,7 @@ def test_the_setting_ships_empty_so_nothing_changes_by_default() -> None:
 
 def test_an_empty_setting_leaves_the_code_random() -> None:
     from app.core.config import settings  # noqa: PLC0415
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     with (
         patch.object(settings, "OTP_DEV_CODE", ""),
@@ -72,7 +72,7 @@ def test_an_empty_setting_leaves_the_code_random() -> None:
 
 
 def test_a_configured_code_is_used_in_development() -> None:
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fixed, debug, provider = _dev_settings()
     with fixed, debug, provider:
@@ -82,7 +82,7 @@ def test_a_configured_code_is_used_in_development() -> None:
 def test_a_configured_code_is_ignored_when_debug_is_off() -> None:
     """Staging with DEBUG off must not hand out a guessable OTP."""
     from app.core.config import settings  # noqa: PLC0415
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     with (
         patch.object(settings, "OTP_DEV_CODE", _ZEROS),
@@ -101,7 +101,7 @@ def test_a_configured_code_is_ignored_when_real_sms_is_selected() -> None:
     means someone patched settings at runtime — the defence still has to hold.
     """
     from app.core.config import settings  # noqa: PLC0415
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     with (
         patch.object(settings, "OTP_DEV_CODE", _ZEROS),
@@ -118,7 +118,7 @@ def test_a_configured_code_is_ignored_when_real_sms_is_selected() -> None:
 
 def test_request_code_stores_the_hash_of_the_fixed_code() -> None:
     """End to end through `request_code`: the fixed code is what gets verified."""
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     fixed, debug, provider = _dev_settings()
@@ -132,7 +132,7 @@ def test_request_code_stores_the_hash_of_the_fixed_code() -> None:
 
 def test_the_fixed_code_verifies_through_the_normal_path() -> None:
     """No shortcut in `verify_code` — it is the same sha256 comparison."""
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     db = MagicMock()
@@ -148,7 +148,7 @@ def test_the_fixed_code_verifies_through_the_normal_path() -> None:
 
 def test_a_wrong_code_is_still_refused_with_a_fixed_code_configured() -> None:
     """Fixing the code must not turn `verify_code` into a no-op."""
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     fixed, debug, provider = _dev_settings()
@@ -207,7 +207,7 @@ def test_the_validated_length_matches_the_generator(monkeypatch) -> None:  # noq
     Two numbers that must agree, in two modules that cannot import each other —
     so something has to assert it.
     """
-    from app.services.otp_service import CODE_LENGTH  # noqa: PLC0415
+    from app.domains.accounts.otp import CODE_LENGTH  # noqa: PLC0415
 
     settings = _settings_with(monkeypatch, OTP_DEV_CODE="0" * CODE_LENGTH)
     assert len(settings.OTP_DEV_CODE) == CODE_LENGTH
@@ -219,7 +219,7 @@ def test_the_validated_length_matches_the_generator(monkeypatch) -> None:  # noq
 def test_the_fixed_code_is_not_logged_by_otp_service(caplog) -> None:  # noqa: ANN001
     """`otp_service` never logs a code, fixed or not — only the console SMS driver
     does, and only under its own gate."""
-    from app.services import otp_service  # noqa: PLC0415
+    from app.domains.accounts import otp as otp_service  # noqa: PLC0415
 
     fake = FakeRedis()
     fixed, debug, provider = _dev_settings()

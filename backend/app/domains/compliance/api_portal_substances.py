@@ -16,9 +16,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
 from app.core.db import get_db
+from app.domains.accounts.models import UserAccount
 from app.domains.compliance import substances as substance_service
 from app.domains.compliance.substance_schemas import SubstanceBrief
-from app.models.accounts import UserAccount
 
 router = APIRouter(prefix="/portal/substances", tags=["portal-compliance"])
 

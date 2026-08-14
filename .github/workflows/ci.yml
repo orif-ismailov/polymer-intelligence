@@ -118,6 +118,11 @@ jobs:
           app/domains/pricing/fx.py
           app/domains/alerts/service.py
           app/domains/storefront/service.py
+          app/domains/accounts/otp.py
+          app/domains/reference/service.py
+          app/domains/reference/relevance.py
+          app/domains/reference/grades.py
+          app/domains/requests/clients.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -144,6 +149,8 @@ jobs:
           app/domains/sourcing/schemas.py
           app/domains/notifications/schemas.py
           app/domains/storefront/schemas.py
+          app/domains/accounts/schemas.py
+          app/domains/reference/schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

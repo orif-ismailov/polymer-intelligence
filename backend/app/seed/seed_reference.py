@@ -154,7 +154,7 @@ def seed_synonyms(session: Session) -> int:
         UNIQUE(synonym_norm) + ON CONFLICT DO NOTHING ensures no duplicates
         on repeated seeding.
     """
-    from app.services.relevance_service import normalize_term  # noqa: PLC0415
+    from app.domains.reference.relevance import normalize_term  # noqa: PLC0415
 
     synonyms_by_code = load_synonyms()
     inserted = 0

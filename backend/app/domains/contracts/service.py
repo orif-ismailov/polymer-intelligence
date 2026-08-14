@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.crypto import decrypt_pii
+from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBankAccount
 from app.domains.contracts import render as contract_render
@@ -36,7 +37,6 @@ from app.domains.contracts.eimzo import CertCompanyMismatch
 from app.domains.contracts.eimzo_models import SignatureEvidence
 from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
 from app.integrations.eimzo import verify_pkcs7
-from app.models.accounts import UserAccount
 from app.models.enums import (
     BankAccountStatus,
     CompanyStatus,

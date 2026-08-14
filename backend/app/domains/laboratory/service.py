@@ -21,10 +21,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.time import to_display_tz, utcnow
+from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBusinessRole
 from app.domains.laboratory.models import LabRequest, LabRequestMessage, LabRequestThread
-from app.models.accounts import UserAccount
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,

@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.schemas.reference import ProductOut
+from app.domains.reference.schemas import ProductOut
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -65,7 +65,7 @@ def _admin_client(staff_user: MagicMock) -> TestClient:
 def test_admin_list_products_200():
     client = _admin_client(_make_staff_user("admin", 1))
     with patch("app.api.health._check_redis", return_value="ok"), patch(
-        "app.api.admin_products.product_service"
+        "app.domains.reference.api_admin.product_service"
     ) as svc:
         svc.list_all.return_value = [_product()]
         resp = client.get("/api/v1/admin/products", headers=_auth_headers(1, "admin"))
@@ -77,7 +77,7 @@ def test_admin_list_products_200():
 def test_admin_create_product_201():
     client = _admin_client(_make_staff_user("admin", 1))
     with patch("app.api.health._check_redis", return_value="ok"), patch(
-        "app.api.admin_products.product_service"
+        "app.domains.reference.api_admin.product_service"
     ) as svc:
         svc.create.return_value = _product(id=9, code="EVA")
         resp = client.post(
@@ -92,7 +92,7 @@ def test_admin_create_product_201():
 def test_admin_update_product_404_when_missing():
     client = _admin_client(_make_staff_user("admin", 1))
     with patch("app.api.health._check_redis", return_value="ok"), patch(
-        "app.api.admin_products.product_service"
+        "app.domains.reference.api_admin.product_service"
     ) as svc:
         svc.get.return_value = None
         resp = client.patch(
@@ -106,7 +106,7 @@ def test_admin_create_duplicate_code_409():
 
     client = _admin_client(_make_staff_user("admin", 1))
     with patch("app.api.health._check_redis", return_value="ok"), patch(
-        "app.api.admin_products.product_service"
+        "app.domains.reference.api_admin.product_service"
     ) as svc:
         svc.create.side_effect = IntegrityError("dup", {}, Exception())
         resp = client.post(
@@ -148,7 +148,7 @@ def test_webapp_reference_products_200():
     application.dependency_overrides[get_current_client] = lambda: MagicMock()
 
     with patch("app.api.health._check_redis", return_value="ok"), patch(
-        "app.api.webapp.reference.product_service"
+        "app.domains.reference.api_webapp.product_service"
     ) as svc, TestClient(application) as tc:
         svc.list_active.return_value = [_product()]
         resp = tc.get("/api/v1/webapp/reference/products")

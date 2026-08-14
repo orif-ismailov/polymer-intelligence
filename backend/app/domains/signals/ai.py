@@ -38,11 +38,11 @@ import logging
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
+from app.domains.reference.grades import extract_grade
+from app.domains.reference.relevance import match_product
 from app.domains.signals.models import Signal
 from app.domains.signals.source_models import ParseRun, RawItem
 from app.models.enums import PriceBasis, SignalKind, Urgency
-from app.services.grade_service import extract_grade
-from app.services.relevance_service import match_product
 from parsing.lead_scoring import SCORING_PROMPT_VERSION, compute_lead_score
 from parsing.schemas import ExtractionResult, UrgencyLevel
 from parsing.schemas import SignalKind as ExtractionKind

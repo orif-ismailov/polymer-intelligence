@@ -66,7 +66,7 @@ def login_telegram(
             detail="Browser login is not enabled",
         )
 
-    from app.services.client_service import (  # noqa: PLC0415
+    from app.domains.requests.clients import (  # noqa: PLC0415
         InvalidInitData,
         get_or_create_client,
         verify_login_widget,

@@ -24,10 +24,10 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBusinessRole
 from app.domains.verification.models import VerificationCase, VerificationCheck
-from app.models.accounts import UserAccount
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,

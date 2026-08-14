@@ -18,11 +18,13 @@ from sqlalchemy import func, or_, update
 from sqlalchemy.orm import Query, Session, joinedload, selectinload
 
 from app.core.time import utcnow
+from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company
 from app.domains.companies.schemas import CompanyOfferIn
 from app.domains.marketplace.models import OfferFavorite, Seller, SellerOffer, SellerOfferFile
 from app.domains.marketplace.schemas import CategoryCount, SellerOfferCreate, SellerOfferUpdate
-from app.models.accounts import UserAccount
+from app.domains.reference.models import Product, ProductSynonym
+from app.domains.reference.relevance import normalize_term
 from app.models.enums import (
     CompanyStatus,
     OfferAvailability,
@@ -30,10 +32,8 @@ from app.models.enums import (
     PriceBasis,
     SellerOfferStatus,
 )
-from app.models.reference import Product, ProductSynonym
 from app.services import event_service, event_types, notification_service
 from app.services.audit_service import write_audit
-from app.services.relevance_service import normalize_term
 
 logger = logging.getLogger(__name__)
 

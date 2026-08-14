@@ -119,7 +119,7 @@ class TestExtractGrade:
 
     def test_extract_grade_regex_match(self) -> None:
         """extract_grade finds a grade token via regex when no DB match."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         session = self._make_session_with_grade(None)
         grade_id, grade_text = extract_grade("PP T30S 300 MT", session)
@@ -129,7 +129,7 @@ class TestExtractGrade:
 
     def test_extract_grade_db_match(self) -> None:
         """extract_grade returns (grade_id, grade_text) when product_grades has a match."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         session = self._make_session_with_grade(42)
         grade_id, grade_text = extract_grade("T30S", session)
@@ -139,7 +139,7 @@ class TestExtractGrade:
 
     def test_extract_grade_no_match_returns_none_none(self) -> None:
         """extract_grade returns (None, None) when neither regex nor DB match."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         session = self._make_session_with_grade(None)
         grade_id, grade_text = extract_grade("some product with no grade info", session)
@@ -150,7 +150,7 @@ class TestExtractGrade:
 
     def test_extract_grade_regex_patterns(self) -> None:
         """Grade regex matches common polymer grade codes."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         grades_to_test = [
             ("T30S", "T30S"),
@@ -170,7 +170,7 @@ class TestExtractGrade:
 
     def test_extract_grade_empty_text(self) -> None:
         """extract_grade handles empty string without raising."""
-        from app.services.grade_service import extract_grade  # noqa: PLC0415
+        from app.domains.reference.grades import extract_grade  # noqa: PLC0415
 
         session = self._make_session_with_grade(None)
         grade_id, grade_text = extract_grade("", session)

@@ -23,7 +23,7 @@ _PATH = "/api/v1/portal/reference/products"
 
 
 def test_reference_route_registered() -> None:
-    from app.api.portal.reference import router
+    from app.domains.reference.api_portal import router
 
     assert "/portal/reference/products" in {r.path for r in router.routes}  # type: ignore[attr-defined]
 
@@ -72,7 +72,7 @@ def test_products_require_a_portal_account(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_active_products_are_listed_in_sort_order(api) -> None:  # noqa: ANN001
-    from app.models.reference import Product
+    from app.domains.reference.models import Product
 
     client, session = api
     with session() as db:

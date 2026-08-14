@@ -23,7 +23,7 @@ import redis
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.accounts import UserAccount
+from app.domains.accounts.models import UserAccount
 from app.models.enums import AccountStatus
 
 logger = logging.getLogger(__name__)

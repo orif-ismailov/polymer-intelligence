@@ -19,12 +19,12 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404
 from app.core.db import get_db
+from app.domains.accounts.models import UserAccount
 from app.domains.deals.models import Deal
 from app.domains.lab_orders import service as lab_service
 from app.domains.lab_orders.models import LabOrder
 from app.domains.lab_orders.schemas import LabOrderIn, LabOrderOut
 from app.domains.marketplace.models import SellerOffer
-from app.models.accounts import UserAccount
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-lab"])
 

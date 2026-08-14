@@ -18,9 +18,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
 from app.core.db import get_db
+from app.domains.reference import service as product_service
+from app.domains.reference.schemas import ProductCreate, ProductOut, ProductUpdate
 from app.models.staff import StaffUser
-from app.schemas.reference import ProductCreate, ProductOut, ProductUpdate
-from app.services import product_service
 
 router = APIRouter(prefix="/admin", tags=["admin-products"])
 

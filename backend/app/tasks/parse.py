@@ -62,7 +62,7 @@ def get_session() -> Any:
 # Thin wrappers so tests can patch them cleanly
 def match_product(session: Any, text_: str) -> int | None:
     """Wrapper: route through relevance_service.match_product."""
-    from app.services.relevance_service import match_product as _match  # noqa: PLC0415
+    from app.domains.reference.relevance import match_product as _match  # noqa: PLC0415
 
     return _match(session, text_)
 
@@ -71,7 +71,7 @@ def queue_for_classification(
     session: Any, raw_item_id: int, product_text: str
 ) -> None:
     """Wrapper: route through relevance_service.queue_for_classification."""
-    from app.services.relevance_service import (  # noqa: PLC0415
+    from app.domains.reference.relevance import (  # noqa: PLC0415
         queue_for_classification as _queue,
     )
 
@@ -285,8 +285,8 @@ def parse_raw_item(raw_item_id: int) -> dict[str, Any]:
         - already parsed → immediate return (idempotency guard)
         - error          → parse_runs status='error', parse_status='failed'
     """
+    from app.domains.reference.grades import extract_grade  # noqa: PLC0415
     from app.domains.signals.source_models import ParseRun, RawItem  # noqa: PLC0415
-    from app.services.grade_service import extract_grade  # noqa: PLC0415
 
     with get_session() as session:
         # ── Load raw_item ──────────────────────────────────────────────────────
@@ -453,11 +453,11 @@ def parse_xarid_item(raw_item_id: int) -> dict[str, Any]:
     """
     from instructor.core import InstructorRetryException  # noqa: PLC0415
 
+    from app.domains.reference.grades import extract_grade  # noqa: PLC0415
     from app.domains.signals.service import (  # noqa: PLC0415
         create_buy_request_signal_from_xarid,
     )
     from app.domains.signals.source_models import RawItem  # noqa: PLC0415
-    from app.services.grade_service import extract_grade  # noqa: PLC0415
     from parsing.budget import BudgetExceeded  # noqa: PLC0415
     from parsing.text_prep import prepare_message_text  # noqa: PLC0415
 

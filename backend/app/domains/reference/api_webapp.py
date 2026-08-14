@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_client
 from app.core.db import get_db
+from app.domains.reference import service as product_service
+from app.domains.reference.schemas import ProductOut
 from app.domains.requests.models import Client
-from app.schemas.reference import ProductOut
-from app.services import product_service
 
 router = APIRouter(prefix="/webapp/reference", tags=["webapp-reference"])
 

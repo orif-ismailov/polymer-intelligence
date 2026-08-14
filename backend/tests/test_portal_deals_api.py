@@ -127,8 +127,8 @@ def _account(session, phone):  # noqa: ANN001, ANN202
 
 
 def _verified_company(session, account_id, tax):  # noqa: ANN001, ANN202
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies import service as company_service  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole, CompanyStatus  # noqa: PLC0415
 
     with session() as db:
@@ -146,10 +146,10 @@ def _verified_company(session, account_id, tax):  # noqa: ANN001, ANN202
 
 def _scene(session):  # noqa: ANN001, ANN202
     """Buyer with an RFQ, seller with a response, and an accepted deal."""
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.domains.deals.models import RfqResponse  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     buyer_id, buyer_h = _account(session, "+998900000001")
     seller_id, seller_h = _account(session, "+998900000002")
@@ -421,8 +421,8 @@ def test_outsider_cannot_read_or_post_chat(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_plain_member_reads_but_cannot_post(api) -> None:  # noqa: ANN001
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
     from tests._verification_db import make_member  # noqa: PLC0415
 
     client, session = api
@@ -543,8 +543,8 @@ def test_only_the_uploader_may_revoke_over_http(api) -> None:  # noqa: ANN001
 @requires_real_db
 def test_supplier_responds_and_buyer_accepts(api) -> None:  # noqa: ANN001
     """The demo path: RFQ -> response -> accept -> Deal."""
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     client, session = api
     buyer_id, buyer_h = _account(session, "+998900000001")
@@ -578,8 +578,8 @@ def test_supplier_responds_and_buyer_accepts(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_supplier_does_not_see_a_competitors_price(api) -> None:  # noqa: ANN001
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     client, session = api
     buyer_id, buyer_h = _account(session, "+998900000001")
@@ -616,8 +616,8 @@ def test_supplier_does_not_see_a_competitors_price(api) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_double_response_is_409(api) -> None:  # noqa: ANN001
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     client, session = api
     buyer_id, _buyer_h = _account(session, "+998900000001")
@@ -660,8 +660,8 @@ def test_only_the_rfq_owner_accepts(api) -> None:  # noqa: ANN001
 @requires_real_db
 def test_market_rfq_list_is_anonymized(api) -> None:  # noqa: ANN001
     """Suppliers see the trade terms, never the buyer's contact details."""
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.models.accounts import UserAccount  # noqa: PLC0415
 
     client, session = api
     buyer_id, _bh = _account(session, "+998900000001")

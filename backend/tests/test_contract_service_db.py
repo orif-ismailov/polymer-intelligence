@@ -237,8 +237,8 @@ def test_concurrent_final_signatures_activate_exactly_once(sf, monkeypatch) -> N
     errors: list[BaseException] = []
 
     def _sign(company_id: int, account_id: int, tax: str, challenge: str) -> None:
+        from app.domains.accounts.models import UserAccount  # noqa: PLC0415
         from app.domains.companies.models import Company  # noqa: PLC0415
-        from app.models.accounts import UserAccount  # noqa: PLC0415
 
         try:
             with sf() as s:

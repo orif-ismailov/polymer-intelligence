@@ -36,21 +36,16 @@ import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
-from app.api.admin_products import router as admin_products_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_users import router as admin_users_router
 from app.api.auth import router as auth_router
 from app.api.dashboard import router as dashboard_router
 from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.health import router as health_router
-from app.api.portal.auth import router as portal_auth_router
-from app.api.portal.reference import router as portal_reference_router
 from app.api.telegram_webhook import router as telegram_webhook_router
-from app.api.webapp.auth import router as webapp_auth_router
-from app.api.webapp.me import router as webapp_me_router
-from app.api.webapp.reference import router as webapp_reference_router
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.domains.accounts.api_portal import router as portal_auth_router
 from app.domains.alerts.api_admin import alerts_router
 from app.domains.alerts.api_admin import router as alert_rules_router
 from app.domains.companies.api_portal import router as portal_companies_router
@@ -85,10 +80,15 @@ from app.domains.news.api_portal import router as portal_news_router
 from app.domains.news.api_webapp import router as webapp_news_router
 from app.domains.notifications.api_portal import router as portal_notifications_router
 from app.domains.pricing.api_admin import router as prices_router
+from app.domains.reference.api_admin import router as admin_products_router
+from app.domains.reference.api_portal import router as portal_reference_router
+from app.domains.reference.api_webapp import router as webapp_reference_router
 from app.domains.requests.api_admin import router as dashboard_requests_router
 from app.domains.requests.api_portal import router as portal_requests_router
 from app.domains.requests.api_webapp import router as webapp_requests_router
+from app.domains.requests.api_webapp_auth import router as webapp_auth_router
 from app.domains.requests.api_webapp_files import router as webapp_files_router
+from app.domains.requests.api_webapp_me import router as webapp_me_router
 from app.domains.signals.api_admin import router as admin_sources_router
 from app.domains.signals.api_feed import router as feed_router
 from app.domains.signals.api_sources import router as sources_router

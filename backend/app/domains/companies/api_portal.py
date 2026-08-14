@@ -18,6 +18,7 @@ from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404, rate_limited, require_company_admin
 from app.core.db import get_db
 from app.core.redis import get_redis
+from app.domains.accounts.models import UserAccount
 from app.domains.companies import directory as directory_service
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBankAccount
@@ -42,7 +43,6 @@ from app.domains.verification.api_portal import case_out, latest_case
 from app.domains.verification.models import (
     VerificationDocument,
 )
-from app.models.accounts import UserAccount
 from app.models.enums import (
     BankAccountStatus,
     BusinessRoleStatus,

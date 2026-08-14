@@ -26,7 +26,9 @@ mypy app/services app/domains/marketplace/{service,requests,compliance}.py \
      app/domains/sourcing/service.py \
      app/domains/signals/{service,ai,raw_pipeline,sources,source_health,lead_score_recompute,userbot_health}.py \
      app/domains/pricing/fx.py \
-     app/domains/{alerts,storefront}/service.py --ignore-missing-imports
+     app/domains/{alerts,storefront}/service.py \
+     app/domains/accounts/otp.py app/domains/reference/{service,relevance,grades}.py \
+     app/domains/requests/clients.py --ignore-missing-imports
 mypy app/schemas  app/domains/marketplace/{schemas,portal_market_schemas}.py \
      app/domains/{verification,companies}/schemas.py \
      app/domains/contracts/{schemas,eimzo_schemas}.py \
@@ -34,7 +36,7 @@ mypy app/schemas  app/domains/marketplace/{schemas,portal_market_schemas}.py \
      app/domains/compliance/{schemas,substance_schemas,substance_match_schemas}.py \
      app/domains/{logistics,laboratory,manufacturers,lab_orders,news}/schemas.py \
      app/domains/requests/{schemas,webapp_schemas,analysis_schemas}.py \
-     app/domains/{sourcing,notifications,storefront}/schemas.py --ignore-missing-imports
+     app/domains/{sourcing,notifications,storefront,accounts,reference}/schemas.py --ignore-missing-imports
 pytest tests/ -q                     # full suite
 pytest tests/test_feed_api.py::test_name -q  # single test
 pytest -k "telegram and not accuracy" -q     # by pattern

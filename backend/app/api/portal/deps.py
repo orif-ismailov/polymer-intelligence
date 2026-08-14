@@ -24,9 +24,9 @@ from __future__ import annotations
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
-from app.models.accounts import UserAccount
 from app.models.enums import CompanyBusinessRole
 from app.services import rate_limit
 

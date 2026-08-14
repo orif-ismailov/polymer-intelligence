@@ -253,9 +253,9 @@ def test_concurrent_accepts_produce_exactly_one_deal(sf) -> None:  # noqa: ANN00
     outcomes: list[str] = []
 
     def accept(response_id: int) -> None:
+        from app.domains.accounts.models import UserAccount  # noqa: PLC0415
         from app.domains.deals.models import RfqResponse  # noqa: PLC0415
         from app.domains.requests.models import Request  # noqa: PLC0415
-        from app.models.accounts import UserAccount  # noqa: PLC0415
 
         with sf() as session:
             req = session.get(Request, request_id)
