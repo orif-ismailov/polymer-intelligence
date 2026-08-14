@@ -53,10 +53,44 @@ _PORTAL_COOKIE = get_portal_session_cookie_name()
 
 
 def _client_ip(request: Request) -> str:
-    """Best-effort client IP for per-IP OTP caps (nginx sets X-Forwarded-For)."""
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """Client IP for the per-IP OTP cap. Reads X-Real-IP, NEVER X-Forwarded-For.
+
+    This distinction is the whole security of the cap, so it is not a style choice:
+
+    * nginx builds X-Forwarded-For with `$proxy_add_x_forwarded_for`, which APPENDS
+      the peer address to whatever the client already sent. So the first entry is
+      always caller-supplied — `xff.split(",")[0]` returns an attacker's string, and
+      rotating it gives every request its own bucket. That is what this function
+      used to do, and it made `_day_ip_key` decorative: unlimited OTP breadth across
+      phone numbers, billed to a metered SMS account.
+    * nginx sets X-Real-IP with `proxy_set_header`, which OVERWRITES. A client-sent
+      value cannot survive it. Every `/api` location in all four configs
+      (`nginx.conf`, `nginx.dev.conf`, and both `*.behind-proxy.conf`) sets it, and
+      in the behind-proxy topology `set_real_ip_from`/`real_ip_header` have already
+      resolved `$remote_addr` to the true client before it is copied.
+
+    The fallback is `request.client`, and it is weaker than it looks: uvicorn ships
+    `ProxyHeadersMiddleware` ENABLED, so when the socket peer is trusted
+    (`--forwarded-allow-ips`, default `127.0.0.1`) uvicorn REWRITES `request.client`
+    from X-Forwarded-For — taking the rightmost entry — before this function ever
+    runs. Verified live: with no X-Real-IP, requests carrying a forged
+    `X-Forwarded-For: 10.0.0.N, 203.0.113.9` all counted into a `203.0.113.9`
+    bucket. So on a same-host deployment the fallback can still be caller-influenced.
+
+    Production does not depend on it — every `/api` location in all four nginx
+    configs sets X-Real-IP, so the first branch always wins, and the peer there is
+    the nginx container (not in uvicorn's default trust list) anyway. Both compose
+    files additionally pass `--no-proxy-headers` to switch that rewriting off
+    outright: nothing in this app reads `request.url`/`request.scheme`, so the
+    middleware's only effect here was to make `request.client` untrustworthy.
+
+    Either way this value only keys a rate-limit bucket, never an authorization
+    decision. Nothing that grants access may be built on it without a real
+    trusted-proxy check.
+    """
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
     return request.client.host if request.client else "unknown"
 
 
