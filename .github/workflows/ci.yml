@@ -97,6 +97,8 @@ jobs:
           app/domains/logistics/service.py
           app/domains/laboratory/service.py
           app/domains/manufacturers/service.py
+          app/domains/lab_orders/service.py
+          app/domains/lab_orders/samples.py
           --ignore-missing-imports
 
       - name: Type-check (mypy — app/schemas)
@@ -115,6 +117,7 @@ jobs:
           app/domains/logistics/schemas.py
           app/domains/laboratory/schemas.py
           app/domains/manufacturers/schemas.py
+          app/domains/lab_orders/schemas.py
           --ignore-missing-imports
 
       # ── Tests ──────────────────────────────────────────────────────────────

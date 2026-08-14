@@ -1333,7 +1333,7 @@ def send_lab_order_to_group(
 
     from app.core.db import engine  # noqa: PLC0415
     from app.domains.companies.models import Company  # noqa: PLC0415
-    from app.models.lab import LabOrder  # noqa: PLC0415
+    from app.domains.lab_orders.models import LabOrder  # noqa: PLC0415
 
     try:
         with Session(engine) as session:

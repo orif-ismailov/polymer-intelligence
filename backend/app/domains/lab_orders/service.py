@@ -36,10 +36,10 @@ from sqlalchemy.orm import Session
 from app.core.time import to_display_tz, utcnow
 from app.domains.companies.models import Company
 from app.domains.deals.models import Deal, DealDocument
+from app.domains.lab_orders.models import LabOrder, LabPartner
 from app.domains.marketplace.models import SellerOffer, SellerOfferFile
 from app.models.accounts import UserAccount
 from app.models.enums import DealDocumentKind, LabOrderStatus, OfferFileKind
-from app.models.lab import LabOrder, LabPartner
 from app.models.staff import StaffUser
 from app.services import (
     audit_service,

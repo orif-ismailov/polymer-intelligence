@@ -68,7 +68,7 @@ def test_prefix_does_not_collide_with_the_p6_lab_order_family() -> None:
     against an offer, this is a client↔laboratory channel. The prefixes must not
     converge, and the P6 routes must still be mounted after this one was added.
     """
-    from app.api.portal import lab  # noqa: PLC0415
+    from app.domains.lab_orders import api_portal as lab  # noqa: PLC0415
     from app.domains.laboratory import api_portal as lab_requests  # noqa: PLC0415
 
     p6 = {r.path for r in lab.router.routes}  # type: ignore[attr-defined]
@@ -102,7 +102,7 @@ def test_lab_verified_is_still_reachable_only_through_p6() -> None:
         for path in root.rglob("*.py")
         if assign.search(path.read_text(encoding="utf-8"))
     }
-    assert writers == {"services/lab_service.py"}, writers
+    assert writers == {"domains/lab_orders/service.py"}, writers
 
 
 def test_pool_payload_omits_the_buyer_contact() -> None:

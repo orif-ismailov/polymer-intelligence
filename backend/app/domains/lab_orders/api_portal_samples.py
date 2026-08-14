@@ -20,12 +20,12 @@ from app.api.portal.deps import company_or_404, require_business_role
 from app.core.db import get_db
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
+from app.domains.lab_orders import samples as sample_service
+from app.domains.lab_orders.models import SampleRequest
+from app.domains.lab_orders.schemas import SampleRequestIn, SampleRequestOut, SampleTransitionIn
 from app.domains.marketplace import service as offer_service
 from app.models.accounts import UserAccount
 from app.models.enums import SampleRequestStatus
-from app.models.lab import SampleRequest
-from app.schemas.lab import SampleRequestIn, SampleRequestOut, SampleTransitionIn
-from app.services import sample_service
 
 router = APIRouter(prefix="/portal", tags=["portal-samples"])
 

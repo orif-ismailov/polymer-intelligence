@@ -60,6 +60,7 @@ from app.domains.deals.models import (  # noqa: F401
     RfqResponse,
 )
 from app.domains.deals.payment_models import EscrowPayment, ProviderEvent  # noqa: F401
+from app.domains.lab_orders.models import LabOrder, LabPartner, SampleRequest  # noqa: F401
 from app.domains.laboratory.models import (  # noqa: F401
     LabRequest,
     LabRequestMessage,
@@ -134,7 +135,6 @@ from app.models.enums import (
 )
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
-from app.models.lab import LabOrder, LabPartner, SampleRequest  # noqa: F401
 from app.models.media import CompanyMedia  # noqa: F401
 from app.models.notifications import PortalNotification  # noqa: F401
 from app.models.prices import PricePoint  # noqa: F401

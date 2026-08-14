@@ -18,11 +18,12 @@ from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.companies import service as company_service
 from app.domains.companies.schemas import CompanyOfferIn, CompanyOfferOut
+from app.domains.lab_orders import service as lab_service
 from app.domains.marketplace import service as offer_service
 from app.domains.marketplace.models import SellerOffer, SellerOfferFile
 from app.models.accounts import UserAccount
 from app.models.enums import OfferFileKind, SellerOfferStatus
-from app.services import lab_service, rate_limit, storage_service
+from app.services import rate_limit, storage_service
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-offers"])
 

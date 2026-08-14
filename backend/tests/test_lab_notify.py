@@ -92,7 +92,7 @@ def test_sends_a_card_naming_the_customer_and_the_subject(
     engine: sa.Engine, sf, monkeypatch
 ) -> None:  # noqa: ANN001
     from app.core.config import settings  # noqa: PLC0415
-    from app.services import lab_service  # noqa: PLC0415
+    from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
     from app.tasks import notify  # noqa: PLC0415
 
     monkeypatch.setattr("app.core.db.engine", engine)  # the task uses Session(engine)

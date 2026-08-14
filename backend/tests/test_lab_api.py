@@ -40,7 +40,7 @@ _JPEG = b"\xff\xd8\xff\xe0 not a document"
 
 
 def test_portal_lab_routes_registered() -> None:
-    from app.api.portal.lab import router  # noqa: PLC0415
+    from app.domains.lab_orders.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/lab-orders" in paths
@@ -48,7 +48,7 @@ def test_portal_lab_routes_registered() -> None:
 
 
 def test_admin_lab_routes_registered() -> None:
-    from app.api.admin_lab import router  # noqa: PLC0415
+    from app.domains.lab_orders.api_admin import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     for path in (
@@ -66,7 +66,7 @@ def test_admin_lab_routes_registered() -> None:
 def test_the_customer_cannot_drive_the_status() -> None:
     """Statuses are staff's — nothing a customer could press makes a laboratory
     work faster, and a self-served `done` would forge a passport."""
-    from app.api.portal.lab import router  # noqa: PLC0415
+    from app.domains.lab_orders.api_portal import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert not any("transition" in p or "result" in p for p in paths)

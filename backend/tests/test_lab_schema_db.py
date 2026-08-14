@@ -65,7 +65,7 @@ def _scene(db: Session):  # noqa: ANN202
 
 class TestLabOrderConstraints:
     def test_an_order_about_nothing_is_rejected(self, db: Session) -> None:
-        from app.models.lab import LabOrder  # noqa: PLC0415
+        from app.domains.lab_orders.models import LabOrder  # noqa: PLC0415
 
         seller, _buyer, owner, _offer = _scene(db)
         db.add(
@@ -80,8 +80,8 @@ class TestLabOrderConstraints:
 
     def test_done_without_a_result_is_rejected(self, db: Session) -> None:
         """The invariant the whole feature rests on: no badge without a document."""
+        from app.domains.lab_orders.models import LabOrder  # noqa: PLC0415
         from app.models.enums import LabOrderStatus  # noqa: PLC0415
-        from app.models.lab import LabOrder  # noqa: PLC0415
 
         seller, _buyer, owner, offer = _scene(db)
         db.add(
@@ -97,9 +97,9 @@ class TestLabOrderConstraints:
             db.flush()
 
     def test_done_with_the_offer_file_is_accepted(self, db: Session) -> None:
+        from app.domains.lab_orders.models import LabOrder  # noqa: PLC0415
         from app.domains.marketplace.models import SellerOfferFile  # noqa: PLC0415
         from app.models.enums import LabOrderStatus, OfferFileKind  # noqa: PLC0415
-        from app.models.lab import LabOrder  # noqa: PLC0415
 
         seller, _buyer, owner, offer = _scene(db)
         passport = SellerOfferFile(
@@ -120,7 +120,7 @@ class TestLabOrderConstraints:
         db.flush()  # must not raise
 
     def test_the_number_is_unique(self, db: Session) -> None:
-        from app.models.lab import LabOrder  # noqa: PLC0415
+        from app.domains.lab_orders.models import LabOrder  # noqa: PLC0415
 
         seller, _buyer, owner, offer = _scene(db)
         for _ in range(2):
@@ -138,7 +138,7 @@ class TestLabOrderConstraints:
 
 class TestSampleRequestConstraints:
     def _request(self, db: Session, offer, buyer, seller, account, **kwargs):  # noqa: ANN001, ANN003, ANN202
-        from app.models.lab import SampleRequest  # noqa: PLC0415
+        from app.domains.lab_orders.models import SampleRequest  # noqa: PLC0415
 
         row = SampleRequest(
             offer_id=offer.id,

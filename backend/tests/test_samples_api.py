@@ -28,7 +28,7 @@ _PORTAL = "/api/v1/portal"
 
 
 def test_sample_routes_registered() -> None:
-    from app.api.portal.samples import router  # noqa: PLC0415
+    from app.domains.lab_orders.api_portal_samples import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/portal/companies/{company_id}/samples" in paths
@@ -39,7 +39,7 @@ def test_sample_routes_registered() -> None:
 def test_there_is_one_transition_door_not_five_verbs() -> None:
     """Five verb routes would be five places to forget the role check; the
     machine is a table and the API is one door."""
-    from app.api.portal.samples import router  # noqa: PLC0415
+    from app.domains.lab_orders.api_portal_samples import router  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert not any(

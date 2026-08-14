@@ -40,7 +40,7 @@ ALL_STATUSES = list(EXPECTED)
 
 
 def _lab():  # noqa: ANN202
-    from app.services import lab_service  # noqa: PLC0415
+    from app.domains.lab_orders import service as lab_service  # noqa: PLC0415
 
     return lab_service
 
