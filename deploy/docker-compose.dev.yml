@@ -151,7 +151,7 @@ services:
     # default is one process per core, and each one opens its own DB pool, so on
     # a developer machine with many cores the pool ceiling scales with the laptop.
     # The api here runs --reload (single process), so dev needs no max_connections bump.
-    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-4} -Q ingest,parse,notify,default,verify
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-2} -Q ingest,parse,notify,default,verify
     volumes:
       - ../backend:/app
 
