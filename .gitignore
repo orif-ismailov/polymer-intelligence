@@ -27,7 +27,10 @@ tsconfig.tsbuildinfo
 # OS / editor
 .DS_Store
 .idea/
-.claude/
+# Local Claude Code config stays out; shared skills are part of the repo.
+# (must be `.claude/*` + a negation — git will not descend into an ignored dir)
+.claude/*
+!.claude/skills/
 
 # Planning (GSD tooling — not part of the shipped codebase)
 .planning/config.json
