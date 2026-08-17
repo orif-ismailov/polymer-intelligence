@@ -589,6 +589,14 @@
       "title": "Litsenziyalar va sertifikatlar",
       "subtitle": "Laboratoriya akkreditatsiyasi va hujjatlarini yuklang",
       "moderationNote": "Barcha hujjatlar profilingiz nashr etilishidan oldin moderator tekshiruvidan o‘tadi."
+    },
+    "registry": {
+      "loading": "Davlat reyestridan ma'lumot so'ralmoqda…",
+      "filledTitle": "Davlat reyestri ma'lumotlari",
+      "filledBody": "Rekvizitlar STIR bo'yicha to'ldirildi. Ularni tekshiring va kerak bo'lsa tuzating — siz ko'rayotgan ma'lumot saqlanadi.",
+      "state": "Reyestrdagi holati: {{state}}.",
+      "notFound": "Davlat reyestrida bu STIR bo'yicha yozuv yo'q. Ma'lumotlarni qo'lda kiriting.",
+      "unavailable": "Davlat reyestri hozir mavjud emas — ma'lumotlarni qo'lda kiriting."
     }
   },
   "verification": {

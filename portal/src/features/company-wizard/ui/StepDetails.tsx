@@ -30,6 +30,8 @@ import {
   isTaxIdValid,
 } from "../model/validation";
 
+import { RegistryPrefillNotice } from "./RegistryPrefillNotice";
+
 interface StepDetailsProps {
   onNext: () => void;
   onBack: () => void;
@@ -129,6 +131,8 @@ export function StepDetails({ onNext, onBack }: StepDetailsProps) {
           {t("wizard.details.lockedBody")}
         </Alert>
       ) : null}
+
+      <RegistryPrefillNotice />
 
       <div className="space-y-5">
         <FormField label={t("wizard.details.fields.logo")}>

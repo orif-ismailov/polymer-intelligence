@@ -589,6 +589,14 @@
       "title": "Licenses and certificates",
       "subtitle": "Upload laboratory accreditations and documents",
       "moderationNote": "All documents are reviewed by a moderator before your profile is published."
+    },
+    "registry": {
+      "loading": "Looking the company up in the state registry…",
+      "filledTitle": "Data from the state registry",
+      "filledBody": "Details were filled in from the tax id. Check them and correct anything that is out of date — what you see is what gets saved.",
+      "state": "Registry status: {{state}}.",
+      "notFound": "The state registry has no record for this tax id. Please fill the form in manually.",
+      "unavailable": "The state registry is unavailable right now — please fill the form in manually."
     }
   },
   "verification": {

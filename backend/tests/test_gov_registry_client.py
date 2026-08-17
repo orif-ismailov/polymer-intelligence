@@ -161,4 +161,5 @@ def test_the_mode_is_a_runtime_setting_shipping_stub() -> None:
 
     spec = _SPECS["gov_registry_mode"]
     assert spec.default == "stub"
-    assert spec.choices == ("stub", "live")
+    # P7.a added the `didox` rail alongside these two; the default is unchanged.
+    assert spec.choices == ("stub", "didox", "live")

@@ -515,6 +515,45 @@ class CompanyOfferOut(BaseModel):
         return value or []
 
 
+class CompanyRegistryDataOut(BaseModel):
+    """What the state registry says about a STIR, shaped for the wizard's fields.
+
+    Deliberately NOT the whole provider record. Any portal account can look up
+    any STIR, so this carries only what a counterparty reads off an invoice —
+    requisites plus the director's name. The director's ПИНФЛ and tax id, and the
+    accountant's name, are personal identifiers and stop at the service layer.
+    """
+
+    tax_id: str
+    legal_name: str | None = None
+    short_name: str | None = None
+    legal_form: str | None = None
+    legal_address: str | None = None
+    registration_date: datetime.date | None = None
+    director_name: str | None = None
+    oked: str | None = None
+    bank_mfo: str | None = None
+    bank_account: str | None = None
+    vat_registered: bool = False
+    vat_certificate_no: str | None = None
+    #: Normalized (`active`/`liquidated`/`suspended`/`unknown`) + the registry's
+    #: own wording, which is what a verifier actually wants to read.
+    registry_status: str = "unknown"
+    registry_status_text: str | None = None
+
+
+class CompanyLookupOut(BaseModel):
+    """Envelope for the prefill lookup.
+
+    `found=False` is an ordinary answer, not an error: Didox reports "no such
+    company" as a 200 with an empty body, and the form must stay manual rather
+    than fill itself with nulls.
+    """
+
+    found: bool
+    company: CompanyRegistryDataOut | None = None
+
+
 class DirectoryCompanyOut(BaseModel):
     """One row of the verified-company picker (`GET /portal/companies/directory`).
 

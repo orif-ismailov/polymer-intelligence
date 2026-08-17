@@ -40,6 +40,10 @@ logger = logging.getLogger(__name__)
 
 MODE_STUB = "stub"
 MODE_LIVE = "live"
+#: P7.a — Didox's `/v1/utils/info/{tin}` reads the tax registry. It is the
+#: channel ПЦД never became, and it is a third rail rather than a replacement:
+#: `live` still names the missing ПЦД adapter.
+MODE_DIDOX = "didox"
 
 #: Normalized company states. `unknown` is the default rather than `active`: an
 #: unstated status must never read as a positive confirmation.
@@ -264,6 +268,13 @@ def get_gov_registry_client(db: Any) -> GovRegistryClient:  # noqa: ANN401
     mode = current_mode(db)
     if mode == MODE_STUB:
         return StubGovRegistryClient()
+    if mode == MODE_DIDOX:
+        # Imported here rather than at module scope: `integrations.didox.registry`
+        # imports this module for the protocol and the DTOs, so a top-level
+        # import would be a cycle.
+        from app.integrations.didox.registry import DidoxGovRegistryClient  # noqa: PLC0415
+
+        return DidoxGovRegistryClient()
     if mode == MODE_LIVE:
         raise ProviderUnavailable(
             "gov_registry: live mode has no adapter yet (needs ПЦД access) — "

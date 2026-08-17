@@ -3,6 +3,7 @@ import { api, resolveDownloadUrl } from "@/shared/api";
 import type {
   BankAccount,
   CompanyDetail,
+  CompanyLookupResult,
   CompanyProfilePatch,
   CompanySummary,
   CreateBankAccountPayload,
@@ -21,6 +22,21 @@ export const companyApi = {
 
   create: (payload: CreateCompanyPayload): Promise<CompanySummary> =>
     api.post<CompanySummary>("/portal/companies", payload),
+
+  /**
+   * The state registry's record for a STIR, for prefilling registration.
+   *
+   * Pass `companyId` once the company row exists (step 1's signature creates
+   * it) and the answer is also stored as immutable registry evidence, which
+   * resolves the verification case's registry checks.
+   *
+   * Throws `ApiError(503)` when no channel is configured — the caller must treat
+   * that as "type it yourself", never as a blocked registration.
+   */
+  lookup: (taxId: string, companyId?: number | null): Promise<CompanyLookupResult> =>
+    api.get<CompanyLookupResult>("/portal/companies/lookup", {
+      query: { tax_id: taxId, ...(companyId != null ? { company_id: companyId } : {}) },
+    }),
 
   updateProfile: (id: number, patch: CompanyProfilePatch): Promise<CompanyDetail> =>
     api.patch<CompanyDetail>(`/portal/companies/${id}`, patch),
@@ -86,4 +102,5 @@ export const companyKeys = {
   all: ["companies"] as const,
   list: () => ["companies", "list"] as const,
   detail: (id: number) => ["companies", "detail", id] as const,
+  lookup: (taxId: string) => ["companies", "lookup", taxId] as const,
 };

@@ -145,6 +145,39 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   # advertise the endpoint.
   ESCROW_WEBHOOK_SECRET=                     # [SECRET] required only for escrow_mode=live
   ```
+- **Didox EDI (R6 / P7.a, Stage 1 = registry lookup)** — the partner API behind two things: the
+  registration form's autofill and, later, the document chain. Stage 1 ships **off**: the lookup
+  runs only when the runtime setting `gov_registry_mode` is flipped to `didox`, and without a
+  partner token the endpoint answers `registry_not_configured` and the wizard stays silent.
+  `DIDOX_BASE_URL` defaults to the **test** contour on purpose — production is a different host
+  AND a different token, so a mis-deploy hits the sandbox rather than the roaming centre.
+  **Production caveat:** `/v1/utils/info/{tin}` requires a `user-key` in prod (the test contour
+  does not). A key is per-company and normally minted with that company's E-IMZO key, which a
+  company registering with us does not have here — so prod autofill needs the optional
+  `DIDOX_SERVICE_*` credentials for our own Didox account. Without them prod degrades to a manual
+  form; nothing breaks. Password logins have a lockout ladder ending in a PERMANENT block, so the
+  minting path tries **once** per cooldown and never retries in a loop.
+  Append by hand to `deploy/.env.example` (`.env*` edits are denied locally, same as the three R3
+  E-IMZO variables and `ESCROW_WEBHOOK_SECRET`):
+  ```
+  # ── Didox EDI partner API (R6 / P7.a) ─────────────────────────────────────────
+  # Uzbekistan's largest private EDI operator. Used for the tax-registry lookup
+  # that prefills company registration (gov_registry_mode=didox) and, later, for
+  # the legally significant document chain (didox_mode).
+  # Defaults to the TEST contour: prod is a different host AND a different token.
+  DIDOX_BASE_URL=https://testapi3.didox.uz
+  # Integrator identity, sent as `Partner-Authorization` on EVERY request. Obtained
+  # offline from the account manager (t.me/Didox_account). Server-side only — it
+  # must never reach a browser. Empty by default: the rails are RUNTIME settings a
+  # startup validator cannot see, same shape as ESCROW_WEBHOOK_SECRET.
+  DIDOX_PARTNER_TOKEN=                       # [SECRET] required only when a Didox rail is on
+  # Optional platform service account. Production refuses the registry lookup
+  # without a per-company `user-key`; these let the backend mint ONE for our own
+  # company and reuse it for read-only lookups. Leave empty and prod autofill
+  # degrades to a manual form.
+  DIDOX_SERVICE_TIN=
+  DIDOX_SERVICE_PASSWORD=                    # [SECRET] optional; password login has a lockout ladder
+  ```
 - **Fixed dev OTP (`OTP_DEV_CODE`)** — set it to `000000` in a DEV `.env` and every portal
   login accepts that code, so a demo no longer needs the real one fished out of the worker log.
   Ships **empty**, and is honoured only when `DEBUG=true` **and** `SMS_PROVIDER=console` (the

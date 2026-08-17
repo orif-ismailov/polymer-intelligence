@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { CompanyDetail } from "@/entities/company";
+import type { CompanyDetail, CompanyRegistryData } from "@/entities/company";
 
 import {
   DEFAULT_JURISDICTION,
@@ -103,6 +103,19 @@ interface WizardDraftState {
   clearCompany: () => void;
   /** Copy server-side requisites over the draft (after an E-IMZO signature). */
   hydrateFromCompany: (company: CompanyDetail) => void;
+  /**
+   * Fill blanks from the state registry (Didox lookup by STIR).
+   *
+   * A registry value never overwrites something the USER typed — that would
+   * discard a correction made on purpose, and the registry can be behind
+   * reality (a moved office, a changed account). But it does replace a value an
+   * EARLIER lookup put there, because after a STIR is corrected those belong to
+   * a different company.
+   */
+  hydrateFromRegistry: (data: CompanyRegistryData) => void;
+  /** Fields the registry owns right now — the hint reads it, and so does the
+   * next lookup, to know what it may replace. */
+  prefilled: string[];
   reset: () => void;
 }
 
@@ -193,6 +206,7 @@ type PersistedDraft = Partial<
     | "laboratory"
     | "companyId"
     | "identityLocked"
+    | "prefilled"
   >
 >;
 
@@ -235,6 +249,7 @@ function mergePersistedDraft(
     },
     logistics: { ...emptyLogistics, ...saved.logistics },
     laboratory: { ...emptyLaboratory, ...saved.laboratory },
+    prefilled: saved.prefilled ?? [],
   };
 }
 
@@ -254,6 +269,7 @@ export const useWizardDraft = create<WizardDraftState>()(
       logo: null,
       companyId: null,
       identityLocked: false,
+      prefilled: [],
       setAccountType: (id) =>
         set((s) => ({
           accountType: id,
@@ -262,8 +278,19 @@ export const useWizardDraft = create<WizardDraftState>()(
           companyId: id === s.accountType ? s.companyId : null,
           identityLocked: id === s.accountType ? s.identityLocked : false,
         })),
-      setIdentity: (patch) => set((s) => ({ identity: { ...s.identity, ...patch } })),
-      setBank: (patch) => set((s) => ({ bank: { ...s.bank, ...patch } })),
+      // Editing a field takes it back from the registry. Without this the store
+      // would still consider a hand-corrected value "ours" and the next lookup
+      // would overwrite the correction — the opposite of the rule.
+      setIdentity: (patch) =>
+        set((s) => ({
+          identity: { ...s.identity, ...patch },
+          prefilled: s.prefilled.filter((field) => !(field in patch)),
+        })),
+      setBank: (patch) =>
+        set((s) => ({
+          bank: { ...s.bank, ...patch },
+          prefilled: s.prefilled.filter((field) => !(field in patch)),
+        })),
       setDocument: (kind, file) => set((s) => ({ documents: { ...s.documents, [kind]: file } })),
       setManufacturer: (patch) =>
         set((s) => ({
@@ -338,12 +365,63 @@ export const useWizardDraft = create<WizardDraftState>()(
                 : ""),
           },
         })),
+      hydrateFromRegistry: (data) =>
+        set((s) => {
+          const owned = new Set(s.prefilled);
+          const filled: string[] = [];
+          /**
+           * The registry owns what the registry filled; the user owns what they
+           * typed.
+           *
+           * Fill-if-blank alone is not enough, and the gap is not theoretical:
+           * correct a STIR after one lookup and the FIRST company's name,
+           * address and bank account stay on screen under the second company's
+           * tax id, because those fields are no longer blank. So a value we put
+           * there last time is replaced — or cleared, when the new company has
+           * none — while anything the user typed (or the certificate locked) is
+           * left exactly as it is.
+           */
+          const fill = (current: string, incoming: string | null | undefined, field: string): string => {
+            const value = (incoming ?? "").trim();
+            const ours = owned.has(field);
+            if (current.trim() !== "" && !ours) return current;
+            if (value === "") return ours ? "" : current;
+            filled.push(field);
+            return value;
+          };
+          return {
+            identity: {
+              ...s.identity,
+              legal_name: fill(s.identity.legal_name, data.legal_name, "legal_name"),
+              short_name: fill(s.identity.short_name, data.short_name, "short_name"),
+              legal_form: fill(s.identity.legal_form, data.legal_form, "legal_form"),
+              legal_address: fill(s.identity.legal_address, data.legal_address, "legal_address"),
+              director_name: fill(s.identity.director_name, data.director_name, "director_name"),
+              registration_date: fill(
+                s.identity.registration_date,
+                data.registration_date,
+                "registration_date",
+              ),
+            },
+            bank: {
+              ...s.bank,
+              bank_mfo: fill(s.bank.bank_mfo, data.bank_mfo, "bank_mfo"),
+              account_number: fill(s.bank.account_number, data.bank_account, "account_number"),
+            },
+            // Replacement, not union: `prefilled` is "what the registry owns
+            // right now". Accumulating it across lookups would keep claiming a
+            // field this answer left empty, and the next lookup would refuse to
+            // clear it.
+            prefilled: filled,
+          };
+        }),
       reset: () =>
         set({
           accountType: "",
           identity: { ...emptyIdentity },
           bank: { ...emptyBank },
           documents: {},
+          prefilled: [],
           manufacturer: {
             ...emptyManufacturer,
             financial_requirements: { ...emptyManufacturer.financial_requirements },
@@ -368,6 +446,10 @@ export const useWizardDraft = create<WizardDraftState>()(
         laboratory: s.laboratory,
         companyId: s.companyId,
         identityLocked: s.identityLocked,
+        // Persisted with the fields it describes: without it a reload makes
+        // every registry-filled value look hand-typed, and a corrected STIR
+        // would then leave the previous company's requisites on the form.
+        prefilled: s.prefilled,
       }),
     },
   ),

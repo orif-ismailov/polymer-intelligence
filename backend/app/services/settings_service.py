@@ -113,9 +113,23 @@ def _specs() -> tuple[SettingSpec, ...]:
         # `live` a submitted case also spawns the two registry checks; on `stub`
         # they are created only when an operator records a manual snapshot, so a
         # case can never be stranded waiting for a channel we do not have.
+        # P7.a adds `didox`: Didox's `/v1/utils/info/{tin}` answers with the tax
+        # registry's own record, which is the channel ПЦД never became. It is a
+        # third rail rather than a replacement — `live` still names the missing
+        # ПЦД adapter, and the manual operator path is untouched.
         SettingSpec(
             "gov_registry_mode", "str", "stub",
-            "State registry: stub (manual operator checks) or live (ПЦД adapter)",
+            "State registry: stub (manual operator checks), didox (Didox lookup) or live (ПЦД adapter)",
+            choices=("stub", "didox", "live"),
+        ),
+        # P7.a — the Didox document rail (договор/ЭСФ/акт). Ships `stub`, which
+        # raises: a fabricated "signed" document would be a false statement about
+        # a legally significant act. Note this is SEPARATE from
+        # `gov_registry_mode=didox`: reading the registry is harmless and useful
+        # on its own, sending documents is not.
+        SettingSpec(
+            "didox_mode", "str", "stub",
+            "Didox document rail: stub (no documents leave the platform) or live",
             choices=("stub", "live"),
         ),
     )

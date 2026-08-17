@@ -82,6 +82,17 @@ collapsed onto the single public URL page by page (the market and manufacturer s
 first), so don't add new twins. A link to a listing is the exception that is already
 settled: it is always `/market/:id`, never `${base}/market/:id`, because there is only one.
 
+**The cabinet is a SHELL response, so the client renders it rather than hydrating it.**
+`server.js` answers every non-public URL with `<div id="root"></div>` and no markup — it holds no
+session, so there is nothing to render a cabinet page with. `entry-client.tsx` therefore branches on
+whether the response actually carried markup (`container.firstElementChild`): storefront →
+`hydrateRoot`, shell → `createRoot`. Calling `hydrateRoot` on an empty container cannot succeed —
+React looks for the tree its first render produced (`RequireAuth`'s spinner, while the boot-time
+refresh is in flight), finds nothing, logs «Expected server HTML to contain a matching `<div>`» plus
+a hydration failure, and falls back to client rendering anyway. That was the true source of the
+hydration errors on `/cabinet/login` long blamed on `AuthLayout`. Branch on the RESPONSE, never on a
+second copy of `server.js`'s public-path whitelist — two lists drift, and the drift is this bug.
+
 Old root-level cabinet URLs (`/login`, `/companies/…`, `/offers/…`) **301 to their
 `/cabinet` equivalent** from `server.js`, not from the router: `entry-server.tsx` returns
 only a status and drops the router's `Location`, so an SSR-time `redirect()` would land on
@@ -161,6 +172,15 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
     company from it, then signs — which is why `EimzoSigner.getChallenge` takes the certificate.
     A signed company arrives at step 2 filled in and `identity_locked` (those fields render
     disabled, and `useSubmitWizard` omits them from the PATCH or the server 409s).
+  - **Steps 2–3 prefill themselves from the state registry** (P7.a). As soon as the STIR is known
+    — read off the certificate at step 1, or typed — `useRegistryPrefill` asks
+    `GET /portal/companies/lookup` and `hydrateFromRegistry` drops the answer into the BLANKS.
+    It never overwrites a typed value or a locked one, so a correction always wins; `prefilled`
+    records which fields came from the registry. All three failure shapes are soft and none of
+    them blocks a registration: "not found" is a warning line, an outage is an info line, and a
+    deployment with no channel configured (the shipped default) says **nothing at all** —
+    `registry_not_configured` is its own error code precisely so the form can stay quiet about a
+    feature nobody turned on. `RegistryPrefillNotice` is shared by both steps.
   - **Arriving at step 5 IS the submit** — there is no confirmation sheet. It is guarded by a ref
     against React's double mount, and the checks then poll until they resolve.
   - Bank + documents are not in the mockup but feed the case's `bank_requisites` /

@@ -20,6 +20,7 @@ from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.accounts.models import UserAccount
 from app.domains.companies import directory as directory_service
+from app.domains.companies import lookup as lookup_service
 from app.domains.companies import reviews as review_service
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBankAccount
@@ -29,8 +30,10 @@ from app.domains.companies.schemas import (
     BusinessRoleOut,
     CompanyCreateIn,
     CompanyDetailOut,
+    CompanyLookupOut,
     CompanyMediaOut,
     CompanyProfileUpdateIn,
+    CompanyRegistryDataOut,
     CompanyReviewIn,
     CompanyReviewOut,
     CompanySummaryOut,
@@ -39,11 +42,18 @@ from app.domains.companies.schemas import (
     PublicProfileUpdateIn,
     RolesUpdateIn,
 )
+from app.domains.verification import registry as registry_service
 from app.domains.verification import service as verification_service
 from app.domains.verification.api_portal import case_out, latest_case
 from app.domains.verification.models import (
     VerificationDocument,
 )
+from app.domains.verification.registry_models import (
+    SNAPSHOT_KIND_COMPANY,
+    SNAPSHOT_KIND_VAT,
+)
+from app.integrations import gov_registry
+from app.integrations.didox import registry as didox_registry
 from app.models.enums import (
     BankAccountStatus,
     BusinessRoleStatus,
@@ -247,6 +257,95 @@ def company_directory(
         )
         for c in rows
     ]
+
+
+@router.get("/lookup", response_model=CompanyLookupOut)
+def lookup_company(
+    tax_id: str = Query(min_length=9, max_length=14, description="STIR/INN (9 digits) or ПИНФЛ"),
+    company_id: int | None = Query(
+        default=None,
+        description="Record the answer as registry evidence on this company (membership required)",
+    ),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> CompanyLookupOut:
+    """The state registry's record for a STIR, for prefilling the wizard.
+
+    DECLARATION ORDER IS LOAD-BEARING: this literal path must stay above
+    `/{company_id}`, or that param route swallows it and "lookup" arrives as a
+    company id (the same rule `/directory` above lives by).
+
+    Three answers, all ordinary:
+      * `found=true` + the company — prefill;
+      * `found=false` — the registry has no such STIR, keep the form manual;
+      * 503 `registry_unavailable` — no channel configured or the provider is
+        down. Never a reason to block a registration: everything here can be
+        typed by hand.
+
+    `company_id` additionally appends an immutable `registry_snapshots` row (via
+    the existing P7.c path), which is what turns a prefill into evidence and
+    resolves the case's `gov_registry`/`vat_status` checks.
+    """
+    try:
+        rate_limit.enforce_window(
+            redis_client, "registry_lookup", account.id, rate_limit.DIRECTORY_SEARCH_PER_MIN, 60
+        )
+    except rate_limit.RateLimited as exc:
+        raise rate_limited(exc) from exc
+
+    stir = tax_id.strip()
+    if not stir.isdigit():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="tax_id must be digits"
+        )
+
+    try:
+        info = lookup_service.lookup_company(db, stir, redis_client=redis_client)
+    except lookup_service.CompanyNotFound:
+        return CompanyLookupOut(found=False)
+    except lookup_service.ChannelDisabled as exc:
+        # Its own code: a deployment with no registry channel is the shipped
+        # default, and the form should say nothing about it. An outage is
+        # different and does earn a line on screen.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "registry_not_configured"},
+        ) from exc
+    except gov_registry.ProviderUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "registry_unavailable", "reason": str(exc)},
+        ) from exc
+
+    if company_id is not None:
+        company = company_or_404(db, account, company_id)
+        # Only for the company being registered — otherwise a lookup of an
+        # arbitrary STIR would write evidence onto someone else's file.
+        if company.tax_id == stir:
+            for kind in (SNAPSHOT_KIND_COMPANY, SNAPSHOT_KIND_VAT):
+                registry_service.fetch_and_record(db, company, kind)
+            db.commit()
+
+    return CompanyLookupOut(
+        found=True,
+        company=CompanyRegistryDataOut(
+            tax_id=info.tin or stir,
+            legal_name=info.name,
+            short_name=info.short_name,
+            legal_form=info.legal_form,
+            legal_address=info.address,
+            registration_date=info.registered_at,
+            director_name=info.director,
+            oked=info.oked,
+            bank_mfo=info.bank_mfo,
+            bank_account=info.bank_account,
+            vat_registered=bool(info.vat_reg_code),
+            vat_certificate_no=info.vat_reg_code,
+            registry_status=didox_registry.normalize_status(info),
+            registry_status_text=info.status_name,
+        ),
+    )
 
 
 @router.get("/{company_id}", response_model=CompanyDetailOut)

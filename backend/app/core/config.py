@@ -171,6 +171,31 @@ class Settings(BaseSettings):
     # deployment does not advertise the endpoint at all.
     ESCROW_WEBHOOK_SECRET: str = ""
 
+    # ── Didox EDI partner API (R6 / P7.a) ─────────────────────────────────────
+    # Uzbekistan's largest private EDI operator. We use it for two things: the
+    # tax registry's own record of a company (`/v1/utils/info/{tin}`, which fills
+    # the registration form and feeds the verification checks) and, later, the
+    # legally significant document chain.
+    #
+    # Defaults to the TEST contour deliberately — production is a different host
+    # AND a different token, so an accidental deploy hits the sandbox, not the
+    # roaming centre.
+    DIDOX_BASE_URL: str = "https://testapi3.didox.uz"
+    # Integrator identity, sent as `Partner-Authorization` on every request.
+    # Empty default for the same reason as ESCROW_WEBHOOK_SECRET above: the rail
+    # is a RUNTIME setting (`didox_mode`, `gov_registry_mode`) that a startup
+    # validator cannot see. Obtained offline from the account manager. It is a
+    # server-side secret and must NEVER reach a browser.
+    DIDOX_PARTNER_TOKEN: str = ""  # [SECRET] required only when the Didox rail is on
+    # Optional platform service account. The lookup needs a per-user `user-key`
+    # in production (the test contour does not ask for one), and a key can only
+    # be minted for a company that already uses Didox — which a company
+    # registering with us, by definition, may not. These credentials let the
+    # backend mint ONE key for our own company and reuse it for read-only
+    # lookups. Leave empty and the lookup simply degrades to unavailable in prod.
+    DIDOX_SERVICE_TIN: str = ""
+    DIDOX_SERVICE_PASSWORD: str = ""  # [SECRET] optional; password login has a lockout ladder
+
     # ── CORS ──────────────────────────────────────────────────────────────────
     # Explicit non-wildcard list of allowed origins for credentialed CORS requests.
     # Never default to ["*"] — wildcard with allow_credentials=True is both a
