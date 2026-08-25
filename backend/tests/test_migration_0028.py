@@ -95,7 +95,11 @@ class TestEnums:
     def test_sample_request_statuses(self) -> None:
         from app.models.enums import SampleRequestStatus  # noqa: PLC0415
 
+        # `pending_letter` was added by 0041 (P7.a W8), ahead of `requested`: it is
+        # the state before the seller is told, while the buyer's commitment letter
+        # is still unsigned.
         assert [m.value for m in SampleRequestStatus] == [
+            "pending_letter",
             "requested",
             "accepted",
             "declined",

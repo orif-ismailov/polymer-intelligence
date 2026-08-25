@@ -4,8 +4,10 @@ Domain code imports from here and never talks to `api-partners.didox.uz`
 directly. Two things live behind this barrel:
 
   * **`client`** — the partner-API HTTP gateway (circuit breaker,
-    `integration_call_log`, the 4xx/5xx split). Stage 1 wires the tax-registry
-    lookup and the catalogs; the document rail follows.
+    `integration_call_log`, the 4xx/5xx split). Stage 1 wired the tax-registry
+    lookup and the catalogs; Stage 2 adds the document rail — dsvs
+    (timestamp/join), document CRUD + signing, onboarding (signup + the one-time
+    public offer), and the profile's ИКПУ / VAT-registration reads.
   * **`registry`** — that lookup adapted onto P7.c's existing `GovRegistryClient`
     protocol, so company verification gains a real channel without a second
     subsystem.
@@ -21,7 +23,12 @@ from app.integrations.didox.client import (
     TEST_BASE_URL,
     DidoxClient,
     DidoxCompanyInfo,
+    DidoxCreatedDocument,
+    DidoxDocumentView,
     DidoxError,
+    DidoxProductClass,
+    DidoxSignResult,
+    DidoxVatStatus,
     ProviderUnavailable,
     get_didox_client,
     is_configured,
@@ -40,8 +47,13 @@ __all__ = [
     "CompanyNotFound",
     "DidoxClient",
     "DidoxCompanyInfo",
+    "DidoxCreatedDocument",
+    "DidoxDocumentView",
     "DidoxError",
     "DidoxGovRegistryClient",
+    "DidoxProductClass",
+    "DidoxSignResult",
+    "DidoxVatStatus",
     "ProviderUnavailable",
     "get_didox_client",
     "is_configured",

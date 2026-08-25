@@ -64,6 +64,10 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "sweep_provider_events",
         # R6 P7.b T3.1: escrow ↔ bank reconciliation (every 30 min, `verify` queue)
         "reconcile_escrow_payments",
+        # R6 P7.a W10: Didox document statuses (every 10 min, `verify` queue).
+        # Didox publishes NO partner webhooks, so polling is the only way we learn
+        # that a counterparty signed or that the tax committee annulled a document.
+        "poll_didox_documents",
     }
     assert set(beat_schedule.keys()) == required_keys, (
         f"Beat schedule keys mismatch: {set(beat_schedule.keys())!r}"

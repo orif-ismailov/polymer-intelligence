@@ -44,7 +44,12 @@ export async function stepAccountType(
   if (opts.sign) {
     // The PIN gates the CTA exactly as the sheet draws it; the E-IMZO module
     // prompts for the real one, so any value unlocks the button here.
-    await page.getByLabel(/pin/i).fill("123456");
+    //
+    // `getByRole("textbox")`, not `getByLabel(/pin/i)`: the field ships with a
+    // «Показать PIN-код» reveal button beside it, so the bare label regex matches
+    // TWO elements and every spec that registers a company dies on a strict-mode
+    // violation — sixteen of them, all reported as unrelated feature failures.
+    await page.getByRole("textbox", { name: /pin/i }).fill("123456");
     await page.getByTestId("wizard-eimzo").click();
     await expect(page.getByTestId("eimzo-success")).toBeVisible({ timeout: 15_000 });
   }

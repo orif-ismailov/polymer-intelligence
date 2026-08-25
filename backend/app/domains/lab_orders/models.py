@@ -28,7 +28,8 @@ State machines live in `app/services/lab_service.py` and
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING
+import uuid
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     BigInteger,
@@ -42,7 +43,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy import Enum as PgEnum
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -190,18 +191,31 @@ class SampleRequest(Base):
         ),
         # One LIVE request per (offer, buyer). Partial, like uq_rfq_response_active:
         # a declined request must not lock the buyer out of ever asking again.
+        # `pending_letter` counts as live even though the seller cannot see it yet —
+        # otherwise a buyer could open unlimited unsigned drafts against one offer.
         Index(
             "uq_sample_request_active",
             "offer_id",
             "buyer_company_id",
             unique=True,
-            postgresql_where=text("status IN ('requested', 'accepted', 'sent')"),
+            postgresql_where=text(
+                "status IN ('pending_letter', 'requested', 'accepted', 'sent')"
+            ),
         ),
         Index("ix_sample_requests_seller", "seller_company_id", "status"),
         Index("ix_sample_requests_buyer", "buyer_company_id", "id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    #: Stable external reference. The commitment letter's S3 key hangs off this
+    #: rather than off `id`, for the same reason `contracts.public_id` exists: a
+    #: signed legal artefact must not carry our row count in its filename.
+    public_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=False,
+        unique=True,
+        server_default=func.gen_random_uuid(),
+    )
     offer_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("seller_offers.id", ondelete="CASCADE"), nullable=False
     )
@@ -232,6 +246,36 @@ class SampleRequest(Base):
     courier: Mapped[str | None] = mapped_column(Text, nullable=True)
     tracking_ref: Mapped[str | None] = mapped_column(Text, nullable=True)
     decline_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # ── Commitment letter (письмо-обязательство) ──────────────────────────────
+    # Rendered from a `contract_templates` row of kind='sample_letter' and signed
+    # by the BUYER with our own E-IMZO rails — never through Didox. It is a
+    # commercial undertaking between two companies, not a tax document, and it has
+    # to work before either side has a Didox account.
+    #
+    # Present only when the offer set `sample_letter_required`. All nullable: the
+    # overwhelming majority of sample requests never carry one.
+    letter_number: Mapped[str | None] = mapped_column(Text, nullable=True)
+    letter_storage_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    letter_sha256: Mapped[str | None] = mapped_column(Text, nullable=True)
+    letter_variables: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    #: The seller's own "if it does not fit" clause AS IT STOOD when the buyer
+    #: signed. `seller_offers.sample_letter_terms` can be edited afterwards; the
+    #: letter must remain evidence of what was actually agreed, not of what the
+    #: seller says today.
+    letter_terms_snapshot: Mapped[str | None] = mapped_column(Text, nullable=True)
+    letter_signature_evidence_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("signature_evidence.id"), nullable=True
+    )
+    letter_signed_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    #: Set when the buyer turns a `received` sample into a deal. One-directional:
+    #: `deals` never learns about samples, it only gets opened from one.
+    deal_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("deals.id", ondelete="SET NULL"), nullable=True
+    )
     # Three stamps rather than a history table: the machine is short and linear,
     # and `deal_status_history` for four transitions would be ceremony.
     accepted_at: Mapped[datetime.datetime | None] = mapped_column(

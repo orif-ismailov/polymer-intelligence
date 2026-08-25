@@ -1,6 +1,13 @@
 /** Sample requests (P6): a buyer asks a seller for material to hold. */
 
 export type SampleRequestStatus =
+  /**
+   * Asked, but NOT yet with the seller: this offer demands a signed
+   * письмо-обязательство first (P7.a W8). The seller is not notified and cannot
+   * act until the buyer signs, so the buyer's own row is the only place that can
+   * say a signature is still owed.
+   */
+  | "pending_letter"
   | "requested"
   | "accepted"
   | "declined"
@@ -34,6 +41,20 @@ export interface SampleRequest {
   sent_at: string | null;
   received_at: string | null;
   created_at: string;
+  /** Whether this request carries a commitment letter at all. */
+  letter_required: boolean;
+  letter_signed_at: string | null;
+  letter_number: string | null;
+}
+
+/** The letter itself — fetched per sample, the PDF separately. */
+export interface SampleLetter {
+  number: string | null;
+  sha256: string | null;
+  signed_at: string | null;
+  /** The seller's clause AS SIGNED — a snapshot, never the live offer text. */
+  terms: string | null;
+  required: boolean;
 }
 
 export interface SampleRequestPayload {

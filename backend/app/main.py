@@ -62,6 +62,8 @@ from app.domains.deals.api_admin import router as admin_deals_router
 from app.domains.deals.api_admin_escrow import router as admin_escrow_router
 from app.domains.deals.api_portal import router as portal_deals_router
 from app.domains.deals.api_webhooks import router as webhooks_escrow_router
+from app.domains.edi.api_admin import router as admin_didox_router
+from app.domains.edi.api_portal import router as portal_didox_router
 from app.domains.lab_orders.api_admin import router as admin_lab_router
 from app.domains.lab_orders.api_portal import router as portal_lab_router
 from app.domains.lab_orders.api_portal_samples import router as portal_samples_router
@@ -73,6 +75,7 @@ from app.domains.manufacturers.api_portal import router as portal_manufacturers_
 from app.domains.marketplace.api_admin import router as offer_requests_router
 from app.domains.marketplace.api_admin_moderation import router as moderation_router
 from app.domains.marketplace.api_portal import router as portal_offers_router
+from app.domains.marketplace.api_portal_ikpu import router as portal_ikpu_router
 from app.domains.marketplace.api_portal_inquiries import router as portal_inquiries_router
 from app.domains.marketplace.api_portal_market import router as portal_market_router
 from app.domains.marketplace.api_webapp_market import router as webapp_market_router
@@ -267,6 +270,9 @@ def create_app() -> FastAPI:
     # shadow nor be shadowed by that param route — position here is not load-bearing.
     application.include_router(portal_verification_router, prefix="/api/v1")
     application.include_router(portal_eimzo_router, prefix="/api/v1")
+    application.include_router(portal_didox_router, prefix="/api/v1")
+    application.include_router(portal_ikpu_router, prefix="/api/v1")
+    application.include_router(admin_didox_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
     application.include_router(portal_market_router, prefix="/api/v1")
     # Manufacturers before any catch-all company/id routes that could shadow list paths.

@@ -16,6 +16,22 @@ import type {
 const base = (companyId: number) => `/portal/companies/${companyId}/deals`;
 
 export const dealApi = {
+  /**
+   * Contract variables the deal can already answer (product, quantity, price…).
+   *
+   * Best-effort: whatever it cannot answer is simply absent. `templateId` lets the
+   * server drop values that would violate that template's enums rather than
+   * failing validation on a field the user never touched.
+   */
+  contractPrefill: (
+    companyId: number,
+    dealId: number,
+    templateId: number,
+  ): Promise<Record<string, string>> =>
+    api.get<Record<string, string>>(
+      `/portal/companies/${companyId}/deals/${dealId}/contract-prefill?template_id=${templateId}`,
+    ),
+
   list: (companyId: number, params: { role?: string; status?: string } = {}): Promise<DealList> =>
     api.get<DealList>(base(companyId), { query: { ...params } }),
 

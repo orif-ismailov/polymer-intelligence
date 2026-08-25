@@ -24,7 +24,7 @@ from app.core.db import get_db
 from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
-from app.domains.contracts.models import Contract
+from app.domains.contracts.models import Contract, ContractTemplate
 from app.domains.deals import escrow as escrow_service
 from app.domains.deals import rfq as rfq_response_service
 from app.domains.deals import service as deal_service
@@ -705,3 +705,35 @@ def withdraw_rfq_response(
 
 
 # ── supplier-facing RFQ market ────────────────────────────────────────────────
+
+@router.get(
+    "/companies/{company_id}/deals/{deal_id}/contract-prefill",
+    response_model=dict[str, str],
+)
+def deal_contract_prefill(
+    company_id: int,
+    deal_id: int,
+    template_id: int | None = Query(default=None),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> dict[str, str]:
+    """Contract variables suggested by the deal's own agreed terms.
+
+    `contract_prefill` has existed and been tested since P2 with no route to reach
+    it, so the "create contract" button opened an empty form for two parties who
+    had already agreed a product, a quantity and a price. Best-effort by design:
+    anything the deal cannot answer is simply absent.
+
+    Passing `template_id` filters out values that would violate one of that
+    template's enums — FOB is a real Incoterm that SUPPLY_V1 does not list, and
+    prefilling it would fail validation and block the whole form rather than
+    leaving one field blank.
+    """
+    company = _company_or_404(db, account, company_id)
+    deal = _deal_or_404(db, company, deal_id)
+    schema: dict[str, object] | None = None
+    if template_id is not None:
+        template = db.get(ContractTemplate, template_id)
+        if template is not None:
+            schema = template.variables_schema
+    return deal_service.contract_prefill(db, deal, schema=schema)

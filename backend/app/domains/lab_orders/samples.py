@@ -51,6 +51,11 @@ logger = logging.getLogger(__name__)
 # ── State machine (data) ──────────────────────────────────────────────────────
 
 _TRANSITIONS: dict[SampleRequestStatus, set[SampleRequestStatus]] = {
+    # The seller has NOT been told yet — the buyer's commitment letter is still
+    # unsigned (P7.a W8). Signing it is what moves the request to `requested`, and
+    # that move is made by the letter service, not by `transition()`: there is no
+    # actor rule for it because it is not a party decision, it is a signature.
+    SampleRequestStatus.pending_letter: {SampleRequestStatus.requested},
     SampleRequestStatus.requested: {
         SampleRequestStatus.accepted,
         SampleRequestStatus.declined,
@@ -213,7 +218,14 @@ def request(
         created_by_user_account_id=account.id,
         delivery_address=address,
         qty=(qty or "").strip() or None,
-        status=SampleRequestStatus.requested,
+        # An offer that demands a commitment letter holds the request BEFORE the
+        # seller ever sees it: `pending_letter` is not a draft, it is "asked, but
+        # not yet undertaken". Signing the letter is what releases it.
+        status=(
+            SampleRequestStatus.pending_letter
+            if offer.sample_letter_required
+            else SampleRequestStatus.requested
+        ),
     )
     # The partial unique index IS the "one live request" rule. Inserting inside a
     # savepoint so a lost race resolves to a typed error instead of poisoning the
@@ -242,7 +254,11 @@ def request(
             "account_id": account.id,
         },
     )
-    _notify(db, sample, notification_service.KIND_SAMPLE_REQUEST_NEW, to="seller")
+    # Only tell the seller once it is a real request. A `pending_letter` row is an
+    # intention the buyer has not signed yet, and a notification for it would have
+    # the seller chasing a request that may never arrive.
+    if sample.status != SampleRequestStatus.pending_letter:
+        _notify(db, sample, notification_service.KIND_SAMPLE_REQUEST_NEW, to="seller")
     logger.info(
         "sample_service.request",
         extra={"sample_id": sample.id, "offer_id": offer.id, "buyer": buyer_company.id},

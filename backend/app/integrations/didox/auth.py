@@ -40,7 +40,10 @@ KEY_TTL_SECONDS = 300 * 60
 #: ladder's punishments escalate to permanent, and a lookup is never worth that.
 FAILURE_COOLDOWN_SECONDS = 3600
 
-_KEY = "didox:user_key:{tin}"
+#: Redis key for a company's cached `user-key`. PUBLIC because the portal session
+#: layer (`domains/edi/session`) shares this cache: one company has one key,
+#: whichever flow minted it — password here, browser signature there.
+USER_KEY_CACHE = "didox:user_key:{tin}"
 _COOLDOWN = "didox:user_key_cooldown:{tin}"
 
 
@@ -65,7 +68,7 @@ def service_user_key(
 
     if redis_client is not None:
         try:
-            cached = redis_client.get(_KEY.format(tin=tin))
+            cached = redis_client.get(USER_KEY_CACHE.format(tin=tin))
             if cached:
                 return str(cached)
             if redis_client.get(_COOLDOWN.format(tin=tin)):
@@ -86,7 +89,7 @@ def service_user_key(
 
     if redis_client is not None:
         try:
-            redis_client.setex(_KEY.format(tin=tin), KEY_TTL_SECONDS, token)
+            redis_client.setex(USER_KEY_CACHE.format(tin=tin), KEY_TTL_SECONDS, token)
         except Exception as exc:  # noqa: BLE001
             logger.warning("didox.auth.cache_write_failed", extra={"error": str(exc)})
     return token

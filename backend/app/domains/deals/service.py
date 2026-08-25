@@ -43,6 +43,7 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company, CompanyMember
 from app.domains.contracts.models import Contract
 from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
+from app.domains.lab_orders.models import SampleRequest
 from app.domains.marketplace.models import OfferRequest, SellerOffer
 from app.domains.requests.models import Request
 from app.models.enums import (
@@ -534,6 +535,65 @@ def open_deal_from_inquiry(
         amount=_total_amount(inquiry.target_price, inquiry.quantity),
         currency=inquiry.currency or offer.currency or "UZS",
     )
+
+
+def open_deal_from_sample(
+    db: Session,
+    sample: SampleRequest,
+    account: UserAccount,
+    *,
+    amount: decimal.Decimal | None = None,
+    currency: str | None = None,
+) -> Deal:
+    """Open a deal from a sample the buyer has RECEIVED (P7.a W7).
+
+    The third door, beside RFQ-response and inquiry, and deliberately manual: a
+    received sample says the material arrived, not that anyone agreed a price or a
+    quantity — and `_open` needs an amount. Auto-opening on receipt would also race
+    the "one live deal per (offer, buyer)" rule that `open_deal_from_inquiry`
+    enforces, and would erase the difference between "I tested it" and "we agreed
+    to trade".
+
+    Buyer-only: the person who received the sample is the one who decides whether
+    it suits them.
+    """
+    from app.models.enums import SampleRequestStatus  # noqa: PLC0415
+
+    if sample.status != SampleRequestStatus.received:
+        raise DealRequiresCompany(f"sample {sample.id} is {sample.status}, not received")
+
+    buyer = db.get(Company, sample.buyer_company_id)
+    seller = db.get(Company, sample.seller_company_id)
+    if buyer is None or seller is None:  # pragma: no cover — FK guarantees both
+        raise DealRequiresCompany("missing party company")
+
+    live = (
+        db.query(Deal.id)
+        .filter(
+            Deal.offer_id == sample.offer_id,
+            Deal.buyer_company_id == sample.buyer_company_id,
+            Deal.status.notin_([DealStatus.cancelled, DealStatus.completed]),
+        )
+        .first()
+    )
+    if live is not None:
+        raise DealAlreadyOpen(str(live[0]))
+
+    offer = db.get(SellerOffer, sample.offer_id)
+    deal = _open(
+        db,
+        buyer=buyer,
+        seller=seller,
+        account=account,
+        offer_id=sample.offer_id,
+        amount=amount,
+        currency=currency or (offer.currency if offer else None) or "UZS",
+    )
+    # One-directional: the sample points at its deal; `deals` never learns about
+    # samples, it only gets opened from one.
+    sample.deal_id = deal.id
+    db.flush()
+    return deal
 
 
 # ── Contract seam (T1.4) ──────────────────────────────────────────────────────

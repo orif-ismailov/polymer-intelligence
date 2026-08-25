@@ -145,8 +145,9 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   # advertise the endpoint.
   ESCROW_WEBHOOK_SECRET=                     # [SECRET] required only for escrow_mode=live
   ```
-- **Didox EDI (R6 / P7.a, Stage 1 = registry lookup)** — the partner API behind two things: the
-  registration form's autofill and, later, the document chain. Stage 1 ships **off**: the lookup
+- **Didox EDI (R6 / P7.a)** — the partner API behind two things: the
+  registration form's autofill (Stage 1) and the legally significant document chain (Stage 2,
+  shipped — see below). Stage 1 ships **off**: the lookup
   runs only when the runtime setting `gov_registry_mode` is flipped to `didox`, and without a
   partner token the endpoint answers `registry_not_configured` and the wizard stays silent.
   `DIDOX_BASE_URL` defaults to the **test** contour on purpose — production is a different host
@@ -178,6 +179,15 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   DIDOX_SERVICE_TIN=
   DIDOX_SERVICE_PASSWORD=                    # [SECRET] optional; password login has a lockout ladder
   ```
+  **Stage 2 (the document rail) adds no new variables** — it is gated by the runtime setting
+  `didox_mode` (`stub` → every action raises; `live` → documents are created at the operator),
+  deliberately separate from `gov_registry_mode`: reading the registry is harmless, sending a
+  legally significant document is not. Two operational facts worth knowing before flipping it:
+  a company must have signed **Didox's public offer** or every send is refused (creating works
+  without it, which makes the failure land late), and **both** parties need an E-IMZO identity
+  confirmation, because the signer's PINFL and full name are mandatory on a «Договор НК».
+  The poller (`poll_didox_documents`, queue `verify`, every 10 min) gates on `didox_mode` before
+  any I/O, so leaving it on `stub` costs nothing.
 - **Fixed dev OTP (`OTP_DEV_CODE`)** — set it to `000000` in a DEV `.env` and every portal
   login accepts that code, so a demo no longer needs the real one fished out of the worker log.
   Ships **empty**, and is honoured only when `DEBUG=true` **and** `SMS_PROVIDER=console` (the

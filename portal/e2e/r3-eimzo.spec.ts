@@ -50,8 +50,8 @@ async function stubEimzo(page: Page, taxId: string, opts: { available: boolean }
         listCertificates: async () => [
           { id: "k1", subjectName: "OOO Polymer Trade", tin: tax, name: "IVANOV IVAN" },
         ],
-        sign: async (_id: string, challenge: string) =>
-          btoa(
+        sign: async (_id: string, challenge: string) => ({
+          pkcs7_64: btoa(
             JSON.stringify({
               challenge,
               tin: tax,
@@ -61,6 +61,8 @@ async function stubEimzo(page: Page, taxId: string, opts: { available: boolean }
               position: "Director",
             }),
           ),
+          signature_hex: "deadbeef",
+        }),
       };
     },
     [taxId, opts.available] as const,
@@ -81,7 +83,7 @@ test("E-IMZO onboarding: the certificate registers and confirms the company", as
 
   // No tax id is typed anywhere: the certificate subject carries the STIR, and
   // the signer creates the company from it. That is the point of signing first.
-  await page.getByLabel(/pin/i).fill("123456");
+  await page.getByRole("textbox", { name: /pin/i }).fill("123456");
   await page.getByTestId("wizard-eimzo").click();
 
   // Auto: probe → single cert → create → challenge → sign → verify → confirmed.
@@ -102,7 +104,7 @@ test("E-IMZO module missing shows install guidance", async ({ page, request }) =
   await login(page, request, phone);
 
   await page.goto("/cabinet/companies/new/1");
-  await page.getByLabel(/pin/i).fill("123456");
+  await page.getByRole("textbox", { name: /pin/i }).fill("123456");
   await page.getByTestId("wizard-eimzo").click();
 
   await expect(page.getByTestId("eimzo-module-missing")).toBeVisible();
@@ -115,6 +117,6 @@ test("signing is gated on the PIN the sheet asks for", async ({ page, request })
 
   await page.goto("/cabinet/companies/new/1");
   await expect(page.getByTestId("wizard-eimzo")).toBeDisabled();
-  await page.getByLabel(/pin/i).fill("123456");
+  await page.getByRole("textbox", { name: /pin/i }).fill("123456");
   await expect(page.getByTestId("wizard-eimzo")).toBeEnabled();
 });

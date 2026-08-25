@@ -658,6 +658,7 @@
     "errors": {
       "title": "Verification failed",
       "unavailable": "E-IMZO service is unavailable. Submit the company for manual verification.",
+      "module_not_authorized": "This site is not authorised in the E-IMZO module. Contact support — the domain needs an access key.",
       "mismatch": "The certificate INN does not match the company Tax ID.",
       "expired": "The request expired. Please retry.",
       "already_registered": "A company with this Tax ID is already registered.",
@@ -926,7 +927,12 @@
       },
       "acceptsRfq": "I accept RFQs",
       "acceptsContract": "Ready to sign a contract through D-Doc",
-      "acceptsEscrow": "I accept escrow payments"
+      "acceptsEscrow": "I accept escrow payments",
+      "sampleLetterRequired": "Require a commitment letter before shipping a sample",
+      "sampleLetterTerms": "Terms if the sample does not fit",
+      "sampleLetterHint": "The buyer e-signs this and reads it before sending the request. The sample price is credited to the later contract automatically.",
+      "sampleLetterPlaceholder": "For example: if testing shows the material does not fit, the buyer returns the unused remainder at their own cost within 10 working days.",
+      "sampleLetterRequiredError": "Write the terms — a letter without them commits to nothing."
     },
     "extra": {
       "title": "Additional information",
@@ -1642,6 +1648,15 @@
       "awaitingSignature": "Awaiting signature from {{company}}",
       "active": "Signed by both parties",
       "awaiting": "Awaiting"
+    },
+    "rail": "How it is signed",
+    "rails": {
+      "eimzo": "E-IMZO on the platform",
+      "didox": "Through Didox (EDI, visible in my.soliq.uz)"
+    },
+    "railHint": {
+      "eimzo": "Both sides sign a document we hold.",
+      "didox": "The document is created at the EDI operator and reaches my.soliq.uz. Both sides need a Didox account."
     }
   },
   "deals": {
@@ -1935,13 +1950,16 @@
       "declined": "Declined",
       "sent": "Sent",
       "received": "Received",
-      "rejected_by_buyer": "Not suitable"
+      "rejected_by_buyer": "Not suitable",
+      "pending_letter": "Awaiting letter signature"
     },
     "errors": {
       "alreadyRequested": "You already have a live request against this offer.",
       "notAvailable": "The seller does not offer samples for this listing.",
       "ownOffer": "This is your own company's offer — no sample needed."
-    }
+    },
+    "letterOwed": "The request exists but has not reached the seller: e-sign the commitment letter first.",
+    "goSign": "Go and sign"
   },
   "onboarding": {
     "title": "Register on",
@@ -2622,5 +2640,118 @@
   },
   "productCategory": {
     "polymer": "Polymers"
+  },
+  "ikpu": {
+    "label": "ИКПУ (product code)",
+    "hint": "Required for documents that reach my.soliq.uz. Searches codes you have already declared to Didox; take a new one from tasnif.soliq.uz.",
+    "placeholder": "Product name, e.g. “polyethylene”",
+    "search": "Search",
+    "package": "Packaging",
+    "chosenPackage": "Packaging: {{name}}",
+    "empty": "Nothing found. Try a different name.",
+    "errors": {
+      "session": "A Didox session is needed. Sign in with your key — it is one click.",
+      "unavailable": "Didox's ИКПУ directory is unavailable right now. Try later — the code can be added afterwards.",
+      "failed": "The search could not be run.",
+      "badCode": "An ИКПУ code must be 17 digits."
+    },
+    "emptyAdd": "Nothing found among your codes. The search only covers codes you have already declared to Didox — take a new one from tasnif.soliq.uz and add it here.",
+    "add": "Add code {{code}}",
+    "codeHint": "An ИКПУ code is 17 digits.",
+    "origin": "Origin of the goods",
+    "originHint": "For the invoice: how you came by these goods. Didox cannot know it — the same code is own production for a factory and resale for a trader.",
+    "originPlaceholder": "Choose an origin",
+    "originRequired": "The offer cannot be published without an origin.",
+    "origins": {
+      "1": "Own production",
+      "2": "Resale (bought from a supplier)",
+      "3": "Services",
+      "4": "Not in circulation"
+    }
+  },
+  "didox": {
+    "title": "Electronic documents (Didox)",
+    "connect": "Connect Didox",
+    "connecting": "Connecting…",
+    "signing": "Signing…",
+    "signAndSend": "Sign and send via Didox",
+    "sessionExpired": "The Didox session has expired — it renews itself on your next signature.",
+    "states": {
+      "not_registered": "Not connected",
+      "offer_unsigned": "Offer unsigned",
+      "ready": "Ready",
+      "disabled": ""
+    },
+    "hints": {
+      "not_registered": "To sign contracts through Didox this company has to be connected once, with its own key.",
+      "offer_unsigned": "The account exists, but Didox's public offer has not been signed yet. Until it is, sending documents will be refused.",
+      "ready": "This company can send and sign documents through Didox.",
+      "disabled": ""
+    },
+    "documentStatus": {
+      "0": "Draft — ready to sign",
+      "1": "Awaiting the counterparty",
+      "2": "Your turn to sign",
+      "3": "Signed by both parties",
+      "4": "The counterparty refused",
+      "50": "Annulled by the tax committee"
+    },
+    "errors": {
+      "module_missing": "E-IMZO not found. Start the E-IMZO module and retry.",
+      "no_cert": "No signing key found.",
+      "cert_mismatch": "The certificate's ИНН does not match this company.",
+      "disabled": "Didox is not enabled in this deployment.",
+      "failed": "Could not connect to Didox."
+    },
+    "signErrors": {
+      "module_missing": "E-IMZO not found. Start the module and retry.",
+      "no_cert": "No signing key found.",
+      "expired": "The signing data has expired. Press Sign again.",
+      "offer_required": "Didox's public offer has to be signed first.",
+      "unavailable": "Didox is unavailable right now. Try later.",
+      "failed": "Could not sign the document.",
+      "rejected": "The EDI operator refused the document: {{message}}",
+      "cancelled": "Signing was cancelled — the E-IMZO password window was closed. Press again and enter your key password."
+    },
+    "signOffer": "Sign Didox's public offer",
+    "signingOffer": "Signing…"
+  },
+  "sampleLetter": {
+    "title": "Commitment letter",
+    "buyerPending": "The seller only sees this request once you have e-signed the letter.",
+    "sellerPending": "The buyer has not signed the letter yet — the request does not count as sent.",
+    "signedAt": "No. {{number}}, signed {{at}}",
+    "open": "Open the letter (PDF)",
+    "sign": "Sign with E-IMZO",
+    "notSentYet": "The request has not reached the seller yet.",
+    "loadFailed": "Could not load the letter. Refresh the page."
+  },
+  "didoxDocument": {
+    "title": "Document at Didox",
+    "sellerHint": "This contract is signed at the EDI operator — create the document and both sides can then e-sign it.",
+    "buyerHint": "The seller has not created the document at the operator yet. Signing opens after that.",
+    "create": "Create the document at Didox",
+    "creating": "Creating…",
+    "blockedTitle": "The document cannot be created yet",
+    "confirmIdentity": "Confirm identity with E-IMZO",
+    "blockers": {
+      "ikpu_missing": "The offer carries no ИКПУ — without a product code the document is refused.",
+      "signer_identity_missing": "One side has not confirmed identity by E-IMZO: the signer's PINFL and full name are mandatory.",
+      "not_ready": "The contract has not been sent to both sides for signing yet.",
+      "wrong_rail": "This contract is signed with our own E-IMZO, not through Didox.",
+      "party_mismatch": "The seller could not be determined from the contract.",
+      "counterparty_unknown": "The counterparty's tax id is not in the EDI operator's registry — it will not accept a document addressed to them.",
+      "counterparty_ikpu_missing": "The counterparty has not declared this product code in their own Didox account, so the operator will refuse it. We cannot add codes to someone else's list — ask them to add it."
+    },
+    "errors": {
+      "didox_session_required": "A Didox session is needed — e-sign the login.",
+      "didox_offer_required": "The company has not signed Didox's public offer.",
+      "didox_unavailable": "Didox is unavailable right now. Try again later.",
+      "ikpu_missing": "The offer carries no ИКПУ.",
+      "not_ready": "The contract is not ready to send.",
+      "not_seller": "The seller creates the document.",
+      "wrong_rail": "The contract is not on the Didox rail.",
+      "empty_body": "The contract has neither text nor lines."
+    }
   }
 }

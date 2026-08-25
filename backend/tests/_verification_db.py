@@ -38,6 +38,9 @@ _TABLES = [
     # partners — they go first (P6).
     "lab_orders",
     "sample_requests",
+    # Didox documents point at deals and companies (P7.a) — before both.
+    "didox_documents",
+    "didox_companies",
     # Payments before deals — escrow_payments.deal_id references them.
     "escrow_payments",
     # Deals before contracts/requests/offers — deals.contract_id references them.

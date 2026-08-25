@@ -1,7 +1,13 @@
 import { CapiwsBridge } from "./capiws";
 import type { EimzoBridge } from "./types";
 
-export type { EimzoBridge, EimzoCertificate } from "./types";
+export type {
+  EimzoBridge,
+  EimzoCertificate,
+  EimzoKeySession,
+  EimzoSignature,
+} from "./types";
+export { CapiwsError } from "./capiws";
 
 /**
  * Resolve the active E-IMZO bridge: an injected stub (`window.__EIMZO_BRIDGE__`,

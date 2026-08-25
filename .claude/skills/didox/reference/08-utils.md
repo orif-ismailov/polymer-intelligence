@@ -1,7 +1,7 @@
 # 08. Утилиты
 
 > Verbatim mirror of <https://api-docs.didox.uz/ru/integrators-utils>
-> Source last updated: 2026-08-06T11:52:01.090Z
+> Source last updated: 2026-08-18T12:00:17.323Z
 
 ---
 
@@ -1097,4 +1097,39 @@ Partner-Authorization | partner-token
         "Type": 1
     }
 ]
+```  
+  
+# 27. Получение списка расчетных счетов по ИНН
+
+### Тип: _GET_
+
+### Endpoint: `v1/utils/bank-accounts/{tin}`
+
+### Краткое описание: Получение списка расчетных счетов по ИНН
+
+* Headers
+* Response _200_
+
+key | value  
+---|---  
+user-key | token  
+Partner-Authorization | partner-token
+```json
+{
+    "data": [
+        {
+            "bankId": "00974",
+            "account": "20208000550408125001",
+            "attribute": 1,
+            "condition": 0
+        },
+        {
+            "bankId": "00401",
+            "account": "22620000200301235004",
+            "attribute": 2,
+            "condition": 0
+        }
+    ],
+    "error": null
+}
 ```

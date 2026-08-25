@@ -155,6 +155,15 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "reconcile_escrow_payments",
         "schedule": crontab(minute="*/30"),
     },
+    # ── Didox document statuses: every 10 minutes (P7.a W10) ─────────────────
+    # There are NO partner webhooks, so polling is the only way we learn that a
+    # counterparty signed or that the tax committee annulled a document. The
+    # cursor is day-granular and deliberately overlapped, which is safe because
+    # `apply_status` is forward-only. A no-op while `didox_mode` is `stub`.
+    "poll_didox_documents": {
+        "task": "poll_didox_documents",
+        "schedule": crontab(minute="*/10"),
+    },
     # ── Contract PDF integrity: daily at 03:00 UTC (R3 TB4.1) ─────────────────
     # Recomputes stored-PDF sha256 vs document_sha256 for active contracts and
     # alerts the admin channel on any mismatch (tamper detection).

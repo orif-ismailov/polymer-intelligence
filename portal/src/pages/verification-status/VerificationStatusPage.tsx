@@ -34,9 +34,18 @@ export function VerificationStatusPage() {
   if (!company) return null;
 
   const displayName = company.legal_name ?? company.short_name ?? company.tax_id;
-  const canSignEimzo =
-    !company.identity_locked &&
-    (company.status === "draft" || company.status === "pending_verification");
+  /**
+   * Offered until the identity IS confirmed — not only while the company is
+   * still being verified.
+   *
+   * The status gate came from the original flow, where signing happened during
+   * registration. It left every company verified before the Didox rail existed
+   * permanently unable to confirm a signer — and `Owner.FizTin`/`Fio` are
+   * mandatory on a «Договор НК», so those companies could never send one. The
+   * backend never had the restriction: it gates on the certificate's INN
+   * matching the company, which is the rule that actually protects anything.
+   */
+  const canSignEimzo = !company.identity_locked;
 
   return (
     <div className="space-y-5">

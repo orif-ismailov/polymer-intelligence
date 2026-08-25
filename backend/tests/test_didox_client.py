@@ -369,11 +369,20 @@ def test_banks_returns_the_mfo_classifier() -> None:
 def test_the_partner_token_is_a_conditionally_required_secret() -> None:
     """Empty default, like ESCROW_WEBHOOK_SECRET: the rail is a RUNTIME setting a
     startup validator cannot see, so a mandatory value would burden every
-    deployment that never turns Didox on."""
-    from app.core.config import settings
+    deployment that never turns Didox on.
 
-    assert settings.DIDOX_PARTNER_TOKEN == ""
-    assert settings.DIDOX_BASE_URL == "https://testapi3.didox.uz", "test contour by default"
+    Asserted against the FIELD DEFAULT, not `settings.DIDOX_PARTNER_TOKEN`. The
+    resolved value comes from the environment, so reading it here only tested
+    "this developer has no `backend/.env`" — which held until someone ran the API
+    locally against the test contour, and then failed for a reason unrelated to
+    what the test is about.
+    """
+    from app.core.config import Settings
+
+    assert Settings.model_fields["DIDOX_PARTNER_TOKEN"].default == ""
+    assert (
+        Settings.model_fields["DIDOX_BASE_URL"].default == "https://testapi3.didox.uz"
+    ), "test contour by default"
 
 
 def test_the_mode_is_a_runtime_setting_shipping_stub() -> None:

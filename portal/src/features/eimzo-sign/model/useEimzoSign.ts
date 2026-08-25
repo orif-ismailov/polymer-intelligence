@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 
 import { ApiError } from "@/shared/api";
-import { getEimzoBridge } from "@/shared/lib/eimzo";
-import type { EimzoCertificate } from "@/shared/lib/eimzo";
+import { CapiwsError, getEimzoBridge } from "@/shared/lib/eimzo";
+import type { EimzoCertificate, EimzoSignature } from "@/shared/lib/eimzo";
 
 /**
  * State machine for one E-IMZO signing attempt (TA2.1):
@@ -27,6 +27,7 @@ export type EimzoState =
 /** Stable error codes → i18n keys under `eimzo.errors.*`. */
 export type EimzoErrorCode =
   | "unavailable"
+  | "module_not_authorized"
   | "mismatch"
   | "expired"
   | "already_registered"
@@ -62,8 +63,15 @@ export interface EimzoSigner<T> {
    * already know their subject (verification status, contracts) ignore it.
    */
   getChallenge: (cert: EimzoCertificate) => Promise<string>;
-  /** Submit the PKCS#7 and return the typed outcome. */
-  verify: (pkcs7: string) => Promise<EimzoVerifyOutcome<T>>;
+  /**
+   * Submit the signature and return the typed outcome.
+   *
+   * Receives BOTH halves rather than the PKCS#7 alone. Our own sidecar only needs
+   * `pkcs7_64` and those signers destructure it, but Didox's timestamp endpoint
+   * requires `signature_hex` too — and a bridge that had already thrown it away
+   * left no way to add that later without changing every signer anyway.
+   */
+  verify: (signature: EimzoSignature) => Promise<EimzoVerifyOutcome<T>>;
 }
 
 interface UseEimzoSignArgs<T> {
@@ -83,6 +91,11 @@ interface UseEimzoSign<T> {
 
 function mapError(err: unknown): EimzoErrorCode {
   if (err instanceof CertificateHasNoTin) return "cert_no_tin";
+  // The module is running and refused this Origin — an operator problem (the domain
+  // needs a key issued by E-IMZO), not something the user can retry their way out of.
+  if (err instanceof CapiwsError) {
+    return err.isApiKeyRejection ? "module_not_authorized" : "sign_failed";
+  }
   if (err instanceof ApiError) {
     if (err.status === 422) return "mismatch";
     if (err.status === 400) return "expired";
@@ -119,9 +132,9 @@ export function useEimzoSign<T>({ signer, onConfirmed }: UseEimzoSignArgs<T>): U
       try {
         setState("signing");
         const challenge = await signer.getChallenge(cert);
-        const pkcs7 = await bridge.sign(cert.id, challenge);
+        const signature = await bridge.sign(cert.id, challenge);
         setState("verifying");
-        const out = await signer.verify(pkcs7);
+        const out = await signer.verify(signature);
         if (!out.ok) {
           setError(mapResultReason(out.reason));
           setState("error");

@@ -47,6 +47,7 @@ import app.domains.contracts.eimzo_models  # noqa: F401
 import app.domains.contracts.models  # noqa: F401
 import app.domains.deals.models  # noqa: F401
 import app.domains.deals.payment_models  # noqa: F401
+import app.domains.edi.models  # noqa: F401
 import app.domains.lab_orders.models  # noqa: F401
 import app.domains.laboratory.models  # noqa: F401
 import app.domains.logistics.models  # noqa: F401

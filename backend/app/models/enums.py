@@ -600,8 +600,15 @@ class SampleRequestStatus(enum.StrEnum):
     accepting, and the buyer may `rejected_by_buyer` what arrived. Unlike the lab
     machine, both sides drive this one — which party may make which move is
     `sample_service._ACTOR_RULES`, not a comment.
+
+    `pending_letter` is the state BEFORE `requested`, entered only when the offer
+    sets `sample_letter_required`: the buyer has asked, but has not yet e-signed
+    the commitment letter, so the seller has not been told. It counts as live for
+    `uq_sample_request_active` — an unsigned draft still holds the (offer, buyer)
+    slot, or a buyer could open unlimited ones.
     """
 
+    pending_letter = "pending_letter"
     requested = "requested"
     accepted = "accepted"
     declined = "declined"

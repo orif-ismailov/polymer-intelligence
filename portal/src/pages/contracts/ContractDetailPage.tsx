@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 import { useAuthStore } from "@/entities/account";
+import { useActiveCompany } from "@/entities/company";
 import { ContractStatusBadge, contractApi, useContract } from "@/entities/contract";
 import type { ContractDetail } from "@/entities/contract";
+import { DIDOX_STATUS } from "@/entities/edi";
+import { DidoxDocumentCard } from "@/features/didox-contract-document";
+import { useDidoxSign } from "@/features/didox-sign";
 import { EimzoSignButton } from "@/features/eimzo-sign";
 import type { EimzoSigner } from "@/features/eimzo-sign";
 import { coerceLang } from "@/shared/i18n";
@@ -32,12 +37,19 @@ export function ContractDetailPage() {
   const id = Number(params.contractId);
   const lang = coerceLang(useAuthStore((s) => s.account?.language));
   const query = useContract(Number.isInteger(id) ? id : null);
+  const queryClient = useQueryClient();
   const [docUrl, setDocUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [reason, setReason] = useState("");
 
   const contract = query.data;
+  // The Didox session belongs to the company the user is ACTING AS, and the
+  // certificate is matched by its ИНН — so both come from the active company,
+  // not from the contract (which carries names, not tax ids).
+  // Hooks cannot sit behind the loading/error returns below.
+  const active = useActiveCompany().activeCompany;
+  const didoxSign = useDidoxSign(active?.id ?? 0, active?.tax_id ?? "");
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +81,11 @@ export function ContractDetailPage() {
     try {
       await fn();
       await query.refetch();
+      // The Didox prefill is derived from the contract's STATUS, so every action
+      // here can change it — accepting the terms is what clears the `not_ready`
+      // blocker. Without this the seller keeps reading «договор ещё не отправлен
+      // на подпись» from cache and concludes the rail is stuck, until a reload.
+      await queryClient.invalidateQueries({ queryKey: ["didox", "contract-prefill"] });
     } finally {
       setBusy(false);
       setDeclineOpen(false);
@@ -93,8 +110,20 @@ export function ContractDetailPage() {
 
   const signer: EimzoSigner<ContractDetail> = {
     getChallenge: () => contractApi.signChallenge(id).then((r) => r.challenge),
-    verify: (pkcs7) => contractApi.sign(id, pkcs7).then((c) => ({ ok: true, reason: null, data: c })),
+    verify: ({ pkcs7_64 }) =>
+      contractApi.sign(id, pkcs7_64).then((c) => ({ ok: true, reason: null, data: c })),
   };
+
+  const isDidoxRail = contract.signing_provider === "didox";
+  /**
+   * Whose turn it is, per DIDOX's status — not per our `signatures`, which stays
+   * empty on this rail because we never hold the counterparty's PKCS#7.
+   * `0` draft and `2` awaiting-us are ours to sign; `1` is theirs.
+   */
+  const didoxSignable =
+    contract.didox_document_id != null &&
+    (contract.didox_status === DIDOX_STATUS.draft ||
+      contract.didox_status === DIDOX_STATUS.awaitingUs);
 
   const isInitiator = contract.role === "initiator";
   const isCounterparty = contract.role === "counterparty";
@@ -166,6 +195,17 @@ export function ContractDetailPage() {
         badge={<ContractStatusBadge status={contract.status} />}
       />
 
+      {/* On the Didox rail the document has to EXIST before anyone can sign it,
+          and creating it is the seller's move. The card removes itself once the
+          document is there and the signing controls below take over. */}
+      {isDidoxRail && contract.didox_document_id == null && active ? (
+        <DidoxDocumentCard
+          companyId={active.id}
+          contractId={id}
+          onCreated={() => void query.refetch()}
+        />
+      ) : null}
+
       {/* Action bar */}
       <Card>
         <CardBody className="flex flex-wrap gap-3" data-testid="contract-actions">
@@ -184,7 +224,50 @@ export function ContractDetailPage() {
               </Button>
             </>
           ) : null}
-          {contract.status === "pending_signatures" && !iSigned ? (
+          {/* The two rails sign different things. On `eimzo` we verify the PKCS#7
+              ourselves against a challenge; on `didox` the document lives at the
+              operator, so it is a two-round-trip exchange and `iSigned` cannot be
+              derived from `signatures` — Didox's own status is the truth. */}
+          {contract.status === "pending_signatures" && isDidoxRail ? (
+            <>
+              {didoxSignable ? (
+                <Button
+                  disabled={didoxSign.signing}
+                  onClick={() =>
+                    void didoxSign
+                      .sign(contract.didox_document_id!)
+                      .then(() => query.refetch())
+                  }
+                  data-testid="contract-sign-didox"
+                >
+                  {didoxSign.signing
+                    ? t("didox.signing")
+                    : /* NOT `contracts.actions.sign` — that reads «Подписать через
+                         E-IMZO», which is the OTHER rail. The key is the same here,
+                         but the document goes to the operator and to my.soliq.uz,
+                         and a signatory has to be able to tell which one they are
+                         signing. */
+                      t("didox.signAndSend")}
+                </Button>
+              ) : (
+                <span className="text-sm text-text-muted" data-testid="didox-awaiting">
+                  {t(`didox.documentStatus.${contract.didox_status ?? 0}`, {
+                    defaultValue: t("contracts.awaitingOther"),
+                  })}
+                </span>
+              )}
+              {didoxSign.error && (
+                <span className="text-sm text-danger" data-testid="didox-sign-error">
+                  {/* A provider refusal is rendered WITH their sentence — it names
+                      the field and the company, which no generic string can. */}
+                  {t(`didox.signErrors.${didoxSign.error}`, {
+                    message: didoxSign.errorMessage ?? "",
+                  })}
+                </span>
+              )}
+            </>
+          ) : null}
+          {contract.status === "pending_signatures" && !isDidoxRail && !iSigned ? (
             <EimzoSignButton
               signer={signer}
               variant="primary"
@@ -192,7 +275,7 @@ export function ContractDetailPage() {
               onConfirmed={() => void query.refetch()}
             />
           ) : null}
-          {contract.status === "pending_signatures" && iSigned ? (
+          {contract.status === "pending_signatures" && !isDidoxRail && iSigned ? (
             <span className="text-sm text-text-muted">{t("contracts.awaitingOther")}</span>
           ) : null}
           {(contract.status === "draft" ||

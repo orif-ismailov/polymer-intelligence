@@ -275,6 +275,40 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
   the client-facing surfaces (the webapp also ships English). Keep locale files in sync — see each
   component's `CLAUDE.md` for the exact set it ships.
 
+## Verify every change in a real browser
+
+**A green test suite is not evidence that a change works. Drive it in a real browser — through
+the `chrome-devtools` MCP server — before saying it does.** Not curl, not a Node/Python script,
+not a passing `pytest`/`playwright` run. This applies to every change that a person can reach:
+a screen, a form, an API a screen calls.
+
+It is a rule because it keeps paying. Every bug in this list was sitting behind a fully green
+suite, and each was visible within a minute of clicking:
+
+- `window.CAPIWS` was assigned by **nothing**, so every user got `module_missing` — R3 contract
+  signing had been broken for everyone.
+- `signBase64` double-encoded UTF-8: «Поставка» was signed as «ÐÐ¾ÑÑÐ°Ð²ÐºÐ°», so the signature
+  covered bytes no verifier could reproduce. Types, tests and curl all passed — ASCII survives it.
+- `GET /v1/newoffer/base64` returns raw base64, not JSON, so a working 200 surfaced as
+  `didox_unavailable` (the mocked test used a JSON fixture).
+- Publishing an offer with an ИКПУ was **impossible** (422 on a field Didox never returns), and
+  editing an offer silently ERASED the ИКПУ, because the read schema omitted what the write
+  schema took.
+- The E-IMZO handshake cached its own REJECTION, so the app insisted «модуль не найден» for the
+  life of the page while the module answered raw calls perfectly.
+- Dead Tailwind classes (`text-muted`, `border-line` — neither exists) fail **silently**.
+
+How, in practice: `navigate_page` → `take_snapshot` for element uids → `click`/`fill`/`fill_form`
+on the real controls; `list_network_requests` + `get_network_request` for what actually went over
+the wire; `list_console_messages` for what a screenshot hides. Then confirm the state landed in
+Postgres/Redis/S3 — an HTTP 200 is not proof that anything persisted. Finally, say plainly what
+was verified in the browser and what is still only unit-tested; never let a script stand in for
+the browser check.
+
+Local stack: `docker start pi-pg pi-redis pi-minio`, API on `:8000`, `npm run dev` on `:5173`.
+Note `portal/e2e/*.spec.ts` still runs under `npx playwright test` — that is the test runner, a
+different thing from this check.
+
 ## CI
 
 `.github/workflows/ci.yml` runs eight jobs: **backend** (ruff · mypy · pytest against a Postgres

@@ -1,7 +1,7 @@
 # 06. Документы
 
 > Verbatim mirror of <https://api-docs.didox.uz/ru/integrators-documents>
-> Source last updated: 2026-07-31T12:10:16.648Z
+> Source last updated: 2026-08-19T06:26:59.239Z
 
 ---
 
@@ -456,8 +456,15 @@ POST   `/v1/documents/{docType}/create/{locale}`
 `075` | [Протокол собрания учредителей](https://api-docs.didox.uz/ru/integrators-property-documents#h-11-%D0%BF%D1%80%D0%BE%D1%82%D0%BE%D0%BA%D0%BE%D0%BB-%D1%81%D0%BE%D0%B1%D1%80%D0%B0%D0%BD%D0%B8%D1%8F-%D1%83%D1%87%D1%80%D0%B5%D0%B4%D0%B8%D1%82%D0%B5%D0%BB%D0%B5%D0%B9)  
 `031` | [Письмо НК](https://api-docs.didox.uz/ru/integrators-property-documents#h-12-%D0%BF%D0%B8%D1%81%D1%8C%D0%BC%D0%BE-%D0%BD%D0%BA)  
   
+* cURL
 * Ответ `200`
 * Ошибки
+```bash
+curl https://api-partners.didox.uz/v1/documents/{docType}/create/{locale} \
+  -H "Partner-Authorization: <PARTNER_TOKEN>" \
+  -H "user-key: <USER_TOKEN>" \ 
+  -d '{JSON_DOC}'
+```
 
 Возвращается ID созданного черновика, дата создания и итоговый JSON документа.  
 Например JSON ЭСФ:
@@ -550,10 +557,17 @@ POST   `/v1/documents/{id}/update/{docType}/{locale}`
 `document` | `string` (base64) / файл | ✅ | Файл документа, только формат **PDF**  
 `data` | `object` | ✅ | JSON документа  
   
+* cURL
 * Запрос
 * Запрос (произвольный документ)
 * Ответ `200`
 * Ошибки
+```bash
+curl https://api-partners.didox.uz/v1/documents/{id}/update/{docType}/{locale} \
+  -H "Partner-Authorization: <PARTNER_TOKEN>" \
+  -H "user-key: <USER_TOKEN>" \ 
+  -d '{JSON_DOC}'
+```
 ```json
 {
     "ActDoc": {

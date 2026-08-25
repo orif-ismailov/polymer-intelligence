@@ -125,7 +125,7 @@ in this repo (same constraint as `webapp/`/`dashboard/`).
 | `app/` | providers (QueryClient, i18n, router, theme), route tree, guards (`RequireAuth`, `RedirectIfAuthed`, `RequireCompany`) — all three cabinet-side; the storefront has none. |
 | `pages/` | login, otp, **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-create, settings + **R2** market (favorites + RFQ inbox only — the grid and the offer sheet are public now), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
 | `widgets/` | `app-shell` (topbar + company switcher), `case-status-panel` (per-check chips + needs_info deep-links). |
-| `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions). |
+| `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions), sample-letter (the письмо-обязательство card — both parties see it, only the buyer signs) + **P7.a** didox-session (`DidoxOnboardingCard` + `withSession` retry), didox-sign (the two-round-trip signer), didox-contract-document (the seller's «создать документ у оператора» step), ikpu-picker (bind-then-read-back; search covers the company's own basket only). |
 | `entities/` | account, company, verification, offer + **R2** market, inquiry, request, news, notification + **P5** compliance (substance picker data, verdicts, licences) + **P6** lab (orders + the two badges), sample (requests + status badge) — types + api hooks + zustand models. |
 | `shared/` | `api` (fetch client + auth bridge), `ui` (Tailwind primitives), `lib` (phone mask, formatters, `useTierBase`), `config` (incl. `CABINET_BASE`/`isCabinetPath`), `i18n`. |
 
@@ -209,6 +209,41 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   - The two `e2e/p0-*.spec.ts` specs gate the system (dark default, token contrast in both
     themes, rendered-label AA, primitive semantics). Keep them green; extend them when you
     add tokens or variants.
+
+### Verify in a real browser, every change
+
+The repo-root `CLAUDE.md` states the rule; it matters most here. Drive the change through the
+`chrome-devtools` MCP server before calling it done — `lint`/`typecheck`/`build` and a green
+`playwright test` are necessary and not sufficient. Three of this package's worst bugs were
+invisible to all of them: a bridge assigned by nothing, a signature over double-encoded UTF-8,
+and Tailwind classes that do not exist and therefore fail silently.
+
+Watch for the ones that only a live page shows: a module-level `let` survives HMR (reload before
+concluding a fix failed), `btoa` throws on non-latin1 (a stub cert name in Cyrillic kills the
+whole flow with a generic error), and a missing i18n key is a RUNTIME error, not a fallback.
+
+### E-IMZO and the Didox rail (P7.a)
+
+Three things about signing in this app that are easy to get wrong:
+
+- **`window.CAPIWS` is ours.** `shared/lib/eimzo/capiwsSocket.ts` is a ~60-line shim over
+  `wss://127.0.0.1:64443/service/cryptapi`, installed lazily by `getEimzoBridge()` and never from
+  `index.html` (SSR must not touch `window`). Before it existed the bridge was assigned by nothing
+  and every user got `module_missing` — including R3 contract signing.
+- **`sign()` vs `signBase64()`.** Anything the server hands over ALREADY base64 (Didox payloads)
+  must go through `signBase64`: `atob` yields a latin-1 string of the UTF-8 bytes, which
+  `encodeURIComponent` then encodes again, so «Поставка» is signed as «ÐÐ¾ÑÑÐ°Ð²ÐºÐ°» and the
+  signature covers bytes no verifier will reproduce. Silent, and invisible to ASCII-only tests.
+- **Two different verifiers.** A Didox session is verified by DIDOX (needs a real key), while
+  company-identity confirmation is verified by OUR sidecar (`EIMZO_STUB=true` locally, where a real
+  PKCS#7 can never verify). Tests inject `window.__EIMZO_BRIDGE__`; see `e2e/r3-eimzo.spec.ts` for
+  the stub blob shape, and keep every field in it ASCII — `btoa` throws otherwise.
+
+The contract rail is chosen once, on the create screen (`contract-rail`), and frozen. On the Didox
+rail the document has to EXIST at the operator before anyone can sign, and creating it is the
+seller's move — `DidoxDocumentCard` shows every blocker at once (`ikpu_missing`,
+`signer_identity_missing:{id}`, `not_ready`) rather than one per round trip, because each retry
+costs the user an E-IMZO password.
 
 ## Deploy
 

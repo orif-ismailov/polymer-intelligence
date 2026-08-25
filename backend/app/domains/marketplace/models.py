@@ -100,6 +100,14 @@ class SellerOffer(Base):
         CheckConstraint(
             "seller_id IS NOT NULL OR company_id IS NOT NULL", name="ck_offer_origin"
         ),
+        # A half-filled ИКПУ is worse than none: it builds a Didox document that
+        # is rejected at SEND time — after the seller has already loaded a key and
+        # typed its password. Fail in the offer form instead.
+        CheckConstraint(
+            "ikpu_code IS NULL "
+            "OR (ikpu_package_code IS NOT NULL AND ikpu_origin IS NOT NULL)",
+            name="ck_offer_ikpu_complete",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -212,6 +220,39 @@ class SellerOffer(Base):
     )
     sample_price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
     sample_dispatch_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Require the buyer to e-sign a commitment letter before the request reaches
+    #: the seller (P7.a W8). Per-offer because the paperwork is proportional to
+    #: what is being given away: 200 g of granulate warrants none, 25 kg does.
+    sample_letter_required: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    #: The seller's own "if the material does not suit the buyer" clause, rendered
+    #: into the letter verbatim and snapshotted onto the request at signing. The
+    #: platform does not write this consequence — the parties do.
+    sample_letter_terms: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # ── ИКПУ / tax classification (P7.a W9) ───────────────────────────────────
+    # Chosen ONCE by the seller, here, from a Didox-backed picker, and reused by
+    # every договор and ЭСФ the offer backs — rather than re-answered per document.
+    # Columns rather than a mirror table: it is exactly one code per offer, and a
+    # local copy of Didox's tasnif directory would go stale silently.
+    #
+    # NULL is a legitimate, permanent state. Back-filling would mean inventing a
+    # tax classification for someone else's goods; an offer without a code simply
+    # cannot back a Didox document, and says so at contract time.
+    ikpu_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ikpu_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ikpu_package_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ikpu_package_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: The ЭСФ `Origin` field: 1 собственное производство · 2 купля-продажа ·
+    #: 3 оказание услуг · 4 не участвую. Didox does NOT supply it — every
+    #: `productClassCodes` row comes back with `origin: null`, and it could not be
+    #: otherwise: the same code is own production for a factory and resale for a
+    #: trader. It is the SELLER's answer, asked once in the offer form.
+    ikpu_origin: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    ikpu_synced_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     #: INDEPENDENT confirmation — set only by `lab_service.complete_with_result`
     #: when a platform lab order finishes. A seller uploading their own passport
     #: gets the "lab passport" badge; only this flag says we had it analysed.

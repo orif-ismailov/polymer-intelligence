@@ -52,6 +52,18 @@ export interface OfferPayload {
   samples_available?: boolean;
   sample_price?: string | number | null;
   sample_dispatch_days?: number | null;
+  /** The commitment letter this seller demands before shipping a sample, and the
+   *  consequence clause they wrote for it (P7.a W8). Demanding one without terms
+   *  is refused by the API. */
+  sample_letter_required?: boolean;
+  sample_letter_terms?: string | null;
+  /** Tax classification of the goods (P7.a W9) — all five fields or none. */
+  ikpu_code?: string | null;
+  ikpu_name?: string | null;
+  ikpu_package_code?: string | null;
+  ikpu_package_name?: string | null;
+  /** The ЭСФ `Origin`: 1 own production · 2 resale · 3 services · 4 not involved. */
+  ikpu_origin?: number | null;
 }
 
 export interface CompanyOffer extends OfferPayload {

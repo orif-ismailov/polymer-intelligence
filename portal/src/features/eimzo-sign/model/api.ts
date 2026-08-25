@@ -24,9 +24,11 @@ export const eimzoApi = {
 export function companyIdentitySigner(companyId: number): EimzoSigner<EimzoVerifyOut> {
   return {
     getChallenge: () => eimzoApi.challenge(companyId).then((r) => r.challenge),
-    verify: (pkcs7) =>
+    // Our own sidecar verifies the PKCS#7 and nothing else; `signature_hex` is
+    // carried for Didox's benefit and simply unused here.
+    verify: ({ pkcs7_64 }) =>
       eimzoApi
-        .verify(companyId, pkcs7)
+        .verify(companyId, pkcs7_64)
         .then((out) => ({ ok: out.ok, reason: out.reason, data: out })),
   };
 }
@@ -67,9 +69,9 @@ export function companyRegistrationSigner(
       const { challenge } = await eimzoApi.challenge(companyId);
       return challenge;
     },
-    verify: async (pkcs7) => {
+    verify: async ({ pkcs7_64 }) => {
       if (companyId == null) throw new Error("eimzo_no_company");
-      const out = await eimzoApi.verify(companyId, pkcs7);
+      const out = await eimzoApi.verify(companyId, pkcs7_64);
       return { ok: out.ok, reason: out.reason, data: { ...out, company_id: companyId } };
     },
   };

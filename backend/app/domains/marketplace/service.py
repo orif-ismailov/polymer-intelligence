@@ -12,6 +12,7 @@ NEVER commit — the router owns the transaction.
 
 from __future__ import annotations
 
+import datetime
 import logging
 
 from sqlalchemy import func, or_, update
@@ -727,6 +728,16 @@ def recheck_compliance_after_files(db: Session, offer: SellerOffer) -> bool:
 # ── Company-origin offers (R1 W5 — portal) ────────────────────────────────────
 
 
+def _ikpu_synced_at(*, ikpu_code: str | None) -> datetime.datetime | None:
+    """When the code on this offer was last read off Didox.
+
+    Stamped on every save that carries a code — a save is exactly the moment the
+    seller picked it out of Didox's answer. Cleared with the code: a sync time
+    with nothing synced claims evidence we do not have.
+    """
+    return utcnow() if ikpu_code is not None else None
+
+
 def create_company_offer(
     db: Session, company: Company, account: UserAccount, data: CompanyOfferIn
 ) -> SellerOffer:
@@ -776,6 +787,14 @@ def create_company_offer(
         hs_code=data.hs_code,
         declared_concentration_pct=data.declared_concentration_pct,
         samples_available=data.samples_available,
+        sample_letter_required=data.sample_letter_required,
+        ikpu_code=data.ikpu_code,
+        ikpu_name=data.ikpu_name,
+        ikpu_package_code=data.ikpu_package_code,
+        ikpu_package_name=data.ikpu_package_name,
+        ikpu_origin=data.ikpu_origin,
+        ikpu_synced_at=_ikpu_synced_at(ikpu_code=data.ikpu_code),
+        sample_letter_terms=(data.sample_letter_terms or None),
         sample_price=data.sample_price,
         sample_dispatch_days=data.sample_dispatch_days,
         status=SellerOfferStatus.pending_moderation,
@@ -828,6 +847,14 @@ def update_company_offer(
     offer.hs_code = data.hs_code
     offer.declared_concentration_pct = data.declared_concentration_pct
     offer.samples_available = data.samples_available
+    offer.sample_letter_required = data.sample_letter_required
+    offer.ikpu_code = data.ikpu_code
+    offer.ikpu_name = data.ikpu_name
+    offer.ikpu_package_code = data.ikpu_package_code
+    offer.ikpu_package_name = data.ikpu_package_name
+    offer.ikpu_origin = data.ikpu_origin
+    offer.ikpu_synced_at = _ikpu_synced_at(ikpu_code=data.ikpu_code)
+    offer.sample_letter_terms = data.sample_letter_terms or None
     offer.sample_price = data.sample_price
     offer.sample_dispatch_days = data.sample_dispatch_days
 

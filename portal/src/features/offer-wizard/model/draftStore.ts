@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+import type { IkpuValue } from "@/features/ikpu-picker";
+
 import type { SubstanceBrief } from "@/entities/compliance";
 import type { CompanyOffer, OfferFile, OfferPayload } from "@/entities/offer";
 import { PRODUCT_OTHER } from "@/entities/product";
@@ -57,6 +59,25 @@ export interface OfferDraft {
   samplesAvailable: boolean;
   sampleFee: SampleFee;
   samplePrice: string;
+  /**
+   * Whether a buyer must e-sign a письмо-обязательство before this seller ships a
+   * sample, and the consequence clause THIS seller writes for it (P7.a W8).
+   *
+   * Per-offer, not per-company: a seller may give away a 200 g pouch and still
+   * demand a commitment for a 25 kg bag. The terms are snapshotted into the
+   * letter at signing, so editing them later never rewrites a signed one.
+   */
+  sampleLetterRequired: boolean;
+  sampleLetterTerms: string;
+  /**
+   * The goods' tax classification (P7.a W9).
+   *
+   * Chosen once here and reused by every «Договор НК» and ЭСФ this offer backs.
+   * `null` is a permanent, legitimate state — an offer without it simply cannot
+   * back a Didox document, and says so at contract time rather than being
+   * back-filled with a guess.
+   */
+  ikpu: IkpuValue | null;
   sampleBand: SampleBandId;
   acceptsRfq: boolean;
   acceptsContract: boolean;
@@ -127,6 +148,9 @@ export const EMPTY_DRAFT: OfferDraft = {
   samplesAvailable: false,
   sampleFee: "free",
   samplePrice: "",
+  sampleLetterRequired: false,
+  sampleLetterTerms: "",
+  ikpu: null,
   sampleBand: DEFAULT_SAMPLE_BAND,
   // Mirrors the backend defaults: answering an RFQ costs nothing, a contract and
   // escrow are commitments the seller opts into.
@@ -205,6 +229,11 @@ export function draftToPayload(draft: OfferDraft): OfferPayload {
     hs_code: trim(draft.hsCode),
     declared_concentration_pct: trim(draft.concentration),
     samples_available: draft.samplesAvailable,
+    // Only meaningful with samples on: a letter gating a sample nobody offers
+    // would be a rule with nothing to apply to.
+    sample_letter_required: draft.samplesAvailable && draft.sampleLetterRequired,
+    sample_letter_terms:
+      draft.samplesAvailable && draft.sampleLetterRequired ? trim(draft.sampleLetterTerms) : null,
     // The API rejects sample terms without samples, and a free sample is a NULL
     // price — not a zero, which would print as "0 USD" on the card.
     sample_price:
@@ -212,6 +241,13 @@ export function draftToPayload(draft: OfferDraft): OfferPayload {
     sample_dispatch_days: draft.samplesAvailable
       ? (SAMPLE_BANDS.find((b) => b.id === draft.sampleBand)?.days ?? null)
       : null,
+    // All five or none: a half-filled ИКПУ builds a document Didox rejects at
+    // SEND time, after the seller has already typed their key password.
+    ikpu_code: draft.ikpu?.code ?? null,
+    ikpu_name: draft.ikpu?.name ?? null,
+    ikpu_package_code: draft.ikpu?.packageCode ?? null,
+    ikpu_package_name: draft.ikpu?.packageName ?? null,
+    ikpu_origin: draft.ikpu?.origin ?? null,
   };
 }
 
@@ -297,6 +333,17 @@ export const useOfferDraft = create<DraftState>((set, get) => ({
         dispatchBand: bandForDays(DISPATCH_BANDS, offer.lead_time_days ?? null, DEFAULT_DISPATCH_BAND),
         hasPassport: offer.has_lab_passport ?? false,
         samplesAvailable: offer.samples_available ?? false,
+        sampleLetterRequired: offer.sample_letter_required ?? false,
+        sampleLetterTerms: offer.sample_letter_terms ?? "",
+        ikpu: offer.ikpu_code
+          ? {
+              code: offer.ikpu_code,
+              name: offer.ikpu_name ?? offer.ikpu_code,
+              packageCode: offer.ikpu_package_code ?? "",
+              packageName: offer.ikpu_package_name ?? "",
+              origin: offer.ikpu_origin ?? null,
+            }
+          : null,
         sampleFee: offer.sample_price != null ? "paid" : "free",
         samplePrice: offer.sample_price != null ? String(offer.sample_price) : "",
         sampleBand: bandForDays(SAMPLE_BANDS, offer.sample_dispatch_days ?? null, DEFAULT_SAMPLE_BAND),
