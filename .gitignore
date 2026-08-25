@@ -37,3 +37,12 @@ tsconfig.tsbuildinfo
 
 # Playwright MCP scratch output (page snapshots, console logs, screenshots)
 .playwright-mcp/
+
+# Ad-hoc Didox support artefacts — they carry the LIVE partner token.
+didox-offer-create-request.txt
+didox-offer-create.sh
+didox-newoffer-base64.txt
+didox-offer-create-body.json
+
+# Настоящие подписанные договоры контрагентов — справочный материал, не код.
+docs/deals_documents/
