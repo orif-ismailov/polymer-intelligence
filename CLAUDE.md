@@ -305,7 +305,33 @@ Postgres/Redis/S3 — an HTTP 200 is not proof that anything persisted. Finally,
 was verified in the browser and what is still only unit-tested; never let a script stand in for
 the browser check.
 
-Local stack: `docker start pi-pg pi-redis pi-minio`, API on `:8000`, `npm run dev` on `:5173`.
+**There is no diagnostic exception.** "I'll just probe the provider's API with a script" is the
+same rule broken with a better excuse — and it was broken that way on 26–27.08.2026, driving the
+whole Didox signing chain from Python. It produced a real signed document that then existed at the
+operator and NOWHERE in our product, because the script had gone around the app. A script proves
+the PROVIDER's contract and nothing about ours. If a flow cannot be driven from the UI, that gap is
+the finding: report it and ask how to unblock it — the answer took one sentence and would have
+saved two days.
+
+**Running the stack means all of it**, and a missing piece looks like a broken feature rather than
+a missing process:
+
+```bash
+docker start pi-pg pi-redis pi-minio          # 5432 / 6379 / 9000
+cd backend && uv run uvicorn app.main:app --reload            # :8000
+cd backend && uv run celery -A app.tasks.celery_app worker \
+    -Q ingest,parse,notify,default,verify                     # REQUIRED
+cd backend && uv run celery -A app.tasks.celery_app beat      # REQUIRED
+cd portal && npm run dev                                      # :5173
+cd dashboard && npm run dev                                   # :3000
+```
+
+Without the **worker**, verification checks sit at «Ожидает» forever and the case never reaches
+`pending_review`, so «Одобрить» answers "already handled by another member of staff" about a case
+nobody touched. Without **beat**, `poll_didox_documents` never runs — and that poller is the only
+way we learn a counterparty signed in their own EDI cabinet, since Didox publishes no webhooks.
+Both were missing from a stack reported as "fully up" on 27.08.2026.
+
 Note `portal/e2e/*.spec.ts` still runs under `npx playwright test` — that is the test runner, a
 different thing from this check.
 

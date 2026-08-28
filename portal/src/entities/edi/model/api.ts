@@ -130,6 +130,17 @@ export const didoxApi = {
       `/portal/companies/documents/${documentId}/sign`,
       signature,
     ),
+
+  /**
+   * The OPERATOR's rendering of the document, as a PDF blob.
+   *
+   * Not our contract PDF — that is what we asked the parties to sign. This one
+   * carries Didox's electronic-document id and the marks of both signatures, and
+   * is the form that appears in my.soliq.uz. Fetched as a blob because the route
+   * needs an `Authorization` header, which an `<iframe src>` cannot send.
+   */
+  printForm: (documentId: number): Promise<Blob> =>
+    api.blob(`/portal/companies/documents/${documentId}/print`),
 };
 
 /** Didox's own status ladder, verbatim — see `didox_documents.status`. */

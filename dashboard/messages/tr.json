@@ -893,8 +893,6 @@
       "attempts": "Denemeler",
       "lastError": "Son hata",
       "waivedReason": "Muafiyet nedeni",
-      "missingDocuments": "Eksik belgeler",
-      "reasons": "Nedenler",
       "waive": "Kontrolü atla",
       "waiveReasonPlaceholder": "Muafiyet nedeni (zorunlu)",
       "waiveConflict": "Kontrol zaten güncellendi — veriler yeniden yüklendi"
@@ -918,6 +916,28 @@
       "unavailable": "Kullanılamaz",
       "waived": "Muaf tutuldu"
     },
+    "findings": {
+      "taxIdDigits": "VKN 9 haneli olmalı, girilen: {digits}",
+      "taxIdEmpty": "VKN girilmemiş",
+      "bankAccount": "Hesap ****{last4}: {problem}",
+      "bankIssue": {
+        "bad_account_length": "hesap numarası 20 haneli olmalı",
+        "bad_mfo": "MFO 5 haneli olmalı",
+        "undecryptable": "hesap numarası okunamadı"
+      },
+      "noBankAccount": "Banka hesabı eklenmemiş",
+      "missingDocuments": "Eksik belgeler: {list}",
+      "registryInnMismatch": "Devlet sicilindeki VKN eşleşmiyor: {inn}",
+      "registryLiquidated": "Devlet siciline göre şirket tasfiye edilmiş",
+      "registrySuspended": "Devlet siciline göre faaliyet durdurulmuş",
+      "registryStatusUnknown": "Devlet sicili yanıt verdi ama şirket durumunu belirtmedi",
+      "registryNameMismatch": "Devlet sicilindeki unvan farklı: «{name}»",
+      "vatNotRegistered": "Şirket KDV mükellefi değil — doğrulama için engel değil",
+      "manualPending": "Personelin manuel kontrolü bekleniyor",
+      "unavailable": "Kaynak yanıt vermedi — kontrol yapılamadı",
+      "unavailableWith": "Kaynak yanıt vermedi: {error}",
+      "eimzoFailed": "Elektronik imza doğrulanamadı"
+    },
     "documents": {
       "title": "Belgeler",
       "empty": "Belge yok",
@@ -932,7 +952,18 @@
       "other": "Diğer",
       "registration_certificate": "Kayıt belgesi",
       "bank_letter": "Banka mektubu",
-      "license": "Lisans"
+      "license": "Lisans",
+      "permit": "İzin belgesi",
+      "certificate": "Sertifika",
+      "production_license": "Üretim lisansı",
+      "export_license": "İhracat lisansı",
+      "certificate_of_origin": "Menşe şahadetnamesi",
+      "iso_certificate": "ISO sertifikaları",
+      "compliance_certificate": "REACH / RoHS / GOST",
+      "carrier_license": "Taşıyıcı lisansı",
+      "liability_insurance": "Sorumluluk sigortası",
+      "service_contract": "Sözleşme",
+      "accreditation_certificate": "Akreditasyon sertifikası"
     },
     "audit": {
       "title": "Geçmiş",
@@ -946,7 +977,17 @@
       "approve": "Onayla",
       "reject": "Reddet",
       "requestInfo": "Bilgi iste",
-      "decidedAt": "Karar verildi"
+      "decidedAt": "Karar verildi",
+      "blocked": {
+        "title": "Şu anda karar verilemez",
+        "needsInfo": "Başvuru müşteriye geri gönderildi: otomatik kontrollerden biri başarısız oldu. Müşteri verilerini düzeltip başvuruyu yeniden gönderdiğinde karar verilebilir.",
+        "running": "Otomatik kontroller hâlâ sürüyor. Tamamlandığında karar verilebilir.",
+        "draft": "Müşteri başvuruyu henüz doğrulamaya göndermedi.",
+        "generic": "Başvuru «İncelemede» durumunda değil — karar verilemez.",
+        "problems": "Düzeltilmesi gerekenler",
+        "waiveHint": "Şirketi kabul etmek için gerekçe varsa (örneğin belge sistem dışında alındıysa), yukarıdaki «Kontroller» bölümünde neden belirterek kontrolü atlayın — ardından karar verilebilir.",
+        "waiveAdminOnly": "Kontrolü atlayıp kararı açmak yalnızca yöneticinin yetkisindedir."
+      }
     },
     "registry": {
       "title": "Devlet sicilleri",

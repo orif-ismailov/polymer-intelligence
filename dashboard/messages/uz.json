@@ -893,8 +893,6 @@
       "attempts": "Urinishlar",
       "lastError": "So'nggi xato",
       "waivedReason": "Bekor qilish sababi",
-      "missingDocuments": "Yo'q hujjatlar",
-      "reasons": "Sabablar",
       "waive": "Tekshiruvni bekor qilish",
       "waiveReasonPlaceholder": "Bekor qilish sababi (majburiy)",
       "waiveConflict": "Tekshiruv allaqachon yangilangan — ma'lumotlar qayta yuklandi"
@@ -918,6 +916,28 @@
       "unavailable": "Mavjud emas",
       "waived": "Bekor qilingan"
     },
+    "findings": {
+      "taxIdDigits": "STIR 9 ta raqamdan iborat bo'lishi kerak, kiritilgani: {digits}",
+      "taxIdEmpty": "STIR ko'rsatilmagan",
+      "bankAccount": "Hisob ****{last4}: {problem}",
+      "bankIssue": {
+        "bad_account_length": "hisob raqami 20 ta raqamdan iborat bo'lishi kerak",
+        "bad_mfo": "MFO 5 ta raqamdan iborat bo'lishi kerak",
+        "undecryptable": "hisob raqamini o'qib bo'lmadi"
+      },
+      "noBankAccount": "Bank hisobi qo'shilmagan",
+      "missingDocuments": "Hujjatlar yetishmaydi: {list}",
+      "registryInnMismatch": "Davlat reyestridagi STIR mos kelmaydi: {inn}",
+      "registryLiquidated": "Davlat reyestri ma'lumotiga ko'ra kompaniya tugatilgan",
+      "registrySuspended": "Davlat reyestri ma'lumotiga ko'ra faoliyat to'xtatilgan",
+      "registryStatusUnknown": "Davlat reyestri javob berdi, lekin kompaniya holatini ko'rsatmadi",
+      "registryNameMismatch": "Davlat reyestridagi nom farq qiladi: «{name}»",
+      "vatNotRegistered": "Kompaniya QQS to'lovchisi emas — bu verifikatsiyaga to'siq emas",
+      "manualPending": "Xodimning qo'lda tekshiruvini kutmoqda",
+      "unavailable": "Manba javob bermadi — tekshiruv bajarilmadi",
+      "unavailableWith": "Manba javob bermadi: {error}",
+      "eimzoFailed": "Elektron imzo tekshiruvdan o'tmadi"
+    },
     "documents": {
       "title": "Hujjatlar",
       "empty": "Hujjatlar yo'q",
@@ -932,7 +952,18 @@
       "other": "Boshqa",
       "registration_certificate": "Ro‘yxatdan o‘tish guvohnomasi",
       "bank_letter": "Bank xati",
-      "license": "Litsenziya"
+      "license": "Litsenziya",
+      "permit": "Ruxsatnoma",
+      "certificate": "Sertifikat",
+      "production_license": "Ishlab chiqarish litsenziyasi",
+      "export_license": "Eksport litsenziyasi",
+      "certificate_of_origin": "Kelib chiqish sertifikati",
+      "iso_certificate": "ISO sertifikatlar",
+      "compliance_certificate": "REACH / RoHS / GOST",
+      "carrier_license": "Tashuvchi litsenziyasi",
+      "liability_insurance": "Javobgarlik sug‘urtasi",
+      "service_contract": "Shartnoma",
+      "accreditation_certificate": "Akkreditatsiya sertifikati"
     },
     "audit": {
       "title": "Tarix",
@@ -946,7 +977,17 @@
       "approve": "Tasdiqlash",
       "reject": "Rad etish",
       "requestInfo": "Ma'lumot so'rash",
-      "decidedAt": "Qaror qabul qilindi"
+      "decidedAt": "Qaror qabul qilindi",
+      "blocked": {
+        "title": "Hozircha qaror qabul qilib bo'lmaydi",
+        "needsInfo": "Ariza mijozga qaytarildi: avtomatik tekshiruvlardan biri o'tmadi. Mijoz ma'lumotlarni tuzatib, arizani qayta yuborgach, qaror qabul qilish mumkin bo'ladi.",
+        "running": "Avtomatik tekshiruvlar hali davom etmoqda. Ular tugagach qaror qabul qilish mumkin bo'ladi.",
+        "draft": "Mijoz arizani hali tekshiruvga yubormagan.",
+        "generic": "Ariza «Ko'rib chiqilmoqda» holatida emas — qaror qabul qilib bo'lmaydi.",
+        "problems": "Nimani tuzatish kerak",
+        "waiveHint": "Kompaniyani qabul qilish uchun asos bo'lsa (masalan, hujjat tizimdan tashqarida olingan), yuqoridagi «Tekshiruvlar» bo'limida sababni ko'rsatib tekshiruvni bekor qiling — shundan so'ng qaror qabul qilish mumkin bo'ladi.",
+        "waiveAdminOnly": "Tekshiruvni bekor qilib, qarorni ochish faqat administrator qo'lidan keladi."
+      }
     },
     "registry": {
       "title": "Davlat reyestrlari",

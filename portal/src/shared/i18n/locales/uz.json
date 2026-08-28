@@ -618,7 +618,30 @@
       "bank_requisites": "Bank rekvizitlari",
       "documents_complete": "Hujjatlar to‘plami",
       "manual_kyb": "Qo‘lda tekshiruv (KYB)",
-      "eimzo_signature": "E-IMZO imzosi"
+      "eimzo_signature": "E-IMZO imzosi",
+      "gov_registry": "Davlat reyestri",
+      "vat_status": "QQS holati"
+    },
+    "findings": {
+      "taxIdDigits": "STIR 9 ta raqamdan iborat bo'lishi kerak, kiritilgani: {{digits}}",
+      "taxIdEmpty": "STIR ko'rsatilmagan",
+      "bankAccount": "Hisob ****{{last4}}: {{problem}}",
+      "bankIssue": {
+        "bad_account_length": "hisob raqami 20 ta raqamdan iborat bo'lishi kerak",
+        "bad_mfo": "MFO 5 ta raqamdan iborat bo'lishi kerak",
+        "undecryptable": "hisob raqamini o'qib bo'lmadi — uni qaytadan kiriting"
+      },
+      "noBankAccount": "Bank hisobi qo'shilmagan",
+      "missingDocuments": "Hujjatlar yetishmaydi: {{list}}",
+      "registryInnMismatch": "STIR davlat reyestri ma'lumotlariga mos kelmaydi",
+      "registryLiquidated": "Davlat reyestri ma'lumotiga ko'ra kompaniya tugatilgan",
+      "registrySuspended": "Davlat reyestri ma'lumotiga ko'ra faoliyat to'xtatilgan",
+      "registryStatusUnknown": "Davlat reyestri kompaniya holatini ko'rsatmadi",
+      "registryNameMismatch": "Davlat reyestridagi nom farq qiladi: «{{name}}»",
+      "vatNotRegistered": "Kompaniya QQS to'lovchisi emas — bu verifikatsiyaga xalaqit bermaydi",
+      "manualPending": "Xodim tekshiruvini kutmoqda",
+      "unavailable": "Manba javob bermadi — tekshiruv bajarilmadi",
+      "eimzoFailed": "Elektron imzo tekshiruvdan o'tmadi — qaytadan imzolang"
     },
     "checkDetail": {
       "empty": "Qo‘shimcha ma’lumot yo‘q.",
@@ -1645,6 +1668,7 @@
       "created": "Loyiha yaratildi",
       "sent": "Kelishuvga yuborildi",
       "signedBy": "Imzolandi: {{company}}",
+      "signedNoDate": "Imzolangan",
       "awaitingSignature": "Imzo kutilmoqda: {{company}}",
       "active": "Shartnoma ikki tomon tomonidan imzolandi",
       "awaiting": "Kutilmoqda"
@@ -2714,7 +2738,17 @@
       "cancelled": "Imzolash bekor qilindi — E-IMZO parol oynasi yopildi. Qaytadan bosing va kalit parolini kiriting."
     },
     "signOffer": "Didox ofertasini imzolash",
-    "signingOffer": "Imzolanmoqda…"
+    "signingOffer": "Imzolanmoqda…",
+    "printForm": {
+      "title": "Didox bosma shakli",
+      "loading": "Operator shakli yuklanmoqda…",
+      "errors": {
+        "failed": "Operatordan bosma shaklni olishning imkoni bo‘lmadi.",
+        "didox_session_required": "Didox sessiyasi kerak — kompaniyani operatorga ulang.",
+        "document_not_created": "Hujjat operatorda hali yaratilmagan.",
+        "didox_unavailable": "Didox hozir mavjud emas. Keyinroq urinib ko‘ring."
+      }
+    }
   },
   "sampleLetter": {
     "title": "Majburiyat xati",

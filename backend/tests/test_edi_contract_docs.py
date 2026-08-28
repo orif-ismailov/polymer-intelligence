@@ -191,9 +191,11 @@ class TestSections:
             "<h2>1. Стороны</h2><p>Продавец и Покупатель.</p>"
             "<h2>2. Предмет договора</h2><p>Поставка полимеров.</p><p>Партия 10 т.</p>"
         )
+        # Unnumbered: Didox prints its own `ordno`, so ours would double it —
+        # see `test_edi_section_titles.py`.
         assert sections_from_html(html) == [
-            ("1. Стороны", "Продавец и Покупатель."),
-            ("2. Предмет договора", "Поставка полимеров. Партия 10 т."),
+            ("Стороны", "Продавец и Покупатель."),
+            ("Предмет договора", "Поставка полимеров. Партия 10 т."),
         ]
 
     def test_tags_and_entities_do_not_leak_into_the_document(self) -> None:
@@ -202,7 +204,7 @@ class TestSections:
 
         html = "<h2>1. Предмет</h2><p>ООО &laquo;Полимер&raquo; <b>обязуется</b>&nbsp;поставить.</p>"
         [(title, text)] = sections_from_html(html)
-        assert title == "1. Предмет"
+        assert title == "Предмет"
         assert "<" not in text and "&" not in text
         assert "обязуется" in text
 

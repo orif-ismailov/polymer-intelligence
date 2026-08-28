@@ -878,8 +878,6 @@
       "attempts": "تلاش‌ها",
       "lastError": "آخرین خطا",
       "waivedReason": "دلیل صرف‌نظر",
-      "missingDocuments": "مدارک ناقص",
-      "reasons": "دلایل",
       "waive": "صرف‌نظر از بررسی",
       "waiveReasonPlaceholder": "دلیل صرف‌نظر (الزامی)",
       "waiveConflict": "بررسی قبلاً به‌روزرسانی شده — داده‌ها دوباره بارگذاری شد"
@@ -903,6 +901,28 @@
       "unavailable": "در دسترس نیست",
       "waived": "صرف‌نظر شد"
     },
+    "findings": {
+      "taxIdDigits": "شناسه مالیاتی باید ۹ رقم باشد، وارد شده: {digits}",
+      "taxIdEmpty": "شناسه مالیاتی وارد نشده است",
+      "bankAccount": "حساب ****{last4}: {problem}",
+      "bankIssue": {
+        "bad_account_length": "شماره حساب باید ۲۰ رقم باشد",
+        "bad_mfo": "کد MFO باید ۵ رقم باشد",
+        "undecryptable": "شماره حساب خوانده نشد"
+      },
+      "noBankAccount": "حساب بانکی اضافه نشده است",
+      "missingDocuments": "مدارک ناقص: {list}",
+      "registryInnMismatch": "شناسه مالیاتی در سامانه دولتی مطابقت ندارد: {inn}",
+      "registryLiquidated": "بر اساس سامانه دولتی شرکت منحل شده است",
+      "registrySuspended": "بر اساس سامانه دولتی فعالیت متوقف شده است",
+      "registryStatusUnknown": "سامانه دولتی پاسخ داد اما وضعیت شرکت را مشخص نکرد",
+      "registryNameMismatch": "نام در سامانه دولتی متفاوت است: «{name}»",
+      "vatNotRegistered": "شرکت مؤدی مالیات بر ارزش افزوده نیست — مانع احراز هویت نیست",
+      "manualPending": "در انتظار بررسی دستی کارمند",
+      "unavailable": "منبع پاسخ نداد — بررسی انجام نشد",
+      "unavailableWith": "منبع پاسخ نداد: {error}",
+      "eimzoFailed": "امضای الکترونیکی تأیید نشد"
+    },
     "documents": {
       "title": "مدارک",
       "empty": "مدرکی وجود ندارد",
@@ -917,7 +937,18 @@
       "other": "سایر",
       "registration_certificate": "گواهی ثبت",
       "bank_letter": "نامه بانکی",
-      "license": "مجوز"
+      "license": "مجوز",
+      "permit": "مجوز",
+      "certificate": "گواهی",
+      "production_license": "پروانه تولید",
+      "export_license": "پروانه صادرات",
+      "certificate_of_origin": "گواهی مبدأ",
+      "iso_certificate": "گواهی‌های ISO",
+      "compliance_certificate": "REACH / RoHS / GOST",
+      "carrier_license": "پروانه حمل‌ونقل",
+      "liability_insurance": "بیمه مسئولیت",
+      "service_contract": "قرارداد",
+      "accreditation_certificate": "گواهی اعتباربخشی"
     },
     "audit": {
       "title": "تاریخچه",
@@ -931,7 +962,17 @@
       "approve": "تأیید",
       "reject": "رد",
       "requestInfo": "درخواست اطلاعات",
-      "decidedAt": "تصمیم گرفته شد"
+      "decidedAt": "تصمیم گرفته شد",
+      "blocked": {
+        "title": "در حال حاضر امکان تصمیم‌گیری نیست",
+        "needsInfo": "درخواست به مشتری بازگردانده شد: یکی از بررسی‌های خودکار ناموفق بود. پس از اینکه مشتری داده‌ها را اصلاح و درخواست را دوباره ارسال کند، تصمیم‌گیری ممکن می‌شود.",
+        "running": "بررسی‌های خودکار هنوز در جریان است. پس از پایان آن‌ها می‌توان تصمیم گرفت.",
+        "draft": "مشتری هنوز درخواست را برای بررسی ارسال نکرده است.",
+        "generic": "درخواست در وضعیت «در دست بررسی» نیست — نمی‌توان تصمیم گرفت.",
+        "problems": "چه چیزی باید اصلاح شود",
+        "waiveHint": "اگر دلیلی برای پذیرش شرکت وجود دارد (مثلاً مدرک خارج از سامانه دریافت شده)، در بخش «بررسی‌ها» بالا با ذکر دلیل از بررسی صرف‌نظر کنید — سپس تصمیم‌گیری ممکن می‌شود.",
+        "waiveAdminOnly": "تنها مدیر می‌تواند از بررسی صرف‌نظر کند و امکان تصمیم‌گیری را باز کند."
+      }
     },
     "registry": {
       "title": "سوابق دولتی",

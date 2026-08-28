@@ -50,11 +50,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class ContractGateway(DidoxDocuments, Protocol):
-    """`DidoxDocuments` plus the one read this assembler needs of its own.
+    """`DidoxDocuments` plus the two reads this assembler needs of its own.
 
     `vatRegStatus` is date- and role-sensitive, so it is read per document rather
     than cached on the company — which makes it part of building a document, not
-    part of sending one.
+    part of sending one. `info_by_tin` is the state registry, and it is what
+    describes the BUYER: see `party_from_registry`.
     """
 
     def vat_reg_status(
@@ -65,6 +66,8 @@ class ContractGateway(DidoxDocuments, Protocol):
         is_seller: bool | None = ...,
         user_key: str | None = ...,
     ) -> DidoxVatStatus | None: ...
+
+    def info_by_tin(self, tin: str) -> object | None: ...
 
 
 class PartyMismatch(Exception):
@@ -131,6 +134,29 @@ def _plain(fragment: str) -> str:
     return _SPACE.sub(" ", html.unescape(_TAG.sub(" ", fragment))).strip()
 
 
+#: A leading ordinal: `1.` · `2)` · `1.2.` — the position, not the name.
+#:
+#: The trailing `.`/`)` is REQUIRED. Without it a bare number is not a numbering
+#: at all: «2026 год: особые условия» would lose its year, and no heading is worth
+#: that risk to save one edge case.
+_LEADING_ORDINAL = re.compile(r"^\s*\d+(?:\.\d+)*\s*[.)]\s+")
+
+
+def _strip_leading_ordinal(title: str) -> str:
+    """Drop the section number, because on their form the number is theirs.
+
+    Didox prefixes `ordno` when it prints, so «1. Стороны» came out as
+    «1. 1. Стороны». Ours is the one to go: their order IS `ordno`, and a number
+    of ours that disagreed with it would be worse than a duplicated one.
+
+    Only a LEADING ordinal, and never the whole title — «Приложение №2» keeps its
+    number because that is part of the name, and a heading that is nothing but a
+    number is left alone rather than blanked.
+    """
+    stripped = _LEADING_ORDINAL.sub("", title, count=1)
+    return stripped if stripped else title
+
+
 def sections_from_html(rendered_html: str) -> list[tuple[str, str]]:
     """`(title, body)` per `<h2>` of the rendered contract, in document order.
 
@@ -139,7 +165,7 @@ def sections_from_html(rendered_html: str) -> list[tuple[str, str]]:
     """
     out: list[tuple[str, str]] = []
     for match in _SECTION.finditer(rendered_html):
-        title = _plain(match.group("title"))
+        title = _strip_leading_ordinal(_plain(match.group("title")))
         body = _plain(match.group("body"))
         if title or body:
             out.append((title, body))
@@ -239,6 +265,67 @@ def party_from_company(
         accountant=str(requisites["director"]) or None,
         vat_reg_code=vat_reg_code,
         vat_reg_status=vat_reg_status,
+    )
+
+
+class CounterpartyNotInRegistry(Exception):
+    """The tax registry cannot describe the buyer, so no document can name them."""
+
+    def __init__(self, tax_id: str) -> None:
+        super().__init__(f"tax registry has no usable record for {tax_id}")
+        self.tax_id = tax_id
+
+
+class _TinRegistry(Protocol):
+    def info_by_tin(self, tin: str) -> object | None: ...
+
+
+def party_from_registry(registry: _TinRegistry, tax_id: str) -> PartyRequisites:
+    """The BUYER's block, taken from the state registry rather than from us.
+
+    Learned live on 27.08.2026, after two days spent on the opposite assumption:
+    `GET /v1/utils/info/{tin}` returns `directorPinfl` and `director` for any
+    company in the registry, so the counterparty's signer does NOT have to be
+    someone who confirmed their identity in our cabinet. That was the belief that
+    made a Didox document impossible for anyone who is not our own user, and it
+    was simply wrong.
+
+    Using the registry here is also the more correct source, not merely the
+    available one: this document is checked against the tax authority's own
+    record of that company, so the tax authority's record is what should be on
+    it. Our `company_person_data` says who signs in OUR cabinet, which on this
+    rail the buyer never does.
+
+    Refuses rather than degrades. A registry that does not know the company, or
+    knows it without a signer, produces exactly the 422 Didox answers AFTER the
+    seller has typed their key password — so it is turned into a stop here.
+    """
+    try:
+        info = registry.info_by_tin(tax_id)
+    except Exception as exc:  # noqa: BLE001 — down or absent are the same to a document
+        raise CounterpartyNotInRegistry(tax_id) from exc
+    if info is None:
+        raise CounterpartyNotInRegistry(tax_id)
+
+    pinfl = getattr(info, "director_pinfl", None)
+    fio = getattr(info, "director", None)
+    if not pinfl or not fio:
+        raise CounterpartyNotInRegistry(tax_id)
+
+    address = (getattr(info, "address", None) or "").strip() or None
+    return PartyRequisites(
+        tin=tax_id,
+        name=str(getattr(info, "name", None) or tax_id),
+        address=address,
+        oked=getattr(info, "oked", None),
+        account=getattr(info, "bank_account", None),
+        bank_mfo=getattr(info, "bank_mfo", None),
+        fiz_tin=str(pinfl),
+        fio=str(fio),
+        director=str(fio),
+        accountant=str(fio),
+        vat_reg_code=getattr(info, "vat_reg_code", None),
+        vat_reg_status=getattr(info, "vat_reg_status", None),
     )
 
 
@@ -396,8 +483,10 @@ def create_for_contract(
             return None, None
         return status_dto.code, status_dto.status
 
+    # Only the seller's: the buyer's whole block, VAT code included, comes from
+    # the registry lookup, and asking twice invites the two to disagree on the
+    # same document.
     seller_vat_code, seller_vat_status = _vat(seller.tax_id, is_seller=True)
-    buyer_vat_code, buyer_vat_status = _vat(buyer.tax_id, is_seller=False)
 
     template = db.get(ContractTemplate, contract.template_id)
     if template is None:  # pragma: no cover — FK-guaranteed
@@ -429,12 +518,14 @@ def create_for_contract(
         date=today,
         expires_on=today + datetime.timedelta(days=term_days),
         title=contract.title,
+        # Two sources, deliberately: we vouch for the seller (they sign here,
+        # with a key we watched them use), the tax registry vouches for the buyer
+        # (who may not be our user at all, and whose block this document will be
+        # checked against). See `party_from_registry`.
         seller=party_from_company(
             db, seller, vat_reg_code=seller_vat_code, vat_reg_status=seller_vat_status
         ),
-        buyer=party_from_company(
-            db, buyer, vat_reg_code=buyer_vat_code, vat_reg_status=buyer_vat_status
-        ),
+        buyer=party_from_registry(client, buyer.tax_id),
         lines=lines or suggested_lines(contract, offer),
         sections=sections_from_html(rendered),
     )

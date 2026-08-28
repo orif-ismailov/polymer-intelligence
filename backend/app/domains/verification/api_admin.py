@@ -387,6 +387,42 @@ def _manual_payload(
     return {"licenses": [], "transcribed": raw_status or ""}, raw_status
 
 
+#: The statuses a case can never leave. Everything else that refuses a decision is
+#: refusing it FOR NOW, which is a different answer — see `_decision_conflict`.
+_TERMINAL_CASE_STATUSES = frozenset(
+    {
+        VerificationCaseStatus.approved,
+        VerificationCaseStatus.rejected,
+        VerificationCaseStatus.cancelled,
+    }
+)
+
+
+def _decision_conflict(db: Session, case: VerificationCase) -> HTTPException:
+    """Say WHICH conflict refused the decision, because the two are not alike.
+
+    `_claim_pending_review` updates `WHERE status='pending_review'` and raises on
+    rowcount 0, which lumps together two situations a person must tell apart: a
+    colleague (or the Telegram button) decided the case a moment ago, and the case
+    has not REACHED a decidable state — checks still running, or `needs_info`
+    waiting on the applicant. This endpoint used to answer "Case already decided"
+    to both, so a case nobody had touched reported itself as handled by someone
+    else; that untrue sentence is what made the queue look broken.
+
+    Still a 409 either way — it is a state conflict — but the body now carries a
+    code the dashboard can turn into the right screen.
+    """
+    db.refresh(case)
+    terminal = case.status in _TERMINAL_CASE_STATUSES
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={
+            "error": "already_decided" if terminal else "not_pending_review",
+            "case_status": str(case.status),
+        },
+    )
+
+
 def _decide(db: Session, case_id: int, staff_id: int, note: str | None, action: str) -> dict[str, Any]:
     case = _case_or_404(db, case_id)
     fn = {"approve": verification_service.approve, "reject": verification_service.reject,
@@ -394,7 +430,7 @@ def _decide(db: Session, case_id: int, staff_id: int, note: str | None, action: 
     try:
         fn(db, case, staff_user_id=staff_id, actor={"staff": staff_id}, note=note)
     except verification_service.AlreadyDecided as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Case already decided") from exc
+        raise _decision_conflict(db, case) from exc
     db.commit()
     return _case_summary(db, case)
 

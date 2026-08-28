@@ -242,8 +242,32 @@ Three things about signing in this app that are easy to get wrong:
 The contract rail is chosen once, on the create screen (`contract-rail`), and frozen. On the Didox
 rail the document has to EXIST at the operator before anyone can sign, and creating it is the
 seller's move — `DidoxDocumentCard` shows every blocker at once (`ikpu_missing`,
-`signer_identity_missing:{id}`, `not_ready`) rather than one per round trip, because each retry
-costs the user an E-IMZO password.
+`signer_identity_missing:{id}`, `not_ready`, `counterparty_unknown`, `counterparty_ikpu_missing`)
+rather than one per round trip, because each retry costs the user an E-IMZO password.
+
+Four more things this rail taught us the expensive way, all on 25–27.08.2026:
+
+- **A cancelled password dialog is not a failure.** The module reports «Ввод пароля отменен»
+  exactly like a crypto error, and rendering it as «не удалось подписать документ» sent an
+  afternoon hunting a bug that did not exist — every dead end that day was a window nobody
+  answered. `CapiwsError.isCancelled` names it, and `useDidoxSign` has a `cancelled` branch whose
+  string says plainly: press again and enter the key password.
+- **`openSession` holds the key open, so one password serves several signatures.** Minting a Didox
+  session and signing the document are two `create_pkcs7` calls; through `sign()`/`signBase64()`
+  each opens and closes its own key and asks twice. Reach for the session whenever a flow signs
+  more than once.
+- **Render the operator's refusal verbatim.** Their 422 carries the only actionable sentence in the
+  whole exchange («ИНН/ПИНФЛ заказчика некорректный. ИНН/ПИНФЛ: 562353400» names the field AND the
+  company). The trap is one level deep and invisible to types: `ApiError.detail` holds the WHOLE
+  response body, so our payload sits at `detail.detail`, and reading `detail.error` finds
+  `undefined` and falls back to the generic string without anything failing. `rejectionOf()`
+  unwraps it; `didox.signErrors.rejected` interpolates their words.
+- **The timeline may not read `contract.signatures` on this rail** — that table stays EMPTY by
+  design (`signature_evidence_id` is NOT NULL and points at a PKCS#7 we verified, which we never
+  have for a Didox signature), so it said «ожидает подписи» about the seller who had just signed.
+  `didoxSignedFor()` derives it from `didox_status` instead, which the API has already restated for
+  this viewer: my side signed at `1`/`3`, theirs at `2`/`3`. Didox tells us THAT a party signed,
+  never WHEN — hence `contracts.timeline.signedNoDate` rather than a borrowed timestamp.
 
 ## Deploy
 

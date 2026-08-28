@@ -878,8 +878,6 @@
       "attempts": "尝试次数",
       "lastError": "最后错误",
       "waivedReason": "豁免原因",
-      "missingDocuments": "缺失文件",
-      "reasons": "原因",
       "waive": "豁免检查",
       "waiveReasonPlaceholder": "豁免原因（必填）",
       "waiveConflict": "检查已更新——数据已重新加载"
@@ -903,6 +901,28 @@
       "unavailable": "不可用",
       "waived": "已豁免"
     },
+    "findings": {
+      "taxIdDigits": "税号应为 9 位数字，实际为 {digits} 位",
+      "taxIdEmpty": "未填写税号",
+      "bankAccount": "账户 ****{last4}：{problem}",
+      "bankIssue": {
+        "bad_account_length": "账号应为 20 位数字",
+        "bad_mfo": "MFO 应为 5 位数字",
+        "undecryptable": "无法读取账号"
+      },
+      "noBankAccount": "未添加银行账户",
+      "missingDocuments": "缺少文件：{list}",
+      "registryInnMismatch": "国家登记册中的税号不一致：{inn}",
+      "registryLiquidated": "根据国家登记册，公司已清算",
+      "registrySuspended": "根据国家登记册，经营活动已暂停",
+      "registryStatusUnknown": "国家登记册已应答，但未说明公司状态",
+      "registryNameMismatch": "国家登记册中的名称不同：「{name}」",
+      "vatNotRegistered": "公司非增值税纳税人——不影响验证",
+      "manualPending": "等待员工人工审核",
+      "unavailable": "数据源未响应——检查未执行",
+      "unavailableWith": "数据源未响应：{error}",
+      "eimzoFailed": "电子签名未通过验证"
+    },
     "documents": {
       "title": "文件",
       "empty": "没有文件",
@@ -917,7 +937,18 @@
       "other": "其他",
       "registration_certificate": "注册证书",
       "bank_letter": "银行证明函",
-      "license": "许可证"
+      "license": "许可证",
+      "permit": "许可证",
+      "certificate": "证书",
+      "production_license": "生产许可证",
+      "export_license": "出口许可证",
+      "certificate_of_origin": "原产地证书",
+      "iso_certificate": "ISO 证书",
+      "compliance_certificate": "REACH / RoHS / GOST",
+      "carrier_license": "承运人许可证",
+      "liability_insurance": "责任保险",
+      "service_contract": "合同",
+      "accreditation_certificate": "认证资质证书"
     },
     "audit": {
       "title": "历史",
@@ -931,7 +962,17 @@
       "approve": "批准",
       "reject": "拒绝",
       "requestInfo": "请求信息",
-      "decidedAt": "已做出决定"
+      "decidedAt": "已做出决定",
+      "blocked": {
+        "title": "目前无法做出决定",
+        "needsInfo": "申请已退回客户：其中一项自动检查未通过。客户更正数据并重新提交后即可做出决定。",
+        "running": "自动检查仍在进行中，完成后即可做出决定。",
+        "draft": "客户尚未提交申请进行验证。",
+        "generic": "申请不处于「待审核」状态——无法做出决定。",
+        "problems": "需要更正的内容",
+        "waiveHint": "如有理由接受该公司（例如文件在系统外收到），可在上方「检查」区块中填写原因并豁免该检查——随后即可做出决定。",
+        "waiveAdminOnly": "只有管理员可以豁免检查并解除决定限制。"
+      }
     },
     "registry": {
       "title": "国家登记系统",

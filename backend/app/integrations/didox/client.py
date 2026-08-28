@@ -608,6 +608,35 @@ class DidoxClient:
             raise ProviderUnavailable("didox: archive was empty")
         return body
 
+    def print_form(
+        self, didox_id: str, *, locale: str = "ru", user_key: str | None = None
+    ) -> bytes:
+        """The document as the OPERATOR renders it — PDF bytes.
+
+        Not the same artefact as ours. `contracts/render.py` produces what we
+        asked the parties to sign; this is what now stands at Didox, carrying
+        their electronic-document id and the marks of both signatures — the thing
+        that shows up in my.soliq.uz.
+
+        Two routes, differing only in who may ask. `view/…` also checks that the
+        document belongs to the acting user, so a cabinet request (which has that
+        company's `user-key`) uses it; staff act as nobody and would be refused,
+        so without a key we take the partner-token route.
+
+        `raw=True` for the same reason `archive` and `_base64_body` need it: a PDF
+        through `resp.json()` raises, and at the call site that is
+        indistinguishable from the provider being down.
+        """
+        path = (
+            f"/v1/documents/view/{didox_id}/pdf/{locale}"
+            if user_key
+            else f"/v1/documents/{didox_id}/pdf/{locale}"
+        )
+        body = self._request("GET", path, "print_form", user_key=user_key, raw=True)
+        if not isinstance(body, bytes) or not body:
+            raise ProviderUnavailable("didox: print form was empty")
+        return body
+
     # ── onboarding: signup + the one-time public offer ────────────────────────
 
     def signup(

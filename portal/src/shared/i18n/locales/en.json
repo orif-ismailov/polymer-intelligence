@@ -618,7 +618,30 @@
       "bank_requisites": "Bank requisites",
       "documents_complete": "Documents complete",
       "manual_kyb": "Manual review (KYB)",
-      "eimzo_signature": "E-IMZO signature"
+      "eimzo_signature": "E-IMZO signature",
+      "gov_registry": "State registry",
+      "vat_status": "VAT status"
+    },
+    "findings": {
+      "taxIdDigits": "The tax ID must be 9 digits; {{digits}} given",
+      "taxIdEmpty": "No tax ID given",
+      "bankAccount": "Account ****{{last4}}: {{problem}}",
+      "bankIssue": {
+        "bad_account_length": "the account number must be 20 digits",
+        "bad_mfo": "the MFO must be 5 digits",
+        "undecryptable": "the account number could not be read — please enter it again"
+      },
+      "noBankAccount": "No bank account added",
+      "missingDocuments": "Missing documents: {{list}}",
+      "registryInnMismatch": "The tax ID does not match the state registry",
+      "registryLiquidated": "The state registry reports the company as liquidated",
+      "registrySuspended": "The state registry reports activity as suspended",
+      "registryStatusUnknown": "The state registry did not state the company's status",
+      "registryNameMismatch": "The name differs from the state registry: “{{name}}”",
+      "vatNotRegistered": "The company is not VAT-registered — this does not block verification",
+      "manualPending": "Awaiting review by a member of staff",
+      "unavailable": "The source did not answer — the check did not run",
+      "eimzoFailed": "The digital signature failed verification — please sign again"
     },
     "checkDetail": {
       "empty": "No additional information.",
@@ -1645,6 +1668,7 @@
       "created": "Draft created",
       "sent": "Sent for approval",
       "signedBy": "Signed by {{company}}",
+      "signedNoDate": "Signed",
       "awaitingSignature": "Awaiting signature from {{company}}",
       "active": "Signed by both parties",
       "awaiting": "Awaiting"
@@ -2714,7 +2738,17 @@
       "cancelled": "Signing was cancelled — the E-IMZO password window was closed. Press again and enter your key password."
     },
     "signOffer": "Sign Didox's public offer",
-    "signingOffer": "Signing…"
+    "signingOffer": "Signing…",
+    "printForm": {
+      "title": "Didox printed form",
+      "loading": "Loading the operator's form…",
+      "errors": {
+        "failed": "Could not fetch the printed form from the operator.",
+        "didox_session_required": "A Didox session is required — connect the company to the operator.",
+        "document_not_created": "The document does not exist at the operator yet.",
+        "didox_unavailable": "Didox is unavailable right now. Try again later."
+      }
+    }
   },
   "sampleLetter": {
     "title": "Commitment letter",

@@ -137,6 +137,29 @@ def _didox_document(db: Session, contract: Contract) -> DidoxDocument | None:
     )
 
 
+#: Didox's `1` and `2` are ONE state named from two ends — "awaiting partner" and
+#: "awaiting us". Everything else (draft, signed, rejected, annulled) is a fact
+#: about the document and reads identically to both sides.
+_MIRRORED_DIDOX_STATUSES = {1: 2, 2: 1}
+
+
+def _didox_status_for_viewer(stored: int | None, *, viewer_is_owner: bool) -> int | None:
+    """Didox's status, restated from the point of view of whoever is asking.
+
+    We store what `owner=1` answers — the OWNER's view — and used to hand that
+    number to both parties. The buyer's screen then read the seller's "awaiting
+    partner" as "waiting for someone else" and hid the sign button from the very
+    person whose turn it was. Their own side of the same document is `2` at Didox.
+
+    Translating here rather than in the UI keeps one rule in one place: the client
+    then needs no notion of who owns the document, and the same number drives both
+    the button and the timeline.
+    """
+    if stored is None or viewer_is_owner:
+        return stored
+    return _MIRRORED_DIDOX_STATUSES.get(stored, stored)
+
+
 def _detail_out(db: Session, contract: Contract, my_ids: set[int]) -> ContractDetailOut:
     base = _summary_out(db, contract, my_ids)
     sigs = (
@@ -150,7 +173,10 @@ def _detail_out(db: Session, contract: Contract, my_ids: set[int]) -> ContractDe
         **base.model_dump(),
         signing_provider=contract.signing_provider,
         didox_document_id=didox_doc.id if didox_doc else None,
-        didox_status=didox_doc.status if didox_doc else None,
+        didox_status=_didox_status_for_viewer(
+            didox_doc.status if didox_doc else None,
+            viewer_is_owner=bool(didox_doc and didox_doc.owner_company_id in my_ids),
+        ),
         variables=contract.variables or {},
         declined_reason=contract.declined_reason,
         document_available=bool(contract.generated_document_path),

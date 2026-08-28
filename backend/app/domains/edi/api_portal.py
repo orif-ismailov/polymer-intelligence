@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 import redis
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
@@ -341,6 +341,56 @@ def _acting_company_id(db: Session, account: UserAccount, row: DidoxDocument) ->
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document_not_found")
 
 
+@router.get(
+    "/documents/{document_id}/print",
+    response_class=Response,
+    responses={200: {"content": {"application/pdf": {}}}},
+)
+def didox_print_form(
+    document_id: int,
+    locale: str = "ru",
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> Response:
+    """The operator's own rendering of the document, as PDF.
+
+    A different artefact from `GET /portal/contracts/{id}/document`: that one is
+    what we asked the parties to sign, this is what stands at Didox — their
+    electronic-document id, both signature marks, the form the tax authority
+    shows. Worth putting in front of a person for exactly that reason.
+
+    Streamed rather than stored: it changes as the document's state changes (a
+    draft's form carries no signature marks), so caching it would mean serving a
+    stale picture of a legal document. The ARCHIVE is the artefact we keep, and
+    the poller already stores that once, on the transition to signed.
+    """
+    row = _document_or_404(db, account, document_id)
+    _guard(db)
+    if not row.didox_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="document_not_created"
+        )
+    company_id = _acting_company_id(db, account, row)
+    company = company_or_404(db, account, company_id)
+    try:
+        # `view/…` checks the document is theirs, which is what we want in a
+        # cabinet — so this needs the acting company's own session.
+        user_key = session.require_user_key(redis_client, company)
+        pdf = get_didox_client().print_form(row.didox_id, locale=locale, user_key=user_key)
+    except session.UserKeyRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_session_required"
+        ) from exc
+    except DidoxError as exc:
+        raise _provider_error(exc) from exc
+    except ProviderUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+    return Response(content=pdf, media_type="application/pdf")
+
+
 @router.post("/documents/{document_id}/sign-payload", response_model=DidoxSignPayloadOut)
 def didox_sign_payload(
     document_id: int,
@@ -485,14 +535,18 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
     except IkpuMissing:
         blockers.append("ikpu_missing")
 
-    for party_id in (seller_id, buyer_id):
-        company = db.get(Company, party_id)
-        if company is None:
-            continue
+    # The SELLER only. They are `Owner`, they sign here, and `Owner.FizTin`/`Fio`
+    # are the subject of that signature — we hold those because they confirmed
+    # them in this cabinet. The buyer's come from the tax registry instead
+    # (`party_from_registry`), so demanding a confirmation from them was a wall
+    # with nothing behind it: a counterparty who is not our user cannot confirm
+    # anything here, and does not need to.
+    seller_company = db.get(Company, seller_id)
+    if seller_company is not None:
         try:
-            contract_docs.party_from_company(db, company)
+            contract_docs.party_from_company(db, seller_company)
         except contract_docs.SignerIdentityMissing:
-            blockers.append(f"signer_identity_missing:{party_id}")
+            blockers.append(f"signer_identity_missing:{seller_id}")
 
     existing = contract_docs._existing_document(db, contract)  # noqa: SLF001
     seller = db.get(Company, seller_id)
@@ -611,6 +665,13 @@ def didox_create_contract_document(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={"error": "signer_identity_missing", "company_id": exc.company_id},
+        ) from exc
+    except contract_docs.CounterpartyNotInRegistry as exc:
+        # The same condition `_prefill` reports as `counterparty_unknown`, caught
+        # again here because the registry can go dark between reading the screen
+        # and pressing the button.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="counterparty_unknown"
         ) from exc
     except IkpuMissing as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="ikpu_missing") from exc

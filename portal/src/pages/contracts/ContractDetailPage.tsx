@@ -8,11 +8,12 @@ import { useAuthStore } from "@/entities/account";
 import { useActiveCompany } from "@/entities/company";
 import { ContractStatusBadge, contractApi, useContract } from "@/entities/contract";
 import type { ContractDetail } from "@/entities/contract";
-import { DIDOX_STATUS } from "@/entities/edi";
+import { DIDOX_STATUS, didoxApi } from "@/entities/edi";
 import { DidoxDocumentCard } from "@/features/didox-contract-document";
 import { useDidoxSign } from "@/features/didox-sign";
 import { EimzoSignButton } from "@/features/eimzo-sign";
 import type { EimzoSigner } from "@/features/eimzo-sign";
+import { ApiError } from "@/shared/api";
 import { coerceLang } from "@/shared/i18n";
 import { formatDateTime } from "@/shared/lib";
 import {
@@ -39,6 +40,8 @@ export function ContractDetailPage() {
   const query = useContract(Number.isInteger(id) ? id : null);
   const queryClient = useQueryClient();
   const [docUrl, setDocUrl] = useState<string | null>(null);
+  const [printFormUrl, setPrintFormUrl] = useState<string | null>(null);
+  const [printFormError, setPrintFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -62,6 +65,37 @@ export function ContractDetailPage() {
       cancelled = true;
     };
   }, [contract?.document_available, contract?.document_sha256, id]);
+
+  /**
+   * The operator's print form. Re-fetched whenever the Didox status moves,
+   * because the form CHANGES with it — a draft's carries no signature marks —
+   * and an object URL is revoked on the way out so the blob is not leaked.
+   */
+  const didoxDocumentId = contract?.didox_document_id ?? null;
+  const didoxStatus = contract?.didox_status ?? null;
+  useEffect(() => {
+    if (didoxDocumentId == null) return undefined;
+    let url: string | null = null;
+    let cancelled = false;
+    setPrintFormError(null);
+    void didoxApi
+      .printForm(didoxDocumentId)
+      .then((blob) => {
+        if (cancelled) return;
+        url = URL.createObjectURL(blob);
+        setPrintFormUrl(url);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setPrintFormUrl(null);
+          setPrintFormError(err instanceof ApiError ? (err.code ?? "failed") : "failed");
+        }
+      });
+    return () => {
+      cancelled = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [didoxDocumentId, didoxStatus]);
 
   if (query.isLoading) return <LoadingView label={t("common.loading")} />;
   if (query.isError || !contract) {
@@ -137,6 +171,31 @@ export function ContractDetailPage() {
   const signedAtFor = (companyId: number): string | null =>
     contract.signatures.find((s) => s.company_id === companyId)?.signed_at ?? null;
 
+  /**
+   * Who has signed, on the Didox rail — where `contract.signatures` is EMPTY by
+   * design and asking it produces «ожидает подписи» about a party that signed
+   * minutes ago. That is what it did to the seller here.
+   *
+   * `didox_status` arrives already restated for THIS viewer (the API mirrors
+   * Didox's `1`/`2`, which are one state named from two ends), so it answers
+   * both halves directly:
+   *
+   *   my side signed    ⟺ 1 (awaiting them) or 3 (both)
+   *   their side signed ⟺ 2 (awaiting me)   or 3 (both)
+   *
+   * `null` means "we cannot tell" — a rail with no document yet — and is not the
+   * same as "has not signed".
+   */
+  const didoxSignedFor = (companyId: number): boolean | null => {
+    if (!isDidoxRail || contract.didox_document_id == null) return null;
+    const status = contract.didox_status;
+    if (status == null) return null;
+    const mine = companyId === myCompanyId;
+    const bothSigned = status === DIDOX_STATUS.signed;
+    if (bothSigned) return true;
+    return mine ? status === DIDOX_STATUS.awaitingPartner : status === DIDOX_STATUS.awaitingUs;
+  };
+
   const partySteps: StatusStep[] = [
     { id: "initiator", companyId: contract.initiator_company_id, name: contract.initiator_name },
     {
@@ -146,16 +205,24 @@ export function ContractDetailPage() {
     },
   ].map(({ id, companyId, name }) => {
     const at = signedAtFor(companyId);
+    const viaDidox = didoxSignedFor(companyId);
+    const signed = at != null || viaDidox === true;
     const company = name ?? `#${companyId}`;
     return {
       id: `signed-${id}`,
       // Wording follows the state — an unsigned step must not read "signed by".
-      label: at
+      label: signed
         ? t("contracts.timeline.signedBy", { company })
         : t("contracts.timeline.awaitingSignature", { company }),
-      hint: at ? formatDateTime(at, lang) : t("contracts.timeline.awaiting"),
+      // Didox tells us THAT a side signed, never WHEN. Borrowing the contract's
+      // «signed at» phrasing here would invent a moment we do not have.
+      hint: at
+        ? formatDateTime(at, lang)
+        : signed
+          ? t("contracts.timeline.signedNoDate")
+          : t("contracts.timeline.awaiting"),
       // Only meaningful to "await" a signature once the contract is out for signing.
-      state: at ? "done" : contract.status === "pending_signatures" ? "current" : "pending",
+      state: signed ? "done" : contract.status === "pending_signatures" ? "current" : "pending",
     };
   });
 
@@ -339,6 +406,37 @@ export function ContractDetailPage() {
               className="h-[600px] w-full rounded-md border border-border"
               data-testid="contract-pdf"
             />
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {/* The operator's own rendering, once a document exists at Didox. A
+          different artefact from ours above: it carries their electronic-document
+          id and the marks of both signatures, and it is what my.soliq.uz shows.
+          Nothing is offered for download — the archive is kept as evidence and
+          there is nobody asking to fetch it. */}
+      {isDidoxRail && contract.didox_document_id != null ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("didox.printForm.title")}</CardTitle>
+          </CardHeader>
+          <CardBody>
+            {printFormUrl ? (
+              <iframe
+                src={printFormUrl}
+                title={t("didox.printForm.title")}
+                className="h-[600px] w-full rounded-md border border-border"
+                data-testid="didox-print-form"
+              />
+            ) : (
+              <p className="text-sm text-text-muted" data-testid="didox-print-form-state">
+                {printFormError
+                  ? t(`didox.printForm.errors.${printFormError}`, {
+                      defaultValue: t("didox.printForm.errors.failed"),
+                    })
+                  : t("didox.printForm.loading")}
+              </p>
+            )}
           </CardBody>
         </Card>
       ) : null}

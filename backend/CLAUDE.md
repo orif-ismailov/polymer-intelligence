@@ -137,20 +137,52 @@ mocks the thing it is testing.
   `signature_evidence_id` is NOT NULL and points at a PKCS#7 we verified — and we never see the
   counterparty's (they may have signed at any of the 27 operators). The contract becomes active
   through `contract_service.activate_from_provider` instead.
-  Four things the live contour taught us, all pinned by tests. **Creating a document does not need
-  the public offer; SENDING it does** — `PUT /v1/documents/{id}/send` answers a plain Russian
-  refusal naming the offer, which is the only actionable error in the whole chain, and
-  `DidoxError.offer_not_signed` matches that TEXT (the `context.offer` field their docs describe is
-  never sent). **`POST /{id}/sign` is not the door out of a draft** — it answers 500
-  `Undefined variable $isDraft` for a real timestamped signature and for garbage alike, so
-  `submit_signature` routes an outgoing draft through `send_document` and keeps `sign_document` for
-  accepting someone else's document (after `join_signatures`, theirs first). **`vatRegStatus`
-  answers only for the acting company's own ИНН** on the test contour, which is what makes an ЭСФ
-  to a real counterparty impossible today (422 `Failed to check vatRegStatus`). **The ИКПУ search
-  covers the company's own basket, not the tasnif catalog**, and `check/{code}` 422s for an unbound
-  code — so the picker binds first and reads the row back rather than guessing packages or origin.
-  `origin` is never returned by Didox at all: it is the seller's answer (own production vs resale)
-  and the offer form asks for it.
+  **`POST /{id}/sign` is the door for an outgoing draft** — their §9, and it works. An earlier
+  note here said the opposite: on 21.08 `/sign` answered 500 `Undefined variable $isDraft` and we
+  routed outgoing drafts through `PUT /{id}/send`. That 500 was a symptom of the UNSIGNED public
+  offer; once the offer was signed the two swapped places, and `/send` now answers
+  `422 Неподдерживаемый тип документа` for a 007. `send_document` stays on the client for the types
+  that use it. **The ИКПУ search covers the company's own basket, not the tasnif catalog**, and
+  `check/{code}` 422s for an unbound code — so the picker binds first and reads the row back rather
+  than guessing packages or origin. `origin` is never returned by Didox at all: it is the seller's
+  answer (own production vs resale) and the offer form asks for it.
+
+  **Their refusals arrive in a ladder, one gate at a time**, and each hides the next until it is
+  cleared — which is why every "one more thing and we are done" estimate on this rail was wrong.
+  In order, live: the buyer's ИНН must be in the tax registry (`ИНН/ПИНФЛ заказчика некорректный`);
+  the ИКПУ must be known to the roaming centre (`не включены в список избранных ИКПУ` — NOT the
+  counterparty's basket, which stays empty; Didox fixed this at `dev-s0.rouming.uz`); the buyer's
+  `FizTin`/`Fio` are mandatory (`ПИНФЛ … заказчика не указан`) — **`create` accepts them empty and
+  only `sign` refuses**, so the condition surfaces after the signatory has typed their key
+  password; and the PINFL must be 14 digits, not the 9-digit ИНН. The first two are checked BEFORE
+  a key is loaded, as `counterparty_unknown` and `counterparty_ikpu_missing` blockers on the
+  prefill — neither is fixable from our side, so they can only be shown.
+
+  **Section titles must not carry their own number.** Didox prefixes `ordno` when it prints, and
+  our template writes «1. Стороны» into the `<h2>`, so the operator's form read «1. 1. Стороны».
+  `sections_from_html` strips a LEADING ordinal (`1.`, `2)`, `1.2.` — the separator is required, or
+  «2026 год…» loses its year). Still open and NOT a code question: we also send «Стороны»,
+  «Предмет договора» and «Подписи сторон», all three of which Didox already renders from
+  `Owner`/`Clients`/`Products` and its own signature block — and the third asserts that signature
+  marks are kept "в системе", which is false on this rail.
+
+  **`didox_documents.status` is the OWNER's view** (we read it with `owner=1`), and Didox's `1` and
+  `2` are one state named from two ends. `contracts.api_portal._didox_status_for_viewer` mirrors
+  them for whoever is asking, because handing the seller's number to the buyer hid the sign button
+  from the very party whose turn it was. Everything else — draft, signed, rejected, annulled — is a
+  fact about the document and does not flip.
+
+  **`print_form` is the operator's rendering, and a different artefact from ours.**
+  `contracts/render.py` produces what we asked the parties to sign; `GET /v1/documents/{id}/pdf`
+  carries Didox's electronic-document id, the QR, the ИКПУ/НДС table and both signature marks — the
+  form my.soliq.uz shows. Two routes differing only in who may ask: `view/…` also checks the
+  document is theirs (cabinet, with that company's `user-key`), the plain one takes the partner
+  token alone (staff, who act as nobody). Streamed, never cached: the form changes with the status,
+  and a draft's carries no marks. The ARCHIVE is the artefact we keep, fetched once on the move to
+  signed.
+
+  **`get_document(owner=True)` goes over the wire as `owner=true` and earns a bare 500.** `bool` is
+  an `int` to the type checker, so it passes mypy; the client coerces with `int(owner)`.
 
 - **`MAX_CHECK_ATTEMPTS` lives in `verification_service`**, and `tasks/verification.py`
   imports it for `max_retries`. The evaluator needs the same number: an `unavailable` check

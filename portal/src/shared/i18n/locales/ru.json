@@ -618,7 +618,30 @@
       "bank_requisites": "Банковские реквизиты",
       "documents_complete": "Комплект документов",
       "manual_kyb": "Ручная проверка (KYB)",
-      "eimzo_signature": "Подпись E-IMZO"
+      "eimzo_signature": "Подпись E-IMZO",
+      "gov_registry": "Госреестр",
+      "vat_status": "Статус НДС"
+    },
+    "findings": {
+      "taxIdDigits": "ИНН должен содержать 9 цифр, указано {{digits}}",
+      "taxIdEmpty": "ИНН не указан",
+      "bankAccount": "Счёт ****{{last4}}: {{problem}}",
+      "bankIssue": {
+        "bad_account_length": "номер счёта должен содержать 20 цифр",
+        "bad_mfo": "МФО должен содержать 5 цифр",
+        "undecryptable": "не удалось прочитать номер счёта — введите его заново"
+      },
+      "noBankAccount": "Банковский счёт не добавлен",
+      "missingDocuments": "Не хватает документов: {{list}}",
+      "registryInnMismatch": "ИНН не совпадает с данными госреестра",
+      "registryLiquidated": "По данным госреестра компания ликвидирована",
+      "registrySuspended": "По данным госреестра деятельность приостановлена",
+      "registryStatusUnknown": "Госреестр не указал статус компании",
+      "registryNameMismatch": "Название в госреестре отличается: «{{name}}»",
+      "vatNotRegistered": "Компания не плательщик НДС — это не мешает верификации",
+      "manualPending": "Ожидает проверки сотрудником",
+      "unavailable": "Источник не ответил — проверка не выполнена",
+      "eimzoFailed": "Электронная подпись не прошла проверку — подпишите заново"
     },
     "checkDetail": {
       "empty": "Дополнительная информация отсутствует.",
@@ -1649,6 +1672,7 @@
       "created": "Проект создан",
       "sent": "Отправлен на согласование",
       "signedBy": "Подписано: {{company}}",
+      "signedNoDate": "Подписано",
       "awaitingSignature": "Ожидает подписи: {{company}}",
       "active": "Договор подписан обеими сторонами",
       "awaiting": "Ожидается"
@@ -2746,7 +2770,17 @@
       "cancelled": "Подписание отменено — окно ввода пароля E-IMZO закрыто. Нажмите ещё раз и введите пароль ключа."
     },
     "signOffer": "Подписать оферту Didox",
-    "signingOffer": "Подписываем…"
+    "signingOffer": "Подписываем…",
+    "printForm": {
+      "title": "Печатная форма Didox",
+      "loading": "Загружаем форму оператора…",
+      "errors": {
+        "failed": "Не удалось получить печатную форму от оператора.",
+        "didox_session_required": "Нужна сессия Didox — подключите компанию к оператору.",
+        "document_not_created": "Документ ещё не создан у оператора.",
+        "didox_unavailable": "Didox сейчас недоступен. Попробуйте позже."
+      }
+    }
   },
   "sampleLetter": {
     "title": "Письмо-обязательство",

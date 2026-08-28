@@ -10,7 +10,9 @@ the message to record the outcome.
 Authorization mirrors offer moderation: the tap must come from the configured
 verification group (VERIFICATION_NOTIFY_CHAT_ID, else REQUEST_NOTIFY_CHAT_ID) and the
 presser must be an admin/creator of it. Idempotent: a case already decided (dashboard,
-double-tap) → the buttons drop and the presser is told "уже обработано".
+double-tap) → the buttons drop and the presser is told "уже обработано". A case that has
+not REACHED `pending_review` is a different refusal and gets a different answer — it keeps
+its buttons, because it may still become decidable.
 
 Import-safety: backend imports are deferred into the handler body so importing this
 module under pytest opens no socket and needs no DB.
@@ -38,6 +40,20 @@ _OUTCOME_LABELS = {
     "reject": "❌ Отклонено",
     "info": "✋ Запрошена информация",
 }
+
+#: Case statuses a decision can never be taken from again. Plain strings, so this
+#: module still needs no backend model import at import time.
+_TERMINAL_STATUSES = frozenset({"approved", "rejected", "cancelled"})
+
+#: Why a case that is not `pending_review` cannot be decided yet. The buttons stay
+#: on the message: unlike a decided case, this one may well become decidable.
+_NOT_PENDING_ANSWERS = {
+    "needs_info": "Кейс возвращён клиенту на доработку — решать пока нечего",
+    "draft": "Заявка ещё не отправлена на проверку",
+    "submitted": "Автопроверки ещё не завершены",
+    "checks_running": "Автопроверки ещё не завершены",
+}
+_NOT_PENDING_FALLBACK = "Кейс сейчас не готов к решению"
 
 
 def _notify_chat_id() -> int | None:
@@ -93,7 +109,17 @@ def _apply_decision(case_id: int, telegram_user_id: int, action: str) -> dict[st
                     session, case, staff_user_id=None, actor=actor, note=_DEFAULT_INFO_NOTE
                 )
         except verification_service.AlreadyDecided:
-            return {"ok": False, "reason": "already"}
+            # That exception conflates "a colleague got there first" with "this
+            # case never reached pending_review". Answering «Уже обработано» to
+            # the second sends someone hunting for the person who handled it —
+            # read the status back and say which one it actually is.
+            session.refresh(case)
+            case_status = str(case.status)
+            return {
+                "ok": False,
+                "reason": "already" if case_status in _TERMINAL_STATUSES else "not_pending_review",
+                "case_status": case_status,
+            }
         session.commit()
         return {"ok": True, "action": action}
 
@@ -119,13 +145,21 @@ async def on_verification_moderation(callback: CallbackQuery) -> None:
     result = await asyncio.to_thread(_apply_decision, case_id, user_id, action)
 
     if not result["ok"]:
-        if result.get("reason") == "already":
+        reason = result.get("reason")
+        if reason == "already":
             await callback.answer("Уже обработано", show_alert=True)
             if callback.message is not None:
                 try:
                     await callback.message.edit_reply_markup(reply_markup=None)
                 except Exception as exc:  # noqa: BLE001
                     logger.debug("verification_moderation.markup_clear_failed", extra={"error": str(exc)})
+        elif reason == "not_pending_review":
+            # Keep the keyboard — this case may reach pending_review later, and
+            # dropping the buttons would strip the group of the way to act then.
+            await callback.answer(
+                _NOT_PENDING_ANSWERS.get(str(result.get("case_status")), _NOT_PENDING_FALLBACK),
+                show_alert=True,
+            )
         else:
             await callback.answer("Заявка не найдена", show_alert=True)
         return
