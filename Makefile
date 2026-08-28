@@ -4,7 +4,7 @@
 # These are thin wrappers around scripts/compose; backend dev commands continue
 # to run from backend/ (uv-managed). Targets here orchestrate the full stack.
 # =============================================================================
-.PHONY: help smoke webapp-bundle portal-bundle
+.PHONY: help dev dev-stop smoke webapp-bundle portal-bundle
 
 # --env-file .env: Compose otherwise looks for the interpolation .env next to the
 # compose file (deploy/), not the repo root — leaving ${POSTGRES_PASSWORD} etc.
@@ -14,6 +14,12 @@ COMPOSE ?= docker compose --env-file .env -f deploy/docker-compose.yml
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
+
+dev: ## Run the WHOLE local stack (infra + api + worker + beat + portal + dashboard)
+	@bash scripts/dev.sh
+
+dev-stop: ## Stop the infra containers `make dev` leaves running
+	@docker stop pi-pg pi-redis pi-minio
 
 smoke: ## Run the full-stack production-compose smoke (D-02, synthetic data + placeholder env)
 	bash tests/smoke/test_smoke_full_stack.sh

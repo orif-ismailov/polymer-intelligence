@@ -314,7 +314,17 @@ the finding: report it and ask how to unblock it — the answer took one sentenc
 saved two days.
 
 **Running the stack means all of it**, and a missing piece looks like a broken feature rather than
-a missing process:
+a missing process. One command starts every piece:
+
+```bash
+make dev        # infra containers + migrations + seeds + api + worker + beat + portal + dashboard
+make dev-stop   # stop the infra containers it leaves running
+```
+
+`scripts/dev.sh` refuses to start on a busy port (otherwise the OLD process keeps answering and you
+debug code you are not running), and if any process dies it takes the rest down — a half-stack is
+the state that makes a working feature look broken. It does NOT start the userbot (needs real
+`TG_API_*`) or the Telegram Web App (`make webapp-bundle`). By hand, if you need the pieces apart:
 
 ```bash
 docker start pi-pg pi-redis pi-minio          # 5432 / 6379 / 9000
