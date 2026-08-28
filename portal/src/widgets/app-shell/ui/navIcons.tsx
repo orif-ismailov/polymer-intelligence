@@ -12,6 +12,7 @@ import {
   Factory,
   FileCheck2,
   FlaskConical,
+  Gavel,
   Globe,
   Handshake,
   Heart,
@@ -37,8 +38,10 @@ export const StoreIcon = <Store {...props} />;
 export const ManufacturersIcon = <Factory {...props} />;
 /** Buyer↔seller inquiry inbox. */
 export const ChatIcon = <Inbox {...props} />;
-/** Purchase requests / RFQs. */
+/** The company's own tenders (or a carrier/lab's broadcast pool). */
 export const DocIcon = <ClipboardList {...props} />;
+/** Open tenders from other buyers — the supplier's quoting inbox. */
+export const GavelIcon = <Gavel {...props} />;
 export const NewsIcon = <Newspaper {...props} />;
 export const ContractIcon = <FileCheck2 {...props} />;
 export const HandshakeIcon = <Handshake {...props} />;

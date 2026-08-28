@@ -83,9 +83,16 @@ export function RequestDetailPage() {
           <Card>
             <CardBody>
               <SpecList>
+                {/* A catalog pick sets `polymer_type` (the product code) and
+                    leaves both text fields NULL, so naming only those two showed
+                    «—» on every tender announced from the catalog. */}
                 <SpecItem
                   label={t("requestWizard.preview.product")}
-                  value={r.grade_text ?? r.product_text ?? "—"}
+                  value={
+                    [r.product_text ?? r.polymer_type, r.grade_text]
+                      .filter(Boolean)
+                      .join(" · ") || "—"
+                  }
                 />
                 <SpecItem
                   label={t("requestWizard.preview.volume")}

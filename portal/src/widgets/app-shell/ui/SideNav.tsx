@@ -6,6 +6,8 @@ import { Link, NavLink } from "react-router-dom";
 import { companyHasFeature, useActiveCompany, type FeatureKey } from "@/entities/company";
 import { cn } from "@/shared/lib";
 
+import { requestsNavLabelKey } from "../model/requestsNavLabel";
+
 import {
   BuildingIcon,
   ChatIcon,
@@ -13,6 +15,7 @@ import {
   ContractIcon,
   DocIcon,
   FlaskNavIcon,
+  GavelIcon,
   TruckNavIcon,
   HandshakeIcon,
   HeartIcon,
@@ -42,9 +45,14 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/market", labelKey: "nav.market", icon: StoreIcon },
   { to: "/manufacturers", labelKey: "nav.manufacturers", icon: ManufacturersIcon },
   { to: "/cabinet/market/favorites", labelKey: "nav.favorites", icon: HeartIcon, feature: "favorites" },
-  // «Заявки» is universal on purpose: the buyer's purchase requests, or the
-  // broadcast pool for a carrier/lab — RequestsRouteSwitch picks the page.
+  // This slot is universal on purpose: the buyer's tenders, or the broadcast
+  // pool for a carrier/lab — RequestsRouteSwitch picks the page, and
+  // `requestsNavLabelKey` names it for whoever is looking.
   { to: "/cabinet/requests", labelKey: "nav.requests", icon: DocIcon },
+  // The other end of the same object: tenders OTHER companies announced, which
+  // a supplier quotes against. It had a route and a role gate but no way in —
+  // reachable only from a notification or the deals page.
+  { to: "/cabinet/market/requests", labelKey: "nav.openTenders", icon: GavelIcon, feature: "rfqInbox" },
   { to: "/cabinet/deals", labelKey: "nav.deals", icon: HandshakeIcon },
   { to: "/cabinet/inquiries", labelKey: "nav.inquiries", icon: ChatIcon, feature: "inquiries" },
   { to: "/cabinet/samples", labelKey: "nav.samples", icon: SampleBoxIcon, feature: "samples" },
@@ -85,6 +93,7 @@ export function SideNav({ onNavigate }: SideNavProps) {
   // matrix drives the route guards, so a hidden entry is also an unreachable
   // page — hiding here is presentation, not the enforcement.
   const { activeCompany } = useActiveCompany();
+  const requestsLabelKey = requestsNavLabelKey(activeCompany);
   const items = NAV_ITEMS.filter(
     (item) => !item.feature || companyHasFeature(activeCompany, item.feature),
   );
@@ -106,7 +115,7 @@ export function SideNav({ onNavigate }: SideNavProps) {
           }
         >
           {item.icon}
-          {t(item.labelKey)}
+          {t(item.to === "/cabinet/requests" ? requestsLabelKey : item.labelKey)}
         </NavLink>
       ))}
 

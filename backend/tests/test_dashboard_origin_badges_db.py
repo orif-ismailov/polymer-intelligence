@@ -73,12 +73,17 @@ def test_requests_list_origin_fields_and_filter(api) -> None:  # noqa: ANN001
         owner = make_account(db, "+998900009001")
         company = make_company(db, owner, tax_id="317000001", short_name="Portal Co")
         from app.domains.requests import service as request_service  # noqa: PLC0415
-        from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
+        from app.domains.requests.schemas import PortalRequestCreate  # noqa: PLC0415
 
         # one portal request, one TG request
         request_service.create_company_request(
             db, company, owner,
-            RequestCreate(product_text="PP", grade_text="X", volume=decimal.Decimal("5")),
+            PortalRequestCreate(
+                company_id=company.id,
+                product_text="PP",
+                grade_text="X",
+                volume=decimal.Decimal("5"),
+            ),
         )
         from app.domains.requests.models import Client, Request  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415

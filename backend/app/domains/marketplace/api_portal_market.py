@@ -34,6 +34,7 @@ from app.domains.marketplace.portal_market_schemas import (
     PublicCompanyProfileOut,
 )
 from app.domains.marketplace.schemas import OfferRequestOut
+from app.domains.reference.models import Product
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,
@@ -143,6 +144,17 @@ def list_market_requests(
     company = company_or_404(db, account, company_id)
     rows = rfq_response_service.list_open_requests(db, company, limit=limit, offset=offset)
 
+    # A tender announced from the CATALOG carries `product_id` and leaves
+    # `product_text` NULL — so the card said "—" where the product name belongs,
+    # which is the one thing a supplier decides on. Resolve the catalog name for
+    # those rows; a free-typed product keeps the buyer's own words.
+    catalog = {
+        p.id: p.name_ru
+        for p in db.query(Product)
+        .filter(Product.id.in_([r.product_id for r in rows if r.product_id] or [0]))
+        .all()
+    }
+
     mine = {
         r.request_id: r
         for r in db.query(RfqResponse)
@@ -157,8 +169,8 @@ def list_market_requests(
         items=[
             MarketRequestOut(
                 id=r.id,
-                product=r.product_text,
-                grade=r.grade_text,
+                product=r.product_text or catalog.get(r.product_id or 0),
+                grade=r.grade_text or r.polymer_type,
                 volume=r.volume if r.volume is not None else decimal.Decimal(0),
                 volume_unit=r.volume_unit,
                 incoterms=str(r.incoterms),

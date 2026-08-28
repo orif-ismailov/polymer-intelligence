@@ -9,6 +9,7 @@ import { useNewsArticles } from "@/entities/news";
 import { useUnreadCount } from "@/entities/notification";
 import { useRequests } from "@/entities/request";
 import { CaseStatusBadge } from "@/entities/verification";
+import { requestsNavHintKey, requestsNavLabelKey } from "@/widgets/app-shell";
 import {
   Building2,
   ClipboardList,
@@ -181,8 +182,8 @@ export function HomePage() {
           />
           <ModuleCard
             to="/cabinet/requests"
-            title={t("nav.requests")}
-            hint={t("requests.subtitle")}
+            title={t(requestsNavLabelKey(activeCompany))}
+            hint={t(requestsNavHintKey(activeCompany))}
             icon={<ClipboardList size={18} strokeWidth={1.75} aria-hidden />}
           />
           {companyHasFeature(activeCompany, "inquiries") ? (

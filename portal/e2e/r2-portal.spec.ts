@@ -3,8 +3,8 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
 import { registerCompany } from "./_registration";
 
 /**
- * R2 demo e2e: OTP login → register a company → create a purchase request through
- * the 4-step wizard → see it in the requests list with a status timeline → browse
+ * R2 demo e2e: OTP login → register a company → announce a tender through the
+ * 5-step wizard → see it in the tenders list with a status timeline → browse
  * the market, news and notification surfaces.
  *
  * Buying never requires a verified company, so this whole flow is self-serve (no
@@ -42,15 +42,18 @@ async function login(page: Page, request: APIRequestContext, phone: string): Pro
 }
 
 
-test("buyer creates a purchase request and browses the R2 surfaces", async ({ page, request }) => {
+test("buyer announces a tender and browses the R2 surfaces", async ({ page, request }) => {
   const phone = uniquePhone();
   await login(page, request, phone);
   await registerCompany(page, uniqueTaxId());
 
-  // ── Purchase request through the 5-step wizard ──────────────────────────────
+  // ── Tender announced through the 5-step wizard ──────────────────────────────
   await page.goto("/cabinet/requests");
   // Two identical CTAs render on /requests (header + empty state) — take the header one.
-  await page.getByRole("link", { name: /new request|новая заявка|yangi ariza/i }).first().click();
+  await page
+    .getByRole("link", { name: /announce a tender|объявить тендер|tender e'lon qilish/i })
+    .first()
+    .click();
   await page.waitForURL("**/cabinet/requests/new/**");
 
   // Step 1 — pick manual product entry
@@ -66,7 +69,7 @@ test("buyer creates a purchase request and browses the R2 surfaces", async ({ pa
   // Step 3 — extra (optional)
   await page.getByTestId("request-wizard-next").click();
 
-  // Step 4 — communication (defaults)
+  // Step 4 — who sees the tender (defaults to verified suppliers only)
   await page.getByTestId("request-wizard-next").click();
 
   // Step 5 — publish

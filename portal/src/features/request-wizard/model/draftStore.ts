@@ -9,8 +9,9 @@ import {
   DEFAULT_VALIDITY_DAYS,
   DELIVERY_BANDS,
   OTHER_OPTION,
+  REQUIRED_DOC_MAP,
+  VISIBILITY_API_VALUE,
   type DeliveryBandId,
-  type OfferChannel,
   type RequestDocKind,
   type VisibilityOption,
 } from "./constants";
@@ -45,8 +46,7 @@ export interface RequestDraft {
   specs: string;
   requiredDocs: RequestDocKind[];
   comment: string;
-  // ── 4. Условия общения ────────────────────────────────────────────────────
-  offerChannel: OfferChannel;
+  // ── 4. Кто увидит тендер ──────────────────────────────────────────────────
   visibility: VisibilityOption;
 }
 
@@ -59,7 +59,7 @@ interface DraftState {
   /** Seed company-scoped defaults when the flow opens. */
   begin: (companyName: string) => void;
   reset: () => void;
-  /** Build the POST body. Specs/docs/channel fold into `comment`. */
+  /** Build the POST body. Only the free-text specs fold into `comment`. */
   toPayload: (companyId: number) => RequestPayload;
 }
 
@@ -84,7 +84,6 @@ const EMPTY: RequestDraft = {
   specs: "",
   requiredDocs: [],
   comment: "",
-  offerChannel: "app",
   visibility: "verified",
 };
 
@@ -105,27 +104,20 @@ function urgencyFor(band: DeliveryBandId): string {
 }
 
 /**
- * Fold the mockup-only fields into the single `comment` column the API accepts,
- * so staff still see specs / required docs / channel preferences without a
- * migration. Blank sections are omitted rather than printed as empty headers.
+ * The two free-text blocks (required characteristics + the buyer's own comment)
+ * share the single `comment` column. Docs and visibility used to be folded in
+ * here too, which is why choosing them changed nothing: they now travel as
+ * `required_docs` / `visibility` and reach the supplier's card and the
+ * visibility gate. Blank sections are omitted rather than printed as empty
+ * headers.
  */
-function buildComment(draft: RequestDraft, tDocs: (kind: RequestDocKind) => string): string {
+function buildComment(draft: RequestDraft): string {
   const parts: string[] = [];
   const specs = draft.specs.trim();
   if (specs) parts.push(specs);
 
-  if (draft.requiredDocs.length > 0) {
-    parts.push(`Требуемые документы: ${draft.requiredDocs.map(tDocs).join(", ")}`);
-  }
-
   const extra = draft.comment.trim();
   if (extra) parts.push(extra);
-
-  // Channel + visibility are soft preferences — keep them short.
-  const prefs: string[] = [];
-  if (draft.offerChannel !== "app") prefs.push(`канал: ${draft.offerChannel}`);
-  if (draft.visibility !== "verified") prefs.push(`видимость: ${draft.visibility}`);
-  if (prefs.length) parts.push(`Предпочтения: ${prefs.join("; ")}`);
 
   return parts.join("\n\n") || "";
 }
@@ -163,20 +155,7 @@ export const useRequestDraft = create<DraftState>((set, get) => ({
     const productId =
       !isOther && draft.productChoice !== "" ? Number(draft.productChoice) : null;
 
-    // Doc labels stay Russian in the folded comment — staff UI is RU-primary
-    // and a translated fold would need i18n at submit time.
-    const docLabel = (kind: RequestDocKind): string => {
-      const map: Record<RequestDocKind, string> = {
-        sds: "SDS",
-        coa: "COA",
-        coo: "Сертификат происхождения",
-        commercial: "Коммерческое предложение",
-        other: "Другие документы",
-      };
-      return map[kind];
-    };
-
-    const comment = buildComment(draft, docLabel);
+    const comment = buildComment(draft);
 
     return {
       company_id: companyId,
@@ -198,6 +177,8 @@ export const useRequestDraft = create<DraftState>((set, get) => ({
       urgency: urgencyFor(draft.deliveryBand),
       comment: comment || null,
       company_name: companyName || null,
+      required_docs: draft.requiredDocs.map((kind) => REQUIRED_DOC_MAP[kind]),
+      visibility: VISIBILITY_API_VALUE[draft.visibility],
     };
   },
 }));

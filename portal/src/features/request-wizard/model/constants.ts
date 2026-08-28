@@ -90,8 +90,9 @@ export const DEST_CITIES = [
 export const OTHER_OPTION = "other";
 
 /**
- * Document checklist on sheet 3. Not a backend column — selected kinds are
- * folded into `comment` at submit so staff still see the ask.
+ * Document checklist on sheet 3. The wizard's own vocabulary — `REQUIRED_DOC_MAP`
+ * below turns it into the codes `requests.required_docs` stores, which is what a
+ * supplier sees as document chips on the tender card.
  */
 export const REQUEST_DOC_KINDS = [
   "sds",
@@ -103,13 +104,33 @@ export const REQUEST_DOC_KINDS = [
 
 export type RequestDocKind = (typeof REQUEST_DOC_KINDS)[number];
 
-/** How the buyer wants to receive offers — UI preference, folded into comment. */
-export const OFFER_CHANNELS = ["app", "email", "telegram"] as const;
-export type OfferChannel = (typeof OFFER_CHANNELS)[number];
+/**
+ * Wizard doc kind → the code the API stores (`REQUIRED_DOC_CODES` in
+ * `backend/app/domains/deals/models.py`). Two of the five differ in name only,
+ * and a mismatch is silent: the server drops unknown codes.
+ */
+export const REQUIRED_DOC_MAP: Record<RequestDocKind, string> = {
+  sds: "sds",
+  coa: "coa",
+  coo: "origin_cert",
+  commercial: "commercial_offer",
+  other: "other",
+};
 
-/** Who can see the request — UI preference, folded into comment. */
-export const VISIBILITY_OPTIONS = ["verified", "all", "selected"] as const;
+/**
+ * Who can see the tender. These reach the API as `visibility` and decide who
+ * `rfq.list_open_requests` shows it to — they are not a display preference.
+ * `selected` exists in the backend enum but has no supplier picker here, so the
+ * wizard does not offer what it cannot collect.
+ */
+export const VISIBILITY_OPTIONS = ["verified", "all"] as const;
 export type VisibilityOption = (typeof VISIBILITY_OPTIONS)[number];
+
+/** `VisibilityOption` → the `rfq_visibility` enum value the API expects. */
+export const VISIBILITY_API_VALUE: Record<VisibilityOption, string> = {
+  verified: "verified_only",
+  all: "all",
+};
 
 export const SPECS_MAX = 300;
 export const COMMENT_MAX = 300;

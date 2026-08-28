@@ -3,8 +3,35 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { rfqApi } from "@/entities/deal";
+import { ApiError } from "@/shared/api";
 import { CURRENCIES, INCOTERMS } from "@/shared/config";
 import { Alert, Button, FormField, Input, Select, Textarea } from "@/shared/ui";
+
+/**
+ * The API's typed refusals, in the words of the person reading them.
+ *
+ * Without this the alert printed the code itself — a supplier who opened an
+ * all-suppliers tender was told «company_not_verified» and had to guess. Keyed
+ * by `code` OR `message`: FastAPI's `detail` is a bare string on most of these
+ * refusals, and the client only fills `code` when it is an object.
+ */
+const ERROR_KEY: Record<string, string> = {
+  company_not_verified: "rfq.errors.notVerified",
+  role_not_allowed: "rfq.errors.roleNotAllowed",
+  already_responded: "rfq.errors.alreadyResponded",
+  request_closed: "rfq.errors.requestClosed",
+  own_request: "rfq.errors.ownRequest",
+  unknown_incoterms: "rfq.errors.unknownIncoterms",
+};
+
+function errorMessage(err: unknown, t: (key: string) => string): string {
+  if (err instanceof ApiError) {
+    const key = ERROR_KEY[err.code ?? ""] ?? ERROR_KEY[err.message];
+    if (key) return t(key);
+    if (err.status === 404) return t("rfq.errors.requestClosed");
+  }
+  return t("errors.generic");
+}
 
 interface RfqResponseFormProps {
   companyId: number;
@@ -53,7 +80,7 @@ export function RfqResponseForm({
       });
       onSubmitted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.generic"));
+      setError(errorMessage(err, t));
     } finally {
       setBusy(false);
     }

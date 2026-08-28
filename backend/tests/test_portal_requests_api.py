@@ -145,6 +145,84 @@ def test_list_and_cancel(api) -> None:  # noqa: ANN001
 
 
 @requires_real_db
+def test_visibility_and_docs_reach_the_row_and_the_supplier(api) -> None:  # noqa: ANN001
+    """The tender sheet's two answers are stored and acted on — not decorated.
+
+    Both used to be folded into the free-text `comment`, so «все поставщики»
+    changed nothing (the column kept its `verified_only` default) and the doc
+    checklist never reached the card a supplier reads.
+    """
+    from app.domains.deals import rfq as rfq_service  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
+    from app.models.enums import CompanyStatus, RfqVisibility  # noqa: PLC0415
+
+    client, session = api
+    owner_id, company_id = _setup_company(session)
+
+    open_to_all = client.post(
+        _BASE,
+        json={
+            "company_id": company_id,
+            **_WIZARD,
+            "visibility": "all",
+            # `coo` is the wizard's name; `origin_cert` is the code — and an
+            # unknown one is dropped rather than stored.
+            "required_docs": ["origin_cert", "sds", "nonsense"],
+        },
+        headers=_auth(owner_id),
+    )
+    assert open_to_all.status_code == 201, open_to_all.text
+    open_id = open_to_all.json()["id"]
+
+    verified_only_id = client.post(
+        _BASE, json={"company_id": company_id, **_WIZARD}, headers=_auth(owner_id)
+    ).json()["id"]
+
+    with session() as db:
+        row = db.get(Request, open_id)
+        assert row.visibility == RfqVisibility.all
+        assert row.required_docs == ["origin_cert", "sds"]
+        # The default is the safe one: a tender is verified-only unless asked.
+        assert db.get(Request, verified_only_id).visibility == RfqVisibility.verified_only
+
+    # The buyer reads back what they set (a screen that can write a field and
+    # not see it is how the value silently disappears on the next save).
+    detail = client.get(
+        f"{_BASE}/{open_id}", params={"company_id": company_id}, headers=_auth(owner_id)
+    ).json()
+    assert detail["visibility"] == "all"
+    assert detail["required_docs"] == ["origin_cert", "sds"]
+
+    # And the promise holds where it is enforced: an UNVERIFIED supplier sees
+    # the open tender and not the verified-only one.
+    with session() as db:
+        supplier_owner = make_account(db, "+998900006010")
+        supplier = make_company(
+            db, supplier_owner, tax_id="316000010", roles=["distributor"]
+        )
+        assert supplier.status != CompanyStatus.verified
+        db.commit()
+        visible = {r.id for r in rfq_service.list_open_requests(db, supplier)}
+        assert open_id in visible
+        assert verified_only_id not in visible
+
+
+@requires_real_db
+def test_selected_visibility_is_refused(api) -> None:  # noqa: ANN001
+    """`selected` needs a supplier list this body cannot carry, and an empty one
+    would publish a tender nobody can answer — so it is a 422, not a default."""
+    client, session = api
+    owner_id, company_id = _setup_company(session)
+
+    resp = client.post(
+        _BASE,
+        json={"company_id": company_id, **_WIZARD, "visibility": "selected"},
+        headers=_auth(owner_id),
+    )
+    assert resp.status_code == 422, resp.text
+
+
+@requires_real_db
 def test_cross_company_isolation(api) -> None:  # noqa: ANN001
     client, session = api
     with session() as db:

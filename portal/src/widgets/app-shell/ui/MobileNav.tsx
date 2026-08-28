@@ -1,7 +1,9 @@
 import { useTranslation } from "react-i18next";
 
+import { useActiveCompany } from "@/entities/company";
 import { BottomNav, type BottomNavItem } from "@/shared/ui";
 
+import { requestsNavLabelKey } from "../model/requestsNavLabel";
 import { CogIcon, DocIcon, HandshakeIcon, HomeIcon, StoreIcon } from "./navIcons";
 
 /**
@@ -13,10 +15,11 @@ import { CogIcon, DocIcon, HandshakeIcon, HomeIcon, StoreIcon } from "./navIcons
  */
 export function MobileNav() {
   const { t } = useTranslation();
+  const { activeCompany } = useActiveCompany();
 
   const items: BottomNavItem[] = [
     { to: "/cabinet", label: t("nav.home"), icon: HomeIcon, end: true },
-    { to: "/cabinet/requests", label: t("nav.requests"), icon: DocIcon },
+    { to: "/cabinet/requests", label: t(requestsNavLabelKey(activeCompany)), icon: DocIcon },
     { to: "/market", label: t("nav.market"), icon: StoreIcon },
     { to: "/cabinet/deals", label: t("nav.deals"), icon: HandshakeIcon },
     { to: "/cabinet/settings", label: t("nav.settings"), icon: CogIcon },

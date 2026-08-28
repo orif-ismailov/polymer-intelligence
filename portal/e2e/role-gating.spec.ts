@@ -21,6 +21,9 @@ const MANUFACTURER_PHONE = process.env.PORTAL_MANUFACTURER_PHONE ?? "+9989012345
 const OFFERS = /^(Предложения|Takliflar|Offers)$/;
 const FAVORITES = /^(Избранное|Saralangan|Favorites)$/;
 const INQUIRIES = /^(Запросы|So.rovlar|Inquiries)$/;
+// The supplier's quoting inbox — buyer tenders from OTHER companies. It had a
+// route and a role gate but no nav entry at all until this spec asked for one.
+const OPEN_TENDERS = /^(Открытые тендеры|Ochiq tenderlar|Open tenders)$/;
 // The merged lab-hub entry (`nav.lab`) — one item where request-list and
 // partner-lab-orders entries used to sit, still gated on `labOrdering`.
 const LAB_ORDERING = /^(Лаборатория|Laboratoriya|Laboratory)$/;
@@ -56,6 +59,7 @@ test("a laboratory's cabinet has no trade features, and direct URLs walk home", 
   await expect(navLink(page, OFFERS)).toHaveCount(0);
   await expect(navLink(page, FAVORITES)).toHaveCount(0);
   await expect(navLink(page, INQUIRIES)).toHaveCount(0);
+  await expect(navLink(page, OPEN_TENDERS)).toHaveCount(0);
   // Its own service side is closed too…
   await expect(navLink(page, LAB_ORDERING)).toHaveCount(0);
   // …but the OTHER service stays: a lab ships samples (cross-service).
@@ -75,6 +79,7 @@ test("a carrier keeps cross-service lab ordering but loses its own buyer page", 
   await signIn(page, request, CARRIER_PHONE);
 
   await expect(navLink(page, OFFERS)).toHaveCount(0);
+  await expect(navLink(page, OPEN_TENDERS)).toHaveCount(0);
   await expect(navLink(page, LOGISTICS_ORDERING)).toHaveCount(0);
   await expect(navLink(page, LAB_ORDERING).first()).toBeVisible();
 
@@ -94,6 +99,7 @@ test("a distributor sees the trade features, before verification", async ({
   await expect(navLink(page, OFFERS).first()).toBeVisible();
   await expect(navLink(page, FAVORITES).first()).toBeVisible();
   await expect(navLink(page, INQUIRIES).first()).toBeVisible();
+  await expect(navLink(page, OPEN_TENDERS).first()).toBeVisible();
 
   // /cabinet/offers is theirs (locked until verified, but not redirected).
   await page.goto("/cabinet/offers");
@@ -114,7 +120,8 @@ test("a manufacturer keeps BOTH sides: sell features and buyer features", async 
   await expect(navLink(page, LAB_ORDERING).first()).toBeVisible();
   await expect(navLink(page, LOGISTICS_ORDERING).first()).toBeVisible();
 
-  // The supplier RFQ inbox is theirs too — no redirect.
+  // The supplier RFQ inbox is theirs too — reachable from the nav, no redirect.
+  await expect(navLink(page, OPEN_TENDERS).first()).toBeVisible();
   await page.goto("/cabinet/market/requests");
   await expect(page).toHaveURL(/\/cabinet\/market\/requests$/);
 });
@@ -134,6 +141,7 @@ test("a buyer buys but never sells: no offers, no supplier inbox", async ({
   await expect(navLink(page, LOGISTICS_ORDERING).first()).toBeVisible();
   // …the seller surface is not.
   await expect(navLink(page, OFFERS)).toHaveCount(0);
+  await expect(navLink(page, OPEN_TENDERS)).toHaveCount(0);
 
   await page.goto("/cabinet/offers");
   await page.waitForURL((url) => url.pathname === "/cabinet");

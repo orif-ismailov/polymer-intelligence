@@ -261,14 +261,15 @@ def test_publishing_an_rfq_enqueues_the_push(sf) -> None:  # noqa: ANN001
     """The trigger point: a company filing an RFQ. Enqueue is fail-soft — a
     broker outage must not break request creation."""
     from app.domains.requests import service as request_service  # noqa: PLC0415
-    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
+    from app.domains.requests.schemas import PortalRequestCreate  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
         buyer = make_company(db, buyer_acc, tax_id="301111111")
         db.commit()
 
-        payload = RequestCreate(
+        payload = PortalRequestCreate(
+            company_id=buyer.id,
             product_text="HDPE film",
             grade_text="F0348",
             volume="20",
@@ -286,14 +287,15 @@ def test_publishing_an_rfq_enqueues_the_push(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_a_broker_outage_does_not_break_rfq_creation(sf) -> None:  # noqa: ANN001
     from app.domains.requests import service as request_service  # noqa: PLC0415
-    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
+    from app.domains.requests.schemas import PortalRequestCreate  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc = make_account(db, "+998900000001")
         buyer = make_company(db, buyer_acc, tax_id="301111111")
         db.commit()
 
-        payload = RequestCreate(
+        payload = PortalRequestCreate(
+            company_id=buyer.id,
             product_text="HDPE film",
             grade_text="F0348",
             volume="20",

@@ -74,6 +74,8 @@
     "market": "Market",
     "manufacturers": "Manufacturers",
     "requests": "Requests",
+    "tenders": "My tenders",
+    "openTenders": "Open tenders",
     "inquiries": "Inquiries",
     "news": "News",
     "notifications": "Notifications",
@@ -101,7 +103,7 @@
     "createCompany": "Create company",
     "goToVerification": "Go to verification status",
     "publishOffer": "Publish an offer",
-    "activeRequests": "Active requests",
+    "activeRequests": "Active tenders",
     "unread": "Unread",
     "latestNews": "Latest news"
   },
@@ -749,7 +751,7 @@
     },
     "readinessTitle": "Ready to deal",
     "readinessHint": "What you tick shows as badges on your market card.",
-    "acceptsRfq": "I answer requests (RFQ)",
+    "acceptsRfq": "I answer buyer requests",
     "acceptsContract": "Ready to sign a contract on the platform",
     "acceptsEscrow": "Ready to work through escrow",
     "samplesTitle": "Samples",
@@ -948,7 +950,7 @@
         "3-7": "3–7 days",
         "7-14": "7–14 days"
       },
-      "acceptsRfq": "I accept RFQs",
+      "acceptsRfq": "I accept buyer requests",
       "acceptsContract": "Ready to sign a contract through D-Doc",
       "acceptsEscrow": "I accept escrow payments",
       "sampleLetterRequired": "Require a commitment letter before shipping a sample",
@@ -1143,7 +1145,7 @@
     "favoritesEmptyBody": "Tap the heart on an offer card and it will show up here.",
     "leadTime": "Lead time: {{count}} days",
     "readiness": {
-      "rfq": "RFQ",
+      "rfq": "Requests",
       "contract": "Contract",
       "escrow": "Escrow"
     },
@@ -1167,7 +1169,7 @@
       "linkCopied": "Link copied",
       "noPhoto": "No photo added",
       "gallery": "Gallery",
-      "requestRfq": "Request RFQ",
+      "requestRfq": "Request to the seller",
       "addFavorite": "Add to favorites",
       "basics": "Basic information",
       "cas": "CAS",
@@ -1206,7 +1208,7 @@
       "contractNeedsVerifiedSeller": "A contract requires a verified counterparty",
       "contractNeedsVerifiedCompany": "Get your own company verified first",
       "contractNotOffered": "The seller is not ready to sign a contract for this offer",
-      "rfqNotAccepted": "The seller does not accept RFQs on this offer",
+      "rfqNotAccepted": "The seller does not accept requests on this offer",
       "reviewsEmpty": "No reviews for this product yet.",
       "docChip": {
         "sds": "SDS PDF",
@@ -1238,34 +1240,34 @@
     "editFailed": "Could not save the changes."
   },
   "requests": {
-    "title": "Purchase requests",
-    "subtitle": "Requests you've submitted for your company",
-    "create": "New request",
+    "title": "My tenders",
+    "subtitle": "Your company's tenders, open to suppliers",
+    "create": "Announce a tender",
     "forCompany": "On behalf of {{company}}",
-    "empty": "No requests yet",
-    "emptyBody": "Create a purchase request to get started.",
-    "notFound": "Request not found",
-    "back": "Back to requests",
-    "timeline": "Status timeline",
-    "cancel": "Cancel request"
+    "empty": "No tenders yet",
+    "emptyBody": "Announce a tender — suppliers will see it and send quotes.",
+    "notFound": "Tender not found",
+    "back": "Back to tenders",
+    "timeline": "Tender history",
+    "cancel": "Withdraw the tender"
   },
   "requestStatus": {
-    "new": "New",
-    "in_review": "In review",
-    "offer_received": "Offer received",
-    "matched": "Matched",
+    "new": "Published",
+    "in_review": "Collecting quotes",
+    "offer_received": "Quotes received",
+    "matched": "Supplier selected",
     "closed": "Closed",
     "cancelled": "Cancelled"
   },
   "requestWizard": {
-    "title": "New purchase request",
-    "subtitle": "Create a request and receive offers from suppliers",
+    "title": "Announce a tender",
+    "subtitle": "Describe the purchase — suppliers will see the tender and send quotes",
     "stepOf": "Step {{current}} of {{total}}",
     "steps": {
       "product": "Product",
       "params": "Parameters",
       "extra": "Extra",
-      "comm": "Terms",
+      "comm": "Access",
       "preview": "Publish"
     },
     "product": {
@@ -1285,12 +1287,12 @@
       "pickRequired": "Pick a product from the list or enter it manually"
     },
     "params": {
-      "title": "2. Request parameters",
+      "title": "2. Tender parameters",
       "volume": "Required volume",
       "volumeRequired": "Enter a volume",
       "unit": "Unit",
       "price": "Target price (your maximum)",
-      "priceHint": "Suppliers will only see your range",
+      "priceHint": "Suppliers never see this price — only the IMEX AI team does",
       "currency": "Currency",
       "dealType": "Deal type",
       "dealHint": "Choose the Incoterms® delivery basis",
@@ -1314,7 +1316,7 @@
         "quarter": "1–3 months",
         "later": "More than 3 months"
       },
-      "validity": "Request validity period",
+      "validity": "Tender validity period",
       "validityOpt": "{{days}} days"
     },
     "extra": {
@@ -1334,70 +1336,52 @@
       "commentPlaceholder": "Any extra requirements or wishes for suppliers…"
     },
     "comm": {
-      "title": "4. Communication terms",
-      "channelLabel": "How do you want to receive offers",
-      "channel": {
-        "app": {
-          "title": "Inside IMEX AI",
-          "body": "All offers arrive in the cabinet — easy to compare"
-        },
-        "email": {
-          "title": "By email",
-          "body": "Also send offers to your email"
-        },
-        "telegram": {
-          "title": "In Telegram",
-          "body": "Notifications about new offers in the messenger"
-        }
-      },
-      "visibilityLabel": "Who can see the request",
+      "title": "4. Who sees the tender",
+      "visibilityLabel": "Tender access",
       "visibility": {
         "verified": {
           "title": "Verified suppliers only",
-          "body": "Only companies with confirmed verification will see it"
+          "body": "Only companies that passed IMEX AI verification will see it"
         },
         "all": {
           "title": "All platform suppliers",
-          "body": "The request will be visible to every seller on the platform"
-        },
-        "selected": {
-          "title": "Selected suppliers",
-          "body": "We will send the request only to those you pick later"
+          "body": "Every seller will see it; only verified ones can quote"
         }
-      }
+      },
+      "contactsNote": "Your company's contacts are never shown to suppliers: until a deal opens, everything goes through the platform."
     },
     "preview": {
-      "title": "5. Review and publish",
+      "title": "5. Review and announce",
       "product": "Product",
       "volume": "Volume",
       "price": "Target price",
       "terms": "Delivery terms",
       "delivery": "Delivery timeframe",
-      "validity": "Request validity",
+      "validity": "Tender validity",
       "comment": "Comment",
       "docs": "Documents from supplier",
-      "publish": "Publish request",
+      "visibility": "Access",
+      "publish": "Announce the tender",
       "visibilityNote": {
-        "verified": "Your request will only be visible to verified suppliers on the platform.",
-        "all": "Your request will be visible to all suppliers on the platform.",
-        "selected": "The request will be sent to the selected suppliers."
+        "verified": "Only verified suppliers will see this tender — the same companies that can quote on it.",
+        "all": "Every supplier on the platform will see this tender. Only verified companies can quote on it."
       }
     },
     "done": {
-      "title": "Request published!",
-      "body": "Suppliers can already see your request and are preparing offers.",
-      "idLabel": "Request number",
+      "title": "Tender announced!",
+      "body": "Suppliers can already see it and are preparing quotes.",
+      "idLabel": "Tender number",
       "copyId": "Copy number",
       "nextTitle": "What's next?",
       "next": {
-        "offers": "Suppliers will send offers shortly",
-        "notify": "You will get a notification about new offers",
-        "compare": "Compare offers and choose the best terms"
+        "offers": "Suppliers will send quotes shortly",
+        "notify": "You will get a notification for every new quote",
+        "compare": "Compare the quotes and choose a supplier"
       },
-      "toRequests": "Go to my requests",
-      "createAnother": "Create another request"
+      "toRequests": "Go to my tenders",
+      "createAnother": "Announce another tender"
     },
-    "submitFailed": "Could not submit the request.",
+    "submitFailed": "Could not announce the tender.",
     "urgencyOpt": {
       "low": "Low",
       "medium": "Medium",
@@ -1500,14 +1484,14 @@
     }
   },
   "notifications": {
-    "subtitle": "Updates on your requests, inquiries, offers and verification",
+    "subtitle": "Updates on your tenders, inquiries, offers and verification",
     "markAllRead": "Mark all read",
     "viewAll": "View all",
     "empty": "No notifications",
     "emptyBody": "You're all caught up.",
     "request_status": {
-      "title": "Request update",
-      "body": "Request {{number}} was updated"
+      "title": "Tender update",
+      "body": "Tender {{number}} was updated"
     },
     "inquiry_approved": {
       "title": "New inquiry",
@@ -1547,7 +1531,7 @@
     },
     "rfq_response_new": {
       "title": "New quote",
-      "body": "A supplier quoted on request {{number}}"
+      "body": "A supplier quoted on tender {{number}}"
     },
     "rfq_response_accepted": {
       "title": "Quote accepted",
@@ -1555,7 +1539,7 @@
     },
     "rfq_response_not_selected": {
       "title": "Quote not selected",
-      "body": "Another quote was chosen for this request"
+      "body": "Another supplier was chosen for this tender"
     },
     "deal_opened": {
       "title": "Deal opened",
@@ -1582,8 +1566,8 @@
       "body": "Deal {{number}}: {{amount}} {{currency}} — the payment status changed"
     },
     "rfq_match": {
-      "title": "A new request matching your profile",
-      "body": "{{product}} — {{volume}} {{volume_unit}}. Request {{number}}"
+      "title": "A new tender matching your profile",
+      "body": "{{product}} — {{volume}} {{volume_unit}}. Tender {{number}}"
     },
     "lab_order_status": {
       "title": "Laboratory order",
@@ -1687,8 +1671,8 @@
     "title": "Deals",
     "subtitle": "Trade rooms: chat, documents, status.",
     "empty": "No deals yet",
-    "emptyBody": "Quote on a buyer's request, or accept a quote on your own.",
-    "browseRfqs": "Open requests",
+    "emptyBody": "Quote on a buyer's tender, or choose a supplier in your own.",
+    "browseRfqs": "Open tenders",
     "needsAction": "Needs action",
     "noAmount": "Amount not set",
     "progress": "Progress",
@@ -1792,11 +1776,11 @@
     }
   },
   "rfq": {
-    "marketTitle": "Open requests",
-    "marketSubtitle": "Buyer requests you can quote against.",
-    "marketEmpty": "No open requests",
-    "marketEmptyBody": "Check back later — new requests appear regularly.",
-    "respond": "Respond",
+    "marketTitle": "Open tenders",
+    "marketSubtitle": "Buyer tenders you can quote against.",
+    "marketEmpty": "No open tenders",
+    "marketEmptyBody": "Check back later — new tenders appear regularly.",
+    "respond": "Submit a quote",
     "alreadyResponded": "Quote sent",
     "submit": "Send quote",
     "price": "Price",
@@ -1813,11 +1797,11 @@
     "destination": "Destination",
     "desiredDate": "Desired date",
     "requiredDocs": "Required documents",
-    "responses": "Quotes",
+    "responses": "Supplier quotes",
     "noResponses": "No quotes yet",
-    "noResponsesBody": "Suppliers have not answered this request yet.",
-    "accept": "Accept",
-    "acceptTitle": "Accept this quote?",
+    "noResponsesBody": "Suppliers have not answered this tender yet.",
+    "accept": "Choose this supplier",
+    "acceptTitle": "Choose this supplier?",
     "acceptBody": "A deal with {{company}} at {{price}} will open. The other quotes will be declined.",
     "openDeal": "Open deal",
     "status": {
@@ -1825,6 +1809,14 @@
       "accepted": "Accepted",
       "not_selected": "Not selected",
       "withdrawn": "Withdrawn"
+    },
+    "errors": {
+      "notVerified": "Only verified companies can submit a quote. Pass verification — the tender stays open.",
+      "roleNotAllowed": "Only a seller company can submit quotes.",
+      "alreadyResponded": "You have already quoted on this tender.",
+      "requestClosed": "This tender no longer accepts quotes.",
+      "ownRequest": "This is your own company's tender.",
+      "unknownIncoterms": "Pick the delivery terms from the list."
     },
     "docs": {
       "sds": "SDS",

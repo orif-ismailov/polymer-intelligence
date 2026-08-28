@@ -42,11 +42,14 @@ def sf(engine: sa.Engine):  # noqa: ANN201
     clean(engine)
 
 
-def _payload():  # noqa: ANN202
-    from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
+def _payload(company_id: int):  # noqa: ANN202
+    from app.domains.requests.schemas import PortalRequestCreate  # noqa: PLC0415
     from app.models.enums import PriceBasis, Urgency  # noqa: PLC0415
 
-    return RequestCreate(
+    # The portal body — `create_company_request` takes the tender fields
+    # (visibility / required_docs) the cabinet collects, not the Mini App shape.
+    return PortalRequestCreate(
+        company_id=company_id,
         product_id=None,
         product_text="HDPE film grade",
         grade_text="F0348",
@@ -72,7 +75,7 @@ def test_create_company_request_is_portal_origin(sf) -> None:  # noqa: ANN001
     with sf() as db:
         owner = make_account(db, "+998900001001")
         company = make_company(db, owner, tax_id="311000001")
-        req = request_service.create_company_request(db, company, owner, _payload())
+        req = request_service.create_company_request(db, company, owner, _payload(company.id))
         db.commit()
         rid = req.id
 
@@ -105,7 +108,7 @@ def test_transition_portal_request_notifies_creator_in_portal(sf) -> None:  # no
     with sf() as db:
         owner = make_account(db, "+998900001002")
         company = make_company(db, owner, tax_id="311000002")
-        req = request_service.create_company_request(db, company, owner, _payload())
+        req = request_service.create_company_request(db, company, owner, _payload(company.id))
         db.commit()
 
         # Staff moves new -> viewed. No TG DM should be enqueued for a portal request.
