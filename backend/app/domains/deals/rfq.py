@@ -272,6 +272,31 @@ def list_for_request(
     return query.order_by(RfqResponse.id).all()
 
 
+def list_for_company(
+    db: Session, company: Company, *, limit: int = 50, offset: int = 0
+) -> list[tuple[RfqResponse, Request]]:
+    """Every quote this company has filed, newest first, with its tender.
+
+    All four statuses, deliberately: `list_open_requests` drops a tender the
+    moment it stops accepting quotes, so a supplier who only ever saw their work
+    there lost sight of it exactly when the answer arrived — including the one
+    that matters, `not_selected`.
+
+    Returns the pair because the caller needs both halves and a second lookup per
+    row would be N+1; `ix_rfq_responses_company` covers the filter.
+    """
+    rows = (
+        db.query(RfqResponse, Request)
+        .join(Request, Request.id == RfqResponse.request_id)
+        .filter(RfqResponse.company_id == company.id)
+        .order_by(RfqResponse.id.desc())
+        .limit(max(1, min(limit, 200)))
+        .offset(max(0, offset))
+        .all()
+    )
+    return [(response, request) for response, request in rows]
+
+
 def get_live_response(db: Session, request_id: int, company_id: int) -> RfqResponse | None:
     """This company's non-withdrawn response to an RFQ, if any."""
     return (

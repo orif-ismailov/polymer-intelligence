@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
-import { useOpenRfqs } from "@/entities/deal";
+import { RfqResponseStatusBadge, useMyRfqResponses, useOpenRfqs } from "@/entities/deal";
 import type { MarketRequest } from "@/entities/deal";
-import { RfqResponseForm } from "@/features/rfq-response";
+import { MyQuoteCard, RfqResponseForm } from "@/features/rfq-response";
 import { formatDate } from "@/shared/lib";
 import {
   Badge,
@@ -20,6 +20,8 @@ import {
   Skeleton,
   SpecItem,
   SpecList,
+  Tabs,
+  type TabItem,
   ClipboardListIcon,
 } from "@/shared/ui";
 
@@ -65,7 +67,7 @@ function RequestCard({
             ) : null}
           </div>
           {responded ? (
-            <Badge tone="info">{t(`rfq.status.${request.my_response_status ?? "submitted"}`)}</Badge>
+            <RfqResponseStatusBadge status={request.my_response_status ?? "submitted"} />
           ) : null}
         </div>
 
@@ -123,14 +125,30 @@ function RequestCard({
   );
 }
 
+type Tab = "open" | "mine";
+
+/**
+ * The supplier's two views of the same object: tenders they may still answer,
+ * and the answers they have already given.
+ *
+ * The tab lives in the URL rather than in state — «Предложение не выбрано»
+ * deep-links straight to `?tab=mine&response=<id>`, and that only works if the
+ * page can be addressed in that condition.
+ */
 export function MarketRequestsPage() {
   const { t } = useTranslation();
   const { activeCompany } = useActiveCompany();
   const companyId = activeCompany?.id ?? null;
-  const query = useOpenRfqs(companyId);
-  // Set by the "new RFQ for you" bell (notificationLink → ?rfq=<id>).
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab: Tab = searchParams.get("tab") === "mine" ? "mine" : "open";
+
+  const openQuery = useOpenRfqs(companyId);
+  const mineQuery = useMyRfqResponses(companyId);
+  const active = tab === "mine" ? mineQuery : openQuery;
+
+  // Set by the bells: ?rfq=<request id> on the open tab, ?response=<quote id> on ours.
   const highlightedId = Number(searchParams.get("rfq")) || null;
+  const highlightedQuoteId = Number(searchParams.get("response")) || null;
 
   if (!activeCompany) {
     return (
@@ -140,37 +158,73 @@ export function MarketRequestsPage() {
     );
   }
 
-  const items = query.data?.items ?? [];
+  const openItems = openQuery.data?.items ?? [];
+  const myQuotes = mineQuery.data?.items ?? [];
+  const tabs: TabItem[] = (["open", "mine"] as const).map((key) => ({
+    id: key,
+    label: t(`rfq.tab.${key}`),
+    testId: `rfq-tab-${key}`,
+  }));
+
+  function selectTab(next: string): void {
+    // Drop the highlight params with the tab that owned them — a stale ?rfq=
+    // would otherwise keep re-scrolling the other list on every switch.
+    setSearchParams(next === "mine" ? { tab: "mine" } : {}, { replace: true });
+  }
 
   return (
     <div className="space-y-5">
       <PageHeader title={t("rfq.marketTitle")} subtitle={t("rfq.marketSubtitle")} />
 
-      {query.isLoading ? (
+      <Tabs items={tabs} value={tab} onChange={selectTab} label={t("rfq.marketTitle")} />
+
+      {active.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <Skeleton className="h-56 w-full" />
           <Skeleton className="h-56 w-full" />
         </div>
-      ) : query.isError ? (
+      ) : active.isError ? (
         <ErrorView
           title={t("errors.loadFailed")}
           retryLabel={t("common.retry")}
-          onRetry={() => void query.refetch()}
+          onRetry={() => void active.refetch()}
         />
-      ) : items.length > 0 ? (
+      ) : tab === "open" ? (
+        openItems.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {openItems.map((request) => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                companyId={activeCompany.id}
+                onResponded={() => {
+                  void openQuery.refetch();
+                  void mineQuery.refetch();
+                }}
+                highlighted={request.id === highlightedId}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon={<ClipboardListIcon size={28} />} title={t("rfq.marketEmpty")} description={t("rfq.marketEmptyBody")} />
+        )
+      ) : myQuotes.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          {items.map((request) => (
-            <RequestCard
-              key={request.id}
-              request={request}
+          {myQuotes.map((quote) => (
+            <MyQuoteCard
+              key={quote.id}
+              quote={quote}
               companyId={activeCompany.id}
-              onResponded={() => void query.refetch()}
-              highlighted={request.id === highlightedId}
+              highlighted={quote.id === highlightedQuoteId}
             />
           ))}
         </div>
       ) : (
-        <EmptyState icon={<ClipboardListIcon size={28} />} title={t("rfq.marketEmpty")} description={t("rfq.marketEmptyBody")} />
+        <EmptyState
+          icon={<ClipboardListIcon size={28} />}
+          title={t("rfq.mine.empty")}
+          description={t("rfq.mine.emptyBody")}
+        />
       )}
     </div>
   );

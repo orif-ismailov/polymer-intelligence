@@ -471,8 +471,11 @@ def open_deal_from_response(
             db, event_types.RFQ_RESPONSE_NOT_SELECTED, "rfq_response", loser.id,
             {"request_id": request.id, "company_id": loser.company_id},
         )
-        # Deliberately keyed to the RFQ, not the deal: a supplier who lost has no
-        # business following a deal they are not part of.
+        # Deliberately NOT the deal: a supplier who lost has no business
+        # following a deal they are not part of. Nor the REQUEST, which was the
+        # link until this line — `/cabinet/requests/{id}` is the buyer's own
+        # company-scoped page and answered 404 for the very supplier it was sent
+        # to. Their own quote is the thing that changed, and it has a page.
         title_key, body_key = notification_service.keys_for(
             notification_service.KIND_RFQ_RESPONSE_NOT_SELECTED
         )
@@ -483,8 +486,8 @@ def open_deal_from_response(
             title_key=title_key,
             body_key=body_key,
             params={"request_id": request.id},
-            entity="request",
-            entity_id=str(request.id),
+            entity="rfq_response",
+            entity_id=str(loser.id),
         )
     db.flush()
 

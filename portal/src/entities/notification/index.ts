@@ -28,6 +28,11 @@ export function notificationLink(
     // `/cabinet/requests/{id}`: that page is company-scoped and a supplier cannot open it.
     case "rfq":
       return `/cabinet/market/requests?rfq=${entityId}`;
+    // The supplier's OWN quote. Its tender may already be closed — which is the
+    // usual case, since the notification that carries this is «не выбрано» — so
+    // the open list is the wrong address and «Мои предложения» is the right one.
+    case "rfq_response":
+      return `/cabinet/market/requests?tab=mine&response=${entityId}`;
     case "inquiry":
       return `/cabinet/inquiries/${entityId}`;
     case "offer":

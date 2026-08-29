@@ -151,6 +151,30 @@ export interface RfqResponse {
   created_at: string;
 }
 
+/**
+ * A quote this company filed, with the tender it answers.
+ *
+ * The tender half is the same anonymized `MarketRequest` the open list shows —
+ * no buyer identity, even though the quote is ours. `request_open` is false once
+ * the tender stops accepting quotes, which is what makes a two-month-old
+ * «Отправлено» readable.
+ */
+export interface MyRfqResponse {
+  id: number;
+  request_id: number;
+  price: string;
+  currency: string;
+  qty: string;
+  qty_unit: string;
+  incoterms: string | null;
+  lead_time_days: number | null;
+  comment: string | null;
+  status: RfqResponse["status"];
+  created_at: string;
+  request: MarketRequest;
+  request_open: boolean;
+}
+
 export interface RfqResponsePayload {
   price: string;
   currency: string;

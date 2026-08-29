@@ -15,8 +15,18 @@ export type {
   DealTimelineEntry,
   RfqResponse,
   RfqResponsePayload,
+  MyRfqResponse,
   MarketRequest,
 } from "./model/types";
 export { dealApi, rfqApi, dealKeys } from "./model/api";
-export { useDeals, useDeal, useRfqResponses, useOpenRfqs, DEAL_POLL_MS } from "./model/hooks";
+export {
+  useDeals,
+  useDeal,
+  useRfqResponses,
+  useOpenRfqs,
+  useMyRfqResponses,
+  useWithdrawRfqResponse,
+  DEAL_POLL_MS,
+} from "./model/hooks";
 export { DealStatusBadge } from "./ui/DealStatusBadge";
+export { RfqResponseStatusBadge } from "./ui/RfqResponseStatusBadge";

@@ -1810,6 +1810,19 @@
       "not_selected": "Tanlanmagan",
       "withdrawn": "Chaqirib olingan"
     },
+    "tab": {
+      "open": "Ochiq",
+      "mine": "Mening takliflarim"
+    },
+    "mine": {
+      "empty": "Siz hali taklif yubormagansiz",
+      "emptyBody": "«Ochiq» bo‘limini oching va tender bo‘yicha o‘z narxingizni taklif qiling.",
+      "yourPrice": "Sizning taklifingiz",
+      "tenderClosed": "Tender yopilgan"
+    },
+    "withdraw": "Taklifni chaqirib olish",
+    "withdrawTitle": "Taklif chaqirib olinsinmi?",
+    "withdrawBody": "Xaridor endi sizning narxingizni ko‘rmaydi. Tender ochiq ekan, qayta taklif yuborishingiz mumkin.",
     "errors": {
       "notVerified": "Taklif yuborishni faqat tekshirilgan kompaniyalar amalga oshira oladi. Verifikatsiyadan o‘ting — tender ochiq qoladi.",
       "roleNotAllowed": "Taklif yuborishni faqat sotuvchi kompaniya amalga oshira oladi.",

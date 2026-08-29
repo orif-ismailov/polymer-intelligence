@@ -8,6 +8,7 @@ contract test pinning the list card field-set to the webapp CatalogOfferOut.
 
 from __future__ import annotations
 
+import decimal
 from datetime import UTC
 
 import pytest
@@ -37,6 +38,12 @@ def test_market_routes_registered() -> None:
     assert "/portal/market/{offer_id}" in paths
     assert "/portal/market/companies/{company_id}" in paths
     assert "/portal/market/favorites" in paths
+    # The two supplier-side RFQ literals. Their ORDER matters as much as their
+    # presence: declared after `/{offer_id}` they would be swallowed by it.
+    literals = [r.path for r in router.routes]  # type: ignore[attr-defined]
+    for literal in ("/portal/market/requests", "/portal/market/responses"):
+        assert literal in paths
+        assert literals.index(literal) < literals.index("/portal/market/{offer_id}")
 
 
 def test_list_card_fields_match_webapp_catalog_contract() -> None:
@@ -288,3 +295,71 @@ def test_market_filter_by_seller_company(api) -> None:  # noqa: ANN001
     assert resp.status_code == 200
     grades = {o["grade_text"] for o in resp.json()}
     assert grades == {"ONLY-A"}
+
+
+@requires_real_db
+def test_my_rfq_responses_survive_the_tender_closing(api) -> None:  # noqa: ANN001
+    """GET /portal/market/responses — the supplier's own quotes, any status.
+
+    Company-scoped like every other route here, anonymized like `/requests`
+    (a quote being ours does not entitle us to the buyer's identity), and NOT
+    filtered to open tenders: the closed one is the case the page exists for.
+    """
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.models.enums import CompanyStatus, RequestStatus  # noqa: PLC0415
+    from tests._verification_db import make_request  # noqa: PLC0415
+
+    client, session = api
+    with session() as db:
+        buyer_acc = make_account(db, "+998900007001")
+        buyer = make_company(db, buyer_acc, tax_id="318000001", roles=["distributor"])
+        buyer.status = CompanyStatus.verified
+        seller_acc = make_account(db, "+998900007002")
+        seller = make_company(db, seller_acc, tax_id="318000002", roles=["distributor"])
+        seller.status = CompanyStatus.verified
+        stranger_acc = make_account(db, "+998900007003")
+        db.flush()
+
+        closed = make_request(
+            db, company=buyer, account=buyer_acc, company_name="Buyer Co", phone="+998901112233"
+        )
+        rfq_response_service.submit(
+            db, closed, seller, seller_acc,
+            price=decimal.Decimal("1250.00"), qty=decimal.Decimal("20"),
+        )
+        closed.status = RequestStatus.closed
+        db.commit()
+        seller_id, seller_account_id = seller.id, seller_acc.id
+        stranger_id = stranger_acc.id
+
+    resp = client.get(
+        f"{_BASE}/responses", params={"company_id": seller_id}, headers=_auth(seller_account_id)
+    )
+    assert resp.status_code == 200, resp.text
+    items = resp.json()["items"]
+    assert len(items) == 1
+
+    quote = items[0]
+    assert quote["status"] == "submitted"
+    assert quote["price"] == "1250.00"
+    # The tender rides along — otherwise the row names nothing the seller knows.
+    assert quote["request"]["product"] == "HDPE film"
+    # …and it is dead, which is why the open list no longer carries it.
+    assert quote["request_open"] is False
+    assert closed_open_list_is_empty(client, seller_id, seller_account_id)
+    # Anonymization holds: no buyer identity leaks in through our own quote.
+    assert "company_name" not in quote["request"]
+    assert "+998901112233" not in resp.text
+
+    # A non-member gets the same 404 every company-scoped route here gives.
+    denied = client.get(
+        f"{_BASE}/responses", params={"company_id": seller_id}, headers=_auth(stranger_id)
+    )
+    assert denied.status_code == 404
+
+
+def closed_open_list_is_empty(client, company_id: int, account_id: int) -> bool:  # noqa: ANN001
+    listing = client.get(
+        f"{_BASE}/requests", params={"company_id": company_id}, headers=_auth(account_id)
+    )
+    return listing.json()["items"] == []

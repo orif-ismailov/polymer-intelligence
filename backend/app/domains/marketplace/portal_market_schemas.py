@@ -169,6 +169,48 @@ class MarketRequestListOut(BaseModel):
     items: list[MarketRequestOut]
 
 
+class MyRfqResponseOut(BaseModel):
+    """One quote this supplier company filed, with the tender it answers.
+
+    The tender half is `MarketRequestOut` verbatim — the same anonymized view a
+    supplier gets everywhere else, and for the same reason: the platform stays
+    the intermediary until a deal opens. Do not enrich it with buyer identity
+    here just because the quote is the reader's own.
+
+    `request_open` is the one derived field: an open tender still accepts
+    quotes, a closed one does not, and without it a card reading «Отправлено»
+    two months after the tender was awarded to somebody else is a puzzle. It is
+    a boolean rather than `requests.status` on purpose — the staff-side machine
+    (`viewed`, `in_progress`, …) is not a supplier's business.
+    """
+
+    id: int
+    request_id: int
+    price: decimal.Decimal
+    currency: str
+    qty: decimal.Decimal
+    qty_unit: str
+    incoterms: str | None = None
+    lead_time_days: int | None = None
+    comment: str | None = None
+    status: str
+    created_at: datetime.datetime
+    request: MarketRequestOut
+    request_open: bool
+
+    @field_serializer("price")
+    def _price(self, value: decimal.Decimal) -> str:
+        return f"{value:.2f}"
+
+    @field_serializer("qty")
+    def _qty(self, value: decimal.Decimal) -> str:
+        return format(value.normalize(), "f")
+
+
+class MyRfqResponseListOut(BaseModel):
+    items: list[MyRfqResponseOut]
+
+
 class IkpuPackageOut(BaseModel):
     """A packaging unit valid for one ИКПУ (`PackageCode` / `PackageName`)."""
 

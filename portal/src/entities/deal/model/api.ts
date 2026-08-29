@@ -9,6 +9,7 @@ import type {
   DealMessagePage,
   DealStatus,
   MarketRequest,
+  MyRfqResponse,
   RfqResponse,
   RfqResponsePayload,
 } from "./types";
@@ -137,6 +138,13 @@ export const rfqApi = {
     api.get<{ items: MarketRequest[] }>("/portal/market/requests", {
       query: { company_id: companyId },
     }),
+
+  /** Every quote this company filed — the companion to `openRequests`, which
+      drops a tender (and with it our own work) as soon as it closes. */
+  myResponses: (companyId: number): Promise<{ items: MyRfqResponse[] }> =>
+    api.get<{ items: MyRfqResponse[] }>("/portal/market/responses", {
+      query: { company_id: companyId },
+    }),
 };
 
 export const dealKeys = {
@@ -150,4 +158,5 @@ export const dealKeys = {
   responses: (companyId: number | null, requestId: number | null) =>
     ["rfq", "responses", companyId, requestId] as const,
   openRequests: (companyId: number | null) => ["rfq", "open", companyId] as const,
+  myResponses: (companyId: number | null) => ["rfq", "mine", companyId] as const,
 };

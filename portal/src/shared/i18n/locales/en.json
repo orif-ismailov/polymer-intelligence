@@ -1810,6 +1810,19 @@
       "not_selected": "Not selected",
       "withdrawn": "Withdrawn"
     },
+    "tab": {
+      "open": "Open",
+      "mine": "My quotes"
+    },
+    "mine": {
+      "empty": "You haven't quoted yet",
+      "emptyBody": "Open the «Open» tab and name your price on a tender.",
+      "yourPrice": "Your quote",
+      "tenderClosed": "Tender closed"
+    },
+    "withdraw": "Withdraw the quote",
+    "withdrawTitle": "Withdraw this quote?",
+    "withdrawBody": "The buyer will no longer see your price. While the tender is open you can quote again.",
     "errors": {
       "notVerified": "Only verified companies can submit a quote. Pass verification — the tender stays open.",
       "roleNotAllowed": "Only a seller company can submit quotes.",
