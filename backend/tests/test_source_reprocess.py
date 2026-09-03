@@ -16,12 +16,12 @@ from fastapi.testclient import TestClient
 
 
 def _client(source_row: Any, updated_ids: list[int] | None = None) -> tuple[TestClient, MagicMock]:
-    """Build a TestClient with get_db + require_admin overridden.
+    """Build a TestClient with get_db + the staff identity overridden.
 
     db.execute is called at most twice: the SELECT (→ .first()) and, when the source
     is supported, the UPDATE ... RETURNING id (→ .scalars()).
     """
-    from app.api.deps import require_admin  # noqa: PLC0415
+    from app.api.deps import get_current_staff_user  # noqa: PLC0415
     from app.core.db import get_db  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
 
@@ -38,7 +38,9 @@ def _client(source_row: Any, updated_ids: list[int] | None = None) -> tuple[Test
 
     app = create_app()
     app.dependency_overrides[get_db] = _override_db
-    app.dependency_overrides[require_admin] = lambda: MagicMock()
+    app.dependency_overrides[get_current_staff_user] = lambda: MagicMock(
+        id=1, is_admin=True, is_active=True
+    )
     return TestClient(app, raise_server_exceptions=True), mock_db
 
 

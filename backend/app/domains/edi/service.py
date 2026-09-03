@@ -151,7 +151,7 @@ def create_document(
     before the call, so a create we never saw the answer to is findable by
     ContractNo rather than lost.
     """
-    onboarding.assert_live(db)
+    onboarding.assert_live()
     row = DidoxDocument(
         doc_type=doc_type,
         subject_kind=subject_kind,
@@ -252,7 +252,7 @@ def submit_signature(
     client: DidoxDocuments,
 ) -> SignOutcome:
     """Timestamp, join if incoming, send — then react to the resulting status."""
-    onboarding.assert_live(db)
+    onboarding.assert_live()
     if not row.didox_id:
         raise DocumentNotReady(str(row.id))
     _take_stashed_payload(redis_client, row.id, company_id)

@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.companies.models import Company
 from app.domains.logistics import service as logistics_service
@@ -29,7 +29,7 @@ from app.domains.logistics.models import (
 )
 from app.models.enums import LogisticsRequestStatus
 
-router = APIRouter(prefix="/admin", tags=["admin-logistics-requests"], dependencies=[Depends(require_analyst_or_admin)])
+router = APIRouter(prefix="/admin", tags=["admin-logistics-requests"], dependencies=[Depends(require_page("logisticsRequests", "read"))])
 
 
 class AdminLogisticsRequestOut(BaseModel):

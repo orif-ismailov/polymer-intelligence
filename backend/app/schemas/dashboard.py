@@ -192,7 +192,7 @@ class StaffUserItem(BaseModel):
 
     id: int
     email: str
-    role: str                           # StaffRole value as string
+    is_admin: bool
     is_active: bool
     created_at: datetime.datetime
 

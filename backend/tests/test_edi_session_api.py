@@ -179,20 +179,20 @@ class TestChannelGate:
         """Saying "not registered" on a deployment with no Didox channel would be
         a claim about a real company's account that nobody looked up. The wizard
         stays silent instead — same rule as `registry_not_configured`."""
-        monkeypatch.setattr(onboarding.settings_service, "get", lambda db, key: "stub")
-        assert onboarding.channel_state(object()) == onboarding.DISABLED
+        monkeypatch.setattr(onboarding.settings_service, "get", lambda key: "stub")
+        assert onboarding.channel_state() == onboarding.DISABLED
 
     def test_actions_refuse_outright_on_the_stub_rail(self, monkeypatch) -> None:  # noqa: ANN001
         """Reading a state is harmless; sending a legally significant document is
         not, so the ACTIONS raise where the status endpoint merely reports."""
-        monkeypatch.setattr(onboarding.settings_service, "get", lambda db, key: "stub")
+        monkeypatch.setattr(onboarding.settings_service, "get", lambda key: "stub")
         with pytest.raises(onboarding.ChannelDisabled):
-            onboarding.assert_live(object())
+            onboarding.assert_live()
 
     def test_the_live_rail_permits_actions(self, monkeypatch) -> None:  # noqa: ANN001
-        monkeypatch.setattr(onboarding.settings_service, "get", lambda db, key: "live")
-        onboarding.assert_live(object())  # must not raise
-        assert onboarding.channel_state(object()) is None
+        monkeypatch.setattr(onboarding.settings_service, "get", lambda key: "live")
+        onboarding.assert_live()  # must not raise
+        assert onboarding.channel_state() is None
 
 
 # ── routes ────────────────────────────────────────────────────────────────────

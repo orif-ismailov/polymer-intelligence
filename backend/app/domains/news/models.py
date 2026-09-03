@@ -48,6 +48,13 @@ class Report(Base):
         server_default="draft",
     )
     generated_by: Mapped[str | None] = mapped_column(Text, nullable=True)        # model + prompt version
+    # What the digest call cost. NULL means no LLM call was attempted; 0 would
+    # mean one was and spent nothing, which is a different fact. Recorded even
+    # when the digest failed and the report fell back to the rule-based summary —
+    # this is the platform's most expensive single call (~6.5k output tokens,
+    # twice a day) and it was the only LLM caller journalling nothing at all.
+    tokens_in: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tokens_out: Mapped[int | None] = mapped_column(Integer, nullable=True)
     approved_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("staff_users.id"), nullable=True
     )

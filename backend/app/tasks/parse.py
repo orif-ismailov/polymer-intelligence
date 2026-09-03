@@ -116,15 +116,16 @@ NEWS_TOKEN_ESTIMATE = 1200
 def news_extract_signal(
     prepared_text: str, *, model: str | None = None, prompt_version: str | None = None
 ) -> tuple[Any, dict]:
-    """Wrapper: call parsing.news_extractor.extract_news with optional runtime overrides."""
-    from parsing.news_extractor import DEFAULT_MODEL, NEWS_PROMPT_VERSION  # noqa: PLC0415
+    """Wrapper: call parsing.news_extractor.extract_news with optional runtime overrides.
+
+    Passes `None` straight through now. It used to substitute the extractor's
+    module constants, which were captured at import — so a settings change
+    reached this path only because the caller happened to read the settings
+    itself. `extract_news` resolves them per call; there is nothing to fill in.
+    """
     from parsing.news_extractor import extract_news as _extract  # noqa: PLC0415
 
-    return _extract(
-        prepared_text,
-        model=model or DEFAULT_MODEL,
-        prompt_version=prompt_version or NEWS_PROMPT_VERSION,
-    )
+    return _extract(prepared_text, model=model, prompt_version=prompt_version)
 
 
 def check_and_reserve_tokens(estimated: int) -> None:
@@ -642,9 +643,9 @@ def parse_news_item(raw_item_id: int) -> dict[str, Any]:
         # Runtime overrides (Phase 8d): model + prompt version + approval requirement.
         from app.services import settings_service  # noqa: PLC0415
 
-        news_model = settings_service.get(session, "llm_extract_model")
-        news_prompt = settings_service.get(session, "news_prompt_version")
-        require_approval = settings_service.get(session, "news_require_approval")
+        news_model = settings_service.get("llm_extract_model")
+        news_prompt = settings_service.get("news_prompt_version")
+        require_approval = settings_service.get("news_require_approval")
 
         try:
             check_and_reserve_tokens(NEWS_TOKEN_ESTIMATE)

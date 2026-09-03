@@ -1,5 +1,6 @@
 """
-Auth API endpoints: POST /auth/login, POST /auth/refresh and POST /auth/logout.
+Auth API endpoints: POST /auth/login, POST /auth/refresh, POST /auth/logout,
+GET /auth/me.
 
 DEC-auth-split: access token (15 min) in response body; refresh token (7 d) httpOnly cookie.
 REQ-nfr-security: all login attempts (success only) write an audit_log row (T-03-07).
@@ -19,10 +20,11 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_staff_user, page_access_for
 from app.core.db import get_db
 from app.core.security import create_access_token, decode_token
 from app.models.staff import StaffUser
-from app.schemas.auth import LoginRequest, TokenResponse
+from app.schemas.auth import LoginRequest, MeResponse, TokenResponse
 from app.services.audit_service import write_audit
 from app.services.auth_service import (
     authenticate,
@@ -45,7 +47,7 @@ def login(
     """Authenticate a staff user and issue a JWT access token + httpOnly refresh cookie.
 
     On success:
-    - Returns 200 with access_token (15 min), token_type, and role in the body.
+    - Returns 200 with access_token (15 min), token_type, and is_admin in the body.
     - Sets an httpOnly + Secure + SameSite refresh cookie (7 d) via Set-Cookie header.
     - Writes an audit_log row with action='auth.login'.
 
@@ -75,13 +77,13 @@ def login(
         action="auth.login",
         entity="staff_users",
         entity_id=str(user.id),
-        details={"role": user.role.value},
+        details={"is_admin": user.is_admin},
     )
     db.commit()
 
     return TokenResponse(
-        access_token=create_access_token(subject=str(user.id), role=user.role.value),
-        role=user.role.value,
+        access_token=create_access_token(subject=str(user.id)),
+        is_admin=user.is_admin,
     )
 
 
@@ -171,7 +173,7 @@ def refresh_token(
             detail="Invalid refresh token: invalid subject",
         ) from exc
 
-    # Re-load user from DB to confirm still active (role may have changed)
+    # Re-load user from DB to confirm still active (is_admin may have changed)
     user: StaffUser | None = (
         db.query(StaffUser).filter(StaffUser.id == staff_user_id).first()
     )
@@ -182,6 +184,29 @@ def refresh_token(
         )
 
     return TokenResponse(
-        access_token=create_access_token(subject=str(user.id), role=user.role.value),
-        role=user.role.value,
+        access_token=create_access_token(subject=str(user.id)),
+        is_admin=user.is_admin,
+    )
+
+
+@router.get("/me", response_model=MeResponse)
+def me(
+    current_user: StaffUser = Depends(get_current_staff_user),
+    db: Session = Depends(get_db),
+) -> MeResponse:
+    """Return the authenticated staff user's identity and reach.
+
+    The access token carries no authorization claim and lives in memory only, so
+    after a page reload the dashboard has a freshly re-minted token and no idea
+    who it belongs to. This is where it asks.
+
+    Reads the staff row rather than the token, so deactivating or demoting
+    someone takes effect on their next poll instead of when their token expires.
+    """
+    return MeResponse(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        is_admin=current_user.is_admin,
+        access=page_access_for(db, current_user),
     )

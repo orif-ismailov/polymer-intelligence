@@ -27,7 +27,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_staff_user, require_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.alerts.models import Alert, AlertRule
 from app.models.enums import AlertKind
@@ -113,7 +113,7 @@ def _rule_to_out(rule: AlertRule) -> AlertRuleOut:
 def list_alert_rules(
     limit: int = Query(default=100, le=500),
     db: Session = Depends(get_db),
-    _: StaffUser = Depends(get_current_staff_user),
+    _: StaffUser = Depends(require_page("alerts", "read")),
 ) -> list[AlertRuleOut]:
     """List alert rules (staff read).
 
@@ -133,7 +133,7 @@ def list_alert_rules(
 def create_alert_rule(
     body: AlertRuleCreate,
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(require_admin),
+    current_user: StaffUser = Depends(require_page("alerts", "write")),
 ) -> AlertRuleOut:
     """Create a new alert rule (admin write).
 
@@ -179,7 +179,7 @@ def update_alert_rule(
     rule_id: int,
     body: AlertRulePatch,
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(require_admin),
+    current_user: StaffUser = Depends(require_page("alerts", "write")),
 ) -> AlertRuleOut:
     """Update an existing alert rule (admin write).
 
@@ -221,7 +221,7 @@ def update_alert_rule(
 def delete_alert_rule(
     rule_id: int,
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(require_admin),
+    current_user: StaffUser = Depends(require_page("alerts", "write")),
 ) -> None:
     """Delete an alert rule (admin write).
 
@@ -272,7 +272,7 @@ def _alert_to_out(row: Any) -> AlertOut:
 def list_alerts(
     limit: int = 100,
     db: Session = Depends(get_db),
-    _: StaffUser = Depends(get_current_staff_user),
+    _: StaffUser = Depends(require_page("alerts", "read")),
 ) -> list[AlertOut]:
     """Alert feed — newest alerts first (staff read).
 

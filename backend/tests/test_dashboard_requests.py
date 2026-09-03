@@ -32,11 +32,10 @@ def _make_mock_db() -> MagicMock:
 
 def _make_staff_user(role: str, user_id: int = 1) -> MagicMock:
     """Return a MagicMock that quacks like a StaffUser ORM object."""
-    from app.models.enums import StaffRole  # noqa: PLC0415
     user = MagicMock()
     user.id = user_id
     user.email = f"{role}@polymer.uz"
-    user.role = StaffRole(role)
+    user.is_admin = role == "admin"
     user.is_active = True
     return user
 
@@ -44,7 +43,7 @@ def _make_staff_user(role: str, user_id: int = 1) -> MagicMock:
 def _auth_headers(user_id: int, role: str) -> dict[str, str]:
     """Return Authorization header dict with a valid JWT for the given role."""
     from app.core.security import create_access_token  # noqa: PLC0415
-    token = create_access_token(subject=str(user_id), role=role)
+    token = create_access_token(subject=str(user_id))
     return {"Authorization": f"Bearer {token}"}
 
 

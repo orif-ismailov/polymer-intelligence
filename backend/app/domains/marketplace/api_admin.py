@@ -11,7 +11,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.marketplace import requests as offer_request_service
 from app.domains.marketplace.models import OfferRequest
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/admin/offer-requests", tags=["offer-requests"])
 )
 def review_queue(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("offerRequests", "read")),
 ) -> list[AdminOfferRequestOut]:
     """GET /admin/offer-requests — pending inquiries, oldest first."""
     return [offer_request_service.to_admin_out(r) for r in offer_request_service.list_pending(db)]
@@ -58,7 +58,7 @@ def approve_offer_request(
     offer_request_id: int,
     body: ModerationDecision,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_analyst_or_admin),
+    user: StaffUser = Depends(require_page("offerRequests", "write")),
 ) -> AdminOfferRequestOut:
     """POST /admin/offer-requests/{id}/approve.
 
@@ -84,7 +84,7 @@ def reject_offer_request(
     offer_request_id: int,
     body: ModerationDecision,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_analyst_or_admin),
+    user: StaffUser = Depends(require_page("offerRequests", "write")),
 ) -> AdminOfferRequestOut:
     """POST /admin/offer-requests/{id}/reject.
 

@@ -179,7 +179,7 @@ export function MarketRequestsPage() {
       <Tabs items={tabs} value={tab} onChange={selectTab} label={t("rfq.marketTitle")} />
 
       {active.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Skeleton className="h-56 w-full" />
           <Skeleton className="h-56 w-full" />
         </div>
@@ -191,7 +191,7 @@ export function MarketRequestsPage() {
         />
       ) : tab === "open" ? (
         openItems.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {openItems.map((request) => (
               <RequestCard
                 key={request.id}
@@ -209,7 +209,7 @@ export function MarketRequestsPage() {
           <EmptyState icon={<ClipboardListIcon size={28} />} title={t("rfq.marketEmpty")} description={t("rfq.marketEmptyBody")} />
         )
       ) : myQuotes.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {myQuotes.map((quote) => (
             <MyQuoteCard
               key={quote.id}

@@ -212,7 +212,7 @@ def open_for_deal(
     if mode is None:
         from app.integrations.escrow import client as escrow_client  # noqa: PLC0415
 
-        mode = escrow_client.current_mode(db)
+        mode = escrow_client.current_mode()
 
     payment = EscrowPayment(
         deal_id=deal.id,

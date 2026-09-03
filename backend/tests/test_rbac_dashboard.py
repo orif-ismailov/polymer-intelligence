@@ -6,23 +6,27 @@ _auth_headers) and extends it to cover every write + read endpoint added across
 Phase 4 (Plans 01, 04, 06, 07).
 
 Threat model (04-09-PLAN.md T-04-33):
-  "test_rbac_dashboard.py asserts viewer -> 403 on every write and read
-   allowance per role matrix (re-verifies require_role across the phase)"
+  "test_rbac_dashboard.py asserts non-admin -> 403 on every write and read
+   (re-verifies require_admin across the phase)"
 
-Role matrix (from dashboard_requests.py + sources.py + alert_rules.py):
-  ┌──────────────────────────────┬─────────┬──────────┬────────┬────────┐
-  │ Endpoint                     │ viewer  │ analyst  │ trader │ admin  │
-  ├──────────────────────────────┼─────────┼──────────┼────────┼────────┤
-  │ GET /feed                    │  200    │  200     │  200   │  200   │
-  │ GET /requests                │  200    │  200     │  200   │  200   │
-  │ GET /alerts                  │  200    │  200     │  200   │  200   │
-  │ GET /prices/series           │  200    │  200     │  200   │  200   │
-  │ PATCH /requests/{id}         │  403    │  200     │  200   │  200   │
-  │ POST /sources                │  403    │  403     │  403   │  201   │
-  │ PATCH /sources/{id}          │  403    │  403     │  403   │  200   │
-  │ POST /alert-rules            │  403    │  403     │  403   │  201   │
-  │ PATCH /alert-rules/{id}      │  403    │  403     │  403   │  200   │
-  └──────────────────────────────┴─────────┴──────────┴────────┴────────┘
+Access matrix as of migration 0042 — every staff endpoint, read or write, is
+administrator-only. The four-role gradient this replaced (viewer/analyst/trader
+could reach the reads; analyst/trader could also PATCH a request) is gone,
+because no role but `admin` could ever be assigned to anyone:
+
+  ┌──────────────────────────────┬───────────────┬────────┐
+  │ Endpoint                     │ non-admin     │ admin  │
+  ├──────────────────────────────┼───────────────┼────────┤
+  │ GET /feed                    │  403          │  200   │
+  │ GET /requests                │  403          │  200   │
+  │ GET /alerts                  │  403          │  200   │
+  │ GET /prices/series           │  403          │  200   │
+  │ PATCH /requests/{id}         │  403          │  200   │
+  │ POST /sources                │  403          │  201   │
+  │ PATCH /sources/{id}          │  403          │  200   │
+  │ POST /alert-rules            │  403          │  201   │
+  │ PATCH /alert-rules/{id}      │  403          │  200   │
+  └──────────────────────────────┴───────────────┴────────┘
 
 Note: sources POST returns 201 on admin success; alert-rules POST returns 201 on
 admin success. In these tests we mock the DB so the admin success assertions check
@@ -35,7 +39,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -53,12 +57,10 @@ def _make_staff_user(
 ):
     """Create a mock StaffUser with the given role."""
     from app.core.security import hash_password
-    from app.models.enums import StaffRole
-
     user = MagicMock()
     user.id = id
     user.email = email
-    user.role = StaffRole(role)
+    user.is_admin = role == "admin"
     user.is_active = is_active
     user.password_hash = hash_password("any_password")
     return user
@@ -84,84 +86,43 @@ def _auth_headers(staff_user_id: int, role: str) -> dict[str, str]:
     """Create a Bearer Authorization header with a valid access token."""
     from app.core.security import create_access_token
 
-    token = create_access_token(subject=str(staff_user_id), role=role)
+    token = create_access_token(subject=str(staff_user_id))
     return {"Authorization": f"Bearer {token}"}
 
 
 # ---------------------------------------------------------------------------
-# Read-endpoint smoke tests: all staff roles must get through (200 or any non-403)
+# Read endpoints — administrator-only, like everything else
 # ---------------------------------------------------------------------------
 
-class TestReadEndpointsAllowedForAllRoles:
-    """All-staff read endpoints must not return 403 for any role.
+READ_ENDPOINTS = ["/api/v1/feed", "/api/v1/requests", "/api/v1/alerts"]
 
-    We mock the DB to return empty/minimal results so the tests don't depend on
-    a live database.  The important invariant is that auth/RBAC doesn't block reads.
+
+class TestReadEndpointsAdminOnly:
+    """Reads are gated too.
+
+    These three used to be readable by any authenticated staff row, which was
+    the only thing the `viewer` role ever meant. With the role gone, reading is
+    a privilege like any other and an ungated read is a leak.
+
+    We mock the DB to return empty results so the tests turn on the guard alone.
     """
 
-    @pytest.mark.parametrize("role,user_id", [
-        ("viewer", 4),
-        ("analyst", 2),
-        ("trader", 3),
-        ("admin", 1),
-    ])
-    def test_get_feed_allowed(self, role: str, user_id: int):
-        """GET /feed is allowed for all staff roles."""
-        user = _make_staff_user(id=user_id, role=role)
-        client = _make_rbac_client(user)
-
-        client.app.dependency_overrides[
-            __import__("app.core.db", fromlist=["get_db"]).get_db
-        ]
-
-        with patch("app.domains.signals.api_feed.get_feed") as _:
-            # We patch at a higher level — just check the auth gate
-            pass
-
-        # Use a mock that returns an empty result set for sa.text queries
-        import sqlalchemy as sa
-        with patch.object(
-            __import__("sqlalchemy", fromlist=["text"]),
-            "text",
-            side_effect=lambda q: sa.text(q),
-        ):
-            resp = client.get("/api/v1/feed", headers=_auth_headers(user_id, role))
-
-        # Auth gate: must not be 401 or 403
+    @pytest.mark.parametrize("path", READ_ENDPOINTS)
+    def test_admin_allowed(self, path: str):
+        """An administrator is not blocked from any read endpoint."""
+        client = _make_rbac_client(_make_staff_user(id=1, role="admin"))
+        resp = client.get(path, headers=_auth_headers(1, "admin"))
         assert resp.status_code not in (401, 403), (
-            f"Role {role!r} was unexpectedly blocked from GET /feed: {resp.status_code}"
+            f"Administrator was unexpectedly blocked from GET {path}: {resp.status_code}"
         )
 
-    @pytest.mark.parametrize("role,user_id", [
-        ("viewer", 4),
-        ("analyst", 2),
-        ("trader", 3),
-        ("admin", 1),
-    ])
-    def test_get_requests_allowed(self, role: str, user_id: int):
-        """GET /requests is allowed for all staff roles (viewer included)."""
-        user = _make_staff_user(id=user_id, role=role)
-        client = _make_rbac_client(user)
-
-        resp = client.get("/api/v1/requests", headers=_auth_headers(user_id, role))
-        assert resp.status_code not in (401, 403), (
-            f"Role {role!r} was unexpectedly blocked from GET /requests: {resp.status_code}"
-        )
-
-    @pytest.mark.parametrize("role,user_id", [
-        ("viewer", 4),
-        ("analyst", 2),
-        ("trader", 3),
-        ("admin", 1),
-    ])
-    def test_get_alerts_allowed(self, role: str, user_id: int):
-        """GET /alerts is allowed for all staff roles."""
-        user = _make_staff_user(id=user_id, role=role)
-        client = _make_rbac_client(user)
-
-        resp = client.get("/api/v1/alerts", headers=_auth_headers(user_id, role))
-        assert resp.status_code not in (401, 403), (
-            f"Role {role!r} was unexpectedly blocked from GET /alerts: {resp.status_code}"
+    @pytest.mark.parametrize("path", READ_ENDPOINTS)
+    def test_non_admin_rejected(self, path: str):
+        """A valid non-administrator staff token is refused on every read."""
+        client = _make_rbac_client(_make_staff_user(id=2, role="staff"))
+        resp = client.get(path, headers=_auth_headers(2, "staff"))
+        assert resp.status_code == 403, (
+            f"Non-administrator reached GET {path}: {resp.status_code}"
         )
 
 
@@ -170,43 +131,40 @@ class TestReadEndpointsAllowedForAllRoles:
 # ---------------------------------------------------------------------------
 
 class TestPatchRequestsRBAC:
-    """T-04-10: require_role(admin, analyst, trader) on PATCH /requests/{id}."""
+    """T-04-10: require_admin on PATCH /requests/{id}.
 
-    def test_viewer_rejected_from_patch_requests(self):
-        """Viewer must get 403 on PATCH /requests/{id} (T-04-10)."""
-        user = _make_staff_user(id=4, role="viewer")
-        client = _make_rbac_client(user)
+    These five request actions were the whole of what the `trader` role could
+    do, and an analyst could do them too — so the role withheld the other 62
+    analyst endpoints and granted nothing of its own.
+    """
+
+    def test_non_admin_rejected_from_patch_requests(self):
+        """A non-administrator must get 403 on PATCH /requests/{id} (T-04-10)."""
+        client = _make_rbac_client(_make_staff_user(id=4, role="staff"))
 
         resp = client.patch(
             "/api/v1/requests/1",
             json={"status": "viewed"},
-            headers=_auth_headers(4, "viewer"),
+            headers=_auth_headers(4, "staff"),
         )
         assert resp.status_code == 403, (
-            f"Viewer should be blocked (403) on PATCH /requests/1, got {resp.status_code}"
+            f"Non-administrator should be blocked (403) on PATCH /requests/1, "
+            f"got {resp.status_code}"
         )
 
-    @pytest.mark.parametrize("role,user_id", [
-        ("analyst", 2),
-        ("trader", 3),
-        ("admin", 1),
-    ])
-    def test_analyst_trader_admin_allowed_on_patch_requests(
-        self, role: str, user_id: int
-    ):
-        """Analyst, trader, and admin must NOT get 403 on PATCH /requests/{id}."""
-        user = _make_staff_user(id=user_id, role=role)
-        client = _make_rbac_client(user)
+    def test_admin_allowed_on_patch_requests(self):
+        """An administrator must NOT get 403 on PATCH /requests/{id}."""
+        client = _make_rbac_client(_make_staff_user(id=1, role="admin"))
 
         resp = client.patch(
             "/api/v1/requests/999",
             json={"status": "viewed"},
-            headers=_auth_headers(user_id, role),
+            headers=_auth_headers(1, "admin"),
         )
-        # 403 = auth failure; anything else means the request passed the RBAC gate
+        # 403 = auth failure; anything else means the request passed the gate
         # (404 = request not found is acceptable — it means auth was OK)
         assert resp.status_code != 403, (
-            f"Role {role!r} should not be blocked on PATCH /requests, got 403"
+            "Administrator should not be blocked on PATCH /requests, got 403"
         )
 
 

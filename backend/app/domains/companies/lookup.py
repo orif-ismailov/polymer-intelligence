@@ -63,7 +63,7 @@ def lookup_company(
     `gov_registry.ProviderUnavailable` when there is no usable channel (mode off,
     no token, outage, or — in production — no service `user-key`).
     """
-    mode = gov_registry.current_mode(db)
+    mode = gov_registry.current_mode()
     if mode != gov_registry.MODE_DIDOX:
         raise ChannelDisabled(
             f"gov_registry: prefill needs gov_registry_mode=didox (currently {mode!r})"

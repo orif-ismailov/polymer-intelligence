@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from app.core.config import settings
 from app.ingest.base import RawItemDraft, TestResult
 from app.ingest.registry import register_adapter
 
@@ -39,8 +40,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# CBU public JSON endpoint (official, no auth required)
-_CBU_DEFAULT_URL = "https://cbu.uz/ru/arkhiv-kursov-valyut/json/"
+# CBU public JSON endpoint (official, no auth required). `CBU_RATES_URL` in
+# `.env` overrides it; the default is today's live endpoint.
+_CBU_DEFAULT_URL = settings.CBU_RATES_URL
 
 
 def _parse_cbu_date(raw_date: object) -> datetime.date | None:

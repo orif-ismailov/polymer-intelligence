@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.config import settings
 from app.ingest.base import RawItemDraft, TestResult
 from app.ingest.registry import register_adapter
 
@@ -87,8 +88,8 @@ class XaridTendersConfig(BaseModel):
 
     model_config = ConfigDict(extra="ignore")
 
-    list_url: str = "https://xarid-api-auction.uzex.uz/Common/GetMinimizedLotsList"
-    detail_url_template: str = "https://xarid-api-auction.uzex.uz/Common/GetLot/{id}"
+    list_url: str = f"{settings.XARID_BASE_URL}/Common/GetMinimizedLotsList"
+    detail_url_template: str = f"{settings.XARID_BASE_URL}/Common/GetLot/{{id}}"
     # Extra fields merged into every LIST request body (auction needs region_ids;
     # the purchase feeds — GetTenders — omit it, so leave it configurable).
     list_body: dict[str, Any] = Field(default_factory=lambda: {"region_ids": []})

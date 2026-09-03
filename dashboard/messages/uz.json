@@ -5,7 +5,8 @@
       "requests": "ARIZALAR",
       "broker": "BROKER",
       "sources": "MANBALAR",
-      "settings": "SOZLAMALAR"
+      "settings": "SOZLAMALAR",
+      "projectSettings": "LOYIHA SOZLAMALARI"
     },
     "items": {
       "dashboard": "Boshqaruv paneli",
@@ -34,7 +35,16 @@
       "labOrders": "Laboratoriya",
       "labPartners": "Laboratoriyalar",
       "logisticsRequests": "Logistika so'rovlari",
-      "labRequests": "Laboratoriya so'rovlari"
+      "labRequests": "Laboratoriya so'rovlari",
+      "settingsAnalytics": "Analitika",
+      "settingsAi": "AI va modellar",
+      "settingsNews": "Yangiliklar va hisobotlar",
+      "settingsNotifications": "Bildirishnomalar",
+      "settingsDidox": "Didox va davlat reestri",
+      "settingsDeals": "Bitimlar va tekshiruv",
+      "settingsSourcing": "Yetkazib beruvchilarni tanlash",
+      "settingsCompliance": "Kimyoviy nazorat",
+      "settingsIngest": "Ma'lumot yig'ish"
     },
     "guest": "Mehmon",
     "openMenu": "Menyuni ochish",
@@ -45,6 +55,10 @@
       "switched": "Bu brauzerda boshqa foydalanuvchi tizimga kirdi. Bu oyna eskirgan hisobni ko‘rsatmoqda — joriy hisob ostida davom etish uchun sahifani yangilang.",
       "signedOut": "Sessiya boshqa oynada yakunlandi. Qayta kirish uchun sahifani yangilang.",
       "reload": "Sahifani yangilash"
+    },
+    "adminBadge": "Administrator",
+    "pages": {
+      "appSettings": "Loyiha sozlamalari"
     }
   },
   "login": {
@@ -681,23 +695,55 @@
     "deleteRuleAria": "{name} qoidasini o'chirish"
   },
   "admin": {
-    "pageTitle": "Foydalanuvchilar boshqaruvi",
-    "pageSubtitle": "Xodimlar hisoblari va rollar tayinlash",
-    "loadError": "Foydalanuvchilarni yuklab bo'lmadi. Sahifani yangilang.",
-    "empty": "Xodim foydalanuvchilari topilmadi.",
+    "pageTitle": "Xodimlar",
+    "pageSubtitle": "Xodimlar hisoblari va kirish darajasi",
+    "countLabel": "Jami: {count}",
+    "createButton": "Xodim qo'shish",
+    "createTitle": "Yangi xodim",
+    "createSubtitle": "Hisob yarating va bo'limlarga ruxsat bering",
+    "editTitle": "Xodimni tahrirlash",
+    "fieldEmail": "Elektron pochta",
+    "fieldName": "F.I.Sh.",
+    "fieldPassword": "Parol",
+    "fieldPasswordReset": "Yangi parol",
+    "fieldPasswordKeep": "O'zgartirmaslik uchun bo'sh qoldiring",
+    "passwordHint": "Kamida {min} ta belgi. Parolni xodimga shaxsan yetkazing.",
+    "fieldIsAdmin": "Administrator",
+    "isAdminHint": "Barcha bo'limlarga to'liq kirish, xodimlarni boshqarish ham.",
+    "accessTitle": "Bo'limlarga ruxsat",
+    "adminHoldsEverything": "Administratorda barcha bo'limlarga ruxsat bor — sozlash shart emas.",
+    "accessAdmin": "Administrator",
+    "accessStaff": "Xodim",
+    "accessPages": "Bo'limlar: {count}",
+    "access": {
+      "none": "Yo'q",
+      "read": "O'qish",
+      "write": "Yozish"
+    },
     "statusActive": "Faol",
     "statusInactive": "Nofaol",
+    "edit": "Tahrirlash",
+    "deactivate": "O'chirish",
+    "activate": "Yoqish",
+    "save": "Saqlash",
+    "saving": "Saqlanmoqda…",
+    "cancel": "Bekor qilish",
+    "you": "(bu siz)",
+    "saveError": "Saqlab bo'lmadi. Qayta urinib ko'ring.",
+    "loadError": "Foydalanuvchilarni yuklab bo'lmadi. Sahifani yangilang.",
+    "empty": "Xodimlar topilmadi.",
     "table": {
       "email": "Elektron pochta",
-      "role": "Rol",
+      "name": "F.I.Sh.",
+      "access": "Ruxsat",
       "status": "Holati",
       "createdAt": "Yaratilgan"
     },
-    "roles": {
-      "admin": "Administrator",
-      "analyst": "Tahlilchi",
-      "trader": "Treyder",
-      "viewer": "Kuzatuvchi"
+    "errors": {
+      "self_demote": "O'zingizdan administrator huquqini olib tashlay olmaysiz. Boshqa administratordan so'rang.",
+      "last_admin": "Bu oxirgi faol administrator — platformani boshqaradigan hech kim qolmaydi.",
+      "admin_holds_all_pages": "Administratorda allaqachon barcha bo'limlarga ruxsat bor. Avval administrator huquqini olib tashlang.",
+      "email_taken": "Bunday pochtali xodim allaqachon mavjud."
     }
   },
   "adminProducts": {
@@ -762,7 +808,7 @@
   },
   "newsAdmin": {
     "title": "Yangiliklar boshqaruvi",
-    "subtitle": "Statistika, AI sozlamalari va yangiliklar moderatsiyasi",
+    "subtitle": "Statistika, parsing faolligi va yangiliklar moderatsiyasi",
     "error": "Yuklab bo‘lmadi",
     "loading": "Yuklanmoqda…",
     "stats": {
@@ -784,10 +830,6 @@
       "runParser": "Parserni ishga tushirish",
       "generateReport": "Hisobot yaratish",
       "save": "Saqlash"
-    },
-    "settings": {
-      "title": "Sozlamalar",
-      "default": "standart"
     },
     "approval": {
       "title": "Moderatsiyadagi yangiliklar",
@@ -1580,6 +1622,299 @@
       "messageCount": "Xabarlar",
       "lastMessage": "Oxirgi xabar",
       "never": "—"
+    }
+  },
+  "noAccess": {
+    "title": "Kirish yo'q",
+    "body": "Sizning hisobingizda boshqaruv panelining hech bir bo'limiga ruxsat yo'q. Huquq berish uchun administratorga murojaat qiling.",
+    "signedInAs": "Siz kirdingiz:",
+    "signOut": "Chiqish",
+    "pageTitle": "Bo'lim mavjud emas",
+    "pageBody": "Sizda bu bo'limga ruxsat yo'q. Agar kerak bo'lsa, administratorga murojaat qiling."
+  },
+  "adminSettings": {
+    "title": "Tizim sozlamalari",
+    "subtitle": "Har bir sozlamaning standart qiymati kodda berilgan va muhit o‘zgaruvchisi bilan almashtirilishi mumkin. Bu yerdagi o‘zgartirish ikkalasini ham bekor qiladi — standart qiymat doim yonida ko‘rinadi, «Tiklash» esa unga qaytaradi.",
+    "loading": "Yuklanmoqda…",
+    "error": "Sozlamalarni yuklab bo‘lmadi",
+    "saveError": "Qiymatni saqlab bo‘lmadi",
+    "resetError": "Qiymatni tiklab bo‘lmadi",
+    "readOnly": "Sizda faqat o‘qish huquqi bor — qiymatni bu sahifaga yozish huquqi bor xodim o‘zgartiradi.",
+    "fromEnv": "Standart qiymat",
+    "overridden": "Bekor qilingan",
+    "envSays": "standart: {value}",
+    "notSet": "berilmagan",
+    "envOnly": "Faqat muhit o‘zgaruvchisi orqali, qayta ishga tushirish bilan",
+    "adminOnly": "Maxfiy ma’lumotni faqat administrator o‘zgartiradi",
+    "save": "Saqlash",
+    "reset": "Standart qiymatga tiklash",
+    "cancel": "Bekor qilish",
+    "confirmAction": "Tasdiqlayman",
+    "groups": {
+      "ai": "AI va modellar",
+      "news": "Yangiliklar va hisobotlar",
+      "notifications": "Bildirishnomalar",
+      "didox": "Didox va davlat reestri",
+      "deals": "Bitimlar va tekshiruv",
+      "sourcing": "Yetkazib beruvchilarni tanlash",
+      "compliance": "Kimyoviy nazorat",
+      "ingest": "Ma'lumot yig'ish"
+    },
+    "items": {
+      "anthropic_api_key": {
+        "name": "Anthropic API kaliti",
+        "desc": "Anthropic platformamizni shu parol orqali taniydi. Sun'iy intellektning barcha ishi shunga bog'liq: yangiliklar tahlili, kunlik hisobotlar, arizalar tahlili va modda bo'yicha maslahat. Saqlashda kalit Anthropic'da tekshiriladi — noto'g'risi qabul qilinmaydi."
+      },
+      "openai_api_key": {
+        "name": "OpenAI API kaliti",
+        "desc": "Faqat quyida GPT modeli tanlangan bo‘lsa kerak bo‘ladi. OpenAI platformamizni shu parol orqali taniydi. Saqlashda kalit OpenAI’da tekshiriladi — noto‘g‘risi qabul qilinmaydi."
+      },
+      "news_ai_enabled": {
+        "name": "Hisobotlardagi AI-xulosalar",
+        "desc": "Sun'iy intellekt kunlik hisobotda yangiliklarni o‘z so‘zlari bilan qayta so‘zlab beradi. O‘chirilsa, hisobotga faqat sarlavhalar tushadi."
+      },
+      "news_require_approval": {
+        "name": "Yangiliklarni chiqarishdan oldin tekshirish",
+        "desc": "Har bir yangilik xodim tasdiqlashini kutadi. O‘chirilsa, yangiliklar lentaga darhol chiqadi."
+      },
+      "report_auto_publish": {
+        "name": "Hisobotlarni avtomatik chiqarish",
+        "desc": "Tayyor hisobot Telegram kanalga odam tekshirmasdan o‘zi ketadi. Chiqarilgan xabarni qaytarib bo‘lmaydi."
+      },
+      "llm_extract_model": {
+        "name": "Yangiliklar uchun AI modeli",
+        "desc": "Yangiliklarni qaysi model o‘qib tahlil qiladi — Claude yoki GPT. Haiku va gpt-4.1-mini eng arzon va tez, Opus va gpt-5 eng aqlli va qimmat."
+      },
+      "llm_report_model": {
+        "name": "Hisobotlar uchun AI modeli",
+        "desc": "Ertalabki va kechki sharhni qaysi model yozadi. Hisobot kuniga ikki marta chiqadi va uni odamlar o‘qiydi, shuning uchun bu yerda yangiliklarnikidan kuchliroq model tanlanadi."
+      },
+      "news_prompt_version": {
+        "name": "AI ko‘rsatmasining versiyasi",
+        "desc": "AI yangilikni tahlil qilishdan oldin qaysi ko‘rsatmani o‘qiydi. Yangi versiyalar odatda aniqroq; eskilari solishtirish uchun qoldirilgan."
+      },
+      "news_refresh_interval_minutes": {
+        "name": "Yangiliklar qanchalik tez-tez tekshiriladi",
+        "desc": "Tizim necha daqiqadan keyin saytlarga yangi yangiliklar uchun qayta kiradi. Raqam kichik bo‘lsa lenta yangiroq, ammo yuk ko‘proq."
+      },
+      "verification_auto_approve": {
+        "name": "Kompaniya tekshiruvini avtomatik tasdiqlash",
+        "desc": "Barcha avtomatik tekshiruvlar o‘tishi bilan kompaniya xodimsiz «tekshirilgan» maqomini oladi. Navbatda turgan arizalar ham tasdiqlanadi."
+      },
+      "contract_pending_ttl_days": {
+        "name": "Shartnoma imzoni necha kun kutadi",
+        "desc": "Ikkinchi tomon shu muddat ichida imzolamasa, shartnoma o‘zi yopiladi. Raqamni kamaytirsangiz, yangi muddatdan eski shartnomalar shu kechada yopiladi."
+      },
+      "escrow_mode": {
+        "name": "Bitim bo‘yicha pul qanday o‘tadi",
+        "desc": "«stub» — har bir o‘tkazmani operator qo‘lda belgilaydi. «live» — pulni haqiqatda bank boshqaradi."
+      },
+      "rfq_supplier_push_enabled": {
+        "name": "Yetkazib beruvchilarga yangi ariza haqida xabar berish",
+        "desc": "Xaridor ariza e’lon qilganda, mos yetkazib beruvchilar bildirishnoma oladi."
+      },
+      "rfq_supplier_push_top_n": {
+        "name": "Nechta yetkazib beruvchiga yozish",
+        "desc": "Bitta ariza shu sondan ortiq yetkazib beruvchini bezovta qilmaydi. Raqam katta bo‘lsa qamrov keng, xabarlar ham ko‘p."
+      },
+      "rfq_supplier_offer_max_age_days": {
+        "name": "Tanlov uchun taklif yoshi",
+        "desc": "Yetkazib beruvchi taklifi mos hisoblanishi uchun qanchalik yangi bo‘lishi kerak. Bu muddatdan eskisi tanlovga kirmaydi."
+      },
+      "substance_ai_enabled": {
+        "name": "Modda haqida AI maslahati",
+        "desc": "Sotuvchi shaklida AI bu qanday kimyoviy modda ekanini taklif qiladi. Sotuvchi rozi bo‘lishi yoki o‘zi tanlashi mumkin."
+      },
+      "dangerous_check_enforced": {
+        "name": "Hujjatsiz xavfli moddalarni sotishni taqiqlash",
+        "desc": "Sotuvchi litsenziya biriktirmaguncha xavfli tovarni e’lon qila olmaydi. O‘chirilsa, bunday tovarlar erkin e’lon qilinadi."
+      },
+      "chem_registry_mode": {
+        "name": "Moddalar ma’lumoti qayerdan olinadi",
+        "desc": "«stub» — o‘zimizning moddalar jadvalidan. «live» — hozircha mavjud bo‘lmagan tashqi reyestrdan."
+      },
+      "gov_registry_mode": {
+        "name": "Kompaniya ma’lumoti qayerdan olinadi",
+        "desc": "«stub» — xodim ma’lumotni qo‘lda kiritadi. «didox» — ma’lumot Didox orqali soliq idorasidan tortiladi va shaklga o‘zi qo‘yiladi. «live» — to‘g‘ridan-to‘g‘ri PSD kanali, hozircha ishlamaydi."
+      },
+      "didox_mode": {
+        "name": "Hujjatlarni Didoxga yuborish",
+        "desc": "«live» shartnoma va hisob-fakturalarni soliq idorasiga haqiqatda yuboradi. Yuborilgan hujjatni bu yerdan qaytarib bo‘lmaydi."
+      },
+      "didox_base_url": {
+        "name": "Didox server manzili",
+        "desc": "Tekshiruvlar uchun sinov serveri yoki haqiqiy hujjatlar uchun asosiy server. Faqat token bilan birga o‘zgartiring."
+      },
+      "didox_partner_token": {
+        "name": "Didox hamkor tokeni",
+        "desc": "Didox platformamizni shu parol orqali taniydi. Uni Didox menejeri beradi. To‘liq ko‘rsatilmaydi — uni hech kim to‘liq ko‘rmaydi."
+      },
+      "didox_service_tin": {
+        "name": "Didoxdagi kompaniyamiz STIRi",
+        "desc": "Tizim boshqa kompaniyalar ma’lumotini ko‘rish uchun Didoxga shu STIR bilan kiradi."
+      },
+      "didox_service_password": {
+        "name": "Didox hisobimiz paroli",
+        "desc": "O‘sha STIR uchun parol. Ketma-ket bir necha noto‘g‘ri urinishdan keyin Didox uzoq muddatga bloklaydi, shuning uchun diqqat bilan kiriting."
+      },
+      "didox_monthly_quota": {
+        "name": "Didox paketidagi so‘rovlar",
+        "desc": "Shartnoma bo‘yicha oylik paketga nechta so‘rov kiritilgan. Hech narsani cheklamaydi — «Analitika» sahifasida sarf shu bilan taqqoslanadi. Standart: 1 000 000."
+      },
+      "didox_monthly_cost_uzs": {
+        "name": "Didox paketi narxi, UZS",
+        "desc": "Oylik paket qancha turadi. Bitta so‘rov narxi va oylik sarf shundan hisoblanadi. Standart: 250 000."
+      },
+      "request_notify_chat_id": {
+        "name": "Yangi arizalar uchun chat",
+        "desc": "Xaridorlarning yangi arizalari tushadigan Telegram guruh raqami. Bo‘sh bo‘lsa — bildirishnoma yuborilmaydi."
+      },
+      "notify_topic_buyers": {
+        "name": "Xaridor arizalari uchun mavzu",
+        "desc": "Guruhda mavzular yoqilgan bo‘lsa, xaridorlar haqidagi xabarlar shu mavzuga tushadi. Bo‘sh bo‘lsa — umumiy mavzuga."
+      },
+      "notify_topic_sellers": {
+        "name": "Sotuvchi takliflari uchun mavzu",
+        "desc": "Sotuvchilar uchun ham xuddi shunday: ularning takliflari shu mavzuga tushadi. Bo‘sh bo‘lsa — umumiyga."
+      },
+      "verification_notify_chat_id": {
+        "name": "Kompaniya tekshiruvi uchun chat",
+        "desc": "Kompaniyalarni tekshirish arizalari qayerga tushadi. Bo‘sh bo‘lsa — yangi arizalar chatiga."
+      },
+      "news_channel_id": {
+        "name": "Hisobotlar uchun kanal",
+        "desc": "Tasdiqlangan hisobotlar chiqadigan Telegram kanal. Bo‘sh bo‘lsa — chiqarish o‘chirilgan."
+      },
+      "ingest_http_timeout_seconds": {
+        "name": "Sayt javobini qancha kutish",
+        "desc": "Yig‘uvchi saytni ishlamayapti deb hisoblashdan oldin necha soniya javob kutadi."
+      },
+      "ingest_http_retries": {
+        "name": "Necha marta qayta urinish",
+        "desc": "Sayt javob bermasa, yig‘uvchi necha marta qayta uradi."
+      },
+      "ingest_user_agent": {
+        "name": "Tizim saytlarga qanday tanishtiriladi",
+        "desc": "Begona saytlar kim kirayotganini shu satr orqali ko‘radi. Deyarli hech qachon o‘zgartirish kerak emas."
+      },
+      "ingest_per_host_delay_seconds": {
+        "name": "Bitta saytga so‘rovlar orasidagi tanaffus",
+        "desc": "O‘sha saytga keyingi murojaatdan oldin necha soniya kutish kerak, uni ortiqcha yuklamaslik uchun."
+      }
+    },
+    "prompt": {
+      "title": "Yangiliklar uchun prompt",
+      "subtitle": "Sun'iy intellekt har bir yangilikni tahlil qilishdan oldin o'qiydigan ko'rsatma. Saqlash yangi versiya yaratadi — eskisi o'zgarmasdan qoladi, shunda har bir maqola qaysi matn bilan tahlil qilingani ma'lum bo'ladi.",
+      "loading": "Yuklanmoqda…",
+      "error": "Promptni yuklab bo'lmadi",
+      "active": "Faol versiya: {version}",
+      "shipped": "to'plamda",
+      "length": "{max} belgidan {chars} tasi",
+      "try": "Maqolada tekshirish",
+      "saveAs": "{version} sifatida saqlash",
+      "readOnly": "Sizda faqat o'qish huquqi bor — promptni yozish huquqi bor xodim o'zgartiradi.",
+      "tryResult": "Tekshiruv natijasi",
+      "tryCost": "Tokenlar: {tokensIn} → {tokensOut} · {seconds} s",
+      "versions": "Versiyalar",
+      "isActive": "faol",
+      "activate": "Faol qilish",
+      "chars": "{chars} belgi",
+      "saveError": "Versiyani saqlab bo'lmadi",
+      "activateError": "Versiyani yoqib bo'lmadi",
+      "tryError": "Tekshiruv muvaffaqiyatsiz"
+    }
+  },
+  "analytics": {
+    "title": "Analitika",
+    "subtitle": "Didox paketidan qancha sarflangani va AI nimaga ishlatilgani. Ma'lumot boshidan yig'ilgan — bu yerda faqat birinchi marta ko'rsatilmoqda.",
+    "loading": "Yuklanmoqda…",
+    "loadFailed": "Yuklab bo'lmadi",
+    "loadFailedHint": "Sahifadagi ikkinchi bo'lim bunga bog'liq emas — u alohida yuklanadi.",
+    "didox": {
+      "title": "Didox — so'rovlar paketi",
+      "calls": "Shu oydagi so'rovlar",
+      "ofDays": "{total} kundan {elapsed}-kun",
+      "projected": "Oy oxiriga prognoz",
+      "spent": "Sarflandi",
+      "ofPackage": "{total} UZS dan",
+      "failed": "Xatolar",
+      "notSent": "yuborilmadi: {count}",
+      "byOperation": "Amallar bo'yicha",
+      "emptyMonth": "Bu oyda hali so'rov bo'lmagan",
+      "emptyMonthHint": "Bu «nol sarflandi» emas — joriy oyda paket hali ishlatila boshlanmagan."
+    },
+    "quota": {
+      "title": "Paket sarfi",
+      "ofQuota": "{quota} dan",
+      "pace": "Bugunga kutilgan",
+      "projected": "Prognoz",
+      "remaining": "Qoldi",
+      "onTrack": "Reja doirasida",
+      "ahead": "Rejadan oldinda",
+      "over": "Paketdan oshadi"
+    },
+    "trend": {
+      "title": "Kunlar bo'yicha sarf (jamlanma)",
+      "actual": "Haqiqatda",
+      "evenBurn": "Tekis sarf"
+    },
+    "health": {
+      "title": "Tashqi xizmatlar ishonchliligi (30 kun)",
+      "empty": "Chaqiruvlar bo'lmagan"
+    },
+    "ai": {
+      "title": "AI — token sarfi",
+      "calls": "Chaqiruvlar",
+      "window": "{days} kun ichida",
+      "tokens": "Tokenlar",
+      "inOut": "kirish {in} · chiqish {out}",
+      "cost": "Taxminiy narx",
+      "estimate": "API javobidagi stavkalar bo'yicha",
+      "degraded": "Degradatsiyalar",
+      "degradedHint": "xatolar, qaytishlar, kechiktirilgan",
+      "byPurpose": "Nimaga sarflandi",
+      "byModel": "Modellar bo'yicha",
+      "empty": "AI hali chaqirilmagan",
+      "emptyHint": "Bu «nol sarflandi» emas: tanlangan davrda bironta ham chaqiruv bo'lmagan."
+    },
+    "purpose": {
+      "signal_extraction": "Signallar tahlili",
+      "news_classification": "Yangiliklar tasnifi",
+      "substance_hint": "Modda bo'yicha maslahat",
+      "request_analysis": "Arizalar tahlili",
+      "report": "Hisobotlar",
+      "unknown": "Noma'lum"
+    },
+    "degradation": {
+      "title": "AI qayerda jimgina ishlamadi",
+      "hint": "Bu yo'llarning har biri «yumshoq» qilib o'ylangan: AI ishlamasa tizim yiqilmaydi, qoidalarga o'tadi. Shuning uchun kalit ishlamagan oy oddiy oyga o'xshaydi — farqni faqat shu yerda ko'rish mumkin.",
+      "errors": "Tahlil xatolari",
+      "fallbacks": "Qoidalarga qaytish",
+      "deferred": "Byudjet bo'yicha kechiktirilgan",
+      "ruleBasedReports": "AI'siz hisobotlar"
+    },
+    "outcome": {
+      "perCompany": "Tekshirilgan kompaniya uchun UZS",
+      "companies": "kompaniyalar: {count}",
+      "perDocument": "Hujjat uchun UZS",
+      "documents": "hujjatlar: {count}",
+      "perArticle": "Yangilikka tokenlar",
+      "articles": "yangiliklar: {count}"
+    },
+    "table": {
+      "operation": "Amal",
+      "calls": "Chaqiruvlar",
+      "failed": "Xatolar",
+      "p95": "p95",
+      "provider": "Xizmat",
+      "success": "Muvaffaqiyat",
+      "purpose": "Maqsad",
+      "tokensIn": "Kirish tokenlari",
+      "tokensOut": "Chiqish tokenlari",
+      "model": "Model",
+      "tokens": "Tokenlar",
+      "cost": "Narx",
+      "none": "yo'q"
     }
   }
 }

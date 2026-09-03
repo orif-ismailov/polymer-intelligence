@@ -44,7 +44,7 @@ def test_prefill_is_off_unless_an_operator_turned_the_channel_on(monkeypatch) ->
     from app.domains.companies import lookup as lookup_service
     from app.integrations.gov_registry import client as registry_client
 
-    monkeypatch.setattr(registry_client.settings_service, "get", lambda db, key: "stub")
+    monkeypatch.setattr(registry_client.settings_service, "get", lambda key: "stub")
 
     with pytest.raises(lookup_service.ChannelDisabled) as excinfo:
         lookup_service.lookup_company(_Db(), "310529901")
@@ -67,7 +67,7 @@ def test_prefill_refuses_without_a_partner_token(monkeypatch) -> None:  # noqa: 
     from app.domains.companies import lookup as lookup_service
     from app.integrations.gov_registry import client as registry_client
 
-    monkeypatch.setattr(registry_client.settings_service, "get", lambda db, key: "didox")
+    monkeypatch.setattr(registry_client.settings_service, "get", lambda key: "didox")
     monkeypatch.setattr(lookup_service, "is_configured", lambda: False)
 
     with pytest.raises(lookup_service.ChannelDisabled) as excinfo:
@@ -81,7 +81,7 @@ def test_prefill_returns_the_record_when_the_channel_is_on(monkeypatch) -> None:
     from app.integrations.didox.registry import DidoxGovRegistryClient
     from app.integrations.gov_registry import client as registry_client
 
-    monkeypatch.setattr(registry_client.settings_service, "get", lambda db, key: "didox")
+    monkeypatch.setattr(registry_client.settings_service, "get", lambda key: "didox")
     monkeypatch.setattr(lookup_service, "is_configured", lambda: True)
     monkeypatch.setattr(
         DidoxGovRegistryClient,

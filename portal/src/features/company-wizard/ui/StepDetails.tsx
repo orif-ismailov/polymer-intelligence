@@ -40,6 +40,12 @@ interface StepDetailsProps {
 /**
  * Step 2 — company identity.
  *
+ * Opens with the ИНН, because everything else on the screen is derived from it:
+ * the state-registry lookup fills the name, address, ownership form and the bank
+ * step from that one number. Registration involves no E-IMZO at all — identity is
+ * established by documents and staff review — so this screen asks for the STIR
+ * and nothing about keys.
+ *
  * Default types keep the shared «Основная информация» sheet. Manufacturer
  * follows `companys_list.jpeg`. Logistics follows `logist_reg_flow.jpeg`.
  * Laboratory follows `labaratory_reg_flow.jpeg`: logo + name + country + city +
@@ -106,6 +112,11 @@ export function StepDetails({ onNext, onBack }: StepDetailsProps) {
         ? t("wizard.details.laboratorySubtitle")
         : t("wizard.details.subtitle");
 
+  const taxIdLabel =
+    logisticsFlow || laboratoryFlow
+      ? t("wizard.details.fields.taxIdOrReg")
+      : t("wizard.details.fields.taxId");
+
   function handleNext(): void {
     setSubmitted(true);
     if (valid) onNext();
@@ -131,6 +142,29 @@ export function StepDetails({ onNext, onBack }: StepDetailsProps) {
           {t("wizard.details.lockedBody")}
         </Alert>
       ) : null}
+
+      <div className="space-y-5">
+        {/* First on the sheet because the registry lookup below keys off it. */}
+        <FormField
+          label={taxIdLabel}
+          required
+          error={show("tax_id") && !taxOk ? t("wizard.details.taxIdInvalid") : null}
+        >
+          {({ id, invalid, describedBy, required }) => (
+            <Input
+              id={id}
+              aria-required={required}
+              inputMode="numeric"
+              value={identity.tax_id}
+              invalid={invalid}
+              aria-describedby={describedBy}
+              disabled={identityLocked}
+              onChange={(e) => setIdentity({ tax_id: e.target.value.replace(/\s+/g, "") })}
+              onBlur={markBlurred("tax_id")}
+            />
+          )}
+        </FormField>
+      </div>
 
       <RegistryPrefillNotice />
 
@@ -283,28 +317,6 @@ export function StepDetails({ onNext, onBack }: StepDetailsProps) {
 
         {manufacturer ? (
           <FormField
-            label={t("wizard.details.fields.taxId")}
-            required
-            error={show("tax_id") && !taxOk ? t("wizard.details.taxIdInvalid") : null}
-          >
-            {({ id, invalid, describedBy, required }) => (
-              <Input
-                id={id}
-                aria-required={required}
-                inputMode="numeric"
-                value={identity.tax_id}
-                invalid={invalid}
-                aria-describedby={describedBy}
-                disabled={identityLocked}
-                onChange={(e) => setIdentity({ tax_id: e.target.value.replace(/\s+/g, "") })}
-                onBlur={markBlurred("tax_id")}
-              />
-            )}
-          </FormField>
-        ) : null}
-
-        {manufacturer ? (
-          <FormField
             label={t("wizard.details.fields.registrationNumber")}
             required
             error={
@@ -436,32 +448,6 @@ export function StepDetails({ onNext, onBack }: StepDetailsProps) {
                 aria-describedby={describedBy}
                 onChange={(e) => setLaboratory({ description: e.target.value })}
                 onBlur={markBlurred("lab_description")}
-              />
-            )}
-          </FormField>
-        ) : null}
-
-        {!manufacturer ? (
-          <FormField
-            label={
-              logisticsFlow || laboratoryFlow
-                ? t("wizard.details.fields.taxIdOrReg")
-                : t("wizard.details.fields.taxId")
-            }
-            required
-            error={show("tax_id") && !taxOk ? t("wizard.details.taxIdInvalid") : null}
-          >
-            {({ id, invalid, describedBy, required }) => (
-              <Input
-                id={id}
-                aria-required={required}
-                inputMode="numeric"
-                value={identity.tax_id}
-                invalid={invalid}
-                aria-describedby={describedBy}
-                disabled={identityLocked}
-                onChange={(e) => setIdentity({ tax_id: e.target.value.replace(/\s+/g, "") })}
-                onBlur={markBlurred("tax_id")}
               />
             )}
           </FormField>

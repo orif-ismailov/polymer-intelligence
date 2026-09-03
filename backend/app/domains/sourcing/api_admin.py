@@ -8,7 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.requests.models import Request
 from app.domains.sourcing import service as sourcing_service
@@ -24,19 +24,21 @@ from app.domains.sourcing.schemas import (
     SourcingRunOut,
 )
 
-router = APIRouter(prefix="/admin", tags=["sourcing"], dependencies=[Depends(require_analyst_or_admin)])
+# No router-level gate: these eleven routes serve FOUR different dashboard
+# pages (inventory, partners, sourcing, intel), so each declares its own.
+router = APIRouter(prefix="/admin", tags=["sourcing"])
 
 
 # ── Inventory CRUD ───────────────────────────────────────────────────────────────
 
-@router.get("/inventory", response_model=list[InventoryItemOut])
+@router.get("/inventory", dependencies=[Depends(require_page("inventory", "read"))], response_model=list[InventoryItemOut])
 def list_inventory(
     db: Session = Depends(get_db),
 ) -> list[InventoryItemOut]:
     return db.query(InventoryItem).order_by(InventoryItem.product_id).all()  # type: ignore[return-value]
 
 
-@router.post("/inventory", response_model=InventoryItemOut, status_code=status.HTTP_201_CREATED)
+@router.post("/inventory", dependencies=[Depends(require_page("inventory", "write"))], response_model=InventoryItemOut, status_code=status.HTTP_201_CREATED)
 def create_inventory(
     body: InventoryItemIn,
     db: Session = Depends(get_db),
@@ -47,7 +49,7 @@ def create_inventory(
     return item  # type: ignore[return-value]
 
 
-@router.patch("/inventory/{item_id}", response_model=InventoryItemOut)
+@router.patch("/inventory/{item_id}", dependencies=[Depends(require_page("inventory", "write"))], response_model=InventoryItemOut)
 def update_inventory(
     item_id: int,
     body: InventoryItemPatch,
@@ -62,7 +64,7 @@ def update_inventory(
     return item  # type: ignore[return-value]
 
 
-@router.delete("/inventory/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/inventory/{item_id}", dependencies=[Depends(require_page("inventory", "write"))], status_code=status.HTTP_204_NO_CONTENT)
 def delete_inventory(
     item_id: int,
     db: Session = Depends(get_db),
@@ -75,14 +77,14 @@ def delete_inventory(
 
 # ── Partner suppliers CRUD ───────────────────────────────────────────────────────
 
-@router.get("/partners", response_model=list[PartnerSupplierOut])
+@router.get("/partners", dependencies=[Depends(require_page("partners", "read"))], response_model=list[PartnerSupplierOut])
 def list_partners(
     db: Session = Depends(get_db),
 ) -> list[PartnerSupplierOut]:
     return db.query(PartnerSupplier).order_by(PartnerSupplier.name).all()  # type: ignore[return-value]
 
 
-@router.post("/partners", response_model=PartnerSupplierOut, status_code=status.HTTP_201_CREATED)
+@router.post("/partners", dependencies=[Depends(require_page("partners", "write"))], response_model=PartnerSupplierOut, status_code=status.HTTP_201_CREATED)
 def create_partner(
     body: PartnerSupplierIn,
     db: Session = Depends(get_db),
@@ -93,7 +95,7 @@ def create_partner(
     return partner  # type: ignore[return-value]
 
 
-@router.patch("/partners/{partner_id}", response_model=PartnerSupplierOut)
+@router.patch("/partners/{partner_id}", dependencies=[Depends(require_page("partners", "write"))], response_model=PartnerSupplierOut)
 def update_partner(
     partner_id: int,
     body: PartnerSupplierPatch,
@@ -108,7 +110,7 @@ def update_partner(
     return partner  # type: ignore[return-value]
 
 
-@router.delete("/partners/{partner_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/partners/{partner_id}", dependencies=[Depends(require_page("partners", "write"))], status_code=status.HTTP_204_NO_CONTENT)
 def delete_partner(
     partner_id: int,
     db: Session = Depends(get_db),
@@ -121,7 +123,7 @@ def delete_partner(
 
 # ── Sourcing ─────────────────────────────────────────────────────────────────────
 
-@router.post("/requests/{request_id}/source", response_model=SourcingRunOut, status_code=status.HTTP_201_CREATED)
+@router.post("/requests/{request_id}/source", dependencies=[Depends(require_page("sourcing", "write"))], response_model=SourcingRunOut, status_code=status.HTTP_201_CREATED)
 def source_request(
     request_id: int,
     db: Session = Depends(get_db),
@@ -134,7 +136,7 @@ def source_request(
     return run  # type: ignore[return-value]
 
 
-@router.get("/requests/{request_id}/sourcing", response_model=SourcingRunOut)
+@router.get("/requests/{request_id}/sourcing", dependencies=[Depends(require_page("sourcing", "read"))], response_model=SourcingRunOut)
 def get_sourcing(
     request_id: int,
     db: Session = Depends(get_db),
@@ -147,7 +149,7 @@ def get_sourcing(
 
 # ── Market intelligence ──────────────────────────────────────────────────────────
 
-@router.get("/intel/market", response_model=list[MarketIntelRow])
+@router.get("/intel/market", dependencies=[Depends(require_page("intel", "read"))], response_model=list[MarketIntelRow])
 def market_intel(
     db: Session = Depends(get_db),
 ) -> list[MarketIntelRow]:

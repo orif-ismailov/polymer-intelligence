@@ -16,6 +16,14 @@
 #   rate_limit                 Redis counters
 #   dashboard_summary_service  presentation for the internal dashboard; kept together
 #                              with app/schemas/dashboard.py + app/api/dashboard.py (P9)
+#   llm_clients                which LLM client is live and in whose dialect. Five modules
+#                              across four domains hold clients it rebinds, and it owns the
+#                              provider/rate tables two routers read — owned by none of them
+#   analytics_service          what the Didox package and the AI are being spent on. Reads
+#                              five tables belonging to four domains and writes nothing;
+#                              same kind of cross-domain presentation as
+#                              dashboard_summary_service, and an "analytics domain" owning
+#                              no data of its own would be a bounded context in name only
 #
 # Adding a file here needs a reason of the same kind. If it has an owner, it belongs in
 # that owner's domain folder.

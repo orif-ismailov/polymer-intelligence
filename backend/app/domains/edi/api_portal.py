@@ -55,7 +55,7 @@ _DISABLED = "didox_disabled"
 def _guard(db: Session) -> None:
     """Actions only. Reading a status on the stub rail is fine; acting is not."""
     try:
-        onboarding.assert_live(db)
+        onboarding.assert_live()
     except onboarding.ChannelDisabled as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_DISABLED) from exc
 
@@ -157,7 +157,7 @@ def didox_status(
 ) -> DidoxStatusOut:
     """Where this company stands. Never calls Didox — the state is ours to hold."""
     company = company_or_404(db, account, company_id)
-    disabled = onboarding.channel_state(db)
+    disabled = onboarding.channel_state()
     if disabled is not None:
         return DidoxStatusOut(state=disabled, has_session=False)
     row = db.get(DidoxCompany, company.id)

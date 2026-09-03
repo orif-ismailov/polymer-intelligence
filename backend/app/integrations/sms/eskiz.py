@@ -21,8 +21,8 @@ from app.integrations.sms.base import SmsSendResult
 
 logger = logging.getLogger(__name__)
 
-_AUTH_URL = "https://notify.eskiz.uz/api/auth/login"
-_SEND_URL = "https://notify.eskiz.uz/api/message/sms/send"
+_AUTH_URL = f"{settings.ESKIZ_BASE_URL}/api/auth/login"
+_SEND_URL = f"{settings.ESKIZ_BASE_URL}/api/message/sms/send"
 # Eskiz's default originator; production accounts register their own approved sender.
 _SENDER = "4546"
 

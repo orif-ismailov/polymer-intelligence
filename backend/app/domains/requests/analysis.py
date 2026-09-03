@@ -23,7 +23,6 @@ import datetime
 import decimal
 import functools
 import logging
-import time
 
 import anthropic
 import instructor
@@ -35,6 +34,7 @@ from app.core.paths import PROMPTS_DIR
 from app.domains.pricing import analysis as price_analysis_service
 from app.domains.requests.analysis_schemas import RequestAnalysisResult
 from app.domains.requests.models import Request
+from app.services import llm_clients
 from parsing.budget import check_and_reserve_tokens, record_actual_tokens
 from parsing.schemas import BudgetExceeded
 
@@ -48,6 +48,9 @@ _PROMPTS_DIR = PROMPTS_DIR
 # ignore_missing_imports, which app.services' disallow_any_explicit would reject.
 _raw_client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 _client = instructor.from_anthropic(_raw_client, mode=instructor.Mode.TOOLS)
+# `None` unless OPENAI_API_KEY is set. The model id decides which client a call
+# uses (llm_clients.provider_of); both are rebound in place by reset().
+_openai_client = llm_clients.build_openai_structured(settings.OPENAI_API_KEY)
 
 
 @functools.lru_cache(maxsize=8)
@@ -175,23 +178,15 @@ def analyze_request(db: Session, request: Request) -> dict[str, object] | None:
         return None
 
     try:
-        t0 = time.monotonic()
-        result, completion = _client.messages.create_with_completion(
+        result, _completion, usage, latency_ms = llm_clients.structured(
+            _client,
+            _openai_client,
             model=model,
-            max_tokens=512,
-            temperature=0,
-            system=[
-                {
-                    "type": "text",
-                    "text": system_prompt,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-            messages=[{"role": "user", "content": json.dumps(context, ensure_ascii=False)}],
+            system=system_prompt,
+            user=json.dumps(context, ensure_ascii=False),
             response_model=RequestAnalysisResult,
-            max_retries=2,
+            max_tokens=512,
         )
-        latency_ms = (time.monotonic() - t0) * 1000.0
     except Exception:
         logger.exception(
             "request_analysis.llm_error", extra={"request_id": request.id}
@@ -199,10 +194,9 @@ def analyze_request(db: Session, request: Request) -> dict[str, object] | None:
         record_actual_tokens(estimate, 0)  # release the reservation
         return None
 
-    usage = completion.usage
-    tokens_in = usage.input_tokens + getattr(usage, "cache_creation_input_tokens", 0)
-    tokens_out = usage.output_tokens
-    record_actual_tokens(estimate, tokens_in + tokens_out)
+    tokens_in = usage.tokens_in
+    tokens_out = usage.tokens_out
+    record_actual_tokens(estimate, usage.total)
 
     ai_block: dict[str, object] = {
         "match_score": round(result.match_score, 3),
@@ -211,6 +205,12 @@ def analyze_request(db: Session, request: Request) -> dict[str, object] | None:
         "analyzed_at": datetime.datetime.now(tz=datetime.UTC).isoformat(),
         "model": model,
         "prompt_version": prompt_version,
+        # What this analysis cost. They were already computed for the budget
+        # reconciliation two lines up and then thrown away into a log line, which
+        # made request analysis invisible to `/admin/analytics/ai` — a log is not
+        # a place you can sum. No migration: `requests.ai` is JSONB.
+        "tokens_in": tokens_in,
+        "tokens_out": tokens_out,
     }
 
     request.ai = ai_block

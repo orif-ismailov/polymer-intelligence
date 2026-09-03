@@ -25,6 +25,7 @@ from tests._verification_db import (
     requires_real_db,
     session_factory,
 )
+from tests.conftest import set_switch
 
 _PKCS7 = base64.b64encode(b"fake-pkcs7-blob").decode()
 
@@ -112,11 +113,9 @@ def test_valid_signature_auto_approves(sf, monkeypatch) -> None:  # noqa: ANN001
         VerificationCheckStatus,
         VerificationCheckType,
     )
-    from app.services import settings_service  # noqa: PLC0415
-
     _patch(monkeypatch, result=_result())
     with sf() as db:
-        settings_service.set_many(db, {"verification_auto_approve": True}, None)
+        set_switch(verification_auto_approve=True)
         account, company = _company(db)
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
@@ -343,3 +342,105 @@ def test_sidecar_down_propagates_and_manual_path_still_works(sf, monkeypatch) ->
         case = verification_service.submit_case(db, company, account)
         db.commit()
         assert case.status == VerificationCaseStatus.checks_running
+
+
+# ── registry vs certificate: who owns the displayed requisites ────────────────
+#
+# A certificate proves WHO signed; the state registry states WHAT the company
+# currently is. The two disagree in practice — E-IMZO v6.4.7 reports the subject
+# lowercased, and an issued name can be months stale — so the registry wins the
+# two fields both sources carry, and the certificate remains the fallback and
+# the thing that FREEZES them. Nothing about the identity guarantee moves: it
+# rests on org_inn == tax_id, which is checked before any of this.
+
+
+def _patch_registry(monkeypatch, info=None, raises=None):  # noqa: ANN001
+    from app.domains.companies import lookup as company_lookup  # noqa: PLC0415
+
+    def fake_lookup(db, tax_id, *, redis_client=None):  # noqa: ANN001, ANN202, ARG001
+        if raises is not None:
+            raise raises
+        return info
+
+    monkeypatch.setattr(company_lookup, "lookup_company", fake_lookup)
+
+
+def _registry_info(**kw):  # noqa: ANN202
+    from app.integrations.didox.client import DidoxCompanyInfo  # noqa: PLC0415
+
+    defaults = {
+        "tin": "301234567",
+        "name": '"POLYMER TRADE" MAS\'ULIYATI CHEKLANGAN JAMIYAT',
+        "director": "IVANOV IVAN IVANOVICH",
+    }
+    defaults.update(kw)
+    return DidoxCompanyInfo(**defaults)
+
+
+@requires_real_db
+def test_registry_name_wins_over_the_certificate(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
+
+    _patch(monkeypatch, result=_result())
+    _patch_registry(monkeypatch, info=_registry_info())
+    with sf() as db:
+        account, company = _company(db)
+        redis_client = FakeRedis()
+        eimzo_service.issue_challenge(redis_client, company.id, account.id)
+
+        eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        db.commit()
+
+        company = db.get(Company, company.id)
+        # The certificate said "OOO Polymer Trade" / "IVANOV IVAN"; the registry
+        # is authoritative for both, and the row is still frozen.
+        assert company.legal_name == '"POLYMER TRADE" MAS\'ULIYATI CHEKLANGAN JAMIYAT'
+        assert company.director_name == "IVANOV IVAN IVANOVICH"
+        assert company.identity_locked is True
+
+
+@requires_real_db
+def test_certificate_is_the_fallback_when_the_registry_has_no_record(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies.lookup import CompanyNotFound  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
+
+    _patch(monkeypatch, result=_result())
+    _patch_registry(monkeypatch, raises=CompanyNotFound("no such company"))
+    with sf() as db:
+        account, company = _company(db)
+        redis_client = FakeRedis()
+        eimzo_service.issue_challenge(redis_client, company.id, account.id)
+
+        eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        db.commit()
+
+        company = db.get(Company, company.id)
+        assert company.legal_name == "OOO Polymer Trade"
+        assert company.director_name == "IVANOV IVAN"
+        assert company.identity_locked is True
+
+
+@requires_real_db
+def test_a_registry_failure_never_fails_a_good_signature(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
+
+    # Not a ProviderUnavailable — an unexpected fault, the shape that would
+    # otherwise 500 a signature the sidecar had already accepted and whose
+    # evidence is already stored.
+    _patch(monkeypatch, result=_result())
+    _patch_registry(monkeypatch, raises=RuntimeError("registry exploded"))
+    with sf() as db:
+        account, company = _company(db)
+        redis_client = FakeRedis()
+        eimzo_service.issue_challenge(redis_client, company.id, account.id)
+
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        db.commit()
+
+        assert outcome.ok is True
+        company = db.get(Company, company.id)
+        assert company.legal_name == "OOO Polymer Trade"
+        assert company.identity_locked is True

@@ -88,14 +88,13 @@ def api(engine: sa.Engine):  # noqa: ANN001, ANN201
 
 def _staff_headers(session, role, email):  # noqa: ANN001, ANN202
     from app.core.security import create_access_token  # noqa: PLC0415
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     with session() as db:
         staff = make_staff(db, email)
-        staff.role = StaffRole(role)
+        staff.is_admin = role == "admin"
         db.commit()
         staff_id = staff.id
-    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"}
 
 
 def _scene(session, *, disputed: bool = False):  # noqa: ANN001, ANN202

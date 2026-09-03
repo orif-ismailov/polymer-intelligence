@@ -31,6 +31,27 @@ import pytest
 from tests.test_didox_client import INFO_EMPTY, INFO_FOUND
 
 
+def _shipped_default(env_var: str) -> object:
+    """The value a deployment runs on when `.env` says nothing.
+
+    Reads `Settings` rather than a `SettingSpec`: since the switches moved into
+    the env contract the field IS the declaration, so asserting anywhere else
+    would be testing a copy.
+    """
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return Settings.model_fields[env_var].get_default()
+
+
+def _allowed_values(env_var: str) -> tuple[object, ...]:
+    """The closed set a mode switch accepts, off its `Literal` annotation."""
+    import typing  # noqa: PLC0415
+
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return typing.get_args(Settings.model_fields[env_var].annotation)
+
+
 class _FakeDidox:
     """A Didox client that answers with whatever the test hands it."""
 
@@ -189,13 +210,12 @@ def test_the_factory_returns_the_didox_client_on_the_didox_rail(monkeypatch) -> 
     from app.integrations.didox.registry import DidoxGovRegistryClient
     from app.integrations.gov_registry import client as registry_client
 
-    monkeypatch.setattr(registry_client.settings_service, "get", lambda db, key: "didox")
+    monkeypatch.setattr(registry_client.settings_service, "get", lambda key: "didox")
     assert isinstance(gov_registry.get_gov_registry_client(None), DidoxGovRegistryClient)
 
 
 def test_the_registry_mode_still_ships_stub() -> None:
-    from app.services.settings_service import _SPECS
-
-    spec = _SPECS["gov_registry_mode"]
-    assert spec.default == "stub", "turning the channel on is an operator decision"
-    assert "didox" in (spec.choices or ())
+    assert _shipped_default("GOV_REGISTRY_MODE") == "stub", (
+        "turning the channel on is an operator decision"
+    )
+    assert "didox" in _allowed_values("GOV_REGISTRY_MODE")

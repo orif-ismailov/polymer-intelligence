@@ -57,7 +57,9 @@ _NOT_PENDING_FALLBACK = "Кейс сейчас не готов к решению
 
 
 def _notify_chat_id() -> int | None:
-    return settings.VERIFICATION_NOTIFY_CHAT_ID or settings.REQUEST_NOTIFY_CHAT_ID
+    from app.services import settings_service  # noqa: PLC0415
+
+    return settings_service.verification_chat_id()
 
 
 async def _require_verification_admin(callback: CallbackQuery) -> bool:

@@ -136,13 +136,13 @@ def _staff_auth(staff_id: int, role: str) -> dict[str, str]:
     from app.core.security import create_access_token  # noqa: PLC0415
 
     return {
-        "Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"
+        "Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"
     }
 
 
 def _seller_scene(session):  # noqa: ANN001, ANN202
     """A verified seller company with an approved offer, plus staff of both roles."""
-    from app.models.enums import CompanyStatus, StaffRole  # noqa: PLC0415
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
     from app.models.staff import StaffUser  # noqa: PLC0415
     from tests._verification_db import make_company, make_seller_offer  # noqa: PLC0415
 
@@ -154,13 +154,13 @@ def _seller_scene(session):  # noqa: ANN001, ANN202
         analyst = StaffUser(
             email="analyst-lab@example.com",
             full_name="Analyst",
-            role=StaffRole.analyst,
+            is_admin=False,
             password_hash="x",
         )
         admin = StaffUser(
             email="admin-lab2@example.com",
             full_name="Admin",
-            role=StaffRole.admin,
+            is_admin=True,
             password_hash="x",
         )
         db.add_all([analyst, admin])

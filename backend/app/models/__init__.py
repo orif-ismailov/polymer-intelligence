@@ -106,7 +106,6 @@ from app.models.enums import (  # noqa: F401
     SellerOfferStatus,
     SignalKind,
     SourceKind,
-    StaffRole,
     Urgency,
     VerificationCaseStatus,
     VerificationCaseType,
@@ -119,7 +118,8 @@ from app.models.enums import (
 )
 from app.models.events import DomainEvent  # noqa: F401
 from app.models.integration import IntegrationCallLog  # noqa: F401
-from app.models.staff import AuditLog, StaffUser  # noqa: F401
+from app.models.prompts import PromptVersion  # noqa: F401
+from app.models.staff import AuditLog, StaffPageAccess, StaffUser  # noqa: F401
 
 __all__ = [
     # Enums
@@ -136,7 +136,6 @@ __all__ = [
     "DeliveryStatus",
     "ReportKind",
     "ReportStatus",
-    "StaffRole",
     "SellerOfferStatus",
     "OfferFileKind",
     "OfferRequestStatus",
@@ -159,6 +158,7 @@ __all__ = [
     # Sources / raw
     # Counterparties
     # Staff / audit
+    "StaffPageAccess",
     "StaffUser",
     "AuditLog",
     # Signals
@@ -166,8 +166,10 @@ __all__ = [
     # Prices
     # Alerts
     # Reports
-    # Runtime settings (Phase 8d)
+    # Runtime setting overrides (the layer over the env contract)
     "AppSetting",
+    # Operator-authored LLM prompt versions (append-only)
+    "PromptVersion",
     # Marketplace (Phase 2)
     "OfferSaleMode",
     # Sourcing (Phase 4)

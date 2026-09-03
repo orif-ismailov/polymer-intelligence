@@ -75,7 +75,9 @@ def _enqueue_group_notify_soft(request_id: int) -> None:
     Posts the request's details to REQUEST_NOTIFY_CHAT_ID. Skips entirely when the
     chat id is unset; a broker outage must never break request creation.
     """
-    if settings.REQUEST_NOTIFY_CHAT_ID is None:
+    from app.services import settings_service  # noqa: PLC0415
+
+    if settings_service.notify_chat_id() is None:
         return
     from app.tasks.notify import send_request_to_group  # noqa: PLC0415
 

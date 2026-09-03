@@ -28,12 +28,11 @@ def _product(id: int = 4, code: str = "LLDPE") -> ProductOut:
 
 
 def _make_staff_user(role: str, user_id: int = 1) -> MagicMock:
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     user = MagicMock()
     user.id = user_id
     user.email = f"{role}@polymer.uz"
-    user.role = StaffRole(role)
+    user.is_admin = role == "admin"
     user.is_active = True
     return user
 
@@ -41,7 +40,7 @@ def _make_staff_user(role: str, user_id: int = 1) -> MagicMock:
 def _auth_headers(user_id: int, role: str) -> dict[str, str]:
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    return {"Authorization": f"Bearer {create_access_token(subject=str(user_id), role=role)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(user_id))}"}
 
 
 def _admin_client(staff_user: MagicMock) -> TestClient:

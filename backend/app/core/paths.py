@@ -20,5 +20,17 @@ from pathlib import Path
 #: `backend/` — the repo's backend root, two levels above `app/core/`.
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
+#: The repo root — home of the ONE `.env` an operator edits.
+#:
+#: `Settings` used to load `env_file=".env"`, which pydantic resolves against the
+#: CURRENT WORKING DIRECTORY, and this repo had both `./.env` and
+#: `./backend/.env`. Which one configured the app depended entirely on where you
+#: launched it: `make dev` runs uvicorn from `backend/` and got that one, while
+#: compose passes the root file — and the two disagreed on ten keys, including
+#: `JWT_SECRET` and the S3 credentials. `backend/.env` is now merged into the
+#: root file and gone; anchoring here rather than to a relative path is what
+#: stops a newly-created `backend/.env` from silently re-forming the split.
+REPO_ROOT = BACKEND_ROOT.parent
+
 #: Versioned, immutable LLM prompts (`parsing/prompts/<family>_v<N>.md`).
 PROMPTS_DIR = BACKEND_ROOT / "parsing" / "prompts"

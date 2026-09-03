@@ -225,7 +225,7 @@ def test_staff_token_rejected_by_portal_me(portal_app) -> None:  # noqa: ANN001
     from app.core.security import create_access_token  # noqa: PLC0415
 
     client, _fake, _db = portal_app
-    staff = create_access_token(subject="1", role="admin")
+    staff = create_access_token(subject="1")
     resp = client.get(_ME, headers={"Authorization": f"Bearer {staff}"})
     assert resp.status_code == 401
 
@@ -244,7 +244,7 @@ def test_portal_token_rejected_by_staff_endpoint(portal_app) -> None:  # noqa: A
 
     client, _fake, _db = portal_app
     portal = create_portal_access_token(subject="7")
-    resp = client.get("/api/v1/admin/whoami", headers={"Authorization": f"Bearer {portal}"})
+    resp = client.get("/api/v1/admin/users", headers={"Authorization": f"Bearer {portal}"})
     assert resp.status_code == 401
 
 

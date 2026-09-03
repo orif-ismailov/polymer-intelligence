@@ -289,7 +289,7 @@ class TestModeration:
         assert resp.status_code == 401, resp.text
 
     def test_approve_offer_200(self):
-        from app.api.deps import require_analyst_or_admin  # noqa: PLC0415
+        from app.api.deps import get_current_staff_user  # noqa: PLC0415
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
         from app.models.enums import SellerOfferStatus  # noqa: PLC0415
@@ -307,7 +307,7 @@ class TestModeration:
 
         application = create_app()
         application.dependency_overrides[get_db] = _db
-        application.dependency_overrides[require_analyst_or_admin] = lambda: staff
+        application.dependency_overrides[get_current_staff_user] = lambda: staff
 
         # Let the real moderate_offer run against the mock offer. It publishes via a
         # guarded UPDATE (QA #1) rather than by mutating the ORM object, so the
@@ -325,7 +325,7 @@ class TestModeration:
 
     def test_approve_offer_409_when_already_moderated(self):
         """A decision that loses the race gets 409, not a silent second verdict (QA #1)."""
-        from app.api.deps import require_analyst_or_admin  # noqa: PLC0415
+        from app.api.deps import get_current_staff_user  # noqa: PLC0415
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
         from app.models.enums import SellerOfferStatus  # noqa: PLC0415
@@ -351,7 +351,7 @@ class TestModeration:
 
         application = create_app()
         application.dependency_overrides[get_db] = _db
-        application.dependency_overrides[require_analyst_or_admin] = lambda: staff
+        application.dependency_overrides[get_current_staff_user] = lambda: staff
 
         with patch("app.api.health._check_redis", return_value="ok"), TestClient(application) as tc:
             resp = tc.post("/api/v1/admin/moderation/offers/11/approve", json={"note": "ok"})

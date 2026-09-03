@@ -59,10 +59,10 @@ def service_user_key(
     proceeds without the header — which the test contour accepts and production
     refuses with a 401 that the gateway already turns into `ProviderUnavailable`.
     """
-    from app.core.config import settings  # noqa: PLC0415 — lazy: import-safe module
+    from app.services import settings_service  # noqa: PLC0415 — lazy: import-safe module
 
-    tin = settings.DIDOX_SERVICE_TIN.strip()
-    password = settings.DIDOX_SERVICE_PASSWORD
+    tin = str(settings_service.get("didox_service_tin") or "").strip()
+    password = str(settings_service.get("didox_service_password") or "")
     if not tin or not password:
         return None
 
@@ -104,3 +104,27 @@ def _cooldown(redis_client: Any, tin: str) -> None:  # noqa: ANN401
         redis_client.setex(_COOLDOWN.format(tin=tin), FAILURE_COOLDOWN_SECONDS, "1")
     except Exception as exc:  # noqa: BLE001
         logger.warning("didox.auth.cooldown_write_failed", extra={"error": str(exc)})
+
+
+def clear_cooldown() -> None:
+    """Forget the failed-login cooldown, because the credentials just changed.
+
+    Without this, correcting a wrong service password in the admin panel appears
+    to do nothing for an hour: the cooldown that the wrong password set is still
+    in Redis, so every lookup keeps degrading and the panel — which now shows the
+    right credential — is contradicted by the behaviour. The cooldown exists to
+    stop us re-trying a credential we already know is bad, and a new credential
+    is not that credential.
+
+    Best-effort and never raises: an operator's write must not fail because a
+    cache could not be cleared.
+    """
+    try:
+        from app.core.redis import signal_client  # noqa: PLC0415
+        from app.services import settings_service  # noqa: PLC0415
+
+        tin = str(settings_service.get("didox_service_tin") or "").strip()
+        if tin:
+            signal_client().delete(_COOLDOWN.format(tin=tin))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("didox.auth.cooldown_clear_failed", extra={"error": str(exc)})

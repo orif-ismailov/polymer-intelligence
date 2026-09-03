@@ -82,10 +82,17 @@
     "deals": "Deals",
     "favorites": "Favorites",
     "samples": "Samples",
-    "marketplace": "Marketplace",
     "openMenu": "Open menu",
     "logisticsRequests": "Logistics requests",
-    "lab": "Laboratory"
+    "lab": "Laboratory",
+    "groups": {
+      "market": "Market",
+      "trade": "Trade",
+      "services": "Services",
+      "company": "Company"
+    },
+    "collapseRail": "Collapse menu",
+    "expandRail": "Expand menu"
   },
   "home": {
     "title": "Overview",
@@ -255,27 +262,6 @@
           "description": "Analysis, testing and certification of materials"
         }
       }
-    },
-    "eimzo": {
-      "title": "Digital signature",
-      "subtitle": "Sign the documents to complete your company registration",
-      "methods": {
-        "usb_token": "USB Token",
-        "mobile_id": "Mobile ID",
-        "cloud_id": "Cloud ID"
-      },
-      "methodUnavailable": "This signing method is coming later. Use USB Token for now.",
-      "instructionTitle": "Instructions",
-      "instruction": {
-        "step1": "Plug your USB Token into the device",
-        "step2": "Enter your token PIN",
-        "step3": "Press “Sign and submit”"
-      },
-      "pinLabel": "Token PIN",
-      "revealPin": "Show PIN",
-      "sign": "Sign and submit",
-      "signedBody": "Company confirmed. Requisites were filled from the certificate and locked.",
-      "legalNote": "Documents are signed and encrypted in line with the laws of Uzbekistan"
     },
     "details": {
       "title": "Company details",
@@ -689,6 +675,7 @@
       "already_registered": "A company with this Tax ID is already registered.",
       "signature_invalid": "The signature is invalid.",
       "cert_revoked": "The certificate is revoked.",
+      "cert_expired": "The certificate has expired. Renew your signature key and try again.",
       "sign_failed": "Could not create the signature in the E-IMZO module.",
       "unknown": "Something went wrong. Please retry.",
       "cert_no_tin": "The certificate carries no organisation tax id. Choose a legal-entity certificate."

@@ -30,16 +30,18 @@ import pytest
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
-# Callables that establish an authenticated identity. `_check_role` is the inner
-# closure built by `require_role(...)`, so it covers require_admin /
-# require_analyst_or_admin and every ad-hoc role guard built from the factory.
+# Callables that establish an authenticated identity. `_check_page_access` is the
+# inner closure built by `require_page(...)` / `require_page_sse(...)`, so it
+# covers every per-page guard; `require_admin` is the flat administrator gate.
 AUTH_DEPENDENCIES = frozenset(
     {
         "get_current_staff_user",
         "get_current_staff_user_sse",
         "get_current_account",
         "get_current_client",
-        "_check_role",
+        "require_admin",
+        "require_admin_sse",
+        "_check_page_access",
     }
 )
 

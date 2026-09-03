@@ -22,17 +22,18 @@ from tests._verification_db import (
 )
 
 
-def test_routes_and_settings_registered() -> None:
+def test_routes_registered() -> None:
     from app.domains.verification.api_admin import router  # noqa: PLC0415
-    from app.services.settings_service import _SPECS  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/verification/cases" in paths
     assert "/admin/verification/cases/{case_id}/approve" in paths
     assert "/admin/verification/checks/{check_id}/waive" in paths
     assert "/admin/companies/{company_id}/suspend" in paths
-    assert "bank_verification_required" in _SPECS
-    assert "verification_required_for_publish" in _SPECS
+    # `bank_verification_required` and `verification_required_for_publish` used
+    # to be asserted here. Both were declared and read by NOTHING — only the
+    # showcase seeder ever set them — so moving the switches into `.env` was
+    # the moment to drop them rather than document two inert env vars.
 
 
 @pytest.fixture(scope="module")
@@ -72,12 +73,11 @@ def _staff_auth(session, role: str, email: str) -> dict[str, str]:  # noqa: ANN0
 
     with session() as db:
         staff = make_staff(db, email)
-        from app.models.enums import StaffRole  # noqa: PLC0415
 
-        staff.role = StaffRole(role)
+        staff.is_admin = role == "admin"
         db.commit()
         staff_id = staff.id
-    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"}
 
 
 def _pending_review_case(session, phone: str, tax: str) -> tuple[int, int]:  # noqa: ANN001

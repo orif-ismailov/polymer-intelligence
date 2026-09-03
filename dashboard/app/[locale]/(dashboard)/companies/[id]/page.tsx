@@ -51,8 +51,7 @@ export default function CompanyDetailPage() {
   const params = useParams<{ id: string }>();
   const companyId = params.id;
   const qc = useQueryClient();
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
 
   const queryKey = ["company", companyId];
 

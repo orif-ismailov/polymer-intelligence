@@ -87,7 +87,10 @@ async def _require_group_admin(callback: CallbackQuery) -> bool:
     chat_id = message.chat.id if message is not None else None
     user_id = callback.from_user.id
 
-    if settings.REQUEST_NOTIFY_CHAT_ID is None or chat_id != settings.REQUEST_NOTIFY_CHAT_ID:
+    from app.services import settings_service  # noqa: PLC0415
+
+    notify_chat_id = settings_service.notify_chat_id()
+    if notify_chat_id is None or chat_id != notify_chat_id:
         await callback.answer("Недоступно", show_alert=True)
         return False
 

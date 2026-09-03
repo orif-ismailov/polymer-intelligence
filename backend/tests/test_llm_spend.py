@@ -14,8 +14,8 @@ from fastapi.testclient import TestClient
 
 
 def _client(model_rows: list[tuple[str, int, int, int]]) -> TestClient:
-    """TestClient with get_db + require_admin overridden; db.execute→fetchall returns rows."""
-    from app.api.deps import require_admin  # noqa: PLC0415
+    """TestClient with get_db + the staff identity overridden; db.execute→fetchall returns rows."""
+    from app.api.deps import get_current_staff_user  # noqa: PLC0415
     from app.core.db import get_db  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
 
@@ -29,7 +29,9 @@ def _client(model_rows: list[tuple[str, int, int, int]]) -> TestClient:
 
     app = create_app()
     app.dependency_overrides[get_db] = _override_db
-    app.dependency_overrides[require_admin] = lambda: MagicMock()
+    app.dependency_overrides[get_current_staff_user] = lambda: MagicMock(
+        id=1, is_admin=True, is_active=True
+    )
     return TestClient(app, raise_server_exceptions=True)
 
 

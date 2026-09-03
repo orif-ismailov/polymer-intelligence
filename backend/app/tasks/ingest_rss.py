@@ -111,7 +111,7 @@ def news_fetch_dispatch() -> dict[str, Any]:
     from app.services import settings_service  # noqa: PLC0415
 
     with Session(engine) as session:
-        interval = int(settings_service.get(session, "news_refresh_interval_minutes"))
+        interval = settings_service.get_int("news_refresh_interval_minutes")
         due = rss_fetch_due(session, interval)
 
     if not due:

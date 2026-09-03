@@ -36,6 +36,7 @@ from tests._verification_db import (
     requires_real_db,
     session_factory,
 )
+from tests.conftest import set_switch
 
 
 @pytest.fixture(scope="module")
@@ -397,12 +398,11 @@ def test_the_beat_is_a_noop_while_the_rail_is_stub(sf) -> None:  # noqa: ANN001
 def test_the_beat_is_a_noop_on_the_live_rail_with_no_adapter(sf) -> None:  # noqa: ANN001
     """`live` has no client yet (the bank's spec has not arrived), so the task
     reports honestly instead of raising or silently using the stub."""
-    from app.services import settings_service  # noqa: PLC0415
     from app.tasks.payments import reconcile_escrow_payments  # noqa: PLC0415
 
     with sf() as db:
         _payment(db)
-        settings_service.set_many(db, {"escrow_mode": "live"}, None)
+        set_switch(escrow_mode="live")
         db.commit()
 
     with patch("app.core.db.engine", make_engine()):
@@ -416,13 +416,12 @@ def test_the_beat_is_a_noop_on_the_live_rail_with_no_adapter(sf) -> None:  # noq
 def test_the_beat_runs_the_rules_when_a_client_exists(sf) -> None:  # noqa: ANN001
     from app.domains.deals.payment_models import EscrowPayment  # noqa: PLC0415
     from app.models.enums import EscrowStatus  # noqa: PLC0415
-    from app.services import settings_service  # noqa: PLC0415
     from app.tasks.payments import reconcile_escrow_payments  # noqa: PLC0415
 
     with sf() as db:
         payment, *_ = _payment(db)
         payment_id = payment.id
-        settings_service.set_many(db, {"escrow_mode": "live"}, None)
+        set_switch(escrow_mode="live")
         db.commit()
 
     bank = _FakeBank({"ESC-1": "funded"})

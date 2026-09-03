@@ -27,7 +27,6 @@ import decimal
 import functools
 import json
 import logging
-import time
 
 import anthropic
 import instructor
@@ -39,7 +38,7 @@ from app.core.time import utcnow
 from app.domains.compliance import substances as substance_service
 from app.domains.compliance.models import SubstanceSuggestion
 from app.domains.compliance.substance_match_schemas import SubstanceMatchResult
-from app.services import settings_service
+from app.services import llm_clients, settings_service
 from parsing.budget import check_and_reserve_tokens, record_actual_tokens
 from parsing.schemas import BudgetExceeded
 
@@ -59,6 +58,9 @@ TOKEN_ESTIMATE = 900
 # network at construction, only the API key.
 _raw_client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 _client = instructor.from_anthropic(_raw_client, mode=instructor.Mode.TOOLS)
+# `None` unless OPENAI_API_KEY is set. The model id decides which client a call
+# uses (llm_clients.provider_of); both are rebound in place by reset().
+_openai_client = llm_clients.build_openai_structured(settings.OPENAI_API_KEY)
 
 
 @functools.lru_cache(maxsize=4)
@@ -71,7 +73,7 @@ def _load_prompt(version: str) -> str:
 
 def enabled(db: Session) -> bool:
     """Whether the hint is offered at all (runtime kill switch, default on)."""
-    return bool(settings_service.get(db, "substance_ai_enabled"))
+    return bool(settings_service.get("substance_ai_enabled"))
 
 
 def _concentration(value: float | None) -> decimal.Decimal | None:
@@ -96,7 +98,7 @@ def suggest(
     if not enabled(db):
         return None
 
-    model = str(settings_service.get(db, "llm_extract_model"))
+    model = str(settings_service.get("llm_extract_model"))
     system_prompt = _load_prompt(PROMPT_VERSION)
 
     try:
@@ -106,34 +108,23 @@ def suggest(
         return None
 
     try:
-        started = time.monotonic()
-        result, completion = _client.messages.create_with_completion(
+        result, _completion, usage, latency_ms = llm_clients.structured(
+            _client,
+            _openai_client,
             model=model,
-            max_tokens=256,
-            temperature=0,
-            system=[
-                {
-                    "type": "text",
-                    "text": system_prompt,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-            messages=[
-                {"role": "user", "content": json.dumps({"offer_text": text}, ensure_ascii=False)}
-            ],
+            system=system_prompt,
+            user=json.dumps({"offer_text": text}, ensure_ascii=False),
             response_model=SubstanceMatchResult,
-            max_retries=2,
+            max_tokens=256,
         )
-        latency_ms = (time.monotonic() - started) * 1000.0
     except Exception:
         logger.exception("substance_ai.llm_error", extra={"company_id": company_id})
         record_actual_tokens(TOKEN_ESTIMATE, 0)  # release the reservation
         return None
 
-    usage = completion.usage
-    tokens_in = usage.input_tokens + getattr(usage, "cache_creation_input_tokens", 0)
-    tokens_out = usage.output_tokens
-    record_actual_tokens(TOKEN_ESTIMATE, tokens_in + tokens_out)
+    tokens_in = usage.tokens_in
+    tokens_out = usage.tokens_out
+    record_actual_tokens(TOKEN_ESTIMATE, usage.total)
 
     # Resolve against OUR registry. A miss is still journalled: the gap is the
     # signal for extending the registry, and dropping it would hide it.

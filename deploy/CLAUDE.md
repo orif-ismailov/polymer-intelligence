@@ -15,7 +15,7 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
 | `Dockerfile.portal` | Vite build image for the client-cabinet portal bundle (R1). |
 | `nginx/nginx.conf` | Prod TLS (443 + 80→443, letsencrypt). `nginx.behind-proxy.conf` | prod HTTP-only behind a TLS-terminating front door. `nginx.dev-server.behind-proxy.conf` | dev-server variant (`dev.*` hosts). `nginx.dev.conf` | local dev HTTP-only. `host-vhost.ai-imex{,-dev}.conf.example` | example host-side nginx vhosts for the behind-proxy topology. |
 | `backup/pg_backup.sh` | pg_dump backup sidecar (14-daily/8-weekly retention); see `backup/README.md`. |
-| `.env.example` | **Authoritative env contract** — every variable, with `[SECRET]` markers. |
+| `.env.example` | **Authoritative env contract**, with `[SECRET]` markers — for everything EXCEPT the 35 panel-managed switches, which are edited at `/admin/settings` and whose defaults live on `Settings`. `ANTHROPIC_API_KEY` is the one that stays (required at startup, so no override can precede it) and carries a `[panel: ai]` marker. `make env-sync` regenerates the mechanical parts; four tests fail when it drifts. |
 
 (The backend image is built from `backend/Dockerfile`, not from this directory. The standalone
 `workers/uzex_backfill` crawler is **not** part of any compose file — it runs under systemd/tmux; see
@@ -46,11 +46,14 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   `docker compose up`. Bring it up explicitly (`--profile userbot up -d userbot`) only once a
   DEDICATED `TG_SESSION_STRING` exists, so two processes never share one session (AuthKeyDuplicated
   permanently kills it).
-- **New env-var groups** in `.env.example` beyond the original Phase-6 contract (all with safe
-  defaults except where noted): News Engine (`NEWS_CHANNEL_ID`), report/extraction models
-  (`LLM_REPORT_MODEL`, `REPORT_PROMPT_VERSION`), buyer-request AI (`REQUEST_AI_ANALYSIS_*`,
-  `REQUEST_NOTIFY_CHAT_ID`, `NOTIFY_TOPIC_BUYERS/SELLERS`), UZEX LLM fallback
-  (`UZEX_LLM_FALLBACK_ENABLED`), and browser Web-App login (`BOT_USERNAME`, `CLIENT_SESSION_TTL_SECONDS`).
+- **Where a setting lives now.** `deploy/.env.example` documents the env-only variables;
+  the 35 runtime switches (news toggles, the Didox/escrow/registry rails, the LLM model pins and
+  key, the notify chat ids, the ingest tunables) are edited at `/admin/settings` with their
+  defaults on `Settings`. Several names this file used to list as `.env.example` entries —
+  `LLM_REPORT_MODEL`, `REQUEST_NOTIFY_CHAT_ID`, `NOTIFY_TOPIC_BUYERS/SELLERS`, `NEWS_CHANNEL_ID`,
+  every `DIDOX_*` — are in that panel-managed set and are deliberately absent from the file.
+  `REPORT_PROMPT_VERSION`, `UZEX_LLM_FALLBACK_ENABLED`, `REQUEST_AI_ANALYSIS_*`, `BOT_USERNAME` and
+  `CLIENT_SESSION_TTL_SECONDS` are still env-only and still listed.
 - **Client portal (R1)** is a long-running Node SSR process — the `portal` service in
   `docker-compose.yml`, built from `Dockerfile.portal` — not a static bundle. It server-renders
   the public marketplace routes (`/`, `/market`, the directories, `/prices`, `/news`) so a
@@ -95,9 +98,9 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   distribution, drop the PEM/DER files into `deploy/eimzo/truststore/` on the host, then
   `docker compose ... --profile eimzo restart eimzo-server`. Review the bundle at least annually and
   whenever UNICON rotates a CA.
-  **NOTE (`.env.example`):** the three E-IMZO variables above must be appended to the tracked
-  `deploy/.env.example` env contract; they were not added automatically here because the local
-  tooling denies edits to `.env*` files.
+  All three are in the tracked `deploy/.env.example` contract. (An older note here said they had
+  to be pasted in by hand because tooling refused `.env*` edits — that has not been true for a
+  while, and `test_env_contract_sync.py` would fail if any were missing.)
 - **Contracts (R3 Stage B)** — the contract PDF renderer uses **WeasyPrint**, whose native libs
   (Pango/Cairo/GDK-Pixbuf + `fonts-dejavu`/`fonts-liberation` for Cyrillic) are installed in
   `backend/Dockerfile` and the CI backend job; without them the PDF render test skips. The api
@@ -132,10 +135,9 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   raises until ПЦД access exists). No new env, no sidecar. The channel that works today is
   the operator's manual check — its screenshots land in S3 under `evidence/registry/`, so
   they are covered by the same bucket/backup policy as `evidence/eimzo/`.
-  **NOTE (`.env.example`):** `ESCROW_WEBHOOK_SECRET` must be appended by hand to the tracked
-  `deploy/.env.example` env contract — the local tooling denies edits to `.env*` files (the
-  same constraint that left the three R3 E-IMZO variables to be pasted in). Paste:
-  ```
+  `ESCROW_WEBHOOK_SECRET` is in the tracked `deploy/.env.example` contract, with the reasoning
+  above beside it. It is NOT panel-managed: `escrow_mode` is, but the secret itself stays an
+  env var so the webhook route can 404 before any database is read.
   # ── Escrow provider callbacks (R6 / P7.b) ─────────────────────────────────────
   # Shared secret the partner bank sends in `X-Escrow-Token` on every callback to
   # POST /api/v1/webhooks/escrow/{provider}. Empty by default and required only once
@@ -158,27 +160,12 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   `DIDOX_SERVICE_*` credentials for our own Didox account. Without them prod degrades to a manual
   form; nothing breaks. Password logins have a lockout ladder ending in a PERMANENT block, so the
   minting path tries **once** per cooldown and never retries in a loop.
-  Append by hand to `deploy/.env.example` (`.env*` edits are denied locally, same as the three R3
-  E-IMZO variables and `ESCROW_WEBHOOK_SECRET`):
-  ```
-  # ── Didox EDI partner API (R6 / P7.a) ─────────────────────────────────────────
-  # Uzbekistan's largest private EDI operator. Used for the tax-registry lookup
-  # that prefills company registration (gov_registry_mode=didox) and, later, for
-  # the legally significant document chain (didox_mode).
-  # Defaults to the TEST contour: prod is a different host AND a different token.
-  DIDOX_BASE_URL=https://testapi3.didox.uz
-  # Integrator identity, sent as `Partner-Authorization` on EVERY request. Obtained
-  # offline from the account manager (t.me/Didox_account). Server-side only — it
-  # must never reach a browser. Empty by default: the rails are RUNTIME settings a
-  # startup validator cannot see, same shape as ESCROW_WEBHOOK_SECRET.
-  DIDOX_PARTNER_TOKEN=                       # [SECRET] required only when a Didox rail is on
-  # Optional platform service account. Production refuses the registry lookup
-  # without a per-company `user-key`; these let the backend mint ONE for our own
-  # company and reuse it for read-only lookups. Leave empty and prod autofill
-  # degrades to a manual form.
-  DIDOX_SERVICE_TIN=
-  DIDOX_SERVICE_PASSWORD=                    # [SECRET] optional; password login has a lockout ladder
-  ```
+  **The four `DIDOX_*` connection settings are no longer in `deploy/.env.example`.** They are
+  panel-managed (`/admin/settings/didox`), their defaults live on `Settings`, and the two
+  credentials are Fernet-encrypted in `app_settings` rather than sitting in plaintext in a
+  file. `test_env_contract_sync.py` FAILS if they are pasted back. An existing deployment
+  still carrying them in its `.env` migrates with `scripts/import_env_overrides.py --apply`,
+  which preserves the effective value.
   **Stage 2 (the document rail) adds no new variables** — it is gated by the runtime setting
   `didox_mode` (`stub` → every action raises; `live` → documents are created at the operator),
   deliberately separate from `gov_registry_mode`: reading the registry is harmless, sending a

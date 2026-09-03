@@ -23,23 +23,22 @@ from fastapi.testclient import TestClient
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _make_staff_user(role: str = "admin", user_id: int = 1) -> MagicMock:
+def _make_staff_user(is_admin: bool = True, user_id: int = 1) -> MagicMock:
     """Return a MagicMock staff user with the given role."""
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     user = MagicMock()
     user.id = user_id
-    user.email = f"{role}@polymer.uz"
-    user.role = StaffRole(role)
+    user.email = f"staff{user_id}@polymer.uz"
+    user.is_admin = is_admin
     user.is_active = True
     return user
 
 
-def _auth_headers(user_id: int = 1, role: str = "admin") -> dict[str, str]:
+def _auth_headers(user_id: int = 1) -> dict[str, str]:
     """Return Bearer auth headers for a staff user."""
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    token = create_access_token(subject=str(user_id), role=role)
+    token = create_access_token(subject=str(user_id))
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -75,17 +74,30 @@ class TestPricesApiAuth:
         resp = client.get("/api/v1/prices/series", params={"product_id": 1})
         assert resp.status_code in (401, 403), f"Expected 401/403, got {resp.status_code}"
 
-    def test_staff_auth_allowed(self) -> None:
-        """GET /prices/series with valid staff token does not return 401/403."""
-        user = _make_staff_user("viewer")
-        client = _make_client_with_user(user)
+    def test_admin_auth_allowed(self) -> None:
+        """GET /prices/series with a valid admin token does not return 401/403."""
+        client = _make_client_with_user(_make_staff_user())
         resp = client.get(
             "/api/v1/prices/series",
             params={"product_id": 1},
-            headers=_auth_headers(role="viewer"),
+            headers=_auth_headers(),
         )
         # Any 2xx or 4xx except 401/403 is acceptable here (404 or 200 both fine)
         assert resp.status_code not in (401, 403), f"Auth was rejected: {resp.status_code}"
+
+    def test_non_admin_staff_refused(self) -> None:
+        """A valid staff token that is not an administrator is refused.
+
+        Authenticating is no longer the same as being allowed in: every staff
+        endpoint is administrator-only (migration 0042).
+        """
+        client = _make_client_with_user(_make_staff_user(is_admin=False))
+        resp = client.get(
+            "/api/v1/prices/series",
+            params={"product_id": 1},
+            headers=_auth_headers(),
+        )
+        assert resp.status_code == 403, resp.text
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -101,7 +113,7 @@ class TestPricesApiRoutes:
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
-        staff_user = _make_staff_user("analyst")
+        staff_user = _make_staff_user()
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = staff_user
         # Default: execute returns empty list
@@ -120,7 +132,7 @@ class TestPricesApiRoutes:
         resp = client.get(
             "/api/v1/prices/series",
             params={"product_id": 999},
-            headers=_auth_headers(role="analyst"),
+            headers=_auth_headers(),
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -132,7 +144,7 @@ class TestPricesApiRoutes:
         resp = client.get(
             "/api/v1/prices/series",
             params={"product_id": 1},
-            headers=_auth_headers(role="analyst"),
+            headers=_auth_headers(),
         )
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
@@ -150,7 +162,7 @@ class TestPricesApiRoutes:
                 "date_from": start.isoformat(),
                 "date_to": today.isoformat(),
             },
-            headers=_auth_headers(role="analyst"),
+            headers=_auth_headers(),
         )
         assert resp.status_code == 200
         # DB was queried (execute called)
@@ -174,7 +186,7 @@ class TestPricesApiRoutes:
                 "date_from": start.isoformat(),
                 "date_to": today.isoformat(),
             },
-            headers=_auth_headers(role="analyst"),
+            headers=_auth_headers(),
         )
         assert resp.status_code == 200
         # DB was queried
@@ -193,7 +205,7 @@ class TestPricesApiRoutes:
         resp = client.get(
             "/api/v1/prices/series",
             params={"product_id": 3, "date_from": "2025-01-01", "date_to": "2025-06-01"},
-            headers=_auth_headers(role="analyst"),
+            headers=_auth_headers(),
         )
         assert resp.status_code == 200
         mock_db.execute.assert_called()
@@ -204,7 +216,7 @@ class TestPricesApiRoutes:
         resp = client.get(
             "/api/v1/prices/series",
             params={"product_id": 1, "market": "UZ"},
-            headers=_auth_headers(role="analyst"),
+            headers=_auth_headers(),
         )
         assert resp.status_code == 200
 

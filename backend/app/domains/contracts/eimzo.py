@@ -215,12 +215,61 @@ def _run_sync_checks(db: Session, case: VerificationCase) -> None:
 # ── Identity + evidence application ───────────────────────────────────────────
 
 
-def _apply_identity(db: Session, company: Company, signer: EimzoSigner) -> None:
-    """Fill + lock the certificate-carried requisites (reject later PATCH)."""
-    if signer.org_name:
-        company.legal_name = signer.org_name
-    if signer.full_name:
-        company.director_name = signer.full_name
+def _registry_requisites(
+    db: Session, tax_id: str | None, redis_client: redis.Redis[str] | None
+) -> tuple[str | None, str | None]:
+    """The registry's `(legal_name, director)` for this STIR, or `(None, None)`.
+
+    **Nothing here may fail a signature that already verified.** By the time this
+    runs the sidecar has accepted the PKCS#7 and the evidence is in S3, so an
+    exception would 500 a legally completed signing over a display string. Hence
+    the bare `Exception`: `lookup_company` documents `CompanyNotFound` and
+    `ProviderUnavailable`, but it reaches an HTTP client through two adapters and
+    an unexpected fault there must degrade to "the certificate wins", which is
+    exactly the behaviour this whole path used to have unconditionally.
+    """
+    if not tax_id:
+        return None, None
+    from app.domains.companies.lookup import lookup_company  # noqa: PLC0415 — avoids a cycle
+
+    try:
+        info = lookup_company(db, tax_id, redis_client=redis_client)
+    except Exception as exc:  # noqa: BLE001 — see the docstring
+        logger.info("eimzo.registry_requisites_unavailable", extra={"error": str(exc)})
+        return None, None
+    return (info.name or "").strip() or None, (info.director or "").strip() or None
+
+
+def _apply_identity(
+    db: Session,
+    company: Company,
+    signer: EimzoSigner,
+    redis_client: redis.Redis[str] | None = None,
+) -> None:
+    """Fill + lock the company's displayed requisites (reject later PATCH).
+
+    The certificate FREEZES these fields; it does not necessarily supply them.
+    Both sources carry a name and a director, they disagree, and the registry is
+    the better one on every axis that matters here: E-IMZO v6.4.7 reports the
+    subject DN **lowercased**, and a certificate is a snapshot taken at issuance
+    that can be a year stale, while `/v1/utils/info/{tin}` is current and
+    correctly cased. Signing with a real key used to overwrite
+    «"IMEX INDUSTRIAL GROUP CA" MAS'ULIYATI CHEKLANGAN JAMIYAT» with
+    «dev_imex industrial group ca mchj» and then lock it.
+
+    The identity guarantee is untouched: it rests on `org_inn == company.tax_id`,
+    checked in `verify` before anything is written, and the certificate subject is
+    kept verbatim on `signature_evidence.cert_subject` either way. The signer's own
+    name and PINFL live on the encrypted `CompanyPersonData` row, so preferring the
+    REGISTERED director here loses nothing — the two answer different questions.
+    """
+    registry_name, registry_director = _registry_requisites(db, company.tax_id, redis_client)
+    name = registry_name or signer.org_name
+    director = registry_director or signer.full_name
+    if name:
+        company.legal_name = name
+    if director:
+        company.director_name = director
     company.identity_locked = True
     db.flush()
 
@@ -367,7 +416,7 @@ def verify(
     _store_person_data(db, company, account, signer)
 
     # Fill + lock requisites; confirm signer as owner.
-    _apply_identity(db, company, signer)
+    _apply_identity(db, company, signer, redis_client)
     _confirm_owner(db, company, account)
 
     # Move the case into an evaluatable state (first-time submit via E-IMZO).

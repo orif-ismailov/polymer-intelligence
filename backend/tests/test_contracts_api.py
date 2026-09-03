@@ -147,14 +147,13 @@ def _verified_company(session, account_id, tax):  # noqa: ANN001, ANN202
 
 def _staff(session, role, email):  # noqa: ANN001, ANN202
     from app.core.security import create_access_token  # noqa: PLC0415
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     with session() as db:
         staff = make_staff(db, email)
-        staff.role = StaffRole(role)
+        staff.is_admin = role == "admin"
         db.commit()
         sid = staff.id
-    return {"Authorization": f"Bearer {create_access_token(subject=str(sid), role=role)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(sid))}"}
 
 
 def _template_id(session):  # noqa: ANN001, ANN202

@@ -53,12 +53,11 @@ from parsing.schemas import ExtractionResult, SignalKind, UrgencyLevel
 
 def _make_staff_user(role: str, user_id: int = 1, is_active: bool = True) -> MagicMock:
     """Create a mock StaffUser with the given role."""
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     user = MagicMock()
     user.id = user_id
     user.email = f"{role}@polymer.uz"
-    user.role = StaffRole(role)
+    user.is_admin = role == "admin"
     user.is_active = is_active
     return user
 
@@ -67,7 +66,7 @@ def _auth_headers(user_id: int, role: str) -> dict[str, str]:
     """Create a Bearer Authorization header."""
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    token = create_access_token(subject=str(user_id), role=role)
+    token = create_access_token(subject=str(user_id))
     return {"Authorization": f"Bearer {token}"}
 
 

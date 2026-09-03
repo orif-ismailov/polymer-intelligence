@@ -62,7 +62,7 @@ def api(engine: sa.Engine):  # noqa: ANN201
 def _staff_auth(staff_id: int) -> dict[str, str]:
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role='admin')}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"}
 
 
 @requires_real_db

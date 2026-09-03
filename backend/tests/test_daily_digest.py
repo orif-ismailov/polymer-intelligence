@@ -14,19 +14,41 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from app.services.llm_clients import Usage
+
+#: What a patched `_ai_digest` reports having spent. The digest returns
+#: `(digest, usage)` because the report is the platform's most expensive call and
+#: was the only one journalling nothing — the tokens come back even when the
+#: digest itself failed, since that call was billed either way.
+_USAGE = Usage(tokens_in=4000, tokens_out=6500, cache_read_tokens=0)
+
 
 def _digest_snapshot() -> dict[str, Any]:
     return {
         "date": "2026-07-15",
         "products": [
-            {"code": "HDPE", "price": 1095.0, "currency": "USD", "unit": "MT", "delta": 15.0, "observed_on": "2026-07-15"},
+            {
+                "code": "HDPE",
+                "price": 1095.0,
+                "currency": "USD",
+                "unit": "MT",
+                "delta": 15.0,
+                "observed_on": "2026-07-15",
+            },
         ],
         "buy_requests_7d": 14,
         "sell_offers_7d": 8,
         "tenders_24h": {
             "count": 3,
             "items": [
-                {"code": "PP", "kind": "sell_offer", "volume": 500.0, "volume_unit": "MT", "price": 1145.0, "currency": "USD"},
+                {
+                    "code": "PP",
+                    "kind": "sell_offer",
+                    "volume": 500.0,
+                    "volume_unit": "MT",
+                    "price": 1145.0,
+                    "currency": "USD",
+                },
             ],
         },
         "new_requests_24h": {
@@ -34,8 +56,20 @@ def _digest_snapshot() -> dict[str, Any]:
             "items": [{"label": "LDPE", "volume": 100.0, "volume_unit": "MT"}],
         },
         "new_offers_24h": {"count": 4},
-        "news_uz": [{"source": "UzDaily", "country": "UZ", "excerpt": "Запущено новое производство ПП в Ташкенте."}],
-        "news_world": [{"source": "PolymerUpdate", "country": None, "excerpt": "Sinopec announced a cracker turnaround."}],
+        "news_uz": [
+            {
+                "source": "UzDaily",
+                "country": "UZ",
+                "excerpt": "Запущено новое производство ПП в Ташкенте.",
+            }
+        ],
+        "news_world": [
+            {
+                "source": "PolymerUpdate",
+                "country": None,
+                "excerpt": "Sinopec announced a cracker turnaround.",
+            }
+        ],
     }
 
 
@@ -59,7 +93,9 @@ class TestRenderDigest:
 
         old = {
             "date": "2026-06-28",
-            "products": [{"code": "PP", "price": 1120.0, "currency": "USD", "unit": "MT", "delta": -10.0}],
+            "products": [
+                {"code": "PP", "price": 1120.0, "currency": "USD", "unit": "MT", "delta": -10.0}
+            ],
             "buy_requests_7d": 1,
             "sell_offers_7d": 0,
         }
@@ -104,7 +140,7 @@ class TestAiDigest:
         )
         with patch.object(report_service._client, "messages") as mock_msgs:
             mock_msgs.create.return_value = self._resp(payload)
-            digest = report_service._ai_digest({"date": "2026-07-15"})
+            digest, _spent = report_service._ai_digest({"date": "2026-07-15"})
         assert digest is not None
         # Every platform language must be present in both blocks.
         assert set(digest["summary"]) == set(SUPPORTED_LANGUAGES)
@@ -120,7 +156,7 @@ class TestAiDigest:
         payload = '```json\n{"summary": {"ru": "Ок."}, "forecast": {}}\n```'
         with patch.object(report_service._client, "messages") as mock_msgs:
             mock_msgs.create.return_value = self._resp(payload)
-            digest = report_service._ai_digest({})
+            digest, _spent = report_service._ai_digest({})
         assert digest is not None
         assert digest["summary"]["ru"] == "Ок."
         assert digest["forecast"] == dict.fromkeys(SUPPORTED_LANGUAGES, "")
@@ -130,14 +166,16 @@ class TestAiDigest:
 
         with patch.object(report_service._client, "messages") as mock_msgs:
             mock_msgs.create.return_value = self._resp("Сегодня рынок стабилен (не JSON).")
-            assert report_service._ai_digest({}) is None
+            assert report_service._ai_digest({})[0] is None
 
     def test_missing_ru_summary_returns_none(self) -> None:
         from app.domains.news import reports as report_service  # noqa: PLC0415
 
         with patch.object(report_service._client, "messages") as mock_msgs:
-            mock_msgs.create.return_value = self._resp('{"summary": {"en": "only en"}, "forecast": {}}')
-            assert report_service._ai_digest({}) is None
+            mock_msgs.create.return_value = self._resp(
+                '{"summary": {"en": "only en"}, "forecast": {}}'
+            )
+            assert report_service._ai_digest({})[0] is None
 
 
 class TestGenerateReport:
@@ -151,7 +189,7 @@ class TestGenerateReport:
         }
         with (
             patch.object(report_service, "build_snapshot", return_value=_digest_snapshot()),
-            patch.object(report_service, "_ai_digest", return_value=digest),
+            patch.object(report_service, "_ai_digest", return_value=(digest, _USAGE)),
         ):
             report = report_service.generate_report(db, use_llm=True)
 
@@ -166,7 +204,7 @@ class TestGenerateReport:
         db = MagicMock()
         with (
             patch.object(report_service, "build_snapshot", return_value=_digest_snapshot()),
-            patch.object(report_service, "_ai_digest", return_value=None),
+            patch.object(report_service, "_ai_digest", return_value=(None, _USAGE)),
         ):
             report = report_service.generate_report(db, use_llm=True)
 

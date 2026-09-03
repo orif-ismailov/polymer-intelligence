@@ -137,6 +137,16 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "prune_portal_notifications",
         "schedule": crontab(minute=30, hour=3),
     },
+    # ── Gateway call-log retention: daily at 03:40 UTC ────────────────────────
+    # `integration_call_log` promised 90-day pruning in its docstring since R3 and
+    # nothing enforced it. Harmless at a few hundred E-IMZO calls; not harmless
+    # against a Didox package of a million requests a month, which is exactly what
+    # /admin/analytics measures. Ten minutes after the notification prune so the
+    # two never contend for the same connections.
+    "prune_integration_call_log": {
+        "task": "prune_integration_call_log",
+        "schedule": crontab(minute=40, hour=3),
+    },
     # ── Escrow provider inbox sweep: every 5 minutes (R6 / P7.b T2.2) ────────
     # The webhook commits the `provider_events` row BEFORE enqueuing its applier,
     # so a Redis blip costs latency rather than evidence. This is the other half

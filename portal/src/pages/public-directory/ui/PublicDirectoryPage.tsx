@@ -5,7 +5,7 @@ import { PublicCompanyTile, usePublicDirectory } from "@/entities/public";
 import { directoryBySlug, publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { Seo, useCanonical } from "@/shared/seo";
-import { LinkButton, Skeleton } from "@/shared/ui";
+import { LinkButton, PageShell, Skeleton } from "@/shared/ui";
 import { useSyncedDraft, useTierBase } from "@/shared/lib";
 
 const PAGE_SIZE = 24;
@@ -56,14 +56,14 @@ export function PublicDirectoryPage({ slug }: { slug: string }) {
 
   if (!directory) {
     return (
-      <div className="mx-auto max-w-[1440px] px-4 py-20 text-center lg:px-6">
+      <PageShell width="storefront" className="py-20 text-center">
         <h1 className="text-2xl font-semibold text-text">{t("public.directory.notFound")}</h1>
         <div className="mt-6">
           <LinkButton to={base || "/"} variant="outline">
             {t("public.nav.home")}
           </LinkButton>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
@@ -121,7 +121,7 @@ export function PublicDirectoryPage({ slug }: { slug: string }) {
         jsonLd={jsonLd}
       />
 
-      <div className="mx-auto max-w-[1440px] px-4 py-10 lg:px-6">
+      <PageShell width="storefront">
         <header>
           <h1 className="text-2xl font-semibold tracking-tight text-text">{heading}</h1>
           <p className="mt-1 max-w-[70ch] text-sm text-text-muted">
@@ -239,7 +239,7 @@ export function PublicDirectoryPage({ slug }: { slug: string }) {
             ) : null}
           </div>
         )}
-      </div>
+      </PageShell>
     </>
   );
 }

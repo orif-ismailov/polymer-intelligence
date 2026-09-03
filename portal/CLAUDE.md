@@ -37,10 +37,14 @@ address for a buyer, a seller and a crawler.
 A guard (`RedirectAuthedToCabinet`) used to bounce signed-in visitors to the `/cabinet`
 twin of whatever they opened. It is **deleted** — do not reintroduce it. The chrome carries
 the session instead: `PublicTopNav` swaps «Войти»/«Регистрация» for a single «Кабинет»
-link, the cabinet's `SideNav` has a «Маркетплейс» link back out, and every `BrandLogo` on
-the site is wrapped in a link to `/` — cabinet topbar, login/OTP, onboarding, footer. The
-lockup is the marketplace's front door from everywhere; the cabinet home has its own nav
-entry and does not need the logo too. An anonymous CTA («Отправить запрос», «Связаться»)
+link, and every `BrandLogo` on the site is wrapped in a link to `/` — cabinet topbar,
+login/OTP, onboarding, footer. The lockup is the marketplace's front door from everywhere;
+the cabinet home has its own nav entry and does not need the logo too.
+
+The rail used to carry a «Маркетплейс» entry pointing at `/` as well. It is **gone**: that
+is the lockup's destination, a few hundred pixels away in the same chrome, and the lockup
+also serves the login and onboarding screens, which have no rail. Don't reintroduce it —
+and note it was never a duplicate of «Рынок», which is `/market`, the offer catalogue. An anonymous CTA («Отправить запрос», «Связаться»)
 goes through `/cabinet/login` with `state.from` set to **the page it was clicked on**, so
 signing in from a listing returns you to *that listing* — where the real actions are now
 waiting.
@@ -161,19 +165,38 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   zero companies to `/cabinet/onboarding`; that route and `/cabinet/companies/new/*` are
   authenticated but sit OUTSIDE both `AppShell` and that guard (gating the screen that resolves "you have no company"
   on having one would loop). The flow follows `docs/new-design/register.jpeg`:
-  **1 Тип компании (+ «Электронная подпись») → 2 Данные → 3 Банк → 4 Документы → 5 Проверка →
+  **1 Тип компании → 2 Данные (сертификат + ИНН) → 3 Банк → 4 Документы → 5 Проверка →
   «Регистрация завершена!»** (`/cabinet/companies/new/done/:companyId`).
   - The four account types are the mockup's, not the backend enum: `buyer→importer`,
     `supplier→distributor` are the nearest members that exist (`ACCOUNT_TYPES` in
     `features/company-wizard/model/constants.ts`). Sending anything else 422s — the enum is a
     Postgres type, so widening it is a migration.
-  - **Signing comes before the form on purpose.** The challenge endpoint is company-scoped, so
+  - **Step 1 asks one question.** It used to carry the whole «Электронная подпись» panel as well —
+    three method tabs of which two were dead, and a PIN box the module never read (it prompts for
+    the real password itself). Identity moved to step 2, beside the ИНН it resolves.
+  - **Step 2 opens with the two controls that say WHICH company this is**, in this order:
+    `CompanyCertificateSelect` (the organisations on the holder's key) and the ИНН. Picking a
+    certificate writes **only** `tax_id` — the org name is already in the option, and writing it
+    would mark the field hand-typed, after which `hydrateFromRegistry` refuses to fill it from the
+    registry, which is the better source. Reading a key is not signing with it:
+    `useEimzoCertificates` is the probe+list half alone, because `useEimzoSign.start()` auto-signs
+    a single certificate — right for a button, wrong for a dropdown someone is still reading.
+  - **«Далее» is what signs.** The challenge endpoint is company-scoped, so
     `companyRegistrationSigner` reads the STIR out of the chosen certificate's subject, creates the
     company from it, then signs — which is why `EimzoSigner.getChallenge` takes the certificate.
-    A signed company arrives at step 2 filled in and `identity_locked` (those fields render
-    disabled, and `useSubmitWizard` omits them from the PATCH or the server 409s).
+    `useEimzoSign.signWith(cert)` is that run entered one step later (`pick` can't serve it: it
+    resolves an id against `certs`, which only `start()` fills). On success the row is refetched,
+    `hydrateFromCompany` freezes the requisites and the wizard advances — advancing is NOT
+    conditional on that read, since the signature already succeeded. A signed company is
+    `identity_locked`: those fields render disabled and `useSubmitWizard` omits them from the PATCH
+    or the server 409s. Signing stays optional — no key, no module, no certificate all leave the
+    ИНН typeable and «Далее» plain.
+  - **A certificate whose STIR no longer matches the typed ИНН is refused before any request.**
+    Derived, not stored, so correcting either side clears it. The rule is the server's own
+    (`/eimzo/verify` answers 422); checking it here only stops a doomed request from first costing
+    the user a key password.
   - **Steps 2–3 prefill themselves from the state registry** (P7.a). As soon as the STIR is known
-    — read off the certificate at step 1, or typed — `useRegistryPrefill` asks
+    — copied in by the certificate dropdown, or typed — `useRegistryPrefill` asks
     `GET /portal/companies/lookup` and `hydrateFromRegistry` drops the answer into the BLANKS.
     It never overwrites a typed value or a locked one, so a correction always wins; `prefilled`
     records which fields came from the registry. All three failure shapes are soft and none of

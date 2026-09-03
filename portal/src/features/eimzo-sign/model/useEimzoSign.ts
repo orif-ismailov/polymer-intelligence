@@ -33,6 +33,7 @@ export type EimzoErrorCode =
   | "already_registered"
   | "signature_invalid"
   | "cert_revoked"
+  | "cert_expired"
   | "cert_no_tin"
   | "sign_failed"
   | "unknown";
@@ -109,7 +110,14 @@ function mapError(err: unknown): EimzoErrorCode {
 
 function mapResultReason(reason: string | null): EimzoErrorCode {
   if (reason === "cert_revoked") return "cert_revoked";
-  if (reason === "challenge_mismatch") return "mismatch";
+  if (reason === "cert_expired") return "cert_expired";
+  if (reason === "cert_no_tin") return "cert_no_tin";
+  // A challenge mismatch is a stale or REPLAYED nonce — the signature covers
+  // something other than what we just issued. It used to map to `mismatch`,
+  // whose string says «ИНН сертификата не совпадает с ИНН компании» and sends the
+  // reader to inspect a certificate that is fine; `expired` says «повторите
+  // попытку», which is the actual remedy.
+  if (reason === "challenge_mismatch") return "expired";
   return "signature_invalid";
 }
 
@@ -129,6 +137,7 @@ export function useEimzoSign<T>({ signer, onConfirmed }: UseEimzoSignArgs<T>): U
   const runVerify = useCallback(
     async (cert: EimzoCertificate) => {
       const bridge = getEimzoBridge();
+      setError(null);
       try {
         setState("signing");
         const challenge = await signer.getChallenge(cert);

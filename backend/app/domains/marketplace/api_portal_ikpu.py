@@ -63,7 +63,7 @@ def _session_or_409(
     """(user_key, tax_id) for the acting company, or the 409 the picker expects."""
     company = company_or_404(db, account, company_id)
     try:
-        onboarding.assert_live(db)
+        onboarding.assert_live()
     except onboarding.ChannelDisabled as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="didox_disabled") from exc
     try:

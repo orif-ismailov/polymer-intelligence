@@ -96,24 +96,24 @@ def state_of(row: DidoxCompany | None) -> str:
     return READY
 
 
-def channel_state(db: Session) -> str | None:
+def channel_state() -> str | None:
     """`DISABLED` when this deployment has no document rail, else `None`.
 
     `None` means "ask `state_of`" — the company's own state is only meaningful once
     the channel exists. Reporting `not_registered` on the stub rail would be a
     claim about a real company's Didox account that nobody ever looked up.
     """
-    return None if _is_live(db) else DISABLED
+    return None if _is_live() else DISABLED
 
 
-def assert_live(db: Session) -> None:
+def assert_live() -> None:
     """Guard for ACTIONS. Reading a state is harmless; sending is not."""
-    if not _is_live(db):
+    if not _is_live():
         raise ChannelDisabled(_MODE_SETTING)
 
 
-def _is_live(db: Session) -> bool:
-    return str(settings_service.get(db, _MODE_SETTING)) == _MODE_LIVE
+def _is_live() -> bool:
+    return str(settings_service.get(_MODE_SETTING)) == _MODE_LIVE
 
 
 # ── the record ────────────────────────────────────────────────────────────────
@@ -220,7 +220,7 @@ def register(
     NOTE their email validator rejects `+` (verified live), so plus-addressing
     cannot be used to derive one address per company.
     """
-    assert_live(db)
+    assert_live()
     token = client.signup(
         client.timestamp(pkcs7_64, signature_hex),
         email=email,
@@ -244,7 +244,7 @@ def offer_to_sign(db: Session, *, tax_id: str, user_key: str, client: _Signer) -
     Serialised compactly and without ASCII escaping, matching how every other
     Didox payload is signed — the bytes have to be reproducible, not merely valid.
     """
-    assert_live(db)
+    assert_live()
     pdf_b64 = client.offer_base64(user_key=user_key)
     document_json = client.create_offer_document(pdf_b64, tax_id=tax_id, user_key=user_key)
     payload = json.dumps(document_json, ensure_ascii=False, separators=(",", ":"))
@@ -262,6 +262,6 @@ def accept_offer(
     client: _Signer,
 ) -> None:
     """Sign the prepared offer — the one-time step that unblocks every send."""
-    assert_live(db)
+    assert_live()
     client.sign_offer(client.timestamp(pkcs7_64, signature_hex), user_key=user_key)
     note_offer_signed(db, company_id, tax_id)

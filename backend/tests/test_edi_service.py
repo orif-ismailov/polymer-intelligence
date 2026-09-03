@@ -309,7 +309,7 @@ class TestSubmitSignatureRouting:
 
     def test_our_own_draft_is_signed_without_joining(self, monkeypatch) -> None:  # noqa: ANN001
         """Nothing to join: the counterparty has not signed our draft yet."""
-        monkeypatch.setattr(edi_service.onboarding, "assert_live", lambda db: None)
+        monkeypatch.setattr(edi_service.onboarding, "assert_live", lambda: None)
         row, client = _Row(status=STATUS_DRAFT), _SigningClient()
         self._submit(row, client, company_id=row.owner_company_id)
         assert "sign" in client.calls
@@ -320,7 +320,7 @@ class TestSubmitSignatureRouting:
         """Accepting someone else's document is a different act from sending our
         own, and it is the one `/sign` is for — after their signature is joined
         first, or the tax committee refuses the pair."""
-        monkeypatch.setattr(edi_service.onboarding, "assert_live", lambda db: None)
+        monkeypatch.setattr(edi_service.onboarding, "assert_live", lambda: None)
         row, client = _Row(status=STATUS_AWAITING_US), _SigningClient(status_after=STATUS_SIGNED)
         self._submit(row, client, company_id=row.owner_company_id + 1)
         assert client.calls.index("join") < client.calls.index("sign")

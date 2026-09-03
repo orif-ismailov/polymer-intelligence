@@ -30,7 +30,7 @@ export function FavoritesPage() {
 
   if (query.isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-64 w-full" />
         ))}
@@ -62,7 +62,7 @@ export function FavoritesPage() {
           action={<LinkButton to="/market">{t("market.title")}</LinkButton>}
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {items.map((offer) => (
             <MarketOfferCard
               key={offer.id}

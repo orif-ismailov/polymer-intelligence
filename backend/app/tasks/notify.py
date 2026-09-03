@@ -480,12 +480,12 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
     from telegram.bot import bot  # noqa: PLC0415
 
-    from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
     from app.domains.reference.models import Product  # noqa: PLC0415
     from app.domains.requests.models import Request  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
-    chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
+    chat_id = settings_service.notify_chat_id()
     if chat_id is None:
         return {"status": "skipped", "error": "REQUEST_NOTIFY_CHAT_ID not set"}
 
@@ -542,7 +542,7 @@ def send_request_to_group(request_id: int) -> dict[str, Any]:
 
             asyncio.run(
                 _deliver_to_group(
-                    bot, chat_id, _settings.NOTIFY_TOPIC_BUYERS, text="\n".join(lines)
+                    bot, chat_id, settings_service.buyers_topic(), text="\n".join(lines)
                 )
             )
             logger.info(
@@ -593,8 +593,9 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
     from app.domains.marketplace.models import SellerOffer  # noqa: PLC0415
     from app.domains.reference.models import Product  # noqa: PLC0415
     from app.models.enums import OfferFileKind  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
-    chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
+    chat_id = settings_service.notify_chat_id()
     if chat_id is None:
         return {"status": "skipped", "error": "REQUEST_NOTIFY_CHAT_ID not set"}
 
@@ -700,7 +701,7 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
                     _deliver_to_group(
                         bot,
                         chat_id,
-                        _settings.NOTIFY_TOPIC_SELLERS,
+                        settings_service.sellers_topic(),
                         photo=photo,
                         caption=text[:1024],
                         reply_markup=keyboard,
@@ -711,7 +712,7 @@ def send_offer_to_group(offer_id: int, edited: bool = False) -> dict[str, Any]:
                     _deliver_to_group(
                         bot,
                         chat_id,
-                        _settings.NOTIFY_TOPIC_SELLERS,
+                        settings_service.sellers_topic(),
                         text=text,
                         reply_markup=keyboard,
                     )
@@ -780,11 +781,11 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
     from sqlalchemy.orm import Session  # noqa: PLC0415
     from telegram.bot import bot, offer_request_moderation_keyboard  # noqa: PLC0415
 
-    from app.core.config import settings as _settings  # noqa: PLC0415
     from app.core.db import engine  # noqa: PLC0415
     from app.domains.marketplace.models import OfferRequest  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
-    chat_id = _settings.REQUEST_NOTIFY_CHAT_ID
+    chat_id = settings_service.notify_chat_id()
     if chat_id is None:
         return {"status": "skipped", "error": "REQUEST_NOTIFY_CHAT_ID not set"}
 
@@ -856,7 +857,7 @@ def send_offer_request_to_group(offer_request_id: int) -> dict[str, Any]:
                 _deliver_to_group(
                     bot,
                     chat_id,
-                    _settings.NOTIFY_TOPIC_BUYERS,
+                    settings_service.buyers_topic(),
                     text="\n".join(lines),
                     reply_markup=keyboard,
                 )
@@ -1038,10 +1039,16 @@ _CHECK_STATUS_EMOJI: dict[str, str] = {
 
 
 def _verification_notify_chat_id() -> int | None:
-    """Verification cards go to VERIFICATION_NOTIFY_CHAT_ID, else the request group."""
-    from app.core.config import settings  # noqa: PLC0415
+    """Verification cards go to VERIFICATION_NOTIFY_CHAT_ID, else the request group.
 
-    return settings.VERIFICATION_NOTIFY_CHAT_ID or settings.REQUEST_NOTIFY_CHAT_ID
+    The fallback itself now lives in `settings_service`, which is where the four
+    notification targets are resolved — it was written out by hand in five
+    modules, so "which chat gets a verification card" had five places it could
+    be answered differently.
+    """
+    from app.services import settings_service  # noqa: PLC0415
+
+    return settings_service.verification_chat_id()
 
 
 @celery_app.task(name="send_verification_case_to_group", queue="notify")  # type: ignore[untyped-decorator]

@@ -10,6 +10,39 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ── shadcn primitive tokens ──────────────────────────────────────────
+        //
+        // The shadcn components in components/ui/ style themselves with these
+        // names (`bg-popover`, `text-muted-foreground`, `border-input`, …), and
+        // `app/globals.css` defines the matching CSS variables. That was not
+        // enough: Tailwind only EMITS a utility for a colour that appears here,
+        // so `bg-popover` was never generated and every dialog, dropdown and
+        // select rendered with NO BACKGROUND — a transparent panel over a
+        // transparent overlay. Nothing failed; the class simply did not exist,
+        // which is the same silent hole `text-muted` and `border-line` left.
+        //
+        // `<alpha-value>` is required for the opacity variants the primitives
+        // use (`bg-muted/50` in DialogFooter, `bg-destructive/10` in Button).
+        //
+        // DELIBERATELY ABSENT: `accent`. Ours is emerald and 44 files depend on
+        // it; shadcn's `--accent` is slate-700 hover fill. Mapping it here would
+        // repaint every accent in the product to grey.
+        popover: "hsl(var(--popover) / <alpha-value>)",
+        "popover-foreground": "hsl(var(--popover-foreground) / <alpha-value>)",
+        card: "hsl(var(--card) / <alpha-value>)",
+        "card-foreground": "hsl(var(--card-foreground) / <alpha-value>)",
+        muted: "hsl(var(--muted) / <alpha-value>)",
+        "muted-foreground": "hsl(var(--muted-foreground) / <alpha-value>)",
+        primary: "hsl(var(--primary) / <alpha-value>)",
+        "primary-foreground": "hsl(var(--primary-foreground) / <alpha-value>)",
+        secondary: "hsl(var(--secondary) / <alpha-value>)",
+        "secondary-foreground": "hsl(var(--secondary-foreground) / <alpha-value>)",
+        destructive: "hsl(var(--destructive) / <alpha-value>)",
+        "destructive-foreground": "hsl(var(--destructive-foreground) / <alpha-value>)",
+        "accent-foreground": "hsl(var(--accent-foreground) / <alpha-value>)",
+        input: "hsl(var(--input) / <alpha-value>)",
+        ring: "hsl(var(--ring) / <alpha-value>)",
+
         // Dark theme base
         background: {
           DEFAULT: "#0f172a", // slate-900

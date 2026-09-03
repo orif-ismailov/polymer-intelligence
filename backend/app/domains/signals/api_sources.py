@@ -29,7 +29,7 @@ import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_staff_user, require_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.signals.source_models import Source
 from app.models.enums import SourceKind
@@ -61,7 +61,7 @@ router = APIRouter(prefix="/sources", tags=["sources"])
     ),
 )
 def get_sources(
-    _current_user: StaffUser = Depends(get_current_staff_user),
+    _current_user: StaffUser = Depends(require_page("sources", "read")),
     db: Session = Depends(get_db),
 ) -> list[SourceHealthItem]:
     """Return health-only view of all sources.
@@ -112,7 +112,7 @@ def get_sources(
 )
 def get_source(
     source_id: int,
-    _current_user: StaffUser = Depends(require_admin),
+    _current_user: StaffUser = Depends(require_page("sources", "read")),
     db: Session = Depends(get_db),
 ) -> SourceDetail:
     source = db.get(Source, source_id)
@@ -149,7 +149,7 @@ def get_source(
 )
 def create_source(
     body: SourceCreate,
-    _current_user: StaffUser = Depends(require_admin),
+    _current_user: StaffUser = Depends(require_page("sources", "write")),
     db: Session = Depends(get_db),
 ) -> SourceHealthItem:
     """Create a new source from the wizard.
@@ -228,7 +228,7 @@ def create_source(
 )
 async def test_source(
     source_id: int,
-    _current_user: StaffUser = Depends(require_admin),
+    _current_user: StaffUser = Depends(require_page("sources", "write")),
     db: Session = Depends(get_db),
 ) -> SourceTestOut:
     """Run adapter test for the source and return the result.
@@ -302,7 +302,7 @@ async def test_source(
 def patch_source(
     source_id: int,
     body: SourcePatch,
-    _current_user: StaffUser = Depends(require_admin),
+    _current_user: StaffUser = Depends(require_page("sources", "write")),
     db: Session = Depends(get_db),
 ) -> SourceHealthItem:
     """Update source fields with server-side enable-gate.

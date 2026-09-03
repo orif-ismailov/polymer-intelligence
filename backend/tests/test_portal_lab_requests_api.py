@@ -679,7 +679,7 @@ def test_anonymous_and_wrong_audience_tokens_are_refused(api) -> None:  # noqa: 
     client, _session = api
 
     assert client.get(f"{_BASE}/pool", params={"company_id": 1}).status_code == 401
-    staff = {"Authorization": f"Bearer {create_access_token(subject='1', role='admin')}"}
+    staff = {"Authorization": f"Bearer {create_access_token(subject='1')}"}
     assert (
         client.get(f"{_BASE}/pool", params={"company_id": 1}, headers=staff).status_code
         == 401
@@ -693,14 +693,13 @@ _ADMIN_BASE = "/api/v1/admin/lab-requests"
 
 def _staff_auth(session, role: str, email: str) -> dict[str, str]:  # noqa: ANN001
     from app.core.security import create_access_token  # noqa: PLC0415
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     with session() as db:
         staff = make_staff(db, email)
-        staff.role = StaffRole(role)
+        staff.is_admin = role == "admin"
         db.commit()
         staff_id = staff.id
-    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"}
 
 
 def test_admin_routes_registered() -> None:

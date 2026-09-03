@@ -20,6 +20,7 @@ from tests._verification_db import (
     requires_real_db,
     session_factory,
 )
+from tests.conftest import set_switch
 
 
 @pytest.fixture(scope="module")
@@ -173,10 +174,10 @@ def test_evaluator_auto_approve_verifies_company(sf, monkeypatch) -> None:  # no
         VerificationCheckStatus,
     )
     from app.models.events import DomainEvent  # noqa: PLC0415
-    from app.services import event_types, settings_service  # noqa: PLC0415
+    from app.services import event_types  # noqa: PLC0415
 
     with sf() as db:
-        settings_service.set_many(db, {"verification_auto_approve": True}, None)
+        set_switch(verification_auto_approve=True)
         _account, company, case = _submit(db, monkeypatch)
         _set_automated(db, case.id, VerificationCheckStatus.passed)
         verification_service.on_check_completed(db, case.id)
@@ -315,10 +316,8 @@ def test_auto_approve_confirms_declared_roles(sf, monkeypatch) -> None:  # noqa:
     from app.domains.verification import service as verification_service  # noqa: PLC0415
     from app.models.enums import BusinessRoleStatus, VerificationCheckStatus  # noqa: PLC0415
     from app.models.enums import CompanyBusinessRole as RoleEnum  # noqa: PLC0415
-    from app.services import settings_service  # noqa: PLC0415
-
     with sf() as db:
-        settings_service.set_many(db, {"verification_auto_approve": True}, None)
+        set_switch(verification_auto_approve=True)
         _account, company, case = _submit(db, monkeypatch)
         _declare_roles(db, company.id, [RoleEnum.distributor, RoleEnum.trader])
         _set_automated(db, case.id, VerificationCheckStatus.passed)

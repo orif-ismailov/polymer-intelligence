@@ -12,6 +12,7 @@ export {
   useThemeStore,
 } from "./theme";
 export type { ThemeMode, ResolvedTheme } from "./theme";
+export { RAIL_WIDTH, RAIL_WIDTH_COLLAPSED, useRailStore } from "./rail";
 export {
   formatDate,
   formatDateShort,

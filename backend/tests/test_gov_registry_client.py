@@ -22,6 +22,27 @@ import datetime
 
 import pytest
 
+
+def _shipped_default(env_var: str) -> object:
+    """The value a deployment runs on when `.env` says nothing.
+
+    Reads `Settings` rather than a `SettingSpec`: since the switches moved into
+    the env contract the field IS the declaration, so asserting anywhere else
+    would be testing a copy.
+    """
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return Settings.model_fields[env_var].get_default()
+
+
+def _allowed_values(env_var: str) -> tuple[object, ...]:
+    """The closed set a mode switch accepts, off its `Literal` annotation."""
+    import typing  # noqa: PLC0415
+
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return typing.get_args(Settings.model_fields[env_var].annotation)
+
 # ── DTOs and their payload round-trip ─────────────────────────────────────────
 
 
@@ -128,7 +149,7 @@ def test_the_factory_returns_the_stub_on_the_stub_rail(monkeypatch) -> None:  # 
     from app.integrations import gov_registry
     from app.integrations.gov_registry import client as registry_client
 
-    monkeypatch.setattr(registry_client.settings_service, "get", lambda db, key: "stub")
+    monkeypatch.setattr(registry_client.settings_service, "get", lambda key: "stub")
     assert isinstance(gov_registry.get_gov_registry_client(None), gov_registry.StubGovRegistryClient)
 
 
@@ -138,7 +159,7 @@ def test_the_factory_refuses_live_because_there_is_no_adapter(monkeypatch) -> No
     from app.integrations import gov_registry
     from app.integrations.gov_registry import client as registry_client
 
-    monkeypatch.setattr(registry_client.settings_service, "get", lambda db, key: "live")
+    monkeypatch.setattr(registry_client.settings_service, "get", lambda key: "live")
     with pytest.raises(gov_registry.ProviderUnavailable) as excinfo:
         gov_registry.get_gov_registry_client(None)
     assert "adapter" in str(excinfo.value)
@@ -148,7 +169,7 @@ def test_the_factory_refuses_a_mode_it_does_not_know(monkeypatch) -> None:  # no
     from app.integrations import gov_registry
     from app.integrations.gov_registry import client as registry_client
 
-    monkeypatch.setattr(registry_client.settings_service, "get", lambda db, key: "pcd")
+    monkeypatch.setattr(registry_client.settings_service, "get", lambda key: "pcd")
     with pytest.raises(gov_registry.ProviderUnavailable):
         gov_registry.get_gov_registry_client(None)
 
@@ -157,9 +178,6 @@ def test_the_factory_refuses_a_mode_it_does_not_know(monkeypatch) -> None:  # no
 
 
 def test_the_mode_is_a_runtime_setting_shipping_stub() -> None:
-    from app.services.settings_service import _SPECS
-
-    spec = _SPECS["gov_registry_mode"]
-    assert spec.default == "stub"
+    assert _shipped_default("GOV_REGISTRY_MODE") == "stub"
     # P7.a added the `didox` rail alongside these two; the default is unchanged.
-    assert spec.choices == ("stub", "didox", "live")
+    assert _allowed_values("GOV_REGISTRY_MODE") == ("stub", "didox", "live")

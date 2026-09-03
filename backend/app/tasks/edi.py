@@ -62,7 +62,7 @@ def poll_didox_documents(limit: int = 100) -> dict[str, Any]:
     try:
         with Session(engine) as db:
             try:
-                onboarding.assert_live(db)
+                onboarding.assert_live()
             except onboarding.ChannelDisabled:
                 return {"status": "disabled", "reason": "didox_mode is not 'live'"}
             report = _poll(db, limit=limit)
@@ -180,9 +180,10 @@ def _alert_terminal(alerts: list[dict[str, Any]]) -> None:
     committee annulled a document that may already have a deal riding on it.
     Mirrors `payments._alert_divergence`.
     """
-    from app.core.config import settings  # noqa: PLC0415
 
-    chat_id = settings.VERIFICATION_NOTIFY_CHAT_ID or settings.REQUEST_NOTIFY_CHAT_ID
+    from app.services import settings_service  # noqa: PLC0415
+
+    chat_id = settings_service.verification_chat_id()
     if chat_id is None:
         return
     try:

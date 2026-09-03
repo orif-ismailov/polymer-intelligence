@@ -40,6 +40,28 @@ from tests._verification_db import (
     session_factory,
 )
 from tests._verification_db import requires_real_db as requires_real_db
+from tests.conftest import set_switch
+
+
+def _shipped_default(env_var: str) -> object:
+    """The value a deployment runs on when `.env` says nothing.
+
+    Reads `Settings` rather than a `SettingSpec`: since the switches moved into
+    the env contract the field IS the declaration, so asserting anywhere else
+    would be testing a copy.
+    """
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return Settings.model_fields[env_var].get_default()
+
+
+def _allowed_values(env_var: str) -> tuple[object, ...]:
+    """The closed set a mode switch accepts, off its `Literal` annotation."""
+    import typing  # noqa: PLC0415
+
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return typing.get_args(Settings.model_fields[env_var].annotation)
 
 _PROMPTS = Path(__file__).parent.parent / "parsing" / "prompts"
 _P = "/api/v1/portal"
@@ -93,11 +115,7 @@ class TestPromptFamily:
 
 class TestRuntimeSetting:
     def test_the_feature_has_a_kill_switch_that_ships_on(self) -> None:
-        from app.services.settings_service import _SPECS  # noqa: PLC0415
-
-        spec = _SPECS.get("substance_ai_enabled")
-        assert spec is not None
-        assert spec.default is True
+        assert _shipped_default("SUBSTANCE_AI_ENABLED") is True
 
 
 # ── Behaviour (guarded) ───────────────────────────────────────────────────────
@@ -190,10 +208,8 @@ class TestSuggest:
     def test_disabled_makes_no_call_and_no_row(self, db: Session) -> None:
         from app.domains.compliance import substance_ai as svc  # noqa: PLC0415
         from app.domains.compliance.models import SubstanceSuggestion  # noqa: PLC0415
-        from app.services import settings_service  # noqa: PLC0415
-
         _, company = _company(db)
-        settings_service.set_many(db, {"substance_ai_enabled": False}, None)
+        set_switch(substance_ai_enabled=False)
         with patch.object(svc, "_client") as client:
             assert svc.suggest(db, text="Ацетон", company_id=company.id) is None
             client.messages.create_with_completion.assert_not_called()
@@ -371,9 +387,7 @@ class TestApi:
         client, session = api
         with session() as db:
             account, company = _company(db)
-            from app.services import settings_service  # noqa: PLC0415
-
-            settings_service.set_many(db, {"substance_ai_enabled": False}, None)
+            set_switch(substance_ai_enabled=False)
             db.commit()
             ids = (account.id, company.id)
 

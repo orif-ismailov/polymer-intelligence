@@ -169,8 +169,7 @@ export default function VerificationCaseDetailPage() {
   const params = useParams<{ id: string }>();
   const caseId = params.id;
   const qc = useQueryClient();
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
 
   const [note, setNote] = useState("");
   const [conflict, setConflict] = useState(false);

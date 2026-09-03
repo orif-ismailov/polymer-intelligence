@@ -31,14 +31,45 @@ _TEST_ENV: dict[str, str] = {
     "S3_ACCESS_KEY": "minio_test_access",
     "S3_SECRET_KEY": "minio_test_secret",
     "VERIFICATION_ENC_KEY": "cG9seW1lcl92ZXJpZmljYXRpb25fdGVzdF9rZXlfMzI=",
-    # Not required by Settings, but asserted on by tests. Settings reads
-    # `env_file=".env"` relative to the CWD, so a developer running pytest from
-    # backend/ with a local backend/.env had their own values substituted for
-    # these — the budget and OTP-cap tests then failed on their machine and
-    # nowhere else, because CI has no such file. Pinning them here restores the
+    # Not required by Settings, but asserted on by tests. Settings reads the
+    # developer's real `.env`, so their own values were substituted for these —
+    # the budget and OTP-cap tests then failed on their machine and nowhere
+    # else, because CI has no such file. Pinning them here restores the
     # documented defaults; os.environ takes precedence over env_file.
+    #
+    # (The original trigger was a second env file at `backend/.env` that only
+    # a CWD-relative `env_file` could see. That file is gone and `Settings` now
+    # reads one absolute path, but the pinning is still needed: the repo-root
+    # `.env` a developer edits is read all the same.)
     "LLM_DAILY_TOKEN_LIMIT": "500000",
     "OTP_MAX_SENDS_PER_DAY": "5",
+    # The runtime feature switches, pinned at their SHIPPED defaults for the same
+    # reason as the two above, and with more at stake now that they come from
+    # `.env` rather than a table the tests could truncate. A developer whose
+    # `.env` says `GOV_REGISTRY_MODE=didox` (a perfectly reasonable thing to want
+    # locally) would otherwise run a suite where the registry rail is live —
+    # green here, red in CI, or worse, quietly exercising a different branch.
+    # Tests that need a switch flipped use the `set_switch` helper below.
+    "NEWS_AI_ENABLED": "true",
+    "NEWS_REQUIRE_APPROVAL": "false",
+    "REPORT_AUTO_PUBLISH": "false",
+    "NEWS_PROMPT_VERSION": "v3",
+    "NEWS_REFRESH_INTERVAL_MINUTES": "60",
+    "VERIFICATION_AUTO_APPROVE": "false",
+    "CONTRACT_PENDING_TTL_DAYS": "30",
+    "ESCROW_MODE": "stub",
+    "RFQ_SUPPLIER_PUSH_ENABLED": "false",
+    "RFQ_SUPPLIER_PUSH_TOP_N": "10",
+    "RFQ_SUPPLIER_OFFER_MAX_AGE_DAYS": "90",
+    "SUBSTANCE_AI_ENABLED": "true",
+    "DANGEROUS_CHECK_ENFORCED": "false",
+    "CHEM_REGISTRY_MODE": "stub",
+    "GOV_REGISTRY_MODE": "stub",
+    "DIDOX_MODE": "stub",
+    "APP_ENV": "development",
+    # Both Didox rails ship `stub`, so no partner token is needed to boot — but
+    # a developer .env supplies one and some tests assert the degraded path.
+    "DIDOX_PARTNER_TOKEN": "",
 }
 
 # Applied at conftest IMPORT time, not from the fixture below, because a
@@ -96,6 +127,57 @@ def patch_env() -> Generator[None, None, None]:
     """
     with patch.dict(os.environ, _SESSION_ENV, clear=False):
         yield
+
+
+def set_switch(**switches: object) -> None:
+    """Point one or more runtime feature switches at a value for this test.
+
+    Writes the OVERRIDE layer, not the env layer, so a test exercises the same
+    precedence path production does. Setting `settings.<ENV_VAR>` instead would
+    be shadowed by any override present, and would therefore prove nothing about
+    the code that ships — it would only have kept working here by accident,
+    because a unit-test process starts with an empty snapshot.
+
+    Keyed by the snake_case setting name (`escrow_mode`), not the env var, so a
+    typo raises `KeyError` from `SPECS` rather than silently setting an attribute
+    nothing reads. `_restore_switches` below clears the snapshot afterwards.
+    """
+    from app.services import settings_service  # noqa: PLC0415
+
+    merged = settings_service.current_overrides()
+    for key, value in switches.items():
+        settings_service.SPECS[key]  # noqa: B018 — resolves the key, raising on a typo
+        merged[key] = value  # type: ignore[assignment]
+    settings_service.seed_overrides(merged)
+
+
+@pytest.fixture(autouse=True)
+def _restore_switches() -> Generator[None, None, None]:
+    """Undo any `set_switch` after every test.
+
+    Both layers, because tests reach for both: the snapshot is where `set_switch`
+    writes, and a few tests still monkeypatch the `settings` singleton directly.
+    Either one leaking turns the next test's failure into an order-dependent one,
+    which is the expensive kind to chase.
+
+    It also pins `AUTO_REFRESH` off for the whole suite. `refresh()` is wired
+    into `get_db` and Celery's `task_prerun`, and the unit suite has neither a
+    Redis nor a migrated Postgres — leaving it on would spend a connect timeout
+    per request against a Redis that is not there, to load overrides that do not
+    exist.
+    """
+    from app.core.config import settings  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
+
+    settings_service.AUTO_REFRESH = False
+    env_vars = [spec.env_var for spec in settings_service.SPECS.values()]
+    before = {name: getattr(settings, name) for name in env_vars}
+    try:
+        yield
+    finally:
+        settings_service.clear_snapshot()
+        for name, value in before.items():
+            setattr(settings, name, value)
 
 
 def _mock_db_session() -> MagicMock:

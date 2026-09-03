@@ -8,21 +8,118 @@ from pydantic import BaseModel
 
 
 class SettingItem(BaseModel):
-    """One runtime setting with its resolved value, default, and override flag.
+    """One runtime switch: what is running, what `.env` says, and who changed it.
 
-    `value`/`default` cover bool, str, and int settings (e.g. the refresh interval).
-    Order matters: bool before int so True/False don't validate as 1/0.
+    Both values, always, side by side. That pairing is the point of the whole
+    screen — a panel showing only the effective value would answer "what is it?"
+    but not "why is it that, and what happens if I put it back?", which is the
+    question that cost a day on 31.08.2026. `env_var` names the line in `.env`
+    for the same reason.
+
+    `value` covers bool, float, str and int switches. Order matters: bool before
+    int so True/False don't validate as 1/0, and int before float so a whole
+    number does not come back as `1.0`. Secrets arrive here already masked (see
+    `settings_service.mask`) — the real value never leaves the server.
     """
 
     key: str
-    type: str
     label: str
-    value: bool | int | str
-    default: bool | int | str
-    is_overridden: bool
-    #: Closed value set for a `str` setting (e.g. escrow_mode) — the panel renders
-    #: a select instead of a free-text input. None means free text.
-    choices: list[str] | None = None
+    #: Which section of the panel this belongs in (news, didox, notify, …).
+    group: str
+    #: The value this deployment is actually running.
+    value: bool | int | float | str | None
+    #: What `.env` says, i.e. what `Reset` would restore.
+    env_value: bool | int | float | str | None
+    #: The `Settings` field / `.env` key that sets this switch.
+    env_var: str
+    #: True when an override row exists, i.e. `value` and `env_value` may differ.
+    overridden: bool
+    overridden_by: str | None
+    overridden_at: datetime.datetime | None
+    #: False → env-only, shown read-only. Changing it needs `.env` and a restart.
+    editable: bool
+    #: True → a credential: masked here, and writable only by an administrator.
+    sensitive: bool
+    #: Non-empty → the UI must make the operator confirm, and this says why.
+    confirm: str
+    #: How to render the control: bool | int | float | choice | str.
+    kind: str
+    #: The permitted values when `kind == "choice"`, else empty.
+    choices: list[str]
+
+
+class PromptVersionItem(BaseModel):
+    """One version of the news prompt, shipped or authored."""
+
+    version: str
+    #: True → this text came out of the image; there is no row and no author.
+    shipped: bool
+    #: True → this is the version the pipeline is running right now.
+    active: bool
+    created_by: str | None
+    created_at: datetime.datetime | None
+    note: str | None
+    #: Characters. Shown because the prompt is billed on every article, so its
+    #: length is a recurring cost that is otherwise invisible at the moment of
+    #: pasting.
+    size: int
+
+
+class NewsPromptOut(BaseModel):
+    """The prompt editor's whole state."""
+
+    active_version: str
+    #: The active version's text — from the authored row if there is one, else
+    #: from the file that shipped.
+    body: str
+    #: True → the active version is a shipped file, so editing it will create a
+    #: new version rather than change anything that exists.
+    shipped: bool
+    #: What a save would be called.
+    next_version: str
+    max_chars: int
+    versions: list[PromptVersionItem]
+
+
+class NewsPromptCreate(BaseModel):
+    """A new version of the news prompt."""
+
+    body: str
+    note: str | None = None
+
+
+class NewsPromptTry(BaseModel):
+    """A dry run: classify one already-collected article with an unsaved prompt."""
+
+    body: str
+    #: Which article to try it on. None → the most recent news item collected.
+    raw_item_id: int | None = None
+
+
+class NewsPromptTryOut(BaseModel):
+    """What the trial produced. Nothing about it is persisted."""
+
+    raw_item_id: int
+    #: The article's own text, so the operator can judge the answer against it.
+    excerpt: str
+    #: The parsed `NewsArticle`, as the classifier returned it.
+    article: dict[str, object]
+    tokens_in: int
+    tokens_out: int
+    latency_ms: float
+
+
+class SettingUpdate(BaseModel):
+    """A new value for one switch.
+
+    Deliberately untyped (`object`): the switches span bool, int, float, str and
+    nullable ints, and the only validator that may decide whether a value is
+    acceptable is `Settings` itself — see `settings_service.validate`. A type
+    here would be a second, weaker opinion about the same question, and the two
+    would drift.
+    """
+
+    value: object
 
 
 class NewsStats(BaseModel):

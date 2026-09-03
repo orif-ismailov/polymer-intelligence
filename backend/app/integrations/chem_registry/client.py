@@ -70,9 +70,14 @@ class StubChemRegistryClient:
         return None
 
 
-def current_mode(db: Any) -> str:  # noqa: ANN401 — Session, typed loosely to stay import-light
-    """The configured rail (`stub` | `live`) from the runtime settings."""
-    return str(settings_service.get(db, "chem_registry_mode"))
+def current_mode() -> str:
+    """The configured rail, read from `CHEM_REGISTRY_MODE` in `.env`.
+
+    Took a `Session` until the switches moved out of `app_settings`; it
+    never queried anything, and a parameter implying a lookup that does
+    not happen is the sort of thing that gets copied forward.
+    """
+    return str(settings_service.get("chem_registry_mode"))
 
 
 def get_chem_registry_client(db: Any) -> ChemRegistryClient:  # noqa: ANN401
@@ -81,7 +86,7 @@ def get_chem_registry_client(db: Any) -> ChemRegistryClient:  # noqa: ANN401
     `live` raises until P7 ships an adapter: a silent fallback to the stub would
     make "the registry had nothing" indistinguishable from "we never asked".
     """
-    mode = current_mode(db)
+    mode = current_mode()
     if mode == MODE_STUB:
         return StubChemRegistryClient()
     if mode == MODE_LIVE:

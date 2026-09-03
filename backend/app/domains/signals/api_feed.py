@@ -5,7 +5,7 @@ GET /feed/stream — SSE endpoint delivering new entity IDs from Redis pub/sub.
 Phase 4, Plan 01: Live Market Feed backend (REQ-live-feed / FR-10).
 
 Security:
-  T-04-01: Both endpoints require a valid staff JWT (get_current_staff_user);
+  T-04-01: Both endpoints are administrator-only (require_admin / require_admin_sse);
            401 returned when no token or invalid token is presented.
   T-04-02: All filter parameters are bound as SQLAlchemy text params — never
            string-interpolated. Cursor params are typed query params.
@@ -38,7 +38,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_staff_user, get_current_staff_user_sse
+from app.api.deps import require_page, require_page_sse
 from app.core.db import get_db
 from app.core.feed_bus import subscribe_feed_events
 from app.models.staff import StaffUser
@@ -184,7 +184,7 @@ def get_feed(
     period: str | None = Query(default=None),
     needs_review: bool | None = Query(default=None),
     db: Session = Depends(get_db),
-    _current_user: StaffUser = Depends(get_current_staff_user),
+    _current_user: StaffUser = Depends(require_page(("dashboard", "liveFeed", "offers"), "read")),
 ) -> FeedPage:
     """Return a keyset-paginated page of live market feed items.
 
@@ -295,7 +295,7 @@ def get_feed(
     ),
 )
 async def feed_stream(
-    _current_user: StaffUser = Depends(get_current_staff_user_sse),
+    _current_user: StaffUser = Depends(require_page_sse(("dashboard", "liveFeed", "offers"), "read")),
 ) -> AsyncIterable[ServerSentEvent]:
     """Stream new entity IDs via Server-Sent Events.
 

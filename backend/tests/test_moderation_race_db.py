@@ -166,10 +166,10 @@ def api(engine: sa.Engine):  # noqa: ANN001, ANN201
 
 
 def _as_analyst(application_client: TestClient, staff_id: int) -> None:
-    from app.api.deps import require_analyst_or_admin  # noqa: PLC0415
+    from app.api.deps import get_current_staff_user  # noqa: PLC0415
 
     stub = type("S", (), {"id": staff_id})()
-    application_client.app.dependency_overrides[require_analyst_or_admin] = lambda: stub  # type: ignore[attr-defined]
+    application_client.app.dependency_overrides[get_current_staff_user] = lambda: stub  # type: ignore[attr-defined]
 
 
 def test_api_returns_409_when_the_offer_already_left_the_queue(

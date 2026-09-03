@@ -68,9 +68,10 @@ def verify_contract_integrity() -> dict[str, Any]:
 
 def _alert_integrity(contract_ids: list[int]) -> None:
     """Best-effort admin-channel alert on integrity drift (never raises)."""
-    from app.core.config import settings  # noqa: PLC0415
 
-    chat_id = settings.VERIFICATION_NOTIFY_CHAT_ID or settings.REQUEST_NOTIFY_CHAT_ID
+    from app.services import settings_service  # noqa: PLC0415
+
+    chat_id = settings_service.verification_chat_id()
     if chat_id is None:
         return
     try:
@@ -97,7 +98,7 @@ def expire_stale_contracts() -> dict[str, Any]:
 
     expired: list[int] = []
     with SessionLocal() as db:
-        ttl_days = int(settings_service.get(db, "contract_pending_ttl_days"))  # type: ignore[arg-type]
+        ttl_days = int(settings_service.get("contract_pending_ttl_days"))  # type: ignore[arg-type]
         cutoff = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=ttl_days)
         stale = (
             db.query(Contract)

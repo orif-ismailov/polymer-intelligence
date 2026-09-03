@@ -510,9 +510,9 @@ def enqueue_offer_request_to_group(offer_request_id: int) -> None:
     Skips when REQUEST_NOTIFY_CHAT_ID is unset; a broker outage must never break
     inquiry creation.
     """
-    from app.core.config import settings  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
-    if settings.REQUEST_NOTIFY_CHAT_ID is None:
+    if settings_service.notify_chat_id() is None:
         return
     from app.tasks.notify import send_offer_request_to_group  # noqa: PLC0415
 

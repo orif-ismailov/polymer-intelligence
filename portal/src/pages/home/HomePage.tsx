@@ -114,7 +114,7 @@ export function HomePage() {
 
       {/* Two real figures. The sheet's other tiles are metrics we don't have —
           a navigation link is not a metric, so those became module cards. */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:max-w-2xl">
         <StatChip value={activeRequests} label={t("home.activeRequests")} tone="brand" />
         <StatChip value={unreadCount} label={t("home.unread")} />
       </div>
@@ -167,7 +167,7 @@ export function HomePage() {
       {/* The sheet's module grid, filled with the destinations this cabinet has. */}
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-text">{t("home.quickActions")}</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           <ModuleCard
             to="/market"
             title={t("nav.market")}

@@ -286,61 +286,40 @@ class TestReportSectionsDb:
         assert all("i18n" not in c for c in sections["uzbekistan"])  # type: ignore[union-attr]
 
 
-@_requires_real_db
-class TestSettingsDb:
-    def test_defaults_then_override(self, seeded_news: sa.Engine) -> None:
-        from app.services import settings_service  # noqa: PLC0415
+class TestSettingsSerialization:
+    """What survived of `TestSettingsDb` once the switches left the database.
 
-        with _open(seeded_news) as s:
-            assert settings_service.get(s, "news_ai_enabled") is True  # default
-            assert settings_service.get(s, "news_require_approval") is False
-            settings_service.set_many(s, {"news_require_approval": True}, staff_user_id=None)
-            s.commit()
-        with _open(seeded_news) as s:
-            assert settings_service.get(s, "news_require_approval") is True  # persisted
-            allsettings = {r["key"]: r for r in settings_service.get_all(s)}
-            assert allsettings["news_require_approval"]["is_overridden"] is True
-            assert allsettings["news_ai_enabled"]["is_overridden"] is False
-            # reset so other tests see the default
-            settings_service.set_many(s, {"news_require_approval": False}, staff_user_id=None)
-            s.commit()
+    The override/clamping tests went with the table they exercised — env-only
+    resolution and the closed-set/bounds validation are covered in
+    `test_settings_env_source.py`, and out-of-range values are now refused at
+    startup rather than silently clamped.
 
-    def test_unknown_key_raises(self, seeded_news: sa.Engine) -> None:
-        import pytest as _pytest  # noqa: PLC0415
+    This one stays, and no longer needs a database: it is the regression for a
+    real `/admin/settings` 500, where the int-valued refresh interval failed to
+    validate against a `bool | str` union in the response schema. The union is
+    still order-sensitive (bool before int, or True serialises as 1), so a
+    reordering of `SettingItem` would break the endpoint again.
+    """
 
-        from app.services import settings_service  # noqa: PLC0415
+    def test_get_all_serializes_through_response_schema(self) -> None:
+        from unittest.mock import MagicMock  # noqa: PLC0415
 
-        with _open(seeded_news) as s, _pytest.raises(KeyError):
-            settings_service.get(s, "does_not_exist")
-
-    def test_get_all_serializes_through_response_schema(self, seeded_news: sa.Engine) -> None:
-        """Regression for the /admin/settings 500: every spec's get_all() output must
-        validate through SettingItem (the int refresh-interval broke a bool|str union)."""
         from app.schemas.admin_settings import SettingItem  # noqa: PLC0415
         from app.services import settings_service  # noqa: PLC0415
 
-        with _open(seeded_news) as s:
-            by_key = {
-                i.key: i for i in (SettingItem.model_validate(r) for r in settings_service.get_all(s))
-            }
+        db = MagicMock()
+        db.execute.return_value.all.return_value = []  # no overrides → the .env values
+        by_key = {
+            i.key: i
+            for i in (SettingItem.model_validate(r) for r in settings_service.get_all(db))
+        }
         assert isinstance(by_key["news_refresh_interval_minutes"].value, int)
         assert isinstance(by_key["news_ai_enabled"].value, bool)
         assert isinstance(by_key["llm_extract_model"].value, str)
-
-    def test_int_setting_clamped(self, seeded_news: sa.Engine) -> None:
-        from app.services import settings_service  # noqa: PLC0415
-
-        with _open(seeded_news) as s:
-            assert settings_service.get(s, "news_refresh_interval_minutes") == 60  # default
-            settings_service.set_many(s, {"news_refresh_interval_minutes": 3}, staff_user_id=None)
-            s.commit()
-            assert settings_service.get(s, "news_refresh_interval_minutes") == 5  # clamped to min
-            settings_service.set_many(s, {"news_refresh_interval_minutes": "120"}, staff_user_id=None)
-            s.commit()
-            assert settings_service.get(s, "news_refresh_interval_minutes") == 120  # string coerced
-            # reset for isolation
-            settings_service.set_many(s, {"news_refresh_interval_minutes": 60}, staff_user_id=None)
-            s.commit()
+        # Every row must name the env var that sets it — the point of the panel.
+        assert all(i.env_var for i in by_key.values())
+        # And carry BOTH values, since with no override they must agree.
+        assert all(i.value == i.env_value for i in by_key.values())
 
 
 @_requires_real_db

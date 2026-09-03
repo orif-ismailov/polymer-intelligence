@@ -231,6 +231,21 @@ class TestEimzoSettings:
         settings = _make_settings()
         assert settings.EIMZO_STUB is False
 
+    def test_eimzo_stub_is_refused_without_debug(self) -> None:
+        """The switch accepts a real PKCS#7 without checking its signature.
+
+        Documented «MUST stay false in production» since R3, which is a comment
+        rather than a guard — and it now gates something an attacker could use
+        with nothing but a public certificate. `DEBUG` is the flag every real
+        deployment already turns off, so the two are pinned together.
+        """
+        with pytest.raises(ValidationError, match="EIMZO_STUB"):
+            _make_settings(EIMZO_STUB="true", DEBUG="false")
+
+    def test_eimzo_stub_is_allowed_in_debug(self) -> None:
+        settings = _make_settings(EIMZO_STUB="true", DEBUG="true")
+        assert settings.EIMZO_STUB is True
+
 
 class TestCiEnvContract:
     """Regression tests asserting the CI workflow's S3 env key matches Settings.S3_ENDPOINT.

@@ -55,6 +55,10 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "publish_breaking_news",
         # R2 W2 T2.3: portal notification retention (daily)
         "prune_portal_notifications",
+        # Gateway call-log retention (daily). The model documented 90-day pruning
+        # from R3 and nothing enforced it — harmless at a few hundred E-IMZO calls,
+        # not against the million-request Didox package /admin/analytics measures.
+        "prune_integration_call_log",
         # R3 TB4.1/TB4.2: contract PDF integrity + stale-contract expiry (daily)
         "verify_contract_integrity",
         "expire_stale_contracts",

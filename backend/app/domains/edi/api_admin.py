@@ -17,7 +17,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_analyst_or_admin
+from app.api.deps import require_admin
 from app.core.db import get_db
 from app.domains.edi import onboarding
 from app.domains.edi.models import DidoxCompany, DidoxDocument
@@ -36,7 +36,7 @@ def list_documents(
     attention: bool = Query(default=False, description="Only 4 (rejected) / 50 (annulled)"),
     limit: int = Query(default=100, ge=1, le=500),
     db: Session = Depends(get_db),
-    _: StaffUser = Depends(require_analyst_or_admin),
+    _: StaffUser = Depends(require_admin),
 ) -> list[DidoxAdminDocumentOut]:
     query = db.query(DidoxDocument)
     if attention:
@@ -68,7 +68,7 @@ def list_companies(
     stuck: bool = Query(default=False, description="Only companies not yet `ready`"),
     limit: int = Query(default=200, ge=1, le=1000),
     db: Session = Depends(get_db),
-    _: StaffUser = Depends(require_analyst_or_admin),
+    _: StaffUser = Depends(require_admin),
 ) -> list[DidoxAdminCompanyOut]:
     """Onboarding state per company — the queue for "cannot send yet"."""
     rows = db.query(DidoxCompany).order_by(DidoxCompany.company_id).limit(limit).all()

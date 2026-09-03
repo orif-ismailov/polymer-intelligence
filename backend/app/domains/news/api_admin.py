@@ -13,7 +13,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.news import reports as report_service
 from app.domains.news.models import Report
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/admin/reports", tags=["reports"])
 @router.get("", response_model=list[ReportAdminOut], summary="List reports for review")
 def list_reports(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("reports", "read")),
 ) -> list[ReportAdminOut]:
     return report_service.list_for_review(db)  # type: ignore[return-value]
 
@@ -36,7 +36,7 @@ def list_reports(
 @router.post("/generate", response_model=ReportAdminOut, status_code=status.HTTP_201_CREATED, summary="Generate today's report now")
 def generate_now(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("reports", "write")),
 ) -> ReportAdminOut:
     report = report_service.generate_report(db)
     db.commit()
@@ -54,7 +54,7 @@ def _get(db: Session, report_id: int) -> Report:
 def approve(
     report_id: int,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_analyst_or_admin),
+    user: StaffUser = Depends(require_page("reports", "write")),
 ) -> ReportAdminOut:
     report = report_service.approve_report(db, _get(db, report_id), user.id)
     db.commit()
@@ -65,7 +65,7 @@ def approve(
 def publish(
     report_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("reports", "write")),
 ) -> ReportAdminOut:
     report = report_service.publish_report(db, _get(db, report_id))
     db.commit()
@@ -83,7 +83,7 @@ def publish(
 def reject(
     report_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("reports", "write")),
 ) -> ReportAdminOut:
     report = report_service.reject_report(db, _get(db, report_id))
     db.commit()

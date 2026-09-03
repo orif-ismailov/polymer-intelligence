@@ -50,7 +50,7 @@ class TestModeGate:
         rail must not create — so it says which rail it is on."""
         from app.domains.edi import onboarding
 
-        monkeypatch.setattr(onboarding.settings_service, "get", lambda db, key: "stub")
+        monkeypatch.setattr(onboarding.settings_service, "get", lambda key: "stub")
 
         called: list[str] = []
         monkeypatch.setattr(edi_tasks, "_poll", lambda db, limit: called.append("polled"))

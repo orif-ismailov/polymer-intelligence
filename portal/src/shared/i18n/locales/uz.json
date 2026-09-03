@@ -82,10 +82,17 @@
     "deals": "Bitimlar",
     "favorites": "Saralangan",
     "samples": "Namunalar",
-    "marketplace": "Marketpleys",
     "openMenu": "Menyuni ochish",
     "logisticsRequests": "Logistika arizalari",
-    "lab": "Laboratoriya"
+    "lab": "Laboratoriya",
+    "groups": {
+      "market": "Bozor",
+      "trade": "Savdo",
+      "services": "Xizmatlar",
+      "company": "Kompaniya"
+    },
+    "collapseRail": "Menyuni yig'ish",
+    "expandRail": "Menyuni yoyish"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -255,27 +262,6 @@
           "description": "Materiallarni tahlil qilish, sinash va sertifikatlash"
         }
       }
-    },
-    "eimzo": {
-      "title": "Elektron imzo",
-      "subtitle": "Kompaniya ro‘yxatini yakunlash uchun hujjatlarni imzolang",
-      "methods": {
-        "usb_token": "USB Token",
-        "mobile_id": "Mobile ID",
-        "cloud_id": "Cloud ID"
-      },
-      "methodUnavailable": "Bu imzolash usuli keyinroq ishga tushadi. Hozircha USB Token’dan foydalaning.",
-      "instructionTitle": "Yo‘riqnoma",
-      "instruction": {
-        "step1": "USB Token’ni qurilmangizga ulang",
-        "step2": "Token PIN-kodini kiriting",
-        "step3": "«Imzolash va yuborish» tugmasini bosing"
-      },
-      "pinLabel": "Token PIN-kodi",
-      "revealPin": "PIN-kodni ko‘rsatish",
-      "sign": "Imzolash va yuborish",
-      "signedBody": "Kompaniya tasdiqlandi. Rekvizitlar sertifikatdan to‘ldirildi va qulflandi.",
-      "legalNote": "Hujjatlar O‘zbekiston Respublikasi qonunchiligiga muvofiq imzolanadi va shifrlanadi"
     },
     "details": {
       "title": "Asosiy ma’lumotlar",
@@ -689,6 +675,7 @@
       "already_registered": "Bu STIR bilan kompaniya allaqachon ro‘yxatdan o‘tgan.",
       "signature_invalid": "Imzo yaroqsiz.",
       "cert_revoked": "Sertifikat bekor qilingan.",
+      "cert_expired": "Sertifikat muddati tugagan. ERI kalitini yangilab, qayta urining.",
       "sign_failed": "E-IMZO modulida imzo yaratib bo‘lmadi.",
       "unknown": "Xatolik yuz berdi. Qayta urinib ko‘ring.",
       "cert_no_tin": "Sertifikatda tashkilot STIR ko‘rsatilmagan. Yuridik shaxs sertifikatini tanlang."

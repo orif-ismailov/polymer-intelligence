@@ -28,6 +28,29 @@ from tests._verification_db import (
     requires_real_db,
     session_factory,
 )
+from tests.conftest import set_switch
+
+
+def _shipped_default(env_var: str) -> object:
+    """The value a deployment runs on when `.env` says nothing.
+
+    Reads `Settings` rather than a `SettingSpec`: since the switches moved into
+    the env contract the field IS the declaration, so asserting anywhere else
+    would be testing a copy.
+    """
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return Settings.model_fields[env_var].get_default()
+
+
+def _allowed_values(env_var: str) -> tuple[object, ...]:
+    """The closed set a mode switch accepts, off its `Literal` annotation."""
+    import typing  # noqa: PLC0415
+
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return typing.get_args(Settings.model_fields[env_var].annotation)
+
 
 
 def test_task_module_is_loaded_for_the_worker() -> None:
@@ -48,10 +71,8 @@ def test_it_runs_on_the_notify_queue() -> None:
 def test_the_settings_exist_and_ship_dark() -> None:
     """A push is unsolicited mail. It must not start flowing the moment this
     deploys — an operator turns it on deliberately."""
-    from app.services.settings_service import _SPECS  # noqa: PLC0415
-
-    assert _SPECS["rfq_supplier_push_enabled"].default is False
-    assert _SPECS["rfq_supplier_push_top_n"].default == 10
+    assert _shipped_default("RFQ_SUPPLIER_PUSH_ENABLED") is False
+    assert _shipped_default("RFQ_SUPPLIER_PUSH_TOP_N") == 10
 
 
 @pytest.fixture(scope="module")
@@ -68,11 +89,16 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _enable(db, **overrides) -> None:  # noqa: ANN001, ANN003
-    from app.services import settings_service  # noqa: PLC0415
+    """Turn the push on and commit the caller's scene.
 
-    settings_service.set_many(
-        db, {"rfq_supplier_push_enabled": True, **overrides}, None
-    )
+    `set_switch` touches only the `Settings` singleton, so the commit looks
+    redundant — it is not. Every caller used this as its commit point back when
+    it wrote an `app_settings` row, and the task under test runs in its OWN
+    session: without the commit the scene rows are invisible to it, and the
+    symptom is a notification count that is short by exactly the rows the last
+    caller added.
+    """
+    set_switch(rfq_supplier_push_enabled=True, **overrides)
     db.commit()
 
 

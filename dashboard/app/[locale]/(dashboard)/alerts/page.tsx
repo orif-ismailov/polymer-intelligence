@@ -17,8 +17,7 @@ import { RuleBuilder } from "@/components/alerts/RuleBuilder";
 
 function AlertsPageContent() {
   const t = useTranslations("alerts");
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
 
   return (
     <div className="flex flex-col gap-6 p-6">

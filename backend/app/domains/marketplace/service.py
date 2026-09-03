@@ -632,9 +632,9 @@ def enqueue_offer_group_notify(offer_id: int, *, edited: bool = False) -> None:
     entirely when REQUEST_NOTIFY_CHAT_ID is unset; a broker outage must never break
     offer creation/edit (mirror of request_service._enqueue_group_notify_soft).
     """
-    from app.core.config import settings  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
-    if settings.REQUEST_NOTIFY_CHAT_ID is None:
+    if settings_service.notify_chat_id() is None:
         return
     from app.tasks.notify import send_offer_to_group  # noqa: PLC0415
 
@@ -684,7 +684,7 @@ def apply_publish_gate(db: Session, offer: SellerOffer) -> bool:
     was_held = offer.compliance_ok is False
     verdict = offer_compliance_service.evaluate_and_stamp(db, offer)
 
-    if not verdict.ok and offer_compliance_service.enforcement_enabled(db):
+    if not verdict.ok and offer_compliance_service.enforcement_enabled():
         if offer.status != SellerOfferStatus.draft:
             offer.status = SellerOfferStatus.draft
             offer.published_at = None

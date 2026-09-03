@@ -147,15 +147,6 @@ class ReportStatus(enum.StrEnum):
     rejected = "rejected"
 
 
-class StaffRole(enum.StrEnum):
-    """Internal staff access role (REQ-roles, enforced in plan 01-03)."""
-
-    admin = "admin"
-    analyst = "analyst"
-    trader = "trader"
-    viewer = "viewer"
-
-
 class SellerOfferStatus(enum.StrEnum):
     """Moderation lifecycle of a seller-published marketplace offer (Phase 2).
 

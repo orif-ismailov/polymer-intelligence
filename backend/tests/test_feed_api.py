@@ -31,23 +31,22 @@ from fastapi.testclient import TestClient
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 
-def _make_staff_user(role: str = "analyst", user_id: int = 1) -> MagicMock:
+def _make_staff_user(is_admin: bool = True, user_id: int = 1) -> MagicMock:
     """Return a MagicMock that quacks like a StaffUser ORM object."""
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     user = MagicMock()
     user.id = user_id
-    user.email = f"{role}@polymer.uz"
-    user.role = StaffRole(role)
+    user.email = f"staff{user_id}@polymer.uz"
+    user.is_admin = is_admin
     user.is_active = True
     return user
 
 
-def _auth_headers(user_id: int = 1, role: str = "analyst") -> dict[str, str]:
+def _auth_headers(user_id: int = 1) -> dict[str, str]:
     """Create a Bearer Authorization header with a valid access token."""
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    token = create_access_token(subject=str(user_id), role=role)
+    token = create_access_token(subject=str(user_id))
     return {"Authorization": f"Bearer {token}"}
 
 

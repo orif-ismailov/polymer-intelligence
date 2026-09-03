@@ -130,7 +130,7 @@ def offer_max_age_days(db: Session) -> int:
     from app.services import settings_service  # noqa: PLC0415
 
     try:
-        return int(settings_service.get(db, "rfq_supplier_offer_max_age_days"))
+        return settings_service.get_int("rfq_supplier_offer_max_age_days")
     except KeyError:  # pragma: no cover — defensive: spec always present
         return DEFAULT_OFFER_MAX_AGE_DAYS
 

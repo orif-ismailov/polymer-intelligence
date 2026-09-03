@@ -24,23 +24,22 @@ from fastapi.testclient import TestClient
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 
-def _make_staff_user(role: str = "analyst", user_id: int = 1) -> MagicMock:
+def _make_staff_user(is_admin: bool = True, user_id: int = 1) -> MagicMock:
     """Return a MagicMock that quacks like a StaffUser ORM object."""
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     user = MagicMock()
     user.id = user_id
-    user.email = f"{role}@polymer.uz"
-    user.role = StaffRole(role)
+    user.email = f"staff{user_id}@polymer.uz"
+    user.is_admin = is_admin
     user.is_active = True
     return user
 
 
-def _auth_headers(user_id: int = 1, role: str = "analyst") -> dict[str, str]:
+def _auth_headers(user_id: int = 1) -> dict[str, str]:
     """Create a Bearer Authorization header with a valid access token."""
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    token = create_access_token(subject=str(user_id), role=role)
+    token = create_access_token(subject=str(user_id))
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -212,3 +211,53 @@ class TestFeedSSEAuth:
             resp = tc.get("/api/v1/feed/stream")
 
         assert resp.status_code == 401, resp.text
+
+
+# ── Admin gate on the SSE route ───────────────────────────────────────────────
+#
+# The stream needs its own guard (`require_admin_sse`) rather than the Bearer-only
+# `require_admin` every other route uses: `EventSource` cannot set an
+# Authorization header, so the token arrives as a query parameter. Stacking the
+# Bearer guard here would have rejected every browser that connected — and no
+# header-based test would have noticed.
+
+
+class TestSseAdminGate:
+    """GET /feed/stream is administrator-only, on BOTH auth paths."""
+
+    def test_admin_allowed_via_query_param(self) -> None:
+        """An admin token supplied as ?access_token= is accepted — the EventSource path."""
+        from app.core.security import create_access_token  # noqa: PLC0415
+
+        client = _make_sse_client()
+        token = create_access_token(subject="1")
+
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+            resp = client.get(f"/api/v1/feed/stream?access_token={token}")
+
+        assert resp.status_code == 200, resp.text
+
+    def test_non_admin_rejected_via_query_param(self) -> None:
+        """A valid non-administrator token is refused on the query-param path too."""
+        from app.core.security import create_access_token  # noqa: PLC0415
+
+        client = _make_sse_client(_make_staff_user(is_admin=False))
+        token = create_access_token(subject="1")
+
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+            resp = client.get(f"/api/v1/feed/stream?access_token={token}")
+
+        assert resp.status_code == 403, resp.text
+
+    def test_non_admin_rejected_via_header(self) -> None:
+        """The header path is gated identically."""
+        client = _make_sse_client(_make_staff_user(is_admin=False))
+
+        with patch("app.api.health._check_redis", return_value="ok"), \
+             patch("app.domains.signals.api_feed.subscribe_feed_events", return_value=_fake_subscribe_one_event()):
+            resp = client.get("/api/v1/feed/stream", headers=_auth_headers())
+
+        assert resp.status_code == 403, resp.text
+

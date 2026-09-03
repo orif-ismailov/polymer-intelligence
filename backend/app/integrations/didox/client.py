@@ -285,11 +285,20 @@ class DidoxClient:
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         if base_url is None or partner_token is None:
-            from app.core.config import settings  # noqa: PLC0415 — lazy: import-safe module
+            # Through `settings_service`, not `settings`: both are operator-set
+            # from the admin panel, so the env field is the DEFAULT and not
+            # necessarily what is running. `get_didox_client` below rebuilds this
+            # object when either changes — without that, a token corrected in the
+            # panel would keep 401-ing until the process restarted.
+            from app.services import settings_service  # noqa: PLC0415 — lazy: import cycle
 
-            base_url = base_url if base_url is not None else settings.DIDOX_BASE_URL
+            base_url = (
+                base_url if base_url is not None else str(settings_service.get("didox_base_url"))
+            )
             partner_token = (
-                partner_token if partner_token is not None else settings.DIDOX_PARTNER_TOKEN
+                partner_token
+                if partner_token is not None
+                else str(settings_service.get("didox_partner_token") or "")
             )
         self._base_url = base_url.rstrip("/")
         self._partner_token = partner_token
@@ -1041,18 +1050,38 @@ _client: DidoxClient | None = None
 
 
 def get_didox_client() -> DidoxClient:
-    """The process-wide client (call-logs to the app DB via SessionLocal)."""
+    """The process-wide client, rebuilt when its credentials change.
+
+    The cache used to be unconditional, which was correct while the host and
+    token could only come from `.env` — they could not change without a restart.
+    They are operator-settable now, so an unconditional cache would mean a token
+    fixed in the panel went on 401-ing until somebody restarted the worker: the
+    provider looks broken, the panel says it is configured, and nothing connects
+    the two. Comparing the effective pair is cheap and removes that gap.
+    """
     global _client
-    if _client is None:
+    from app.services import settings_service  # noqa: PLC0415
+
+    base_url = str(settings_service.get("didox_base_url")).rstrip("/")
+    partner_token = str(settings_service.get("didox_partner_token") or "")
+    if _client is None or (_client._base_url, _client._partner_token) != (base_url, partner_token):
         from app.core.db import SessionLocal  # noqa: PLC0415
 
-        _client = DidoxClient(session_factory=SessionLocal)
+        _client = DidoxClient(
+            base_url=base_url, partner_token=partner_token, session_factory=SessionLocal
+        )
     return _client
+
+
+def reset_didox_client() -> None:
+    """Drop the cached client. Called by `settings_service` when Didox config moves."""
+    global _client
+    _client = None
 
 
 def is_configured() -> bool:
     """True when a partner token exists. Without one every call is a 401, so the
     caller should degrade before spending a request finding that out."""
-    from app.core.config import settings  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
-    return bool(settings.DIDOX_PARTNER_TOKEN)
+    return bool(settings_service.get("didox_partner_token"))

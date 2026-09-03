@@ -198,7 +198,7 @@ def reconcile_escrow_payments(limit: int = 100) -> dict[str, Any]:
 
     try:
         with Session(engine) as db:
-            mode = escrow_client.current_mode(db)
+            mode = escrow_client.current_mode()
             if mode != escrow_client.MODE_LIVE:
                 return {"status": "no_provider", "reason": f"escrow_mode is {mode!r}"}
             try:
@@ -226,9 +226,10 @@ def _alert_divergence(payment_ids: list[Any], reasons: Any = None) -> None:
     synthesized poll event id is deterministic, so a standing disagreement is
     alerted once and then lives in the operator queue.
     """
-    from app.core.config import settings  # noqa: PLC0415
 
-    chat_id = settings.VERIFICATION_NOTIFY_CHAT_ID or settings.REQUEST_NOTIFY_CHAT_ID
+    from app.services import settings_service  # noqa: PLC0415
+
+    chat_id = settings_service.verification_chat_id()
     if chat_id is None:
         return
     try:

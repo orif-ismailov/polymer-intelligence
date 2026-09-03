@@ -10,12 +10,12 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_staff_user
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.schemas.dashboard import DashboardSummary
 from app.services.dashboard_summary_service import get_dashboard_summary
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_staff_user)])
+router = APIRouter(prefix="/dashboard", tags=["dashboard"], dependencies=[Depends(require_page("dashboard", "read"))])
 
 
 @router.get(

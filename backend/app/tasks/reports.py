@@ -33,8 +33,8 @@ def _generate_report(session: str) -> int | None:
 
     with SessionLocal() as db:
         try:
-            use_llm = bool(settings_service.get(db, "news_ai_enabled"))
-            auto_publish = bool(settings_service.get(db, "report_auto_publish"))
+            use_llm = bool(settings_service.get("news_ai_enabled"))
+            auto_publish = bool(settings_service.get("report_auto_publish"))
             report = report_service.generate_report(db, use_llm=use_llm, session=session)
             if auto_publish:
                 report_service.publish_report(db, report)
@@ -71,9 +71,10 @@ def publish_breaking_news() -> dict[str, object]:
 
     from telegram.bot import bot  # noqa: PLC0415
 
-    from app.core.config import settings as _settings  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
-    if not _settings.NEWS_CHANNEL_ID:
+    channel_id = settings_service.news_channel_id()
+    if not channel_id:
         return {"status": "skipped", "pushed": 0}
 
     pushed = 0
@@ -84,7 +85,7 @@ def publish_breaking_news() -> dict[str, object]:
             try:
                 asyncio.run(
                     bot.send_message(
-                        chat_id=_settings.NEWS_CHANNEL_ID, text=text, parse_mode="Markdown"
+                        chat_id=channel_id, text=text, parse_mode="Markdown"
                     )
                 )
             except Exception as exc:  # noqa: BLE001
@@ -113,8 +114,10 @@ def publish_report_to_channel(report_id: int) -> dict[str, object]:
     from telegram.bot import bot  # noqa: PLC0415
 
     from app.core.config import settings as _settings  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
 
-    if not _settings.NEWS_CHANNEL_ID:
+    channel_id = settings_service.news_channel_id()
+    if not channel_id:
         logger.info("publish_report_to_channel.skipped_no_channel", extra={"report_id": report_id})
         return {"status": "skipped", "error": None}
 
@@ -140,7 +143,7 @@ def publish_report_to_channel(report_id: int) -> dict[str, object]:
             )
         asyncio.run(
             bot.send_message(
-                chat_id=_settings.NEWS_CHANNEL_ID,
+                chat_id=channel_id,
                 text=content,
                 parse_mode="Markdown",
                 reply_markup=reply_markup,

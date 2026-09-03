@@ -852,22 +852,3 @@ GRADE_SPECS: list[dict[str, object]] = [
     },
 ]
 
-# ── Operator knobs shown on the admin settings screen ─────────────────────────
-# Values are JSON (the column is jsonb). Keys must exist in settings_service._SPECS;
-# an unknown key would silently fall back to its code default and read as "unset".
-APP_SETTINGS: list[tuple[str, object]] = [
-    ("news_ai_enabled", True),
-    ("news_require_approval", True),
-    ("report_auto_publish", False),
-    ("news_refresh_interval_minutes", 30),
-    ("verification_auto_approve", False),
-    ("bank_verification_required", True),
-    ("verification_required_for_publish", True),
-    ("contract_pending_ttl_days", 14),
-    ("escrow_mode", "stub"),
-    ("rfq_supplier_push_enabled", True),
-    ("rfq_supplier_push_top_n", 5),
-    ("rfq_supplier_offer_max_age_days", 60),
-    ("substance_ai_enabled", True),
-    ("dangerous_check_enforced", False),
-]

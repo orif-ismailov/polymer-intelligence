@@ -4,10 +4,15 @@ Integration gateway call log (R3 — ARCHITECTURE §5, §12).
 Every outbound call to an external verification provider (the E-IMZO sidecar now;
 gov registry / bank / e-invoice adapters later) writes one `integration_call_log`
 row: which provider/operation, whether it succeeded, latency, and a redacted error.
-It is the observability + circuit-breaker audit trail for the gateway. Prunable
-(90-day retention, §13) — never holds evidence, only call metadata. NEVER store
-request/response bodies here (they may carry PINFL/PKCS#7); evidence lives in the
-immutable `signature_evidence`/`registry_snapshots` tables instead.
+It is the observability + circuit-breaker audit trail for the gateway, and the
+data behind `/admin/analytics`. Never holds evidence, only call metadata. NEVER
+store request/response bodies here (they may carry PINFL/PKCS#7); evidence lives
+in the immutable `signature_evidence`/`registry_snapshots` tables instead.
+
+Pruned at 90 days (§13) by `prune_integration_call_log` in `app/tasks/retention.py`,
+which owns the number. This docstring claimed that retention for a year while
+nothing implemented it — fine at a few hundred E-IMZO calls, not fine against a
+Didox package of a million requests a month.
 """
 
 from __future__ import annotations

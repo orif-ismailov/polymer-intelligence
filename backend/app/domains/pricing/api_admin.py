@@ -27,13 +27,13 @@ import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_staff_user
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.schemas.dashboard import PriceSeriesOut
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/prices", tags=["prices"], dependencies=[Depends(get_current_staff_user)])
+router = APIRouter(prefix="/prices", tags=["prices"], dependencies=[Depends(require_page(("dashboard", "prices"), "read"))])
 
 # Threshold for switching from daily to weekly downsampling (dev-spec §3.1)
 _DOWNSAMPLE_THRESHOLD_DAYS = 365

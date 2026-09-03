@@ -49,6 +49,7 @@ gotchas. **Read the relevant one before working inside that directory:**
 | `userbot/` | Telethon (MTProto) | Long-lived process monitoring Telegram channels. **Repo-root package**, separate from Celery worker/beat. |
 | `workers/` | standalone Python | `uzex_backfill/` — isolated crawler that walks the uzex.uz offer-detail ID space into its **own** Postgres tables. No app imports, own DB schema + entrypoint + requirements, own process (systemd/tmux) — **never Celery**. |
 | `deploy/` | docker-compose, nginx, backup | `docker-compose.yml` (prod), `docker-compose.dev.yml` (dev). |
+| `scripts/` | repo-level Python/shell | `dev.sh` (the `make dev` stack), `sync_env_example.py` (keeps the env contract in step with `Settings`; `make env-sync`), `import_env_overrides.py` (one-time: moves a deployment's switch lines out of `.env` into `app_settings`). Run in the backend venv — they import `app.core.config`. |
 | `docs/` | — | Dev spec, DB architecture, deployment guide, backup/restore runbook, RU admin guide, extraction schema. |
 | `.planning/` | — | Phase plans, roadmap, requirements, design decisions. Not shipped code. |
 
@@ -93,6 +94,7 @@ Full stack:
 docker compose -f deploy/docker-compose.dev.yml up   # postgres, redis, minio, api, worker, beat, userbot, nginx
 make smoke           # production-compose smoke test with synthetic data + placeholder env
 make webapp-bundle   # build the Telegram Web App into the nginx-served webapp_static volume
+make env-sync        # refresh deploy/.env.example from Settings + the setting specs
 ```
 
 Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compose.yml` — the
@@ -102,10 +104,14 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 
 - All config flows through `backend/app/core/config.py` (`Settings`, a single module-level
   `settings` instance — import it, never construct `Settings()` again). `deploy/.env.example`
-  is the authoritative env contract.
+  is the authoritative env contract **for everything except the 35 panel-managed switches**,
+  which are edited at `/admin/settings` and whose defaults live on `Settings` — see «Runtime
+  feature switches» below. `make env-sync` keeps the file honest; a test fails when it drifts.
 - **Secrets have no defaults** (`JWT_SECRET`, `BOT_TOKEN`, `WEBHOOK_SECRET`, `TG_API_*`,
   `ANTHROPIC_API_KEY`, `S3_*`) — misconfiguration fails fast at startup. No secret literals
-  appear in tracked source.
+  appear in tracked source. The three OPTIONAL credentials (`OPENAI_API_KEY`,
+  `DIDOX_PARTNER_TOKEN`, `DIDOX_SERVICE_PASSWORD`) are set in the panel instead, Fernet-encrypted
+  at rest rather than in plaintext in a file that gets copied around.
 - The real `.env` is gitignored. Dev reads it from the **repo root**; prod compose reads it
   from **one level above the repo root** (`../.env`).
 - `RUN_MIGRATIONS_ON_STARTUP` defaults `false` so the TestClient-built app (tests/CI) never
@@ -155,17 +161,51 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 
 ### LLM extraction & prompts (Phase 5+)
 
-- `parsing/extractor.py` (and `parsing/news_extractor.py`) use `instructor` + the Anthropic SDK
-  (`Mode.TOOLS`) for forced structured output. Clients are module-level singletons built at import;
-  tests patch `parsing.extractor._client` so no network call happens in CI.
-- Prompts are **versioned and immutable**: to change one, add `parsing/prompts/<family>_v{N+1}.md`
-  and bump its version pin (journaled in `parse_runs.prompt_version` for replay). Four families:
+- `parsing/extractor.py` (and `parsing/news_extractor.py`) use `instructor` (`Mode.TOOLS`) for
+  forced structured output. Clients are module-level singletons built at import; tests patch
+  `parsing.extractor._client` so no network call happens in CI. Five modules hold such a client
+  — now one per vendor, `_client` (Anthropic) and `_openai_client` — and
+  `app/services/llm_clients.py` **rebinds all of them in place** when an operator changes a key.
+  Keeping `_client` a module attribute rather than a lazy factory is exactly what keeps those
+  patch sites working.
+- **Two vendors, chosen per model.** Claude or GPT, selected in `/admin/settings/ai`; the provider
+  is **derived from the model id** (`claude-*` → Anthropic, `gpt-*`/`o*` → OpenAI), never
+  configured separately — a provider switch could disagree with the model it describes. An id
+  matching no known OpenAI prefix goes to Anthropic, which is what makes this change unable to
+  move any existing deployment's provider. `llm_clients` owns the whole difference:
+  - **`structured()`** for the four extraction sites, which were byte-identical before it existed,
+    and **`text()`** for the report digest, whose raw clients are where the two SDKs stop looking
+    alike (`.messages.create()` + content blocks vs `.chat.completions.create()` + choices).
+  - Three dialect traps, each a 400 rather than a silent degradation, and none of them visible to
+    a mocked test: OpenAI takes the system prompt as a **message** not a parameter, `max_tokens` is
+    **`max_completion_tokens`**, and the reasoning models (`gpt-5*`, `o*`) **reject `temperature`**.
+  - `cache_control` stays on the Anthropic branch only. It is not portable, and it is most of the
+    reason the monthly bill is what it is — so it is applied where it works rather than dropped for
+    the symmetry of one code path.
+  - **Usage is normalised** (`llm_clients.Usage`): Anthropic's `input_tokens` excludes cache reads,
+    OpenAI's `prompt_tokens` includes them, so the OpenAI branch subtracts them. Without that a
+    cached GPT call reports the same tokens in `tokens_in` and `cache_read_tokens`, and
+    `/admin/llm-spend` sums both.
+- Prompts are **versioned and immutable** — meaning **one version string, one text, forever**. It is
+  what `parse_runs.prompt_version` rests on: that column is the only record of what produced a past
+  classification, and every loader caches per process keyed on the version string, so a version
+  whose text could change would split the fleet between old and new while both journalled the same
+  name. A change is therefore always a NEW version, never a rewrite. Four families:
   `extract_v*` (trade signals, pinned by `LLM_PROMPT_VERSION`, currently **v1**), `news_extract_v*`
-  (news classification, **v1–v3**, selected at **runtime** via the `news_prompt_version` app-setting),
-  `report_v*` (daily/evening report digest, `REPORT_PROMPT_VERSION`, currently **v6**), and
-  `analyze_request_v*` (buyer-request analysis, `REQUEST_AI_ANALYSIS_PROMPT_VERSION`, **v1**).
-- Two model tiers: report generation uses the higher-quality `LLM_REPORT_MODEL` (Sonnet); per-item
-  extraction/classification and request analysis use the cheaper `LLM_EXTRACT_MODEL` (Haiku).
+  (news classification, **v1–v3** shipped, selected at **runtime** via the `news_prompt_version`
+  app-setting), `report_v*` (daily/evening report digest, `REPORT_PROMPT_VERSION`, currently **v6**),
+  and `analyze_request_v*` (buyer-request analysis, `REQUEST_AI_ANALYSIS_PROMPT_VERSION`, **v1**).
+  - For three of them a new version is a new `parsing/prompts/<family>_v{N+1}.md` plus a pin bump.
+  - **`news_extract` can also be authored from `/admin/settings/news`**: saving writes a row in the
+    append-only `prompt_versions` table (migration `0046`), activating is an ordinary settings
+    override, and a dry-run button classifies one real article with the draft before it goes live —
+    the only check that family has, since the eval harness covers `extract` only. Shipped files stay
+    the fallback and the version list is the union of both. See `backend/CLAUDE.md`.
+- Two model tiers, **both operator-settable on `/admin/settings/ai` and both able to name either
+  vendor**: report generation uses the higher-quality `LLM_REPORT_MODEL` (ships Sonnet); per-item
+  extraction/classification and request analysis use the cheaper `LLM_EXTRACT_MODEL` (ships Haiku).
+  Read them through `settings_service`, never off `settings` — `reports.report_model()` is the
+  accessor for the report one.
 - A **daily token budget** (`LLM_DAILY_TOKEN_LIMIT`, `parsing/budget.py`) gates all LLM calls.
   On exhaustion, items are marked `budget_deferred` and reprocessed by the `nightly_llm_catchup`
   beat task after the UTC midnight reset; meanwhile a rule-based fallback degrades gracefully.
@@ -188,13 +228,113 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
   Rendering (`render_telegram_digest`, `render_breaking_alert`) lives in `report_service`, **not** the
   `telegram/` package. Mini-App news cards read `GET /webapp/news/articles`.
 
-### Runtime settings & marketplace
+### Analytics — what the external bills are spent on
 
-- **Runtime settings:** a small set of operator-editable knobs lives in the `app_settings` table
-  (`settings_service.py`, declared in `_SPECS`) and is editable from the dashboard admin panel —
-  **distinct from the immutable env/`config.py` contract**. Keys: `news_ai_enabled`,
-  `news_require_approval`, `report_auto_publish`, `llm_extract_model`, `news_prompt_version`,
-  `news_refresh_interval_minutes`. Unknown keys fall back to their code default.
+- **`/admin/analytics`** (dashboard «Аналитика», first under НАСТРОЙКИ ПРОЕКТА) answers, per rail,
+  *how much have we used, of what we paid for, on what, and is it working*. Backed by
+  `app/services/analytics_service.py` + `app/api/admin_analytics.py`; it **writes nothing** —
+  every number comes from data both rails were already journalling.
+  - The route is **`/admin/analytics`, not `/admin/settings/analytics`**: `test_settings_modules.py`
+    fails when an `/admin/settings/<module>` href has no matching `SettingSpec.group`, and analytics
+    is a screen rather than a group of switches. It shares the nav group and the `appSettings` grant.
+  - **Didox** reads `integration_call_log`, which had recorded every call since R3 and had never
+    been read by anything. Two correctness rules, both of which would otherwise produce a
+    confident wrong number: the calendar month is **Asia/Tashkent's** (five hours of every month
+    sit on the wrong side of a UTC boundary), and rows with `error='breaker_open'` are **excluded
+    from consumption** — the client writes them before the request, so they cost no quota, and
+    counting them would inflate the bill exactly when the rail is broken.
+  - `didox_monthly_quota` / `didox_monthly_cost_uzs` are ordinary overridable settings. They gate
+    nothing at runtime — Didox owns the real count — they are the page's denominator.
+  - **AI** unions five sources into one `purpose` column (`parse_runs` twice, plus
+    `substance_suggestions`, `requests.ai`, `reports`). `tests/test_analytics.py` asserts every
+    module in `llm_clients._CLIENTS` maps to a purpose, so a sixth AI feature cannot be added and
+    silently left out of the totals.
+  - `integration_call_log` is pruned at 90 days by `prune_integration_call_log`
+    (`app/tasks/retention.py`) — the retention its model docstring had promised since R3 with
+    nothing enforcing it. Consequence: roughly three months of history, no more.
+
+### Runtime feature switches & marketplace
+
+- **Runtime feature switches:** the resolution order is **override row, else the `Settings` field** —
+
+      effective value = the `app_settings` row, if one exists, else the Settings default
+                        (which an environment variable may itself have supplied)
+
+  35 switches, declared as `SettingSpec`s in `app/services/settings_service.py`. `app_settings`
+  (migration `0045`) holds only the deliberate exceptions, one row per overridden key.
+  - **The DEFAULT lives on `Settings`** (`app/core/config.py`), beside the type, the bounds and
+    the `Literal` set that validate it — one thing rather than a value in one file and a rule in
+    another. They are still ordinary env vars: setting one in `.env` or in compose overrides the
+    code default exactly as before.
+  - **`deploy/.env.example` no longer lists them.** It used to enumerate all 35 with their
+    defaults, which put a second copy of every default in a file that was not its source. The
+    contract now carries a pointer block naming the panel, the groups, and how to list the names
+    offline. **`ANTHROPIC_API_KEY` is the single exception and must stay**: it is required and
+    `Settings` validates at import, before anything has connected to the database an override
+    would live in, so a deployment that copied the file without it would not boot with nothing to
+    say why. `test_env_contract_sync.py` enforces both halves of that rule.
+  - `/admin/settings` (dashboard, page key `appSettings`) shows **both** values side by side with
+    the env var named, who overrode it and when, and a **Reset** button. That pairing is the
+    design: a missing row cannot mean "some invisible default", it means the value declared on
+    `Settings`, and an override is visible AS an override.
+  - **Two scripts keep the contract honest**, both wired to `make env-sync` / run by hand:
+    - `scripts/sync_env_example.py` regenerates the `[panel: X]` markers and appends any
+      `Settings` field nobody documented; it **never rewrites a value**, because `S3_ENDPOINT` and
+      `CORS_ALLOWED_ORIGINS` deliberately document something other than their code default.
+    - `scripts/import_env_overrides.py` migrates a deployment's remaining switch lines out of
+      `.env` and into `app_settings`, preserving the effective value. Run it on prod once; it
+      writes to that database.
+  - **An override lives in Postgres, an env var lives on disk.** A database restore predating a
+    panel change loses it. That is the trade for editing without a deploy, and it is why the
+    credentials are worth having encrypted in the table rather than in plaintext in a file.
+  - This is NOT a revert of the `0043` removal. That table stored a value next to a default written
+    as a Python literal in `settings_service`, so a fresh database ran every rail on something
+    nobody had chosen or could see — which is how a healthy, fully-credentialed Didox integration
+    came to answer `503 registry_not_configured` on every company lookup (31.08.2026), taking a day
+    to trace through a service module and then a Postgres query. The defaults moved onto `Settings`
+    and stayed there; only the override layer came back, and it is displayed rather than implied.
+  - **`settings_service.get(key)` never touches Postgres or Redis.** It is called inside open
+    transactions (`verification/service.py` holds a `SELECT … FOR UPDATE` across it), and with
+    `DB_POOL_SIZE=5` against uvicorn's 40-thread pool a second connection checkout per call is a
+    pool deadlock, not a slow path. Overrides reach a process through `refresh(db)`, called from
+    `get_db()` (on the session the request already holds) and Celery's `task_prerun` (where no
+    transaction is open yet), gated on a Redis generation counter with a 0.25 s timeout. Postgres
+    is authoritative; Redis is an invalidation SIGNAL only, never the source of a value — so a lost
+    cache degrades to the documented `.env` contract.
+  - **A write is validated by `Settings` itself** (`settings_service.validate` builds a candidate
+    model), so bounds, `Literal` sets and the cross-field rail-credential validators all fire at the
+    write — the same checks a boot would apply, never re-implemented. `ValidationError.errors()`
+    must never cross the wire: it embeds `input_value` for every field, and the candidate holds
+    every credential the deployment has.
+  - Closed sets are `Literal` and bounds are `Field(ge=…, le=…)`, so a typo or an out-of-range
+    number is refused at startup AND at the write. The old `_coerce` clamped silently.
+  - Four switches are **credentials** (`anthropic_api_key`, `openai_api_key`,
+    `didox_partner_token`, `didox_service_password`): Fernet-encrypted at rest, masked on read, and
+    writable only by an administrator whatever the page grant says. Handing someone the page must
+    not hand them the partner token.
+  - **The two LLM keys are checked with their provider before they are stored** (a token-free
+    `models.list()` call) and refused with the provider's own reason if it fails, because every LLM
+    feature here degrades quietly rather than erroring on a bad key. Storing one also rebinds the
+    in-process clients (`app/services/llm_clients.py`), so a rotation takes effect without a
+    restart — otherwise the panel would report a saved key while the workers kept using the old
+    one. Both sit on `/admin/settings/ai` with the two model pins.
+  - Three validators refuse a rail switched on without its credentials:
+    `GOV_REGISTRY_MODE=didox` / `DIDOX_MODE=live` require `DIDOX_PARTNER_TOKEN`,
+    `ESCROW_MODE=live` requires `ESCROW_WEBHOOK_SECRET` (without it the bank's callback route
+    404s and no payment can ever settle), and a **GPT model in either pin requires
+    `OPENAI_API_KEY`** — `ANTHROPIC_API_KEY` stays unconditionally required, the OpenAI one is
+    needed only once a GPT model is actually selected.
+  - **There is exactly one `.env`, at the repo root**, and `Settings` finds it by absolute path.
+    It used to be `env_file=".env"` (CWD-relative) with a second file at `./backend/.env`, so which
+    of the two configured the app depended on where you launched it — `make dev` starts uvicorn from
+    `backend/` and got that one, compose passes the root one — and they disagreed on ten keys
+    including `JWT_SECRET`, `BOT_TOKEN` and the S3 credentials. `backend/.env` is merged in and
+    deleted; a test fails if one reappears.
+  - `backend/tests/test_env_contract_sync.py` guards the contract in **four** directions now: a
+    `Settings` field with no line, a documented key that maps to nothing, a panel-managed switch
+    that crept back in, and a documented value `Settings` would refuse at boot. It also runs the
+    sync script in `--check` mode, so a stale `[panel: X]` marker fails there rather than sending
+    an operator to a page the setting is not on.
 - **Marketplace/sourcing:** buyers submit purchase requests + per-offer inquiries and sellers publish
   offers through the Telegram Web App; staff moderate from the dashboard (`/moderation`,
   `/offer-requests`) and Telegram inline callbacks (`telegram/handlers/moderation.py`). Models in
@@ -216,8 +356,12 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
   lifecycle track's company logo `0022`, deals `0023`, escrow `0024`, offer sale fields `0025`,
   RFQ push log `0026`, compliance `0027`, lab `0028`, gov registry `0029`, offer product facts
   `0030`, and the manufacturer/logistics/laboratory company profiles `0031`–`0033` plus the
-  manufacturers module `0034`). Run `alembic upgrade head` (or let `app/entrypoint.py` do it,
-  advisory-locked, idempotent for concurrent workers).
+  manufacturers module `0034`; then `0043` DROPS `app_settings` — the runtime switches became env
+  vars — and `0045` brings the table back as an OVERRIDE layer only, which is a different thing
+  and the docstring says why. Head is `0047`: `0046` is the append-only `prompt_versions` table,
+  `0047` adds `tokens_in`/`tokens_out` to `reports` so the daily digest — the platform's single
+  most expensive LLM call — stops being invisible to `/admin/analytics`. Run `alembic upgrade head`
+  (or let `app/entrypoint.py` do it, advisory-locked, idempotent for concurrent workers).
 - Reference/seed data: `app/seed/` (`seed_reference`, `seed_staff`, `seed_sources`, `seed_demo`,
   `seed_contract_templates`), with JSON/HTML under `app/seed/data/`. Seeders are idempotent (`ON CONFLICT`).
 

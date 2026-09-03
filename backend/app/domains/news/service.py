@@ -29,6 +29,34 @@ if TYPE_CHECKING:
     from parsing.news_schemas import NewsArticle
 
 
+def sample_news_item(session: Session, raw_item_id: int | None = None) -> RawItem | None:
+    """One collected news article to try a prompt against.
+
+    Named explicitly, or the most recent item from a source configured as news.
+    Deliberately not filtered by `parse_status`: an item that was classified
+    irrelevant is often the most useful thing to test a prompt on, because
+    "should this have been kept?" is the question a scope edit is trying to
+    answer.
+
+    Returns None when nothing has been collected yet — the honest answer, and one
+    the caller turns into a 404 rather than inventing a specimen.
+    """
+    from app.domains.signals.source_models import RawItem, Source  # noqa: PLC0415
+
+    stmt = sa.select(RawItem)
+    if raw_item_id is not None:
+        stmt = stmt.where(RawItem.id == raw_item_id)
+    else:
+        stmt = (
+            stmt.join(Source, Source.id == RawItem.source_id)
+            .where(sa.func.coalesce(Source.config["content_kind"].astext, "") == "news")
+            .where(RawItem.content.isnot(None))
+            .order_by(RawItem.id.desc())
+            .limit(1)
+        )
+    return session.execute(stmt).scalars().first()
+
+
 def _resolve_product_id(session: Session, related_products: list[str]) -> int | None:
     """Best-effort: map the first recognizable product code to a product_id (else None)."""
     for code in related_products:

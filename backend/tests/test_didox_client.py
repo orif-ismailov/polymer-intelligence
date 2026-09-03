@@ -32,6 +32,27 @@ import pytest
 
 from app.integrations.circuit_breaker import CircuitBreaker
 
+
+def _shipped_default(env_var: str) -> object:
+    """The value a deployment runs on when `.env` says nothing.
+
+    Reads `Settings` rather than a `SettingSpec`: since the switches moved into
+    the env contract the field IS the declaration, so asserting anywhere else
+    would be testing a copy.
+    """
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return Settings.model_fields[env_var].get_default()
+
+
+def _allowed_values(env_var: str) -> tuple[object, ...]:
+    """The closed set a mode switch accepts, off its `Literal` annotation."""
+    import typing  # noqa: PLC0415
+
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return typing.get_args(Settings.model_fields[env_var].annotation)
+
 # ── recorded fixtures ─────────────────────────────────────────────────────────
 
 #: GET testapi3/v1/utils/info/310529901 — a real company (DIDOX TECH itself).
@@ -386,8 +407,5 @@ def test_the_partner_token_is_a_conditionally_required_secret() -> None:
 
 
 def test_the_mode_is_a_runtime_setting_shipping_stub() -> None:
-    from app.services.settings_service import _SPECS
-
-    spec = _SPECS["didox_mode"]
-    assert spec.default == "stub"
-    assert spec.choices == ("stub", "live")
+    assert _shipped_default("DIDOX_MODE") == "stub"
+    assert _allowed_values("DIDOX_MODE") == ("stub", "live")

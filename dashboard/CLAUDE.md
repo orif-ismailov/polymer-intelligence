@@ -49,6 +49,19 @@ npx next typegen   # regenerate typed-route defs before tsc on a clean checkout 
   and the P7.c registry screenshot).
   They are separate because `apiFetch` always sets `Content-Type: application/json`; on a
   FormData body the browser must set the header itself so it can add the boundary.
+- **`/admin/analytics`** («Аналитика», first under НАСТРОЙКИ ПРОЕКТА) is deliberately NOT under
+  `/admin/settings/` — the backend's `test_settings_modules.py` reads every
+  `/admin/settings/<module>` href out of `lib/nav.ts` and fails when one has no matching settings
+  group. `SETTINGS_MODULES` filters on that prefix for the same reason.
+  - Charts follow `components/prices/PriceChart.tsx`: hex constants mirroring the Tailwind tokens,
+    because Recharts paints SVG and cannot read CSS variables. Projected/reference series are
+    **dashed**, which carries the meaning and satisfies "never distinguish series by hue alone".
+  - Status never rides on colour alone — each state pairs its colour with an icon and a word.
+  - `text-foreground-subtle` (#64748b) is ≈3.5:1 on this background and **fails** the 4.5:1
+    minimum; meaningful text uses `text-foreground-muted` (#94a3b8, ≈6.3:1).
+  - Every panel renders an `EmptyPanel` rather than a zero when its `has_data` is false: a fresh
+    deployment and a broken integration produce the same 0, and "we spent nothing" reads
+    identically to "nothing has run yet" while meaning the opposite.
 - A **file input keeps the filename it displays** even after the React state behind it is
   cleared, so a form that resets on success must remount it (`key={n}`) or it will advertise
   a file it is not going to send. Found in the browser on the P7.c registry form.
