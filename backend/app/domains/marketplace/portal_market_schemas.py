@@ -53,6 +53,15 @@ class PortalMarketOfferOut(CatalogOfferOut):
     samples_available: bool = False
     sample_price: decimal.Decimal | None = None
     sample_dispatch_days: int | None = None
+    #: Require the buyer to e-sign a commitment letter before the request reaches
+    #: this seller. Per-offer because the paperwork is proportional to what is
+    #: being given away: 200 g of granulate warrants none, 25 kg does.
+    sample_letter_required: bool = False
+    #: The seller's own "if the material does not suit the buyer" clause, rendered
+    #: into the letter verbatim. The platform does not write this consequence for
+    #: two other businesses — which is why requiring a letter without supplying it
+    #: is refused rather than filled in with a default.
+    sample_letter_terms: str | None = None
     #: Product facts the detail sheet paints (CAS / HS / maker / chip rows). The
     #: Mini App contract never carried them; the portal product page does.
     manufacturer: str | None = None
@@ -158,3 +167,68 @@ class MarketRequestOut(BaseModel):
 
 class MarketRequestListOut(BaseModel):
     items: list[MarketRequestOut]
+
+
+class MyRfqResponseOut(BaseModel):
+    """One quote this supplier company filed, with the tender it answers.
+
+    The tender half is `MarketRequestOut` verbatim — the same anonymized view a
+    supplier gets everywhere else, and for the same reason: the platform stays
+    the intermediary until a deal opens. Do not enrich it with buyer identity
+    here just because the quote is the reader's own.
+
+    `request_open` is the one derived field: an open tender still accepts
+    quotes, a closed one does not, and without it a card reading «Отправлено»
+    two months after the tender was awarded to somebody else is a puzzle. It is
+    a boolean rather than `requests.status` on purpose — the staff-side machine
+    (`viewed`, `in_progress`, …) is not a supplier's business.
+    """
+
+    id: int
+    request_id: int
+    price: decimal.Decimal
+    currency: str
+    qty: decimal.Decimal
+    qty_unit: str
+    incoterms: str | None = None
+    lead_time_days: int | None = None
+    comment: str | None = None
+    status: str
+    created_at: datetime.datetime
+    request: MarketRequestOut
+    request_open: bool
+
+    @field_serializer("price")
+    def _price(self, value: decimal.Decimal) -> str:
+        return f"{value:.2f}"
+
+    @field_serializer("qty")
+    def _qty(self, value: decimal.Decimal) -> str:
+        return format(value.normalize(), "f")
+
+
+class MyRfqResponseListOut(BaseModel):
+    items: list[MyRfqResponseOut]
+
+
+class IkpuPackageOut(BaseModel):
+    """A packaging unit valid for one ИКПУ (`PackageCode` / `PackageName`)."""
+
+    code: str
+    name: str
+
+
+class IkpuOut(BaseModel):
+    """One ИКПУ row as the picker renders it.
+
+    `origin_id` is the ЭСФ `Origin` field (1 own production · 2 resale ·
+    3 services · 4 not involved) and comes straight from Didox — it is not ours to
+    guess, and it ends up on every invoice line.
+    """
+
+    class_code: str
+    name: str | None
+    origin_id: int | None
+    origin_name: str | None
+    use_package: bool
+    packages: list[IkpuPackageOut]

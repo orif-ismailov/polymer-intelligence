@@ -10,6 +10,7 @@ here is the shape both sides agree on.
 from __future__ import annotations
 
 import datetime
+import decimal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -140,3 +141,50 @@ class SampleRequestOut(BaseModel):
     sent_at: datetime.datetime | None = None
     received_at: datetime.datetime | None = None
     created_at: datetime.datetime
+    #: The commitment letter, summarised for a LIST row (P7.a W8).
+    #:
+    #: Both parties need it here, not behind a second call: the buyer's row is
+    #: the only place that can say "this request is not with the seller yet, you
+    #: still owe a signature", and the seller's row is where "signed on <date>"
+    #: belongs. `letter_required` comes from the offer as it was when the request
+    #: was made, so turning the flag off later never strands a live request.
+    letter_required: bool = False
+    letter_signed_at: datetime.datetime | None = None
+    letter_number: str | None = None
+
+
+class SampleDealIn(BaseModel):
+    """Terms the buyer is opening the deal on.
+
+    Both optional: the parties may still be negotiating the amount, and a deal in
+    `negotiation` is allowed to carry none.
+    """
+
+    amount: decimal.Decimal | None = None
+    currency: str | None = Field(default=None, max_length=3)
+
+
+class SampleDealOut(BaseModel):
+    deal_id: int
+    number: str
+    buyer_company_id: int
+
+
+class SampleLetterOut(BaseModel):
+    """The commitment letter's state. The PDF itself is fetched separately."""
+
+    number: str | None
+    sha256: str | None
+    signed_at: datetime.datetime | None
+    #: The seller's "if it does not fit" clause AS SIGNED. Read from the snapshot,
+    #: never from the offer — the offer can be edited afterwards.
+    terms: str | None
+    required: bool
+
+
+class SampleLetterChallengeOut(BaseModel):
+    challenge: str
+
+
+class SampleLetterSignIn(BaseModel):
+    pkcs7: str = Field(min_length=1)

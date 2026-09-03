@@ -40,6 +40,10 @@ logger = logging.getLogger(__name__)
 
 MODE_STUB = "stub"
 MODE_LIVE = "live"
+#: P7.a — Didox's `/v1/utils/info/{tin}` reads the tax registry. It is the
+#: channel ПЦД never became, and it is a third rail rather than a replacement:
+#: `live` still names the missing ПЦД adapter.
+MODE_DIDOX = "didox"
 
 #: Normalized company states. `unknown` is the default rather than `active`: an
 #: unstated status must never read as a positive confirmation.
@@ -249,9 +253,14 @@ class StubGovRegistryClient:
         raise ProviderUnavailable(self._WHY)
 
 
-def current_mode(db: Any) -> str:  # noqa: ANN401 — Session, typed loosely to stay import-light
-    """The configured rail (`stub` | `live`) from the runtime settings."""
-    return str(settings_service.get(db, "gov_registry_mode"))
+def current_mode() -> str:
+    """The configured rail, read from `GOV_REGISTRY_MODE` in `.env`.
+
+    Took a `Session` until the switches moved out of `app_settings`; it
+    never queried anything, and a parameter implying a lookup that does
+    not happen is the sort of thing that gets copied forward.
+    """
+    return str(settings_service.get("gov_registry_mode"))
 
 
 def get_gov_registry_client(db: Any) -> GovRegistryClient:  # noqa: ANN401
@@ -261,9 +270,16 @@ def get_gov_registry_client(db: Any) -> GovRegistryClient:  # noqa: ANN401
     stub instead would let an operator believe a state registry confirmed
     something when nothing did.
     """
-    mode = current_mode(db)
+    mode = current_mode()
     if mode == MODE_STUB:
         return StubGovRegistryClient()
+    if mode == MODE_DIDOX:
+        # Imported here rather than at module scope: `integrations.didox.registry`
+        # imports this module for the protocol and the DTOs, so a top-level
+        # import would be a cycle.
+        from app.integrations.didox.registry import DidoxGovRegistryClient  # noqa: PLC0415
+
+        return DidoxGovRegistryClient()
     if mode == MODE_LIVE:
         raise ProviderUnavailable(
             "gov_registry: live mode has no adapter yet (needs ПЦД access) — "

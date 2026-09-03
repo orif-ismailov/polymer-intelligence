@@ -235,8 +235,7 @@ interface AddSourceWizardProps {
 
 export function AddSourceWizard({ open, onClose }: AddSourceWizardProps) {
   const t = useTranslations("sources");
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<WizardStep>(1);

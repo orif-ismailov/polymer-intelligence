@@ -13,8 +13,14 @@ interface TopbarProps {
 export function Topbar({ onOpenMenu }: TopbarProps) {
   const { t } = useTranslation();
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+    // `z-30` — above the rail, which starts under this bar and must scroll
+    // beneath it rather than over it.
+    <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur">
+      {/* Edge to edge, so the lockup sits in the actual corner. It used to be
+          centred in the same `max-w-6xl` as the content, which put it 384px
+          adrift on a 1920 screen and was half of why the app read as a page
+          floating in a void rather than as a frame. */}
+      <div className="flex h-14 items-center gap-3 px-4 lg:px-6">
         {/* This opened the drawer while announcing itself as "Home". */}
         <button
           type="button"

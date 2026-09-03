@@ -12,6 +12,7 @@ company-scoped: pass ``company_id`` (membership enforced → 404 for non-members
 from __future__ import annotations
 
 import decimal
+from collections.abc import Sequence
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session, selectinload
@@ -29,11 +30,15 @@ from app.domains.marketplace.models import SellerOffer
 from app.domains.marketplace.portal_market_schemas import (
     MarketRequestListOut,
     MarketRequestOut,
+    MyRfqResponseListOut,
+    MyRfqResponseOut,
     PortalMarketOfferDetail,
     PortalMarketOfferOut,
     PublicCompanyProfileOut,
 )
 from app.domains.marketplace.schemas import OfferRequestOut
+from app.domains.reference.models import Product
+from app.domains.requests.models import Request
 from app.models.enums import (
     BusinessRoleStatus,
     CompanyStatus,
@@ -122,6 +127,48 @@ def list_market(
 # order routers are included in app/main.py.
 
 
+def _catalog_product_names(db: Session, rows: Sequence[Request]) -> dict[int, str]:
+    """Catalog names for the tenders that carry a `product_id` and no text.
+
+    A tender announced from the CATALOG leaves `product_text` NULL — so a card
+    built from the text columns alone said "—" where the product name belongs,
+    which is the one fact a supplier decides on. A free-typed product keeps the
+    buyer's own words; this only fills the blanks.
+    """
+    ids = [r.product_id for r in rows if r.product_id]
+    if not ids:
+        return {}
+    return {
+        p.id: p.name_ru for p in db.query(Product).filter(Product.id.in_(ids)).all()
+    }
+
+
+def _market_request_out(
+    request: Request,
+    catalog: dict[int, str],
+    *,
+    my_response: RfqResponse | None = None,
+) -> MarketRequestOut:
+    """The anonymized supplier view of a tender — one builder, two readers."""
+    return MarketRequestOut(
+        id=request.id,
+        product=request.product_text or catalog.get(request.product_id or 0),
+        grade=request.grade_text or request.polymer_type,
+        volume=request.volume if request.volume is not None else decimal.Decimal(0),
+        volume_unit=request.volume_unit,
+        incoterms=str(request.incoterms),
+        destination_country=request.destination_country,
+        port_or_city=request.port_or_city,
+        desired_date=request.desired_date,
+        validity_days=request.validity_days,
+        urgency=str(request.urgency),
+        required_docs=list(request.required_docs or []),
+        created_at=request.created_at,
+        my_response_id=my_response.id if my_response else None,
+        my_response_status=str(my_response.status) if my_response else None,
+    )
+
+
 @router.get("/requests", response_model=MarketRequestListOut)
 def list_market_requests(
     company_id: int = Query(...),
@@ -142,6 +189,7 @@ def list_market_requests(
     """
     company = company_or_404(db, account, company_id)
     rows = rfq_response_service.list_open_requests(db, company, limit=limit, offset=offset)
+    catalog = _catalog_product_names(db, rows)
 
     mine = {
         r.request_id: r
@@ -155,24 +203,49 @@ def list_market_requests(
     }
     return MarketRequestListOut(
         items=[
-            MarketRequestOut(
-                id=r.id,
-                product=r.product_text,
-                grade=r.grade_text,
-                volume=r.volume if r.volume is not None else decimal.Decimal(0),
-                volume_unit=r.volume_unit,
-                incoterms=str(r.incoterms),
-                destination_country=r.destination_country,
-                port_or_city=r.port_or_city,
-                desired_date=r.desired_date,
-                validity_days=r.validity_days,
-                urgency=str(r.urgency),
-                required_docs=list(r.required_docs or []),
-                created_at=r.created_at,
-                my_response_id=mine[r.id].id if r.id in mine else None,
-                my_response_status=str(mine[r.id].status) if r.id in mine else None,
+            _market_request_out(r, catalog, my_response=mine.get(r.id)) for r in rows
+        ]
+    )
+
+
+@router.get("/responses", response_model=MyRfqResponseListOut)
+def list_my_rfq_responses(
+    company_id: int = Query(...),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> MyRfqResponseListOut:
+    """Quotes this supplier company has filed, newest first — every status.
+
+    The companion to `/requests`, and the only place a quote survives: that list
+    is filtered to open tenders, so an awarded or cancelled one takes the
+    supplier's own work off the screen with it.
+
+    Another literal declared above `/{offer_id}` — see the note on `/requests`.
+    """
+    company = company_or_404(db, account, company_id)
+    pairs = rfq_response_service.list_for_company(db, company, limit=limit, offset=offset)
+    catalog = _catalog_product_names(db, [request for _, request in pairs])
+
+    return MyRfqResponseListOut(
+        items=[
+            MyRfqResponseOut(
+                id=response.id,
+                request_id=response.request_id,
+                price=response.price,
+                currency=response.currency,
+                qty=response.qty,
+                qty_unit=response.qty_unit,
+                incoterms=str(response.incoterms) if response.incoterms else None,
+                lead_time_days=response.lead_time_days,
+                comment=response.comment,
+                status=str(response.status),
+                created_at=response.created_at,
+                request=_market_request_out(request, catalog, my_response=response),
+                request_open=request.status in rfq_response_service.OPEN_STATUSES,
             )
-            for r in rows
+            for response, request in pairs
         ]
     )
 

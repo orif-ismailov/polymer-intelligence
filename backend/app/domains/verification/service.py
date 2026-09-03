@@ -202,7 +202,7 @@ def _registry_checks_for(db: Session) -> tuple[VerificationCheckType, ...]:
     """
     from app.integrations.gov_registry import MODE_LIVE, current_mode  # noqa: PLC0415
 
-    return _REGISTRY_CHECK_TYPES if current_mode(db) == MODE_LIVE else ()
+    return _REGISTRY_CHECK_TYPES if current_mode() == MODE_LIVE else ()
 
 
 def upsert_check(
@@ -324,7 +324,7 @@ def on_check_completed(db: Session, case_id: int) -> VerificationCase | None:
         )
         return case
 
-    if settings_service.get(db, "verification_auto_approve"):
+    if settings_service.get("verification_auto_approve"):
         now = company_service.now_utc()
         case.status = VerificationCaseStatus.approved
         case.decided_at = now

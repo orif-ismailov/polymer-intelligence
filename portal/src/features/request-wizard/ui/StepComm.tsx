@@ -1,20 +1,11 @@
 import { useTranslation } from "react-i18next";
 
-import {
-  MailIcon,
-  MessageIcon,
-  RadioCard,
-  ShieldCheckIcon,
-  StoreIcon,
-  UsersIcon,
-} from "@/shared/ui";
+import { RadioCard, ShieldCheckIcon, StoreIcon } from "@/shared/ui";
 
 import {
   COUNTED_STEPS,
-  OFFER_CHANNELS,
   STEP_COMM,
   VISIBILITY_OPTIONS,
-  type OfferChannel,
   type VisibilityOption,
 } from "../model/constants";
 import { useRequestDraft } from "../model/draftStore";
@@ -25,21 +16,15 @@ interface StepCommProps {
   onBack: () => void;
 }
 
-const CHANNEL_ICON = {
-  app: <StoreIcon size={18} />,
-  email: <MailIcon size={18} />,
-  telegram: <MessageIcon size={18} />,
-} as const;
-
 const VISIBILITY_ICON = {
   verified: <ShieldCheckIcon size={18} />,
   all: <StoreIcon size={18} />,
-  selected: <UsersIcon size={18} />,
 } as const;
 
 /**
- * Sheet 4 — «Условия общения»: how offers arrive, and who can see the request.
- * Soft preferences — folded into `comment` at submit.
+ * Sheet 4 — «Кто увидит тендер»: the one choice on this sheet that the API
+ * acts on. It used to also ask how offers should arrive (email / Telegram),
+ * which nothing ever sent, and both answers were folded into `comment`.
  */
 export function StepComm({ onNext, onBack }: StepCommProps) {
   const { t } = useTranslation();
@@ -59,25 +44,6 @@ export function StepComm({ onNext, onBack }: StepCommProps) {
 
       <fieldset className="space-y-2">
         <legend className="mb-2 text-sm font-medium text-text">
-          {t("requestWizard.comm.channelLabel")}
-        </legend>
-        {OFFER_CHANNELS.map((channel) => (
-          <RadioCard
-            key={channel}
-            name="offer-channel"
-            value={channel}
-            checked={draft.offerChannel === channel}
-            onChange={(v) => setField("offerChannel", v as OfferChannel)}
-            title={t(`requestWizard.comm.channel.${channel}.title`)}
-            description={t(`requestWizard.comm.channel.${channel}.body`)}
-            icon={CHANNEL_ICON[channel]}
-            data-testid={`request-wizard-channel-${channel}`}
-          />
-        ))}
-      </fieldset>
-
-      <fieldset className="space-y-2">
-        <legend className="mb-2 text-sm font-medium text-text">
           {t("requestWizard.comm.visibilityLabel")}
         </legend>
         {VISIBILITY_OPTIONS.map((opt) => (
@@ -94,6 +60,10 @@ export function StepComm({ onNext, onBack }: StepCommProps) {
           />
         ))}
       </fieldset>
+
+      <p className="text-sm leading-relaxed text-text-muted">
+        {t("requestWizard.comm.contactsNote")}
+      </p>
 
       <StepNav onNext={onNext} onBack={onBack} />
     </div>

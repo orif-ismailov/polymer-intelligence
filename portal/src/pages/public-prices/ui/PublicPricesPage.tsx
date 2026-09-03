@@ -6,7 +6,7 @@ import { publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { cn, useTierBase } from "@/shared/lib";
 import { Seo, useCanonical } from "@/shared/seo";
-import { Skeleton } from "@/shared/ui";
+import { PageShell, Skeleton } from "@/shared/ui";
 
 /**
  * `/prices` — the market quote table.
@@ -36,7 +36,7 @@ export function PublicPricesPage() {
         alternates={alternates}
       />
 
-      <div className="mx-auto max-w-[1440px] px-4 py-10 lg:px-6">
+      <PageShell width="storefront">
         <header>
           <h1 className="text-2xl font-semibold tracking-tight text-text">
             {t("public.prices.title")}
@@ -125,7 +125,7 @@ export function PublicPricesPage() {
             {t("public.home.noPrices")}
           </p>
         )}
-      </div>
+      </PageShell>
     </>
   );
 }

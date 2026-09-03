@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { SampleStatusBadge, useSamples, type SampleRequest } from "@/entities/sample";
+import { SampleLetterCard } from "@/features/sample-letter";
 import { SampleActions } from "@/features/sample-request";
 import {
   Card,
@@ -68,6 +69,9 @@ function SampleCard({
           ) : null}
         </SpecList>
 
+        {/* A request that owes a letter is not with the seller yet, so the card
+            sits ABOVE the actions: signing is the only move that matters. */}
+        {sample.letter_required ? <SampleLetterCard sample={sample} /> : null}
         <SampleActions sample={sample} companyId={companyId} />
       </CardBody>
     </Card>

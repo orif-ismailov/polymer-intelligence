@@ -7,25 +7,39 @@ Identity is extracted from the verified JWT, never from the request body (T-03-0
 Dependencies provided:
 - get_current_staff_user: decodes Bearer access token, loads StaffUser, rejects if inactive
 - get_current_client: validates Telegram initData HMAC, upserts clients row, returns Client
-- require_role(*roles): dependency factory enforcing role membership from the token's role claim
-- require_admin: convenience shorthand for require_role(StaffRole.admin)
+- require_admin / require_admin_sse: allow only administrators (`staff_users.is_admin`)
+- require_page(page, level) / require_page_sse: gate on one dashboard page
+- page_access_for: the caller's whole reach, for GET /auth/me
+
+Staff authorization has two layers. `is_admin` grants everything, including pages
+added after the account was created; everyone else is granted one dashboard page
+at a time (`staff_page_access`, migration 0044) at `read` or `write`, and a page
+with no grant cannot be reached. The four-role `staff_role` enum both replaced
+(migration 0042) could only be changed with SQL, because nothing but the seeder
+ever wrote it.
+
+Every decision reads the staff row and its grants on each request, never a token
+claim, so revoking access takes effect on the next request rather than when a
+15-minute token expires.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
 
+import sqlalchemy as sa
 from fastapi import Cookie, Depends, Header, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
+from app.core.pages import PAGES, AccessLevel, is_page, satisfies
 from app.core.security import decode_token
 from app.domains.accounts.models import UserAccount
 from app.domains.requests.models import Client
-from app.models.enums import AccountStatus, StaffRole
-from app.models.staff import StaffUser
+from app.models.enums import AccountStatus
+from app.models.staff import StaffPageAccess, StaffUser
 
 # HTTP Bearer token extractor — auto_error=False so we can return 401 (not 403) on missing header
 _bearer_scheme = HTTPBearer(auto_error=False)
@@ -196,47 +210,165 @@ def get_current_account(
     return account
 
 
-def require_role(*roles: StaffRole) -> Callable[[StaffUser], StaffUser]:
-    """Dependency factory that enforces role-based access control.
+def _assert_admin(current_user: StaffUser) -> StaffUser:
+    """Raise 403 unless the user is an administrator. Shared by both guards below."""
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: administrator only",
+        )
+    return current_user
 
-    Creates a FastAPI dependency that checks the current user's role against
-    the allowed set. Authorization is enforced at the API layer, never the UI
-    (REQ-roles, dev-spec §10.5, T-03-04).
 
-    Args:
-        *roles: The allowed StaffRole values for this endpoint.
+def require_admin(
+    current_user: StaffUser = Depends(get_current_staff_user),
+) -> StaffUser:
+    """Allow only administrators.
 
-    Returns:
-        A dependency callable that returns the current user if authorized,
-        or raises HTTP 403 if their role is not in the allowed set.
+    Authorization is enforced at the API layer, never the UI (REQ-roles,
+    dev-spec §10.5, T-03-04).
+    """
+    return _assert_admin(current_user)
+
+
+def require_admin_sse(
+    current_user: StaffUser = Depends(get_current_staff_user_sse),
+) -> StaffUser:
+    """Admin guard for SSE routes.
+
+    Separate from :func:`require_admin` only in what it depends on. `EventSource`
+    cannot set an `Authorization` header, so SSE routes accept the token as a
+    query param via :func:`get_current_staff_user_sse`; stacking the Bearer-only
+    guard on top of them would reject every browser that connects.
+    """
+    return _assert_admin(current_user)
+
+
+def _normalize_pages(pages: str | tuple[str, ...]) -> tuple[str, ...]:
+    """Validate a page argument at import time.
+
+    A typo would gate the endpoint on a permission nobody can hold. That fails
+    closed, which is the safe direction, but it surfaces as a screen that is
+    broken for everyone except administrators — so it fails at import instead.
+    """
+    keys = (pages,) if isinstance(pages, str) else pages
+    unknown = [k for k in keys if not is_page(k)]
+    if unknown or not keys:
+        raise ValueError(f"Unknown dashboard page(s): {unknown or 'none given'}")
+    return keys
+
+
+def _resolve_page_access(
+    db: Session, user: StaffUser, pages: tuple[str, ...], level: AccessLevel
+) -> StaffUser:
+    """Allow `user` through if they hold `level` (or better) on ANY of `pages`.
+
+    Administrators short-circuit: they hold every page, including pages added
+    after their account was created. Everyone else is checked against stored
+    grants, and no grant means no access — absence is the denial.
+    """
+    if user.is_admin:
+        return user
+
+    granted = dict(
+        db.execute(
+            sa.select(StaffPageAccess.page, StaffPageAccess.access).where(
+                StaffPageAccess.staff_user_id == user.id,
+                StaffPageAccess.page.in_(pages),
+            )
+        ).all()
+    )
+
+    if not any(satisfies(granted.get(p), level) for p in pages):
+        # Deliberately uniform whether the pages are unknown to this account or
+        # merely read-only for them: the 403 body is not the place to enumerate
+        # what somebody may not reach.
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied: requires {level} access to {' or '.join(pages)}",
+        )
+    return user
+
+
+def require_page(
+    pages: str | tuple[str, ...], level: AccessLevel
+) -> Callable[[StaffUser, Session], StaffUser]:
+    """Dependency factory gating an endpoint on the dashboard page(s) it serves.
+
+    `pages` is one key from `app.core.pages.PAGES`, or a tuple of them — the same
+    vocabulary an administrator grants in, so what they tick on the users screen
+    is what the API enforces. Read endpoints take `"read"`, mutations take
+    `"write"`, and `write` satisfies `read` (see `pages.satisfies`).
+
+    A TUPLE MEANS "any of", and it is how an endpoint that feeds more than one
+    screen is expressed. `GET /feed` backs the live feed, the offers page and the
+    dashboard home; gating it on the live feed alone would leave somebody granted
+    only the dashboard staring at a permission error on their landing page.
+
+    Authorization is enforced HERE, never in the UI: the dashboard hides pages a
+    user cannot reach as a courtesy, but hiding a link is not a permission.
 
     Usage::
 
-        @router.get("/admin/users")
-        def list_users(current_user: StaffUser = Depends(require_role(StaffRole.admin))):
+        @router.get("/admin/deals")
+        def list_deals(_: StaffUser = Depends(require_page("deals", "read"))):
+            ...
+
+        @router.get("/feed")
+        def feed(_: StaffUser = Depends(
+            require_page(("dashboard", "liveFeed", "offers"), "read")
+        )):
             ...
     """
+    keys = _normalize_pages(pages)
 
-    def _check_role(
+    def _check_page_access(
         current_user: StaffUser = Depends(get_current_staff_user),
+        db: Session = Depends(get_db),
     ) -> StaffUser:
-        if current_user.role not in roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied: requires one of {[r.value for r in roles]}",
-            )
-        return current_user
+        return _resolve_page_access(db, current_user, keys, level)
 
-    return _check_role
+    return _check_page_access
 
 
-# ── Convenience shortcuts ──────────────────────────────────────────────────────
+def require_page_sse(
+    pages: str | tuple[str, ...], level: AccessLevel
+) -> Callable[[StaffUser, Session], StaffUser]:
+    """The same gate for SSE routes.
 
-#: Dependency that allows only admin users.
-require_admin = require_role(StaffRole.admin)
+    Differs from :func:`require_page` only in what it depends on. `EventSource`
+    cannot set an `Authorization` header, so SSE routes take the token as a query
+    param via :func:`get_current_staff_user_sse`; stacking the Bearer-only guard
+    on one would reject every browser that connects, while every header-based
+    test kept passing.
+    """
+    keys = _normalize_pages(pages)
 
-#: Dependency that allows analyst and admin users.
-require_analyst_or_admin = require_role(StaffRole.analyst, StaffRole.admin)
+    def _check_page_access(
+        current_user: StaffUser = Depends(get_current_staff_user_sse),
+        db: Session = Depends(get_db),
+    ) -> StaffUser:
+        return _resolve_page_access(db, current_user, keys, level)
+
+    return _check_page_access
+
+
+def page_access_for(db: Session, user: StaffUser) -> dict[str, str]:
+    """Every page this user can reach, as `{page: 'read' | 'write'}`.
+
+    Backs `GET /auth/me`, which is how the dashboard decides what to show. An
+    administrator gets the whole catalog at `write` — computed rather than
+    stored, so it cannot fall behind a page added later.
+    """
+    if user.is_admin:
+        return {p.key: "write" for p in PAGES}
+
+    rows = db.execute(
+        sa.select(StaffPageAccess.page, StaffPageAccess.access).where(
+            StaffPageAccess.staff_user_id == user.id
+        )
+    ).all()
+    return {page: access for page, access in rows}
 
 
 def _client_from_session_cookie(db: Session, token: str) -> Client | None:

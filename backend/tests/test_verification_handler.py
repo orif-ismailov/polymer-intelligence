@@ -135,7 +135,50 @@ def test_apply_decision_approve_verifies_company(engine: sa.Engine, sf, monkeypa
         assert db.get(Company, company_id).status == CompanyStatus.verified
 
     # a second decision is idempotent (already left pending_review)
-    assert _apply_decision(case_id, 555, "approve") == {"ok": False, "reason": "already"}
+    assert _apply_decision(case_id, 555, "approve") == {
+        "ok": False,
+        "reason": "already",
+        "case_status": "approved",
+    }
+
+
+@requires_real_db
+def test_apply_decision_on_needs_info_is_not_already(engine: sa.Engine, sf, monkeypatch) -> None:  # noqa: ANN001
+    """A case that never reached pending_review is a DIFFERENT refusal.
+
+    `AlreadyDecided` covers both, so the group used to be told «Уже обработано»
+    about a case nobody had touched — sending someone to look for the colleague
+    who supposedly handled it.
+    """
+    from telegram.handlers.verification import _apply_decision  # noqa: PLC0415
+
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
+    from app.models.enums import VerificationCheckStatus, VerificationCheckType  # noqa: PLC0415
+
+    with sf() as db:
+        account = make_account(db, "+998900000009")
+        company = company_service.create_company(db, account, "UZ", "999999999")
+        verification_service.open_case(db, company)
+        monkeypatch.setattr(verification_service, "_dispatch_checks", lambda case_id: None)
+        case = verification_service.submit_case(db, company, account)
+        for check in db.query(VerificationCheck).filter(VerificationCheck.case_id == case.id):
+            if check.check_type == VerificationCheckType.bank_requisites:
+                check.status = VerificationCheckStatus.failed
+            elif check.check_type != VerificationCheckType.manual_kyb:
+                check.status = VerificationCheckStatus.passed
+        db.flush()
+        verification_service.on_check_completed(db, case.id)
+        db.commit()
+        case_id = case.id
+
+    monkeypatch.setattr("app.core.db.engine", engine)
+    assert _apply_decision(case_id, 555, "approve") == {
+        "ok": False,
+        "reason": "not_pending_review",
+        "case_status": "needs_info",
+    }
 
 
 @requires_real_db

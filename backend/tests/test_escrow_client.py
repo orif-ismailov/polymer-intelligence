@@ -30,38 +30,51 @@ class _FakeSettings:
     def __init__(self, mode: str) -> None:
         self.mode = mode
 
-    def get(self, _db: Any, key: str) -> Any:  # noqa: ANN401
+    def get(self, key: str) -> Any:  # noqa: ANN401
         assert key == "escrow_mode"
         return self.mode
 
 
 class TestRuntimeSetting:
-    def test_escrow_mode_is_declared_with_a_safe_default(self) -> None:
-        from app.services.settings_service import _SPECS  # noqa: PLC0415
+    """`escrow_mode` as an env switch.
 
-        spec = _SPECS.get("escrow_mode")
-        assert spec is not None, "escrow_mode must be operator-editable at runtime"
-        assert spec.default == "stub", "the default must never move real money"
+    These asserted on `SettingSpec.default`/`.choices` and drove
+    `settings_service._coerce` while the switches were rows in `app_settings`.
+    The declaration is now the `Settings` field itself, and a bad value is
+    refused at STARTUP instead of at a write that no longer exists — so the same
+    three properties are checked where they actually live.
+    """
+
+    def test_escrow_mode_is_declared_with_a_safe_default(self) -> None:
+        from app.core.config import Settings  # noqa: PLC0415
+
+        assert Settings.model_fields["ESCROW_MODE"].get_default() == "stub", (
+            "the default must never move real money"
+        )
 
     def test_only_the_two_known_rails_are_accepted(self) -> None:
-        """A typo in the admin panel must be rejected at write time, not become a
-        silently unroutable mode discovered later by a 503."""
-        from app.services import settings_service  # noqa: PLC0415
+        """A typo must be refused at startup, not become a silently unroutable
+        mode discovered later by a 503."""
+        import typing  # noqa: PLC0415
 
-        spec = settings_service._SPECS["escrow_mode"]
-        assert spec.choices == ("stub", "live")
-        with pytest.raises(ValueError, match="escrow_mode"):
-            settings_service._coerce(spec, "libe")
-        assert settings_service._coerce(spec, " live ") == "live"
+        from app.core.config import Settings  # noqa: PLC0415
+
+        assert typing.get_args(Settings.model_fields["ESCROW_MODE"].annotation) == (
+            "stub",
+            "live",
+        )
 
     def test_other_string_settings_are_unconstrained(self) -> None:
-        """Adding `choices` must not accidentally constrain the existing free-text
-        settings (the extract model name, the news prompt version)."""
-        from app.services import settings_service  # noqa: PLC0415
+        """Constraining the mode switches must not also pin the free-text ones
+        (the extract model name, the news prompt version)."""
+        import typing  # noqa: PLC0415
 
-        spec = settings_service._SPECS["llm_extract_model"]
-        assert spec.choices is None
-        assert settings_service._coerce(spec, "claude-anything-5") == "claude-anything-5"
+        from app.core.config import Settings  # noqa: PLC0415
+
+        for env_var in ("LLM_EXTRACT_MODEL", "NEWS_PROMPT_VERSION"):
+            field = Settings.model_fields[env_var]
+            assert field.annotation is str
+            assert typing.get_args(field.annotation) == ()
 
 
 class TestStubClient:
@@ -121,4 +134,4 @@ class TestFactory:
         from app.integrations.escrow import client as escrow_client  # noqa: PLC0415
 
         monkeypatch.setattr(escrow_client, "settings_service", _FakeSettings("live"))
-        assert escrow_client.current_mode(None) == "live"
+        assert escrow_client.current_mode() == "live"

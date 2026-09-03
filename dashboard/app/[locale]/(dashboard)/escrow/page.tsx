@@ -102,7 +102,7 @@ export default function EscrowPage() {
   // The deal's own status is named in the deals namespace — reuse it rather than
   // translating the same ten statuses twice, or showing the raw enum value.
   const tDeal = useTranslations("deals");
-  const { user } = useAuth();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
   const [status, setStatus] = useState("");
@@ -163,7 +163,6 @@ export default function EscrowPage() {
   }
 
   const data = listQuery.data;
-  const isAdmin = user?.role === "admin";
   const current = data?.items.find((p) => p.id === selected) ?? null;
 
   function statusChip(s: string) {

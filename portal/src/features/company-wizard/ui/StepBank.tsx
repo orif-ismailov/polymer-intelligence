@@ -9,6 +9,8 @@ import { useWizardDraft } from "../model/draftStore";
 import { useEnumOptions } from "../model/useEnumOptions";
 import { isBankValid, isMfoValid } from "../model/validation";
 
+import { RegistryPrefillNotice } from "./RegistryPrefillNotice";
+
 interface StepBankProps {
   onNext: () => void;
   onBack: () => void;
@@ -51,6 +53,8 @@ export function StepBank({ onNext, onBack }: StepBankProps) {
         <h2 className="text-lg font-semibold text-text">{t("wizard.bank.title")}</h2>
         <p className="mt-1 text-sm text-text-muted">{t("wizard.bank.subtitle")}</p>
       </div>
+
+      <RegistryPrefillNotice />
 
       <div className="space-y-5">
         <FormField

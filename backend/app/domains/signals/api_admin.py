@@ -25,13 +25,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.deps import require_admin, require_page
 from app.core.config import settings
 from app.core.db import get_db
 from app.domains.signals import sources as source_service
 from app.ingest.registry import list_adapters
 from app.models.staff import StaffUser
 from app.schemas.admin_settings import SourceBrief, SourceGroup, SourceGroupUpdate
+from app.services.llm_clients import RATE_USD_PER_MTOK, est_cost
 from parsing.budget import per_source_spend
 
 router = APIRouter(prefix="/admin", tags=["admin-sources"])
@@ -70,7 +71,7 @@ class SourceTypeItem(BaseModel):
     ),
 )
 def get_source_types(
-    _current_user: StaffUser = Depends(require_admin),
+    _current_user: StaffUser = Depends(require_page("sources", "read")),
 ) -> list[SourceTypeItem]:
     """Return all registered adapter types with their config_schema.
 
@@ -126,7 +127,7 @@ class SourceHealthItem(BaseModel):
     ),
 )
 def get_sources_health(
-    _current_user: StaffUser = Depends(require_admin),
+    _current_user: StaffUser = Depends(require_page("sources", "read")),
     db: Session = Depends(get_db),
 ) -> list[SourceHealthItem]:
     """Return per-source health fields for all sources.
@@ -198,7 +199,7 @@ class ReprocessResult(BaseModel):
 )
 def reprocess_source(
     source_id: int,
-    _current_user: StaffUser = Depends(require_admin),
+    _current_user: StaffUser = Depends(require_page("sources", "write")),
     db: Session = Depends(get_db),
 ) -> ReprocessResult:
     """Re-queue a source's previously-dropped raw_items through the correct parse task.
@@ -261,29 +262,11 @@ def reprocess_source(
 
 # ── LLM spend endpoint (cost visibility) ──────────────────────────────────────
 
-# Approximate list prices, USD per 1M tokens. These are ESTIMATES for a rough $/day
-# figure — the response echoes them under `assumed_rates_usd_per_mtok` so they can be
-# corrected. Token/call counts below them are exact (journaled in parse_runs).
-_RATE_USD_PER_MTOK: dict[str, dict[str, float]] = {
-    "claude-haiku-4-5": {"in": 1.0, "out": 5.0},
-    "claude-sonnet-4-5": {"in": 3.0, "out": 15.0},
-}
-_DEFAULT_RATE: dict[str, float] = {"in": 3.0, "out": 15.0}
+# Rates, `rate_for` and `est_cost` live in `app/services/llm_clients.py` — which
+# already owns "what a model IS", so "what a model COSTS" belongs beside it. They
+# moved there when /admin/analytics needed the same numbers: two rate tables
+# would have disagreed within a month.
 
-
-def _rate_for(model: str) -> dict[str, float]:
-    """Best-effort rate lookup: exact, then longest known prefix, else the default."""
-    if model in _RATE_USD_PER_MTOK:
-        return _RATE_USD_PER_MTOK[model]
-    for key, rate in _RATE_USD_PER_MTOK.items():
-        if model.startswith(key):
-            return rate
-    return _DEFAULT_RATE
-
-
-def _est_cost(tokens_in: int, tokens_out: int, model: str) -> float:
-    rate = _rate_for(model)
-    return round(tokens_in / 1_000_000 * rate["in"] + tokens_out / 1_000_000 * rate["out"], 4)
 
 
 class LlmModelSpend(BaseModel):
@@ -359,7 +342,7 @@ def get_llm_spend(
     total_cost = 0.0
     for r in rows:
         model, calls, t_in, t_out = str(r[0]), int(r[1]), int(r[2]), int(r[3])
-        cost = _est_cost(t_in, t_out, model)
+        cost = est_cost(t_in, t_out, model)
         by_model.append(
             LlmModelSpend(model=model, calls=calls, tokens_in=t_in, tokens_out=t_out, est_cost_usd=cost)
         )
@@ -380,7 +363,7 @@ def get_llm_spend(
         est_cost_usd=round(total_cost, 4),
         est_cost_usd_per_day=round(total_cost / days, 4) if days > 0 else 0.0,
         by_model=by_model,
-        assumed_rates_usd_per_mtok=_RATE_USD_PER_MTOK,
+        assumed_rates_usd_per_mtok=RATE_USD_PER_MTOK,
     )
 
 
@@ -391,7 +374,7 @@ def get_llm_spend(
 @router.get("/source-groups", response_model=list[SourceGroup], summary="List source groups")
 def list_source_groups(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("sources", "read")),
 ) -> list[SourceGroup]:
     return [SourceGroup.model_validate(g) for g in source_service.list_source_groups(db)]
 
@@ -399,7 +382,7 @@ def list_source_groups(
 @router.get("/sources/brief", response_model=list[SourceBrief], summary="List sources (identity + group)")
 def list_sources_brief(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("sources", "read")),
 ) -> list[SourceBrief]:
     return [SourceBrief.model_validate(s) for s in source_service.list_sources_brief(db)]
 
@@ -409,7 +392,7 @@ def set_source_group(
     source_id: int,
     body: SourceGroupUpdate,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_admin),
+    _user: StaffUser = Depends(require_page("sources", "write")),
 ) -> SourceBrief:
     if not source_service.set_source_group(db, source_id, body.group):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")

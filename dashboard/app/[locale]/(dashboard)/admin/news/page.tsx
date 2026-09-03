@@ -1,31 +1,30 @@
 "use client";
 
 /**
- * News Admin (/admin/news) — Phase 8d/8e control panel.
+ * News Admin (/admin/news) — news OPERATIONS.
  *
- * Three surfaces backed by /api/v1/admin:
+ * Live state and one-off actions, not configuration:
  *  - News-ops stats (GET /admin/news/stats) + Run-Parser / Generate-Report actions.
- *  - Runtime settings (GET/PUT /admin/settings) — admin only; toggles + text inputs.
- *  - Approval queue (GET /admin/news/pending, POST /{id}/approve|reject) — analyst+.
+ *  - Per-source scan activity (GET /admin/news/activity), polled.
+ *  - Source groups (GET /admin/source-groups, PUT /admin/sources/{id}/group).
+ *  - Approval queue (GET /admin/news/pending, POST /{id}/approve|reject).
+ *
+ * The runtime switches used to be here too, and for a while that was the only
+ * place to see them. They now live at `/admin/settings/news`, which shows the
+ * env default beside the running value and lets an operator change one. Keeping
+ * a copy here meant this page rendered ALL THIRTY settings — the Didox partner
+ * token and the escrow rail included, twenty-three of them nothing to do with
+ * news — under a hint telling the reader to go and edit `.env`, which migration
+ * 0045 made untrue. Two screens disagreeing about the same values is worse than
+ * one screen fewer.
  */
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Pencil, Play, RefreshCw, SlidersHorizontal, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-
-interface SettingItem {
-  key: string;
-  type: "bool" | "str" | "int";
-  label: string;
-  value: boolean | string | number;
-  default: boolean | string | number;
-  is_overridden: boolean;
-  /** Closed value set (e.g. escrow_mode stub|live) — render a select, not free text. */
-  choices?: string[] | null;
-}
 
 interface SourceBrief {
   id: number;
@@ -114,8 +113,7 @@ function fmtDateTime(iso: string | null, fallback: string): string {
 export default function NewsAdminPage() {
   const t = useTranslations("newsAdmin");
   const qc = useQueryClient();
-  const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const { isAdmin } = useAuth();
 
   // ── Queries ──────────────────────────────────────────────────────────────
   const stats = useQuery<NewsStats>({
@@ -131,11 +129,6 @@ export default function NewsAdminPage() {
     queryFn: () => apiFetch<SourceActivity[]>("/admin/news/activity"),
     refetchInterval: 10_000, // keep the "what's happening" view live as workers complete
   });
-  const settings = useQuery<SettingItem[]>({
-    queryKey: ["admin-settings"],
-    queryFn: () => apiFetch<SettingItem[]>("/admin/settings"),
-    enabled: isAdmin, // GET /admin/settings is admin-only; don't 401 analysts
-  });
   const groups = useQuery<SourceGroup[]>({
     queryKey: ["source-groups"],
     queryFn: () => apiFetch<SourceGroup[]>("/admin/source-groups"),
@@ -148,11 +141,6 @@ export default function NewsAdminPage() {
   });
 
   // ── Local edit buffers ──────────────────────────────────────────────────
-  const [edits, setEdits] = useState<Record<string, boolean | string | number>>({});
-  const valueOf = (s: SettingItem): boolean | string | number =>
-    s.key in edits ? edits[s.key]! : s.value;
-  const dirty = useMemo(() => Object.keys(edits).length > 0, [edits]);
-
   const [groupEdits, setGroupEdits] = useState<Record<number, string>>({});
   const [editId, setEditId] = useState<number | null>(null);
 
@@ -160,13 +148,6 @@ export default function NewsAdminPage() {
   const invalidate = (keys: string[]) =>
     keys.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
 
-  const saveSettings = useMutation({
-    mutationFn: () => apiFetch("/admin/settings", { method: "PUT", body: JSON.stringify(edits) }),
-    onSuccess: () => {
-      setEdits({});
-      invalidate(["admin-settings", "news-stats"]);
-    },
-  });
   const [runMsg, setRunMsg] = useState<string | null>(null);
   const runParser = useMutation({
     mutationFn: () => apiFetch<RunParserResult>("/admin/news/run-parser", { method: "POST" }),
@@ -361,64 +342,6 @@ export default function NewsAdminPage() {
           </div>
         )}
       </section>
-
-      {/* ── Runtime settings (admin only) ──────────────────────────────────── */}
-      {isAdmin && (
-        <section className="rounded-lg border border-border bg-background-secondary p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">{t("settings.title")}</h2>
-            <button
-              type="button"
-              disabled={!dirty || saveSettings.isPending}
-              onClick={() => saveSettings.mutate()}
-              className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-dark disabled:opacity-40"
-            >
-              {saveSettings.isPending ? "…" : t("actions.save")}
-            </button>
-          </div>
-          {settings.isError && <p className="text-sm text-red-400">{t("error")}</p>}
-          <ul className="flex flex-col divide-y divide-border">
-            {settings.data?.map((item) => (
-              <li key={item.key} className="flex items-center justify-between gap-4 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{item.label}</p>
-                  <p className="truncate text-xs text-foreground-muted">
-                    {item.key}
-                    {item.is_overridden || item.key in edits ? "" : ` · ${t("settings.default")}`}
-                  </p>
-                </div>
-                {item.type === "bool" ? (
-                  <Toggle
-                    on={Boolean(valueOf(item))}
-                    onChange={(v) => setEdits((e) => ({ ...e, [item.key]: v }))}
-                  />
-                ) : item.choices?.length ? (
-                  /* A closed set (escrow_mode) is a select: a typo in a mode switch
-                     is rejected by the API anyway, so don't offer the chance. */
-                  <select
-                    value={String(valueOf(item))}
-                    onChange={(e) => setEdits((prev) => ({ ...prev, [item.key]: e.target.value }))}
-                    className="w-56 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-                  >
-                    {item.choices.map((choice) => (
-                      <option key={choice} value={choice}>
-                        {choice}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type={item.type === "int" ? "number" : "text"}
-                    value={String(valueOf(item))}
-                    onChange={(e) => setEdits((prev) => ({ ...prev, [item.key]: e.target.value }))}
-                    className="w-56 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* ── Source groups (admin only) ─────────────────────────────────────── */}
       {isAdmin && (
@@ -797,22 +720,3 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => onChange(!on)}
-      className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
-        on ? "bg-accent" : "bg-background-tertiary"
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-          on ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
-    </button>
-  );
-}

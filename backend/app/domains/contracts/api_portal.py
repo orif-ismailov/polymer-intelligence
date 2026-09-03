@@ -15,6 +15,11 @@ order any more.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover
+    from app.domains.edi.models import DidoxDocument
+
 import io
 import json
 import zipfile
@@ -110,6 +115,51 @@ def _summary_out(db: Session, contract: Contract, my_ids: set[int]) -> ContractS
     )
 
 
+def _didox_document(db: Session, contract: Contract) -> DidoxDocument | None:
+    """The live Didox document for this contract, if it is on that rail.
+
+    Cheap and rail-gated: on the `eimzo` rail there is nothing to look up, and
+    the overwhelming majority of contracts are on it.
+    """
+    from app.domains.edi.models import DidoxDocument  # noqa: PLC0415
+
+    if contract.signing_provider != "didox":
+        return None
+    return (
+        db.query(DidoxDocument)
+        .filter(
+            DidoxDocument.subject_kind == "contract",
+            DidoxDocument.subject_id == contract.id,
+            DidoxDocument.status.notin_([5, 55]),
+        )
+        .order_by(DidoxDocument.id.desc())
+        .first()
+    )
+
+
+#: Didox's `1` and `2` are ONE state named from two ends — "awaiting partner" and
+#: "awaiting us". Everything else (draft, signed, rejected, annulled) is a fact
+#: about the document and reads identically to both sides.
+_MIRRORED_DIDOX_STATUSES = {1: 2, 2: 1}
+
+
+def _didox_status_for_viewer(stored: int | None, *, viewer_is_owner: bool) -> int | None:
+    """Didox's status, restated from the point of view of whoever is asking.
+
+    We store what `owner=1` answers — the OWNER's view — and used to hand that
+    number to both parties. The buyer's screen then read the seller's "awaiting
+    partner" as "waiting for someone else" and hid the sign button from the very
+    person whose turn it was. Their own side of the same document is `2` at Didox.
+
+    Translating here rather than in the UI keeps one rule in one place: the client
+    then needs no notion of who owns the document, and the same number drives both
+    the button and the timeline.
+    """
+    if stored is None or viewer_is_owner:
+        return stored
+    return _MIRRORED_DIDOX_STATUSES.get(stored, stored)
+
+
 def _detail_out(db: Session, contract: Contract, my_ids: set[int]) -> ContractDetailOut:
     base = _summary_out(db, contract, my_ids)
     sigs = (
@@ -118,8 +168,15 @@ def _detail_out(db: Session, contract: Contract, my_ids: set[int]) -> ContractDe
         .order_by(ContractSignature.id)
         .all()
     )
+    didox_doc = _didox_document(db, contract)
     return ContractDetailOut(
         **base.model_dump(),
+        signing_provider=contract.signing_provider,
+        didox_document_id=didox_doc.id if didox_doc else None,
+        didox_status=_didox_status_for_viewer(
+            didox_doc.status if didox_doc else None,
+            viewer_is_owner=bool(didox_doc and didox_doc.owner_company_id in my_ids),
+        ),
         variables=contract.variables or {},
         declined_reason=contract.declined_reason,
         document_available=bool(contract.generated_document_path),
@@ -185,6 +242,7 @@ def create_contract(
         contract = contract_service.create_contract(
             db, initiator, account, template, body.variables, counterparty,
             offer_id=body.offer_id, title=body.title,
+            signing_provider=body.signing_provider,
         )
     except contract_service.CompanyNotVerified as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="company_not_verified") from exc
@@ -195,8 +253,45 @@ def create_contract(
         ) from exc
     except contract_service.NotAParty as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="invalid_parties") from exc
+
+    if body.deal_id is not None:
+        _link_to_deal(db, account, contract, body.deal_id)
+
     db.commit()
     return _detail_out(db, contract, _my_company_ids(db, account))
+
+
+def _link_to_deal(
+    db: Session, account: UserAccount, contract: Contract, deal_id: int
+) -> None:
+    """Point the deal at this contract, in the SAME transaction as the create.
+
+    A router composing two services, which is allowed — `deals` still owns the
+    link and `contracts` still never writes to a deals table. Doing it here rather
+    than inside `contract_service` keeps that boundary intact while closing the
+    gap that left every portal-created contract orphaned from its deal.
+    """
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
+
+    deal = db.get(Deal, deal_id)
+    if deal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
+    # A member of EITHER party may draw up the contract.
+    my_companies = _my_company_ids(db, account)
+    if not {deal.buyer_company_id, deal.seller_company_id} & my_companies:
+        # Same rule as everywhere else in the portal: a stranger learns nothing.
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
+    try:
+        deal_service.attach_contract(db, deal, contract, account)
+    except deal_service.NotDealParticipant as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="not_deal_participant"
+        ) from exc
+    except deal_service.DealAlreadyOpen as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="deal_has_contract"
+        ) from exc
 
 
 @router.get("/contracts", response_model=list[ContractSummaryOut])

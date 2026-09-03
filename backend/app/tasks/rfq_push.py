@@ -39,7 +39,7 @@ def notify_matched_suppliers(request_id: int) -> dict[str, Any]:
 
     try:
         with Session(engine) as db:
-            if not bool(settings_service.get(db, "rfq_supplier_push_enabled")):
+            if not bool(settings_service.get("rfq_supplier_push_enabled")):
                 return {"status": "disabled", "request_id": request_id}
 
             request = db.get(Request, request_id)
@@ -49,7 +49,7 @@ def notify_matched_suppliers(request_id: int) -> dict[str, Any]:
                 # push. Neither case is retryable.
                 return {"status": "skipped", "reason": "no company rfq"}
 
-            top_n = int(settings_service.get(db, "rfq_supplier_push_top_n"))
+            top_n = settings_service.get_int("rfq_supplier_push_top_n")
             matches = supplier_matching_service.match_suppliers(db, request)[:top_n]
 
             title_key, body_key = notification_service.keys_for(

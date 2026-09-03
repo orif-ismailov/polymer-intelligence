@@ -137,6 +137,16 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "task": "prune_portal_notifications",
         "schedule": crontab(minute=30, hour=3),
     },
+    # ── Gateway call-log retention: daily at 03:40 UTC ────────────────────────
+    # `integration_call_log` promised 90-day pruning in its docstring since R3 and
+    # nothing enforced it. Harmless at a few hundred E-IMZO calls; not harmless
+    # against a Didox package of a million requests a month, which is exactly what
+    # /admin/analytics measures. Ten minutes after the notification prune so the
+    # two never contend for the same connections.
+    "prune_integration_call_log": {
+        "task": "prune_integration_call_log",
+        "schedule": crontab(minute=40, hour=3),
+    },
     # ── Escrow provider inbox sweep: every 5 minutes (R6 / P7.b T2.2) ────────
     # The webhook commits the `provider_events` row BEFORE enqueuing its applier,
     # so a Redis blip costs latency rather than evidence. This is the other half
@@ -154,6 +164,15 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
     "reconcile_escrow_payments": {
         "task": "reconcile_escrow_payments",
         "schedule": crontab(minute="*/30"),
+    },
+    # ── Didox document statuses: every 10 minutes (P7.a W10) ─────────────────
+    # There are NO partner webhooks, so polling is the only way we learn that a
+    # counterparty signed or that the tax committee annulled a document. The
+    # cursor is day-granular and deliberately overlapped, which is safe because
+    # `apply_status` is forward-only. A no-op while `didox_mode` is `stub`.
+    "poll_didox_documents": {
+        "task": "poll_didox_documents",
+        "schedule": crontab(minute="*/10"),
     },
     # ── Contract PDF integrity: daily at 03:00 UTC (R3 TB4.1) ─────────────────
     # Recomputes stored-PDF sha256 vs document_sha256 for active contracts and

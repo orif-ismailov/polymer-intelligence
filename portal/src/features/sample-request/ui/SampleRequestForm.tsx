@@ -3,13 +3,21 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCompany } from "@/entities/company";
-import { useRequestSample } from "@/entities/sample";
+import { useRequestSample, type SampleRequest } from "@/entities/sample";
 import { Alert, Button, FormField, Input } from "@/shared/ui";
 
 interface SampleRequestFormProps {
   offerId: number;
   companyId: number;
-  onSent: () => void;
+  /**
+   * Receives the CREATED request, not just "done".
+   *
+   * An offer may demand a signed письмо-обязательство, and then the request lands
+   * in `pending_letter` — asked, but deliberately not with the seller yet. Saying
+   * "sent to the seller" there would be false, and would leave the buyer with no
+   * hint that a signature is still owed.
+   */
+  onSent: (sample: SampleRequest) => void;
 }
 
 /**
@@ -78,7 +86,7 @@ export function SampleRequestForm({ offerId, companyId, onSent }: SampleRequestF
         onClick={() =>
           request.mutate(
             { company_id: companyId, qty: qty.trim() || null, delivery_address: address.trim() },
-            { onSuccess: onSent },
+            { onSuccess: (sample) => onSent(sample) },
           )
         }
       >

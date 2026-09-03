@@ -23,7 +23,7 @@ from fastapi import (
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.companies import directory as directory_service
 from app.domains.companies import service as company_service
@@ -134,7 +134,7 @@ def _company_profile(company: Company) -> dict[str, Any]:
 def list_cases(
     status_filter: str | None = Query(default=None, alias="status"),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("verification", "read")),
 ) -> list[dict[str, Any]]:
     query = db.query(VerificationCase)
     if status_filter:
@@ -154,7 +154,7 @@ def list_cases(
 def get_case(
     case_id: int,
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("verification", "read")),
 ) -> dict[str, Any]:
     case = _case_or_404(db, case_id)
     company = _company_or_404(db, case.company_id)
@@ -247,7 +247,7 @@ def record_registry_check(
     note: str | None = Form(default=None),
     evidence: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_analyst_or_admin),
+    staff: StaffUser = Depends(require_page("verification", "write")),
 ) -> dict[str, Any]:
     """Record a registry check an operator performed by hand (P7.c — T5.4).
 
@@ -387,6 +387,42 @@ def _manual_payload(
     return {"licenses": [], "transcribed": raw_status or ""}, raw_status
 
 
+#: The statuses a case can never leave. Everything else that refuses a decision is
+#: refusing it FOR NOW, which is a different answer — see `_decision_conflict`.
+_TERMINAL_CASE_STATUSES = frozenset(
+    {
+        VerificationCaseStatus.approved,
+        VerificationCaseStatus.rejected,
+        VerificationCaseStatus.cancelled,
+    }
+)
+
+
+def _decision_conflict(db: Session, case: VerificationCase) -> HTTPException:
+    """Say WHICH conflict refused the decision, because the two are not alike.
+
+    `_claim_pending_review` updates `WHERE status='pending_review'` and raises on
+    rowcount 0, which lumps together two situations a person must tell apart: a
+    colleague (or the Telegram button) decided the case a moment ago, and the case
+    has not REACHED a decidable state — checks still running, or `needs_info`
+    waiting on the applicant. This endpoint used to answer "Case already decided"
+    to both, so a case nobody had touched reported itself as handled by someone
+    else; that untrue sentence is what made the queue look broken.
+
+    Still a 409 either way — it is a state conflict — but the body now carries a
+    code the dashboard can turn into the right screen.
+    """
+    db.refresh(case)
+    terminal = case.status in _TERMINAL_CASE_STATUSES
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={
+            "error": "already_decided" if terminal else "not_pending_review",
+            "case_status": str(case.status),
+        },
+    )
+
+
 def _decide(db: Session, case_id: int, staff_id: int, note: str | None, action: str) -> dict[str, Any]:
     case = _case_or_404(db, case_id)
     fn = {"approve": verification_service.approve, "reject": verification_service.reject,
@@ -394,7 +430,7 @@ def _decide(db: Session, case_id: int, staff_id: int, note: str | None, action: 
     try:
         fn(db, case, staff_user_id=staff_id, actor={"staff": staff_id}, note=note)
     except verification_service.AlreadyDecided as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Case already decided") from exc
+        raise _decision_conflict(db, case) from exc
     db.commit()
     return _case_summary(db, case)
 
@@ -402,7 +438,7 @@ def _decide(db: Session, case_id: int, staff_id: int, note: str | None, action: 
 @router.post("/verification/cases/{case_id}/approve")
 def approve_case(
     case_id: int, body: _DecisionIn, db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_analyst_or_admin),
+    staff: StaffUser = Depends(require_page("verification", "write")),
 ) -> dict[str, Any]:
     return _decide(db, case_id, staff.id, body.note, "approve")
 
@@ -410,7 +446,7 @@ def approve_case(
 @router.post("/verification/cases/{case_id}/reject")
 def reject_case(
     case_id: int, body: _DecisionIn, db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_analyst_or_admin),
+    staff: StaffUser = Depends(require_page("verification", "write")),
 ) -> dict[str, Any]:
     return _decide(db, case_id, staff.id, body.note, "reject")
 
@@ -418,7 +454,7 @@ def reject_case(
 @router.post("/verification/cases/{case_id}/request-info")
 def request_info_case(
     case_id: int, body: _DecisionIn, db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_analyst_or_admin),
+    staff: StaffUser = Depends(require_page("verification", "write")),
 ) -> dict[str, Any]:
     return _decide(db, case_id, staff.id, body.note, "request_info")
 
@@ -426,7 +462,7 @@ def request_info_case(
 @router.post("/verification/checks/{check_id}/waive")
 def waive_check(
     check_id: int, body: _WaiveIn, db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("verification", "write")),
 ) -> dict[str, Any]:
     check = db.get(VerificationCheck, check_id)
     if check is None:
@@ -447,7 +483,7 @@ def list_companies(
     status_filter: str | None = Query(default=None, alias="status"),
     q: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("companies", "read")),
 ) -> list[dict[str, Any]]:
     query = db.query(Company)
     if status_filter:
@@ -469,7 +505,7 @@ def list_companies(
 @router.get("/companies/{company_id}")
 def get_company(
     company_id: int, db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("companies", "read")),
 ) -> dict[str, Any]:
     return _company_profile(_company_or_404(db, company_id))
 
@@ -477,7 +513,7 @@ def get_company(
 @router.post("/companies/{company_id}/suspend")
 def suspend_company(
     company_id: int, db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("companies", "write")),
 ) -> dict[str, Any]:
     company = _company_or_404(db, company_id)
     try:
@@ -491,7 +527,7 @@ def suspend_company(
 @router.post("/companies/{company_id}/reinstate")
 def reinstate_company(
     company_id: int, db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("companies", "write")),
 ) -> dict[str, Any]:
     company = _company_or_404(db, company_id)
     try:

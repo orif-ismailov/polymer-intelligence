@@ -39,6 +39,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import BaseModel, Field
 
+from app.core.config import settings
 from app.ingest.base import RawItemDraft, TestResult
 from app.ingest.registry import register_adapter
 from app.ingest.uzex.parse_tables import parse_table_rows
@@ -90,9 +91,9 @@ class UzexOffersConfig(BaseModel):
 
     urls: list[str] = Field(
         default_factory=lambda: [
-            "https://uzex.uz/Trade/OffersSumNew",
-            "https://uzex.uz/Trade/OffersCurrencyNew",
-            "https://uzex.uz/Trade/OffersImportNew",
+            f"{settings.UZEX_BASE_URL}/Trade/OffersSumNew",
+            f"{settings.UZEX_BASE_URL}/Trade/OffersCurrencyNew",
+            f"{settings.UZEX_BASE_URL}/Trade/OffersImportNew",
         ]
     )
     table_selector: str = _DEFAULT_TABLE_SELECTOR
@@ -120,8 +121,8 @@ class UzexContractsConfig(BaseModel):
 
     urls: list[str] = Field(
         default_factory=lambda: [
-            "https://uzex.uz/Trade/ContractsSumNew",
-            "https://uzex.uz/Trade/ContractsCurrencyNew",
+            f"{settings.UZEX_BASE_URL}/Trade/ContractsSumNew",
+            f"{settings.UZEX_BASE_URL}/Trade/ContractsCurrencyNew",
         ]
     )
     table_selector: str = _DEFAULT_TABLE_SELECTOR
@@ -144,7 +145,7 @@ class UzexDealsConfig(BaseModel):
 
     urls: list[str] = Field(
         default_factory=lambda: [
-            "https://uzex.uz/Trade/List",
+            f"{settings.UZEX_BASE_URL}/Trade/List",
         ]
     )
     table_selector: str = _DEFAULT_TABLE_SELECTOR

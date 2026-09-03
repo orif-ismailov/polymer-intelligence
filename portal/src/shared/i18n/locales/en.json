@@ -74,16 +74,25 @@
     "market": "Market",
     "manufacturers": "Manufacturers",
     "requests": "Requests",
+    "tenders": "My tenders",
+    "openTenders": "Open tenders",
     "inquiries": "Inquiries",
     "news": "News",
     "notifications": "Notifications",
     "deals": "Deals",
     "favorites": "Favorites",
     "samples": "Samples",
-    "marketplace": "Marketplace",
     "openMenu": "Open menu",
     "logisticsRequests": "Logistics requests",
-    "lab": "Laboratory"
+    "lab": "Laboratory",
+    "groups": {
+      "market": "Market",
+      "trade": "Trade",
+      "services": "Services",
+      "company": "Company"
+    },
+    "collapseRail": "Collapse menu",
+    "expandRail": "Expand menu"
   },
   "home": {
     "title": "Overview",
@@ -101,7 +110,7 @@
     "createCompany": "Create company",
     "goToVerification": "Go to verification status",
     "publishOffer": "Publish an offer",
-    "activeRequests": "Active requests",
+    "activeRequests": "Active tenders",
     "unread": "Unread",
     "latestNews": "Latest news"
   },
@@ -253,27 +262,6 @@
           "description": "Analysis, testing and certification of materials"
         }
       }
-    },
-    "eimzo": {
-      "title": "Digital signature",
-      "subtitle": "Sign the documents to complete your company registration",
-      "methods": {
-        "usb_token": "USB Token",
-        "mobile_id": "Mobile ID",
-        "cloud_id": "Cloud ID"
-      },
-      "methodUnavailable": "This signing method is coming later. Use USB Token for now.",
-      "instructionTitle": "Instructions",
-      "instruction": {
-        "step1": "Plug your USB Token into the device",
-        "step2": "Enter your token PIN",
-        "step3": "Press “Sign and submit”"
-      },
-      "pinLabel": "Token PIN",
-      "revealPin": "Show PIN",
-      "sign": "Sign and submit",
-      "signedBody": "Company confirmed. Requisites were filled from the certificate and locked.",
-      "legalNote": "Documents are signed and encrypted in line with the laws of Uzbekistan"
     },
     "details": {
       "title": "Company details",
@@ -589,6 +577,14 @@
       "title": "Licenses and certificates",
       "subtitle": "Upload laboratory accreditations and documents",
       "moderationNote": "All documents are reviewed by a moderator before your profile is published."
+    },
+    "registry": {
+      "loading": "Looking the company up in the state registry…",
+      "filledTitle": "Data from the state registry",
+      "filledBody": "Details were filled in from the tax id. Check them and correct anything that is out of date — what you see is what gets saved.",
+      "state": "Registry status: {{state}}.",
+      "notFound": "The state registry has no record for this tax id. Please fill the form in manually.",
+      "unavailable": "The state registry is unavailable right now — please fill the form in manually."
     }
   },
   "verification": {
@@ -610,7 +606,30 @@
       "bank_requisites": "Bank requisites",
       "documents_complete": "Documents complete",
       "manual_kyb": "Manual review (KYB)",
-      "eimzo_signature": "E-IMZO signature"
+      "eimzo_signature": "E-IMZO signature",
+      "gov_registry": "State registry",
+      "vat_status": "VAT status"
+    },
+    "findings": {
+      "taxIdDigits": "The tax ID must be 9 digits; {{digits}} given",
+      "taxIdEmpty": "No tax ID given",
+      "bankAccount": "Account ****{{last4}}: {{problem}}",
+      "bankIssue": {
+        "bad_account_length": "the account number must be 20 digits",
+        "bad_mfo": "the MFO must be 5 digits",
+        "undecryptable": "the account number could not be read — please enter it again"
+      },
+      "noBankAccount": "No bank account added",
+      "missingDocuments": "Missing documents: {{list}}",
+      "registryInnMismatch": "The tax ID does not match the state registry",
+      "registryLiquidated": "The state registry reports the company as liquidated",
+      "registrySuspended": "The state registry reports activity as suspended",
+      "registryStatusUnknown": "The state registry did not state the company's status",
+      "registryNameMismatch": "The name differs from the state registry: “{{name}}”",
+      "vatNotRegistered": "The company is not VAT-registered — this does not block verification",
+      "manualPending": "Awaiting review by a member of staff",
+      "unavailable": "The source did not answer — the check did not run",
+      "eimzoFailed": "The digital signature failed verification — please sign again"
     },
     "checkDetail": {
       "empty": "No additional information.",
@@ -650,11 +669,13 @@
     "errors": {
       "title": "Verification failed",
       "unavailable": "E-IMZO service is unavailable. Submit the company for manual verification.",
+      "module_not_authorized": "This site is not authorised in the E-IMZO module. Contact support — the domain needs an access key.",
       "mismatch": "The certificate INN does not match the company Tax ID.",
       "expired": "The request expired. Please retry.",
       "already_registered": "A company with this Tax ID is already registered.",
       "signature_invalid": "The signature is invalid.",
       "cert_revoked": "The certificate is revoked.",
+      "cert_expired": "The certificate has expired. Renew your signature key and try again.",
       "sign_failed": "Could not create the signature in the E-IMZO module.",
       "unknown": "Something went wrong. Please retry.",
       "cert_no_tin": "The certificate carries no organisation tax id. Choose a legal-entity certificate."
@@ -717,7 +738,7 @@
     },
     "readinessTitle": "Ready to deal",
     "readinessHint": "What you tick shows as badges on your market card.",
-    "acceptsRfq": "I answer requests (RFQ)",
+    "acceptsRfq": "I answer buyer requests",
     "acceptsContract": "Ready to sign a contract on the platform",
     "acceptsEscrow": "Ready to work through escrow",
     "samplesTitle": "Samples",
@@ -916,9 +937,14 @@
         "3-7": "3–7 days",
         "7-14": "7–14 days"
       },
-      "acceptsRfq": "I accept RFQs",
+      "acceptsRfq": "I accept buyer requests",
       "acceptsContract": "Ready to sign a contract through D-Doc",
-      "acceptsEscrow": "I accept escrow payments"
+      "acceptsEscrow": "I accept escrow payments",
+      "sampleLetterRequired": "Require a commitment letter before shipping a sample",
+      "sampleLetterTerms": "Terms if the sample does not fit",
+      "sampleLetterHint": "The buyer e-signs this and reads it before sending the request. The sample price is credited to the later contract automatically.",
+      "sampleLetterPlaceholder": "For example: if testing shows the material does not fit, the buyer returns the unused remainder at their own cost within 10 working days.",
+      "sampleLetterRequiredError": "Write the terms — a letter without them commits to nothing."
     },
     "extra": {
       "title": "Additional information",
@@ -1106,7 +1132,7 @@
     "favoritesEmptyBody": "Tap the heart on an offer card and it will show up here.",
     "leadTime": "Lead time: {{count}} days",
     "readiness": {
-      "rfq": "RFQ",
+      "rfq": "Requests",
       "contract": "Contract",
       "escrow": "Escrow"
     },
@@ -1130,7 +1156,7 @@
       "linkCopied": "Link copied",
       "noPhoto": "No photo added",
       "gallery": "Gallery",
-      "requestRfq": "Request RFQ",
+      "requestRfq": "Request to the seller",
       "addFavorite": "Add to favorites",
       "basics": "Basic information",
       "cas": "CAS",
@@ -1169,7 +1195,7 @@
       "contractNeedsVerifiedSeller": "A contract requires a verified counterparty",
       "contractNeedsVerifiedCompany": "Get your own company verified first",
       "contractNotOffered": "The seller is not ready to sign a contract for this offer",
-      "rfqNotAccepted": "The seller does not accept RFQs on this offer",
+      "rfqNotAccepted": "The seller does not accept requests on this offer",
       "reviewsEmpty": "No reviews for this product yet.",
       "docChip": {
         "sds": "SDS PDF",
@@ -1201,34 +1227,34 @@
     "editFailed": "Could not save the changes."
   },
   "requests": {
-    "title": "Purchase requests",
-    "subtitle": "Requests you've submitted for your company",
-    "create": "New request",
+    "title": "My tenders",
+    "subtitle": "Your company's tenders, open to suppliers",
+    "create": "Announce a tender",
     "forCompany": "On behalf of {{company}}",
-    "empty": "No requests yet",
-    "emptyBody": "Create a purchase request to get started.",
-    "notFound": "Request not found",
-    "back": "Back to requests",
-    "timeline": "Status timeline",
-    "cancel": "Cancel request"
+    "empty": "No tenders yet",
+    "emptyBody": "Announce a tender — suppliers will see it and send quotes.",
+    "notFound": "Tender not found",
+    "back": "Back to tenders",
+    "timeline": "Tender history",
+    "cancel": "Withdraw the tender"
   },
   "requestStatus": {
-    "new": "New",
-    "in_review": "In review",
-    "offer_received": "Offer received",
-    "matched": "Matched",
+    "new": "Published",
+    "in_review": "Collecting quotes",
+    "offer_received": "Quotes received",
+    "matched": "Supplier selected",
     "closed": "Closed",
     "cancelled": "Cancelled"
   },
   "requestWizard": {
-    "title": "New purchase request",
-    "subtitle": "Create a request and receive offers from suppliers",
+    "title": "Announce a tender",
+    "subtitle": "Describe the purchase — suppliers will see the tender and send quotes",
     "stepOf": "Step {{current}} of {{total}}",
     "steps": {
       "product": "Product",
       "params": "Parameters",
       "extra": "Extra",
-      "comm": "Terms",
+      "comm": "Access",
       "preview": "Publish"
     },
     "product": {
@@ -1248,12 +1274,12 @@
       "pickRequired": "Pick a product from the list or enter it manually"
     },
     "params": {
-      "title": "2. Request parameters",
+      "title": "2. Tender parameters",
       "volume": "Required volume",
       "volumeRequired": "Enter a volume",
       "unit": "Unit",
       "price": "Target price (your maximum)",
-      "priceHint": "Suppliers will only see your range",
+      "priceHint": "Suppliers never see this price — only the IMEX AI team does",
       "currency": "Currency",
       "dealType": "Deal type",
       "dealHint": "Choose the Incoterms® delivery basis",
@@ -1277,7 +1303,7 @@
         "quarter": "1–3 months",
         "later": "More than 3 months"
       },
-      "validity": "Request validity period",
+      "validity": "Tender validity period",
       "validityOpt": "{{days}} days"
     },
     "extra": {
@@ -1297,70 +1323,52 @@
       "commentPlaceholder": "Any extra requirements or wishes for suppliers…"
     },
     "comm": {
-      "title": "4. Communication terms",
-      "channelLabel": "How do you want to receive offers",
-      "channel": {
-        "app": {
-          "title": "Inside IMEX AI",
-          "body": "All offers arrive in the cabinet — easy to compare"
-        },
-        "email": {
-          "title": "By email",
-          "body": "Also send offers to your email"
-        },
-        "telegram": {
-          "title": "In Telegram",
-          "body": "Notifications about new offers in the messenger"
-        }
-      },
-      "visibilityLabel": "Who can see the request",
+      "title": "4. Who sees the tender",
+      "visibilityLabel": "Tender access",
       "visibility": {
         "verified": {
           "title": "Verified suppliers only",
-          "body": "Only companies with confirmed verification will see it"
+          "body": "Only companies that passed IMEX AI verification will see it"
         },
         "all": {
           "title": "All platform suppliers",
-          "body": "The request will be visible to every seller on the platform"
-        },
-        "selected": {
-          "title": "Selected suppliers",
-          "body": "We will send the request only to those you pick later"
+          "body": "Every seller will see it; only verified ones can quote"
         }
-      }
+      },
+      "contactsNote": "Your company's contacts are never shown to suppliers: until a deal opens, everything goes through the platform."
     },
     "preview": {
-      "title": "5. Review and publish",
+      "title": "5. Review and announce",
       "product": "Product",
       "volume": "Volume",
       "price": "Target price",
       "terms": "Delivery terms",
       "delivery": "Delivery timeframe",
-      "validity": "Request validity",
+      "validity": "Tender validity",
       "comment": "Comment",
       "docs": "Documents from supplier",
-      "publish": "Publish request",
+      "visibility": "Access",
+      "publish": "Announce the tender",
       "visibilityNote": {
-        "verified": "Your request will only be visible to verified suppliers on the platform.",
-        "all": "Your request will be visible to all suppliers on the platform.",
-        "selected": "The request will be sent to the selected suppliers."
+        "verified": "Only verified suppliers will see this tender — the same companies that can quote on it.",
+        "all": "Every supplier on the platform will see this tender. Only verified companies can quote on it."
       }
     },
     "done": {
-      "title": "Request published!",
-      "body": "Suppliers can already see your request and are preparing offers.",
-      "idLabel": "Request number",
+      "title": "Tender announced!",
+      "body": "Suppliers can already see it and are preparing quotes.",
+      "idLabel": "Tender number",
       "copyId": "Copy number",
       "nextTitle": "What's next?",
       "next": {
-        "offers": "Suppliers will send offers shortly",
-        "notify": "You will get a notification about new offers",
-        "compare": "Compare offers and choose the best terms"
+        "offers": "Suppliers will send quotes shortly",
+        "notify": "You will get a notification for every new quote",
+        "compare": "Compare the quotes and choose a supplier"
       },
-      "toRequests": "Go to my requests",
-      "createAnother": "Create another request"
+      "toRequests": "Go to my tenders",
+      "createAnother": "Announce another tender"
     },
-    "submitFailed": "Could not submit the request.",
+    "submitFailed": "Could not announce the tender.",
     "urgencyOpt": {
       "low": "Low",
       "medium": "Medium",
@@ -1463,14 +1471,14 @@
     }
   },
   "notifications": {
-    "subtitle": "Updates on your requests, inquiries, offers and verification",
+    "subtitle": "Updates on your tenders, inquiries, offers and verification",
     "markAllRead": "Mark all read",
     "viewAll": "View all",
     "empty": "No notifications",
     "emptyBody": "You're all caught up.",
     "request_status": {
-      "title": "Request update",
-      "body": "Request {{number}} was updated"
+      "title": "Tender update",
+      "body": "Tender {{number}} was updated"
     },
     "inquiry_approved": {
       "title": "New inquiry",
@@ -1510,7 +1518,7 @@
     },
     "rfq_response_new": {
       "title": "New quote",
-      "body": "A supplier quoted on request {{number}}"
+      "body": "A supplier quoted on tender {{number}}"
     },
     "rfq_response_accepted": {
       "title": "Quote accepted",
@@ -1518,7 +1526,7 @@
     },
     "rfq_response_not_selected": {
       "title": "Quote not selected",
-      "body": "Another quote was chosen for this request"
+      "body": "Another supplier was chosen for this tender"
     },
     "deal_opened": {
       "title": "Deal opened",
@@ -1545,8 +1553,8 @@
       "body": "Deal {{number}}: {{amount}} {{currency}} — the payment status changed"
     },
     "rfq_match": {
-      "title": "A new request matching your profile",
-      "body": "{{product}} — {{volume}} {{volume_unit}}. Request {{number}}"
+      "title": "A new tender matching your profile",
+      "body": "{{product}} — {{volume}} {{volume_unit}}. Tender {{number}}"
     },
     "lab_order_status": {
       "title": "Laboratory order",
@@ -1631,17 +1639,27 @@
       "created": "Draft created",
       "sent": "Sent for approval",
       "signedBy": "Signed by {{company}}",
+      "signedNoDate": "Signed",
       "awaitingSignature": "Awaiting signature from {{company}}",
       "active": "Signed by both parties",
       "awaiting": "Awaiting"
+    },
+    "rail": "How it is signed",
+    "rails": {
+      "eimzo": "E-IMZO on the platform",
+      "didox": "Through Didox (EDI, visible in my.soliq.uz)"
+    },
+    "railHint": {
+      "eimzo": "Both sides sign a document we hold.",
+      "didox": "The document is created at the EDI operator and reaches my.soliq.uz. Both sides need a Didox account."
     }
   },
   "deals": {
     "title": "Deals",
     "subtitle": "Trade rooms: chat, documents, status.",
     "empty": "No deals yet",
-    "emptyBody": "Quote on a buyer's request, or accept a quote on your own.",
-    "browseRfqs": "Open requests",
+    "emptyBody": "Quote on a buyer's tender, or choose a supplier in your own.",
+    "browseRfqs": "Open tenders",
     "needsAction": "Needs action",
     "noAmount": "Amount not set",
     "progress": "Progress",
@@ -1745,11 +1763,11 @@
     }
   },
   "rfq": {
-    "marketTitle": "Open requests",
-    "marketSubtitle": "Buyer requests you can quote against.",
-    "marketEmpty": "No open requests",
-    "marketEmptyBody": "Check back later — new requests appear regularly.",
-    "respond": "Respond",
+    "marketTitle": "Open tenders",
+    "marketSubtitle": "Buyer tenders you can quote against.",
+    "marketEmpty": "No open tenders",
+    "marketEmptyBody": "Check back later — new tenders appear regularly.",
+    "respond": "Submit a quote",
     "alreadyResponded": "Quote sent",
     "submit": "Send quote",
     "price": "Price",
@@ -1766,11 +1784,11 @@
     "destination": "Destination",
     "desiredDate": "Desired date",
     "requiredDocs": "Required documents",
-    "responses": "Quotes",
+    "responses": "Supplier quotes",
     "noResponses": "No quotes yet",
-    "noResponsesBody": "Suppliers have not answered this request yet.",
-    "accept": "Accept",
-    "acceptTitle": "Accept this quote?",
+    "noResponsesBody": "Suppliers have not answered this tender yet.",
+    "accept": "Choose this supplier",
+    "acceptTitle": "Choose this supplier?",
     "acceptBody": "A deal with {{company}} at {{price}} will open. The other quotes will be declined.",
     "openDeal": "Open deal",
     "status": {
@@ -1778,6 +1796,27 @@
       "accepted": "Accepted",
       "not_selected": "Not selected",
       "withdrawn": "Withdrawn"
+    },
+    "tab": {
+      "open": "Open",
+      "mine": "My quotes"
+    },
+    "mine": {
+      "empty": "You haven't quoted yet",
+      "emptyBody": "Open the «Open» tab and name your price on a tender.",
+      "yourPrice": "Your quote",
+      "tenderClosed": "Tender closed"
+    },
+    "withdraw": "Withdraw the quote",
+    "withdrawTitle": "Withdraw this quote?",
+    "withdrawBody": "The buyer will no longer see your price. While the tender is open you can quote again.",
+    "errors": {
+      "notVerified": "Only verified companies can submit a quote. Pass verification — the tender stays open.",
+      "roleNotAllowed": "Only a seller company can submit quotes.",
+      "alreadyResponded": "You have already quoted on this tender.",
+      "requestClosed": "This tender no longer accepts quotes.",
+      "ownRequest": "This is your own company's tender.",
+      "unknownIncoterms": "Pick the delivery terms from the list."
     },
     "docs": {
       "sds": "SDS",
@@ -1927,13 +1966,16 @@
       "declined": "Declined",
       "sent": "Sent",
       "received": "Received",
-      "rejected_by_buyer": "Not suitable"
+      "rejected_by_buyer": "Not suitable",
+      "pending_letter": "Awaiting letter signature"
     },
     "errors": {
       "alreadyRequested": "You already have a live request against this offer.",
       "notAvailable": "The seller does not offer samples for this listing.",
       "ownOffer": "This is your own company's offer — no sample needed."
-    }
+    },
+    "letterOwed": "The request exists but has not reached the seller: e-sign the commitment letter first.",
+    "goSign": "Go and sign"
   },
   "onboarding": {
     "title": "Register on",
@@ -2614,5 +2656,128 @@
   },
   "productCategory": {
     "polymer": "Polymers"
+  },
+  "ikpu": {
+    "label": "ИКПУ (product code)",
+    "hint": "Required for documents that reach my.soliq.uz. Searches codes you have already declared to Didox; take a new one from tasnif.soliq.uz.",
+    "placeholder": "Product name, e.g. “polyethylene”",
+    "search": "Search",
+    "package": "Packaging",
+    "chosenPackage": "Packaging: {{name}}",
+    "empty": "Nothing found. Try a different name.",
+    "errors": {
+      "session": "A Didox session is needed. Sign in with your key — it is one click.",
+      "unavailable": "Didox's ИКПУ directory is unavailable right now. Try later — the code can be added afterwards.",
+      "failed": "The search could not be run.",
+      "badCode": "An ИКПУ code must be 17 digits."
+    },
+    "emptyAdd": "Nothing found among your codes. The search only covers codes you have already declared to Didox — take a new one from tasnif.soliq.uz and add it here.",
+    "add": "Add code {{code}}",
+    "codeHint": "An ИКПУ code is 17 digits.",
+    "origin": "Origin of the goods",
+    "originHint": "For the invoice: how you came by these goods. Didox cannot know it — the same code is own production for a factory and resale for a trader.",
+    "originPlaceholder": "Choose an origin",
+    "originRequired": "The offer cannot be published without an origin.",
+    "origins": {
+      "1": "Own production",
+      "2": "Resale (bought from a supplier)",
+      "3": "Services",
+      "4": "Not in circulation"
+    }
+  },
+  "didox": {
+    "title": "Electronic documents (Didox)",
+    "connect": "Connect Didox",
+    "connecting": "Connecting…",
+    "signing": "Signing…",
+    "signAndSend": "Sign and send via Didox",
+    "sessionExpired": "The Didox session has expired — it renews itself on your next signature.",
+    "states": {
+      "not_registered": "Not connected",
+      "offer_unsigned": "Offer unsigned",
+      "ready": "Ready",
+      "disabled": ""
+    },
+    "hints": {
+      "not_registered": "To sign contracts through Didox this company has to be connected once, with its own key.",
+      "offer_unsigned": "The account exists, but Didox's public offer has not been signed yet. Until it is, sending documents will be refused.",
+      "ready": "This company can send and sign documents through Didox.",
+      "disabled": ""
+    },
+    "documentStatus": {
+      "0": "Draft — ready to sign",
+      "1": "Awaiting the counterparty",
+      "2": "Your turn to sign",
+      "3": "Signed by both parties",
+      "4": "The counterparty refused",
+      "50": "Annulled by the tax committee"
+    },
+    "errors": {
+      "module_missing": "E-IMZO not found. Start the E-IMZO module and retry.",
+      "no_cert": "No signing key found.",
+      "cert_mismatch": "The certificate's ИНН does not match this company.",
+      "disabled": "Didox is not enabled in this deployment.",
+      "failed": "Could not connect to Didox."
+    },
+    "signErrors": {
+      "module_missing": "E-IMZO not found. Start the module and retry.",
+      "no_cert": "No signing key found.",
+      "expired": "The signing data has expired. Press Sign again.",
+      "offer_required": "Didox's public offer has to be signed first.",
+      "unavailable": "Didox is unavailable right now. Try later.",
+      "failed": "Could not sign the document.",
+      "rejected": "The EDI operator refused the document: {{message}}",
+      "cancelled": "Signing was cancelled — the E-IMZO password window was closed. Press again and enter your key password."
+    },
+    "signOffer": "Sign Didox's public offer",
+    "signingOffer": "Signing…",
+    "printForm": {
+      "title": "Didox printed form",
+      "loading": "Loading the operator's form…",
+      "errors": {
+        "failed": "Could not fetch the printed form from the operator.",
+        "didox_session_required": "A Didox session is required — connect the company to the operator.",
+        "document_not_created": "The document does not exist at the operator yet.",
+        "didox_unavailable": "Didox is unavailable right now. Try again later."
+      }
+    }
+  },
+  "sampleLetter": {
+    "title": "Commitment letter",
+    "buyerPending": "The seller only sees this request once you have e-signed the letter.",
+    "sellerPending": "The buyer has not signed the letter yet — the request does not count as sent.",
+    "signedAt": "No. {{number}}, signed {{at}}",
+    "open": "Open the letter (PDF)",
+    "sign": "Sign with E-IMZO",
+    "notSentYet": "The request has not reached the seller yet.",
+    "loadFailed": "Could not load the letter. Refresh the page."
+  },
+  "didoxDocument": {
+    "title": "Document at Didox",
+    "sellerHint": "This contract is signed at the EDI operator — create the document and both sides can then e-sign it.",
+    "buyerHint": "The seller has not created the document at the operator yet. Signing opens after that.",
+    "create": "Create the document at Didox",
+    "creating": "Creating…",
+    "blockedTitle": "The document cannot be created yet",
+    "confirmIdentity": "Confirm identity with E-IMZO",
+    "blockers": {
+      "ikpu_missing": "The offer carries no ИКПУ — without a product code the document is refused.",
+      "signer_identity_missing": "One side has not confirmed identity by E-IMZO: the signer's PINFL and full name are mandatory.",
+      "not_ready": "The contract has not been sent to both sides for signing yet.",
+      "wrong_rail": "This contract is signed with our own E-IMZO, not through Didox.",
+      "party_mismatch": "The seller could not be determined from the contract.",
+      "counterparty_unknown": "The counterparty's tax id is not in the EDI operator's registry — it will not accept a document addressed to them.",
+      "counterparty_ikpu_missing": "The counterparty has not declared this product code in their own Didox account, so the operator will refuse it. We cannot add codes to someone else's list — ask them to add it."
+    },
+    "errors": {
+      "didox_session_required": "A Didox session is needed — e-sign the login.",
+      "didox_offer_required": "The company has not signed Didox's public offer.",
+      "didox_unavailable": "Didox is unavailable right now. Try again later.",
+      "ikpu_missing": "The offer carries no ИКПУ.",
+      "not_ready": "The contract is not ready to send.",
+      "not_seller": "The seller creates the document.",
+      "wrong_rail": "The contract is not on the Didox rail.",
+      "empty_body": "The contract has neither text nor lines."
+    }
   }
 }

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
+import { dealApi } from "@/entities/deal";
 import { contractApi, useContractTemplates } from "@/entities/contract";
 import type { ContractTemplate, DirectoryCompany } from "@/entities/contract";
 import { BusinessRoleBadges } from "@/entities/market";
@@ -48,6 +49,10 @@ export function ContractCreatePage() {
   const [searchParams] = useSearchParams();
   const offerId = searchParams.get("offerId");
   const counterpartyIdParam = searchParams.get("counterpartyId");
+  // `DealDetailPage` links here with `?deal_id=`; this page used to drop it, which
+  // left `deals.contract_id` NULL and stalled the deal at `contract_pending`.
+  const dealIdParam = searchParams.get("deal_id");
+  const dealId = dealIdParam ? Number(dealIdParam) : null;
   const active = useActiveCompany().activeCompany;
   const templatesQuery = useContractTemplates();
 
@@ -56,6 +61,14 @@ export function ContractCreatePage() {
   const [cpQuery, setCpQuery] = useState("");
   const [cpResults, setCpResults] = useState<DirectoryCompany[]>([]);
   const [counterparty, setCounterparty] = useState<DirectoryCompany | null>(null);
+  /**
+   * Which rail signs this contract, frozen at creation.
+   *
+   * Offered rather than assumed: `didox` puts the document in front of the tax
+   * authority and needs an operator account on BOTH sides, so choosing it for
+   * someone who has not onboarded would fail late — after the terms were typed.
+   */
+  const [rail, setRail] = useState<"eimzo" | "didox">("eimzo");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -64,6 +77,37 @@ export function ContractCreatePage() {
     [templatesQuery.data, templateId],
   );
   const fields = template ? fieldsOf(template) : [];
+
+  // Seed the form from what the two parties have already agreed on the deal.
+  // Only fills BLANKS, and only once per (deal, template): a value the user has
+  // typed always wins, and a failure here is silent — a prefill that cannot be
+  // fetched must never block drawing up a contract.
+  const prefilledFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (dealId == null || Number.isNaN(dealId) || !active || !template) return;
+    const token = `${dealId}:${template.id}`;
+    if (prefilledFor.current === token) return;
+    prefilledFor.current = token;
+    let cancelled = false;
+    void dealApi
+      .contractPrefill(active.id, dealId, template.id)
+      .then((suggested) => {
+        if (cancelled) return;
+        setVariables((current) => {
+          const next = { ...current };
+          for (const [key, value] of Object.entries(suggested)) {
+            if (!next[key]) next[key] = value;
+          }
+          return next;
+        });
+      })
+      .catch(() => {
+        /* best effort — the form stays usable */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [dealId, active, template]);
 
   // Arriving from «Запросить контракт» on a product page: the offer hands over the
   // seller's company id, so resolve it once and preselect it. Fetched by id rather
@@ -116,6 +160,8 @@ export function ContractCreatePage() {
         template_id: template.id,
         variables,
         offer_id: offerId ? Number(offerId) : null,
+        deal_id: dealId != null && !Number.isNaN(dealId) ? dealId : null,
+        signing_provider: rail,
       });
       void navigate(`/cabinet/contracts/${created.id}`);
     } catch (err) {
@@ -200,6 +246,21 @@ export function ContractCreatePage() {
 
       <Card>
         <CardBody className="space-y-3">
+          <FormField label={t("contracts.rail")} hint={t(`contracts.railHint.${rail}`)}>
+            {({ id }) => (
+              <Select
+                id={id}
+                value={rail}
+                onChange={(e) => setRail(e.target.value as "eimzo" | "didox")}
+                options={[
+                  { value: "eimzo", label: t("contracts.rails.eimzo") },
+                  { value: "didox", label: t("contracts.rails.didox") },
+                ]}
+                data-testid="contract-rail"
+              />
+            )}
+          </FormField>
+
           <FormField label={t("contracts.counterparty")} required hint={t("contracts.counterpartyHint")}>
             {({ id }) => (
               <Input

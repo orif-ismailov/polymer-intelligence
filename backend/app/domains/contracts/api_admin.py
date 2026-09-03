@@ -16,14 +16,14 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Text, cast, or_, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.companies.models import Company
 from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
 from app.models.staff import AuditLog
 from app.services import storage_service
 
-router = APIRouter(prefix="/admin", tags=["admin-contracts"], dependencies=[Depends(require_analyst_or_admin)])
+router = APIRouter(prefix="/admin", tags=["admin-contracts"], dependencies=[Depends(require_page("contracts", "read"))])
 
 
 class AdminSignatureOut(BaseModel):

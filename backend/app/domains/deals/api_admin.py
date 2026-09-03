@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, field_serializer
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.companies.models import Company
 from app.domains.deals import service as deal_service
@@ -210,7 +210,7 @@ def list_deals(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("deals", "read")),
 ) -> AdminDealListOut:
     query = db.query(Deal)
     if deal_status:
@@ -236,7 +236,7 @@ def list_deals(
 def get_deal(
     deal_id: int,
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("deals", "read")),
 ) -> AdminDealDetailOut:
     return _detail(db, _deal_or_404(db, deal_id))
 
@@ -247,7 +247,7 @@ def list_deal_messages(
     after_id: int | None = Query(default=None, ge=0),
     limit: int = Query(default=100, ge=1, le=200),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("deals", "read")),
 ) -> AdminMessagePageOut:
     """Read-only view of the Trade Room chat (support + dispute context)."""
     deal = _deal_or_404(db, deal_id)
@@ -278,7 +278,7 @@ def resolve_dispute(
     deal_id: int,
     body: ResolveDisputeIn,
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("deals", "write")),
 ) -> AdminDealDetailOut:
     """Cancel a disputed deal or restore it to a pre-dispute status.
 

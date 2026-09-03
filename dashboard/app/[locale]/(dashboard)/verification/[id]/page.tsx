@@ -144,7 +144,23 @@ const REGISTRY_STATUSES = ["active", "liquidated", "suspended", "unknown"] as co
 
 type DecisionAction = "approve" | "reject" | "request-info";
 
+/** Statuses a case can never leave. Mirrors `_TERMINAL_CASE_STATUSES` on the backend. */
 const DECIDED_STATUSES = new Set(["approved", "rejected", "cancelled"]);
+
+/**
+ * The ONLY status a decision can be taken from.
+ *
+ * `verification_service._claim_pending_review` updates
+ * `WHERE status='pending_review'` and raises on rowcount 0, so approve/reject/
+ * request-info from any other status is a guaranteed 409. This page used to hide
+ * the buttons only for the terminal statuses, which left `draft`, `submitted`,
+ * `checks_running` and `needs_info` rendering three buttons that could not work —
+ * under an error that claimed someone else had already decided the case.
+ */
+const DECIDABLE_STATUS = "pending_review";
+
+/** Statuses where the automated checks simply have not finished yet. */
+const IN_FLIGHT_STATUSES = new Set(["submitted", "checks_running"]);
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
@@ -153,8 +169,7 @@ export default function VerificationCaseDetailPage() {
   const params = useParams<{ id: string }>();
   const caseId = params.id;
   const qc = useQueryClient();
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
 
   const [note, setNote] = useState("");
   const [conflict, setConflict] = useState(false);
@@ -178,11 +193,13 @@ export default function VerificationCaseDetailPage() {
       void qc.invalidateQueries({ queryKey });
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.status === 409) {
-        // Already decided by someone else — surface a message and refetch.
-        setConflict(true);
-        void qc.invalidateQueries({ queryKey });
-      }
+      if (!(e instanceof ApiError) || e.status !== 409) return;
+      // Two different 409s share one exception on the backend. Only one of them
+      // means a colleague got there first; `not_pending_review` means the case
+      // never became decidable, and the refetch alone puts the explanatory panel
+      // on screen — a "handled by someone else" banner would be a lie.
+      setConflict(conflictCode(e.body) === "already_decided");
+      void qc.invalidateQueries({ queryKey });
     },
   });
 
@@ -207,6 +224,7 @@ export default function VerificationCaseDetailPage() {
 
   const c = data;
   const alreadyDecided = DECIDED_STATUSES.has(c.status);
+  const canDecide = c.status === DECIDABLE_STATUS;
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -413,6 +431,8 @@ export default function VerificationCaseDetailPage() {
               <p className="mt-2 italic text-foreground">“{c.decision_note}”</p>
             )}
           </div>
+        ) : !canDecide ? (
+          <BlockedDecision caseStatus={c.status} checks={c.checks} isAdmin={isAdmin} />
         ) : (
           <>
             <textarea
@@ -452,6 +472,86 @@ export default function VerificationCaseDetailPage() {
         )}
       </section>
     </div>
+  );
+}
+
+// ─── Why a decision isn't available yet ───────────────────────────────────────
+
+/**
+ * What is blocking the decision, and the two ways out of it.
+ *
+ * Shown instead of the buttons for every non-terminal status that is not
+ * `pending_review`. The buttons used to render here and 409 on every press, so a
+ * case nobody had touched reported itself as "already decided by another member
+ * of staff" — the screen said the opposite of the truth twice over.
+ *
+ * The state machine is unchanged and deliberately so: from `needs_info` the case
+ * moves when the applicant corrects their data and resubmits, or when an admin
+ * waives the failing check with a reason (`docs/admin-guide-ru.md`). Both routes
+ * are named here, and the waive control already lives on the check row above.
+ */
+function BlockedDecision({
+  caseStatus,
+  checks,
+  isAdmin,
+}: {
+  caseStatus: string;
+  checks: VerificationCheck[];
+  isAdmin: boolean;
+}) {
+  const t = useTranslations("verification");
+  const blocking = checks.filter(
+    (c) => c.status === "failed" || c.status === "unavailable",
+  );
+
+  const explanation = IN_FLIGHT_STATUSES.has(caseStatus)
+    ? t("decision.blocked.running")
+    : caseStatus === "needs_info"
+      ? t("decision.blocked.needsInfo")
+      : caseStatus === "draft"
+        ? t("decision.blocked.draft")
+        : t("decision.blocked.generic");
+
+  return (
+    <div className="mt-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
+      <p className="text-sm font-medium text-amber-400">{t("decision.blocked.title")}</p>
+      <p className="mt-1 text-sm text-foreground">{explanation}</p>
+
+      {blocking.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+            {t("decision.blocked.problems")}
+          </p>
+          <ul className="mt-1 flex flex-col gap-1.5">
+            {blocking.map((check) => (
+              <BlockingCheck key={check.id} check={check} />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {caseStatus === "needs_info" && (
+        <p className="mt-3 text-xs text-foreground-muted">
+          {isAdmin ? t("decision.blocked.waiveHint") : t("decision.blocked.waiveAdminOnly")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function BlockingCheck({ check }: { check: VerificationCheck }) {
+  const t = useTranslations("verification");
+  const findings = checkFindings(check, t);
+
+  return (
+    <li className="text-sm text-foreground">
+      <span className="font-medium">
+        <CheckTypeLabel checkType={check.check_type} />
+      </span>
+      {findings.length > 0 ? (
+        <span className="text-foreground-muted"> — {findings.join("; ")}</span>
+      ) : null}
+    </li>
   );
 }
 
@@ -786,9 +886,7 @@ function CheckRow({
         </p>
       )}
 
-      {check.result && Object.keys(check.result).length > 0 && (
-        <ResultSummary result={check.result} />
-      )}
+      <ResultSummary check={check} />
 
       {canWaive && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -817,49 +915,154 @@ function CheckRow({
   );
 }
 
+// ─── Check findings — the payload, in words ───────────────────────────────────
+
+type Translator = ReturnType<typeof useTranslations>;
+
+/**
+ * Turn one check's structured result into sentences a person can act on.
+ *
+ * The vocabulary is the backend's, verbatim: `app/domains/verification/checks.py`
+ * is the only writer of these payloads, so every shape it can emit is mapped here
+ * and nothing else needs to be.
+ *
+ * This exists because the old `ResultSummary` read `result["missing_documents"]`
+ * and `result["reasons"]` — keys **no check function has ever written** (they are
+ * `missing`, `problems` and `reason`). Both branches were dead, every result fell
+ * through to the raw JSON dump, and neither staff nor the client could see WHY a
+ * case was blocked. Nothing errored; the information simply never arrived.
+ *
+ * Returns [] when there is nothing worth saying (a passing check). The raw
+ * `JsonBlock` still renders underneath on this staff surface, so an unmapped
+ * shape degrades to exactly what it showed before.
+ */
+function checkFindings(check: VerificationCheck, t: Translator): string[] {
+  // `unavailable` is about the SOURCE, not the company, whatever the check type.
+  if (check.status === "unavailable") {
+    return [
+      check.last_error
+        ? t("findings.unavailableWith", { error: check.last_error })
+        : t("findings.unavailable"),
+    ];
+  }
+  if (check.check_type === "manual_kyb" && check.status === "pending") {
+    return [t("findings.manualPending")];
+  }
+
+  const result = check.result ?? {};
+  const findings: string[] = [];
+
+  switch (check.check_type) {
+    case "tax_id_format": {
+      if (check.status !== "failed") break;
+      const digits = typeof result["digits"] === "number" ? result["digits"] : 0;
+      findings.push(
+        digits === 0 ? t("findings.taxIdEmpty") : t("findings.taxIdDigits", { digits }),
+      );
+      break;
+    }
+
+    case "bank_requisites": {
+      if (result["reason"] === "no_bank_account") {
+        findings.push(t("findings.noBankAccount"));
+        break;
+      }
+      for (const problem of toBankProblems(result["problems"])) {
+        const key = `findings.bankIssue.${problem.issue}`;
+        findings.push(
+          t("findings.bankAccount", {
+            last4: problem.last4,
+            problem: t.has(key) ? t(key) : problem.issue,
+          }),
+        );
+      }
+      break;
+    }
+
+    case "documents_complete": {
+      const missing = toStringList(result["missing"]);
+      if (missing.length > 0) {
+        findings.push(
+          t("findings.missingDocuments", {
+            list: missing.map((kind) => docKindLabel(kind, t)).join(", "),
+          }),
+        );
+      }
+      break;
+    }
+
+    case "gov_registry": {
+      const reason = result["reason"];
+      const registryStatus = result["registry_status"];
+      if (reason === "inn_mismatch") {
+        findings.push(t("findings.registryInnMismatch", { inn: text(result["registry_inn"]) }));
+      }
+      if (registryStatus === "liquidated") findings.push(t("findings.registryLiquidated"));
+      if (registryStatus === "suspended") findings.push(t("findings.registrySuspended"));
+      if (reason === "status_unknown") findings.push(t("findings.registryStatusUnknown"));
+      if (result["name_matches"] === false) {
+        findings.push(t("findings.registryNameMismatch", { name: text(result["registry_name"]) }));
+      }
+      break;
+    }
+
+    case "vat_status": {
+      // Not being a VAT payer is legally normal — say so, or staff read the
+      // warning chip as a problem to solve.
+      if (result["registered"] === false) findings.push(t("findings.vatNotRegistered"));
+      break;
+    }
+
+    case "eimzo_signature": {
+      // `reason` is the sidecar's vocabulary, not ours; the JSON block below
+      // carries it verbatim for whoever needs to chase it.
+      if (check.status === "failed") findings.push(t("findings.eimzoFailed"));
+      break;
+    }
+  }
+
+  return findings;
+}
+
+interface BankProblem {
+  last4: string;
+  issue: string;
+}
+
+function toBankProblems(value: unknown): BankProblem[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (typeof entry !== "object" || entry === null) return [];
+    const { last4, issue } = entry as Record<string, unknown>;
+    if (typeof issue !== "string") return [];
+    return [{ last4: typeof last4 === "string" ? last4 : "—", issue }];
+  });
+}
+
 // ─── Result payload rendering ─────────────────────────────────────────────────
 
 /**
- * Render the most common structured check-result fields compactly (missing docs,
- * reasons), then fall back to a raw JSON block for anything else.
+ * The check's findings in words, with the raw payload underneath.
+ *
+ * The JSON block stays: this is the staff surface, where the exact payload is
+ * evidence. The client's copy of the same vocabulary (portal `CheckRow`) shows
+ * the sentences alone.
  */
-function ResultSummary({ result }: { result: Record<string, unknown> }) {
+function ResultSummary({ check }: { check: VerificationCheck }) {
   const t = useTranslations("verification");
-
-  const missing = toStringList(result["missing_documents"]);
-  const reasons = toStringList(result["reasons"]);
-
-  const rendered = new Set(["missing_documents", "reasons"]);
-  const rest: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(result)) {
-    if (!rendered.has(k)) rest[k] = v;
-  }
+  const findings = checkFindings(check, t);
+  const result = check.result ?? {};
 
   return (
     <div className="mt-2 flex flex-col gap-2">
-      {missing.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-foreground-muted">
-            {t("checks.missingDocuments")}
-          </p>
-          <ul className="mt-1 list-disc ps-5 text-xs text-foreground">
-            {missing.map((m) => (
-              <li key={m}>{m}</li>
-            ))}
-          </ul>
-        </div>
+      {findings.length > 0 && (
+        <ul className="list-disc ps-5 text-xs text-foreground">
+          {findings.map((f) => (
+            <li key={f}>{f}</li>
+          ))}
+        </ul>
       )}
-      {reasons.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-foreground-muted">{t("checks.reasons")}</p>
-          <ul className="mt-1 list-disc ps-5 text-xs text-foreground">
-            {reasons.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {Object.keys(rest).length > 0 && <JsonBlock value={rest} />}
+      {Object.keys(result).length > 0 && <JsonBlock value={result} />}
     </div>
   );
 }
@@ -920,17 +1123,42 @@ function CheckTypeLabel({ checkType }: { checkType: string }) {
   return <>{t.has(key) ? t(key) : checkType}</>;
 }
 
+/** A document kind in words, falling back to its raw code. Shared with `checkFindings`. */
+function docKindLabel(kind: string, t: Translator): string {
+  const key = `docKind.${kind}`;
+  return t.has(key) ? t(key) : kind;
+}
+
 function DocKindLabel({ kind }: { kind: string }) {
   const t = useTranslations("verification");
-  const key = `docKind.${kind}`;
-  return <>{t.has(key) ? t(key) : kind}</>;
+  return <>{docKindLabel(kind, t)}</>;
 }
 
 // ─── Pure utilities ────────────────────────────────────────────────────────────
 
+/**
+ * The decision conflict code out of a 409 body (`{detail: {error, case_status}}`).
+ *
+ * Tolerates the older string-only `detail`, which is what every other endpoint
+ * still sends and what this one sent before the split.
+ */
+function conflictCode(body: unknown): string | null {
+  if (typeof body !== "object" || body === null) return null;
+  const detail = (body as { detail?: unknown }).detail;
+  if (typeof detail === "string") return "already_decided";
+  if (typeof detail !== "object" || detail === null) return null;
+  const error = (detail as { error?: unknown }).error;
+  return typeof error === "string" ? error : null;
+}
+
 function toStringList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((v) => (typeof v === "string" ? v : JSON.stringify(v)));
+}
+
+/** A JSONB field as display text — never `[object Object]`. */
+function text(value: unknown, fallback = "—"): string {
+  return typeof value === "string" && value.trim() !== "" ? value : fallback;
 }
 
 function formatBytes(bytes: number): string {

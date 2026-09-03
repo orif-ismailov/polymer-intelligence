@@ -230,16 +230,38 @@ def get_eimzo_client() -> EimzoClient:
 
 
 def _stub_verify(pkcs7_b64: str, challenge: str) -> EimzoVerifyResult:
-    """DEV/DEMO synthetic verification (settings.EIMZO_STUB) — no sidecar, no crypto.
+    """DEV/DEMO verification (settings.EIMZO_STUB) — no sidecar.
 
-    The stub CAPIWS bridge signs by base64-encoding a JSON blob describing the
-    signer; here we decode it and enforce the same challenge-match / revocation
-    rules the real sidecar would, so the full flow is exercisable end-to-end.
+    Handles BOTH shapes a developer machine can produce, dispatched on the
+    payload itself:
+
+    * the **synthetic envelope** our test bridge emits (base64 JSON) — decoded
+      here, enforcing the same challenge-match / revocation rules the real
+      sidecar would, so CI and the e2e specs exercise the flow with no device;
+    * a **real PKCS#7** from the E-IMZO desktop module (ASN.1, so it opens
+      `0x30`) — handed to `local_verify`, which reads the genuine certificate and
+      the content it covers but CANNOT check the O'zDSt signature bytes.
+
+    That second branch is why signing with a real token used to fail: this
+    function understood only the JSON envelope, so a real DER blob fell into
+    `signature_invalid` and told the user their key was bad. See
+    `local_verify` for exactly what is and is not checked, and note that
+    `EIMZO_STUB` is refused outside DEBUG precisely because of it.
     """
     import json  # noqa: PLC0415
 
     try:
-        blob = json.loads(base64.b64decode(pkcs7_b64))
+        payload = base64.b64decode(pkcs7_b64)
+    except (ValueError, TypeError):
+        return EimzoVerifyResult(ok=False, error="signature_invalid")
+
+    from app.integrations.eimzo import local_verify  # noqa: PLC0415 — avoids a cycle
+
+    if local_verify.looks_like_pkcs7(payload):
+        return local_verify.verify_structural(pkcs7_b64, challenge, payload)
+
+    try:
+        blob = json.loads(payload)
     except (ValueError, TypeError):
         return EimzoVerifyResult(ok=False, error="signature_invalid")
     if not isinstance(blob, dict) or blob.get("challenge") != challenge:

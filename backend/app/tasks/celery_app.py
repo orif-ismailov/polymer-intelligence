@@ -24,6 +24,8 @@ Design notes:
 
 from __future__ import annotations
 
+import logging
+
 from celery import Celery, signals
 from kombu import Queue
 
@@ -58,8 +60,10 @@ _TASK_MODULES = [
     "app.tasks.contracts",
     "app.tasks.deals",
     "app.tasks.payments",
+    "app.tasks.edi",
     "app.tasks.rfq_push",
     "app.tasks.portal_notify",
+    "app.tasks.retention",
 ]
 
 # ── Celery application instance ───────────────────────────────────────────────
@@ -172,3 +176,30 @@ def _init_worker_observability(**_kwargs: object) -> None:
     from app.core.observability import init_sentry  # noqa: PLC0415
 
     init_sentry("worker")
+
+
+# ── Runtime settings ──────────────────────────────────────────────────────────
+# The worker's half of the settings-override propagation. `get_db` covers the api
+# processes; this covers the four prefork children.
+#
+# `task_prerun` rather than `celeryd_init`: a worker that read the overrides once
+# at boot would run on them until it was restarted, which is the restart this
+# whole feature exists to remove. Per-task is the right granularity — a task is
+# the unit of work a switch governs, and it is also the one moment in a worker's
+# loop when no transaction is open, so the short-lived session below cannot nest
+# inside the task's own and deadlock the pool.
+#
+# The common case costs one Redis GET on a 0.25 s timeout; the session is opened
+# only when the generation actually moved. Never raises: `refresh` swallows its
+# own failures, and the `try` here covers the checkout itself, because a task
+# must not die over a settings read.
+@signals.task_prerun.connect  # type: ignore[misc]
+def _refresh_runtime_settings(**_kwargs: object) -> None:
+    from app.core.db import SessionLocal  # noqa: PLC0415
+    from app.services import settings_service  # noqa: PLC0415
+
+    try:
+        with SessionLocal() as db:
+            settings_service.refresh(db)
+    except Exception:  # noqa: BLE001 — a stale switch beats a dead task
+        logging.getLogger(__name__).warning("settings.task_refresh_failed", exc_info=True)

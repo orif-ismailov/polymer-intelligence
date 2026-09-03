@@ -37,10 +37,14 @@ address for a buyer, a seller and a crawler.
 A guard (`RedirectAuthedToCabinet`) used to bounce signed-in visitors to the `/cabinet`
 twin of whatever they opened. It is **deleted** — do not reintroduce it. The chrome carries
 the session instead: `PublicTopNav` swaps «Войти»/«Регистрация» for a single «Кабинет»
-link, the cabinet's `SideNav` has a «Маркетплейс» link back out, and every `BrandLogo` on
-the site is wrapped in a link to `/` — cabinet topbar, login/OTP, onboarding, footer. The
-lockup is the marketplace's front door from everywhere; the cabinet home has its own nav
-entry and does not need the logo too. An anonymous CTA («Отправить запрос», «Связаться»)
+link, and every `BrandLogo` on the site is wrapped in a link to `/` — cabinet topbar,
+login/OTP, onboarding, footer. The lockup is the marketplace's front door from everywhere;
+the cabinet home has its own nav entry and does not need the logo too.
+
+The rail used to carry a «Маркетплейс» entry pointing at `/` as well. It is **gone**: that
+is the lockup's destination, a few hundred pixels away in the same chrome, and the lockup
+also serves the login and onboarding screens, which have no rail. Don't reintroduce it —
+and note it was never a duplicate of «Рынок», which is `/market`, the offer catalogue. An anonymous CTA («Отправить запрос», «Связаться»)
 goes through `/cabinet/login` with `state.from` set to **the page it was clicked on**, so
 signing in from a listing returns you to *that listing* — where the real actions are now
 waiting.
@@ -82,6 +86,17 @@ collapsed onto the single public URL page by page (the market and manufacturer s
 first), so don't add new twins. A link to a listing is the exception that is already
 settled: it is always `/market/:id`, never `${base}/market/:id`, because there is only one.
 
+**The cabinet is a SHELL response, so the client renders it rather than hydrating it.**
+`server.js` answers every non-public URL with `<div id="root"></div>` and no markup — it holds no
+session, so there is nothing to render a cabinet page with. `entry-client.tsx` therefore branches on
+whether the response actually carried markup (`container.firstElementChild`): storefront →
+`hydrateRoot`, shell → `createRoot`. Calling `hydrateRoot` on an empty container cannot succeed —
+React looks for the tree its first render produced (`RequireAuth`'s spinner, while the boot-time
+refresh is in flight), finds nothing, logs «Expected server HTML to contain a matching `<div>`» plus
+a hydration failure, and falls back to client rendering anyway. That was the true source of the
+hydration errors on `/cabinet/login` long blamed on `AuthLayout`. Branch on the RESPONSE, never on a
+second copy of `server.js`'s public-path whitelist — two lists drift, and the drift is this bug.
+
 Old root-level cabinet URLs (`/login`, `/companies/…`, `/offers/…`) **301 to their
 `/cabinet` equivalent** from `server.js`, not from the router: `entry-server.tsx` returns
 only a status and drops the router's `Location`, so an SSR-time `redirect()` would land on
@@ -114,7 +129,7 @@ in this repo (same constraint as `webapp/`/`dashboard/`).
 | `app/` | providers (QueryClient, i18n, router, theme), route tree, guards (`RequireAuth`, `RedirectIfAuthed`, `RequireCompany`) — all three cabinet-side; the storefront has none. |
 | `pages/` | login, otp, **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-create, settings + **R2** market (favorites + RFQ inbox only — the grid and the offer sheet are public now), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
 | `widgets/` | `app-shell` (topbar + company switcher), `case-status-panel` (per-check chips + needs_info deep-links). |
-| `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions). |
+| `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions), sample-letter (the письмо-обязательство card — both parties see it, only the buyer signs) + **P7.a** didox-session (`DidoxOnboardingCard` + `withSession` retry), didox-sign (the two-round-trip signer), didox-contract-document (the seller's «создать документ у оператора» step), ikpu-picker (bind-then-read-back; search covers the company's own basket only). |
 | `entities/` | account, company, verification, offer + **R2** market, inquiry, request, news, notification + **P5** compliance (substance picker data, verdicts, licences) + **P6** lab (orders + the two badges), sample (requests + status badge) — types + api hooks + zustand models. |
 | `shared/` | `api` (fetch client + auth bridge), `ui` (Tailwind primitives), `lib` (phone mask, formatters, `useTierBase`), `config` (incl. `CABINET_BASE`/`isCabinetPath`), `i18n`. |
 
@@ -150,17 +165,45 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   zero companies to `/cabinet/onboarding`; that route and `/cabinet/companies/new/*` are
   authenticated but sit OUTSIDE both `AppShell` and that guard (gating the screen that resolves "you have no company"
   on having one would loop). The flow follows `docs/new-design/register.jpeg`:
-  **1 Тип компании (+ «Электронная подпись») → 2 Данные → 3 Банк → 4 Документы → 5 Проверка →
+  **1 Тип компании → 2 Данные (сертификат + ИНН) → 3 Банк → 4 Документы → 5 Проверка →
   «Регистрация завершена!»** (`/cabinet/companies/new/done/:companyId`).
   - The four account types are the mockup's, not the backend enum: `buyer→importer`,
     `supplier→distributor` are the nearest members that exist (`ACCOUNT_TYPES` in
     `features/company-wizard/model/constants.ts`). Sending anything else 422s — the enum is a
     Postgres type, so widening it is a migration.
-  - **Signing comes before the form on purpose.** The challenge endpoint is company-scoped, so
+  - **Step 1 asks one question.** It used to carry the whole «Электронная подпись» panel as well —
+    three method tabs of which two were dead, and a PIN box the module never read (it prompts for
+    the real password itself). Identity moved to step 2, beside the ИНН it resolves.
+  - **Step 2 opens with the two controls that say WHICH company this is**, in this order:
+    `CompanyCertificateSelect` (the organisations on the holder's key) and the ИНН. Picking a
+    certificate writes **only** `tax_id` — the org name is already in the option, and writing it
+    would mark the field hand-typed, after which `hydrateFromRegistry` refuses to fill it from the
+    registry, which is the better source. Reading a key is not signing with it:
+    `useEimzoCertificates` is the probe+list half alone, because `useEimzoSign.start()` auto-signs
+    a single certificate — right for a button, wrong for a dropdown someone is still reading.
+  - **«Далее» is what signs.** The challenge endpoint is company-scoped, so
     `companyRegistrationSigner` reads the STIR out of the chosen certificate's subject, creates the
     company from it, then signs — which is why `EimzoSigner.getChallenge` takes the certificate.
-    A signed company arrives at step 2 filled in and `identity_locked` (those fields render
-    disabled, and `useSubmitWizard` omits them from the PATCH or the server 409s).
+    `useEimzoSign.signWith(cert)` is that run entered one step later (`pick` can't serve it: it
+    resolves an id against `certs`, which only `start()` fills). On success the row is refetched,
+    `hydrateFromCompany` freezes the requisites and the wizard advances — advancing is NOT
+    conditional on that read, since the signature already succeeded. A signed company is
+    `identity_locked`: those fields render disabled and `useSubmitWizard` omits them from the PATCH
+    or the server 409s. Signing stays optional — no key, no module, no certificate all leave the
+    ИНН typeable and «Далее» plain.
+  - **A certificate whose STIR no longer matches the typed ИНН is refused before any request.**
+    Derived, not stored, so correcting either side clears it. The rule is the server's own
+    (`/eimzo/verify` answers 422); checking it here only stops a doomed request from first costing
+    the user a key password.
+  - **Steps 2–3 prefill themselves from the state registry** (P7.a). As soon as the STIR is known
+    — copied in by the certificate dropdown, or typed — `useRegistryPrefill` asks
+    `GET /portal/companies/lookup` and `hydrateFromRegistry` drops the answer into the BLANKS.
+    It never overwrites a typed value or a locked one, so a correction always wins; `prefilled`
+    records which fields came from the registry. All three failure shapes are soft and none of
+    them blocks a registration: "not found" is a warning line, an outage is an info line, and a
+    deployment with no channel configured (the shipped default) says **nothing at all** —
+    `registry_not_configured` is its own error code precisely so the form can stay quiet about a
+    feature nobody turned on. `RegistryPrefillNotice` is shared by both steps.
   - **Arriving at step 5 IS the submit** — there is no confirmation sheet. It is guarded by a ref
     against React's double mount, and the checks then poll until they resolve.
   - Bank + documents are not in the mockup but feed the case's `bank_requisites` /
@@ -189,6 +232,65 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   - The two `e2e/p0-*.spec.ts` specs gate the system (dark default, token contrast in both
     themes, rendered-label AA, primitive semantics). Keep them green; extend them when you
     add tokens or variants.
+
+### Verify in a real browser, every change
+
+The repo-root `CLAUDE.md` states the rule; it matters most here. Drive the change through the
+`chrome-devtools` MCP server before calling it done — `lint`/`typecheck`/`build` and a green
+`playwright test` are necessary and not sufficient. Three of this package's worst bugs were
+invisible to all of them: a bridge assigned by nothing, a signature over double-encoded UTF-8,
+and Tailwind classes that do not exist and therefore fail silently.
+
+Watch for the ones that only a live page shows: a module-level `let` survives HMR (reload before
+concluding a fix failed), `btoa` throws on non-latin1 (a stub cert name in Cyrillic kills the
+whole flow with a generic error), and a missing i18n key is a RUNTIME error, not a fallback.
+
+### E-IMZO and the Didox rail (P7.a)
+
+Three things about signing in this app that are easy to get wrong:
+
+- **`window.CAPIWS` is ours.** `shared/lib/eimzo/capiwsSocket.ts` is a ~60-line shim over
+  `wss://127.0.0.1:64443/service/cryptapi`, installed lazily by `getEimzoBridge()` and never from
+  `index.html` (SSR must not touch `window`). Before it existed the bridge was assigned by nothing
+  and every user got `module_missing` — including R3 contract signing.
+- **`sign()` vs `signBase64()`.** Anything the server hands over ALREADY base64 (Didox payloads)
+  must go through `signBase64`: `atob` yields a latin-1 string of the UTF-8 bytes, which
+  `encodeURIComponent` then encodes again, so «Поставка» is signed as «ÐÐ¾ÑÑÐ°Ð²ÐºÐ°» and the
+  signature covers bytes no verifier will reproduce. Silent, and invisible to ASCII-only tests.
+- **Two different verifiers.** A Didox session is verified by DIDOX (needs a real key), while
+  company-identity confirmation is verified by OUR sidecar (`EIMZO_STUB=true` locally, where a real
+  PKCS#7 can never verify). Tests inject `window.__EIMZO_BRIDGE__`; see `e2e/r3-eimzo.spec.ts` for
+  the stub blob shape, and keep every field in it ASCII — `btoa` throws otherwise.
+
+The contract rail is chosen once, on the create screen (`contract-rail`), and frozen. On the Didox
+rail the document has to EXIST at the operator before anyone can sign, and creating it is the
+seller's move — `DidoxDocumentCard` shows every blocker at once (`ikpu_missing`,
+`signer_identity_missing:{id}`, `not_ready`, `counterparty_unknown`, `counterparty_ikpu_missing`)
+rather than one per round trip, because each retry costs the user an E-IMZO password.
+
+Four more things this rail taught us the expensive way, all on 25–27.08.2026:
+
+- **A cancelled password dialog is not a failure.** The module reports «Ввод пароля отменен»
+  exactly like a crypto error, and rendering it as «не удалось подписать документ» sent an
+  afternoon hunting a bug that did not exist — every dead end that day was a window nobody
+  answered. `CapiwsError.isCancelled` names it, and `useDidoxSign` has a `cancelled` branch whose
+  string says plainly: press again and enter the key password.
+- **`openSession` holds the key open, so one password serves several signatures.** Minting a Didox
+  session and signing the document are two `create_pkcs7` calls; through `sign()`/`signBase64()`
+  each opens and closes its own key and asks twice. Reach for the session whenever a flow signs
+  more than once.
+- **Render the operator's refusal verbatim.** Their 422 carries the only actionable sentence in the
+  whole exchange («ИНН/ПИНФЛ заказчика некорректный. ИНН/ПИНФЛ: 562353400» names the field AND the
+  company). The trap is one level deep and invisible to types: `ApiError.detail` holds the WHOLE
+  response body, so our payload sits at `detail.detail`, and reading `detail.error` finds
+  `undefined` and falls back to the generic string without anything failing. `rejectionOf()`
+  unwraps it; `didox.signErrors.rejected` interpolates their words.
+- **The timeline may not read `contract.signatures` on this rail** — that table stays EMPTY by
+  design (`signature_evidence_id` is NOT NULL and points at a PKCS#7 we verified, which we never
+  have for a Didox signature), so it said «ожидает подписи» about the seller who had just signed.
+  `didoxSignedFor()` derives it from `didox_status` instead, which the API has already restated for
+  this viewer: my side signed at `1`/`3`, theirs at `2`/`3`. Didox tells us THAT a party signed,
+  never WHEN — hence `contracts.timeline.signedNoDate` rather than a borrowed timestamp.
 
 ## Deploy
 

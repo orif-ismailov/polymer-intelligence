@@ -53,6 +53,16 @@ export const LANGUAGE_KEY = "portal.language";
  */
 export const THEME_KEY = "portal.theme";
 
+/**
+ * localStorage key for the cabinet rail's collapsed state.
+ *
+ * Unlike {@link THEME_KEY} this needs no bootstrap script: the cabinet is a
+ * shell response (`server.js` sends no markup for it), so the store reads this
+ * synchronously on the client before first paint and there is no server render
+ * to flash against.
+ */
+export const RAIL_COLLAPSED_KEY = "portal.railCollapsed";
+
 /** OTP code length the backend issues. */
 export const OTP_CODE_LENGTH = 6;
 

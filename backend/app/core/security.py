@@ -106,19 +106,22 @@ def dummy_verify(plain: str) -> None:
         _hasher.verify(_DUMMY_HASH, plain)
 
 
-def create_access_token(subject: str, role: str) -> str:
+def create_access_token(subject: str) -> str:
     """Create a short-lived access JWT (15 minutes).
 
     The token carries:
     - sub: staff_user_id (string)
-    - role: the staff_role value (e.g. 'admin', 'analyst', 'trader', 'viewer')
     - type: 'access' (used to prevent token-type confusion, T-03-03)
     - iat: issued-at timestamp
     - exp: expiry (15 minutes from now)
 
+    No authorization claim is embedded. Every guard loads the staff row and reads
+    `is_admin` from it, so revoking access takes effect on the next request
+    instead of waiting out an unexpired token. The dashboard asks
+    `GET /auth/me` rather than decoding the token.
+
     Args:
         subject: The staff_user.id as a string (used as JWT sub claim).
-        role: The staff_role value (admin/analyst/trader/viewer).
 
     Returns:
         A signed JWT access token string.
@@ -126,7 +129,6 @@ def create_access_token(subject: str, role: str) -> str:
     now = datetime.now(UTC)
     payload = {
         "sub": subject,
-        "role": role,
         "type": "access",
         "iat": now,
         "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
@@ -143,8 +145,8 @@ def create_refresh_token(subject: str) -> str:
     - iat: issued-at timestamp
     - exp: expiry (7 days from now)
 
-    Note: the role is NOT included in the refresh token; it is re-read from
-    the DB on refresh to pick up any role changes.
+    Note: no authorization claim is included here either; it is read from the
+    staff row on every request (see create_access_token).
 
     Args:
         subject: The staff_user.id as a string (used as JWT sub claim).

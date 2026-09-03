@@ -11,10 +11,10 @@ Phase 4, Plan 05: GET /requests/export — CSV stream of current filtered result
   Accepts the same filter query params as GET /requests.
   Streams via StreamingResponse + csv.writer generator.
   Capped at 50,000 rows (T-04-18: DoS / large result).
-  Guarded by get_current_staff_user.
+  Guarded by require_admin.
 
 Security (T-04-10/T-04-11/T-04-12/T-04-14/T-04-18):
-  T-04-10: PATCH and actions are guarded by require_role(admin, analyst, trader).
+  T-04-10: every route here is administrator-only (require_admin).
            Viewer role → 403. Status only via transition_status (D-12).
   T-04-11: transition_status raises ValueError on illegal transition → 422.
            request.status is NEVER set directly in this router (Pitfall 5).
@@ -44,14 +44,14 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_serializer
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_staff_user, require_role
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.pricing import analysis as price_analysis_service
 from app.domains.requests import analysis as request_analysis_service
 from app.domains.requests import rfq_push as rfq_push_service
 from app.domains.requests import service as request_service
 from app.domains.requests.models import Request
-from app.models.enums import RequestStatus, StaffRole
+from app.models.enums import RequestStatus
 from app.models.staff import StaffUser
 from app.schemas.dashboard import (
     RequestDetailOut,
@@ -145,7 +145,7 @@ def _build_request_detail(
 )
 def list_requests(
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(get_current_staff_user),
+    current_user: StaffUser = Depends(require_page("purchaseRequests", "read")),
     status_filter: str | None = Query(default=None, alias="status"),
     urgency: str | None = None,
     product_id: int | None = None,
@@ -240,7 +240,7 @@ def export_requests(
     urgency: str | None = None,
     product_id: int | None = None,
     db: Session = Depends(get_db),
-    _current_user: StaffUser = Depends(get_current_staff_user),
+    _current_user: StaffUser = Depends(require_page("purchaseRequests", "read")),
 ) -> StreamingResponse:
     """GET /requests/export — stream all matching requests as CSV (T-04-18: cap 50k).
 
@@ -316,7 +316,7 @@ def export_requests(
 def get_request(
     request_id: int,
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(get_current_staff_user),
+    current_user: StaffUser = Depends(require_page("purchaseRequests", "read")),
 ) -> RequestDetailOut:
     """GET /requests/{id} — detail view, auto-transitions new->viewed (D-12).
 
@@ -367,9 +367,7 @@ def patch_request(
     request_id: int,
     body: RequestPatch,
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(
-        require_role(StaffRole.admin, StaffRole.analyst, StaffRole.trader)
-    ),
+    current_user: StaffUser = Depends(require_page("purchaseRequests", "write")),
 ) -> RequestDetailOut:
     """PATCH /requests/{id} — status change, assign, or add note.
 
@@ -446,9 +444,7 @@ def add_note(
     request_id: int,
     body: RequestPatch,
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(
-        require_role(StaffRole.admin, StaffRole.analyst, StaffRole.trader)
-    ),
+    current_user: StaffUser = Depends(require_page("purchaseRequests", "write")),
 ) -> RequestDetailOut:
     """POST /requests/{id}/note — attach a free-text note; writes audit_log.
 
@@ -495,9 +491,7 @@ def assign_request(
     request_id: int,
     body: RequestPatch,
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(
-        require_role(StaffRole.admin, StaffRole.analyst, StaffRole.trader)
-    ),
+    current_user: StaffUser = Depends(require_page("purchaseRequests", "write")),
 ) -> RequestDetailOut:
     """POST /requests/{id}/assign — assign a staff owner; writes audit_log.
 
@@ -542,9 +536,7 @@ def assign_request(
 def contact_buyer(
     request_id: int,
     db: Session = Depends(get_db),
-    current_user: StaffUser = Depends(
-        require_role(StaffRole.admin, StaffRole.analyst, StaffRole.trader)
-    ),
+    current_user: StaffUser = Depends(require_page("purchaseRequests", "write")),
 ) -> dict:
     """POST /requests/{id}/contact — Contact Buyer action; writes audit_log.
 
@@ -608,9 +600,7 @@ def contact_buyer(
 def analyze_request(
     request_id: int,
     db: Session = Depends(get_db),
-    _current_user: StaffUser = Depends(
-        require_role(StaffRole.admin, StaffRole.analyst, StaffRole.trader)
-    ),
+    _current_user: StaffUser = Depends(require_page("purchaseRequests", "write")),
 ) -> RequestDetailOut:
     """POST /requests/{id}/analyze — synchronously run the LLM analysis and persist it.
 
@@ -670,7 +660,7 @@ class PushedSupplierOut(BaseModel):
 def list_pushed_suppliers(
     request_id: int,
     db: Session = Depends(get_db),
-    _current_user: StaffUser = Depends(get_current_staff_user),
+    _current_user: StaffUser = Depends(require_page("purchaseRequests", "read")),
 ) -> list[PushedSupplierOut]:
     """GET /requests/{id}/pushed-suppliers — the AI push's own audit trail.
 

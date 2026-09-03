@@ -192,8 +192,7 @@ function DisableConfirmDialog({
 
 export function SourcesList() {
   const t = useTranslations("sources");
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [testingSourceId, setTestingSourceId] = useState<number | null>(null);
   const [disableConfirmId, setDisableConfirmId] = useState<number | null>(null);

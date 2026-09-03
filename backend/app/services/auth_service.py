@@ -9,11 +9,10 @@ T-03-06: identity derived only from the verified JWT, never from the request bod
 
 from __future__ import annotations
 
-import os
-
 from fastapi import Response
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import (
     create_refresh_token,
     dummy_verify,
@@ -28,7 +27,15 @@ _REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 # In production (APP_ENV=production), cookies are Secure-only (HTTPS).
 # In dev/test environments, Secure is disabled so HTTP TestClient can send cookies.
 # T-03-05: production deployments MUST set APP_ENV=production behind TLS (nginx+certbot).
-_COOKIE_SECURE = os.environ.get("APP_ENV", "development").lower() == "production"
+#
+# Read through `settings` rather than `os.environ`: this used to be a raw
+# `os.environ.get("APP_ENV", "development")`, which put a security-relevant flag
+# outside the env contract entirely — absent from `.env.example`, unvalidated,
+# and silently satisfied by any typo. `prod`, `Production ` or a missing value
+# all meant "not production", and the only symptom was a staff session cookie
+# without `Secure` travelling over plain HTTP. `Settings.APP_ENV` is a Literal,
+# so those now fail at startup instead.
+_COOKIE_SECURE = settings.APP_ENV == "production"
 
 
 def authenticate(db: Session, email: str, password: str) -> StaffUser | None:

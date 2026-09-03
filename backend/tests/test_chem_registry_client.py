@@ -22,23 +22,40 @@ from typing import Any
 import pytest
 
 
+def _shipped_default(env_var: str) -> object:
+    """The value a deployment runs on when `.env` says nothing.
+
+    Reads `Settings` rather than a `SettingSpec`: since the switches moved into
+    the env contract the field IS the declaration, so asserting anywhere else
+    would be testing a copy.
+    """
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return Settings.model_fields[env_var].get_default()
+
+
+def _allowed_values(env_var: str) -> tuple[object, ...]:
+    """The closed set a mode switch accepts, off its `Literal` annotation."""
+    import typing  # noqa: PLC0415
+
+    from app.core.config import Settings  # noqa: PLC0415
+
+    return typing.get_args(Settings.model_fields[env_var].annotation)
+
+
 class _FakeSettings:
     def __init__(self, mode: str) -> None:
         self.mode = mode
 
-    def get(self, _db: Any, key: str) -> Any:  # noqa: ANN401
+    def get(self, key: str) -> Any:  # noqa: ANN401
         assert key == "chem_registry_mode"
         return self.mode
 
 
 class TestRuntimeSetting:
     def test_mode_is_declared_with_a_safe_default(self) -> None:
-        from app.services.settings_service import _SPECS  # noqa: PLC0415
-
-        spec = _SPECS.get("chem_registry_mode")
-        assert spec is not None
-        assert spec.default == "stub"
-        assert spec.choices == ("stub", "live")
+        assert _shipped_default("CHEM_REGISTRY_MODE") == "stub"
+        assert _allowed_values("CHEM_REGISTRY_MODE") == ("stub", "live")
 
 
 class TestStubClient:

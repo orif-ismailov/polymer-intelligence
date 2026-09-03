@@ -18,12 +18,10 @@ from fastapi.testclient import TestClient
 
 def _make_staff_user(id: int = 1, role: str = "admin", is_active: bool = True):
     from app.core.security import hash_password
-    from app.models.enums import StaffRole
-
     user = MagicMock()
     user.id = id
     user.email = "admin@polymer.uz"
-    user.role = StaffRole(role)
+    user.is_admin = role == "admin"
     user.is_active = is_active
     user.password_hash = hash_password("admin_password_secure")
     return user

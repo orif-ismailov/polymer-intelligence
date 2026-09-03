@@ -18,14 +18,14 @@ from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.companies.models import Company
 from app.domains.laboratory import service as laboratory_service
 from app.domains.laboratory.models import LabRequest, LabRequestMessage, LabRequestThread
 from app.models.enums import LabRequestStatus
 
-router = APIRouter(prefix="/admin", tags=["admin-lab-requests"], dependencies=[Depends(require_analyst_or_admin)])
+router = APIRouter(prefix="/admin", tags=["admin-lab-requests"], dependencies=[Depends(require_page("labRequests", "read"))])
 
 
 class AdminLabRequestOut(BaseModel):

@@ -115,8 +115,11 @@ export function DealsPage() {
     <div className="space-y-5">
       <PageHeader title={t("deals.title")} subtitle={t("deals.subtitle")} />
 
-      {/* Scope on the left, party on the right — one chip row, as in the sheets. */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Scope on the left, party on the right — one chip row, as in the sheets.
+          Capped because `ms-auto` was drawn for a 880px column: across the full
+          1600px frame the two groups end up a thousand pixels apart and stop
+          reading as two facets of one filter. */}
+      <div className="flex max-w-5xl flex-wrap items-center gap-2">
         <Tabs
           variant="pill"
           items={scopeTabs}
@@ -135,7 +138,7 @@ export function DealsPage() {
       </div>
 
       {query.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-32 w-full" />
         </div>
@@ -146,7 +149,7 @@ export function DealsPage() {
           onRetry={() => void query.refetch()}
         />
       ) : items.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {items.map((deal) => (
             <DealCard key={deal.id} deal={deal} onOpen={() => navigate(`/cabinet/deals/${deal.id}`)} />
           ))}

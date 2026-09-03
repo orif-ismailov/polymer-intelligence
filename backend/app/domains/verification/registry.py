@@ -174,7 +174,7 @@ def fetch_and_record(db: Session, company: Company, kind: str) -> RegistrySnapsh
         company,
         kind=kind,
         source=SNAPSHOT_SOURCE_REGISTRY,
-        provider=str(gov_registry.current_mode(db)),
+        provider=str(gov_registry.current_mode()),
         payload=payload,
         raw_status=raw_status,
     )

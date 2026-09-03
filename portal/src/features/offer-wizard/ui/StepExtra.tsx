@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 
+import { useActiveCompany } from "@/entities/company";
+import { IkpuPicker } from "@/features/ikpu-picker";
 import { ChipInput, FormField, StepPanel, Textarea } from "@/shared/ui";
 
 import { COUNTED_STEPS, STEP_EXTRA } from "../model/constants";
@@ -16,6 +18,7 @@ export function StepExtra({ onNext, onBack }: StepExtraProps) {
   const { t } = useTranslation();
   const draft = useOfferDraft((s) => s.draft);
   const setField = useOfferDraft((s) => s.setField);
+  const active = useActiveCompany().activeCompany;
 
   return (
     <StepPanel
@@ -25,6 +28,17 @@ export function StepExtra({ onNext, onBack }: StepExtraProps) {
       data-testid="offer-wizard-step-7"
     >
       <div className="space-y-5">
+        {/* ИКПУ lives on this step because a seller who ticked «принимаю договоры»
+            cannot skip it, and the code has to exist before any document does.
+            Optional on purpose: an offer without one simply cannot back a Didox
+            document, and says so at contract time. */}
+        {active && (
+          <IkpuPicker
+            companyId={active.id}
+            value={draft.ikpu}
+            onChange={(value) => setField("ikpu", value)}
+          />
+        )}
         <FormField label={t("offerWizard.extra.description")}>
           {({ id }) => (
             <Textarea

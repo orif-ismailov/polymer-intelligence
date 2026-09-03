@@ -1,19 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
+import { NoAccessNotice } from "@/components/shared/NoAccessNotice";
+import { NoPageAccess } from "@/components/shared/NoPageAccess";
 import { RouteGuardFallback } from "@/components/shared/RouteGuardFallback";
 import { useAuth } from "@/hooks/useAuth";
 import { refreshAccessToken } from "@/lib/api";
+import { pageForPath, pageKeyOf } from "@/lib/nav";
 import queryClient from "@/lib/queryClient";
 
 /**
  * Auth-guarded route-group layout for all dashboard routes.
  *
- * Security boundary: API's require_role is the real guard (PATTERNS.md Shared Patterns).
- * This layout is UX-layer.
+ * Security boundary: the API's require_admin is the real guard (PATTERNS.md Shared
+ * Patterns). This layout is UX-layer — it decides what to render, never what is allowed.
  *
  * The access token lives only in memory, so a full reload / direct navigation
  * starts unauthenticated. Before bouncing to /login we attempt a silent refresh
@@ -26,7 +29,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, login } = useAuth();
+  const pathname = usePathname();
+  const { isAuthenticated, isAdmin, user, access, can, login } = useAuth();
 
   useEffect(() => {
     // Already authenticated — nothing to verify.
@@ -57,9 +61,37 @@ export default function DashboardLayout({
     return <RouteGuardFallback />;
   }
 
+  // Signed in, but /auth/me has not answered yet — `user` is null for both
+  // "still loading" and "not an admin", so waiting is what keeps a legitimate
+  // administrator from being told they have no access for a frame.
+  if (!user) {
+    return <RouteGuardFallback />;
+  }
+
+  // Signed in and known to reach nothing at all. Rendering the shell here would
+  // show a nav over a wall of 403s, which reads as an outage rather than as a
+  // permission boundary.
+  if (!isAdmin && Object.keys(access).length === 0) {
+    return <NoAccessNotice />;
+  }
+
+  // Per-page gate, resolved from the nav rather than declared in each of the 26
+  // page components — one place that cannot be forgotten when a page is added.
+  // A path outside the nav (there are none today) renders rather than 404s: the
+  // API refuses it anyway, and a blank screen would be the worse guess.
+  const navItem = pageForPath(pathname);
+  const allowed =
+    navItem === null
+      ? true
+      : navItem.adminOnly
+        ? isAdmin
+        : can(pageKeyOf(navItem));
+
   return (
     <QueryClientProvider client={queryClient}>
-      <AppShell>{children}</AppShell>
+      <AppShell>
+        {allowed ? children : <NoPageAccess />}
+      </AppShell>
     </QueryClientProvider>
   );
 }

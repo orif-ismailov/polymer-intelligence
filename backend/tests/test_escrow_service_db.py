@@ -29,6 +29,7 @@ from tests._verification_db import (
     requires_real_db,
     session_factory,
 )
+from tests.conftest import set_switch
 
 
 @pytest.fixture(scope="module")
@@ -146,8 +147,6 @@ def test_open_is_idempotent(sf) -> None:  # noqa: ANN001
 @requires_real_db
 def test_open_freezes_the_mode_the_setting_had(sf) -> None:  # noqa: ANN001
     from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
-    from app.services import settings_service  # noqa: PLC0415
-
     with sf() as db:
         deal, *_ = _deal_at_contract_signed(db)
         payment = escrow_service.open_for_deal(db, deal)
@@ -155,8 +154,7 @@ def test_open_freezes_the_mode_the_setting_had(sf) -> None:  # noqa: ANN001
         assert payment.mode == "stub"
 
         # Flipping the rail later must NOT rewrite an existing payment.
-        settings_service.set_many(db, {"escrow_mode": "live"}, None)
-        db.commit()
+        set_switch(escrow_mode="live")
         db.refresh(payment)
         assert payment.mode == "stub"
 

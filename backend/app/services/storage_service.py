@@ -667,6 +667,46 @@ REGISTRY_EVIDENCE_MIMES: frozenset[str] = frozenset(
 )
 
 
+def store_sample_letter_pdf(
+    sample_public_id: str, version_n: int, pdf_bytes: bytes
+) -> tuple[str, str]:
+    """Store a rendered commitment letter; return (storage_path, sha256).
+
+    Keyed on the sample's `public_id`, not its row id: this is a signed legal
+    artefact and its filename should not carry our row count — the same reason
+    `contracts.public_id` exists.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    key = f"samples/{sample_public_id}/letter_v{version_n}.pdf"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET, Key=key, Body=pdf_bytes, ContentType="application/pdf"
+    )
+    return key, hashlib.sha256(pdf_bytes).hexdigest()
+
+
+def store_didox_archive(didox_id: str, zip_bytes: bytes) -> tuple[str, str]:
+    """Store a Didox evidence archive; return (storage_path, sha256).
+
+    The ZIP holds both signatures, the PDF and the JSON — on the Didox rail it IS
+    the legal artefact, and our own rendered PDF is a preview. Fetched once on the
+    transition to signed and never re-fetched: the hash is what makes a later copy
+    checkable, and a second download could differ without anyone noticing.
+
+    `didox_id` is provider-issued hex, so the key is traversal-safe by
+    construction; it is sanitised anyway because it is the only externally-sourced
+    component of the path.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    safe = "".join(c for c in didox_id if c.isalnum())[:64] or secrets.token_hex(8)
+    key = f"evidence/didox/{safe}/archive.zip"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET, Key=key, Body=zip_bytes, ContentType="application/zip"
+    )
+    return key, hashlib.sha256(zip_bytes).hexdigest()
+
+
 def store_registry_evidence(
     company_id: int, content: bytes, filename: str
 ) -> tuple[str, str]:

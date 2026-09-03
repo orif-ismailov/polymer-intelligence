@@ -41,6 +41,7 @@ from tests._verification_db import (
     requires_real_db,
     session_factory,
 )
+from tests.conftest import set_switch
 
 _A = "/api/v1/admin"
 
@@ -230,10 +231,8 @@ def test_the_stub_rail_spawns_no_registry_checks(sf) -> None:  # noqa: ANN001
 
 @requires_real_db
 def test_the_live_rail_spawns_both_registry_checks(sf) -> None:  # noqa: ANN001
-    from app.services import settings_service  # noqa: PLC0415
-
     with sf() as db:
-        settings_service.set_many(db, {"gov_registry_mode": "live"}, None)
+        set_switch(gov_registry_mode="live")
         db.flush()
         _account, _company, case = _submit(db)
         db.commit()
@@ -274,14 +273,13 @@ def api(engine: sa.Engine):  # noqa: ANN201
 
 def _staff_headers(session, role="analyst", email="reg@example.com"):  # noqa: ANN001, ANN202
     from app.core.security import create_access_token  # noqa: PLC0415
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     with session() as db:
         staff = make_staff(db, email)
-        staff.role = StaffRole(role)
+        staff.is_admin = role == "admin"
         db.commit()
         staff_id = staff.id
-    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"}
 
 
 def _case(session):  # noqa: ANN001, ANN202

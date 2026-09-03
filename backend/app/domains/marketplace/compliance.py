@@ -232,14 +232,14 @@ def verdict_out(db: Session, offer: SellerOffer) -> ComplianceOut:
         exempt_reason=verdict.exempt_reason,
         missing=[MissingOut(kind=m.kind, detail=m.detail) for m in verdict.missing],
         substance=SubstanceBrief.model_validate(substance) if substance else None,
-        enforced=enforcement_enabled(db),
+        enforced=enforcement_enabled(),
         checked_at=offer.compliance_checked_at,
     )
 
 
-def enforcement_enabled(db: Session) -> bool:
-    """Whether a failing verdict actually blocks (runtime setting, default off)."""
-    return bool(settings_service.get(db, "dangerous_check_enforced"))
+def enforcement_enabled() -> bool:
+    """Whether a failing verdict actually blocks (`DANGEROUS_CHECK_ENFORCED`, ships off)."""
+    return bool(settings_service.get("dangerous_check_enforced"))
 
 
 def assert_publishable(db: Session, offer: SellerOffer) -> ComplianceVerdict:
@@ -249,7 +249,7 @@ def assert_publishable(db: Session, offer: SellerOffer) -> ComplianceVerdict:
     submitting an offer and staff approving it.
     """
     verdict = evaluate_and_stamp(db, offer)
-    if not verdict.ok and enforcement_enabled(db):
+    if not verdict.ok and enforcement_enabled():
         logger.info(
             "compliance.blocked",
             extra={"offer_id": offer.id, "level": str(verdict.level)},

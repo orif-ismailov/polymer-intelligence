@@ -10,7 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.marketplace import compliance as offer_compliance_service
 from app.domains.marketplace import service as offer_service
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/admin/moderation", tags=["moderation"])
 )
 def moderation_queue(
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("moderation", "read")),
 ) -> list[ModerationOfferOut]:
     """GET /admin/moderation/offers — pending offers, oldest first.
 
@@ -73,7 +73,7 @@ def approve_offer(
     offer_id: int,
     body: ModerationDecision,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_analyst_or_admin),
+    user: StaffUser = Depends(require_page("moderation", "write")),
 ) -> SellerOfferOut:
     """POST /admin/moderation/offers/{id}/approve.
 
@@ -112,7 +112,7 @@ def reject_offer(
     offer_id: int,
     body: ModerationDecision,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_analyst_or_admin),
+    user: StaffUser = Depends(require_page("moderation", "write")),
 ) -> SellerOfferOut:
     """POST /admin/moderation/offers/{id}/reject.
 

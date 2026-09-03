@@ -119,13 +119,6 @@ export function wizardStepCount(accountType: string): number {
  */
 export const LEGAL_FORMS = ["ООО", "ЧП", "АО", "СП", "ИП", "ГУП"] as const;
 
-/** E-IMZO signing methods on the «Электронная подпись» panel. */
-export const EIMZO_METHODS = ["usb_token", "mobile_id", "cloud_id"] as const;
-export type EimzoMethod = (typeof EIMZO_METHODS)[number];
-
-/** Only the desktop CAPIWS module is wired; the other two are operator-pending. */
-export const EIMZO_AVAILABLE_METHOD: EimzoMethod = "usb_token";
-
 /** Document kinds surfaced as dropzones in the default wizard. */
 export const WIZARD_DOCUMENT_KINDS: readonly DocumentKind[] = [
   "registration_certificate",
@@ -376,7 +369,11 @@ export type LabAccreditation = (typeof LAB_ACCREDITATIONS)[number];
 /** Deep-link map: which wizard step a failing verification check points back to. */
 export const CHECK_TO_STEP: Record<string, number> = {
   tax_id_format: WIZARD_STEP_DETAILS,
-  eimzo_signature: WIZARD_STEP_TYPE,
+  // `eimzo_signature` is deliberately absent: registration no longer signs
+  // anything, so no step of this wizard can satisfy that check and a deep link
+  // would land the applicant on a screen that cannot help. It is confirmed from
+  // «Статус проверки» instead. The check keeps its place in CHECK_ORDER so cases
+  // that WERE signed still render it.
   bank_requisites: WIZARD_STEP_BANK,
   documents_complete: WIZARD_STEP_DOCUMENTS,
   manual_kyb: WIZARD_STEP_REVIEW,

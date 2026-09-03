@@ -16,12 +16,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.reference import service as product_service
 from app.domains.reference.schemas import ProductCreate, ProductOut, ProductUpdate
 
-router = APIRouter(prefix="/admin", tags=["admin-products"], dependencies=[Depends(require_admin)])
+router = APIRouter(prefix="/admin", tags=["admin-products"], dependencies=[Depends(require_page("adminProducts", "read"))])
 
 
 @router.get(
@@ -38,6 +38,7 @@ def list_products(
 
 @router.post(
     "/products",
+    dependencies=[Depends(require_page("adminProducts", "write"))],
     response_model=ProductOut,
     status_code=status.HTTP_201_CREATED,
     summary="Create a product (admin-only)",
@@ -60,6 +61,7 @@ def create_product(
 
 @router.patch(
     "/products/{product_id}",
+    dependencies=[Depends(require_page("adminProducts", "write"))],
     response_model=ProductOut,
     summary="Update a product (admin-only)",
 )

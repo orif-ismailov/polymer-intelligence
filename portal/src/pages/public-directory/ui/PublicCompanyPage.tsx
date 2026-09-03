@@ -17,7 +17,7 @@ import { directoryBySlug, directoryForRoles, publicSiteOrigin } from "@/shared/c
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { useTierBase } from "@/shared/lib";
 import { Seo, useCanonical } from "@/shared/seo";
-import { LinkButton, Skeleton, StickyActionBar } from "@/shared/ui";
+import { LinkButton, PageShell, Skeleton, StickyActionBar } from "@/shared/ui";
 
 /**
  * `/{directory}/{companyId}` — a verified company's public profile.
@@ -64,14 +64,14 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
 
   if (!directory || id == null) {
     return (
-      <div className="mx-auto max-w-[1440px] px-4 py-20 text-center lg:px-6">
+      <PageShell width="storefront" className="py-20 text-center">
         <h1 className="text-2xl font-semibold text-text">{t("public.company.notFound")}</h1>
         <div className="mt-6">
           <LinkButton to={base || "/"} variant="outline">
             {t("public.nav.home")}
           </LinkButton>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
@@ -89,16 +89,16 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
 
   if (query.isLoading) {
     return (
-      <div className="mx-auto max-w-[1440px] px-4 py-10 lg:px-6">
+      <PageShell width="storefront">
         {pendingSeo}
         <Skeleton className="h-64 w-full" />
-      </div>
+      </PageShell>
     );
   }
 
   if (query.isError || !company) {
     return (
-      <div className="mx-auto max-w-[1440px] px-4 py-20 text-center lg:px-6">
+      <PageShell width="storefront" className="py-20 text-center">
         <Seo title={t("public.company.notFound")} noindex />
         <h1 className="text-2xl font-semibold text-text">{t("public.company.notFound")}</h1>
         <p className="mt-2 text-sm text-text-muted">{t("public.company.notFoundBody")}</p>
@@ -107,7 +107,7 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
             {t(directory.labelKey)}
           </LinkButton>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
@@ -177,9 +177,10 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
         jsonLd={jsonLd}
       />
 
-      {/* `max-w-6xl`, not the storefront's usual `max-w-[1440px]`: the sheet is
-          laid out for the cabinet's column width (`AppShell`). */}
-      <div className="mx-auto max-w-6xl px-4 py-8 lg:px-6">
+      {/* `max-w-6xl`, not the storefront's usual `max-w-[1440px]`: a profile
+          sheet is a reading surface, and the cabinet frame is 1600 wide now.
+          `PageShell` supplies the padding the storefront shell does not. */}
+      <PageShell width="storefront" className="max-w-6xl py-8">
         <nav aria-label={t("public.offer.breadcrumb")} className="text-xs text-text-subtle">
           <Link to={base || "/"} className="hover:text-brand">
             {t("public.nav.home")}
@@ -340,7 +341,7 @@ export function PublicCompanyPage({ slug }: { slug: string }) {
             }
           />
         </div>
-      </div>
+      </PageShell>
     </>
   );
 }

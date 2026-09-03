@@ -36,8 +36,6 @@ from urllib.parse import urlparse
 
 import httpx
 
-from app.core.config import settings
-
 logger = logging.getLogger(__name__)
 
 # Maximum response body size (25 MB) — bodies over this are rejected without
@@ -187,8 +185,14 @@ async def fetch_url(
         httpx.HTTPError: On network/HTTP errors after all retries are exhausted.
         httpx.TimeoutException: If the request times out.
     """
+    # Read through `settings_service` rather than off `settings`: these four are
+    # operator-tunable from the admin panel, and reading the env field directly
+    # would show a control that changes nothing. Lazy import — `app.ingest` is
+    # imported by the worker at startup and must not pull the service layer in.
+    from app.services import settings_service  # noqa: PLC0415
+
     if host_delay is None:
-        host_delay = settings.INGEST_PER_HOST_DELAY_SECONDS
+        host_delay = float(settings_service.get("ingest_per_host_delay_seconds") or 0.0)
 
     # SSRF guard — must come before any socket activity
     if not is_safe_url(url):
@@ -200,9 +204,9 @@ async def fetch_url(
     # Enforce per-host minimum delay
     await _enforce_host_delay(hostname, host_delay)
 
-    timeout = settings.INGEST_HTTP_TIMEOUT_SECONDS
-    max_retries = settings.INGEST_HTTP_RETRIES
-    user_agent = settings.INGEST_USER_AGENT
+    timeout = int(settings_service.get("ingest_http_timeout_seconds") or 30)
+    max_retries = int(settings_service.get("ingest_http_retries") or 0)
+    user_agent = str(settings_service.get("ingest_user_agent") or "")
 
     request_headers = {"User-Agent": user_agent}
     if headers:

@@ -48,8 +48,7 @@ interface CompanyLicense {
 export function CompanyLicenses({ companyId }: { companyId: string }) {
   const t = useTranslations("licenses");
   const qc = useQueryClient();
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
 
   const queryKey = ["company-licenses", companyId];
   const { data, isLoading } = useQuery<CompanyLicense[]>({

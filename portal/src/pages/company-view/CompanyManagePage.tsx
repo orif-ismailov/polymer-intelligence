@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 import { CompanyStatusBadge, useCompany } from "@/entities/company";
+import { DidoxOnboardingCard } from "@/features/didox-session";
 import { ApiError } from "@/shared/api";
 import {
   Alert,
@@ -86,6 +87,14 @@ export function CompanyManagePage() {
       />
 
       {!editable ? <Alert tone="info">{t("company.notEditable")}</Alert> : null}
+
+      {/* Didox onboarding — a card, not a wizard step. It renders NOTHING when
+          the deployment has no Didox rail, so a system that never enabled it
+          says nothing about it. Verified-only: an unverified company cannot be a
+          party to a contract anyway, so offering the connection would be noise. */}
+      {isVerified ? (
+        <DidoxOnboardingCard companyId={company.id} taxId={company.tax_id} />
+      ) : null}
 
       <ProfileSection company={company} editable={editable} />
       {/* Storefront copy, and NOT behind `editable` — see the note in the

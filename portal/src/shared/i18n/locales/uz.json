@@ -74,16 +74,25 @@
     "market": "Bozor",
     "manufacturers": "Ishlab chiqaruvchilar",
     "requests": "Arizalar",
+    "tenders": "Mening tenderlarim",
+    "openTenders": "Ochiq tenderlar",
     "inquiries": "So'rovlar",
     "news": "Yangiliklar",
     "notifications": "Bildirishnomalar",
     "deals": "Bitimlar",
     "favorites": "Saralangan",
     "samples": "Namunalar",
-    "marketplace": "Marketpleys",
     "openMenu": "Menyuni ochish",
     "logisticsRequests": "Logistika arizalari",
-    "lab": "Laboratoriya"
+    "lab": "Laboratoriya",
+    "groups": {
+      "market": "Bozor",
+      "trade": "Savdo",
+      "services": "Xizmatlar",
+      "company": "Kompaniya"
+    },
+    "collapseRail": "Menyuni yig'ish",
+    "expandRail": "Menyuni yoyish"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -101,7 +110,7 @@
     "createCompany": "Kompaniya yaratish",
     "goToVerification": "Verifikatsiya holatiga",
     "publishOffer": "Taklif chop etish",
-    "activeRequests": "Faol arizalar",
+    "activeRequests": "Faol tenderlar",
     "unread": "O'qilmagan",
     "latestNews": "So'nggi yangiliklar"
   },
@@ -253,27 +262,6 @@
           "description": "Materiallarni tahlil qilish, sinash va sertifikatlash"
         }
       }
-    },
-    "eimzo": {
-      "title": "Elektron imzo",
-      "subtitle": "Kompaniya ro‘yxatini yakunlash uchun hujjatlarni imzolang",
-      "methods": {
-        "usb_token": "USB Token",
-        "mobile_id": "Mobile ID",
-        "cloud_id": "Cloud ID"
-      },
-      "methodUnavailable": "Bu imzolash usuli keyinroq ishga tushadi. Hozircha USB Token’dan foydalaning.",
-      "instructionTitle": "Yo‘riqnoma",
-      "instruction": {
-        "step1": "USB Token’ni qurilmangizga ulang",
-        "step2": "Token PIN-kodini kiriting",
-        "step3": "«Imzolash va yuborish» tugmasini bosing"
-      },
-      "pinLabel": "Token PIN-kodi",
-      "revealPin": "PIN-kodni ko‘rsatish",
-      "sign": "Imzolash va yuborish",
-      "signedBody": "Kompaniya tasdiqlandi. Rekvizitlar sertifikatdan to‘ldirildi va qulflandi.",
-      "legalNote": "Hujjatlar O‘zbekiston Respublikasi qonunchiligiga muvofiq imzolanadi va shifrlanadi"
     },
     "details": {
       "title": "Asosiy ma’lumotlar",
@@ -589,6 +577,14 @@
       "title": "Litsenziyalar va sertifikatlar",
       "subtitle": "Laboratoriya akkreditatsiyasi va hujjatlarini yuklang",
       "moderationNote": "Barcha hujjatlar profilingiz nashr etilishidan oldin moderator tekshiruvidan o‘tadi."
+    },
+    "registry": {
+      "loading": "Davlat reyestridan ma'lumot so'ralmoqda…",
+      "filledTitle": "Davlat reyestri ma'lumotlari",
+      "filledBody": "Rekvizitlar STIR bo'yicha to'ldirildi. Ularni tekshiring va kerak bo'lsa tuzating — siz ko'rayotgan ma'lumot saqlanadi.",
+      "state": "Reyestrdagi holati: {{state}}.",
+      "notFound": "Davlat reyestrida bu STIR bo'yicha yozuv yo'q. Ma'lumotlarni qo'lda kiriting.",
+      "unavailable": "Davlat reyestri hozir mavjud emas — ma'lumotlarni qo'lda kiriting."
     }
   },
   "verification": {
@@ -610,7 +606,30 @@
       "bank_requisites": "Bank rekvizitlari",
       "documents_complete": "Hujjatlar to‘plami",
       "manual_kyb": "Qo‘lda tekshiruv (KYB)",
-      "eimzo_signature": "E-IMZO imzosi"
+      "eimzo_signature": "E-IMZO imzosi",
+      "gov_registry": "Davlat reyestri",
+      "vat_status": "QQS holati"
+    },
+    "findings": {
+      "taxIdDigits": "STIR 9 ta raqamdan iborat bo'lishi kerak, kiritilgani: {{digits}}",
+      "taxIdEmpty": "STIR ko'rsatilmagan",
+      "bankAccount": "Hisob ****{{last4}}: {{problem}}",
+      "bankIssue": {
+        "bad_account_length": "hisob raqami 20 ta raqamdan iborat bo'lishi kerak",
+        "bad_mfo": "MFO 5 ta raqamdan iborat bo'lishi kerak",
+        "undecryptable": "hisob raqamini o'qib bo'lmadi — uni qaytadan kiriting"
+      },
+      "noBankAccount": "Bank hisobi qo'shilmagan",
+      "missingDocuments": "Hujjatlar yetishmaydi: {{list}}",
+      "registryInnMismatch": "STIR davlat reyestri ma'lumotlariga mos kelmaydi",
+      "registryLiquidated": "Davlat reyestri ma'lumotiga ko'ra kompaniya tugatilgan",
+      "registrySuspended": "Davlat reyestri ma'lumotiga ko'ra faoliyat to'xtatilgan",
+      "registryStatusUnknown": "Davlat reyestri kompaniya holatini ko'rsatmadi",
+      "registryNameMismatch": "Davlat reyestridagi nom farq qiladi: «{{name}}»",
+      "vatNotRegistered": "Kompaniya QQS to'lovchisi emas — bu verifikatsiyaga xalaqit bermaydi",
+      "manualPending": "Xodim tekshiruvini kutmoqda",
+      "unavailable": "Manba javob bermadi — tekshiruv bajarilmadi",
+      "eimzoFailed": "Elektron imzo tekshiruvdan o'tmadi — qaytadan imzolang"
     },
     "checkDetail": {
       "empty": "Qo‘shimcha ma’lumot yo‘q.",
@@ -650,11 +669,13 @@
     "errors": {
       "title": "Tasdiqlab bo‘lmadi",
       "unavailable": "E-IMZO xizmati mavjud emas. Kompaniyani qo‘lda verifikatsiyaga yuboring.",
+      "module_not_authorized": "Sayt E-IMZO modulida avtorizatsiya qilinmagan. Yordam xizmatiga xabar bering — domen uchun kirish kaliti kerak.",
       "mismatch": "Sertifikat STIRi kompaniya STIRiga mos kelmaydi.",
       "expired": "So‘rov muddati tugadi. Qayta urinib ko‘ring.",
       "already_registered": "Bu STIR bilan kompaniya allaqachon ro‘yxatdan o‘tgan.",
       "signature_invalid": "Imzo yaroqsiz.",
       "cert_revoked": "Sertifikat bekor qilingan.",
+      "cert_expired": "Sertifikat muddati tugagan. ERI kalitini yangilab, qayta urining.",
       "sign_failed": "E-IMZO modulida imzo yaratib bo‘lmadi.",
       "unknown": "Xatolik yuz berdi. Qayta urinib ko‘ring.",
       "cert_no_tin": "Sertifikatda tashkilot STIR ko‘rsatilmagan. Yuridik shaxs sertifikatini tanlang."
@@ -717,7 +738,7 @@
     },
     "readinessTitle": "Bitimga tayyorlik",
     "readinessHint": "Belgilanganlar marketdagi kartochkada bejlar sifatida ko‘rinadi.",
-    "acceptsRfq": "So‘rovlarga (RFQ) javob beraman",
+    "acceptsRfq": "Xaridor so‘rovlariga javob beraman",
     "acceptsContract": "Platformada shartnoma imzolashga tayyorman",
     "acceptsEscrow": "Escrow orqali ishlashga tayyorman",
     "samplesTitle": "Namunalar",
@@ -916,9 +937,14 @@
         "3-7": "3–7 kun",
         "7-14": "7–14 kun"
       },
-      "acceptsRfq": "RFQ so‘rovlarini qabul qilaman",
+      "acceptsRfq": "Xaridor so‘rovlarini qabul qilaman",
       "acceptsContract": "D-Doc orqali shartnoma imzolashga tayyorman",
-      "acceptsEscrow": "Escrow to‘lovlarini qabul qilaman"
+      "acceptsEscrow": "Escrow to‘lovlarini qabul qilaman",
+      "sampleLetterRequired": "Namuna jo‘natishdan oldin majburiyat xatini talab qilish",
+      "sampleLetterTerms": "Namuna to‘g‘ri kelmasa — shartlar",
+      "sampleLetterHint": "Xaridor buni ERI bilan imzolaydi va matnni ariza yuborishdan oldin ko‘radi. Namuna narxi kelgusi shartnomaga avtomatik hisobga olinadi.",
+      "sampleLetterPlaceholder": "Masalan: sinov natijalariga ko‘ra material mos kelmasa, xaridor foydalanilmagan qoldiqni 10 ish kuni ichida o‘z hisobidan qaytaradi.",
+      "sampleLetterRequiredError": "Shartlarni yozing — ularsiz xatda imzolashga narsa yo‘q."
     },
     "extra": {
       "title": "Qo‘shimcha ma’lumot",
@@ -1106,7 +1132,7 @@
     "favoritesEmptyBody": "Kartochkadagi yurakcha bilan takliflarni belgilang — ular shu yerda paydo bo‘ladi.",
     "leadTime": "Ishlab chiqarish muddati: {{count}} kun",
     "readiness": {
-      "rfq": "RFQ",
+      "rfq": "So‘rovlar",
       "contract": "Shartnoma",
       "escrow": "Escrow"
     },
@@ -1130,7 +1156,7 @@
       "linkCopied": "Havola nusxalandi",
       "noPhoto": "Foto qo‘shilmagan",
       "gallery": "Galereya",
-      "requestRfq": "RFQ so‘rash",
+      "requestRfq": "Sotuvchiga so‘rov",
       "addFavorite": "Sevimlilarga qo‘shish",
       "basics": "Asosiy ma’lumot",
       "cas": "CAS",
@@ -1169,7 +1195,7 @@
       "contractNeedsVerifiedSeller": "Shartnoma faqat verifikatsiyadan o‘tgan kompaniya bilan tuziladi",
       "contractNeedsVerifiedCompany": "Avval o‘z kompaniyangizni verifikatsiyadan o‘tkazing",
       "contractNotOffered": "Sotuvchi bu taklif bo‘yicha shartnoma tuzishga tayyor emas",
-      "rfqNotAccepted": "Sotuvchi bu taklif bo‘yicha KP so‘rovlarini qabul qilmaydi",
+      "rfqNotAccepted": "Sotuvchi bu taklif bo‘yicha so‘rovlarni qabul qilmaydi",
       "reviewsEmpty": "Bu tovar bo‘yicha hali sharhlar yo‘q.",
       "docChip": {
         "sds": "SDS PDF",
@@ -1201,34 +1227,34 @@
     "editFailed": "O'zgarishlarni saqlab bo'lmadi."
   },
   "requests": {
-    "title": "Xarid arizalari",
-    "subtitle": "Kompaniyangiz nomidan yuborilgan arizalar",
-    "create": "Yangi ariza",
+    "title": "Mening tenderlarim",
+    "subtitle": "Kompaniyangizning yetkazib beruvchilar uchun ochiq tenderlari",
+    "create": "Tender e'lon qilish",
     "forCompany": "{{company}} nomidan",
-    "empty": "Hozircha arizalar yo'q",
-    "emptyBody": "Boshlash uchun xarid arizasini yarating.",
-    "notFound": "Ariza topilmadi",
-    "back": "Arizalarga",
-    "timeline": "Holat tarixi",
-    "cancel": "Arizani bekor qilish"
+    "empty": "Hozircha tenderlar yo'q",
+    "emptyBody": "Tender e'lon qiling — yetkazib beruvchilar uni ko'radi va taklif yuboradi.",
+    "notFound": "Tender topilmadi",
+    "back": "Tenderlarga",
+    "timeline": "Tender tarixi",
+    "cancel": "Tenderni nashrdan olish"
   },
   "requestStatus": {
-    "new": "Yangi",
-    "in_review": "Ko'rib chiqilmoqda",
-    "offer_received": "Taklif olindi",
-    "matched": "Moslashtirildi",
+    "new": "E'lon qilingan",
+    "in_review": "Takliflar yig'ilmoqda",
+    "offer_received": "Takliflar bor",
+    "matched": "Yetkazib beruvchi tanlandi",
     "closed": "Yopilgan",
     "cancelled": "Bekor qilingan"
   },
   "requestWizard": {
-    "title": "Yangi xarid arizasi",
-    "subtitle": "Ariza yarating va yetkazib beruvchilardan takliflar oling",
+    "title": "Tender e'lon qilish",
+    "subtitle": "Xaridni tasvirlang — yetkazib beruvchilar tenderni ko'radi va taklif yuboradi",
     "stepOf": "{{current}}-qadam / {{total}}",
     "steps": {
       "product": "Mahsulot",
       "params": "Parametrlar",
       "extra": "Qo'shimcha",
-      "comm": "Shartlar",
+      "comm": "Kirish",
       "preview": "Nashr"
     },
     "product": {
@@ -1248,12 +1274,12 @@
       "pickRequired": "Ro'yxatdan tanlang yoki qo'lda kiriting"
     },
     "params": {
-      "title": "2. So'rov parametrlari",
+      "title": "2. Tender parametrlari",
       "volume": "Kerakli hajm",
       "volumeRequired": "Hajmni kiriting",
       "unit": "Birlik",
       "price": "Maqsad narx (maksimalingiz)",
-      "priceHint": "Yetkazib beruvchilar faqat diapazoningizni ko'radi",
+      "priceHint": "Bu narxni yetkazib beruvchilar ko'rmaydi — uni faqat IMEX AI jamoasi ko'radi",
       "currency": "Valyuta",
       "dealType": "Bitim turi",
       "dealHint": "Incoterms® yetkazib berish bazisini tanlang",
@@ -1277,7 +1303,7 @@
         "quarter": "1–3 oy",
         "later": "3 oydan ko'p"
       },
-      "validity": "Ariza amal qilish muddati",
+      "validity": "Tender amal qilish muddati",
       "validityOpt": "{{days}} kun"
     },
     "extra": {
@@ -1297,70 +1323,52 @@
       "commentPlaceholder": "Yetkazib beruvchilarga qo'shimcha talablar yoki istaklar…"
     },
     "comm": {
-      "title": "4. Muloqot shartlari",
-      "channelLabel": "Takliflarni qanday olishni xohlaysiz",
-      "channel": {
-        "app": {
-          "title": "IMEX AI ichida",
-          "body": "Barcha takliflar kabinetga keladi — solishtirish oson"
-        },
-        "email": {
-          "title": "Email orqali",
-          "body": "Takliflarni elektron pochtaga ham yuborish"
-        },
-        "telegram": {
-          "title": "Telegramda",
-          "body": "Yangi takliflar haqida messengerda bildirishnoma"
-        }
-      },
-      "visibilityLabel": "Arizani kim ko'rishi mumkin",
+      "title": "4. Tenderni kim ko'radi",
+      "visibilityLabel": "Tenderga kirish",
       "visibility": {
         "verified": {
           "title": "Faqat tekshirilgan yetkazib beruvchilar",
-          "body": "Faqat tasdiqlangan verifikatsiyali kompaniyalar ko'radi"
+          "body": "Tenderni IMEX AI verifikatsiyasidan o'tgan kompaniyalar ko'radi"
         },
         "all": {
           "title": "Platformadagi barcha yetkazib beruvchilar",
-          "body": "Ariza maydondagi barcha sotuvchilarga ko'rinadi"
-        },
-        "selected": {
-          "title": "Tanlangan yetkazib beruvchilar",
-          "body": "Keyinroq ko'rsatganlaringizga yuboramiz"
+          "body": "Tenderni barcha sotuvchilar ko'radi; taklifni faqat tekshirilganlari yubora oladi"
         }
-      }
+      },
+      "contactsNote": "Kompaniyangiz kontaktlari yetkazib beruvchilarga ko'rsatilmaydi: bitim ochilgunicha muloqot maydon orqali boradi."
     },
     "preview": {
-      "title": "5. Tekshiring va nashr eting",
+      "title": "5. Tekshiring va e'lon qiling",
       "product": "Mahsulot",
       "volume": "Hajm",
       "price": "Maqsad narx",
       "terms": "Yetkazib berish shartlari",
       "delivery": "Yetkazib berish muddati",
-      "validity": "Ariza muddati",
+      "validity": "Tender muddati",
       "comment": "Izoh",
       "docs": "Yetkazib beruvchi hujjatlari",
-      "publish": "Arizani nashr etish",
+      "visibility": "Kirish",
+      "publish": "Tenderni e'lon qilish",
       "visibilityNote": {
-        "verified": "Arizangiz faqat platformadagi tekshirilgan yetkazib beruvchilarga ko'rinadi.",
-        "all": "Arizangiz platformadagi barcha yetkazib beruvchilarga ko'rinadi.",
-        "selected": "Ariza tanlangan yetkazib beruvchilarga yuboriladi."
+        "verified": "Tenderni faqat tekshirilgan yetkazib beruvchilar ko'radi — taklif yubora oladiganlarning o'zi.",
+        "all": "Tenderni platformadagi barcha yetkazib beruvchilar ko'radi. Taklifni faqat tekshirilgan kompaniyalar yubora oladi."
       }
     },
     "done": {
-      "title": "Ariza nashr etildi!",
-      "body": "Yetkazib beruvchilar so'rovingizni ko'rmoqda va takliflar tayyorlamoqda.",
-      "idLabel": "Ariza raqami",
+      "title": "Tender e'lon qilindi!",
+      "body": "Yetkazib beruvchilar uni allaqachon ko'rmoqda va takliflar tayyorlamoqda.",
+      "idLabel": "Tender raqami",
       "copyId": "Raqamni nusxalash",
       "nextTitle": "Keyingi nima?",
       "next": {
         "offers": "Yetkazib beruvchilar tez orada taklif yuboradi",
-        "notify": "Yangi takliflar haqida bildirishnoma olasiz",
-        "compare": "Takliflarni solishtiring va eng yaxshi shartni tanlang"
+        "notify": "Har bir yangi taklif haqida bildirishnoma olasiz",
+        "compare": "Takliflarni solishtiring va yetkazib beruvchini tanlang"
       },
-      "toRequests": "Mening arizalarimga o'tish",
-      "createAnother": "Yana bir ariza yaratish"
+      "toRequests": "Mening tenderlarimga o'tish",
+      "createAnother": "Yana bir tender e'lon qilish"
     },
-    "submitFailed": "Arizani yuborib bo'lmadi.",
+    "submitFailed": "Tenderni e'lon qilib bo'lmadi.",
     "urgencyOpt": {
       "low": "Past",
       "medium": "O'rta",
@@ -1463,14 +1471,14 @@
     }
   },
   "notifications": {
-    "subtitle": "Arizalar, so'rovlar, takliflar va tekshiruv bo'yicha yangilanishlar",
+    "subtitle": "Tenderlar, so'rovlar, takliflar va tekshiruv bo'yicha yangilanishlar",
     "markAllRead": "Hammasini o'qilgan qilish",
     "viewAll": "Barchasini ko'rish",
     "empty": "Bildirishnomalar yo'q",
     "emptyBody": "Hammasi o'qilgan.",
     "request_status": {
-      "title": "Ariza yangilandi",
-      "body": "{{number}} arizasi yangilandi"
+      "title": "Tender yangilandi",
+      "body": "{{number}} tenderi yangilandi"
     },
     "inquiry_approved": {
       "title": "Yangi so'rov",
@@ -1510,7 +1518,7 @@
     },
     "rfq_response_new": {
       "title": "Yangi taklif",
-      "body": "{{number}} so‘roviga taklif keldi"
+      "body": "{{number}} tenderiga taklif keldi"
     },
     "rfq_response_accepted": {
       "title": "Taklif qabul qilindi",
@@ -1518,7 +1526,7 @@
     },
     "rfq_response_not_selected": {
       "title": "Taklif tanlanmadi",
-      "body": "Ushbu so‘rov bo‘yicha boshqa taklif tanlandi"
+      "body": "Ushbu tender bo‘yicha boshqa yetkazib beruvchi tanlandi"
     },
     "deal_opened": {
       "title": "Bitim ochildi",
@@ -1545,8 +1553,8 @@
       "body": "{{number}} bitimi: {{amount}} {{currency}} — to‘lov holati o‘zgardi"
     },
     "rfq_match": {
-      "title": "Profilingizga mos yangi so‘rov",
-      "body": "{{product}} — {{volume}} {{volume_unit}}. Ariza {{number}}"
+      "title": "Profilingizga mos yangi tender",
+      "body": "{{product}} — {{volume}} {{volume_unit}}. Tender {{number}}"
     },
     "lab_order_status": {
       "title": "Laboratoriya arizasi",
@@ -1631,17 +1639,27 @@
       "created": "Loyiha yaratildi",
       "sent": "Kelishuvga yuborildi",
       "signedBy": "Imzolandi: {{company}}",
+      "signedNoDate": "Imzolangan",
       "awaitingSignature": "Imzo kutilmoqda: {{company}}",
       "active": "Shartnoma ikki tomon tomonidan imzolandi",
       "awaiting": "Kutilmoqda"
+    },
+    "rail": "Qanday imzolaymiz",
+    "rails": {
+      "eimzo": "Platformadagi ERI",
+      "didox": "Didox orqali (EDI, my.soliq.uz da ko‘rinadi)"
+    },
+    "railHint": {
+      "eimzo": "Ikkala tomon biz saqlaydigan hujjatni imzolaydi.",
+      "didox": "Hujjat EDI operatorida yaratiladi va my.soliq.uz ga tushadi. Ikkala tomonda Didox akkaunti kerak."
     }
   },
   "deals": {
     "title": "Bitimlar",
     "subtitle": "Bitim xonalari: chat, hujjatlar, holatlar.",
     "empty": "Hozircha bitimlar yo‘q",
-    "emptyBody": "Xaridor so‘roviga javob bering yoki o‘z so‘rovingizga kelgan taklifni qabul qiling.",
-    "browseRfqs": "Ochiq so‘rovlar",
+    "emptyBody": "Xaridor tenderiga taklif yuboring yoki o‘z tenderingizda yetkazib beruvchini tanlang.",
+    "browseRfqs": "Ochiq tenderlar",
     "needsAction": "Harakat kerak",
     "noAmount": "Summa ko‘rsatilmagan",
     "progress": "Bitim jarayoni",
@@ -1745,11 +1763,11 @@
     }
   },
   "rfq": {
-    "marketTitle": "Ochiq so‘rovlar",
-    "marketSubtitle": "Siz javob bera oladigan xaridor so‘rovlari.",
-    "marketEmpty": "Ochiq so‘rovlar yo‘q",
-    "marketEmptyBody": "Keyinroq qarang — yangi so‘rovlar muntazam paydo bo‘ladi.",
-    "respond": "Javob berish",
+    "marketTitle": "Ochiq tenderlar",
+    "marketSubtitle": "Siz taklif yubora oladigan xaridor tenderlari.",
+    "marketEmpty": "Ochiq tenderlar yo‘q",
+    "marketEmptyBody": "Keyinroq qarang — yangi tenderlar muntazam paydo bo‘ladi.",
+    "respond": "Taklif yuborish",
     "alreadyResponded": "Taklif yuborilgan",
     "submit": "Taklifni yuborish",
     "price": "Narx",
@@ -1766,11 +1784,11 @@
     "destination": "Manzil",
     "desiredDate": "Istalgan sana",
     "requiredDocs": "Kerakli hujjatlar",
-    "responses": "Takliflar",
+    "responses": "Yetkazib beruvchilar takliflari",
     "noResponses": "Hozircha takliflar yo‘q",
-    "noResponsesBody": "Yetkazib beruvchilar hali javob bermagan.",
-    "accept": "Qabul qilish",
-    "acceptTitle": "Taklif qabul qilinsinmi?",
+    "noResponsesBody": "Yetkazib beruvchilar tenderga hali javob bermagan.",
+    "accept": "Yetkazib beruvchini tanlash",
+    "acceptTitle": "Shu yetkazib beruvchi tanlansinmi?",
     "acceptBody": "{{company}} bilan {{price}} bo‘yicha bitim ochiladi. Qolgan takliflar rad etiladi.",
     "openDeal": "Bitimni ochish",
     "status": {
@@ -1778,6 +1796,27 @@
       "accepted": "Qabul qilingan",
       "not_selected": "Tanlanmagan",
       "withdrawn": "Chaqirib olingan"
+    },
+    "tab": {
+      "open": "Ochiq",
+      "mine": "Mening takliflarim"
+    },
+    "mine": {
+      "empty": "Siz hali taklif yubormagansiz",
+      "emptyBody": "«Ochiq» bo‘limini oching va tender bo‘yicha o‘z narxingizni taklif qiling.",
+      "yourPrice": "Sizning taklifingiz",
+      "tenderClosed": "Tender yopilgan"
+    },
+    "withdraw": "Taklifni chaqirib olish",
+    "withdrawTitle": "Taklif chaqirib olinsinmi?",
+    "withdrawBody": "Xaridor endi sizning narxingizni ko‘rmaydi. Tender ochiq ekan, qayta taklif yuborishingiz mumkin.",
+    "errors": {
+      "notVerified": "Taklif yuborishni faqat tekshirilgan kompaniyalar amalga oshira oladi. Verifikatsiyadan o‘ting — tender ochiq qoladi.",
+      "roleNotAllowed": "Taklif yuborishni faqat sotuvchi kompaniya amalga oshira oladi.",
+      "alreadyResponded": "Siz bu tender bo‘yicha taklif yuborgansiz.",
+      "requestClosed": "Tender endi takliflar qabul qilmaydi.",
+      "ownRequest": "Bu sizning kompaniyangiz tenderi.",
+      "unknownIncoterms": "Ro‘yxatdan yetkazib berish shartlarini tanlang."
     },
     "docs": {
       "sds": "SDS",
@@ -1927,13 +1966,16 @@
       "declined": "Rad etilgan",
       "sent": "Jo‘natilgan",
       "received": "Qabul qilingan",
-      "rejected_by_buyer": "To‘g‘ri kelmadi"
+      "rejected_by_buyer": "To‘g‘ri kelmadi",
+      "pending_letter": "Xat imzolanishini kutmoqda"
     },
     "errors": {
       "alreadyRequested": "Bu taklif bo‘yicha faol so‘rovingiz allaqachon bor.",
       "notAvailable": "Sotuvchi bu taklif bo‘yicha namuna taklif qilmaydi.",
       "ownOffer": "Bu sizning kompaniyangiz taklifi — namuna so‘rash kerak emas."
-    }
+    },
+    "letterOwed": "So‘rov yaratildi, lekin sotuvchiga yuborilmadi: avval majburiyat xatini ERI bilan imzolang.",
+    "goSign": "Imzolashga o‘tish"
   },
   "onboarding": {
     "title": "Ro‘yxatdan o‘tish —",
@@ -2614,5 +2656,128 @@
   },
   "productCategory": {
     "polymer": "Polimerlar"
+  },
+  "ikpu": {
+    "label": "IKPU (tovar kodi)",
+    "hint": "my.soliq.uz ga yuboriladigan hujjatlar uchun kerak. Didox’da e’lon qilgan kodlaringiz orasidan qidiradi; yangi kodni tasnif.soliq.uz dan oling.",
+    "placeholder": "Tovar nomi, masalan «polietilen»",
+    "search": "Qidirish",
+    "package": "Qadoq",
+    "chosenPackage": "Qadoq: {{name}}",
+    "empty": "Hech narsa topilmadi. Boshqa nom bilan urinib ko‘ring.",
+    "errors": {
+      "session": "Didox sessiyasi kerak. ERI bilan kiring — bu bir marta bosish.",
+      "unavailable": "Didox IKPU ma’lumotnomasi hozir mavjud emas. Keyinroq urinib ko‘ring — kodni keyin ham qo‘shsa bo‘ladi.",
+      "failed": "Qidiruvni bajarib bo‘lmadi.",
+      "badCode": "IKPU kodi 17 ta raqamdan iborat bo‘lishi kerak."
+    },
+    "emptyAdd": "Sizning kodlaringiz orasidan hech narsa topilmadi. Qidiruv faqat Didox’da e’lon qilgan kodlaringiz bo‘yicha ishlaydi — yangi kodni tasnif.soliq.uz dan olib, shu yerda qo‘shing.",
+    "add": "{{code}} kodini qo‘shish",
+    "codeHint": "IKPU kodi — 17 ta raqam.",
+    "origin": "Tovar kelib chiqishi",
+    "originHint": "Hisob-faktura uchun: bu tovarni qanday olgansiz. Didox buni bilmaydi — bir xil kod zavod uchun «o‘z ishlab chiqarishi», treyder uchun «qayta sotish».",
+    "originPlaceholder": "Kelib chiqishini tanlang",
+    "originRequired": "Kelib chiqishisiz e’lonni chop etib bo‘lmaydi.",
+    "origins": {
+      "1": "O‘z ishlab chiqarishi",
+      "2": "Qayta sotish (yetkazib beruvchidan olingan)",
+      "3": "Xizmatlar",
+      "4": "Aylanmada ishtirok etmaydi"
+    }
+  },
+  "didox": {
+    "title": "Elektron hujjat aylanmasi (Didox)",
+    "connect": "Didox’ni ulash",
+    "connecting": "Ulanmoqda…",
+    "signing": "Imzolanmoqda…",
+    "signAndSend": "Imzolash va Didox’ga yuborish",
+    "sessionExpired": "Didox sessiyasi tugadi — birinchi imzolashda o‘zi yangilanadi.",
+    "states": {
+      "not_registered": "Ulanmagan",
+      "offer_unsigned": "Oferta imzolanmagan",
+      "ready": "Tayyor",
+      "disabled": ""
+    },
+    "hints": {
+      "not_registered": "Didox orqali shartnoma imzolash uchun kompaniyani bir marta ERI bilan ulash kerak.",
+      "offer_unsigned": "Hisob yaratildi, lekin Didox ommaviy ofertasi hali imzolanmagan. U imzolanmaguncha hujjat yuborish rad etiladi.",
+      "ready": "Kompaniya Didox orqali hujjat yubora va imzolay oladi.",
+      "disabled": ""
+    },
+    "documentStatus": {
+      "0": "Qoralama — imzolash mumkin",
+      "1": "Kontragent imzosini kutyapmiz",
+      "2": "Sizning navbatingiz",
+      "3": "Ikkala tomon imzolagan",
+      "4": "Kontragent rad etdi",
+      "50": "Soliq organi bekor qilgan"
+    },
+    "errors": {
+      "module_missing": "E-IMZO topilmadi. E-IMZO modulini ishga tushiring.",
+      "no_cert": "Hech qanday ERI kaliti topilmadi.",
+      "cert_mismatch": "Sertifikatdagi STIR kompaniya STIRiga mos emas.",
+      "disabled": "Bu tizimda Didox ulanmagan.",
+      "failed": "Didox’ga ulanib bo‘lmadi."
+    },
+    "signErrors": {
+      "module_missing": "E-IMZO topilmadi. Modulni ishga tushiring.",
+      "no_cert": "Hech qanday ERI kaliti topilmadi.",
+      "expired": "Imzo ma’lumotlari eskirdi. «Imzolash»ni qayta bosing.",
+      "offer_required": "Avval Didox ommaviy ofertasini imzolash kerak.",
+      "unavailable": "Didox hozir mavjud emas. Keyinroq urinib ko‘ring.",
+      "failed": "Hujjatni imzolab bo‘lmadi.",
+      "rejected": "EHA operatori hujjatni rad etdi: {{message}}",
+      "cancelled": "Imzolash bekor qilindi — E-IMZO parol oynasi yopildi. Qaytadan bosing va kalit parolini kiriting."
+    },
+    "signOffer": "Didox ofertasini imzolash",
+    "signingOffer": "Imzolanmoqda…",
+    "printForm": {
+      "title": "Didox bosma shakli",
+      "loading": "Operator shakli yuklanmoqda…",
+      "errors": {
+        "failed": "Operatordan bosma shaklni olishning imkoni bo‘lmadi.",
+        "didox_session_required": "Didox sessiyasi kerak — kompaniyani operatorga ulang.",
+        "document_not_created": "Hujjat operatorda hali yaratilmagan.",
+        "didox_unavailable": "Didox hozir mavjud emas. Keyinroq urinib ko‘ring."
+      }
+    }
+  },
+  "sampleLetter": {
+    "title": "Majburiyat xati",
+    "buyerPending": "Sotuvchi so‘rovni siz xatni ERI bilan imzolaganingizdan keyingina ko‘radi.",
+    "sellerPending": "Xaridor xatni hali imzolamagan — so‘rov yuborilgan hisoblanmaydi.",
+    "signedAt": "№ {{number}}, {{at}} da imzolangan",
+    "open": "Xatni ochish (PDF)",
+    "sign": "ERI bilan imzolash",
+    "notSentYet": "So‘rov hali sotuvchiga yuborilmagan.",
+    "loadFailed": "Xatni yuklab bo‘lmadi. Sahifani yangilang."
+  },
+  "didoxDocument": {
+    "title": "Didox’dagi hujjat",
+    "sellerHint": "Shartnoma EDI operatorida imzolanadi — hujjatni yarating, shundan so‘ng ikkala tomon ERI bilan imzolashi mumkin.",
+    "buyerHint": "Sotuvchi hali operatorda hujjat yaratmagan. Imzolash shundan keyin ochiladi.",
+    "create": "Didox’da hujjat yaratish",
+    "creating": "Yaratilmoqda…",
+    "blockedTitle": "Hozircha hujjat yaratib bo‘lmaydi",
+    "confirmIdentity": "ERI bilan shaxsni tasdiqlash",
+    "blockers": {
+      "ikpu_missing": "E’londa IKPU ko‘rsatilmagan — tovar kodisiz hujjat qabul qilinmaydi.",
+      "signer_identity_missing": "Tomonlardan biri ERI orqali shaxsini tasdiqlamagan: hujjatda imzolovchining JSHSHIR va F.I.Sh. majburiy.",
+      "not_ready": "Shartnoma hali ikkala tomonga imzoga yuborilmagan.",
+      "wrong_rail": "Bu shartnoma Didox orqali emas, bizning ERI bilan imzolanadi.",
+      "party_mismatch": "Shartnoma bo‘yicha sotuvchini aniqlab bo‘lmadi.",
+      "counterparty_unknown": "Kontragent STIRi EHA operatori ma’lumotnomasida topilmadi — hujjat bu tomonga qabul qilinmaydi.",
+      "counterparty_ikpu_missing": "Kontragent bu MXIK kodini o‘z Didox kabinetida e’lon qilmagan — operator rad etadi. Boshqa kompaniya ro‘yxatini biz to‘ldira olmaymiz; kontragentdan kodni qo‘shishni so‘rang."
+    },
+    "errors": {
+      "didox_session_required": "Didox sessiyasi kerak — kirishni ERI bilan imzolang.",
+      "didox_offer_required": "Kompaniya Didox ommaviy ofertasini imzolamagan.",
+      "didox_unavailable": "Didox hozir ishlamayapti. Keyinroq urinib ko‘ring.",
+      "ikpu_missing": "E’londa IKPU ko‘rsatilmagan.",
+      "not_ready": "Shartnoma yuborishga tayyor emas.",
+      "not_seller": "Hujjatni sotuvchi yaratadi.",
+      "wrong_rail": "Shartnoma Didox relsida emas.",
+      "empty_body": "Shartnomada na matn, na pozitsiyalar bor."
+    }
   }
 }

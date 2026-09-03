@@ -63,6 +63,15 @@ LOCK_BASE_LAB_ORDER = 1_000
 LOCK_BASE_FACTORY_RFQ = 34_000
 LOCK_BASE_LOGISTICS_REQUEST = 35_000
 LOCK_BASE_LAB_REQUEST = 39_000
+#: ЭСФ numbers are per SELLER COMPANY per year (`esf_seq_{company_id}_{year}`), so
+#: this base is keyed on the year alone. That DOES serialise the first invoice of a
+#: year across companies — one `CREATE SEQUENCE`, once a year, which is precisely
+#: the cost the lock exists to pay. Do not "fix" it into a per-company key: those
+#: would collide with LOCK_BASE_SAMPLE_LETTER within a few thousand companies.
+LOCK_BASE_ESF = 40_000
+#: Commitment letters are numbered globally per year — they are OUR document, not
+#: an entry in any seller's tax book.
+LOCK_BASE_SAMPLE_LETTER = 41_000
 #: The daily request counter keys on YYYYMMDD directly — see `generate_request_number`.
 LOCK_BASE_REQUEST = 0
 

@@ -163,11 +163,14 @@ test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
     await page.waitForURL(`**/cabinet/manufacturers/${emptyFactoryId}/chat`);
   }
 
-  // ...and the two ways back out: the sidebar link and the brand lockup, which
-  // points at the public home from every surface that draws it.
+  // ...and the way back out: the brand lockup, which points at the public home
+  // from every surface that draws it. There used to be a second one — a
+  // «Маркетплейс» entry at the foot of the rail — but it was the same
+  // destination as the lockup a few hundred pixels away, and the lockup is the
+  // one that also exists on the login and onboarding screens, which have no
+  // rail. So the rail no longer carries a duplicate of it.
   await page.goto("/cabinet");
-  await page.getByRole("link", { name: MARKETPLACE }).click();
-  await page.waitForURL((url) => url.pathname === "/");
+  await expect(page.getByRole("link", { name: MARKETPLACE })).toHaveCount(0);
 
   await page.goto("/cabinet/offers");
   await page.getByRole("link", { name: "IMEX AI" }).first().click();

@@ -3,8 +3,9 @@
 A buyer, acting for a selected company, creates purchase requests through the same
 wizard payload as the Mini App. The request enters the SAME status machine +
 history and appears in the dashboard `/requests` identically to TG-originated ones.
-The read side reuses the webapp RequestOut/RequestDetailOut (raw status; the portal
-maps to client-facing labels), so a portal request serializes like a TG request.
+The read side reuses the webapp RequestOut and extends RequestDetailOut with the
+two tender fields the cabinet owns — visibility and required_docs (raw status; the
+portal maps to client-facing labels), so a portal request serializes like a TG one.
 
 Company-scoped: every route carries company_id; membership is enforced (non-member
 → 404 = no cross-company disclosure).
@@ -33,8 +34,8 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.requests import service as request_service
 from app.domains.requests.models import Request
-from app.domains.requests.schemas import PortalRequestCreate
-from app.domains.requests.webapp_schemas import RequestDetailOut, RequestFileOut, RequestOut
+from app.domains.requests.schemas import PortalRequestCreate, PortalRequestDetailOut
+from app.domains.requests.webapp_schemas import RequestFileOut, RequestOut
 from app.services import rate_limit, storage_service
 
 router = APIRouter(prefix="/portal/requests", tags=["portal-requests"])
@@ -113,7 +114,7 @@ def list_requests(
 
 @router.get(
     "/{request_id}",
-    response_model=RequestDetailOut,
+    response_model=PortalRequestDetailOut,
     summary="Request detail + status timeline",
 )
 def get_request(
@@ -121,11 +122,11 @@ def get_request(
     company_id: int = Query(...),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
-) -> RequestDetailOut:
+) -> PortalRequestDetailOut:
     company = company_or_404(db, account, company_id)
     req = _request_or_404(db, company.id, request_id)
     history = sorted(req.status_history, key=lambda h: h.created_at)
-    return RequestDetailOut(
+    return PortalRequestDetailOut(
         id=req.id,
         number=req.number,
         status=req.status,
@@ -149,6 +150,8 @@ def get_request(
         contact_name=req.contact_name,
         phone=req.phone,
         legal_address=req.legal_address,
+        visibility=req.visibility,
+        required_docs=req.required_docs or [],
         files=req.files,
         history=history,
     )

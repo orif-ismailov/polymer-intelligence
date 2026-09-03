@@ -106,9 +106,14 @@ class StubEscrowClient:
         return False
 
 
-def current_mode(db: Any) -> str:  # noqa: ANN401 — Session, typed loosely to stay import-light
-    """The configured rail (`stub` | `live`) from the runtime settings."""
-    return str(settings_service.get(db, "escrow_mode"))
+def current_mode() -> str:
+    """The configured rail, read from `ESCROW_MODE` in `.env`.
+
+    Took a `Session` until the switches moved out of `app_settings`; it
+    never queried anything, and a parameter implying a lookup that does
+    not happen is the sort of thing that gets copied forward.
+    """
+    return str(settings_service.get("escrow_mode"))
 
 
 def get_escrow_client(db: Any) -> EscrowClient:  # noqa: ANN401
@@ -118,7 +123,7 @@ def get_escrow_client(db: Any) -> EscrowClient:  # noqa: ANN401
     setting should not be able to hold — better a loud 503 than a quiet stub
     standing in for a bank.
     """
-    mode = current_mode(db)
+    mode = current_mode()
     if mode == MODE_STUB:
         return StubEscrowClient()
     if mode == MODE_LIVE:

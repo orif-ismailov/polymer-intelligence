@@ -46,11 +46,17 @@ interface CaseStatusPanelProps {
   fallbackCase?: CaseOut | null;
 }
 
-/** Which wizard step to deep-link to when the case needs more information. */
+/** Which wizard step to deep-link to when the case needs more information.
+ *
+ * A `failed` check is what sent the case back; a `warning` never blocks one. The
+ * two used to be taken together in list order, so a company whose only failure
+ * was a missing certificate was pointed at the BANK step — because "no bank
+ * account" is a warning and sorts earlier. Failures first, warnings only after.
+ */
 function firstActionableStep(caseOut: CaseOut): number {
-  const failing = caseOut.checks.find(
-    (c) => c.status === "failed" || c.status === "warning",
-  );
+  const failing =
+    caseOut.checks.find((c) => c.status === "failed") ??
+    caseOut.checks.find((c) => c.status === "warning");
   if (failing) return CHECK_TO_STEP[failing.check_type] ?? 1;
   return 1;
 }

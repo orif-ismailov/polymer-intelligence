@@ -27,7 +27,7 @@ interface StepPreviewProps {
 }
 
 /**
- * Sheet 5 — «Проверьте и опубликуйте». Summary of every choice, the visibility
+ * Sheet 5 — «Проверьте и объявите». Summary of every choice, the visibility
  * note, and the amber Publish CTA the mockup paints specially.
  */
 export function StepPreview({
@@ -98,6 +98,12 @@ export function StepPreview({
           />
           <SpecItem label={t("requestWizard.preview.comment")} value={comment} />
           <SpecItem label={t("requestWizard.preview.docs")} value={docs} />
+          {/* Visibility is a property of the tender now, not a preference —
+              so it belongs in the summary the buyer signs off on. */}
+          <SpecItem
+            label={t("requestWizard.preview.visibility")}
+            value={t(`requestWizard.comm.visibility.${draft.visibility}.title`)}
+          />
         </SpecList>
       </div>
 

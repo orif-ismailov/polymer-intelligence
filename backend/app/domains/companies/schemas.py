@@ -418,6 +418,51 @@ class CompanyOfferIn(BaseModel):
     #: samples available means free.
     samples_available: bool = False
     sample_price: decimal.Decimal | None = Field(default=None, ge=0)
+    #: Require the buyer to e-sign a commitment letter before this request reaches
+    #: the seller. Per-offer because the paperwork should be proportional to what
+    #: is being given away: 200 g of granulate warrants none, 25 kg does.
+    sample_letter_required: bool = False
+    #: The seller's own "if the material does not suit the buyer" clause. Rendered
+    #: into the letter verbatim and snapshotted onto the request when the buyer
+    #: signs — the platform does not write this consequence for two other
+    #: businesses, which is why the validator below refuses to default it.
+    sample_letter_terms: str | None = Field(default=None, max_length=4000)
+
+    # ── ИКПУ (P7.a W9) — the tax classification of these goods ────────────
+    #: Chosen ONCE here and reused by every договор and ЭСФ this offer backs.
+    #: NULL is a permanent, legitimate state: back-filling would mean inventing a
+    #: tax classification for someone else's goods, so an offer without a code
+    #: simply cannot back a Didox document and says so at contract time.
+    ikpu_code: str | None = Field(default=None, max_length=32)
+    ikpu_name: str | None = Field(default=None, max_length=500)
+    ikpu_package_code: str | None = Field(default=None, max_length=32)
+    ikpu_package_name: str | None = Field(default=None, max_length=200)
+    ikpu_origin: int | None = Field(default=None, ge=1, le=4)
+
+    @model_validator(mode="after")
+    def _ikpu_is_all_or_nothing(self) -> CompanyOfferIn:
+        """A half-filled ИКПУ is worse than none.
+
+        It builds a document Didox rejects at SEND time — after the seller has
+        loaded a key and typed its password — so it fails here instead. The DB
+        CHECK says the same thing; this is the copy that produces a form error.
+        """
+        if self.ikpu_code and not (self.ikpu_package_code and self.ikpu_origin):
+            raise ValueError("ikpu_package_code and ikpu_origin are required with an ikpu_code")
+        return self
+
+    @model_validator(mode="after")
+    def _letter_needs_terms(self) -> CompanyOfferIn:
+        """A required letter must say what happens if the sample does not fit.
+
+        Defaulting the clause would mean the platform inventing a commercial
+        consequence between two other companies, and an empty one would put a
+        blank section into a document the buyer signs. Both are worse than a form
+        error, so this is a hard rule rather than a hint.
+        """
+        if self.sample_letter_required and not (self.sample_letter_terms or "").strip():
+            raise ValueError("sample_letter_terms is required when a letter is demanded")
+        return self
     sample_dispatch_days: int | None = Field(default=None, ge=1, le=365)
 
     @field_validator("key_properties", "applications", mode="after")
@@ -499,6 +544,21 @@ class CompanyOfferOut(BaseModel):
     sample_dispatch_days: int | None = None
     has_lab_passport: bool = False
     lab_verified: bool = False
+    #: The commitment letter the seller may demand before a sample ships (W8) and
+    #: the tax classification of the goods (W9).
+    #:
+    #: These are READ-BACK fields, and that is load-bearing: the offer form
+    #: hydrates from this schema and PUTs the whole draft back, so a field missing
+    #: here returns as `None` and overwrites the stored value. Omitting them meant
+    #: any edit — a fixed typo in the description — silently erased the ИКПУ and
+    #: the letter terms, and the seller only found out at contract time.
+    sample_letter_required: bool = False
+    sample_letter_terms: str | None = None
+    ikpu_code: str | None = None
+    ikpu_name: str | None = None
+    ikpu_package_code: str | None = None
+    ikpu_package_name: str | None = None
+    ikpu_origin: int | None = None
     moderation_note: str | None = None
     created_at: datetime.datetime
     #: Attached files in upload order (photos + documents), so the seller's own
@@ -513,6 +573,45 @@ class CompanyOfferOut(BaseModel):
         """The columns are nullable (0030 backfilled nothing), and a client that
         has to tell `null` from `[]` will eventually get it wrong."""
         return value or []
+
+
+class CompanyRegistryDataOut(BaseModel):
+    """What the state registry says about a STIR, shaped for the wizard's fields.
+
+    Deliberately NOT the whole provider record. Any portal account can look up
+    any STIR, so this carries only what a counterparty reads off an invoice —
+    requisites plus the director's name. The director's ПИНФЛ and tax id, and the
+    accountant's name, are personal identifiers and stop at the service layer.
+    """
+
+    tax_id: str
+    legal_name: str | None = None
+    short_name: str | None = None
+    legal_form: str | None = None
+    legal_address: str | None = None
+    registration_date: datetime.date | None = None
+    director_name: str | None = None
+    oked: str | None = None
+    bank_mfo: str | None = None
+    bank_account: str | None = None
+    vat_registered: bool = False
+    vat_certificate_no: str | None = None
+    #: Normalized (`active`/`liquidated`/`suspended`/`unknown`) + the registry's
+    #: own wording, which is what a verifier actually wants to read.
+    registry_status: str = "unknown"
+    registry_status_text: str | None = None
+
+
+class CompanyLookupOut(BaseModel):
+    """Envelope for the prefill lookup.
+
+    `found=False` is an ordinary answer, not an error: Didox reports "no such
+    company" as a 200 with an empty body, and the form must stay manual rather
+    than fill itself with nulls.
+    """
+
+    found: bool
+    company: CompanyRegistryDataOut | None = None
 
 
 class DirectoryCompanyOut(BaseModel):

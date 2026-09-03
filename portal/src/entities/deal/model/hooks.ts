@@ -1,7 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { dealApi, dealKeys, rfqApi } from "./api";
-import type { DealDetail, DealList, MarketRequest, RfqResponse } from "./types";
+import type {
+  DealDetail,
+  DealList,
+  MarketRequest,
+  MyRfqResponse,
+  RfqResponse,
+} from "./types";
 
 /** How often the Trade Room re-reads. SSE is out of scope for P2. */
 export const DEAL_POLL_MS = 15_000;
@@ -38,5 +44,30 @@ export function useOpenRfqs(companyId: number | null) {
     queryKey: dealKeys.openRequests(companyId),
     queryFn: () => rfqApi.openRequests(companyId as number),
     enabled: companyId != null,
+  });
+}
+
+export function useMyRfqResponses(companyId: number | null) {
+  return useQuery<{ items: MyRfqResponse[] }>({
+    queryKey: dealKeys.myResponses(companyId),
+    queryFn: () => rfqApi.myResponses(companyId as number),
+    enabled: companyId != null,
+  });
+}
+
+/**
+ * Pull a quote back. Invalidates the open list too: withdrawing frees the
+ * partial-unique slot, so that card's «Предложение отправлено» has to become a
+ * live «Подать предложение» again.
+ */
+export function useWithdrawRfqResponse(companyId: number | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ requestId, responseId }: { requestId: number; responseId: number }) =>
+      rfqApi.withdraw(companyId as number, requestId, responseId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: dealKeys.myResponses(companyId) });
+      void queryClient.invalidateQueries({ queryKey: dealKeys.openRequests(companyId) });
+    },
   });
 }

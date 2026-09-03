@@ -161,8 +161,7 @@ function toPayload(form: FormState): Record<string, unknown> {
 export default function SubstancesPage() {
   const t = useTranslations("substances");
   const qc = useQueryClient();
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
 
   const [q, setQ] = useState("");
   const [level, setLevel] = useState<Level | "">("");

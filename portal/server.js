@@ -332,6 +332,30 @@ async function createServer() {
     const pathname = req.path;
     const origin = siteOrigin(req);
 
+    // Anything that cannot be an app route gets a 404 here rather than a render.
+    //
+    // Real assets never reach this far — `vite.middlewares` (dev) and `sirv`
+    // (prod) are registered above — so a path with a file extension arriving
+    // here is a MISS, and answering it with the HTML shell at status 200 tells
+    // a crawler that `/style.css` is a page.
+    //
+    // It also breaks outright, which is how this was found. Vite derives the
+    // ids of index.html's inline `<style>`/`<script>` blocks from the request
+    // URL, so Chrome DevTools probing `/.well-known/appspecific/
+    // com.chrome.devtools.json` produced the module id
+    // `…com.chrome.devtools.json?html-proxy&direct&index=0.css` — which still
+    // contains `.json`, so `vite:json` claimed it and tried to `JSON.parse` our
+    // CSS: «Failed to parse JSON file». The catch below then swallowed it and
+    // served the shell, so the only symptom was a stack trace per page load.
+    //
+    // Safe as a blanket rule because no route here has a dot in it:
+    // `PUBLIC_PATTERNS` above is fixed segments and numeric ids, and the cabinet
+    // is `/cabinet/**`. Extension-less unknown paths still fall through to the
+    // SPA shell, so a client-routed 404 page keeps working.
+    if (pathname.startsWith("/.well-known/") || /\.[a-z0-9]+$/i.test(pathname)) {
+      return res.status(404).type("text/plain").send("Not found");
+    }
+
     try {
       let template;
       let render = ssrRender;

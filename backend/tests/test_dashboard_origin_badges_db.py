@@ -62,7 +62,7 @@ def api(engine: sa.Engine):  # noqa: ANN201
 def _staff_auth(staff_id: int) -> dict[str, str]:
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role='admin')}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"}
 
 
 @requires_real_db
@@ -73,12 +73,17 @@ def test_requests_list_origin_fields_and_filter(api) -> None:  # noqa: ANN001
         owner = make_account(db, "+998900009001")
         company = make_company(db, owner, tax_id="317000001", short_name="Portal Co")
         from app.domains.requests import service as request_service  # noqa: PLC0415
-        from app.domains.requests.webapp_schemas import RequestCreate  # noqa: PLC0415
+        from app.domains.requests.schemas import PortalRequestCreate  # noqa: PLC0415
 
         # one portal request, one TG request
         request_service.create_company_request(
             db, company, owner,
-            RequestCreate(product_text="PP", grade_text="X", volume=decimal.Decimal("5")),
+            PortalRequestCreate(
+                company_id=company.id,
+                product_text="PP",
+                grade_text="X",
+                volume=decimal.Decimal("5"),
+            ),
         )
         from app.domains.requests.models import Client, Request  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415

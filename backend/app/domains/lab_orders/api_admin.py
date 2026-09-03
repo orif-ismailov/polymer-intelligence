@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.companies.models import Company
 from app.domains.deals import service as deal_service
@@ -150,7 +150,7 @@ def list_lab_orders(
     limit: int = Query(default=100, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("labOrders", "read")),
 ) -> LabOrderListOut:
     parsed: LabOrderStatus | None = None
     if order_status:
@@ -183,7 +183,7 @@ def list_lab_orders(
 def get_lab_order(
     order_id: int,
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("labOrders", "read")),
 ) -> LabOrderAdminOut:
     return _out(db, _order_or_404(db, order_id))
 
@@ -193,7 +193,7 @@ def transition_lab_order(
     order_id: int,
     body: TransitionIn,
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_analyst_or_admin),
+    staff: StaffUser = Depends(require_page("labOrders", "write")),
 ) -> LabOrderAdminOut:
     """Move an order along.
 
@@ -236,7 +236,7 @@ def upload_lab_result(
     file: UploadFile = File(...),
     note: str | None = Form(default=None),
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_analyst_or_admin),
+    staff: StaffUser = Depends(require_page("labOrders", "write")),
 ) -> LabOrderAdminOut:
     """Finish an order by uploading the passport (PDF).
 
@@ -287,7 +287,7 @@ def assign_lab_partner(
     order_id: int,
     body: AssignPartnerIn,
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_analyst_or_admin),
+    staff: StaffUser = Depends(require_page("labOrders", "write")),
 ) -> LabOrderAdminOut:
     """Record which laboratory is doing the work. Not a status change."""
     order = _order_or_404(db, order_id)
@@ -307,7 +307,7 @@ def assign_lab_partner(
 def list_lab_partners(
     active_only: bool = Query(default=False),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("labPartners", "read")),
 ) -> list[LabPartner]:
     """Readable by analysts — they pick a partner when assigning an order."""
     return lab_service.list_partners(db, active_only=active_only)
@@ -319,7 +319,7 @@ def list_lab_partners(
 def create_lab_partner(
     body: LabPartnerIn,
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("labPartners", "write")),
 ) -> LabPartner:
     partner = lab_service.create_partner(
         db,
@@ -339,7 +339,7 @@ def update_lab_partner(
     partner_id: int,
     body: LabPartnerIn,
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("labPartners", "write")),
 ) -> LabPartner:
     partner = _partner_or_404(db, partner_id)
     lab_service.update_partner(
@@ -360,7 +360,7 @@ def update_lab_partner(
 def deactivate_lab_partner(
     partner_id: int,
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("labPartners", "write")),
 ) -> LabPartner:
     """Retire a laboratory. There is no DELETE: a finished order points at the
     lab that ran it, and that answer has to survive the partnership."""
@@ -375,7 +375,7 @@ def deactivate_lab_partner(
 def activate_lab_partner(
     partner_id: int,
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("labPartners", "write")),
 ) -> LabPartner:
     partner = _partner_or_404(db, partner_id)
     lab_service.set_partner_active(db, partner, True, staff_user_id=staff.id)

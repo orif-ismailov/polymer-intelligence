@@ -38,6 +38,9 @@ _TABLES = [
     # partners — they go first (P6).
     "lab_orders",
     "sample_requests",
+    # Didox documents point at deals and companies (P7.a) — before both.
+    "didox_documents",
+    "didox_companies",
     # Payments before deals — escrow_payments.deal_id references them.
     "escrow_payments",
     # Deals before contracts/requests/offers — deals.contract_id references them.
@@ -91,7 +94,6 @@ _TABLES = [
     "staff_users",
     "sellers",
     "user_accounts",
-    "app_settings",  # reset operator overrides (e.g. verification_auto_approve) per test
 ]
 
 
@@ -133,11 +135,10 @@ def make_account(db: Session, phone: str):  # noqa: ANN202
 
 
 def make_staff(db: Session, email: str = "staff@example.com"):  # noqa: ANN202
-    from app.models.enums import StaffRole  # noqa: PLC0415
     from app.models.staff import StaffUser  # noqa: PLC0415
 
     staff = StaffUser(
-        email=email, full_name="Test Staff", role=StaffRole.admin, password_hash="x"
+        email=email, full_name="Test Staff", is_admin=True, password_hash="x"
     )
     db.add(staff)
     db.flush()

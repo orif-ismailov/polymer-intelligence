@@ -23,26 +23,32 @@ def test_create_access_token_has_access_type():
     """Access token has type='access' claim."""
     from app.core.security import create_access_token, decode_token
 
-    token = create_access_token(subject="1", role="admin")
+    token = create_access_token(subject="1")
     payload = decode_token(token, expected_type="access")
     assert payload["type"] == "access"
 
 
-def test_create_access_token_encodes_subject_and_role():
-    """Access token encodes sub (staff_user_id) and role."""
+def test_create_access_token_encodes_subject_and_no_authorization_claim():
+    """Access token encodes sub, and deliberately carries NO authorization claim.
+
+    Authorization is read from the staff row on every request, so demoting or
+    deactivating someone takes effect immediately rather than when their
+    15-minute token expires.
+    """
     from app.core.security import create_access_token, decode_token
 
-    token = create_access_token(subject="42", role="analyst")
+    token = create_access_token(subject="42")
     payload = decode_token(token, expected_type="access")
     assert payload["sub"] == "42"
-    assert payload["role"] == "analyst"
+    assert "role" not in payload
+    assert "is_admin" not in payload
 
 
 def test_create_access_token_expires_in_15_minutes():
     """Access token expiry is approximately 15 minutes (800–910 seconds from now)."""
     from app.core.security import create_access_token, decode_token
 
-    token = create_access_token(subject="1", role="viewer")
+    token = create_access_token(subject="1")
     payload = decode_token(token, expected_type="access")
     # exp should be roughly 15 min = 900 s from now
     remaining = payload["exp"] - int(time.time())
@@ -85,7 +91,7 @@ def test_decode_token_rejects_tampered_signature():
     """A JWT with a tampered signature is rejected (raises an exception)."""
     from app.core.security import create_access_token, decode_token
 
-    token = create_access_token(subject="1", role="admin")
+    token = create_access_token(subject="1")
     # Tamper the last few chars of the signature segment
     parts = token.split(".")
     parts[-1] = parts[-1][:-4] + "XXXX"
@@ -123,7 +129,7 @@ def test_decode_token_rejects_access_as_refresh():
     """An access token presented where a refresh token is expected is rejected."""
     from app.core.security import create_access_token, decode_token
 
-    token = create_access_token(subject="1", role="admin")
+    token = create_access_token(subject="1")
 
     with pytest.raises(JWTError):
         decode_token(token, expected_type="refresh")

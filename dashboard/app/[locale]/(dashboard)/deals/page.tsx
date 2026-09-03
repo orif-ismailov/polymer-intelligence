@@ -110,7 +110,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function DealsPage() {
   const t = useTranslations("deals");
-  const { user } = useAuth();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
   const [status, setStatus] = useState("");
@@ -163,7 +163,6 @@ export default function DealsPage() {
   });
 
   const detail = detailQuery.data;
-  const isAdmin = user?.role === "admin";
 
   function statusChip(s: string) {
     return (

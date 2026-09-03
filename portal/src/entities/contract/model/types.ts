@@ -36,6 +36,17 @@ export interface ContractDetail extends ContractSummary {
   declined_reason: string | null;
   document_available: boolean;
   document_sha256: string | null;
+  /**
+   * Which rail carries the signatures.
+   *
+   * On `didox` the parties sign a document held by the EDI operator, so
+   * `signatures` stays empty by design — we never see the counterparty's PKCS#7,
+   * they may have signed at any of the 27 operators.
+   */
+  signing_provider?: "eimzo" | "didox";
+  didox_document_id?: number | null;
+  /** Didox's ladder verbatim: 0 draft · 1 awaiting partner · 3 signed · 4 rejected · 50 annulled. */
+  didox_status?: number | null;
   signatures: ContractSignature[];
 }
 
@@ -55,4 +66,21 @@ export interface CreateContractPayload {
   variables: Record<string, unknown>;
   offer_id?: number | null;
   title?: string;
+  /**
+   * Which rail carries the signatures, frozen at creation.
+   *
+   * `eimzo` — both sides sign a PDF we hold and we verify the PKCS#7 ourselves.
+   * `didox` — the document lives at the EDI operator, which is what puts it in
+   * front of the tax authority; it needs a Didox account on BOTH sides, so it is
+   * opt-in and never the default.
+   */
+  signing_provider?: "eimzo" | "didox";
+  /**
+   * The deal this contract belongs to.
+   *
+   * `DealDetailPage` has always passed `?deal_id=` and this page silently dropped
+   * it, so `deals.contract_id` stayed NULL and the deal never advanced past
+   * `contract_pending` — no `contract_signed`, no escrow.
+   */
+  deal_id?: number | null;
 }

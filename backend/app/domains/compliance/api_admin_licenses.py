@@ -15,7 +15,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.companies.models import Company
 from app.domains.compliance import licenses as company_license_service
@@ -40,7 +40,7 @@ def _company_or_404(db: Session, company_id: int) -> Company:
 def list_licenses(
     company_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("companies", "read")),
 ) -> list[CompanyLicenseOut]:
     _company_or_404(db, company_id)
     return company_license_service.list_for(db, company_id)  # type: ignore[return-value]
@@ -56,7 +56,7 @@ def register_license(
     company_id: int,
     body: CompanyLicenseIn,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_admin),
+    user: StaffUser = Depends(require_page("companies", "write")),
 ) -> CompanyLicenseOut:
     _company_or_404(db, company_id)
     licence = company_license_service.register(
@@ -85,7 +85,7 @@ def revoke_license(
     license_id: int,
     body: LicenseRevokeIn,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_admin),
+    user: StaffUser = Depends(require_page("companies", "write")),
 ) -> CompanyLicenseOut:
     licence = company_license_service.get(db, license_id)
     if licence is None:

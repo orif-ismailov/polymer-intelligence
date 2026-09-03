@@ -55,6 +55,25 @@ _SUPPLY_V1_SCHEMA: dict[str, object] = {
 }
 
 
+#: The letter is rendered from the sample request, not typed by anyone, so its
+#: "variables" are documentation of what the renderer supplies rather than a form
+#: schema. Kept in the same shape as SUPPLY_V1 so one template table serves both.
+_SAMPLE_LETTER_V1_SCHEMA: dict[str, object] = {
+    "type": "object",
+    "required": ["product", "sample_qty", "seller_terms"],
+    "properties": {
+        "product": {"type": "string", "title": "Материал"},
+        "sample_qty": {"type": "string", "title": "Количество пробы"},
+        "sample_price": {"type": "string", "title": "Стоимость пробы"},
+        "delivery_address": {"type": "string", "title": "Адрес доставки"},
+        "offer_id": {"type": "string", "title": "Объявление"},
+        "letter_number": {"type": "string", "title": "Номер письма"},
+        "sample_public_id": {"type": "string", "title": "Заявка"},
+        "seller_terms": {"type": "string", "title": "Условия поставщика"},
+    },
+}
+
+
 def seed_contract_templates(db: Session | None = None) -> list[ContractTemplate]:
     """Seed the SUPPLY_V1 template (idempotent). Returns rows created this run."""
     own = db is None
@@ -80,6 +99,30 @@ def seed_contract_templates(db: Session | None = None) -> list[ContractTemplate]
             session.add(template)
             session.flush()
             created.append(template)
+
+        # The commitment letter shares this table (`kind` discriminates) and the
+        # same pure renderer. A second table plus a second `{{ key }}` substituter
+        # would have been two things to keep in step for no gain.
+        existing_letter = session.execute(
+            select(ContractTemplate).where(ContractTemplate.code == "SAMPLE_LETTER_V1")
+        ).scalar_one_or_none()
+        if existing_letter is None:
+            letter_html = (_DATA_DIR / "sample_letter_v1_ru.html").read_text(encoding="utf-8")
+            letter_path = storage_service.store_contract_template("SAMPLE_LETTER_V1", 1, letter_html)
+            letter = ContractTemplate(
+                code="SAMPLE_LETTER_V1",
+                kind="sample_letter",
+                name_ru="Письмо-обязательство (проба)",
+                name_uz="Majburiyat xati (namuna)",
+                name_en="Sample commitment letter",
+                body_storage_path=letter_path,
+                variables_schema=_SAMPLE_LETTER_V1_SCHEMA,
+                version=1,
+                is_active=True,
+            )
+            session.add(letter)
+            session.flush()
+            created.append(letter)
         if own:
             session.commit()
     finally:

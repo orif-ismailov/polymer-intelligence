@@ -35,6 +35,7 @@ from app.core.time import to_display_tz, utcnow
 from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company
 from app.domains.requests.models import Request, RequestStatusHistory
+from app.domains.requests.schemas import PortalRequestCreate
 from app.domains.requests.webapp_schemas import RequestCreate
 from app.models.enums import RequestStatus
 from app.services import notification_service
@@ -74,7 +75,9 @@ def _enqueue_group_notify_soft(request_id: int) -> None:
     Posts the request's details to REQUEST_NOTIFY_CHAT_ID. Skips entirely when the
     chat id is unset; a broker outage must never break request creation.
     """
-    if settings.REQUEST_NOTIFY_CHAT_ID is None:
+    from app.services import settings_service  # noqa: PLC0415
+
+    if settings_service.notify_chat_id() is None:
         return
     from app.tasks.notify import send_request_to_group  # noqa: PLC0415
 
@@ -317,7 +320,7 @@ def create_company_request(
     db: Session,
     company: Company,
     account: UserAccount,
-    data: RequestCreate,
+    data: PortalRequestCreate,
 ) -> Request:
     """Create a portal-origin purchase request on behalf of a company (R2 A2).
 
@@ -325,6 +328,10 @@ def create_company_request(
     ``company_id`` + ``created_by_user_account_id`` and ``client_id`` is NULL. It
     enters the SAME status machine and ``request_status_history`` as TG requests —
     the dashboard processes it identically. Does NOT commit (caller owns the tx).
+
+    ``visibility`` + ``required_docs`` come from the cabinet's tender sheet and
+    are what a supplier is gated by / shown; the Mini App has neither, so this
+    signature is the portal schema rather than the shared ``RequestCreate``.
 
     The creator is NOT self-notified on creation (they just submitted it); status
     changes by the team produce in-portal notifications via ``transition_status``.
@@ -357,6 +364,10 @@ def create_company_request(
         contact_name=data.contact_name,
         phone=data.phone,
         legal_address=data.legal_address,
+        visibility=data.visibility,
+        # NULL, not [], when nothing is asked for: the column's "no requirement"
+        # is null and `normalize_required_docs` says the same.
+        required_docs=data.required_docs or None,
     )
     db.add(req)
     db.flush()

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: sans-serif; font-size: 11pt; color: #111; line-height: 1.5; }
+  h1 { font-size: 14pt; text-align: center; margin-bottom: 4pt; }
+  .sub { text-align: center; color: #555; font-size: 9pt; margin-top: 0; }
+  h2 { font-size: 11pt; border-bottom: 1px solid #999; padding-bottom: 2pt; margin-top: 16pt; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6pt; }
+  td, th { border: 1px solid #bbb; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #f0f0f0; width: 40%; }
+  .terms { background: #fafafa; border-left: 3px solid #999; padding: 6pt 10pt; margin-top: 6pt; white-space: pre-wrap; }
+  .sig { margin-top: 28pt; }
+  .sig div { width: 60%; border-top: 1px solid #333; padding-top: 4pt; font-size: 9pt; }
+  .muted { color: #666; font-size: 9pt; }
+</style>
+</head>
+<body>
+  <h1>ПИСЬМО-ОБЯЗАТЕЛЬСТВО № {{ letter_number }}</h1>
+  <p class="sub">о запросе пробной партии · {{ generated_at }}</p>
+  <p class="muted">ШАБЛОН-ЗАГЛУШКА ДЛЯ РАЗРАБОТКИ. Итоговый текст письма предоставляется юридической службой (блокер запуска).</p>
+
+  <h2>1. Стороны</h2>
+  <table>
+    <tr><th>Покупатель (заявитель)</th><td>{{ buyer_legal_name }}, ИНН {{ buyer_inn }}<br />{{ buyer_address }}<br />Руководитель: {{ buyer_director }}</td></tr>
+    <tr><th>Поставщик</th><td>{{ seller_legal_name }}, ИНН {{ seller_inn }}<br />{{ seller_address }}<br />Руководитель: {{ seller_director }}</td></tr>
+  </table>
+
+  <h2>2. Предмет запроса</h2>
+  <table>
+    <tr><th>Материал</th><td>{{ product }}</td></tr>
+    <tr><th>Количество пробы</th><td>{{ sample_qty }}</td></tr>
+    <tr><th>Стоимость пробы</th><td>{{ sample_price }}</td></tr>
+    <tr><th>Адрес доставки</th><td>{{ delivery_address }}</td></tr>
+    <tr><th>Объявление</th><td>№ {{ offer_id }}</td></tr>
+  </table>
+
+  <h2>3. Обязательство покупателя</h2>
+  <p>
+    Настоящим {{ buyer_legal_name }} подтверждает, что запрашивает у {{ seller_legal_name }}
+    пробную партию указанного выше материала для проведения входного контроля и проверки
+    совместимости с собственным оборудованием.
+  </p>
+  <p>
+    В случае, если материал соответствует требованиям покупателя, покупатель обязуется
+    заключить с поставщиком договор поставки, а <strong>стоимость пробной партии
+    засчитывается в счёт оплаты по этому договору</strong>.
+  </p>
+
+  <h2>4. Условия поставщика</h2>
+  <p class="muted">Условия, установленные поставщиком на случай, если материал не подойдёт покупателю:</p>
+  <div class="terms">{{ seller_terms }}</div>
+
+  <h2>5. Прочее</h2>
+  <p>
+    Настоящее письмо подписано усиленной электронной цифровой подписью (E-IMZO) и не требует
+    проставления печати. Дата и время подписания фиксируются платформой.
+  </p>
+
+  <div class="sig">
+    <div>
+      {{ buyer_legal_name }}<br />
+      Подписано ЭЦП: {{ buyer_director }}<br />
+      Заявка № {{ sample_public_id }}
+    </div>
+  </div>
+</body>
+</html>

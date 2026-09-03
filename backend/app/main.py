@@ -17,7 +17,7 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # ── Adapter registration (Phase 4, Plan 06) ──────────────────────────────────
@@ -36,11 +36,11 @@ import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
+from app.api.admin_analytics import router as admin_analytics_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_users import router as admin_users_router
 from app.api.auth import router as auth_router
 from app.api.dashboard import router as dashboard_router
-from app.api.deps import require_admin, require_analyst_or_admin
 from app.api.health import router as health_router
 from app.api.telegram_webhook import router as telegram_webhook_router
 from app.core.config import settings
@@ -62,6 +62,8 @@ from app.domains.deals.api_admin import router as admin_deals_router
 from app.domains.deals.api_admin_escrow import router as admin_escrow_router
 from app.domains.deals.api_portal import router as portal_deals_router
 from app.domains.deals.api_webhooks import router as webhooks_escrow_router
+from app.domains.edi.api_admin import router as admin_didox_router
+from app.domains.edi.api_portal import router as portal_didox_router
 from app.domains.lab_orders.api_admin import router as admin_lab_router
 from app.domains.lab_orders.api_portal import router as portal_lab_router
 from app.domains.lab_orders.api_portal_samples import router as portal_samples_router
@@ -73,6 +75,7 @@ from app.domains.manufacturers.api_portal import router as portal_manufacturers_
 from app.domains.marketplace.api_admin import router as offer_requests_router
 from app.domains.marketplace.api_admin_moderation import router as moderation_router
 from app.domains.marketplace.api_portal import router as portal_offers_router
+from app.domains.marketplace.api_portal_ikpu import router as portal_ikpu_router
 from app.domains.marketplace.api_portal_inquiries import router as portal_inquiries_router
 from app.domains.marketplace.api_portal_market import router as portal_market_router
 from app.domains.marketplace.api_webapp_market import router as webapp_market_router
@@ -98,7 +101,6 @@ from app.domains.sourcing.api_admin import router as sourcing_router
 from app.domains.storefront.api import router as public_router
 from app.domains.verification.api_admin import router as admin_verification_router
 from app.domains.verification.api_portal import router as portal_verification_router
-from app.models.staff import StaffUser
 
 logger = logging.getLogger(__name__)
 
@@ -222,6 +224,7 @@ def create_app() -> FastAPI:
     application.include_router(admin_users_router, prefix="/api/v1")
     application.include_router(admin_products_router, prefix="/api/v1")
     application.include_router(admin_settings_router, prefix="/api/v1")
+    application.include_router(admin_analytics_router, prefix="/api/v1")
     # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─
     application.include_router(sources_router, prefix="/api/v1")
     # ── alerts engine routers (Phase 4, Plan 07 — alert rules CRUD + alerts feed) ─
@@ -267,6 +270,9 @@ def create_app() -> FastAPI:
     # shadow nor be shadowed by that param route — position here is not load-bearing.
     application.include_router(portal_verification_router, prefix="/api/v1")
     application.include_router(portal_eimzo_router, prefix="/api/v1")
+    application.include_router(portal_didox_router, prefix="/api/v1")
+    application.include_router(portal_ikpu_router, prefix="/api/v1")
+    application.include_router(admin_didox_router, prefix="/api/v1")
     application.include_router(portal_offers_router, prefix="/api/v1")
     application.include_router(portal_market_router, prefix="/api/v1")
     # Manufacturers before any catch-all company/id routes that could shadow list paths.
@@ -290,33 +296,6 @@ def create_app() -> FastAPI:
     application.include_router(admin_lab_router, prefix="/api/v1")
     application.include_router(admin_logistics_requests_router, prefix="/api/v1")
     application.include_router(admin_lab_requests_router, prefix="/api/v1")
-
-    # ── Demo guard routes (REQ-roles testable hooks) ───────────────────────────
-    # These minimal routes exist to prove the require_role guard works end-to-end.
-    # The full /admin/users CRUD ships in Phase 4 (admin management screen).
-    # The full /analyst/* data endpoints ship in Phase 2+.
-
-    @application.get("/api/v1/admin/whoami", tags=["admin-demo"])
-    def admin_whoami(
-        current_user: StaffUser = Depends(require_admin),
-    ) -> dict:
-        """Admin-only demo route. Returns 403 for non-admin roles (REQ-roles guard test)."""
-        return {
-            "id": current_user.id,
-            "email": current_user.email,
-            "role": current_user.role.value,
-        }
-
-    @application.get("/api/v1/analyst/whoami", tags=["analyst-demo"])
-    def analyst_whoami(
-        current_user: StaffUser = Depends(require_analyst_or_admin),
-    ) -> dict:
-        """Analyst+admin demo route. Returns 403 for trader/viewer (REQ-roles guard test)."""
-        return {
-            "id": current_user.id,
-            "email": current_user.email,
-            "role": current_user.role.value,
-        }
 
     return application
 

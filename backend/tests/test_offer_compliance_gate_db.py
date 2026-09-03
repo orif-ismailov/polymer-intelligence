@@ -41,6 +41,7 @@ from tests._verification_db import (
     session_factory,
 )
 from tests._verification_db import requires_real_db as requires_real_db
+from tests.conftest import set_switch
 
 pytestmark = requires_real_db
 
@@ -110,10 +111,7 @@ def _attach(db: Session, offer, kind: str) -> None:  # noqa: ANN001
 
 
 def _enforce(db: Session, on: bool) -> None:
-    from app.services import settings_service  # noqa: PLC0415
-
-    settings_service.set_many(db, {"dangerous_check_enforced": on}, None)
-    db.flush()
+    set_switch(dangerous_check_enforced=on)
 
 
 class TestLicences:
@@ -306,9 +304,9 @@ class TestPublishGate:
     def test_off_by_default(self, db: Session) -> None:
         """`dangerous_check_enforced` ships off: turning it on before the legal
         review of the lists would block trade on an incomplete registry."""
-        from app.services.settings_service import _SPECS  # noqa: PLC0415
+        from app.core.config import Settings  # noqa: PLC0415
 
-        assert _SPECS["dangerous_check_enforced"].default is False
+        assert Settings.model_fields["DANGEROUS_CHECK_ENFORCED"].get_default() is False
 
     def test_with_the_gate_off_a_blocked_offer_still_reaches_moderation(
         self, db: Session
@@ -591,14 +589,13 @@ def api(engine: sa.Engine):  # noqa: ANN001, ANN201
 
 def _staff_headers(session, role="admin", email="admin@example.com"):  # noqa: ANN001, ANN202
     from app.core.security import create_access_token  # noqa: PLC0415
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     with session() as db:
         staff = make_staff(db, email)
-        staff.role = StaffRole(role)
+        staff.is_admin = role == "admin"
         db.commit()
         staff_id = staff.id
-    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"}
 
 
 def _scene(session):  # noqa: ANN001, ANN202

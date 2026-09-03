@@ -69,6 +69,9 @@ export function isLabValid(draft: OfferDraft, passport: StagedFile | null, onSer
 
 export function isTermsValid(draft: OfferDraft): boolean {
   if (!draft.samplesAvailable) return true;
+  // A demanded letter with a blank clause would be signed evidence of nothing —
+  // the backend refuses the pair too (`sample_letter_terms is required`).
+  if (draft.sampleLetterRequired && draft.sampleLetterTerms.trim() === "") return false;
   if (draft.sampleFee === "free") return true;
   const price = Number(draft.samplePrice);
   return draft.samplePrice.trim() !== "" && Number.isFinite(price) && price >= 0;

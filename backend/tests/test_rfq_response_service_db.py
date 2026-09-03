@@ -366,3 +366,58 @@ def test_supplier_sees_only_their_own_response(sf) -> None:  # noqa: ANN001
         assert [r.id for r in supplier_view] == [mine.id], (
             "a supplier must never see a competitor's price"
         )
+
+
+@requires_real_db
+def test_list_for_company_keeps_every_quote_the_open_list_drops(sf) -> None:  # noqa: ANN001
+    """A supplier's own work survives the tender closing.
+
+    `list_open_requests` is filtered to OPEN_STATUSES, so an awarded or closed
+    tender takes the supplier's quote off their screen with it. This list is the
+    one place it persists — and it carries the tender so the row is readable.
+    """
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.models.enums import RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer, seller_acc, seller, request = _setup(db)
+        other_acc, other = _verified(db, "303333333", "+998900000003")
+
+        first = rfq_response_service.submit(db, request, seller, seller_acc, **_QUOTE)
+        second_request = make_request(db, company=buyer, account=buyer_acc, n=2)
+        second = rfq_response_service.submit(db, second_request, seller, seller_acc, **_QUOTE)
+        # A competitor's quote on the same tender must not leak into our list.
+        rfq_response_service.submit(db, request, other, other_acc, **_QUOTE)
+
+        # The buyer closes the first tender: it leaves the open list…
+        request.status = RequestStatus.closed
+        db.flush()
+        assert request.id not in {
+            r.id for r in rfq_response_service.list_open_requests(db, seller)
+        }
+
+        # …and the quote on it is still here, newest first, with its tender.
+        rows = rfq_response_service.list_for_company(db, seller)
+        assert [response.id for response, _ in rows] == [second.id, first.id]
+        assert {req.id for _, req in rows} == {second_request.id, request.id}
+
+
+@requires_real_db
+def test_list_for_company_covers_every_status(sf) -> None:  # noqa: ANN001
+    """Including the two outcomes a supplier most wants to look back at."""
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.models.enums import RfqResponseStatus  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer, seller_acc, seller, request = _setup(db)
+        withdrawn = rfq_response_service.submit(db, request, seller, seller_acc, **_QUOTE)
+        rfq_response_service.withdraw(db, withdrawn, seller_acc)
+        # Withdrawing frees the partial-unique slot, so a second quote is legal.
+        live = rfq_response_service.submit(db, request, seller, seller_acc, **_QUOTE)
+        live.status = RfqResponseStatus.not_selected
+        db.flush()
+
+        statuses = {
+            response.status for response, _ in rfq_response_service.list_for_company(db, seller)
+        }
+        assert statuses == {RfqResponseStatus.withdrawn, RfqResponseStatus.not_selected}

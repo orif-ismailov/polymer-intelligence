@@ -251,17 +251,17 @@ function ProductsTable() {
 function AdminProductsPageContent() {
   const t = useTranslations("adminProducts");
   const router = useRouter();
-  const { role, isAuthenticated } = useAuth();
+  const { user, isAdmin, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated && role !== "admin") {
+    if (isAuthenticated && user && !isAdmin) {
       router.replace("/");
     }
-  }, [isAuthenticated, role, router]);
+  }, [isAuthenticated, user, isAdmin, router]);
 
   // Not `null` — an effect-driven redirect takes a beat, and a blank viewport
   // during it reads as a crash rather than as a permission bounce.
-  if (role && role !== "admin") {
+  if (user && !isAdmin) {
     return <RouteGuardFallback />;
   }
 

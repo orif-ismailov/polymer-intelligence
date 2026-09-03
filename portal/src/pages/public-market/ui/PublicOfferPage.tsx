@@ -18,6 +18,7 @@ import {
   useOfferSession,
   type ProductDetailTabId,
 } from "@/features/product-detail";
+import type { SampleRequest } from "@/entities/sample";
 import { SampleRequestForm } from "@/features/sample-request";
 import {
   directoryForRoles,
@@ -72,7 +73,8 @@ export function PublicOfferPage() {
   const fromManufacturer = searchParams.get("fromManufacturer") === "1";
   const id = offerId && /^\d+$/.test(offerId) ? Number(offerId) : null;
   const [tab, setTab] = useState<ProductDetailTabId>("description");
-  const [sampleSent, setSampleSent] = useState(false);
+  /** The created request, so the confirmation can name what happens next. */
+  const [sample, setSample] = useState<SampleRequest | null>(null);
 
   const session = useOfferSession(id);
   const toggleFavorite = useToggleFavorite();
@@ -336,13 +338,24 @@ export function PublicOfferPage() {
               onRequestSample={session ? () => scrollTo("samples") : null}
               sampleSlot={
                 session && session.companyId != null ? (
-                  sampleSent ? (
-                    <p className="text-sm text-success">{t("samples.sentOk")}</p>
+                  sample ? (
+                    sample.status === "pending_letter" ? (
+                      // NOT sent: this offer demands a signed commitment letter,
+                      // and the seller sees nothing until the buyer signs it.
+                      <div className="space-y-2" data-testid="sample-needs-letter">
+                        <p className="text-sm text-warning">{t("samples.letterOwed")}</p>
+                        <LinkButton to="/cabinet/samples" variant="secondary">
+                          {t("samples.goSign")}
+                        </LinkButton>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-success">{t("samples.sentOk")}</p>
+                    )
                   ) : (
                     <SampleRequestForm
                       offerId={offer.id}
                       companyId={session.companyId}
-                      onSent={() => setSampleSent(true)}
+                      onSent={setSample}
                     />
                   )
                 ) : null

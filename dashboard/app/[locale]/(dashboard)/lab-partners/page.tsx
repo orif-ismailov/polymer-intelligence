@@ -51,9 +51,8 @@ const EMPTY: PartnerForm = {
 
 export default function LabPartnersPage() {
   const t = useTranslations("labPartners");
-  const { user } = useAuth();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
-  const isAdmin = user?.role === "admin";
 
   const [form, setForm] = useState<PartnerForm>(EMPTY);
   const [editing, setEditing] = useState<number | null>(null);

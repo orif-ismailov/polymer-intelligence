@@ -47,12 +47,11 @@ _requires_real_db = pytest.mark.skipif(
 
 def _make_staff_user(id: int, role: str, is_active: bool = True):
     """Return a mock StaffUser."""
-    from app.models.enums import StaffRole  # noqa: PLC0415
 
     user = MagicMock()
     user.id = id
     user.email = f"{role}@polymer.uz"
-    user.role = StaffRole(role)
+    user.is_admin = role == "admin"
     user.is_active = is_active
     return user
 
@@ -60,7 +59,7 @@ def _make_staff_user(id: int, role: str, is_active: bool = True):
 def _auth_headers(staff_user_id: int, role: str) -> dict[str, str]:
     from app.core.security import create_access_token  # noqa: PLC0415
 
-    token = create_access_token(subject=str(staff_user_id), role=role)
+    token = create_access_token(subject=str(staff_user_id))
     return {"Authorization": f"Bearer {token}"}
 
 

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { rfqApi, useRfqResponses } from "@/entities/deal";
+import { RfqResponseStatusBadge, rfqApi, useRfqResponses } from "@/entities/deal";
 import type { RfqResponse } from "@/entities/deal";
 import { formatDateTime } from "@/shared/lib";
 import {
@@ -15,14 +15,6 @@ import {
   Skeleton,
   MessageIcon,
 } from "@/shared/ui";
-import type { BadgeTone } from "@/shared/ui";
-
-const TONES: Record<RfqResponse["status"], BadgeTone> = {
-  submitted: "info",
-  accepted: "success",
-  not_selected: "neutral",
-  withdrawn: "neutral",
-};
 
 interface RfqResponseListProps {
   companyId: number;
@@ -78,7 +70,7 @@ export function RfqResponseList({ companyId, requestId, canAccept }: RfqResponse
                 {response.company_verified ? (
                   <Badge variant="verified">{t("market.verified")}</Badge>
                 ) : null}
-                <Badge tone={TONES[response.status]}>{t(`rfq.status.${response.status}`)}</Badge>
+                <RfqResponseStatusBadge status={response.status} />
               </div>
               <p className="num mt-1 text-sm text-text-muted">
                 <span className="font-semibold text-brand">

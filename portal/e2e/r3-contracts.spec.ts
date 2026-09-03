@@ -38,8 +38,12 @@ async function stubEimzo(context: BrowserContext, tin: string): Promise<void> {
       (window as unknown as { __EIMZO_BRIDGE__: unknown }).__EIMZO_BRIDGE__ = {
         probe: async () => true,
         listCertificates: async () => [{ id: "k1", subjectName: "OOO " + t, tin: t, name: "DIRECTOR" }],
-        sign: async (_id: string, challenge: string) =>
-          btoa(JSON.stringify({ challenge, tin: t, name: "DIRECTOR", org_name: "OOO " + t })),
+        sign: async (_id: string, challenge: string) => ({
+          pkcs7_64: btoa(
+            JSON.stringify({ challenge, tin: t, name: "DIRECTOR", org_name: "OOO " + t }),
+          ),
+          signature_hex: "deadbeef",
+        }),
       };
     },
     tin,

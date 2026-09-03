@@ -12,6 +12,7 @@ import {
   Segmented,
   Select,
   StepPanel,
+  Textarea,
 } from "@/shared/ui";
 import type { SelectOption } from "@/shared/ui";
 
@@ -108,6 +109,44 @@ export function StepTerms({ onNext, onBack }: StepTermsProps) {
                 )}
               </FormField>
             ) : null}
+
+            {/* The письмо-обязательство (W8). Per-offer, and the clause is the
+                seller's own words — we never write a commitment on their behalf.
+                It is snapshotted into the letter at signing, so editing it here
+                later cannot rewrite a letter someone already signed. */}
+            <div className="space-y-2">
+              <Checkbox
+                checked={draft.sampleLetterRequired}
+                onChange={(e) => setField("sampleLetterRequired", e.target.checked)}
+                label={t("offerWizard.terms.sampleLetterRequired")}
+                data-testid="offer-wizard-sample-letter"
+              />
+              {draft.sampleLetterRequired ? (
+                <FormField
+                  label={t("offerWizard.terms.sampleLetterTerms")}
+                  hint={t("offerWizard.terms.sampleLetterHint")}
+                  required
+                  error={
+                    touched && draft.sampleLetterTerms.trim() === ""
+                      ? t("offerWizard.terms.sampleLetterRequiredError")
+                      : null
+                  }
+                >
+                  {({ id, invalid, describedBy }) => (
+                    <Textarea
+                      id={id}
+                      rows={4}
+                      value={draft.sampleLetterTerms}
+                      invalid={invalid}
+                      aria-describedby={describedBy}
+                      placeholder={t("offerWizard.terms.sampleLetterPlaceholder")}
+                      onChange={(e) => setField("sampleLetterTerms", e.target.value)}
+                      data-testid="offer-wizard-sample-letter-terms"
+                    />
+                  )}
+                </FormField>
+              ) : null}
+            </div>
 
             <FormField label={t("offerWizard.terms.sampleDispatch")}>
               {({ id }) => (

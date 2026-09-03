@@ -351,7 +351,7 @@ class TestReportsAdminApi:
         assert resp.status_code == 401, resp.text
 
     def test_publish_200(self):
-        from app.api.deps import require_analyst_or_admin  # noqa: PLC0415
+        from app.api.deps import get_current_staff_user  # noqa: PLC0415
         from app.core.db import get_db  # noqa: PLC0415
         from app.main import create_app  # noqa: PLC0415
 
@@ -360,7 +360,9 @@ class TestReportsAdminApi:
 
         application = create_app()
         application.dependency_overrides[get_db] = _db
-        application.dependency_overrides[require_analyst_or_admin] = lambda: MagicMock(id=3)
+        application.dependency_overrides[get_current_staff_user] = lambda: MagicMock(
+        id=3, is_admin=True, is_active=True
+    )
         with patch("app.api.health._check_redis", return_value="ok"), patch(
             "app.domains.news.api_admin.report_service"
         ) as svc, TestClient(application) as tc:

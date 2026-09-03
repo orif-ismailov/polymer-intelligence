@@ -5,7 +5,8 @@
       "requests": "TALEPLER",
       "broker": "BROKER",
       "sources": "KAYNAKLAR",
-      "settings": "AYARLAR"
+      "settings": "AYARLAR",
+      "projectSettings": "PROJE AYARLARI"
     },
     "items": {
       "dashboard": "Panel",
@@ -34,7 +35,16 @@
       "labOrders": "Laboratuvar",
       "labPartners": "Laboratuvarlar",
       "logisticsRequests": "Lojistik talepleri",
-      "labRequests": "Laboratuvar talepleri"
+      "labRequests": "Laboratuvar talepleri",
+      "settingsAnalytics": "Analitik",
+      "settingsAi": "Yapay zekâ ve modeller",
+      "settingsNews": "Haberler ve raporlar",
+      "settingsNotifications": "Bildirimler",
+      "settingsDidox": "Didox ve devlet sicili",
+      "settingsDeals": "Anlaşmalar ve doğrulama",
+      "settingsSourcing": "Tedarikçi eşleştirme",
+      "settingsCompliance": "Kimyasal denetim",
+      "settingsIngest": "Veri toplama"
     },
     "guest": "Misafir",
     "openMenu": "Menüyü aç",
@@ -45,6 +55,10 @@
       "switched": "Bu tarayıcıda başka bir kullanıcı oturum açtı. Bu sekme artık güncel değil — mevcut hesapla devam etmek için sayfayı yenileyin.",
       "signedOut": "Oturum başka bir sekmede kapatıldı. Yeniden giriş yapmak için sayfayı yenileyin.",
       "reload": "Sayfayı yenile"
+    },
+    "adminBadge": "Yönetici",
+    "pages": {
+      "appSettings": "Proje ayarları"
     }
   },
   "login": {
@@ -212,7 +226,7 @@
   "requests": {
     "loading": "Yükleniyor…",
     "pageTitle": "Satın Alma Talepleri",
-    "pageSubtitle": "Borsalardan, web sitelerinden ve kanallardan toplanan gerçek zamanlı alıcı talepleri",
+    "pageSubtitle": "Alıcı talepleri: portaldaki ihaleler ve Telegram botundan gelen talepler",
     "searchPlaceholder": "Talepleri ara…",
     "searchAriaLabel": "Talepleri ara",
     "exportCsv": "CSV Dışa Aktar",
@@ -318,12 +332,12 @@
     "exportError": "Dışa aktarma başarısız oldu. Tekrar deneyin veya sorun devam ederse destek ile iletişime geçin.",
     "exportAriaLabel": "Talepleri CSV olarak dışa aktar",
     "originTelegram": "Telegram",
-    "originPortal": "Portal",
-    "originPortalNamed": "Portal: {company}",
+    "originPortal": "İhale (portal)",
+    "originPortalNamed": "İhale: {company}",
     "filterOrigin": "Kaynak",
     "originOptAll": "Tüm kaynaklar",
     "originOptClient": "Telegram",
-    "originOptCompany": "Portal",
+    "originOptCompany": "İhale (portal)",
     "sectionPushedSuppliers": "Bilgilendirilen tedarikçiler",
     "pushedScoreHint": "Gönderim anındaki eşleşme puanı"
   },
@@ -681,23 +695,55 @@
     "deleteRuleAria": "{name} kuralını sil"
   },
   "admin": {
-    "pageTitle": "Yönetici Kullanıcılar",
-    "pageSubtitle": "Personel kullanıcı hesapları ve rol atamaları",
-    "loadError": "Kullanıcılar yüklenemedi. Lütfen sayfayı yenileyin.",
-    "empty": "Personel kullanıcısı bulunamadı.",
+    "pageTitle": "Personel",
+    "pageSubtitle": "Personel hesapları ve erişim düzeyi",
+    "countLabel": "Toplam: {count}",
+    "createButton": "Personel ekle",
+    "createTitle": "Yeni personel",
+    "createSubtitle": "Hesap oluşturun ve bölümlere erişim verin",
+    "editTitle": "Personeli düzenle",
+    "fieldEmail": "E-posta",
+    "fieldName": "Ad soyad",
+    "fieldPassword": "Parola",
+    "fieldPasswordReset": "Yeni parola",
+    "fieldPasswordKeep": "Değiştirmemek için boş bırakın",
+    "passwordHint": "En az {min} karakter. Parolayı personele bizzat iletin.",
+    "fieldIsAdmin": "Yönetici",
+    "isAdminHint": "Personel yönetimi dahil tüm bölümlere tam erişim.",
+    "accessTitle": "Bölüm erişimi",
+    "adminHoldsEverything": "Yöneticinin tüm bölümlere erişimi var — ayarlanacak bir şey yok.",
+    "accessAdmin": "Yönetici",
+    "accessStaff": "Personel",
+    "accessPages": "Bölüm: {count}",
+    "access": {
+      "none": "Yok",
+      "read": "Okuma",
+      "write": "Yazma"
+    },
     "statusActive": "Aktif",
     "statusInactive": "Pasif",
+    "edit": "Düzenle",
+    "deactivate": "Devre dışı bırak",
+    "activate": "Etkinleştir",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor…",
+    "cancel": "İptal",
+    "you": "(bu sizsiniz)",
+    "saveError": "Kaydedilemedi. Tekrar deneyin.",
+    "loadError": "Kullanıcılar yüklenemedi. Sayfayı yenileyin.",
+    "empty": "Personel bulunamadı.",
     "table": {
       "email": "E-posta",
-      "role": "Rol",
+      "name": "Ad soyad",
+      "access": "Erişim",
       "status": "Durum",
       "createdAt": "Oluşturulma"
     },
-    "roles": {
-      "admin": "Yönetici",
-      "analyst": "Analist",
-      "trader": "Tüccar",
-      "viewer": "İzleyici"
+    "errors": {
+      "self_demote": "Kendi yönetici yetkinizi kaldıramazsınız. Başka bir yöneticiden isteyin.",
+      "last_admin": "Bu son etkin yönetici — platformayı yönetecek kimse kalmazdı.",
+      "admin_holds_all_pages": "Yöneticinin zaten tüm bölümlere erişimi var. Önce yönetici yetkisini kaldırın.",
+      "email_taken": "Bu e-posta ile bir personel zaten var."
     }
   },
   "adminProducts": {
@@ -762,7 +808,7 @@
   },
   "newsAdmin": {
     "title": "Haber Yönetimi",
-    "subtitle": "İstatistikler, AI ayarları ve haber moderasyonu",
+    "subtitle": "İstatistikler, tarama etkinliği ve haber moderasyonu",
     "error": "Yüklenemedi",
     "loading": "Yükleniyor…",
     "stats": {
@@ -784,10 +830,6 @@
       "runParser": "Ayrıştırıcıyı çalıştır",
       "generateReport": "Rapor oluştur",
       "save": "Kaydet"
-    },
-    "settings": {
-      "title": "Ayarlar",
-      "default": "varsayılan"
     },
     "approval": {
       "title": "Onay bekleyen haberler",
@@ -893,8 +935,6 @@
       "attempts": "Denemeler",
       "lastError": "Son hata",
       "waivedReason": "Muafiyet nedeni",
-      "missingDocuments": "Eksik belgeler",
-      "reasons": "Nedenler",
       "waive": "Kontrolü atla",
       "waiveReasonPlaceholder": "Muafiyet nedeni (zorunlu)",
       "waiveConflict": "Kontrol zaten güncellendi — veriler yeniden yüklendi"
@@ -918,6 +958,28 @@
       "unavailable": "Kullanılamaz",
       "waived": "Muaf tutuldu"
     },
+    "findings": {
+      "taxIdDigits": "VKN 9 haneli olmalı, girilen: {digits}",
+      "taxIdEmpty": "VKN girilmemiş",
+      "bankAccount": "Hesap ****{last4}: {problem}",
+      "bankIssue": {
+        "bad_account_length": "hesap numarası 20 haneli olmalı",
+        "bad_mfo": "MFO 5 haneli olmalı",
+        "undecryptable": "hesap numarası okunamadı"
+      },
+      "noBankAccount": "Banka hesabı eklenmemiş",
+      "missingDocuments": "Eksik belgeler: {list}",
+      "registryInnMismatch": "Devlet sicilindeki VKN eşleşmiyor: {inn}",
+      "registryLiquidated": "Devlet siciline göre şirket tasfiye edilmiş",
+      "registrySuspended": "Devlet siciline göre faaliyet durdurulmuş",
+      "registryStatusUnknown": "Devlet sicili yanıt verdi ama şirket durumunu belirtmedi",
+      "registryNameMismatch": "Devlet sicilindeki unvan farklı: «{name}»",
+      "vatNotRegistered": "Şirket KDV mükellefi değil — doğrulama için engel değil",
+      "manualPending": "Personelin manuel kontrolü bekleniyor",
+      "unavailable": "Kaynak yanıt vermedi — kontrol yapılamadı",
+      "unavailableWith": "Kaynak yanıt vermedi: {error}",
+      "eimzoFailed": "Elektronik imza doğrulanamadı"
+    },
     "documents": {
       "title": "Belgeler",
       "empty": "Belge yok",
@@ -932,7 +994,18 @@
       "other": "Diğer",
       "registration_certificate": "Kayıt belgesi",
       "bank_letter": "Banka mektubu",
-      "license": "Lisans"
+      "license": "Lisans",
+      "permit": "İzin belgesi",
+      "certificate": "Sertifika",
+      "production_license": "Üretim lisansı",
+      "export_license": "İhracat lisansı",
+      "certificate_of_origin": "Menşe şahadetnamesi",
+      "iso_certificate": "ISO sertifikaları",
+      "compliance_certificate": "REACH / RoHS / GOST",
+      "carrier_license": "Taşıyıcı lisansı",
+      "liability_insurance": "Sorumluluk sigortası",
+      "service_contract": "Sözleşme",
+      "accreditation_certificate": "Akreditasyon sertifikası"
     },
     "audit": {
       "title": "Geçmiş",
@@ -946,7 +1019,17 @@
       "approve": "Onayla",
       "reject": "Reddet",
       "requestInfo": "Bilgi iste",
-      "decidedAt": "Karar verildi"
+      "decidedAt": "Karar verildi",
+      "blocked": {
+        "title": "Şu anda karar verilemez",
+        "needsInfo": "Başvuru müşteriye geri gönderildi: otomatik kontrollerden biri başarısız oldu. Müşteri verilerini düzeltip başvuruyu yeniden gönderdiğinde karar verilebilir.",
+        "running": "Otomatik kontroller hâlâ sürüyor. Tamamlandığında karar verilebilir.",
+        "draft": "Müşteri başvuruyu henüz doğrulamaya göndermedi.",
+        "generic": "Başvuru «İncelemede» durumunda değil — karar verilemez.",
+        "problems": "Düzeltilmesi gerekenler",
+        "waiveHint": "Şirketi kabul etmek için gerekçe varsa (örneğin belge sistem dışında alındıysa), yukarıdaki «Kontroller» bölümünde neden belirterek kontrolü atlayın — ardından karar verilebilir.",
+        "waiveAdminOnly": "Kontrolü atlayıp kararı açmak yalnızca yöneticinin yetkisindedir."
+      }
     },
     "registry": {
       "title": "Devlet sicilleri",
@@ -1539,6 +1622,299 @@
       "messageCount": "Mesajlar",
       "lastMessage": "Son mesaj",
       "never": "—"
+    }
+  },
+  "noAccess": {
+    "title": "Erişim yok",
+    "body": "Hesabınızın panelin hiçbir bölümüne erişimi yok. Yetki verilmesi için yöneticinize başvurun.",
+    "signedInAs": "Giriş yapan:",
+    "signOut": "Çıkış",
+    "pageTitle": "Bölüme erişilemiyor",
+    "pageBody": "Bu bölüme erişiminiz yok. Gerekiyorsa yöneticinize başvurun."
+  },
+  "adminSettings": {
+    "title": "Sistem ayarları",
+    "subtitle": "Her anahtarın varsayılan değeri kodda tanımlıdır ve bir ortam değişkeniyle geçersiz kılınabilir. Buradaki değişiklik ikisini de geçersiz kılar — varsayılan her zaman yanında görünür, «Sıfırla» ona döndürür.",
+    "loading": "Yükleniyor…",
+    "error": "Ayarlar yüklenemedi",
+    "saveError": "Değer kaydedilemedi",
+    "resetError": "Değer sıfırlanamadı",
+    "readOnly": "Yalnızca okuma yetkiniz var — değerleri bu sayfada yazma yetkisi olan bir personel değiştirir.",
+    "fromEnv": "Varsayılan değer",
+    "overridden": "Geçersiz kılındı",
+    "envSays": "varsayılan: {value}",
+    "notSet": "tanımsız",
+    "envOnly": "Yalnızca ortam değişkeniyle, yeniden başlatma gerektirir",
+    "adminOnly": "Kimlik bilgilerini yalnızca yönetici değiştirir",
+    "save": "Kaydet",
+    "reset": "Varsayılana sıfırla",
+    "cancel": "İptal",
+    "confirmAction": "Onaylıyorum",
+    "groups": {
+      "ai": "Yapay zekâ ve modeller",
+      "news": "Haberler ve raporlar",
+      "notifications": "Bildirimler",
+      "didox": "Didox ve devlet sicili",
+      "deals": "Anlaşmalar ve doğrulama",
+      "sourcing": "Tedarikçi eşleştirme",
+      "compliance": "Kimyasal denetim",
+      "ingest": "Veri toplama"
+    },
+    "items": {
+      "anthropic_api_key": {
+        "name": "Anthropic API anahtarı",
+        "desc": "Anthropic'in platformumuzu tanıdığı parola. Yapay zekânın tüm işi buna bağlıdır: haber çözümleme, günlük raporlar, talep analizi ve madde önerisi. Kaydederken anahtar Anthropic'te doğrulanır — hatalı olan kabul edilmez."
+      },
+      "openai_api_key": {
+        "name": "OpenAI API anahtarı",
+        "desc": "Yalnızca aşağıda bir GPT modeli seçiliyse gerekir. OpenAI'ın platformumuzu tanıdığı parola. Kaydederken anahtar OpenAI'da doğrulanır — hatalı olan kabul edilmez."
+      },
+      "news_ai_enabled": {
+        "name": "Raporlardaki yapay zekâ özetleri",
+        "desc": "Yapay zekâ günlük raporda haberleri kendi cümleleriyle anlatır. Kapatılırsa rapora yalnızca başlıklar girer."
+      },
+      "news_require_approval": {
+        "name": "Haberleri yayından önce denetle",
+        "desc": "Her haber bir çalışanın onayını bekler. Kapatılırsa haberler akışa hemen çıkar."
+      },
+      "report_auto_publish": {
+        "name": "Raporları kendiliğinden yayınla",
+        "desc": "Hazır rapor, insan denetimi olmadan Telegram kanalına kendi gider. Yayınlanan bir mesaj geri alınamaz."
+      },
+      "llm_extract_model": {
+        "name": "Haberler için yapay zekâ modeli",
+        "desc": "Haberleri hangi modelin okuyup çözümleyeceği — Claude ya da GPT. Haiku ve gpt-4.1-mini en ucuz ve hızlı, Opus ve gpt-5 en akıllı ve pahalı olanı."
+      },
+      "llm_report_model": {
+        "name": "Raporlar için yapay zekâ modeli",
+        "desc": "Sabah ve akşam bültenini hangi modelin yazacağı. Rapor günde iki kez çıkar ve insanlar okur, bu yüzden burada haberlerdekinden daha güçlü bir model seçilir."
+      },
+      "news_prompt_version": {
+        "name": "Yapay zekâ yönergesinin sürümü",
+        "desc": "Yapay zekânın bir haberi çözümlemeden önce okuduğu yönerge. Yeni sürümler genelde daha isabetli; eskiler karşılaştırma için duruyor."
+      },
+      "news_refresh_interval_minutes": {
+        "name": "Haberler ne sıklıkla denetlensin",
+        "desc": "Sistemin yeni haberler için sitelere kaç dakikada bir uğrayacağı. Sayı küçüldükçe akış tazelenir ama yük artar."
+      },
+      "verification_auto_approve": {
+        "name": "Şirket doğrulamasını kendiliğinden onayla",
+        "desc": "Tüm otomatik denetimler geçer geçmez şirket, çalışan olmadan «doğrulanmış» olur. Sırada bekleyen başvurular da onaylanır."
+      },
+      "contract_pending_ttl_days": {
+        "name": "Sözleşme imzayı kaç gün bekler",
+        "desc": "Karşı taraf bu süre içinde imzalamazsa sözleşme kendiliğinden kapanır. Sayıyı düşürürseniz yeni süreden eski sözleşmeler ilk gece kapanır."
+      },
+      "escrow_mode": {
+        "name": "Anlaşmanın parası nasıl geçer",
+        "desc": "«stub» — her aktarımı bir operatör elle işaretler. «live» — parayı gerçekten banka yürütür."
+      },
+      "rfq_supplier_push_enabled": {
+        "name": "Yeni talebi tedarikçilere bildir",
+        "desc": "Alıcı bir talep yayınladığında uygun tedarikçilere bildirim gider."
+      },
+      "rfq_supplier_push_top_n": {
+        "name": "Kaç tedarikçiye yazılsın",
+        "desc": "Tek bir talep bu sayıdan fazla tedarikçiyi rahatsız etmez. Sayı büyüdükçe erişim genişler, mesaj da çoğalır."
+      },
+      "rfq_supplier_offer_max_age_days": {
+        "name": "Eşleşme için ilan yaşı",
+        "desc": "Bir tedarikçi ilanının uygun sayılması için ne kadar taze olması gerektiği. Bu süreden eskisi eşleşmeye girmez."
+      },
+      "substance_ai_enabled": {
+        "name": "Madde için yapay zekâ önerisi",
+        "desc": "Satıcının formunda yapay zekâ bunun hangi kimyasal madde olduğunu önerir. Satıcı kabul edebilir ya da kendi seçer."
+      },
+      "dangerous_check_enforced": {
+        "name": "Belgesiz tehlikeli madde satışını engelle",
+        "desc": "Satıcı lisansını eklemeden tehlikeli ürünü yayınlayamaz. Kapatılırsa böyle ürünler serbestçe yayınlanır."
+      },
+      "chem_registry_mode": {
+        "name": "Madde bilgisi nereden gelir",
+        "desc": "«stub» — kendi madde tablomuzdan. «live» — henüz var olmayan dış bir sicilden."
+      },
+      "gov_registry_mode": {
+        "name": "Şirket bilgisi nereden gelir",
+        "desc": "«stub» — bilgiyi çalışan elle girer. «didox» — bilgi Didox üzerinden vergi idaresinden çekilir ve forma kendiliğinden yazılır. «live» — doğrudan PSD kanalı, henüz çalışmıyor."
+      },
+      "didox_mode": {
+        "name": "Belgeleri Didox'a gönderme",
+        "desc": "«live», sözleşme ve faturaları vergi idaresine gerçekten gönderir. Gönderilen belge buradan geri alınamaz."
+      },
+      "didox_base_url": {
+        "name": "Didox sunucu adresi",
+        "desc": "Denemeler için sınama sunucusu ya da gerçek belgeler için asıl sunucu. Yalnızca belirteçle birlikte değiştirin."
+      },
+      "didox_partner_token": {
+        "name": "Didox iş ortağı belirteci",
+        "desc": "Didox'un platformumuzu tanıdığı parola. Didox yöneticisi verir. Tam gösterilmez — kimse tamamını görmez."
+      },
+      "didox_service_tin": {
+        "name": "Didox'taki şirketimizin vergi numarası",
+        "desc": "Sistem, başka şirketlerin bilgisine bakmak için Didox'a bu vergi numarasıyla girer."
+      },
+      "didox_service_password": {
+        "name": "Didox hesabımızın parolası",
+        "desc": "Aynı vergi numarasının parolası. Art arda birkaç yanlış deneme Didox'ta uzun süreli engele yol açar, dikkatli girin."
+      },
+      "didox_monthly_quota": {
+        "name": "Didox paketindeki istek sayısı",
+        "desc": "Sözleşmeye göre aylık pakete kaç istek dahil. Hiçbir şeyi sınırlamaz — «Analitik» sayfasında kullanım bununla karşılaştırılır. Varsayılan 1.000.000."
+      },
+      "didox_monthly_cost_uzs": {
+        "name": "Didox paket ücreti, UZS",
+        "desc": "Aylık paketin fiyatı. Tek istek maliyeti ve aylık harcama buradan hesaplanır. Varsayılan 250.000."
+      },
+      "request_notify_chat_id": {
+        "name": "Yeni talepler için sohbet",
+        "desc": "Alıcıların yeni taleplerinin düştüğü Telegram grubunun numarası. Boşsa bildirim gönderilmez."
+      },
+      "notify_topic_buyers": {
+        "name": "Alıcı talepleri için başlık",
+        "desc": "Grupta başlıklar açıksa alıcı mesajları buraya gider. Boşsa genel başlığa."
+      },
+      "notify_topic_sellers": {
+        "name": "Satıcı ilanları için başlık",
+        "desc": "Satıcılar için de aynısı: ilanları bu başlığa gider. Boşsa genele."
+      },
+      "verification_notify_chat_id": {
+        "name": "Şirket doğrulaması için sohbet",
+        "desc": "Şirket doğrulama başvurularının geldiği yer. Boşsa yeni talepler sohbetine gelir."
+      },
+      "news_channel_id": {
+        "name": "Raporlar için kanal",
+        "desc": "Onaylanan raporların yayınlandığı Telegram kanalı. Boşsa yayın kapalıdır."
+      },
+      "ingest_http_timeout_seconds": {
+        "name": "Sitenin yanıtı ne kadar beklensin",
+        "desc": "Toplayıcının siteyi erişilemez saymadan önce kaç saniye yanıt bekleyeceği."
+      },
+      "ingest_http_retries": {
+        "name": "Kaç kez yeniden denensin",
+        "desc": "Site yanıt vermezse toplayıcının kaç kez yeniden deneyeceği."
+      },
+      "ingest_user_agent": {
+        "name": "Sistem sitelere kendini nasıl tanıtır",
+        "desc": "Yabancı sitelerin kimin uğradığını gördüğü satır. Neredeyse hiç değiştirmek gerekmez."
+      },
+      "ingest_per_host_delay_seconds": {
+        "name": "Aynı siteye istekler arası bekleme",
+        "desc": "Aynı siteye bir sonraki başvurudan önce kaç saniye beklemeli — siteyi yormamak için."
+      }
+    },
+    "prompt": {
+      "title": "Haberler için istem",
+      "subtitle": "Yapay zekânın her haberi çözümlemeden önce okuduğu yönerge. Kaydetmek yeni bir sürüm oluşturur — eskisi değişmeden kalır, böylece her haberin hangi metinle çözümlendiği belli olur.",
+      "loading": "Yükleniyor…",
+      "error": "İstem yüklenemedi",
+      "active": "Etkin sürüm: {version}",
+      "shipped": "pakette gelen",
+      "length": "{max} karakterden {chars} tanesi",
+      "try": "Bir haberde dene",
+      "saveAs": "{version} olarak kaydet",
+      "readOnly": "Yalnızca okuma yetkiniz var — istemi yazma yetkisi olan bir personel değiştirir.",
+      "tryResult": "Deneme sonucu",
+      "tryCost": "Jeton: {tokensIn} → {tokensOut} · {seconds} sn",
+      "versions": "Sürümler",
+      "isActive": "etkin",
+      "activate": "Etkinleştir",
+      "chars": "{chars} karakter",
+      "saveError": "Sürüm kaydedilemedi",
+      "activateError": "Sürüm etkinleştirilemedi",
+      "tryError": "Deneme başarısız"
+    }
+  },
+  "analytics": {
+    "title": "Analitik",
+    "subtitle": "Didox paketinden ne kadarı harcandı ve yapay zekâ neye kullanıldı. Veri baştan beri toplanıyordu — burada ilk kez gösteriliyor.",
+    "loading": "Yükleniyor…",
+    "loadFailed": "Yüklenemedi",
+    "loadFailedHint": "Sayfadaki diğer bölüm buna bağlı değil — kendi başına yüklenir.",
+    "didox": {
+      "title": "Didox — istek paketi",
+      "calls": "Bu ayki istekler",
+      "ofDays": "{total} günün {elapsed}. günü",
+      "projected": "Ay sonu tahmini",
+      "spent": "Harcanan",
+      "ofPackage": "{total} UZS içinden",
+      "failed": "Hatalar",
+      "notSent": "gönderilmedi: {count}",
+      "byOperation": "İşleme göre",
+      "emptyMonth": "Bu ay henüz istek olmadı",
+      "emptyMonthHint": "Bu «sıfır harcandı» değil — paket bu ay henüz kullanılmaya başlanmadı."
+    },
+    "quota": {
+      "title": "Paket kullanımı",
+      "ofQuota": "{quota} içinden",
+      "pace": "Bugüne beklenen",
+      "projected": "Tahmin",
+      "remaining": "Kalan",
+      "onTrack": "Plan dahilinde",
+      "ahead": "Planın önünde",
+      "over": "Paketi aşacak"
+    },
+    "trend": {
+      "title": "Günlere göre kullanım (kümülatif)",
+      "actual": "Gerçekleşen",
+      "evenBurn": "Eşit kullanım"
+    },
+    "health": {
+      "title": "Dış servis güvenilirliği (30 gün)",
+      "empty": "Çağrı olmadı"
+    },
+    "ai": {
+      "title": "Yapay zekâ — token kullanımı",
+      "calls": "Çağrı",
+      "window": "{days} günde",
+      "tokens": "Token",
+      "inOut": "giriş {in} · çıkış {out}",
+      "cost": "Tahmini maliyet",
+      "estimate": "API yanıtındaki oranlarla",
+      "degraded": "Bozulma",
+      "degradedHint": "hatalar, geri dönüşler, ertelenenler",
+      "byPurpose": "Neye harcandı",
+      "byModel": "Modele göre",
+      "empty": "Yapay zekâ henüz çağrılmadı",
+      "emptyHint": "Bu «sıfır harcandı» değil: seçilen dönemde hiç çağrı olmadı."
+    },
+    "purpose": {
+      "signal_extraction": "Sinyal çözümleme",
+      "news_classification": "Haber sınıflandırma",
+      "substance_hint": "Madde önerisi",
+      "request_analysis": "Talep analizi",
+      "report": "Raporlar",
+      "unknown": "Bilinmiyor"
+    },
+    "degradation": {
+      "title": "Yapay zekânın sessizce çalışmadığı yerler",
+      "hint": "Buradaki her yol bilerek «yumuşak»: yapay zekâ başarısız olursa sistem çökmez, kurallara döner. Bu yüzden anahtarı bozuk bir ay normal görünür — farkı yalnızca burada görebilirsiniz.",
+      "errors": "Çözümleme hataları",
+      "fallbacks": "Kurala dönüş",
+      "deferred": "Bütçe nedeniyle ertelenen",
+      "ruleBasedReports": "Yapay zekâsız raporlar"
+    },
+    "outcome": {
+      "perCompany": "Doğrulanan şirket başına UZS",
+      "companies": "şirket: {count}",
+      "perDocument": "Belge başına UZS",
+      "documents": "belge: {count}",
+      "perArticle": "Haber başına token",
+      "articles": "haber: {count}"
+    },
+    "table": {
+      "operation": "İşlem",
+      "calls": "Çağrı",
+      "failed": "Hata",
+      "p95": "p95",
+      "provider": "Servis",
+      "success": "Başarı",
+      "purpose": "Amaç",
+      "tokensIn": "Giriş token",
+      "tokensOut": "Çıkış token",
+      "model": "Model",
+      "tokens": "Token",
+      "cost": "Maliyet",
+      "none": "yok"
     }
   }
 }

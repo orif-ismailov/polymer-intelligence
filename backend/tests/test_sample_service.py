@@ -23,6 +23,10 @@ import pytest
 
 #: from → the statuses reachable from it.
 EXPECTED: dict[str, set[str]] = {
+    # P7.a W8: the pre-state while the buyer's commitment letter is unsigned. Its
+    # one exit is driven by the signature, not by a party choosing it, so it has
+    # no entry in ACTORS below.
+    "pending_letter": {"requested"},
     "requested": {"accepted", "declined"},
     "accepted": {"sent"},
     "sent": {"received", "rejected_by_buyer"},

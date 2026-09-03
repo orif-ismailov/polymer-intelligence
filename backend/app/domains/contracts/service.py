@@ -22,6 +22,7 @@ from __future__ import annotations
 import base64
 import datetime
 import logging
+from dataclasses import dataclass
 
 import redis
 from sqlalchemy import select
@@ -119,6 +120,32 @@ class AlreadySigned(Exception):
     """This company already signed the contract."""
 
 
+class WrongRail(Exception):
+    """This contract is not on the rail the caller assumed.
+
+    A contract signed through Didox is activated by evidence from Didox; one
+    signed through our own E-IMZO rails is activated by two verified
+    `contract_signatures` rows. Neither door may open the other's contract.
+    """
+
+
+@dataclass(frozen=True)
+class ProviderEvidence:
+    """What a provider hands back when a document is fully signed.
+
+    The archive is the legal artefact — a ZIP of both signatures, the PDF and the
+    JSON — stored once with its hash. Kept SEPARATE from
+    `contracts.generated_document_path` / `document_sha256`, which describe our own
+    rendered preview: two artefacts, two hash pairs, and neither overwrites the
+    other.
+    """
+
+    provider: str
+    doc_id: str
+    archive_path: str
+    archive_sha256: str
+
+
 class CannotCancel(Exception):
     """The contract can no longer be cancelled (a signature exists / terminal)."""
 
@@ -211,8 +238,15 @@ def create_contract(
     counterparty_company: Company,
     offer_id: int | None = None,
     title: str | None = None,
+    signing_provider: str = "eimzo",
 ) -> Contract:
-    """Create a draft contract between two verified companies; render the document."""
+    """Create a draft contract between two verified companies; render the document.
+
+    The rail is frozen here: everything downstream — which signing UI the portal
+    shows, whether a provider document is due, how the contract becomes active —
+    reads it, and a contract that changed rails mid-flight would have signatures
+    on one rail and a document on the other.
+    """
     if initiator_company.id == counterparty_company.id:
         raise NotAParty("initiator == counterparty")
     _assert_verified(initiator_company)
@@ -225,6 +259,7 @@ def create_contract(
         initiator_company_id=initiator_company.id,
         counterparty_company_id=counterparty_company.id,
         offer_id=offer_id,
+        signing_provider=signing_provider,
         title=title or template.name_ru,
         variables=variables,
         status=ContractStatus.draft,
@@ -495,6 +530,52 @@ def _maybe_activate(db: Session, contract: Contract) -> None:
         db.flush()
         event_service.emit(db, event_types.CONTRACT_ACTIVATED, "contract", contract.id, {})
         db.refresh(contract)
+
+
+def activate_from_provider(
+    db: Session, contract: Contract, evidence: ProviderEvidence
+) -> Contract:
+    """Activate a Didox-rail contract on the provider's evidence.
+
+    A separate door from `_maybe_activate`, and deliberately so. That one requires
+    two `contract_signatures` rows, each pointing at a `signature_evidence` row
+    holding a PKCS#7 **we verified ourselves** — and on the Didox rail we never see
+    either signature: the counterparty may have signed in their own EDI cabinet, at
+    another of the 27 operators. Writing rows here to satisfy the other door would
+    be fabricating our own verification of a signature we never held, and
+    `contract_signatures.signature_evidence_id` being NOT NULL is the schema saying
+    the same thing.
+
+    So this writes NO signature rows. The evidence is the archive: fetched once,
+    hashed, stored, and recorded in the audit trail.
+
+    Idempotent — the poller delivers at least once, and a document that is already
+    `active` has nothing to add.
+    """
+    locked = db.execute(
+        select(Contract).where(Contract.id == contract.id).with_for_update()
+    ).scalar_one()
+    if locked.signing_provider != "didox":
+        raise WrongRail(f"contract {contract.id} is on the {locked.signing_provider} rail")
+    if locked.status == ContractStatus.active:
+        return locked
+    if locked.status != ContractStatus.pending_signatures:
+        raise InvalidContractTransition(f"{locked.status} -> active")
+
+    locked.status = ContractStatus.active
+    locked.activated_at = company_service.now_utc()
+    db.flush()
+    audit_service.write_audit(
+        db, None, "contract.activated_from_provider", "contracts", str(contract.id),
+        {
+            "provider": evidence.provider,
+            "doc_id": evidence.doc_id,
+            "archive_sha256": evidence.archive_sha256,
+        },
+    )
+    event_service.emit(db, event_types.CONTRACT_ACTIVATED, "contract", contract.id, {})
+    db.refresh(contract)
+    return contract
 
 
 # ── Notifications (R2 portal_notifications; best-effort, in-tx) ────────────────

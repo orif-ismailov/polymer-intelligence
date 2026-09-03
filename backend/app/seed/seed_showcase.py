@@ -33,7 +33,6 @@ from sqlalchemy.orm import Session
 from app.core.crypto import encrypt_pii
 from app.core.db import SessionLocal
 from app.seed.showcase_data import (
-    APP_SETTINGS,
     BANKS,
     COMPANIES,
     GRADE_SPECS,
@@ -1785,23 +1784,8 @@ def seed_attention(
             },
         )
 
-    for setting_key, value in APP_SETTINGS:
-        db.execute(
-            sa.text(
-                """
-                INSERT INTO app_settings (key, value, updated_at, updated_by)
-                VALUES (:key, CAST(:value AS jsonb), :updated, 1)
-                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value,
-                                                updated_at = EXCLUDED.updated_at,
-                                                updated_by = EXCLUDED.updated_by
-                """
-            ),
-            {"key": setting_key, "value": json.dumps(value), "updated": _ago(days=RNG.randrange(1, 60))},
-        )
-
     print(
-        f"attention: {made} notifications, {len(rules)} alert rules, "
-        f"{len(fired)} alerts, {len(APP_SETTINGS)} settings"
+        f"attention: {made} notifications, {len(rules)} alert rules, {len(fired)} alerts"
     )
     del offers
 

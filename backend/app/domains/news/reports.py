@@ -30,15 +30,35 @@ from app.core.time import to_display_tz, utcnow
 from app.domains.news.dedup import cluster_articles
 from app.domains.news.models import Report
 from app.models.enums import ReportKind, ReportStatus
+from app.services import llm_clients, settings_service
 
 logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = PROMPTS_DIR
 
-# Module-level Anthropic client (built once at import; constructing it performs no
+# Module-level clients (built once at import; constructing them performs no
 # network I/O — only stores the key, so it is safe under CI/tests). _ai_summary
 # catches call-time failures; tests pass use_llm=False for a network-free path.
+#
+# RAW clients, unlike the four extraction modules: the digest asks for strict JSON
+# and parses the answer itself rather than through an instructor `response_model`,
+# so it holds the vendor SDKs directly — and the raw clients are exactly where the
+# two SDKs stop looking alike. `llm_clients.text` owns that difference.
 _client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+_openai_client = llm_clients.build_openai_raw(settings.OPENAI_API_KEY)
+
+
+def report_model() -> str:
+    """The report model as configured RIGHT NOW, override included.
+
+    Read through `settings_service` rather than off `settings`, because
+    `llm_report_model` is operator-settable: reading the env value directly would
+    give the panel a control that silently does nothing, and would stamp
+    `generated_by` with a model that did not write the report. Resolved per call
+    — a module constant would freeze it at import, which is the exact bug the
+    extractor's `_live_model` was introduced to fix.
+    """
+    return settings_service.get_str("llm_report_model")
 
 
 @functools.lru_cache(maxsize=4)
@@ -918,32 +938,40 @@ def render_telegram_digest(
 _DIGEST_LANGS = SUPPORTED_LANGUAGES
 
 
-def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
+def _ai_digest(
+    snapshot: dict[str, object],
+) -> tuple[dict[str, dict[str, str]] | None, llm_clients.Usage]:
     """Best-effort multi-language digest: summary + forecast in every supported language.
 
-    The report prompt asks for strict JSON. Returns None on any failure — API error,
-    non-JSON output, or a payload missing the Russian summary — so generate_report can
-    degrade to the deterministic rule-based summary.
+    The report prompt asks for strict JSON. Returns `(None, usage)` on any failure —
+    API error, non-JSON output, or a payload missing the Russian summary — so
+    generate_report can degrade to the deterministic rule-based summary.
+
+    **The usage comes back even when the digest does not.** A call that answered
+    unparseable JSON was paid for exactly like one that worked, and this is the
+    most expensive call the platform makes; reporting only successful spend would
+    hide the failures that cost the most. Zero when the call never happened.
     """
     import json  # noqa: PLC0415
 
+    spent = llm_clients.Usage(tokens_in=0, tokens_out=0, cache_read_tokens=0)
     prompt = _load_prompt(settings.REPORT_PROMPT_VERSION) or _load_prompt("v1")
     try:
-        resp = _client.messages.create(
-            model=settings.LLM_REPORT_MODEL,
+        text, spent = llm_clients.text(
+            _client,
+            _openai_client,
+            model=report_model(),
+            system=prompt,
+            user=json.dumps(snapshot, ensure_ascii=False),
             # The v6 payload — summary + forecast in 6 languages PLUS three detailed
             # per-section briefs — runs ~6.5k Cyrillic-dense output tokens. At 4096 the
             # JSON was truncated mid-string (stop_reason=max_tokens) → json.loads failed →
             # silent rule-based fallback. 12000 leaves comfortable headroom; unused output
             # tokens are not billed, so a generous ceiling has no cost.
             max_tokens=12000,
-            system=prompt,
-            messages=[{"role": "user", "content": json.dumps(snapshot, ensure_ascii=False)}],
         )
-        parts = [getattr(b, "text", "") for b in resp.content if getattr(b, "type", None) == "text"]
-        text = " ".join(parts).strip()
         if not text:
-            return None
+            return None, spent
         # Tolerate accidental markdown fences around the JSON.
         if text.startswith("```"):
             text = text.strip("`").removeprefix("json").strip()
@@ -951,7 +979,7 @@ def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
         summary = data.get("summary") or {}
         forecast = data.get("forecast") or {}
         if not isinstance(summary, dict) or not str(summary.get("ru", "")).strip():
-            return None
+            return None, spent
         briefs_raw = data.get("briefs") if isinstance(data.get("briefs"), dict) else {}
         briefs = {k: str(briefs_raw.get(k, "")).strip() for k in ("uzbekistan", "producers", "global")}
         return {
@@ -960,10 +988,10 @@ def _ai_digest(snapshot: dict[str, object]) -> dict[str, dict[str, str]] | None:
             if isinstance(forecast, dict)
             else dict.fromkeys(_DIGEST_LANGS, ""),
             "briefs": briefs,
-        }
+        }, spent
     except Exception:  # noqa: BLE001
         logger.warning("report_service.ai_digest_failed", exc_info=True)
-        return None
+        return None, spent
 
 
 # ── Generation ───────────────────────────────────────────────────────────────────
@@ -990,7 +1018,10 @@ def generate_report(db: Session, *, use_llm: bool = True, session: str = "mornin
     """
     snapshot = build_snapshot(db)
     snapshot["session"] = session
-    digest = _ai_digest(snapshot) if use_llm else None
+    if use_llm:
+        digest, spent = _ai_digest(snapshot)
+    else:
+        digest, spent = None, llm_clients.Usage(tokens_in=0, tokens_out=0, cache_read_tokens=0)
     used_llm = digest is not None
 
     if digest is not None:
@@ -1015,10 +1046,17 @@ def generate_report(db: Session, *, use_llm: bool = True, session: str = "mornin
         data_snapshot=snapshot,
         status=ReportStatus.draft,
         generated_by=(
-            f"{settings.LLM_REPORT_MODEL} {settings.REPORT_PROMPT_VERSION}"
+            f"{report_model()} {settings.REPORT_PROMPT_VERSION}"
             if used_llm
             else "rule_based"
         ),
+        # Recorded even when the digest failed and the report fell back to the
+        # rule-based summary — those tokens were still spent, and a failure that
+        # cost 6.5k tokens is exactly the one worth seeing on the analytics page.
+        # NULL only when no call was attempted (`use_llm=False`), which is how the
+        # query tells "no AI" apart from "AI spent nothing".
+        tokens_in=spent.tokens_in or None,
+        tokens_out=spent.tokens_out or None,
     )
     db.add(report)
     db.flush()

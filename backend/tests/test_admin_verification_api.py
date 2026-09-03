@@ -22,17 +22,18 @@ from tests._verification_db import (
 )
 
 
-def test_routes_and_settings_registered() -> None:
+def test_routes_registered() -> None:
     from app.domains.verification.api_admin import router  # noqa: PLC0415
-    from app.services.settings_service import _SPECS  # noqa: PLC0415
 
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/admin/verification/cases" in paths
     assert "/admin/verification/cases/{case_id}/approve" in paths
     assert "/admin/verification/checks/{check_id}/waive" in paths
     assert "/admin/companies/{company_id}/suspend" in paths
-    assert "bank_verification_required" in _SPECS
-    assert "verification_required_for_publish" in _SPECS
+    # `bank_verification_required` and `verification_required_for_publish` used
+    # to be asserted here. Both were declared and read by NOTHING — only the
+    # showcase seeder ever set them — so moving the switches into `.env` was
+    # the moment to drop them rather than document two inert env vars.
 
 
 @pytest.fixture(scope="module")
@@ -72,12 +73,11 @@ def _staff_auth(session, role: str, email: str) -> dict[str, str]:  # noqa: ANN0
 
     with session() as db:
         staff = make_staff(db, email)
-        from app.models.enums import StaffRole  # noqa: PLC0415
 
-        staff.role = StaffRole(role)
+        staff.is_admin = role == "admin"
         db.commit()
         staff_id = staff.id
-    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id), role=role)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(staff_id))}"}
 
 
 def _pending_review_case(session, phone: str, tax: str) -> tuple[int, int]:  # noqa: ANN001
@@ -130,13 +130,101 @@ def test_approve_case_verifies_company(api) -> None:  # noqa: ANN001
     with session() as db:
         assert db.get(Company, company_id).status == CompanyStatus.verified
 
-    # a second approve is idempotent → 409
-    assert (
-        client.post(
-            f"/api/v1/admin/verification/cases/{case_id}/approve", json={}, headers=analyst
-        ).status_code
-        == 409
+    # a second approve is idempotent → 409, and says WHICH conflict it was
+    second = client.post(
+        f"/api/v1/admin/verification/cases/{case_id}/approve", json={}, headers=analyst
     )
+    assert second.status_code == 409
+    assert second.json()["detail"] == {"error": "already_decided", "case_status": "approved"}
+
+
+def _needs_info_case(session, phone: str, tax: str) -> tuple[int, int]:  # noqa: ANN001
+    """A submitted case whose bank_requisites check failed → `needs_info`."""
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+    from app.domains.verification import service as verification_service  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
+    from app.models.enums import VerificationCheckStatus, VerificationCheckType  # noqa: PLC0415
+
+    with session() as db:
+        account = make_account(db, phone)
+        company = company_service.create_company(db, account, "UZ", tax)
+        verification_service.open_case(db, company)
+        case = verification_service.submit_case(db, company, account)
+        for check in db.query(VerificationCheck).filter(VerificationCheck.case_id == case.id):
+            if check.check_type == VerificationCheckType.bank_requisites:
+                check.status = VerificationCheckStatus.failed
+                check.result = {"accounts": 1, "problems": [{"last4": "4321", "issue": "bad_account_length"}]}
+            elif check.check_type != VerificationCheckType.manual_kyb:
+                check.status = VerificationCheckStatus.passed
+        db.flush()
+        verification_service.on_check_completed(db, case.id)
+        db.commit()
+        return company.id, case.id
+
+
+@requires_real_db
+@pytest.mark.parametrize("action", ["approve", "reject", "request-info"])
+def test_decision_on_needs_info_is_not_already_decided(api, action: str) -> None:  # noqa: ANN001
+    """A `needs_info` case refuses a decision — but NOT as "already decided".
+
+    `_claim_pending_review` raises the same `AlreadyDecided` for both, and this
+    endpoint used to answer "Case already decided" to a case nobody had touched.
+    The dashboard showed the buttons anyway, so pressing approve reported a
+    colleague's decision that had never happened.
+    """
+    client, session = api
+    _company_id, case_id = _needs_info_case(session, "+998900000004", "444444444")
+    analyst = _staff_auth(session, "analyst", "a@x.com")
+
+    resp = client.post(
+        f"/api/v1/admin/verification/cases/{case_id}/{action}", json={}, headers=analyst
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"] == {"error": "not_pending_review", "case_status": "needs_info"}
+
+
+@requires_real_db
+def test_waiving_the_failed_check_unblocks_the_decision(api) -> None:  # noqa: ANN001
+    """The documented way out of `needs_info` for staff, end to end.
+
+    Waiving the failing check re-runs the evaluator, which moves the case from
+    `needs_info` to `pending_review` — and only then does approve succeed. That
+    ordering is what the new dashboard panel tells an operator to do.
+    """
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
+    from app.models.enums import CompanyStatus, VerificationCheckType  # noqa: PLC0415
+
+    client, session = api
+    company_id, case_id = _needs_info_case(session, "+998900000005", "555555555")
+    admin = _staff_auth(session, "admin", "adm@x.com")
+
+    with session() as db:
+        check_id = (
+            db.query(VerificationCheck)
+            .filter(
+                VerificationCheck.case_id == case_id,
+                VerificationCheck.check_type == VerificationCheckType.bank_requisites,
+            )
+            .one()
+            .id
+        )
+
+    assert client.post(
+        f"/api/v1/admin/verification/checks/{check_id}/waive",
+        json={"reason": "bank letter received out of band"},
+        headers=admin,
+    ).status_code == 200
+
+    resp = client.get(f"/api/v1/admin/verification/cases/{case_id}", headers=admin)
+    assert resp.json()["status"] == "pending_review"
+
+    approve = client.post(
+        f"/api/v1/admin/verification/cases/{case_id}/approve", json={}, headers=admin
+    )
+    assert approve.status_code == 200
+    with session() as db:
+        assert db.get(Company, company_id).status == CompanyStatus.verified
 
 
 @requires_real_db

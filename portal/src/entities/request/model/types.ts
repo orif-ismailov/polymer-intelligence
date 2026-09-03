@@ -47,6 +47,10 @@ export interface RequestDetail extends RequestSummary {
   contact_name: string | null;
   phone: string | null;
   legal_address: string | null;
+  /** `rfq_visibility` — who among suppliers this tender is open to. */
+  visibility: string;
+  /** Document codes the buyer asks suppliers for (`sds`, `origin_cert`, …). */
+  required_docs: string[];
   files: RequestFile[];
   history: StatusHistoryEntry[];
 }
@@ -73,4 +77,8 @@ export interface RequestPayload {
   contact_name?: string | null;
   phone?: string | null;
   legal_address?: string | null;
+  /** Codes from `REQUIRED_DOC_CODES`; unknown ones are dropped server-side. */
+  required_docs?: string[];
+  /** `verified_only` (default) | `all` — decides which suppliers see it. */
+  visibility?: string;
 }

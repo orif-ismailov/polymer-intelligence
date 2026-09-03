@@ -192,7 +192,7 @@ def test_feed_keyset_page_within_500ms(seeded_feed_db):
     from app.core.security import create_access_token
 
     app = _build_app_with_real_db()
-    token = create_access_token(subject="1", role="admin")
+    token = create_access_token(subject="1")
     headers = {"Authorization": f"Bearer {token}"}
 
     with TestClient(app, raise_server_exceptions=True) as client:
@@ -281,7 +281,7 @@ def test_feed_second_page_within_500ms(seeded_feed_db):
     from app.core.security import create_access_token
 
     app = _build_app_with_real_db()
-    token = create_access_token(subject="1", role="admin")
+    token = create_access_token(subject="1")
     headers = {"Authorization": f"Bearer {token}"}
 
     with TestClient(app, raise_server_exceptions=True) as client:

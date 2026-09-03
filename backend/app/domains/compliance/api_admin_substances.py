@@ -15,7 +15,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.compliance import substances as substance_service
 from app.domains.compliance.substance_schemas import SubstanceIn, SubstanceOut
@@ -42,7 +42,7 @@ def list_substances(
     level: RegulationLevel | None = None,
     include_inactive: bool = Query(default=True),
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("substances", "read")),
 ) -> list[SubstanceOut]:
     """Inactive rows are included by default — staff need to see what was retired."""
     return substance_service.list_all(  # type: ignore[return-value]
@@ -59,7 +59,7 @@ def list_substances(
 def create_substance(
     body: SubstanceIn,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_admin),
+    user: StaffUser = Depends(require_page("substances", "write")),
 ) -> SubstanceOut:
     try:
         row = substance_service.create(db, body, staff_user_id=user.id)
@@ -73,7 +73,7 @@ def create_substance(
 def get_substance(
     substance_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(require_analyst_or_admin),
+    _user: StaffUser = Depends(require_page("substances", "read")),
 ) -> SubstanceOut:
     return _or_404(db, substance_id)
 
@@ -83,7 +83,7 @@ def update_substance(
     substance_id: int,
     body: SubstanceIn,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_admin),
+    user: StaffUser = Depends(require_page("substances", "write")),
 ) -> SubstanceOut:
     """Full replacement. Takes the row out of the seed's hands (seed_revision → NULL)."""
     row = _or_404(db, substance_id)
@@ -101,7 +101,7 @@ def update_substance(
 def deactivate_substance(
     substance_id: int,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_admin),
+    user: StaffUser = Depends(require_page("substances", "write")),
 ) -> SubstanceOut:
     row = _or_404(db, substance_id)
     substance_service.set_active(db, row, active=False, staff_user_id=user.id)
@@ -115,7 +115,7 @@ def deactivate_substance(
 def activate_substance(
     substance_id: int,
     db: Session = Depends(get_db),
-    user: StaffUser = Depends(require_admin),
+    user: StaffUser = Depends(require_page("substances", "write")),
 ) -> SubstanceOut:
     row = _or_404(db, substance_id)
     substance_service.set_active(db, row, active=True, staff_user_id=user.id)

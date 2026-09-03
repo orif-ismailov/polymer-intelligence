@@ -1,4 +1,5 @@
 export type {
+  SampleLetter,
   SampleRequest,
   SampleRequestPayload,
   SampleRequestStatus,

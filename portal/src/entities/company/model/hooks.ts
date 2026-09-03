@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { companyApi, companyKeys } from "./api";
 import { useActiveCompanyStore } from "./activeCompanyStore";
-import type { CompanyDetail, CompanySummary } from "./types";
+import type { CompanyDetail, CompanyLookupResult, CompanySummary } from "./types";
 
 /**
  * List all companies the account is a member of.
@@ -29,6 +29,31 @@ export function useCompany(id: number | null) {
     queryKey: companyKeys.detail(id ?? -1),
     queryFn: () => companyApi.get(id as number),
     enabled: id != null,
+  });
+}
+
+/** A STIR the registry could plausibly know: 9 digits (a ПИНФЛ is 14). */
+export function isLookupableTaxId(taxId: string): boolean {
+  const digits = taxId.trim();
+  return /^\d{9}$/.test(digits) || /^\d{14}$/.test(digits);
+}
+
+/**
+ * The state registry's record for a STIR, for prefilling registration.
+ *
+ * Deliberately quiet about failure: `retry: false` because a 503 means "no
+ * channel configured", which retrying cannot fix, and every consumer treats an
+ * error as "the form stays manual". `enabled` guards both a malformed STIR and
+ * SSR — an unguarded query fires from Node during a server render.
+ */
+export function useCompanyLookup(taxId: string, companyId?: number | null, enabled = true) {
+  const normalized = taxId.trim();
+  return useQuery<CompanyLookupResult>({
+    queryKey: companyKeys.lookup(normalized),
+    queryFn: () => companyApi.lookup(normalized, companyId),
+    enabled: enabled && isLookupableTaxId(normalized),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

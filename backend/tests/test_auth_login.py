@@ -31,12 +31,10 @@ def _make_staff_user(
 ):
     """Create a mock StaffUser ORM object."""
     from app.core.security import hash_password
-    from app.models.enums import StaffRole
-
     user = MagicMock()
     user.id = id
     user.email = email
-    user.role = StaffRole(role)
+    user.is_admin = role == "admin"
     user.is_active = is_active
     user.password_hash = hash_password(password)
     return user
@@ -150,7 +148,7 @@ def test_login_success_returns_access_token(auth_client: TestClient):
     data = resp.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
-    assert data["role"] == "admin"
+    assert data["is_admin"] is True
 
 
 def test_login_success_sets_httponly_refresh_cookie(auth_client: TestClient):

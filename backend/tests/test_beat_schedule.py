@@ -55,6 +55,10 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "publish_breaking_news",
         # R2 W2 T2.3: portal notification retention (daily)
         "prune_portal_notifications",
+        # Gateway call-log retention (daily). The model documented 90-day pruning
+        # from R3 and nothing enforced it — harmless at a few hundred E-IMZO calls,
+        # not against the million-request Didox package /admin/analytics measures.
+        "prune_integration_call_log",
         # R3 TB4.1/TB4.2: contract PDF integrity + stale-contract expiry (daily)
         "verify_contract_integrity",
         "expire_stale_contracts",
@@ -64,6 +68,10 @@ def test_all_five_keys_present(beat_schedule: dict[str, dict[str, object]]) -> N
         "sweep_provider_events",
         # R6 P7.b T3.1: escrow ↔ bank reconciliation (every 30 min, `verify` queue)
         "reconcile_escrow_payments",
+        # R6 P7.a W10: Didox document statuses (every 10 min, `verify` queue).
+        # Didox publishes NO partner webhooks, so polling is the only way we learn
+        # that a counterparty signed or that the tax committee annulled a document.
+        "poll_didox_documents",
     }
     assert set(beat_schedule.keys()) == required_keys, (
         f"Beat schedule keys mismatch: {set(beat_schedule.keys())!r}"

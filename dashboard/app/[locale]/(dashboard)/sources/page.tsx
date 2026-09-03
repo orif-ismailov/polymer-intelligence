@@ -25,8 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 function SourcesPageContent() {
   const t = useTranslations("sources");
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { isAdmin } = useAuth();
   const [wizardOpen, setWizardOpen] = useState(false);
 
   return (

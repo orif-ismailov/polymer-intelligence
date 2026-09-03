@@ -74,7 +74,7 @@ class TestWaterfall:
 # ── API (mocked) ─────────────────────────────────────────────────────────────────
 
 def _staff_app(mock_db: MagicMock) -> Any:
-    from app.api.deps import require_analyst_or_admin
+    from app.api.deps import get_current_staff_user
     from app.core.db import get_db
     from app.main import create_app
 
@@ -83,7 +83,9 @@ def _staff_app(mock_db: MagicMock) -> Any:
 
     application = create_app()
     application.dependency_overrides[get_db] = _db
-    application.dependency_overrides[require_analyst_or_admin] = lambda: MagicMock(id=3)
+    application.dependency_overrides[get_current_staff_user] = lambda: MagicMock(
+        id=3, is_admin=True, is_active=True
+    )
     return application
 
 

@@ -33,29 +33,24 @@ export async function login(
 
 const SKIP = /skip|пропустить|o.tkazib/i;
 
-/** Step 1 — pick an account type and (optionally) sign with E-IMZO. */
+/** Step 1 — pick an account type. Registration involves no E-IMZO at all. */
 export async function stepAccountType(
   page: Page,
-  opts: { type?: string; sign?: boolean } = {},
+  opts: { type?: string } = {},
 ): Promise<void> {
   await page.goto("/cabinet/companies/new/1");
   await page.getByTestId(`account-type-${opts.type ?? "distributor"}`).click();
-
-  if (opts.sign) {
-    // The PIN gates the CTA exactly as the sheet draws it; the E-IMZO module
-    // prompts for the real one, so any value unlocks the button here.
-    await page.getByLabel(/pin/i).fill("123456");
-    await page.getByTestId("wizard-eimzo").click();
-    await expect(page.getByTestId("eimzo-success")).toBeVisible({ timeout: 15_000 });
-  }
 
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/2");
 }
 
 /**
- * Step 2 — «Основная информация». Every field is required, so a signed company
- * (name + tax id frozen and disabled) still has to state its form and date.
+ * Step 2 — «Основная информация», opening with the ИНН.
+ *
+ * The registry lookup keys off that field, so on a deployment with the Didox
+ * rail on, several of the values typed below arrive already filled; filling them
+ * anyway is harmless and keeps the helper working on a stub deployment too.
  */
 export async function stepDetails(page: Page, taxId?: string): Promise<void> {
   const name = page.getByLabel(/company name|название компании|kompaniya nomi/i);
@@ -73,7 +68,7 @@ export async function stepDetails(page: Page, taxId?: string): Promise<void> {
   await page.getByLabel(/ownership form|форма собственности|mulkchilik shakli/i).selectOption("ООО");
 
   await page.getByTestId("wizard-next").click();
-  await page.waitForURL("**/cabinet/companies/new/3");
+  await page.waitForURL("**/cabinet/companies/new/3", { timeout: 20_000 });
 }
 
 /** Step 3 — bank (skipped) and step 4 — the required registration certificate. */
@@ -106,14 +101,36 @@ export async function stepReview(page: Page): Promise<number> {
   return Number(match?.[1]);
 }
 
-/** The whole flow, end to end. Returns the new company's id. */
+/**
+ * Confirm a registered company's identity with E-IMZO, from «Статус проверки».
+ *
+ * This is now the ONLY door to `identity_locked` — registration no longer signs
+ * anything — and with `verification_auto_approve` on it is also how a spec gets a
+ * company that may transact. Needs a stub bridge on `window.__EIMZO_BRIDGE__`
+ * whose certificate INN matches `taxId`.
+ */
+export async function confirmIdentityWithEimzo(page: Page, companyId: number): Promise<void> {
+  await page.goto(`/cabinet/companies/${companyId}/verification`);
+  await page.getByTestId("eimzo-open").click();
+  await expect(page.getByTestId("eimzo-success")).toBeVisible({ timeout: 20_000 });
+}
+
+/**
+ * The whole flow, end to end. Returns the new company's id.
+ *
+ * `sign` no longer happens inside the wizard: it registers first, then confirms
+ * on the verification screen — which is the real user path since E-IMZO left
+ * registration, and the only one that still yields a verified company.
+ */
 export async function registerCompany(
   page: Page,
   taxId: string,
   opts: { type?: string; sign?: boolean } = {},
 ): Promise<number> {
   await stepAccountType(page, opts);
-  await stepDetails(page, opts.sign ? undefined : taxId);
+  await stepDetails(page, taxId);
   await stepBankAndDocuments(page);
-  return stepReview(page);
+  const companyId = await stepReview(page);
+  if (opts.sign) await confirmIdentityWithEimzo(page, companyId);
+  return companyId;
 }

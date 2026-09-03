@@ -64,6 +64,11 @@ dependencies = [
     "anthropic>=0.40,<1.0",
     # instructor: pypi.org/project/instructor (jxnl-instructor-ai structured outputs)
     "instructor>=1.5,<2.0",
+    # openai: pypi.org/project/openai (OpenAI official SDK) — the second LLM
+    # provider, selected per model from /admin/settings/ai. It arrived as an
+    # instructor dependency and was used without being declared; an undeclared
+    # import is one `uv sync` away from vanishing.
+    "openai>=1.60,<3.0",
     # telethon: pypi.org/project/telethon (LonamiWebs MTProto userbot client)
     "telethon>=1.36,<2.0",
     "weasyprint>=69.0",
@@ -136,9 +141,11 @@ extend-immutable-calls = [
     "fastapi.Form",
     "fastapi.File",
     "fastapi.security.HTTPBearer",
-    # require_role(...) is a dependency factory built once at import time and wrapped
+    # require_page(...) is a dependency factory built once at import time and wrapped
     # in Depends(...) — the same immutable-call pattern as the FastAPI markers above.
-    "app.api.deps.require_role",
+    # (It replaced require_role, which went with the staff_role enum in 0042.)
+    "app.api.deps.require_page",
+    "app.api.deps.require_page_sse",
 ]
 
 [tool.mypy]

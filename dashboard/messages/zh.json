@@ -5,7 +5,8 @@
       "requests": "采购需求",
       "broker": "经纪",
       "sources": "数据源",
-      "settings": "设置"
+      "settings": "设置",
+      "projectSettings": "项目设置"
     },
     "items": {
       "dashboard": "仪表盘",
@@ -34,7 +35,16 @@
       "labOrders": "实验室",
       "labPartners": "合作实验室",
       "logisticsRequests": "物流请求",
-      "labRequests": "实验室请求"
+      "labRequests": "实验室请求",
+      "settingsAnalytics": "分析",
+      "settingsAi": "AI 与模型",
+      "settingsNews": "新闻与报告",
+      "settingsNotifications": "通知",
+      "settingsDidox": "Didox 与国家登记册",
+      "settingsDeals": "交易与审核",
+      "settingsSourcing": "供应商匹配",
+      "settingsCompliance": "化学品合规",
+      "settingsIngest": "数据采集"
     },
     "guest": "访客",
     "openMenu": "打开菜单",
@@ -45,6 +55,10 @@
       "switched": "另一位用户已在此浏览器登录。当前标签页显示的是旧账号——请刷新页面以使用当前账号继续。",
       "signedOut": "会话已在其他标签页中结束。请刷新页面重新登录。",
       "reload": "刷新页面"
+    },
+    "adminBadge": "管理员",
+    "pages": {
+      "appSettings": "项目设置"
     }
   },
   "login": {
@@ -205,7 +219,7 @@
   "requests": {
     "loading": "加载中…",
     "pageTitle": "采购需求",
-    "pageSubtitle": "从交易所、网站和频道收集的买方实时采购需求",
+    "pageSubtitle": "买方采购需求：门户发布的招标与 Telegram 机器人提交的需求",
     "searchPlaceholder": "搜索需求…",
     "searchAriaLabel": "搜索需求",
     "exportCsv": "导出 CSV",
@@ -311,12 +325,12 @@
     "exportError": "导出执行失败。请重试，如问题持续存在请联系支持。",
     "exportAriaLabel": "将需求导出为 CSV",
     "originTelegram": "Telegram",
-    "originPortal": "门户",
-    "originPortalNamed": "门户：{company}",
+    "originPortal": "招标（门户）",
+    "originPortalNamed": "招标：{company}",
     "filterOrigin": "来源",
     "originOptAll": "所有来源",
     "originOptClient": "Telegram",
-    "originOptCompany": "门户",
+    "originOptCompany": "招标（门户）",
     "sectionPushedSuppliers": "已通知的供应商",
     "pushedScoreHint": "推送时的匹配评分"
   },
@@ -666,23 +680,55 @@
     "deleteRuleAria": "删除规则 {name}"
   },
   "admin": {
-    "pageTitle": "用户管理",
-    "pageSubtitle": "员工账户与角色分配",
-    "loadError": "加载用户失败。请刷新页面。",
-    "empty": "未找到员工。",
-    "statusActive": "在职",
+    "pageTitle": "员工",
+    "pageSubtitle": "员工账户与访问权限",
+    "countLabel": "共 {count} 人",
+    "createButton": "添加员工",
+    "createTitle": "新增员工",
+    "createSubtitle": "创建账户并授予板块权限",
+    "editTitle": "编辑员工",
+    "fieldEmail": "电子邮箱",
+    "fieldName": "姓名",
+    "fieldPassword": "密码",
+    "fieldPasswordReset": "新密码",
+    "fieldPasswordKeep": "留空则不修改",
+    "passwordHint": "至少 {min} 个字符。请当面告知员工密码。",
+    "fieldIsAdmin": "管理员",
+    "isAdminHint": "对所有板块的完全权限，包括员工管理。",
+    "accessTitle": "板块权限",
+    "adminHoldsEverything": "管理员已拥有全部板块权限，无需设置。",
+    "accessAdmin": "管理员",
+    "accessStaff": "员工",
+    "accessPages": "{count} 个板块",
+    "access": {
+      "none": "无",
+      "read": "只读",
+      "write": "可写"
+    },
+    "statusActive": "启用",
     "statusInactive": "停用",
+    "edit": "编辑",
+    "deactivate": "停用",
+    "activate": "启用",
+    "save": "保存",
+    "saving": "保存中…",
+    "cancel": "取消",
+    "you": "（这是您）",
+    "saveError": "保存失败，请重试。",
+    "loadError": "无法加载用户，请刷新页面。",
+    "empty": "未找到员工。",
     "table": {
       "email": "电子邮箱",
-      "role": "角色",
+      "name": "姓名",
+      "access": "权限",
       "status": "状态",
       "createdAt": "创建时间"
     },
-    "roles": {
-      "admin": "管理员",
-      "analyst": "分析师",
-      "trader": "交易员",
-      "viewer": "查看者"
+    "errors": {
+      "self_demote": "无法移除自己的管理员权限，请让其他管理员操作。",
+      "last_admin": "这是最后一位在用管理员，移除后将无人可管理平台。",
+      "admin_holds_all_pages": "管理员已拥有全部板块权限。请先移除管理员权限。",
+      "email_taken": "该邮箱的员工已存在。"
     }
   },
   "adminProducts": {
@@ -747,7 +793,7 @@
   },
   "newsAdmin": {
     "title": "新闻管理",
-    "subtitle": "统计、AI 设置与新闻审核",
+    "subtitle": "统计、抓取活动与新闻审核",
     "error": "加载失败",
     "loading": "加载中…",
     "stats": {
@@ -769,10 +815,6 @@
       "runParser": "立即运行解析",
       "generateReport": "生成报告",
       "save": "保存"
-    },
-    "settings": {
-      "title": "设置",
-      "default": "默认"
     },
     "approval": {
       "title": "待审核新闻",
@@ -878,8 +920,6 @@
       "attempts": "尝试次数",
       "lastError": "最后错误",
       "waivedReason": "豁免原因",
-      "missingDocuments": "缺失文件",
-      "reasons": "原因",
       "waive": "豁免检查",
       "waiveReasonPlaceholder": "豁免原因（必填）",
       "waiveConflict": "检查已更新——数据已重新加载"
@@ -903,6 +943,28 @@
       "unavailable": "不可用",
       "waived": "已豁免"
     },
+    "findings": {
+      "taxIdDigits": "税号应为 9 位数字，实际为 {digits} 位",
+      "taxIdEmpty": "未填写税号",
+      "bankAccount": "账户 ****{last4}：{problem}",
+      "bankIssue": {
+        "bad_account_length": "账号应为 20 位数字",
+        "bad_mfo": "MFO 应为 5 位数字",
+        "undecryptable": "无法读取账号"
+      },
+      "noBankAccount": "未添加银行账户",
+      "missingDocuments": "缺少文件：{list}",
+      "registryInnMismatch": "国家登记册中的税号不一致：{inn}",
+      "registryLiquidated": "根据国家登记册，公司已清算",
+      "registrySuspended": "根据国家登记册，经营活动已暂停",
+      "registryStatusUnknown": "国家登记册已应答，但未说明公司状态",
+      "registryNameMismatch": "国家登记册中的名称不同：「{name}」",
+      "vatNotRegistered": "公司非增值税纳税人——不影响验证",
+      "manualPending": "等待员工人工审核",
+      "unavailable": "数据源未响应——检查未执行",
+      "unavailableWith": "数据源未响应：{error}",
+      "eimzoFailed": "电子签名未通过验证"
+    },
     "documents": {
       "title": "文件",
       "empty": "没有文件",
@@ -917,7 +979,18 @@
       "other": "其他",
       "registration_certificate": "注册证书",
       "bank_letter": "银行证明函",
-      "license": "许可证"
+      "license": "许可证",
+      "permit": "许可证",
+      "certificate": "证书",
+      "production_license": "生产许可证",
+      "export_license": "出口许可证",
+      "certificate_of_origin": "原产地证书",
+      "iso_certificate": "ISO 证书",
+      "compliance_certificate": "REACH / RoHS / GOST",
+      "carrier_license": "承运人许可证",
+      "liability_insurance": "责任保险",
+      "service_contract": "合同",
+      "accreditation_certificate": "认证资质证书"
     },
     "audit": {
       "title": "历史",
@@ -931,7 +1004,17 @@
       "approve": "批准",
       "reject": "拒绝",
       "requestInfo": "请求信息",
-      "decidedAt": "已做出决定"
+      "decidedAt": "已做出决定",
+      "blocked": {
+        "title": "目前无法做出决定",
+        "needsInfo": "申请已退回客户：其中一项自动检查未通过。客户更正数据并重新提交后即可做出决定。",
+        "running": "自动检查仍在进行中，完成后即可做出决定。",
+        "draft": "客户尚未提交申请进行验证。",
+        "generic": "申请不处于「待审核」状态——无法做出决定。",
+        "problems": "需要更正的内容",
+        "waiveHint": "如有理由接受该公司（例如文件在系统外收到），可在上方「检查」区块中填写原因并豁免该检查——随后即可做出决定。",
+        "waiveAdminOnly": "只有管理员可以豁免检查并解除决定限制。"
+      }
     },
     "registry": {
       "title": "国家登记系统",
@@ -1524,6 +1607,299 @@
       "messageCount": "消息数",
       "lastMessage": "最新消息",
       "never": "—"
+    }
+  },
+  "noAccess": {
+    "title": "无访问权限",
+    "body": "您的账户无权访问控制台的任何板块。请联系管理员授予权限。",
+    "signedInAs": "当前登录",
+    "signOut": "退出",
+    "pageTitle": "无法访问该板块",
+    "pageBody": "您无权访问此板块。如有需要，请联系管理员。"
+  },
+  "adminSettings": {
+    "title": "系统设置",
+    "subtitle": "每个开关的默认值在代码中设定，可由环境变量覆盖。在此处修改将覆盖两者——默认值始终并列显示，「重置」可恢复为该值。",
+    "loading": "加载中…",
+    "error": "无法加载设置",
+    "saveError": "无法保存该值",
+    "resetError": "无法重置该值",
+    "readOnly": "您只有只读权限——需由对本页面拥有写入权限的员工修改。",
+    "fromEnv": "默认值",
+    "overridden": "已覆盖",
+    "envSays": "默认：{value}",
+    "notSet": "未设置",
+    "envOnly": "仅可通过环境变量修改，需重启生效",
+    "adminOnly": "凭据仅限管理员修改",
+    "save": "保存",
+    "reset": "重置为默认值",
+    "cancel": "取消",
+    "confirmAction": "确认",
+    "groups": {
+      "ai": "AI 与模型",
+      "news": "新闻与报告",
+      "notifications": "通知",
+      "didox": "Didox 与国家登记册",
+      "deals": "交易与审核",
+      "sourcing": "供应商匹配",
+      "compliance": "化学品合规",
+      "ingest": "数据采集"
+    },
+    "items": {
+      "anthropic_api_key": {
+        "name": "Anthropic API 密钥",
+        "desc": "Anthropic 借以识别本平台的口令。AI 的全部工作都依赖它：新闻分析、每日报告、需求分析和物质提示。保存时会在 Anthropic 处校验，错误的密钥不会被接受。"
+      },
+      "openai_api_key": {
+        "name": "OpenAI API 密钥",
+        "desc": "仅当下方选择了 GPT 模型时才需要。OpenAI 借以识别本平台的口令。保存时会在 OpenAI 处校验，错误的密钥不会被接受。"
+      },
+      "news_ai_enabled": {
+        "name": "报告中的 AI 摘要",
+        "desc": "由 AI 在每日报告中用自己的话复述新闻。关闭后，报告里只有标题，没有分析。"
+      },
+      "news_require_approval": {
+        "name": "新闻发布前需审核",
+        "desc": "每条新闻都要等员工批准。关闭后，新闻会立即出现在信息流中。"
+      },
+      "report_auto_publish": {
+        "name": "自动发布报告",
+        "desc": "报告做好后无需人工检查，自行发到 Telegram 频道。已发布的消息无法撤回。"
+      },
+      "llm_extract_model": {
+        "name": "新闻使用的 AI 模型",
+        "desc": "由哪个模型阅读并分析新闻——可选 Claude 或 GPT。Haiku 和 gpt-4.1-mini 最便宜最快，Opus 和 gpt-5 最聪明也最贵。"
+      },
+      "llm_report_model": {
+        "name": "报告使用的 AI 模型",
+        "desc": "由哪个模型撰写早晚简报。报告每天发布两次并由人阅读，因此这里选用比新闻更强的模型。"
+      },
+      "news_prompt_version": {
+        "name": "AI 指令的版本",
+        "desc": "AI 分析新闻前读取的那份指令。新版本通常更准确；旧版本保留用于比较。"
+      },
+      "news_refresh_interval_minutes": {
+        "name": "多久检查一次新闻",
+        "desc": "系统每隔多少分钟去各网站抓取新消息。数字越小信息越新，但负载也越大。"
+      },
+      "verification_auto_approve": {
+        "name": "自动通过公司审核",
+        "desc": "所有自动检查一通过，公司即无需员工经手自动变为「已核实」。排队中的申请也会一并通过。"
+      },
+      "contract_pending_ttl_days": {
+        "name": "合同等待签署的天数",
+        "desc": "对方在此期限内未签署，合同将自动关闭。调小这个数字，超过新期限的旧合同会在当晚关闭。"
+      },
+      "escrow_mode": {
+        "name": "交易资金如何流转",
+        "desc": "「stub」——每笔转账由操作员手动确认。「live」——资金由银行真实划转。"
+      },
+      "rfq_supplier_push_enabled": {
+        "name": "向供应商推送新需求",
+        "desc": "买家发布需求时，匹配的供应商会收到通知。"
+      },
+      "rfq_supplier_push_top_n": {
+        "name": "通知多少家供应商",
+        "desc": "一条需求最多打扰这么多供应商。数字越大覆盖越广，消息也越多。"
+      },
+      "rfq_supplier_offer_max_age_days": {
+        "name": "参与匹配的报价时限",
+        "desc": "供应商的报价要多新才算匹配。超过这个天数的不再参与匹配。"
+      },
+      "substance_ai_enabled": {
+        "name": "物质的 AI 提示",
+        "desc": "在卖家表单上由 AI 提示这是哪种化学物质。卖家可以采纳，也可以自己选。"
+      },
+      "dangerous_check_enforced": {
+        "name": "禁止无证销售危险品",
+        "desc": "卖家未上传许可证前不能发布危险品。关闭后，这类商品可以自由发布。"
+      },
+      "chem_registry_mode": {
+        "name": "物质数据来自哪里",
+        "desc": "「stub」——来自我们自己的物质表。「live」——来自尚不存在的外部登记库。"
+      },
+      "gov_registry_mode": {
+        "name": "公司数据来自哪里",
+        "desc": "「stub」——由员工手工录入。「didox」——经 Didox 从税务机关拉取并自动填入表单。「live」——PSD 直连通道，目前不可用。"
+      },
+      "didox_mode": {
+        "name": "向 Didox 发送单据",
+        "desc": "「live」会把合同和发票真实提交给税务机关。已提交的单据无法从这里撤回。"
+      },
+      "didox_base_url": {
+        "name": "Didox 服务器地址",
+        "desc": "测试服务器用于试验，正式服务器用于真实单据。只能与令牌一起更改。"
+      },
+      "didox_partner_token": {
+        "name": "Didox 合作方令牌",
+        "desc": "Didox 借以识别本平台的口令，由 Didox 客户经理发放。不会完整显示——任何人都看不到全文。"
+      },
+      "didox_service_tin": {
+        "name": "我方公司在 Didox 的税号",
+        "desc": "系统用这个税号登录 Didox，以查询其他公司的资料。"
+      },
+      "didox_service_password": {
+        "name": "我方 Didox 账号密码",
+        "desc": "对应上述税号的密码。连续几次输错会被 Didox 长时间封锁，请仔细填写。"
+      },
+      "didox_monthly_quota": {
+        "name": "Didox 套餐请求数",
+        "desc": "合同约定的月度套餐包含多少次请求。它不限制任何东西——「分析」页面用它来对比用量。默认 1 000 000。"
+      },
+      "didox_monthly_cost_uzs": {
+        "name": "Didox 套餐价格（UZS）",
+        "desc": "月度套餐的价格。单次请求成本和本月已花费金额都由此计算。默认 250 000。"
+      },
+      "request_notify_chat_id": {
+        "name": "接收新需求的群组",
+        "desc": "买家新需求发往的 Telegram 群号。留空则不发送通知。"
+      },
+      "notify_topic_buyers": {
+        "name": "买家需求的话题",
+        "desc": "若群组启用了话题，买家相关消息发到这个话题。留空则发到常规话题。"
+      },
+      "notify_topic_sellers": {
+        "name": "卖家报价的话题",
+        "desc": "卖家同理：他们的报价发到这个话题。留空则发到常规话题。"
+      },
+      "verification_notify_chat_id": {
+        "name": "公司审核的群组",
+        "desc": "公司审核申请发往哪里。留空则发到接收新需求的群组。"
+      },
+      "news_channel_id": {
+        "name": "发布报告的频道",
+        "desc": "已批准的报告发布到的 Telegram 频道。留空则关闭发布。"
+      },
+      "ingest_http_timeout_seconds": {
+        "name": "等待网站响应多久",
+        "desc": "采集器等待响应多少秒后，判定该网站不可用。"
+      },
+      "ingest_http_retries": {
+        "name": "重试多少次",
+        "desc": "网站没有响应时，采集器再尝试几次。"
+      },
+      "ingest_user_agent": {
+        "name": "系统如何向网站自我介绍",
+        "desc": "外部网站据此看出是谁在访问。几乎从不需要修改。"
+      },
+      "ingest_per_host_delay_seconds": {
+        "name": "访问同一网站的间隔",
+        "desc": "再次访问同一网站前等待多少秒，以免给对方造成过大压力。"
+      }
+    },
+    "prompt": {
+      "title": "新闻提示词",
+      "subtitle": "AI 分析每条新闻前读取的指令。保存会创建一个新版本——旧版本保持不变，这样始终能查明每篇文章是用哪份文本分析的。",
+      "loading": "加载中…",
+      "error": "无法加载提示词",
+      "active": "当前版本：{version}",
+      "shipped": "随版本发布",
+      "length": "{chars} / {max} 字符",
+      "try": "在一篇文章上试用",
+      "saveAs": "保存为 {version}",
+      "readOnly": "您只有只读权限——需由对本页面拥有写入权限的员工修改提示词。",
+      "tryResult": "试用结果",
+      "tryCost": "令牌：{tokensIn} → {tokensOut} · {seconds} 秒",
+      "versions": "版本",
+      "isActive": "当前",
+      "activate": "设为当前",
+      "chars": "{chars} 字符",
+      "saveError": "无法保存版本",
+      "activateError": "无法启用该版本",
+      "tryError": "试用失败"
+    }
+  },
+  "analytics": {
+    "title": "分析",
+    "subtitle": "Didox 套餐用了多少，AI 又花在了什么上。数据一直在记录，这里是第一次呈现。",
+    "loading": "加载中…",
+    "loadFailed": "加载失败",
+    "loadFailedHint": "页面的另一部分不依赖它，会单独加载。",
+    "didox": {
+      "title": "Didox — 请求套餐",
+      "calls": "本月请求数",
+      "ofDays": "第 {elapsed} 天 / 共 {total} 天",
+      "projected": "月末预测",
+      "spent": "已花费",
+      "ofPackage": "共 {total} UZS",
+      "failed": "失败",
+      "notSent": "未发出：{count}",
+      "byOperation": "按操作",
+      "emptyMonth": "本月尚无请求",
+      "emptyMonthHint": "这不是「花费为零」——本月还没有开始使用套餐。"
+    },
+    "quota": {
+      "title": "套餐消耗",
+      "ofQuota": "共 {quota}",
+      "pace": "按进度应为",
+      "projected": "预测",
+      "remaining": "剩余",
+      "onTrack": "符合计划",
+      "ahead": "快于计划",
+      "over": "将超出套餐"
+    },
+    "trend": {
+      "title": "每日消耗（累计）",
+      "actual": "实际",
+      "evenBurn": "匀速消耗"
+    },
+    "health": {
+      "title": "外部服务可靠性（30 天）",
+      "empty": "没有调用"
+    },
+    "ai": {
+      "title": "AI — 令牌消耗",
+      "calls": "调用次数",
+      "window": "{days} 天内",
+      "tokens": "令牌",
+      "inOut": "输入 {in} · 输出 {out}",
+      "cost": "估算成本",
+      "estimate": "按响应中的费率",
+      "degraded": "降级次数",
+      "degradedHint": "错误、回退、延后",
+      "byPurpose": "用途分布",
+      "byModel": "按模型",
+      "empty": "AI 尚未被调用",
+      "emptyHint": "这不是「花费为零」：所选时间段内没有任何调用。"
+    },
+    "purpose": {
+      "signal_extraction": "信号解析",
+      "news_classification": "新闻分类",
+      "substance_hint": "物质提示",
+      "request_analysis": "需求分析",
+      "report": "报告",
+      "unknown": "未知"
+    },
+    "degradation": {
+      "title": "AI 悄然失效之处",
+      "hint": "这里的每条路径都被有意设计为「柔性」：AI 失败时系统不会崩溃，而是回退到规则。因此密钥失效的一个月看起来与正常月份无异——差别只能在这里看到。",
+      "errors": "解析错误",
+      "fallbacks": "回退到规则",
+      "deferred": "因预算延后",
+      "ruleBasedReports": "未用 AI 的报告"
+    },
+    "outcome": {
+      "perCompany": "每家已核验公司 UZS",
+      "companies": "公司：{count}",
+      "perDocument": "每份文件 UZS",
+      "documents": "文件：{count}",
+      "perArticle": "每条新闻令牌数",
+      "articles": "新闻：{count}"
+    },
+    "table": {
+      "operation": "操作",
+      "calls": "调用",
+      "failed": "失败",
+      "p95": "p95",
+      "provider": "服务",
+      "success": "成功率",
+      "purpose": "用途",
+      "tokensIn": "输入令牌",
+      "tokensOut": "输出令牌",
+      "model": "模型",
+      "tokens": "令牌",
+      "cost": "成本",
+      "none": "无"
     }
   }
 }

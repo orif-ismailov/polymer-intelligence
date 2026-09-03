@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field, field_serializer
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin, require_analyst_or_admin
+from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.companies.models import Company
 from app.domains.deals import escrow as escrow_service
@@ -207,7 +207,7 @@ def list_escrow(
     limit: int = Query(default=100, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("escrow", "read")),
 ) -> EscrowListOut:
     query = db.query(EscrowPayment)
     if escrow_status:
@@ -250,7 +250,7 @@ def list_escrow(
 def list_provider_holds(
     limit: int = Query(default=100, ge=1, le=200),
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("escrow", "read")),
 ) -> ProviderHoldListOut:
     """Bank callbacks held for a human (R6 / P7.b).
 
@@ -271,7 +271,7 @@ def list_provider_holds(
 def get_escrow(
     payment_id: int,
     db: Session = Depends(get_db),
-    _staff: StaffUser = Depends(require_analyst_or_admin),
+    _staff: StaffUser = Depends(require_page("escrow", "read")),
 ) -> EscrowPaymentOut:
     payment, deal = _payment_or_404(db, payment_id)
     return _out(db, payment, deal)
@@ -295,7 +295,7 @@ def mark_escrow(
     payment_id: int,
     body: MarkIn,
     db: Session = Depends(get_db),
-    staff: StaffUser = Depends(require_admin),
+    staff: StaffUser = Depends(require_page("escrow", "write")),
 ) -> EscrowPaymentOut:
     """Record that money moved. The deal follows in the same transaction.
 

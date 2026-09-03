@@ -168,3 +168,33 @@ export interface CreateBankAccountPayload {
   bank_name?: string;
   currency?: string;
 }
+
+/**
+ * What the state registry says about a STIR (`GET /portal/companies/lookup`).
+ *
+ * Requisites only — the backend deliberately withholds the director's ПИНФЛ and
+ * tax id, so do not add them here expecting them to arrive.
+ */
+export interface CompanyRegistryData {
+  tax_id: string;
+  legal_name?: string | null;
+  short_name?: string | null;
+  legal_form?: string | null;
+  legal_address?: string | null;
+  /** ISO `yyyy-mm-dd`. */
+  registration_date?: string | null;
+  director_name?: string | null;
+  oked?: string | null;
+  bank_mfo?: string | null;
+  bank_account?: string | null;
+  vat_registered: boolean;
+  vat_certificate_no?: string | null;
+  registry_status: string;
+  registry_status_text?: string | null;
+}
+
+/** `found: false` is an ordinary answer — the registry has no such company. */
+export interface CompanyLookupResult {
+  found: boolean;
+  company?: CompanyRegistryData | null;
+}
