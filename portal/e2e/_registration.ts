@@ -112,7 +112,11 @@ export async function stepReview(page: Page): Promise<number> {
 export async function confirmIdentityWithEimzo(page: Page, companyId: number): Promise<void> {
   await page.goto(`/cabinet/companies/${companyId}/verification`);
   await page.getByTestId("eimzo-open").click();
-  await expect(page.getByTestId("eimzo-success")).toBeVisible({ timeout: 20_000 });
+  // NOT `eimzo-success`: confirming refetches the company, `identity_locked`
+  // flips, and the whole offer block — button, dialog and that success alert —
+  // unmounts. The alert is therefore racing its own side effect. The confirmed
+  // badge is the state that persists, so it is what this waits on.
+  await expect(page.getByTestId("eimzo-confirmed")).toBeVisible({ timeout: 20_000 });
 }
 
 /**

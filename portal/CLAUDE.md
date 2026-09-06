@@ -165,38 +165,37 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   zero companies to `/cabinet/onboarding`; that route and `/cabinet/companies/new/*` are
   authenticated but sit OUTSIDE both `AppShell` and that guard (gating the screen that resolves "you have no company"
   on having one would loop). The flow follows `docs/new-design/register.jpeg`:
-  **1 Тип компании → 2 Данные (сертификат + ИНН) → 3 Банк → 4 Документы → 5 Проверка →
+  **1 Тип компании → 2 Данные (ИНН) → 3 Банк → 4 Документы → 5 Проверка →
   «Регистрация завершена!»** (`/cabinet/companies/new/done/:companyId`).
   - The four account types are the mockup's, not the backend enum: `buyer→importer`,
     `supplier→distributor` are the nearest members that exist (`ACCOUNT_TYPES` in
     `features/company-wizard/model/constants.ts`). Sending anything else 422s — the enum is a
     Postgres type, so widening it is a migration.
-  - **Step 1 asks one question.** It used to carry the whole «Электронная подпись» panel as well —
-    three method tabs of which two were dead, and a PIN box the module never read (it prompts for
-    the real password itself). Identity moved to step 2, beside the ИНН it resolves.
-  - **Step 2 opens with the two controls that say WHICH company this is**, in this order:
-    `CompanyCertificateSelect` (the organisations on the holder's key) and the ИНН. Picking a
-    certificate writes **only** `tax_id` — the org name is already in the option, and writing it
-    would mark the field hand-typed, after which `hydrateFromRegistry` refuses to fill it from the
-    registry, which is the better source. Reading a key is not signing with it:
-    `useEimzoCertificates` is the probe+list half alone, because `useEimzoSign.start()` auto-signs
-    a single certificate — right for a button, wrong for a dropdown someone is still reading.
-  - **«Далее» is what signs.** The challenge endpoint is company-scoped, so
-    `companyRegistrationSigner` reads the STIR out of the chosen certificate's subject, creates the
-    company from it, then signs — which is why `EimzoSigner.getChallenge` takes the certificate.
-    `useEimzoSign.signWith(cert)` is that run entered one step later (`pick` can't serve it: it
-    resolves an id against `certs`, which only `start()` fills). On success the row is refetched,
-    `hydrateFromCompany` freezes the requisites and the wizard advances — advancing is NOT
-    conditional on that read, since the signature already succeeded. A signed company is
-    `identity_locked`: those fields render disabled and `useSubmitWizard` omits them from the PATCH
-    or the server 409s. Signing stays optional — no key, no module, no certificate all leave the
-    ИНН typeable and «Далее» plain.
-  - **A certificate whose STIR no longer matches the typed ИНН is refused before any request.**
-    Derived, not stored, so correcting either side clears it. The rule is the server's own
-    (`/eimzo/verify` answers 422); checking it here only stops a doomed request from first costing
-    the user a key password.
-  - **Steps 2–3 prefill themselves from the state registry** (P7.a). As soon as the STIR is known
-    — copied in by the certificate dropdown, or typed — `useRegistryPrefill` asks
+  - **Registration involves no E-IMZO at all**, and this is the third shape it has had. Step 1
+    once carried the whole «Электронная подпись» panel (three method tabs of which two were dead,
+    plus a PIN box the module never read — it prompts for the real password itself); then a
+    certificate dropdown sat beside the ИНН on step 2 and «Далее» signed. Both are gone. Identity
+    is established by documents and staff review, and confirmed by key **afterwards**, from
+    «Статус проверки». Don't reintroduce a signer here: the challenge endpoint is company-scoped,
+    so signing before the row exists needs a create-from-certificate signer, which is the
+    complexity that kept moving.
+  - **Step 2 opens with the ИНН**, because everything else on the screen derives from it — the
+    registry lookup fills the name, address, ownership form and the whole bank step from that one
+    number.
+  - **Two consequences of no signature at registration**, both by design and both visible:
+    a registration certificate is **required** on step 4 (the `documents_complete` waiver only
+    applies to an `identity_locked` company), and the company is verified WITHOUT
+    `identity_locked` — so `CompanyPersonData` is absent until someone confirms by key, and
+    `Owner.FizTin`/`Fio` are mandatory on a Didox «Договор НК». Confirming on «Статус проверки»
+    is the only thing that supplies them (`domains/edi/contract_docs.py`), which is why that
+    offer stays on the page after approval rather than being gated on status.
+  - `CHECK_TO_STEP` deliberately has **no `eimzo_signature` entry** and `CHECK_ORDER` deliberately
+    omits it: no wizard step can satisfy that check now, and `StepReview` renders `CHECK_ORDER` as
+    placeholder rows before a case exists — so listing it promised every applicant a check that
+    never appears. A case that really carries it still renders it (those rows come from the API,
+    and `checkRank` sorts an unlisted type last).
+  - **Steps 2–3 prefill themselves from the state registry** (P7.a). As soon as the STIR is
+    typed, `useRegistryPrefill` asks
     `GET /portal/companies/lookup` and `hydrateFromRegistry` drops the answer into the BLANKS.
     It never overwrites a typed value or a locked one, so a correction always wins; `prefilled`
     records which fields came from the registry. All three failure shapes are soft and none of
