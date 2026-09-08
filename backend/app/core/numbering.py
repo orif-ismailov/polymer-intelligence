@@ -119,3 +119,56 @@ def next_in_sequence(db: Session, sequence: str, lock_key: int) -> int:
     if value is None:  # pragma: no cover — nextval never returns NULL
         raise RuntimeError(f"nextval returned NULL for {sequence!r}")
     return int(value)
+
+
+def align_sequence(db: Session, sequence: str, last_used: int) -> None:
+    """Point `sequence` PAST `last_used`, so the next `nextval` clears it.
+
+    For rows whose number was written OUTSIDE `next_in_sequence`. The demo
+    seeders insert `DEAL-2026-000001` with raw SQL, so the sequence knows
+    nothing about them, and the first real caller draws 1 and dies on the
+    table's UNIQUE number column. See `app/seed/align_numbering.py`, which is
+    the only caller and explains what that cost.
+
+    MONOTONIC by construction: a sequence already ahead of `last_used` is left
+    alone. Anything else would be a way to hand out a number twice — the exact
+    failure this function exists to end — and seeders run in arbitrary order
+    against a database that may already hold real rows.
+
+    Args:
+        db: Active session; the setval lands in the caller's transaction.
+        sequence: Sequence name, e.g. `deal_seq_2026`. Same rule as
+            `next_in_sequence` — a lowercase identifier, validated because it
+            still reaches DDL as a literal.
+        last_used: Highest ordinal already taken. `<= 0` is a no-op, so a caller
+            may pass the max of an empty table without a branch of its own.
+
+    Raises:
+        ValueError: if `sequence` is not a plain lowercase identifier.
+    """
+    if not _SAFE_SEQUENCE_NAME.match(sequence):
+        raise ValueError(f"unsafe sequence name: {sequence!r}")
+    if last_used <= 0:
+        return
+
+    # No advisory lock: seeding is single-writer by nature, and the worst a race
+    # could do here is set the same value twice.
+    db.execute(sa.text(f"CREATE SEQUENCE IF NOT EXISTS {sequence}"))  # noqa: S608 — validated above
+
+    # `pg_sequences.last_value` is NULL until the first nextval, which is
+    # exactly the "nothing drawn yet" case and reads as 0.
+    row = db.execute(
+        sa.text(
+            "SELECT last_value FROM pg_sequences "
+            "WHERE schemaname = current_schema() AND sequencename = :name"
+        ),
+        {"name": sequence},
+    ).first()
+    current = int(row[0]) if row is not None and row[0] is not None else 0
+    if last_used <= current:
+        return
+
+    db.execute(
+        sa.text("SELECT setval(CAST(:name AS regclass), CAST(:last AS bigint), true)"),
+        {"name": sequence, "last": last_used},
+    )

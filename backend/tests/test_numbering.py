@@ -113,6 +113,79 @@ def test_unsafe_sequence_names_are_rejected(bad: str) -> None:
         numbering.next_in_sequence(db, bad, 2026)
 
 
+def _align_db(*, current: int | None) -> tuple[MagicMock, list[str]]:
+    """Mock session for `align_sequence`; `current` is `pg_sequences.last_value`."""
+    db = MagicMock()
+    statements: list[str] = []
+
+    def _execute(stmt: Any, *_a: Any, **_k: Any) -> MagicMock:
+        sql = " ".join(str(stmt).split())
+        statements.append(sql)
+        result = MagicMock()
+        result.first.return_value = None if current is None else (current,)
+        return result
+
+    db.execute.side_effect = _execute
+    return db, statements
+
+
+def test_align_sequence_moves_a_never_drawn_sequence_past_the_seeded_rows() -> None:
+    """The bug this exists for: a seeder wrote 1..N, the sequence is still at 0.
+
+    Without this the first real deal draws 1, builds `DEAL-2026-000001` — a row
+    the seeder already wrote — and dies on `uq_deals_number`, which the buyer
+    sees as a 500 on accepting a supplier's quote.
+    """
+    db, statements = _align_db(current=None)  # NULL last_value = never called
+
+    numbering.align_sequence(db, "deal_seq_2026", 12)
+
+    joined = " | ".join(statements)
+    assert "CREATE SEQUENCE IF NOT EXISTS deal_seq_2026" in joined
+    assert "setval" in joined
+
+
+def test_align_sequence_never_moves_a_sequence_backwards() -> None:
+    """A sequence already ahead is left alone.
+
+    Rewinding would hand out a number that is already on a row — the exact
+    failure this function exists to end. Seeders run in arbitrary order against
+    a database that may already hold real rows.
+    """
+    db, statements = _align_db(current=90)
+
+    numbering.align_sequence(db, "deal_seq_2026", 12)
+
+    assert not any("setval" in s for s in statements), statements
+
+
+def test_align_sequence_ignores_an_empty_table() -> None:
+    """`<= 0` is a no-op, so a caller may pass MAX() of nothing without a branch."""
+    db, statements = _align_db(current=None)
+
+    numbering.align_sequence(db, "deal_seq_2026", 0)
+
+    assert statements == []
+
+
+def test_align_sequence_binds_the_name_into_setval() -> None:
+    """Same rule as `next_in_sequence`: only the DDL interpolates."""
+    db, statements = _align_db(current=None)
+
+    numbering.align_sequence(db, "deal_seq_2026", 5)
+
+    setval_sql = next(s for s in statements if "setval" in s)
+    assert "CAST(:name AS regclass)" in setval_sql
+    assert "deal_seq_2026" not in setval_sql
+
+
+@pytest.mark.parametrize("bad", ["deal_seq_2026; DROP TABLE deals", "Deal_Seq", "2026_seq", ""])
+def test_align_sequence_rejects_unsafe_names(bad: str) -> None:
+    db, _ = _align_db(current=None)
+    with pytest.raises(ValueError, match="unsafe sequence name"):
+        numbering.align_sequence(db, bad, 5)
+
+
 def test_lock_bases_are_distinct() -> None:
     """No two yearly namespaces may share a key.
 

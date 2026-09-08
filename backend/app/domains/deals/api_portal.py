@@ -20,6 +20,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
+from app.api.portal.deps import require_company_admin
 from app.core.db import get_db
 from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
@@ -548,9 +549,7 @@ def submit_rfq_response(
 ) -> RfqResponseOut:
     """Quote against a buyer's RFQ on behalf of this supplier company."""
     company = _company_or_404(db, account, company_id)
-    company_service.require_company_role(
-        db, account, company.id, company_service.COMPANY_ADMIN_ROLES
-    )
+    require_company_admin(db, account, company.id)
     request = _request_or_404(db, request_id)
 
     incoterms: PriceBasis | None = None
@@ -633,9 +632,7 @@ def accept_rfq_response(
 ) -> DealDetailOut:
     """Accept a quote — opens the Deal and retires the competing responses."""
     company = _company_or_404(db, account, company_id)
-    company_service.require_company_role(
-        db, account, company.id, company_service.COMPANY_ADMIN_ROLES
-    )
+    require_company_admin(db, account, company.id)
     request = _request_or_404(db, request_id)
     if request.company_id != company.id:
         # Only the buyer accepts. Anyone else must not learn this RFQ exists here.
