@@ -48,6 +48,7 @@ from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.middleware import RequestIdMiddleware
 from app.core.observability import init_sentry
+from app.domains.accounts.api_admin import router as admin_portal_accounts_router
 from app.domains.accounts.api_portal import router as portal_auth_router
 from app.domains.alerts.api_admin import alerts_router
 from app.domains.alerts.api_admin import router as alert_rules_router
@@ -241,6 +242,12 @@ def create_app() -> FastAPI:
         dashboard_requests_router, prefix="/api/v1", responses=errors.STAFF
     )
     application.include_router(admin_users_router, prefix="/api/v1", responses=errors.STAFF)
+    # Cabinet accounts — the applications queue and credential issuing. Beside
+    # admin_users because it is the same act one audience over, and admin-only for
+    # the same reason (see app/core/pages.py).
+    application.include_router(
+        admin_portal_accounts_router, prefix="/api/v1", responses=errors.STAFF_RESOURCE
+    )
     application.include_router(admin_products_router, prefix="/api/v1", responses=errors.STAFF)
     application.include_router(admin_settings_router, prefix="/api/v1", responses=errors.STAFF)
     application.include_router(admin_analytics_router, prefix="/api/v1", responses=errors.STAFF)
@@ -274,7 +281,7 @@ def create_app() -> FastAPI:
     # External provider callback inbox (R6 / P7.b) — authenticated by a shared
     # secret, not a JWT; absent from the OpenAPI schema.
     application.include_router(webhooks_escrow_router, prefix="/api/v1")
-    # ── portal (client cabinet — passwordless OTP accounts, R1 W3) ─────────────
+    # ── portal (client cabinet — staff-issued login + password, 0048) ─────────
     application.include_router(portal_auth_router, prefix="/api/v1")
     application.include_router(portal_contracts_router, prefix="/api/v1", responses=errors.PORTAL)
     # Deals before companies: its literal /portal/companies/{company_id}/deals routes

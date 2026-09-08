@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { registerCompany } from "./_registration";
 
@@ -9,49 +9,26 @@ import { registerCompany } from "./_registration";
  *
  * Buying never requires a verified company, so this whole flow is self-serve (no
  * staff moderation). Requires a live migrated+seeded API on :8000 exposing the
- * dev-only `GET /portal/auth/otp/peek`. Not run in CI here (no live backend).
+ * dev-only the seeded demo logins. Not run in CI here (no live backend).
  */
-
-const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
-
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
 
 function uniqueTaxId(): string {
   return String(100_000_000 + Math.floor(Math.random() * 899_999_999));
 }
 
-async function readOtp(request: APIRequestContext, phone: string): Promise<string> {
-  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
-  expect(res.ok()).toBeTruthy();
-  const body = (await res.json()) as { code: string };
-  return body.code;
-}
-
-async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/cabinet/login");
-  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
-  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/cabinet/login/code");
-  const code = await readOtp(request, phone);
-  await page.getByLabel(/code|код|kod/i).fill(code);
-  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
-}
-
-
-test("buyer announces a tender and browses the R2 surfaces", async ({ page, request }) => {
-  const phone = uniquePhone();
-  await login(page, request, phone);
+test("buyer announces a tender and browses the R2 surfaces", async ({
+  page,
+}) => {
+  await login(page, await provisionAccount(request));
   await registerCompany(page, uniqueTaxId());
 
   // ── Tender announced through the 5-step wizard ──────────────────────────────
   await page.goto("/cabinet/requests");
   // Two identical CTAs render on /requests (header + empty state) — take the header one.
   await page
-    .getByRole("link", { name: /announce a tender|объявить тендер|tender e'lon qilish/i })
+    .getByRole("link", {
+      name: /announce a tender|объявить тендер|tender e'lon qilish/i,
+    })
     .first()
     .click();
   await page.waitForURL("**/cabinet/requests/new/**");

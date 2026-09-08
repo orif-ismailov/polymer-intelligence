@@ -3,7 +3,8 @@
 Simple per-subject daily counters (reset at UTC midnight) for abuse-prone portal
 actions: company create (per account), document upload (per account), offer create
 (per company). Over-limit raises `RateLimited` with a retry-after, which the router
-maps to a 429. Mirrors the OTP daily-cap shape but is a generic, reusable helper.
+maps to a 429. A generic, reusable helper; `enforce_window` additionally backs the
+cabinet's minute-scale sign-in and registration caps.
 """
 
 from __future__ import annotations
@@ -55,6 +56,20 @@ def enforce_daily(
 
 # R3 — counterparty directory search (20/min per account).
 DIRECTORY_SEARCH_PER_MIN = 20
+
+# Cabinet auth (0048). Both login buckets are enforced, IP FIRST: on its own the
+# per-login counter allows (limit × every login an attacker can name), so the IP cap
+# is what makes the pair mean anything. There is no daily bucket on sign-in — an
+# account whose owner is genuinely locked out for a day is a support call, and a
+# 5-minute window already makes guessing uneconomic.
+PORTAL_LOGIN_PER_IP_PER_MIN = 20
+PORTAL_LOGIN_PER_ACCOUNT_PER_5MIN = 10
+# Registration is anonymous and unverified — no SMS proves the phone — so the IP is
+# the only thing to count. Hourly AND daily: the hourly window stops a burst, the
+# daily one stops a patient script from filling the staff queue overnight.
+PORTAL_REGISTER_PER_IP_PER_HOUR = 5
+PORTAL_REGISTER_PER_IP_PER_DAY = 20
+PORTAL_PASSWORD_CHANGE_PER_5MIN = 5
 
 
 def enforce_window(

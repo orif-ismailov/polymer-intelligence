@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { registerCompany } from "./_registration";
 
@@ -11,38 +11,18 @@ import { registerCompany } from "./_registration";
  */
 
 const GALLERY = "/dev/ui";
-const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
 
 function uniqueTaxId(): string {
   return String(Math.floor(Math.random() * 900_000_000) + 100_000_000);
 }
 
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
-
 /** OTP login — only needed by the shell test, which must render the real cabinet. */
-async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.unrouteAll();
-  await page.goto("/cabinet/login");
-  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
-  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-
-  await page.waitForURL("**/cabinet/login/code");
-  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
-  expect(res.ok()).toBeTruthy();
-  const { code } = (await res.json()) as { code: string };
-  await page.getByLabel(/code|код|kod/i).fill(code);
-  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-
-  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
-}
 
 /** Resolve a CSS custom property to the value the browser computed. */
 async function token(page: Page, name: string): Promise<string> {
   return page.evaluate(
-    (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(),
+    (n) =>
+      getComputedStyle(document.documentElement).getPropertyValue(n).trim(),
     name,
   );
 }
@@ -50,7 +30,8 @@ async function token(page: Page, name: string): Promise<string> {
 /** Normalise `#rrggbb` / `rgb(...)` / `color(srgb …)` to a comparable `r,g,b` triple. */
 function rgbKey(raw: string): string {
   const m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(raw.trim());
-  if (m) return `${Math.round(+m[1])},${Math.round(+m[2])},${Math.round(+m[3])}`;
+  if (m)
+    return `${Math.round(+m[1])},${Math.round(+m[2])},${Math.round(+m[3])}`;
 
   // Tokens built with color-mix() (brand-line, brand-soft, gold-*) compute to
   // `color(srgb r g b / a)` with 0–1 components.
@@ -81,8 +62,14 @@ interface Rgba {
 function parseRgba(raw: string): Rgba {
   const key = rgbKey(raw);
   const [r, g, b] = key.split(",").map(Number);
-  const alpha = /^(?:rgba\([^)]*?[\s,]\/?\s*|color\(srgb[^/)]*\/\s*)([\d.]+)\s*\)/.exec(raw.trim());
-  const legacy = /^rgba\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*,\s*([\d.]+)/.exec(raw.trim());
+  const alpha =
+    /^(?:rgba\([^)]*?[\s,]\/?\s*|color\(srgb[^/)]*\/\s*)([\d.]+)\s*\)/.exec(
+      raw.trim(),
+    );
+  const legacy =
+    /^rgba\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*,\s*([\d.]+)/.exec(
+      raw.trim(),
+    );
   return { r, g, b, a: Number(alpha?.[1] ?? legacy?.[1] ?? 1) };
 }
 
@@ -90,7 +77,8 @@ function parseRgba(raw: string): Rgba {
 function composite(fore: string, backdrop: string): string {
   const f = parseRgba(fore);
   const b = parseRgba(backdrop);
-  const mix = (x: number, y: number): number => Math.round(x * f.a + y * (1 - f.a));
+  const mix = (x: number, y: number): number =>
+    Math.round(x * f.a + y * (1 - f.a));
   return `rgb(${mix(f.r, b.r)}, ${mix(f.g, b.g)}, ${mix(f.b, b.b)})`;
 }
 
@@ -124,7 +112,9 @@ test.beforeEach(async ({ page }) => {
 
 // ── T2.1 — Button: brand fill with a DARK label, per the mockups ─────────────
 
-test("primary button paints the brand fill with the brand foreground", async ({ page }) => {
+test("primary button paints the brand fill with the brand foreground", async ({
+  page,
+}) => {
   const button = page.getByTestId("ui-button-primary");
   const styles = await button.evaluate((el) => {
     const s = getComputedStyle(el);
@@ -135,7 +125,9 @@ test("primary button paints the brand fill with the brand foreground", async ({ 
   expect(rgbKey(styles.fg)).toBe(rgbKey(await token(page, "--brand-fg")));
 });
 
-test("a disabled primary button stays legible instead of dimming to mud", async ({ page }) => {
+test("a disabled primary button stays legible instead of dimming to mud", async ({
+  page,
+}) => {
   // Fading a dark label on a green fill to 50% made the label vanish; disabled
   // must drop to a neutral surface with muted (still readable) text.
   const disabled = page.getByTestId("ui-button-disabled");
@@ -151,7 +143,9 @@ test("a disabled primary button stays legible instead of dimming to mud", async 
 
 // ── T2.1 — Badge: the mockups' badge family, one component, no inline colour ──
 
-test("badge variants cover the mockup set and use their own tokens", async ({ page }) => {
+test("badge variants cover the mockup set and use their own tokens", async ({
+  page,
+}) => {
   await expect(page.getByTestId("ui-badge-verified")).toBeVisible();
   await expect(page.getByTestId("ui-badge-lab")).toBeVisible();
   await expect(page.getByTestId("ui-badge-in-stock")).toBeVisible();
@@ -170,12 +164,16 @@ test("badge variants cover the mockup set and use their own tokens", async ({ pa
   expect(rgbKey(verifiedColor)).not.toBe(rgbKey(labColor));
 
   // The verified badge carries the mockups' check mark.
-  await expect(page.getByTestId("ui-badge-verified").locator("svg")).toBeVisible();
+  await expect(
+    page.getByTestId("ui-badge-verified").locator("svg"),
+  ).toBeVisible();
 });
 
 // ── T2.1 — badges are legible on their own tinted fill, in BOTH themes ───────
 
-test("badge label contrast clears AA on every tinted variant and tone", async ({ page }) => {
+test("badge label contrast clears AA on every tinted variant and tone", async ({
+  page,
+}) => {
   // Buttons are in here too, on purpose. The token-level contrast spec only
   // proves the *pairs* are sound; it cannot see a label colour that never
   // reaches the element. `text-danger-fg` did exactly that — the class was on
@@ -208,9 +206,10 @@ test("badge label contrast clears AA on every tinted variant and tone", async ({
       // Tinted fills are translucent, so the effective backdrop is the card
       // behind them; compose the badge tint over it before measuring.
       const surface = await token(page, "--surface");
-      expect(contrastRatio(fg, composite(bg, surface)), `${theme}: ${id}`).toBeGreaterThanOrEqual(
-        4.5,
-      );
+      expect(
+        contrastRatio(fg, composite(bg, surface)),
+        `${theme}: ${id}`,
+      ).toBeGreaterThanOrEqual(4.5);
     }
   }
 
@@ -236,17 +235,23 @@ test("accent card is outlined in the brand colour", async ({ page }) => {
 
 // ── T2.1 — form controls sit in the inset well, not flush with the card ──────
 
-test("inputs paint the inset surface so they read as fields", async ({ page }) => {
+test("inputs paint the inset surface so they read as fields", async ({
+  page,
+}) => {
   const inset = rgbKey(await token(page, "--surface-inset"));
   for (const id of ["ui-input", "ui-select", "ui-textarea"]) {
-    const bg = await page.getByTestId(id).evaluate((el) => getComputedStyle(el).backgroundColor);
+    const bg = await page
+      .getByTestId(id)
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(rgbKey(bg), id).toBe(inset);
   }
 });
 
 // ── T2.2 — StatusStepper: the vertical deal/contract timeline ────────────────
 
-test("status stepper marks done, current and pending steps distinctly", async ({ page }) => {
+test("status stepper marks done, current and pending steps distinctly", async ({
+  page,
+}) => {
   const stepper = page.getByTestId("ui-status-stepper");
   await expect(stepper).toBeVisible();
 
@@ -273,7 +278,9 @@ test("progress ring exposes its value to assistive tech", async ({ page }) => {
 
 // ── T2.2 — StatChip: the metric tile, with non-jittering figures ─────────────
 
-test("stat chip renders value + label with tabular figures", async ({ page }) => {
+test("stat chip renders value + label with tabular figures", async ({
+  page,
+}) => {
   const chip = page.getByTestId("ui-stat-chip");
   await expect(chip).toContainText("50 000+");
   await expect(chip).toContainText("Проверенных компаний");
@@ -296,7 +303,9 @@ test("bottom nav shows on mobile and hides on desktop", async ({ page }) => {
   await expect(nav).toBeHidden();
 });
 
-test("bottom nav marks the active route and surfaces unread counts", async ({ page }) => {
+test("bottom nav marks the active route and surfaces unread counts", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 375, height: 780 });
   const nav = page.getByTestId("ui-bottom-nav");
 
@@ -307,12 +316,14 @@ test("bottom nav marks the active route and surfaces unread counts", async ({ pa
 
 // ── The cabinet shell actually uses the bar on phones (P0 definition of done) ──
 
-test("the authenticated shell shows the bottom bar on phones only", async ({ page, request }) => {
+test("the authenticated shell shows the bottom bar on phones only", async ({
+  page,
+}) => {
   // A company is required, not incidental: `RequireCompany` sends a companyless
   // account to `/cabinet/onboarding`, which sits outside `AppShell` and so has
   // no bottom bar to assert on. This test is about the SHELL, so it has to get
   // past the registration gate first.
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await registerCompany(page, uniqueTaxId());
   // The wizard ends on `/cabinet/companies/new/done/:id`, which is deliberately
   // outside `AppShell` — step into the cabinet proper to get the shell.
@@ -329,7 +340,9 @@ test("the authenticated shell shows the bottom bar on phones only", async ({ pag
   await page.waitForLoadState("networkidle");
   await page.evaluate(async () => {
     window.scrollTo(0, document.body.scrollHeight);
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    await new Promise((r) =>
+      requestAnimationFrame(() => requestAnimationFrame(r)),
+    );
   });
   const [barTop, mainBottom] = await Promise.all([
     nav.evaluate((el) => el.getBoundingClientRect().top),
@@ -346,7 +359,9 @@ test("the authenticated shell shows the bottom bar on phones only", async ({ pag
 // Added, never edited: the twelve assertions above are P0's contract and stay
 // exactly as they were. These cover the six primitives the restyle introduces.
 
-test("page header renders a real h1 with its back link and action slot", async ({ page }) => {
+test("page header renders a real h1 with its back link and action slot", async ({
+  page,
+}) => {
   const header = page.getByTestId("ui-page-header");
   await expect(header).toBeVisible();
 
@@ -356,7 +371,9 @@ test("page header renders a real h1 with its back link and action slot", async (
   await expect(header.getByRole("button", { name: /RFQ/i })).toBeVisible();
 });
 
-test("tabs mark exactly one option pressed in each variant", async ({ page }) => {
+test("tabs mark exactly one option pressed in each variant", async ({
+  page,
+}) => {
   for (const id of ["ui-tabs-underline", "ui-tabs-pill"] as const) {
     const group = page.getByTestId(id);
     await expect(group).toBeVisible();
@@ -368,11 +385,16 @@ test("tabs mark exactly one option pressed in each variant", async ({ page }) =>
   }
 
   // Counts beside a label are figures, so they line up down a column of tabs.
-  const counted = page.getByTestId("ui-tabs-underline").locator("span.num").first();
+  const counted = page
+    .getByTestId("ui-tabs-underline")
+    .locator("span.num")
+    .first();
   await expect(counted).toHaveCSS("font-variant-numeric", /tabular-nums/);
 });
 
-test("spec list is a definition list and marks its numeric values tabular", async ({ page }) => {
+test("spec list is a definition list and marks its numeric values tabular", async ({
+  page,
+}) => {
   // `SpecList` stamps the testid on every instance, and the gallery now renders
   // a second one (the `justified` receipt shape) — this test is about the first,
   // `stacked`, block.
@@ -388,19 +410,23 @@ test("spec list is a definition list and marks its numeric values tabular", asyn
   );
 });
 
-test("spec tiles sit on the card surface with the label above the value", async ({ page }) => {
+test("spec tiles sit on the card surface with the label above the value", async ({
+  page,
+}) => {
   const tile = page.getByTestId("ui-spec-tile").first();
   await expect(tile).toBeVisible();
-  expect(rgbKey(await tile.evaluate((el) => getComputedStyle(el).backgroundColor))).toBe(
-    rgbKey(await token(page, "--surface")),
-  );
+  expect(
+    rgbKey(await tile.evaluate((el) => getComputedStyle(el).backgroundColor)),
+  ).toBe(rgbKey(await token(page, "--surface")));
 
   const box = await tile.boundingBox();
   const valueBox = await tile.locator("p").boundingBox();
   expect(valueBox!.y).toBeGreaterThan(box!.y);
 });
 
-test("file rows show the name, the meta line and their actions", async ({ page }) => {
+test("file rows show the name, the meta line and their actions", async ({
+  page,
+}) => {
   const row = page.getByTestId("ui-file-row").first();
   await expect(row).toBeVisible();
   await expect(row).toContainText("SDS_PP_H030GP.pdf");
@@ -409,10 +435,15 @@ test("file rows show the name, the meta line and their actions", async ({ page }
 
   // A superseded document is struck through rather than removed.
   const muted = page.getByTestId("ui-file-row").nth(1);
-  await expect(muted.locator("p").first()).toHaveCSS("text-decoration-line", /line-through/);
+  await expect(muted.locator("p").first()).toHaveCSS(
+    "text-decoration-line",
+    /line-through/,
+  );
 });
 
-test("gold button paints the gold token pair and clears AA in both themes", async ({ page }) => {
+test("gold button paints the gold token pair and clears AA in both themes", async ({
+  page,
+}) => {
   // Same reasoning as the badge-contrast test: a colour class that never reaches
   // the element is invisible to token-level maths, so measure what was painted.
   for (const theme of ["dark", "light"] as const) {
@@ -420,15 +451,24 @@ test("gold button paints the gold token pair and clears AA in both themes", asyn
     await page.goto(GALLERY);
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 
-    const { fg, bg } = await page.getByTestId("ui-button-gold").evaluate((el) => {
-      const s = getComputedStyle(el);
-      return { fg: s.color, bg: s.backgroundColor };
-    });
-    expect(rgbKey(bg), `${theme}: fill`).toBe(rgbKey(await token(page, "--accent-gold")));
-    expect(rgbKey(fg), `${theme}: label`).toBe(rgbKey(await token(page, "--accent-gold-fg")));
+    const { fg, bg } = await page
+      .getByTestId("ui-button-gold")
+      .evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { fg: s.color, bg: s.backgroundColor };
+      });
+    expect(rgbKey(bg), `${theme}: fill`).toBe(
+      rgbKey(await token(page, "--accent-gold")),
+    );
+    expect(rgbKey(fg), `${theme}: label`).toBe(
+      rgbKey(await token(page, "--accent-gold-fg")),
+    );
 
     const surface = await token(page, "--surface");
-    expect(contrastRatio(fg, composite(bg, surface)), `${theme}: AA`).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(fg, composite(bg, surface)),
+      `${theme}: AA`,
+    ).toBeGreaterThanOrEqual(4.5);
   }
 
   await page.evaluate(() => localStorage.setItem("portal.theme", "dark"));
@@ -442,7 +482,9 @@ test("sticky action bar clears the bottom nav on phones and goes static on deskt
 
   await page.setViewportSize({ width: 375, height: 780 });
   await expect(bar).toBeVisible();
-  expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("fixed");
+  expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe(
+    "fixed",
+  );
 
   // The bar sits ON TOP of the nav, not over it.
   const [barBottom, navTop] = await Promise.all([
@@ -499,19 +541,28 @@ test("sticky action bar clears the bottom nav on phones and goes static on deskt
     // `!p-0` (which `OfferActionBar` passes) those are the same, and the labels
     // are what a visitor notices being cut.
     const deepest = Math.max(
-      ...[...el.querySelectorAll("*")].map((n) => n.getBoundingClientRect().bottom),
+      ...[...el.querySelectorAll("*")].map(
+        (n) => n.getBoundingClientRect().bottom,
+      ),
     );
     return { overlap: deepest - (navTop + navBorder) };
   });
-  expect(inset.overlap, "bar content behind the bottom nav with an iOS inset").toBeLessThanOrEqual(0);
+  expect(
+    inset.overlap,
+    "bar content behind the bottom nav with an iOS inset",
+  ).toBeLessThanOrEqual(0);
 
   await page.setViewportSize({ width: 1280, height: 900 });
-  expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
+  expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe(
+    "static",
+  );
 });
 
 // ── Registration primitives (the redesigned company-registration flow) ───────
 
-test("radio cards expose real radios and mark exactly one selected", async ({ page }) => {
+test("radio cards expose real radios and mark exactly one selected", async ({
+  page,
+}) => {
   const group = page.getByTestId("ui-radio-cards");
   const radios = group.locator('input[type="radio"]');
   expect(await radios.count()).toBeGreaterThan(1);
@@ -532,7 +583,9 @@ test("radio cards expose real radios and mark exactly one selected", async ({ pa
    * synchronously on click, so the paint is still one React commit behind.
    */
   const brand = await page.evaluate(() =>
-    getComputedStyle(document.documentElement).getPropertyValue("--brand").trim(),
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--brand")
+      .trim(),
   );
   const [r, g, b] = rgbKey(brand).split(",");
   await expect(page.getByTestId("ui-radio-card-buyer")).toHaveCSS(
@@ -541,16 +594,22 @@ test("radio cards expose real radios and mark exactly one selected", async ({ pa
   );
 });
 
-test("segmented tabs share one track and press exactly one option", async ({ page }) => {
+test("segmented tabs share one track and press exactly one option", async ({
+  page,
+}) => {
   const strip = page.getByTestId("ui-tabs-segmented");
   await expect(strip.locator('button[aria-pressed="true"]')).toHaveCount(1);
 
   // The whole group is one control: the track is bordered, the items are not.
-  const trackBorder = await strip.evaluate((el) => getComputedStyle(el).borderTopWidth);
+  const trackBorder = await strip.evaluate(
+    (el) => getComputedStyle(el).borderTopWidth,
+  );
   expect(parseFloat(trackBorder)).toBeGreaterThan(0);
 });
 
-test("checklist rows carry their outcome beyond colour alone", async ({ page }) => {
+test("checklist rows carry their outcome beyond colour alone", async ({
+  page,
+}) => {
   const rows = page.getByTestId("ui-checklist").locator("li");
   expect(await rows.count()).toBeGreaterThan(2);
 
@@ -561,18 +620,28 @@ test("checklist rows carry their outcome beyond colour alone", async ({ page }) 
    * from drifting apart.
    */
   for (const state of ["passed", "running", "warning"]) {
-    const row = page.locator(`[data-testid="ui-checklist"] li[data-state="${state}"]`).first();
+    const row = page
+      .locator(`[data-testid="ui-checklist"] li[data-state="${state}"]`)
+      .first();
     await expect(row).toBeVisible();
-    expect((await row.innerText()).trim().length, `${state} row states its outcome`).toBeGreaterThan(0);
+    expect(
+      (await row.innerText()).trim().length,
+      `${state} row states its outcome`,
+    ).toBeGreaterThan(0);
   }
 });
 
 test("checklist status lines clear AA in both themes", async ({ page }) => {
   for (const theme of ["dark", "light"] as const) {
-    await page.evaluate((t) => document.documentElement.setAttribute("data-theme", t), theme);
+    await page.evaluate(
+      (t) => document.documentElement.setAttribute("data-theme", t),
+      theme,
+    );
 
     for (const state of ["passed", "warning", "failed", "running", "pending"]) {
-      const line = page.locator(`[data-testid="ui-checklist"] li[data-state="${state}"] p + p`);
+      const line = page.locator(
+        `[data-testid="ui-checklist"] li[data-state="${state}"] p + p`,
+      );
       if ((await line.count()) === 0) continue;
       const { color, backdrop } = await line.first().evaluate((el) => {
         let node: HTMLElement | null = el.parentElement;
@@ -593,10 +662,14 @@ test("checklist status lines clear AA in both themes", async ({ page }) => {
       ).toBeGreaterThanOrEqual(4.5);
     }
   }
-  await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"));
+  await page.evaluate(() =>
+    document.documentElement.setAttribute("data-theme", "dark"),
+  );
 });
 
-test("the date field shows one calendar affordance, not the UA's as well", async ({ page }) => {
+test("the date field shows one calendar affordance, not the UA's as well", async ({
+  page,
+}) => {
   const field = page.locator("input.date-field").first();
   await expect(field).toBeVisible();
 
@@ -624,13 +697,17 @@ test("the date field shows one calendar affordance, not the UA's as well", async
       }
     }),
   );
-  expect(rulePresent, "styles.css must hide the UA picker indicator").toBe(true);
+  expect(rulePresent, "styles.css must hide the UA picker indicator").toBe(
+    true,
+  );
 
   // …and the design-system affordance that replaces it is there, exactly once.
   await expect(field.locator("xpath=..").getByRole("button")).toHaveCount(1);
 });
 
-test("a password field masks by default and reveals on demand", async ({ page }) => {
+test("a password field masks by default and reveals on demand", async ({
+  page,
+}) => {
   const field = page.getByTestId("ui-password-input");
   await expect(field).toHaveAttribute("type", "password");
 
@@ -642,9 +719,13 @@ test("a password field masks by default and reveals on demand", async ({ page })
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
 });
 
-test("the stacked stepper shows every label at phone width", async ({ page }) => {
+test("the stacked stepper shows every label at phone width", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 375, height: 900 });
-  const labels = page.getByTestId("ui-stepper-stacked").locator("li > span:last-child");
+  const labels = page
+    .getByTestId("ui-stepper-stacked")
+    .locator("li > span:last-child");
   expect(await labels.count()).toBe(5);
 
   /*
@@ -653,7 +734,9 @@ test("the stacked stepper shows every label at phone width", async ({ page }) =>
    * the labels wrap instead — asserted as "nothing is clipped".
    */
   for (let i = 0; i < 5; i += 1) {
-    const clipped = await labels.nth(i).evaluate((el) => el.scrollWidth > el.clientWidth + 1);
+    const clipped = await labels
+      .nth(i)
+      .evaluate((el) => el.scrollWidth > el.clientWidth + 1);
     expect(clipped, `step ${i + 1} label is clipped`).toBe(false);
   }
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -666,7 +749,9 @@ test("the stacked stepper shows every label at phone width", async ({ page }) =>
  * wrongly at a call site — so the contract is asserted here, not in the flow.
  */
 
-test("a choice tile is a real radio and paints its chosen state", async ({ page }) => {
+test("a choice tile is a real radio and paints its chosen state", async ({
+  page,
+}) => {
   const tiles = page.getByTestId("ui-choice-tiles");
   const inputs = tiles.getByRole("radio");
   await expect(inputs).toHaveCount(2);
@@ -681,11 +766,15 @@ test("a choice tile is a real radio and paints its chosen state", async ({ page 
   // …and the chosen tile carries the gold border the mockup gives it, from the
   // token rather than a stock palette class.
   const chosen = tiles.locator("label").nth(1);
-  const border = await chosen.evaluate((el) => getComputedStyle(el).borderTopColor);
+  const border = await chosen.evaluate(
+    (el) => getComputedStyle(el).borderTopColor,
+  );
   expect(rgbKey(border)).toBe(rgbKey(await token(page, "--accent-gold")));
 });
 
-test("the segmented control reports its state to assistive tech", async ({ page }) => {
+test("the segmented control reports its state to assistive tech", async ({
+  page,
+}) => {
   const group = page.getByTestId("ui-segmented");
   await expect(group).toHaveAttribute("role", "radiogroup");
 
@@ -714,7 +803,9 @@ test("the chip input commits on Enter and removes a chip", async ({ page }) => {
   await expect(field.getByText("Высокая жёсткость")).toBeVisible();
 
   // Every chip carries its own labelled ✕ — a bare glyph would be unreachable.
-  await field.getByRole("button", { name: /Убрать: Высокая жёсткость/ }).click();
+  await field
+    .getByRole("button", { name: /Убрать: Высокая жёсткость/ })
+    .click();
   await expect(chips).toHaveCount(before);
 });
 
@@ -729,9 +820,13 @@ test("the dropzone opens a picker and hides its input", async ({ page }) => {
   await expect(input).not.toBeVisible();
 });
 
-test("a step panel numbers its sheet and states the counter", async ({ page }) => {
+test("a step panel numbers its sheet and states the counter", async ({
+  page,
+}) => {
   const panel = page.getByTestId("ui-step-panel");
-  await expect(panel.getByRole("heading", { level: 2 })).toHaveText("Наличие / Под заказ");
+  await expect(panel.getByRole("heading", { level: 2 })).toHaveText(
+    "Наличие / Под заказ",
+  );
   await expect(panel.getByText("Шаг 3 из 7")).toBeVisible();
   await expect(panel.getByText("3", { exact: true }).first()).toBeVisible();
 });

@@ -35,7 +35,7 @@ from app.core.pages import PAGES, is_page, satisfies
 _NAV = Path(__file__).resolve().parents[2] / "dashboard" / "lib" / "nav.ts"
 
 #: Nav items that must NOT be grantable. See the module docstring.
-ADMIN_ONLY_NAV = frozenset({"adminUsers"})
+ADMIN_ONLY_NAV = frozenset({"adminUsers", "portalAccounts"})
 
 
 def _nav() -> tuple[list[str], list[str]]:
@@ -101,6 +101,17 @@ def test_admin_users_is_not_grantable() -> None:
     ends with someone holding every page nobody granted them.
     """
     assert not is_page("adminUsers")
+
+
+def test_portal_accounts_is_not_grantable() -> None:
+    """Cabinet-credential issuing must never become a page an administrator hands out.
+
+    Same argument as `adminUsers` one audience over: whoever can issue a cabinet
+    login can sign in as a customer and act inside their company. A page grant is the
+    right shape for "let the ops lead work the verification queue"; it is not the
+    right shape for "let them become any counterparty".
+    """
+    assert not is_page("portalAccounts")
 
 
 def test_write_implies_read_but_not_the_reverse() -> None:

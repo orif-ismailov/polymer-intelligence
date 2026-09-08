@@ -106,6 +106,11 @@ PAGES: tuple[PageSpec, ...] = (
     # administrator, or widen their own grants, and would then hold every page
     # without anyone having granted them one. Nothing that can hand out
     # authority may itself be handed out.
+    #
+    # `portalAccounts` (0048) is absent for the same reason, one audience over:
+    # whoever can issue a cabinet credential can sign in as a customer and act
+    # inside their company — sign contracts, publish offers, read their deals.
+    # That is authority being handed out, so it is `require_admin` too.
 )
 
 PAGE_KEYS: frozenset[str] = frozenset(p.key for p in PAGES)

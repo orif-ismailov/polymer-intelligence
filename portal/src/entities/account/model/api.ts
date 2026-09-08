@@ -1,13 +1,29 @@
 import { api } from "@/shared/api";
 
-import type { Account, AccountPatch, AuthResult, OtpVerifyPayload } from "./types";
+import type {
+  Account,
+  AccountPatch,
+  AuthResult,
+  LoginPayload,
+  PasswordChangePayload,
+  RegisterPayload,
+} from "./types";
 
 export const accountApi = {
-  requestOtp: (phone: string): Promise<void> =>
-    api.post<void>("/portal/auth/otp/request", { phone }),
+  login: (payload: LoginPayload): Promise<AuthResult> =>
+    api.post<AuthResult>("/portal/auth/login", payload),
 
-  verifyOtp: (payload: OtpVerifyPayload): Promise<AuthResult> =>
-    api.post<AuthResult>("/portal/auth/otp/verify", payload),
+  /**
+   * Ask for access. Answers 202 with a fixed body whatever happens — including for
+   * a phone that has applied before — so nothing here can be used to find out who
+   * already has an account.
+   */
+  register: (payload: RegisterPayload): Promise<{ status: string }> =>
+    api.post<{ status: string }>("/portal/auth/register", payload),
+
+  /** The only route past the first-login gate; returns a fresh session. */
+  changePassword: (payload: PasswordChangePayload): Promise<AuthResult> =>
+    api.post<AuthResult>("/portal/auth/password", payload),
 
   // `skipAuthRetry`: this IS the refresh. Without it a 401 here sent the client
   // into its own 401-handler, which refreshed again, failed again, and then
@@ -24,12 +40,6 @@ export const accountApi = {
   updateMe: (patch: AccountPatch): Promise<Account> =>
     api.patch<Account>("/portal/me", patch),
 };
-
-// NOTE: there is deliberately no `peekOtp` here. The backend does expose
-// `GET /portal/auth/otp/peek` as a test hook, but it is double-gated (404 unless
-// DEBUG *and* the console SMS driver) and nothing in the app or the e2e suite
-// called the client wrapper — it only shipped the endpoint's name inside the
-// production bundle. The e2e specs read the code from the API directly.
 
 export const accountKeys = {
   me: ["account", "me"] as const,

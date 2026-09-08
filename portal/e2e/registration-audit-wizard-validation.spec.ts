@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { login } from "./_registration";
-import { pickAccountType, uniquePhone, uniqueTaxId } from "./_registration-typed";
+import { pickAccountType, uniqueTaxId } from "./_registration-typed";
 
 /**
  * Validation/failure-case audit for the company-registration wizard.
@@ -14,8 +14,10 @@ test.use({ locale: "ru-RU" });
 
 // ── Buyer/default flow (StepDetails + StepDocuments) — deep dive ───────────
 
-test("step 2: empty legal name blocks Next, with the field-level error", async ({ page, request }) => {
-  await login(page, request, uniquePhone());
+test("step 2: empty legal name blocks Next, with the field-level error", async ({
+  page,
+}) => {
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "buyer");
 
   const next = page.getByTestId("wizard-next");
@@ -29,9 +31,8 @@ test("step 2: empty legal name blocks Next, with the field-level error", async (
 
 test("step 2: non-numeric / wrong-length tax id is rejected (UZ 9-digit rule)", async ({
   page,
-  request,
 }) => {
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "buyer");
 
   await page.getByLabel(/название компании/i).fill("OOO E2E Test");
@@ -46,13 +47,19 @@ test("step 2: non-numeric / wrong-length tax id is rejected (UZ 9-digit rule)", 
   await expect(page.getByTestId("wizard-next")).toBeDisabled();
 });
 
-test("step 2: a future registration date is rejected", async ({ page, request }) => {
-  await login(page, request, uniquePhone());
+test("step 2: a future registration date is rejected", async ({ page }) => {
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "buyer");
 
   await page.getByLabel(/название компании/i).fill("OOO E2E Test");
-  await page.getByLabel(/ИНН \(СТИР\)/i).first().fill(uniqueTaxId());
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Amir Temur 1");
+  await page
+    .getByLabel(/ИНН \(СТИР\)/i)
+    .first()
+    .fill(uniqueTaxId());
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Amir Temur 1");
 
   const futureDate = new Date();
   futureDate.setFullYear(futureDate.getFullYear() + 1);
@@ -60,16 +67,26 @@ test("step 2: a future registration date is rejected", async ({ page, request })
   const dateField = page.getByLabel(/дата регистрации/i);
   await dateField.fill(iso);
   await dateField.blur();
-  await expect(page.getByText("Укажите корректную дату регистрации")).toBeVisible();
+  await expect(
+    page.getByText("Укажите корректную дату регистрации"),
+  ).toBeVisible();
   await expect(page.getByTestId("wizard-next")).toBeDisabled();
 });
 
-test("step 4: missing required registration certificate blocks Next", async ({ page, request }) => {
-  await login(page, request, uniquePhone());
+test("step 4: missing required registration certificate blocks Next", async ({
+  page,
+}) => {
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "buyer");
   await page.getByLabel(/название компании/i).fill("OOO E2E Test");
-  await page.getByLabel(/ИНН \(СТИР\)/i).first().fill(uniqueTaxId());
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Amir Temur 1");
+  await page
+    .getByLabel(/ИНН \(СТИР\)/i)
+    .first()
+    .fill(uniqueTaxId());
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Amir Temur 1");
   await page.getByLabel(/дата регистрации/i).fill("2020-01-15");
   await page.getByLabel(/форма собственности/i).selectOption("ООО");
   await page.getByTestId("wizard-next").click();
@@ -83,13 +100,18 @@ test("step 4: missing required registration certificate blocks Next", async ({ p
 
 test("step 4: an unsupported file type is rejected client-side with a clear message", async ({
   page,
-  request,
 }) => {
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "buyer");
   await page.getByLabel(/название компании/i).fill("OOO E2E Test");
-  await page.getByLabel(/ИНН \(СТИР\)/i).first().fill(uniqueTaxId());
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Amir Temur 1");
+  await page
+    .getByLabel(/ИНН \(СТИР\)/i)
+    .first()
+    .fill(uniqueTaxId());
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Amir Temur 1");
   await page.getByLabel(/дата регистрации/i).fill("2020-01-15");
   await page.getByLabel(/форма собственности/i).selectOption("ООО");
   await page.getByTestId("wizard-next").click();
@@ -97,26 +119,36 @@ test("step 4: an unsupported file type is rejected client-side with a clear mess
   await page.getByRole("button", { name: /пропустить/i }).click();
   await page.waitForURL("**/cabinet/companies/new/4");
 
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: "malware.exe",
-    mimeType: "application/x-msdownload",
-    buffer: Buffer.from("MZ fake exe content"),
-  });
+  await page
+    .locator('input[type="file"]')
+    .first()
+    .setInputFiles({
+      name: "malware.exe",
+      mimeType: "application/x-msdownload",
+      buffer: Buffer.from("MZ fake exe content"),
+    });
   await expect(
-    page.getByText("Неподдерживаемый формат файла. Загрузите PDF, JPG или PNG."),
+    page.getByText(
+      "Неподдерживаемый формат файла. Загрузите PDF, JPG или PNG.",
+    ),
   ).toBeVisible();
   await expect(page.getByTestId("wizard-next")).toBeDisabled();
 });
 
 test("step 4: an oversized file is rejected client-side before any upload", async ({
   page,
-  request,
 }) => {
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "buyer");
   await page.getByLabel(/название компании/i).fill("OOO E2E Test");
-  await page.getByLabel(/ИНН \(СТИР\)/i).first().fill(uniqueTaxId());
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Amir Temur 1");
+  await page
+    .getByLabel(/ИНН \(СТИР\)/i)
+    .first()
+    .fill(uniqueTaxId());
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Amir Temur 1");
   await page.getByLabel(/дата регистрации/i).fill("2020-01-15");
   await page.getByLabel(/форма собственности/i).selectOption("ООО");
   await page.getByTestId("wizard-next").click();
@@ -129,11 +161,14 @@ test("step 4: an oversized file is rejected client-side before any upload", asyn
     uploadHit = true;
     void route.continue();
   });
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: "huge.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.alloc(11 * 1024 * 1024, "x"), // 11MB > MAX_UPLOAD_BYTES (10MB)
-  });
+  await page
+    .locator('input[type="file"]')
+    .first()
+    .setInputFiles({
+      name: "huge.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.alloc(11 * 1024 * 1024, "x"), // 11MB > MAX_UPLOAD_BYTES (10MB)
+    });
   await expect(page.getByText(/Файл превышает \d+ МБ/)).toBeVisible();
   await expect(page.getByTestId("wizard-next")).toBeDisabled();
   expect(uploadHit).toBe(false); // never reached the network — rejected before submit
@@ -143,54 +178,77 @@ test("step 4: an oversized file is rejected client-side before any upload", asyn
 
 test("registering a second company with the same (jurisdiction, tax_id) is rejected as a duplicate", async ({
   page,
-  request,
 }) => {
   const sharedTaxId = uniqueTaxId();
 
   // First registration succeeds.
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "buyer");
   await page.getByLabel(/название компании/i).fill("OOO First");
-  await page.getByLabel(/ИНН \(СТИР\)/i).first().fill(sharedTaxId);
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Amir Temur 1");
+  await page
+    .getByLabel(/ИНН \(СТИР\)/i)
+    .first()
+    .fill(sharedTaxId);
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Amir Temur 1");
   await page.getByLabel(/дата регистрации/i).fill("2020-01-15");
   await page.getByLabel(/форма собственности/i).selectOption("ООО");
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/3");
   await page.getByRole("button", { name: /пропустить/i }).click();
   await page.waitForURL("**/cabinet/companies/new/4");
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: "reg.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4 test"),
-  });
+  await page
+    .locator('input[type="file"]')
+    .first()
+    .setInputFiles({
+      name: "reg.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4 test"),
+    });
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/5");
-  await expect(page.getByTestId("wizard-submit")).toBeEnabled({ timeout: 20_000 });
+  await expect(page.getByTestId("wizard-submit")).toBeEnabled({
+    timeout: 20_000,
+  });
   await page.getByTestId("wizard-submit").click();
-  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, { timeout: 15_000 });
+  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, {
+    timeout: 15_000,
+  });
 
   // Second account, same tax_id — must be rejected, not silently accepted.
   await page.context().clearCookies();
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "buyer");
   await page.getByLabel(/название компании/i).fill("OOO Second");
-  await page.getByLabel(/ИНН \(СТИР\)/i).first().fill(sharedTaxId);
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Amir Temur 2");
+  await page
+    .getByLabel(/ИНН \(СТИР\)/i)
+    .first()
+    .fill(sharedTaxId);
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Amir Temur 2");
   await page.getByLabel(/дата регистрации/i).fill("2020-01-15");
   await page.getByLabel(/форма собственности/i).selectOption("ООО");
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/3");
   await page.getByRole("button", { name: /пропустить/i }).click();
   await page.waitForURL("**/cabinet/companies/new/4");
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: "reg.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4 test"),
-  });
+  await page
+    .locator('input[type="file"]')
+    .first()
+    .setInputFiles({
+      name: "reg.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4 test"),
+    });
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/5");
-  await expect(page.getByText("Компания с таким ИНН уже существует.")).toBeVisible({
+  await expect(
+    page.getByText("Компания с таким ИНН уже существует."),
+  ).toBeVisible({
     timeout: 20_000,
   });
   // Must NOT have advanced to the done screen.
@@ -199,14 +257,24 @@ test("registering a second company with the same (jurisdiction, tax_id) is rejec
 
 // ── Typed-flow required-field spot checks ───────────────────────────────────
 
-test("manufacturer step 3: empty production fields block Next", async ({ page, request }) => {
-  await login(page, request, uniquePhone());
+test("manufacturer step 3: empty production fields block Next", async ({
+  page,
+}) => {
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "manufacturer");
   await page.getByLabel(/юридическое название завода/i).fill("OOO E2E Factory");
-  await page.getByLabel(/ИНН \(СТИР\)/i).first().fill(uniqueTaxId());
+  await page
+    .getByLabel(/ИНН \(СТИР\)/i)
+    .first()
+    .fill(uniqueTaxId());
   await page.getByLabel(/регистрационный номер компании/i).fill("REG-X");
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Chilanzar 5");
-  await page.getByLabel(/фактический адрес завода/i).fill("Tashkent, Industrial Zone 12");
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Chilanzar 5");
+  await page
+    .getByLabel(/фактический адрес завода/i)
+    .fill("Tashkent, Industrial Zone 12");
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/3");
 
@@ -214,14 +282,22 @@ test("manufacturer step 3: empty production fields block Next", async ({ page, r
   await expect(page.getByTestId("wizard-next")).toBeDisabled();
 });
 
-test("manufacturer step 6: empty MOQ blocks Next", async ({ page, request }) => {
-  await login(page, request, uniquePhone());
+test("manufacturer step 6: empty MOQ blocks Next", async ({ page }) => {
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "manufacturer");
   await page.getByLabel(/юридическое название завода/i).fill("OOO E2E Factory");
-  await page.getByLabel(/ИНН \(СТИР\)/i).first().fill(uniqueTaxId());
+  await page
+    .getByLabel(/ИНН \(СТИР\)/i)
+    .first()
+    .fill(uniqueTaxId());
   await page.getByLabel(/регистрационный номер компании/i).fill("REG-X");
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Chilanzar 5");
-  await page.getByLabel(/фактический адрес завода/i).fill("Tashkent, Industrial Zone 12");
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Chilanzar 5");
+  await page
+    .getByLabel(/фактический адрес завода/i)
+    .fill("Tashkent, Industrial Zone 12");
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/3");
 
@@ -235,12 +311,18 @@ test("manufacturer step 6: empty MOQ blocks Next", async ({ page, request }) => 
   await page.waitForURL("**/cabinet/companies/new/4");
   await page.getByTestId("wizard-catalog-manual").click();
   await page.waitForURL("**/cabinet/companies/new/5");
-  await page.getByText(/загрузить документ/i).first().waitFor();
-  await page.locator('input[type="file"]').first().setInputFiles({
-    name: "reg.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4 test"),
-  });
+  await page
+    .getByText(/загрузить документ/i)
+    .first()
+    .waitFor();
+  await page
+    .locator('input[type="file"]')
+    .first()
+    .setInputFiles({
+      name: "reg.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4 test"),
+    });
   await expect(page.getByText("reg.pdf")).toBeVisible();
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/6");
@@ -253,13 +335,16 @@ test("manufacturer step 6: empty MOQ blocks Next", async ({ page, request }) => 
   await expect(page.getByTestId("wizard-next")).toBeDisabled();
 });
 
-test("logistics step 3: no service selected blocks Next", async ({ page, request }) => {
-  await login(page, request, uniquePhone());
+test("logistics step 3: no service selected blocks Next", async ({ page }) => {
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "logistics");
   await page.getByLabel(/название компании/i).fill("OOO E2E Carrier");
   await page.getByLabel(/город/i).fill("Tashkent");
   await page.getByLabel(/ИНН \/ Регистрационный номер/i).fill(uniqueTaxId());
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Yunusabad 8");
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Yunusabad 8");
   await page.getByTestId("wizard-next").click();
   await page.waitForURL("**/cabinet/companies/new/3");
 
@@ -275,13 +360,16 @@ test("logistics step 3: no service selected blocks Next", async ({ page, request
   await expect(page.getByTestId("wizard-next")).toBeDisabled();
 });
 
-test("laboratory step 2: invalid email blocks Next", async ({ page, request }) => {
-  await login(page, request, uniquePhone());
+test("laboratory step 2: invalid email blocks Next", async ({ page }) => {
+  await login(page, await provisionAccount(request));
   await pickAccountType(page, "laboratory");
   await page.getByLabel(/название лаборатории/i).fill("OOO E2E Lab");
   await page.getByLabel(/город/i).fill("Tashkent");
   await page.getByLabel(/ИНН \/ Регистрационный номер/i).fill(uniqueTaxId());
-  await page.getByLabel(/юридический адрес/i).first().fill("Tashkent, Mirzo Ulugbek 3");
+  await page
+    .getByLabel(/юридический адрес/i)
+    .first()
+    .fill("Tashkent, Mirzo Ulugbek 3");
   const email = page.getByLabel(/email/i);
   await email.fill("not-an-email");
   await email.blur();

@@ -13,11 +13,21 @@ with a `/:companyId` profile), `/prices` and `/news`. These routes are **server-
 so search engines receive real HTML, and they read `/api/v1/public/*`, the only API surface
 with no auth dependency. Open to **everyone**, signed in or not.
 
-**The client cabinet** (R1): everything under **`/cabinet`** — a person logs in by phone
-OTP, registers companies, submits them for verification, and publishes offers. The browser
-counterpart to the staff `dashboard/` and the Telegram `webapp/`. Distinct identity world
-from `webapp/` (Telegram `clients`/`sellers`, frozen): the portal authenticates
-`user_accounts` (phone, passwordless OTP). Cabinet routes are **client-rendered only** and
+**The client cabinet** (R1): everything under **`/cabinet`** — a person signs in with a
+login and password ISSUED BY STAFF, registers companies, submits them for verification, and
+publishes offers. The browser counterpart to the staff `dashboard/` and the Telegram
+`webapp/`. Distinct identity world from `webapp/` (Telegram `clients`/`sellers`, frozen):
+the portal authenticates `user_accounts` (`login` + argon2 password, migration 0048).
+
+**Sign-up is not self-service.** `/cabinet/register` is an access REQUEST: it creates a
+`pending` account, grants nothing, and answers «мы свяжемся с вами». Staff issue the
+credentials from the dashboard, and they are printed in the contract the parties sign —
+which is why the first sign-in is forced through `/cabinet/password`. Three consequences
+worth holding in mind: the API answers **403 `password_change_required`** (not 401) until
+that is done, so it never enters the client's refresh path; `RequirePasswordCurrent` sits
+ABOVE `RequireCompany` because a fresh account has no company and would otherwise bounce to
+an onboarding screen whose first query 403s; and there is no OTP anywhere any more — the
+whole SMS rail was deleted with it. Cabinet routes are **client-rendered only** and
 `noindex`, which is now one line of robots.txt (`Disallow: /cabinet`) rather than a list
 that kept drifting.
 
@@ -38,7 +48,7 @@ A guard (`RedirectAuthedToCabinet`) used to bounce signed-in visitors to the `/c
 twin of whatever they opened. It is **deleted** — do not reintroduce it. The chrome carries
 the session instead: `PublicTopNav` swaps «Войти»/«Регистрация» for a single «Кабинет»
 link, and every `BrandLogo` on the site is wrapped in a link to `/` — cabinet topbar,
-login/OTP, onboarding, footer. The lockup is the marketplace's front door from everywhere;
+login/register, onboarding, footer. The lockup is the marketplace's front door from everywhere;
 the cabinet home has its own nav entry and does not need the logo too.
 
 The rail used to carry a «Маркетплейс» entry pointing at `/` as well. It is **gone**: that
@@ -114,9 +124,10 @@ npm start              # production: node server.js against dist/ (needs npm run
 npm run lint           # eslint . --max-warnings 0
 npm run typecheck      # tsc --noEmit
 npm run build          # tsc -b tsconfig.build.json && vite build (client) && vite build --ssr (server) → dist/
-npm run e2e            # playwright (needs a live API on :8000 + DEBUG=true console SMS)
-#                        tip: OTP_DEV_CODE=000000 on that API fixes the login code so you can
-#                        click through by hand; the specs read the real one via the peek hook
+npm run e2e            # playwright (needs a live API on :8000, migrated + seeded)
+#                        accounts are provisioned THROUGH the real staff API by
+#                        `e2e/_registration.ts::provisionAccount`; seeded demo people sign in
+#                        as `<company key>-<role>` (e.g. shurtan-owner) with SEED_DEMO_PASSWORD
 ```
 
 **Lockfile:** regenerate with `npx npm@10 install` — npm-11 lockfiles break Docker `npm ci`
@@ -127,9 +138,9 @@ in this repo (same constraint as `webapp/`/`dashboard/`).
 | Layer | Role |
 |------|------|
 | `app/` | providers (QueryClient, i18n, router, theme), route tree, guards (`RequireAuth`, `RedirectIfAuthed`, `RequireCompany`) — all three cabinet-side; the storefront has none. |
-| `pages/` | login, otp, **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-create, settings + **R2** market (favorites + RFQ inbox only — the grid and the offer sheet are public now), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
+| `pages/` | login, register (+ done), password (forced change), **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-create, settings + **R2** market (favorites + RFQ inbox only — the grid and the offer sheet are public now), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
 | `widgets/` | `app-shell` (topbar + company switcher), `case-status-panel` (per-check chips + needs_info deep-links). |
-| `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions), sample-letter (the письмо-обязательство card — both parties see it, only the buyer signs) + **P7.a** didox-session (`DidoxOnboardingCard` + `withSession` retry), didox-sign (the two-round-trip signer), didox-contract-document (the seller's «создать документ у оператора» step), ikpu-picker (bind-then-read-back; search covers the company's own basket only). |
+| `features/` | auth-by-password, register-account, change-password, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions), sample-letter (the письмо-обязательство card — both parties see it, only the buyer signs) + **P7.a** didox-session (`DidoxOnboardingCard` + `withSession` retry), didox-sign (the two-round-trip signer), didox-contract-document (the seller's «создать документ у оператора» step), ikpu-picker (bind-then-read-back; search covers the company's own basket only). |
 | `entities/` | account, company, verification, offer + **R2** market, inquiry, request, news, notification + **P5** compliance (substance picker data, verdicts, licences) + **P6** lab (orders + the two badges), sample (requests + status badge) — types + api hooks + zustand models. |
 | `shared/` | `api` (fetch client + auth bridge), `ui` (Tailwind primitives), `lib` (phone mask, formatters, `useTierBase`), `config` (incl. `CABINET_BASE`/`isCabinetPath`), `i18n`. |
 
@@ -325,5 +336,5 @@ the inner nginx routes by `Host`, so a domain with no host-side block never reac
 (`deploy/nginx/host-vhost.ai-imex.conf.example` now ships that block; certbot covers the name).
 
 The bundle needs no build-time env or secrets: the API base is the relative `/api/v1`. Nothing
-dev-only ships — `/dev/ui` is behind `import.meta.env.DEV`, and there is no client for the
-`otp/peek` test hook.
+dev-only ships — `/dev/ui` is behind `import.meta.env.DEV`, and there is no dev-only auth hook
+at all any more: the e2e suite provisions accounts through the same staff API a person uses.

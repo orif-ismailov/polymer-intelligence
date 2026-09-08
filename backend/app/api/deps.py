@@ -147,7 +147,7 @@ def _resolve_staff_user(token: str | None, db: Session) -> StaffUser:
     return user
 
 
-def get_current_account(
+def get_account_for_password_change(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     db: Session = Depends(get_db),
 ) -> UserAccount:
@@ -157,9 +157,14 @@ def get_current_account(
     `portal_access`, so a staff `access` or webapp `client_session` token fails
     here (and a portal token fails on those deps).
 
+    **This is the un-gated dependency**, and its name says what it is for: it stops
+    at the status check, so an account that still owes a first-login password change
+    can reach the two routes that let it settle that. Every other portal route wants
+    `get_current_account`.
+
     Raises HTTP 401 if the header/token is missing, malformed, expired, the wrong
     type, or the account no longer exists. Raises HTTP 403 if the account is
-    blocked (status != active).
+    blocked or still pending (status != active).
 
     Returns:
         The authenticated UserAccount ORM object.
@@ -207,6 +212,36 @@ def get_current_account(
             detail="Account is blocked",
         )
 
+    return account
+
+
+def get_current_account(
+    account: UserAccount = Depends(get_account_for_password_change),
+) -> UserAccount:
+    """The authenticated portal person, cleared to act.
+
+    Everything `get_account_for_password_change` checks, plus the first-login gate:
+    an account whose password was issued by staff and never changed is refused with
+    403 `password_change_required` until it pays that debt. That debt is real —
+    the issued password is printed in a contract, so it is an initial secret and
+    nothing more.
+
+    **The gate lives HERE rather than on the routes** because there are ~140
+    `Depends(get_current_account)` sites, and one forgotten guard would be a hole no
+    test in this repo would notice. Inverting it costs three lines and fails closed:
+    a portal route added next month inherits the gate without knowing it exists. The
+    two routes that must stay reachable take the un-gated dependency by name —
+    `POST /portal/auth/password`, where the debt is paid, and `GET /portal/me`, where
+    a reloaded client learns it owes one — which is a visible act in a diff rather
+    than an omission.
+    """
+    if account.must_change_password:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            # A dict detail so the cabinet can route on the code rather than parse
+            # prose (precedent: `api/portal/deps.py::require_business_role`).
+            detail={"code": "password_change_required", "message": "Password change required"},
+        )
     return account
 
 

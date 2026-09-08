@@ -13,9 +13,10 @@ So this checks both directions:
 - no route claims a 401 or a 403 it has no way to produce.
 
 The second half is why `_SELF_AUTHENTICATING` is an explicit list rather than a rule.
-Those routes ARE the auth surface — login, OTP, refresh, the bot's shared-secret webhook —
-so they raise 401/403 from the handler with no dependency to infer it from. Six routes,
-each named, each cheap to re-check by eye when it changes.
+Those routes ARE the auth surface — the two logins, the two refreshes, the Telegram
+Login Widget and the bot's shared-secret webhook — so they raise 401/403 from the
+handler with no dependency to infer it from. Six routes, each named, each cheap to
+re-check by eye when it changes.
 """
 
 from __future__ import annotations
@@ -37,6 +38,10 @@ _GUARD_FAILURES: dict[str, set[int]] = {
     "require_admin": {401, 403},
     "require_admin_sse": {401, 403},
     "get_current_account": {401, 403},
+    # The un-gated portal dependency: same 401s, and the same 403 for an account that
+    # is not active. It raises no `password_change_required` — being able to reach the
+    # route that clears that debt is the entire reason it exists.
+    "get_account_for_password_change": {401, 403},
     # One generic 401 for every cause, and no 403 at all — T-03-03.
     "get_current_client": {401},
 }
@@ -47,7 +52,7 @@ _GUARD_FAILURES: dict[str, set[int]] = {
 _SELF_AUTHENTICATING: set[tuple[str, str]] = {
     ("POST", "/api/v1/auth/login"),  # wrong credentials → 401
     ("POST", "/api/v1/auth/refresh"),  # refresh cookie → 401
-    ("POST", "/api/v1/portal/auth/otp/verify"),  # blocked account → 403
+    ("POST", "/api/v1/portal/auth/login"),  # wrong credentials → 401
     ("POST", "/api/v1/portal/auth/refresh"),  # portal_session cookie → 401/403
     ("POST", "/api/v1/webapp/auth/telegram"),  # Login Widget HMAC → 401
     ("POST", "/api/v1/telegram/webhook/{secret}"),  # shared secret → 403
@@ -195,7 +200,7 @@ def test_the_schema_a_client_generator_reads_carries_the_codes(app: FastAPI) -> 
 
     expected = {
         ("/api/v1/auth/login", "post"): 401,  # "Invalid credentials"
-        ("/api/v1/portal/auth/otp/verify", "post"): 400,  # "Invalid or expired code"
+        ("/api/v1/portal/auth/login", "post"): 401,  # "Invalid credentials"
         ("/api/v1/public/offers/{offer_id}", "get"): 404,  # "Offer not found"
     }
     for (path, method), code in expected.items():

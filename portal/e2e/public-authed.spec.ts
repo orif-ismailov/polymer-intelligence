@@ -13,7 +13,7 @@ import { login, registerCompany } from "./_registration";
  * line: it asserts the URL does not move.
  *
  * Requires a live migrated+seeded API on :8000 exposing the dev-only
- * `GET /portal/auth/otp/peek`. Not run in CI here (no live backend).
+ * the seeded demo logins. Not run in CI here (no live backend).
  */
 
 const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
@@ -25,18 +25,17 @@ const SIGN_IN = /^(sign in|войти|kirish)$/i;
 const CABINET = /^(cabinet|кабинет|kabinet)$/i;
 const MARKETPLACE = /^(marketplace|маркетплейс|marketpleys)$/i;
 
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
-
 function uniqueTaxId(): string {
   return String(100_000_000 + Math.floor(Math.random() * 899_999_999));
 }
 
 /** First published listing, or null when the marketplace is empty. */
-async function anyPublicOfferId(request: APIRequestContext): Promise<number | null> {
-  const res = await request.get(`${API_BASE}/public/offers`, { params: { limit: 1 } });
+async function anyPublicOfferId(
+  request: APIRequestContext,
+): Promise<number | null> {
+  const res = await request.get(`${API_BASE}/public/offers`, {
+    params: { limit: 1 },
+  });
   if (!res.ok()) return null;
   const body = (await res.json()) as { items?: { id: number }[] };
   return body.items?.[0]?.id ?? null;
@@ -49,16 +48,25 @@ async function anyPublicOfferId(request: APIRequestContext): Promise<number | nu
  * below went unnoticed: the two profiles anyone demos (Shurtan, Navoiyazot)
  * both have offers, and the bar only misbehaves when there are none.
  */
-async function emptyManufacturerId(request: APIRequestContext): Promise<number | null> {
-  const res = await request.get(`${API_BASE}/public/directories/manufacturers`, {
-    params: { limit: 50 },
-  });
+async function emptyManufacturerId(
+  request: APIRequestContext,
+): Promise<number | null> {
+  const res = await request.get(
+    `${API_BASE}/public/directories/manufacturers`,
+    {
+      params: { limit: 50 },
+    },
+  );
   if (!res.ok()) return null;
-  const body = (await res.json()) as { items?: { id: number; offer_count: number }[] };
+  const body = (await res.json()) as {
+    items?: { id: number; offer_count: number }[];
+  };
   return body.items?.find((c) => c.offer_count === 0)?.id ?? null;
 }
 
-test("anonymous visitors get the storefront and its two auth CTAs", async ({ page }) => {
+test("anonymous visitors get the storefront and its two auth CTAs", async ({
+  page,
+}) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -77,7 +85,6 @@ test("anonymous visitors get the storefront and its two auth CTAs", async ({ pag
  */
 test("an anonymous visitor reads a listing but gets no acting surface", async ({
   page,
-  request,
 }) => {
   const offerId = await anyPublicOfferId(request);
   test.skip(offerId === null, "no published listing to read");
@@ -87,7 +94,9 @@ test("an anonymous visitor reads a listing but gets no acting surface", async ({
   await expect(page.getByTestId("product-detail-hero")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /sign in to contact|войти, чтобы связаться/i }),
+    page.getByRole("link", {
+      name: /sign in to contact|войти, чтобы связаться/i,
+    }),
   ).toBeVisible();
 
   for (const testId of [
@@ -104,14 +113,14 @@ test("an anonymous visitor reads a listing but gets no acting surface", async ({
  * One signed-in session for the whole authed story: registering a company is
  * ~15 s of wizard, and the suite shares one OTP rate-limit bucket per IP.
  */
-test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
+test("a signed-in visitor keeps the storefront", async ({ page }) => {
   const offerId = await anyPublicOfferId(request);
   const emptyFactoryId = await emptyManufacturerId(request);
 
   // A company, not just a session: `RequireCompany` sends an account with none
   // to `/cabinet/onboarding`, which renders outside `AppShell` and so has no
   // sidebar for the return trip below.
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await registerCompany(page, uniqueTaxId());
 
   for (const path of PUBLIC_PATHS) {
@@ -119,7 +128,9 @@ test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
     // The assertion is the URL — but read it only once the header proves the
     // session is live, since the guard this replaces fired after the boot-time
     // refresh resolved, not on navigation.
-    await expect(page.getByRole("link", { name: CABINET }).first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: CABINET }).first(),
+    ).toBeVisible();
     expect(new URL(page.url()).pathname).toBe(path);
     await expect(page.getByRole("link", { name: SIGN_IN })).toHaveCount(0);
   }
@@ -135,7 +146,9 @@ test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
     await expect(page.getByTestId("product-detail-action-bar")).toBeVisible();
     // The sign-in prompt is what the actions replaced.
     await expect(
-      page.getByRole("link", { name: /sign in to contact|войти, чтобы связаться/i }),
+      page.getByRole("link", {
+        name: /sign in to contact|войти, чтобы связаться/i,
+      }),
     ).toHaveCount(0);
   }
 
@@ -157,7 +170,9 @@ test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
     await expect(chat).toBeVisible();
     await expect(page.getByTestId("seller-profile-action-bar")).toHaveCount(0);
     // Nor the hint that told the visitor to pick from an empty panel.
-    await expect(page.getByText(/выберите продукт ниже|pick a product|mahsulotni/i)).toHaveCount(0);
+    await expect(
+      page.getByText(/выберите продукт ниже|pick a product|mahsulotni/i),
+    ).toHaveCount(0);
 
     await chat.click();
     await page.waitForURL(`**/cabinet/manufacturers/${emptyFactoryId}/chat`);
@@ -177,7 +192,9 @@ test("a signed-in visitor keeps the storefront", async ({ page, request }) => {
   await page.waitForURL((url) => url.pathname === "/");
 });
 
-test("the logo leads to the public home from the login screen too", async ({ page }) => {
+test("the logo leads to the public home from the login screen too", async ({
+  page,
+}) => {
   await page.goto("/cabinet/login");
   await page.getByRole("link", { name: "IMEX AI" }).first().click();
   await page.waitForURL((url) => url.pathname === "/");

@@ -55,6 +55,22 @@ _SUPPLY_V1_SCHEMA: dict[str, object] = {
 }
 
 
+#: SUPPLY_V2 = V1 plus the cabinet credentials. A NEW row rather than a version bump
+#: on V1: `contracts.template_version` records what the parties signed, and re-rendering
+#: an existing contract would move `document_sha256` — which is bound into the E-IMZO
+#: sign challenge and re-checked nightly. Both new fields are OPTIONAL, so every
+#: contract drafted without them stays valid and `render._fill` prints "" for a missing
+#: key.
+_SUPPLY_V2_SCHEMA: dict[str, object] = {
+    **_SUPPLY_V1_SCHEMA,
+    "properties": {
+        **_SUPPLY_V1_SCHEMA["properties"],  # type: ignore[dict-item]
+        "portal_login": {"type": "string", "title": "Логин в кабинете"},
+        "portal_password": {"type": "string", "title": "Пароль кабинета"},
+    },
+}
+
+
 #: The letter is rendered from the sample request, not typed by anyone, so its
 #: "variables" are documentation of what the renderer supplies rather than a form
 #: schema. Kept in the same shape as SUPPLY_V1 so one template table serves both.
@@ -75,7 +91,7 @@ _SAMPLE_LETTER_V1_SCHEMA: dict[str, object] = {
 
 
 def seed_contract_templates(db: Session | None = None) -> list[ContractTemplate]:
-    """Seed the SUPPLY_V1 template (idempotent). Returns rows created this run."""
+    """Seed the contract templates (idempotent). Returns rows created this run."""
     own = db is None
     session = db or SessionLocal()
     created: list[ContractTemplate] = []
@@ -99,6 +115,26 @@ def seed_contract_templates(db: Session | None = None) -> list[ContractTemplate]
             session.add(template)
             session.flush()
             created.append(template)
+
+        existing_v2 = session.execute(
+            select(ContractTemplate).where(ContractTemplate.code == "SUPPLY_V2")
+        ).scalar_one_or_none()
+        if existing_v2 is None:
+            html_v2 = (_DATA_DIR / "supply_v2_ru.html").read_text(encoding="utf-8")
+            path_v2 = storage_service.store_contract_template("SUPPLY_V2", 1, html_v2)
+            template_v2 = ContractTemplate(
+                code="SUPPLY_V2",
+                name_ru="Договор поставки (полимеры, с доступом в кабинет)",
+                name_uz="Yetkazib berish shartnomasi (kabinetga kirish bilan)",
+                name_en="Supply contract (with cabinet access)",
+                body_storage_path=path_v2,
+                variables_schema=_SUPPLY_V2_SCHEMA,
+                version=1,
+                is_active=True,
+            )
+            session.add(template_v2)
+            session.flush()
+            created.append(template_v2)
 
         # The commitment letter shares this table (`kind` discriminates) and the
         # same pure renderer. A second table plus a second `{{ key }}` substituter

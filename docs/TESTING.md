@@ -44,7 +44,7 @@ opts into the real-DB path described further down).
   **import time** (not from a fixture) — `DATABASE_URL`, `REDIS_URL`,
   `ANTHROPIC_API_KEY`, `BOT_TOKEN`, `WEBHOOK_SECRET`, `TG_API_ID`, `TG_API_HASH`,
   `JWT_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `VERIFICATION_ENC_KEY`, plus
-  `LLM_DAILY_TOKEN_LIMIT` and `OTP_MAX_SENDS_PER_DAY` pinned to their documented
+  `LLM_DAILY_TOKEN_LIMIT` pinned to its documented
   defaults. This runs before any test module import so the `Settings` singleton
   (built the first time anything imports `app.core.config`) is never accidentally
   constructed from a developer's local `backend/.env` file. A session-scoped,
@@ -174,7 +174,7 @@ this flag.
   the actual gate is the `@requires_real_db` decorator, see above).
 - Use the `client` fixture for API-level tests; call services/functions directly for
   unit tests. Reuse `_fake_redis.py` for tests that need Redis-shaped behavior
-  (rate limiting, OTP storage, feed SSE bus) without a live Redis server.
+  (rate limiting, feed SSE bus) without a live Redis server.
 - If you add a new real-DB test, import `requires_real_db` from
   `tests._verification_db` and decorate the test function/class with it; add any new
   tables you write to `_verification_db.py`'s FK-ordered delete list if your test
@@ -250,7 +250,7 @@ explicitly before type-checking.
   `product-detail.spec.ts`, `r3-eimzo.spec.ts`, `offer-wizard.spec.ts`,
   `portal.spec.ts`, `r3-contracts.spec.ts`, `p0-ui-kit.spec.ts`) — expects the portal
   SPA on `:5173` (`PORTAL_BASE_URL` override) and the API on `:8000`, single worker
-  (the suite shares one backend + one per-IP OTP rate-limit bucket, so specs run
+  (the suite shares one backend + one per-IP registration rate-limit bucket, so specs run
   serially — a healthy run is ~9s). Not wired into CI; a valid, type-correct local
   harness only.
 

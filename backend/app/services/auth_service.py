@@ -172,7 +172,7 @@ def get_client_session_cookie_name() -> str:
     return _CLIENT_SESSION_COOKIE_NAME
 
 
-# ── Portal session (passwordless OTP accounts) ─────────────────────────────────
+# ── Portal session (cabinet accounts) ──────────────────────────────────────────
 # httpOnly refresh cookie for the R1 portal, scoped to /api/v1/portal only. Holds a
 # portal_refresh JWT; the short-lived portal_access token is returned in the body.
 
@@ -181,7 +181,7 @@ _PORTAL_SESSION_COOKIE_PATH = "/api/v1/portal"
 
 
 def set_portal_session_cookie(response: Response, account_id: int) -> None:
-    """Set the httpOnly portal refresh cookie after OTP verify / on refresh rotation.
+    """Set the httpOnly portal refresh cookie after sign-in / on refresh rotation.
 
     Mirrors the staff/client cookie shape (HttpOnly + Secure-in-prod + SameSite=lax),
     scoped to /api/v1/portal so it only rides along with the portal API.

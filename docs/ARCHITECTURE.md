@@ -10,7 +10,7 @@ dashboard, a Telegram Web App / Mini App, and a Telegram bot/channel. On top of 
 core the platform also runs a two-sided B2B marketplace (buyer purchase requests + per-offer
 inquiries, seller offers, RFQs to manufacturers), an AI-classified News Engine (daily/evening
 digest reports + breaking-news alerts), a company-verification and client-cabinet track
-(phone-OTP accounts, E-IMZO digital-signature company confirmation), and a Deal Lifecycle
+(cabinet accounts, E-IMZO digital-signature company confirmation), and a Deal Lifecycle
 track (contracts, escrow payments, chemical-compliance licensing, lab sample verification,
 government-registry evidence). The guiding invariant across every part of the system: **no
 single source or integration can take the others down** — collectors are isolated, raw data is
@@ -58,7 +58,7 @@ Each component also has its own scoped `CLAUDE.md` (`backend/CLAUDE.md`, `dashbo
 
    Marketplace / sourcing:  buyer requests + inquiries, seller offers  ──┐
    News Engine:             RSS→classify→dedup→draft report→approve→publish │
-   Company verification:    phone-OTP accounts, E-IMZO signature,        ├─ portal (Vite SSR)
+   Company verification:    cabinet accounts, E-IMZO signature,          ├─ portal (Vite SSR)
                              staff verification queue                    │  client cabinet +
    Deal Lifecycle:          contracts (E-IMZO e-sign), escrow payments,  │  public storefront
                              chemical compliance, lab sample verification,│  (cabinet.ai-imex.com)
@@ -171,7 +171,7 @@ for the table-by-table design; this doc groups the model files by bounded contex
 | Requests & alerts | `requests.py`, `alerts.py` | Client purchase requests (Telegram Web App submissions) and the alert-rule/delivery engine. |
 | Marketplace & sourcing | `marketplace.py`, `sourcing.py` | Seller offers, offer requests/favorites, RFQ push log; broker-side inventory/partner-supplier tracking. |
 | News Engine | `reports.py`, `app_settings.py` | Draft/pending/approved/published `Report` rows and the operator-editable runtime-settings table. |
-| Company verification & portal | `accounts.py`, `companies.py`, `verification.py`, `events.py`, `notifications.py` | Phone-OTP `UserAccount`s, `Company`/`CompanyMember`/business roles, the verification case/check/document state machine, the transactional-outbox `DomainEvent`, portal notifications. |
+| Company verification & portal | `accounts.py`, `companies.py`, `verification.py`, `events.py`, `notifications.py` | `UserAccount`s with a staff-issued login+password, `Company`/`CompanyMember`/business roles, the verification case/check/document state machine, the transactional-outbox `DomainEvent`, portal notifications. |
 | E-IMZO & integrations | `eimzo.py`, `integration.py` | Signature evidence + person-data captured from the UNICON e-imzo-server sidecar, and a generic external-call log. |
 | Contracts | `contracts.py` | `ContractTemplate` / `Contract` / `ContractSignature` — two verified companies e-signing a contract. |
 | Deal Lifecycle | `deals.py`, `payments.py`, `registry.py` | `Deal` + status history/messages/documents, RFQ responses; `EscrowPayment`/`ProviderEvent` (bank callback rail); append-only `RegistrySnapshot` government-registry evidence. |
@@ -208,7 +208,7 @@ seller contact details.
 - **Staff auth**: HS256 JWT access tokens (short-lived) plus a refresh cookie. Role guards
   (`require_admin`, `require_analyst_or_admin`, `require_role(*roles)`) live in
   `backend/app/api/deps.py`.
-- **Portal auth**: phone-OTP `UserAccount`s with a separate JWT audience (`type=portal_access` /
+- **Portal auth**: `UserAccount`s signing in with a staff-issued login+password (0048; registration is an application that grants nothing), with a separate JWT audience (`type=portal_access` /
   `portal_refresh` claims, not a jose `aud` claim), so a staff token can never be replayed
   against a portal endpoint.
 - **Telegram Web App auth**: `X-Telegram-Init-Data` HMAC verification with a TTL
@@ -236,7 +236,7 @@ seller contact details.
   staff approve/publish from `/admin/reports` unless the `report_auto_publish` runtime setting is
   on. `publish_report_to_channel` and `publish_breaking_news` post to `NEWS_CHANNEL_ID` via the
   `telegram.bot` client; rendering lives in `report_service`, not the `telegram/` package.
-- **Company verification & portal** — phone-OTP `user_accounts`, company registration, and a
+- **Company verification & portal** — `user_accounts` with staff-issued credentials, company registration, and a
   staff-run verification case/check queue (`verification_service`, `verification_checks`,
   `admin_verification.py`). Domain events flow through a transactional outbox
   (`event_service`/`event_types`, dispatched every 15 s by `app.tasks.events.dispatch_domain_events`).
@@ -271,7 +271,7 @@ Four separate frontends, each with its own scoped `CLAUDE.md`:
 |---|---|---|---|
 | `dashboard/` | Next.js 16 (App Router), React 18, TanStack Query, Tailwind, shadcn, `app/[locale]/` + `next-intl` | Internal team dashboard: live signal feed, moderation, admin (users/products/settings/verification/contracts/escrow/substances/licenses/lab), news/reports, sourcing/partners/inventory/intel. | `admin.ai-imex.com` |
 | `webapp/` | React 18 + Vite, react-router, i18next, zustand | Telegram Mini App: marketplace (buyer inquiries / seller offers), news reader, request-submission wizard. Also runs standalone in a plain browser. | `ai-imex.com` (static bundle at the site root) |
-| `portal/` | React 18 + Vite (SSR via a small Express `server.js`), react-router v7, TanStack Query, zustand, i18next, Feature-Sliced Design | Client cabinet (phone-OTP accounts, company verification, offer publishing, contracts, deals, compliance, lab/samples, manufacturers) **and** the public, server-rendered marketplace storefront (`/`, `/market`, the four company directories, `/prices`, `/news`) for SEO crawlability. Public routes render to HTML (`entry-server.tsx`); everything under `/cabinet` ships as an app shell and renders client-side (`entry-client.tsx`), because the access token lives in memory and the refresh cookie is scoped to `/api/v1/portal` — the SSR process has no session to render a cabinet page from. | `cabinet.ai-imex.com` |
+| `portal/` | React 18 + Vite (SSR via a small Express `server.js`), react-router v7, TanStack Query, zustand, i18next, Feature-Sliced Design | Client cabinet (staff-issued login+password accounts, company verification, offer publishing, contracts, deals, compliance, lab/samples, manufacturers) **and** the public, server-rendered marketplace storefront (`/`, `/market`, the four company directories, `/prices`, `/news`) for SEO crawlability. Public routes render to HTML (`entry-server.tsx`); everything under `/cabinet` ships as an app shell and renders client-side (`entry-client.tsx`), because the access token lives in memory and the refresh cookie is scoped to `/api/v1/portal` — the SSR process has no session to render a cabinet page from. | `cabinet.ai-imex.com` |
 | `telegram/` (bot) | aiogram 3 | Bot webhook (served inside the `api` container, no separate bot process) + message templates; inline moderation callbacks. | — |
 
 `userbot/` (Telethon, MTProto) is a fifth, non-UI long-lived process that monitors Telegram

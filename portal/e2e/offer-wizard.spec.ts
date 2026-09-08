@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * The add-product flow (`docs/new-design/product_creation.jpeg`), sheet by sheet:
@@ -7,45 +7,26 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
  * Публикация успешна».
  *
  * Requires a live migrated+seeded API on :8000 with the dev-only
- * `GET /portal/auth/otp/peek` endpoint AND a VERIFIED company for the account —
+ * the seeded demo logins endpoint AND a VERIFIED company for the account —
  * publishing is gated on verification, so the flow is unreachable without one.
  * Like `portal.spec.ts` this is a valid harness that CI does not run (no live
  * backend there).
  */
-
-const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
 
 const PDF = {
   mimeType: "application/pdf",
   buffer: Buffer.from("%PDF-1.4 test document"),
 };
 
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
-
 function uniqueTaxId(): string {
   return String(100_000_000 + Math.floor(Math.random() * 899_999_999));
 }
 
-async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/cabinet/login");
-  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
-  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-
-  await page.waitForURL("**/cabinet/login/code");
-  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
-  expect(res.ok()).toBeTruthy();
-  const { code } = (await res.json()) as { code: string };
-  await page.getByLabel(/code|код|kod/i).fill(code);
-  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-
-  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
-}
-
 /** Walk sheet 1: name the product, then move on. */
-async function fillBasics(page: Page, opts: { manual?: string } = {}): Promise<void> {
+async function fillBasics(
+  page: Page,
+  opts: { manual?: string } = {},
+): Promise<void> {
   await expect(page.getByTestId("offer-wizard-step-1")).toBeVisible();
 
   const select = page.getByTestId("offer-wizard-product");
@@ -62,22 +43,33 @@ async function fillBasics(page: Page, opts: { manual?: string } = {}): Promise<v
 /** Sheet 2 gates «Далее» on the check settling, so wait for the verdict. */
 async function passAiCheck(page: Page): Promise<void> {
   await expect(page.getByTestId("offer-wizard-step-2")).toBeVisible();
-  await expect(page.getByTestId("offer-wizard-verdict")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("offer-wizard-verdict")).toBeVisible({
+    timeout: 20_000,
+  });
   await page.getByTestId("offer-wizard-next").click();
 }
 
 test.describe("add-product flow", () => {
-  test.beforeEach(async ({ page, request }) => {
-    await login(page, request, uniquePhone());
+  test.beforeEach(async ({ page }) => {
+    await login(page, await provisionAccount(request));
   });
 
-  test("«Другое» reveals a manual name field, and the catalog choice hides it", async ({ page }) => {
+  test("«Другое» reveals a manual name field, and the catalog choice hides it", async ({
+    page,
+  }) => {
     await page.goto("/cabinet/offers/new/1");
 
     // An unverified account never reaches the sheets — publishing is gated, and
     // the locked screen says so instead of wasting seven sheets of typing.
-    if (await page.getByText(/не верифицирована|not verified|tekshirilmagan/i).isVisible()) {
-      test.skip(true, "account has no verified company; see the fixture note above");
+    if (
+      await page
+        .getByText(/не верифицирована|not verified|tekshirilmagan/i)
+        .isVisible()
+    ) {
+      test.skip(
+        true,
+        "account has no verified company; see the fixture note above",
+      );
     }
 
     const select = page.getByTestId("offer-wizard-product");
@@ -90,9 +82,15 @@ test.describe("add-product flow", () => {
     await expect(page.getByTestId("offer-wizard-product-text")).toHaveCount(0);
   });
 
-  test("the first sheet will not advance without a product name", async ({ page }) => {
+  test("the first sheet will not advance without a product name", async ({
+    page,
+  }) => {
     await page.goto("/cabinet/offers/new/1");
-    if (await page.getByText(/не верифицирована|not verified|tekshirilmagan/i).isVisible()) {
+    if (
+      await page
+        .getByText(/не верифицирована|not verified|tekshirilmagan/i)
+        .isVisible()
+    ) {
       test.skip(true, "account has no verified company");
     }
 
@@ -104,7 +102,11 @@ test.describe("add-product flow", () => {
 
   test("a product walks all seven sheets and publishes", async ({ page }) => {
     await page.goto("/cabinet/offers/new/1");
-    if (await page.getByText(/не верифицирована|not verified|tekshirilmagan/i).isVisible()) {
+    if (
+      await page
+        .getByText(/не верифицирована|not verified|tekshirilmagan/i)
+        .isVisible()
+    ) {
       test.skip(true, "account has no verified company");
     }
 
@@ -138,22 +140,36 @@ test.describe("add-product flow", () => {
 
     // 7 — «Дополнительная информация».
     await expect(page.getByTestId("offer-wizard-step-7")).toBeVisible();
-    await page.getByTestId("offer-wizard-description").fill("Полипропилен для литья под давлением.");
+    await page
+      .getByTestId("offer-wizard-description")
+      .fill("Полипропилен для литья под давлением.");
     await page.getByTestId("offer-wizard-next").click();
 
     // 8 — the preview, then the gold CTA.
     await expect(page.getByTestId("offer-wizard-step-preview")).toBeVisible();
-    await expect(page.getByTestId("offer-wizard-preview-name")).toContainText("PP H030 GP");
+    await expect(page.getByTestId("offer-wizard-preview-name")).toContainText(
+      "PP H030 GP",
+    );
     await page.getByTestId("offer-wizard-publish").click();
 
-    await page.waitForURL(/\/cabinet\/offers\/new\/done\/\d+/, { timeout: 30_000 });
+    await page.waitForURL(/\/cabinet\/offers\/new\/done\/\d+/, {
+      timeout: 30_000,
+    });
     await expect(page.getByTestId("offer-wizard-done")).toBeVisible();
-    await expect(page.getByTestId("offer-wizard-public-id")).toContainText("#IMX-");
+    await expect(page.getByTestId("offer-wizard-public-id")).toContainText(
+      "#IMX-",
+    );
   });
 
-  test("a lab passport is required once the seller says they have one", async ({ page }) => {
+  test("a lab passport is required once the seller says they have one", async ({
+    page,
+  }) => {
     await page.goto("/cabinet/offers/new/5");
-    if (await page.getByText(/не верифицирована|not verified|tekshirilmagan/i).isVisible()) {
+    if (
+      await page
+        .getByText(/не верифицирована|not verified|tekshirilmagan/i)
+        .isVisible()
+    ) {
       test.skip(true, "account has no verified company");
     }
 

@@ -23,9 +23,12 @@ from alembic.script import ScriptDirectory
 BACKEND_DIR = Path(__file__).parent.parent
 _MIGRATION = BACKEND_DIR / "alembic" / "versions" / "0017_company_verification.py"
 
+#: The tables 0017 added that a MODEL still declares. `sms_send_log` was one of
+#: them and is deliberately absent: 0048 dropped it with the rest of the SMS rail,
+#: so `Base.metadata` no longer carries it — this set is asserted against the
+#: metadata, not against what 0017's own upgrade() body creates.
 _NEW_TABLES = {
     "user_accounts",
-    "sms_send_log",
     "companies",
     "company_members",
     "company_business_roles",

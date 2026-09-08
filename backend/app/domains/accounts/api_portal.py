@@ -1,47 +1,46 @@
-"""Portal auth endpoints (R1 W3 — T3.3): passwordless SMS-OTP under /portal.
+"""Cabinet auth endpoints: login + password under /portal.
 
-- POST /portal/auth/otp/request  → 204 (or 429 with Retry-After)
-- POST /portal/auth/otp/verify   → portal_access token (body) + portal_session cookie
-- POST /portal/auth/refresh      → rotate cookie + new access token
-- POST /portal/auth/logout       → clear cookie
+- POST /portal/auth/login     → portal_access token (body) + portal_session cookie
+- POST /portal/auth/register  → 202, always the same body (an access REQUEST)
+- POST /portal/auth/password  → change the password; the only way past the first-login gate
+- POST /portal/auth/refresh   → rotate cookie + new access token
+- POST /portal/auth/logout    → clear cookie
 - GET  /portal/me / PATCH /portal/me
 
-Identity comes only from the verified OTP / JWT (never the body). Failures are
-uniform so a caller can't distinguish known vs unknown phones.
+Credentials are issued by staff (`api_admin.py`); nothing here creates an account that
+can sign in. Identity comes only from the verified password check or the verified JWT,
+never from a request body.
+
+This router mixes anonymous and authenticated routes, so its OpenAPI failure sets are
+declared PER ROUTE — a router-level 401 would document a code `register` cannot return.
 """
 
 from __future__ import annotations
 
 import redis
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.api import errors
-from app.api.deps import get_current_account
-from app.core.config import settings
+from app.api.deps import get_account_for_password_change, get_current_account
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.core.security import create_portal_access_token, decode_token
+from app.domains.accounts import service as account_service
 from app.domains.accounts.models import UserAccount
-from app.domains.accounts.otp import (
-    InvalidPhone,
-    OtpInvalid,
-    OtpLocked,
-    OtpRateLimited,
-    normalize_phone,
-    peek_key,
-    request_code,
-    verify_code,
-)
 from app.domains.accounts.schemas import (
     AccountOut,
+    LoginIn,
     MeUpdateIn,
-    OtpRequestIn,
-    OtpVerifyIn,
+    PasswordChangeIn,
     PortalTokenResponse,
+    RegisterAccepted,
+    RegisterIn,
 )
 from app.models.enums import AccountStatus
+from app.services import rate_limit
+from app.services.audit_service import write_audit
 from app.services.auth_service import (
     clear_portal_session_cookie,
     get_portal_session_cookie_name,
@@ -52,9 +51,14 @@ router = APIRouter(prefix="/portal", tags=["portal-auth"])
 
 _PORTAL_COOKIE = get_portal_session_cookie_name()
 
+#: One generic answer for an unknown login, a wrong password, a blocked account and
+#: an application that has not been granted credentials. Splitting them would tell a
+#: caller which logins exist, which is most of what an attacker came for.
+_INVALID_CREDENTIALS = "Invalid credentials"
+
 
 def _client_ip(request: Request) -> str:
-    """Client IP for the per-IP OTP cap. Reads X-Real-IP, NEVER X-Forwarded-For.
+    """Client IP for the per-IP rate caps. Reads X-Real-IP, NEVER X-Forwarded-For.
 
     This distinction is the whole security of the cap, so it is not a style choice:
 
@@ -62,8 +66,8 @@ def _client_ip(request: Request) -> str:
       the peer address to whatever the client already sent. So the first entry is
       always caller-supplied — `xff.split(",")[0]` returns an attacker's string, and
       rotating it gives every request its own bucket. That is what this function
-      used to do, and it made `_day_ip_key` decorative: unlimited OTP breadth across
-      phone numbers, billed to a metered SMS account.
+      used to do, and it made the per-IP cap decorative: unlimited breadth across
+      accounts, billed to a metered account.
     * nginx sets X-Real-IP with `proxy_set_header`, which OVERWRITES. A client-sent
       value cannot survive it. Every `/api` location in all four configs
       (`nginx.conf`, `nginx.dev.conf`, and both `*.behind-proxy.conf`) sets it, and
@@ -95,6 +99,17 @@ def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def _too_many(exc: rate_limit.RateLimited) -> HTTPException:
+    """429 with a Retry-After. Deliberately not `portal.deps.rate_limited`, whose
+    body says "Daily limit reached" — these are minute-scale windows and that
+    sentence would be false on screen."""
+    return HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail="Too many attempts",
+        headers={"Retry-After": str(exc.retry_after)},
+    )
+
+
 def _token_response(account: UserAccount) -> PortalTokenResponse:
     return PortalTokenResponse(
         access_token=create_portal_access_token(subject=str(account.id)),
@@ -102,120 +117,199 @@ def _token_response(account: UserAccount) -> PortalTokenResponse:
     )
 
 
-# The four routes below are anonymous and each fails differently, so this router
-# carries no router-level set — see the table in app/main.py.
-@router.post(
-    "/auth/otp/request",
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses=errors.error(
-        429,
-        "Too many codes asked for, counted per phone AND per client IP. `Retry-After` "
-        "carries the wait in seconds.",
-        "Too many requests",
-        headers=errors.RETRY_AFTER_HEADER,
-    ),
-)
-def otp_request(
-    body: OtpRequestIn,
-    request: Request,
-    db: Session = Depends(get_db),
-    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
-) -> Response:
-    """Send an OTP to `phone`. Always 204 for a valid number; 429 when rate-limited."""
-    try:
-        request_code(db, redis_client, body.phone, _client_ip(request))
-    except InvalidPhone as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid phone number"
-        ) from exc
-    except OtpRateLimited as exc:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many requests",
-            headers={"Retry-After": str(exc.retry_after)},
-        ) from exc
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.get(
-    "/auth/otp/peek",
-    responses=errors.error(
-        404,
-        "The hook is off (anything but DEBUG + the console SMS driver — so always, in "
-        "production), the phone is unparseable, or no code is pending. One answer for all "
-        "three: an enabled-but-empty hook and a disabled one must look alike.",
-        "Not found",
-    ),
-)
-def otp_peek(
-    phone: str = Query(...),
-    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
-) -> dict[str, str]:
-    """E2E test hook: return the pending OTP code. DOUBLE-GATED — 404 unless the
-    console SMS driver is active AND DEBUG is on (i.e. never in prod)."""
-    if not (settings.DEBUG and settings.SMS_PROVIDER == "console"):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    try:
-        normalized = normalize_phone(phone)
-    except InvalidPhone as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found") from exc
-    code = redis_client.get(peek_key(normalized))
-    if code is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    return {"code": code}
+# ── Sign-in ───────────────────────────────────────────────────────────────────
 
 
 @router.post(
-    "/auth/otp/verify",
+    "/auth/login",
     response_model=PortalTokenResponse,
     responses={
         **errors.error(
-            400,
-            "The code is wrong or its TTL has passed. Uniform for both, so a caller "
-            "cannot tell a live code from an expired one by the answer.",
-            "Invalid or expired code",
-        ),
-        **errors.error(
-            403,
-            "The code was right, but the account it belongs to is not `active`.",
-            "Account is blocked",
+            401,
+            "Unknown login, wrong password, a blocked account, or an application that "
+            "has not been granted credentials — one generic answer for all four, so a "
+            "caller cannot learn which logins exist.",
+            _INVALID_CREDENTIALS,
         ),
         **errors.error(
             429,
-            "The attempt ladder for this phone is spent; the code is locked. No "
-            "`Retry-After` here — the lock clears with the code's own TTL.",
+            "Too many attempts, counted per client IP and per login.",
             "Too many attempts",
+            headers=errors.RETRY_AFTER_HEADER,
         ),
     },
 )
-def otp_verify(
-    body: OtpVerifyIn,
+def login(
+    body: LoginIn,
+    request: Request,
     response: Response,
     db: Session = Depends(get_db),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> PortalTokenResponse:
-    """Verify the OTP; issue a portal access token + set the portal_session cookie."""
+    """Authenticate with the staff-issued credentials; issue a token + session cookie."""
+    # IP bucket FIRST: a spray across many logins is capped before it can walk the
+    # per-login counters, which on their own would allow limit × logins attempts.
     try:
-        account = verify_code(db, redis_client, body.phone, body.code)
-    except InvalidPhone as exc:
+        rate_limit.enforce_window(
+            redis_client,
+            "portal_login_ip",
+            _client_ip(request),
+            rate_limit.PORTAL_LOGIN_PER_IP_PER_MIN,
+            60,
+        )
+        rate_limit.enforce_window(
+            redis_client,
+            "portal_login",
+            body.login,
+            rate_limit.PORTAL_LOGIN_PER_ACCOUNT_PER_5MIN,
+            300,
+        )
+    except rate_limit.RateLimited as exc:
+        raise _too_many(exc) from exc
+
+    account = account_service.authenticate(db, body.login, body.password)
+    if account is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=_INVALID_CREDENTIALS
+        )
+
+    db.commit()  # last_login_at
+    set_portal_session_cookie(response, account.id)
+    return _token_response(account)
+
+
+# ── Registration — an access request, not a sign-up ───────────────────────────
+
+
+@router.post(
+    "/auth/register",
+    response_model=RegisterAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        **errors.error(
+            429,
+            "Too many applications from this client IP.",
+            "Too many attempts",
+            headers=errors.RETRY_AFTER_HEADER,
+        ),
+    },
+)
+def register(
+    body: RegisterIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> RegisterAccepted:
+    """Record an access request. Creates a `pending` account — no token, no cookie.
+
+    202 with a fixed body EVERY time, including for a phone that has applied before:
+    the response is the last place that distinction could leak, now that `phone`
+    carries no unique constraint to leak it from. A malformed phone is the one
+    exception, because it is a form error the applicant can act on.
+    """
+    try:
+        rate_limit.enforce_window(
+            redis_client,
+            "portal_register_ip",
+            _client_ip(request),
+            rate_limit.PORTAL_REGISTER_PER_IP_PER_HOUR,
+            3600,
+        )
+        rate_limit.enforce_daily(
+            redis_client,
+            "portal_register_ip_day",
+            _client_ip(request),
+            rate_limit.PORTAL_REGISTER_PER_IP_PER_DAY,
+        )
+    except rate_limit.RateLimited as exc:
+        raise _too_many(exc) from exc
+
+    try:
+        account = account_service.register(
+            db,
+            phone=body.phone,
+            contact_name=body.contact_name,
+            company_name=body.company_name,
+            note=body.note,
+        )
+    except account_service.InvalidPhone as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid phone number"
         ) from exc
-    except OtpLocked as exc:
+
+    # No staff actor — the applicant is not a staff user and has no identity here.
+    write_audit(
+        db=db,
+        staff_user_id=None,
+        action="portal_account.applied",
+        entity="user_accounts",
+        entity_id=str(account.id),
+        details={"company": account.applied_company_name},
+    )
+    db.commit()
+    return RegisterAccepted()
+
+
+# ── First-login password change ───────────────────────────────────────────────
+
+
+@router.post(
+    "/auth/password",
+    response_model=PortalTokenResponse,
+    responses={
+        **errors.PORTAL,
+        **errors.error(
+            400,
+            "The current password did not match.",
+            "Current password is incorrect",
+        ),
+        **errors.error(
+            429,
+            "Too many change attempts for this account.",
+            "Too many attempts",
+            headers=errors.RETRY_AFTER_HEADER,
+        ),
+    },
+)
+def change_password(
+    body: PasswordChangeIn,
+    response: Response,
+    db: Session = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+    account: UserAccount = Depends(get_account_for_password_change),
+) -> PortalTokenResponse:
+    """Set a new password — the ONLY route past the `must_change_password` gate.
+
+    It takes the exempt dependency for that reason: `get_current_account` refuses an
+    account that still owes a password change, so an endpoint guarded by it could
+    never be the place the debt is paid.
+    """
+    try:
+        rate_limit.enforce_window(
+            redis_client,
+            "portal_password_change",
+            account.id,
+            rate_limit.PORTAL_PASSWORD_CHANGE_PER_5MIN,
+            300,
+        )
+    except rate_limit.RateLimited as exc:
+        raise _too_many(exc) from exc
+
+    try:
+        account_service.change_password(
+            db, account, current=body.current_password, new=body.new_password
+        )
+    except account_service.WrongPassword as exc:
         raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts"
-        ) from exc
-    except OtpInvalid as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired code"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect"
         ) from exc
 
-    if account.status != AccountStatus.active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is blocked")
-
-    db.commit()  # the OTP verify endpoint owns the account-upsert transaction
-    set_portal_session_cookie(response, account.id)
+    db.commit()
+    set_portal_session_cookie(response, account.id)  # rotation: new jti ⇒ new cookie
     return _token_response(account)
+
+
+# ── Session ───────────────────────────────────────────────────────────────────
 
 
 @router.post(
@@ -225,7 +319,7 @@ def otp_verify(
         **errors.error(
             401,
             "The `portal_session` cookie is absent, unreadable, expired, of the wrong "
-            "type, or names an account that is gone. The client's move is a fresh OTP.",
+            "type, or names an account that is gone. The client's move is a fresh sign-in.",
             "Session missing",
         ),
         **errors.error(403, "The account is not `active`.", "Account is blocked"),
@@ -236,7 +330,13 @@ def refresh(
     db: Session = Depends(get_db),
     portal_session: str | None = Cookie(default=None, alias=_PORTAL_COOKIE),
 ) -> PortalTokenResponse:
-    """Rotate the portal_session cookie and mint a fresh access token."""
+    """Rotate the portal_session cookie and mint a fresh access token.
+
+    Deliberately NOT gated on `must_change_password`: refusing here would strand a
+    reloaded tab with an expired access token on the very screen where the debt is
+    paid. The flag rides along in the account body instead, and the gate lives on
+    every route that does something.
+    """
     if not portal_session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Session missing"
@@ -276,8 +376,17 @@ def logout(response: Response) -> dict[str, bool]:
     return {"ok": True}
 
 
+# ── Profile ───────────────────────────────────────────────────────────────────
+
+
 @router.get("/me", response_model=AccountOut, responses=errors.PORTAL)
-def get_me(account: UserAccount = Depends(get_current_account)) -> AccountOut:
+def get_me(account: UserAccount = Depends(get_account_for_password_change)) -> AccountOut:
+    """The caller's own account.
+
+    Exempt from the password-change gate on purpose: after a hard reload the client
+    holds nothing but the refresh cookie, and this is where it learns it owes a
+    password change. A 403 here would leave it unable to find that out.
+    """
     return AccountOut.model_validate(account)
 
 

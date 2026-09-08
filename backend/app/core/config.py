@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # the app therefore depended on the directory you launched from, and the two
     # disagreed on ten keys including `JWT_SECRET`, `BOT_TOKEN` and the S3
     # credentials. The test suite still carries a scar from it: `conftest` pins
-    # `LLM_DAILY_TOKEN_LIMIT` and `OTP_MAX_SENDS_PER_DAY` because a developer's
+    # `LLM_DAILY_TOKEN_LIMIT` because a developer's
     # `backend/.env` silently substituted its own values, failing tests on one
     # machine and nowhere else.
     #
@@ -147,28 +147,11 @@ class Settings(BaseSettings):
     # misconfigured key must fail fast, not silently store plaintext. Generate with
     #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     VERIFICATION_ENC_KEY: str
-    # SMS provider for phone-OTP auth. "console" (default) logs the code at INFO for
-    # dev/CI; "eskiz" sends real SMS via Eskiz.uz and requires ESKIZ_EMAIL/PASSWORD.
-    SMS_PROVIDER: str = "console"
-    ESKIZ_EMAIL: str = ""
-    ESKIZ_PASSWORD: str = ""
-    # DEV/DEMO ONLY — a fixed OTP code, so a demo login does not need the code
-    # fished out of a worker log every time. Set it to "000000" in a dev .env.
-    #
-    # Empty by default, and honoured ONLY when `DEBUG` is on AND `SMS_PROVIDER` is
-    # `console` — the same double gate as the `/portal/auth/otp/peek` hook, because
-    # this has the same consequence: a predictable OTP means anyone who knows a
-    # phone number can sign in as its owner. Both halves of that gate live in
-    # `otp_service._dev_fixed_code`, and `_reject_fixed_otp_with_real_sms` below
-    # refuses the one combination that can only be a mistake.
-    #
-    # MUST stay empty in production.
-    OTP_DEV_CODE: str = ""
-    # OTP tunables (Redis-backed, see app/services/otp_service.py).
-    OTP_TTL_SECONDS: int = 300
-    OTP_RESEND_COOLDOWN_SECONDS: int = 60
-    OTP_MAX_SENDS_PER_DAY: int = 5
-    OTP_MAX_VERIFY_ATTEMPTS: int = 5
+    # NOTE: there are no SMS settings here any more. Migration 0048 replaced phone-OTP
+    # cabinet auth with staff-issued credentials, and OTP was the only consumer of the
+    # SMS rail, so `SMS_PROVIDER`, `ESKIZ_*` and the five `OTP_*` tunables went with it.
+    # Cabinet rate limits live in `app/services/rate_limit.py` beside the other portal
+    # buckets, not here — they are counts, not deployment configuration.
     # Portal refresh-cookie lifetime (days). Short access JWT (aud=portal) rides on top.
     PORTAL_SESSION_TTL_DAYS: int = 30
     # Telegram group/chat that receives a verification-case card per submitted case.
@@ -197,9 +180,9 @@ class Settings(BaseSettings):
     # that rule exists so a misconfiguration fails fast at startup, but the escrow
     # rail is a RUNTIME setting (`escrow_mode`) that a startup validator cannot
     # see. Making this mandatory would force every deployment — including the
-    # ones that never enable escrow — to invent a value. Same shape as
-    # ESKIZ_EMAIL/ESKIZ_PASSWORD: conditionally required, validated at the point
-    # of use. While it is empty the webhook route answers 404, so an unconfigured
+    # ones that never enable escrow — to invent a value. Conditionally required,
+    # validated at the point of use rather than at boot. While it is empty the
+    # webhook route answers 404, so an unconfigured
     # deployment does not advertise the endpoint at all.
     ESCROW_WEBHOOK_SECRET: str = ""
 
@@ -362,7 +345,6 @@ class Settings(BaseSettings):
     UZEX_BASE_URL: str = "https://uzex.uz"
     XARID_BASE_URL: str = "https://xarid-api-auction.uzex.uz"
     CBU_RATES_URL: str = "https://cbu.uz/ru/arkhiv-kursov-valyut/json/"
-    ESKIZ_BASE_URL: str = "https://notify.eskiz.uz"
 
     # ── Timezone / display ────────────────────────────────────────────────────
     TZ_DISPLAY: str = "Asia/Tashkent"
@@ -472,55 +454,6 @@ class Settings(BaseSettings):
             raise ValueError(f"Unknown timezone: {v!r}") from exc
         return v
 
-    @field_validator("OTP_DEV_CODE")
-    @classmethod
-    def _dev_otp_shape(cls, v: str) -> str:
-        """Empty, or exactly the digits a real code has.
-
-        A 5-digit "dev code" would never match a stored hash, and the symptom
-        would read as a broken OTP flow rather than a typo in `.env`. The length
-        is `otp_service.CODE_LENGTH`, which cannot be imported here (config must
-        stay dependency-free) — a test asserts the two agree.
-        """
-        if not v:
-            return v
-        if len(v) != 6 or not v.isdigit():
-            raise ValueError("OTP_DEV_CODE must be empty or exactly 6 digits (e.g. 000000)")
-        return v
-
-    @field_validator("OTP_RESEND_COOLDOWN_SECONDS", "OTP_TTL_SECONDS")
-    @classmethod
-    def _positive_seconds(cls, v: int) -> int:
-        """At least one second — Redis refuses a non-positive TTL.
-
-        `otp_service.request_code` passes these straight to `SET … EX`, and Redis
-        answers `invalid expire time` for anything ≤ 0. The result is a 500 on
-        every sign-in: the login is simply down, and nothing about the symptom
-        points at a number in `.env`. Someone reaching for "no cooldown" writes
-        `0` because it is the obvious way to say that, so this fails at startup
-        instead — the same bargain the required secrets make.
-        """
-        if v < 1:
-            raise ValueError("must be at least 1 second (Redis refuses a non-positive TTL)")
-        return v
-
-    @model_validator(mode="after")
-    def _reject_fixed_otp_with_real_sms(self) -> Self:
-        """Refuse a fixed OTP alongside a real SMS provider.
-
-        `otp_service` would ignore the setting anyway (it requires the console
-        driver), but ignoring it silently is the wrong answer: the operator asked
-        for every real user's code to be the same six digits. That is either a
-        `.env` copied from dev or a serious misunderstanding, and both deserve a
-        boot failure rather than a stack that looks fine.
-        """
-        if self.OTP_DEV_CODE and self.SMS_PROVIDER != "console":
-            raise ValueError(
-                "OTP_DEV_CODE is a dev-only fixed OTP and cannot be combined with "
-                f"SMS_PROVIDER={self.SMS_PROVIDER!r} — clear it, or use the console driver"
-            )
-        return self
-
     @model_validator(mode="after")
     def _reject_eimzo_stub_outside_debug(self) -> Self:
         """Refuse the dev E-IMZO verifier on anything that looks like production.
@@ -554,9 +487,9 @@ class Settings(BaseSettings):
         lookup answers `registry_unavailable`, the document rail
         `didox_unavailable`. That is right when the provider is genuinely down
         and wrong here: the operator asked for Didox and got a 503 that blames
-        Didox for an empty line in `.env`. Same bargain as ESKIZ_EMAIL: the
-        credential is conditionally required, so it is checked the moment the
-        condition is visible, which is now.
+        Didox for an empty line in `.env`. The credential is conditionally
+        required, so it is checked the moment the condition is visible, which
+        is now.
 
         Nothing fires on the shipped defaults (both rails `stub`), so a
         deployment that never enables Didox needs no value.
@@ -625,17 +558,6 @@ class Settings(BaseSettings):
             )
         return self
 
-    @model_validator(mode="after")
-    def _require_eskiz_creds(self) -> Self:
-        """Require Eskiz credentials only when SMS_PROVIDER=eskiz.
-
-        The console driver (dev/CI default) needs no credentials; the real Eskiz
-        driver fails fast at startup if either credential is missing rather than at
-        the first OTP send.
-        """
-        if self.SMS_PROVIDER == "eskiz" and not (self.ESKIZ_EMAIL and self.ESKIZ_PASSWORD):
-            raise ValueError("ESKIZ_EMAIL and ESKIZ_PASSWORD are required when SMS_PROVIDER=eskiz")
-        return self
 
 
 # Single module-level accessor — import `settings` everywhere, do not call Settings() twice.

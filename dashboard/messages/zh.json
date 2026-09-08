@@ -24,6 +24,7 @@
       "prices": "价格",
       "adminProducts": "产品",
       "adminUsers": "用户",
+      "portalAccounts": "客户账户",
       "offerRequests": "报价请求",
       "newsAdmin": "新闻（管理）",
       "verification": "验证",
@@ -729,6 +730,69 @@
       "last_admin": "这是最后一位在用管理员，移除后将无人可管理平台。",
       "admin_holds_all_pages": "管理员已拥有全部板块权限。请先移除管理员权限。",
       "email_taken": "该邮箱的员工已存在。"
+    }
+  },
+  "portalAccounts": {
+    "pageTitle": "客户账户",
+    "pageSubtitle": "访问申请与客户后台登录凭据的发放",
+    "countLabel": "共 {count} 条",
+    "empty": "暂无申请或账户。",
+    "loadError": "列表加载失败，请刷新页面。",
+    "saveError": "保存失败，请重试。",
+    "cancel": "取消",
+    "saving": "保存中…",
+    "mustChange": "登录时须改密码",
+    "block": "封禁",
+    "unblock": "解封",
+    "status": {
+      "pending": "申请",
+      "active": "已启用",
+      "blocked": "已封禁"
+    },
+    "filter": {
+      "pending": "申请",
+      "active": "已启用",
+      "blocked": "已封禁",
+      "all": "全部"
+    },
+    "table": {
+      "applicant": "申请人",
+      "company": "公司",
+      "login": "登录名",
+      "status": "状态",
+      "createdAt": "申请时间"
+    },
+    "issue": {
+      "action": "发放凭据",
+      "title": "发放后台访问凭据",
+      "subtitle": "登录名和密码由你亲自交给客户——系统没有邮件通道。",
+      "login": "登录名",
+      "loginHint": "不区分大小写：Acme 与 acme 是同一个账户。",
+      "password": "密码",
+      "passwordPlaceholder": "留空则自动生成",
+      "generateHint": "将生成 16 位密码，不含 0/O/1/l/I，便于口头转达。",
+      "minLength": "至少 {n} 个字符。",
+      "submit": "发放"
+    },
+    "regenerate": {
+      "action": "重置密码",
+      "title": "生成新密码",
+      "subtitle": "旧密码立即失效。客户登录时仍须再次修改。"
+    },
+    "issued": {
+      "title": "凭据已发放",
+      "onceWarning": "密码只显示一次。我们只保存其哈希值——无法找回，只能重新生成。",
+      "loginLabel": "登录名",
+      "passwordLabel": "密码",
+      "contractHint": "复制这两项，在创建合同时填入「后台登录名」和「后台密码」字段。",
+      "copy": "复制",
+      "copied": "已复制",
+      "done": "完成"
+    },
+    "errors": {
+      "login_taken": "该登录名已被占用，请另选一个。",
+      "no_credentials": "该记录尚无登录名——请先发放凭据。",
+      "login_required": "请填写登录名。"
     }
   },
   "adminProducts": {

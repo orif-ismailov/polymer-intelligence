@@ -74,8 +74,10 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   on the default site. `cabinet.*` was inner-only until now;
   `host-vhost.ai-imex{,-dev}.conf.example` ship the block, and the certbot line in each header
   covers the name. If the cabinet is unreachable while the container is healthy, check there first. New envs (R1): `VERIFICATION_ENC_KEY` (**secret**, ≥32
-  urlsafe-b64 chars), `SMS_PROVIDER` (`console` dev / `eskiz` prod) + `ESKIZ_EMAIL`/`ESKIZ_PASSWORD`
-  (secret, required when eskiz), `VERIFICATION_NOTIFY_CHAT_ID` (optional). Enforcement app-settings
+  urlsafe-b64 chars) and `VERIFICATION_NOTIFY_CHAT_ID` (optional). The SMS vars that used to sit
+  here are **gone** — migration 0048 replaced cabinet phone-OTP with staff-issued credentials, and
+  OTP was the SMS rail's only consumer, so `SMS_PROVIDER`/`ESKIZ_*`/`OTP_*` no longer exist.
+  A `.env` still carrying them boots fine (`Settings` ignores unknown keys); delete them anyway. Enforcement app-settings
   (`verification_auto_approve`, `bank_verification_required`, `verification_required_for_publish`)
   default OFF — R1 ships badge-only.
 - **Web App bundle** is built separately into the `webapp_static` volume: `make webapp-bundle`
@@ -124,7 +126,7 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   to the api like the rest of `/api/`, and the bank sends a shared secret in `X-Escrow-Token`.
   New env **`ESCROW_WEBHOOK_SECRET`** (**secret**, empty default — the route answers **404**
   while it is empty, so a deployment that never enables escrow does not advertise the
-  endpoint; conditionally required, same shape as `ESKIZ_*`, because the rail is a RUNTIME
+  endpoint; conditionally required, because the rail is a RUNTIME
   setting a startup validator cannot see). Two new beats on existing queues — no compose
   change: `sweep_provider_events` (`default`, every 5 min — the safety net for a dropped
   dispatch) and `reconcile_escrow_payments` (`verify`, every 30 min — the only OUTBOUND call
@@ -142,7 +144,7 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   # Shared secret the partner bank sends in `X-Escrow-Token` on every callback to
   # POST /api/v1/webhooks/escrow/{provider}. Empty by default and required only once
   # the bank rail is on: `escrow_mode` is a RUNTIME setting a startup validator cannot
-  # see, so a mandatory value would burden every deployment. Same shape as ESKIZ_*.
+  # see, so a mandatory value would burden every deployment.
   # While empty the webhook answers 404 — an unconfigured deployment does not
   # advertise the endpoint.
   ESCROW_WEBHOOK_SECRET=                     # [SECRET] required only for escrow_mode=live
@@ -175,23 +177,18 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   confirmation, because the signer's PINFL and full name are mandatory on a «Договор НК».
   The poller (`poll_didox_documents`, queue `verify`, every 10 min) gates on `didox_mode` before
   any I/O, so leaving it on `stub` costs nothing.
-- **Fixed dev OTP (`OTP_DEV_CODE`)** — set it to `000000` in a DEV `.env` and every portal
-  login accepts that code, so a demo no longer needs the real one fished out of the worker log.
-  Ships **empty**, and is honoured only when `DEBUG=true` **and** `SMS_PROVIDER=console` (the
-  same double gate as the `/portal/auth/otp/peek` hook — a predictable OTP is an auth bypass:
-  anyone who knows a phone number can sign in as its owner). `Settings` **refuses to boot** if
-  it is set alongside a real SMS provider, or if it is not exactly 6 digits.
-  **Think before putting it on the shared dev stack** (`dev-cabinet.ai-imex.com` is public):
-  it makes every account there signable-in by anyone who knows the number. That box is already
-  open in the same way if it runs `DEBUG=true` + console (the peek hook is unauthenticated), so
-  this changes degree rather than kind — but it is a deliberate choice, not a default.
-  Also append to `deploy/.env.example` by hand (`.env*` edits are denied locally):
-  ```
-  # DEV/DEMO ONLY — fixed OTP so a demo login needs no code lookup. Honoured only
-  # when DEBUG=true AND SMS_PROVIDER=console; startup FAILS if set with a real SMS
-  # provider or with a value that is not 6 digits. MUST stay empty in production.
-  OTP_DEV_CODE=                              # e.g. 000000 in a dev .env
-  ```
+- **Cabinet credentials (0048)** — there is no dev login shortcut any more, and none is needed:
+  a demo account is created the way a real one is. Either seed it (`seed_showcase` gives every
+  demo person `<company key>-<role>` — `shurtan-owner`, `cptl_lab-owner` — with
+  `SEED_DEMO_PASSWORD`, default `demo-password-2026`), or issue credentials from the dashboard's
+  «Кабинеты клиентов» screen, which is administrator-only.
+
+  **This is strictly less exposure than the rail it replaced.** `OTP_DEV_CODE=000000` plus the
+  unauthenticated `/portal/auth/otp/peek` hook meant anyone who knew a phone number could sign in
+  as its owner on any `DEBUG=true` deployment — including the public dev stack. Both are deleted.
+  What remains to keep honest is `SEED_DEMO_PASSWORD`: it is a real password on any stack the
+  showcase seeder has run against, so set it on `dev-cabinet.ai-imex.com` rather than leaving the
+  default.
 
 ## Make targets (run from repo root)
 

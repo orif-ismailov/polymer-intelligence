@@ -437,12 +437,13 @@ CREATE TABLE app_settings (
 ## 10. Верификация компаний и портал (R1, миграция 0017)
 
 Модель личности v2 (ARCHITECTURE §5, поправка A1): человек = `user_accounts`
-(телефон, passwordless OTP), членство в компании — через `company_members.user_account_id`.
+(логин + пароль, выдаются сотрудником — миграция 0048), членство в компании — через
+`company_members.user_account_id`.
 Telegram-личности (`clients`/`sellers`) — отдельный «замороженный» мир; связь пока
 дремлющая (`user_accounts.telegram_user_id`, `sellers.company_id`, `clients.company_id`,
 `seller_offers.company_id` — все NULL, без логики моста в R1–R3).
 
-Бизнес-логика в `app/services/` (company/verification/otp/event сервисы, R1 wave 4+);
+Бизнес-логика в `app/domains/` (accounts/company/verification/event сервисы);
 шифрование PII — `app/core/crypto.py` (Fernet, ключ `VERIFICATION_ENC_KEY`);
 транзакционный outbox — `domain_events` + beat-таск `dispatch_domain_events`.
 
@@ -471,21 +472,26 @@ CREATE TABLE user_accounts (
     language         char(2) NOT NULL DEFAULT 'ru',
     status           account_status NOT NULL DEFAULT 'active',
     telegram_user_id bigint UNIQUE,                   -- дремлющий мост к Mini App (frozen)
+    -- Учётные данные (0048). NULL, пока сотрудник их не выдал: строка со
+    -- status='pending' — это ЗАЯВКА на доступ, а не аккаунт.
+    login                 text,                       -- уникален через partial-индекс ниже
+    password_hash         text,                       -- argon2; наружу не отдаётся никогда
+    must_change_password  boolean NOT NULL DEFAULT false,
+    password_set_at       timestamptz,
+    credentials_issued_at timestamptz,
+    credentials_issued_by bigint REFERENCES staff_users(id),
+    applied_company_name  text,                       -- что указал заявитель
+    application_note      text,
     created_at       timestamptz NOT NULL DEFAULT now(),
     last_login_at    timestamptz
 );
+-- Регистр не важен, и только там, где логин есть: сотни строк-заявок с NULL
+-- не должны конфликтовать друг с другом.
+CREATE UNIQUE INDEX uq_user_accounts_login ON user_accounts (lower(login)) WHERE login IS NOT NULL;
+-- ВНИМАНИЕ: UNIQUE с `phone` СНЯТ в 0048. Телефон — контакт, а не идентификатор:
+-- анонимная форма заявки с ним не может отвечать одинаково на повтор, потому что
+-- за неё отвечает база (500 = «такой номер уже есть»).
 
--- Лог отправок SMS — учёт стоимости + форензика OTP-абьюза. Коды НЕ хранятся.
-CREATE TABLE sms_send_log (
-    id              bigserial PRIMARY KEY,
-    phone           text NOT NULL,
-    purpose         text NOT NULL,                    -- 'otp'
-    provider        text NOT NULL,                    -- 'console' | 'eskiz'
-    provider_msg_id text,
-    status          text NOT NULL,                    -- 'ok' | 'error'
-    created_at      timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX ix_sms_send_log_phone_created ON sms_send_log(phone, created_at);  -- дневной лимит
 
 -- ── Реестр компаний ───────────────────────────────────────────────────────
 CREATE TABLE companies (
@@ -1721,6 +1727,7 @@ CREATE INDEX ix_lab_messages_thread ON lab_request_messages(thread_id, id);
 - v1.17 (02.08.2026): отзывы о компаниях (миграция 0036_company_reviews): enum `review_status` (`published`/`hidden`, БЕЗ `pending` — см. раздел выше); таблица `company_reviews` с UNIQUE на пару (субъект, автор) как правилом «одно мнение на контрагента» и CHECK'ами на самоотзыв и диапазон 1..5. Агрегат — на чтении, одним группирующим запросом на страницу каталога.
 - v1.16 (02.08.2026): логистические заявки (миграция 0035_logistics_requests): enum `logistics_request_status`; таблица `logistics_requests` (CHECK parties distinct + volume > 0, номер `LRQ-YYYY-NNNNNN`, advisory-lock ключ 35_000 — не 34_000, который держат заводские RFQ). Без `offer_id`, без документов и без треда: перевозчик котирует маршрут, а лишний слот на форме — это повод её не отправить. Заодно `companies.logistics_profile` наконец отдаётся публично (схема не менялась, JSONB получил ключи `description` / `years_experience` / `projects_completed`), и появился узкий путь правки витрины у уже верифицированной компании.
 - v1.15 (30.07.2026): каталог заводов + factory RFQ + чат (миграция 0034_manufacturers_module): enum'ы `factory_rfq_status` / `factory_rfq_document_kind`; таблицы `factory_rfqs` (CHECK parties distinct + quantity > 0, номер `FRQ-YYYY-NNNNNN`), `factory_rfq_documents` (UNIQUE kind на RFQ), `manufacturer_threads` (UNIQUE пара buyer×manufacturer), `manufacturer_messages` (CHECK текст-или-файл, как deal chat).
+- v1.15 (08.09.2026): вход в кабинет по логину и паролю (миграция 0048_portal_password_auth): `account_status += pending` (ЗАЯВКА на доступ — состояние, а не «нет пароля»: `get_current_account` отказывает всему, кроме `active`, поэтому ~140 маршрутов закрываются сами), `user_accounts += login / password_hash / must_change_password / password_set_at / credentials_issued_at / credentials_issued_by / applied_company_name / application_note`; UNIQUE логина — ЧАСТИЧНЫЙ и по `lower(login)`; **UNIQUE с `phone` снят** (анонимная форма заявки не может отвечать одинаково на повтор, пока за неё отвечает база); таблица `sms_send_log` УДАЛЕНА вместе со всей SMS-рельсой — OTP был её единственным потребителем. Существующие строки остаются без логина и не могут начать НОВУЮ сессию, пока сотрудник не выдаст доступ; это и есть переключение.
 - v1.14 (30.07.2026): карточка товара (миграция 0030_offer_product_facts): `seller_offers += manufacturer / key_properties / applications` — три факта с листов «Добавление товара», которым не было места в строке оффера; чипы как JSONB-массивы (свободный текст, по значению не ищется), `manufacturer` текстом, а не ссылкой на `companies`; все колонки nullable, NULL читается схемой как `[]`.
 - v1.13 (28.07.2026): R6/P7 — гос-реестры (миграция 0029_gov_registry): `verification_check_type += gov_registry / vat_status`; таблица `registry_snapshots` — append-only (нет `updated_at`, нет UPDATE-пути), `source` различает ответ API и транскрипцию оператора, скриншот + sha256 как evidence, `fetched_at` отдельно от `created_at`. Заодно починен эвалюатор R1: `unavailable` перестаёт блокировать кейс после исчерпания ретраев (иначе мёртвый провайдер отключал ручной путь). P7.b (входящий контур эскроу) схемы не потребовал — `provider_events` и nullable `*_marked_by` приехали с P3.
 - v1.12 (28.07.2026): R5/P6 — лаборатории и образцы (миграция 0028_lab): enum'ы `lab_order_status`, `sample_request_status`, `offer_file_kind += lab_passport`; таблицы `lab_partners`, `lab_orders` (CHECK «заявка о чём-то» + CHECK «`done` ссылается на паспорт», результат указателем на файловую строку), `sample_requests` (продавец копией, частичный UQ на один живой запрос); `seller_offers += samples_available / sample_price / sample_dispatch_days / lab_verified`.

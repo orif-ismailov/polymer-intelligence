@@ -30,7 +30,10 @@ async function uploadPdf(page: Page, name = "registration.pdf"): Promise<void> {
   // grabbing `input[type=file]` immediately after `waitForURL` can catch the
   // DOM mid-render. Wait for the shared placeholder text so every dropzone
   // (registration_certificate first) has actually mounted before indexing.
-  await page.getByText(/загрузить документ|upload document/i).first().waitFor({ state: "visible" });
+  await page
+    .getByText(/загрузить документ|upload document/i)
+    .first()
+    .waitFor({ state: "visible" });
   const inputs = page.locator('input[type="file"]');
   // The registration_certificate dropzone is always first when unlocked.
   await inputs.nth(0).setInputFiles({
@@ -55,25 +58,50 @@ export async function pickAccountType(page: Page, type: string): Promise<void> {
 
 // ── Manufacturer (7 steps) ──────────────────────────────────────────────────
 
-export async function manufacturerDetails(page: Page, taxId: string): Promise<void> {
-  await page.getByLabel(/юридическое название завода|factory legal name/i).fill("OOO E2E Factory");
-  await page.getByLabel(/ИНН \(СТИР\)|tax id/i).first().fill(taxId);
-  await page.getByLabel(/регистрационный номер компании|registration number/i).fill(`REG-${taxId}`);
-  await page.getByLabel(/юридический адрес|legal address/i).first().fill("Tashkent, Chilanzar 5");
-  await page.getByLabel(/фактический адрес завода|factory address/i).fill("Tashkent, Industrial Zone 12");
+export async function manufacturerDetails(
+  page: Page,
+  taxId: string,
+): Promise<void> {
+  await page
+    .getByLabel(/юридическое название завода|factory legal name/i)
+    .fill("OOO E2E Factory");
+  await page
+    .getByLabel(/ИНН \(СТИР\)|tax id/i)
+    .first()
+    .fill(taxId);
+  await page
+    .getByLabel(/регистрационный номер компании|registration number/i)
+    .fill(`REG-${taxId}`);
+  await page
+    .getByLabel(/юридический адрес|legal address/i)
+    .first()
+    .fill("Tashkent, Chilanzar 5");
+  await page
+    .getByLabel(/фактический адрес завода|factory address/i)
+    .fill("Tashkent, Industrial Zone 12");
   await next(page, 3);
 }
 
 export async function manufacturerProduction(page: Page): Promise<void> {
-  await page.getByLabel(/вид производства|production type/i).selectOption({ index: 1 });
-  await page.getByLabel(/основная продукция|main products/i).selectOption({ index: 1 });
-  await page.getByLabel(/годовая производственная мощность|annual capacity/i).fill("1000");
-  await page.getByLabel(/количество производственных линий|production lines/i).fill("2");
+  await page
+    .getByLabel(/вид производства|production type/i)
+    .selectOption({ index: 1 });
+  await page
+    .getByLabel(/основная продукция|main products/i)
+    .selectOption({ index: 1 });
+  await page
+    .getByLabel(/годовая производственная мощность|annual capacity/i)
+    .fill("1000");
+  await page
+    .getByLabel(/количество производственных линий|production lines/i)
+    .fill("2");
   await page.getByLabel(/количество сотрудников|employees/i).fill("50");
   // Markets defaults to ["domestic"] (draftStore.ts) — already satisfies the
   // "at least one market" rule, so no click needed; clicking "Внутренний
   // рынок" here would DESELECT the default and leave markets empty.
-  await page.getByLabel(/год основания завода|founded year/i).selectOption({ index: 1 });
+  await page
+    .getByLabel(/год основания завода|founded year/i)
+    .selectOption({ index: 1 });
   await next(page, 4);
 }
 
@@ -98,12 +126,17 @@ export async function manufacturerReview(page: Page): Promise<number> {
   const submit = page.getByTestId("wizard-submit");
   await expect(submit).toBeEnabled({ timeout: 20_000 });
   await submit.click();
-  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, { timeout: 15_000 });
+  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, {
+    timeout: 15_000,
+  });
   await expect(page.getByTestId("wizard-done")).toBeVisible();
   return Number(/\/done\/(\d+)/.exec(page.url())?.[1]);
 }
 
-export async function registerManufacturer(page: Page, taxId: string): Promise<number> {
+export async function registerManufacturer(
+  page: Page,
+  taxId: string,
+): Promise<number> {
   await pickAccountType(page, "manufacturer");
   await manufacturerDetails(page, taxId);
   await manufacturerProduction(page);
@@ -115,11 +148,21 @@ export async function registerManufacturer(page: Page, taxId: string): Promise<n
 
 // ── Logistics (7 steps) ─────────────────────────────────────────────────────
 
-export async function logisticsDetails(page: Page, taxId: string): Promise<void> {
-  await page.getByLabel(/название компании|company name/i).fill("OOO E2E Carrier");
+export async function logisticsDetails(
+  page: Page,
+  taxId: string,
+): Promise<void> {
+  await page
+    .getByLabel(/название компании|company name/i)
+    .fill("OOO E2E Carrier");
   await page.getByLabel(/город|city/i).fill("Tashkent");
-  await page.getByLabel(/ИНН \/ Регистрационный номер|tax id.*registration/i).fill(taxId);
-  await page.getByLabel(/юридический адрес|legal address/i).first().fill("Tashkent, Yunusabad 8");
+  await page
+    .getByLabel(/ИНН \/ Регистрационный номер|tax id.*registration/i)
+    .fill(taxId);
+  await page
+    .getByLabel(/юридический адрес|legal address/i)
+    .first()
+    .fill("Tashkent, Yunusabad 8");
   await next(page, 3);
 }
 
@@ -133,13 +176,22 @@ export async function logisticsServices(page: Page): Promise<void> {
 }
 
 export async function logisticsGeography(page: Page): Promise<void> {
-  await section(page, "Откуда (страны-поставщики)").locator("button").first().click();
-  await section(page, "Куда (страны-получатели)").locator("button").first().click();
+  await section(page, "Откуда (страны-поставщики)")
+    .locator("button")
+    .first()
+    .click();
+  await section(page, "Куда (страны-получатели)")
+    .locator("button")
+    .first()
+    .click();
   await next(page, 5);
 }
 
 export async function logisticsSpecialization(page: Page): Promise<void> {
-  await section(page, "Какие грузы вы перевозите?").locator("button").first().click();
+  await section(page, "Какие грузы вы перевозите?")
+    .locator("button")
+    .first()
+    .click();
   await next(page, 6);
 }
 
@@ -153,12 +205,17 @@ export async function logisticsReview(page: Page): Promise<number> {
   const submit = page.getByTestId("wizard-submit");
   await expect(submit).toBeEnabled({ timeout: 20_000 });
   await submit.click();
-  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, { timeout: 15_000 });
+  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, {
+    timeout: 15_000,
+  });
   await expect(page.getByTestId("wizard-done")).toBeVisible();
   return Number(/\/done\/(\d+)/.exec(page.url())?.[1]);
 }
 
-export async function registerLogistics(page: Page, taxId: string): Promise<number> {
+export async function registerLogistics(
+  page: Page,
+  taxId: string,
+): Promise<number> {
   await pickAccountType(page, "logistics");
   await logisticsDetails(page, taxId);
   await logisticsServices(page);
@@ -170,14 +227,26 @@ export async function registerLogistics(page: Page, taxId: string): Promise<numb
 
 // ── Laboratory (4 steps) ─────────────────────────────────────────────────────
 
-export async function laboratoryDetails(page: Page, taxId: string): Promise<void> {
-  await page.getByLabel(/название лаборатории|laboratory name/i).fill("OOO E2E Lab");
+export async function laboratoryDetails(
+  page: Page,
+  taxId: string,
+): Promise<void> {
+  await page
+    .getByLabel(/название лаборатории|laboratory name/i)
+    .fill("OOO E2E Lab");
   await page.getByLabel(/город|city/i).fill("Tashkent");
-  await page.getByLabel(/ИНН \/ Регистрационный номер|tax id.*registration/i).fill(taxId);
-  await page.getByLabel(/юридический адрес|legal address/i).first().fill("Tashkent, Mirzo Ulugbek 3");
+  await page
+    .getByLabel(/ИНН \/ Регистрационный номер|tax id.*registration/i)
+    .fill(taxId);
+  await page
+    .getByLabel(/юридический адрес|legal address/i)
+    .first()
+    .fill("Tashkent, Mirzo Ulugbek 3");
   await page.getByLabel(/email/i).fill("lab-e2e@example.uz");
   await page.getByLabel(/телефон|phone/i).fill("+998901112233");
-  await page.getByLabel(/описание|description/i).fill("E2E test laboratory profile description.");
+  await page
+    .getByLabel(/описание|description/i)
+    .fill("E2E test laboratory profile description.");
   await next(page, 3);
 }
 
@@ -190,21 +259,21 @@ export async function laboratoryReview(page: Page): Promise<number> {
   const submit = page.getByTestId("wizard-submit");
   await expect(submit).toBeEnabled({ timeout: 20_000 });
   await submit.click();
-  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, { timeout: 15_000 });
+  await page.waitForURL(/\/cabinet\/companies\/new\/done\/\d+/, {
+    timeout: 15_000,
+  });
   await expect(page.getByTestId("wizard-done")).toBeVisible();
   return Number(/\/done\/(\d+)/.exec(page.url())?.[1]);
 }
 
-export async function registerLaboratory(page: Page, taxId: string): Promise<number> {
+export async function registerLaboratory(
+  page: Page,
+  taxId: string,
+): Promise<number> {
   await pickAccountType(page, "laboratory");
   await laboratoryDetails(page, taxId);
   await laboratoryLicenses(page);
   return laboratoryReview(page);
-}
-
-export function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
 }
 
 export function uniqueTaxId(): string {

@@ -172,40 +172,18 @@ class TestVerificationEncKeyValidator:
         assert key_32 == settings.VERIFICATION_ENC_KEY
 
 
-class TestSmsProviderSettings:
-    """SMS_PROVIDER default + Eskiz-credential model validator (R1)."""
+class TestPortalSettings:
+    """Cabinet settings.
 
-    def test_sms_provider_defaults_to_console(self) -> None:
-        settings = _make_settings()
-        assert settings.SMS_PROVIDER == "console"
+    What used to be here — `SMS_PROVIDER`, the Eskiz credentials and the five
+    `OTP_*` tunables — went with the OTP rail in 0048. The cabinet's rate limits
+    are counts in `app/services/rate_limit.py`, not deployment configuration, so
+    there is nothing of theirs to assert in this file.
+    """
 
-    def test_otp_tunables_have_baseline_defaults(self) -> None:
+    def test_portal_session_ttl_default(self) -> None:
         settings = _make_settings()
-        assert settings.OTP_TTL_SECONDS == 300
-        assert settings.OTP_RESEND_COOLDOWN_SECONDS == 60
-        assert settings.OTP_MAX_SENDS_PER_DAY == 5
-        assert settings.OTP_MAX_VERIFY_ATTEMPTS == 5
         assert settings.PORTAL_SESSION_TTL_DAYS == 30
-
-    def test_eskiz_without_credentials_raises(self) -> None:
-        """SMS_PROVIDER=eskiz with no creds must fail fast at startup."""
-        with pytest.raises(ValidationError):
-            _make_settings(SMS_PROVIDER="eskiz")
-
-    def test_eskiz_with_only_email_raises(self) -> None:
-        with pytest.raises(ValidationError):
-            _make_settings(SMS_PROVIDER="eskiz", ESKIZ_EMAIL="a@b.uz")
-
-    def test_eskiz_with_both_credentials_succeeds(self) -> None:
-        settings = _make_settings(
-            SMS_PROVIDER="eskiz", ESKIZ_EMAIL="a@b.uz", ESKIZ_PASSWORD="secret"
-        )
-        assert settings.SMS_PROVIDER == "eskiz"
-
-    def test_console_ignores_missing_credentials(self) -> None:
-        """The default console driver needs no Eskiz creds."""
-        settings = _make_settings(SMS_PROVIDER="console")
-        assert settings.ESKIZ_EMAIL == ""
 
     def test_blank_verification_notify_chat_id_is_none(self) -> None:
         settings = _make_settings(VERIFICATION_NOTIFY_CHAT_ID="")

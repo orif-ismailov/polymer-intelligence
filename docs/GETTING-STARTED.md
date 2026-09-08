@@ -52,7 +52,7 @@ For a first local boot, at minimum set:
 boots those services even before you touch it.
 
 `deploy/.env.example` is missing a few variable groups that exist in `Settings` but have not
-yet been appended to the tracked file (E-IMZO, `ESCROW_WEBHOOK_SECRET`, `OTP_DEV_CODE`) — see
+yet been appended to the tracked file (E-IMZO, `ESCROW_WEBHOOK_SECRET`) — see
 [`docs/CONFIGURATION.md`](CONFIGURATION.md) for the authoritative list and current defaults if
 you need one of those for local work.
 
@@ -184,8 +184,7 @@ npm run dev           # http://localhost:5173 (server.js: PORT=5173 in the dev s
 
 - **`Settings` fails to construct / API container exits immediately on boot** — a required
   env var is missing or fails validation (`JWT_SECRET`/`VERIFICATION_ENC_KEY` under 32
-  characters, `OTP_DEV_CODE` not exactly 6 digits, `SMS_PROVIDER=eskiz` without
-  `ESKIZ_EMAIL`/`ESKIZ_PASSWORD`, etc.). Check the `api` container logs
+  characters, a GPT model pinned without `OPENAI_API_KEY`, etc.). Check the `api` container logs
   (`docker compose -f deploy/docker-compose.dev.yml logs api`) — `Settings` fails fast with a
   clear validation error rather than starting in a broken state. See
   [`docs/CONFIGURATION.md`](CONFIGURATION.md) for the full validation list.

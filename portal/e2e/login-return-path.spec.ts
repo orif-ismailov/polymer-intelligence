@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 
 /**
  * Signing in from the storefront returns you to the page you clicked from.
@@ -19,33 +19,12 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
  * screens rather than asserting on the computed value.
  *
  * Requires a live migrated+seeded API on :8000 exposing the dev-only
- * `GET /portal/auth/otp/peek`.
+ * the seeded demo logins.
  */
 
 const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
 
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
-
 /** Drive the two login screens, starting from wherever the caller already is. */
-async function completeLogin(
-  page: Page,
-  request: APIRequestContext,
-  phone: string,
-): Promise<void> {
-  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
-  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/cabinet/login/code");
-
-  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
-  expect(res.ok()).toBeTruthy();
-  const { code } = (await res.json()) as { code: string };
-
-  await page.getByLabel(/code|код|kod/i).fill(code);
-  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-}
 
 /** First company in a public directory, or null when the seed has none. */
 async function anyCompanyId(
@@ -60,7 +39,9 @@ async function anyCompanyId(
   return body.items?.[0]?.id ?? null;
 }
 
-test("signing in from a company profile returns to that profile", async ({ page, request }) => {
+test("signing in from a company profile returns to that profile", async ({
+  page,
+}) => {
   const companyId = await anyCompanyId(request, "logistics");
   test.skip(companyId === null, "no logistics company in this environment");
 
@@ -68,19 +49,24 @@ test("signing in from a company profile returns to that profile", async ({ page,
   await page.goto(profile);
 
   // The anonymous CTA — the only control on the sheet before a session exists.
-  await page.getByRole("link", { name: /contact|связаться|bog.lanish/i }).first().click();
+  await page
+    .getByRole("link", { name: /contact|связаться|bog.lanish/i })
+    .first()
+    .click();
   await page.waitForURL("**/cabinet/login");
 
-  await completeLogin(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
 
   // The assertion the whole spec exists for: NOT /cabinet.
   await page.waitForURL((url) => url.pathname === profile);
   expect(new URL(page.url()).pathname).toBe(profile);
 });
 
-test("a login with no origin still lands on the cabinet home", async ({ page, request }) => {
+test("a login with no origin still lands on the cabinet home", async ({
+  page,
+}) => {
   await page.goto("/cabinet/login");
-  await completeLogin(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
 
   // No `state.from`, so the fallback applies. Onboarding is the correct landing
   // for a brand-new account with no company — what matters is that it is inside
@@ -102,7 +88,6 @@ test("a login with no origin still lands on the cabinet home", async ({ page, re
 for (const slug of ["logistics", "manufacturers"]) {
   test(`the retired /cabinet/${slug} address redirects anonymously`, async ({
     page,
-    request,
   }) => {
     const companyId = await anyCompanyId(request, slug);
     test.skip(companyId === null, `no ${slug} company in this environment`);

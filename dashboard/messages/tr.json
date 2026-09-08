@@ -24,6 +24,7 @@
       "prices": "Fiyatlar",
       "adminProducts": "Ürünler",
       "adminUsers": "Kullanıcılar",
+      "portalAccounts": "Müşteri hesapları",
       "offerRequests": "Teklif talepleri",
       "newsAdmin": "Haberler (yönetici)",
       "verification": "Doğrulama",
@@ -744,6 +745,69 @@
       "last_admin": "Bu son etkin yönetici — platformayı yönetecek kimse kalmazdı.",
       "admin_holds_all_pages": "Yöneticinin zaten tüm bölümlere erişimi var. Önce yönetici yetkisini kaldırın.",
       "email_taken": "Bu e-posta ile bir personel zaten var."
+    }
+  },
+  "portalAccounts": {
+    "pageTitle": "Müşteri hesapları",
+    "pageSubtitle": "Erişim başvuruları ve müşteri paneli giriş bilgileri",
+    "countLabel": "Toplam: {count}",
+    "empty": "Başvuru veya hesap yok.",
+    "loadError": "Liste yüklenemedi. Sayfayı yenileyin.",
+    "saveError": "Kaydedilemedi. Tekrar deneyin.",
+    "cancel": "İptal",
+    "saving": "Kaydediliyor…",
+    "mustChange": "girişte şifre değiştirecek",
+    "block": "Engelle",
+    "unblock": "Engeli kaldır",
+    "status": {
+      "pending": "Başvuru",
+      "active": "Aktif",
+      "blocked": "Engelli"
+    },
+    "filter": {
+      "pending": "Başvurular",
+      "active": "Aktif",
+      "blocked": "Engelli",
+      "all": "Tümü"
+    },
+    "table": {
+      "applicant": "Başvuran",
+      "company": "Şirket",
+      "login": "Kullanıcı adı",
+      "status": "Durum",
+      "createdAt": "Başvuru tarihi"
+    },
+    "issue": {
+      "action": "Erişim ver",
+      "title": "Panele erişim ver",
+      "subtitle": "Kullanıcı adı ve şifreyi müşteriye kendiniz iletirsiniz — sistemde e-posta yok.",
+      "login": "Kullanıcı adı",
+      "loginHint": "Büyük/küçük harf önemsiz: Acme ile acme aynı hesaptır.",
+      "password": "Şifre",
+      "passwordPlaceholder": "boş bırakın — biz üretelim",
+      "generateHint": "Şifre üretilecek: 16 karakter, 0/O/1/l/I yok — telefonda okunabilsin diye.",
+      "minLength": "En az {n} karakter.",
+      "submit": "Ver"
+    },
+    "regenerate": {
+      "action": "Yeni şifre",
+      "title": "Yeni şifre üret",
+      "subtitle": "Eski şifre hemen geçersiz olur. Müşteri girişte tekrar değiştirecek."
+    },
+    "issued": {
+      "title": "Erişim verildi",
+      "onceWarning": "Şifre bir kez gösterilir. Yalnızca özetini saklıyoruz — geri alınamaz, sadece yenisi üretilebilir.",
+      "loginLabel": "Kullanıcı adı",
+      "passwordLabel": "Şifre",
+      "contractHint": "Bu ikiliyi kopyalayıp sözleşme oluştururken «Panel kullanıcı adı» ve «Panel şifresi» alanlarına yapıştırın.",
+      "copy": "Kopyala",
+      "copied": "Kopyalandı",
+      "done": "Tamam"
+    },
+    "errors": {
+      "login_taken": "Bu kullanıcı adı kullanımda. Başka birini seçin.",
+      "no_credentials": "Bu kaydın henüz kullanıcı adı yok — önce erişim verin.",
+      "login_required": "Kullanıcı adı girin."
     }
   },
   "adminProducts": {
