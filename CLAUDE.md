@@ -375,6 +375,16 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
   (`TELEGRAM_INIT_DATA_TTL_SECONDS`).
 - CORS origins come from `CORS_ALLOWED_ORIGINS` (explicit, never `*` — wildcard + credentials is
   both insecure and non-functional).
+- **The failure contract is declared, not implied.** `app/api/errors.py` holds one `ErrorDetail`
+  model (`{"detail": …}`, FastAPI's own body — there is no envelope layer) plus the response sets
+  `STAFF` / `PORTAL` / `WEBAPP` and their `_RESOURCE` variants, attached per router where
+  `create_app()` mounts it. They are assigned by what a route's DEPENDENCIES can raise, so a guard
+  that answers 403 puts 403 in the contract of every route behind it — and adding a router without
+  a `responses=` argument fails `tests/test_openapi_errors.py` rather than silently documenting
+  nothing. Two deliberate gaps, both named in `docs/API.md`: 422 stays as FastAPI generates it
+  (~100 handlers raise it with a *string* detail, and overriding it would replace the more common
+  validation-error schema), and 404/409/400/503 are declared only where they hold for EVERY route
+  in the router.
 
 ## Frontend notes
 

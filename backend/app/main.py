@@ -36,6 +36,7 @@ import app.ingest.rss  # noqa: E402, F401 — registers rss adapter
 import app.ingest.telegram_channel  # noqa: E402, F401 — registers telegram_channel adapter
 import app.ingest.uzex  # noqa: E402, F401 — registers uzex_offers/contracts/deals adapters
 import app.ingest.xarid  # noqa: E402, F401 — registers xarid_tenders adapter
+from app.api import errors
 from app.api.admin_analytics import router as admin_analytics_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_users import router as admin_users_router
@@ -209,45 +210,65 @@ def create_app() -> FastAPI:
 
     # ── Routers ───────────────────────────────────────────────────────────────
     # All API routes are mounted under /api/v1 per dev-spec §3.2.
+    #
+    # `responses=` documents the failures a router's AUTH SURFACE can produce —
+    # errors.STAFF for the staff JWT + page grant, errors.PORTAL for a cabinet
+    # account, errors.WEBAPP for a Telegram client — and the `_RESOURCE` variants
+    # add 404 where EVERY path in that router names a resource that may be absent
+    # (or someone else's, which answers the same way on purpose). Without them the
+    # schema showed only the success model and FastAPI's generated 422, so every
+    # 401/403/404 this API returns was invisible to a generated client.
+    #
+    # Assigned by dependency, not by handler: a guard that can raise 403 puts 403
+    # in the contract of every route behind it. The four routers that MIX
+    # authenticated and anonymous routes (auth, portal auth, webapp auth, webapp
+    # market) declare theirs per route instead — a router-level 401 there would
+    # document a code the anonymous half cannot return. `tests/test_openapi_errors.py`
+    # fails if what is declared here and what the dependencies imply ever disagree.
     application.include_router(health_router, prefix="/api/v1")
     application.include_router(auth_router, prefix="/api/v1")
-    application.include_router(admin_sources_router, prefix="/api/v1")
+    application.include_router(admin_sources_router, prefix="/api/v1", responses=errors.STAFF)
     # ── public marketplace storefront (anonymous — server-rendered for search) ─
     # Deliberately first among the product routers: it is the only surface with
     # no auth dependency, so it stays visible at the top rather than buried in
     # the portal block where a reader would assume the account guard applies.
+    # No auth surface ⇒ no router-level failures; its detail routes declare 404.
     application.include_router(public_router, prefix="/api/v1")
     # ── dashboard routers (Phase 4 internal team dashboard) ──────────────────
-    application.include_router(feed_router, prefix="/api/v1")
-    application.include_router(dashboard_router, prefix="/api/v1")
-    application.include_router(dashboard_requests_router, prefix="/api/v1")
-    application.include_router(admin_users_router, prefix="/api/v1")
-    application.include_router(admin_products_router, prefix="/api/v1")
-    application.include_router(admin_settings_router, prefix="/api/v1")
-    application.include_router(admin_analytics_router, prefix="/api/v1")
+    application.include_router(feed_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(dashboard_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(
+        dashboard_requests_router, prefix="/api/v1", responses=errors.STAFF
+    )
+    application.include_router(admin_users_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(admin_products_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(admin_settings_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(admin_analytics_router, prefix="/api/v1", responses=errors.STAFF)
     # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─
-    application.include_router(sources_router, prefix="/api/v1")
+    application.include_router(sources_router, prefix="/api/v1", responses=errors.STAFF)
     # ── alerts engine routers (Phase 4, Plan 07 — alert rules CRUD + alerts feed) ─
-    application.include_router(alert_rules_router, prefix="/api/v1")
-    application.include_router(alerts_router, prefix="/api/v1")
+    application.include_router(alert_rules_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(alerts_router, prefix="/api/v1", responses=errors.STAFF)
     # ── prices router (Phase 4, Plan 07 — price series endpoint) ─────────────
-    application.include_router(prices_router, prefix="/api/v1")
+    application.include_router(prices_router, prefix="/api/v1", responses=errors.STAFF)
     # ── webapp routers (Telegram Web App client surface) ─────────────────────
     application.include_router(webapp_auth_router, prefix="/api/v1")
-    application.include_router(webapp_requests_router, prefix="/api/v1")
-    application.include_router(webapp_me_router, prefix="/api/v1")
-    application.include_router(webapp_files_router, prefix="/api/v1")
+    application.include_router(webapp_requests_router, prefix="/api/v1", responses=errors.WEBAPP)
+    application.include_router(webapp_me_router, prefix="/api/v1", responses=errors.WEBAPP)
+    application.include_router(
+        webapp_files_router, prefix="/api/v1", responses=errors.WEBAPP_RESOURCE
+    )
     # ── marketplace (Phase 2): seller offers + public catalog + moderation ───
-    application.include_router(webapp_seller_router, prefix="/api/v1")
+    application.include_router(webapp_seller_router, prefix="/api/v1", responses=errors.WEBAPP)
     application.include_router(webapp_market_router, prefix="/api/v1")
-    application.include_router(webapp_reference_router, prefix="/api/v1")
-    application.include_router(moderation_router, prefix="/api/v1")
-    application.include_router(offer_requests_router, prefix="/api/v1")
+    application.include_router(webapp_reference_router, prefix="/api/v1", responses=errors.WEBAPP)
+    application.include_router(moderation_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(offer_requests_router, prefix="/api/v1", responses=errors.STAFF)
     # ── news engine (Phase 3): published reports + dashboard review ───────────
-    application.include_router(webapp_news_router, prefix="/api/v1")
-    application.include_router(reports_router, prefix="/api/v1")
+    application.include_router(webapp_news_router, prefix="/api/v1", responses=errors.WEBAPP)
+    application.include_router(reports_router, prefix="/api/v1", responses=errors.STAFF)
     # ── AI broker dashboard (Phase 4): inventory/partners/sourcing/intel ─────
-    application.include_router(sourcing_router, prefix="/api/v1")
+    application.include_router(sourcing_router, prefix="/api/v1", responses=errors.STAFF)
     # ── telegram bot webhook (dev-spec §4.1: webhook inside api container) ────
     application.include_router(telegram_webhook_router, prefix="/api/v1")
     # External provider callback inbox (R6 / P7.b) — authenticated by a shared
@@ -255,47 +276,75 @@ def create_app() -> FastAPI:
     application.include_router(webhooks_escrow_router, prefix="/api/v1")
     # ── portal (client cabinet — passwordless OTP accounts, R1 W3) ─────────────
     application.include_router(portal_auth_router, prefix="/api/v1")
-    application.include_router(portal_contracts_router, prefix="/api/v1")
+    application.include_router(portal_contracts_router, prefix="/api/v1", responses=errors.PORTAL)
     # Deals before companies: its literal /portal/companies/{company_id}/deals routes
     # must be matched by this router rather than falling into the companies router's
     # /{company_id} param route.
-    application.include_router(portal_deals_router, prefix="/api/v1")
-    application.include_router(portal_compliance_router, prefix="/api/v1")
+    application.include_router(
+        portal_deals_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
+    )
+    application.include_router(
+        portal_compliance_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
+    )
     # Lab orders hang off /portal/companies/{id}/lab-orders — same reason again.
-    application.include_router(portal_lab_router, prefix="/api/v1")
-    application.include_router(portal_samples_router, prefix="/api/v1")
-    application.include_router(portal_companies_router, prefix="/api/v1")
+    application.include_router(
+        portal_lab_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
+    )
+    application.include_router(
+        portal_samples_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
+    )
+    application.include_router(portal_companies_router, prefix="/api/v1", responses=errors.PORTAL)
     # Applicant-side verification, split out of the companies router (P2). Its paths
     # all sit one segment below /portal/companies/{company_id}, so they can neither
     # shadow nor be shadowed by that param route — position here is not load-bearing.
-    application.include_router(portal_verification_router, prefix="/api/v1")
-    application.include_router(portal_eimzo_router, prefix="/api/v1")
-    application.include_router(portal_didox_router, prefix="/api/v1")
-    application.include_router(portal_ikpu_router, prefix="/api/v1")
-    application.include_router(admin_didox_router, prefix="/api/v1")
-    application.include_router(portal_offers_router, prefix="/api/v1")
-    application.include_router(portal_market_router, prefix="/api/v1")
+    application.include_router(
+        portal_verification_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
+    )
+    application.include_router(
+        portal_eimzo_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
+    )
+    application.include_router(
+        portal_didox_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
+    )
+    application.include_router(portal_ikpu_router, prefix="/api/v1", responses=errors.PORTAL)
+    application.include_router(admin_didox_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(
+        portal_offers_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
+    )
+    application.include_router(portal_market_router, prefix="/api/v1", responses=errors.PORTAL)
     # Manufacturers before any catch-all company/id routes that could shadow list paths.
-    application.include_router(portal_manufacturers_router, prefix="/api/v1")
+    application.include_router(
+        portal_manufacturers_router, prefix="/api/v1", responses=errors.PORTAL
+    )
     # `/portal/logistics` collides with nothing under `/portal/companies`, so
     # registration order against that router does not matter here.
-    application.include_router(portal_logistics_router, prefix="/api/v1")
-    application.include_router(portal_lab_requests_router, prefix="/api/v1")
-    application.include_router(portal_substances_router, prefix="/api/v1")
-    application.include_router(portal_reference_router, prefix="/api/v1")
-    application.include_router(portal_inquiries_router, prefix="/api/v1")
-    application.include_router(portal_requests_router, prefix="/api/v1")
-    application.include_router(portal_news_router, prefix="/api/v1")
-    application.include_router(portal_notifications_router, prefix="/api/v1")
-    application.include_router(admin_verification_router, prefix="/api/v1")
-    application.include_router(admin_contracts_router, prefix="/api/v1")
-    application.include_router(admin_deals_router, prefix="/api/v1")
-    application.include_router(admin_escrow_router, prefix="/api/v1")
-    application.include_router(admin_substances_router, prefix="/api/v1")
-    application.include_router(admin_licenses_router, prefix="/api/v1")
-    application.include_router(admin_lab_router, prefix="/api/v1")
-    application.include_router(admin_logistics_requests_router, prefix="/api/v1")
-    application.include_router(admin_lab_requests_router, prefix="/api/v1")
+    application.include_router(portal_logistics_router, prefix="/api/v1", responses=errors.PORTAL)
+    application.include_router(
+        portal_lab_requests_router, prefix="/api/v1", responses=errors.PORTAL
+    )
+    application.include_router(portal_substances_router, prefix="/api/v1", responses=errors.PORTAL)
+    application.include_router(portal_reference_router, prefix="/api/v1", responses=errors.PORTAL)
+    application.include_router(portal_inquiries_router, prefix="/api/v1", responses=errors.PORTAL)
+    application.include_router(portal_requests_router, prefix="/api/v1", responses=errors.PORTAL)
+    application.include_router(portal_news_router, prefix="/api/v1", responses=errors.PORTAL)
+    application.include_router(
+        portal_notifications_router, prefix="/api/v1", responses=errors.PORTAL
+    )
+    application.include_router(admin_verification_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(admin_contracts_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(admin_deals_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(admin_escrow_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(admin_substances_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(
+        admin_licenses_router, prefix="/api/v1", responses=errors.STAFF_RESOURCE
+    )
+    application.include_router(admin_lab_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(
+        admin_logistics_requests_router, prefix="/api/v1", responses=errors.STAFF
+    )
+    application.include_router(
+        admin_lab_requests_router, prefix="/api/v1", responses=errors.STAFF
+    )
 
     return application
 

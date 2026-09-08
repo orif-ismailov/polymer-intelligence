@@ -16,6 +16,7 @@ import logging
 
 from fastapi import APIRouter, Header, HTTPException, Request, status
 
+from app.api import errors
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,13 @@ router = APIRouter(prefix="/telegram", tags=["telegram"])
         "Both the URL path {secret} and the X-Telegram-Bot-Api-Secret-Token header "
         "must match settings.WEBHOOK_SECRET (constant-time comparison, T-03-11). "
         "Mismatched secret → 403."
+    ),
+    responses=errors.error(
+        403,
+        "The path secret or the `X-Telegram-Bot-Api-Secret-Token` header does not match "
+        "`WEBHOOK_SECRET`. Both are compared in constant time and both must pass; the "
+        "body never says which one failed.",
+        "Forbidden",
     ),
 )
 async def telegram_webhook(

@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
+from app.api import errors
 from app.api.deps import get_current_client
 from app.core.db import get_db
 from app.domains.companies.models import Company
@@ -27,6 +28,11 @@ from app.domains.marketplace.schemas import (
 from app.domains.requests.models import Client
 
 router = APIRouter(prefix="/webapp/market", tags=["webapp-market"])
+
+# This router mixes authenticated and public routes — the landing page and every
+# <img src> below are served to anonymous browsers — so the failure sets are declared
+# per route rather than at include time. A router-level 401 here would document a code
+# the public half cannot return, and readers would stop believing the schema.
 
 
 @router.get(
@@ -54,6 +60,7 @@ def list_featured(
     "/offers",
     response_model=list[CatalogOfferOut],
     summary="List public catalog offers (approved)",
+    responses=errors.WEBAPP,
 )
 def list_offers(
     product_id: int | None = Query(default=None),
@@ -84,6 +91,7 @@ def list_offers(
     "/categories",
     response_model=list[CategoryCount],
     summary="Catalog category chips with approved-offer counts",
+    responses=errors.WEBAPP,
 )
 def list_categories(
     db: Session = Depends(get_db),
@@ -98,6 +106,7 @@ def list_categories(
     "/offers/{offer_id}",
     response_model=CatalogOfferOut,
     summary="Get a public catalog offer",
+    responses=errors.WEBAPP_RESOURCE,
 )
 def get_offer(
     offer_id: int,
@@ -121,6 +130,9 @@ def get_offer(
 @router.get(
     "/offers/{offer_id}/images/{file_id}",
     summary="Stream an approved offer's file (public — for <img> tags)",
+    # No offer, no file, or an offer that is not approved: all 404, so the route
+    # never doubles as a way to ask whether an unapproved offer exists.
+    responses=errors.NOT_FOUND,
 )
 def get_offer_image(
     offer_id: int,
@@ -152,6 +164,7 @@ def get_offer_image(
 @router.get(
     "/companies/{company_id}/logo",
     summary="Stream a company logo (public — for <img> tags)",
+    responses=errors.NOT_FOUND,
 )
 def get_company_logo(company_id: int, db: Session = Depends(get_db)) -> Response:
     """GET a company logo's bytes.
@@ -181,6 +194,7 @@ def get_company_logo(company_id: int, db: Session = Depends(get_db)) -> Response
 @router.get(
     "/companies/{company_id}/cover",
     summary="Stream a company cover image (public — for <img> tags)",
+    responses=errors.NOT_FOUND,
 )
 def get_company_cover(company_id: int, db: Session = Depends(get_db)) -> Response:
     """GET a company cover's bytes — same proxy contract as the logo above."""
@@ -200,6 +214,7 @@ def get_company_cover(company_id: int, db: Session = Depends(get_db)) -> Respons
 @router.get(
     "/companies/{company_id}/media/{media_id}",
     summary="Stream a company media image (public — for <img> tags)",
+    responses=errors.NOT_FOUND,
 )
 def get_company_media(
     company_id: int, media_id: int, db: Session = Depends(get_db)
@@ -232,6 +247,10 @@ def get_company_media(
     response_model=OfferRequestOut,
     status_code=status.HTTP_201_CREATED,
     summary="Request an offer (buyer inquiry → admin review → seller)",
+    # No 404 on purpose: a missing or unpublished offer arrives as a ValueError and
+    # leaves as the 422 below, which is the one 422 on this surface that is a string
+    # rather than a list of field errors.
+    responses=errors.WEBAPP,
 )
 def request_offer(
     offer_id: int,
@@ -263,6 +282,7 @@ def request_offer(
     "/my-requests",
     response_model=list[OfferRequestOut],
     summary="List the authenticated buyer's own offer inquiries",
+    responses=errors.WEBAPP,
 )
 def list_my_offer_requests(
     db: Session = Depends(get_db),
@@ -284,6 +304,7 @@ def _own_offer_request(db: Session, offer_request_id: int, client: Client) -> ob
     "/my-requests/{offer_request_id}",
     response_model=OfferRequestOut,
     summary="Get one of the buyer's own inquiries (detail)",
+    responses=errors.WEBAPP_RESOURCE,
 )
 def get_my_offer_request(
     offer_request_id: int,
@@ -298,6 +319,7 @@ def get_my_offer_request(
     "/my-requests/{offer_request_id}",
     response_model=OfferRequestOut,
     summary="Edit the buyer's own inquiry (re-review + notify seller of changes)",
+    responses=errors.WEBAPP_RESOURCE,
 )
 def update_my_offer_request(
     offer_request_id: int,

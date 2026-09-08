@@ -6,6 +6,8 @@
 #
 #   deps.py               RBAC guards (require_admin / require_analyst_or_admin /
 #                         get_current_account) — depended on by every router
+#   errors.py             the OpenAPI failure contract those guards imply, attached
+#                         per router in app/main.py — the same "no single owner" as deps
 #   portal/deps.py        the portal's shared guards (P2): company_or_404,
 #                         require_business_role, require_company_admin, rate_limited
 #   auth.py               staff login/refresh

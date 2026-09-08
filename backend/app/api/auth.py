@@ -20,6 +20,7 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.api import errors
 from app.api.deps import get_current_staff_user, page_access_for
 from app.core.db import get_db
 from app.core.security import create_access_token, decode_token
@@ -38,7 +39,18 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 _REFRESH_COOKIE = get_refresh_cookie_name()
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    # Declared per route, not on the router: /logout answers 204 to anyone, so a
+    # router-level 401 would document a failure it cannot produce.
+    responses=errors.error(
+        401,
+        "Unknown email, wrong password, or an inactive account — one generic answer for "
+        "all three (T-03-01), so a caller cannot learn which addresses exist.",
+        "Invalid credentials",
+    ),
+)
 def login(
     body: LoginRequest,
     response: Response,
@@ -128,7 +140,16 @@ def logout(
     clear_refresh_cookie(response=response)
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post(
+    "/refresh",
+    response_model=TokenResponse,
+    responses=errors.error(
+        401,
+        "The refresh cookie is absent, unreadable, expired, of the wrong type, or names "
+        "a staff row that is gone or deactivated. The client's move is a fresh login.",
+        "Refresh token missing",
+    ),
+)
 def refresh_token(
     db: Session = Depends(get_db),
     refresh_token_cookie: str | None = Cookie(default=None, alias=_REFRESH_COOKIE),
@@ -189,7 +210,7 @@ def refresh_token(
     )
 
 
-@router.get("/me", response_model=MeResponse)
+@router.get("/me", response_model=MeResponse, responses=errors.STAFF)
 def me(
     current_user: StaffUser = Depends(get_current_staff_user),
     db: Session = Depends(get_db),

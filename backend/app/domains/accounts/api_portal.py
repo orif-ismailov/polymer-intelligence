@@ -17,6 +17,7 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, R
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.api import errors
 from app.api.deps import get_current_account
 from app.core.config import settings
 from app.core.db import get_db
@@ -101,7 +102,19 @@ def _token_response(account: UserAccount) -> PortalTokenResponse:
     )
 
 
-@router.post("/auth/otp/request", status_code=status.HTTP_204_NO_CONTENT)
+# The four routes below are anonymous and each fails differently, so this router
+# carries no router-level set — see the table in app/main.py.
+@router.post(
+    "/auth/otp/request",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=errors.error(
+        429,
+        "Too many codes asked for, counted per phone AND per client IP. `Retry-After` "
+        "carries the wait in seconds.",
+        "Too many requests",
+        headers=errors.RETRY_AFTER_HEADER,
+    ),
+)
 def otp_request(
     body: OtpRequestIn,
     request: Request,
@@ -124,7 +137,16 @@ def otp_request(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/auth/otp/peek")
+@router.get(
+    "/auth/otp/peek",
+    responses=errors.error(
+        404,
+        "The hook is off (anything but DEBUG + the console SMS driver — so always, in "
+        "production), the phone is unparseable, or no code is pending. One answer for all "
+        "three: an enabled-but-empty hook and a disabled one must look alike.",
+        "Not found",
+    ),
+)
 def otp_peek(
     phone: str = Query(...),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
@@ -143,7 +165,29 @@ def otp_peek(
     return {"code": code}
 
 
-@router.post("/auth/otp/verify", response_model=PortalTokenResponse)
+@router.post(
+    "/auth/otp/verify",
+    response_model=PortalTokenResponse,
+    responses={
+        **errors.error(
+            400,
+            "The code is wrong or its TTL has passed. Uniform for both, so a caller "
+            "cannot tell a live code from an expired one by the answer.",
+            "Invalid or expired code",
+        ),
+        **errors.error(
+            403,
+            "The code was right, but the account it belongs to is not `active`.",
+            "Account is blocked",
+        ),
+        **errors.error(
+            429,
+            "The attempt ladder for this phone is spent; the code is locked. No "
+            "`Retry-After` here — the lock clears with the code's own TTL.",
+            "Too many attempts",
+        ),
+    },
+)
 def otp_verify(
     body: OtpVerifyIn,
     response: Response,
@@ -174,7 +218,19 @@ def otp_verify(
     return _token_response(account)
 
 
-@router.post("/auth/refresh", response_model=PortalTokenResponse)
+@router.post(
+    "/auth/refresh",
+    response_model=PortalTokenResponse,
+    responses={
+        **errors.error(
+            401,
+            "The `portal_session` cookie is absent, unreadable, expired, of the wrong "
+            "type, or names an account that is gone. The client's move is a fresh OTP.",
+            "Session missing",
+        ),
+        **errors.error(403, "The account is not `active`.", "Account is blocked"),
+    },
+)
 def refresh(
     response: Response,
     db: Session = Depends(get_db),
@@ -220,12 +276,12 @@ def logout(response: Response) -> dict[str, bool]:
     return {"ok": True}
 
 
-@router.get("/me", response_model=AccountOut)
+@router.get("/me", response_model=AccountOut, responses=errors.PORTAL)
 def get_me(account: UserAccount = Depends(get_current_account)) -> AccountOut:
     return AccountOut.model_validate(account)
 
 
-@router.patch("/me", response_model=AccountOut)
+@router.patch("/me", response_model=AccountOut, responses=errors.PORTAL)
 def update_me(
     body: MeUpdateIn,
     db: Session = Depends(get_db),

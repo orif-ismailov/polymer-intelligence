@@ -608,4 +608,35 @@ company-membership checks, so a non-member cannot distinguish "doesn't exist" fr
 `422` (request validation or a domain `ValueError` translated to a client error), `429` (OTP /
 rate-limited endpoints, with a `Retry-After` header).
 
+### What the OpenAPI schema declares
+
+These codes are **in the schema**, not only in this document. `backend/app/api/errors.py`
+declares them as reusable response sets (`STAFF`, `PORTAL`, `WEBAPP`, and the `_RESOURCE`
+variants that add 404), attached per router at `include_router()` time in `app/main.py` and per
+route in the four routers that mix authenticated and anonymous paths (staff auth, portal auth,
+webapp auth, webapp market). Every declared failure carries the same `ErrorDetail` model — the
+`{"detail": "…"}` above — so a generated client has one type for the failure branch instead of an
+untyped body, and each carries the real `detail` string as its example.
+
+They are assigned by what a route's **dependencies** can raise, not by what one handler happens
+to raise today: a guard that can answer 403 puts 403 in the contract of every route behind it.
+`backend/tests/test_openapi_errors.py` fails in both directions — a guarded route that documents
+less than its guard can raise, and an anonymous route that claims a 401 it cannot produce.
+
+Two known gaps, deliberate rather than overlooked:
+
+- **422 is left exactly as FastAPI generates it.** About a hundred handlers raise
+  `HTTPException(422, detail="…")` with a *string* where the documented `HTTPValidationError`
+  says a list of field errors. Declaring our own 422 would replace the validation-error schema —
+  the commoner of the two shapes — so the narrower one stays undocumented instead.
+- **`404`/`409`/`400`/`503` are declared only where they hold for every route in the router.**
+  A collection route that cannot 404 must not say it can, so the per-route remainder — most
+  notably the `409` state-machine conflicts on deals, contracts and samples, and the `503`
+  provider-unavailable answers on the Didox/E-IMZO/registry rails — is still route-by-route work
+  that the schema does not yet carry.
+
+The schema itself is served only when `DEBUG=true` (`/docs`, `/redoc`, `/openapi.json`); in
+production all three are `None` per `WR-03`, so this document remains the reference of record
+there.
+
 <!-- VERIFY: production base URL for the API (e.g. https://api.ai-imex.com or the cabinet/webapp origin's /api/v1 path) is deployment-specific and not established from repository contents alone. -->
