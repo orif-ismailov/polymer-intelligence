@@ -410,6 +410,93 @@ model.flows.forEach((flow, fi) => {
   cursorY += headerH + bodyH + rulesH + GAP;
 });
 
+/* ── Статусные машины ───────────────────────────────────────────────────────
+ * Стена из машин: имя, enum и цепочка состояний в один ряд. Значения берутся
+ * из модели, а туда — из app/models/enums.py, поэтому расписать состояние,
+ * которого в продукте нет, здесь невозможно.
+ */
+const SM_BASE = FLOW_BASE + model.flows.length;
+if (model.stateMachines?.length) {
+  const rowH = 150;
+  const h = 130 + model.stateMachines.length * rowH;
+  const f = frame(PAD, cursorY, 1900, h, `${SM_BASE} · Статусные машины`);
+  text("СТАТУСНЫЕ МАШИНЫ", PAD + 24, cursorY + 24, { size: 26, maxWidth: 900, frameId: f.id });
+  text(model.stateMachinesNote, PAD + 24, cursorY + 62, {
+    size: 15, color: "#595959", maxWidth: 1700, frameId: f.id,
+  });
+
+  let y = cursorY + 110;
+  for (const sm of model.stateMachines) {
+    text(sm.name, PAD + 24, y + 26, { size: 18, maxWidth: 240, frameId: f.id });
+    text(sm.enum, PAD + 24, y + 52, { size: 13, color: "#595959", maxWidth: 240, frameId: f.id });
+
+    let x = PAD + 290;
+    sm.path.forEach((st, i) => {
+      const w = Math.max(150, st.length * 9 + 28);
+      box(x, y + 14, w, 48, { fill: BG.state, stroke: "#8a8a8a", frameId: f.id });
+      text(st, x + 14, y + 30, { size: 14, maxWidth: w - 28, frameId: f.id });
+      if (i < sm.path.length - 1) arrow(x + w + 2, y + 38, x + w + 22, y + 38, { frameId: f.id });
+      x += w + 24;
+    });
+    // Выходы — без стрелок: в них попадают из нескольких точек пути, а не следом за последней.
+    if (sm.exits.length) {
+      x += 16;
+      text("выходы:", x, y + 30, { size: 13, color: "#8a8a8a", maxWidth: 90, frameId: f.id });
+      x += 84;
+      for (const st of sm.exits) {
+        const w = Math.max(140, st.length * 9 + 28);
+        box(x, y + 14, w, 48, { fill: BG.error, stroke: COLOR.error ?? "#e5484d", frameId: f.id });
+        text(st, x + 14, y + 30, { size: 14, maxWidth: w - 28, frameId: f.id });
+        x += w + 14;
+      }
+    }
+
+    box(PAD + 290, y + 76, 1560, 46, { fill: BG.rule, stroke: COLOR.rule, frameId: f.id });
+    text(sm.note, PAD + 304, y + 88, { size: 14, maxWidth: 1530, frameId: f.id });
+    y += rowH;
+  }
+  cursorY += h + GAP;
+}
+
+/* ── Находки ────────────────────────────────────────────────────────────────
+ * Сводка строится из findings.md самим сборщиком модели, поэтому список здесь
+ * и файл с разбором не могут разъехаться.
+ */
+if (model.findings?.items?.length) {
+  const KIND_BG = {
+    blocker: BG.error, external: BG.rail, defect: BG.error, mismatch: BG.rule,
+    risk: BG.rule, rule: BG.state, works: BG.success, withdrawn: "#ffffff",
+  };
+  const KIND_STROKE = {
+    blocker: "#b02a1f", external: "#d97b28", defect: COLOR.error ?? "#e5484d",
+    mismatch: COLOR.rule ?? "#FFC943", risk: COLOR.rule ?? "#FFC943",
+    rule: "#8a8a8a", works: COLOR.success ?? "#66D575", withdrawn: "#c4c4c4",
+  };
+  const byKind = model.findings.kinds
+    .map((k) => ({ ...k, items: model.findings.items.filter((i) => i.kind === k.key) }))
+    .filter((k) => k.items.length);
+
+  const h = 170 + byKind.reduce((acc, k) => acc + 74 + k.items.length * 46, 0);
+  const f = frame(PAD, cursorY, 1900, h, `${SM_BASE + 1} · Находки`);
+  text("НАХОДКИ", PAD + 24, cursorY + 24, { size: 26, maxWidth: 600, frameId: f.id });
+  text(model.findings.intro, PAD + 24, cursorY + 62, { size: 15, color: "#595959", maxWidth: 1700, frameId: f.id });
+
+  let y = cursorY + 150;
+  for (const k of byKind) {
+    text(`${k.label.toUpperCase()} · ${k.items.length} — ${k.hint}`, PAD + 24, y, {
+      size: 17, maxWidth: 1700, frameId: f.id,
+    });
+    y += 40;
+    for (const it of k.items) {
+      box(PAD + 24, y, 1830, 40, { fill: KIND_BG[k.key], stroke: KIND_STROKE[k.key], frameId: f.id });
+      text(`${it.id}  ·  ${it.title}`, PAD + 40, y + 11, { size: 14, maxWidth: 1800, frameId: f.id });
+      y += 46;
+    }
+    y += 34;
+  }
+  cursorY += h + GAP;
+}
+
 // Что не исследовано
 {
   const h = 110 + model.notExplored.length * 52;
@@ -562,6 +649,33 @@ const html = `<!doctype html>
   .gap{background:#f7f7f7;border:1px solid var(--line);border-radius:9px;padding:10px 14px;
        margin-bottom:8px;font-size:14px}
   .gap b{font-weight:600}
+  .sm{border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-bottom:12px;background:#fff}
+  .sm-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+  .sm-head b{font-size:16px}
+  .sm-head code{color:var(--mut)}
+  .sm-states{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:10px}
+  .sm-st{background:#f2f2f2;border:1px solid #cfcfcf;border-radius:7px;padding:5px 10px;
+         font:13px ui-monospace,SFMono-Regular,Menlo,monospace}
+  .sm-arr{color:#9a9a9a}
+  .sm-exit-label{color:#9a9a9a;font-size:13px;margin:0 4px 0 14px}
+  .sm-exit{background:#fff2ee;border-color:var(--error)}
+  .sm-note{background:#fffaeb;border:1px solid var(--rule);border-left-width:5px;border-radius:8px;
+           padding:9px 13px;font-size:14px}
+  .fk{margin-bottom:26px}
+  .fk-head{display:flex;align-items:baseline;gap:10px;margin-bottom:9px}
+  .fk-head b{font-size:16px}
+  .fk-head span{color:var(--mut);font-size:14px}
+  .fk-count{display:inline-grid;place-items:center;min-width:26px;height:22px;border-radius:6px;
+            background:var(--ink);color:#fff;font-size:12px;font-weight:700;padding:0 6px}
+  .fi{display:flex;gap:11px;align-items:baseline;border:1px solid var(--line);border-left-width:5px;
+      border-radius:9px;padding:9px 13px;margin-bottom:6px;font-size:14px;background:#fff}
+  .fi code{font-size:12.5px;color:var(--mut);flex:0 0 auto}
+  .fi-blocker,.fi-defect{border-left-color:var(--error);background:#fff7f5}
+  .fi-external{border-left-color:#d97b28;background:#fff8f0}
+  .fi-mismatch,.fi-risk{border-left-color:var(--rule);background:#fffdf5}
+  .fi-rule{border-left-color:#9a9a9a;background:#fafafa}
+  .fi-works{border-left-color:var(--success);background:#f4fcf6}
+  .fi-withdrawn{border-left-color:#cfcfcf;background:#fff;color:var(--mut);text-decoration:line-through}
   footer{padding:26px 40px;color:var(--mut);font-size:13px;border-top:1px solid var(--line);background:#fff}
   .shot{margin:0 0 34px;padding:0}
   .shot figcaption{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
@@ -588,6 +702,8 @@ const html = `<!doctype html>
   <a href="#roles">2 · Ролевая модель</a>
   ${partsWithFrames.map((p, i) => `<a href="#part-${p.key}">3.${i + 1} · ${esc(p.title)}</a>`).join("")}
   ${model.flows.map((f, i) => `<a href="#flow-${f.id}">${FLOW_BASE + i} · ${esc(f.title)}</a>`).join("")}
+  <a href="#states">${SM_BASE} · Статусные машины</a>
+  <a href="#findings">${SM_BASE + 1} · Находки</a>
   <a href="#gaps">Не исследовано</a>
 </nav>
 
@@ -640,6 +756,41 @@ const html = `<!doctype html>
   ${partsWithFrames.map(partHtml).join("")}
 
   ${model.flows.map(flowHtml).join("")}
+
+  <section id="states">
+    <h2><span class="num">${SM_BASE}</span>Статусные машины</h2>
+    <p class="goal">${esc(model.stateMachinesNote ?? "")} Значения взяты из <code>app/models/enums.py</code>.</p>
+    ${(model.stateMachines ?? [])
+      .map(
+        (sm) => `
+    <div class="sm">
+      <div class="sm-head"><b>${esc(sm.name)}</b><code>${esc(sm.enum)}</code></div>
+      <div class="sm-states">
+        ${sm.path.map((st, i, a) => `<span class="sm-st">${esc(st)}</span>${i < a.length - 1 ? '<span class="sm-arr">→</span>' : ""}`).join("")}
+        ${sm.exits.length ? `<span class="sm-exit-label">выходы:</span>${sm.exits.map((st) => `<span class="sm-st sm-exit">${esc(st)}</span>`).join("")}` : ""}
+      </div>
+      <div class="sm-note">${esc(sm.note)}</div>
+    </div>`,
+      )
+      .join("")}
+  </section>
+
+  <section id="findings">
+    <h2><span class="num">${SM_BASE + 1}</span>Находки</h2>
+    <p class="goal">${esc(model.findings?.intro ?? "")}</p>
+    ${(model.findings?.kinds ?? [])
+      .map((k) => ({ ...k, items: (model.findings?.items ?? []).filter((i) => i.kind === k.key) }))
+      .filter((k) => k.items.length)
+      .map(
+        (k) => `
+    <div class="fk">
+      <div class="fk-head"><span class="fk-count">${k.items.length}</span><b>${esc(k.label)}</b><span>— ${esc(k.hint)}</span></div>
+      ${k.items.map((it) => `<div class="fi fi-${k.key}"><code>${esc(it.id)}</code><span>${esc(it.title)}</span></div>`).join("")}
+    </div>`,
+      )
+      .join("")}
+    <p class="goal">Полный разбор каждой — с воспроизведением, строками из Postgres и ответами API — в <code>findings.md</code>.</p>
+  </section>
 
   <section id="gaps">
     <h2>Что ещё не исследовано</h2>
