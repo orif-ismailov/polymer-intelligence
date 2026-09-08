@@ -27,6 +27,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
+from app.seed.align_numbering import align_reference_numbers
 
 RNG = random.Random(20260731)
 UTC = datetime.UTC
@@ -483,6 +484,12 @@ def ensure_coverage(db: Session) -> None:
             )
             if buyer is not None:
                 added["deal"] += _open_deal(db, offer, company, buyer, now)
+
+    # Same reason as `seed_showcase`: every number above is a literal, so the
+    # sequences the app draws from must be told. The 9000/900000 bands keep
+    # these rows out of `nextval`'s way on their own, but the sequence has to end
+    # up past them anyway — see `app/seed/align_numbering.py`.
+    align_reference_numbers(db)
 
     db.commit()
     print(

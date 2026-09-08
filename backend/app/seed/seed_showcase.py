@@ -34,6 +34,7 @@ from sqlalchemy.orm import Session
 from app.core.crypto import encrypt_pii
 from app.core.db import SessionLocal
 from app.core.security import hash_password
+from app.seed.align_numbering import align_reference_numbers
 from app.seed.showcase_data import (
     BANKS,
     COMPANIES,
@@ -166,7 +167,11 @@ def purge(db: Session) -> None:
     # pipeline data and stay, so detach rather than delete.
     db.execute(sa.text("UPDATE signals SET counterparty_id = NULL WHERE counterparty_id IS NOT NULL"))
     db.execute(sa.text("DELETE FROM counterparties"))
-    # Numbering restarts with the data, so DEAL-2026-000001 is the first deal again.
+    # Numbering restarts with the data, so DEAL-2026-000001 is the first deal
+    # again. Dropping is only half of it: the seed then writes 1..N by hand, and
+    # `align_reference_numbers` at the end of `seed_showcase()` is what stops the
+    # first REAL deal from drawing 1 on top of them. Do not drop these without
+    # that call — see `app/seed/align_numbering.py`.
     for seq in ("deal_seq", "lab_order_seq", "request_seq"):
         db.execute(sa.text(f"DROP SEQUENCE IF EXISTS {seq}_{NOW.year}"))
     print("purged previous showcase rows")
@@ -1841,6 +1846,11 @@ def seed_showcase(*, reset: bool = False) -> bool:
         seed_labs(db, companies, accounts, offers, deals)
         seed_market_intel(db, offers)
         seed_attention(db, accounts, deals, offers)
+
+        # Every number above was written as a literal, so the sequences the app
+        # draws from are still at 0. Without this the first real deal collides
+        # with DEAL-2026-000001 and the buyer gets a 500 on accepting a quote.
+        align_reference_numbers(db)
 
         db.commit()
         print(f"\nShowcase seeded: {len(companies)} companies, {len(offers)} offers, "

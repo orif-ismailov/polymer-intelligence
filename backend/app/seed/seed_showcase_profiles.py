@@ -32,6 +32,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
+from app.seed.align_numbering import align_reference_numbers
 from app.seed.showcase_profiles_data import (
     CONVERTER_PROFILES,
     LABORATORY_PROFILES,
@@ -915,6 +916,12 @@ def seed_showcase_profiles(*, reset: bool = False, skip_media: bool = False) -> 
         seed_logistics_requests(db, companies)
         seed_lab_requests(db, companies)
         ensure_service_coverage(db, companies)
+
+        # FRQ/LBR numbers above are literals; the sequences behind
+        # `generate_factory_rfq_number` / `generate_lab_request_number` have to
+        # end up past them. See `app/seed/align_numbering.py`.
+        align_reference_numbers(db)
+        db.commit()
     except Exception:
         db.rollback()
         raise
