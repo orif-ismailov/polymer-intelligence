@@ -1,8 +1,8 @@
 """R1 security pass (W8 — T8.2): PII/secrets never leave via schemas, presign TTL
 is bounded, and internal storage paths aren't exposed. Complements the behavioural
-tests (bank number never in a company response — test_portal_companies_api; OTP code
-never logged — test_otp_service / test_verification_notify; JWT audience isolation —
-test_portal_auth_api).
+tests (bank number never in a company response — test_portal_companies_api; an issued
+password never logged or audited — test_portal_admin_accounts_api; JWT audience
+isolation — test_portal_auth_api).
 """
 
 from __future__ import annotations
@@ -19,6 +19,17 @@ _FORBIDDEN_FIELDS = {
     "password_hash",
     "storage_path",
 }
+
+#: The ONE response that may carry a plaintext password, and the reason it must.
+#:
+#: `IssuedCredentialsOut` answers the staff call that MINTED the password. We store an
+#: argon2 hash and nothing else, so this response is the only moment the plaintext
+#: exists — there is no read route that could return it later, which is exactly the
+#: property that makes it safe to send here and nowhere else.
+#:
+#: Named rather than pattern-matched (`*Credentials*` would wave through anything
+#: somebody calls a credential) and asserted below to still be admin-only.
+_ONE_TIME_SECRET_RESPONSES = {"IssuedCredentialsOut"}
 
 
 def _pydantic_models(module) -> list[type]:  # noqa: ANN001
@@ -40,8 +51,36 @@ def test_portal_response_schemas_expose_no_secret_fields() -> None:
         for model in _pydantic_models(module):
             if not model.__name__.endswith("Out"):
                 continue  # response models only — inputs legitimately carry account_number
+            if model.__name__ in _ONE_TIME_SECRET_RESPONSES:
+                continue
             leaked = set(model.model_fields) & _FORBIDDEN_FIELDS
             assert not leaked, f"{model.__name__} exposes secret field(s): {leaked}"
+
+
+def test_the_one_time_credentials_response_is_admin_only() -> None:
+    """The exemption above is only tolerable while nothing but an admin can ask.
+
+    If `IssuedCredentialsOut` ever became reachable by a page grant — or worse, by a
+    cabinet account — a plaintext password would be one ordinary request away.
+    """
+    from fastapi.routing import APIRoute  # noqa: PLC0415
+
+    from app.domains.accounts.api_admin import router  # noqa: PLC0415
+    from app.domains.accounts.schemas import IssuedCredentialsOut  # noqa: PLC0415
+
+    returning = [
+        route
+        for route in router.routes
+        if isinstance(route, APIRoute) and route.response_model is IssuedCredentialsOut
+    ]
+    assert returning, "no route returns IssuedCredentialsOut — has it been renamed?"
+
+    for route in returning:
+        guards = {
+            getattr(dependency.call, "__name__", "")
+            for dependency in route.dependant.dependencies
+        }
+        assert "require_admin" in guards, f"{route.path} is not administrator-only"
 
 
 def test_bank_account_out_masks_the_number() -> None:

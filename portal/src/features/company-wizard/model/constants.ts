@@ -386,7 +386,12 @@ export const CHECK_TO_STEP: Record<string, number> = {
  */
 export const CHECK_ORDER: readonly string[] = [
   "tax_id_format",
-  "eimzo_signature",
+  // `eimzo_signature` is NOT listed: `StepReview` renders this array as
+  // placeholder rows before the case exists, so keeping it promised every
+  // applicant a check registration can no longer produce — «Подпись E-IMZO ·
+  // Ожидание» next to four checks that do run. A case that really carries the
+  // check (one confirmed from «Статус проверки») still renders it: those rows
+  // come from the API, and `checkRank` sorts an unlisted type last.
   "documents_complete",
   "bank_requisites",
   "manual_kyb",

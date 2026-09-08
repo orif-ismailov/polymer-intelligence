@@ -1,6 +1,6 @@
-import { expect, test, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
-import { registerCompany } from "./_registration";
+import { login, provisionAccount, registerCompany } from "./_registration";
 
 /**
  * R3 Stage B e2e: the full contract demo with a STUBBED CAPIWS bridge.
@@ -16,48 +16,32 @@ import { registerCompany } from "./_registration";
  * Two browser contexts play the two companies.
  */
 
-const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
 const BASE_URL = process.env.PORTAL_BASE_URL ?? "http://localhost:5173";
 
-function uniquePhone(): string {
-  return `+998${String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0")}`;
-}
 function uniqueTaxId(): string {
   return String(300_000_000 + Math.floor(Math.random() * 99_999_999));
 }
 
-async function readOtp(request: APIRequestContext, phone: string): Promise<string> {
-  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
-  const body = (await res.json()) as { code: string };
-  return body.code;
-}
-
 async function stubEimzo(context: BrowserContext, tin: string): Promise<void> {
-  await context.addInitScript(
-    (t) => {
-      (window as unknown as { __EIMZO_BRIDGE__: unknown }).__EIMZO_BRIDGE__ = {
-        probe: async () => true,
-        listCertificates: async () => [{ id: "k1", subjectName: "OOO " + t, tin: t, name: "DIRECTOR" }],
-        sign: async (_id: string, challenge: string) => ({
-          pkcs7_64: btoa(
-            JSON.stringify({ challenge, tin: t, name: "DIRECTOR", org_name: "OOO " + t }),
-          ),
-          signature_hex: "deadbeef",
-        }),
-      };
-    },
-    tin,
-  );
-}
-
-async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/cabinet/login");
-  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
-  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/cabinet/login/code");
-  await page.getByLabel(/code|код|kod/i).fill(await readOtp(request, phone));
-  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
+  await context.addInitScript((t) => {
+    (window as unknown as { __EIMZO_BRIDGE__: unknown }).__EIMZO_BRIDGE__ = {
+      probe: async () => true,
+      listCertificates: async () => [
+        { id: "k1", subjectName: "OOO " + t, tin: t, name: "DIRECTOR" },
+      ],
+      sign: async (_id: string, challenge: string) => ({
+        pkcs7_64: btoa(
+          JSON.stringify({
+            challenge,
+            tin: t,
+            name: "DIRECTOR",
+            org_name: "OOO " + t,
+          }),
+        ),
+        signature_hex: "deadbeef",
+      }),
+    };
+  }, tin);
 }
 
 /**
@@ -71,11 +55,12 @@ async function onboardVerified(page: Page, tax: string): Promise<void> {
   await registerCompany(page, tax, { type: "distributor", sign: true });
 }
 
-test("Stage B: two verified companies sign a contract end-to-end", async ({ browser, request }) => {
+test("Stage B: two verified companies sign a contract end-to-end", async ({
+  browser,
+  request,
+}) => {
   const taxA = uniqueTaxId();
   const taxB = uniqueTaxId();
-  const phoneA = uniquePhone();
-  const phoneB = uniquePhone();
 
   const ctxA = await browser.newContext({ baseURL: BASE_URL });
   const ctxB = await browser.newContext({ baseURL: BASE_URL });
@@ -85,9 +70,9 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
   const pageB = await ctxB.newPage();
 
   // Onboard + verify both companies (E-IMZO, auto-approve on).
-  await login(pageA, request, phoneA);
+  await login(pageA, await provisionAccount(request));
   await onboardVerified(pageA, taxA);
-  await login(pageB, request, phoneB);
+  await login(pageB, await provisionAccount(request));
   await onboardVerified(pageB, taxB);
 
   // Company A creates a contract with company B.
@@ -117,7 +102,11 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
 
   // A sends → pending_counterparty
   await pageA.getByTestId("contract-send").click();
-  await expect(pageA.getByText(/awaiting counterparty|ожидает контрагента|kontragent kutil/i)).toBeVisible();
+  await expect(
+    pageA.getByText(
+      /awaiting counterparty|ожидает контрагента|kontragent kutil/i,
+    ),
+  ).toBeVisible();
 
   // B opens the same contract, accepts, signs.
   // The dialog auto-signs (single stub cert) and, on success, the parent refetches —
@@ -127,7 +116,9 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
   await pageB.goto(`/cabinet/contracts/${contractId}`);
   await pageB.getByTestId("contract-accept").click();
   await pageB.getByTestId("eimzo-open").click();
-  await expect(pageB.getByText(/awaiting the other|ожидаем подпись|ikkinchi tomon/i)).toBeVisible({
+  await expect(
+    pageB.getByText(/awaiting the other|ожидаем подпись|ikkinchi tomon/i),
+  ).toBeVisible({
     timeout: 15_000,
   });
   await expect(pageB.getByTestId("eimzo-open")).toHaveCount(0);
@@ -135,7 +126,9 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({ brow
   // A signs → both signatures present → active
   await pageA.goto(`/cabinet/contracts/${contractId}`);
   await pageA.getByTestId("eimzo-open").click();
-  await expect(pageA.getByTestId("contract-download")).toBeVisible({ timeout: 15_000 });
+  await expect(pageA.getByTestId("contract-download")).toBeVisible({
+    timeout: 15_000,
+  });
   await pageA.reload();
   await expect(pageA.getByText(/active|активен|faol/i).first()).toBeVisible();
   await expect(pageA.getByTestId("contract-download")).toBeVisible();

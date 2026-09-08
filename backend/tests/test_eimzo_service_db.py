@@ -444,3 +444,61 @@ def test_a_registry_failure_never_fails_a_good_signature(sf, monkeypatch) -> Non
         company = db.get(Company, company.id)
         assert company.legal_name == "OOO Polymer Trade"
         assert company.identity_locked is True
+
+
+# ── confirming identity on a company that is ALREADY verified ─────────────────
+
+
+@requires_real_db
+def test_an_already_verified_company_can_still_confirm_its_identity(sf, monkeypatch) -> None:  # noqa: ANN001
+    """The E-IMZO offer stays on «Статус проверки» after approval — on purpose.
+
+    A company verified by documents alone has no `CompanyPersonData`, and
+    `Owner.FizTin`/`Fio` are mandatory on a «Договор НК», so without this it can
+    never send one. Registration no longer signs anything, which makes this the
+    ONLY door to `identity_locked` — and it used to answer 500:
+    `on_check_completed` re-approved the case, `_finalize_approval` asked for
+    `verified → verified`, and the state machine (rightly) refuses that edge.
+    """
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import CompanyPersonData  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
+    from app.models.enums import (  # noqa: PLC0415
+        CompanyStatus,
+        VerificationCaseStatus,
+    )
+
+    _patch(monkeypatch, result=_result())
+    with sf() as db:
+        set_switch(verification_auto_approve=True)
+        account, company = _company(db)
+
+        # The end state of a documents-only registration under auto-approve:
+        # verified, case closed, and NOT identity_locked.
+        open_case = (
+            db.query(VerificationCase).filter(VerificationCase.company_id == company.id).one()
+        )
+        open_case.status = VerificationCaseStatus.approved
+        company.status = CompanyStatus.verified
+        db.commit()
+
+        redis_client = FakeRedis()
+        eimzo_service.issue_challenge(redis_client, company.id, account.id)
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        db.commit()
+
+        assert outcome.ok is True
+        assert outcome.case is not None
+
+        company = db.get(Company, company.id)
+        assert company.identity_locked is True
+        assert company.status == CompanyStatus.verified
+
+        # The signer's identity is now on file — the thing the Didox rail needs.
+        person = (
+            db.query(CompanyPersonData)
+            .filter(CompanyPersonData.company_id == company.id)
+            .one()
+        )
+        assert person.pinfl_last4 == "0123"

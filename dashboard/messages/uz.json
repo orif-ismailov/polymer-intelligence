@@ -24,6 +24,7 @@
       "prices": "Narxlar",
       "adminProducts": "Mahsulotlar",
       "adminUsers": "Foydalanuvchilar",
+      "portalAccounts": "Mijoz kabinetlari",
       "offerRequests": "Taklif so'rovlari",
       "newsAdmin": "Yangiliklar (admin)",
       "verification": "Tekshiruv",
@@ -744,6 +745,69 @@
       "last_admin": "Bu oxirgi faol administrator — platformani boshqaradigan hech kim qolmaydi.",
       "admin_holds_all_pages": "Administratorda allaqachon barcha bo'limlarga ruxsat bor. Avval administrator huquqini olib tashlang.",
       "email_taken": "Bunday pochtali xodim allaqachon mavjud."
+    }
+  },
+  "portalAccounts": {
+    "pageTitle": "Mijoz kabinetlari",
+    "pageSubtitle": "Kirish uchun arizalar va shaxsiy kabinet loginlarini berish",
+    "countLabel": "Jami: {count}",
+    "empty": "Ariza va hisoblar yo‘q.",
+    "loadError": "Ro‘yxatni yuklab bo‘lmadi. Sahifani yangilang.",
+    "saveError": "Saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+    "cancel": "Bekor qilish",
+    "saving": "Saqlanmoqda…",
+    "mustChange": "kirishda parolni almashtiradi",
+    "block": "Bloklash",
+    "unblock": "Blokdan chiqarish",
+    "status": {
+      "pending": "Ariza",
+      "active": "Faol",
+      "blocked": "Bloklangan"
+    },
+    "filter": {
+      "pending": "Arizalar",
+      "active": "Faol",
+      "blocked": "Bloklangan",
+      "all": "Hammasi"
+    },
+    "table": {
+      "applicant": "Ariza beruvchi",
+      "company": "Kompaniya",
+      "login": "Login",
+      "status": "Holat",
+      "createdAt": "Ariza sanasi"
+    },
+    "issue": {
+      "action": "Kirish berish",
+      "title": "Kabinetga kirish berish",
+      "subtitle": "Login va parolni mijozga o‘zingiz topshirasiz — tizimda pochta yo‘q.",
+      "login": "Login",
+      "loginHint": "Katta-kichik harf muhim emas: Acme va acme — bitta login.",
+      "password": "Parol",
+      "passwordPlaceholder": "bo‘sh qoldiring — o‘zimiz yaratamiz",
+      "generateHint": "Parol yaratiladi: 16 belgi, 0/O/1/l/I ishlatilmaydi — aytib berish oson bo‘lsin.",
+      "minLength": "Kamida {n} ta belgi.",
+      "submit": "Berish"
+    },
+    "regenerate": {
+      "action": "Yangi parol",
+      "title": "Yangi parol yaratish",
+      "subtitle": "Eski parol darhol ishlamay qoladi. Mijoz kirishda uni yana almashtiradi."
+    },
+    "issued": {
+      "title": "Kirish berildi",
+      "onceWarning": "Parol bir marta ko‘rsatiladi. Biz faqat uning xeshini saqlaymiz — tiklab bo‘lmaydi, faqat yangisini berish mumkin.",
+      "loginLabel": "Login",
+      "passwordLabel": "Parol",
+      "contractHint": "Juftlikni nusxalab, shartnoma tuzishda «Kabinet logini» va «Kabinet paroli» maydonlariga qo‘ying.",
+      "copy": "Nusxalash",
+      "copied": "Nusxalandi",
+      "done": "Tayyor"
+    },
+    "errors": {
+      "login_taken": "Bu login band. Boshqasini tanlang.",
+      "no_credentials": "Bu yozuvda hali login yo‘q — avval kirish bering.",
+      "login_required": "Loginni kiriting."
     }
   },
   "adminProducts": {

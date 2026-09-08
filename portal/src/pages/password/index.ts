@@ -1,0 +1,1 @@
+export { PasswordChangePage } from "./PasswordChangePage";

@@ -34,15 +34,15 @@ import { login, registerCompany } from "./_registration";
 const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
 const BASE_URL = process.env.PORTAL_BASE_URL ?? "http://localhost:5173";
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@polymer.uz";
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "admin_dev_password_change_in_prod";
+const ADMIN_PASSWORD =
+  process.env.SEED_ADMIN_PASSWORD ?? "admin_dev_password_change_in_prod";
 
-const PDF = { mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 test document") };
+const PDF = {
+  mimeType: "application/pdf",
+  buffer: Buffer.from("%PDF-1.4 test document"),
+};
 
 const MY_INQUIRIES = /my inquiries|мои запросы|mening so/i;
-
-function uniquePhone(): string {
-  return `+998${String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0")}`;
-}
 
 function uniqueTaxId(): string {
   return String(320_000_000 + Math.floor(Math.random() * 79_999_999));
@@ -50,23 +50,25 @@ function uniqueTaxId(): string {
 
 /** The R3 CAPIWS stub — onboarding signs with E-IMZO to come out verified. */
 async function stubEimzo(context: BrowserContext, tin: string): Promise<void> {
-  await context.addInitScript(
-    (t) => {
-      (window as unknown as { __EIMZO_BRIDGE__: unknown }).__EIMZO_BRIDGE__ = {
-        probe: async () => true,
-        listCertificates: async () => [
-          { id: "k1", subjectName: "OOO " + t, tin: t, name: "DIRECTOR" },
-        ],
-        sign: async (_id: string, challenge: string) => ({
-          pkcs7_64: btoa(
-            JSON.stringify({ challenge, tin: t, name: "DIRECTOR", org_name: "OOO " + t }),
-          ),
-          signature_hex: "deadbeef",
-        }),
-      };
-    },
-    tin,
-  );
+  await context.addInitScript((t) => {
+    (window as unknown as { __EIMZO_BRIDGE__: unknown }).__EIMZO_BRIDGE__ = {
+      probe: async () => true,
+      listCertificates: async () => [
+        { id: "k1", subjectName: "OOO " + t, tin: t, name: "DIRECTOR" },
+      ],
+      sign: async (_id: string, challenge: string) => ({
+        pkcs7_64: btoa(
+          JSON.stringify({
+            challenge,
+            tin: t,
+            name: "DIRECTOR",
+            org_name: "OOO " + t,
+          }),
+        ),
+        signature_hex: "deadbeef",
+      }),
+    };
+  }, tin);
 }
 
 /**
@@ -91,7 +93,9 @@ async function publishOffer(
   await page.getByTestId("offer-wizard-next").click();
 
   // 2 — AI check: the sheet gates «Далее» on the verdict settling.
-  await expect(page.getByTestId("offer-wizard-verdict")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("offer-wizard-verdict")).toBeVisible({
+    timeout: 20_000,
+  });
   await page.getByTestId("offer-wizard-next").click();
 
   // 3 — «Наличие»: in stock owes a quantity and a price.
@@ -116,36 +120,52 @@ async function publishOffer(
   // 6 — «Условия продажи»
   await expect(page.getByTestId("offer-wizard-step-6")).toBeVisible();
   // Segmented: «Доступны» is the first cell, «Не предоставляются» the second.
-  await page.getByTestId("offer-wizard-samples").getByRole("button").first().click();
+  await page
+    .getByTestId("offer-wizard-samples")
+    .getByRole("button")
+    .first()
+    .click();
   await page.getByLabel(/D-Doc/i).check();
   if (opts.acceptsRfq === false) await page.getByLabel(/RFQ/i).uncheck();
   await page.getByTestId("offer-wizard-next").click();
 
   // 7 — «Дополнительная информация»
   await expect(page.getByTestId("offer-wizard-step-7")).toBeVisible();
-  await page.getByTestId("offer-wizard-description").fill("Полипропилен для литья под давлением.");
+  await page
+    .getByTestId("offer-wizard-description")
+    .fill("Полипропилен для литья под давлением.");
   await page.getByTestId("offer-wizard-next").click();
 
   // 8 — preview → publish
   await expect(page.getByTestId("offer-wizard-step-preview")).toBeVisible();
   await page.getByTestId("offer-wizard-publish").click();
-  await page.waitForURL(/\/cabinet\/offers\/new\/done\/\d+/, { timeout: 30_000 });
+  await page.waitForURL(/\/cabinet\/offers\/new\/done\/\d+/, {
+    timeout: 30_000,
+  });
 
   return Number(/\/cabinet\/offers\/new\/done\/(\d+)/.exec(page.url())?.[1]);
 }
 
 /** Staff approval — the only door that makes an offer public. */
-async function approveOffer(request: APIRequestContext, offerId: number): Promise<void> {
+async function approveOffer(
+  request: APIRequestContext,
+  offerId: number,
+): Promise<void> {
   const auth = await request.post(`${API_BASE}/auth/login`, {
     data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
   });
   expect(auth.ok(), "the seeded admin must be able to sign in").toBeTruthy();
-  const { access_token: token } = (await auth.json()) as { access_token: string };
+  const { access_token: token } = (await auth.json()) as {
+    access_token: string;
+  };
 
-  const res = await request.post(`${API_BASE}/admin/moderation/offers/${offerId}/approve`, {
-    headers: { Authorization: `Bearer ${token}` },
-    data: {},
-  });
+  const res = await request.post(
+    `${API_BASE}/admin/moderation/offers/${offerId}/approve`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {},
+    },
+  );
   expect(res.ok(), await res.text()).toBeTruthy();
 }
 
@@ -159,7 +179,7 @@ async function openAsBuyer(
   const context = await browser.newContext({ baseURL: BASE_URL });
   await stubEimzo(context, tax);
   const page = await context.newPage();
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await registerCompany(page, tax, { type: "buyer", sign: true });
 
   await page.goto(`/cabinet/market/${offerId}`);
@@ -178,7 +198,7 @@ async function sellWith(
   const context = await browser.newContext({ baseURL: BASE_URL });
   await stubEimzo(context, taxId);
   const page = await context.newPage();
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await registerCompany(page, taxId, { type: "distributor", sign: true });
 
   const offerId = await publishOffer(page, `${name} ${taxId}`, opts);
@@ -187,7 +207,10 @@ async function sellWith(
   return { offerId, taxId };
 }
 
-test("every control on the product sheet does what its label says", async ({ browser, request }) => {
+test("every control on the product sheet does what its label says", async ({
+  browser,
+  request,
+}) => {
   test.setTimeout(240_000);
 
   const { offerId, taxId } = await sellWith(browser, request, "PP H030 GP");
@@ -197,7 +220,9 @@ test("every control on the product sheet does what its label says", async ({ bro
   await expect(page.getByRole("heading", { level: 1 })).toContainText(taxId);
 
   // ── Documents tab: a translated label, not the raw enum ─────────────────────
-  await page.getByRole("button", { name: /^documents|^документы|^hujjatlar/i }).click();
+  await page
+    .getByRole("button", { name: /^documents|^документы|^hujjatlar/i })
+    .click();
   const tds = page.getByRole("link", { name: /TDS\.pdf/i });
   await expect(tds).toBeVisible();
   // The badge used to read "tds": `documentKind` is the company-verification tree
@@ -207,7 +232,9 @@ test("every control on the product sheet does what its label says", async ({ bro
   );
 
   // ── Favourite: responds to the tap, and survives a reload ───────────────────
-  await page.getByRole("button", { name: /^description|^описание|^tavsif/i }).click();
+  await page
+    .getByRole("button", { name: /^description|^описание|^tavsif/i })
+    .click();
   const heart = page.getByTestId("product-detail-favorite");
   await expect(heart).toHaveAttribute("aria-pressed", "false");
   await heart.click();
@@ -227,14 +254,18 @@ test("every control on the product sheet does what its label says", async ({ bro
   // ── Sending an inquiry refreshes «Мои запросы» in place ─────────────────────
   await expect(page.getByText(MY_INQUIRIES)).toHaveCount(0);
   await qty.fill("12");
-  await page.getByLabel(/^message|^сообщение|^xabar/i).fill("Прошу коммерческое предложение.");
+  await page
+    .getByLabel(/^message|^сообщение|^xabar/i)
+    .fill("Прошу коммерческое предложение.");
   await expect(submit).toBeEnabled();
   await submit.click();
   // No reload between the click and this assertion — that is the whole point.
   await expect(page.getByText(MY_INQUIRIES)).toBeVisible({ timeout: 15_000 });
 
   // ── The sticky bar ──────────────────────────────────────────────────────────
-  const cells = page.getByTestId("product-detail-action-bar").getByRole("button");
+  const cells = page
+    .getByTestId("product-detail-action-bar")
+    .getByRole("button");
   // Escrow is the third cell. The seller left escrow off, so it says so instead
   // of scrolling to the inquiry form the way the first cell does.
   await expect(cells.nth(2)).toBeDisabled();
@@ -246,15 +277,22 @@ test("every control on the product sheet does what its label says", async ({ bro
   expect(url.searchParams.get("offerId")).toBe(String(offerId));
   expect(Number(url.searchParams.get("counterpartyId"))).toBeGreaterThan(0);
   // Preselected by id, not typed: the seller is already named on the sheet.
-  await expect(page.getByText(new RegExp(taxId))).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(new RegExp(taxId))).toBeVisible({
+    timeout: 15_000,
+  });
 
   await context.close();
 });
 
-test("an offer that refuses RFQs offers no way to send one", async ({ browser, request }) => {
+test("an offer that refuses RFQs offers no way to send one", async ({
+  browser,
+  request,
+}) => {
   test.setTimeout(240_000);
 
-  const { offerId } = await sellWith(browser, request, "PP NO-RFQ", { acceptsRfq: false });
+  const { offerId } = await sellWith(browser, request, "PP NO-RFQ", {
+    acceptsRfq: false,
+  });
   const { context, page } = await openAsBuyer(browser, request, offerId);
 
   // The hero CTA was already disabled; the form below it used to submit anyway,

@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useAuthStore, useLogout, useUpdateAccount } from "@/entities/account";
 import { SUPPORTED_LANGS, coerceLang } from "@/shared/i18n";
@@ -62,11 +62,26 @@ export function SettingsPage() {
           <CardTitle>{t("settings.profile")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
+          <FormField label={t("settings.login")}>
+            {({ id }) => (
+              <Input id={id} value={account?.login ?? ""} disabled readOnly />
+            )}
+          </FormField>
+
           <FormField label={t("settings.phone")}>
             {({ id }) => (
               <Input id={id} value={account ? formatPhoneMask(account.phone) : ""} disabled readOnly />
             )}
           </FormField>
+
+          {/* The only self-service route to a new password. Staff can regenerate
+              one, but that is a phone call; this is the door the account owner has. */}
+          <Link
+            to="/cabinet/password"
+            className="inline-block text-sm font-medium text-brand hover:underline"
+          >
+            {t("password.changeCta")}
+          </Link>
 
           <FormField label={t("settings.name")}>
             {({ id }) => (

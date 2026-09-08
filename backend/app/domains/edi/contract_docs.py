@@ -124,6 +124,17 @@ _TAG = re.compile(r"<[^>]+>")
 _SECTION = re.compile(r"<h2[^>]*>(?P<title>.*?)</h2>(?P<body>.*?)(?=<h2|\Z)", re.S | re.I)
 _SPACE = re.compile(r"\s+")
 
+#: Blocks the template marks as ours-only, removed BEFORE the sections are read.
+#:
+#: Everything `sections_from_html` returns is transmitted to Didox and printed on the
+#: my.soliq.uz form, so a block that is merely "not an `<h2>`" is not safe: the last
+#: section's body runs to `\Z`, and anything appended after it — a credentials box by
+#: the signature block, say — is swallowed whole and shipped to the tax authority
+#: without a single thing failing. The credentials block in `supply_v2_ru.html` is
+#: placed above the first `<h2>` for that reason AND marked here, so that moving it
+#: later cannot quietly publish a customer's password.
+_SKIPPED = re.compile(r"<(\w+)[^>]*\bdata-didox=[\"\']skip[\"\'][^>]*>.*?</\1>", re.S | re.I)
+
 
 def _plain(fragment: str) -> str:
     """Markup out, entities decoded, whitespace collapsed.
@@ -161,10 +172,11 @@ def sections_from_html(rendered_html: str) -> list[tuple[str, str]]:
     """`(title, body)` per `<h2>` of the rendered contract, in document order.
 
     `<h1>` is the document's own title and is carried by `ContractName`, so it is
-    deliberately not a section.
+    deliberately not a section. Blocks marked `data-didox="skip"` are removed first —
+    see `_SKIPPED`; what this function returns leaves the building.
     """
     out: list[tuple[str, str]] = []
-    for match in _SECTION.finditer(rendered_html):
+    for match in _SECTION.finditer(_SKIPPED.sub(" ", rendered_html)):
         title = _strip_leading_ordinal(_plain(match.group("title")))
         body = _plain(match.group("body"))
         if title or body:

@@ -29,6 +29,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.api import errors
 from app.core.db import get_db
 from app.domains.companies import directory as directory_service
 from app.domains.companies import reviews as review_service
@@ -219,6 +220,7 @@ def list_public_offers(
     "/offers/{offer_id}",
     response_model=PublicOfferDetail,
     summary="Public offer page",
+    responses=errors.NOT_FOUND,
 )
 def get_public_offer(offer_id: int, db: Session = Depends(get_db)) -> PublicOfferDetail:
     """GET /public/offers/{id} -- one approved listing, or 404.
@@ -265,6 +267,12 @@ def list_public_categories(
     "/directories/{slug}",
     response_model=PublicCompanyListOut,
     summary="A public company directory (manufacturers / traders / logistics / laboratories)",
+    responses=errors.error(
+        404,
+        "`slug` is not one of the four directories. The set is the SEO contract in "
+        "`DIRECTORY_SLUGS`, so an unknown one is a bad URL rather than an empty list.",
+        "Unknown directory",
+    ),
 )
 def list_public_directory(
     slug: str,
@@ -298,6 +306,12 @@ def list_public_directory(
     "/directories/{slug}/{company_id}",
     response_model=PublicCompanyDetail,
     summary="A company's public profile",
+    responses=errors.error(
+        404,
+        "Unknown directory slug, or no verified company with that id holding a CONFIRMED "
+        "role in it — a company reached through the wrong directory 404s too.",
+        "Company not found",
+    ),
 )
 def get_public_company(
     slug: str,
@@ -474,6 +488,9 @@ def public_news_filters(
     "/news/articles/{signal_id}",
     response_model=NewsArticleDetail,
     summary="One news article",
+    responses=errors.error(
+        404, "No published article carries that signal id.", "Article not found"
+    ),
 )
 def get_public_news_article(
     signal_id: int,

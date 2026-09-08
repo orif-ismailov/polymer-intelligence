@@ -220,15 +220,24 @@ class OfferRequestStatus(enum.StrEnum):
 
 
 # ── Company Verification & Portal (R1) ────────────────────────────────────────
-# Identity model v2 (ARCHITECTURE Amendment A1): person = user_accounts (phone
-# OTP), company membership via company_members.user_account_id. All ENUM values
-# below are verbatim from R1-PLAN §T1.1 and mapped to native PG ENUM types in
-# migration 0017. Do not change a value without a migration + DB-doc edit.
+# Identity model v2 (ARCHITECTURE Amendment A1): person = user_accounts (a
+# staff-issued login + password since 0048), company membership via
+# company_members.user_account_id. All ENUM values below are verbatim from
+# R1-PLAN §T1.1 and mapped to native PG ENUM types in migration 0017. Do not
+# change a value without a migration + DB-doc edit.
 
 
 class AccountStatus(enum.StrEnum):
-    """Portal user-account lifecycle (PG type: account_status)."""
+    """Portal user-account lifecycle (PG type: account_status).
 
+    `pending` is an APPLICATION: somebody filled in the registration form and is
+    waiting for staff to issue their credentials. It is a real state rather than
+    "has no password yet" because `deps.get_current_account` refuses anything that
+    is not `active`, so every one of the ~140 routes behind that guard fails closed
+    for an applicant without knowing this state exists. Added in migration 0048.
+    """
+
+    pending = "pending"
     active = "active"
     blocked = "blocked"
 

@@ -63,11 +63,12 @@ export const THEME_KEY = "portal.theme";
  */
 export const RAIL_COLLAPSED_KEY = "portal.railCollapsed";
 
-/** OTP code length the backend issues. */
-export const OTP_CODE_LENGTH = 6;
-
-/** Default resend cooldown (seconds) when no Retry-After header is present. */
-export const OTP_RESEND_FALLBACK_SECONDS = 60;
+/**
+ * Shortest password the cabinet accepts, mirroring the backend's
+ * `accounts/schemas.py::MIN_PASSWORD_LENGTH`. Checked here only so a typo is
+ * caught before a round trip; the server is what enforces it.
+ */
+export const MIN_PASSWORD_LENGTH = 12;
 
 /** UZ tax_id must be exactly 9 digits. */
 export const UZ_TAX_ID_LENGTH = 9;

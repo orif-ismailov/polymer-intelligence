@@ -1,7 +1,7 @@
 """Redis clients.
 
 `get_redis` is a FastAPI dependency that yields a short-lived, string-decoding
-sync Redis client (mirrors `get_db`). Used by the portal OTP endpoints; overridable
+sync Redis client (mirrors `get_db`). Used by the portal auth endpoints; overridable
 in tests via `dependency_overrides[get_redis]`.
 
 `signal_client()` is the other shape: a long-lived, process-wide client for the
@@ -22,7 +22,7 @@ from app.core.config import settings
 #: How long `signal_client()` will wait on Redis, in seconds.
 #:
 #: Deliberately two orders of magnitude below `get_redis`'s 3 s. That client
-#: serves OTP endpoints, where three seconds of patience is right; this one is
+#: serves the auth endpoints, where three seconds of patience is right; this one is
 #: consulted before ordinary requests, so the same patience would put a 3 s stall
 #: on every company lookup for as long as Redis was unwell. A quarter second is
 #: long enough for a healthy local Redis and short enough to be invisible — and
@@ -60,7 +60,7 @@ def get_redis() -> Generator[redis.Redis, None, None]:  # type: ignore[type-arg]
 
     NB: the return annotation is unsubscripted on purpose. FastAPI evaluates it at
     runtime via get_type_hints, and redis-py's runtime `Redis` class is not a real
-    generic (`redis.Redis[str]` → TypeError). otp_service still sees `Redis[str]`
+    generic (`redis.Redis[str]` → TypeError). The rate limiter still sees `Redis[str]`
     (string annotations, never evaluated) for the mypy-strict gate.
     """
     client = redis.from_url(

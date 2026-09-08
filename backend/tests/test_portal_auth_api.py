@@ -1,12 +1,23 @@
-"""Portal auth API tests (R1 W3 — T3.3 acceptance).
+"""Cabinet auth API tests — login + password, registration, forced change (0048).
 
-TestClient with get_db (mock session) + get_redis (FakeRedis) overridden. Where a
-test needs a persisted account with a real id, verify_code is patched to return a
-canned UserAccount (the service's own logic is unit-tested in test_otp_service).
+TestClient with `get_db` (mock session) + `get_redis` (FakeRedis) overridden. The
+service's own logic is unit-tested in `test_portal_account_service.py`; what this file
+covers is the router's contract: what a caller can observe.
 
-Covers the W3 acceptance list: cooldown 429, wrong-code uniform error, success
-issues a working token + cookie, JWT audience isolation both directions, blocked
-account 403, refresh rotation, send_sms enqueue, and code-absent-from-logs.
+Three of those observations are the whole point of the design and are asserted here
+rather than left to review:
+
+* **Sign-in says one thing.** Unknown login, wrong password, blocked account and an
+  application that was never granted credentials all produce the identical 401 body.
+* **Registration says one thing.** The same 202 whether or not that phone has applied
+  before — the enumeration oracle the dropped UNIQUE constraint removed at the schema
+  level must not come back through the response.
+* **The forced-change gate is real.** An account that owes a password change is refused
+  by `get_current_account` (so ~140 routes are closed to it) and can still reach exactly
+  the two routes that let it settle the debt.
+
+Plus the properties inherited from the OTP era that must survive the swap: JWT audience
+isolation in both directions, blocked → 403, and refresh rotating the cookie.
 """
 
 from __future__ import annotations
@@ -20,12 +31,14 @@ from fastapi.testclient import TestClient
 
 from tests._fake_redis import FakeRedis
 
-_REQUEST = "/api/v1/portal/auth/otp/request"
-_VERIFY = "/api/v1/portal/auth/otp/verify"
+_LOGIN = "/api/v1/portal/auth/login"
+_REGISTER = "/api/v1/portal/auth/register"
+_PASSWORD = "/api/v1/portal/auth/password"
 _REFRESH = "/api/v1/portal/auth/refresh"
 _LOGOUT = "/api/v1/portal/auth/logout"
 _ME = "/api/v1/portal/me"
 _PHONE = "+998901234567"
+_PASS = "correct horse battery"
 
 
 @pytest.fixture
@@ -51,166 +64,340 @@ def portal_app() -> Iterator[tuple[TestClient, FakeRedis, MagicMock]]:
         yield client, fake, db
 
 
-def _account(account_id: int, status: str = "active"):  # noqa: ANN202
+def _account(  # noqa: ANN202
+    account_id: int,
+    status: str = "active",
+    *,
+    login: str = "acme-trade",
+    password: str | None = _PASS,
+    must_change: bool = False,
+):
+    """A cabinet account as staff would have issued it.
+
+    The password is hashed for real — `authenticate` compares against argon2, and a
+    canned hash would make every sign-in test pass for the wrong reason.
+    """
+    from app.core.security import hash_password  # noqa: PLC0415
     from app.domains.accounts.models import UserAccount  # noqa: PLC0415
     from app.models.enums import AccountStatus  # noqa: PLC0415
 
-    acct = UserAccount(phone=_PHONE, language="ru", status=AccountStatus(status))
+    acct = UserAccount(
+        phone=_PHONE,
+        language="ru",
+        status=AccountStatus(status),
+        login=login,
+        password_hash=hash_password(password) if password is not None else None,
+        must_change_password=must_change,
+    )
     acct.id = account_id
     return acct
 
 
-# ── OTP request ───────────────────────────────────────────────────────────────
+def _found(db: MagicMock, account) -> None:  # noqa: ANN001
+    db.query.return_value.filter.return_value.first.return_value = account
 
 
-def test_otp_request_returns_204(portal_app) -> None:  # noqa: ANN001
-    client, _fake, _db = portal_app
-    with patch("app.domains.accounts.otp._enqueue_sms"):
-        resp = client.post(_REQUEST, json={"phone": _PHONE})
-    assert resp.status_code == 204
+# ── Sign-in ───────────────────────────────────────────────────────────────────
 
 
-def test_otp_request_second_call_is_rate_limited_with_retry_after(portal_app) -> None:  # noqa: ANN001
-    client, _fake, _db = portal_app
-    with patch("app.domains.accounts.otp._enqueue_sms"):
-        client.post(_REQUEST, json={"phone": _PHONE})
-        resp = client.post(_REQUEST, json={"phone": _PHONE})
+def test_login_success_issues_token_and_cookie(portal_app) -> None:  # noqa: ANN001
+    from app.core.security import decode_token  # noqa: PLC0415
+
+    client, _fake, db = portal_app
+    _found(db, _account(7))
+
+    resp = client.post(_LOGIN, json={"login": "acme-trade", "password": _PASS})
+    assert resp.status_code == 200
+
+    body = resp.json()
+    payload = decode_token(body["access_token"], expected_type="portal_access")
+    assert payload["sub"] == "7"
+    assert body["account"]["login"] == "acme-trade"
+    assert body["account"]["must_change_password"] is False
+    assert "portal_session=" in resp.headers.get("set-cookie", "")
+
+
+def test_login_is_case_insensitive_in_the_login(portal_app) -> None:  # noqa: ANN001
+    """`Acme-Trade` reaches the account stored as `acme-trade`.
+
+    The unique index is on `lower(login)`, so a case-sensitive lookup would create
+    accounts that exist and cannot be signed into — which is what `staff_users.email`
+    paid for once already.
+    """
+    client, _fake, db = portal_app
+    _found(db, _account(7))
+
+    resp = client.post(_LOGIN, json={"login": "  Acme-Trade  ", "password": _PASS})
+    assert resp.status_code == 200
+
+
+@pytest.mark.parametrize(
+    ("case", "account", "password"),
+    [
+        ("unknown login", None, _PASS),
+        ("wrong password", "active", "not the password"),
+        ("blocked account", "blocked", _PASS),
+        ("application, no credentials", "pending", _PASS),
+    ],
+)
+def test_login_failures_are_indistinguishable(portal_app, case, account, password) -> None:  # noqa: ANN001
+    """Every way to fail produces the SAME 401 body.
+
+    Splitting them — 403 for blocked, 404 for unknown — would tell a caller which
+    logins exist and which accounts are merely disabled, which is most of what an
+    attacker came for.
+    """
+    client, _fake, db = portal_app
+    if account is None:
+        _found(db, None)
+    elif account == "pending":
+        _found(db, _account(7, "pending", password=None))
+    else:
+        _found(db, _account(7, account))
+
+    resp = client.post(_LOGIN, json={"login": "acme-trade", "password": password})
+    assert resp.status_code == 401, case
+    assert resp.json() == {"detail": "Invalid credentials"}, case
+
+
+def test_login_is_rate_limited_per_ip_with_retry_after(portal_app) -> None:  # noqa: ANN001
+    client, _fake, db = portal_app
+    _found(db, None)
+
+    from app.services.rate_limit import PORTAL_LOGIN_PER_IP_PER_MIN  # noqa: PLC0415
+
+    # Each attempt names a DIFFERENT login, so only the per-IP bucket can stop it.
+    for i in range(PORTAL_LOGIN_PER_IP_PER_MIN):
+        resp = client.post(_LOGIN, json={"login": f"who-{i}", "password": "x"})
+        assert resp.status_code == 401
+
+    resp = client.post(_LOGIN, json={"login": "who-last", "password": "x"})
     assert resp.status_code == 429
     assert int(resp.headers["Retry-After"]) > 0
 
 
-def test_otp_request_invalid_phone_returns_422(portal_app) -> None:  # noqa: ANN001
-    client, _fake, _db = portal_app
-    with patch("app.domains.accounts.otp._enqueue_sms"):
-        resp = client.post(_REQUEST, json={"phone": "not-a-phone"})
-    assert resp.status_code == 422
+def test_login_per_account_bucket_is_keyed_by_the_normalized_login(portal_app) -> None:  # noqa: ANN001
+    """Varying only the CASE must not buy more attempts."""
+    client, _fake, db = portal_app
+    _found(db, _account(7))
 
+    from app.services.rate_limit import PORTAL_LOGIN_PER_ACCOUNT_PER_5MIN  # noqa: PLC0415
 
-def test_otp_request_enqueues_send_sms_without_logging_the_code(portal_app, caplog) -> None:  # noqa: ANN001
-    client, _fake, _db = portal_app
-    with (
-        patch("app.domains.accounts.otp._generate_code", return_value="654321"),
-        patch("app.tasks.notify.send_sms.apply_async") as apply_async,
-        caplog.at_level("DEBUG"),
-    ):
-        resp = client.post(_REQUEST, json={"phone": _PHONE})
+    for _ in range(PORTAL_LOGIN_PER_ACCOUNT_PER_5MIN):
+        client.post(_LOGIN, json={"login": "ACME-trade", "password": "wrong"})
 
-    assert resp.status_code == 204
-    apply_async.assert_called_once()
-    enqueued = apply_async.call_args.kwargs["kwargs"]
-    assert enqueued["phone"] == _PHONE
-    assert enqueued["purpose"] == "otp"
-    assert "654321" in enqueued["text"]  # the code rides in the SMS body …
-    assert "654321" not in caplog.text  # … but is never logged
-
-
-# ── Per-IP cap: which header identifies the caller ────────────────────────────
-# The cap is only worth as much as the header it keys on. nginx APPENDS to
-# X-Forwarded-For (`$proxy_add_x_forwarded_for`) and OVERWRITES X-Real-IP
-# (`proxy_set_header`), so only the latter is caller-proof. These two tests pin
-# that: one proves a forged header buys nothing, the other proves the trusted
-# header still separates real callers (so the fix isn't "ignore all headers").
-#
-# Distinct phones throughout — the per-phone cooldown would otherwise 429 first
-# and both tests would pass without ever reaching the per-IP bucket.
-
-_CAP = 5  # settings.OTP_MAX_SENDS_PER_DAY, pinned in tests/conftest.py
-
-
-def _request_from(client, phone: str, headers: dict[str, str]):  # noqa: ANN001, ANN202
-    with patch("app.domains.accounts.otp._enqueue_sms"):
-        return client.post(_REQUEST, json={"phone": phone}, headers=headers)
-
-
-def test_forged_x_forwarded_for_cannot_escape_the_per_ip_cap(portal_app) -> None:  # noqa: ANN001
-    """A caller rotating X-Forwarded-For stays in one bucket.
-
-    Regression test for the spoofable-IP bug: `_client_ip` used to return
-    `xff.split(",")[0]`, which is the value the CALLER sent (nginx appends its
-    own after it). Every forged value therefore minted a fresh bucket and the
-    cap never fired — unlimited OTP breadth across phone numbers on a metered
-    SMS account. Each request below carries a different forged XFF; the cap must
-    still fire on schedule.
-    """
-    client, _fake, _db = portal_app
-
-    for i in range(_CAP):
-        resp = _request_from(
-            client, f"+99890000{i:04d}", {"X-Forwarded-For": f"10.0.0.{i}, 203.0.113.9"}
-        )
-        assert resp.status_code == 204, f"request {i} should be under the cap"
-
-    over = _request_from(
-        client, "+998909999999", {"X-Forwarded-For": "10.0.0.99, 203.0.113.9"}
-    )
-    assert over.status_code == 429
-    assert int(over.headers["Retry-After"]) > 0
-
-
-def test_x_real_ip_keys_the_per_ip_bucket(portal_app) -> None:  # noqa: ANN001
-    """Two different X-Real-IP values get independent buckets.
-
-    The counterpart to the test above: the fix must not degrade into "ignore
-    every header", which would collapse all traffic behind a proxy into a single
-    bucket and rate-limit the whole internet as one caller.
-    """
-    client, _fake, _db = portal_app
-
-    for i in range(_CAP):
-        resp = _request_from(client, f"+99891000{i:04d}", {"X-Real-IP": "198.51.100.7"})
-        assert resp.status_code == 204
-
-    assert _request_from(
-        client, "+998918888888", {"X-Real-IP": "198.51.100.7"}
-    ).status_code == 429
-    # A genuinely different client is unaffected by the first one's exhaustion.
-    assert _request_from(
-        client, "+998917777777", {"X-Real-IP": "198.51.100.8"}
-    ).status_code == 204
-
-
-# ── OTP verify ────────────────────────────────────────────────────────────────
-
-
-def test_otp_verify_wrong_code_returns_400(portal_app) -> None:  # noqa: ANN001
-    from app.domains.accounts.otp import OtpInvalid  # noqa: PLC0415
-
-    client, _fake, _db = portal_app
-    with patch("app.domains.accounts.api_portal.verify_code", side_effect=OtpInvalid("wrong")):
-        resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "000000"})
-    assert resp.status_code == 400
-
-
-def test_otp_verify_lockout_returns_429(portal_app) -> None:  # noqa: ANN001
-    from app.domains.accounts.otp import OtpLocked  # noqa: PLC0415
-
-    client, _fake, _db = portal_app
-    with patch("app.domains.accounts.api_portal.verify_code", side_effect=OtpLocked("locked")):
-        resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "000000"})
+    resp = client.post(_LOGIN, json={"login": "acme-trade", "password": _PASS})
     assert resp.status_code == 429
 
 
-def test_otp_verify_success_issues_token_and_cookie(portal_app) -> None:  # noqa: ANN001
-    from app.core.security import decode_token  # noqa: PLC0415
+# ── Registration ──────────────────────────────────────────────────────────────
 
+
+_APPLICATION = {
+    "contact_name": "Иван Петров",
+    "phone": _PHONE,
+    "company_name": "ООО Полимер",
+    "note": "Хотим закупать ПВХ",
+}
+
+
+def test_register_accepts_and_grants_nothing(portal_app) -> None:  # noqa: ANN001
+    client, _fake, db = portal_app
+
+    resp = client.post(_REGISTER, json=_APPLICATION)
+    assert resp.status_code == 202
+    assert resp.json() == {"status": "received"}
+    # No session, no token, nothing a caller could act with.
+    assert "portal_session=" not in resp.headers.get("set-cookie", "")
+    assert "access_token" not in resp.text
+    assert db.commit.called
+
+
+def test_register_creates_a_pending_account(portal_app) -> None:  # noqa: ANN001
+    from app.models.enums import AccountStatus  # noqa: PLC0415
+
+    client, _fake, db = portal_app
+    client.post(_REGISTER, json=_APPLICATION)
+
+    added = [c.args[0] for c in db.add.call_args_list]
+    accounts = [a for a in added if type(a).__name__ == "UserAccount"]
+    assert len(accounts) == 1
+    assert accounts[0].status == AccountStatus.pending
+    assert accounts[0].password_hash is None
+    assert accounts[0].login is None
+    assert accounts[0].applied_company_name == "ООО Полимер"
+
+
+def test_register_answers_identically_for_a_repeat_phone(portal_app) -> None:  # noqa: ANN001
+    """Byte-identical answers, so the response cannot enumerate applicants.
+
+    The schema half of this property is the dropped UNIQUE on `phone` (0048): with it
+    in place the database would raise on the second call and the endpoint would 500,
+    which is itself the answer an attacker wanted.
+    """
     client, _fake, _db = portal_app
-    with patch("app.domains.accounts.api_portal.verify_code", return_value=_account(7)):
-        resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "123456"})
 
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["account"]["id"] == 7
-    assert body["account"]["phone"] == _PHONE
-    assert "portal_session=" in resp.headers.get("set-cookie", "")
-    payload = decode_token(body["access_token"], expected_type="portal_access")
-    assert payload["sub"] == "7"
+    first = client.post(_REGISTER, json=_APPLICATION)
+    second = client.post(_REGISTER, json=_APPLICATION)
+    assert (first.status_code, first.json()) == (second.status_code, second.json())
 
 
-def test_otp_verify_blocked_account_returns_403(portal_app) -> None:  # noqa: ANN001
+def test_register_rejects_an_unparseable_phone(portal_app) -> None:  # noqa: ANN001
+    """The one thing this route may vary on: a form error the applicant can fix."""
     client, _fake, _db = portal_app
-    with patch("app.domains.accounts.api_portal.verify_code", return_value=_account(8, status="blocked")):
-        resp = client.post(_VERIFY, json={"phone": _PHONE, "code": "123456"})
+    resp = client.post(_REGISTER, json={**_APPLICATION, "phone": "12"})
+    assert resp.status_code == 422
+
+
+def test_register_is_rate_limited_per_ip(portal_app) -> None:  # noqa: ANN001
+    client, _fake, _db = portal_app
+
+    from app.services.rate_limit import PORTAL_REGISTER_PER_IP_PER_HOUR  # noqa: PLC0415
+
+    for _ in range(PORTAL_REGISTER_PER_IP_PER_HOUR):
+        assert client.post(_REGISTER, json=_APPLICATION).status_code == 202
+
+    resp = client.post(_REGISTER, json=_APPLICATION)
+    assert resp.status_code == 429
+    assert int(resp.headers["Retry-After"]) > 0
+
+
+def test_forged_x_forwarded_for_cannot_escape_the_per_ip_cap(portal_app) -> None:  # noqa: ANN001
+    """Rotating X-Forwarded-For must not mint a fresh bucket.
+
+    `_client_ip` reads X-Real-IP only. nginx builds XFF by APPENDING to whatever the
+    client sent, so its first entry is attacker-controlled; keying on it made the cap
+    decorative. Guarded here because the symptom of a regression is silence.
+    """
+    client, _fake, _db = portal_app
+
+    from app.services.rate_limit import PORTAL_REGISTER_PER_IP_PER_HOUR  # noqa: PLC0415
+
+    for i in range(PORTAL_REGISTER_PER_IP_PER_HOUR):
+        resp = client.post(
+            _REGISTER, json=_APPLICATION, headers={"X-Forwarded-For": f"10.0.0.{i}"}
+        )
+        assert resp.status_code == 202
+
+    resp = client.post(
+        _REGISTER, json=_APPLICATION, headers={"X-Forwarded-For": "10.0.0.250"}
+    )
+    assert resp.status_code == 429
+
+
+def test_x_real_ip_keys_the_per_ip_bucket(portal_app) -> None:  # noqa: ANN001
+    """Two different X-Real-IP values get two different buckets."""
+    client, _fake, _db = portal_app
+
+    from app.services.rate_limit import PORTAL_REGISTER_PER_IP_PER_HOUR  # noqa: PLC0415
+
+    for _ in range(PORTAL_REGISTER_PER_IP_PER_HOUR):
+        client.post(_REGISTER, json=_APPLICATION, headers={"X-Real-IP": "203.0.113.1"})
+
+    assert (
+        client.post(
+            _REGISTER, json=_APPLICATION, headers={"X-Real-IP": "203.0.113.1"}
+        ).status_code
+        == 429
+    )
+    assert (
+        client.post(
+            _REGISTER, json=_APPLICATION, headers={"X-Real-IP": "203.0.113.2"}
+        ).status_code
+        == 202
+    )
+
+
+# ── The forced-change gate ────────────────────────────────────────────────────
+
+
+def _bearer(account_id: int) -> dict[str, str]:
+    from app.core.security import create_portal_access_token  # noqa: PLC0415
+
+    return {"Authorization": f"Bearer {create_portal_access_token(subject=str(account_id))}"}
+
+
+def test_an_account_owing_a_password_change_is_refused_by_guarded_routes(portal_app) -> None:  # noqa: ANN001
+    """403 with a machine-readable code, from the guard rather than the route.
+
+    `PATCH /portal/me` stands in for the ~140 routes behind `get_current_account`: the
+    gate lives in the dependency precisely so none of them has to remember it.
+    """
+    client, _fake, db = portal_app
+    _found(db, _account(7, must_change=True))
+
+    resp = client.patch(_ME, json={"name": "Иван"}, headers=_bearer(7))
     assert resp.status_code == 403
+    assert resp.json()["detail"]["code"] == "password_change_required"
+
+
+def test_an_account_owing_a_password_change_can_still_read_me(portal_app) -> None:  # noqa: ANN001
+    """After a hard reload this is the only way the client learns it owes one."""
+    client, _fake, db = portal_app
+    _found(db, _account(7, must_change=True))
+
+    resp = client.get(_ME, headers=_bearer(7))
+    assert resp.status_code == 200
+    assert resp.json()["must_change_password"] is True
+
+
+def test_changing_the_password_clears_the_debt_and_rotates_the_cookie(portal_app) -> None:  # noqa: ANN001
+    from app.core.security import verify_password  # noqa: PLC0415
+
+    client, _fake, db = portal_app
+    account = _account(7, must_change=True)
+    _found(db, account)
+
+    resp = client.post(
+        _PASSWORD,
+        json={"current_password": _PASS, "new_password": "a-longer-new-secret"},
+        headers=_bearer(7),
+    )
+    assert resp.status_code == 200
+    assert account.must_change_password is False
+    assert verify_password("a-longer-new-secret", account.password_hash)
+    assert account.password_set_at is not None
+    assert "portal_session=" in resp.headers.get("set-cookie", "")
+    assert resp.json()["account"]["must_change_password"] is False
+
+
+def test_changing_the_password_requires_the_current_one(portal_app) -> None:  # noqa: ANN001
+    client, _fake, db = portal_app
+    account = _account(7, must_change=True)
+    _found(db, account)
+
+    resp = client.post(
+        _PASSWORD,
+        json={"current_password": "not it", "new_password": "a-longer-new-secret"},
+        headers=_bearer(7),
+    )
+    assert resp.status_code == 400
+    assert account.must_change_password is True
+
+
+def test_a_short_new_password_is_refused(portal_app) -> None:  # noqa: ANN001
+    client, _fake, db = portal_app
+    _found(db, _account(7, must_change=True))
+
+    resp = client.post(
+        _PASSWORD,
+        json={"current_password": _PASS, "new_password": "short"},
+        headers=_bearer(7),
+    )
+    assert resp.status_code == 422
+
+
+def test_an_ordinary_account_is_unaffected_by_the_gate(portal_app) -> None:  # noqa: ANN001
+    """The payoff of putting the gate in the guard: nothing else had to change.
+
+    `must_change_password` defaults false, so every account that never owed a change —
+    including the ones the rest of the suite mints straight from
+    `create_portal_access_token` — reaches guarded routes exactly as before.
+    """
+    client, _fake, db = portal_app
+    _found(db, _account(7))
+
+    assert client.patch(_ME, json={"name": "Иван"}, headers=_bearer(7)).status_code == 200
 
 
 # ── get_current_account: audience isolation + blocked ─────────────────────────
@@ -240,42 +427,38 @@ def test_client_session_token_rejected_by_portal_me(portal_app) -> None:  # noqa
 
 
 def test_portal_token_rejected_by_staff_endpoint(portal_app) -> None:  # noqa: ANN001
-    from app.core.security import create_portal_access_token  # noqa: PLC0415
-
     client, _fake, _db = portal_app
-    portal = create_portal_access_token(subject="7")
-    resp = client.get("/api/v1/admin/users", headers={"Authorization": f"Bearer {portal}"})
+    resp = client.get("/api/v1/admin/users", headers=_bearer(7))
     assert resp.status_code == 401
 
 
 def test_me_success_with_portal_token(portal_app) -> None:  # noqa: ANN001
-    from app.core.security import create_portal_access_token  # noqa: PLC0415
-
     client, _fake, db = portal_app
-    db.query.return_value.filter.return_value.first.return_value = _account(7)
-    token = create_portal_access_token(subject="7")
-    resp = client.get(_ME, headers={"Authorization": f"Bearer {token}"})
+    _found(db, _account(7))
+    resp = client.get(_ME, headers=_bearer(7))
     assert resp.status_code == 200
     assert resp.json()["id"] == 7
 
 
 def test_me_blocked_account_returns_403(portal_app) -> None:  # noqa: ANN001
-    from app.core.security import create_portal_access_token  # noqa: PLC0415
-
     client, _fake, db = portal_app
-    db.query.return_value.filter.return_value.first.return_value = _account(7, status="blocked")
-    token = create_portal_access_token(subject="7")
-    resp = client.get(_ME, headers={"Authorization": f"Bearer {token}"})
+    _found(db, _account(7, status="blocked"))
+    resp = client.get(_ME, headers=_bearer(7))
+    assert resp.status_code == 403
+
+
+def test_me_pending_account_returns_403(portal_app) -> None:  # noqa: ANN001
+    """An application cannot act, even if it somehow holds a token."""
+    client, _fake, db = portal_app
+    _found(db, _account(7, status="pending", password=None))
+    resp = client.get(_ME, headers=_bearer(7))
     assert resp.status_code == 403
 
 
 def test_me_unknown_account_returns_401(portal_app) -> None:  # noqa: ANN001
-    from app.core.security import create_portal_access_token  # noqa: PLC0415
-
     client, _fake, db = portal_app
-    db.query.return_value.filter.return_value.first.return_value = None
-    token = create_portal_access_token(subject="999")
-    resp = client.get(_ME, headers={"Authorization": f"Bearer {token}"})
+    _found(db, None)
+    resp = client.get(_ME, headers=_bearer(999))
     assert resp.status_code == 401
 
 
@@ -286,7 +469,7 @@ def test_refresh_rotates_cookie_and_returns_new_access_token(portal_app) -> None
     from app.core.security import create_portal_refresh_token  # noqa: PLC0415
 
     client, _fake, db = portal_app
-    db.query.return_value.filter.return_value.first.return_value = _account(7)
+    _found(db, _account(7))
     old_refresh = create_portal_refresh_token(subject="7")
 
     resp = client.post(_REFRESH, headers={"Cookie": f"portal_session={old_refresh}"})
@@ -297,6 +480,21 @@ def test_refresh_rotates_cookie_and_returns_new_access_token(portal_app) -> None
     match = re.search(r"portal_session=([^;]+)", set_cookie)
     assert match is not None
     assert match.group(1) != old_refresh  # rotated: new jti ⇒ new token
+
+
+def test_refresh_works_for_an_account_owing_a_password_change(portal_app) -> None:  # noqa: ANN001
+    """Not gated on purpose: refusing here strands a reloaded tab on the very screen
+    where the debt is paid, holding an expired access token and no way to mint one."""
+    client, _fake, db = portal_app
+    _found(db, _account(7, must_change=True))
+    from app.core.security import create_portal_refresh_token  # noqa: PLC0415
+
+    resp = client.post(
+        _REFRESH,
+        headers={"Cookie": f"portal_session={create_portal_refresh_token(subject='7')}"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["account"]["must_change_password"] is True
 
 
 def test_refresh_without_cookie_returns_401(portal_app) -> None:  # noqa: ANN001

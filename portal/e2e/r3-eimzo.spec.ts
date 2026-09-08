@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { confirmIdentityWithEimzo, login, registerCompany } from "./_registration";
+import {
+  confirmIdentityWithEimzo,
+  login,
+  registerCompany,
+} from "./_registration";
 
 /**
  * E-IMZO company-identity confirmation, with a STUBBED CAPIWS bridge (CI has no
@@ -18,23 +22,27 @@ import { confirmIdentityWithEimzo, login, registerCompany } from "./_registratio
  * phone, so the default 5 blocks repeated runs from one machine).
  */
 
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
-
 function uniqueTaxId(): string {
   return String(100_000_000 + Math.floor(Math.random() * 899_999_999));
 }
 
 /** Inject a stub CAPIWS bridge whose certificate INN is `taxId`. */
-async function stubEimzo(page: Page, taxId: string, opts: { available: boolean }): Promise<void> {
+async function stubEimzo(
+  page: Page,
+  taxId: string,
+  opts: { available: boolean },
+): Promise<void> {
   await page.addInitScript(
     ([tax, available]) => {
       (window as unknown as { __EIMZO_BRIDGE__: unknown }).__EIMZO_BRIDGE__ = {
         probe: async () => available,
         listCertificates: async () => [
-          { id: "k1", subjectName: "OOO Polymer Trade", tin: tax, name: "IVANOV IVAN" },
+          {
+            id: "k1",
+            subjectName: "OOO Polymer Trade",
+            tin: tax,
+            name: "IVANOV IVAN",
+          },
         ],
         sign: async (_id: string, challenge: string) => ({
           pkcs7_64: btoa(
@@ -55,10 +63,12 @@ async function stubEimzo(page: Page, taxId: string, opts: { available: boolean }
   );
 }
 
-test("registration asks for the ИНН and nothing about keys", async ({ page, request }) => {
+test("registration asks for the ИНН and nothing about keys", async ({
+  page,
+}) => {
   const taxId = uniqueTaxId();
   await stubEimzo(page, taxId, { available: true });
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
 
   await page.goto("/cabinet/companies/new/1");
   await page.getByTestId("account-type-distributor").click();
@@ -68,16 +78,17 @@ test("registration asks for the ИНН and nothing about keys", async ({ page, r
   // The certificate picker is gone; the tax id is typed, not read off a key.
   await expect(page.getByTestId("wizard-cert-select")).toHaveCount(0);
   await expect(page.getByLabel(/tax id|инн|stir/i)).toBeEditable();
-  await expect(page.getByTestId("wizard-next")).toHaveText(/next|далее|keyingi/i);
+  await expect(page.getByTestId("wizard-next")).toHaveText(
+    /next|далее|keyingi/i,
+  );
 });
 
 test("a registered company confirms its identity from the verification screen", async ({
   page,
-  request,
 }) => {
   const taxId = uniqueTaxId();
   await stubEimzo(page, taxId, { available: true });
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
 
   const companyId = await registerCompany(page, taxId);
 
@@ -92,29 +103,33 @@ test("a registered company confirms its identity from the verification screen", 
   await expect(page.getByTestId("eimzo-offer")).toHaveCount(0);
 });
 
-test("a certificate for another company is refused", async ({ page, request }) => {
+test("a certificate for another company is refused", async ({ page }) => {
   const taxId = uniqueTaxId();
   // The key belongs to a DIFFERENT company than the one being confirmed — the
   // rule the backend actually enforces (422 → «ИНН сертификата не совпадает»).
   await stubEimzo(page, uniqueTaxId(), { available: true });
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
 
   const companyId = await registerCompany(page, taxId);
 
   await page.goto(`/cabinet/companies/${companyId}/verification`);
   await page.getByTestId("eimzo-open").click();
-  await expect(page.getByTestId("eimzo-error")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("eimzo-error")).toBeVisible({
+    timeout: 20_000,
+  });
   await expect(page.getByTestId("eimzo-confirmed")).toHaveCount(0);
 });
 
-test("E-IMZO module missing shows install guidance", async ({ page, request }) => {
+test("E-IMZO module missing shows install guidance", async ({ page }) => {
   const taxId = uniqueTaxId();
   await stubEimzo(page, taxId, { available: false });
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
 
   const companyId = await registerCompany(page, taxId);
 
   await page.goto(`/cabinet/companies/${companyId}/verification`);
   await page.getByTestId("eimzo-open").click();
-  await expect(page.getByTestId("eimzo-module-missing")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("eimzo-module-missing")).toBeVisible({
+    timeout: 20_000,
+  });
 });

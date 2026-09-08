@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { login, registerCompany } from "./_registration";
 
@@ -9,14 +9,24 @@ import { login, registerCompany } from "./_registration";
  * covers the first two (the API layer is pinned by
  * `backend/tests/test_portal_role_gates_api.py`).
  *
- * Requires a live migrated+seeded API on :8000 with the dev-only OTP peek —
- * the seeded laboratory/carrier phones are `seed_showcase`'s (same contract as
+ * Requires a live migrated+seeded API on :8000 with the seeded demo
+ * logins from `seed_showcase` (same contract as
  * `lab-request.spec.ts` / `logistics-request.spec.ts`).
  */
 
-const LAB_PHONE = process.env.PORTAL_LAB_PHONE ?? "+998901234530";
-const CARRIER_PHONE = process.env.PORTAL_CARRIER_PHONE ?? "+998901234528";
-const MANUFACTURER_PHONE = process.env.PORTAL_MANUFACTURER_PHONE ?? "+998901234501";
+const DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD ?? "demo-password-2026";
+const LAB = {
+  login: process.env.PORTAL_LAB_LOGIN ?? "cptl_lab-owner",
+  password: DEMO_PASSWORD,
+};
+const CARRIER = {
+  login: process.env.PORTAL_CARRIER_LOGIN ?? "trans_asia-owner",
+  password: DEMO_PASSWORD,
+};
+const MANUFACTURER = {
+  login: process.env.PORTAL_MANUFACTURER_LOGIN ?? "shurtan-owner",
+  password: DEMO_PASSWORD,
+};
 
 const OFFERS = /^(Предложения|Takliflar|Offers)$/;
 const FAVORITES = /^(Избранное|Saralangan|Favorites)$/;
@@ -27,12 +37,8 @@ const OPEN_TENDERS = /^(Открытые тендеры|Ochiq tenderlar|Open ten
 // The merged lab-hub entry (`nav.lab`) — one item where request-list and
 // partner-lab-orders entries used to sit, still gated on `labOrdering`.
 const LAB_ORDERING = /^(Лаборатория|Laboratoriya|Laboratory)$/;
-const LOGISTICS_ORDERING = /^(Логистика: заявки|Logistika arizalari|Logistics requests)$/;
-
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
+const LOGISTICS_ORDERING =
+  /^(Логистика: заявки|Logistika arizalari|Logistics requests)$/;
 
 function uniqueTaxId(): string {
   return String(100_000_000 + Math.floor(Math.random() * 899_999_999));
@@ -42,17 +48,16 @@ function navLink(page: Page, name: RegExp) {
   return page.getByRole("link", { name });
 }
 
-async function signIn(page: Page, request: APIRequestContext, phone: string): Promise<void> {
+async function signInAs(page: Page, creds: Credentials): Promise<void> {
   await page.context().clearCookies();
-  await login(page, request, phone);
+  await login(page, creds);
   await page.goto("/cabinet");
 }
 
 test("a laboratory's cabinet has no trade features, and direct URLs walk home", async ({
   page,
-  request,
 }) => {
-  await signIn(page, request, LAB_PHONE);
+  await signInAs(page, LAB);
 
   // The seller/buyer entries are not merely hidden — they are not rendered at
   // all, in either nav instance (sidebar or drawer).
@@ -74,9 +79,8 @@ test("a laboratory's cabinet has no trade features, and direct URLs walk home", 
 
 test("a carrier keeps cross-service lab ordering but loses its own buyer page", async ({
   page,
-  request,
 }) => {
-  await signIn(page, request, CARRIER_PHONE);
+  await signInAs(page, CARRIER);
 
   await expect(navLink(page, OFFERS)).toHaveCount(0);
   await expect(navLink(page, OPEN_TENDERS)).toHaveCount(0);
@@ -89,9 +93,8 @@ test("a carrier keeps cross-service lab ordering but loses its own buyer page", 
 
 test("a distributor sees the trade features, before verification", async ({
   page,
-  request,
 }) => {
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await registerCompany(page, uniqueTaxId()); // default type: distributor
   await page.goto("/cabinet");
 
@@ -108,9 +111,8 @@ test("a distributor sees the trade features, before verification", async ({
 
 test("a manufacturer keeps BOTH sides: sell features and buyer features", async ({
   page,
-  request,
 }) => {
-  await signIn(page, request, MANUFACTURER_PHONE);
+  await signInAs(page, MANUFACTURER);
 
   // Sell side…
   await expect(navLink(page, OFFERS).first()).toBeVisible();
@@ -128,9 +130,8 @@ test("a manufacturer keeps BOTH sides: sell features and buyer features", async 
 
 test("a buyer buys but never sells: no offers, no supplier inbox", async ({
   page,
-  request,
 }) => {
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await registerCompany(page, uniqueTaxId(), { type: "buyer" });
   await page.goto("/cabinet");
 

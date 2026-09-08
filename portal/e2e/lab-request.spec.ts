@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { registerCompany } from "./_registration";
 
@@ -13,42 +13,27 @@ import { registerCompany } from "./_registration";
  * asserted rather than inferred from the one that happens to be under test.
  *
  * Requires a live migrated+seeded API on :8000 with the dev-only
- * `GET /portal/auth/otp/peek`, and at least one verified company holding a
+ * the seeded demo logins, and at least one verified company holding a
  * CONFIRMED `laboratory` role (`seed_showcase` provides two).
  *
  * Signs in as a SPECIFIC seeded account: a laboratory has to be a member of a
  * company whose role staff have confirmed, which a freshly-registered throwaway
- * company is not. Same phone every run, so the API needs a short
- * `OTP_RESEND_COOLDOWN_SECONDS` or a rerun inside a minute fails in `login` with
- * a timeout that looks nothing like its cause. Override with `PORTAL_LAB_PHONE`.
+ * company is not. The same seeded account every run — sign-in is a password now, with no
+ * per-account cooldown to trip over. Override with `PORTAL_LAB_LOGIN`.
  */
 
-const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
-const LAB_PHONE = process.env.PORTAL_LAB_PHONE ?? "+998901234530";
-const CARRIER_PHONE = process.env.PORTAL_CARRIER_PHONE ?? "+998901234528";
-
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
+const DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD ?? "demo-password-2026";
+const LAB = {
+  login: process.env.PORTAL_LAB_LOGIN ?? "cptl_lab-owner",
+  password: DEMO_PASSWORD,
+};
+const CARRIER = {
+  login: process.env.PORTAL_CARRIER_LOGIN ?? "trans_asia-owner",
+  password: DEMO_PASSWORD,
+};
 
 function uniqueTaxId(): string {
   return String(100_000_000 + Math.floor(Math.random() * 899_999_999));
-}
-
-async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/cabinet/login");
-  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
-  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/cabinet/login/code");
-
-  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
-  expect(res.ok()).toBeTruthy();
-  const { code } = (await res.json()) as { code: string };
-
-  await page.getByLabel(/code|код|kod/i).fill(code);
-  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
 }
 
 /** Walk both sheets of the wizard. Returns the new request id. */
@@ -59,17 +44,23 @@ async function fileRequest(page: Page, product: string): Promise<number> {
   await expect(form).toBeVisible();
 
   // Sheet 1 — «Новая заявка»: what to test.
-  await page.getByLabel(/what are we testing|что исследуем|nimani tekshiramiz/i).fill(product);
+  await page
+    .getByLabel(/what are we testing|что исследуем|nimani tekshiramiz/i)
+    .fill(product);
   await page.getByTestId("lab-method-mfi").check();
   await page.getByTestId("lab-method-density").check();
   await page.getByTestId("lab-request-next").click();
 
   // Sheet 2 — «Данные для заявки»: who to come back to.
   await expect(page.getByTestId("lab-request-submit")).toBeVisible();
-  await page.getByLabel(/contact person|контактное лицо|aloqa uchun shaxs/i).fill("E2E QA");
+  await page
+    .getByLabel(/contact person|контактное лицо|aloqa uchun shaxs/i)
+    .fill("E2E QA");
   await page.getByTestId("lab-request-submit").click();
 
-  await page.waitForURL(/\/cabinet\/lab\/requests\/\d+\/done/, { timeout: 15_000 });
+  await page.waitForURL(/\/cabinet\/lab\/requests\/\d+\/done/, {
+    timeout: 15_000,
+  });
   const match = /\/cabinet\/lab\/requests\/(\d+)\/done/.exec(page.url());
   return Number(match?.[1]);
 }
@@ -81,7 +72,7 @@ test("a broadcast request reaches a laboratory, which replies in a private threa
   const product = `E2E HDPE ${Date.now()}`;
 
   // ── Buyer files it. No laboratory is chosen anywhere in the flow. ─────────
-  await login(page, request, uniquePhone());
+  await login(page, await provisionAccount(request));
   await registerCompany(page, uniqueTaxId());
   const requestId = await fileRequest(page, product);
 
@@ -98,15 +89,19 @@ test("a broadcast request reaches a laboratory, which replies in a private threa
   );
 
   // ── The laboratory sees it in the pool at the SAME url. ──────────────────
+  // The SEEDED lab account: its role is confirmed, which a company registered a
+  // moment ago is not, and the pool is role-gated.
   await page.context().clearCookies();
-  await login(page, request, LAB_PHONE);
+  await login(page, LAB);
   await page.goto("/cabinet/requests");
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     /исследовани|analysis|tadqiqot/i,
   );
   // The pool's own chrome, not the buyer page with different rows in it.
-  await expect(page.getByText(/мои отклики|my replies|mening javoblarim/i)).toBeVisible();
+  await expect(
+    page.getByText(/мои отклики|my replies|mening javoblarim/i),
+  ).toBeVisible();
 
   const card = page.locator(`[data-request-id="${requestId}"]`);
   await expect(card).toBeVisible();
@@ -117,7 +112,9 @@ test("a broadcast request reaches a laboratory, which replies in a private threa
   const chat = card.getByRole("log");
   await expect(chat).toBeVisible();
 
-  await card.getByPlaceholder(/сообщение|message|xabar/i).fill("ПТР + плотность, 2 дня");
+  await card
+    .getByPlaceholder(/сообщение|message|xabar/i)
+    .fill("ПТР + плотность, 2 дня");
   await card.getByRole("button", { name: /отправить|send|yuborish/i }).click();
   await expect(chat).toContainText("ПТР + плотность, 2 дня");
 
@@ -127,9 +124,8 @@ test("a broadcast request reaches a laboratory, which replies in a private threa
 
 test("the third branch: a carrier still gets the carrier pool, not the lab one", async ({
   page,
-  request,
 }) => {
-  await login(page, request, CARRIER_PHONE);
+  await login(page, CARRIER);
   await page.goto("/cabinet/requests");
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(

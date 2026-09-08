@@ -378,9 +378,21 @@ def _finalize_approval(
     company = _load_company(db, case.company_id)
     company.verified_at = now
     company.reverification_due_at = now + datetime.timedelta(days=_REVERIFICATION_DAYS)
-    company_service.transition(
-        db, company, CompanyStatus.verified, staff_user_id=staff_user_id, actor=actor
-    )
+    # A company can be approved while ALREADY verified, and the state machine has
+    # no `verified → verified` edge — rightly, since it exists to catch exactly
+    # the bogus moves this is not. The live case is E-IMZO identity confirmation
+    # from «Статус проверки» after a documents-only approval: that opens a second
+    # (targeted) case, auto-approve closes it in the same request, and this line
+    # raised `InvalidCompanyTransition` → HTTP 500. It mattered more once
+    # registration stopped signing, because confirming afterwards became the only
+    # route to `identity_locked` and therefore to a Didox «Договор НК».
+    #
+    # The dates and the role confirmation below still run: re-approval is a real
+    # event and should refresh them. Only the no-op move is skipped.
+    if company.status != CompanyStatus.verified:
+        company_service.transition(
+            db, company, CompanyStatus.verified, staff_user_id=staff_user_id, actor=actor
+        )
     # Verification vouches for what the company registered as: its declared
     # business roles become confirmed here — the ONLY app-code writer of
     # `confirmed` (the confirmed-gated surfaces — pools, directories, badges —

@@ -1,7 +1,6 @@
 import {
   expect,
   test,
-  type APIRequestContext,
   type BrowserContext,
   type Page,
   type Route,
@@ -30,7 +29,6 @@ import {
  * directory carries exactly one package («тонна»).
  */
 
-const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
 
 const CODE = "03901001001000000";
 const PACKAGES = [
@@ -49,40 +47,32 @@ const ROW = {
 
 /**
  * Reaching the sheet at all needs an account with a VERIFIED company, which a
- * freshly minted phone never has — it lands on onboarding instead. Point
- * `PORTAL_E2E_PHONE` at such an account to run these; without it they skip, the
- * same bargain `offer-wizard.spec.ts` makes. OTP is throttled per phone AND per
- * IP, so between local runs clear it:
- * `docker exec pi-redis redis-cli --scan --pattern 'otp:*' | xargs -r docker exec -i pi-redis redis-cli DEL`
+ * freshly provisioned one never has — it lands on onboarding instead. Point
+ * `PORTAL_E2E_LOGIN`/`PORTAL_E2E_PASSWORD` at such an account to run these;
+ * without them they skip, the same bargain `offer-wizard.spec.ts` makes.
  */
-const PHONE = process.env.PORTAL_E2E_PHONE ?? "";
-
-async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/cabinet/login");
-  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
-  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-
-  await page.waitForURL("**/cabinet/login/code");
-  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
-  expect(res.ok()).toBeTruthy();
-  const { code } = (await res.json()) as { code: string };
-  await page.getByLabel(/code|код|kod/i).fill(code);
-  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-
-  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
-}
+const LOGIN = process.env.PORTAL_E2E_LOGIN ?? "";
+const PASSWORD = process.env.PORTAL_E2E_PASSWORD ?? "";
 
 /** The basket the stubbed Didox answers from — empty until `bind` is called. */
-function stubIkpu(page: Page, opts: { bound?: boolean } = {}): { binds: string[] } {
+function stubIkpu(
+  page: Page,
+  opts: { bound?: boolean } = {},
+): { binds: string[] } {
   const binds: string[] = [];
   let bound = opts.bound ?? false;
 
   const json = (route: Route, body: unknown) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(body),
+    });
 
   void page.route("**/portal/ikpu/search**", (route) => {
     const term = new URL(route.request().url()).searchParams.get("q") ?? "";
-    const hit = bound && (CODE.includes(term) || /полиэтилен|полимер/i.test(term));
+    const hit =
+      bound && (CODE.includes(term) || /полиэтилен|полимер/i.test(term));
     return json(route, hit ? [ROW] : []);
   });
   void page.route(`**/portal/companies/*/ikpu/*/bind`, (route) => {
@@ -90,7 +80,9 @@ function stubIkpu(page: Page, opts: { bound?: boolean } = {}): { binds: string[]
     bound = true;
     return json(route, null);
   });
-  void page.route(`**/portal/companies/*/ikpu/*/packages`, (route) => json(route, PACKAGES));
+  void page.route(`**/portal/companies/*/ikpu/*/packages`, (route) =>
+    json(route, PACKAGES),
+  );
 
   return { binds };
 }
@@ -100,7 +92,9 @@ async function openPickerSheet(page: Page): Promise<boolean> {
   // The sheet is unreachable without a verified company — the wizard renders a
   // locked screen, or `RequireCompany` diverts to onboarding entirely.
   try {
-    await page.getByTestId("ikpu-query").waitFor({ state: "visible", timeout: 5_000 });
+    await page
+      .getByTestId("ikpu-query")
+      .waitFor({ state: "visible", timeout: 5_000 });
     return true;
   } catch {
     return false;
@@ -108,7 +102,10 @@ async function openPickerSheet(page: Page): Promise<boolean> {
 }
 
 test.describe("ИКПУ picker", () => {
-  test.skip(!PHONE, "set PORTAL_E2E_PHONE to an account with a verified company");
+  test.skip(
+    !LOGIN || !PASSWORD,
+    "set PORTAL_E2E_LOGIN/PORTAL_E2E_PASSWORD to an account with a verified company",
+  );
 
   /**
    * Log in ONCE and hand the refresh cookie to each test.
@@ -120,10 +117,10 @@ test.describe("ИКПУ picker", () => {
   let cookies: Awaited<ReturnType<BrowserContext["cookies"]>> = [];
 
   test.beforeAll(async ({ browser }) => {
-    if (!PHONE) return;
+    if (!LOGIN || !PASSWORD) return;
     const context = await browser.newContext();
     const page = await context.newPage();
-    await login(page, context.request, PHONE);
+    await login(page, { login: LOGIN, password: PASSWORD });
     cookies = await context.cookies();
     await context.close();
   });
@@ -132,9 +129,14 @@ test.describe("ИКПУ picker", () => {
     await page.context().addCookies(cookies);
   });
 
-  test("an empty result offers to add the code instead of dead-ending", async ({ page }) => {
+  test("an empty result offers to add the code instead of dead-ending", async ({
+    page,
+  }) => {
     stubIkpu(page);
-    test.skip(!(await openPickerSheet(page)), "account has no verified company");
+    test.skip(
+      !(await openPickerSheet(page)),
+      "account has no verified company",
+    );
 
     // A word the basket cannot contain — the normal first search.
     await page.getByTestId("ikpu-query").fill("полиэтилен");
@@ -148,9 +150,14 @@ test.describe("ИКПУ picker", () => {
     await expect(page.getByTestId("ikpu-add")).toBeEnabled();
   });
 
-  test("adding a code binds it, then reads the row BACK from Didox", async ({ page }) => {
+  test("adding a code binds it, then reads the row BACK from Didox", async ({
+    page,
+  }) => {
     const { binds } = stubIkpu(page);
-    test.skip(!(await openPickerSheet(page)), "account has no verified company");
+    test.skip(
+      !(await openPickerSheet(page)),
+      "account has no verified company",
+    );
 
     await page.getByTestId("ikpu-query").fill(CODE);
     await page.getByTestId("ikpu-search").click();
@@ -170,14 +177,20 @@ test.describe("ИКПУ picker", () => {
     page,
   }) => {
     stubIkpu(page, { bound: true });
-    test.skip(!(await openPickerSheet(page)), "account has no verified company");
+    test.skip(
+      !(await openPickerSheet(page)),
+      "account has no verified company",
+    );
 
     await page.getByTestId("ikpu-query").fill(CODE);
     await page.getByTestId("ikpu-search").click();
     await page.getByTestId("ikpu-results").getByRole("button").first().click();
 
     // The regression: picking used to clear the rows the select was derived from.
-    const select = page.getByTestId("ikpu-chosen").getByRole("combobox").first();
+    const select = page
+      .getByTestId("ikpu-chosen")
+      .getByRole("combobox")
+      .first();
     await expect(select).toBeVisible();
     await select.selectOption("9999999");
     await expect(page.getByTestId("ikpu-chosen")).toContainText("килограмм");

@@ -38,6 +38,11 @@ AUTH_DEPENDENCIES = frozenset(
         "get_current_staff_user",
         "get_current_staff_user_sse",
         "get_current_account",
+        # The un-gated portal dependency (0048). It authenticates exactly as
+        # `get_current_account` does and stops before the first-login password gate,
+        # so the two routes that take it are guarded — listing it here is what keeps
+        # them from reading as anonymous and being "fixed" into PUBLIC_ROUTES below.
+        "get_account_for_password_change",
         "get_current_client",
         "require_admin",
         "require_admin_sse",
@@ -56,14 +61,15 @@ PUBLIC_ROUTES: frozenset[tuple[str, str]] = frozenset(
         ("POST", "/api/v1/auth/login"),
         ("POST", "/api/v1/auth/refresh"),
         ("POST", "/api/v1/auth/logout"),
-        # Portal (client cabinet) auth bootstrap — same argument, phone-OTP instead
-        # of a password. `otp/peek` is an e2e hook double-gated to DEBUG + the
-        # console SMS driver, so it 404s anywhere it could matter.
-        ("POST", "/api/v1/portal/auth/otp/request"),
-        ("POST", "/api/v1/portal/auth/otp/verify"),
+        # Portal (client cabinet) auth bootstrap — same argument as staff above.
+        # `login` IS the credential check; `refresh`/`logout` authenticate from the
+        # httpOnly cookie, which a Depends() cannot express. `register` is anonymous
+        # by definition: it is how somebody with no account asks for one, and it
+        # grants nothing — a `pending` row, no token, no cookie.
+        ("POST", "/api/v1/portal/auth/login"),
+        ("POST", "/api/v1/portal/auth/register"),
         ("POST", "/api/v1/portal/auth/refresh"),
         ("POST", "/api/v1/portal/auth/logout"),
-        ("GET", "/api/v1/portal/auth/otp/peek"),
         # Telegram Web App auth bootstrap (Login Widget / initData exchange).
         ("GET", "/api/v1/webapp/auth/config"),
         ("POST", "/api/v1/webapp/auth/telegram"),

@@ -46,3 +46,9 @@ didox-offer-create-body.json
 
 # Настоящие подписанные договоры контрагентов — справочный материал, не код.
 docs/deals_documents/
+
+# Кадры онбординг-доски и собранные носители: 87 МБ снимков живого стенда.
+# Описание доски (board-model.json) и генератор лежат в .planning/onboarding-board/,
+# сами носители пересобираются из них: node .planning/onboarding-board/build.mjs
+# (dist/ уже покрыт общим правилом выше).
+.tmp-onboarding/

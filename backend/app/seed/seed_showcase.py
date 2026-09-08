@@ -24,6 +24,7 @@ import datetime
 import decimal
 import hashlib
 import json
+import os
 import random
 import sys
 
@@ -32,6 +33,7 @@ from sqlalchemy.orm import Session
 
 from app.core.crypto import encrypt_pii
 from app.core.db import SessionLocal
+from app.core.security import hash_password
 from app.seed.showcase_data import (
     BANKS,
     COMPANIES,
@@ -46,6 +48,17 @@ RNG = random.Random(20260730)
 
 #: Presence of this tax_id means the showcase is already seeded.
 SENTINEL_TAX_ID = COMPANIES[0]["tax_id"]
+
+#: Every demo person signs in as `<company key>-<role>` — e.g. `shurtan-owner`,
+#: `cptl_lab-owner` — with this one password. Documented in
+#: `docs/runbook-dev-environment.md`; the e2e suite reads the same pair.
+DEMO_LOGIN_PASSWORD = os.environ.get("SEED_DEMO_PASSWORD", "demo-password-2026")
+
+#: Hashed ONCE and reused for every demo row. argon2 at `memory_cost=65536` is
+#: ~50 ms a call and this seeder writes ~40 accounts, so per-row hashing is two
+#: visible seconds for no benefit: a shared salt across synthetic accounts nobody
+#: outside a dev machine can sign in to is not a finding.
+DEMO_PASSWORD_HASH = hash_password(DEMO_LOGIN_PASSWORD)
 
 _D = decimal.Decimal
 
@@ -178,14 +191,22 @@ def seed_companies(db: Session) -> tuple[dict[str, int], dict[str, list[int]]]:
         created = _ago(days=300 - idx * 7, hours=RNG.randrange(0, 20))
 
         # ── accounts ──────────────────────────────────────────────────────────
+        # Credentials are explicit now (0048): the column defaults produce a
+        # `pending` application, which is right for a real registration and wrong
+        # for a demo account somebody is about to sign in as.
         ids: list[int] = []
-        for phone, name, _role, lang in people:
+        for phone, name, member_role, lang in people:
             account_id = db.execute(
                 sa.text(
                     """
                     INSERT INTO user_accounts (phone, name, language, status,
+                                               login, password_hash,
+                                               must_change_password,
+                                               password_set_at,
                                                created_at, last_login_at)
-                    VALUES (:phone, :name, :lang, 'active', :created, :seen)
+                    VALUES (:phone, :name, :lang, 'active',
+                            :login, :password_hash, false, :created,
+                            :created, :seen)
                     RETURNING id
                     """
                 ),
@@ -193,6 +214,8 @@ def seed_companies(db: Session) -> tuple[dict[str, int], dict[str, list[int]]]:
                     "phone": phone,
                     "name": name,
                     "lang": lang,
+                    "login": f"{key}-{member_role}",
+                    "password_hash": DEMO_PASSWORD_HASH,
                     "created": created,
                     "seen": _ago(days=RNG.randrange(0, 6), hours=RNG.randrange(0, 22)),
                 },

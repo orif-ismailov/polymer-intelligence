@@ -26,9 +26,8 @@ server-runtime exceptions noted in their own section.
 > explicitly as a known gap (local tooling denies programmatic edits to `.env*`
 > files, so it has to be done by hand): the three E-IMZO variables
 > (`EIMZO_SERVER_URL`, `EIMZO_CHALLENGE_TTL_SECONDS`, `EIMZO_STUB`), the escrow
-> webhook secret (`ESCROW_WEBHOOK_SECRET`), and the dev-only fixed OTP
-> (`OTP_DEV_CODE`). Treat `Settings` (`backend/app/core/config.py`) as the source
-> of truth until that file is updated. <!-- VERIFY: confirm deploy/.env.example has been updated to include EIMZO_*, ESCROW_WEBHOOK_SECRET, and OTP_DEV_CODE since this doc was generated -->
+> webhook secret (`ESCROW_WEBHOOK_SECRET`). Treat `Settings`
+> (`backend/app/core/config.py`) as the source of truth until that file is updated.
 
 ## Environment variables
 
@@ -43,7 +42,7 @@ Everything else is **Optional** and falls back to the listed default.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `DATABASE_URL` | Yes | — | SQLAlchemy connection string (e.g. `postgresql+psycopg://user:pass@host:5432/db`). |
-| `REDIS_URL` | Yes | — | Redis connection string. Backs Celery broker/result, OTP storage, E-IMZO challenges, feed SSE bus, userbot heartbeat. |
+| `REDIS_URL` | Yes | — | Redis connection string. Backs Celery broker/result, rate-limit buckets, E-IMZO challenges, feed SSE bus, userbot heartbeat. |
 
 ### Anthropic / LLM
 
@@ -94,14 +93,6 @@ Everything else is **Optional** and falls back to the listed default.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `VERIFICATION_ENC_KEY` | Yes | — | Fernet key (urlsafe base64) that encrypts company bank account numbers and PINFL at the app layer. **Validated at startup: must be ≥32 characters** or `Settings()` raises. Generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`. |
-| `SMS_PROVIDER` | No | `console` | Phone-OTP SMS driver. `console` logs the code at INFO level (dev/CI). `eskiz` sends real SMS via Eskiz.uz and requires `ESKIZ_EMAIL`/`ESKIZ_PASSWORD`. |
-| `ESKIZ_EMAIL` | Conditional | `""` | Eskiz.uz account email. **Required when `SMS_PROVIDER=eskiz`** — `Settings()` raises at startup if `SMS_PROVIDER=eskiz` and this or `ESKIZ_PASSWORD` is missing. |
-| `ESKIZ_PASSWORD` | Conditional | `""` | Eskiz.uz account password. Same requirement as `ESKIZ_EMAIL`. |
-| `OTP_DEV_CODE` | No | `""` (empty) | DEV/DEMO ONLY — a fixed OTP code (e.g. `000000`) so a demo login doesn't need the real code fished from a worker log. Honoured **only** when `DEBUG=true` **and** `SMS_PROVIDER=console`. Must be empty or exactly 6 digits, or startup fails. `Settings()` also refuses to boot if this is set alongside a non-`console` `SMS_PROVIDER` — combining a fixed OTP with a real SMS provider is an auth bypass, not a valid config. **Must stay empty in production.** |
-| `OTP_TTL_SECONDS` | No | `300` | OTP code lifetime (Redis-backed). |
-| `OTP_RESEND_COOLDOWN_SECONDS` | No | `60` | Minimum interval between OTP resend requests. |
-| `OTP_MAX_SENDS_PER_DAY` | No | `5` | Per-phone-number daily OTP send cap. |
-| `OTP_MAX_VERIFY_ATTEMPTS` | No | `5` | Max verify attempts before an OTP code is invalidated. |
 | `PORTAL_SESSION_TTL_DAYS` | No | `30` | Portal refresh-cookie lifetime (days). A short-lived access JWT (`type=portal_access`) rides on top. |
 | `VERIFICATION_NOTIFY_CHAT_ID` | No | `None` | Telegram chat/group id notified per submitted verification case. Falls back to `REQUEST_NOTIFY_CHAT_ID` when unset. `None` disables group notification. |
 
@@ -177,9 +168,6 @@ A handful of fields are cross-checked by Pydantic validators on `Settings` beyon
 type coercion, and violating them prevents the app (and CI) from booting at all:
 
 - `JWT_SECRET` and `VERIFICATION_ENC_KEY` must each be **≥32 characters**.
-- `OTP_DEV_CODE` must be empty or **exactly 6 digits**.
-- `OTP_DEV_CODE` set alongside `SMS_PROVIDER != console` **fails startup** (a fixed OTP with a real SMS provider is an auth bypass).
-- `SMS_PROVIDER=eskiz` **requires** both `ESKIZ_EMAIL` and `ESKIZ_PASSWORD`.
 - `TZ_DISPLAY` must be a valid IANA timezone name (validated against `zoneinfo`).
 - `CORS_ALLOWED_ORIGINS` is parsed from either a comma-separated string or a JSON
   list, and is never coerced to `["*"]`.

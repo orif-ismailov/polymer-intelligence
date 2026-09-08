@@ -47,7 +47,7 @@ across staff, webapp clients, and portal accounts.
 | Staff JWT | `get_current_staff_user` / `get_current_staff_user_sse` | `StaffUser` | Bearer access token (HS256, 15 min TTL, `ACCESS_TOKEN_EXPIRE_MINUTES` in `core/security.py`), issued by `POST /api/v1/auth/login`; refreshed via an httpOnly refresh cookie (`REFRESH_TOKEN_EXPIRE_DAYS` = 7). Token `sub` = staff user id, type must be `access`. The SSE variant also accepts the token as an `access_token` query param since `EventSource` cannot set headers. |
 | Staff RBAC | `require_role(*roles)`, `require_admin`, `require_analyst_or_admin` | `StaffUser` with role check | Wraps `get_current_staff_user`; returns 403 if `current_user.role` is not in the allowed set. Roles: `admin`, `analyst`, `trader`, `viewer` (`StaffRole`). |
 | Telegram Web App | `get_current_client` | `Client` | Two paths, first success wins: (A) `X-Telegram-Init-Data` header — Telegram Mini App initData, HMAC-verified constant-time, TTL-bound; (B) `client_session` httpOnly cookie — browser Telegram Login Widget session, issued by `POST /api/v1/webapp/auth/telegram`. Every failure returns a generic 401 ("Authentication required") without revealing which check failed. |
-| Portal account | `get_current_account` | `UserAccount` | Bearer `portal_access` JWT (audience-isolated by a `type` claim — `portal_access`/`portal_refresh` — never a JWT `aud` claim, so a staff `access` or webapp `client_session` token cannot be replayed here and vice versa). Issued by `POST /api/v1/portal/auth/otp/verify`; refreshed via an httpOnly `portal_session` cookie. 403 if the account is not `active`. |
+| Portal account | `get_current_account` | `UserAccount` | Bearer `portal_access` JWT (audience-isolated by a `type` claim — `portal_access`/`portal_refresh` — never a JWT `aud` claim, so a staff `access` or webapp `client_session` token cannot be replayed here and vice versa). Issued by `POST /api/v1/portal/auth/login`; refreshed via an httpOnly `portal_session` cookie. 403 if the account is not `active`. |
 | Shared-secret webhook | inline `hmac.compare_digest` checks | none (system caller) | Used only by `POST /api/v1/telegram/webhook/{secret}` and `POST /api/v1/webhooks/escrow/{provider}` — see [Webhooks](#webhooks--bot-integration-unauthenticated-schema). |
 
 Company-scoped portal routes additionally re-check membership in the request path
@@ -343,8 +343,10 @@ Routers under `app/api/webapp/`. All prefixed `/webapp` (or `/webapp/<sub-area>`
 ## Portal (client cabinet) surface
 
 Routers under `app/api/portal/`. All prefixed `/portal` (or `/portal/<sub-area>`). Auth is
-`get_current_account` (portal `Bearer` access token) on every route except the OTP request/verify
-endpoints themselves. Company-scoped routes (`{company_id}` in the path) additionally require
+`get_current_account` (portal `Bearer` access token) on every route except the sign-in and
+access-request endpoints themselves. That guard also refuses, with 403 `password_change_required`,
+an account that has not yet replaced the password staff issued it — two routes take the un-gated
+`get_account_for_password_change` instead, which is how the debt can be paid at all. Company-scoped routes (`{company_id}` in the path) additionally require
 the caller's account to be a member of that company (404 otherwise) — most write actions further
 require the acting member to hold an admin role on the company (`_require_company_admin`).
 
@@ -352,12 +354,12 @@ require the acting member to hold an admin role on the company (`_require_compan
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/portal/auth/otp/request` | none | Request an OTP SMS to a phone number. 204 always for a valid number; 429 when rate-limited. |
-| GET | `/api/v1/portal/auth/otp/peek` | none, but **404 unless `DEBUG=true` and `SMS_PROVIDER=console`** | E2E test hook — returns the pending OTP code. Never reachable in production. |
-| POST | `/api/v1/portal/auth/otp/verify` | none (issues token) | Verify the OTP → `PortalTokenResponse` (access token) + `portal_session` cookie. |
+| POST | `/api/v1/portal/auth/login` | none (issues token) | Sign in with the staff-issued `login` + `password` → `PortalTokenResponse` + `portal_session` cookie. One generic 401 for an unknown login, a wrong password, a blocked account and an ungranted application alike; 429 when rate-limited (per IP, then per login). |
+| POST | `/api/v1/portal/auth/register` | none | Ask for access. Creates a `pending` account and answers **202 `{"status": "received"}` every time** — including for a phone that has applied before, so the response cannot enumerate applicants. No token, no cookie. 422 only for an unparseable phone. |
+| POST | `/api/v1/portal/auth/password` | account (un-gated) | Replace the password; clears `must_change_password`, rotates the cookie, returns a fresh `PortalTokenResponse`. 400 if the current password is wrong. |
 | POST | `/api/v1/portal/auth/refresh` | `portal_session` cookie | Exchange the refresh cookie for a new access token. |
 | POST | `/api/v1/portal/auth/logout` | none | Clear the `portal_session` cookie. |
-| GET | `/api/v1/portal/me` | account | Authenticated account profile (`AccountOut`). |
+| GET | `/api/v1/portal/me` | account (un-gated) | Authenticated account profile (`AccountOut`), including `must_change_password` — after a reload this is where the client learns it owes a change. |
 | PATCH | `/api/v1/portal/me` | account | Update account profile. |
 
 ### Companies & verification — `companies.py` (prefix `/portal/companies`, tag `portal-companies`)
@@ -605,7 +607,38 @@ message on the webapp `get_current_client` path, per `T-03-03`, to avoid leaking
 failed), `403` (authenticated but not authorized — wrong role, inactive/blocked account, or not a
 company member), `404` (not found — also used deliberately in place of `403` for
 company-membership checks, so a non-member cannot distinguish "doesn't exist" from "not yours"),
-`422` (request validation or a domain `ValueError` translated to a client error), `429` (OTP /
+`422` (request validation or a domain `ValueError` translated to a client error), `429` (sign-in /
 rate-limited endpoints, with a `Retry-After` header).
+
+### What the OpenAPI schema declares
+
+These codes are **in the schema**, not only in this document. `backend/app/api/errors.py`
+declares them as reusable response sets (`STAFF`, `PORTAL`, `WEBAPP`, and the `_RESOURCE`
+variants that add 404), attached per router at `include_router()` time in `app/main.py` and per
+route in the four routers that mix authenticated and anonymous paths (staff auth, portal auth,
+webapp auth, webapp market). Every declared failure carries the same `ErrorDetail` model — the
+`{"detail": "…"}` above — so a generated client has one type for the failure branch instead of an
+untyped body, and each carries the real `detail` string as its example.
+
+They are assigned by what a route's **dependencies** can raise, not by what one handler happens
+to raise today: a guard that can answer 403 puts 403 in the contract of every route behind it.
+`backend/tests/test_openapi_errors.py` fails in both directions — a guarded route that documents
+less than its guard can raise, and an anonymous route that claims a 401 it cannot produce.
+
+Two known gaps, deliberate rather than overlooked:
+
+- **422 is left exactly as FastAPI generates it.** About a hundred handlers raise
+  `HTTPException(422, detail="…")` with a *string* where the documented `HTTPValidationError`
+  says a list of field errors. Declaring our own 422 would replace the validation-error schema —
+  the commoner of the two shapes — so the narrower one stays undocumented instead.
+- **`404`/`409`/`400`/`503` are declared only where they hold for every route in the router.**
+  A collection route that cannot 404 must not say it can, so the per-route remainder — most
+  notably the `409` state-machine conflicts on deals, contracts and samples, and the `503`
+  provider-unavailable answers on the Didox/E-IMZO/registry rails — is still route-by-route work
+  that the schema does not yet carry.
+
+The schema itself is served only when `DEBUG=true` (`/docs`, `/redoc`, `/openapi.json`); in
+production all three are `None` per `WR-03`, so this document remains the reference of record
+there.
 
 <!-- VERIFY: production base URL for the API (e.g. https://api.ai-imex.com or the cabinet/webapp origin's /api/v1 path) is deployment-specific and not established from repository contents alone. -->

@@ -13,11 +13,21 @@ with a `/:companyId` profile), `/prices` and `/news`. These routes are **server-
 so search engines receive real HTML, and they read `/api/v1/public/*`, the only API surface
 with no auth dependency. Open to **everyone**, signed in or not.
 
-**The client cabinet** (R1): everything under **`/cabinet`** — a person logs in by phone
-OTP, registers companies, submits them for verification, and publishes offers. The browser
-counterpart to the staff `dashboard/` and the Telegram `webapp/`. Distinct identity world
-from `webapp/` (Telegram `clients`/`sellers`, frozen): the portal authenticates
-`user_accounts` (phone, passwordless OTP). Cabinet routes are **client-rendered only** and
+**The client cabinet** (R1): everything under **`/cabinet`** — a person signs in with a
+login and password ISSUED BY STAFF, registers companies, submits them for verification, and
+publishes offers. The browser counterpart to the staff `dashboard/` and the Telegram
+`webapp/`. Distinct identity world from `webapp/` (Telegram `clients`/`sellers`, frozen):
+the portal authenticates `user_accounts` (`login` + argon2 password, migration 0048).
+
+**Sign-up is not self-service.** `/cabinet/register` is an access REQUEST: it creates a
+`pending` account, grants nothing, and answers «мы свяжемся с вами». Staff issue the
+credentials from the dashboard, and they are printed in the contract the parties sign —
+which is why the first sign-in is forced through `/cabinet/password`. Three consequences
+worth holding in mind: the API answers **403 `password_change_required`** (not 401) until
+that is done, so it never enters the client's refresh path; `RequirePasswordCurrent` sits
+ABOVE `RequireCompany` because a fresh account has no company and would otherwise bounce to
+an onboarding screen whose first query 403s; and there is no OTP anywhere any more — the
+whole SMS rail was deleted with it. Cabinet routes are **client-rendered only** and
 `noindex`, which is now one line of robots.txt (`Disallow: /cabinet`) rather than a list
 that kept drifting.
 
@@ -38,7 +48,7 @@ A guard (`RedirectAuthedToCabinet`) used to bounce signed-in visitors to the `/c
 twin of whatever they opened. It is **deleted** — do not reintroduce it. The chrome carries
 the session instead: `PublicTopNav` swaps «Войти»/«Регистрация» for a single «Кабинет»
 link, and every `BrandLogo` on the site is wrapped in a link to `/` — cabinet topbar,
-login/OTP, onboarding, footer. The lockup is the marketplace's front door from everywhere;
+login/register, onboarding, footer. The lockup is the marketplace's front door from everywhere;
 the cabinet home has its own nav entry and does not need the logo too.
 
 The rail used to carry a «Маркетплейс» entry pointing at `/` as well. It is **gone**: that
@@ -114,9 +124,10 @@ npm start              # production: node server.js against dist/ (needs npm run
 npm run lint           # eslint . --max-warnings 0
 npm run typecheck      # tsc --noEmit
 npm run build          # tsc -b tsconfig.build.json && vite build (client) && vite build --ssr (server) → dist/
-npm run e2e            # playwright (needs a live API on :8000 + DEBUG=true console SMS)
-#                        tip: OTP_DEV_CODE=000000 on that API fixes the login code so you can
-#                        click through by hand; the specs read the real one via the peek hook
+npm run e2e            # playwright (needs a live API on :8000, migrated + seeded)
+#                        accounts are provisioned THROUGH the real staff API by
+#                        `e2e/_registration.ts::provisionAccount`; seeded demo people sign in
+#                        as `<company key>-<role>` (e.g. shurtan-owner) with SEED_DEMO_PASSWORD
 ```
 
 **Lockfile:** regenerate with `npx npm@10 install` — npm-11 lockfiles break Docker `npm ci`
@@ -127,9 +138,9 @@ in this repo (same constraint as `webapp/`/`dashboard/`).
 | Layer | Role |
 |------|------|
 | `app/` | providers (QueryClient, i18n, router, theme), route tree, guards (`RequireAuth`, `RedirectIfAuthed`, `RequireCompany`) — all three cabinet-side; the storefront has none. |
-| `pages/` | login, otp, **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-create, settings + **R2** market (favorites + RFQ inbox only — the grid and the offer sheet are public now), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
+| `pages/` | login, register (+ done), password (forced change), **onboarding** (the registration gate), home, companies, company-create (wizard + the done sheet), company-view, verification-status, offers, offer-create, settings + **R2** market (favorites + RFQ inbox only — the grid and the offer sheet are public now), inquiries (sent/incoming tabs + detail), requests (list + 4-step wizard + status-timeline detail), news (feed + article), notifications (full list) + **P6** samples (incoming/sent tabs), lab-orders (own analysis requests, read-only). |
 | `widgets/` | `app-shell` (topbar + company switcher), `case-status-panel` (per-check chips + needs_info deep-links). |
-| `features/` | auth-by-otp, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions), sample-letter (the письмо-обязательство card — both parties see it, only the buyer signs) + **P7.a** didox-session (`DidoxOnboardingCard` + `withSession` retry), didox-sign (the two-round-trip signer), didox-contract-document (the seller's «создать документ у оператора» step), ikpu-picker (bind-then-read-back; search covers the company's own basket only). |
+| `features/` | auth-by-password, register-account, change-password, company-wizard, submit-verification, upload-document, switch-company, offer-form + **R2** request-wizard, notification-center (topbar bell + dropdown, 30 s poll) + **P6** lab-passport (offer-form block: upload or order an analysis), sample-request (buyer form + both sides' actions), sample-letter (the письмо-обязательство card — both parties see it, only the buyer signs) + **P7.a** didox-session (`DidoxOnboardingCard` + `withSession` retry), didox-sign (the two-round-trip signer), didox-contract-document (the seller's «создать документ у оператора» step), ikpu-picker (bind-then-read-back; search covers the company's own basket only). |
 | `entities/` | account, company, verification, offer + **R2** market, inquiry, request, news, notification + **P5** compliance (substance picker data, verdicts, licences) + **P6** lab (orders + the two badges), sample (requests + status badge) — types + api hooks + zustand models. |
 | `shared/` | `api` (fetch client + auth bridge), `ui` (Tailwind primitives), `lib` (phone mask, formatters, `useTierBase`), `config` (incl. `CABINET_BASE`/`isCabinetPath`), `i18n`. |
 
@@ -165,38 +176,37 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   zero companies to `/cabinet/onboarding`; that route and `/cabinet/companies/new/*` are
   authenticated but sit OUTSIDE both `AppShell` and that guard (gating the screen that resolves "you have no company"
   on having one would loop). The flow follows `docs/new-design/register.jpeg`:
-  **1 Тип компании → 2 Данные (сертификат + ИНН) → 3 Банк → 4 Документы → 5 Проверка →
+  **1 Тип компании → 2 Данные (ИНН) → 3 Банк → 4 Документы → 5 Проверка →
   «Регистрация завершена!»** (`/cabinet/companies/new/done/:companyId`).
   - The four account types are the mockup's, not the backend enum: `buyer→importer`,
     `supplier→distributor` are the nearest members that exist (`ACCOUNT_TYPES` in
     `features/company-wizard/model/constants.ts`). Sending anything else 422s — the enum is a
     Postgres type, so widening it is a migration.
-  - **Step 1 asks one question.** It used to carry the whole «Электронная подпись» panel as well —
-    three method tabs of which two were dead, and a PIN box the module never read (it prompts for
-    the real password itself). Identity moved to step 2, beside the ИНН it resolves.
-  - **Step 2 opens with the two controls that say WHICH company this is**, in this order:
-    `CompanyCertificateSelect` (the organisations on the holder's key) and the ИНН. Picking a
-    certificate writes **only** `tax_id` — the org name is already in the option, and writing it
-    would mark the field hand-typed, after which `hydrateFromRegistry` refuses to fill it from the
-    registry, which is the better source. Reading a key is not signing with it:
-    `useEimzoCertificates` is the probe+list half alone, because `useEimzoSign.start()` auto-signs
-    a single certificate — right for a button, wrong for a dropdown someone is still reading.
-  - **«Далее» is what signs.** The challenge endpoint is company-scoped, so
-    `companyRegistrationSigner` reads the STIR out of the chosen certificate's subject, creates the
-    company from it, then signs — which is why `EimzoSigner.getChallenge` takes the certificate.
-    `useEimzoSign.signWith(cert)` is that run entered one step later (`pick` can't serve it: it
-    resolves an id against `certs`, which only `start()` fills). On success the row is refetched,
-    `hydrateFromCompany` freezes the requisites and the wizard advances — advancing is NOT
-    conditional on that read, since the signature already succeeded. A signed company is
-    `identity_locked`: those fields render disabled and `useSubmitWizard` omits them from the PATCH
-    or the server 409s. Signing stays optional — no key, no module, no certificate all leave the
-    ИНН typeable and «Далее» plain.
-  - **A certificate whose STIR no longer matches the typed ИНН is refused before any request.**
-    Derived, not stored, so correcting either side clears it. The rule is the server's own
-    (`/eimzo/verify` answers 422); checking it here only stops a doomed request from first costing
-    the user a key password.
-  - **Steps 2–3 prefill themselves from the state registry** (P7.a). As soon as the STIR is known
-    — copied in by the certificate dropdown, or typed — `useRegistryPrefill` asks
+  - **Registration involves no E-IMZO at all**, and this is the third shape it has had. Step 1
+    once carried the whole «Электронная подпись» panel (three method tabs of which two were dead,
+    plus a PIN box the module never read — it prompts for the real password itself); then a
+    certificate dropdown sat beside the ИНН on step 2 and «Далее» signed. Both are gone. Identity
+    is established by documents and staff review, and confirmed by key **afterwards**, from
+    «Статус проверки». Don't reintroduce a signer here: the challenge endpoint is company-scoped,
+    so signing before the row exists needs a create-from-certificate signer, which is the
+    complexity that kept moving.
+  - **Step 2 opens with the ИНН**, because everything else on the screen derives from it — the
+    registry lookup fills the name, address, ownership form and the whole bank step from that one
+    number.
+  - **Two consequences of no signature at registration**, both by design and both visible:
+    a registration certificate is **required** on step 4 (the `documents_complete` waiver only
+    applies to an `identity_locked` company), and the company is verified WITHOUT
+    `identity_locked` — so `CompanyPersonData` is absent until someone confirms by key, and
+    `Owner.FizTin`/`Fio` are mandatory on a Didox «Договор НК». Confirming on «Статус проверки»
+    is the only thing that supplies them (`domains/edi/contract_docs.py`), which is why that
+    offer stays on the page after approval rather than being gated on status.
+  - `CHECK_TO_STEP` deliberately has **no `eimzo_signature` entry** and `CHECK_ORDER` deliberately
+    omits it: no wizard step can satisfy that check now, and `StepReview` renders `CHECK_ORDER` as
+    placeholder rows before a case exists — so listing it promised every applicant a check that
+    never appears. A case that really carries it still renders it (those rows come from the API,
+    and `checkRank` sorts an unlisted type last).
+  - **Steps 2–3 prefill themselves from the state registry** (P7.a). As soon as the STIR is
+    typed, `useRegistryPrefill` asks
     `GET /portal/companies/lookup` and `hydrateFromRegistry` drops the answer into the BLANKS.
     It never overwrites a typed value or a locked one, so a correction always wins; `prefilled`
     records which fields came from the registry. All three failure shapes are soft and none of
@@ -326,5 +336,5 @@ the inner nginx routes by `Host`, so a domain with no host-side block never reac
 (`deploy/nginx/host-vhost.ai-imex.conf.example` now ships that block; certbot covers the name).
 
 The bundle needs no build-time env or secrets: the API base is the relative `/api/v1`. Nothing
-dev-only ships — `/dev/ui` is behind `import.meta.env.DEV`, and there is no client for the
-`otp/peek` test hook.
+dev-only ships — `/dev/ui` is behind `import.meta.env.DEV`, and there is no dev-only auth hook
+at all any more: the e2e suite provisions accounts through the same staff API a person uses.

@@ -24,6 +24,7 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
+from app.api import errors
 from app.core.config import settings
 from app.core.db import get_db
 from app.services.auth_service import (
@@ -44,7 +45,25 @@ def auth_config() -> dict[str, object]:
     }
 
 
-@router.post("/telegram", summary="Authenticate a browser visitor via the Telegram Login Widget")
+@router.post(
+    "/telegram",
+    summary="Authenticate a browser visitor via the Telegram Login Widget",
+    # Per route: /config and /logout answer anyone, so the router carries no set.
+    responses={
+        **errors.error(
+            401,
+            "The widget payload did not verify — absent, tampered with, badly signed, or "
+            "past its TTL. Generic for every cause (T-03-03).",
+            "Authentication required",
+        ),
+        **errors.error(
+            404,
+            "Browser login is not configured on this deployment (no `BOT_USERNAME`), so "
+            "the route does not exist as far as a client is concerned.",
+            "Browser login is not enabled",
+        ),
+    },
+)
 def login_telegram(
     response: Response,
     payload: dict[str, Any] = Body(...),

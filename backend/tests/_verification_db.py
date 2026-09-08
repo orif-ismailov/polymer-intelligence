@@ -90,7 +90,6 @@ _TABLES = [
     "company_members",
     "clients",
     "companies",
-    "sms_send_log",
     "staff_users",
     "sellers",
     "user_accounts",
@@ -126,9 +125,26 @@ def session_factory(engine: sa.Engine) -> sessionmaker[Session]:
 
 
 def make_account(db: Session, phone: str):  # noqa: ANN202
-    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    """An ACTIVE cabinet account with credentials, as staff would have issued it.
 
-    account = UserAccount(phone=phone)
+    Both halves are explicit because the model now defaults to `pending` (0048 —
+    an INSERT that forgets to say produces an applicant, not an account), and a
+    pending account 403s on every guarded route. Callers of this helper want a
+    person who can act.
+
+    The password hash is a literal rather than `hash_password(...)`: nothing here
+    signs in through it, and argon2 at `memory_cost=65536` per fixture is a
+    visible tax on a suite that builds accounts freely.
+    """
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.models.enums import AccountStatus  # noqa: PLC0415
+
+    account = UserAccount(
+        phone=phone,
+        login=phone.lstrip("+"),
+        password_hash="x",
+        status=AccountStatus.active,
+    )
     db.add(account)
     db.flush()
     return account

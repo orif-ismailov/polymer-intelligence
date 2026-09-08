@@ -40,6 +40,7 @@ import {
   Tag,
   TestTube,
   Truck,
+  UserCog,
   Users,
   Workflow,
 } from "lucide-react";
@@ -151,6 +152,12 @@ export const NAV_GROUPS: NavGroup[] = [
         key: "adminUsers",
         href: "/admin/users",
         icon: Users,
+        adminOnly: true,
+      },
+      {
+        key: "portalAccounts",
+        href: "/admin/portal-accounts",
+        icon: UserCog,
         adminOnly: true,
       },
     ],

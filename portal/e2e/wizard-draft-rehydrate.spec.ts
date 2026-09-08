@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * Regression: a company-wizard draft saved by an OLDER build must not crash the
@@ -17,31 +17,10 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
  * that they no longer satisfy it.
  *
  * Requires a live migrated+seeded API on :8000 exposing the dev-only
- * `GET /portal/auth/otp/peek`.
+ * the seeded demo logins.
  */
 
-const API_BASE = process.env.PORTAL_API_BASE ?? "http://localhost:8000/api/v1";
 const PERSIST_KEY = "imex.company-wizard.draft";
-
-function uniquePhone(): string {
-  const suffix = String(Math.floor(Math.random() * 1_000_000_000)).padStart(9, "0");
-  return `+998${suffix}`;
-}
-
-async function login(page: Page, request: APIRequestContext, phone: string): Promise<void> {
-  await page.goto("/cabinet/login");
-  await page.getByLabel(/phone|телефон|telefon/i).fill(phone);
-  await page.getByRole("button", { name: /get code|получить код|kod olish/i }).click();
-  await page.waitForURL("**/cabinet/login/code");
-
-  const res = await request.get(`${API_BASE}/portal/auth/otp/peek`, { params: { phone } });
-  expect(res.ok()).toBeTruthy();
-  const { code } = (await res.json()) as { code: string };
-
-  await page.getByLabel(/code|код|kod/i).fill(code);
-  await page.getByRole("button", { name: /sign in|войти|kirish/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/cabinet/login"));
-}
 
 /**
  * Uncaught `TypeError`s only.
@@ -52,14 +31,20 @@ async function login(page: Page, request: APIRequestContext, phone: string): Pro
  * would tie this regression to it and stay red for unrelated reasons. A reading
  * of `undefined` is a `TypeError`, which the hydration reports are not.
  */
-function typeErrorsFrom(errors: Array<{ name: string; message: string }>): string[] {
+function typeErrorsFrom(
+  errors: Array<{ name: string; message: string }>,
+): string[] {
   return errors.filter((e) => e.name === "TypeError").map((e) => e.message);
 }
 
 /** Write a raw persisted draft, then reload so the store rehydrates from it. */
-async function seedDraft(page: Page, state: Record<string, unknown>): Promise<void> {
+async function seedDraft(
+  page: Page,
+  state: Record<string, unknown>,
+): Promise<void> {
   await page.evaluate(
-    ([key, payload]) => window.localStorage.setItem(key as string, payload as string),
+    ([key, payload]) =>
+      window.localStorage.setItem(key as string, payload as string),
     [PERSIST_KEY, JSON.stringify({ state, version: 0 })] as const,
   );
 }
@@ -91,12 +76,13 @@ const LEGACY_BANK = {
 test.describe("company-wizard draft rehydration", () => {
   test("a pre-typed-flow draft opens the wizard instead of crashing it", async ({
     page,
-    request,
   }) => {
     const errors: Array<{ name: string; message: string }> = [];
-    page.on("pageerror", (err) => errors.push({ name: err.name, message: err.message }));
+    page.on("pageerror", (err) =>
+      errors.push({ name: err.name, message: err.message }),
+    );
 
-    await login(page, request, uniquePhone());
+    await login(page, await provisionAccount(request));
 
     // `manufacturer` is the branch that reads the two fields the old draft lacks.
     await seedDraft(page, {
@@ -118,10 +104,14 @@ test.describe("company-wizard draft rehydration", () => {
     await page.goto("/cabinet/companies/new/2");
 
     await expect(
-      page.getByLabel(/legal name of the factory|название завода|zavodning to.liq yuridik nomi/i),
+      page.getByLabel(
+        /legal name of the factory|название завода|zavodning to.liq yuridik nomi/i,
+      ),
     ).toHaveValue("OOO Legacy Draft");
     await expect(
-      page.getByLabel(/actual factory address|фактический адрес завода|zavodning amaldagi manzili/i),
+      page.getByLabel(
+        /actual factory address|фактический адрес завода|zavodning amaldagi manzili/i,
+      ),
     ).toHaveValue("");
 
     expect(typeErrorsFrom(errors)).toEqual([]);
@@ -137,18 +127,23 @@ test.describe("company-wizard draft rehydration", () => {
    */
   const PARTIAL_SLICES = [
     { accountType: "logistics", slice: "logistics", value: {} },
-    { accountType: "laboratory", slice: "laboratory", value: { city: "Ташкент" } },
+    {
+      accountType: "laboratory",
+      slice: "laboratory",
+      value: { city: "Ташкент" },
+    },
   ] as const;
 
   for (const { accountType, slice, value } of PARTIAL_SLICES) {
     test(`the ${accountType} branch survives a half-populated ${slice} slice`, async ({
       page,
-      request,
     }) => {
       const errors: Array<{ name: string; message: string }> = [];
-      page.on("pageerror", (err) => errors.push({ name: err.name, message: err.message }));
+      page.on("pageerror", (err) =>
+        errors.push({ name: err.name, message: err.message }),
+      );
 
-      await login(page, request, uniquePhone());
+      await login(page, await provisionAccount(request));
 
       await seedDraft(page, {
         accountType,
@@ -161,7 +156,9 @@ test.describe("company-wizard draft rehydration", () => {
 
       await page.goto("/cabinet/companies/new/1");
 
-      await expect(page.getByTestId(`account-type-${accountType}`)).toBeVisible();
+      await expect(
+        page.getByTestId(`account-type-${accountType}`),
+      ).toBeVisible();
       expect(typeErrorsFrom(errors)).toEqual([]);
     });
   }
