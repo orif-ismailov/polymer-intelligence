@@ -119,13 +119,20 @@ def seed_substances(db: Session | None = None, *, path: Path | None = None) -> S
     finally:
         if own:
             session.close()
+    # `created` is a RESERVED LogRecord attribute (the record's creation time), and
+    # `logging.makeRecord` raises KeyError rather than shadowing one. This call
+    # therefore blew up whenever anything had turned INFO logging on — which nothing
+    # had, because each seeder used to run as its own `python -m` with the root
+    # logger left at WARNING, so `isEnabledFor(INFO)` was False and the record was
+    # never built. `python -m app.seed` calls basicConfig, and the latent bug became
+    # a crash on the last seeder in the chain. Suffixed to keep the three symmetrical.
     logger.info(
         "seed_substances",
         extra={
             "revision": revision,
-            "created": len(outcome.created),
-            "updated": len(outcome.updated),
-            "skipped": len(outcome.skipped),
+            "created_count": len(outcome.created),
+            "updated_count": len(outcome.updated),
+            "skipped_count": len(outcome.skipped),
         },
     )
     return outcome
