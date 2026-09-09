@@ -4,7 +4,7 @@
 # These are thin wrappers around scripts/compose; backend dev commands continue
 # to run from backend/ (uv-managed). Targets here orchestrate the full stack.
 # =============================================================================
-.PHONY: help dev dev-stop smoke webapp-bundle portal-bundle env-sync
+.PHONY: help dev dev-stop seed smoke webapp-bundle portal-bundle env-sync
 
 # --env-file .env: Compose otherwise looks for the interpolation .env next to the
 # compose file (deploy/), not the repo root — leaving ${POSTGRES_PASSWORD} etc.
@@ -20,6 +20,14 @@ dev: ## Run the WHOLE local stack (infra + api + worker + beat + portal + dashbo
 
 dev-stop: ## Stop the infra containers `make dev` leaves running
 	@docker stop pi-pg pi-redis pi-minio
+
+seed: ## Re-run the idempotent core seeders against the RUNNING stack
+# The compose `command` seeds as a pre-start step, so it fires only when the api
+# container is recreated — `docker compose up -d` on an unchanged image is a no-op.
+# After a database wipe the api therefore keeps serving against empty reference
+# tables, which is how the dev stand ended up with zero contract_templates and a
+# dead signing chain (09.09.2026). This is the missing step.
+	$(COMPOSE) exec api python -m app.seed
 
 smoke: ## Run the full-stack production-compose smoke (D-02, synthetic data + placeholder env)
 	bash tests/smoke/test_smoke_full_stack.sh

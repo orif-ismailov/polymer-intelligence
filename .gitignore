@@ -14,7 +14,9 @@ venv/
 .ruff_cache/
 .pytest_cache/
 *.egg-info/
-celerybeat-schedule
+# Celery beat's shelve DB. SQLite runs it in WAL mode, so it is three files,
+# not one — the -shm/-wal sidecars showed up as untracked after `make dev`.
+celerybeat-schedule*
 
 # Node / frontend
 node_modules/

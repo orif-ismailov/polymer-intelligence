@@ -79,12 +79,29 @@ def _do_seed(db: Session) -> list[StaffUser]:
         password_env: str = record["password_env"]
         dev_default: str = record["password_dev_default"]
 
+        # Check if this user already exists (idempotent seed)
+        existing: StaffUser | None = (
+            db.query(StaffUser).filter(StaffUser.email == email).first()
+        )
+        if existing is not None:
+            # Skip — user already seeded; do NOT overwrite the password hash
+            continue
+
         # Read the password from env. The fallback is a literal in
         # `staff_users.json` — a known string, in a public repo, that opens an
         # ADMIN account. A comment saying "never rely on dev_default in
         # production" is not a control: seeding is automatic on a fresh deploy,
         # so the one environment where nobody watches it run is exactly the one
-        # that would get it. Outside development the seeder now refuses instead.
+        # that would get it. Outside development the seeder refuses instead.
+        #
+        # This check sits BELOW the already-exists skip on purpose. Above it, the
+        # seeder raised on EVERY start of a deployment whose admin was long since
+        # created but whose `SEED_ADMIN_PASSWORD` had been dropped from `.env` —
+        # and because it runs inside the api container's pre-start `&&` chain, the
+        # raise aborted the chain and uvicorn never started. A missing variable
+        # took the whole API down to protect a row it was not going to write. The
+        # security property is untouched: the public literal still cannot create
+        # an admin, because nothing past this point runs unless one is being made.
         plain_password = os.environ.get(password_env)
         if not plain_password:
             if settings.APP_ENV != "development":
@@ -94,14 +111,6 @@ def _do_seed(db: Session) -> list[StaffUser]:
                     "literal and must never become a real admin password"
                 )
             plain_password = dev_default
-
-        # Check if this user already exists (idempotent seed)
-        existing: StaffUser | None = (
-            db.query(StaffUser).filter(StaffUser.email == email).first()
-        )
-        if existing is not None:
-            # Skip — user already seeded; do NOT overwrite the password hash
-            continue
 
         # Hash the password with argon2 before storing (T-03-01: never plaintext)
         password_hash = hash_password(plain_password)
