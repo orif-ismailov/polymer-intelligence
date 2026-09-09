@@ -1266,7 +1266,8 @@
       "declined": "已拒绝",
       "cancelled": "已取消",
       "expired": "已过期"
-    }
+    },
+    "templatesLink": "合同模板"
   },
   "deals": {
     "title": "交易",
@@ -1964,6 +1965,46 @@
       "tokens": "令牌",
       "cost": "成本",
       "none": "无"
+    }
+  },
+  "contractTemplates": {
+    "title": "合同模板",
+    "subtitle": "双方以电子签名签署的文本。占位符校验是必需的：未知的占位符会被替换为空字符串且不报任何错误——合同会在公司名称处留下一个空洞。",
+    "backToContracts": "返回合同",
+    "newTemplate": "新建模板",
+    "colCode": "代码",
+    "colKind": "类型",
+    "colVersion": "版本",
+    "colUsage": "合同数",
+    "inactive": "已隐藏",
+    "empty": "暂无模板",
+    "selectHint": "请选择模板或新建一个。",
+    "fieldCode": "代码",
+    "hintCode": "大写拉丁字母，例如 SUPPLY_V3。创建后不可更改。",
+    "fieldKind": "文档类型",
+    "hintKind": "决定模板可使用哪些当事方字段。创建后不可更改。",
+    "field_name_ru": "名称（RU）",
+    "field_name_uz": "名称（UZ）",
+    "field_name_en": "名称（EN）",
+    "fieldActive": "在客户端可用",
+    "hintActive": "隐藏的模板不会被删除——合同仍引用它。",
+    "fieldBody": "HTML 正文",
+    "fieldSchema": "变量结构（JSON）",
+    "check": "校验",
+    "preview": "预览",
+    "previewHint": "数值已替换为可见的 [键] 标记——此处的空白意味着模板有洞，而不是数据缺失。",
+    "save": "保存",
+    "create": "创建",
+    "checkOk": "所有占位符均可填充（{count}）。",
+    "renderableNames": "可用占位符",
+    "errUnknownPlaceholders": "这些占位符将不会被填充",
+    "errDuplicateCode": "该代码的模板已存在。",
+    "errAdminOnly": "只有管理员可以修改模板。",
+    "errSaveFailed": "模板保存失败。",
+    "errSchemaJson": "JSON 无效。",
+    "kind": {
+      "contract": "合同",
+      "sample_letter": "承诺函"
     }
   }
 }

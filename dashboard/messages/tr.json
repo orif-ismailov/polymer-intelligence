@@ -1281,7 +1281,8 @@
       "declined": "Reddedildi",
       "cancelled": "İptal edildi",
       "expired": "Süresi doldu"
-    }
+    },
+    "templatesLink": "Sözleşme şablonları"
   },
   "deals": {
     "title": "İşlemler",
@@ -1979,6 +1980,46 @@
       "tokens": "Token",
       "cost": "Maliyet",
       "none": "yok"
+    }
+  },
+  "contractTemplates": {
+    "title": "Sözleşme şablonları",
+    "subtitle": "Tarafların e-imza ile imzaladığı metinler. Yer tutucu denetimi zorunludur: bilinmeyen bir yer tutucu hiçbir hata vermeden boş dizeyle değiştirilir — sözleşme, şirket adının olması gereken yerde bir boşlukla gider.",
+    "backToContracts": "Sözleşmelere dön",
+    "newTemplate": "Yeni şablon",
+    "colCode": "Kod",
+    "colKind": "Tür",
+    "colVersion": "Sürüm",
+    "colUsage": "Sözleşme",
+    "inactive": "Gizli",
+    "empty": "Şablon yok",
+    "selectHint": "Bir şablon seçin veya yeni oluşturun.",
+    "fieldCode": "Kod",
+    "hintCode": "Büyük harf, örn. SUPPLY_V3. Sonradan değiştirilemez.",
+    "fieldKind": "Belge türü",
+    "hintKind": "Şablona hangi taraf alanlarının sunulacağını belirler. Sonradan değiştirilemez.",
+    "field_name_ru": "Ad (RU)",
+    "field_name_uz": "Ad (UZ)",
+    "field_name_en": "Ad (EN)",
+    "fieldActive": "Kabinde kullanılabilir",
+    "hintActive": "Gizlenen şablon silinmez — sözleşmeler ona bağlıdır.",
+    "fieldBody": "HTML gövdesi",
+    "fieldSchema": "Değişken şeması (JSON)",
+    "check": "Denetle",
+    "preview": "Önizleme",
+    "previewHint": "Değerler görünür [anahtar] işaretleriyle dolduruldu — buradaki boşluk veride değil şablonda bir delik demektir.",
+    "save": "Kaydet",
+    "create": "Oluştur",
+    "checkOk": "Tüm yer tutucular dolduruluyor ({count}).",
+    "renderableNames": "Kullanılabilir yer tutucular",
+    "errUnknownPlaceholders": "Bu yer tutucular doldurulmayacak",
+    "errDuplicateCode": "Bu koda sahip bir şablon zaten var.",
+    "errAdminOnly": "Şablonları yalnızca yönetici değiştirebilir.",
+    "errSaveFailed": "Şablon kaydedilemedi.",
+    "errSchemaJson": "Geçersiz JSON.",
+    "kind": {
+      "contract": "Sözleşme",
+      "sample_letter": "Taahhüt mektubu"
     }
   }
 }

@@ -24,8 +24,8 @@
 
   <h2>1. Стороны</h2>
   <table>
-    <tr><th>Покупатель (заявитель)</th><td>{{ buyer_legal_name }}, ИНН {{ buyer_inn }}<br />{{ buyer_address }}<br />Руководитель: {{ buyer_director }}</td></tr>
-    <tr><th>Поставщик</th><td>{{ seller_legal_name }}, ИНН {{ seller_inn }}<br />{{ seller_address }}<br />Руководитель: {{ seller_director }}</td></tr>
+    <tr><th>Покупатель (заявитель)</th><td>{{ initiator_legal_name }}, ИНН {{ initiator_inn }}<br />{{ initiator_address }}<br />Руководитель: {{ initiator_director }}</td></tr>
+    <tr><th>Поставщик</th><td>{{ counterparty_legal_name }}, ИНН {{ counterparty_inn }}<br />{{ counterparty_address }}<br />Руководитель: {{ counterparty_director }}</td></tr>
   </table>
 
   <h2>2. Предмет запроса</h2>
@@ -39,7 +39,7 @@
 
   <h2>3. Обязательство покупателя</h2>
   <p>
-    Настоящим {{ buyer_legal_name }} подтверждает, что запрашивает у {{ seller_legal_name }}
+    Настоящим {{ initiator_legal_name }} подтверждает, что запрашивает у {{ counterparty_legal_name }}
     пробную партию указанного выше материала для проведения входного контроля и проверки
     совместимости с собственным оборудованием.
   </p>
@@ -61,8 +61,8 @@
 
   <div class="sig">
     <div>
-      {{ buyer_legal_name }}<br />
-      Подписано ЭЦП: {{ buyer_director }}<br />
+      {{ initiator_legal_name }}<br />
+      Подписано ЭЦП: {{ initiator_director }}<br />
       Заявка № {{ sample_public_id }}
     </div>
   </div>

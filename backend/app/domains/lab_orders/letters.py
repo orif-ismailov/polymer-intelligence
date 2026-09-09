@@ -98,6 +98,12 @@ def next_letter_number(db: Session) -> str:
     return f"ПО-{year}-{value:06d}"
 
 
+#: Party fields a LETTER supplies — a strict subset of the contract set (no bank
+#: details). Same role as `contracts.service.REQUISITE_KEYS`: the template validator
+#: builds the renderable-name set from it. See that docstring.
+REQUISITE_KEYS: frozenset[str] = frozenset({"legal_name", "inn", "address", "director"})
+
+
 def _requisites(db: Session, company: Company) -> dict[str, object]:
     """Display requisites. No bank account — a commitment letter needs none, and
     the fewer places that decrypt one, the better."""

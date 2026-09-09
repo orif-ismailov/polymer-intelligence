@@ -1281,7 +1281,8 @@
       "declined": "Rad etilgan",
       "cancelled": "Bekor qilingan",
       "expired": "Muddati o‘tgan"
-    }
+    },
+    "templatesLink": "Shartnoma shablonlari"
   },
   "deals": {
     "title": "Bitimlar",
@@ -1979,6 +1980,46 @@
       "tokens": "Tokenlar",
       "cost": "Narx",
       "none": "yo'q"
+    }
+  },
+  "contractTemplates": {
+    "title": "Shartnoma shablonlari",
+    "subtitle": "Tomonlar ERI bilan imzolaydigan matnlar. Pleysxolderlarni tekshirish majburiy: noma'lum pleysxolder hech qanday xatosiz bo'sh satr bilan almashtiriladi — shartnoma kompaniya nomi o'rnida teshik bilan ketadi.",
+    "backToContracts": "Shartnomalarga",
+    "newTemplate": "Yangi shablon",
+    "colCode": "Kod",
+    "colKind": "Turi",
+    "colVersion": "Versiya",
+    "colUsage": "Shartnomalar",
+    "inactive": "Yashirilgan",
+    "empty": "Shablonlar yo'q",
+    "selectHint": "Shablonni tanlang yoki yangisini yarating.",
+    "fieldCode": "Kod",
+    "hintCode": "Katta lotin harflari, masalan SUPPLY_V3. Keyin o'zgartirib bo'lmaydi.",
+    "fieldKind": "Hujjat turi",
+    "hintKind": "Shablonga qaysi tomon maydonlari mavjudligini belgilaydi. Keyin o'zgartirib bo'lmaydi.",
+    "field_name_ru": "Nomi (RU)",
+    "field_name_uz": "Nomi (UZ)",
+    "field_name_en": "Nomi (EN)",
+    "fieldActive": "Kabinetda mavjud",
+    "hintActive": "Yashirilgan shablon o'chirilmaydi — unga shartnomalar bog'langan.",
+    "fieldBody": "HTML tanasi",
+    "fieldSchema": "O'zgaruvchilar sxemasi (JSON)",
+    "check": "Tekshirish",
+    "preview": "Ko'rib chiqish",
+    "previewHint": "Qiymatlar ko'rinadigan [kalit] belgilariga almashtirildi — bu yerdagi bo'shliq ma'lumotdagi emas, shablondagi teshikdir.",
+    "save": "Saqlash",
+    "create": "Yaratish",
+    "checkOk": "Barcha pleysxolderlar almashtiriladi ({count}).",
+    "renderableNames": "Mavjud pleysxolderlar",
+    "errUnknownPlaceholders": "Bu pleysxolderlar almashtirilmaydi",
+    "errDuplicateCode": "Bunday kodli shablon allaqachon mavjud.",
+    "errAdminOnly": "Shablonlarni faqat administrator o'zgartira oladi.",
+    "errSaveFailed": "Shablonni saqlab bo'lmadi.",
+    "errSchemaJson": "Noto'g'ri JSON.",
+    "kind": {
+      "contract": "Shartnoma",
+      "sample_letter": "Majburiyat xati"
     }
   }
 }

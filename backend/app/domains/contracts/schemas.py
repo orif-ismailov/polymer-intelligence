@@ -6,7 +6,9 @@ import datetime
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.domains.contracts.templates import KINDS
 
 
 class TemplateOut(BaseModel):
@@ -101,3 +103,104 @@ class ContractDetailOut(ContractSummaryOut):
     #: 2 awaiting us · 3 signed · 4 rejected · 50 annulled by the tax committee.
     didox_status: int | None = None
 
+
+# ── Contract-template AUTHORING (staff) ───────────────────────────────────────
+#
+# Read and write shapes are kept deliberately symmetric. The bug this repo has paid
+# for before is a read schema returning FEWER fields than the write schema accepts:
+# the screen loads a row, the omitted field comes back absent, the next save writes
+# the absence, and the value is gone with nobody having touched it. Here that would
+# erase `variables_schema` — the declaration of what a template's form asks for.
+
+#: Stable identifier, e.g. SUPPLY_V3. Upper snake so it reads the same in an audit
+#: row, an S3 key and a runbook.
+_TEMPLATE_CODE = r"^[A-Z][A-Z0-9_]{2,63}$"
+
+
+
+class TemplateSummaryOut(BaseModel):
+    """One row of the list screen. No body — see `TemplateDetailOut`."""
+
+    id: int
+    code: str
+    kind: str
+    name_ru: str
+    name_uz: str | None = None
+    name_en: str | None = None
+    version: int
+    is_active: bool
+    created_at: datetime.datetime
+    #: Contracts referencing this template. Signed ones cannot change (their PDF is
+    #: frozen); drafts re-render, so this is what an editor needs to see.
+    usage_count: int = 0
+
+
+class TemplateDetailOut(TemplateSummaryOut):
+    body: str
+    variables_schema: dict[str, object] = Field(default_factory=dict)
+    body_storage_path: str
+    #: Advisory only — a saved template always has an empty `unknown`.
+    warnings: list[str] = Field(default_factory=list)
+
+
+class TemplateCreateIn(BaseModel):
+    code: str = Field(pattern=_TEMPLATE_CODE, description="Stable identifier, e.g. SUPPLY_V3")
+    kind: Literal["contract", "sample_letter"] = "contract"
+    name_ru: str = Field(min_length=1, max_length=200)
+    name_uz: str | None = Field(default=None, max_length=200)
+    name_en: str | None = Field(default=None, max_length=200)
+    body: str = Field(min_length=1)
+    variables_schema: dict[str, object] = Field(default_factory=dict)
+    is_active: bool = True
+
+    @field_validator("kind")
+    @classmethod
+    def _known_kind(cls, v: str) -> str:
+        # Belt and braces with the Literal: KINDS mirrors the DB CHECK constraint,
+        # and the two must not be able to drift apart silently.
+        if v not in KINDS:
+            raise ValueError(f"kind must be one of {KINDS}")
+        return v
+
+
+class TemplateUpdateIn(BaseModel):
+    """`code` and `kind` are absent on purpose — see `templates.update_template`."""
+
+    name_ru: str = Field(min_length=1, max_length=200)
+    name_uz: str | None = Field(default=None, max_length=200)
+    name_en: str | None = Field(default=None, max_length=200)
+    #: Omit to leave the stored body untouched; an unchanged body does not bump the
+    #: version, so re-saving the metadata does not create a phantom revision.
+    body: str | None = Field(default=None, min_length=1)
+    variables_schema: dict[str, object] | None = None
+    is_active: bool = True
+
+
+class TemplateActiveIn(BaseModel):
+    is_active: bool
+
+
+class TemplateCheckIn(BaseModel):
+    """A body to validate or preview without saving anything."""
+
+    body: str = Field(min_length=1)
+    kind: Literal["contract", "sample_letter"] = "contract"
+    variables_schema: dict[str, object] = Field(default_factory=dict)
+
+
+class TemplateCheckOut(BaseModel):
+    ok: bool
+    #: `{{ names }}` the renderer cannot fill. These BLOCK a save, because
+    #: `render._fill` turns each one into an empty string with no error anywhere —
+    #: a legal document with a hole and nothing to notice it by.
+    unknown: list[str] = Field(default_factory=list)
+    used: list[str] = Field(default_factory=list)
+    renderable: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class TemplatePreviewOut(BaseModel):
+    """Rendered HTML with visible `[stand_in]` tokens in place of real values."""
+
+    html: str
+    warnings: list[str] = Field(default_factory=list)
