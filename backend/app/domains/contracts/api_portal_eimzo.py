@@ -9,6 +9,8 @@ error mapping keeps the frontend able to offer the manual path on a sidecar outa
 
 from __future__ import annotations
 
+import logging
+
 import redis
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -23,6 +25,8 @@ from app.domains.contracts import eimzo as eimzo_service
 from app.domains.contracts.eimzo_schemas import ChallengeOut, VerifyIn, VerifyOut
 from app.domains.verification.api_portal import case_out
 from app.integrations.eimzo import ProviderUnavailable
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-eimzo"])
 
@@ -69,6 +73,19 @@ def eimzo_verify(
         ) from exc
     except ProviderUnavailable as exc:
         # Sidecar down → 503; the frontend falls back to the manual verification path.
+        #
+        # The reason is logged because the response cannot carry it. `eimzo_unavailable`
+        # is one string for three different situations — no sidecar deployed at all,
+        # a sidecar that is down, and a breaker already open from earlier failures —
+        # and the gateway distinguishes them ("eimzo: ConnectError", "eimzo: circuit
+        # open", "eimzo: sidecar 500"). Without this line the operator sees only a mute
+        # 503: on 09.09.2026 a tester reading one concluded the stand was running
+        # EIMZO_STUB, which is the opposite of what a 503 means (the stub cannot
+        # produce one — it has no raise in it at all).
+        logger.error(
+            "eimzo.unavailable",
+            extra={"reason": str(exc), "company_id": company.id, "operation": "verify"},
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="eimzo_unavailable"
         ) from exc
