@@ -225,6 +225,25 @@ class TestEimzoSettings:
         assert settings.EIMZO_STUB is True
 
 
+class TestRateLimitSwitch:
+    """`RATE_LIMIT_ENABLED` — on by default, and unreachable outside DEBUG."""
+
+    def test_defaults_true(self) -> None:
+        settings = _make_settings()
+        assert settings.RATE_LIMIT_ENABLED is True
+
+    def test_disabling_is_refused_without_debug(self) -> None:
+        """Portal registration is anonymous and unverified; the per-IP cap is the
+        only thing between the staff verification queue and a script. This is
+        precisely the flag that gets copied from a dev `.env` into a prod one."""
+        with pytest.raises(ValidationError, match="RATE_LIMIT_ENABLED"):
+            _make_settings(RATE_LIMIT_ENABLED="false", DEBUG="false")
+
+    def test_disabling_is_allowed_in_debug(self) -> None:
+        settings = _make_settings(RATE_LIMIT_ENABLED="false", DEBUG="true")
+        assert settings.RATE_LIMIT_ENABLED is False
+
+
 class TestCiEnvContract:
     """Regression tests asserting the CI workflow's S3 env key matches Settings.S3_ENDPOINT.
 
