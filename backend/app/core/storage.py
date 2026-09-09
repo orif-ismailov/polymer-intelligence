@@ -25,27 +25,65 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def get_s3_client() -> object:
-    """Build and return a boto3 S3 client from S3_* settings.
-
-    endpoint_url is set to settings.S3_ENDPOINT when non-empty (dev/MinIO);
-    when empty (pure AWS), it falls back to None (boto3 default).
+def _build_client(endpoint: str, *, sigv4: bool = False) -> object:
+    """Build a boto3 S3 client against `endpoint` (empty → boto3's AWS default).
 
     region_name is fixed to "us-east-1" which is the MinIO default and
     sufficient for path-style MinIO access.
 
-    Returns:
-        A boto3.client("s3") instance.
+    `sigv4` pins the SIGNATURE VERSION, and only the presigning client asks for it.
+    Left to itself botocore emits SigV2 presigned URLs here (`AWSAccessKeyId` +
+    `Signature` + `Expires`, HMAC-SHA1) even though `meta.config.signature_version`
+    reads `s3v4` — verified against the MinIO this repo runs. V2 does not sign the
+    Host header, so the URL is valid against ANY host that can reach the bucket;
+    v4 does, so it is valid only against the host it was signed for. That is the
+    property worth having on a link we hand to a browser over the public internet,
+    and it is what makes `proxy_set_header Host $host` in the nginx bucket location
+    load-bearing rather than incidental (without it MinIO answers 403
+    SignatureDoesNotMatch — also verified, both directions).
     """
     import boto3  # noqa: PLC0415 — deferred import keeps collection socket-free
+    from botocore.config import Config  # noqa: PLC0415
 
     return boto3.client(
         "s3",
-        endpoint_url=settings.S3_ENDPOINT or None,
+        endpoint_url=endpoint or None,
         aws_access_key_id=settings.S3_ACCESS_KEY,
         aws_secret_access_key=settings.S3_SECRET_KEY,
         region_name="us-east-1",
+        config=Config(signature_version="s3v4") if sigv4 else None,
     )
+
+
+def get_s3_client() -> object:
+    """The I/O client: put/get/head, over the INTERNAL endpoint.
+
+    endpoint_url is set to settings.S3_ENDPOINT when non-empty (dev/MinIO);
+    when empty (pure AWS), it falls back to None (boto3 default).
+
+    Returns:
+        A boto3.client("s3") instance.
+    """
+    return _build_client(settings.S3_ENDPOINT)
+
+
+def get_s3_presign_client() -> object:
+    """The signing client: presigned URLs a BROWSER has to be able to open.
+
+    A second client rather than a second endpoint on the first one, because a
+    presigned URL cannot be rewritten after the fact. SigV4 lists `host` in
+    `X-Amz-SignedHeaders`, so the host is part of what the signature covers —
+    swapping `minio:9000` for a public name in the returned string produces a URL
+    the object store answers 403 to. The endpoint has to be right at signing time,
+    which means a client built with it.
+
+    `S3_PUBLIC_ENDPOINT` empty → falls back to `S3_ENDPOINT`, i.e. exactly the old
+    behaviour. That is deliberate: the fallback keeps every deployment that has not
+    set the new variable working precisely as before, at the cost of continuing to
+    emit URLs only reachable inside the docker network (which is the bug this
+    exists to fix — see the note on `S3_PUBLIC_ENDPOINT` in `core/config.py`).
+    """
+    return _build_client(settings.S3_PUBLIC_ENDPOINT or settings.S3_ENDPOINT, sigv4=True)
 
 
 # Module-level lazy s3_client accessor.
@@ -60,6 +98,7 @@ def get_s3_client() -> object:
 # which also means tests can patch `app.core.storage.s3_client` after import.
 
 _s3_client_instance: object = None
+_s3_presign_client_instance: object = None
 
 
 def _get_or_create_s3_client() -> object:
@@ -68,6 +107,14 @@ def _get_or_create_s3_client() -> object:
     if _s3_client_instance is None:
         _s3_client_instance = get_s3_client()
     return _s3_client_instance
+
+
+def _get_or_create_s3_presign_client() -> object:
+    """Return the cached presigning client, building it on first call."""
+    global _s3_presign_client_instance
+    if _s3_presign_client_instance is None:
+        _s3_presign_client_instance = get_s3_presign_client()
+    return _s3_presign_client_instance
 
 
 class _LazyS3Client:
@@ -83,7 +130,17 @@ class _LazyS3Client:
         return getattr(real, name)
 
 
+class _LazyS3PresignClient:
+    """The same proxy for the presigning client. Patch this one in tests that
+    exercise a `presign_*` helper — `s3_client` no longer signs anything."""
+
+    def __getattr__(self, name: str) -> object:
+        real = _get_or_create_s3_presign_client()
+        return getattr(real, name)
+
+
 s3_client: object = _LazyS3Client()
+s3_presign_client: object = _LazyS3PresignClient()
 
 
 def ensure_bucket() -> None:

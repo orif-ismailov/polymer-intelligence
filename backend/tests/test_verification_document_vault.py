@@ -99,7 +99,9 @@ def test_presign_returns_url() -> None:
     document = VerificationDocument(
         company_id=7, kind=None, storage_path="verification/7/abc-cert.pdf", sha256="z"
     )
-    with patch("app.core.storage.s3_client") as s3:
+    # `s3_presign_client`, not `s3_client`: signing is done by a client built
+    # against S3_PUBLIC_ENDPOINT so the URL names a host a browser can resolve.
+    with patch("app.core.storage.s3_presign_client") as s3:
         s3.generate_presigned_url.return_value = "https://minio/presigned?sig=1"
         url = storage_service.presign_verification_document(document, ttl=600)
     assert url == "https://minio/presigned?sig=1"

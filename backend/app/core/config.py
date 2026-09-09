@@ -151,7 +151,20 @@ class Settings(BaseSettings):
     # cabinet auth with staff-issued credentials, and OTP was the only consumer of the
     # SMS rail, so `SMS_PROVIDER`, `ESKIZ_*` and the five `OTP_*` tunables went with it.
     # Cabinet rate limits live in `app/services/rate_limit.py` beside the other portal
-    # buckets, not here — they are counts, not deployment configuration.
+    # buckets, not here — they are counts, not deployment configuration. The master
+    # switch below IS deployment configuration, which is why it is the one that moved.
+    #
+    # Turns every portal rate bucket off — all thirteen, whichever subject each keys
+    # on. That breadth is the point: a QA stand needs register (per IP), company-create
+    # (per ACCOUNT) and tender-create (per COMPANY) to stop firing, and no per-IP
+    # allowlist can reach the last two. The tightest bucket is registration at 5/hour,
+    # and company/tender creation reset at UTC midnight — 05:00 in Tashkent — so a
+    # regression run that exhausts them is blocked for the rest of the working day.
+    #
+    # Guarded to DEBUG by `_reject_disabled_rate_limits_outside_debug`: unlimited
+    # anonymous registration on a public deployment is a spam queue, and this is
+    # exactly the sort of flag that gets copied from a dev `.env` into a prod one.
+    RATE_LIMIT_ENABLED: bool = True
     # Portal refresh-cookie lifetime (days). Short access JWT (aud=portal) rides on top.
     PORTAL_SESSION_TTL_DAYS: int = 30
     # Telegram group/chat that receives a verification-case card per submitted case.
@@ -305,7 +318,26 @@ class Settings(BaseSettings):
     CORS_ALLOWED_ORIGINS: list[str] | str = ["http://localhost:3000"]
 
     # ── S3 / MinIO file storage ───────────────────────────────────────────────
+    # The INTERNAL address the api and worker read and write objects through. Under
+    # compose that is `http://minio:9000`, a name that resolves on the docker network
+    # and nowhere else — MinIO publishes no host ports (docker-compose.yml:97).
     S3_ENDPOINT: str = ""
+    # The PUBLIC address presigned download URLs are signed against. Empty → falls
+    # back to S3_ENDPOINT, which is exactly the old behaviour and also the bug:
+    # every document link the API handed out (verification documents, contract PDFs,
+    # deal attachments, lab letters — eleven call sites through three presign
+    # helpers) pointed at `http://minio:9000`, so no client outside the cluster
+    # could open any of them. Images had already been given the byte-proxy
+    # treatment; documents were never given anything.
+    #
+    # It must carry NO path component — `https://api.example.com`, not
+    # `https://api.example.com/s3`. boto3 signs the full canonical URI, so a prefix
+    # would be signed in and then stripped by the nginx location, breaking the
+    # signature. nginx exposes the BUCKET path instead (`location /polymer-files/`)
+    # and forwards `Host $host` unchanged, so what MinIO verifies is what was signed.
+    # Safe to expose: the bucket is private (minio-init sets no anonymous policy),
+    # so an unsigned request is a 403 and a signed one expires in 600 seconds.
+    S3_PUBLIC_ENDPOINT: str = ""
     S3_ACCESS_KEY: str
     S3_SECRET_KEY: str
     S3_BUCKET: str = "polymer-files"
@@ -476,6 +508,27 @@ class Settings(BaseSettings):
                 "EIMZO_STUB verifies signatures WITHOUT crypto and is dev-only; it "
                 "cannot be combined with DEBUG=false — set EIMZO_STUB=false and run "
                 "the e-imzo-server sidecar (EIMZO_SERVER_URL) for real verification"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _reject_disabled_rate_limits_outside_debug(self) -> Self:
+        """Refuse switched-off rate limits on anything that looks like production.
+
+        Same shape and same reasoning as `_reject_eimzo_stub_outside_debug`. The
+        buckets this disables are not comfort features: portal registration is
+        anonymous and unverified — no SMS proves the phone — so the per-IP cap is
+        the only thing standing between the staff verification queue and a script.
+
+        `DEBUG` is the flag every production deployment already turns off, so
+        pinning the two together makes "dev stands only" enforceable at boot rather
+        than a sentence in a contract file nobody re-reads while copying a `.env`.
+        """
+        if not self.RATE_LIMIT_ENABLED and not self.DEBUG:
+            raise ValueError(
+                "RATE_LIMIT_ENABLED=false removes every portal abuse cap (including "
+                "anonymous registration) and is dev-only; it cannot be combined with "
+                "DEBUG=false"
             )
         return self
 

@@ -262,9 +262,17 @@ def test_document_upload_download_delete(api) -> None:  # noqa: ANN001
     _aid, auth = _seed_account(session, "+998900000001")
     company_id = client.post(_BASE, json={"tax_id": "123456789"}, headers=auth).json()["id"]
 
+    # Two clients now: `s3_client` does the I/O (put/delete) over the INTERNAL
+    # endpoint, `s3_presign_client` signs download URLs against S3_PUBLIC_ENDPOINT
+    # so the browser can resolve the host. Patching only the first left the real
+    # signer in place and this asserted against a genuine presigned URL.
     fake_s3 = MagicMock()
-    fake_s3.generate_presigned_url.return_value = "https://minio/presigned"
-    with patch("app.core.storage.s3_client", fake_s3):
+    fake_presign = MagicMock()
+    fake_presign.generate_presigned_url.return_value = "https://minio/presigned"
+    with (
+        patch("app.core.storage.s3_client", fake_s3),
+        patch("app.core.storage.s3_presign_client", fake_presign),
+    ):
         up = client.post(
             f"{_BASE}/{company_id}/documents",
             data={"kind": "registration_certificate"},
