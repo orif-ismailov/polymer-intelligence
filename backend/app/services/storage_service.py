@@ -120,11 +120,16 @@ def validate_upload(content: bytes, filename: str) -> str:
         ValueError("invalid_file_type"): when magic bytes do not match any
             entry in MAGIC_BYTES.
     """
+    # The three log calls below say `file_name`, not `filename`: `filename` is a
+    # RESERVED LogRecord attribute and `logging.makeRecord` raises KeyError rather
+    # than shadowing one. At DEBUG they were never built, so the bug was invisible —
+    # and it would have surfaced the moment somebody raised the log level to
+    # diagnose an upload, turning every upload into a KeyError instead.
     # 1. Size check first (T-03-05)
     if len(content) > MAX_SIZE_BYTES:
         logger.debug(
             "storage_service.validate_upload.too_large",
-            extra={"filename": filename, "size": len(content), "limit": MAX_SIZE_BYTES},
+            extra={"file_name": filename, "size": len(content), "limit": MAX_SIZE_BYTES},
         )
         raise ValueError("file_too_large")
 
@@ -133,13 +138,13 @@ def validate_upload(content: bytes, filename: str) -> str:
         if content.startswith(magic):
             logger.debug(
                 "storage_service.validate_upload.accepted",
-                extra={"filename": filename, "mime": mime},
+                extra={"file_name": filename, "mime": mime},
             )
             return mime
 
     logger.debug(
         "storage_service.validate_upload.invalid_type",
-        extra={"filename": filename, "magic_head": content[:8].hex()},
+        extra={"file_name": filename, "magic_head": content[:8].hex()},
     )
     raise ValueError("invalid_file_type")
 
@@ -435,10 +440,16 @@ def presign_company_logo(company: Company, ttl: int = 600) -> str | None:
 
 
 def presign_verification_document(document: VerificationDocument, ttl: int = 600) -> str:
-    """Return a short-lived presigned GET URL for a verification document (≤600 s)."""
-    from app.core.storage import s3_client  # noqa: PLC0415
+    """Return a short-lived presigned GET URL for a verification document (≤600 s).
 
-    url = s3_client.generate_presigned_url(  # type: ignore[attr-defined]
+    Signed by `s3_presign_client`, NOT `s3_client`: the URL is handed to a browser,
+    so it has to name a host that browser can resolve (`S3_PUBLIC_ENDPOINT`). The
+    two clients differ in nothing but their endpoint, and it cannot be fixed after
+    signing — SigV4 covers the `host` header.
+    """
+    from app.core.storage import s3_presign_client  # noqa: PLC0415
+
+    url = s3_presign_client.generate_presigned_url(  # type: ignore[attr-defined]
         "get_object",
         Params={"Bucket": settings.S3_BUCKET, "Key": document.storage_path},
         ExpiresIn=ttl,
@@ -469,10 +480,13 @@ def store_eimzo_pkcs7(company_id: int, pkcs7_bytes: bytes) -> tuple[str, str]:
 
 
 def presign_eimzo_pkcs7(storage_path: str, ttl: int = 600) -> str:
-    """Presigned GET URL for a stored PKCS#7 evidence blob (≤600 s)."""
-    from app.core.storage import s3_client  # noqa: PLC0415
+    """Presigned GET URL for a stored PKCS#7 evidence blob (≤600 s).
 
-    url = s3_client.generate_presigned_url(  # type: ignore[attr-defined]
+    Public-endpoint signed — see `presign_verification_document`.
+    """
+    from app.core.storage import s3_presign_client  # noqa: PLC0415
+
+    url = s3_presign_client.generate_presigned_url(  # type: ignore[attr-defined]
         "get_object",
         Params={"Bucket": settings.S3_BUCKET, "Key": storage_path},
         ExpiresIn=ttl,
@@ -647,10 +661,15 @@ def get_object_bytes(key: str) -> bytes:
 
 
 def presign_object(key: str, ttl: int = 600) -> str:
-    """Generic short-lived presigned GET URL for any stored object (≤600 s)."""
-    from app.core.storage import s3_client  # noqa: PLC0415
+    """Generic short-lived presigned GET URL for any stored object (≤600 s).
 
-    url = s3_client.generate_presigned_url(  # type: ignore[attr-defined]
+    The busiest of the three: contract documents, deal attachments, lab letters,
+    thread files and registry evidence all come through here. Public-endpoint
+    signed — see `presign_verification_document`.
+    """
+    from app.core.storage import s3_presign_client  # noqa: PLC0415
+
+    url = s3_presign_client.generate_presigned_url(  # type: ignore[attr-defined]
         "get_object",
         Params={"Bucket": settings.S3_BUCKET, "Key": key},
         ExpiresIn=ttl,

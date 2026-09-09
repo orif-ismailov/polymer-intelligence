@@ -66,7 +66,7 @@ class StubChemRegistryClient:
     def lookup_substance(
         self, *, hs_code: str | None = None, name: str | None = None
     ) -> SubstanceLookup | None:
-        logger.debug("chem_registry.stub.lookup", extra={"hs_code": hs_code, "name": name})
+        logger.debug("chem_registry.stub.lookup", extra={"hs_code": hs_code, "substance_name": name})
         return None
 
 

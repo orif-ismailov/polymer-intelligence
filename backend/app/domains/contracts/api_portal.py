@@ -22,6 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 import io
 import json
+import logging
 import zipfile
 
 import redis
@@ -54,6 +55,8 @@ from app.domains.contracts.schemas import (
 from app.integrations.eimzo import ProviderUnavailable
 from app.models.enums import CompanyStatus, ContractStatus
 from app.services import storage_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/portal", tags=["portal-contracts"])
 
@@ -487,6 +490,13 @@ def sign_contract(
     except contract_service.InvalidContractTransition as exc:
         raise _transition_error(exc) from exc
     except ProviderUnavailable as exc:
+        # `eimzo_unavailable` cannot say WHICH outage this is — no sidecar deployed,
+        # sidecar down, or a breaker already open — but the gateway can, so the
+        # reason goes to the log rather than nowhere. See api_portal_eimzo.py.
+        logger.error(
+            "eimzo.unavailable",
+            extra={"reason": str(exc), "contract_id": contract.id, "operation": "sign"},
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="eimzo_unavailable"
         ) from exc

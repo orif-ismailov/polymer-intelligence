@@ -101,11 +101,14 @@ uv run alembic upgrade head
 
 # Idempotent (ON CONFLICT). Without them a fresh database has no staff user, so
 # the dashboard cannot be logged into at all. Set DEV_SEED=0 to skip.
+#
+# This ran three of the five seeders until 09.09.2026, so `make dev` built a
+# database with no contract_templates and no substances — a database where the
+# contract chain and the compliance gate cannot be exercised, which reads as two
+# broken features rather than a short list. The list lives in app/seed/__main__.py.
 if [ "${DEV_SEED:-1}" = "1" ]; then
-  log "seeding reference data, staff and sources"
-  for seeder in seed_reference seed_staff seed_sources; do
-    uv run python -m "app.seed.$seeder" >/dev/null || warn "$seeder failed (continuing)"
-  done
+  log "seeding reference data, staff, sources, contract templates and substances"
+  uv run python -m app.seed >/dev/null || warn "seeding failed (continuing)"
 fi
 cd "$ROOT"
 

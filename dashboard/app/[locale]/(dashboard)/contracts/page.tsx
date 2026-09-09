@@ -11,8 +11,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { FileText } from "lucide-react";
+import { FileCode, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { formatTashkent } from "@/lib/tz";
 
@@ -107,7 +108,16 @@ export default function ContractsPage() {
         <FileText className="h-5 w-5 text-foreground-muted" />
         <h1 className="text-xl font-semibold">{t("title")}</h1>
       </div>
-      <p className="mb-4 text-sm text-foreground-muted">{t("subtitle")}</p>
+      <p className="mb-2 text-sm text-foreground-muted">{t("subtitle")}</p>
+      {/* The templates a contract is built from. Reached from here rather than
+          from the nav: same `contracts` page grant, no new key to grant anyone. */}
+      <Link
+        href="/contracts/templates"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-accent hover:underline"
+      >
+        <FileCode className="h-4 w-4" />
+        {t("templatesLink")}
+      </Link>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <select

@@ -13,6 +13,8 @@ import datetime
 
 import redis
 
+from app.core.config import settings
+
 # Portal daily limits (bucket → limit). Kept here so the numbers live in one place.
 COMPANY_CREATE_PER_DAY = 5
 DOCUMENT_UPLOAD_PER_DAY = 30
@@ -43,7 +45,15 @@ def _seconds_until_utc_midnight(now: datetime.datetime) -> int:
 def enforce_daily(
     redis_client: redis.Redis[str], bucket: str, subject: str | int, limit: int
 ) -> None:
-    """Increment the `bucket:subject` daily counter; raise RateLimited past `limit`."""
+    """Increment the `bucket:subject` daily counter; raise RateLimited past `limit`.
+
+    A no-op when `RATE_LIMIT_ENABLED` is off (dev stands only — `Settings` refuses
+    that combination with `DEBUG=false`). It returns before the INCR rather than
+    swallowing `RateLimited` afterwards, so a disabled bucket leaves no `rl:` key
+    behind to expire at an unexpected moment once the switch goes back on.
+    """
+    if not settings.RATE_LIMIT_ENABLED:
+        return
     key = f"rl:{bucket}:{subject}"
     count = int(redis_client.incr(key))
     if count == 1:
@@ -79,7 +89,12 @@ def enforce_window(
     limit: int,
     window_seconds: int,
 ) -> None:
-    """Fixed-window counter: `bucket:subject` resets every `window_seconds`."""
+    """Fixed-window counter: `bucket:subject` resets every `window_seconds`.
+
+    No-op when `RATE_LIMIT_ENABLED` is off — see `enforce_daily`.
+    """
+    if not settings.RATE_LIMIT_ENABLED:
+        return
     key = f"rl:{bucket}:{subject}"
     count = int(redis_client.incr(key))
     if count == 1:

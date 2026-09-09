@@ -173,6 +173,20 @@ def _validate_variables(schema: dict[str, object], variables: dict[str, object])
         raise VariablesInvalid(sorted(errors))
 
 
+#: The party fields `_requisites` supplies to the renderer. `render_contract_html`
+#: prefixes them `initiator_` / `counterparty_`, so `{{ initiator_legal_name }}` is
+#: what a template body writes.
+#:
+#: Declared as a constant because `contracts/templates.py` validates a template body
+#: against it: a `{{ }}` name the renderer cannot fill is substituted with an EMPTY
+#: STRING and reported nowhere, so the only sign of the mistake is a legal document
+#: with a hole in it. `tests/test_contract_templates.py` pins the two together, or
+#: the validator would quietly rot the first time a field is added here.
+REQUISITE_KEYS: frozenset[str] = frozenset(
+    {"legal_name", "inn", "address", "director", "bank_account", "bank_mfo"}
+)
+
+
 def _requisites(db: Session, company: Company) -> dict[str, object]:
     """Full requisites for rendering (bank account decrypted — render path only)."""
     bank = (

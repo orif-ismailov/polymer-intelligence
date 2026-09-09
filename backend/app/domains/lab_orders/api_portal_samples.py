@@ -12,6 +12,8 @@ portal.
 
 from __future__ import annotations
 
+import logging
+
 import redis
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -53,6 +55,8 @@ def _letter_out(sample: SampleRequest) -> SampleLetterOut:
         required=True,
     )
 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/portal", tags=["portal-samples"])
 
@@ -408,6 +412,13 @@ def sign_sample_letter(
     except EimzoUnavailable as exc:
         # The sidecar is down; the buyer can try again. Nothing was consumed —
         # the challenge is gone, but re-issuing one is a click.
+        #
+        # Which outage it is (absent / down / breaker open) only the gateway knows,
+        # and the 503 body cannot carry it. See api_portal_eimzo.py.
+        logger.error(
+            "eimzo.unavailable",
+            extra={"reason": str(exc), "sample_id": sample_id, "operation": "sign_letter"},
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="eimzo_unavailable"
         ) from exc
