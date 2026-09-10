@@ -18,7 +18,20 @@ zero rows, and `contract_templates` being empty took the whole signing chain wit
 `make seed` is this module.
 
 Demo and showcase seeders are deliberately absent: they are fixtures, not reference
-data, and they carry real passwords. Run those by hand.
+data, and they carry real passwords. Run those by hand:
+
+    python -m app.seed.seed_showcase          # the full world — PURGES companies,
+                                              # accounts, deals, contracts, offers
+    python -m app.seed.seed_showcase_news     # classified articles only, additive
+    python -m app.seed.seed_showcase_prices   # a weekly quote series only, additive
+
+The distinction matters when choosing one. `seed_showcase` builds a coherent world and
+truncates half the schema to do it, so it is for an environment nobody is mid-way
+through testing. The satellites each own their rows — a marker in `ai.news`, a
+dedicated `manual` source — delete only those on a re-run, and are safe to point at a
+live dev stand. `seed_showcase_prices` exists because `price_points` is a DERIVED
+table with no write endpoint, so an environment where the aggregation has never run
+has no way to obtain prices at all (IMEX-11).
 
 Each seeder owns its own session and commits its own work — `seed_substances` and
 `seed_contract_templates` only commit `if own`, so handing them a shared session here
