@@ -18,6 +18,7 @@ import redis
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
+from app.api import errors
 from app.api.deps import get_current_account
 from app.api.portal.deps import company_or_404
 from app.core.db import get_db
@@ -167,7 +168,11 @@ def didox_status(
     )
 
 
-@router.post("/{company_id}/didox/session", response_model=DidoxSessionOut)
+@router.post(
+    "/{company_id}/didox/session",
+    response_model=DidoxSessionOut,
+    responses=errors.DIDOX_CONFLICT,
+)
 def didox_session(
     company_id: int,
     body: DidoxSignatureIn,
@@ -201,7 +206,11 @@ def didox_session(
     return DidoxSessionOut(state=onboarding.state_of(row))
 
 
-@router.post("/{company_id}/didox/signup", response_model=DidoxSessionOut)
+@router.post(
+    "/{company_id}/didox/signup",
+    response_model=DidoxSessionOut,
+    responses=errors.DIDOX_CONFLICT,
+)
 def didox_signup(
     company_id: int,
     body: DidoxSignupIn,
@@ -238,7 +247,11 @@ def didox_signup(
     return DidoxSessionOut(state=onboarding.state_of(row))
 
 
-@router.get("/{company_id}/didox/offer", response_model=DidoxOfferOut)
+@router.get(
+    "/{company_id}/didox/offer",
+    response_model=DidoxOfferOut,
+    responses=errors.DIDOX_CONFLICT,
+)
 def didox_offer(
     company_id: int,
     db: Session = Depends(get_db),
@@ -267,7 +280,11 @@ def didox_offer(
         ) from exc
 
 
-@router.post("/{company_id}/didox/offer", response_model=DidoxSessionOut)
+@router.post(
+    "/{company_id}/didox/offer",
+    response_model=DidoxSessionOut,
+    responses=errors.DIDOX_CONFLICT,
+)
 def didox_accept_offer(
     company_id: int,
     body: DidoxOfferIn,
@@ -344,7 +361,7 @@ def _acting_company_id(db: Session, account: UserAccount, row: DidoxDocument) ->
 @router.get(
     "/documents/{document_id}/print",
     response_class=Response,
-    responses={200: {"content": {"application/pdf": {}}}},
+    responses={200: {"content": {"application/pdf": {}}}, **errors.DIDOX_CONFLICT},
 )
 def didox_print_form(
     document_id: int,
@@ -391,7 +408,11 @@ def didox_print_form(
     return Response(content=pdf, media_type="application/pdf")
 
 
-@router.post("/documents/{document_id}/sign-payload", response_model=DidoxSignPayloadOut)
+@router.post(
+    "/documents/{document_id}/sign-payload",
+    response_model=DidoxSignPayloadOut,
+    responses=errors.DIDOX_CONFLICT,
+)
 def didox_sign_payload(
     document_id: int,
     db: Session = Depends(get_db),
@@ -431,7 +452,11 @@ def didox_sign_payload(
     return DidoxSignPayloadOut(data_b64=data_b64, mode=mode)
 
 
-@router.post("/documents/{document_id}/sign", response_model=DidoxDocumentOut)
+@router.post(
+    "/documents/{document_id}/sign",
+    response_model=DidoxDocumentOut,
+    responses=errors.DIDOX_CONFLICT,
+)
 def didox_sign_document(
     document_id: int,
     body: DidoxSignatureIn,
@@ -599,6 +624,7 @@ def didox_contract_prefill(
     "/{company_id}/didox/contracts/{contract_id}/document",
     response_model=DidoxDocumentOut,
     status_code=status.HTTP_201_CREATED,
+    responses=errors.DIDOX_CONFLICT,
 )
 def didox_create_contract_document(
     company_id: int,
