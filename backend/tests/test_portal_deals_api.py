@@ -144,6 +144,16 @@ def _verified_company(session, account_id, tax):  # noqa: ANN001, ANN202
         return company.id
 
 
+def _unverify(session, company_id):  # noqa: ANN001, ANN202
+    """Send a company back to pending — verification lapses, it is not one-way."""
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.models.enums import CompanyStatus  # noqa: PLC0415
+
+    with session() as db:
+        db.get(Company, company_id).status = CompanyStatus.pending_verification
+        db.commit()
+
+
 def _scene(session):  # noqa: ANN001, ANN202
     """Buyer with an RFQ, seller with a response, and an accepted deal."""
     from app.domains.accounts.models import UserAccount  # noqa: PLC0415
@@ -640,6 +650,76 @@ def test_double_response_is_409(api) -> None:  # noqa: ANN001
     )
     assert dupe.status_code == 409
     assert dupe.json()["detail"] == "already_responded"
+
+
+@requires_real_db
+def test_unverified_supplier_cannot_quote_and_is_told_in_the_shared_shape(api) -> None:  # noqa: ANN001
+    """403 with a typed `code`, exactly as the offer route answers (IMEX-7).
+
+    This used to be `422 {"detail": "company_not_verified"}` — the wrong code for a
+    request whose body is fine, in a shape no client could branch on without a
+    special case for this one endpoint.
+    """
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+
+    client, session = api
+    buyer_id, _buyer_h = _account(session, "+998900000001")
+    seller_id, seller_h = _account(session, "+998900000002")
+    buyer_co = _verified_company(session, buyer_id, "301111111")
+    seller_co = _verified_company(session, seller_id, "302222222")
+    with session() as db:
+        request = make_request(
+            db, company=db.get(Company, buyer_co), account=db.get(UserAccount, buyer_id)
+        )
+        db.commit()
+        request_id = request.id
+    _unverify(session, seller_co)
+
+    posted = client.post(
+        f"{_P}/companies/{seller_co}/requests/{request_id}/responses",
+        json={"price": "1250.00", "currency": "USD", "qty": "20", "qty_unit": "MT"},
+        headers=seller_h,
+    )
+    assert posted.status_code == 403, posted.text
+    assert posted.json()["detail"]["code"] == "company_not_verified"
+
+
+@requires_real_db
+def test_accepting_a_quote_from_a_lapsed_supplier_answers_the_same_403(api) -> None:  # noqa: ANN001
+    """The buyer's side of the same rule, and it must read identically (IMEX-7)."""
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+
+    client, session = api
+    buyer_id, buyer_h = _account(session, "+998900000001")
+    seller_id, seller_h = _account(session, "+998900000002")
+    buyer_co = _verified_company(session, buyer_id, "301111111")
+    seller_co = _verified_company(session, seller_id, "302222222")
+    with session() as db:
+        request = make_request(
+            db, company=db.get(Company, buyer_co), account=db.get(UserAccount, buyer_id)
+        )
+        db.commit()
+        request_id = request.id
+
+    posted = client.post(
+        f"{_P}/companies/{seller_co}/requests/{request_id}/responses",
+        json={"price": "1250.00", "currency": "USD", "qty": "20", "qty_unit": "MT"},
+        headers=seller_h,
+    )
+    assert posted.status_code == 201, posted.text
+    response_id = posted.json()["id"]
+
+    # The quote was filed while the supplier was verified; verification lapsed after.
+    _unverify(session, seller_co)
+
+    accepted = client.post(
+        f"{_P}/companies/{buyer_co}/requests/{request_id}/responses/{response_id}/accept",
+        headers=buyer_h,
+    )
+    assert accepted.status_code == 403, accepted.text
+    assert accepted.json()["detail"]["code"] == "company_not_verified"
 
 
 @requires_real_db

@@ -185,9 +185,11 @@ export function PublicOfferPage() {
   const canInquire = session != null && session.companyId != null && !session.offer.is_own;
   const canSendRfq = canInquire && session?.offer.accepts_rfq === true;
 
-  // Both sides must be verified or POST /portal/contracts answers 422, and a TG-origin
-  // offer has no company to sign with at all. Say which of those it is, on the page,
-  // rather than letting the buyer discover it two screens later.
+  // Both sides must be verified or POST /portal/contracts refuses — 403
+  // `company_not_verified` for the caller's own company, 422 `counterparty_not_verified`
+  // for the seller's — and a TG-origin offer has no company to sign with at all. Say
+  // which of those it is, on the page, rather than letting the buyer discover it two
+  // screens later.
   const contractBlockedReason = !session
     ? null
     : !session.offer.accepts_contract

@@ -3,7 +3,8 @@
 A verified company publishes offers that flow through the EXISTING moderation
 machine (pending_moderation → approved/rejected). All routes require a portal
 account + company membership (non-member → 404). Publishing from an unverified
-company → 403 with a typed `{code: "company_not_verified"}` body.
+company is refused by `portal.deps.company_not_verified()` — the same 403 and the
+same typed body as the four other routes that enforce that rule.
 """
 
 from __future__ import annotations
@@ -13,7 +14,12 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, Upl
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.deps import company_or_404, rate_limited, require_business_role
+from app.api.portal.deps import (
+    company_not_verified,
+    company_or_404,
+    rate_limited,
+    require_business_role,
+)
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.accounts.models import UserAccount
@@ -67,9 +73,7 @@ def create_offer(
     try:
         offer = offer_service.create_company_offer(db, company, account, body)
     except offer_service.CompanyNotVerified as exc:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail={"code": "company_not_verified"}
-        ) from exc
+        raise company_not_verified() from exc
     except company_service.RoleNotAllowed as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail={"code": "role_not_allowed"}

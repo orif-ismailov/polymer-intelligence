@@ -1,10 +1,10 @@
 """Shared portal-router helpers. Under /api/v1/portal.
 
-These four guards are the portal's common entry sequence: resolve the company for
-the calling account, then narrow by business role or company role, and translate a
-rate-limit refusal into a response. Eleven routers across six bounded contexts use
-them, which is why they live here rather than in whichever router happened to
-define them first.
+These guards are the portal's common entry sequence: resolve the company for the
+calling account, then narrow by business role or company role, and translate a
+rate-limit or not-verified refusal into a response. Eleven routers across six
+bounded contexts use them, which is why they live here rather than in whichever
+router happened to define them first.
 
 Shared kernel, same status as `app/api/deps.py`: this module stays in `app/api/`
 permanently and is **not** moved into `app/domains/` by the domain reorg. Anything
@@ -36,6 +36,33 @@ def rate_limited(exc: rate_limit.RateLimited) -> HTTPException:
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         detail="Daily limit reached",
         headers={"Retry-After": str(exc.retry_after)},
+    )
+
+
+def company_not_verified() -> HTTPException:
+    """403 `company_not_verified` — one business rule, one status, one shape.
+
+    Publishing an offer, quoting on a tender, accepting a quote, drawing up a
+    contract and turning a sample into a deal all enforce the SAME rule, and each
+    used to answer it its own way: the offer route 403 with a typed body, the other
+    four 422 with a bare string. Both halves of that were a cost a client paid.
+
+    **422 was the wrong code.** The request body is impeccable; what is unfinished
+    is the COMPANY. 403 is the truthful one — the caller authenticated and is not
+    permitted in this state — and it is what the offer route always answered.
+
+    **A bare string cannot be read.** A `code` inside `detail` is machine-readable
+    from one branch; prose is not, so five endpoints meant five special cases in
+    the cabinet. The shape here is the one `deps.get_current_account` already uses
+    for `password_change_required`: a `code` to branch on, a `message` to log.
+
+    Raised, never depended on — the rule is enforced deep in five different
+    services, so this translates their exception at the router edge:
+    `raise company_not_verified() from exc`, the same call shape as `rate_limited`.
+    """
+    return HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={"code": "company_not_verified", "message": "Company is not verified"},
     )
 
 

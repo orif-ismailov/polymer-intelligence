@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.deps import company_or_404, require_business_role
+from app.api.portal.deps import company_not_verified, company_or_404, require_business_role
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.accounts.models import UserAccount
@@ -259,9 +259,7 @@ def open_deal_from_sample(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="sample_not_received"
         ) from exc
     except deal_service.CompanyNotVerified as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="company_not_verified"
-        ) from exc
+        raise company_not_verified() from exc
     db.commit()
     return SampleDealOut(deal_id=deal.id, number=deal.number, buyer_company_id=buyer.id)
 

@@ -20,7 +20,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
-from app.api.portal.deps import require_company_admin
+from app.api.portal.deps import company_not_verified, require_company_admin
 from app.core.db import get_db
 from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
@@ -582,9 +582,7 @@ def submit_rfq_response(
     except rfq_response_service.RequestNotOpen as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="request_closed") from exc
     except deal_service.CompanyNotVerified as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="company_not_verified"
-        ) from exc
+        raise company_not_verified() from exc
     except company_service.RoleNotAllowed as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail={"code": "role_not_allowed"}
@@ -657,9 +655,7 @@ def accept_rfq_response(
     except deal_service.RequestNotOpen as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="request_closed") from exc
     except deal_service.CompanyNotVerified as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="company_not_verified"
-        ) from exc
+        raise company_not_verified() from exc
     except deal_service.DealRequiresCompany as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="company_required"
