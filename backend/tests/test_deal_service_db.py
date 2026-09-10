@@ -680,3 +680,109 @@ def test_deal_numbers_are_sequential_within_the_year(sf) -> None:  # noqa: ANN00
         assert first.startswith(f"DEAL-{year}-")
         assert len(seq) == 6, "zero-padded to six digits"
         assert int(second.split("-")[2]) == int(seq) + 1
+
+
+# ── The tender's own status timeline (IMEX-6) ─────────────────────────────────
+
+
+@requires_real_db
+def test_accepting_a_response_marks_the_request_matched(sf) -> None:  # noqa: ANN001
+    """Choosing a winner IS the `matched` transition. The deal opened from the
+    start; the tender it came from stayed `new`, so a buyer's list could not show
+    which of their tenders had already been decided."""
+    from app.domains.requests.models import Request  # noqa: PLC0415
+    from app.models.enums import RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        deal, *_ = _open_deal(db)
+
+        request = db.get(Request, deal.request_id)
+        assert request.status == RequestStatus.matched
+
+
+@requires_real_db
+def test_accepting_writes_the_matched_history_row(sf) -> None:  # noqa: ANN001
+    """The reported symptom was a `history` holding only the creation row."""
+    from app.domains.requests.models import RequestStatusHistory  # noqa: PLC0415
+    from app.models.enums import RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        deal, *_ = _open_deal(db)
+
+        rows = (
+            db.query(RequestStatusHistory)
+            .filter(RequestStatusHistory.request_id == deal.request_id)
+            .all()
+        )
+        assert [r.to_status for r in rows] == [RequestStatus.matched]
+        assert rows[0].changed_by is None, "the buyer is not staff"
+
+
+@requires_real_db
+def test_qa_reproduction_new_to_offer_sent_to_matched(sf) -> None:  # noqa: ANN001
+    """IMEX-6 end to end, driving the same services the portal routes call.
+
+    Buyer files a tender, supplier quotes it, buyer accepts: the deal opens AND
+    the tender walks `new -> offer_sent -> matched`. QA saw the deal alone.
+    """
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.requests.models import RequestStatusHistory  # noqa: PLC0415
+    from app.models.enums import DealStatus, RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer = _verified(db, "301111111", "+998900000001")
+        # `submit` gates on a seller role, which the default fixture company lacks.
+        seller_acc, seller = _verified(
+            db, "302222222", "+998900000002", roles=["distributor", "trader"]
+        )
+
+        request = make_request(db, company=buyer, account=buyer_acc)
+        assert request.status == RequestStatus.new
+
+        response = rfq_response_service.submit(
+            db, request, seller, seller_acc,
+            price=decimal.Decimal("1250.00"), currency="USD",
+            qty=decimal.Decimal("20"), qty_unit="MT",
+        )
+        assert request.status == RequestStatus.offer_sent
+
+        deal = deal_service.open_deal_from_response(db, request, response, buyer_acc)
+
+        assert deal.status == DealStatus.negotiation
+        assert request.status == RequestStatus.matched
+        transitions = [
+            (r.from_status, r.to_status)
+            for r in db.query(RequestStatusHistory)
+            .filter(RequestStatusHistory.request_id == request.id)
+            .order_by(RequestStatusHistory.id)
+            .all()
+        ]
+        assert transitions == [
+            (RequestStatus.new, RequestStatus.offer_sent),
+            (RequestStatus.offer_sent, RequestStatus.matched),
+        ]
+
+
+@requires_real_db
+def test_accepting_on_a_cancelled_request_does_not_raise(sf) -> None:  # noqa: ANN001
+    """Neither `open_deal_from_response` nor the accept route checks the REQUEST
+    status, so a buyer with a stale tab can accept a quote on a tender they just
+    cancelled. `cancelled -> matched` is not in the machine; transitioning
+    unconditionally would make that a 500. The deal still opens — that it opens
+    on a cancelled tender is a pre-existing defect this does not change.
+    """
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.models.enums import DealStatus, RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer, seller_acc, seller = _parties(db)
+        request = make_request(db, company=buyer, account=buyer_acc)
+        response = _response(db, request, seller, seller_acc)
+        request.status = RequestStatus.cancelled
+        db.flush()
+
+        deal = deal_service.open_deal_from_response(db, request, response, buyer_acc)
+
+        assert deal.status == DealStatus.negotiation
+        assert request.status == RequestStatus.cancelled, "left alone, not crashed on"

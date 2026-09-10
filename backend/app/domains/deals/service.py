@@ -45,6 +45,7 @@ from app.domains.contracts.models import Contract
 from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
 from app.domains.lab_orders.models import SampleRequest
 from app.domains.marketplace.models import OfferRequest, SellerOffer
+from app.domains.requests import service as request_service
 from app.domains.requests.models import Request
 from app.models.enums import (
     CompanyMemberRole,
@@ -53,6 +54,7 @@ from app.models.enums import (
     DealActorKind,
     DealDocumentKind,
     DealStatus,
+    RequestStatus,
     RfqResponseStatus,
 )
 from app.services import (
@@ -489,6 +491,25 @@ def open_deal_from_response(
             entity="rfq_response",
             entity_id=str(loser.id),
         )
+    # Choosing a winner IS the `matched` transition — the onboarding board's
+    # «matched выставляется выбором победителя — и тем же действием открывается
+    # сделка». The deal half of that sentence worked from the start and this half
+    # was never written, so a tender with a live deal hanging off it still read
+    # `new` and its history held only the row it was created with (IMEX-6).
+    #
+    # `changed_by=None` because this is the BUYER acting, not staff: that column
+    # is a `staff_users` FK, and `open_deal_from_response` writes its own audit
+    # row below for the portal action.
+    #
+    # Asking the machine rather than transitioning unconditionally: neither this
+    # function nor `POST /…/accept` checks that the REQUEST is still open, only
+    # that the RESPONSE is, so a buyer who cancels a tender and then accepts a
+    # quote still standing against it (a stale tab is enough) arrives here on
+    # `cancelled`. `cancelled -> matched` is not in the machine, and an unguarded
+    # call would turn a silent oddity into a 500 on the accept endpoint. The deal
+    # opening on a cancelled tender at all is a separate defect, NOT fixed here.
+    if RequestStatus.matched in request_service.VALID_TRANSITIONS[request.status]:
+        request_service.transition_status(db, request, RequestStatus.matched)
     db.flush()
 
     audit_service.write_audit(

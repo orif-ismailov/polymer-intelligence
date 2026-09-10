@@ -139,9 +139,30 @@ def _enqueue_analysis_soft(request_id: int) -> None:
 # ── Status machine ────────────────────────────────────────────────────────────
 
 #: Valid transitions per dev-spec §3.
+#
+#: `viewed` and `in_progress` mean a STAFF MEMBER triaged this request, and the
+#: ladder new → viewed → in_progress → offer_sent was written when that was the
+#: only way a request moved. The self-service RFQ path has no triage step: a
+#: supplier quotes an untriaged tender and the buyer picks a winner, both without
+#: staff ever touching it. Those two edges (`offer_sent`, `matched`) are therefore
+#: legal from the earlier open statuses as well — NOT because the machine got
+#: looser, but because the transition genuinely happens and had nowhere to land.
+#:
+#: Walking the intermediate states instead was the alternative and is wrong twice
+#: over: it writes `viewed`/`in_progress` history rows asserting a triage that
+#: never happened, and `transition_status` notifies on every hop (`dedup=False`),
+#: so one supplier quote would send the buyer three notifications.
 VALID_TRANSITIONS: dict[RequestStatus, set[RequestStatus]] = {
-    RequestStatus.new: {RequestStatus.viewed},
-    RequestStatus.viewed: {RequestStatus.in_progress},
+    RequestStatus.new: {
+        RequestStatus.viewed,
+        RequestStatus.offer_sent,
+        RequestStatus.matched,
+    },
+    RequestStatus.viewed: {
+        RequestStatus.in_progress,
+        RequestStatus.offer_sent,
+        RequestStatus.matched,
+    },
     RequestStatus.in_progress: {
         RequestStatus.offer_sent,
         RequestStatus.matched,
