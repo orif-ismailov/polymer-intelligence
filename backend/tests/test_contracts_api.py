@@ -345,3 +345,38 @@ def test_create_counterparty_must_be_verified_422(api) -> None:  # noqa: ANN001
     )
     assert res.status_code == 422
     assert res.json()["detail"] == "counterparty_not_verified"
+
+
+@requires_real_db
+def test_create_unverified_initiator_is_403_typed(api) -> None:  # noqa: ANN001
+    """The INITIATOR failing the same rule answers 403 with a code (IMEX-7).
+
+    Deliberately a different answer from the case above: `counterparty_not_verified`
+    is a fact about a company named in the BODY, so 422 is honest there. This one is
+    about the caller's own standing, which is what 403 means — and it is the same
+    refusal the offer, tender and sample routes give, in the same shape.
+    """
+    client, session = api
+    a_id, a_auth = _account(session, "+998900000001")
+    b_id, _ = _account(session, "+998900000002")
+    counterparty = _verified_company(session, b_id, "302222222")
+    tpl = _template_id(session)
+
+    from app.domains.accounts.models import UserAccount  # noqa: PLC0415
+    from app.domains.companies import service as company_service  # noqa: PLC0415
+
+    with session() as db:
+        initiator = company_service.create_company(
+            db, db.get(UserAccount, a_id), "UZ", "301111111"
+        )
+        db.commit()
+        initiator_id = initiator.id
+
+    res = client.post(
+        f"{_P}/contracts",
+        json={"initiator_company_id": initiator_id, "counterparty_company_id": counterparty,
+              "template_id": tpl, "variables": {"product": "HDPE"}},
+        headers=a_auth,
+    )
+    assert res.status_code == 403, res.text
+    assert res.json()["detail"]["code"] == "company_not_verified"

@@ -610,6 +610,31 @@ company-membership checks, so a non-member cannot distinguish "doesn't exist" fr
 `422` (request validation or a domain `ValueError` translated to a client error), `429` (sign-in /
 rate-limited endpoints, with a `Retry-After` header).
 
+### Machine-readable refusal codes
+
+Where a client is expected to *branch* on a refusal rather than only display it, `detail` is an
+**object** carrying a stable `code`, and usually a `message` for the log:
+
+```json
+{ "detail": { "code": "company_not_verified", "message": "Company is not verified" } }
+```
+
+Branch on `detail.code`. The `message` is prose and its wording is not a contract — it is not
+translated, and the cabinet renders its own sentence per code. `code` is stable across surfaces:
+one business rule answers with one code, one status and one shape wherever it is enforced.
+
+`company_not_verified` is the example worth naming, because it was the counter-example. The rule
+"an unverified company may not sell" is checked in five places — publishing an offer, quoting on a
+tender, accepting a quote, drawing up a contract, turning a sample into a deal — and four of them
+used to answer `422 {"detail": "company_not_verified"}` while the fifth answered `403` with the
+object above. Both halves were wrong for a client: 422 says the request body is invalid when the
+body is fine and the *company* is not, and a bare string cannot be read without a special case per
+endpoint. All five now raise through `app/api/portal/deps.py::company_not_verified` (IMEX-7);
+`backend/tests/test_portal_error_codes.py` fails if a sixth site spells the code out for itself.
+
+Note that `counterparty_not_verified` on `POST /portal/contracts` is deliberately **not** the same
+answer: it is a fact about a company named in the request body, so it stays a 422.
+
 ### What the OpenAPI schema declares
 
 These codes are **in the schema**, not only in this document. `backend/app/api/errors.py`

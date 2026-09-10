@@ -165,7 +165,13 @@ export function ContractCreatePage() {
       });
       void navigate(`/cabinet/contracts/${created.id}`);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
+      if (err instanceof ApiError && err.code === "company_not_verified") {
+        // Typed and 403 since IMEX-7, like every other route that enforces this
+        // rule. The guard below normally renders instead of the form, so this is
+        // the narrow case of a verification that lapsed while the form was open —
+        // and «проверьте поля» would send the user hunting through a valid form.
+        setError(t("contracts.needVerifiedInitiator"));
+      } else if (err instanceof ApiError && err.status === 422) {
         setError(t("contracts.errors.invalid"));
       } else {
         setError(t("contracts.errors.createFailed"));

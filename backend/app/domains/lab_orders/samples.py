@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import logging
 
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -157,19 +158,42 @@ def get(db: Session, request_id: int) -> SampleRequest | None:
     return db.get(SampleRequest, request_id)
 
 
-def list_for_company(db: Session, company_id: int, *, side: str) -> list[SampleRequest]:
-    """`side='incoming'` — requests to answer; `'sent'` — requests we made."""
-    column = (
-        SampleRequest.seller_company_id
-        if side == "incoming"
-        else SampleRequest.buyer_company_id
-    )
-    return (
-        db.query(SampleRequest)
-        .filter(column == company_id)
-        .order_by(SampleRequest.id.desc())
-        .all()
-    )
+def list_for_company(
+    db: Session, company_id: int, *, side: str | None = None
+) -> list[SampleRequest]:
+    """Sample requests this company is a party to, newest first.
+
+    `side='incoming'` — requests to answer; `'sent'` — requests we made; **None,
+    the default — both**, each row then read from this company's point of view by
+    `party_role`.
+
+    Both is the default because one side is not a whole answer, and the old
+    default was the seller's. A buyer asking `GET …/companies/{id}/samples` with
+    no query string got `[]` about a request they had just created and whose row
+    names them (IMEX-8) — and since the list is the only READ surface samples
+    have (there is no `GET /samples/{id}`), that emptiness hid the status, the
+    courier and tracking details, and the fact that a commitment letter was
+    waiting for their signature. Half the flow, invisible to the party who
+    started it.
+
+    Mirrors `deals`: party-scoped by default, narrowed by an explicit parameter.
+    Note the two vocabularies for one axis — `incoming`/`sent` is the caller's
+    view of the same split `my_role` reports as `seller`/`buyer` — kept because
+    the cabinet's two tabs are named after the request, not the role.
+    """
+    query = db.query(SampleRequest)
+    if side == "incoming":
+        query = query.filter(SampleRequest.seller_company_id == company_id)
+    elif side == "sent":
+        query = query.filter(SampleRequest.buyer_company_id == company_id)
+    else:
+        query = query.filter(
+            or_(
+                SampleRequest.seller_company_id == company_id,
+                SampleRequest.buyer_company_id == company_id,
+            )
+        )
+    return query.order_by(SampleRequest.id.desc()).all()
 
 
 def acting_role(sample: SampleRequest, company_id: int) -> str:

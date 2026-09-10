@@ -32,6 +32,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_account
+from app.api.portal.deps import company_not_verified
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.accounts.models import UserAccount
@@ -248,7 +249,7 @@ def create_contract(
             signing_provider=body.signing_provider,
         )
     except contract_service.CompanyNotVerified as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="company_not_verified") from exc
+        raise company_not_verified() from exc
     except contract_service.VariablesInvalid as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
