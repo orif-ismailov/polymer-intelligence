@@ -45,6 +45,7 @@ from app.domains.contracts.models import Contract
 from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
 from app.domains.lab_orders.models import SampleRequest
 from app.domains.marketplace.models import OfferRequest, SellerOffer
+from app.domains.requests import service as request_service
 from app.domains.requests.models import Request
 from app.models.enums import (
     CompanyMemberRole,
@@ -53,6 +54,7 @@ from app.models.enums import (
     DealActorKind,
     DealDocumentKind,
     DealStatus,
+    RequestStatus,
     RfqResponseStatus,
 )
 from app.services import (
@@ -186,6 +188,10 @@ class ResponseNotOpen(Exception):
 
 class ResponseAlreadyAccepted(Exception):
     """Another response to this RFQ has already been accepted (one deal per RFQ)."""
+
+
+class RequestNotOpen(Exception):
+    """The tender is cancelled or closed, so no quote against it can be accepted."""
 
 
 class DealAlreadyOpen(Exception):
@@ -432,6 +438,19 @@ def open_deal_from_response(
     if already is not None:
         raise ResponseAlreadyAccepted(str(request.id))
 
+    # The TENDER has to still be open, not just the quote. Only the response was
+    # checked before, so a buyer with a stale tab could cancel a tender and then
+    # accept a quote still standing against it — opening a real deal against a
+    # cancelled tender (IMEX-6, Finding 1).
+    #
+    # Asked as "is `matched` still reachable from here" rather than as a list of
+    # dead statuses: `request_service.VALID_TRANSITIONS` is the machine, and a
+    # second copy of it here would be the thing that drifts. It is read AFTER the
+    # `FOR UPDATE` above, so a concurrent cancel either lands before this line and
+    # is seen, or waits behind it.
+    if RequestStatus.matched not in request_service.VALID_TRANSITIONS[request.status]:
+        raise RequestNotOpen(str(request.status))
+
     buyer = db.get(Company, request.company_id)
     seller = db.get(Company, response.company_id)
     if buyer is None or seller is None:  # pragma: no cover — FK guarantees both
@@ -489,6 +508,21 @@ def open_deal_from_response(
             entity="rfq_response",
             entity_id=str(loser.id),
         )
+    # Choosing a winner IS the `matched` transition — the onboarding board's
+    # «matched выставляется выбором победителя — и тем же действием открывается
+    # сделка». The deal half of that sentence worked from the start and this half
+    # was never written, so a tender with a live deal hanging off it still read
+    # `new` and its history held only the row it was created with (IMEX-6).
+    #
+    # `changed_by=None` because this is the BUYER acting, not staff: that column
+    # is a `staff_users` FK, and `open_deal_from_response` writes its own audit
+    # row below for the portal action.
+    #
+    # Unconditional: the `RequestNotOpen` guard above has already established that
+    # `matched` is reachable from this status, and it ran inside the same
+    # `FOR UPDATE`. It used to be an `if` here — a silent skip that let the deal
+    # open on a cancelled tender rather than refusing it (IMEX-6, Finding 1).
+    request_service.transition_status(db, request, RequestStatus.matched)
     db.flush()
 
     audit_service.write_audit(

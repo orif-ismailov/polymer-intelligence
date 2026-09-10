@@ -654,6 +654,8 @@ def accept_rfq_response(
         ) from exc
     except deal_service.ResponseNotOpen as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="response_closed") from exc
+    except deal_service.RequestNotOpen as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="request_closed") from exc
     except deal_service.CompanyNotVerified as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="company_not_verified"

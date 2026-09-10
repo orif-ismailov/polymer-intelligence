@@ -421,3 +421,72 @@ def test_list_for_company_covers_every_status(sf) -> None:  # noqa: ANN001
             response.status for response, _ in rfq_response_service.list_for_company(db, seller)
         }
         assert statuses == {RfqResponseStatus.withdrawn, RfqResponseStatus.not_selected}
+
+
+# ── The tender's own status timeline (IMEX-6) ─────────────────────────────────
+#
+# A quote arriving is the buyer-visible event that the tender list is built on.
+# Before this, an RFQ stayed `new` however many quotes were sitting in it, so a
+# buyer could not tell an untouched tender from one awaiting their decision.
+
+
+@requires_real_db
+def test_first_quote_moves_the_rfq_to_offer_sent(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.models.enums import RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        _buyer_acc, _buyer, seller_acc, seller, request = _setup(db)
+        assert request.status == RequestStatus.new, "precondition: nobody has triaged it"
+
+        rfq_response_service.submit(db, request, seller, seller_acc, **_QUOTE)
+
+        assert request.status == RequestStatus.offer_sent
+
+
+@requires_real_db
+def test_first_quote_writes_one_history_row(sf) -> None:  # noqa: ANN001
+    """`new -> offer_sent` directly: walking the staff ladder would fabricate
+    `viewed`/`in_progress` rows for a triage that never happened."""
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.domains.requests.models import RequestStatusHistory  # noqa: PLC0415
+    from app.models.enums import RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        _buyer_acc, _buyer, seller_acc, seller, request = _setup(db)
+        rfq_response_service.submit(db, request, seller, seller_acc, **_QUOTE)
+
+        rows = (
+            db.query(RequestStatusHistory)
+            .filter(RequestStatusHistory.request_id == request.id)
+            .all()
+        )
+        assert len(rows) == 1
+        assert rows[0].from_status == RequestStatus.new
+        assert rows[0].to_status == RequestStatus.offer_sent
+        assert rows[0].changed_by is None, "the supplier is not staff"
+
+
+@requires_real_db
+def test_second_quote_does_not_re_transition(sf) -> None:  # noqa: ANN001
+    """`offer_sent -> offer_sent` is not in the machine, so a second quote must
+    be a no-op rather than a ValueError — and must not notify the buyer twice
+    about a status that did not change."""
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.domains.requests.models import RequestStatusHistory  # noqa: PLC0415
+    from app.models.enums import RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        _buyer_acc, _buyer, seller_acc, seller, request = _setup(db)
+        other_acc, other = _verified(db, "303333333", "+998900000003")
+
+        rfq_response_service.submit(db, request, seller, seller_acc, **_QUOTE)
+        rfq_response_service.submit(db, request, other, other_acc, **_QUOTE)
+
+        assert request.status == RequestStatus.offer_sent
+        rows = (
+            db.query(RequestStatusHistory)
+            .filter(RequestStatusHistory.request_id == request.id)
+            .all()
+        )
+        assert len(rows) == 1, "one transition happened, not two"

@@ -146,17 +146,31 @@ class TestGenerateRequestNumber:
 class TestValidTransitions:
     """VALID_TRANSITIONS dict encodes the dev-spec §3 status machine exactly."""
 
-    def test_new_can_only_go_to_viewed(self):
+    def test_new_allowed_targets(self):
+        """Staff triage (`viewed`) plus the two edges the self-service RFQ path
+        performs on an untriaged tender: a supplier quotes it, or the buyer picks
+        a winner outright (IMEX-6)."""
         from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
 
-        assert VALID_TRANSITIONS[RequestStatus.new] == {RequestStatus.viewed}
+        expected = {
+            RequestStatus.viewed,
+            RequestStatus.offer_sent,
+            RequestStatus.matched,
+        }
+        assert VALID_TRANSITIONS[RequestStatus.new] == expected
 
-    def test_viewed_can_only_go_to_in_progress(self):
+    def test_viewed_allowed_targets(self):
+        """Same two self-service edges once staff have looked but not started."""
         from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415
         from app.models.enums import RequestStatus  # noqa: PLC0415
 
-        assert VALID_TRANSITIONS[RequestStatus.viewed] == {RequestStatus.in_progress}
+        expected = {
+            RequestStatus.in_progress,
+            RequestStatus.offer_sent,
+            RequestStatus.matched,
+        }
+        assert VALID_TRANSITIONS[RequestStatus.viewed] == expected
 
     def test_in_progress_allowed_targets(self):
         from app.domains.requests.service import VALID_TRANSITIONS  # noqa: PLC0415

@@ -9,7 +9,14 @@ Run locally with a real DB:
     DATABASE_URL=postgresql+psycopg://user:pass@localhost/test_polymer \\
     pytest tests/test_synonyms_migration.py -v
 
-In CI: the postgres service container is configured in .github/workflows/*.yml.
+These are NOT run in CI: `conftest._real_db_optin` only honours a `DATABASE_URL`
+naming a localhost `test_polymer`, and CI's is `polymer_intelligence_test`.
+
+**Target `0002` by name, never `head`.** These were written when `0002` WAS the
+head, so `upgrade(head)` meant "apply the migration under test". By head `0050` it
+meant "apply fifty of them", and the two assertions that pin the revision — this
+module's `0002` and the `-1` downgrade landing on `0001` — had been failing ever
+since. A test about one migration has to name that migration.
 """
 
 from __future__ import annotations
@@ -79,7 +86,7 @@ class TestMigration0002Upgrade:
 
     def test_upgrade_to_0002_succeeds(self, alembic_cfg: Config) -> None:
         """alembic upgrade head (0002) succeeds from 0001."""
-        command.upgrade(alembic_cfg, "head")  # raises on failure
+        command.upgrade(alembic_cfg, "0002")  # raises on failure
 
     def test_alembic_version_is_0002(self, engine) -> None:
         """After upgrade to 0002, alembic_version contains '0002'."""
@@ -257,7 +264,7 @@ class TestMigration0002Downgrade:
     ) -> None:
         """alembic downgrade -1 from 0002 removes product_synonyms and manual_classification_queue."""
         # Ensure we are at 0002 first
-        command.upgrade(alembic_cfg, "head")
+        command.upgrade(alembic_cfg, "0002")
 
         # Downgrade one step (0002 → 0001)
         command.downgrade(alembic_cfg, "-1")

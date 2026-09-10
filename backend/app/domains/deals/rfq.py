@@ -25,6 +25,7 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company, CompanyMember
 from app.domains.deals.models import RfqResponse
 from app.domains.deals.service import CompanyNotVerified, ResponseNotOpen
+from app.domains.requests import service as request_service
 from app.domains.requests.models import Request
 from app.models.enums import (
     CompanyMemberStatus,
@@ -49,6 +50,11 @@ OPEN_STATUSES: frozenset[RequestStatus] = frozenset(
         RequestStatus.offer_sent,
     }
 )
+
+#: Open statuses that a quote moves FORWARD. `offer_sent` is absent on purpose:
+#: it is where this transition lands, so the second and later quotes on the same
+#: RFQ are a no-op rather than a self-transition the machine would reject.
+_PRE_OFFER_STATUSES: frozenset[RequestStatus] = OPEN_STATUSES - {RequestStatus.offer_sent}
 
 
 # ── Domain exceptions (no `Error` suffix — house style) ───────────────────────
@@ -222,6 +228,13 @@ def submit(
             entity="request",
             entity_id=str(request.id),
         )
+    # The RFQ now has a quote against it, so it is no longer waiting for one.
+    # Without this the buyer's tender list showed every RFQ as `new` however many
+    # quotes were sitting in it, and `matched` was unreachable at accept time
+    # because the machine only admitted it from `in_progress`/`offer_sent`.
+    if request.status in _PRE_OFFER_STATUSES:
+        request_service.transition_status(db, request, RequestStatus.offer_sent)
+
     logger.info(
         "rfq_response_service.submit",
         extra={"response_id": response.id, "request_id": request.id, "company_id": company.id},

@@ -16,6 +16,8 @@ import {
   MessageIcon,
 } from "@/shared/ui";
 
+import { ACCEPT_ERRORS, rfqErrorMessage } from "../lib/errors";
+
 interface RfqResponseListProps {
   companyId: number;
   requestId: number;
@@ -49,9 +51,14 @@ export function RfqResponseList({ companyId, requestId, canAccept }: RfqResponse
       const deal = await rfqApi.accept(companyId, requestId, response.id);
       void navigate(`/cabinet/deals/${deal.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.generic"));
+      // Was `err.message`, which printed the API's own code — a buyer who had
+      // cancelled the tender in another tab was told «request_closed» and had
+      // no idea why (IMEX-6, Finding 1). Refresh so the page stops offering an
+      // action the server has just refused.
+      setError(rfqErrorMessage(err, t, ACCEPT_ERRORS));
       setBusy(false);
       setConfirming(null);
+      void query.refetch();
     }
   }
 
