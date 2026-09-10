@@ -223,6 +223,64 @@ class TestTheTwoSides:
         )
         assert sent.json() == []
 
+    def test_the_buyer_sees_their_own_request_without_asking_for_a_side(self, api) -> None:  # noqa: ANN001
+        """The list is the only READ surface samples have, so an empty one hides everything.
+
+        This route used to default to the seller's side, so a buyer calling it
+        with no query string got `[]` about the request they had just made —
+        status, courier, tracking and the pending letter all invisible to the
+        party who started the flow (IMEX-8).
+        """
+        client, session = api
+        scene = _scene(session)
+        created = _request_sample(client, scene)
+
+        listed = client.get(
+            f"{_PORTAL}/companies/{scene['buyer_company']}/samples",
+            headers=_auth(scene["buyer_account"]),
+        )
+        assert listed.status_code == 200
+        rows = listed.json()
+        assert [r["id"] for r in rows] == [created["id"]]
+        # Their own point of view, not the seller's.
+        assert rows[0]["my_role"] == "buyer"
+        assert rows[0]["counterparty_name"] == "Продавец"
+
+    def test_both_sides_see_one_sample_each_from_their_own_side(self, api) -> None:  # noqa: ANN001
+        """The same row, two viewpoints — the shape `deals` already had."""
+        client, session = api
+        scene = _scene(session)
+        sample_id = _request_sample(client, scene)["id"]
+
+        for company, account, role, other in (
+            (scene["buyer_company"], scene["buyer_account"], "buyer", "Продавец"),
+            (scene["seller_company"], scene["seller_account"], "seller", "Покупатель"),
+        ):
+            rows = client.get(
+                f"{_PORTAL}/companies/{company}/samples", headers=_auth(account)
+            ).json()
+            assert [r["id"] for r in rows] == [sample_id]
+            assert rows[0]["my_role"] == role
+            assert rows[0]["counterparty_name"] == other
+
+    def test_the_tabs_still_narrow_to_one_side(self, api) -> None:  # noqa: ANN001
+        """Defaulting to both must not turn the cabinet's two tabs into one list."""
+        client, session = api
+        scene = _scene(session)
+        sample_id = _request_sample(client, scene)["id"]
+
+        def ids(company: int, account: int, query: str) -> list[int]:
+            return [
+                r["id"]
+                for r in client.get(
+                    f"{_PORTAL}/companies/{company}/samples{query}", headers=_auth(account)
+                ).json()
+            ]
+
+        buyer, b_acc = scene["buyer_company"], scene["buyer_account"]
+        assert ids(buyer, b_acc, "?side=sent") == [sample_id]
+        assert ids(buyer, b_acc, "?side=incoming") == []
+
     def test_the_round_trip(self, api) -> None:  # noqa: ANN001
         client, session = api
         scene = _scene(session)

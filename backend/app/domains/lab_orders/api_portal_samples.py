@@ -103,11 +103,18 @@ def _out(db: Session, sample: SampleRequest, *, company_id: int) -> SampleReques
 @router.get("/companies/{company_id}/samples", response_model=list[SampleRequestOut])
 def list_samples(
     company_id: int,
-    side: str = Query(default="incoming", pattern="^(incoming|sent)$"),
+    side: str | None = Query(default=None, pattern="^(incoming|sent)$"),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> list[SampleRequestOut]:
-    """`incoming` — requests to answer; `sent` — requests we made."""
+    """Every sample this company is a party to; `my_role` says which side it is on.
+
+    `side=incoming` narrows to requests to answer, `side=sent` to requests we
+    made — the cabinet's two tabs. Omitting it returns **both**, which is the
+    answer to "show me my samples" and what this route used to get wrong: it
+    defaulted to the seller's side, so a buyer with no query string was told
+    `[]` about their own request (IMEX-8).
+    """
     company = company_or_404(db, account, company_id)
     return [
         _out(db, sample, company_id=company.id)

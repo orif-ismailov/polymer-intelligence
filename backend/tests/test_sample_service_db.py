@@ -391,3 +391,8 @@ class TestLists:
             sample.id
         ]
         assert sample_service.list_for_company(db, buyer.id, side="incoming") == []
+
+        # No side is BOTH sides, so each party sees the row from where they stand
+        # rather than the buyer being told there is nothing (IMEX-8).
+        for company in (seller, buyer):
+            assert [s.id for s in sample_service.list_for_company(db, company.id)] == [sample.id]
