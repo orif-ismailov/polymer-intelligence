@@ -44,6 +44,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_serializer
 from sqlalchemy.orm import Session
 
+from app.api import errors
 from app.api.deps import require_page
 from app.core.db import get_db
 from app.domains.pricing import analysis as price_analysis_service
@@ -208,6 +209,29 @@ def _request_company_name(req: Request) -> str | None:
     return None
 
 
+def _request_or_404(db: Session, request_id: int) -> Request:
+    """The request, or 404 `Request not found` — every `/{request_id}` route's first line.
+
+    This was six byte-identical copies of a `first()` and an `if is None`, and the
+    seventh route to be added simply left it out: `/pushed-suppliers` queried the
+    push log by a `request_id` nobody had checked, so a request that does not
+    exist and one nobody was told about were both `200 []`, and no client could
+    tell them apart (IMEX-9).
+
+    That is the argument for a name rather than a pattern. A copied guard is
+    invisible when it is missing — nothing reads as wrong at the omission site —
+    whereas a route that does not call this one is a line a reviewer can look for,
+    and `test_dashboard_requests.py` now looks for it too.
+    """
+    req: Request | None = db.query(Request).filter(Request.id == request_id).first()
+    if req is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Request not found",
+        )
+    return req
+
+
 # ── GET /requests/export CSV stream ───────────────────────────────────────────
 
 _EXPORT_COLUMNS = [
@@ -312,6 +336,7 @@ def export_requests(
     "/{request_id}",
     response_model=RequestDetailOut,
     summary="Get request detail with price analysis (staff)",
+    responses=errors.NOT_FOUND,
 )
 def get_request(
     request_id: int,
@@ -334,14 +359,7 @@ def get_request(
         HTTP 401: Missing or invalid Bearer token.
         HTTP 404: Request not found.
     """
-    req: Request | None = (
-        db.query(Request).filter(Request.id == request_id).first()
-    )
-    if req is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Request not found",
-        )
+    req = _request_or_404(db, request_id)
 
     # D-12: auto-transition new->viewed on first staff view
     if req.status == RequestStatus.new:
@@ -362,6 +380,7 @@ def get_request(
     "/{request_id}",
     response_model=RequestDetailOut,
     summary="Change request status / assign / add note (staff)",
+    responses=errors.NOT_FOUND,
 )
 def patch_request(
     request_id: int,
@@ -383,14 +402,7 @@ def patch_request(
         HTTP 404: Request not found.
         HTTP 422: Invalid status transition (T-04-11).
     """
-    req: Request | None = (
-        db.query(Request).filter(Request.id == request_id).first()
-    )
-    if req is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Request not found",
-        )
+    req = _request_or_404(db, request_id)
 
     try:
         # Status change via state machine (NEVER direct assignment — Pitfall 5)
@@ -439,6 +451,7 @@ def patch_request(
     "/{request_id}/note",
     response_model=RequestDetailOut,
     summary="Add a team note to a request (staff)",
+    responses=errors.NOT_FOUND,
 )
 def add_note(
     request_id: int,
@@ -460,14 +473,7 @@ def add_note(
             detail="note field is required",
         )
 
-    req: Request | None = (
-        db.query(Request).filter(Request.id == request_id).first()
-    )
-    if req is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Request not found",
-        )
+    req = _request_or_404(db, request_id)
 
     request_service.add_note(
         db=db,
@@ -486,6 +492,7 @@ def add_note(
     "/{request_id}/assign",
     response_model=RequestDetailOut,
     summary="Assign an owner to a request (staff)",
+    responses=errors.NOT_FOUND,
 )
 def assign_request(
     request_id: int,
@@ -507,14 +514,7 @@ def assign_request(
             detail="assigned_to field is required",
         )
 
-    req: Request | None = (
-        db.query(Request).filter(Request.id == request_id).first()
-    )
-    if req is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Request not found",
-        )
+    req = _request_or_404(db, request_id)
 
     request_service.assign_owner(
         db=db,
@@ -532,6 +532,7 @@ def assign_request(
 @router.post(
     "/{request_id}/contact",
     summary="Contact Buyer deep-link action (staff)",
+    responses=errors.NOT_FOUND,
 )
 def contact_buyer(
     request_id: int,
@@ -552,14 +553,7 @@ def contact_buyer(
         HTTP 404: Request not found.
         HTTP 409: Buyer has no Telegram ID on file (D-11 / Pitfall 6).
     """
-    req: Request | None = (
-        db.query(Request).filter(Request.id == request_id).first()
-    )
-    if req is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Request not found",
-        )
+    req = _request_or_404(db, request_id)
 
     # D-11 / Pitfall 6: never build tg://user?id=None
     contact_available = (
@@ -596,6 +590,7 @@ def contact_buyer(
     "/{request_id}/analyze",
     response_model=RequestDetailOut,
     summary="Run (or re-run) LLM AI analysis for a request (staff)",
+    responses=errors.NOT_FOUND,
 )
 def analyze_request(
     request_id: int,
@@ -615,14 +610,7 @@ def analyze_request(
         HTTP 404: Request not found.
         HTTP 503: AI analysis is disabled or could not complete (e.g. budget exhausted).
     """
-    req: Request | None = (
-        db.query(Request).filter(Request.id == request_id).first()
-    )
-    if req is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Request not found",
-        )
+    req = _request_or_404(db, request_id)
 
     ai_block = request_analysis_service.analyze_request(db, req)
     if ai_block is None:
@@ -656,6 +644,7 @@ class PushedSupplierOut(BaseModel):
     "/{request_id}/pushed-suppliers",
     response_model=list[PushedSupplierOut],
     summary="Suppliers this RFQ was pushed to (staff, read-only)",
+    responses=errors.NOT_FOUND,
 )
 def list_pushed_suppliers(
     request_id: int,
@@ -668,7 +657,17 @@ def list_pushed_suppliers(
     answer "did anyone hear about this, and why them?". Score and rank come from
     the log rather than being recomputed — the weights change over time, and a
     rank re-derived today would not explain a push made last month.
+
+    The parent is resolved first even though the push log is queried by id alone:
+    "nobody was told about this request" and "there is no such request" are
+    different answers, and an empty list said both (IMEX-9).
+
+    Raises:
+        HTTP 401: Missing or invalid Bearer token.
+        HTTP 403: Lacks the purchaseRequests page grant.
+        HTTP 404: Request not found.
     """
+    _request_or_404(db, request_id)
     return [
         PushedSupplierOut(
             company_id=row.company_id,

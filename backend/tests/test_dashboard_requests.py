@@ -508,3 +508,102 @@ class TestContactAvailable:
         req = _make_mock_request(telegram_user_id=None)
         contact_available = req.client.telegram_user_id is not None
         assert contact_available is False
+
+
+# ── A missing parent is a 404 on every sub-resource (IMEX-9) ──────────────────
+
+class TestMissingRequestIs404:
+    """`200 []` cannot say "no such request", and one route was saying it.
+
+    `/pushed-suppliers` queried the push log by a `request_id` nobody had looked
+    up, so an id that does not exist and an RFQ nobody was told about produced
+    the same body. The other six request-scoped routes each carried their own
+    copy of the lookup; the seventh just omitted it, which is what a copied guard
+    lets you do.
+    """
+
+    #: Every route under `/requests/{request_id}` — the collection and the CSV
+    #: export are the only two that cannot 404, and they take no id.
+    SUB_RESOURCES = [
+        ("get", "/api/v1/requests/999999999"),
+        ("get", "/api/v1/requests/999999999/pushed-suppliers"),
+    ]
+
+    def _client_with_no_such_request(self):  # noqa: ANN202
+        """The staff user resolves; no `Request` does.
+
+        Keyed on the MODEL rather than on a call counter: the counter version
+        only survives one request per client, because the second request's own
+        auth lookup is call three and comes back as the missing request — a 401
+        that looks like the thing under test failing.
+        """
+        from fastapi.testclient import TestClient  # noqa: PLC0415
+
+        from app.core.db import get_db  # noqa: PLC0415
+        from app.main import create_app  # noqa: PLC0415
+        from app.models.staff import StaffUser  # noqa: PLC0415
+
+        admin_user = _make_staff_user("admin", user_id=1)
+        mock_db = MagicMock()
+
+        def query_side_effect(model, *args):  # noqa: ANN001, ANN202
+            q = MagicMock()
+            q.filter.return_value.first.return_value = (
+                admin_user if model is StaffUser else None
+            )
+            return q
+
+        mock_db.query.side_effect = query_side_effect
+
+        def override_db():  # noqa: ANN202
+            yield mock_db
+
+        app = create_app()
+        app.dependency_overrides[get_db] = override_db
+        return TestClient(app, raise_server_exceptions=False)
+
+    def test_pushed_suppliers_404s_instead_of_answering_empty(self):
+        """The bug itself: `200 []` for a request that does not exist."""
+        client = self._client_with_no_such_request()
+
+        response = client.get(
+            "/api/v1/requests/999999999/pushed-suppliers", headers=_auth_headers(1, "admin")
+        )
+
+        assert response.status_code == 404, response.text
+        # The parent resource's wording, not a second dialect for one route.
+        assert response.json()["detail"] == "Request not found"
+
+    def test_the_sub_resource_answers_exactly_what_the_parent_answers(self):
+        """Same id, same status, same body — that is the whole ticket."""
+        client = self._client_with_no_such_request()
+        headers = _auth_headers(1, "admin")
+
+        answers = {
+            path: (r.status_code, r.json())
+            for method, path in self.SUB_RESOURCES
+            for r in [getattr(client, method)(path, headers=headers)]
+        }
+
+        assert len(set(map(str, answers.values()))) == 1, answers
+
+    def test_every_request_scoped_route_declares_404(self):
+        """The spec half — Swagger listed 401/403/422 and no 404 (IMEX-9).
+
+        Introspects the router rather than the generated schema so the failure
+        names the handler. A new `/{request_id}` route that forgets the guard
+        also forgets this, and lands here.
+        """
+        from app.domains.requests.api_admin import router  # noqa: PLC0415
+
+        undeclared = sorted(
+            route.name
+            for route in router.routes
+            if "{request_id}" in getattr(route, "path", "")
+            and 404 not in getattr(route, "responses", {})
+        )
+
+        assert undeclared == [], (
+            f"request-scoped routes that can 404 but do not declare it: {undeclared} — "
+            "add `responses=errors.NOT_FOUND` (IMEX-9)."
+        )
