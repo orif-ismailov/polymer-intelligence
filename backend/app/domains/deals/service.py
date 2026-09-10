@@ -190,6 +190,10 @@ class ResponseAlreadyAccepted(Exception):
     """Another response to this RFQ has already been accepted (one deal per RFQ)."""
 
 
+class RequestNotOpen(Exception):
+    """The tender is cancelled or closed, so no quote against it can be accepted."""
+
+
 class DealAlreadyOpen(Exception):
     """A live deal for this context already exists."""
 
@@ -434,6 +438,19 @@ def open_deal_from_response(
     if already is not None:
         raise ResponseAlreadyAccepted(str(request.id))
 
+    # The TENDER has to still be open, not just the quote. Only the response was
+    # checked before, so a buyer with a stale tab could cancel a tender and then
+    # accept a quote still standing against it — opening a real deal against a
+    # cancelled tender (IMEX-6, Finding 1).
+    #
+    # Asked as "is `matched` still reachable from here" rather than as a list of
+    # dead statuses: `request_service.VALID_TRANSITIONS` is the machine, and a
+    # second copy of it here would be the thing that drifts. It is read AFTER the
+    # `FOR UPDATE` above, so a concurrent cancel either lands before this line and
+    # is seen, or waits behind it.
+    if RequestStatus.matched not in request_service.VALID_TRANSITIONS[request.status]:
+        raise RequestNotOpen(str(request.status))
+
     buyer = db.get(Company, request.company_id)
     seller = db.get(Company, response.company_id)
     if buyer is None or seller is None:  # pragma: no cover — FK guarantees both
@@ -501,15 +518,11 @@ def open_deal_from_response(
     # is a `staff_users` FK, and `open_deal_from_response` writes its own audit
     # row below for the portal action.
     #
-    # Asking the machine rather than transitioning unconditionally: neither this
-    # function nor `POST /…/accept` checks that the REQUEST is still open, only
-    # that the RESPONSE is, so a buyer who cancels a tender and then accepts a
-    # quote still standing against it (a stale tab is enough) arrives here on
-    # `cancelled`. `cancelled -> matched` is not in the machine, and an unguarded
-    # call would turn a silent oddity into a 500 on the accept endpoint. The deal
-    # opening on a cancelled tender at all is a separate defect, NOT fixed here.
-    if RequestStatus.matched in request_service.VALID_TRANSITIONS[request.status]:
-        request_service.transition_status(db, request, RequestStatus.matched)
+    # Unconditional: the `RequestNotOpen` guard above has already established that
+    # `matched` is reachable from this status, and it ran inside the same
+    # `FOR UPDATE`. It used to be an `if` here — a silent skip that let the deal
+    # open on a cancelled tender rather than refusing it (IMEX-6, Finding 1).
+    request_service.transition_status(db, request, RequestStatus.matched)
     db.flush()
 
     audit_service.write_audit(

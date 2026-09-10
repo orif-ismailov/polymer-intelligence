@@ -1848,7 +1848,10 @@
       "alreadyResponded": "Siz bu tender bo‘yicha taklif yuborgansiz.",
       "requestClosed": "Tender endi takliflar qabul qilmaydi.",
       "ownRequest": "Bu sizning kompaniyangiz tenderi.",
-      "unknownIncoterms": "Ro‘yxatdan yetkazib berish shartlarini tanlang."
+      "unknownIncoterms": "Ro‘yxatdan yetkazib berish shartlarini tanlang.",
+      "acceptRequestClosed": "Tender yopilgan yoki bekor qilingan — endi yetkazib beruvchini tanlab bo‘lmaydi.",
+      "acceptResponseClosed": "Bu taklif qaytarib olingan yoki endi amal qilmaydi.",
+      "acceptAlreadyAccepted": "Bu tender bo‘yicha yetkazib beruvchi allaqachon tanlangan."
     },
     "docs": {
       "sds": "SDS",

@@ -765,24 +765,42 @@ def test_qa_reproduction_new_to_offer_sent_to_matched(sf) -> None:  # noqa: ANN0
 
 
 @requires_real_db
-def test_accepting_on_a_cancelled_request_does_not_raise(sf) -> None:  # noqa: ANN001
-    """Neither `open_deal_from_response` nor the accept route checks the REQUEST
-    status, so a buyer with a stale tab can accept a quote on a tender they just
-    cancelled. `cancelled -> matched` is not in the machine; transitioning
-    unconditionally would make that a 500. The deal still opens — that it opens
-    on a cancelled tender is a pre-existing defect this does not change.
+@pytest.mark.parametrize("closed_status", ["cancelled", "closed"])
+def test_accepting_on_a_closed_request_is_refused(sf, closed_status: str) -> None:  # noqa: ANN001
+    """A tender that is no longer open cannot yield a deal.
+
+    IMEX-6 found this: only the RESPONSE status was checked, so a buyer with a
+    stale tab could accept a quote on a tender they had just cancelled and open
+    a real deal against it. The refusal is expressed as "is `matched` still a
+    legal transition from here" rather than a hand-written status list, so the
+    machine in `request_service` stays the single source of truth.
     """
     from app.domains.deals import service as deal_service  # noqa: PLC0415
-    from app.models.enums import DealStatus, RequestStatus  # noqa: PLC0415
+    from app.models.enums import RequestStatus, RfqResponseStatus  # noqa: PLC0415
 
     with sf() as db:
         buyer_acc, buyer, seller_acc, seller = _parties(db)
         request = make_request(db, company=buyer, account=buyer_acc)
         response = _response(db, request, seller, seller_acc)
-        request.status = RequestStatus.cancelled
+        request.status = RequestStatus(closed_status)
         db.flush()
 
-        deal = deal_service.open_deal_from_response(db, request, response, buyer_acc)
+        with pytest.raises(deal_service.RequestNotOpen):
+            deal_service.open_deal_from_response(db, request, response, buyer_acc)
 
+        assert request.status == RequestStatus(closed_status), "left alone"
+        assert response.status == RfqResponseStatus.submitted, "the quote still stands"
+
+
+@requires_real_db
+def test_accepting_on_an_open_request_still_works(sf) -> None:  # noqa: ANN001
+    """The refusal above must not have narrowed the happy path."""
+    from app.domains.requests.models import Request  # noqa: PLC0415
+    from app.models.enums import DealStatus, RequestStatus  # noqa: PLC0415
+
+    with sf() as db:
+        deal, *_ = _open_deal(db)
+        request = db.get(Request, deal.request_id)
         assert deal.status == DealStatus.negotiation
-        assert request.status == RequestStatus.cancelled, "left alone, not crashed on"
+        assert request is not None
+        assert request.status == RequestStatus.matched

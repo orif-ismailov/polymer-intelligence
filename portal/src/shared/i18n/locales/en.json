@@ -1848,7 +1848,10 @@
       "alreadyResponded": "You have already quoted on this tender.",
       "requestClosed": "This tender no longer accepts quotes.",
       "ownRequest": "This is your own company's tender.",
-      "unknownIncoterms": "Pick the delivery terms from the list."
+      "unknownIncoterms": "Pick the delivery terms from the list.",
+      "acceptRequestClosed": "This tender is closed or cancelled — a supplier can no longer be chosen.",
+      "acceptResponseClosed": "This quote was withdrawn or is no longer valid.",
+      "acceptAlreadyAccepted": "A supplier has already been chosen for this tender."
     },
     "docs": {
       "sds": "SDS",
