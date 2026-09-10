@@ -96,6 +96,29 @@ CONFLICT: Responses = error(
     "Deal is not in a state that can be cancelled",
 )
 
+#: The Didox rail refusing a call because of its own state, not the request's.
+#:
+#: `detail` is a bare STABLE CODE here, not prose — branch on it. The common one by
+#: far is `didox_session_required`: the acting company holds no live `user-key`, which
+#: the person can fix in one click, so it is the normal answer for a company that has
+#: not opened a session yet rather than an exceptional one. `didox_disabled` means this
+#: deployment has no document rail configured at all.
+#:
+#: Undeclared, a generated client had no branch for the single most likely response on
+#: the ИКПУ picker and handled it as an unexpected error (IMEX-10). Attached where the
+#: rail can actually refuse — never router-wide on a router that also serves routes
+#: reaching no provider.
+DIDOX_CONFLICT: Responses = error(
+    409,
+    "The Didox rail is not in a state that allows this call. `detail` is a stable "
+    "code: `didox_session_required` (no live `user-key` for the acting company — "
+    "recoverable by opening a session), `didox_disabled` (no document rail on this "
+    "deployment), or a per-route code such as `didox_offer_required`, "
+    "`didox_not_registered`, `document_not_created`, `wrong_rail`, `not_ready`, "
+    "`not_seller`, `counterparty_unknown`, `ikpu_missing` or `empty_body`.",
+    "didox_session_required",
+)
+
 RETRY_AFTER_HEADER: dict[str, Any] = {
     "Retry-After": {
         "description": "Seconds to wait before retrying.",

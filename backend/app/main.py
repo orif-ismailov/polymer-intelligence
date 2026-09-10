@@ -313,7 +313,13 @@ def create_app() -> FastAPI:
     application.include_router(
         portal_didox_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
     )
-    application.include_router(portal_ikpu_router, prefix="/api/v1", responses=errors.PORTAL)
+    # 409 router-wide here, not per-route: all three ИКПУ routes open with
+    # `_session_or_409`, so every one of them can answer `didox_session_required`.
+    application.include_router(
+        portal_ikpu_router,
+        prefix="/api/v1",
+        responses={**errors.PORTAL, **errors.DIDOX_CONFLICT},
+    )
     application.include_router(admin_didox_router, prefix="/api/v1", responses=errors.STAFF)
     application.include_router(
         portal_offers_router, prefix="/api/v1", responses=errors.PORTAL_RESOURCE
