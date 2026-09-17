@@ -187,4 +187,14 @@ class SampleLetterChallengeOut(BaseModel):
 
 
 class SampleLetterSignIn(BaseModel):
+    """Two signatures from one key session — see `lab_orders/letters.py`.
+
+    `pkcs7` covers the LETTER hash and is stored as evidence; the `identity_*`
+    pair covers the buyer's INN and is what Didox authenticates. They are separate
+    fields rather than one because they sign different things and only one of them
+    is ever checked by anybody.
+    """
+
     pkcs7: str = Field(min_length=1)
+    identity_pkcs7: str = Field(min_length=1)
+    identity_signature_hex: str = Field(min_length=1)

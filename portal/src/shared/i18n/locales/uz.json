@@ -703,6 +703,7 @@
       "mismatch": "Sertifikat STIRi kompaniya STIRiga mos kelmaydi.",
       "expired": "So‘rov muddati tugadi. Qayta urinib ko‘ring.",
       "already_registered": "Bu STIR bilan kompaniya allaqachon ro‘yxatdan o‘tgan.",
+      "didox_account_required": "Kompaniyaning Didox hisobi yo‘q. Didox'da ro‘yxatdan o‘ting va tasdiqlashni takrorlang.",
       "signature_invalid": "Imzo yaroqsiz.",
       "cert_revoked": "Sertifikat bekor qilingan.",
       "cert_expired": "Sertifikat muddati tugagan. ERI kalitini yangilab, qayta urining.",

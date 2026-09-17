@@ -249,6 +249,69 @@ def test_a_401_is_an_outage_of_our_configuration_not_a_verdict() -> None:
         _client(handler).info_by_tin("310529901")
 
 
+def test_a_401_from_auth_by_eimzo_is_a_verdict_about_the_signature() -> None:
+    """The one carve-out, and the reason it exists.
+
+    Everywhere else a 401 means OUR `user-key` is missing or stale, which says
+    nothing about the caller. `auth_by_eimzo` IS the call that establishes auth,
+    so its 401 has exactly one meaning — this signature is not valid for this INN
+    — and it is a domain verdict.
+
+    Left as `ProviderUnavailable` it would be indistinguishable from Didox being
+    down, and since an outage must never fail a verification case (the
+    degradation invariant), a FORGED signature would have been waved through as
+    "provider unavailable, approve manually".
+    """
+    from app.integrations.didox.client import InvalidSignature
+
+    breaker = CircuitBreaker(threshold=1)
+
+    def handler(request: httpx.Request) -> httpx.Response:  # noqa: ARG001
+        return httpx.Response(
+            401, json={"statusCode": 401, "message": "Unauthorized. Invalid signature"}
+        )
+
+    with pytest.raises(InvalidSignature) as exc:
+        _client(handler, breaker=breaker).auth_by_eimzo("310529901", "dGltZXN0YW1w")
+    assert "Invalid signature" in str(exc.value), "Didox's own reason must survive"
+    assert breaker.is_open() is False, "a refused signature is not Didox being down"
+
+
+def test_invalid_signature_is_a_domain_error_not_an_outage() -> None:
+    """Callers branch on the base classes, so the hierarchy is the contract."""
+    from app.integrations.didox.client import DidoxError, InvalidSignature, ProviderUnavailable
+
+    assert issubclass(InvalidSignature, DidoxError)
+    assert not issubclass(InvalidSignature, ProviderUnavailable)
+
+
+def test_the_carve_out_does_not_widen_to_other_operations() -> None:
+    """`profile` is called immediately after auth with the key we just minted, so
+    a 401 there is a stale/absent key — our configuration, not a verdict."""
+    from app.integrations.didox.client import ProviderUnavailable
+
+    def handler(request: httpx.Request) -> httpx.Response:  # noqa: ARG001
+        return httpx.Response(401, json={"statusCode": 401, "message": "Invalid user key"})
+
+    with pytest.raises(ProviderUnavailable):
+        _client(handler).profile(user_key="stale-key")
+
+
+def test_an_unregistered_company_stays_an_ordinary_4xx() -> None:
+    """`422 User not registered` is a different answer from a bad signature: the
+    signature was fine, the company simply has no Didox account yet. The identity
+    gateway branches on it to offer signup, so it must not collapse into 401."""
+    from app.integrations.didox.client import DidoxError, InvalidSignature
+
+    def handler(request: httpx.Request) -> httpx.Response:  # noqa: ARG001
+        return httpx.Response(422, json={"statusCode": 422, "message": "User not registered"})
+
+    with pytest.raises(DidoxError) as exc:
+        _client(handler).auth_by_eimzo("310529901", "dGltZXN0YW1w")
+    assert not isinstance(exc.value, InvalidSignature)
+    assert "User not registered" in str(exc.value)
+
+
 def test_a_4xx_that_is_our_bad_request_does_not_trip_the_breaker() -> None:
     from app.integrations.didox.client import DidoxError
 

@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import { sampleApi, type SampleRequest } from "@/entities/sample";
-import { EimzoSignButton } from "@/features/eimzo-sign";
+import { CertificateHasNoTin, EimzoSignButton } from "@/features/eimzo-sign";
 import type { EimzoSigner } from "@/features/eimzo-sign";
 import { coerceLang } from "@/shared/i18n";
 import { formatDateTime } from "@/shared/lib";
@@ -40,10 +40,25 @@ export function SampleLetterCard({ sample }: SampleLetterCardProps) {
     window.open(await sampleApi.letterUrl(sample.id), "_blank", "noopener");
   }
 
+  // Two envelopes, one key session, one password prompt. The letter hash is what
+  // we store as evidence; the INN is the only payload Didox will authenticate,
+  // and it is what establishes who signed. See backend `lab_orders/letters.py`.
   const signer: EimzoSigner<SampleRequest> = {
     getChallenge: () => sampleApi.letterChallenge(sample.id),
-    verify: ({ pkcs7_64 }) =>
-      sampleApi.signLetter(sample.id, pkcs7_64).then((data) => ({ ok: true, reason: null, data })),
+    identityPayload: (cert) => {
+      // Not `?? ""`: an empty payload would be signed happily and then refused by
+      // Didox as a bad signature, sending the user to check a key that is fine.
+      // `CertificateHasNoTin` is the existing code for "this certificate carries
+      // no organisation STIR" and `mapError` already renders it.
+      if (!cert.tin) throw new CertificateHasNoTin();
+      return cert.tin;
+    },
+    verify: ({ pkcs7_64 }, identity) => {
+      if (!identity) throw new CertificateHasNoTin();
+      return sampleApi
+        .signLetter(sample.id, pkcs7_64, identity.pkcs7_64, identity.signature_hex)
+        .then((data) => ({ ok: true, reason: null, data }));
+    },
   };
 
   if (letter.isLoading) return <LoadingView label={t("common.loading")} />;

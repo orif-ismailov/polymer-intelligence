@@ -14,9 +14,20 @@ class ChallengeOut(BaseModel):
 
 
 class VerifyIn(BaseModel):
-    """The browser-produced PKCS#7 (base64) over the issued challenge."""
+    """Both halves of what `pkcs7.create_pkcs7` returns.
+
+    `signature_hex` is the raw signature value inside the envelope (128 hex chars
+    for GOST). The module has always sent it and the bridge has always parsed it;
+    nothing read it until verification moved to Didox, whose
+    `POST /v1/dsvs/timestamp` takes both and refuses a bare PKCS#7.
+
+    Required rather than optional on purpose: without it the request cannot be
+    served at all, and a 422 naming the missing field beats a provider rejection
+    two calls downstream that reads like an outage.
+    """
 
     pkcs7: str = Field(min_length=1)
+    signature_hex: str = Field(min_length=1)
 
 
 class VerifyOut(BaseModel):

@@ -31,6 +31,7 @@ export type EimzoErrorCode =
   | "mismatch"
   | "expired"
   | "already_registered"
+  | "didox_account_required"
   | "signature_invalid"
   | "cert_revoked"
   | "cert_expired"
@@ -65,6 +66,20 @@ export interface EimzoSigner<T> {
    */
   getChallenge: (cert: EimzoCertificate) => Promise<string>;
   /**
+   * A SECOND payload to sign with the same key, signed first and handed to
+   * `verify` as `identity`.
+   *
+   * The sample letter needs two envelopes for two different jobs: one over the
+   * buyer's INN, which is the only thing Didox will authenticate, and one over
+   * the letter hash, which we store as evidence. Both come from ONE
+   * `openSession`, so the person types their key password once — signing twice
+   * through `sign()` would load and unload the key twice and prompt twice, which
+   * is precisely what `EimzoKeySession` exists to avoid.
+   *
+   * Omit it and nothing changes: the flow stays a single `sign()`.
+   */
+  identityPayload?: (cert: EimzoCertificate) => string;
+  /**
    * Submit the signature and return the typed outcome.
    *
    * Receives BOTH halves rather than the PKCS#7 alone. Our own sidecar only needs
@@ -72,7 +87,10 @@ export interface EimzoSigner<T> {
    * requires `signature_hex` too — and a bridge that had already thrown it away
    * left no way to add that later without changing every signer anyway.
    */
-  verify: (signature: EimzoSignature) => Promise<EimzoVerifyOutcome<T>>;
+  verify: (
+    signature: EimzoSignature,
+    identity?: EimzoSignature,
+  ) => Promise<EimzoVerifyOutcome<T>>;
 }
 
 interface UseEimzoSignArgs<T> {
@@ -100,7 +118,15 @@ function mapError(err: unknown): EimzoErrorCode {
   if (err instanceof ApiError) {
     if (err.status === 422) return "mismatch";
     if (err.status === 400) return "expired";
-    if (err.status === 409) return "already_registered";
+    // Two different 409s now, and they need opposite advice: one says this
+    // company is already registered to someone, the other that it has no Didox
+    // account yet. `extractError` puts a string `detail` into `message`, which is
+    // the only thing that tells them apart (a string detail leaves `code` null).
+    if (err.status === 409) {
+      return err.message === "didox_account_required"
+        ? "didox_account_required"
+        : "already_registered";
+    }
     if (err.status === 503) return "unavailable";
     return "unknown";
   }
@@ -141,9 +167,31 @@ export function useEimzoSign<T>({ signer, onConfirmed }: UseEimzoSignArgs<T>): U
       try {
         setState("signing");
         const challenge = await signer.getChallenge(cert);
-        const signature = await bridge.sign(cert.id, challenge);
+        const identityPayload = signer.identityPayload?.(cert);
+
+        let signature: EimzoSignature;
+        let identity: EimzoSignature | undefined;
+        if (identityPayload !== undefined && bridge.openSession) {
+          // One password for both envelopes. `close()` is best-effort — a failed
+          // unload must never fail a signature that already succeeded.
+          const session = await bridge.openSession(cert.id);
+          try {
+            identity = await session.sign(identityPayload);
+            signature = await session.sign(challenge);
+          } finally {
+            await session.close().catch(() => undefined);
+          }
+        } else {
+          // No session support (an injected stub bridge need not implement it) —
+          // correct, just one prompt per signature.
+          if (identityPayload !== undefined) {
+            identity = await bridge.sign(cert.id, identityPayload);
+          }
+          signature = await bridge.sign(cert.id, challenge);
+        }
+
         setState("verifying");
-        const out = await signer.verify(signature);
+        const out = await signer.verify(signature, identity);
         if (!out.ok) {
           setError(mapResultReason(out.reason));
           setState("error");

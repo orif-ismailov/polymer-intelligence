@@ -4,19 +4,38 @@ Two entry points:
 
 * ``issue_challenge`` mints a single-use, short-TTL nonce in Redis for a given
   (company, account) and returns it for the browser to sign.
-* ``verify`` consumes the challenge, verifies the PKCS#7 through the gateway
-  adapter, and — on a valid signature whose certificate INN matches the company —
-  fills+locks the company requisites, stores immutable evidence + encrypted person
-  data (§6.2), records the ``eimzo_signature`` check as ``passed`` (confidence
-  ``method: eimzo``), auto-confirms the signer as owner, and re-runs the case
+* ``verify`` consumes the challenge, confirms the signer through Didox, and — on a
+  valid signature whose certificate INN matches the company — fills+locks the
+  company requisites, stores immutable evidence + encrypted person data (§6.2),
+  records the ``eimzo_signature`` check as ``passed`` (confidence
+  ``method: didox``), auto-confirms the signer as owner, and re-runs the case
   evaluator (so with ``verification_auto_approve`` on and the other automated checks
   green — the reg-cert requirement now relaxed, TA1.5 — the case approves with no
   staff touch).
 
-Degradation (ARCHITECTURE invariant): a sidecar outage surfaces as
-``ProviderUnavailable`` (→ 503) and never blocks the manual path. An invalid /
-revoked signature records a ``failed`` check with a reason rather than raising.
-PINFL/full name are never returned or logged — only a masked ``****{last4}``.
+**Verification moved off the UNICON sidecar** (see ``domains/edi/identity``). That
+sidecar is licensed, was never obtained and runs nowhere, so this whole flow
+answered 503 outside a dev stack. Didox refuses a signature that does not verify
+for the given INN, which is the same statement, from a provider we already hold a
+token for — and minting the session here spares the user a second key password
+later on the 007 document rail.
+
+**What the challenge still is, and no longer is.** It is minted, stored per
+(company, account) and consumed exactly once, so a verify cannot be replayed
+against US. It is NOT covered by the signature any more: the browser now signs the
+company's INN, because that is what Didox authenticates. Nothing in the envelope
+proves when it was made, so the single-use nonce is the whole of our freshness
+guarantee rather than a second belt beside the sidecar's. Do not describe it in a
+comment as "the signed challenge" — it is not one.
+
+Degradation (ARCHITECTURE invariant): a provider outage surfaces as
+``ProviderUnavailable`` (→ 503) and never blocks the manual path. A signature Didox
+refuses records a ``failed`` check with a reason rather than raising — the split
+that keeps a forged signature from being waved through as an outage. A company with
+no Didox account raises ``DidoxAccountRequired`` (→ 409) and records nothing: the
+signature was never judged, and a failed check there would libel an honest
+applicant. PINFL/full name are never returned or logged — only a masked
+``****{last4}``.
 """
 
 from __future__ import annotations
@@ -34,9 +53,9 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyMember
 from app.domains.contracts.eimzo_models import CompanyPersonData, SignatureEvidence
+from app.domains.edi.identity import DidoxIdentityResult, DidoxSigner, verify_identity
 from app.domains.verification import service as verification_service
 from app.domains.verification.models import VerificationCase, VerificationCheck
-from app.integrations.eimzo import EimzoSigner, EimzoVerifyResult, verify_pkcs7
 from app.models.enums import (
     CompanyMemberRole,
     CompanyMemberStatus,
@@ -243,7 +262,7 @@ def _registry_requisites(
 def _apply_identity(
     db: Session,
     company: Company,
-    signer: EimzoSigner,
+    signer: DidoxSigner,
     redis_client: redis.Redis[str] | None = None,
 ) -> None:
     """Fill + lock the company's displayed requisites (reject later PATCH).
@@ -280,7 +299,7 @@ def _store_evidence(
     account: UserAccount,
     challenge: str,
     pkcs7_b64: str,
-    result: EimzoVerifyResult,
+    result: DidoxIdentityResult,
 ) -> SignatureEvidence:
     import base64  # noqa: PLC0415
 
@@ -294,8 +313,13 @@ def _store_evidence(
         "org_name": signer.org_name if signer else None,
         "org_inn": signer.org_inn if signer else None,
         "position": signer.position if signer else None,
-        "serial_number": signer.serial_number if signer else None,
         # NOTE: full name / PINFL are NOT copied here in the clear.
+        #
+        # `serial_number` used to sit here and is GONE rather than None: the
+        # sidecar read it off the certificate, and Didox's profile does not carry
+        # it. Rows written before this change keep theirs — a key absent from new
+        # evidence says "never established", which a null would blur into "the
+        # certificate had none".
     }
     evidence = SignatureEvidence(
         company_id=company.id,
@@ -316,7 +340,7 @@ def _store_evidence(
 
 
 def _store_person_data(
-    db: Session, company: Company, account: UserAccount, signer: EimzoSigner
+    db: Session, company: Company, account: UserAccount, signer: DidoxSigner
 ) -> None:
     if not (signer.full_name or signer.pinfl):
         return
@@ -384,17 +408,27 @@ def verify(
     company: Company,
     account: UserAccount,
     pkcs7_b64: str,
+    signature_hex: str,
 ) -> EimzoVerifyOutcome:
-    """Consume the challenge, verify the signature, apply identity effects.
+    """Consume the challenge, confirm the signer, apply identity effects.
+
+    `signature_hex` is the raw signature inside the PKCS#7, which the module has
+    always returned and we never read. It is required, not optional: Didox's
+    `/v1/dsvs/timestamp` takes both halves and refuses a bare envelope, so a
+    caller that omits it cannot be served at all — better a 422 from the schema
+    than a provider rejection three calls later.
 
     Raises: ChallengeExpired, CertCompanyMismatch, company_service.CompanyAlreadyRegistered,
-    and (propagated) integrations.eimzo.ProviderUnavailable.
+    edi.identity.DidoxAccountRequired, and (propagated) ProviderUnavailable.
     """
     challenge = _pop_challenge(redis_client, company.id, account.id)
     if challenge is None:
         raise ChallengeExpired(str(company.id))
 
-    result = verify_pkcs7(pkcs7_b64, challenge)  # ProviderUnavailable propagates → 503
+    # Single-use on OUR side only — the signature covers the INN, not this nonce.
+    result = verify_identity(
+        redis_client, company, pkcs7_64=pkcs7_b64, signature_hex=signature_hex
+    )  # ProviderUnavailable propagates → 503
 
     case = _open_or_create_case(db, company)
     _spawn_missing_checks(db, case.id)
@@ -402,7 +436,7 @@ def verify(
     if not result.ok:
         return _record_failure(db, case, result)
 
-    signer = result.signer or EimzoSigner()
+    signer = result.signer or DidoxSigner()
 
     # INN match rule (both values masked in the error).
     cert_inn = signer.org_inn
@@ -432,7 +466,10 @@ def verify(
                 db, company, CompanyStatus.pending_verification, actor={"account_id": account.id}
             )
 
-    # Record the eimzo_signature check (confidence tier: method=eimzo).
+    # Record the eimzo_signature check. `method` is the only record of WHO judged
+    # the signature, so it moved with the rail: `eimzo` means the UNICON sidecar
+    # checked the envelope, `didox` means the operator accepted it as auth for
+    # this INN. Old rows keep `eimzo` and stay true about themselves.
     holder_masked = _mask_pinfl(signer.pinfl)
     eimzo_check = _get_check(db, case.id, VerificationCheckType.eimzo_signature)
     now = company_service.now_utc()
@@ -440,12 +477,12 @@ def verify(
         eimzo_check.status = VerificationCheckStatus.passed
         eimzo_check.finished_at = now
         eimzo_check.result = {
-            "method": "eimzo",
+            "method": "didox",
             "org_inn": _mask_inn(signer.org_inn),
             "holder": holder_masked,
             "holder_name": signer.full_name,  # org director (shown to own members)
             "position": signer.position,
-            "serial": signer.serial_number,
+            # `serial` is gone with the sidecar that read it — see _store_evidence.
             "signed_at": now.isoformat(),
         }
     db.flush()
@@ -479,7 +516,7 @@ def verify(
 
 
 def _record_failure(
-    db: Session, case: VerificationCase, result: EimzoVerifyResult
+    db: Session, case: VerificationCase, result: DidoxIdentityResult
 ) -> EimzoVerifyOutcome:
     """Record eimzo_signature=failed with a reason (invalid/revoked signature)."""
     reason = result.error or "signature_invalid"
@@ -487,7 +524,7 @@ def _record_failure(
     if check is not None:
         check.status = VerificationCheckStatus.failed
         check.finished_at = company_service.now_utc()
-        check.result = {"method": "eimzo", "reason": reason}
+        check.result = {"method": "didox", "reason": reason}
     audit_service.write_audit(
         db, None, "company.eimzo_verify_failed", "companies", str(case.company_id),
         {"case_id": case.id, "reason": reason},

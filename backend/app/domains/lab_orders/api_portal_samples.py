@@ -41,7 +41,7 @@ from app.domains.lab_orders.schemas import (
     SampleTransitionIn,
 )
 from app.domains.marketplace import service as offer_service
-from app.integrations.eimzo import ProviderUnavailable as EimzoUnavailable
+from app.integrations.didox import ProviderUnavailable as EimzoUnavailable
 from app.models.enums import SampleRequestStatus
 from app.services import notification_service, storage_service
 
@@ -393,7 +393,11 @@ def sign_sample_letter(
     sample = _sample_or_404(db, sample_id)
     buyer = _buyer_or_404(db, account, sample)
     try:
-        letters.sign(db, redis_client, sample, buyer, account, body.pkcs7)
+        letters.sign(
+            db, redis_client, sample, buyer, account, body.pkcs7,
+            identity_pkcs7=body.identity_pkcs7,
+            identity_signature_hex=body.identity_signature_hex,
+        )
     except letters.LetterAlreadySigned as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="already_signed") from exc
     except letters.ChallengeExpired as exc:

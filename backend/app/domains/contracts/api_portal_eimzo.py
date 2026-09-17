@@ -23,8 +23,9 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.contracts import eimzo as eimzo_service
 from app.domains.contracts.eimzo_schemas import ChallengeOut, VerifyIn, VerifyOut
+from app.domains.edi.identity import DidoxAccountRequired
 from app.domains.verification.api_portal import case_out
-from app.integrations.eimzo import ProviderUnavailable
+from app.integrations.didox import ProviderUnavailable
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,9 @@ def eimzo_verify(
 ) -> VerifyOut:
     company = company_or_404(db, account, company_id)
     try:
-        outcome = eimzo_service.verify(db, redis_client, company, account, body.pkcs7)
+        outcome = eimzo_service.verify(
+            db, redis_client, company, account, body.pkcs7, body.signature_hex
+        )
     except eimzo_service.ChallengeExpired as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="challenge_expired"
@@ -70,6 +73,14 @@ def eimzo_verify(
     except company_service.CompanyAlreadyRegistered as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="company_already_registered"
+        ) from exc
+    except DidoxAccountRequired as exc:
+        # 409, not 422: the signature was never judged. This company has no Didox
+        # account, which is a precondition the user can satisfy (`/v1/auth/signup`)
+        # — not a statement about their certificate. Matching the shape
+        # `didox_session_required` already uses for the other Didox precondition.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_account_required"
         ) from exc
     except ProviderUnavailable as exc:
         # Sidecar down → 503; the frontend falls back to the manual verification path.

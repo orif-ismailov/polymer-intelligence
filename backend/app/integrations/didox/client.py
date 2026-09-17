@@ -106,6 +106,24 @@ class DidoxError(Exception):
         return "публичной оферты" in (self.message or "")
 
 
+class InvalidSignature(DidoxError):
+    """Didox refused a signature: it does not verify, or not for that INN.
+
+    The ONE place a 401 is a domain verdict rather than an outage, and the reason
+    `_request` takes `unauthorized_is_verdict`. Everywhere else a 401 means our
+    own `user-key` is missing or stale, which says nothing about the caller — but
+    `auth_by_eimzo` IS the call that establishes auth, so there is no key of ours
+    for it to be complaining about.
+
+    Why it matters more than a tidier exception: `verification_service` must never
+    fail a case on an outage (the degradation invariant), so anything wearing
+    `ProviderUnavailable` is waved through to the manual path. A forged signature
+    landing in that bucket would be approved by a human who was told the provider
+    was down. It subclasses `DidoxError` so the ordinary 4xx handlers still catch
+    it, and deliberately NOT `ProviderUnavailable`.
+    """
+
+
 def _text(value: Any) -> str | None:  # noqa: ANN401 — untrusted provider JSON
     """Trim to None. Didox pads several fields with trailing spaces, and an
     address with a ragged tail is visible the moment it lands in a form field."""
@@ -674,12 +692,19 @@ class DidoxClient:
         return str(token)
 
     def auth_by_eimzo(self, tax_id: str, signature: str, locale: str = "ru") -> str:
-        """Mint a `user-key` from a timestamped signature over the INN."""
+        """Mint a `user-key` from a timestamped signature over the INN.
+
+        Doubles as our signature VERIFIER: a 200 proves the PKCS#7 verifies against
+        the national trust chain AND that the certificate is authorised to act for
+        `tax_id`. `InvalidSignature` (401) is that verdict inverted — hence
+        `unauthorized_is_verdict`, which no other call may pass.
+        """
         body = self._request(
             "POST",
             f"/v1/auth/{tax_id}/token/{locale}",
             "auth_by_eimzo",
             json_body={"signature": signature},
+            unauthorized_is_verdict=True,
         )
         token = (body or {}).get("token") if isinstance(body, dict) else None
         if not token:
@@ -898,6 +923,7 @@ class DidoxClient:
         json_body: Any = None,  # noqa: ANN401
         params: dict[str, Any] | None = None,
         raw: bool = False,
+        unauthorized_is_verdict: bool = False,
     ) -> Any:  # noqa: ANN401
         if self._breaker.is_open():
             self._log_call(operation, ok=False, status_code=None, latency_ms=None, error="breaker_open")
@@ -936,6 +962,22 @@ class DidoxClient:
             # says "Token expired"; treating that as a domain answer would let a
             # misconfiguration masquerade as a fact about a company. It is not
             # the provider failing either, so the breaker stays closed.
+            #
+            # The single exception is the call that ESTABLISHES auth: there is no
+            # key of ours for it to be refusing, so its 401 is a verdict on the
+            # signature. See `InvalidSignature`. 403 is not documented for it and
+            # stays an outage — only 401 carries that meaning.
+            if unauthorized_is_verdict and resp.status_code == 401:
+                self._breaker.record_success()
+                self._log_call(
+                    operation, ok=False, status_code=401, latency_ms=latency_ms,
+                    error="didox_signature_invalid",
+                )
+                base = self._to_error(resp)
+                raise InvalidSignature(
+                    base.status_code, base.message,
+                    trace_id=base.trace_id, description=base.description, context=base.context,
+                )
             self._breaker.record_success()
             self._log_call(operation, ok=False, status_code=resp.status_code, latency_ms=latency_ms, error="didox_auth")
             raise ProviderUnavailable(f"didox: {resp.status_code} {self._message(resp)}")
