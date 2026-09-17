@@ -112,7 +112,16 @@ services:
     # mc client pinned to the same era as the minio server (RELEASE.2023-01-12) — NOT
     # :latest. Recent minio/mc builds require x86-64-v2 and crash on older CPUs, the
     # same reason MINIO_IMAGE is pinned. Override via .env (MC_IMAGE=...) on newer hosts.
-    image: ${MC_IMAGE:-minio/mc:RELEASE.2023-01-11T03-14-16Z}
+    #
+    # **quay.io, not Docker Hub.** MinIO emptied their Docker Hub namespace: as of
+    # 17.09.2026 `minio/mc:RELEASE.2023-01-11T03-14-16Z`, `minio/mc:latest` and
+    # `minio/minio:latest` all 404 there, while quay.io still serves the same tags
+    # and digests. Docker reports a missing Hub tag as "pull access denied ...
+    # repository does not exist or may require 'docker login'", which reads like a
+    # credentials problem and is not one — the deploy had just logged into ghcr.io
+    # successfully. `minio` above was migrated to quay earlier; this line was the
+    # half of the pair left behind, and it broke every deploy the day the tag went.
+    image: ${MC_IMAGE:-quay.io/minio/mc:RELEASE.2023-01-11T03-14-16Z}
     restart: "no"
     depends_on:
       minio:
