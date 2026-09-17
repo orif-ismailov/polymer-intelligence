@@ -51,7 +51,9 @@ services:
 
   # ── MinIO (S3-compatible object storage for request file uploads) ─────────
   minio:
-    image: minio/minio:latest
+    # quay.io, not Docker Hub: MinIO emptied their Hub namespace, so
+    # `minio/minio:latest` 404s there (17.09.2026). Same image, still published here.
+    image: quay.io/minio/minio:latest
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
