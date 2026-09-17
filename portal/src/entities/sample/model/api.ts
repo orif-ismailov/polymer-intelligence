@@ -48,8 +48,19 @@ export const sampleApi = {
       .then((r) => r.challenge),
 
   /** Signing is what releases the request to the seller. */
-  signLetter: (sampleId: number, pkcs7: string): Promise<SampleRequest> =>
-    api.post<SampleRequest>(`/portal/samples/${sampleId}/letter/sign`, { pkcs7 }),
+  signLetter: (
+    sampleId: number,
+    pkcs7: string,
+    identityPkcs7: string,
+    identitySignatureHex: string,
+  ): Promise<SampleRequest> =>
+    api.post<SampleRequest>(`/portal/samples/${sampleId}/letter/sign`, {
+      pkcs7,
+      // The letter blob is stored as evidence; this pair is what Didox
+      // authenticates. See backend `lab_orders/letters.py`.
+      identity_pkcs7: identityPkcs7,
+      identity_signature_hex: identitySignatureHex,
+    }),
 };
 
 export const sampleKeys = {

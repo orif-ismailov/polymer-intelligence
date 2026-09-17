@@ -385,8 +385,26 @@ require the acting member to hold an admin role on the company (`_require_compan
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/portal/companies/{company_id}/eimzo/challenge` | account (member) | Start an E-IMZO signing challenge (`ChallengeOut`). |
-| POST | `/api/v1/portal/companies/{company_id}/eimzo/verify` | account (member) | Verify the E-IMZO PKCS#7 response → identity lock + evidence (`VerifyOut`). |
+| POST | `/api/v1/portal/companies/{company_id}/eimzo/challenge` | account (member) | Arm a single-use signing nonce (`ChallengeOut`). |
+| POST | `/api/v1/portal/companies/{company_id}/eimzo/verify` | account (member) | Confirm the signer through Didox → identity lock + evidence (`VerifyOut`). |
+
+**What the browser signs here is the company's ИНН, not the challenge.** Verification
+runs through Didox (`POST /v1/auth/{taxId}/token` — a 200 means the signature verifies
+for that INN, a 401 means it does not), because the UNICON sidecar it replaced is
+licensed and runs nowhere. The challenge is still minted and consumed exactly once, so
+a verify cannot be replayed against us; it is simply no longer inside the envelope.
+`VerifyIn` therefore requires **both** `pkcs7` and `signature_hex` — Didox's
+`/v1/dsvs/timestamp` takes the two halves and refuses a bare PKCS#7.
+
+Failure contract for `verify`, beyond the router-wide set:
+
+| Status | Detail | Meaning |
+|---|---|---|
+| 200 | `{"ok": false, "reason": "signature_invalid"}` | Didox refused the signature. A **verdict**, recorded on the case — not an error. It covers forged, expired and revoked certificates alike; Didox exposes one refusal for all three, so we no longer report `cert_revoked` separately. |
+| 400 | `challenge_expired` | No live nonce — never issued, expired, or already consumed. |
+| 409 | `didox_account_required` | **New.** This company has no Didox account, so the signature was never judged. Nothing is recorded on the case; the remedy is Didox signup. Distinct from the pre-existing 409 `company_already_registered`. |
+| 422 | `{"error": "cert_company_mismatch", …}` | The certificate's INN is not the company's. Both values masked. |
+| 503 | `eimzo_unavailable` | Didox is down or the breaker is open. Never fails the case — the manual verification path stays usable. |
 
 ### Compliance — `compliance.py` (prefix `/portal/companies`, tag `portal-compliance`)
 

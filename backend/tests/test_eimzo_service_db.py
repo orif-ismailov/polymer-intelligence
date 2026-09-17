@@ -1,11 +1,12 @@
 """Real-Postgres tests for eimzo_service (R3 Stage A — TA1.4/TA1.5 acceptance).
 
-Guarded (localhost test_polymer). The gateway adapter (`verify_pkcs7`) and S3
+Guarded (localhost test_polymer). The identity gateway (`verify_identity`) and S3
 storage are mocked; Redis is the in-memory fake. Covers: valid signature →
 identity locked + evidence + encrypted person data + eimzo check passed +
 auto-approve; pending_review when auto-approve off; INN mismatch; expired &
-replayed (single-use) challenge; revoked cert → failed check; sidecar down → the
-manual path stays usable; and PINFL never surfaced (masked only, evidence sha256).
+replayed (single-use) challenge; a refused signature → failed check; Didox down →
+the manual path stays usable; and PINFL never surfaced (masked only, evidence
+sha256).
 """
 
 from __future__ import annotations
@@ -28,6 +29,9 @@ from tests._verification_db import (
 from tests.conftest import set_switch
 
 _PKCS7 = base64.b64encode(b"fake-pkcs7-blob").decode()
+#: The other half of what the module returns. Didox's `/v1/dsvs/timestamp` takes
+#: both and refuses a bare envelope, so `verify()` requires it.
+_SIG_HEX = "ab" * 64
 
 
 @pytest.fixture(scope="module")
@@ -44,25 +48,28 @@ def sf(engine: sa.Engine):  # noqa: ANN201
 
 
 def _signer(**kw):  # noqa: ANN202
-    from app.integrations.eimzo import EimzoSigner  # noqa: PLC0415
+    from app.domains.edi.identity import DidoxSigner  # noqa: PLC0415
 
+    # No `serial_number`: Didox's profile does not carry one, so the field is gone
+    # from the signer rather than present-and-None.
     defaults = {
         "org_name": "OOO Polymer Trade",
         "org_inn": "301234567",
         "full_name": "IVANOV IVAN",
         "pinfl": "31234567890123",
         "position": "Director",
-        "serial_number": "AABBCC",
     }
     defaults.update(kw)
-    return EimzoSigner(**defaults)
+    return DidoxSigner(**defaults)
 
 
-def _result(ok=True, revoked=False, error=None, **signer_kw):  # noqa: ANN001, ANN202
-    from app.integrations.eimzo import EimzoVerifyResult  # noqa: PLC0415
+def _result(ok=True, error=None, **signer_kw):  # noqa: ANN001, ANN202
+    from app.domains.edi.identity import DidoxIdentityResult  # noqa: PLC0415
 
-    return EimzoVerifyResult(
-        ok=ok, signer=_signer(**signer_kw), revoked=revoked, error=error
+    # A refused signature carries no signer — Didox never got far enough to name
+    # anyone, which is the shape `verify()` branches on.
+    return DidoxIdentityResult(
+        ok=ok, signer=_signer(**signer_kw) if ok else None, error=error
     )
 
 
@@ -79,15 +86,18 @@ def _company(db, tax="301234567", phone="+998900000001"):  # noqa: ANN001, ANN20
 
 def _patch(monkeypatch, result=None, raises=None):  # noqa: ANN001
     from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
-    from app.integrations.eimzo import ProviderUnavailable  # noqa: PLC0415
+    from app.integrations.didox import ProviderUnavailable  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
 
-    def fake_verify(pkcs7, challenge):  # noqa: ANN001, ANN202
+    def fake_verify(redis_client, company, *, pkcs7_64, signature_hex, client=None):  # noqa: ANN001, ANN202, ARG001
         if raises is not None:
-            raise ProviderUnavailable("down")
+            raise raises if isinstance(raises, Exception) else ProviderUnavailable("down")
         return result
 
-    monkeypatch.setattr(eimzo_service, "verify_pkcs7", fake_verify)
+    # The seam is the NAME `contracts.eimzo` imported, not the gateway module —
+    # patching `edi.identity.verify_identity` would leave this module's own
+    # reference bound to the real one.
+    monkeypatch.setattr(eimzo_service, "verify_identity", fake_verify)
     monkeypatch.setattr(
         storage_service,
         "store_eimzo_pkcs7",
@@ -120,7 +130,7 @@ def test_valid_signature_auto_approves(sf, monkeypatch) -> None:  # noqa: ANN001
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
 
-        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
 
         assert outcome.ok is True
@@ -144,7 +154,7 @@ def test_valid_signature_auto_approves(sf, monkeypatch) -> None:  # noqa: ANN001
             .one()
         )
         assert eimzo_check.status == VerificationCheckStatus.passed
-        assert eimzo_check.result["method"] == "eimzo"
+        assert eimzo_check.result["method"] == "didox"
         # PINFL never in the check payload in the clear.
         assert "31234567890123" not in str(eimzo_check.result)
 
@@ -162,35 +172,32 @@ def test_valid_signature_auto_approves(sf, monkeypatch) -> None:  # noqa: ANN001
 
 
 @requires_real_db
-def test_evidence_signed_at_is_the_signing_moment_not_cert_issuance(sf, monkeypatch) -> None:  # noqa: ANN001
+def test_evidence_signed_at_is_the_signing_moment(sf, monkeypatch) -> None:  # noqa: ANN001
     """`signed_at` must record WHEN the signature was made.
 
-    The certificate's validity window starts whenever the cert was issued — often
-    years earlier — so recording `cert_valid_from` there misdates the evidence a
-    lawyer reads as "signed on". Contract evidence already stamps the signing
-    moment; identity evidence must match.
+    Originally a guard against stamping `cert_valid_from` — the certificate's
+    issuance date, often years earlier, which misdates evidence a lawyer reads as
+    "signed on". The Didox rail carries no certificate dates at all, so that
+    particular wrong value is now unreachable; the assertion stays because the
+    property it protects (this is a signing timestamp, taken from the clock) is
+    still the one the evidence claims.
     """
     import datetime  # noqa: PLC0415
 
     from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.domains.contracts.eimzo_models import SignatureEvidence  # noqa: PLC0415
 
-    issued = datetime.datetime(2019, 3, 4, tzinfo=datetime.UTC)
-    result = _result()
-    object.__setattr__(result, "cert_valid_from", issued)
-
-    _patch(monkeypatch, result=result)
+    _patch(monkeypatch, result=_result())
     with sf() as db:
         account, company = _company(db)
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
         before = datetime.datetime.now(datetime.UTC)
-        eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
 
         evidence = db.query(SignatureEvidence).filter_by(company_id=company.id).one()
         assert evidence.signed_at is not None
-        assert evidence.signed_at != issued
         assert evidence.signed_at >= before - datetime.timedelta(seconds=5)
 
 
@@ -205,7 +212,7 @@ def test_locked_requisites_reject_manual_patch(sf, monkeypatch) -> None:  # noqa
         account, company = _company(db)
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
-        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         # send the pending_review case back to needs_info so the profile is editable
         verification_service.request_info(db, outcome.case, note="need more")
         db.commit()
@@ -231,7 +238,7 @@ def test_valid_signature_pending_review_when_auto_approve_off(sf, monkeypatch) -
         account, company = _company(db)
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
-        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
 
         assert outcome.ok is True
@@ -256,7 +263,7 @@ def test_inn_mismatch_raises_and_stores_no_evidence(sf, monkeypatch) -> None:  #
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
 
         with pytest.raises(eimzo_service.CertCompanyMismatch) as exc:
-            eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+            eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         # both values masked
         assert "300000000" not in exc.value.cert_inn_masked
         db.rollback()
@@ -274,7 +281,7 @@ def test_missing_challenge_raises_expired(sf, monkeypatch) -> None:  # noqa: ANN
         account, company = _company(db)
         redis_client = FakeRedis()  # no challenge issued
         with pytest.raises(eimzo_service.ChallengeExpired):
-            eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+            eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
 
 
 @requires_real_db
@@ -286,30 +293,39 @@ def test_replayed_challenge_is_single_use(sf, monkeypatch) -> None:  # noqa: ANN
         account, company = _company(db)
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
-        eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
         # replay: the challenge was consumed
         with pytest.raises(eimzo_service.ChallengeExpired):
-            eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+            eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
 
 
 @requires_real_db
-def test_revoked_cert_records_failed_check(sf, monkeypatch) -> None:  # noqa: ANN001
+def test_a_signature_didox_refuses_records_a_failed_check(sf, monkeypatch) -> None:  # noqa: ANN001
+    """Was `test_revoked_cert_records_failed_check`, and the rename is the finding.
+
+    The sidecar reported revocation as its own flag, so we could say WHY a
+    signature failed. Didox exposes one refusal — `401 Invalid signature` — for a
+    forged envelope, an expired certificate and a revoked one alike. It still
+    refuses all three (it validates against the national chain), so no bad
+    signature gets through; we simply cannot name which it was, and
+    `signature_invalid` is the honest label for all of them.
+    """
     from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.domains.verification.models import VerificationCheck  # noqa: PLC0415
     from app.models.enums import VerificationCheckStatus, VerificationCheckType  # noqa: PLC0415
 
-    _patch(monkeypatch, result=_result(ok=False, revoked=True, error="cert_revoked"))
+    _patch(monkeypatch, result=_result(ok=False, error="signature_invalid"))
     with sf() as db:
         account, company = _company(db)
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
-        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
 
         assert outcome.ok is False
-        assert outcome.reason == "cert_revoked"
+        assert outcome.reason == "signature_invalid"
         assert db.get(Company, company.id).identity_locked is False
         check = (
             db.query(VerificationCheck)
@@ -317,14 +333,23 @@ def test_revoked_cert_records_failed_check(sf, monkeypatch) -> None:  # noqa: AN
             .one()
         )
         assert check.status == VerificationCheckStatus.failed
-        assert check.result["reason"] == "cert_revoked"
+        assert check.result["reason"] == "signature_invalid"
+        assert check.result["method"] == "didox"
 
 
 @requires_real_db
-def test_sidecar_down_propagates_and_manual_path_still_works(sf, monkeypatch) -> None:  # noqa: ANN001
+def test_provider_down_propagates_and_manual_path_still_works(sf, monkeypatch) -> None:  # noqa: ANN001
+    """The degradation invariant, now over Didox.
+
+    Note the import: `integrations.eimzo` and `integrations.didox` each declare
+    their OWN `ProviderUnavailable`, and they are unrelated classes. An
+    `except ProviderUnavailable` that names the wrong one stops catching silently
+    — no error, the exception simply sails past into a 500. This test failed on
+    exactly that when the rail moved, which is the cheapest place to find it.
+    """
     from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
     from app.domains.verification import service as verification_service  # noqa: PLC0415
-    from app.integrations.eimzo import ProviderUnavailable  # noqa: PLC0415
+    from app.integrations.didox import ProviderUnavailable  # noqa: PLC0415
     from app.models.enums import VerificationCaseStatus  # noqa: PLC0415
 
     _patch(monkeypatch, raises=True)
@@ -335,7 +360,7 @@ def test_sidecar_down_propagates_and_manual_path_still_works(sf, monkeypatch) ->
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
 
         with pytest.raises(ProviderUnavailable):
-            eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+            eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.rollback()
 
         # The manual submit path is still usable after a sidecar outage.
@@ -389,7 +414,7 @@ def test_registry_name_wins_over_the_certificate(sf, monkeypatch) -> None:  # no
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
 
-        eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
 
         company = db.get(Company, company.id)
@@ -413,7 +438,7 @@ def test_certificate_is_the_fallback_when_the_registry_has_no_record(sf, monkeyp
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
 
-        eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
 
         company = db.get(Company, company.id)
@@ -437,7 +462,7 @@ def test_a_registry_failure_never_fails_a_good_signature(sf, monkeypatch) -> Non
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
 
-        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
 
         assert outcome.ok is True
@@ -485,7 +510,7 @@ def test_an_already_verified_company_can_still_confirm_its_identity(sf, monkeypa
 
         redis_client = FakeRedis()
         eimzo_service.issue_challenge(redis_client, company.id, account.id)
-        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7)
+        outcome = eimzo_service.verify(db, redis_client, company, account, _PKCS7, _SIG_HEX)
         db.commit()
 
         assert outcome.ok is True

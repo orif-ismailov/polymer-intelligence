@@ -26,6 +26,7 @@ from tests._verification_db import requires_real_db as requires_real_db
 
 _BASE = "/api/v1/portal/companies"
 _PKCS7 = base64.b64encode(b"fake-pkcs7-blob").decode()
+_SIG_HEX = "ab" * 64
 
 
 def test_routes_registered() -> None:
@@ -89,30 +90,34 @@ def _seed_company(session, phone: str, tax: str = "301234567"):  # noqa: ANN001,
     return company_id, {"Authorization": f"Bearer {token}"}
 
 
-def _patch_eimzo(monkeypatch, *, ok=True, org_inn="301234567", raises=False):  # noqa: ANN001
+def _patch_eimzo(monkeypatch, *, ok=True, org_inn="301234567", raises=None):  # noqa: ANN001
+    """Stand in for the Didox identity rail.
+
+    `raises` takes an exception INSTANCE so a test can drive each of the three
+    non-verdict exits — outage (503), no Didox account (409) — through the same
+    seam. `True` is still accepted and means the outage, which is what every
+    caller of this helper meant before those exits existed.
+    """
     from app.domains.contracts import eimzo as eimzo_service  # noqa: PLC0415
-    from app.integrations.eimzo import (  # noqa: PLC0415
-        EimzoSigner,
-        EimzoVerifyResult,
-        ProviderUnavailable,
-    )
+    from app.domains.edi.identity import DidoxIdentityResult, DidoxSigner  # noqa: PLC0415
+    from app.integrations.didox import ProviderUnavailable  # noqa: PLC0415
     from app.services import storage_service  # noqa: PLC0415
 
-    result = EimzoVerifyResult(
+    result = DidoxIdentityResult(
         ok=ok,
-        signer=EimzoSigner(
+        signer=DidoxSigner(
             org_name="OOO Polymer", org_inn=org_inn, full_name="IVANOV IVAN",
-            pinfl="31234567890123", position="Director", serial_number="AB",
-        ),
+            pinfl="31234567890123", position="Director",
+        ) if ok else None,
         error=None if ok else "signature_invalid",
     )
 
-    def fake_verify(pkcs7, challenge):  # noqa: ANN001, ANN202
+    def fake_verify(redis_client, company, *, pkcs7_64, signature_hex, client=None):  # noqa: ANN001, ANN202, ARG001
         if raises:
-            raise ProviderUnavailable("down")
+            raise raises if isinstance(raises, Exception) else ProviderUnavailable("down")
         return result
 
-    monkeypatch.setattr(eimzo_service, "verify_pkcs7", fake_verify)
+    monkeypatch.setattr(eimzo_service, "verify_identity", fake_verify)
     monkeypatch.setattr(
         storage_service, "store_eimzo_pkcs7",
         lambda cid, b: (f"evidence/eimzo/{cid}/x.p7s", hashlib.sha256(b).hexdigest()),
@@ -129,7 +134,7 @@ def test_challenge_and_verify_happy_path(api, monkeypatch) -> None:  # noqa: ANN
     assert ch.status_code == 200
     assert len(ch.json()["challenge"]) > 20
 
-    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7}, headers=auth)
+    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7, "signature_hex": _SIG_HEX}, headers=auth)
     assert resp.status_code == 200
     body = resp.json()
     assert body["ok"] is True
@@ -145,7 +150,7 @@ def test_verify_non_member_404(api, monkeypatch) -> None:  # noqa: ANN001
     _company2, auth_b = _seed_company(session, "+998900000002", tax="309999999")
     _patch_eimzo(monkeypatch)
 
-    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7}, headers=auth_b)
+    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7, "signature_hex": _SIG_HEX}, headers=auth_b)
     assert resp.status_code == 404
 
 
@@ -156,7 +161,7 @@ def test_verify_inn_mismatch_422(api, monkeypatch) -> None:  # noqa: ANN001
     _patch_eimzo(monkeypatch, org_inn="300000000")
 
     client.post(f"{_BASE}/{company_id}/eimzo/challenge", headers=auth)
-    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7}, headers=auth)
+    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7, "signature_hex": _SIG_HEX}, headers=auth)
     assert resp.status_code == 422
     assert resp.json()["detail"]["error"] == "cert_company_mismatch"
 
@@ -166,7 +171,7 @@ def test_verify_without_challenge_400(api, monkeypatch) -> None:  # noqa: ANN001
     client, session = api
     company_id, auth = _seed_company(session, "+998900000001")
     _patch_eimzo(monkeypatch)
-    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7}, headers=auth)
+    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7, "signature_hex": _SIG_HEX}, headers=auth)
     assert resp.status_code == 400
     assert resp.json()["detail"] == "challenge_expired"
 
@@ -177,6 +182,6 @@ def test_verify_sidecar_down_503(api, monkeypatch) -> None:  # noqa: ANN001
     company_id, auth = _seed_company(session, "+998900000001")
     _patch_eimzo(monkeypatch, raises=True)
     client.post(f"{_BASE}/{company_id}/eimzo/challenge", headers=auth)
-    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7}, headers=auth)
+    resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7, "signature_hex": _SIG_HEX}, headers=auth)
     assert resp.status_code == 503
     assert resp.json()["detail"] == "eimzo_unavailable"

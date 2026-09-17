@@ -79,7 +79,7 @@ export function VerificationStatusPage() {
             <p className="mt-0.5 text-xs text-text-muted">{t("eimzo.offerBody")}</p>
           </div>
           <EimzoSignButton
-            signer={companyIdentitySigner(company.id)}
+            signer={companyIdentitySigner(company.id, company.tax_id)}
             holderOf={(o) => o.holder_masked}
             onConfirmed={() => void query.refetch()}
           />

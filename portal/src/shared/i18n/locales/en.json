@@ -703,6 +703,7 @@
       "mismatch": "The certificate INN does not match the company Tax ID.",
       "expired": "The request expired. Please retry.",
       "already_registered": "A company with this Tax ID is already registered.",
+      "didox_account_required": "This company has no Didox account. Register with Didox, then confirm again.",
       "signature_invalid": "The signature is invalid.",
       "cert_revoked": "The certificate is revoked.",
       "cert_expired": "The certificate has expired. Renew your signature key and try again.",

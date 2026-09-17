@@ -8,11 +8,27 @@ consequence for two other businesses.
 
 Three deliberate choices:
 
-**Internal, not Didox.** This is a commercial undertaking between two companies,
-not a tax document; it never needs to reach soliq, and it has to work *before*
-either side has a Didox account. So it rides our own R3 rails —
-`verify_pkcs7` → `SignatureEvidence` — with `purpose='sample_letter'` (that column
-is plain text, so no enum migration).
+**The document never goes to Didox — but the SIGNER's identity now does, and
+that changes what this letter proves.** The undertaking is still commercial, not
+fiscal: nothing here reaches soliq, and `purpose='sample_letter'` still marks an
+ordinary `SignatureEvidence` row. What is gone is the independent verdict on the
+envelope. Verification used to run through the UNICON sidecar, which does not
+exist and never ran outside a dev stack; Didox publishes no "verify this PKCS#7"
+call, so there is nothing to replace it with.
+
+So the flow now takes TWO signatures from one key session (one password prompt,
+via the browser's `openSession`):
+
+  1. over the buyer company's **INN** — Didox authenticates it, which is what
+     establishes WHO is signing;
+  2. over the **letter hash** — stored verbatim as evidence, and NOT
+     cryptographically checked by anything of ours.
+
+The honest reading of the result: we can prove this account, holding a key Didox
+accepted for this company, asked us to record a signature over this exact
+document at this time. We can no longer prove the envelope itself verifies. The
+docstring used to say this flow "has to work before either side has a Didox
+account" — that is no longer true, and it is the real cost of the change.
 
 **The seller's terms are SNAPSHOTTED at signing.** `seller_offers.sample_letter_terms`
 can be edited at any time; the letter must stay evidence of what was actually
@@ -36,7 +52,7 @@ from app.core.time import utcnow
 from app.domains.contracts import render as contract_render
 from app.domains.contracts.eimzo_models import SignatureEvidence
 from app.domains.contracts.models import ContractTemplate
-from app.integrations.eimzo import verify_pkcs7
+from app.domains.edi.identity import verify_identity
 from app.models.enums import SampleRequestStatus
 from app.services import audit_service, storage_service
 
@@ -216,8 +232,16 @@ def sign(
     buyer: Company,
     account: UserAccount,
     pkcs7_b64: str,
+    *,
+    identity_pkcs7: str,
+    identity_signature_hex: str,
 ) -> SampleRequest:
-    """Verify the buyer's signature, store evidence, and release the request.
+    """Confirm who is signing, store the letter signature, release the request.
+
+    `pkcs7_b64` covers the LETTER hash and is evidence only — see the module
+    docstring for why nothing of ours verifies it any more. The `identity_*` pair
+    covers the buyer's INN and is what Didox authenticates; both come from one
+    key session in the browser, so the person types their password once.
 
     The state move is the point: until this succeeds the request sits in
     `pending_letter` and the SELLER HAS NOT BEEN TOLD. Signing is what makes it a
@@ -232,7 +256,10 @@ def sign(
         # Missing, or the letter was re-rendered after the challenge was issued.
         raise ChallengeExpired(str(sample.id))
 
-    result = verify_pkcs7(pkcs7_b64, challenge)  # ProviderUnavailable propagates
+    # Identity, from the OTHER signature. Didox never sees the letter.
+    result = verify_identity(
+        redis_client, buyer, pkcs7_64=identity_pkcs7, signature_hex=identity_signature_hex
+    )  # ProviderUnavailable propagates
     if not result.ok:
         raise SignatureVerificationFailed(result.error or "signature_invalid")
 
@@ -255,18 +282,19 @@ def sign(
         challenge=challenge,
         pkcs7_storage_path=path,
         pkcs7_sha256=sha,
+        # Who Didox said was signing — NOT read off this envelope, which nothing
+        # parsed. `serial_number` is gone with the sidecar that could read it.
         cert_subject=(
             {
                 "org_name": signer.org_name,
                 "org_inn": signer.org_inn,
                 "position": signer.position,
-                "serial_number": signer.serial_number,
             }
             if signer
             else None
         ),
-        # The sidecar reports certificate validity, not a signing time — so this is
-        # ours to stamp, exactly as the contract and identity paths do.
+        # No provider reports a signing time, so this is ours to stamp, exactly as
+        # the contract and identity paths do.
         signed_at=utcnow(),
     )
     db.add(evidence)

@@ -46,6 +46,48 @@ class _Redis:
         return self.values.pop(key, None)
 
 
+class _Account:
+    id = 11
+
+
+class _Buyer:
+    id = 3
+    tax_id = "301234567"
+
+
+class _Session:
+    """Enough Session for `sign()`: it adds one row and flushes twice.
+
+    `flush` stands in for the DB assigning a PK, which `sign()` reads back into
+    `sample.letter_signature_evidence_id`. Hermetic on purpose — the behaviour
+    under test is which blob goes where, and that needs no Postgres.
+    """
+
+    def __init__(self) -> None:
+        self.added: list[object] = []
+
+    def add(self, obj: object) -> None:
+        self.added.append(obj)
+
+    def flush(self) -> None:
+        for obj in self.added:
+            if getattr(obj, "id", None) is None:
+                obj.id = 42  # type: ignore[attr-defined]
+
+
+def _signable():  # noqa: ANN202
+    """A sample whose challenge has been issued and whose letter is rendered."""
+    sample = _Sample()
+    sample.status = __import__(
+        "app.models.enums", fromlist=["SampleRequestStatus"]
+    ).SampleRequestStatus.pending_letter
+    sample.letter_signature_evidence_id = None
+    buyer = _Buyer()
+    redis_client = _Redis()
+    letters.issue_challenge(redis_client, sample, buyer.id)
+    return sample, buyer, _Session(), redis_client
+
+
 # ── the challenge ─────────────────────────────────────────────────────────────
 
 
@@ -80,6 +122,97 @@ class TestChallenge:
 
 
 # ── numbering ─────────────────────────────────────────────────────────────────
+
+
+class TestSigningTakesTwoSignaturesForTwoDifferentJobs:
+    """`sign()` had NO test before this — the challenge lifecycle was covered and
+    the signing path was not, which is how it could change rails unnoticed.
+
+    Since verification moved off the UNICON sidecar, two envelopes arrive: one
+    over the buyer's INN that Didox authenticates, and one over the letter hash
+    that we store and nobody checks. Everything here guards the one mistake that
+    would be both catastrophic and invisible — putting them the wrong way round,
+    which would file the INN signature as the signed letter and hand the letter
+    blob to Didox as proof of identity.
+    """
+
+    @staticmethod
+    def _run(monkeypatch, *, ok=True, org_inn="301234567"):  # noqa: ANN001, ANN205
+        from app.domains.edi.identity import DidoxIdentityResult, DidoxSigner
+        from app.domains.lab_orders import letters
+        from app.services import audit_service, storage_service
+
+        seen: dict[str, object] = {}
+
+        def fake_verify_identity(redis_client, company, *, pkcs7_64, signature_hex, client=None):  # noqa: ANN001, ANN202, ARG001
+            seen["identity_blob"] = pkcs7_64
+            seen["identity_hex"] = signature_hex
+            return DidoxIdentityResult(
+                ok=ok,
+                signer=DidoxSigner(org_inn=org_inn, full_name="IVANOV IVAN") if ok else None,
+                error=None if ok else "signature_invalid",
+            )
+
+        def fake_store(company_id, blob):  # noqa: ANN001, ANN202, ARG001
+            seen["stored_blob"] = blob
+            return ("evidence/x.p7s", "sha-of-stored")
+
+        monkeypatch.setattr(letters, "verify_identity", fake_verify_identity)
+        monkeypatch.setattr(storage_service, "store_eimzo_pkcs7", fake_store)
+        monkeypatch.setattr(audit_service, "write_audit", lambda *a, **k: None)
+        return letters, seen
+
+    def _sign(self, letters, sample, buyer, db, redis_client):  # noqa: ANN001, ANN202
+        import base64
+
+        return letters.sign(
+            db, redis_client, sample, buyer, _Account(),
+            base64.b64encode(b"LETTER-SIGNATURE").decode(),
+            identity_pkcs7=base64.b64encode(b"INN-SIGNATURE").decode(),
+            identity_signature_hex="ab" * 64,
+        )
+
+    def test_the_letter_blob_is_stored_and_the_inn_blob_is_verified(self, monkeypatch) -> None:  # noqa: ANN001
+        letters, seen = self._run(monkeypatch)
+        sample, buyer, db, redis_client = _signable()
+
+        self._sign(letters, sample, buyer, db, redis_client)
+
+        assert seen["stored_blob"] == b"LETTER-SIGNATURE", (
+            "evidence must hold the signature over the DOCUMENT, not over the INN"
+        )
+        import base64
+        assert seen["identity_blob"] == base64.b64encode(b"INN-SIGNATURE").decode(), (
+            "Didox authenticates the INN signature — the letter never goes to them"
+        )
+        assert seen["identity_hex"] == "ab" * 64
+
+    def test_signing_releases_the_request_to_the_seller(self, monkeypatch) -> None:  # noqa: ANN001
+        from app.models.enums import SampleRequestStatus
+
+        letters, _ = self._run(monkeypatch)
+        sample, buyer, db, redis_client = _signable()
+
+        self._sign(letters, sample, buyer, db, redis_client)
+
+        assert sample.letter_signed_at is not None
+        assert sample.status == SampleRequestStatus.requested
+
+    def test_an_identity_didox_refuses_does_not_sign_the_letter(self, monkeypatch) -> None:  # noqa: ANN001
+        letters, _ = self._run(monkeypatch, ok=False)
+        sample, buyer, db, redis_client = _signable()
+
+        with pytest.raises(letters.SignatureVerificationFailed):
+            self._sign(letters, sample, buyer, db, redis_client)
+        assert sample.letter_signed_at is None
+
+    def test_a_key_belonging_to_another_company_is_refused(self, monkeypatch) -> None:  # noqa: ANN001
+        letters, _ = self._run(monkeypatch, org_inn="999999999")
+        sample, buyer, db, redis_client = _signable()
+
+        with pytest.raises(letters.CertCompanyMismatch):
+            self._sign(letters, sample, buyer, db, redis_client)
+        assert sample.letter_signed_at is None
 
 
 def test_letter_numbers_are_global_per_year(monkeypatch) -> None:  # noqa: ANN001
