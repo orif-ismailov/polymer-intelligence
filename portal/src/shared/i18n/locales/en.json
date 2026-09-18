@@ -2815,5 +2815,16 @@
       "wrong_rail": "The contract is not on the Didox rail.",
       "empty_body": "The contract has neither text nor lines."
     }
+  },
+  "stepUp": {
+    "title": "Confirm your password",
+    "description": "This action changes payout details. Enter your password to continue.",
+    "passwordLabel": "Password",
+    "confirm": "Confirm",
+    "errors": {
+      "wrongPassword": "Incorrect password",
+      "unavailable": "The service is temporarily unavailable. Try again.",
+      "failed": "Could not confirm your password. Try again."
+    }
   }
 }

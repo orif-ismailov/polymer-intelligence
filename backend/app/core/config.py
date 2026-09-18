@@ -141,6 +141,34 @@ class Settings(BaseSettings):
     # ── Auth ──────────────────────────────────────────────────────────────────
     JWT_SECRET: str
 
+    # Refresh-session policy (IMEX-1). One pair of numbers for BOTH password-login
+    # surfaces — staff dashboard and client cabinet — because a session window that
+    # differs by surface is a window somebody has to remember, and the staff one had
+    # quietly been 7 days while the cabinet's was 30.
+    #
+    # Deliberately NOT panel-overridable (no `SettingSpec`): every other switch in
+    # this app changes what a feature does, and this one changes how long a stolen
+    # cookie is worth something. An operator widening it from a web page, with the
+    # audit row sitting in the same database the session state does not, is not a
+    # control worth shipping.
+    #
+    # Sliding: each successful refresh re-dates the session this far into the future.
+    REFRESH_SESSION_TTL_DAYS: int = Field(default=30, ge=1, le=90)
+    # Absolute ceiling, fixed at sign-in and carried unchanged across every rotation
+    # (the `abx` claim). Without it "sliding" means "immortal": refresh once every 29
+    # days and the session never ends, which is the shape IMEX-1's own notes refuse.
+    REFRESH_SESSION_ABSOLUTE_TTL_DAYS: int = Field(default=90, ge=1, le=365)
+    # How long a password re-entry keeps a sensitive action unlocked.
+    STEP_UP_TTL_MINUTES: int = Field(default=5, ge=1, le=60)
+    # Two tabs refreshing at once present the same token; the loser must get the
+    # winner's successor back instead of being called a thief. This is how long the
+    # spent token stays forgivable. Past it, the same replay is an incident.
+    #
+    # It is a real, if narrow, weakening: a token stolen and replayed inside this
+    # window is indistinguishable from a second tab and buys the attacker one
+    # rotation. Seconds, not minutes, is the whole reason that is tolerable.
+    REFRESH_ROTATION_GRACE_SECONDS: int = Field(default=10, ge=1, le=60)
+
     # ── Company verification & portal (R1) ────────────────────────────────────
     # Fernet key (urlsafe base64, ≥32 chars) that encrypts company bank account
     # numbers (R1) and PINFL (R3) at the app layer. Required, no default — a

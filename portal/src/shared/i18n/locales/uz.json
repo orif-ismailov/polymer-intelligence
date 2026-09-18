@@ -2815,5 +2815,16 @@
       "wrong_rail": "Shartnoma Didox relsida emas.",
       "empty_body": "Shartnomada na matn, na pozitsiyalar bor."
     }
+  },
+  "stepUp": {
+    "title": "Parolni tasdiqlang",
+    "description": "Bu amal to‘lov rekvizitlariga taalluqli. Davom etish uchun parolni kiriting.",
+    "passwordLabel": "Parol",
+    "confirm": "Tasdiqlash",
+    "errors": {
+      "wrongPassword": "Parol noto‘g‘ri",
+      "unavailable": "Xizmat vaqtincha ishlamayapti. Qayta urinib ko‘ring.",
+      "failed": "Parolni tasdiqlab bo‘lmadi. Qayta urinib ko‘ring."
+    }
   }
 }

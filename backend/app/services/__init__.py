@@ -14,6 +14,9 @@
 #   storage_service            S3/MinIO presign + upload
 #   settings_service           runtime app_settings knobs
 #   rate_limit                 Redis counters
+#   session_service            refresh-token families: rotation, reuse detection, step-up.
+#                              Serves BOTH password-login surfaces (staff + cabinet) and
+#                              belongs to neither — the same reason auth_service is here
 #   dashboard_summary_service  presentation for the internal dashboard; kept together
 #                              with app/schemas/dashboard.py + app/api/dashboard.py (P9)
 #   llm_clients                which LLM client is live and in whose dialect. Five modules

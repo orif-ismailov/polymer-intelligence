@@ -21,14 +21,104 @@ only ever run for someone already known to be a member.
 
 from __future__ import annotations
 
-from fastapi import HTTPException, status
+import redis
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.core.redis import get_redis
+from app.core.security import decode_token
 from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
 from app.models.enums import CompanyBusinessRole
-from app.services import rate_limit
+from app.services import rate_limit, session_service
+
+#: `auto_error=False` so a missing header reaches our own 401 with its WWW-Authenticate
+#: header, matching `app/api/deps.py` rather than FastAPI's bare 403.
+_bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def get_current_session_family(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+) -> str:
+    """The refresh-session family behind the caller's access token (`fam` claim).
+
+    Identity is already settled by `get_current_account`; this answers the separate
+    question of WHICH SESSION is asking, which is what a step-up stamp attaches to.
+
+    A token without `fam` is refused. That is the whole value of making the claim
+    optional: tokens minted before this shipped, and any minted by a code path that
+    does not start a session, cannot reach a sensitive action — they fail closed
+    instead of silently behaving as though a session had been verified.
+    """
+    token = credentials.credentials if credentials is not None else None
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        payload = decode_token(token, expected_type="portal_access")
+    except JWTError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
+
+    fam = payload.get("fam")
+    if not isinstance(fam, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token is not bound to a session",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return fam
+
+
+def require_recent_auth(
+    fam: str = Depends(get_current_session_family),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> None:
+    """Refuse a sensitive action unless the password was re-entered recently.
+
+    Three outcomes, and the difference between them is the point:
+
+    * **403 `step_up_required`** — a live session that has not re-authenticated.
+      A dict detail so the cabinet routes on the code rather than parsing prose
+      (precedent: `require_business_role`), because this 403 is the one the client
+      must turn into a password prompt rather than an error toast.
+    * **401** — the session is gone. Asking for a password would be cruel and
+      useless: no password re-opens a revoked session.
+    * **503** — the session store is unreachable, so we cannot tell. Failing closed
+      on a sensitive action is right; calling it a 401 and dumping the session is not.
+    """
+    try:
+        recent = session_service.has_recent_step_up(
+            redis_client, fam, within_seconds=settings.STEP_UP_TTL_MINUTES * 60
+        )
+    except session_service.SessionInvalid as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired"
+        ) from exc
+    except session_service.SessionUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Session store unavailable",
+        ) from exc
+
+    if not recent:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "step_up_required",
+                "message": "Re-enter your password to continue",
+            },
+        )
 
 
 def rate_limited(exc: rate_limit.RateLimited) -> HTTPException:

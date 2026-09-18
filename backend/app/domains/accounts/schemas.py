@@ -64,6 +64,19 @@ class PasswordChangeIn(BaseModel):
     new_password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=256)
 
 
+class StepUpIn(BaseModel):
+    """Body for POST /portal/auth/step-up — a password re-entry, not a sign-in."""
+
+    password: str
+
+
+class StepUpOut(BaseModel):
+    """How long the unlocked window lasts, so the client can hide the prompt until
+    it is actually needed again rather than guessing at the server's policy."""
+
+    expires_in: int
+
+
 class MeUpdateIn(BaseModel):
     """Body for PATCH /portal/me — profile self-edit."""
 

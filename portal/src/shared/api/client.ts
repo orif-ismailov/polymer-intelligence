@@ -11,13 +11,22 @@
  *    fails it clears auth, and hard-navigates to `/cabinet/login` ONLY from a page that
  *    requires a session — never from the public marketplace, where being signed
  *    out is the normal state.
+ *  - On a 403 carrying `step_up_required` it prompts for the password through the
+ *    step-up bridge and retries once. Declining leaves the original 403 to the
+ *    caller, so a cancelled prompt reads as "not done" rather than as a failure.
  *
  * The refresh is de-duplicated: concurrent 401s share one in-flight refresh.
+ *
+ * Note both retries are single-shot and cannot chain into each other: a step-up
+ * retry that comes back 401 falls through to the refresh branch once, and a
+ * refreshed request that comes back 403 is thrown, not re-prompted. Two bounded
+ * retries, never a loop.
  */
 
 import { API_BASE, isCabinetPath, SERVER_API_ORIGIN } from "@/shared/config";
 
 import { clearAuth, getAuthToken, setAuthToken } from "./authBridge";
+import { promptStepUp } from "./stepUpBridge";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -209,6 +218,26 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       throw new ApiError(0, "Network error", { code: "network" });
     }
     throw err;
+  }
+
+  // A sensitive action refused for want of a recent password entry. Handled here
+  // rather than at each call site for the same reason the 401 retry is: every
+  // mutation that touches payout details would otherwise need its own copy, and
+  // the one that forgot would surface as an unexplained error toast.
+  if (res.status === 403 && !skipAuthRetry) {
+    const parsed = await readBody(res);
+    const err = extractError(403, parsed, res.headers);
+    if (err.code !== "step_up_required") throw err;
+
+    if (!(await promptStepUp())) throw err;
+    try {
+      res = await rawRequest(path, init, query);
+    } catch (retryErr) {
+      if (isNetworkFailure(retryErr)) {
+        throw new ApiError(0, "Network error", { code: "network" });
+      }
+      throw retryErr;
+    }
   }
 
   if (res.status === 401 && !skipAuthRetry) {

@@ -15,7 +15,12 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_account
-from app.api.portal.deps import company_or_404, rate_limited, require_company_admin
+from app.api.portal.deps import (
+    company_or_404,
+    rate_limited,
+    require_company_admin,
+    require_recent_auth,
+)
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.accounts.models import UserAccount
@@ -492,9 +497,20 @@ def set_roles(
 
 
 # ── bank accounts ─────────────────────────────────────────────────────────────
+#
+# Both routes are step-up gated (IMEX-1). These are the payout details: an attacker
+# holding a live access token could previously point a company's money at their own
+# account, or archive the real one, with no re-authentication at all. `Depends` in
+# the decorator rather than in the signature because the guard returns nothing — it
+# either raises or lets the request through.
 
 
-@router.post("/{company_id}/bank-accounts", response_model=CompanyDetailOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{company_id}/bank-accounts",
+    response_model=CompanyDetailOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_recent_auth)],
+)
 def add_bank_account(
     company_id: int,
     body: BankAccountIn,
@@ -513,7 +529,11 @@ def add_bank_account(
     return _detail_out(db, company)
 
 
-@router.delete("/{company_id}/bank-accounts/{account_id}", response_model=CompanyDetailOut)
+@router.delete(
+    "/{company_id}/bank-accounts/{account_id}",
+    response_model=CompanyDetailOut,
+    dependencies=[Depends(require_recent_auth)],
+)
 def archive_bank_account(
     company_id: int,
     account_id: int,

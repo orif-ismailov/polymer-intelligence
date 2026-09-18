@@ -47,7 +47,32 @@ _DUMMY_HASH = _hasher.hash("timing-attack-mitigation-dummy")
 # ── JWT constants ──────────────────────────────────────────────────────────────
 _ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+# REFRESH_TOKEN_EXPIRE_DAYS = 7 used to live here, and PORTAL_SESSION_TTL_DAYS = 30 in
+# Settings, so the same product had two session policies depending on which door you
+# came in by. Both are now `settings.REFRESH_SESSION_TTL_DAYS` (IMEX-1).
+
+
+def new_family_id() -> str:
+    """A refresh-token family id: one sign-in, however many rotations it survives."""
+    return secrets.token_hex(16)
+
+
+def new_jti() -> str:
+    """A single refresh token's identity within its family."""
+    return secrets.token_hex(16)
+
+
+def _refresh_exp(now: datetime, abs_exp: int) -> datetime:
+    """The sliding window, clamped so a token never outlives its family's ceiling.
+
+    The clamp is cosmetic for security — `abx` is checked on every refresh, so a
+    longer `exp` could not actually extend anything — and load-bearing for everyone
+    who debugs a session by decoding its cookie.
+    """
+    sliding = now + timedelta(days=settings.REFRESH_SESSION_TTL_DAYS)
+    ceiling = datetime.fromtimestamp(abs_exp, UTC)
+    return min(sliding, ceiling)
 
 
 def hash_password(plain: str) -> str:
@@ -106,14 +131,21 @@ def dummy_verify(plain: str) -> None:
         _hasher.verify(_DUMMY_HASH, plain)
 
 
-def create_access_token(subject: str) -> str:
+def create_access_token(subject: str, *, fam: str | None = None) -> str:
     """Create a short-lived access JWT (15 minutes).
 
     The token carries:
     - sub: staff_user_id (string)
     - type: 'access' (used to prevent token-type confusion, T-03-03)
+    - fam: the refresh-session family, when one is known (IMEX-1)
     - iat: issued-at timestamp
     - exp: expiry (15 minutes from now)
+
+    `fam` is OPTIONAL, and that is a decision rather than convenience: it is what
+    lets `require_recent_auth` find the session behind a bearer token, and a token
+    minted without one simply cannot satisfy a step-up gate. Tokens issued before
+    this shipped therefore fail closed on sensitive actions and behave exactly as
+    before everywhere else, for the fifteen minutes they have left.
 
     No authorization claim is embedded. Every guard loads the staff row and reads
     `is_admin` from it, so revoking access takes effect on the next request
@@ -127,29 +159,41 @@ def create_access_token(subject: str) -> str:
         A signed JWT access token string.
     """
     now = datetime.now(UTC)
-    payload = {
+    payload: dict[str, Any] = {
         "sub": subject,
         "type": "access",
         "iat": now,
         "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     }
+    if fam is not None:
+        payload["fam"] = fam
     return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 
 
-def create_refresh_token(subject: str) -> str:
-    """Create a long-lived refresh JWT (7 days).
+def create_refresh_token(subject: str, *, fam: str, jti: str, abs_exp: int) -> str:
+    """Create a rotating refresh JWT for the staff surface.
 
     The token carries:
     - sub: staff_user_id (string)
     - type: 'refresh' (used to prevent token-type confusion, T-03-03)
-    - iat: issued-at timestamp
-    - exp: expiry (7 days from now)
+    - fam: the refresh-session family this token belongs to
+    - jti: this token's identity — Redis holds exactly one live jti per family,
+           which is what makes rotation, invalidation and reuse detection possible
+    - abx: the ABSOLUTE session ceiling, fixed at sign-in
+    - iat / exp: issued-at and the sliding window, clamped to `abx`
+
+    `abx` is signed and copied UNCHANGED into every successor. That is what stops
+    rotation from extending the ceiling, and it means the cap still holds even if
+    Redis loses the family record entirely.
 
     Note: no authorization claim is included here either; it is read from the
     staff row on every request (see create_access_token).
 
     Args:
         subject: The staff_user.id as a string (used as JWT sub claim).
+        fam: The family id (`security.new_family_id()`).
+        jti: This token's id (`security.new_jti()`).
+        abs_exp: Epoch seconds at which the session dies regardless of activity.
 
     Returns:
         A signed JWT refresh token string.
@@ -158,8 +202,11 @@ def create_refresh_token(subject: str) -> str:
     payload = {
         "sub": subject,
         "type": "refresh",
+        "fam": fam,
+        "jti": jti,
+        "abx": abs_exp,
         "iat": now,
-        "exp": now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+        "exp": _refresh_exp(now, abs_exp),
     }
     return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 
@@ -193,7 +240,7 @@ def create_client_session_token(subject: str) -> str:
     return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 
 
-def create_portal_access_token(subject: str) -> str:
+def create_portal_access_token(subject: str, *, fam: str | None = None) -> str:
     """Create a short-lived portal access JWT (15 min) for a UserAccount.
 
     Audience isolation uses the SAME mechanism as staff/client tokens — the
@@ -211,7 +258,7 @@ def create_portal_access_token(subject: str) -> str:
         A signed JWT portal access token string.
     """
     now = datetime.now(UTC)
-    payload = {
+    payload: dict[str, Any] = {
         "sub": subject,
         "role": "account",
         "type": "portal_access",
@@ -219,18 +266,26 @@ def create_portal_access_token(subject: str) -> str:
         "iat": now,
         "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     }
+    if fam is not None:
+        payload["fam"] = fam
     return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 
 
-def create_portal_refresh_token(subject: str) -> str:
-    """Create a long-lived portal refresh JWT (PORTAL_SESSION_TTL_DAYS).
+def create_portal_refresh_token(
+    subject: str, *, fam: str, jti: str, abs_exp: int
+) -> str:
+    """Create a rotating portal refresh JWT. Same shape as the staff one.
 
     Delivered only via the httpOnly `portal_session` cookie. Carries
-    type='portal_refresh' + a random jti (so rotation produces a new token).
+    type='portal_refresh' plus the family/jti/absolute-cap claims the session
+    machinery reads back — see `create_refresh_token` for what each one is for.
     The role is re-read from the DB on refresh, so it is not embedded here.
 
     Args:
         subject: The user_accounts.id as a string (JWT sub claim).
+        fam: The family id (`security.new_family_id()`).
+        jti: This token's id (`security.new_jti()`).
+        abs_exp: Epoch seconds at which the session dies regardless of activity.
 
     Returns:
         A signed JWT portal refresh token string.
@@ -239,9 +294,11 @@ def create_portal_refresh_token(subject: str) -> str:
     payload = {
         "sub": subject,
         "type": "portal_refresh",
-        "jti": secrets.token_hex(8),
+        "fam": fam,
+        "jti": jti,
+        "abx": abs_exp,
         "iat": now,
-        "exp": now + timedelta(days=settings.PORTAL_SESSION_TTL_DAYS),
+        "exp": _refresh_exp(now, abs_exp),
     }
     return str(jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM))
 

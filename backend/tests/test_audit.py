@@ -15,6 +15,8 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
+from tests._fake_redis import FakeRedis
+
 
 def _make_staff_user(id: int = 1, role: str = "admin", is_active: bool = True):
     from app.core.security import hash_password
@@ -80,6 +82,7 @@ def test_write_audit_creates_audit_log_instance():
 def test_login_writes_audit_log_row():
     """A successful POST /auth/login writes one audit_log row."""
     from app.core.db import get_db
+    from app.core.redis import get_redis
     from app.main import create_app
 
     admin_user = _make_staff_user(id=1, role="admin", is_active=True)
@@ -94,6 +97,11 @@ def test_login_writes_audit_log_row():
 
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
+    # Login records a refresh-token family before it answers, so a stack with no
+    # session store refuses the sign-in (503) rather than issuing a cookie that
+    # would be rejected on its first refresh.
+    _redis = FakeRedis()
+    application.dependency_overrides[get_redis] = lambda: _redis
 
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as client:
         resp = client.post(
@@ -119,6 +127,7 @@ def test_login_writes_audit_log_row():
 def test_failed_login_does_not_write_audit_log():
     """A failed login (wrong password) does NOT write an audit_log row."""
     from app.core.db import get_db
+    from app.core.redis import get_redis
     from app.main import create_app
     from app.models.staff import AuditLog
 
@@ -134,6 +143,11 @@ def test_failed_login_does_not_write_audit_log():
 
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
+    # Login records a refresh-token family before it answers, so a stack with no
+    # session store refuses the sign-in (503) rather than issuing a cookie that
+    # would be rejected on its first refresh.
+    _redis = FakeRedis()
+    application.dependency_overrides[get_redis] = lambda: _redis
 
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as client:
         resp = client.post(

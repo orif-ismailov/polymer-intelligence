@@ -17,6 +17,8 @@ declared PER ROUTE — a router-level 401 would document a code `register` canno
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import redis
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from jose import JWTError
@@ -24,6 +26,8 @@ from sqlalchemy.orm import Session
 
 from app.api import errors
 from app.api.deps import get_account_for_password_change, get_current_account
+from app.api.portal.deps import get_current_session_family
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.core.security import create_portal_access_token, decode_token
@@ -37,14 +41,18 @@ from app.domains.accounts.schemas import (
     PortalTokenResponse,
     RegisterAccepted,
     RegisterIn,
+    StepUpIn,
+    StepUpOut,
 )
 from app.models.enums import AccountStatus
-from app.services import rate_limit
+from app.services import rate_limit, session_service
 from app.services.audit_service import write_audit
 from app.services.auth_service import (
+    begin_session,
     clear_portal_session_cookie,
     get_portal_session_cookie_name,
-    set_portal_session_cookie,
+    rotate_session,
+    session_http_error,
 )
 
 router = APIRouter(prefix="/portal", tags=["portal-auth"])
@@ -110,9 +118,9 @@ def _too_many(exc: rate_limit.RateLimited) -> HTTPException:
     )
 
 
-def _token_response(account: UserAccount) -> PortalTokenResponse:
+def _token_response(account: UserAccount, fam: str | None = None) -> PortalTokenResponse:
     return PortalTokenResponse(
-        access_token=create_portal_access_token(subject=str(account.id)),
+        access_token=create_portal_access_token(subject=str(account.id), fam=fam),
         account=AccountOut.model_validate(account),
     )
 
@@ -174,8 +182,16 @@ def login(
         )
 
     db.commit()  # last_login_at
-    set_portal_session_cookie(response, account.id)
-    return _token_response(account)
+    try:
+        fam = begin_session(
+            redis_client,
+            response,
+            kind=session_service.KIND_PORTAL,
+            subject_id=account.id,
+        )
+    except session_service.SessionUnavailable as exc:
+        raise session_http_error(exc) from exc
+    return _token_response(account, fam)
 
 
 # ── Registration — an access request, not a sign-up ───────────────────────────
@@ -277,6 +293,7 @@ def change_password(
     db: Session = Depends(get_db),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
     account: UserAccount = Depends(get_account_for_password_change),
+    portal_session: str | None = Cookie(default=None, alias=_PORTAL_COOKIE),
 ) -> PortalTokenResponse:
     """Set a new password — the ONLY route past the `must_change_password` gate.
 
@@ -305,8 +322,30 @@ def change_password(
         ) from exc
 
     db.commit()
-    set_portal_session_cookie(response, account.id)  # rotation: new jti ⇒ new cookie
-    return _token_response(account)
+
+    # A password change ends the old session and starts a clean one. Revoking first
+    # matters: the whole reason someone changes a password in a hurry is that they
+    # think somebody else has it, and leaving the previous family alive would let the
+    # holder of the old cookie keep refreshing for another 30 days.
+    if portal_session:
+        try:
+            old = decode_token(portal_session, expected_type="portal_refresh")
+            old_fam = old.get("fam")
+            if isinstance(old_fam, str):
+                session_service.revoke(redis_client, old_fam)
+        except JWTError:
+            pass  # unreadable cookie: nothing to revoke, the new session replaces it
+
+    try:
+        fam = begin_session(
+            redis_client,
+            response,
+            kind=session_service.KIND_PORTAL,
+            subject_id=account.id,
+        )
+    except session_service.SessionUnavailable as exc:
+        raise session_http_error(exc) from exc
+    return _token_response(account, fam)
 
 
 # ── Session ───────────────────────────────────────────────────────────────────
@@ -328,6 +367,7 @@ def change_password(
 def refresh(
     response: Response,
     db: Session = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
     portal_session: str | None = Cookie(default=None, alias=_PORTAL_COOKIE),
 ) -> PortalTokenResponse:
     """Rotate the portal_session cookie and mint a fresh access token.
@@ -365,15 +405,125 @@ def refresh(
     if account.status != AccountStatus.active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is blocked")
 
-    set_portal_session_cookie(response, account.id)  # rotation: new jti ⇒ new cookie
-    return _token_response(account)
+    fam, jti, abs_exp = payload.get("fam"), payload.get("jti"), payload.get("abx")
+    if not isinstance(fam, str) or not isinstance(jti, str) or not isinstance(abs_exp, int):
+        # A cookie minted before rotation shipped: well-signed, but belonging to no
+        # family, so there is nothing to spend. One re-login and it is gone.
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired"
+        )
+
+    if int(datetime.now(UTC).timestamp()) >= abs_exp:
+        session_service.revoke(redis_client, fam)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired"
+        )
+
+    try:
+        fam = rotate_session(
+            redis_client,
+            response,
+            kind=session_service.KIND_PORTAL,
+            subject_id=account.id,
+            fam=fam,
+            jti=jti,
+            abs_exp=abs_exp,
+        )
+    except (
+        session_service.SessionInvalid,
+        session_service.SessionReused,
+        session_service.SessionUnavailable,
+    ) as exc:
+        raise session_http_error(exc) from exc
+
+    return _token_response(account, fam)
 
 
 @router.post("/auth/logout")
-def logout(response: Response) -> dict[str, bool]:
-    """Clear the portal_session cookie (client discards the in-memory access token)."""
+def logout(
+    response: Response,
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+    portal_session: str | None = Cookie(default=None, alias=_PORTAL_COOKIE),
+) -> dict[str, bool]:
+    """End the session: revoke the family, then clear the cookie.
+
+    Revoking is the half that was missing. Clearing a cookie stops this browser from
+    presenting the token; it does nothing about a copy taken from it. Now the token
+    dies on the server, so logout means what a user assumes it means.
+
+    Stays unauthenticated and always answers ok: an expired access token must never
+    be the reason someone cannot end their own session.
+    """
+    if portal_session:
+        try:
+            payload = decode_token(portal_session, expected_type="portal_refresh")
+            fam = payload.get("fam")
+            if isinstance(fam, str):
+                session_service.revoke(redis_client, fam)
+        except JWTError:
+            pass  # unreadable cookie: still clear it
+
     clear_portal_session_cookie(response)
     return {"ok": True}
+
+
+@router.post(
+    "/auth/step-up",
+    response_model=StepUpOut,
+    responses={
+        **errors.PORTAL,
+        **errors.error(
+            401,
+            "The password did not match, or the session behind the access token is "
+            "gone. Same body either way.",
+            _INVALID_CREDENTIALS,
+        ),
+        **errors.error(
+            429,
+            "Too many step-up attempts for this account.",
+            "Too many attempts",
+            headers=errors.RETRY_AFTER_HEADER,
+        ),
+    },
+)
+def step_up(
+    body: StepUpIn,
+    db: Session = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+    account: UserAccount = Depends(get_current_account),
+    fam: str = Depends(get_current_session_family),
+) -> StepUpOut:
+    """Re-enter the password to unlock sensitive actions for a few minutes.
+
+    The stamp goes on the session family rather than into a token, so it survives a
+    refresh mid-flow — a rotation happening while someone fills in a bank form must
+    not send them back to the password prompt.
+
+    Rate-limited on the same footing as sign-in: without that, this endpoint is an
+    oracle for testing passwords against an already-stolen access token.
+    """
+    try:
+        rate_limit.enforce_window(
+            redis_client,
+            "portal_step_up",
+            account.id,
+            rate_limit.PORTAL_PASSWORD_CHANGE_PER_5MIN,
+            300,
+        )
+    except rate_limit.RateLimited as exc:
+        raise _too_many(exc) from exc
+
+    if not account_service.verify_account_password(account, body.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=_INVALID_CREDENTIALS
+        )
+
+    try:
+        session_service.stamp_step_up(redis_client, fam)
+    except (session_service.SessionInvalid, session_service.SessionUnavailable) as exc:
+        raise session_http_error(exc) from exc
+
+    return StepUpOut(expires_in=settings.STEP_UP_TTL_MINUTES * 60)
 
 
 # ── Profile ───────────────────────────────────────────────────────────────────

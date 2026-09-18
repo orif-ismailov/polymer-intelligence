@@ -150,6 +150,19 @@ def register(
     return account
 
 
+def verify_account_password(account: UserAccount, password: str) -> bool:
+    """Whether `password` is this account's current one. No side effects.
+
+    Used by the step-up gate, where the question is "is this still the same person"
+    rather than "who is this" — the identity is already settled by the access token,
+    and re-running `authenticate` would answer a different question (and touch
+    `last_login_at` for something that is not a login).
+    """
+    if account.password_hash is None:
+        return False
+    return verify_password(password, account.password_hash)
+
+
 # ── Self-service password change ──────────────────────────────────────────────
 
 
