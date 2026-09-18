@@ -69,6 +69,7 @@
     "signIn": "ورود",
     "signingIn": "در حال ورود…",
     "failed": "ورود ناموفق بود. اطلاعات احراز هویت را بررسی کنید.",
+    "invalidCredentials": "ایمیل یا رمز عبور نادرست است.",
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {

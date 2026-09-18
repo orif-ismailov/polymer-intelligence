@@ -69,6 +69,7 @@
     "signIn": "Giriş yap",
     "signingIn": "Giriş yapılıyor…",
     "failed": "Giriş başarısız. Bilgilerinizi kontrol edin.",
+    "invalidCredentials": "E-posta veya şifre hatalı.",
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {

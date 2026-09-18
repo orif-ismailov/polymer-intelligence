@@ -69,6 +69,7 @@
     "signIn": "Войти",
     "signingIn": "Вход…",
     "failed": "Не удалось войти. Проверьте учётные данные.",
+    "invalidCredentials": "Неверная эл. почта или пароль.",
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {

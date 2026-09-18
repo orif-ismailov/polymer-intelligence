@@ -7,7 +7,60 @@
  * - On 401 redirects to /login (T-04-06: token never echoed to DOM/logs)
  */
 
+import { routing } from "@/i18n/routing";
+
 const API_BASE = "/api/v1";
+
+/**
+ * Split `/ru/deals` into its locale and the rest.
+ *
+ * Needed because the redirect below is a raw `window.location` assignment — it
+ * has no access to next-intl's locale-aware router — and dropping the prefix
+ * sent a person working in `uz` to the Russian login screen.
+ */
+function splitLocale(pathname: string): { locale: string; rest: string } {
+  const [, first = "", ...tail] = pathname.split("/");
+  if ((routing.locales as readonly string[]).includes(first)) {
+    return { locale: first, rest: `/${tail.join("/")}` };
+  }
+  return { locale: routing.defaultLocale, rest: pathname };
+}
+
+/**
+ * Is this a path we are willing to send someone to after they sign in?
+ *
+ * Only an app-internal absolute path. `//evil.com` is a protocol-relative URL
+ * the browser treats as another origin, so the leading-slash check alone is an
+ * open redirect — and this value arrives from the query string, which anyone
+ * can write.
+ */
+export function isSafeNext(value: string | null | undefined): value is string {
+  return (
+    !!value &&
+    value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\")
+  );
+}
+
+/**
+ * The session is gone — send them to sign in, remembering where they were.
+ *
+ * Two things this must not lose, and used to lose both (IMEX-21): the locale,
+ * and the page that was asked for. `next` is stored WITHOUT the locale prefix
+ * so the login page can hand it straight to next-intl's router, which adds the
+ * prefix back for whatever locale the person is actually in.
+ */
+function redirectToLogin(): void {
+  if (typeof window === "undefined") return;
+  const { locale, rest } = splitLocale(window.location.pathname);
+  const next = `${rest}${window.location.search}`;
+  const base = `/${locale}/login`;
+  window.location.href =
+    isSafeNext(next) && !rest.startsWith("/login")
+      ? `${base}?next=${encodeURIComponent(next)}`
+      : base;
+}
 
 // In-memory token store. The token is written by useAuth on login
 // and cleared on logout. Never placed in localStorage (XSS risk).
@@ -80,9 +133,26 @@ export class ApiError extends Error {
   }
 }
 
+export interface ApiFetchOptions {
+  /**
+   * Handle a 401 by redirecting to the login screen. Default `true`.
+   *
+   * Pass `false` wherever a 401 is an ANSWER rather than an expired session.
+   * `/auth/login` is the case that mattered: a wrong password is a 401, so the
+   * global redirect tore the login page down mid-navigation and the `catch` that
+   * would have rendered «Email yoki parol noto'g'ri» never got to paint. The
+   * user saw the screen blink and both fields empty, with nothing said
+   * (IMEX-17). `refreshAccessToken` and `logoutSession` already dodge this by
+   * using raw `fetch`; this is the same exemption, made available to callers
+   * that want the rest of `apiFetch`.
+   */
+  redirectOnUnauthorized?: boolean;
+}
+
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
+  options?: ApiFetchOptions,
 ): Promise<T> {
   const token = getToken();
 
@@ -104,11 +174,9 @@ export async function apiFetch<T>(
     credentials: "include",
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && options?.redirectOnUnauthorized !== false) {
     // Token absent or expired — redirect to login (T-04-06: no token echo)
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
+    redirectToLogin();
     throw new ApiError(401, null, "Unauthorized — redirecting to login");
   }
 
@@ -156,7 +224,7 @@ export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
   });
 
   if (response.status === 401) {
-    if (typeof window !== "undefined") window.location.href = "/login";
+    redirectToLogin();
     throw new ApiError(401, null, "Unauthorized — redirecting to login");
   }
   if (!response.ok) {
