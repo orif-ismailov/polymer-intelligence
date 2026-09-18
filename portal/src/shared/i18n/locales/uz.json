@@ -2602,6 +2602,7 @@
     "title": "Tadqiqot arizasi",
     "heroTitle": "Laboratoriyaga yangi ariza",
     "heroBody": "Nimani tekshirish kerakligini yozing. Arizani barcha tekshirilgan laboratoriyalar ko‘radi.",
+    "broadcastHint": "Arizani barcha tekshirilgan laboratoriyalar ko‘radi.",
     "stepSubject": "Nimani tekshiramiz",
     "stepDetails": "Ariza ma’lumotlari",
     "product": "Nimani tekshiramiz?",

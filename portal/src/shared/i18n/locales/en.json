@@ -2602,6 +2602,7 @@
     "title": "Analysis request",
     "heroTitle": "New laboratory request",
     "heroBody": "Describe what needs testing. Every verified laboratory will see it.",
+    "broadcastHint": "Every verified laboratory will see this request.",
     "stepSubject": "What to test",
     "stepDetails": "Request details",
     "product": "What are we testing?",
