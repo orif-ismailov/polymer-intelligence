@@ -3,7 +3,7 @@ import { type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
 import { usePublicStats } from "@/entities/public";
-import { cn, useCountUp } from "@/shared/lib";
+import { cn, formatNumber, useCountUp } from "@/shared/lib";
 import { Skeleton } from "@/shared/ui";
 
 interface FigureSpec {
@@ -51,7 +51,9 @@ interface FigureProps {
  * makes it do.
  */
 function Figure({ spec, loading, revealed, liveLabel, delayMs, spanRow }: FigureProps) {
-  const { i18n } = useTranslation();
+  // No `useTranslation()` here even though `formatNumber` reads the active
+  // language: `spec.label` arrives already translated, so the parent re-renders
+  // every Figure on a language change and the number follows it.
   const target = spec.value ?? 0;
   const shown = useCountUp(target, { enabled: revealed, decimals: spec.decimals ?? 0 });
 
@@ -92,7 +94,7 @@ function Figure({ spec, loading, revealed, liveLabel, delayMs, spanRow }: Figure
           <Skeleton className="mx-auto h-9 w-24" />
         ) : (
           <>
-            {shown.toLocaleString(i18n.language, {
+            {formatNumber(shown, {
               maximumFractionDigits: spec.decimals ?? 0,
               minimumFractionDigits: spec.decimals ?? 0,
             })}

@@ -20,6 +20,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from tests._fake_redis import FakeRedis
+
 # ── Test fixtures ──────────────────────────────────────────────────────────────
 
 def _make_staff_user(
@@ -44,6 +46,7 @@ def _make_staff_user(
 def auth_client(monkeypatch) -> Generator[TestClient, None, None]:
     """TestClient with a mocked DB that has one seeded admin user."""
     from app.core.db import get_db
+    from app.core.redis import get_redis
     from app.main import create_app
 
     admin_user = _make_staff_user(
@@ -73,6 +76,8 @@ def auth_client(monkeypatch) -> Generator[TestClient, None, None]:
 
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
+    _redis = FakeRedis()
+    application.dependency_overrides[get_redis] = lambda: _redis
 
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as tc:
         yield tc
@@ -82,6 +87,7 @@ def auth_client(monkeypatch) -> Generator[TestClient, None, None]:
 def inactive_auth_client(monkeypatch) -> Generator[TestClient, None, None]:
     """TestClient where the only user is inactive."""
     from app.core.db import get_db
+    from app.core.redis import get_redis
     from app.main import create_app
 
     inactive_user = _make_staff_user(
@@ -106,6 +112,8 @@ def inactive_auth_client(monkeypatch) -> Generator[TestClient, None, None]:
 
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
+    _redis = FakeRedis()
+    application.dependency_overrides[get_redis] = lambda: _redis
 
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as tc:
         yield tc
@@ -115,6 +123,7 @@ def inactive_auth_client(monkeypatch) -> Generator[TestClient, None, None]:
 def no_user_auth_client() -> Generator[TestClient, None, None]:
     """TestClient where email lookup returns None (user not found)."""
     from app.core.db import get_db
+    from app.core.redis import get_redis
     from app.main import create_app
 
     mock_db = MagicMock()
@@ -131,6 +140,8 @@ def no_user_auth_client() -> Generator[TestClient, None, None]:
 
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
+    _redis = FakeRedis()
+    application.dependency_overrides[get_redis] = lambda: _redis
 
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as tc:
         yield tc
@@ -238,6 +249,7 @@ def test_refresh_without_cookie_returns_401(auth_client: TestClient):
     """POST /auth/refresh without a cookie returns 401."""
     # Use a fresh client with no cookies
     from app.core.db import get_db
+    from app.core.redis import get_redis
     from app.main import create_app
 
     mock_db = MagicMock()
@@ -252,6 +264,8 @@ def test_refresh_without_cookie_returns_401(auth_client: TestClient):
 
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
+    _redis = FakeRedis()
+    application.dependency_overrides[get_redis] = lambda: _redis
 
     with patch("app.api.health._check_redis", return_value="ok"), TestClient(application, raise_server_exceptions=True) as fresh_client:
         # Don't set any cookies - call refresh directly
@@ -264,6 +278,7 @@ def test_refresh_with_invalid_cookie_returns_401(auth_client: TestClient):
     from fastapi.testclient import TestClient as TestClientAlias  # noqa: PLC0415
 
     from app.core.db import get_db  # noqa: PLC0415
+    from app.core.redis import get_redis  # noqa: PLC0415
     from app.main import create_app  # noqa: PLC0415
 
     mock_db = MagicMock()
@@ -278,6 +293,8 @@ def test_refresh_with_invalid_cookie_returns_401(auth_client: TestClient):
 
     application = create_app()
     application.dependency_overrides[get_db] = _override_get_db
+    _redis = FakeRedis()
+    application.dependency_overrides[get_redis] = lambda: _redis
 
     with patch("app.api.health._check_redis", return_value="ok"), TestClientAlias(application, raise_server_exceptions=True) as bad_client:
         bad_client.cookies.set("refresh_token", "totally.invalid.token")

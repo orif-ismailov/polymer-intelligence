@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch, isSafeNext } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 interface LoginResponse {
@@ -25,14 +25,32 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const data = await apiFetch<LoginResponse>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await apiFetch<LoginResponse>(
+        "/auth/login",
+        { method: "POST", body: JSON.stringify({ email, password }) },
+        // A 401 here means "wrong password", not "your session expired". Without
+        // this, `apiFetch`'s global handler navigated the whole document to
+        // /login mid-submit: the page was torn down before `setError` could
+        // paint, so a mistyped password showed a blink and two empty fields and
+        // said nothing at all (IMEX-17).
+        { redirectOnUnauthorized: false },
+      );
       login(data.access_token);
-      router.push("/");
+      // Back to whatever was asked for before the bounce to login (IMEX-21).
+      // Read off `location` rather than through `useSearchParams`, which would
+      // put this page behind a Suspense boundary for no other reason.
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(isSafeNext(next) ? next : "/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("failed"));
+      // Only the password is cleared. Re-typing the email every attempt is the
+      // other half of what made this screen hostile, and it is not the field
+      // that was wrong.
+      setPassword("");
+      setError(
+        err instanceof ApiError && err.status === 401
+          ? t("invalidCredentials")
+          : t("failed"),
+      );
     } finally {
       setLoading(false);
     }
@@ -52,6 +70,7 @@ export default function LoginPage() {
           {/* Error banner */}
           {error && (
             <div
+              id="login-error"
               role="alert"
               className="mb-4 rounded-md border border-status-cancelled/30 bg-status-cancelled/10 px-3 py-2 text-sm text-status-cancelled"
             >
@@ -70,6 +89,10 @@ export default function LoginPage() {
               type="email"
               autoComplete="email"
               required
+              // Both fields are marked, because a 401 does not say WHICH was
+              // wrong and guessing would point the reader at the wrong one.
+              aria-invalid={error != null}
+              aria-errormessage={error != null ? "login-error" : undefined}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-foreground-subtle focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
@@ -88,6 +111,8 @@ export default function LoginPage() {
               type="password"
               autoComplete="current-password"
               required
+              aria-invalid={error != null}
+              aria-errormessage={error != null ? "login-error" : undefined}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-foreground-subtle focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"

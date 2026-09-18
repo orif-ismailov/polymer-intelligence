@@ -69,6 +69,7 @@
     "signIn": "登录",
     "signingIn": "正在登录…",
     "failed": "登录失败。请检查您的凭据。",
+    "invalidCredentials": "邮箱或密码不正确。",
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {
@@ -465,6 +466,18 @@
         "approved": "已通过",
         "rejected": "已拒绝",
         "archived": "已归档"
+      }
+    },
+    "files": {
+      "label": "附件",
+      "kind": {
+        "image": "照片",
+        "tds": "TDS",
+        "certificate": "证书",
+        "other": "文件",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "质量证书"
       }
     }
   },

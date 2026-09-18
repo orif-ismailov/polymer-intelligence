@@ -69,6 +69,7 @@
     "signIn": "Giriş yap",
     "signingIn": "Giriş yapılıyor…",
     "failed": "Giriş başarısız. Bilgilerinizi kontrol edin.",
+    "invalidCredentials": "E-posta veya şifre hatalı.",
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {
@@ -472,6 +473,18 @@
         "approved": "onaylandı",
         "rejected": "reddedildi",
         "archived": "arşivde"
+      }
+    },
+    "files": {
+      "label": "Ekler",
+      "kind": {
+        "image": "Foto",
+        "tds": "TDS",
+        "certificate": "Sertifika",
+        "other": "Dosya",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "Kalite pasaportu"
       }
     }
   },

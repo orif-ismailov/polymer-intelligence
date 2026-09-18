@@ -241,8 +241,12 @@ def seed_demo() -> bool:
                     )
 
         # ── Alert rule (shows in the RuleBuilder list on /alerts) ───────────
+        # `is_admin`, not `role`: that column was replaced and this raw SQL kept
+        # naming it, so the whole seeder aborted with UndefinedColumn — which is
+        # what CI's `python -m app.seed.seed_demo` step runs, so `dashboard-e2e`
+        # had been asserting on demo rows that were never inserted.
         admin_id = db.execute(
-            sa.text("SELECT id FROM staff_users WHERE role = 'admin' ORDER BY id LIMIT 1")
+            sa.text("SELECT id FROM staff_users WHERE is_admin IS TRUE ORDER BY id LIMIT 1")
         ).scalar()
         db.execute(
             sa.text(

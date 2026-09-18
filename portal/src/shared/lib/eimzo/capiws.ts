@@ -12,6 +12,7 @@ import { EIMZO_API_KEYS, isApiKeyRejection } from "./apikey";
 import { ensureCapiwsInstalled } from "./capiwsSocket";
 import type { CapiwsApi, CapiwsRequest } from "./capiwsSocket";
 import type {
+  EimzoAvailability,
   EimzoBridge,
   EimzoCertificate,
   EimzoKeySession,
@@ -323,15 +324,44 @@ export class CapiwsBridge implements EimzoBridge {
    * or a dead socket is a missing module.
    */
   async probe(): Promise<boolean> {
+    return (await this.diagnose()).available;
+  }
+
+  /**
+   * The same question as `probe()`, answered with a reason (IMEX-18).
+   *
+   * The distinction that matters is between the module NOT ANSWERING and the
+   * module answering "no". A `CapiwsError` is the second: the module is running,
+   * talking, and refusing this particular request — and the one refusal we can
+   * act on is the origin rejection, which is a key this deployment has not been
+   * issued, not anything the person can install or restart.
+   *
+   * Everything else is a transport failure, and `capiwsSocket` has already told
+   * us which kind by close code. Note what it CANNOT tell us: a closed port and
+   * an untrusted certificate are both 1006. See `EimzoUnavailableReason`.
+   */
+  async diagnose(): Promise<EimzoAvailability> {
     const api = this.api;
-    if (!api) return false;
+    if (!api) return { available: false, reason: "unreachable" };
     try {
       await withHandshake(api, () =>
         call(api, { plugin: "pfx", name: "list_all_certificates" }),
       );
-      return true;
+      return { available: true };
     } catch (err) {
-      return err instanceof CapiwsError;
+      if (err instanceof CapiwsError) {
+        // It answered. Only an origin refusal is worth a screen of its own —
+        // any other refusal still means the module is there and usable, so the
+        // flow carries on and the real error surfaces where it happens.
+        return err.isApiKeyRejection
+          ? { available: false, reason: "unauthorized_origin" }
+          : { available: true };
+      }
+      const message = err instanceof Error ? err.message : "";
+      return {
+        available: false,
+        reason: message === "eimzo_no_response" ? "silent" : "unreachable",
+      };
     }
   }
 

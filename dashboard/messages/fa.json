@@ -69,6 +69,7 @@
     "signIn": "ورود",
     "signingIn": "در حال ورود…",
     "failed": "ورود ناموفق بود. اطلاعات احراز هویت را بررسی کنید.",
+    "invalidCredentials": "ایمیل یا رمز عبور نادرست است.",
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {
@@ -465,6 +466,18 @@
         "approved": "تأییدشده",
         "rejected": "ردشده",
         "archived": "بایگانی‌شده"
+      }
+    },
+    "files": {
+      "label": "پیوست‌ها",
+      "kind": {
+        "image": "عکس",
+        "tds": "TDS",
+        "certificate": "گواهی",
+        "other": "فایل",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "گذرنامه کیفیت"
       }
     }
   },

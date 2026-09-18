@@ -465,33 +465,119 @@ def test_me_unknown_account_returns_401(portal_app) -> None:  # noqa: ANN001
 # ── refresh + logout ──────────────────────────────────────────────────────────
 
 
-def test_refresh_rotates_cookie_and_returns_new_access_token(portal_app) -> None:  # noqa: ANN001
-    from app.core.security import create_portal_refresh_token  # noqa: PLC0415
+def _live_session(fake, account_id: int = 7, *, days: int = 90) -> str:  # noqa: ANN001
+    """Record a refresh-token family in Redis and return its cookie value.
 
-    client, _fake, db = portal_app
+    A refresh JWT on its own is no longer enough to refresh with — the family has to
+    exist — so tests that want a signed-in cabinet must set up both halves, exactly
+    as `POST /auth/login` does.
+    """
+    import time  # noqa: PLC0415
+
+    from app.core.security import (  # noqa: PLC0415
+        create_portal_refresh_token,
+        new_family_id,
+        new_jti,
+    )
+    from app.services import session_service  # noqa: PLC0415
+
+    fam, jti = new_family_id(), new_jti()
+    abs_exp = int(time.time()) + days * 86400
+    session_service.start(
+        fake,
+        kind=session_service.KIND_PORTAL,
+        subject_id=account_id,
+        fam=fam,
+        jti=jti,
+        abs_exp=abs_exp,
+    )
+    return create_portal_refresh_token(
+        subject=str(account_id), fam=fam, jti=jti, abs_exp=abs_exp
+    )
+
+
+def _cookie_from(resp) -> str | None:  # noqa: ANN001
+    match = re.search(r"portal_session=([^;]+)", resp.headers.get("set-cookie", ""))
+    return match.group(1) if match else None
+
+
+def test_refresh_rotates_cookie_and_returns_new_access_token(portal_app) -> None:  # noqa: ANN001
+    client, fake, db = portal_app
     _found(db, _account(7))
-    old_refresh = create_portal_refresh_token(subject="7")
+    old_refresh = _live_session(fake)
 
     resp = client.post(_REFRESH, headers={"Cookie": f"portal_session={old_refresh}"})
     assert resp.status_code == 200
     assert resp.json()["access_token"]
+    assert _cookie_from(resp) not in (None, old_refresh)  # rotated
 
-    set_cookie = resp.headers.get("set-cookie", "")
-    match = re.search(r"portal_session=([^;]+)", set_cookie)
-    assert match is not None
-    assert match.group(1) != old_refresh  # rotated: new jti ⇒ new token
+
+def test_the_previous_refresh_token_stops_working(portal_app) -> None:  # noqa: ANN001
+    """The acceptance criterion a stateless JWT could not meet. Before IMEX-1 the
+    old cookie kept working for its full lifetime and "rotation" meant nothing."""
+    client, fake, db = portal_app
+    _found(db, _account(7))
+    old_refresh = _live_session(fake)
+
+    client.post(_REFRESH, headers={"Cookie": f"portal_session={old_refresh}"})
+    fake.delete(f"rs:used:{__import__('jose').jwt.get_unverified_claims(old_refresh)['jti']}")
+
+    replay = client.post(_REFRESH, headers={"Cookie": f"portal_session={old_refresh}"})
+    assert replay.status_code == 401
+
+
+def test_replaying_a_spent_token_kills_the_live_session_too(portal_app) -> None:  # noqa: ANN001
+    """Reuse means two copies exist and we cannot tell which caller is the thief, so
+    both lose. The successor issued moments ago stops working as well."""
+    from jose import jwt as jose_jwt  # noqa: PLC0415
+
+    client, fake, db = portal_app
+    _found(db, _account(7))
+    old_refresh = _live_session(fake)
+
+    first = client.post(_REFRESH, headers={"Cookie": f"portal_session={old_refresh}"})
+    successor = _cookie_from(first)
+    fake.delete(f"rs:used:{jose_jwt.get_unverified_claims(old_refresh)['jti']}")
+
+    client.post(_REFRESH, headers={"Cookie": f"portal_session={old_refresh}"})  # the theft
+
+    assert successor is not None
+    victim = client.post(_REFRESH, headers={"Cookie": f"portal_session={successor}"})
+    assert victim.status_code == 401
+
+
+def test_a_concurrent_second_tab_is_not_treated_as_a_thief(portal_app) -> None:  # noqa: ANN001
+    """Two tabs refresh at the same moment; the loser gets the winner's token, not
+    a 401. Without the grace window this design signs people out at random."""
+    client, fake, db = portal_app
+    _found(db, _account(7))
+    old_refresh = _live_session(fake)
+
+    first = client.post(_REFRESH, headers={"Cookie": f"portal_session={old_refresh}"})
+    second = client.post(_REFRESH, headers={"Cookie": f"portal_session={old_refresh}"})
+
+    assert second.status_code == 200
+    assert _cookie_from(second) == _cookie_from(first)
+
+
+def test_refresh_refuses_a_session_past_its_absolute_cap(portal_app) -> None:  # noqa: ANN001
+    """Sliding does not mean immortal: at 90 days the session ends mid-activity."""
+    client, fake, db = portal_app
+    _found(db, _account(7))
+    expired = _live_session(fake, days=0)
+
+    resp = client.post(_REFRESH, headers={"Cookie": f"portal_session={expired}"})
+    assert resp.status_code == 401
 
 
 def test_refresh_works_for_an_account_owing_a_password_change(portal_app) -> None:  # noqa: ANN001
     """Not gated on purpose: refusing here strands a reloaded tab on the very screen
     where the debt is paid, holding an expired access token and no way to mint one."""
-    client, _fake, db = portal_app
+    client, fake, db = portal_app
     _found(db, _account(7, must_change=True))
-    from app.core.security import create_portal_refresh_token  # noqa: PLC0415
 
     resp = client.post(
-        _REFRESH,
-        headers={"Cookie": f"portal_session={create_portal_refresh_token(subject='7')}"},
+        _REFRESH, headers={"Cookie": f"portal_session={_live_session(fake)}"}
     )
     assert resp.status_code == 200
     assert resp.json()["account"]["must_change_password"] is True
@@ -503,10 +589,14 @@ def test_refresh_without_cookie_returns_401(portal_app) -> None:  # noqa: ANN001
 
 
 def test_refresh_rejects_a_staff_refresh_token(portal_app) -> None:  # noqa: ANN001
+    import time  # noqa: PLC0415
+
     from app.core.security import create_refresh_token  # noqa: PLC0415
 
     client, _fake, _db = portal_app
-    staff_refresh = create_refresh_token(subject="1")
+    staff_refresh = create_refresh_token(
+        subject="1", fam="f", jti="j", abs_exp=int(time.time()) + 86400
+    )
     resp = client.post(_REFRESH, headers={"Cookie": f"portal_session={staff_refresh}"})
     assert resp.status_code == 401  # type mismatch: 'refresh' != 'portal_refresh'
 

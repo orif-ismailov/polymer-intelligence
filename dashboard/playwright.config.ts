@@ -44,19 +44,22 @@ export default defineConfig({
   },
 
   projects: [
-    // 1) Log in once via the real UI and persist the refresh cookie.
-    { name: "setup", testMatch: /auth\.setup\.ts/ },
-
-    // 2) Authenticated specs reuse the stored cookie; the dashboard layout silently
-    //    refreshes the in-memory access token from it on load.
+    // 1) Authenticated specs sign in PER TEST, via the `test` fixture in helpers.ts.
+    //
+    //    This used to be a "setup" project that logged in once and saved the refresh
+    //    cookie to `e2e/.auth/admin.json`, which every test then replayed. Since
+    //    IMEX-1 the refresh token rotates and its predecessor is invalidated, so the
+    //    saved cookie was spent by the first test and replayed by all the others —
+    //    indistinguishable from a stolen cookie, and treated as one. The family was
+    //    revoked and the entire suite landed on the login screen. The application is
+    //    right; a shared, replayed session was the thing that had to go.
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/admin.json" },
-      dependencies: ["setup"],
-      testIgnore: [/auth\.setup\.ts/, /auth\.spec\.ts/],
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: [/auth\.spec\.ts/],
     },
 
-    // 3) Anonymous specs (login-form behavior) run without the stored state.
+    // 2) Anonymous specs (login-form behavior) run with no session at all.
     {
       name: "anon",
       use: { ...devices["Desktop Chrome"], storageState: { cookies: [], origins: [] } },

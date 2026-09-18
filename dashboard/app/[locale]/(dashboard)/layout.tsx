@@ -8,7 +8,7 @@ import { NoAccessNotice } from "@/components/shared/NoAccessNotice";
 import { NoPageAccess } from "@/components/shared/NoPageAccess";
 import { RouteGuardFallback } from "@/components/shared/RouteGuardFallback";
 import { useAuth } from "@/hooks/useAuth";
-import { refreshAccessToken } from "@/lib/api";
+import { isSafeNext, refreshAccessToken } from "@/lib/api";
 import { pageForPath, pageKeyOf } from "@/lib/nav";
 import queryClient from "@/lib/queryClient";
 
@@ -42,13 +42,21 @@ export default function DashboardLayout({
       if (token) {
         login(token);
       } else {
-        router.replace("/login");
+        // Carry the page they asked for, so a bookmark or a link pasted into a
+        // ticket survives the sign-in instead of dumping them on the dashboard
+        // to search for the record again (IMEX-21). `usePathname` here is
+        // next-intl's, so it is already locale-less — which is exactly what the
+        // login page hands back to the locale-aware router.
+        const next = `${pathname}${window.location.search}`;
+        router.replace(
+          isSafeNext(next) ? `/login?next=${encodeURIComponent(next)}` : "/login",
+        );
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, login, router]);
+  }, [isAuthenticated, login, router, pathname]);
 
   // No protected content until authenticated. This avoids a flash of protected
   // content while the silent refresh runs, and avoids a premature /login bounce —

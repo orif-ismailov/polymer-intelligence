@@ -686,10 +686,14 @@
       "verifying": "Imzo tekshirilmoqda…"
     },
     "moduleMissing": {
-      "title": "E-IMZO moduli topilmadi",
-      "body": "E-IMZO ni kompyuterga o‘rnating va ilovani ishga tushiring, so‘ng qayta urinib ko‘ring.",
+      "title": "E-IMZO moduli bilan bog‘lanib bo‘lmadi",
+      "body": "Ikki sabab bo‘lishi mumkin — ikkalasini ham tekshiring. Brauzer qaysi biri ekanini aytmaydi.",
+      "causeNotRunning": "1. Modul o‘rnatilmagan yoki ishga tushirilmagan.",
       "link_eimzo": "E-IMZO ni yuklab olish (e-imzo.uz)",
       "link_soliq": "Yo‘riqnoma (my.soliq.uz)",
+      "causeCert": "2. Brauzer modul sertifikatiga ishonmayapti.",
+      "causeCertBody": "Modul o‘z sertifikati bilan HTTPS orqali ishlaydi. Quyidagi manzilni yangi oynada oching, «Qo‘shimcha» → «O‘tish» ni bosing, so‘ng shu yerga qaytib qayta urinib ko‘ring.",
+      "link_cert": "https://127.0.0.1:64443 ni ochish",
       "desktopHint": "Imzolash faqat E-IMZO moduli o‘rnatilgan kompyuterda mavjud."
     },
     "success": {
@@ -2598,6 +2602,7 @@
     "title": "Tadqiqot arizasi",
     "heroTitle": "Laboratoriyaga yangi ariza",
     "heroBody": "Nimani tekshirish kerakligini yozing. Arizani barcha tekshirilgan laboratoriyalar ko‘radi.",
+    "broadcastHint": "Arizani barcha tekshirilgan laboratoriyalar ko‘radi.",
     "stepSubject": "Nimani tekshiramiz",
     "stepDetails": "Ariza ma’lumotlari",
     "product": "Nimani tekshiramiz?",
@@ -2814,6 +2819,17 @@
       "not_seller": "Hujjatni sotuvchi yaratadi.",
       "wrong_rail": "Shartnoma Didox relsida emas.",
       "empty_body": "Shartnomada na matn, na pozitsiyalar bor."
+    }
+  },
+  "stepUp": {
+    "title": "Parolni tasdiqlang",
+    "description": "Bu amal to‘lov rekvizitlariga taalluqli. Davom etish uchun parolni kiriting.",
+    "passwordLabel": "Parol",
+    "confirm": "Tasdiqlash",
+    "errors": {
+      "wrongPassword": "Parol noto‘g‘ri",
+      "unavailable": "Xizmat vaqtincha ishlamayapti. Qayta urinib ko‘ring.",
+      "failed": "Parolni tasdiqlab bo‘lmadi. Qayta urinib ko‘ring."
     }
   }
 }

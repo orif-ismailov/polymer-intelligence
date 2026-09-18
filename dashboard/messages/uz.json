@@ -69,6 +69,7 @@
     "signIn": "Kirish",
     "signingIn": "Kirilmoqda…",
     "failed": "Kirib bo'lmadi. Ma'lumotlarni tekshiring.",
+    "invalidCredentials": "Elektron pochta yoki parol noto‘g‘ri.",
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {
@@ -472,6 +473,18 @@
         "approved": "tasdiqlangan",
         "rejected": "rad etilgan",
         "archived": "arxivda"
+      }
+    },
+    "files": {
+      "label": "Ilovalar",
+      "kind": {
+        "image": "Foto",
+        "tds": "TDS",
+        "certificate": "Sertifikat",
+        "other": "Fayl",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "Sifat pasporti"
       }
     }
   },

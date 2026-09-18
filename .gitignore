@@ -37,6 +37,11 @@ tsconfig.tsbuildinfo
 # Planning (GSD tooling — not part of the shipped codebase)
 .planning/config.json
 
+# The Flutter mobile client is an INDEPENDENT repository (mobile/.git), not a
+# submodule. This repo must neither track nor report its files — see mobile/README.md.
+# Leading slash: only the project at the root, never a `mobile/` inside another package.
+/mobile/
+
 # Playwright MCP scratch output (page snapshots, console logs, screenshots)
 .playwright-mcp/
 

@@ -70,9 +70,42 @@ export interface EimzoKeySession {
   close(): Promise<void>;
 }
 
+/**
+ * Why the module could not be used — the three cases that need three different
+ * things from the person in front of the screen (IMEX-18).
+ *
+ * `unreachable` covers TWO physical causes that a browser genuinely cannot tell
+ * apart: nothing listening on the port, and a TLS handshake the browser refused
+ * because it does not trust the module's self-signed certificate. Both surface as
+ * WebSocket close code 1006 with no detail — Chrome writes
+ * `net::ERR_CERT_AUTHORITY_INVALID` to the console but exposes nothing to script.
+ * So this reason deliberately does not claim to know which; the screen it drives
+ * offers both remedies rather than asserting the wrong one, which is the whole
+ * bug: a running module was being reported as "not installed".
+ */
+export type EimzoUnavailableReason =
+  /** Socket never opened — module not running, or its certificate is not trusted. */
+  | "unreachable"
+  /** The module answered and refused THIS SITE's origin. Not the user's problem. */
+  | "unauthorized_origin"
+  /** Connected, then said nothing. */
+  | "silent";
+
+export type EimzoAvailability =
+  | { available: true }
+  | { available: false; reason: EimzoUnavailableReason };
+
 export interface EimzoBridge {
   /** True when the local E-IMZO module is reachable. */
   probe(): Promise<boolean>;
+  /**
+   * Like `probe()`, but says WHY when the answer is no.
+   *
+   * Optional so an injected stub bridge (`window.__EIMZO_BRIDGE__`) need not
+   * implement it; callers fall back to `probe()` and report the undifferentiated
+   * `unreachable`.
+   */
+  diagnose?(): Promise<EimzoAvailability>;
   /** Enumerate the user's available certificates. */
   listCertificates(): Promise<EimzoCertificate[]>;
   /** Sign TEXT once: load the key, sign, unload. One native password prompt. */

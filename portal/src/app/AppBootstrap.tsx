@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 
 import { useBootstrapAuth } from "@/entities/account";
+import { StepUpDialog } from "@/features/step-up";
 import { i18n, preferredLanguage } from "@/shared/i18n";
 
 /**
@@ -26,5 +27,12 @@ export function AppBootstrap({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  return <>{children}</>;
+  // Mounted once, above the router: the 403 that opens it can come from a mutation
+  // fired on any screen, and it must survive the navigation that mutation triggers.
+  return (
+    <>
+      {children}
+      <StepUpDialog />
+    </>
+  );
 }

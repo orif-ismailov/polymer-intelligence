@@ -69,6 +69,7 @@
     "signIn": "Войти",
     "signingIn": "Вход…",
     "failed": "Не удалось войти. Проверьте учётные данные.",
+    "invalidCredentials": "Неверная эл. почта или пароль.",
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {
@@ -472,6 +473,18 @@
         "approved": "одобрено",
         "rejected": "отклонено",
         "archived": "в архиве"
+      }
+    },
+    "files": {
+      "label": "Вложения",
+      "kind": {
+        "image": "Фото",
+        "tds": "TDS",
+        "certificate": "Сертификат",
+        "other": "Файл",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "Паспорт качества"
       }
     }
   },
