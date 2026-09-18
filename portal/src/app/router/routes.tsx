@@ -155,6 +155,11 @@ const appRoutes: RouteObject[] = [
           element: <PublicCompanyPage slug={dir.slug} />,
         },
       ]),
+      // Public 404, INSIDE the shell — so a mistyped URL still arrives with the
+      // site's header, navigation, `<main>` and footer rather than on a bare
+      // page carrying one link. `*` ranks below every literal path above, so
+      // its position here costs none of them a match.
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 
@@ -502,10 +507,6 @@ const appRoutes: RouteObject[] = [
     ],
   },
 
-  // Public 404. Previously the only catch-all lived inside `AppShell`, behind
-  // both guards, so an anonymous visitor to an unknown URL was bounced to the
-  // login screen instead of being told the page does not exist.
-  { path: "*", element: <NotFoundPage /> },
 ];
 
 /**
