@@ -326,7 +326,16 @@ async function createServer() {
 
   // ── Page render ───────────────────────────────────────────────────────────
   app.use(async (req, res, next) => {
-    if (req.method !== "GET") return next();
+    // HEAD is GET without the body, and it has to answer the same way: this is
+    // an `app.use` middleware, so Express does not map HEAD onto it the way it
+    // does for an `app.get` route, and excluding HEAD sent every HEAD request
+    // past the renderer to the final handler — a 404 on `/`, `/market` and
+    // every other page that answers 200 to GET. Link checkers and uptime
+    // monitors use HEAD, so the whole site read as down to them (IMEX-19).
+    //
+    // Node suppresses the body on a HEAD response by itself, so the render below
+    // needs no special case: the status and headers are what is being asked for.
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
 
     const url = req.originalUrl;
     const pathname = req.path;
