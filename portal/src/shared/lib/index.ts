@@ -19,6 +19,7 @@ export {
   formatDateTime,
   formatBytes,
   formatMoney,
+  formatNumber,
   formatQty,
   countryName,
   countryFlag,

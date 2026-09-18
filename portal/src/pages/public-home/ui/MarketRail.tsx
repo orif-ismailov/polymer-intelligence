@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { usePublicNews, usePublicPrices } from "@/entities/public";
-import { cn, formatDateShort } from "@/shared/lib";
+import { cn, formatDateShort, formatNumber } from "@/shared/lib";
 import { Skeleton } from "@/shared/ui";
 
 /**
@@ -13,7 +13,7 @@ import { Skeleton } from "@/shared/ui";
  * made this column nearly twice as tall as the products beside it.
  */
 export function MarketRail() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const prices = usePublicPrices(6);
   const news = usePublicNews(3);
   // Freshest observation across the rail — the quotes are ordered by product,
@@ -104,9 +104,7 @@ export function MarketRail() {
                           wire value is a Decimal string like "1087.34", and two
                           decimals of a market quote is precision it doesn't have. */}
                       <span className="num text-[12px] font-medium text-text">
-                        {Number(row.price).toLocaleString(i18n.language, {
-                          maximumFractionDigits: 0,
-                        })}
+                        {formatNumber(row.price, { maximumFractionDigits: 0 })}
                       </span>
                       <span
                         className={cn(
@@ -196,7 +194,14 @@ export function MarketRail() {
                         dateTime={article.published_at}
                         className="num block text-[11px] text-text-subtle"
                       >
-                        {new Date(article.published_at).toLocaleDateString()}
+                        {/* `formatDateShort`, never a bare
+                            `toLocaleDateString()`: that reads the runtime's own
+                            locale AND time zone, which is en-US/UTC in the
+                            container that renders this and ru-RU/Asia/Tashkent
+                            in the reader's browser — two different strings for
+                            one instant, and a date published after 19:00 UTC is
+                            a different DAY in the two. See IMEX-16. */}
+                        {formatDateShort(article.published_at)}
                       </time>
                     ) : null}
                     <span className="mt-0.5 line-clamp-2 text-[12px] leading-[1.4] text-text">

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import { publicOfferImageUrl, type PublicOfferCard } from "@/entities/public";
 import { offerPhotoFiles } from "@/shared/config";
-import { countryFlag, countryName } from "@/shared/lib";
+import { countryFlag, countryName, formatNumber } from "@/shared/lib";
 import { ImageIcon } from "@/shared/ui";
 
 /**
@@ -89,9 +89,7 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
           ) : (
             <>
               {offer.currency === "USD" ? "$" : ""}
-              {Number(offer.price).toLocaleString(undefined, {
-                maximumFractionDigits: 0,
-              })}
+              {formatNumber(offer.price, { maximumFractionDigits: 0 })}
               <span className="ms-1 text-[11px] font-medium text-text-muted">
                 {offer.currency === "USD" ? "" : `${offer.currency} `}/{" "}
                 {offer.qty_unit ?? "MT"}

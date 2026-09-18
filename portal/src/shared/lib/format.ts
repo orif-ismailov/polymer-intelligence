@@ -144,6 +144,32 @@ export function formatMoney(
   }
 }
 
+/**
+ * Format a bare number — thousands separators, decimals — in the UI language.
+ *
+ * Exists so no call site has to reach for `toLocaleString` itself. The two
+ * spellings that invite are `toLocaleString()` and `toLocaleString(undefined,
+ * …)`, and both mean "use whatever locale this runtime happens to have". That
+ * is en-US in the Node container that server-renders the storefront and ru-RU
+ * in a Russian visitor's browser, so the same number reached the page as
+ * `1,200` from the server and `1 200` from the client's first render — a text
+ * mismatch on every card, and the whole of IMEX-16.
+ *
+ * Passing `i18n.language` instead is honest but not quite right either: it is a
+ * bare subtag (`uz`), and only {@link intlLocale} knows this app means `uz-UZ`
+ * by it.
+ */
+export function formatNumber(
+  value: string | number | null | undefined,
+  options: Intl.NumberFormatOptions = {},
+  lang = currentLang(),
+): string {
+  if (value == null || value === "") return "—";
+  const num = typeof value === "string" ? Number(value) : value;
+  if (Number.isNaN(num)) return String(value);
+  return new Intl.NumberFormat(intlLocale(lang), options).format(num);
+}
+
 /** Format a numeric-or-string quantity with a unit suffix. */
 export function formatQty(
   value: string | number | null | undefined,
