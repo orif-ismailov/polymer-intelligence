@@ -26,6 +26,12 @@ interface ComplianceBlock {
   enforced: boolean;
 }
 
+interface OfferFileRef {
+  id: number;
+  kind: "image" | "tds" | "certificate" | "other" | "sds" | "coa" | "lab_passport";
+  file_name: string;
+}
+
 interface ModerationOffer {
   id: number;
   grade_text: string | null;
@@ -56,6 +62,8 @@ interface ModerationOffer {
    *  before buyers do; `lab_verified` means WE arranged the analysis. */
   has_lab_passport: boolean;
   lab_verified: boolean;
+  /** Already on the wire (`_CatalogOfferFields`), unread by this page until IMEX-23. */
+  files: OfferFileRef[];
 }
 
 type T = (key: string, values?: Record<string, string>) => string;
@@ -87,6 +95,34 @@ function docLabel(detail: string | null, t: T): string {
 
 function offerStatusLabel(status: string, t: T): string {
   return OFFER_STATUS_KEYS.has(status) ? t(`conflict.status.${status}`) : status;
+}
+
+/**
+ * What the row is selling, said the way the catalogue says it (IMEX-23).
+ *
+ * The order is `product_text` first and it matters: this page used to read
+ * `grade_text || product_text`, so any offer carrying a grade showed the GRADE as
+ * its headline and never its product. Two listings for different polymers arrived
+ * at the moderator as the same sentence — «QA · PP | В наличии · 25.000 MT …» — and
+ * the decision screen could not tell them apart.
+ *
+ * `portal/src/entities/market/ui/MarketOfferCard.tsx` has always resolved it the
+ * other way round for buyers. Matching it here means the moderator approves the
+ * listing a buyer will actually read, rather than a different view of the same row.
+ */
+function offerTitle(o: ModerationOffer): string {
+  return o.product_text || o.grade_text || "—";
+}
+
+/**
+ * The grade and polymer type, once the title is no longer impersonating them.
+ *
+ * `grade_text` is dropped when it IS the title (an offer with no product text),
+ * because repeating it under itself tells the reader nothing.
+ */
+function offerSubtitle(o: ModerationOffer): string | null {
+  const parts = [o.product_text ? o.grade_text : null, o.polymer_type].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 /** Turn a refused approval into a sentence naming what compliance is waiting for. */
@@ -186,16 +222,32 @@ export default function ModerationPage() {
         {data?.map((o) => (
           <div
             key={o.id}
+            data-testid="moderation-offer"
+            data-offer-id={o.id}
             className="rounded-lg border border-border bg-background-secondary p-4"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-base font-semibold text-foreground">
-                  {o.grade_text || o.product_text || "—"}
-                  {o.polymer_type && (
-                    <span className="ms-2 text-sm font-normal text-foreground-muted">{o.polymer_type}</span>
-                  )}
-                </p>
+                <div className="flex items-baseline gap-2">
+                  <p
+                    data-testid="moderation-offer-title"
+                    className="text-base font-semibold text-foreground"
+                  >
+                    {offerTitle(o)}
+                  </p>
+                  {/* The id, so a moderator can name this row in a message to the
+                      seller — and so a bug report about "the queue" can point at
+                      something. */}
+                  <span className="text-xs font-normal text-foreground-muted">#{o.id}</span>
+                </div>
+                {offerSubtitle(o) && (
+                  <p
+                    data-testid="moderation-offer-subtitle"
+                    className="text-sm text-foreground-muted mt-0.5"
+                  >
+                    {offerSubtitle(o)}
+                  </p>
+                )}
                 <p className="text-sm text-foreground-muted mt-1">
                   {o.availability === "on_order" ? t("availOnOrder") : t("availInStock")}
                   {o.qty_available != null ? ` · ${o.qty_available.toLocaleString()} ${o.qty_unit}` : ""}
@@ -240,8 +292,22 @@ export default function ModerationPage() {
               </p>
             )}
 
+            {/* What the seller actually attached. The payload has carried `files`
+                since the catalog schema was written and this page never read it,
+                so the moderator was deciding without knowing whether a photo or a
+                quality passport was on the listing at all. Names, not thumbnails:
+                `OfferFileRef` is {id, kind, file_name} with no URL, and inventing
+                an image endpoint is a bigger change than this ticket asks for. */}
+            {o.files.length > 0 && (
+              <p data-testid="moderation-offer-files" className="mt-2 text-sm text-foreground-muted">
+                <span className="text-foreground">{t("files.label")}:</span>{" "}
+                {o.files.map((f) => `${t(`files.kind.${f.kind}`)} — ${f.file_name}`).join(" · ")}
+              </p>
+            )}
+
             <input
               type="text"
+              data-testid="moderation-note"
               value={notes[o.id] ?? ""}
               onChange={(e) => setNotes((n) => ({ ...n, [o.id]: e.target.value }))}
               placeholder={t("notePlaceholder")}
@@ -299,6 +365,7 @@ export default function ModerationPage() {
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
+                data-testid="moderation-approve"
                 disabled={decide.isPending}
                 onClick={() => decide.mutate({ id: o.id, action: "approve", note: notes[o.id] })}
                 className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-dark disabled:opacity-50"
@@ -307,6 +374,7 @@ export default function ModerationPage() {
               </button>
               <button
                 type="button"
+                data-testid="moderation-reject"
                 disabled={decide.isPending}
                 onClick={() => decide.mutate({ id: o.id, action: "reject", note: notes[o.id] })}
                 className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background-tertiary disabled:opacity-50"

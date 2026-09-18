@@ -467,6 +467,18 @@
         "rejected": "ردشده",
         "archived": "بایگانی‌شده"
       }
+    },
+    "files": {
+      "label": "پیوست‌ها",
+      "kind": {
+        "image": "عکس",
+        "tds": "TDS",
+        "certificate": "گواهی",
+        "other": "فایل",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "گذرنامه کیفیت"
+      }
     }
   },
   "sources": {

@@ -474,6 +474,18 @@
         "rejected": "rad etilgan",
         "archived": "arxivda"
       }
+    },
+    "files": {
+      "label": "Ilovalar",
+      "kind": {
+        "image": "Foto",
+        "tds": "TDS",
+        "certificate": "Sertifikat",
+        "other": "Fayl",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "Sifat pasporti"
+      }
     }
   },
   "sources": {

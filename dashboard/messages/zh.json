@@ -467,6 +467,18 @@
         "rejected": "已拒绝",
         "archived": "已归档"
       }
+    },
+    "files": {
+      "label": "附件",
+      "kind": {
+        "image": "照片",
+        "tds": "TDS",
+        "certificate": "证书",
+        "other": "文件",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "质量证书"
+      }
     }
   },
   "sources": {

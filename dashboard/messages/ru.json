@@ -474,6 +474,18 @@
         "rejected": "отклонено",
         "archived": "в архиве"
       }
+    },
+    "files": {
+      "label": "Вложения",
+      "kind": {
+        "image": "Фото",
+        "tds": "TDS",
+        "certificate": "Сертификат",
+        "other": "Файл",
+        "sds": "SDS",
+        "coa": "COA",
+        "lab_passport": "Паспорт качества"
+      }
     }
   },
   "sources": {
