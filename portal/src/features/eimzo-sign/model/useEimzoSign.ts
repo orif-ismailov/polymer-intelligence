@@ -2,7 +2,11 @@ import { useCallback, useState } from "react";
 
 import { ApiError } from "@/shared/api";
 import { CapiwsError, getEimzoBridge } from "@/shared/lib/eimzo";
-import type { EimzoCertificate, EimzoSignature } from "@/shared/lib/eimzo";
+import type {
+  EimzoAvailability,
+  EimzoCertificate,
+  EimzoSignature,
+} from "@/shared/lib/eimzo";
 
 /**
  * State machine for one E-IMZO signing attempt (TA2.1):
@@ -213,13 +217,33 @@ export function useEimzoSign<T>({ signer, onConfirmed }: UseEimzoSignArgs<T>): U
     setResult(null);
     const bridge = getEimzoBridge();
     setState("probing");
-    let available = false;
+    /**
+     * Ask WHY, not just whether (IMEX-18).
+     *
+     * This used to collapse every negative answer — and every thrown error —
+     * into `module_missing`, so a module that was running and had simply been
+     * reached over a certificate the browser distrusts told the user to install
+     * software they already had. `diagnose` is optional on the bridge, so a
+     * stub that only implements `probe` still works and lands on the same
+     * undifferentiated `unreachable`.
+     */
+    let availability: EimzoAvailability;
     try {
-      available = await bridge.probe();
+      availability = bridge.diagnose
+        ? await bridge.diagnose()
+        : { available: await bridge.probe() } as EimzoAvailability;
     } catch {
-      available = false;
+      availability = { available: false, reason: "unreachable" };
     }
-    if (!available) {
+    if (!availability.available) {
+      if (availability.reason === "unauthorized_origin") {
+        // The module is running and refused this SITE. Nothing the person can do
+        // — the domain needs a key issued by E-IMZO — so it must not be dressed
+        // up as an install problem.
+        setError("module_not_authorized");
+        setState("error");
+        return;
+      }
       setState("module_missing");
       return;
     }

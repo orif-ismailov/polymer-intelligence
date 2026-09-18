@@ -22,6 +22,17 @@ const DOWNLOAD_LINKS = [
 ] as const;
 
 /**
+ * The module's own TLS endpoint — the same origin `capiwsSocket` opens its
+ * `wss://` connection to.
+ *
+ * Opening it in a tab is the only way to get Chrome's «proceed anyway»
+ * interstitial for a self-signed certificate; a WebSocket never shows one, it
+ * just fails with a close code that says nothing. Once accepted here, the
+ * exception applies to the socket too.
+ */
+const CAPIWS_TRUST_URL = "https://127.0.0.1:64443";
+
+/**
  * Controlled, generic E-IMZO signing dialog (TA2.1). Auto-starts the
  * probe→list→sign→verify flow when opened with a signer; renders every state incl.
  * module-missing (with install links) and typed error mapping. Reused by the wizard,
@@ -73,20 +84,57 @@ export function EimzoSignDialog<T>({
           </div>
         ) : null}
 
+        {/*
+          Two causes, both offered, because the browser cannot tell them apart:
+          a closed port and a certificate Chrome refuses to trust are the SAME
+          WebSocket close code (1006) with no detail. This screen used to assert
+          the first one — «Установите E-IMZO» — at people whose module was
+          running perfectly, who then reinstalled it, retried, and wrote to
+          support (IMEX-18). Naming both is what the browser actually knows.
+        */}
         {state === "module_missing" ? (
           <div className="space-y-3" data-testid="eimzo-module-missing">
             <Alert tone="warning" title={t("eimzo.moduleMissing.title")}>
               {t("eimzo.moduleMissing.body")}
             </Alert>
-            <ul className="space-y-1 text-sm">
-              {DOWNLOAD_LINKS.map((link) => (
-                <li key={link.key}>
-                  <a className="text-primary underline" href={link.href} target="_blank" rel="noreferrer">
-                    {t(`eimzo.moduleMissing.link_${link.key}`)}
-                  </a>
-                </li>
-              ))}
-            </ul>
+
+            <div data-testid="eimzo-cause-not-running">
+              <p className="text-sm font-medium text-text">
+                {t("eimzo.moduleMissing.causeNotRunning")}
+              </p>
+              <ul className="mt-1 space-y-1 text-sm">
+                {DOWNLOAD_LINKS.map((link) => (
+                  <li key={link.key}>
+                    <a className="text-primary underline" href={link.href} target="_blank" rel="noreferrer">
+                      {t(`eimzo.moduleMissing.link_${link.key}`)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* The remedy nobody could guess. The module serves its own
+                self-signed certificate; until the browser has been walked
+                through trusting it once, every connection dies before a byte of
+                CAPIWS is exchanged. */}
+            <div data-testid="eimzo-cause-cert">
+              <p className="text-sm font-medium text-text">
+                {t("eimzo.moduleMissing.causeCert")}
+              </p>
+              <p className="mt-1 text-sm text-text-muted">
+                {t("eimzo.moduleMissing.causeCertBody")}
+              </p>
+              <a
+                className="mt-1 inline-block text-sm text-primary underline"
+                href={CAPIWS_TRUST_URL}
+                target="_blank"
+                rel="noreferrer"
+                data-testid="eimzo-trust-link"
+              >
+                {t("eimzo.moduleMissing.link_cert")}
+              </a>
+            </div>
+
             <p className="text-xs text-text-muted">{t("eimzo.moduleMissing.desktopHint")}</p>
             <Button variant="secondary" onClick={handleRetry} data-testid="eimzo-retry">
               {t("eimzo.retry")}

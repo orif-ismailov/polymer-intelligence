@@ -686,10 +686,14 @@
       "verifying": "Imzo tekshirilmoqda…"
     },
     "moduleMissing": {
-      "title": "E-IMZO moduli topilmadi",
-      "body": "E-IMZO ni kompyuterga o‘rnating va ilovani ishga tushiring, so‘ng qayta urinib ko‘ring.",
+      "title": "E-IMZO moduli bilan bog‘lanib bo‘lmadi",
+      "body": "Ikki sabab bo‘lishi mumkin — ikkalasini ham tekshiring. Brauzer qaysi biri ekanini aytmaydi.",
+      "causeNotRunning": "1. Modul o‘rnatilmagan yoki ishga tushirilmagan.",
       "link_eimzo": "E-IMZO ni yuklab olish (e-imzo.uz)",
       "link_soliq": "Yo‘riqnoma (my.soliq.uz)",
+      "causeCert": "2. Brauzer modul sertifikatiga ishonmayapti.",
+      "causeCertBody": "Modul o‘z sertifikati bilan HTTPS orqali ishlaydi. Quyidagi manzilni yangi oynada oching, «Qo‘shimcha» → «O‘tish» ni bosing, so‘ng shu yerga qaytib qayta urinib ko‘ring.",
+      "link_cert": "https://127.0.0.1:64443 ni ochish",
       "desktopHint": "Imzolash faqat E-IMZO moduli o‘rnatilgan kompyuterda mavjud."
     },
     "success": {

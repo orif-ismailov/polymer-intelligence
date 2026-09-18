@@ -2,10 +2,12 @@ import { CapiwsBridge } from "./capiws";
 import type { EimzoBridge } from "./types";
 
 export type {
+  EimzoAvailability,
   EimzoBridge,
   EimzoCertificate,
   EimzoKeySession,
   EimzoSignature,
+  EimzoUnavailableReason,
 } from "./types";
 export { CapiwsError } from "./capiws";
 

@@ -686,10 +686,14 @@
       "verifying": "Verifying the signature…"
     },
     "moduleMissing": {
-      "title": "E-IMZO module not found",
-      "body": "Install E-IMZO on your computer and launch the app, then retry.",
+      "title": "Could not reach the E-IMZO module",
+      "body": "There are two possible causes — check both. The browser does not say which it is.",
+      "causeNotRunning": "1. The module is not installed, or not running.",
       "link_eimzo": "Download E-IMZO (e-imzo.uz)",
       "link_soliq": "Instructions (my.soliq.uz)",
+      "causeCert": "2. The browser does not trust the module's certificate.",
+      "causeCertBody": "The module serves HTTPS with its own certificate. Open the address below in a new tab, choose «Advanced» → «Proceed», then come back here and retry.",
+      "link_cert": "Open https://127.0.0.1:64443",
       "desktopHint": "Signing is available only on a computer with the E-IMZO module installed."
     },
     "success": {
