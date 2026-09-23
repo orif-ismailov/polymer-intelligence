@@ -30,5 +30,8 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  // Unit tests run under `node --test`, which needs the `.ts` import suffix
+  // this project refuses; they are linted syntactically instead (eslint.config.js).
+  "exclude": ["src/**/*.test.ts"]
 }

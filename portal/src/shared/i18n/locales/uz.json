@@ -1865,6 +1865,39 @@
       "origin_cert": "Kelib chiqish sertifikati",
       "commercial_offer": "Tijorat taklifi",
       "other": "Boshqa"
+    },
+    "columns": {
+      "product": "Mahsulot",
+      "volume": "Hajm",
+      "terms": "Shartlar",
+      "deliveryBy": "Yetkazish muddati",
+      "responseWindow": "Javob qabul qilish",
+      "yourQuote": "Sizning taklifingiz"
+    },
+    "deadline": {
+      "daysLeft": "yana {{count}} kun",
+      "lastDay": "bir kundan kam",
+      "closed": "qabul yopildi"
+    },
+    "urgent": "Shoshilinch",
+    "needs": "Kerak: {{docs}}",
+    "reply": "Javob berish",
+    "hideForm": "Yig'ish",
+    "viewMyQuote": "Mening taklifim",
+    "filters": {
+      "label": "Tender filtrlari",
+      "product": "Mahsulot",
+      "allProducts": "Barcha mahsulotlar",
+      "closingSoon": "Tez yopiladi",
+      "urgent": "Faqat shoshilinch",
+      "unanswered": "Javob bermaganlarim",
+      "reset": "Filtrlarni tozalash",
+      "status": "Taklif holati",
+      "allStatuses": "Barchasi",
+      "empty": "Bu filtrlar bo‘yicha tender yo‘q",
+      "emptyBody": "Barcha ochiq tenderlarni ko‘rish uchun filtrlarni o‘zgartiring yoki tozalang.",
+      "mineEmpty": "Bu holatdagi takliflar yo‘q",
+      "mineEmptyBody": "Boshqa holatni tanlang yoki barcha takliflarni ko‘rsating."
     }
   },
   "compliance": {

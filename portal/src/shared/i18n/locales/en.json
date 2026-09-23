@@ -1865,6 +1865,39 @@
       "origin_cert": "Certificate of origin",
       "commercial_offer": "Commercial offer",
       "other": "Other"
+    },
+    "columns": {
+      "product": "Product",
+      "volume": "Volume",
+      "terms": "Terms",
+      "deliveryBy": "Deliver by",
+      "responseWindow": "Accepting quotes",
+      "yourQuote": "Your quote"
+    },
+    "deadline": {
+      "daysLeft": "{{count}} days left",
+      "lastDay": "less than a day",
+      "closed": "closed"
+    },
+    "urgent": "Urgent",
+    "needs": "Required: {{docs}}",
+    "reply": "Quote",
+    "hideForm": "Collapse",
+    "viewMyQuote": "My quote",
+    "filters": {
+      "label": "Tender filters",
+      "product": "Product",
+      "allProducts": "All products",
+      "closingSoon": "Closing soon",
+      "urgent": "Urgent only",
+      "unanswered": "Not yet quoted",
+      "reset": "Reset filters",
+      "status": "Quote status",
+      "allStatuses": "All",
+      "empty": "No tenders match these filters",
+      "emptyBody": "Change or reset the filters to see every open tender.",
+      "mineEmpty": "No quotes with this status",
+      "mineEmptyBody": "Pick another status or show all quotes."
     }
   },
   "compliance": {

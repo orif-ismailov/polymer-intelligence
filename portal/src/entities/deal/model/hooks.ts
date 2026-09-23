@@ -1,18 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { dealApi, dealKeys, rfqApi } from "./api";
 import type {
   DealDetail,
   DealList,
+  DealListParams,
   MarketRequest,
   MyRfqResponse,
+  OpenRfqFilters,
   RfqResponse,
 } from "./types";
 
 /** How often the Trade Room re-reads. SSE is out of scope for P2. */
 export const DEAL_POLL_MS = 15_000;
 
-export function useDeals(companyId: number | null, params: { role?: string; status?: string } = {}) {
+export function useDeals(companyId: number | null, params: DealListParams = {}) {
   return useQuery<DealList>({
     queryKey: dealKeys.list(companyId, params),
     queryFn: () => dealApi.list(companyId as number, params),
@@ -39,19 +41,24 @@ export function useRfqResponses(companyId: number | null, requestId: number | nu
   });
 }
 
-export function useOpenRfqs(companyId: number | null) {
+// Both lists keep showing the previous result while a new filter loads, so a
+// click on a filter does not blank the table into skeletons and back.
+
+export function useOpenRfqs(companyId: number | null, filters: OpenRfqFilters = {}) {
   return useQuery<{ items: MarketRequest[] }>({
-    queryKey: dealKeys.openRequests(companyId),
-    queryFn: () => rfqApi.openRequests(companyId as number),
+    queryKey: dealKeys.openRequests(companyId, filters),
+    queryFn: () => rfqApi.openRequests(companyId as number, filters),
     enabled: companyId != null,
+    placeholderData: keepPreviousData,
   });
 }
 
-export function useMyRfqResponses(companyId: number | null) {
+export function useMyRfqResponses(companyId: number | null, status?: MyRfqResponse["status"]) {
   return useQuery<{ items: MyRfqResponse[] }>({
-    queryKey: dealKeys.myResponses(companyId),
-    queryFn: () => rfqApi.myResponses(companyId as number),
+    queryKey: dealKeys.myResponses(companyId, status ?? "all"),
+    queryFn: () => rfqApi.myResponses(companyId as number, status),
     enabled: companyId != null,
+    placeholderData: keepPreviousData,
   });
 }
 

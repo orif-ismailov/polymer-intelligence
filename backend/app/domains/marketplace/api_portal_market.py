@@ -172,6 +172,10 @@ def _market_request_out(
 @router.get("/requests", response_model=MarketRequestListOut)
 def list_market_requests(
     company_id: int = Query(...),
+    product_id: int | None = Query(default=None, ge=1),
+    closing_soon: bool = Query(default=False),
+    urgent: bool = Query(default=False),
+    unanswered: bool = Query(default=False),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -180,7 +184,8 @@ def list_market_requests(
     """Open RFQs this supplier company may answer — trade terms only.
 
     Buyer contact details are never included: the platform stays the
-    intermediary until a deal is open.
+    intermediary until a deal is open. The four optional filters narrow the list
+    server-side, because it is paged — see `list_open_requests`.
 
     Served by THIS router, not the deals router, even though the data is a deals
     concern: the full path is /portal/market/requests, which `/{offer_id}` below
@@ -188,7 +193,16 @@ def list_market_requests(
     deals router it silently depended on that router being registered first (P5).
     """
     company = company_or_404(db, account, company_id)
-    rows = rfq_response_service.list_open_requests(db, company, limit=limit, offset=offset)
+    rows = rfq_response_service.list_open_requests(
+        db,
+        company,
+        product_id=product_id,
+        closing_soon=closing_soon,
+        urgent=urgent,
+        unanswered=unanswered,
+        limit=limit,
+        offset=offset,
+    )
     catalog = _catalog_product_names(db, rows)
 
     mine = {
@@ -211,6 +225,7 @@ def list_market_requests(
 @router.get("/responses", response_model=MyRfqResponseListOut)
 def list_my_rfq_responses(
     company_id: int = Query(...),
+    status: RfqResponseStatus | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -225,7 +240,9 @@ def list_my_rfq_responses(
     Another literal declared above `/{offer_id}` — see the note on `/requests`.
     """
     company = company_or_404(db, account, company_id)
-    pairs = rfq_response_service.list_for_company(db, company, limit=limit, offset=offset)
+    pairs = rfq_response_service.list_for_company(
+        db, company, status=status, limit=limit, offset=offset
+    )
     catalog = _catalog_product_names(db, [request for _, request in pairs])
 
     return MyRfqResponseListOut(

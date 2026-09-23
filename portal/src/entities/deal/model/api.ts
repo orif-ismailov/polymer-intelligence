@@ -5,11 +5,13 @@ import type {
   DealDocument,
   DealDocumentKind,
   DealList,
+  DealListParams,
   DealMessage,
   DealMessagePage,
   DealStatus,
   MarketRequest,
   MyRfqResponse,
+  OpenRfqFilters,
   RfqResponse,
   RfqResponsePayload,
 } from "./types";
@@ -33,7 +35,7 @@ export const dealApi = {
       `/portal/companies/${companyId}/deals/${dealId}/contract-prefill?template_id=${templateId}`,
     ),
 
-  list: (companyId: number, params: { role?: string; status?: string } = {}): Promise<DealList> =>
+  list: (companyId: number, params: DealListParams = {}): Promise<DealList> =>
     api.get<DealList>(base(companyId), { query: { ...params } }),
 
   get: (companyId: number, dealId: number): Promise<DealDetail> =>
@@ -134,22 +136,36 @@ export const rfqApi = {
       `/portal/companies/${companyId}/requests/${requestId}/responses/${responseId}/withdraw`,
     ),
 
-  openRequests: (companyId: number): Promise<{ items: MarketRequest[] }> =>
+  openRequests: (
+    companyId: number,
+    filters: OpenRfqFilters = {},
+  ): Promise<{ items: MarketRequest[] }> =>
     api.get<{ items: MarketRequest[] }>("/portal/market/requests", {
-      query: { company_id: companyId },
+      // An off toggle is left out rather than sent as `false`, so the URL a
+      // default view requests is the same one it always was.
+      query: {
+        company_id: companyId,
+        product_id: filters.productId,
+        closing_soon: filters.closingSoon || undefined,
+        urgent: filters.urgent || undefined,
+        unanswered: filters.unanswered || undefined,
+      },
     }),
 
   /** Every quote this company filed — the companion to `openRequests`, which
       drops a tender (and with it our own work) as soon as it closes. */
-  myResponses: (companyId: number): Promise<{ items: MyRfqResponse[] }> =>
+  myResponses: (
+    companyId: number,
+    status?: MyRfqResponse["status"],
+  ): Promise<{ items: MyRfqResponse[] }> =>
     api.get<{ items: MyRfqResponse[] }>("/portal/market/responses", {
-      query: { company_id: companyId },
+      query: { company_id: companyId, status },
     }),
 };
 
 export const dealKeys = {
   all: ["deals"] as const,
-  list: (companyId: number | null, params: Record<string, unknown> = {}) =>
+  list: (companyId: number | null, params: DealListParams = {}) =>
     ["deals", "list", companyId, params] as const,
   detail: (companyId: number | null, id: number | null) =>
     ["deals", "detail", companyId, id] as const,
@@ -157,6 +173,10 @@ export const dealKeys = {
     ["deals", "messages", companyId, id] as const,
   responses: (companyId: number | null, requestId: number | null) =>
     ["rfq", "responses", companyId, requestId] as const,
-  openRequests: (companyId: number | null) => ["rfq", "open", companyId] as const,
-  myResponses: (companyId: number | null) => ["rfq", "mine", companyId] as const,
+  // The filtered keys extend the bare ones, so invalidating `openRequests(id)`
+  // (after a quote or a withdrawal) refreshes every filtered view with it.
+  openRequests: (companyId: number | null, filters?: OpenRfqFilters) =>
+    filters ? (["rfq", "open", companyId, filters] as const) : (["rfq", "open", companyId] as const),
+  myResponses: (companyId: number | null, status?: string) =>
+    status ? (["rfq", "mine", companyId, status] as const) : (["rfq", "mine", companyId] as const),
 };
