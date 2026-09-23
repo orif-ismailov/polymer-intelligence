@@ -185,3 +185,151 @@ def test_verify_sidecar_down_503(api, monkeypatch) -> None:  # noqa: ANN001
     resp = client.post(f"{_BASE}/{company_id}/eimzo/verify", json={"pkcs7": _PKCS7, "signature_hex": _SIG_HEX}, headers=auth)
     assert resp.status_code == 503
     assert resp.json()["detail"] == "eimzo_unavailable"
+
+
+# ── re-confirmation by a company that is already verified ─────────────────────
+
+
+def _verify(client, company_id, auth):  # noqa: ANN001, ANN202
+    client.post(f"{_BASE}/{company_id}/eimzo/challenge", headers=auth)
+    return client.post(
+        f"{_BASE}/{company_id}/eimzo/verify",
+        json={"pkcs7": _PKCS7, "signature_hex": _SIG_HEX},
+        headers=auth,
+    )
+
+
+def _approve(session, company_id, *, signer_pinfl=None):  # noqa: ANN001, ANN202
+    """Staff approved the onboarding case; optionally a signer is already on file."""
+    from app.core.crypto import encrypt_pii  # noqa: PLC0415
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import CompanyPersonData  # noqa: PLC0415
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
+    from app.models.enums import CompanyStatus, VerificationCaseStatus  # noqa: PLC0415
+
+    with session() as db:
+        company = db.get(Company, company_id)
+        company.status = CompanyStatus.verified
+        case = db.query(VerificationCase).filter(VerificationCase.company_id == company_id).one()
+        case.status = VerificationCaseStatus.approved
+        if signer_pinfl is not None:
+            db.add(CompanyPersonData(
+                company_id=company_id, full_name_enc=encrypt_pii("IVANOV IVAN"),
+                pinfl_enc=encrypt_pii(signer_pinfl), pinfl_last4=signer_pinfl[-4:],
+            ))
+        db.commit()
+        return case.id
+
+
+def _cases(session, company_id):  # noqa: ANN001, ANN202
+    from app.domains.verification.models import VerificationCase  # noqa: PLC0415
+
+    with session() as db:
+        return [
+            (c.id, str(c.status))
+            for c in db.query(VerificationCase)
+            .filter(VerificationCase.company_id == company_id)
+            .order_by(VerificationCase.id)
+        ]
+
+
+@requires_real_db
+def test_a_verified_company_re_confirming_is_not_queued_for_staff(api, monkeypatch) -> None:  # noqa: ANN001
+    """Same key, same ИНН, same director as on file: nothing for a person to
+    review. It used to open a «точечная проверка» with a pending manual KYB, so
+    every verified company that re-signed showed up twice in /verification."""
+    client, session = api
+    company_id, auth = _seed_company(session, "+998900000001")
+    approved = _approve(session, company_id, signer_pinfl="31234567890123")
+    _patch_eimzo(monkeypatch)
+
+    resp = _verify(client, company_id, auth)
+
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
+    assert _cases(session, company_id) == [(approved, "approved")]
+    assert resp.json()["case"]["id"] == approved, "the response still names the company's case"
+
+
+@requires_real_db
+def test_a_verified_company_confirming_for_the_first_time_is_not_queued(api, monkeypatch) -> None:  # noqa: ANN001
+    """Verified by documents, never signed before: staff already vouched for the
+    company, and the signer is the registry's director — nothing new to review."""
+    client, session = api
+    company_id, auth = _seed_company(session, "+998900000001")
+    approved = _approve(session, company_id)
+    _patch_eimzo(monkeypatch)
+
+    assert _verify(client, company_id, auth).status_code == 200
+    assert _cases(session, company_id) == [(approved, "approved")]
+
+
+@requires_real_db
+def test_a_different_director_still_goes_to_staff(api, monkeypatch) -> None:  # noqa: ANN001
+    """A new person signing for the company IS news — that one a human checks."""
+    client, session = api
+    company_id, auth = _seed_company(session, "+998900000001")
+    approved = _approve(session, company_id, signer_pinfl="39999999999999")
+    _patch_eimzo(monkeypatch)
+
+    assert _verify(client, company_id, auth).status_code == 200
+    cases = _cases(session, company_id)
+    assert len(cases) == 2
+    assert cases[0] == (approved, "approved")
+    assert cases[1][1] not in {"approved", "draft"}
+
+
+# ── the ordinary Didox sign-in records who signed ─────────────────────────────
+
+
+class _DidoxSignIn:
+    def __init__(self, director: str = "PETROV PETR", pinfl: str = "32345678901234") -> None:
+        self.director, self.pinfl = director, pinfl
+
+    def timestamp(self, pkcs7_64: str, signature_hex: str, **_: object) -> str:
+        return "TS"
+
+    def auth_by_eimzo(self, tax_id: str, signature: str, locale: str = "ru") -> str:
+        return "user-key"
+
+    def profile(self, *, user_key: str) -> dict[str, str]:
+        return {"tin": "301234567", "director": self.director, "directorPinfl": self.pinfl}
+
+
+def _people(session, company_id):  # noqa: ANN001, ANN202
+    from app.core.crypto import decrypt_pii  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import CompanyPersonData  # noqa: PLC0415
+
+    with session() as db:
+        return [
+            (decrypt_pii(p.full_name_enc), decrypt_pii(p.pinfl_enc))
+            for p in db.query(CompanyPersonData)
+            .filter(CompanyPersonData.company_id == company_id)
+            .order_by(CompanyPersonData.id)
+        ]
+
+
+@requires_real_db
+def test_signing_in_to_didox_records_the_signer(api, monkeypatch) -> None:  # noqa: ANN001
+    """It is the SAME signature «Подтвердить личность» asks for — the ИНН, sent to
+    Didox's auth. Asking twice, and queueing the second for staff, was the cost."""
+    from app.domains.edi import api_portal as edi_api  # noqa: PLC0415
+    from app.domains.edi import onboarding  # noqa: PLC0415
+
+    client, session = api
+    company_id, auth = _seed_company(session, "+998900000001")
+    didox = _DidoxSignIn()
+    monkeypatch.setattr(edi_api, "get_didox_client", lambda: didox)
+    monkeypatch.setattr(onboarding, "assert_live", lambda: None)
+    body = {"pkcs7_64": _PKCS7, "signature_hex": _SIG_HEX}
+
+    assert client.post(f"{_BASE}/{company_id}/didox/session", json=body, headers=auth).status_code == 200
+    assert _people(session, company_id) == [("PETROV PETR", "32345678901234")]
+
+    # Every 6 hours is a sign-in; the same person is not a new row each time.
+    client.post(f"{_BASE}/{company_id}/didox/session", json=body, headers=auth)
+    assert len(_people(session, company_id)) == 1
+
+    didox.director, didox.pinfl = "SIDOROV SIDOR", "33456789012345"
+    client.post(f"{_BASE}/{company_id}/didox/session", json=body, headers=auth)
+    assert _people(session, company_id)[-1] == ("SIDOROV SIDOR", "33456789012345")

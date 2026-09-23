@@ -36,4 +36,6 @@ class VerifyOut(BaseModel):
     ok: bool
     reason: str | None = None
     holder_masked: str | None = None
-    case: CaseOut
+    #: The company's case. A verified company re-confirming opens no new one, so
+    #: this is its existing case — or None if it was verified without one.
+    case: CaseOut | None = None

@@ -7,7 +7,8 @@ export interface EimzoVerifyOut {
   ok: boolean;
   reason: string | null;
   holder_masked: string | null;
-  case: CaseOut;
+  /** A verified company re-confirming opens no new case: this is its existing one. */
+  case: CaseOut | null;
 }
 
 export const eimzoApi = {
