@@ -207,6 +207,9 @@ def list_templates(
     rows = (
         db.query(ContractTemplate)
         .filter(ContractTemplate.is_active.is_(True))
+        # The commitment letter shares this table but is rendered by the sample
+        # flow from the sample request — nobody types it into this form.
+        .filter(ContractTemplate.kind == "contract")
         .order_by(ContractTemplate.code)
         .all()
     )
@@ -239,7 +242,7 @@ def create_contract(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="counterparty_not_verified"
         )
     template = db.get(ContractTemplate, body.template_id)
-    if template is None or not template.is_active:
+    if template is None or not template.is_active or template.kind != "contract":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
 
     try:

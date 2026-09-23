@@ -346,3 +346,60 @@ def test_prefill_drops_values_a_template_would_reject(sf) -> None:  # noqa: ANN0
         assert "incoterms" not in deal_service.contract_prefill(db, deal, schema=schema)
         # Without a schema the raw domain value is offered as-is.
         assert deal_service.contract_prefill(db, deal)["incoterms"] == "FOB"
+
+
+def _catalogue_product(db, code: str, name_ru: str) -> int:  # noqa: ANN001
+    """`clean()` leaves `products` alone and test_polymer is not seeded — upsert."""
+    return int(
+        db.execute(
+            sa.text(
+                "INSERT INTO products (code, name_ru) VALUES (:code, :name) "
+                "ON CONFLICT (code) DO UPDATE SET name_ru = EXCLUDED.name_ru RETURNING id"
+            ),
+            {"code": code, "name": name_ru},
+        ).scalar_one()
+    )
+
+
+@requires_real_db
+def test_prefill_names_a_catalogue_product(sf) -> None:  # noqa: ANN001
+    """A portal tender picks its product from the catalogue and types nothing, so
+    `product_text` is NULL — the prefill used to leave «Материал» blank for every
+    such tender."""
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
+
+    with sf() as db:
+        deal, *_ = _deal_with_contract(db)
+        request = db.get(Request, deal.request_id)
+        request.product_text = None
+        request.product_id = _catalogue_product(db, "TST-HDPE", "Полиэтилен высокой плотности")
+        db.flush()
+
+        assert deal_service.contract_prefill(db, deal)["product"] == (
+            "Полиэтилен высокой плотности (TST-HDPE)"
+        )
+        assert deal_service.deal_product_label(db, deal) == (
+            "Полиэтилен высокой плотности (TST-HDPE)"
+        )
+
+        request.grade_text = "I-1561"
+        db.flush()
+        assert deal_service.deal_product_label(db, deal) == (
+            "Полиэтилен высокой плотности (TST-HDPE), I-1561"
+        )
+
+
+@requires_real_db
+def test_typed_product_wins_over_the_catalogue(sf) -> None:  # noqa: ANN001
+    """The buyer's own words are what they asked for; the catalogue row is our
+    classification of it."""
+    from app.domains.deals import service as deal_service  # noqa: PLC0415
+    from app.domains.requests.models import Request  # noqa: PLC0415
+
+    with sf() as db:
+        deal, *_ = _deal_with_contract(db)
+        request = db.get(Request, deal.request_id)
+        request.product_id = _catalogue_product(db, "TST-HDPE", "Полиэтилен высокой плотности")
+        db.flush()
+        assert deal_service.deal_product_label(db, deal) == "HDPE film"

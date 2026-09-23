@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
-import { dealApi } from "@/entities/deal";
+import { dealApi, useDeals } from "@/entities/deal";
 import { contractApi, useContractTemplates } from "@/entities/contract";
 import type { ContractTemplate, DirectoryCompany } from "@/entities/contract";
 import { BusinessRoleBadges } from "@/entities/market";
@@ -50,11 +50,15 @@ export function ContractCreatePage() {
   const offerId = searchParams.get("offerId");
   const counterpartyIdParam = searchParams.get("counterpartyId");
   // `DealDetailPage` links here with `?deal_id=`; this page used to drop it, which
-  // left `deals.contract_id` NULL and stalled the deal at `contract_pending`.
-  const dealIdParam = searchParams.get("deal_id");
-  const dealId = dealIdParam ? Number(dealIdParam) : null;
+  // left `deals.contract_id` NULL and stalled the deal at `contract_pending`. It is
+  // only the starting value of «Основание» now — the same picker a user reaches
+  // from «Договоры» directly.
+  const dealIdParam = Number(searchParams.get("deal_id"));
+  const [dealId, setDealId] = useState<number | null>(dealIdParam > 0 ? dealIdParam : null);
   const active = useActiveCompany().activeCompany;
   const templatesQuery = useContractTemplates();
+  const dealsQuery = useDeals(active?.id ?? null, { needs_contract: true });
+  const deal = dealsQuery.data?.items.find((d) => d.id === dealId) ?? null;
 
   const [templateId, setTemplateId] = useState<number | null>(null);
   const [variables, setVariables] = useState<Record<string, string>>({});
@@ -79,12 +83,15 @@ export function ContractCreatePage() {
   const fields = template ? fieldsOf(template) : [];
 
   // Seed the form from what the two parties have already agreed on the deal.
-  // Only fills BLANKS, and only once per (deal, template): a value the user has
-  // typed always wins, and a failure here is silent — a prefill that cannot be
-  // fetched must never block drawing up a contract.
+  // Only once per (deal, template), and it never overwrites the user: a field is
+  // filled when blank, or when it still holds what the PREVIOUS deal put there —
+  // so switching «Основание» swaps the terms over without eating anything typed.
+  // A failure here is silent — a prefill that cannot be fetched must never block
+  // drawing up a contract.
   const prefilledFor = useRef<string | null>(null);
+  const prefilled = useRef<Record<string, string>>({});
   useEffect(() => {
-    if (dealId == null || Number.isNaN(dealId) || !active || !template) return;
+    if (dealId == null || !active || !template) return;
     const token = `${dealId}:${template.id}`;
     if (prefilledFor.current === token) return;
     prefilledFor.current = token;
@@ -93,8 +100,13 @@ export function ContractCreatePage() {
       .contractPrefill(active.id, dealId, template.id)
       .then((suggested) => {
         if (cancelled) return;
+        const before = prefilled.current;
+        prefilled.current = suggested;
         setVariables((current) => {
           const next = { ...current };
+          for (const [key, value] of Object.entries(before)) {
+            if (next[key] === value) delete next[key];
+          }
           for (const [key, value] of Object.entries(suggested)) {
             if (!next[key]) next[key] = value;
           }
@@ -114,7 +126,13 @@ export function ContractCreatePage() {
   // than by name — the directory searches legal_name/tax_id, and a seller trading
   // under a short name would never match its own listing. An id that is no longer
   // verified comes back empty, which correctly leaves the buyer to pick by hand.
-  const preselectId = counterpartyIdParam ? Number(counterpartyIdParam) : null;
+  // A deal fixes the counterparty outright: the contract links to the deal only
+  // when its two parties are the deal's two parties.
+  const preselectId = deal
+    ? deal.counterparty.company_id
+    : counterpartyIdParam
+      ? Number(counterpartyIdParam)
+      : null;
   useEffect(() => {
     if (preselectId == null || Number.isNaN(preselectId)) return;
     if (active && preselectId === active.id) return;
@@ -160,7 +178,7 @@ export function ContractCreatePage() {
         template_id: template.id,
         variables,
         offer_id: offerId ? Number(offerId) : null,
-        deal_id: dealId != null && !Number.isNaN(dealId) ? dealId : null,
+        deal_id: dealId,
         signing_provider: rail,
       });
       void navigate(`/cabinet/contracts/${created.id}`);
@@ -193,6 +211,17 @@ export function ContractCreatePage() {
     );
   }
 
+  const dealOptions = (dealsQuery.data?.items ?? []).map((d) => ({
+    value: String(d.id),
+    label: [d.number, d.product, d.counterparty.name].filter(Boolean).join(" · "),
+  }));
+  // Arrived by `?deal_id=` for a deal the list no longer offers (it got a contract
+  // meanwhile): keep the choice visible rather than showing «Без основания» while
+  // still submitting the id — the server answers that with a clear 409.
+  if (dealId != null && !deal && !dealsQuery.isLoading) {
+    dealOptions.push({ value: String(dealId), label: `#${dealId}` });
+  }
+
   const canSubmit = !!template && !!counterparty && !missingRequired() && !submitting;
 
   return (
@@ -205,6 +234,28 @@ export function ContractCreatePage() {
 
       <Card>
         <CardBody className="space-y-4" data-testid="contract-variables">
+          <FormField
+            label={t("contracts.basis.label")}
+            hint={dealOptions.length > 0 ? t("contracts.basis.hint") : t("contracts.basis.empty")}
+          >
+            {({ id }) => (
+              <Select
+                id={id}
+                value={dealId != null ? String(dealId) : ""}
+                onChange={(e) => {
+                  const next = e.target.value ? Number(e.target.value) : null;
+                  setDealId(next);
+                  if (next == null) prefilled.current = {};
+                  // A deal brings its own counterparty (the effect above resolves
+                  // it when it differs); leaving the deal, its counterparty goes too.
+                  if (next == null && deal) setCounterparty(null);
+                }}
+                options={[{ value: "", label: t("contracts.basis.none") }, ...dealOptions]}
+                data-testid="contract-basis"
+              />
+            )}
+          </FormField>
+
           <FormField label={t("contracts.template")} required>
             {({ id }) => (
               <Select
@@ -213,6 +264,7 @@ export function ContractCreatePage() {
                 onChange={(e) => {
                   setTemplateId(e.target.value ? Number(e.target.value) : null);
                   setVariables({});
+                  prefilled.current = {};
                 }}
                 options={[
                   { value: "", label: t("contracts.selectTemplate") },
@@ -267,15 +319,21 @@ export function ContractCreatePage() {
             )}
           </FormField>
 
-          <FormField label={t("contracts.counterparty")} required hint={t("contracts.counterpartyHint")}>
-            {({ id }) => (
-              <Input
-                id={id}
-                value={cpQuery}
-                placeholder={t("contracts.counterpartySearch")}
-                onChange={(e) => void searchCounterparties(e.target.value)}
-              />
-            )}
+          <FormField
+            label={t("contracts.counterparty")}
+            required
+            hint={deal ? t("contracts.basis.counterpartyFromDeal") : t("contracts.counterpartyHint")}
+          >
+            {({ id }) =>
+              deal ? null : (
+                <Input
+                  id={id}
+                  value={cpQuery}
+                  placeholder={t("contracts.counterpartySearch")}
+                  onChange={(e) => void searchCounterparties(e.target.value)}
+                />
+              )
+            }
           </FormField>
           {counterparty ? (
             <div className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
@@ -283,9 +341,11 @@ export function ContractCreatePage() {
                 {counterparty.legal_name ?? counterparty.tax_id}{" "}
                 <span className="text-text-muted">({counterparty.tax_id})</span>
               </span>
-              <Button variant="ghost" size="sm" onClick={() => setCounterparty(null)}>
-                {t("common.cancel")}
-              </Button>
+              {deal ? null : (
+                <Button variant="ghost" size="sm" onClick={() => setCounterparty(null)}>
+                  {t("common.cancel")}
+                </Button>
+              )}
             </div>
           ) : (
             <ul className="space-y-1" data-testid="cp-results">

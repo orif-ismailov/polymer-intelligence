@@ -1690,6 +1690,13 @@
     "railHint": {
       "eimzo": "Both sides sign a document we hold.",
       "didox": "The document is created at the EDI operator and reaches my.soliq.uz. Both sides need a Didox account."
+    },
+    "basis": {
+      "label": "Based on",
+      "none": "Nothing — I will fill it in",
+      "hint": "A deal from an accepted tender quote: product, quantity, price and counterparty fill in by themselves.",
+      "empty": "No deals without a contract yet — one appears when you accept a tender quote or yours is accepted.",
+      "counterpartyFromDeal": "The counterparty is the other side of the selected deal."
     }
   },
   "deals": {

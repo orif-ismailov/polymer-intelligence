@@ -122,6 +122,7 @@ def _summary(db: Session, deal: Deal, company_id: int) -> DealSummaryOut:
         status=str(deal.status),
         role=role,
         counterparty=_party(db, other),
+        product=deal_service.deal_product_label(db, deal),
         amount=deal.amount,
         currency=deal.currency,
         contract_id=deal.contract_id,
@@ -261,9 +262,15 @@ def list_deals(
     company_id: int,
     role: str | None = Query(default=None, pattern="^(buyer|seller)$"),
     deal_status: str | None = Query(default=None, alias="status"),
+    needs_contract: bool = Query(default=False),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> DealListOut:
+    """This company's deals, either side.
+
+    `needs_contract` narrows to the deals «Создать договор» can still attach a
+    contract to: none linked yet, and not past the point a contract is drawn up.
+    """
     company = _company_or_404(db, account, company_id)
     query = db.query(Deal).filter(
         or_(Deal.buyer_company_id == company.id, Deal.seller_company_id == company.id)
@@ -278,6 +285,11 @@ def list_deals(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="unknown_status"
             )
         query = query.filter(Deal.status == deal_status)
+    if needs_contract:
+        query = query.filter(
+            Deal.contract_id.is_(None),
+            Deal.status.in_([DealStatus.negotiation, DealStatus.contract_pending]),
+        )
 
     items = [_summary(db, d, company.id) for d in query.order_by(Deal.id.desc()).all()]
     closed = {DealStatus.completed.value, DealStatus.cancelled.value}
