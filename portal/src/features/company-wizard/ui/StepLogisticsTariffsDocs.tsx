@@ -7,7 +7,7 @@ import { Alert, Button, Radio } from "@/shared/ui";
 
 import { LOGISTICS_DOC_KINDS, LOGISTICS_TARIFF_MODELS } from "../model/constants";
 import { useWizardDraft } from "../model/draftStore";
-import { areDocumentsValid, isLogisticsTariffsValid } from "../model/validation";
+import { areDocumentsValid, certificateWaived, isLogisticsTariffsValid } from "../model/validation";
 
 interface StepLogisticsTariffsDocsProps {
   onNext: () => void;
@@ -27,6 +27,8 @@ export function StepLogisticsTariffsDocs({ onNext, onBack }: StepLogisticsTariff
   const setDocument = useWizardDraft((s) => s.setDocument);
   const bank = useWizardDraft((s) => s.bank);
   const identityLocked = useWizardDraft((s) => s.identityLocked);
+  // E-IMZO or a registry confirmation — see `certificateWaived`.
+  const waived = useWizardDraft(certificateWaived);
   const accountType = useWizardDraft((s) => s.accountType);
   const [submitted, setSubmitted] = useState(false);
 
@@ -35,7 +37,7 @@ export function StepLogisticsTariffsDocs({ onNext, onBack }: StepLogisticsTariff
     : (["registration_certificate", ...LOGISTICS_DOC_KINDS] as const);
 
   const tariffsOk = isLogisticsTariffsValid(logistics);
-  const docsOk = areDocumentsValid(documents, bank, identityLocked, accountType);
+  const docsOk = areDocumentsValid(documents, bank, waived, accountType);
   const valid = tariffsOk && docsOk;
 
   function handleSubmit(e: FormEvent<HTMLFormElement>): void {
@@ -92,7 +94,7 @@ export function StepLogisticsTariffsDocs({ onNext, onBack }: StepLogisticsTariff
             <DocumentDropzone
               key={kind}
               kind={kind}
-              required={kind === "registration_certificate" && !identityLocked}
+              required={kind === "registration_certificate" && !waived}
               file={documents[kind] ?? null}
               onSelect={(file) => setDocument(kind, file)}
               onClear={() => setDocument(kind, null)}

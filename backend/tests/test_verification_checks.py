@@ -180,3 +180,46 @@ def test_manual_kyb_is_pending() -> None:
     from app.domains.verification.checks import check_manual_kyb  # noqa: PLC0415
 
     assert check_manual_kyb().status.value == "pending"
+
+
+# ── registry waiver ──────────────────────────────────────────────────────────
+# A passing `gov_registry` check supersedes the registration certificate the same
+# way a passing E-IMZO signature does: the state registry has just confirmed the
+# company exists, is ACTIVE, and carries this tax id and name — more than a scan
+# of a certificate proves, and current rather than historical.
+
+
+def test_documents_registry_supersedes_registration_certificate() -> None:
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
+
+    result = check_documents_complete(
+        _company(), [], [], has_bank_account=False, registry_passed=True
+    )
+    assert result.status.value == "passed"
+    assert result.result["missing"] == []
+    assert result.result["registry_passed"] is True
+
+
+def test_documents_registry_does_not_relax_bank_letter() -> None:
+    # The registry confirms the COMPANY; nothing in the snapshot says the account
+    # typed on the bank step is theirs, so the bank letter rule stands.
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
+
+    result = check_documents_complete(
+        _company(), [], [], has_bank_account=True, registry_passed=True
+    )
+    assert result.status.value == "failed"
+    assert result.result["missing"] == ["bank_letter"]
+
+
+def test_documents_without_a_registry_pass_still_need_the_certificate() -> None:
+    # The fallback is the whole safety property: a company the registry could not
+    # confirm is never verified on nothing.
+    from app.domains.verification.checks import check_documents_complete  # noqa: PLC0415
+
+    result = check_documents_complete(
+        _company(), [], [], has_bank_account=False, registry_passed=False
+    )
+    assert result.status.value == "failed"
+    assert result.result["missing"] == ["registration_certificate"]
+    assert result.result["registry_passed"] is False

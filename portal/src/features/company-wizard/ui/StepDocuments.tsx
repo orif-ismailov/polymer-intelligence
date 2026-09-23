@@ -7,7 +7,12 @@ import { Alert, Button } from "@/shared/ui";
 
 import { WIZARD_DOCUMENT_KINDS } from "../model/constants";
 import { useWizardDraft } from "../model/draftStore";
-import { areDocumentsValid, requiredDocumentKinds } from "../model/validation";
+import {
+  areDocumentsValid,
+  certificateWaived,
+  isRegistryConfirmed,
+  requiredDocumentKinds,
+} from "../model/validation";
 
 interface StepDocumentsProps {
   onNext: () => void;
@@ -25,10 +30,12 @@ export function StepDocuments({ onNext, onBack }: StepDocumentsProps) {
   const documents = useWizardDraft((s) => s.documents);
   const setDocument = useWizardDraft((s) => s.setDocument);
   const identityLocked = useWizardDraft((s) => s.identityLocked);
+  const waived = useWizardDraft(certificateWaived);
+  const registryConfirmed = useWizardDraft(isRegistryConfirmed);
   const [touched, setTouched] = useState(false);
 
-  const required = new Set(requiredDocumentKinds(bank, identityLocked));
-  const valid = areDocumentsValid(documents, bank, identityLocked);
+  const required = new Set(requiredDocumentKinds(bank, waived));
+  const valid = areDocumentsValid(documents, bank, waived);
 
   function handleNext(): void {
     setTouched(true);
@@ -45,6 +52,8 @@ export function StepDocuments({ onNext, onBack }: StepDocumentsProps) {
       <ul className="space-y-1 text-sm text-text-muted">
         {identityLocked ? (
           <li>• {t("wizard.documents.eimzoWaived")}</li>
+        ) : registryConfirmed ? (
+          <li>• {t("wizard.documents.registryWaived")}</li>
         ) : (
           <li>• {t("wizard.documents.registrationRequired")}</li>
         )}

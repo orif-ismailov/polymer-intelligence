@@ -7,7 +7,7 @@ import { Alert, Button } from "@/shared/ui";
 
 import { LABORATORY_DOC_KINDS } from "../model/constants";
 import { useWizardDraft } from "../model/draftStore";
-import { areDocumentsValid } from "../model/validation";
+import { areDocumentsValid, certificateWaived } from "../model/validation";
 
 interface StepLabLicensesProps {
   onNext: () => void;
@@ -25,6 +25,8 @@ export function StepLabLicenses({ onNext, onBack }: StepLabLicensesProps) {
   const setDocument = useWizardDraft((s) => s.setDocument);
   const bank = useWizardDraft((s) => s.bank);
   const identityLocked = useWizardDraft((s) => s.identityLocked);
+  // E-IMZO or a registry confirmation — see `certificateWaived`.
+  const waived = useWizardDraft(certificateWaived);
   const accountType = useWizardDraft((s) => s.accountType);
   const [submitted, setSubmitted] = useState(false);
 
@@ -32,7 +34,7 @@ export function StepLabLicenses({ onNext, onBack }: StepLabLicensesProps) {
     ? [...LABORATORY_DOC_KINDS]
     : (["registration_certificate", ...LABORATORY_DOC_KINDS] as const);
 
-  const valid = areDocumentsValid(documents, bank, identityLocked, accountType);
+  const valid = areDocumentsValid(documents, bank, waived, accountType);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>): void {
     e.preventDefault();
@@ -60,7 +62,7 @@ export function StepLabLicenses({ onNext, onBack }: StepLabLicensesProps) {
           <DocumentDropzone
             key={kind}
             kind={kind}
-            required={kind === "registration_certificate" && !identityLocked}
+            required={kind === "registration_certificate" && !waived}
             file={documents[kind] ?? null}
             onSelect={(file) => setDocument(kind, file)}
             onClear={() => setDocument(kind, null)}

@@ -62,9 +62,10 @@ _R1_CHECK_TYPES: tuple[VerificationCheckType, ...] = (
     VerificationCheckType.manual_kyb,
 )
 
-#: P7.c registry checks. Spawned at submit ONLY on the live rail — on the stub
-#: rail (the shipped default) they are created when an operator records a manual
-#: snapshot, so a case never sits waiting for a channel we do not have.
+#: P7.c registry checks. Spawned at submit on the rails that have a channel
+#: (`didox`, `live`) — on the stub rail (the shipped default) they are created when
+#: an operator records a manual snapshot, so a case never sits waiting for a
+#: channel we do not have.
 _REGISTRY_CHECK_TYPES: tuple[VerificationCheckType, ...] = (
     VerificationCheckType.gov_registry,
     VerificationCheckType.vat_status,
@@ -195,14 +196,26 @@ def submit_case(db: Session, company: Company, account: UserAccount) -> Verifica
 def _registry_checks_for(db: Session) -> tuple[VerificationCheckType, ...]:
     """The registry checks to spawn, given the configured rail.
 
-    Empty on the stub rail, which is what ships: there is no ПЦД channel, so a
-    spawned check would only ever be `unavailable`, and a case whose checks can
-    never resolve is worse than a case with fewer checks. On the stub rail these
-    appear the moment an operator records a manual snapshot (`upsert_check`).
-    """
-    from app.integrations.gov_registry import MODE_LIVE, current_mode  # noqa: PLC0415
+    Spawned on every rail that has a channel to ask — `didox` and `live` — and on
+    none that does not. Empty on the stub rail, which is what ships: nothing
+    answers there, so a spawned check would only ever be `unavailable`, and a case
+    whose checks can never resolve is worse than a case with fewer checks. On the
+    stub rail these appear the moment an operator records a manual snapshot
+    (`upsert_check`).
 
-    return _REGISTRY_CHECK_TYPES if current_mode() == MODE_LIVE else ()
+    This used to read `== MODE_LIVE`, a guard written when there were two rails.
+    `didox` arrived later as a third and was never admitted, so on a deployment
+    with Didox switched on the registry only prefilled the form and no verdict was
+    ever recorded on a case — while `documents_complete` came to be waived on the
+    strength of exactly that verdict.
+    """
+    from app.integrations.gov_registry import (  # noqa: PLC0415
+        MODE_DIDOX,
+        MODE_LIVE,
+        current_mode,
+    )
+
+    return _REGISTRY_CHECK_TYPES if current_mode() in {MODE_DIDOX, MODE_LIVE} else ()
 
 
 def upsert_check(

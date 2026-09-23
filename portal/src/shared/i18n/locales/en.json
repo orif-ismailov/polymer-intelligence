@@ -250,7 +250,8 @@
       "tooLarge": "The file exceeds {{mb}} MB",
       "replace": "Replace",
       "invalidType": "Unsupported file format. Upload a PDF, JPG or PNG.",
-      "eimzoWaived": "Documents are optional: the company is confirmed by a digital signature. You can add them later."
+      "eimzoWaived": "Documents are optional: the company is confirmed by a digital signature. You can add them later.",
+      "registryWaived": "The registration certificate is optional: the company is confirmed by the state registry. You can still attach it if you like."
     },
     "errors": {
       "duplicate": "A company with this Tax ID already exists.",

@@ -194,8 +194,8 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
     registry lookup fills the name, address, ownership form and the whole bank step from that one
     number.
   - **Two consequences of no signature at registration**, both by design and both visible:
-    a registration certificate is **required** on step 4 (the `documents_complete` waiver only
-    applies to an `identity_locked` company), and the company is verified WITHOUT
+    a registration certificate is **required** on step 4 unless the state registry confirmed
+    the company (below), and the company is verified WITHOUT
     `identity_locked` — so `CompanyPersonData` is absent until someone confirms by key, and
     `Owner.FizTin`/`Fio` are mandatory on a Didox «Договор НК». Confirming on «Статус проверки»
     is the only thing that supplies them (`domains/edi/contract_docs.py`), which is why that
@@ -214,6 +214,16 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
     deployment with no channel configured (the shipped default) says **nothing at all** —
     `registry_not_configured` is its own error code precisely so the form can stay quiet about a
     feature nobody turned on. `RegistryPrefillNotice` is shared by both steps.
+  - **A registry-confirmed company needs no registration certificate.** The backend waives it
+    on a PASSED `gov_registry` check; the wizard predicts that with `certificateWaived(draft)`
+    (`validation.ts`) — E-IMZO locked identity, or `isRegistryConfirmed`: the registry called
+    the STIR now on the form ACTIVE (`registryConfirmedTaxId`, keyed on the STIR so correcting
+    it drops the confirmation) AND still owns `legal_name`. A retyped name is compared by the
+    backend and comes back a `warning`, which waives nothing — so the wizard requires the
+    certificate then too. Every document call site goes through `certificateWaived`; passing
+    bare `identityLocked` there again would ask a confirmed company for a file the backend no
+    longer requires. A wrong prediction is soft: the case goes `needs_info` and `CHECK_TO_STEP`
+    brings the applicant back to attach it.
   - **Arriving at step 5 IS the submit** — there is no confirmation sheet. It is guarded by a ref
     against React's double mount, and the checks then poll until they resolve.
   - Bank + documents are not in the mockup but feed the case's `bank_requisites` /

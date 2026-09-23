@@ -250,7 +250,8 @@
       "tooLarge": "Fayl {{mb}} MB dan oshib ketdi",
       "replace": "Almashtirish",
       "invalidType": "Fayl formati qo‘llab-quvvatlanmaydi. PDF, JPG yoki PNG yuklang.",
-      "eimzoWaived": "Hujjatlar majburiy emas: kompaniya elektron imzo bilan tasdiqlangan. Ularni keyinroq qo‘shishingiz mumkin."
+      "eimzoWaived": "Hujjatlar majburiy emas: kompaniya elektron imzo bilan tasdiqlangan. Ularni keyinroq qo‘shishingiz mumkin.",
+      "registryWaived": "Ro'yxatdan o'tganlik guvohnomasi majburiy emas: kompaniya davlat reestri bo'yicha tasdiqlangan. Xohlasangiz, uni qo'shishingiz mumkin."
     },
     "errors": {
       "duplicate": "Bunday STIR bilan kompaniya allaqachon mavjud.",

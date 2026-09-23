@@ -102,6 +102,17 @@ interface WizardDraftState {
    * names it — and so are their ownership marks.
    */
   bankNameFromRegister: boolean;
+  /**
+   * The STIR the state registry last confirmed as an ACTIVE company, or null.
+   *
+   * Keyed on the STIR rather than a boolean so that correcting the ИНН drops the
+   * confirmation by itself — it was about a different company. Read through
+   * `isRegistryConfirmed` in `validation.ts`, which also requires that the
+   * registry still owns `legal_name`: the backend waives the registration
+   * certificate only on a PASSED `gov_registry` check, and a name the applicant
+   * retyped comes back as a `warning`, which does not waive it.
+   */
+  registryConfirmedTaxId: string | null;
   setAccountType: (id: string) => void;
   setIdentity: (patch: Partial<WizardIdentity>) => void;
   setBank: (patch: Partial<WizardBank>) => void;
@@ -225,6 +236,7 @@ type PersistedDraft = Partial<
     | "identityLocked"
     | "prefilled"
     | "bankNameFromRegister"
+    | "registryConfirmedTaxId"
   >
 >;
 
@@ -288,6 +300,7 @@ export const useWizardDraft = create<WizardDraftState>()(
       companyId: null,
       identityLocked: false,
       bankNameFromRegister: false,
+      registryConfirmedTaxId: null,
       prefilled: [],
       setAccountType: (id) =>
         set((s) => ({
@@ -446,6 +459,10 @@ export const useWizardDraft = create<WizardDraftState>()(
             // field this answer left empty, and the next lookup would refuse to
             // clear it.
             prefilled: filled,
+            // Only an ACTIVE company is a confirmation — a liquidated or suspended
+            // one fails `gov_registry` and waives nothing.
+            registryConfirmedTaxId:
+              data.registry_status === "active" ? data.tax_id.trim() : null,
           };
         }),
       reset: () =>
@@ -456,6 +473,7 @@ export const useWizardDraft = create<WizardDraftState>()(
           documents: {},
           prefilled: [],
           bankNameFromRegister: false,
+          registryConfirmedTaxId: null,
           manufacturer: {
             ...emptyManufacturer,
             financial_requirements: { ...emptyManufacturer.financial_requirements },
@@ -488,6 +506,7 @@ export const useWizardDraft = create<WizardDraftState>()(
         // a register-filled bank name look hand-typed, and changing the MFO would
         // then leave the previous bank's name on the form.
         bankNameFromRegister: s.bankNameFromRegister,
+        registryConfirmedTaxId: s.registryConfirmedTaxId,
       }),
     },
   ),
