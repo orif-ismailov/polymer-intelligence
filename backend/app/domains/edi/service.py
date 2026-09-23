@@ -44,6 +44,7 @@ from app.integrations.didox import (
     DidoxDocumentView,
     DidoxError,
     DidoxSignResult,
+    ProviderUnavailable,
 )
 from app.services import storage_service
 
@@ -285,10 +286,25 @@ def submit_signature(
             raise OfferRequired(str(company_id)) from exc
         raise
 
-    view = client.get_document(row.didox_id, owner=1, user_key=user_key)
-    activated = apply_status(
-        db, row, view.status, user_key=user_key, client=client
-    )
+    # Read the result AS THE SIDE THAT SIGNED. `owner=1` with the counterparty's
+    # key answers 500 — on 23.09.2026 that failed the request after Didox had
+    # accepted the buyer's signature, and the retry it provoked got «Нет такого
+    # документа».
+    #
+    # And a read that fails now is not a failed signature: `/sign` said yes, the
+    # signature is at the operator, and `poll_didox_documents` brings the status
+    # within ten minutes. Raising here rolled the request back and told the signer
+    # the opposite of what happened.
+    activated = False
+    try:
+        view = client.get_document(row.didox_id, owner=1 if outgoing else 0, user_key=user_key)
+    except (DidoxError, ProviderUnavailable) as exc:
+        logger.warning(
+            "edi.sign.status_read_failed",
+            extra={"doc_id": row.id, "error": str(exc)},
+        )
+    else:
+        activated = apply_status(db, row, view.status, user_key=user_key, client=client)
     return SignOutcome(
         status=row.status,
         activated=activated,
