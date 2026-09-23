@@ -26,8 +26,10 @@ document that reaches my.soliq.uz.
 from __future__ import annotations
 
 import datetime
+import decimal
 import html
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 from app.domains.edi.payloads import (
@@ -396,17 +398,23 @@ def _existing_document(db: Session, contract: Contract) -> DidoxDocument | None:
     )
 
 
-def suggested_lines(contract: Contract, offer: SellerOffer | None) -> list[DocumentLine]:
-    """One line, from the contract's own variables plus the offer's ИКПУ.
+@dataclass(frozen=True)
+class IkpuChoice:
+    """The ИКПУ a seller picked on the Didox card, for a contract with no offer.
 
-    The quantity and price are the CONTRACT's — they were negotiated and may
-    differ from the listing — while the tax classification can only come from the
-    offer, which is where the seller chose it once.
+    Spelled like the `seller_offers` columns so `line_from_offer` — the one place a
+    code reaches a document line — reads it exactly as it reads an offer.
     """
-    import decimal  # noqa: PLC0415
 
-    from app.domains.edi.payloads import line_from_offer  # noqa: PLC0415
+    ikpu_code: str
+    ikpu_name: str
+    ikpu_package_code: str
+    ikpu_package_name: str
+    ikpu_origin: int
 
+
+def contract_line_terms(contract: Contract) -> tuple[str, decimal.Decimal, decimal.Decimal]:
+    """Name, quantity and price of the one line — the CONTRACT's, as negotiated."""
     variables = contract.variables if isinstance(contract.variables, dict) else {}
 
     def _number(key: str, fallback: str) -> decimal.Decimal:
@@ -417,13 +425,31 @@ def suggested_lines(contract: Contract, offer: SellerOffer | None) -> list[Docum
             return decimal.Decimal(fallback)
 
     name = str(variables.get("product") or contract.title)
+    return name, _number("qty", "1"), _number("price", "0")
+
+
+def suggested_lines(
+    contract: Contract, offer: SellerOffer | None, ikpu: IkpuChoice | None = None
+) -> list[DocumentLine]:
+    """One line, from the contract's own variables plus an ИКПУ.
+
+    The quantity and price are the CONTRACT's — they were negotiated and may
+    differ from the listing. The tax classification comes from the offer, where
+    the seller chose it once; `ikpu` is consulted only when there IS no offer —
+    a contract drawn up from a tender, which passes through none. An offer that
+    lacks a code stays refused: the fix is on the offer, for every contract it
+    backs, not on one of them.
+    """
+    from app.domains.edi.payloads import line_from_offer  # noqa: PLC0415
+
+    name, count, price = contract_line_terms(contract)
     return [
         line_from_offer(
-            offer,
+            offer if offer is not None else ikpu,
             ord_no=1,
             name=name,
-            count=_number("qty", "1"),
-            price=_number("price", "0"),
+            count=count,
+            price=price,
         )
     ]
 
@@ -439,6 +465,7 @@ def create_for_contract(
     client: ContractGateway,
     today: datetime.date,
     term_days: int = 365,
+    ikpu: IkpuChoice | None = None,
 ) -> DidoxDocument:
     """Create (or return) the Didox 007 backing this contract.
 
@@ -538,7 +565,7 @@ def create_for_contract(
             db, seller, vat_reg_code=seller_vat_code, vat_reg_status=seller_vat_status
         ),
         buyer=party_from_registry(client, buyer.tax_id),
-        lines=lines or suggested_lines(contract, offer),
+        lines=lines or suggested_lines(contract, offer, ikpu),
         sections=sections_from_html(rendered),
     )
 

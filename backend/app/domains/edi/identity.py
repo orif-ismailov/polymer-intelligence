@@ -73,6 +73,7 @@ from app.integrations.didox.client import is_configured as _is_configured
 
 if TYPE_CHECKING:  # pragma: no cover
     import redis
+    from sqlalchemy.orm import Session
 
     from app.domains.companies.models import Company
 
@@ -193,7 +194,7 @@ def verify_identity(
         )
         raise ProviderUnavailable(str(exc)) from exc
 
-    return DidoxIdentityResult(ok=True, signer=_signer_for(company, token, didox))
+    return DidoxIdentityResult(ok=True, signer=signer_for(company, token, didox))
 
 
 def _stub_identity(company: Company, pkcs7_64: str) -> DidoxIdentityResult:
@@ -233,7 +234,7 @@ def _stub_identity(company: Company, pkcs7_64: str) -> DidoxIdentityResult:
     )
 
 
-def _signer_for(company: Company, token: str, didox: _Verifier) -> DidoxSigner:
+def signer_for(company: Company, token: str, didox: _Verifier) -> DidoxSigner:
     """Name the person behind `token`, falling back to what we already know.
 
     `GET /v1/profile` answers `422 "Failed to get Phis By Tin Info info from
@@ -271,3 +272,74 @@ def _text(value: object) -> str | None:
     if not isinstance(value, str):
         return None
     return value.strip() or None
+
+
+# ── who signs for the company, on file ────────────────────────────────────────
+
+
+def _latest_person(db: Session, company_id: int) -> tuple[str, str] | None:
+    """The newest (full name, PINFL) on file for the company, decrypted."""
+    from app.core.crypto import decrypt_pii  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import CompanyPersonData  # noqa: PLC0415
+
+    row = (
+        db.query(CompanyPersonData)
+        .filter(CompanyPersonData.company_id == company_id)
+        .order_by(CompanyPersonData.id.desc())
+        .first()
+    )
+    if row is None:
+        return None
+    try:
+        return decrypt_pii(row.full_name_enc), decrypt_pii(row.pinfl_enc)
+    except Exception:  # noqa: BLE001 — undecryptable is the same as absent
+        return None
+
+
+def signer_changed(db: Session, company_id: int, signer: DidoxSigner) -> bool:
+    """Is someone OTHER than the person on file now signing for this company?
+
+    Only a known PINFL against a different known PINFL counts. Nothing on file,
+    or a profile that named nobody, is not news about a person.
+    """
+    if not signer.pinfl:
+        return False
+    on_file = _latest_person(db, company_id)
+    return on_file is not None and bool(on_file[1]) and on_file[1] != signer.pinfl
+
+
+def remember_signer(
+    db: Session,
+    company_id: int,
+    account_id: int | None,
+    signer: DidoxSigner,
+    *,
+    position: str | None = None,
+) -> None:
+    """Put the signer on file — what `Owner.FizTin`/`Fio` of a Didox 007 are read from.
+
+    Called from BOTH signatures over the company's ИНН: the identity confirmation
+    and the plain Didox sign-in. They are the same ceremony answered by the same
+    `GET /v1/profile`, so either one is enough; making the seller do the first to
+    unblock a document, after already doing the second, is what this replaced.
+    A sign-in is every six hours, so an unchanged signer writes nothing.
+    """
+    from app.core.crypto import encrypt_pii  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import CompanyPersonData  # noqa: PLC0415
+
+    if not (signer.full_name or signer.pinfl):
+        return
+    if _latest_person(db, company_id) == (signer.full_name or "", signer.pinfl or ""):
+        return
+    db.add(
+        CompanyPersonData(
+            company_id=company_id,
+            user_account_id=account_id,
+            full_name_enc=encrypt_pii(signer.full_name or ""),
+            pinfl_enc=encrypt_pii(signer.pinfl or ""),
+            pinfl_last4=(signer.pinfl or "")[-4:] or None,
+            position=position,
+            source="eimzo",
+        )
+    )
+    db.flush()

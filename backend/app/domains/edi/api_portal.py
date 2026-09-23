@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 import redis
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.api import errors
@@ -47,6 +47,7 @@ if TYPE_CHECKING:  # pragma: no cover
     # Annotation only: importing the contracts model at module scope would tie
     # this router's import order to that domain's for nothing.
     from app.domains.contracts.models import Contract
+    from app.domains.edi.contract_docs import IkpuChoice
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-didox"])
 
@@ -184,16 +185,25 @@ def didox_session(
 
     Succeeding proves the Didox account exists, which is the only signal we get
     for the signup step when a company registered on Didox's own site.
+
+    It also puts the signer on file. This is the same signature the identity
+    confirmation takes — the ИНН, authenticated by Didox — and the same profile
+    read names the person, so a seller who has signed in has everything a 007
+    needs from them. Asking for «Подтвердить личность» on top of it only made the
+    seller sign twice, and queued a verified company for a second staff review.
     """
+    from app.domains.edi import identity  # noqa: PLC0415
+
     company = company_or_404(db, account, company_id)
     _guard(db)
+    client = get_didox_client()
     try:
-        session.mint_user_key(
+        token = session.mint_user_key(
             redis_client,
             company,
             pkcs7_64=body.pkcs7_64,
             signature_hex=body.signature_hex,
-            client=get_didox_client(),
+            client=client,
         )
     except DidoxError as exc:
         raise _provider_error(exc) from exc
@@ -201,6 +211,11 @@ def didox_session(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
         ) from exc
+    # Best effort: `signer_for` already degrades a failed profile read to a
+    # signer with no name, and `remember_signer` records nothing for that.
+    identity.remember_signer(
+        db, company.id, int(account.id), identity.signer_for(company, token, client)
+    )
     row = onboarding.note_signed_in(db, company.id, company.tax_id)
     db.commit()
     return DidoxSessionOut(state=onboarding.state_of(row))
@@ -521,7 +536,9 @@ def _contract_or_404(db: Session, contract_id: int, company_id: int) -> Contract
     return contract
 
 
-def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractPrefillOut:
+def _prefill(
+    db: Session, contract: Contract, company_id: int, *, ikpu_code: str | None = None
+) -> DidoxContractPrefillOut:
     """What the seller is about to send — and every reason it would be refused.
 
     Collected rather than raised one at a time: a seller who has to discover
@@ -550,15 +567,23 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
         blockers.append("not_seller")
 
     lines: list[DidoxContractLineIn] = []
-    try:
-        lines = [
-            DidoxContractLineIn(
-                name=line.name, count=line.count, price=line.price, vat_rate=line.vat_rate
-            )
-            for line in contract_docs.suggested_lines(contract, offer)
-        ]
-    except IkpuMissing:
-        blockers.append("ikpu_missing")
+    # No offer — the contract came from a tender — means no code to inherit, so
+    # the seller picks one on the card. `ikpu_missing` is for an offer that lacks
+    # one: that has a fix (edit the offer); a missing offer has none.
+    ikpu_choice = offer is None
+    if ikpu_choice:
+        name, count, price = contract_docs.contract_line_terms(contract)
+        lines = [DidoxContractLineIn(name=name, count=count, price=price)]
+    else:
+        try:
+            lines = [
+                DidoxContractLineIn(
+                    name=line.name, count=line.count, price=line.price, vat_rate=line.vat_rate
+                )
+                for line in contract_docs.suggested_lines(contract, offer)
+            ]
+        except IkpuMissing:
+            blockers.append("ikpu_missing")
 
     # The SELLER only. They are `Owner`, they sign here, and `Owner.FizTin`/`Fio`
     # are the subject of that signature — we hold those because they confirmed
@@ -585,10 +610,13 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
         unknown = _counterparty_blocker(client, buyer.tax_id)
         if unknown:
             blockers.append(unknown)
-        elif offer is not None:
+        else:
             # Only worth asking once the counterparty is real: an unknown ИНН has
             # no basket to look in, and two blockers for one cause read as two.
-            missing = _counterparty_ikpu_blocker(client, buyer.tax_id, offer.ikpu_code)
+            # The code is the offer's, or — on a tender contract — the one the
+            # seller has picked on the card so far.
+            code = offer.ikpu_code if offer is not None else ikpu_code
+            missing = _counterparty_ikpu_blocker(client, buyer.tax_id, code)
             if missing:
                 blockers.append(missing)
 
@@ -600,6 +628,7 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
         buyer_name=(buyer.legal_name or buyer.tax_id) if buyer else None,
         document_id=int(existing.id) if existing else None,
         lines=lines,
+        ikpu_choice=ikpu_choice,
         blockers=blockers,
     )
 
@@ -611,13 +640,18 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
 def didox_contract_prefill(
     company_id: int,
     contract_id: int,
+    ikpu_code: str | None = Query(default=None, pattern=r"^\d{17}$"),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> DidoxContractPrefillOut:
-    """Everything the create needs, plus what is missing — a plain read."""
+    """Everything the create needs, plus what is missing — a plain read.
+
+    `ikpu_code` is the code the seller has picked so far on a tender contract, so
+    the buyer's list can be checked BEFORE the key password rather than at `/sign`.
+    """
     company_or_404(db, account, company_id)
     contract = _contract_or_404(db, contract_id, company_id)
-    return _prefill(db, contract, company_id)
+    return _prefill(db, contract, company_id, ikpu_code=ikpu_code)
 
 
 @router.post(
@@ -663,6 +697,17 @@ def didox_create_contract_document(
         )
         for index, line in enumerate(body.lines, start=1)
     ]
+    choice = (
+        None
+        if body.ikpu is None
+        else contract_docs.IkpuChoice(
+            ikpu_code=body.ikpu.code,
+            ikpu_name=body.ikpu.name,
+            ikpu_package_code=body.ikpu.package_code,
+            ikpu_package_name=body.ikpu.package_name,
+            ikpu_origin=body.ikpu.origin,
+        )
+    )
     try:
         user_key = session.require_user_key(redis_client, company)
         row = contract_docs.create_for_contract(
@@ -672,10 +717,11 @@ def didox_create_contract_document(
             account_id=int(account.id),
             # An empty list means "use the prefill" — the seller confirmed it
             # unchanged, and re-deriving is how the ИКПУ stays the offer's.
-            lines=None if not lines else _with_ikpu(db, contract, lines),
+            lines=None if not lines else _with_ikpu(db, contract, lines, choice),
             user_key=user_key,
             client=get_didox_client(),
             today=utcnow().date(),
+            ikpu=choice,
         )
     except session.UserKeyRequired as exc:
         raise HTTPException(
@@ -725,13 +771,16 @@ def didox_create_contract_document(
 
 
 def _with_ikpu(
-    db: Session, contract: Contract, lines: list[DocumentLine]
+    db: Session,
+    contract: Contract,
+    lines: list[DocumentLine],
+    choice: IkpuChoice | None = None,
 ) -> list[DocumentLine]:
     """Stamp the offer's tax classification onto seller-edited lines.
 
     The seller may correct a name, a quantity or a price; they may not invent an
     ИКПУ, because that code is chosen once on the offer and reused by every
-    document it backs.
+    document it backs. `choice` counts only when there is no offer at all.
     """
     import dataclasses  # noqa: PLC0415
 
@@ -739,7 +788,7 @@ def _with_ikpu(
 
     deal = contract_docs._linked_deal(db, contract)  # noqa: SLF001
     offer = contract_docs._linked_offer(db, contract, deal)  # noqa: SLF001
-    [template] = contract_docs.suggested_lines(contract, offer)
+    [template] = contract_docs.suggested_lines(contract, offer, choice)
     return [
         dataclasses.replace(
             line,

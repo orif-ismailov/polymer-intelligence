@@ -2748,7 +2748,6 @@
     "chosenPackage": "Packaging: {{name}}",
     "empty": "Nothing found. Try a different name.",
     "errors": {
-      "session": "A Didox session is needed. Sign in with your key — it is one click.",
       "unavailable": "Didox's ИКПУ directory is unavailable right now. Try later — the code can be added afterwards.",
       "failed": "The search could not be run.",
       "badCode": "An ИКПУ code must be 17 digits."
@@ -2765,6 +2764,10 @@
       "2": "Resale (bought from a supplier)",
       "3": "Services",
       "4": "Not in circulation"
+    },
+    "session": {
+      "hint": "IKPU codes live in your Didox account. To search and add them, sign in to Didox with the company’s e-signature — once every 6 hours.",
+      "open": "Sign in to Didox with e-signature"
     }
   },
   "didox": {
@@ -2841,10 +2844,9 @@
     "create": "Create the document at Didox",
     "creating": "Creating…",
     "blockedTitle": "The document cannot be created yet",
-    "confirmIdentity": "Confirm identity with E-IMZO",
     "blockers": {
-      "ikpu_missing": "The offer carries no ИКПУ — without a product code the document is refused.",
-      "signer_identity_missing": "One side has not confirmed identity by E-IMZO: the signer's PINFL and full name are mandatory.",
+      "ikpu_missing": "The offer has no IKPU — the document will not be accepted without a product code. Set it on the offer.",
+      "signer_identity_missing": "The signer’s details (full name and PINFL) are missing and the document requires them. Sign in to Didox with the company’s e-signature — they are taken from that same signature.",
       "not_ready": "The contract has not been sent to both sides for signing yet.",
       "wrong_rail": "This contract is signed with our own E-IMZO, not through Didox.",
       "party_mismatch": "The seller could not be determined from the contract.",
@@ -2855,12 +2857,15 @@
       "didox_session_required": "A Didox session is needed — e-sign the login.",
       "didox_offer_required": "The company has not signed Didox's public offer.",
       "didox_unavailable": "Didox is unavailable right now. Try again later.",
-      "ikpu_missing": "The offer carries no ИКПУ.",
+      "ikpu_missing": "No IKPU chosen.",
       "not_ready": "The contract is not ready to send.",
       "not_seller": "The seller creates the document.",
       "wrong_rail": "The contract is not on the Didox rail.",
       "empty_body": "The contract has neither text nor lines."
-    }
+    },
+    "ikpuTitle": "Product code (IKPU)",
+    "ikpuHint": "This contract came from a tender, so there is no offer carrying a code — pick the IKPU yourself. It goes on the document and to my.soliq.uz.",
+    "ikpuRequired": "Pick the IKPU, its package and the origin of the goods — the document cannot be created without them."
   },
   "stepUp": {
     "title": "Confirm your password",

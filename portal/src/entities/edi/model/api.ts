@@ -53,6 +53,15 @@ export interface DidoxContractLine {
   vat_rate: number | null;
 }
 
+/** The seller's ИКПУ for a contract with no offer to take it from. */
+export interface DidoxIkpuChoice {
+  code: string;
+  name: string;
+  package_code: string;
+  package_name: string;
+  origin: number;
+}
+
 export interface DidoxContractPrefill {
   contract_id: number;
   seller_company_id: number;
@@ -62,6 +71,8 @@ export interface DidoxContractPrefill {
   /** Already created — show the document, not the form. */
   document_id: number | null;
   lines: DidoxContractLine[];
+  /** No offer behind the contract (a tender): the seller picks the ИКПУ here. */
+  ikpu_choice: boolean;
   /**
    * Why the create would fail, all of them at once: `ikpu_missing` ·
    * `signer_identity_missing:{companyId}` · `not_ready` · `wrong_rail` ·
@@ -81,9 +92,18 @@ export const didoxApi = {
     api.post<DidoxStatus>(`/portal/companies/${companyId}/didox/session`, signature),
 
   /** What the seller is about to send at the operator, and what blocks it. */
-  contractPrefill: (companyId: number, contractId: number): Promise<DidoxContractPrefill> =>
+  /**
+   * `ikpuCode`: the code picked so far on a tender contract, so the card can say
+   * whether the BUYER has declared it before the seller loads a key.
+   */
+  contractPrefill: (
+    companyId: number,
+    contractId: number,
+    ikpuCode?: string,
+  ): Promise<DidoxContractPrefill> =>
     api.get<DidoxContractPrefill>(
       `/portal/companies/${companyId}/didox/contracts/${contractId}/document`,
+      { query: { ikpu_code: ikpuCode } },
     ),
 
   /**
@@ -94,10 +114,11 @@ export const didoxApi = {
     companyId: number,
     contractId: number,
     lines: DidoxContractLine[] = [],
+    ikpu: DidoxIkpuChoice | null = null,
   ): Promise<DidoxDocumentResult> =>
     api.post<DidoxDocumentResult>(
       `/portal/companies/${companyId}/didox/contracts/${contractId}/document`,
-      { lines },
+      { lines, ikpu },
     ),
 
   /**

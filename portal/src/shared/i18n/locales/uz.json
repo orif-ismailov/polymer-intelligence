@@ -2748,7 +2748,6 @@
     "chosenPackage": "Qadoq: {{name}}",
     "empty": "Hech narsa topilmadi. Boshqa nom bilan urinib ko‘ring.",
     "errors": {
-      "session": "Didox sessiyasi kerak. ERI bilan kiring — bu bir marta bosish.",
       "unavailable": "Didox IKPU ma’lumotnomasi hozir mavjud emas. Keyinroq urinib ko‘ring — kodni keyin ham qo‘shsa bo‘ladi.",
       "failed": "Qidiruvni bajarib bo‘lmadi.",
       "badCode": "IKPU kodi 17 ta raqamdan iborat bo‘lishi kerak."
@@ -2765,6 +2764,10 @@
       "2": "Qayta sotish (yetkazib beruvchidan olingan)",
       "3": "Xizmatlar",
       "4": "Aylanmada ishtirok etmaydi"
+    },
+    "session": {
+      "hint": "IKPU kodlari Didox kabinetingizda saqlanadi. Ularni qidirish va qo‘shish uchun kompaniya ERI bilan Didox ga kiring — 6 soatda bir marta.",
+      "open": "Didox ga ERI bilan kirish"
     }
   },
   "didox": {
@@ -2841,10 +2844,9 @@
     "create": "Didox’da hujjat yaratish",
     "creating": "Yaratilmoqda…",
     "blockedTitle": "Hozircha hujjat yaratib bo‘lmaydi",
-    "confirmIdentity": "ERI bilan shaxsni tasdiqlash",
     "blockers": {
-      "ikpu_missing": "E’londa IKPU ko‘rsatilmagan — tovar kodisiz hujjat qabul qilinmaydi.",
-      "signer_identity_missing": "Tomonlardan biri ERI orqali shaxsini tasdiqlamagan: hujjatda imzolovchining JSHSHIR va F.I.Sh. majburiy.",
+      "ikpu_missing": "E’londa IKPU ko‘rsatilmagan — tovar kodisiz hujjat qabul qilinmaydi. Uni e’londa ko‘rsating.",
+      "signer_identity_missing": "Imzolovchi ma’lumotlari (F.I.Sh. va JShShIR) yo‘q — ular hujjatda majburiy. Kompaniya ERI bilan Didox ga kiring: ularni shu imzodan olamiz.",
       "not_ready": "Shartnoma hali ikkala tomonga imzoga yuborilmagan.",
       "wrong_rail": "Bu shartnoma Didox orqali emas, bizning ERI bilan imzolanadi.",
       "party_mismatch": "Shartnoma bo‘yicha sotuvchini aniqlab bo‘lmadi.",
@@ -2855,12 +2857,15 @@
       "didox_session_required": "Didox sessiyasi kerak — kirishni ERI bilan imzolang.",
       "didox_offer_required": "Kompaniya Didox ommaviy ofertasini imzolamagan.",
       "didox_unavailable": "Didox hozir ishlamayapti. Keyinroq urinib ko‘ring.",
-      "ikpu_missing": "E’londa IKPU ko‘rsatilmagan.",
+      "ikpu_missing": "IKPU tanlanmagan.",
       "not_ready": "Shartnoma yuborishga tayyor emas.",
       "not_seller": "Hujjatni sotuvchi yaratadi.",
       "wrong_rail": "Shartnoma Didox relsida emas.",
       "empty_body": "Shartnomada na matn, na pozitsiyalar bor."
-    }
+    },
+    "ikpuTitle": "Tovar kodi (IKPU)",
+    "ikpuHint": "Shartnoma tender bo‘yicha tuzilgan, uning ortida kodli e’lon yo‘q — IKPU ni o‘zingiz tanlang. U hujjatga va my.soliq.uz ga boradi.",
+    "ikpuRequired": "IKPU, qadoq va tovar kelib chiqishini tanlang — ularsiz hujjat yaratilmaydi."
   },
   "stepUp": {
     "title": "Parolni tasdiqlang",

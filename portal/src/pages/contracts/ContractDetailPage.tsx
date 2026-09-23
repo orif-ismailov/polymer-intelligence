@@ -268,13 +268,16 @@ export function ContractDetailPage() {
       {isDidoxRail && contract.didox_document_id == null && active ? (
         <DidoxDocumentCard
           companyId={active.id}
+          taxId={active.tax_id}
           contractId={id}
           onCreated={() => void query.refetch()}
         />
       ) : null}
 
-      {/* Action bar */}
-      <Card>
+      {/* Action bar. Hidden when it has nothing to offer — e.g. a Didox contract
+          before its document exists, where the card above does the talking —
+          rather than left as an empty bordered strip. */}
+      <Card className="has-[[data-testid=contract-actions]:empty]:hidden">
         <CardBody className="flex flex-wrap gap-3" data-testid="contract-actions">
           {contract.status === "draft" && isInitiator ? (
             <Button disabled={busy} onClick={() => void act(() => contractApi.send(id))} data-testid="contract-send">
@@ -295,6 +298,10 @@ export function ContractDetailPage() {
               ourselves against a challenge; on `didox` the document lives at the
               operator, so it is a two-round-trip exchange and `iSigned` cannot be
               derived from `signatures` — Didox's own status is the truth. */}
+          {/* No document yet: the Didox card above says what is missing. The
+              status line is for a document that exists — `didox_status ?? 0`
+              used to read «Черновик — можно подписать» here, beside no button,
+              for one that did not. */}
           {contract.status === "pending_signatures" && isDidoxRail ? (
             <>
               {didoxSignable ? (
@@ -316,7 +323,7 @@ export function ContractDetailPage() {
                          signing. */
                       t("didox.signAndSend")}
                 </Button>
-              ) : (
+              ) : contract.didox_document_id == null ? null : (
                 <span className="text-sm text-text-muted" data-testid="didox-awaiting">
                   {t(`didox.documentStatus.${contract.didox_status ?? 0}`, {
                     defaultValue: t("contracts.awaitingOther"),

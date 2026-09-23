@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
+import { didoxApi } from "@/entities/edi";
+import { useDidoxSession } from "@/features/didox-session";
 import { ApiError } from "@/shared/api";
 import { Button, FormField, Input, Select } from "@/shared/ui";
 
@@ -31,6 +35,8 @@ export interface IkpuValue {
 
 interface IkpuPickerProps {
   companyId: number;
+  /** The company's ИНН — a Didox session is opened by signing it. */
+  taxId: string;
   value: IkpuValue | null;
   onChange: (value: IkpuValue | null) => void;
 }
@@ -52,9 +58,24 @@ interface IkpuPickerProps {
  * seller: **no Didox session** (409, one click), **Didox unavailable** (503,
  * nothing they can do), and **no matches** — which is a real answer and must not
  * be dressed up as an error.
+ *
+ * **The one click is offered here, before the first search.** Every call behind
+ * this picker needs the session, so a seller without one used to type a name,
+ * press «Найти», and only then read «подпишите вход ЭЦП» with nothing to press.
+ * The status is read up front (same query as the company's Didox card), and a
+ * search that still hits the 409 — a session that expired meanwhile — is run
+ * again once the seller has signed in.
  */
-export function IkpuPicker({ companyId, value, onChange }: IkpuPickerProps) {
+export function IkpuPicker({ companyId, taxId, value, onChange }: IkpuPickerProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const session = useDidoxSession(companyId, taxId);
+  const didoxStatus = useQuery({
+    queryKey: ["didox", "status", companyId],
+    queryFn: () => didoxApi.status(companyId),
+  });
+  /** What to run again once the session exists — the search that asked for it. */
+  const retry = useRef<(() => Promise<void>) | null>(null);
   const [query, setQuery] = useState("");
   const [rows, setRows] = useState<IkpuRow[] | null>(null);
   /**
@@ -70,6 +91,16 @@ export function IkpuPicker({ companyId, value, onChange }: IkpuPickerProps) {
   const [busy, setBusy] = useState(false);
   const [searched, setSearched] = useState(false);
 
+  async function signIn() {
+    const opened = await session.open();
+    if (!opened) return;
+    setError(null);
+    await queryClient.invalidateQueries({ queryKey: ["didox", "status", companyId] });
+    const again = retry.current;
+    retry.current = null;
+    if (again) await again();
+  }
+
   async function search() {
     const term = query.trim();
     if (!term) return;
@@ -80,7 +111,10 @@ export function IkpuPicker({ companyId, value, onChange }: IkpuPickerProps) {
       setSearched(true);
     } catch (err) {
       setRows(null);
-      if (err instanceof ApiError && err.status === 409) setError("session");
+      if (err instanceof ApiError && err.status === 409) {
+        retry.current = search;
+        setError("session");
+      }
       else if (err instanceof ApiError && err.status === 503) setError("unavailable");
       else setError("failed");
     } finally {
@@ -125,7 +159,10 @@ export function IkpuPicker({ companyId, value, onChange }: IkpuPickerProps) {
       }
       choose(row);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409) setError("session");
+      if (err instanceof ApiError && err.status === 409) {
+        retry.current = addByCode;
+        setError("session");
+      }
       else if (err instanceof ApiError && err.status === 503) setError("unavailable");
       else setError("failed");
     } finally {
@@ -164,6 +201,12 @@ export function IkpuPicker({ companyId, value, onChange }: IkpuPickerProps) {
   }, [companyId, value?.code, value?.name, value?.origin, picked?.class_code]);
 
   const chosen = picked?.class_code === value?.code ? picked : null;
+  // `disabled` is the deployment, not the company: nothing to sign in to.
+  const needsSession =
+    error === "session" ||
+    (didoxStatus.data != null &&
+      didoxStatus.data.state !== "disabled" &&
+      !didoxStatus.data.has_session);
   const looksLikeCode = IKPU_CODE.test(query.trim());
 
   return (
@@ -197,10 +240,24 @@ export function IkpuPicker({ companyId, value, onChange }: IkpuPickerProps) {
         )}
       </FormField>
 
-      {error === "session" && (
-        <p className="text-sm text-warning" data-testid="ikpu-session">
-          {t("ikpu.errors.session")}
-        </p>
+      {needsSession && (
+        <div className="space-y-2 rounded-md border border-border p-3" data-testid="ikpu-session">
+          <p className="text-sm text-text-muted">{t("ikpu.session.hint")}</p>
+          <Button
+            type="button"
+            size="sm"
+            disabled={session.minting || busy}
+            onClick={() => void signIn()}
+            data-testid="ikpu-session-open"
+          >
+            {session.minting ? t("didox.connecting") : t("ikpu.session.open")}
+          </Button>
+          {session.error && (
+            <p className="text-sm text-danger" data-testid="ikpu-session-error">
+              {t(`didox.errors.${session.error}`)}
+            </p>
+          )}
+        </div>
       )}
       {error === "unavailable" && (
         <p className="text-sm text-warning" data-testid="ikpu-unavailable">

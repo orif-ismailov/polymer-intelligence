@@ -116,8 +116,26 @@ class DidoxContractLineIn(BaseModel):
     vat_rate: int | None = Field(default=12, ge=0, le=100)
 
 
+class DidoxIkpuIn(BaseModel):
+    """The seller's ИКПУ for a contract with no offer to take it from (a tender).
+
+    Complete or refused: the code, its package and the seller's `origin` all reach
+    my.soliq.uz, and `ck_offer_ikpu_complete` asks the same of an offer.
+    """
+
+    #: 17 digits — the tasnif.soliq.uz format.
+    code: str = Field(pattern=r"^\d{17}$")
+    name: str = Field(min_length=1, max_length=500)
+    package_code: str = Field(min_length=1, max_length=50)
+    package_name: str = Field(default="", max_length=200)
+    #: How THIS seller came by the goods — Didox never supplies it.
+    origin: int = Field(ge=1, le=4)
+
+
 class DidoxContractDocumentIn(BaseModel):
     lines: list[DidoxContractLineIn] = Field(default_factory=list)
+    #: Only for a contract without an offer; an offer's own code always wins.
+    ikpu: DidoxIkpuIn | None = None
 
 
 class DidoxContractPrefillOut(BaseModel):
@@ -131,6 +149,9 @@ class DidoxContractPrefillOut(BaseModel):
     #: Already created — the screen shows the document instead of the form.
     document_id: int | None = None
     lines: list[DidoxContractLineIn] = Field(default_factory=list)
+    #: No offer behind this contract (it came from a tender), so the seller picks
+    #: the ИКПУ on the card instead of it arriving from the listing.
+    ikpu_choice: bool = False
     #: Machine-readable reasons the create would fail, so the UI can fix each in
     #: place: `ikpu_missing` · `signer_identity_missing` · `not_ready` ·
     #: `wrong_rail` · `not_seller` · `counterparty_unknown` (the buyer's ИНН is
