@@ -338,7 +338,12 @@ def lookup_company(
             tax_id=info.tin or stir,
             legal_name=info.name,
             short_name=info.short_name,
-            legal_form=info.legal_form,
+            # Their wording, our vocabulary. Didox says «Общество с огр.
+            # ответствен.» where the select offers `ООО`, and the select appends
+            # anything it does not recognise as an extra option — so the raw
+            # value listed the same legal form twice and stored the spelling
+            # nobody chose. Unrecognised wording still passes through untouched.
+            legal_form=didox_registry.normalize_legal_form(info.legal_form),
             legal_address=info.address,
             registration_date=info.registered_at,
             director_name=info.director,

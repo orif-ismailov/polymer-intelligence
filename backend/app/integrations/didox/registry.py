@@ -88,6 +88,85 @@ def normalize_status(info: DidoxCompanyInfo) -> str:
     return COMPANY_UNKNOWN
 
 
+#: Short codes, matched on the WHOLE value after stripping punctuation and case.
+#: Separate from the keyword table because these are too short to be substrings:
+#: «АЖ» inside a longer word, or «ХК» inside an address, would place a company
+#: in a legal form nobody claimed.
+_LEGAL_FORM_ABBREVIATIONS: dict[str, str] = {
+    "ООО": "ООО", "МЧЖ": "ООО", "MCHJ": "ООО", "OOO": "ООО", "LLC": "ООО",
+    "ЧП": "ЧП", "ХК": "ЧП", "XK": "ЧП",
+    "АО": "АО", "АЖ": "АО", "AJ": "АО", "JSC": "АО",
+    "СП": "СП", "ҚК": "СП", "QK": "СП",
+    "ИП": "ИП", "ЯТТ": "ИП", "YATT": "ИП",
+    "ГУП": "ГУП", "ДУК": "ГУП", "DUK": "ГУП",
+}
+
+#: Distinctive stems, checked in order against the lower-cased wording.
+#:
+#: Two traps, both of which a mapping written from the spelt-out names alone
+#: walks into. Didox ABBREVIATES — the one captured record says «Общество с огр.
+#: ответствен.», so «огранич» never matches it — and three of the six forms end
+#: in «предприятие», so only the leading stem may decide between them. For the
+#: same reason the LLC rule may not match a bare «общество»: «Акционерное
+#: общество» is a different form and would be swallowed by it.
+_LEGAL_FORM_KEYWORDS: tuple[tuple[str, str], ...] = (
+    ("общество с огр", "ООО"),
+    ("огранич", "ООО"),
+    ("cheklangan", "ООО"),
+    ("чекланган", "ООО"),
+    ("акционер", "АО"),
+    ("aksiyador", "АО"),
+    ("акциядор", "АО"),
+    ("совместн", "СП"),
+    ("qo'shma", "СП"),
+    ("qo‘shma", "СП"),
+    ("qoshma", "СП"),
+    ("қўшма", "СП"),
+    ("индивидуальн", "ИП"),
+    ("yakka tartib", "ИП"),
+    ("якка тартиб", "ИП"),
+    ("унитар", "ГУП"),
+    ("unitar", "ГУП"),
+    ("частн", "ЧП"),
+    ("xususiy", "ЧП"),
+    ("хусусий", "ЧП"),
+)
+
+
+def normalize_legal_form(value: str | None) -> str | None:
+    """Registry wording → the code the registration select offers, or unchanged.
+
+    `companies.legal_form` is free text and the portal's «Форма собственности»
+    appends any value it does not recognise as an extra option, labelled with its
+    raw string. Didox states the form in its own words, so without this the
+    prefill produced a select listing the same legal form twice — «Общество с
+    ограниченной ответственностью» (ours) beside «Общество с огр. ответствен.»
+    (theirs) — and auto-selected the registry's spelling, taking the stored value
+    off the vocabulary with it.
+
+    Unrecognised wording is returned **unchanged**, never guessed. That branch is
+    load-bearing: `СП ООО` exists in real rows, names two forms and belongs to
+    neither, and collapsing it into one would rewrite a company's legal form on
+    its next save. The portal's append-an-option branch is where such a value is
+    meant to land.
+    """
+    if value is None:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+
+    exact = _LEGAL_FORM_ABBREVIATIONS.get(text.upper().replace(".", "").replace('"', "").strip())
+    if exact is not None:
+        return exact
+
+    lowered = text.lower()
+    for needle, code in _LEGAL_FORM_KEYWORDS:
+        if needle in lowered:
+            return code
+    return text
+
+
 def to_company_snapshot(info: DidoxCompanyInfo) -> CompanySnapshot:
     return CompanySnapshot(
         inn=info.tin,
