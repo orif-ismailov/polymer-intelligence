@@ -55,6 +55,38 @@ def signal_client() -> redis.Redis:  # type: ignore[type-arg]
     return _signal_client
 
 
+#: How long `cache_client()` waits on Redis, in seconds. A cache that is slow is
+#: worse than no cache, and every caller treats a failure as a miss.
+CACHE_TIMEOUT_SECONDS = 1.0
+
+_cache_client: redis.Redis | None = None  # type: ignore[type-arg]
+
+
+def cache_client() -> redis.Redis:  # type: ignore[type-arg]
+    """A process-wide Redis client for integration caches, usable from a Celery task.
+
+    The third shape, for a need neither of the others meets: `get_redis` is a
+    per-request FastAPI dependency a worker cannot reach, and `signal_client` is
+    deliberately reserved for the settings generation counter. The Didox registry
+    client needs Redis in BOTH processes — the API (registration prefill) and the
+    worker (verification checks) — for its record cache and for the service
+    `user-key`, whose cooldown after a rejected password is the only thing between
+    us and Didox's permanent account lockout. Before this existed the worker built
+    that client with no Redis at all.
+
+    Every consumer is fail-soft: a Redis error is a cache miss, never a failure.
+    """
+    global _cache_client
+    if _cache_client is None:
+        _cache_client = redis.from_url(
+            settings.REDIS_URL,
+            socket_connect_timeout=CACHE_TIMEOUT_SECONDS,
+            socket_timeout=CACHE_TIMEOUT_SECONDS,
+            decode_responses=True,
+        )
+    return _cache_client
+
+
 def get_redis() -> Generator[redis.Redis, None, None]:  # type: ignore[type-arg]
     """Yield a Redis client (decode_responses=True) and close it after the request.
 

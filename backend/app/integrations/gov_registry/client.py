@@ -277,9 +277,15 @@ def get_gov_registry_client(db: Any) -> GovRegistryClient:  # noqa: ANN401
         # Imported here rather than at module scope: `integrations.didox.registry`
         # imports this module for the protocol and the DTOs, so a top-level
         # import would be a cycle.
+        from app.core.redis import cache_client  # noqa: PLC0415
         from app.integrations.didox.registry import DidoxGovRegistryClient  # noqa: PLC0415
 
-        return DidoxGovRegistryClient()
+        # WITH Redis. Built without it, this client — the one the verification
+        # checks use — could neither reuse the record the registration prefill had
+        # already fetched, nor cache the service user-key: every check logged in to
+        # Didox with our password, and a rejected password could not set the
+        # cooldown that keeps us off Didox's permanent-lockout ladder.
+        return DidoxGovRegistryClient(redis_client=cache_client())
     if mode == MODE_LIVE:
         raise ProviderUnavailable(
             "gov_registry: live mode has no adapter yet (needs ПЦД access) — "

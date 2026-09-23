@@ -25,6 +25,9 @@ What it deliberately does NOT do:
 
 from __future__ import annotations
 
+import dataclasses
+import datetime
+import json
 import logging
 from typing import TYPE_CHECKING, NoReturn
 
@@ -50,6 +53,32 @@ if TYPE_CHECKING:  # pragma: no cover
     import redis
 
 logger = logging.getLogger(__name__)
+
+#: One Didox registry record per tax id, shared by every consumer in every process.
+INFO_CACHE_KEY = "didox:info:{tin}"
+
+#: A day. The registration prefill, the `gov_registry` check and the `vat_status`
+#: check all read the same `/v1/utils/info/{tin}` record, usually minutes apart;
+#: without this they asked Didox for it separately (eight calls for one company on
+#: 23.09.2026, most of them timeouts). A day is comfortably safe for the facts
+#: judged here — liquidating a company in Uzbekistan takes more than a month.
+INFO_CACHE_TTL_SECONDS = 24 * 60 * 60
+
+
+def _dump_info(info: DidoxCompanyInfo) -> str:
+    data = dataclasses.asdict(info)
+    if isinstance(info.registered_at, datetime.date):
+        data["registered_at"] = info.registered_at.isoformat()
+    return json.dumps(data, ensure_ascii=False)
+
+
+def _load_info(raw: str) -> DidoxCompanyInfo:
+    data = json.loads(raw)
+    known = {f.name for f in dataclasses.fields(DidoxCompanyInfo)}
+    data = {k: v for k, v in data.items() if k in known}
+    if data.get("registered_at"):
+        data["registered_at"] = datetime.date.fromisoformat(data["registered_at"])
+    return DidoxCompanyInfo(**data)
 
 
 class CompanyNotFound(ProviderUnavailable):
@@ -228,7 +257,16 @@ class DidoxGovRegistryClient:
         Public because the registration form needs more than the protocol DTO
         carries (short name, legal form, bank requisites) and must not re-invent
         the exception translation to get it.
+
+        Read through a day-long Redis cache (`INFO_CACHE_KEY`), so the prefill and
+        both registry checks cost Didox ONE call between them. Only a FOUND record
+        is cached — a company registered this morning may reach the registry this
+        afternoon, and caching its absence would hide it for a day. Redis is an
+        optimisation only: any error there is a miss, never a failed lookup.
         """
+        cached = self._cached(inn)
+        if cached is not None:
+            return cached
         try:
             info = self._client.info_by_tin(inn, user_key=self._resolved_user_key())
         except DidoxUnavailable as exc:
@@ -240,7 +278,28 @@ class DidoxGovRegistryClient:
             raise ProviderUnavailable(f"gov_registry: didox rejected the lookup ({exc})") from exc
         if info is None:
             raise CompanyNotFound(f"gov_registry: didox has no record of {inn}")
+        self._remember(inn, info)
         return info
+
+    def _cached(self, inn: str) -> DidoxCompanyInfo | None:
+        if self._redis is None:
+            return None
+        try:
+            raw = self._redis.get(INFO_CACHE_KEY.format(tin=inn))
+            return _load_info(raw) if raw else None
+        except Exception as exc:  # noqa: BLE001 — a cache must never fail a lookup
+            logger.warning("didox.info_cache.read_failed", extra={"error": str(exc)})
+            return None
+
+    def _remember(self, inn: str, info: DidoxCompanyInfo) -> None:
+        if self._redis is None:
+            return
+        try:
+            self._redis.setex(
+                INFO_CACHE_KEY.format(tin=inn), INFO_CACHE_TTL_SECONDS, _dump_info(info)
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("didox.info_cache.write_failed", extra={"error": str(exc)})
 
     def _resolved_user_key(self) -> str | None:
         if self._user_key is not None:
