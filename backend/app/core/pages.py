@@ -110,6 +110,7 @@ PAGES: tuple[PageSpec, ...] = (
     # ── administration ───────────────────────────────────────────────────────
     # `adminUsers` is administrator-only and deliberately absent — see below.
     PageSpec("adminProducts", "administration"),
+    PageSpec("adminBankRegister", "administration"),
     # ── projectSettings ──────────────────────────────────────────────────────
     # ONE grant behind NINE screens. The sidebar splits the settings by area so
     # an operator can find one; the permission does not follow that split,

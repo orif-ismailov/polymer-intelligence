@@ -90,9 +90,26 @@ interface WizardDraftState {
   companyId: number | null;
   /** True after a successful signature — frozen requisites must not be PATCHed. */
   identityLocked: boolean;
+  /**
+   * Whether the bank name on the form came from the CB register rather than from
+   * the person filling it in.
+   *
+   * Its own flag rather than an entry in `prefilled`, because the two mechanisms
+   * would fight: `hydrateFromRegistry` REPLACES `prefilled` wholesale on every
+   * STIR lookup ("what the registry owns right now"), so a marker put there by an
+   * MFO lookup would be wiped by the next keystroke in the ИНН field. The two
+   * sources are independent — the state registry fills the MFO, the bank register
+   * names it — and so are their ownership marks.
+   */
+  bankNameFromRegister: boolean;
   setAccountType: (id: string) => void;
   setIdentity: (patch: Partial<WizardIdentity>) => void;
   setBank: (patch: Partial<WizardBank>) => void;
+  /**
+   * Fill «Название банка» from the bank register, without ever overwriting a
+   * name the user typed.
+   */
+  applyRegisterBankName: (name: string) => void;
   setDocument: (kind: string, file: File | null) => void;
   setManufacturer: (patch: Partial<WizardManufacturerProfile>) => void;
   setLogistics: (patch: Partial<WizardLogisticsProfile>) => void;
@@ -207,6 +224,7 @@ type PersistedDraft = Partial<
     | "companyId"
     | "identityLocked"
     | "prefilled"
+    | "bankNameFromRegister"
   >
 >;
 
@@ -269,6 +287,7 @@ export const useWizardDraft = create<WizardDraftState>()(
       logo: null,
       companyId: null,
       identityLocked: false,
+      bankNameFromRegister: false,
       prefilled: [],
       setAccountType: (id) =>
         set((s) => ({
@@ -290,7 +309,21 @@ export const useWizardDraft = create<WizardDraftState>()(
         set((s) => ({
           bank: { ...s.bank, ...patch },
           prefilled: s.prefilled.filter((field) => !(field in patch)),
+          // Typing in the name field takes it back off the register: from here on
+          // it is the user's, and a later MFO lookup must not overwrite it.
+          bankNameFromRegister:
+            "bank_name" in patch ? false : s.bankNameFromRegister,
         })),
+      applyRegisterBankName: (name) =>
+        set((s) => {
+          const incoming = name.trim();
+          if (!incoming) return s;
+          // Fill an empty field, or replace a name this same mechanism put there
+          // (the MFO changed). Never a name the user typed.
+          if (s.bank.bank_name.trim() !== "" && !s.bankNameFromRegister) return s;
+          if (s.bank.bank_name === incoming) return s;
+          return { bank: { ...s.bank, bank_name: incoming }, bankNameFromRegister: true };
+        }),
       setDocument: (kind, file) => set((s) => ({ documents: { ...s.documents, [kind]: file } })),
       setManufacturer: (patch) =>
         set((s) => ({
@@ -422,6 +455,7 @@ export const useWizardDraft = create<WizardDraftState>()(
           bank: { ...emptyBank },
           documents: {},
           prefilled: [],
+          bankNameFromRegister: false,
           manufacturer: {
             ...emptyManufacturer,
             financial_requirements: { ...emptyManufacturer.financial_requirements },
@@ -450,6 +484,10 @@ export const useWizardDraft = create<WizardDraftState>()(
         // every registry-filled value look hand-typed, and a corrected STIR
         // would then leave the previous company's requisites on the form.
         prefilled: s.prefilled,
+        // Persisted for the same reason as `prefilled`: without it a reload makes
+        // a register-filled bank name look hand-typed, and changing the MFO would
+        // then leave the previous bank's name on the form.
+        bankNameFromRegister: s.bankNameFromRegister,
       }),
     },
   ),

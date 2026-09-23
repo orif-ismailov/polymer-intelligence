@@ -42,6 +42,7 @@
       "alerts": "Uyarılar",
       "adminUsers": "Personel",
       "adminProducts": "Ürün kataloğu",
+      "adminBankRegister": "Banka rehberi",
       "settingsAnalytics": "Harcama ve limitler",
       "settingsAi": "Yapay zekâ ve modeller",
       "settingsNews": "Haberler ve raporlar",
@@ -2039,5 +2040,24 @@
       "contract": "Sözleşme",
       "sample_letter": "Taahhüt mektubu"
     }
+  },
+
+  "adminBankRegister": {
+    "title": "Banka rehberi",
+    "subtitle": "MB şube kaydı: MFO → banka adı. Şirket kaydında otomatik doldurulur.",
+    "loaded": "Rehber yüklendi",
+    "notLoaded": "Rehber yüklenmedi",
+    "rows": "Şube",
+    "fileDate": "MB yayın tarihi",
+    "uploadedAt": "Yüklendi",
+    "uploadedBy": "Yükleyen",
+    "shipped": "sürümle birlikte gelir",
+    "upload": ".xlsx yükle",
+    "uploading": "Yükleniyor…",
+    "imported": "Yüklenen şube: {count}",
+    "unchanged": "Dosya değişmedi — rehber olduğu gibi bırakıldı",
+    "failed": "Dosya yüklenemedi",
+    "file": "Dosya",
+    "hint": "Merkez Bankası sitesindeki şube kayıt dosyası (.xlsx)."
   }
 }

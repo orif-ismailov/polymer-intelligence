@@ -132,6 +132,60 @@ class ProductSynonym(Base):
     product: Mapped[Product] = relationship("Product")
 
 
+class BankRegisterImport(Base):
+    """One load of the Central Bank's branch register — seeded or uploaded.
+
+    The newest row is the live register; older ones are kept so an operator can
+    see when the list last changed and what it came from. `file_created_at` is
+    the register's OWN publication date, which is the only thing that says
+    whether a copy is stale — the upload timestamp says when we noticed, not when
+    the CB published.
+
+    `uploaded_by` is NULL for the seeded load, which is how "shipped with the
+    release" is told apart from "a person replaced it".
+    """
+
+    __tablename__ = "bank_register_imports"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    filename: Mapped[str] = mapped_column(Text, nullable=False)
+    #: sha256 of the uploaded bytes — makes re-loading the same file a no-op.
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    file_created_at: Mapped[datetime.date | None] = mapped_column(Date, nullable=True)
+    row_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    uploaded_by: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("staff_users.id"), nullable=True
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class BankBranch(Base):
+    """A bank branch, keyed by its MFO — the register's «Код филиала».
+
+    `mfo` is the natural key and is UNIQUE, like every other reference table here
+    (`products.code`, `substances.code`). `String(5)` matches
+    `company_bank_accounts.bank_mfo`, which is the column this table exists to
+    give a name to.
+
+    Branches of all four types are kept (CB units, head offices, payment centres
+    and ordinary branches): a company's account sits at a branch, not at a head
+    office, and every row names its parent bank either way.
+    """
+
+    __tablename__ = "bank_branches"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    mfo: Mapped[str] = mapped_column(String(5), nullable=False, unique=True, index=True)
+    bank_name: Mapped[str] = mapped_column(Text, nullable=False)
+    branch_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    branch_type: Mapped[str | None] = mapped_column(String(1), nullable=True)
+    import_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("bank_register_imports.id", ondelete="CASCADE"), nullable=False
+    )
+
+
 class ManualClassificationItem(Base):
     """Queue for raw_items whose product text was not recognized by the relevance service.
 

@@ -42,6 +42,7 @@
       "alerts": "Ogohlantirishlar",
       "adminUsers": "Xodimlar",
       "adminProducts": "Mahsulotlar ma'lumotnomasi",
+      "adminBankRegister": "Banklar ma'lumotnomasi",
       "settingsAnalytics": "Xarajatlar va limitlar",
       "settingsAi": "AI va modellar",
       "settingsNews": "Yangiliklar va hisobotlar",
@@ -2039,5 +2040,24 @@
       "contract": "Shartnoma",
       "sample_letter": "Majburiyat xati"
     }
+  },
+
+  "adminBankRegister": {
+    "title": "Banklar ma'lumotnomasi",
+    "subtitle": "MB filiallari reestri: MFO → bank nomi. Kompaniya ro'yxatdan o'tkazishda to'ldiriladi.",
+    "loaded": "Ma'lumotnoma yuklangan",
+    "notLoaded": "Ma'lumotnoma yuklanmagan",
+    "rows": "Filiallar",
+    "fileDate": "MB chiqarish sanasi",
+    "uploadedAt": "Yuklangan",
+    "uploadedBy": "Kim yukladi",
+    "shipped": "reliz bilan yetkaziladi",
+    "upload": ".xlsx yuklash",
+    "uploading": "Yuklanmoqda…",
+    "imported": "Yuklangan filiallar: {count}",
+    "unchanged": "Fayl o'zgarmadi — ma'lumotnoma o'zgarishsiz qoldi",
+    "failed": "Faylni yuklab bo'lmadi",
+    "file": "Fayl",
+    "hint": "Markaziy bank saytidagi filiallar reestri fayli (.xlsx)."
   }
 }

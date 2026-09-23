@@ -42,6 +42,7 @@
       "alerts": "预警",
       "adminUsers": "员工",
       "adminProducts": "产品目录",
+      "adminBankRegister": "银行目录",
       "settingsAnalytics": "支出与额度",
       "settingsAi": "AI 与模型",
       "settingsNews": "新闻与报告",
@@ -2024,5 +2025,24 @@
       "contract": "合同",
       "sample_letter": "承诺函"
     }
+  },
+
+  "adminBankRegister": {
+    "title": "银行目录",
+    "subtitle": "央行分支机构登记：MFO → 银行名称。公司注册时自动填充。",
+    "loaded": "目录已加载",
+    "notLoaded": "目录未加载",
+    "rows": "分支机构",
+    "fileDate": "央行发布日期",
+    "uploadedAt": "上传时间",
+    "uploadedBy": "上传者",
+    "shipped": "随版本发布",
+    "upload": "上传 .xlsx",
+    "uploading": "上传中…",
+    "imported": "已导入分支机构：{count}",
+    "unchanged": "文件未变更 — 目录保持不变",
+    "failed": "文件上传失败",
+    "file": "文件",
+    "hint": "来自中央银行网站的分支机构登记文件（.xlsx）。"
   }
 }
