@@ -9,9 +9,9 @@ Why pages rather than endpoints or domains. An administrator granting access is
 thinking about the screens their colleague needs, not about the 111 routes
 behind them or the 21 bounded contexts underneath. The dashboard's own
 navigation is already that list, so the keys here are the `NavItem.key` values
-from `dashboard/components/layout/Sidebar.tsx`, verbatim — the two must agree or
-a page appears in the nav that no permission can grant.
-`tests/test_page_catalog.py` reads the Sidebar and fails when they drift.
+from `dashboard/lib/nav.ts`, verbatim — the two must agree or a page appears in
+the nav that no permission can grant.
+`tests/test_page_catalog.py` reads that file and fails when they drift.
 
 The levels are ordered: `write` implies `read`. There is no separate "no access"
 value — a page a user holds no row for is a page they cannot reach, so a page
@@ -21,9 +21,9 @@ it. Defaulting the other way would silently widen everyone's reach on deploy.
 Administrators bypass the catalog entirely (`staff_users.is_admin`), which is
 what keeps a new page reachable by somebody on the day it ships.
 
-Adding a page means three edits: a `NavItem` in the Sidebar, a `PageSpec` here,
-and a `require_page` on its endpoints. The first two are checked against each
-other; the third is not, so an endpoint with no guard is still a way in.
+Adding a page means three edits: a `NavItem` in `dashboard/lib/nav.ts`, a
+`PageSpec` here, and a `require_page` on its endpoints. The first two are checked
+against each other; the third is not, so an endpoint with no guard is still a way in.
 """
 
 from __future__ import annotations
@@ -36,7 +36,24 @@ AccessLevel = Literal["read", "write"]
 
 #: Nav group keys, in the order the sidebar renders them. Used to lay the
 #: permission matrix out the way the person granting access sees the product.
-PageGroup = Literal["main", "requests", "broker", "sources", "settings", "projectSettings"]
+#:
+#: These name bounded contexts. `requests` and `settings` are gone: the first had
+#: become a 14-item catch-all holding the marketplace, the deal lifecycle,
+#: compliance, labs and logistics, and the second held operational screens
+#: (reports, news, prices) next to a group actually called project settings.
+PageGroup = Literal[
+    "main",
+    "marketplace",
+    "dealFlow",
+    "counterparties",
+    "labCompliance",
+    "fulfilment",
+    "broker",
+    "content",
+    "sources",
+    "administration",
+    "projectSettings",
+]
 
 
 @dataclass(frozen=True)
@@ -57,36 +74,44 @@ PAGES: tuple[PageSpec, ...] = (
     # ── main ─────────────────────────────────────────────────────────────────
     PageSpec("dashboard", "main"),
     PageSpec("liveFeed", "main"),
-    # ── requests ─────────────────────────────────────────────────────────────
-    PageSpec("purchaseRequests", "requests"),
-    PageSpec("offers", "requests"),
-    PageSpec("moderation", "requests"),
-    PageSpec("offerRequests", "requests"),
-    PageSpec("verification", "requests"),
-    PageSpec("companies", "requests"),
-    PageSpec("contracts", "requests"),
-    PageSpec("deals", "requests"),
-    PageSpec("escrow", "requests"),
-    PageSpec("substances", "requests"),
-    PageSpec("labOrders", "requests"),
-    PageSpec("labPartners", "requests"),
-    PageSpec("logisticsRequests", "requests"),
-    PageSpec("labRequests", "requests"),
+    # ── marketplace ──────────────────────────────────────────────────────────
+    PageSpec("purchaseRequests", "marketplace"),
+    PageSpec("offers", "marketplace"),
+    PageSpec("offerRequests", "marketplace"),
+    PageSpec("moderation", "marketplace"),
+    # ── dealFlow ─────────────────────────────────────────────────────────────
+    PageSpec("contracts", "dealFlow"),
+    PageSpec("deals", "dealFlow"),
+    PageSpec("escrow", "dealFlow"),
+    # ── counterparties ───────────────────────────────────────────────────────
+    # `portalAccounts` belongs to this group in the nav but is NOT grantable —
+    # see the note at the end of this tuple.
+    PageSpec("companies", "counterparties"),
+    PageSpec("verification", "counterparties"),
+    # ── labCompliance ────────────────────────────────────────────────────────
+    PageSpec("labOrders", "labCompliance"),
+    PageSpec("labPartners", "labCompliance"),
+    PageSpec("substances", "labCompliance"),
+    # ── fulfilment ───────────────────────────────────────────────────────────
+    PageSpec("logisticsRequests", "fulfilment"),
+    PageSpec("labRequests", "fulfilment"),
     # ── broker ───────────────────────────────────────────────────────────────
     PageSpec("sourcing", "broker"),
     PageSpec("inventory", "broker"),
     PageSpec("partners", "broker"),
     PageSpec("intel", "broker"),
+    # ── content ──────────────────────────────────────────────────────────────
+    PageSpec("newsAdmin", "content"),
+    PageSpec("reports", "content"),
+    PageSpec("prices", "content"),
     # ── sources ──────────────────────────────────────────────────────────────
     PageSpec("sources", "sources"),
     PageSpec("alerts", "sources"),
-    # ── settings ─────────────────────────────────────────────────────────────
-    PageSpec("reports", "settings"),
-    PageSpec("newsAdmin", "settings"),
-    PageSpec("prices", "settings"),
-    PageSpec("adminProducts", "settings"),
+    # ── administration ───────────────────────────────────────────────────────
+    # `adminUsers` is administrator-only and deliberately absent — see below.
+    PageSpec("adminProducts", "administration"),
     # ── projectSettings ──────────────────────────────────────────────────────
-    # ONE grant behind SEVEN screens. The sidebar splits the settings by area so
+    # ONE grant behind NINE screens. The sidebar splits the settings by area so
     # an operator can find one; the permission does not follow that split,
     # because "may tune the platform" is a single decision to delegate and a
     # seven-row matrix would only make it look like seven.

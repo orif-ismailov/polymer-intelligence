@@ -2,42 +2,47 @@
   "nav": {
     "groups": {
       "main": "ANA",
-      "requests": "TALEPLER",
+      "marketplace": "PAZAR YERİ",
+      "dealFlow": "İŞLEMLER",
+      "counterparties": "KARŞI TARAFLAR",
+      "labCompliance": "LABORATUVAR VE DENETİM",
+      "fulfilment": "İFA",
       "broker": "BROKER",
+      "content": "İÇERİK",
       "sources": "KAYNAKLAR",
-      "settings": "AYARLAR",
-      "projectSettings": "PROJE AYARLARI"
+      "administration": "YÖNETİM",
+      "projectSettings": "AYARLAR"
     },
     "items": {
       "dashboard": "Panel",
-      "liveFeed": "Canlı akış",
+      "liveFeed": "Piyasa akışı",
       "purchaseRequests": "Satın alma talepleri",
-      "offers": "Teklifler",
+      "offers": "Satıcı teklifleri",
+      "offerRequests": "Teklif başvuruları",
       "moderation": "Moderasyon",
-      "sourcing": "AI tedarik",
-      "inventory": "Stok",
-      "partners": "Partnerler",
-      "intel": "Analiz",
-      "sources": "Kaynaklar",
-      "alerts": "Uyarılar",
-      "reports": "Raporlar",
-      "prices": "Fiyatlar",
-      "adminProducts": "Ürünler",
-      "adminUsers": "Kullanıcılar",
-      "portalAccounts": "Müşteri hesapları",
-      "offerRequests": "Teklif talepleri",
-      "newsAdmin": "Haberler (yönetici)",
-      "verification": "Doğrulama",
-      "companies": "Şirketler",
       "contracts": "Sözleşmeler",
       "deals": "İşlemler",
       "escrow": "Emanet",
+      "companies": "Şirketler",
+      "verification": "Şirket doğrulama",
+      "portalAccounts": "Müşteri hesapları",
+      "labOrders": "Analizler",
+      "labPartners": "Laboratuvar iş ortakları",
       "substances": "Maddeler",
-      "labOrders": "Laboratuvar",
-      "labPartners": "Laboratuvarlar",
-      "logisticsRequests": "Lojistik talepleri",
+      "logisticsRequests": "Lojistik",
       "labRequests": "Laboratuvar talepleri",
-      "settingsAnalytics": "Analitik",
+      "sourcing": "AI tedarik",
+      "inventory": "Stok",
+      "partners": "Tedarikçi iş ortakları",
+      "intel": "Piyasa analizi",
+      "newsAdmin": "Haberler",
+      "reports": "Raporlar",
+      "prices": "Fiyatlar",
+      "sources": "Kaynaklar",
+      "alerts": "Uyarılar",
+      "adminUsers": "Personel",
+      "adminProducts": "Ürün kataloğu",
+      "settingsAnalytics": "Harcama ve limitler",
       "settingsAi": "Yapay zekâ ve modeller",
       "settingsNews": "Haberler ve raporlar",
       "settingsNotifications": "Bildirimler",
@@ -59,7 +64,7 @@
     },
     "adminBadge": "Yönetici",
     "pages": {
-      "appSettings": "Proje ayarları"
+      "appSettings": "Ayarlar"
     }
   },
   "login": {
@@ -73,7 +78,7 @@
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {
-    "title": "Canlı akış",
+    "title": "Piyasa akışı",
     "subtitle": "Tüm yapılandırılmış kaynaklardan gerçek zamanlı piyasa sinyalleri",
     "loading": "Yükleniyor…"
   },
@@ -824,7 +829,7 @@
     }
   },
   "adminProducts": {
-    "pageTitle": "Ürünler",
+    "pageTitle": "Ürün kataloğu",
     "pageSubtitle": "Uygulama için ürün listesi. Buraya eklenen ürünler seçicilerde görünür.",
     "loadError": "Ürünler yüklenemedi. Lütfen sayfayı yenileyin.",
     "empty": "Ürün bulunamadı.",
@@ -858,7 +863,7 @@
     }
   },
   "offerRequests": {
-    "title": "Teklif talepleri",
+    "title": "Teklif başvuruları",
     "subtitle": "Alıcıların teklif talepleri — satıcıya iletmeden önce inceleyin",
     "empty": "İncelenecek talep yok",
     "error": "Talepler yüklenemedi",
@@ -954,7 +959,7 @@
     }
   },
   "verification": {
-    "title": "Doğrulama",
+    "title": "Şirket doğrulama",
     "subtitle": "Şirket doğrulama başvuruları kuyruğu",
     "loading": "Yükleniyor…",
     "error": "Veriler yüklenemedi",
@@ -1530,7 +1535,7 @@
     }
   },
   "labOrders": {
-    "title": "Laboratuvar talepleri",
+    "title": "Analizler",
     "subtitle": "Analizi iş ortağı laboratuvar yapar — durumları operatör yürütür. Talepler en eskiden başlar.",
     "filterAll": "Tüm durumlar",
     "empty": "Talep yok",
@@ -1586,7 +1591,7 @@
     }
   },
   "labPartners": {
-    "title": "İş ortağı laboratuvarlar",
+    "title": "Laboratuvar iş ortakları",
     "subtitle": "Laboratuvar dizini. Analist okur (atama sırasında seçer), yalnızca yönetici düzenler.",
     "empty": "Henüz laboratuvar yok",
     "colName": "Ad",
@@ -1609,7 +1614,7 @@
     "adminOnly": "Dizini yönetici düzenler."
   },
   "logisticsRequests": {
-    "title": "Lojistik talepleri",
+    "title": "Lojistik",
     "subtitle": "Alıcıdan taşıyıcıya yayın panosunun salt okunur gözetimi.",
     "loading": "Yükleniyor…",
     "error": "Veriler yüklenemedi",

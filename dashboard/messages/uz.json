@@ -2,42 +2,47 @@
   "nav": {
     "groups": {
       "main": "ASOSIY",
-      "requests": "ARIZALAR",
+      "marketplace": "SAVDO MAYDONI",
+      "dealFlow": "BITIMLAR",
+      "counterparties": "KONTRAGENTLAR",
+      "labCompliance": "LABORATORIYA VA NAZORAT",
+      "fulfilment": "IJRO",
       "broker": "BROKER",
+      "content": "KONTENT",
       "sources": "MANBALAR",
-      "settings": "SOZLAMALAR",
-      "projectSettings": "LOYIHA SOZLAMALARI"
+      "administration": "MA'MURIYAT",
+      "projectSettings": "SOZLAMALAR"
     },
     "items": {
       "dashboard": "Boshqaruv paneli",
-      "liveFeed": "Jonli tasma",
+      "liveFeed": "Bozor tasmasi",
       "purchaseRequests": "Xarid arizalari",
-      "offers": "Takliflar",
+      "offers": "Sotuvchi takliflari",
+      "offerRequests": "Takliflar bo'yicha murojaatlar",
       "moderation": "Moderatsiya",
-      "sourcing": "AI-tanlov",
-      "inventory": "Ombor",
-      "partners": "Hamkorlar",
-      "intel": "Tahlil",
-      "sources": "Manbalar",
-      "alerts": "Ogohlantirishlar",
-      "reports": "Hisobotlar",
-      "prices": "Narxlar",
-      "adminProducts": "Mahsulotlar",
-      "adminUsers": "Foydalanuvchilar",
-      "portalAccounts": "Mijoz kabinetlari",
-      "offerRequests": "Taklif so'rovlari",
-      "newsAdmin": "Yangiliklar (admin)",
-      "verification": "Tekshiruv",
-      "companies": "Kompaniyalar",
       "contracts": "Shartnomalar",
       "deals": "Bitimlar",
       "escrow": "Eskrou",
+      "companies": "Kompaniyalar",
+      "verification": "Kompaniyalarni tekshirish",
+      "portalAccounts": "Mijoz kabinetlari",
+      "labOrders": "Tahlillar",
+      "labPartners": "Hamkor laboratoriyalar",
       "substances": "Moddalar",
-      "labOrders": "Laboratoriya",
-      "labPartners": "Laboratoriyalar",
-      "logisticsRequests": "Logistika so'rovlari",
+      "logisticsRequests": "Logistika",
       "labRequests": "Laboratoriya so'rovlari",
-      "settingsAnalytics": "Analitika",
+      "sourcing": "AI-tanlov",
+      "inventory": "Ombor",
+      "partners": "Hamkor yetkazib beruvchilar",
+      "intel": "Bozor tahlili",
+      "newsAdmin": "Yangiliklar",
+      "reports": "Hisobotlar",
+      "prices": "Narxlar",
+      "sources": "Manbalar",
+      "alerts": "Ogohlantirishlar",
+      "adminUsers": "Xodimlar",
+      "adminProducts": "Mahsulotlar ma'lumotnomasi",
+      "settingsAnalytics": "Xarajatlar va limitlar",
       "settingsAi": "AI va modellar",
       "settingsNews": "Yangiliklar va hisobotlar",
       "settingsNotifications": "Bildirishnomalar",
@@ -59,7 +64,7 @@
     },
     "adminBadge": "Administrator",
     "pages": {
-      "appSettings": "Loyiha sozlamalari"
+      "appSettings": "Sozlamalar"
     }
   },
   "login": {
@@ -73,7 +78,7 @@
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {
-    "title": "Jonli tasma",
+    "title": "Bozor tasmasi",
     "subtitle": "Barcha sozlangan manbalardan real vaqtdagi bozor signallari",
     "loading": "Yuklanmoqda…"
   },
@@ -824,7 +829,7 @@
     }
   },
   "adminProducts": {
-    "pageTitle": "Mahsulotlar",
+    "pageTitle": "Mahsulotlar ma'lumotnomasi",
     "pageSubtitle": "Ilova uchun mahsulotlar ro'yxati. Bu yerda qo'shilgan mahsulotlar selektorlarda ko'rinadi.",
     "loadError": "Mahsulotlarni yuklab bo'lmadi. Sahifani yangilang.",
     "empty": "Mahsulotlar topilmadi.",
@@ -858,7 +863,7 @@
     }
   },
   "offerRequests": {
-    "title": "Taklif so'rovlari",
+    "title": "Takliflar bo'yicha murojaatlar",
     "subtitle": "Xaridorlarning takliflarga so'rovlari — sotuvchiga yuborishdan oldin tekshiring",
     "empty": "Ko'rib chiqiladigan so'rovlar yo'q",
     "error": "So'rovlarni yuklab bo'lmadi",
@@ -954,7 +959,7 @@
     }
   },
   "verification": {
-    "title": "Tekshiruv",
+    "title": "Kompaniyalarni tekshirish",
     "subtitle": "Kompaniyalarni tekshirish so'rovlari navbati",
     "loading": "Yuklanmoqda…",
     "error": "Ma'lumotlarni yuklab bo'lmadi",
@@ -1530,7 +1535,7 @@
     }
   },
   "labOrders": {
-    "title": "Laboratoriya arizalari",
+    "title": "Tahlillar",
     "subtitle": "Tahlilni hamkor laboratoriya bajaradi — holatlarni operator yuritadi. Arizalar eng eskisidan ko‘rsatiladi.",
     "filterAll": "Barcha holatlar",
     "empty": "Ariza yo‘q",
@@ -1609,7 +1614,7 @@
     "adminOnly": "Ma’lumotnomani administrator tahrirlaydi."
   },
   "logisticsRequests": {
-    "title": "Logistika so'rovlari",
+    "title": "Logistika",
     "subtitle": "Xaridorlardan tashuvchilarga so'rovlar nazorati (faqat ko'rish).",
     "loading": "Yuklanmoqda…",
     "error": "Ma'lumotlarni yuklab bo'lmadi",
