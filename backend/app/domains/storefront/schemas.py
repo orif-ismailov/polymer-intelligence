@@ -25,7 +25,7 @@ import datetime
 import decimal
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.domains.marketplace.schemas import PublicFeaturedOffer
 
@@ -64,6 +64,16 @@ class PublicOfferDetail(PublicOfferCard):
     #: Telegram-seller offers, which have no company to link to.
     seller_company_id: int | None = None
     seller_display_name: str | None = None
+
+    @field_validator("key_properties", "applications", mode="before")
+    @classmethod
+    def _null_is_no_chips(cls, v: object) -> object:
+        """Both columns are nullable (0030) and every older offer holds NULL.
+
+        Read from attributes, that arrives as an explicit None, which the
+        `default_factory` does not cover — the page answered 500 (prod, 24.09.2026).
+        """
+        return [] if v is None else v
 
 
 class PublicOfferListOut(BaseModel):
