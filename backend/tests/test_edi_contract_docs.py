@@ -395,6 +395,21 @@ class TestTheRealContractsAreQuotedAsNumbered:
 
         contract = SimpleNamespace(
             title="Договор",
-            variables={"product": "МЭГ", "qty": "120000", "price_with_vat": "16300", "vat_rate": "12"},
+            variables={"product": "МЭГ", "qty": "120000", "unit_price": "16300", "vat_rate": "12"},
         )
         assert contract_line_terms(contract) == ("МЭГ", D("120000"), D("14553.57"))
+
+
+class TestAFrameworkContractGoesWithoutGoods:
+    def test_no_products_and_no_vat(self) -> None:
+        from app.domains.edi.contract_docs import EmptyContractBody, build_body
+
+        common = dict(
+            number="346-01", date=datetime.date(2026, 1, 15), expires_on=datetime.date(2027, 1, 15),
+            title="Договор", seller=_party("301111111"), buyer=_party("302222222"),
+            lines=[], sections=[("ПРЕДМЕТ ДОГОВОРА", "1.1. …")],
+        )
+        body = build_body(**common, framework=True)
+        assert (body["Products"], body["HasVat"]) == ([], False)
+        with pytest.raises(EmptyContractBody):
+            build_body(**common)

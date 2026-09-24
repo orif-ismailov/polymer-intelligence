@@ -113,6 +113,8 @@ export interface DidoxFacture {
   /** Issued by the reader's company. */
   outgoing: boolean;
   total: string;
+  /** The specification it invoices, on a framework contract. */
+  specification_id: number | null;
 }
 
 export interface DidoxFactures {
@@ -203,9 +205,14 @@ export const didoxApi = {
     api.post<DidoxStatus>(`/portal/companies/${companyId}/didox/offer`, signature),
 
   /** The contract's ЭСФ, and the form for the next one. */
-  factures: (companyId: number, contractId: number): Promise<DidoxFactures> =>
+  factures: (
+    companyId: number,
+    contractId: number,
+    specificationId?: number | null,
+  ): Promise<DidoxFactures> =>
     api.get<DidoxFactures>(
       `/portal/companies/${companyId}/didox/contracts/${contractId}/factures`,
+      { query: { specification_id: specificationId ?? undefined } },
     ),
 
   /** Issue an ЭСФ (Didox 002) for this contract; the seller signs it next. */
@@ -214,10 +221,20 @@ export const didoxApi = {
     contractId: number,
     lines: DidoxContractLine[],
     ikpu: DidoxIkpuChoice | null = null,
+    specificationId: number | null = null,
   ): Promise<DidoxDocumentResult> =>
     api.post<DidoxDocumentResult>(
       `/portal/companies/${companyId}/didox/contracts/${contractId}/factures`,
-      { lines, ikpu },
+      { lines, ikpu, specification_id: specificationId },
+    ),
+
+  /**
+   * Send a framework contract's specification to Didox — a «Произвольный
+   * документ» carrying our PDF. Idempotent while its document lives.
+   */
+  createSpecificationDocument: (companyId: number, specId: number): Promise<DidoxDocumentResult> =>
+    api.post<DidoxDocumentResult>(
+      `/portal/companies/${companyId}/didox/specifications/${specId}/document`,
     ),
 
   /** Round 1 — the exact bytes to sign, stashed single-use on the server. */

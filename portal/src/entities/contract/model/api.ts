@@ -6,6 +6,9 @@ import type {
   ContractTemplate,
   CreateContractPayload,
   DirectoryCompany,
+  Specification,
+  SpecificationList,
+  SpecificationPayload,
   TermPreset,
   TermPresetList,
   TermPresetPayload,
@@ -69,6 +72,20 @@ export const contractApi = {
     payload: TermPresetPayload,
   ): Promise<TermPreset> =>
     api.put<TermPreset>(`/portal/companies/${companyId}/contract-term-presets/${presetId}`, payload),
+  specifications: (contractId: number): Promise<SpecificationList> =>
+    api.get<SpecificationList>(`/portal/contracts/${contractId}/specifications`),
+  createSpecification: (contractId: number, variables: SpecificationPayload): Promise<Specification> =>
+    api.post<Specification>(`/portal/contracts/${contractId}/specifications`, { variables }),
+  cancelSpecification: (contractId: number, specId: number): Promise<Specification> =>
+    api.post<Specification>(`/portal/contracts/${contractId}/specifications/${specId}/cancel`),
+  /** Presigned PDF URL of a specification — for an <iframe> or a new tab. */
+  specificationUrl: (contractId: number, specId: number): Promise<string> =>
+    api
+      .get<{ url: string }>(`/portal/contracts/${contractId}/specifications/${specId}/document`, {
+        query: { as: "url" },
+      })
+      .then((r) => r.url),
+
   archiveTermPreset: (companyId: number, presetId: number): Promise<void> =>
     api.del<void>(`/portal/companies/${companyId}/contract-term-presets/${presetId}`),
 };
@@ -79,4 +96,5 @@ export const contractKeys = {
   detail: (id: number) => ["contracts", "detail", id] as const,
   templates: () => ["contracts", "templates"] as const,
   termPresets: (companyId: number) => ["contracts", "term-presets", companyId] as const,
+  specifications: (contractId: number) => ["contracts", "specifications", contractId] as const,
 };

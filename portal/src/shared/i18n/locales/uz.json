@@ -2757,7 +2757,7 @@
     "origin": "Tovar kelib chiqishi",
     "originHint": "Hisob-faktura uchun: bu tovarni qanday olgansiz. Didox buni bilmaydi — bir xil kod zavod uchun «o‘z ishlab chiqarishi», treyder uchun «qayta sotish».",
     "originPlaceholder": "Kelib chiqishini tanlang",
-    "originRequired": "Kelib chiqishisiz e’lonni chop etib bo‘lmaydi.",
+    "originRequired": "Tovarning kelib chiqishisiz kodni hujjatlarda ishlatib bo'lmaydi.",
     "origins": {
       "1": "O‘z ishlab chiqarishi",
       "2": "Qayta sotish (yetkazib beruvchidan olingan)",
@@ -2965,7 +2965,8 @@
     "blockedTitle": "Hozircha ESF chiqarib bo'lmaydi",
     "blockers": {
       "contract_reference_missing": "ESF havola qilishi kerak bo'lgan Didoxdagi shartnoma topilmadi.",
-      "not_active": "Shartnoma hali ikkala tomon tomonidan imzolanmagan."
+      "not_active": "Shartnoma hali ikkala tomon tomonidan imzolanmagan.",
+      "specification_required": "Imzolangan spetsifikatsiyani tanlang — ramkaviy shartnoma bo'yicha ESF shu asosida chiqariladi."
     },
     "errors": {
       "facture_pending": "Oldingi ESF hali imzolanmagan.",
@@ -2973,6 +2974,49 @@
       "precision": "Verguldan keyin juda ko'p raqam: miqdor — 6 gacha, narx — 2 gacha.",
       "not_active": "Shartnoma hali ikkala tomon tomonidan imzolanmagan.",
       "contract_reference_missing": "ESF havola qilishi kerak bo'lgan Didoxdagi shartnoma topilmadi."
+    },
+    "specification": "Spetsifikatsiya bo'yicha"
+  },
+  "specification": {
+    "title": "Spetsifikatsiyalar",
+    "none": "Hozircha spetsifikatsiyalar yo'q. Ramkaviy shartnoma bo'yicha har bir yetkazib berish o'z spetsifikatsiyasi bilan rasmiylashtiriladi.",
+    "new": "Yangi spetsifikatsiya",
+    "create": "Spetsifikatsiya tuzish",
+    "name": "Spetsifikatsiya № {{n}}",
+    "line": "Pozitsiya {{n}}",
+    "product": "Tovar",
+    "qty": "Miqdor",
+    "unit": "O'lchov birligi",
+    "unitPrice": "Birlik narxi, so'm",
+    "addLine": "Pozitsiya qo'shish",
+    "units": {
+      "kg": "kg",
+      "t": "t",
+      "pcs": "dona"
+    },
+    "priceBasis": "Narx ko'rsatilgan",
+    "withVat": "QQS bilan",
+    "withoutVat": "QQSsiz",
+    "priceBasisHint": {
+      "with_vat": "Jami yaxlit chiqadi, lekin ESF bir necha so'mga farq qilishi mumkin.",
+      "without_vat": "ESF spetsifikatsiya bilan tiyingacha mos keladi."
+    },
+    "payment": "To'lov",
+    "prepay": "100% oldindan to'lov",
+    "schedule": "Jadval bo'yicha",
+    "scheduleText": "To'lov jadvali",
+    "deliveryDays": "To'lovdan keyin yetkazib berish muddati, bank kunlari",
+    "openPdf": "PDF ochish",
+    "status": {
+      "draft": "Qoralama",
+      "pending_signatures": "Imzolar kutilmoqda",
+      "active": "Imzolangan",
+      "declined": "Rad etilgan",
+      "cancelled": "Bekor qilingan"
+    },
+    "errors": {
+      "invalid": "Pozitsiyalarni tekshiring: har birida tovar, miqdor va narx bo'lishi kerak.",
+      "createFailed": "Spetsifikatsiyani tuzib bo'lmadi."
     }
   }
 }

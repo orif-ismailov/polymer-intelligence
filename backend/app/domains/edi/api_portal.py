@@ -54,7 +54,7 @@ from app.models.enums import CompanyMemberRole
 if TYPE_CHECKING:  # pragma: no cover
     # Annotation only: importing the contracts model at module scope would tie
     # this router's import order to that domain's for nothing.
-    from app.domains.contracts.models import Contract
+    from app.domains.contracts.models import Contract, ContractSpecification
     from app.domains.edi.contract_docs import IkpuChoice
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-didox"])
@@ -653,8 +653,14 @@ def _prefill(
     # No offer — the contract came from a tender — means no code to inherit, so
     # the seller picks one on the card. `ikpu_missing` is for an offer that lacks
     # one: that has a fix (edit the offer); a missing offer has none.
-    ikpu_choice = offer is None
-    if ikpu_choice:
+    from app.domains.contracts.specifications import is_framework  # noqa: PLC0415
+
+    framework = is_framework(contract)
+    # A framework contract goes to Didox with no goods — nothing to classify.
+    ikpu_choice = offer is None and not framework
+    if framework:
+        lines = []
+    elif ikpu_choice:
         name, count, price = contract_docs.contract_line_terms(contract)
         lines = [DidoxContractLineIn(name=name, count=count, price=price)]
     else:
@@ -901,6 +907,7 @@ def _facture_out(db: Session, row: DidoxDocument, company_id: int) -> DidoxFactu
         status=_didox_status_for_viewer(row.status, viewer_is_owner=outgoing) or 0,
         outgoing=outgoing,
         total=sum((line.amount + line.vat_sum for line in lines), decimal.Decimal("0")),
+        specification_id=row.specification_id,
     )
 
 
@@ -911,6 +918,7 @@ def _facture_out(db: Session, row: DidoxDocument, company_id: int) -> DidoxFactu
 def didox_contract_factures(
     company_id: int,
     contract_id: int,
+    specification_id: int | None = Query(default=None),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> DidoxFacturesOut:
@@ -921,14 +929,19 @@ def didox_contract_factures(
     after loading a key, concludes the feature is broken.
     """
     from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts.specifications import is_framework  # noqa: PLC0415
     from app.domains.edi import contract_docs, facture_docs  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
 
     company_or_404(db, account, company_id)
     contract = _contract_or_404(db, contract_id, company_id)
+    spec = _specification_for(db, contract, specification_id)
     deal = contract_docs._linked_deal(db, contract)  # noqa: SLF001
     offer = contract_docs._linked_offer(db, contract, deal)  # noqa: SLF001
     blockers: list[str] = []
+    if is_framework(contract) and (spec is None or spec.status != "active"):
+        # A framework contract names no goods: its ЭСФ invoice a signed specification.
+        blockers.append("specification_required")
     try:
         seller_id, buyer_id = contract_docs.resolve_parties(contract, deal=deal, offer=offer)
     except contract_docs.PartyMismatch:
@@ -968,7 +981,7 @@ def didox_contract_factures(
                 ord_no=line.ord_no, name=line.name, count=line.count, price=line.price,
                 vat_rate=line.vat_rate, unit=line.unit,
             )
-            for line in facture_docs.suggested_lines(db, contract)
+            for line in facture_docs.suggested_lines(db, contract, spec)
         ],
         documents=[_facture_out(db, row, company_id) for row in facture_docs.list_for_contract(db, contract)],
         pending_document_id=int(pending.id) if pending is not None else None,
@@ -1019,6 +1032,7 @@ def didox_create_facture(
         )
     )
     source = facture_docs.classification(db, contract, choice)
+    spec = _specification_for(db, contract, body.specification_id)
     try:
         if source is None:
             raise IkpuMissing(contract_id)
@@ -1039,7 +1053,12 @@ def didox_create_facture(
             user_key=user_key,
             client=get_didox_client(),
             today=utcnow().date(),
+            specification=spec,
         )
+    except facture_docs.SpecificationRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="specification_required"
+        ) from exc
     except IkpuMissing as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="ikpu_missing") from exc
     except PrecisionError as exc:
@@ -1090,4 +1109,78 @@ def didox_create_facture(
         number=row.number,
         status=row.status,
         didox_id=row.didox_id,
+    )
+
+
+def _specification_for(
+    db: Session, contract: Contract, specification_id: int | None
+) -> ContractSpecification | None:
+    """The named specification, only if it belongs to this contract."""
+    from app.domains.contracts.models import ContractSpecification  # noqa: PLC0415
+
+    if specification_id is None:
+        return None
+    spec = db.get(ContractSpecification, specification_id)
+    if spec is None or spec.contract_id != contract.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="specification_not_found")
+    return spec
+
+
+# ── the specification → 000 door ──────────────────────────────────────────────
+
+
+@router.post(
+    "/{company_id}/didox/specifications/{spec_id}/document",
+    response_model=DidoxDocumentOut,
+    status_code=status.HTTP_201_CREATED,
+    responses=errors.DIDOX_CONFLICT,
+)
+def didox_create_specification_document(
+    company_id: int,
+    spec_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> DidoxDocumentOut:
+    """Send a framework contract's specification to Didox; the seller signs it next.
+
+    Idempotent while its document lives, like the 007: a second press returns
+    the first document.
+    """
+    from app.domains.contracts.models import ContractSpecification  # noqa: PLC0415
+    from app.domains.edi import contract_docs, specification_docs  # noqa: PLC0415
+
+    company = company_or_404(db, account, company_id)
+    spec = db.get(ContractSpecification, spec_id)
+    if spec is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="specification_not_found")
+    _contract_or_404(db, spec.contract_id, company_id)
+    _guard(db)
+    try:
+        user_key = session.require_user_key(redis_client, company)
+        row = specification_docs.create_for_specification(
+            db, spec, acting_company_id=company_id, account_id=int(account.id),
+            user_key=user_key, client=get_didox_client(),
+        )
+    except session.UserKeyRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_session_required"
+        ) from exc
+    except specification_docs.SpecificationNotReady as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_ready") from exc
+    except contract_docs.PartyMismatch as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_seller") from exc
+    except edi_service.OfferRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_offer_required"
+        ) from exc
+    except DidoxError as exc:
+        raise _provider_error(exc) from exc
+    except ProviderUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+    db.commit()
+    return DidoxDocumentOut(
+        id=row.id, doc_type=row.doc_type, number=row.number, status=row.status, didox_id=row.didox_id,
     )

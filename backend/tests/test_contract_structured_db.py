@@ -194,7 +194,7 @@ def test_a_didox_document_keeps_its_lines(sf, monkeypatch) -> None:  # noqa: ANN
 
 _MGBUS_ONE_OFF = {
     "contract_kind": "one_off", "contract_number": "297-08", "contract_date": "15.08.2024",
-    "product": "МЭГ", "qty": "120000", "unit": "kg", "price_with_vat": "16300", "vat_rate": "12",
+    "product": "МЭГ", "qty": "120000", "unit": "kg", "unit_price": "16300", "vat_rate": "12",
     "payment_mode": "prepay", "delivery_days": "5", "delivery_basis": "supplier_warehouse",
 }
 

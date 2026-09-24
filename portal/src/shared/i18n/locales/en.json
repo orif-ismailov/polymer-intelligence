@@ -2757,7 +2757,7 @@
     "origin": "Origin of the goods",
     "originHint": "For the invoice: how you came by these goods. Didox cannot know it — the same code is own production for a factory and resale for a trader.",
     "originPlaceholder": "Choose an origin",
-    "originRequired": "The offer cannot be published without an origin.",
+    "originRequired": "Without the goods' origin the code cannot be used in documents.",
     "origins": {
       "1": "Own production",
       "2": "Resale (bought from a supplier)",
@@ -2965,7 +2965,8 @@
     "blockedTitle": "An ESF cannot be issued yet",
     "blockers": {
       "contract_reference_missing": "The Didox contract the ESF must refer to was not found.",
-      "not_active": "The contract is not signed by both parties yet."
+      "not_active": "The contract is not signed by both parties yet.",
+      "specification_required": "Pick a signed specification — a framework contract's ESF is issued against one."
     },
     "errors": {
       "facture_pending": "The previous ESF is not signed yet.",
@@ -2973,6 +2974,49 @@
       "precision": "Too many decimals: quantity up to 6, price up to 2.",
       "not_active": "The contract is not signed by both parties yet.",
       "contract_reference_missing": "The Didox contract the ESF must refer to was not found."
+    },
+    "specification": "Specification"
+  },
+  "specification": {
+    "title": "Specifications",
+    "none": "No specifications yet. Each shipment under a framework contract gets its own specification.",
+    "new": "New specification",
+    "create": "Draw up specification",
+    "name": "Specification No. {{n}}",
+    "line": "Item {{n}}",
+    "product": "Goods",
+    "qty": "Quantity",
+    "unit": "Unit",
+    "unitPrice": "Unit price, UZS",
+    "addLine": "Add item",
+    "units": {
+      "kg": "kg",
+      "t": "t",
+      "pcs": "pcs"
+    },
+    "priceBasis": "Price stated",
+    "withVat": "With VAT",
+    "withoutVat": "Without VAT",
+    "priceBasisHint": {
+      "with_vat": "The total comes out round, but the ESF may differ by a few soum.",
+      "without_vat": "The ESF matches the specification to the tiyin."
+    },
+    "payment": "Payment",
+    "prepay": "100% prepayment",
+    "schedule": "By schedule",
+    "scheduleText": "Payment schedule",
+    "deliveryDays": "Delivery after payment, banking days",
+    "openPdf": "Open PDF",
+    "status": {
+      "draft": "Draft",
+      "pending_signatures": "Awaiting signatures",
+      "active": "Signed",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
+    "errors": {
+      "invalid": "Check the items: each needs goods, quantity and price.",
+      "createFailed": "Could not draw up the specification."
     }
   }
 }

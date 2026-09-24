@@ -197,6 +197,8 @@ class DidoxFactureOut(BaseModel):
     outgoing: bool
     #: Sum of the lines including VAT.
     total: decimal.Decimal
+    #: The specification it invoices, on a framework contract.
+    specification_id: int | None = None
 
 
 class DidoxFacturesOut(BaseModel):
@@ -215,13 +217,15 @@ class DidoxFacturesOut(BaseModel):
         default_factory=list,
         description=(
             "not_active · not_seller · signer_identity_missing · "
-            "contract_reference_missing · counterparty_unknown"
+            "contract_reference_missing · counterparty_unknown · specification_required"
         ),
     )
 
 
 class DidoxFactureIn(BaseModel):
     lines: list[DidoxContractLineIn] = Field(min_length=1, max_length=50)
+    #: Required on a framework contract: the SIGNED specification this invoices.
+    specification_id: int | None = None
     #: Only when `ikpu_choice` was true — otherwise the known code wins.
     ikpu: DidoxIkpuIn | None = None
 

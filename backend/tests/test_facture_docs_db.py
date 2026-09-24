@@ -361,3 +361,83 @@ def test_the_buyer_sees_the_invoice_but_no_form(api) -> None:  # noqa: ANN001
     assert form.status_code == 200
     assert form.json()["is_seller"] is False
     assert "not_seller" in form.json()["blockers"]
+
+
+# ── a framework contract is invoiced by specification ─────────────────────────
+
+
+def _frame_with_spec(db, monkeypatch, spec_status="active"):  # noqa: ANN001, ANN202
+    import hashlib  # noqa: PLC0415
+
+    from app.domains.contracts import render as contract_render  # noqa: PLC0415
+    from app.domains.contracts import specifications  # noqa: PLC0415
+    from app.domains.contracts.models import ContractTemplate  # noqa: PLC0415
+    from app.services import storage_service  # noqa: PLC0415
+
+    monkeypatch.setattr(storage_service, "get_object_text", lambda path: "<p>{{ spec_number }}</p>")
+    monkeypatch.setattr(contract_render, "render_contract_pdf", lambda *a, **k: b"%PDF")
+    monkeypatch.setattr(
+        storage_service, "store_specification_pdf",
+        lambda pid, n, pdf: (f"c/{pid}/s{n}.pdf", hashlib.sha256(pdf).hexdigest()),
+    )
+    contract, seller, buyer, acc = _contract(db)
+    contract.variables = {"contract_kind": "frame", "contract_number": "346-01",
+                          "contract_date": "15.01.2026", "amount_limit": "20000000000"}
+    from app.domains.contracts import terms  # noqa: PLC0415
+
+    terms.sync_structured(db, contract)
+    db.add(ContractTemplate(code="SPECIFICATION_V1", kind="specification", name_ru="Спец",
+                            body_storage_path="s", variables_schema={}, version=1))
+    db.flush()
+    spec = specifications.create_specification(
+        db, contract, acc,
+        {"lines": [{"product": "LL 0209AA", "qty": "120000", "unit": "kg", "unit_price": "14553.57"}],
+         "price_basis": "without_vat", "vat_rate": "12"},
+        today=_TODAY,
+    )
+    spec.status = spec_status
+    db.flush()
+    return contract, seller, acc, spec
+
+
+@requires_real_db
+def test_a_framework_contract_is_invoiced_by_its_specification(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.edi import facture_docs  # noqa: PLC0415
+    from app.domains.edi.payloads import line_from_offer  # noqa: PLC0415
+
+    with sf() as db:
+        contract, seller, acc, spec = _frame_with_spec(db, monkeypatch)
+
+        [suggested] = facture_docs.suggested_lines(db, contract, spec)
+        assert (suggested.name, suggested.count, suggested.price) == ("LL 0209AA", D("120000"), D("14553.57"))
+
+        # No specification named: a framework contract has nothing to invoice.
+        assert facture_docs.suggested_lines(db, contract) == []
+        with pytest.raises(facture_docs.SpecificationRequired):
+            _issue(db, contract, seller, acc, _Didox())
+
+        didox = _Didox()
+        row = facture_docs.create_for_contract(
+            db, contract, acting_company_id=seller.id, account_id=acc.id,
+            lines=[line_from_offer(_IKPU, ord_no=1, name="LL 0209AA", count=D("50000"), price=D("14553.57"))],
+            user_key="k", client=didox, today=_TODAY, specification=spec,
+        )
+        assert row.specification_id == spec.id
+        [left] = facture_docs.suggested_lines(db, contract, spec)
+        assert left.count == D("70000")
+        # The ЭСФ quotes the contract the parties typed.
+        [(_, payload)] = didox.created
+        assert payload["ContractDoc"] == {"ContractNo": "346-01", "ContractDate": "2026-01-15"}
+
+
+@requires_real_db
+def test_an_unsigned_specification_is_not_invoiced(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.edi import facture_docs  # noqa: PLC0415
+
+    with sf() as db:
+        contract, seller, acc, spec = _frame_with_spec(db, monkeypatch, spec_status="pending_signatures")
+        with pytest.raises(facture_docs.SpecificationRequired):
+            facture_docs.create_for_contract(
+                db, contract, acting_company_id=seller.id, account_id=acc.id,
+                lines=[_line("1")], user_key="k", client=_Didox(), today=_TODAY, specification=spec,
+            )

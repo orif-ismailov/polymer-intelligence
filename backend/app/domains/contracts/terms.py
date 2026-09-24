@@ -9,6 +9,7 @@ contract differently.
 
 from __future__ import annotations
 
+import datetime
 import decimal
 from typing import TYPE_CHECKING
 
@@ -40,7 +41,7 @@ DERIVED_KEYS: frozenset[str] = frozenset(
     {
         "spec_qty",
         "spec_unit",
-        "spec_price_with_vat",
+        "spec_unit_price",
         "spec_price_without_vat",
         "spec_amount_without_vat",
         "spec_vat_sum",
@@ -68,12 +69,21 @@ def vat_rate_of(raw: object) -> int | None:
 
 
 def spec_line(variables: dict[str, object]) -> amounts.VatLine | None:
-    """The one line of a contract priced WITH VAT — or None if it does not parse."""
+    """The one line of a contract, split into VAT columns — or None if it does not parse.
+
+    `price_basis` is the user's choice, not ours (24.09.2026): a price WITH VAT
+    keeps the agreed total round, as the real MGBUS specifications do, and may
+    then differ from its ЭСФ by a few soum; a price WITHOUT VAT matches the ЭСФ
+    to the tiyin.
+    """
     qty = parse_number(variables.get("qty"))
-    price = parse_number(variables.get("price_with_vat"))
+    price = parse_number(variables.get("unit_price"))
     if qty is None or price is None or qty <= 0:
         return None
-    return amounts.vat_line(qty=qty, price_with_vat=price, vat_rate=vat_rate_of(variables.get("vat_rate")))
+    rate = vat_rate_of(variables.get("vat_rate"))
+    if variables.get("price_basis") == "without_vat":
+        return amounts.net_line(qty=qty, price_without_vat=price, vat_rate=rate)
+    return amounts.vat_line(qty=qty, price_with_vat=price, vat_rate=rate)
 
 
 def derived_values(variables: dict[str, object]) -> dict[str, str]:
@@ -82,11 +92,11 @@ def derived_values(variables: dict[str, object]) -> dict[str, str]:
     line = spec_line(variables)
     if line is not None:
         qty = parse_number(variables.get("qty"))
-        price = parse_number(variables.get("price_with_vat"))
+        price = parse_number(variables.get("unit_price"))
         out.update(
             spec_qty=amounts.grouped(qty) if qty is not None else "",
             spec_unit=_UNIT_LABELS.get(str(variables.get("unit") or ""), str(variables.get("unit") or "")),
-            spec_price_with_vat=amounts.grouped(price) if price is not None else "",
+            spec_unit_price=amounts.grouped(price) if price is not None else "",
             spec_price_without_vat=amounts.grouped(line.price_without_vat),
             spec_amount_without_vat=amounts.grouped(line.amount_without_vat),
             spec_vat_sum=amounts.grouped(line.vat_sum),
@@ -100,6 +110,17 @@ def derived_values(variables: dict[str, object]) -> dict[str, str]:
     elif line is not None:
         out["amount_total_phrase"] = amounts.sum_phrase(line.amount_with_vat)
     return out
+
+
+def typed_date(raw: object) -> datetime.date | None:
+    """«15.01.2026» or «2026-01-15» as the parties typed it; anything else → None."""
+    text = str(raw or "").strip()
+    for fmt in ("%d.%m.%Y", "%Y-%m-%d"):
+        try:
+            return datetime.datetime.strptime(text, fmt).date()  # noqa: DTZ007 — a calendar date
+        except ValueError:
+            continue
+    return None
 
 
 def _text(raw: object) -> str | None:
@@ -123,7 +144,7 @@ def sync_structured(db: Session, contract: Contract) -> None:
     average it was counted in.
 
     Two shapes of contract. The MGBUS-based templates price a line WITH VAT in
-    soum (`price_with_vat`); the stored unit price is the price WITHOUT it — what
+    soum (`unit_price`, with or without VAT as `price_basis` says); the stored unit price is the price WITHOUT it — what
     analytics compares — and the contract total is what the parties signed. A
     framework contract has no goods of its own: its total is the limit, and its
     lines arrive with the specifications.
@@ -133,7 +154,11 @@ def sync_structured(db: Session, contract: Contract) -> None:
     variables = _variables(contract)
     existing = (
         db.query(ContractLine)
-        .filter(ContractLine.contract_id == contract.id, ContractLine.ord_no == 1)
+        .filter(
+            ContractLine.contract_id == contract.id,
+            ContractLine.specification_id.is_(None),
+            ContractLine.ord_no == 1,
+        )
         .one_or_none()
     )
 
@@ -207,7 +232,11 @@ def stamp_classification(
 
     line = (
         db.query(ContractLine)
-        .filter(ContractLine.contract_id == contract_id, ContractLine.ord_no == ord_no)
+        .filter(
+            ContractLine.contract_id == contract_id,
+            ContractLine.specification_id.is_(None),
+            ContractLine.ord_no == ord_no,
+        )
         .one_or_none()
     )
     if line is None:

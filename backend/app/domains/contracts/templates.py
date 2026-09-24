@@ -58,7 +58,7 @@ from app.services import audit_service, storage_service
 
 #: Mirrors `ck_contract_template_kind`. Kept here so a bad `kind` is a 422 from the
 #: schema rather than an IntegrityError from Postgres.
-KINDS: tuple[str, ...] = ("contract", "sample_letter")
+KINDS: tuple[str, ...] = ("contract", "sample_letter", "specification")
 
 #: Names `render_contract_html` injects for every render, whatever the template is.
 _ALWAYS: frozenset[str] = frozenset({"contract_public_id", "generated_at"})
@@ -134,6 +134,10 @@ def renderable_names(kind: str, variables_schema: dict[str, object]) -> set[str]
         names |= {f"supplier_{k}" for k in party}
         names |= {f"buyer_{k}" for k in party}
         names |= DERIVED_KEYS
+    if kind == "specification":
+        from app.domains.contracts.specifications import RENDERED_KEYS, SPEC_KEYS  # noqa: PLC0415
+
+        names |= RENDERED_KEYS | SPEC_KEYS
     properties = variables_schema.get("properties") or {}
     if isinstance(properties, dict):
         names |= set(properties)

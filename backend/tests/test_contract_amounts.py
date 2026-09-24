@@ -68,3 +68,11 @@ def test_the_sum_as_a_contract_writes_it() -> None:
         "922 383 000 (девятьсот двадцать два миллиона триста восемьдесят три тысячи) сум 00 тийин"
     )
     assert amounts.sum_phrase(D("1500.5")) == "1 500 (одна тысяча пятьсот) сум 50 тийин"
+
+
+def test_a_line_priced_without_vat_agrees_with_its_esf() -> None:
+    """14 553,57 without VAT: the ЭСФ's own arithmetic, to the tiyin."""
+    line = amounts.net_line(qty=D("120000"), price_without_vat=D("14553.57"), vat_rate=12)
+    assert line.amount_without_vat == D("1746428400.00")
+    assert line.vat_sum == D("209571408.00")
+    assert line.amount_with_vat == D("1955999808.00")

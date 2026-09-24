@@ -46,7 +46,6 @@ from app.domains.edi.contract_docs import (
     resolve_parties,
 )
 from app.domains.edi.models import (
-    DOC_TYPE_CONTRACT,
     DOC_TYPE_FACTURE,
     STATUS_ANNULLED_BY_TAX,
     STATUS_DELETED,
@@ -59,7 +58,7 @@ from app.domains.edi.payloads import DocumentLine, build_facture_002
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.orm import Session
 
-    from app.domains.contracts.models import Contract
+    from app.domains.contracts.models import Contract, ContractSpecification
     from app.domains.edi.models import DidoxDocument
 
 #: Invoices that no longer stand — their quantity is free to invoice again.
@@ -77,6 +76,10 @@ class FacturePending(Exception):
     def __init__(self, document_id: int) -> None:
         super().__init__(f"ЭСФ {document_id} is still an unsigned draft")
         self.document_id = document_id
+
+
+class SpecificationRequired(Exception):
+    """A framework contract is invoiced against one of its SIGNED specifications."""
 
 
 class ContractReferenceMissing(Exception):
@@ -116,8 +119,11 @@ def pending_draft(db: Session, contract: Contract) -> DidoxDocument | None:
     return next((row for row in list_for_contract(db, contract) if row.status == STATUS_DRAFT), None)
 
 
-def invoiced(db: Session, contract: Contract) -> dict[int, decimal.Decimal]:
-    """`ord_no → quantity` across the invoices still standing."""
+def invoiced(
+    db: Session, contract: Contract, spec: ContractSpecification | None = None
+) -> dict[int, decimal.Decimal]:
+    """`ord_no → quantity` across the invoices still standing — of this specification,
+    if one is named, else of the contract's own goods."""
     from sqlalchemy import func  # noqa: PLC0415
 
     from app.domains.edi.models import DidoxDocument, DidoxDocumentLine  # noqa: PLC0415
@@ -130,6 +136,9 @@ def invoiced(db: Session, contract: Contract) -> dict[int, decimal.Decimal]:
             DidoxDocument.subject_id == contract.id,
             DidoxDocument.doc_type == DOC_TYPE_FACTURE,
             DidoxDocument.status.notin_(_NOT_STANDING),
+            DidoxDocument.specification_id == spec.id
+            if spec is not None
+            else DidoxDocument.specification_id.is_(None),
         )
         .group_by(DidoxDocumentLine.ord_no)
         .all()
@@ -137,15 +146,23 @@ def invoiced(db: Session, contract: Contract) -> dict[int, decimal.Decimal]:
     return {int(ord_no): decimal.Decimal(total) for ord_no, total in rows}
 
 
-def suggested_lines(db: Session, contract: Contract) -> list[SuggestedLine]:
-    """The contract's lines, with what is left to invoice as the quantity."""
+def suggested_lines(
+    db: Session, contract: Contract, spec: ContractSpecification | None = None
+) -> list[SuggestedLine]:
+    """The lines to invoice — the specification's, or the contract's own — with what
+    is left to invoice as the quantity."""
     from app.domains.contracts.models import ContractLine  # noqa: PLC0415
 
-    done = invoiced(db, contract)
-    in_soum = (contract.currency or "UZS").upper() == "UZS"
+    done = invoiced(db, contract, spec)
+    in_soum = spec is not None or (contract.currency or "UZS").upper() == "UZS"
     lines = (
         db.query(ContractLine)
-        .filter(ContractLine.contract_id == contract.id)
+        .filter(
+            ContractLine.contract_id == contract.id,
+            ContractLine.specification_id == spec.id
+            if spec is not None
+            else ContractLine.specification_id.is_(None),
+        )
         .order_by(ContractLine.ord_no)
         .all()
     )
@@ -206,22 +223,31 @@ def classification(
 def contract_reference(db: Session, contract: Contract) -> tuple[str, datetime.date, str | None]:
     """`(ContractNo, ContractDate, didox_contract_id)` exactly as the договор states them."""
     from app.core.time import to_display_tz  # noqa: PLC0415
+    from app.domains.contracts.terms import typed_date  # noqa: PLC0415
     from app.domains.edi import numbering  # noqa: PLC0415
 
+    variables = contract.variables if isinstance(contract.variables, dict) else {}
     if contract.signing_provider == "didox":
         document = _existing_document(db, contract)
-        if document is None or document.doc_type != DOC_TYPE_CONTRACT:
-            raise ContractReferenceMissing(str(contract.id))
-        if not document.number or document.doc_date is None:
-            raise ContractReferenceMissing(str(contract.id))
-        return document.number, document.doc_date, document.didox_contract_id
+        # The stored 007 is the authority: it is what the roaming centre holds.
+        if document is not None and document.number and document.doc_date is not None:
+            return document.number, document.doc_date, document.didox_contract_id
+        # No 007 yet — the number and date the parties typed on the contract.
+        typed_no = str(variables.get("contract_number") or "").strip()
+        typed_day = typed_date(variables.get("contract_date"))
+        if typed_no and typed_day is not None:
+            return typed_no, typed_day, None
+        raise ContractReferenceMissing(str(contract.id))
 
     deal = _linked_deal(db, contract)
     number = numbering.contract_number(
         deal_number=deal.number if deal is not None else None,
         contract_public_id=str(contract.public_id),
-        custom=str((contract.variables or {}).get("contract_number") or ""),
+        custom=str(variables.get("contract_number") or ""),
     )
+    typed_day = typed_date(variables.get("contract_date"))
+    if typed_day is not None:
+        return number, typed_day, None
     activated = contract.activated_at or contract.created_at
     return number, to_display_tz(activated).date(), None
 
@@ -236,15 +262,31 @@ def create_for_contract(
     user_key: str,
     client: ContractGateway,
     today: datetime.date,
+    specification: ContractSpecification | None = None,
 ) -> DidoxDocument:
-    """Create an ЭСФ for this contract at Didox. `lines` arrive classified."""
+    """Create an ЭСФ for this contract at Didox. `lines` arrive classified.
+
+    A framework contract is invoiced against one of its SIGNED specifications;
+    the ЭСФ remembers which, so what is left to invoice is counted per
+    specification.
+    """
     from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts.specifications import is_framework  # noqa: PLC0415
     from app.domains.edi import numbering  # noqa: PLC0415
     from app.domains.edi import service as edi_service  # noqa: PLC0415
     from app.models.enums import ContractStatus  # noqa: PLC0415
 
     if contract.status != ContractStatus.active:
         raise ContractNotActive(str(contract.status))
+    if is_framework(contract):
+        if (
+            specification is None
+            or specification.contract_id != contract.id
+            or specification.status != "active"
+        ):
+            raise SpecificationRequired(str(contract.id))
+    elif specification is not None:
+        raise SpecificationRequired(str(contract.id))
     deal = _linked_deal(db, contract)
     offer = _linked_offer(db, contract, deal)
     seller_id, buyer_id = resolve_parties(contract, deal=deal, offer=offer)
@@ -283,7 +325,7 @@ def create_for_contract(
         lines=lines,
         didox_contract_id=didox_contract_id,
     )
-    return edi_service.create_document(
+    row = edi_service.create_document(
         db,
         doc_type=DOC_TYPE_FACTURE,
         subject_kind="contract",
@@ -300,3 +342,7 @@ def create_for_contract(
         client=client,
         lines=lines,
     )
+    if specification is not None:
+        row.specification_id = int(specification.id)
+        db.flush()
+    return row

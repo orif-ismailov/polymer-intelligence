@@ -24,6 +24,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -55,7 +56,7 @@ class ContractTemplate(Base):
     __tablename__ = "contract_templates"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('contract', 'sample_letter')",
+            "kind IN ('contract', 'sample_letter', 'specification')",
             name="ck_contract_template_kind",
         ),
     )
@@ -214,11 +215,25 @@ class ContractLine(Base):
     """
 
     __tablename__ = "contract_lines"
-    __table_args__ = (UniqueConstraint("contract_id", "ord_no", name="uq_contract_line_ord"),)
+    __table_args__ = (
+        # Numbered per specification: a framework contract's lines arrive with
+        # its specifications, each numbered from 1 (0054).
+        Index(
+            "uq_contract_line_ord",
+            "contract_id",
+            text("coalesce(specification_id, 0)"),
+            "ord_no",
+            unique=True,
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     contract_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False
+    )
+    #: The specification this line belongs to — NULL for a one-off contract's own goods.
+    specification_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("contract_specifications.id", ondelete="CASCADE"), nullable=True
     )
     ord_no: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     product_name: Mapped[str] = mapped_column(Text, nullable=False)
@@ -272,4 +287,49 @@ class ContractTermPreset(Base):
     )
     archived_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+
+
+class ContractSpecification(Base):
+    """«Спецификация № N» to a framework contract — one per shipment (0054).
+
+    Signed on its own, at Didox as a «Произвольный документ» (subtype 8) carrying
+    our PDF, and invoiced by its own ЭСФ. Its goods are `contract_lines` rows with
+    `specification_id` set; the totals here are what the document states.
+    """
+
+    __tablename__ = "contract_specifications"
+    __table_args__ = (
+        UniqueConstraint("contract_id", "number", name="uq_contract_specification_number"),
+        CheckConstraint(
+            "status IN ('draft', 'pending_signatures', 'active', 'declined', 'cancelled')",
+            name="ck_contract_specification_status",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    contract_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False
+    )
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    spec_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="draft", server_default="draft")
+    variables: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+    amount_without_vat: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+    vat_sum: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+    amount_with_vat: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+    generated_document_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    document_sha256: Mapped[str | None] = mapped_column(Text, nullable=True)
+    declined_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by_user_account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=False
+    )
+    activated_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )

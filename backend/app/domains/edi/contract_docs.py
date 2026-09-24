@@ -201,11 +201,17 @@ def build_body(
     lines: list[DocumentLine],
     sections: list[tuple[str, str]],
     place: str = "г. Ташкент",
+    framework: bool = False,
 ) -> JsonObject:
-    """The 007 body for this contract — refusing anything hollow."""
+    """The 007 body for this contract — refusing anything hollow.
+
+    A framework contract names no goods (they arrive with its specifications),
+    so it goes with no `Products` at all: a line with a zero price would be a
+    false statement on a document that reaches my.soliq.uz.
+    """
     if not sections:
         raise EmptyContractBody("contract has no sections to send")
-    if not lines:
+    if not lines and not framework:
         raise EmptyContractBody("contract has no product lines")
     return build_contract_007(
         number=number,
@@ -417,9 +423,9 @@ def contract_line_terms(contract: Contract) -> tuple[str, decimal.Decimal, decim
 
     variables = contract.variables if isinstance(contract.variables, dict) else {}
     qty = terms.parse_number(variables.get("qty"))
-    if "price_with_vat" in variables:
-        # Priced WITH VAT, as the real MGBUS contracts are; the document states
-        # the price without it and adds the VAT itself.
+    if "unit_price" in variables:
+        # The MGBUS-based templates: the document states the price WITHOUT VAT
+        # and adds the VAT itself, whichever way the contract was priced.
         line = terms.spec_line(variables)
         price = line.price_without_vat if line is not None else None
     else:
@@ -557,11 +563,17 @@ def create_for_contract(
         contract_public_id=str(contract.public_id),
         custom=str((contract.variables or {}).get("contract_number") or ""),
     )
-    document_lines = lines or suggested_lines(contract, offer, ikpu)
+    from app.domains.contracts.specifications import is_framework  # noqa: PLC0415
+
+    framework = is_framework(contract)
+    document_lines = [] if framework else (lines or suggested_lines(contract, offer, ikpu))
+    # The date the parties typed on the contract, so the 007, its ЭСФ and its
+    # specifications all quote the date printed on the document they signed.
+    contract_day = contract_terms.typed_date((contract.variables or {}).get("contract_date")) or today
     body = build_body(
         number=number,
-        date=today,
-        expires_on=today + datetime.timedelta(days=term_days),
+        date=contract_day,
+        expires_on=contract_day + datetime.timedelta(days=term_days),
         title=contract.title,
         # Two sources, deliberately: we vouch for the seller (they sign here,
         # with a key we watched them use), the tax registry vouches for the buyer
@@ -573,6 +585,7 @@ def create_for_contract(
         buyer=party_from_registry(client, buyer.tax_id),
         lines=document_lines,
         sections=sections_from_html(rendered),
+        framework=framework,
     )
 
     row = edi_service.create_document(
@@ -584,7 +597,7 @@ def create_for_contract(
         partner_company_id=buyer_id,
         deal_id=int(deal.id) if deal is not None else None,
         number=number,
-        doc_date=today,
+        doc_date=contract_day,
         payload=body,
         created_by_user_account_id=account_id,
         user_key=user_key,

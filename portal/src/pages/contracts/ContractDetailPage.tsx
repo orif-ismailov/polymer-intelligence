@@ -6,11 +6,17 @@ import { useParams } from "react-router-dom";
 
 import { useAuthStore } from "@/entities/account";
 import { useActiveCompany } from "@/entities/company";
-import { ContractStatusBadge, contractApi, useContract } from "@/entities/contract";
+import {
+  ContractStatusBadge,
+  contractApi,
+  useContract,
+  useSpecifications,
+} from "@/entities/contract";
 import type { ContractDetail } from "@/entities/contract";
 import { DIDOX_STATUS, didoxApi, useDidoxStatus } from "@/entities/edi";
 import { DidoxDocumentCard } from "@/features/didox-contract-document";
 import { DidoxFactureCard } from "@/features/didox-facture";
+import { SpecificationsCard } from "@/features/contract-specification";
 import { useDidoxSign } from "@/features/didox-sign";
 import { EimzoSignButton } from "@/features/eimzo-sign";
 import type { EimzoSigner } from "@/features/eimzo-sign";
@@ -58,6 +64,10 @@ export function ContractDetailPage() {
   const active = useActiveCompany().activeCompany;
   const didoxSign = useDidoxSign(active?.id ?? 0, active?.tax_id ?? "");
   const myDidox = useDidoxStatus(active?.id ?? null).data;
+  // A framework contract names no goods: its shipments are specifications, and
+  // its ЭСФ invoice a signed one.
+  const isFramework = contract?.variables?.contract_kind === "frame";
+  const specs = useSpecifications(isFramework && contract?.status === "active" ? id : null).data;
 
   useEffect(() => {
     let cancelled = false;
@@ -440,12 +450,26 @@ export function ContractDetailPage() {
       {/* ЭСФ are issued against a signed contract, on either rail — the invoice
           goes through Didox whichever way the contract was signed. Absent where
           the deployment has no Didox at all. */}
+      {isFramework && contract.status === "active" && active && myDidox && myDidox.state !== "disabled" ? (
+        <SpecificationsCard
+          contractId={id}
+          companyId={active.id}
+          taxId={active.tax_id}
+          ready={myDidox.state === "ready"}
+        />
+      ) : null}
+
       {contract.status === "active" && active && myDidox && myDidox.state !== "disabled" ? (
         <DidoxFactureCard
           companyId={active.id}
           taxId={active.tax_id}
           contractId={id}
           ready={myDidox.state === "ready"}
+          specifications={
+            isFramework
+              ? (specs?.items ?? []).filter((sp) => sp.status === "active")
+              : undefined
+          }
         />
       ) : null}
 

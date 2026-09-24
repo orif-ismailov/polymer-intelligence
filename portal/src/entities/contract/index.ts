@@ -5,6 +5,12 @@ export type {
   ContractSignature,
   DirectoryCompany,
   CreateContractPayload,
+  Specification,
+  SpecificationLine,
+  SpecificationLineInput,
+  SpecificationList,
+  SpecificationPayload,
+  SpecificationStatus,
   TermPreset,
   TermPresetList,
   TermPresetPayload,
@@ -19,6 +25,12 @@ export {
   templateFields,
 } from "./model/fields";
 export { contractApi, contractKeys } from "./model/api";
-export { useContractTemplates, useContracts, useContract, useTermPresets } from "./model/hooks";
+export {
+  useContractTemplates,
+  useContracts,
+  useContract,
+  useSpecifications,
+  useTermPresets,
+} from "./model/hooks";
 export { ContractStatusBadge } from "./ui/ContractStatusBadge";
 export { TemplateFieldInputs } from "./ui/TemplateFieldInputs";

@@ -42,7 +42,13 @@ from app.domains.contracts import service as contract_service
 from app.domains.contracts import term_presets
 from app.domains.contracts.eimzo import CertCompanyMismatch
 from app.domains.contracts.eimzo_models import SignatureEvidence
-from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
+from app.domains.contracts.models import (
+    Contract,
+    ContractLine,
+    ContractSignature,
+    ContractSpecification,
+    ContractTemplate,
+)
 from app.domains.contracts.schemas import (
     ContractCreateIn,
     ContractDetailOut,
@@ -51,6 +57,10 @@ from app.domains.contracts.schemas import (
     SignatureOut,
     SignChallengeOut,
     SignIn,
+    SpecificationIn,
+    SpecificationLineOut,
+    SpecificationListOut,
+    SpecificationOut,
     TemplateOut,
     TermPresetIn,
     TermPresetListOut,
@@ -621,6 +631,148 @@ def sign_contract(
         ) from exc
     db.commit()
     return _detail_out(db, contract, _my_company_ids(db, account))
+
+
+# ── specifications of a framework contract ────────────────────────────────────
+
+
+def _specification_out(
+    db: Session, spec: ContractSpecification, viewer_company_id: int
+) -> SpecificationOut:
+    from app.domains.edi import specification_docs  # noqa: PLC0415
+
+    lines = (
+        db.query(ContractLine)
+        .filter(ContractLine.specification_id == spec.id)
+        .order_by(ContractLine.ord_no)
+        .all()
+    )
+    document = specification_docs.existing_document(db, spec)
+    return SpecificationOut(
+        id=int(spec.id),
+        number=spec.number,
+        spec_date=spec.spec_date,
+        status=spec.status,
+        amount_without_vat=spec.amount_without_vat,
+        vat_sum=spec.vat_sum,
+        amount_with_vat=spec.amount_with_vat,
+        document_available=bool(spec.generated_document_path),
+        didox_document_id=int(document.id) if document is not None else None,
+        didox_status=_didox_status_for_viewer(
+            document.status, viewer_is_owner=document.owner_company_id == viewer_company_id
+        )
+        if document is not None
+        else None,
+        lines=[
+            SpecificationLineOut(
+                ord_no=line.ord_no, product=line.product_name, qty=line.qty, unit=line.unit,
+                price_without_vat=line.price, vat_rate=line.vat_rate, amount_without_vat=line.amount,
+            )
+            for line in lines
+        ],
+    )
+
+
+def _specification_or_404(db: Session, contract: Contract, spec_id: int) -> ContractSpecification:
+    spec = db.get(ContractSpecification, spec_id)
+    if spec is None or spec.contract_id != contract.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="specification_not_found")
+    return spec
+
+
+@router.get("/contracts/{contract_id}/specifications", response_model=SpecificationListOut)
+def list_specifications(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> SpecificationListOut:
+    from app.domains.contracts import specifications  # noqa: PLC0415
+    from app.domains.edi import contract_docs  # noqa: PLC0415
+
+    contract, acting, _role = _contract_and_role(db, account, contract_id)
+    deal = contract_docs._linked_deal(db, contract)  # noqa: SLF001
+    try:
+        seller_id, _buyer_id = contract_docs.resolve_parties(
+            contract, deal=deal, offer=contract_docs._linked_offer(db, contract, deal)  # noqa: SLF001
+        )
+    except contract_docs.PartyMismatch:
+        seller_id = None
+    return SpecificationListOut(
+        items=[_specification_out(db, s, acting.id) for s in specifications.list_for(db, contract)],
+        can_create=contract.status == ContractStatus.active and specifications.is_framework(contract),
+        is_seller=seller_id == acting.id,
+    )
+
+
+@router.post(
+    "/contracts/{contract_id}/specifications",
+    response_model=SpecificationOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_specification(
+    contract_id: int,
+    body: SpecificationIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> SpecificationOut:
+    """Either party may draw it up; the seller sends it to Didox."""
+    from app.core.time import to_display_tz, utcnow  # noqa: PLC0415
+    from app.domains.contracts import specifications  # noqa: PLC0415
+
+    contract, acting, _role = _contract_and_role(db, account, contract_id)
+    try:
+        spec = specifications.create_specification(
+            db, contract, account, body.variables, today=to_display_tz(utcnow()).date()
+        )
+    except specifications.NotAFrameworkContract as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_a_framework_contract") from exc
+    except specifications.InvalidSpecification as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"error": "invalid_specification", "fields": exc.fields},
+        ) from exc
+    db.commit()
+    return _specification_out(db, spec, acting.id)
+
+
+@router.get("/contracts/{contract_id}/specifications/{spec_id}/document")
+def specification_document(
+    contract_id: int,
+    spec_id: int,
+    as_: str = Query(default="redirect", alias="as"),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> Response:
+    """The specification's PDF — `?as=url` for an iframe, like the contract's."""
+    contract, _acting, _role = _contract_and_role(db, account, contract_id)
+    spec = _specification_or_404(db, contract, spec_id)
+    if not spec.generated_document_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No document")
+    url = storage_service.presign_object(spec.generated_document_path, ttl=600)
+    if as_ == "url":
+        return JSONResponse({"url": url})
+    return RedirectResponse(url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+
+@router.post(
+    "/contracts/{contract_id}/specifications/{spec_id}/cancel", response_model=SpecificationOut
+)
+def cancel_specification(
+    contract_id: int,
+    spec_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> SpecificationOut:
+    from app.domains.contracts import specifications  # noqa: PLC0415
+
+    contract, acting, _role = _contract_and_role(db, account, contract_id)
+    spec = _specification_or_404(db, contract, spec_id)
+    try:
+        specifications.cancel(db, spec)
+    except specifications.SpecificationNotEditable as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_editable") from exc
+    db.commit()
+    return _specification_out(db, spec, acting.id)
 
 
 # ── document + bundle ─────────────────────────────────────────────────────────

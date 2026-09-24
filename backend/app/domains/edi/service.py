@@ -147,6 +147,7 @@ def create_document(
     tax_id: str,
     client: DidoxDocuments,
     lines: Sequence[DocumentLine] = (),
+    attachment_b64: str | None = None,
 ) -> DidoxDocument:
     """Record the row, THEN create it at Didox.
 
@@ -157,6 +158,10 @@ def create_document(
     `lines` are the goods the payload carries, recorded beside it as numbers
     (`didox_document_lines`) — for the analytics, and for how much of a contract
     has been invoiced.
+
+    `attachment_b64` is the PDF a «Произвольный документ» carries. It is sent as
+    `document` and NOT stored in `payload`: we hold the file already, and a copy
+    of it in JSONB would only bloat the row.
     """
     onboarding.assert_live()
     row = DidoxDocument(
@@ -176,7 +181,12 @@ def create_document(
     _record_lines(db, row, lines)
 
     try:
-        created = client.create_document(doc_type, payload, user_key=user_key)
+        body = (
+            payload
+            if attachment_b64 is None
+            else {**payload, "document": f"data:application/pdf;base64,{attachment_b64}"}
+        )
+        created = client.create_document(doc_type, body, user_key=user_key)
     except DidoxError as exc:
         row.last_error = exc.message[:500]
         db.flush()
@@ -377,6 +387,9 @@ def apply_status(
     row.status_synced_at = utcnow()
     db.flush()
 
+    if row.subject_kind == "specification":
+        _settle_specification(db, row, status)
+
     if status in _TERMINAL_BAD:
         logger.warning(
             "didox.document.terminal",
@@ -387,6 +400,26 @@ def apply_status(
     if status != STATUS_SIGNED:
         return False
     return _on_signed(db, row, user_key=user_key, client=client)
+
+
+def _settle_specification(db: Session, row: DidoxDocument, status: int) -> None:
+    """A specification is decided at Didox: both signatures, or a refusal.
+
+    Unlike a договор it carries nothing downstream yet when it is refused, so a
+    refusal simply declines it — a new specification is drawn up instead.
+    """
+    from app.core.time import utcnow  # noqa: PLC0415
+    from app.domains.contracts.models import ContractSpecification  # noqa: PLC0415
+
+    spec = db.get(ContractSpecification, row.subject_id)
+    if spec is None or spec.status != "pending_signatures":
+        return
+    if status == STATUS_SIGNED:
+        spec.status = "active"
+        spec.activated_at = utcnow()
+    elif status == STATUS_REJECTED:
+        spec.status = "declined"
+    db.flush()
 
 
 def _on_signed(

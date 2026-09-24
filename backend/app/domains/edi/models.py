@@ -44,6 +44,9 @@ from app.core.db import Base
 #: deliberately absent: it never enters roaming, so it cannot stand in for a договор.
 DOC_TYPE_CONTRACT = "007"
 DOC_TYPE_FACTURE = "002"
+#: «Произвольный документ» — carries a PDF, stays inside Didox (no roaming). Used
+#: for a framework contract's specification, subtype 8 «Спецификация».
+DOC_TYPE_ARBITRARY = "000"
 
 #: Didox's own status ladder for these two types (reference/09-catalogs.md §6).
 STATUS_DRAFT = 0
@@ -65,11 +68,11 @@ class DidoxDocument(Base):
     __tablename__ = "didox_documents"
     __table_args__ = (
         CheckConstraint(
-            "doc_type IN ('007', '002')",
+            "doc_type IN ('007', '002', '000')",
             name="ck_didox_document_type",
         ),
         CheckConstraint(
-            "subject_kind IN ('contract', 'deal')",
+            "subject_kind IN ('contract', 'deal', 'specification')",
             name="ck_didox_document_subject_kind",
         ),
         # `didox_id` arrives one round trip AFTER the row is committed, so it is
@@ -119,6 +122,11 @@ class DidoxDocument(Base):
     #: which subject kind a row is.
     deal_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("deals.id", ondelete="SET NULL"), nullable=True
+    )
+    #: On an ЭСФ issued against a framework contract's specification — its lines
+    #: and what is left to invoice are that specification's (0054).
+    specification_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("contract_specifications.id", ondelete="SET NULL"), nullable=True
     )
 
     #: Whose `user-key` created it — a document is attributable to one company.

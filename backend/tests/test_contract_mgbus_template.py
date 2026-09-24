@@ -43,7 +43,7 @@ _GLOBAL = {
     **_AKFA,
     "contract_kind": "one_off", "contract_number": "297-08", "buyer_authority": "charter",
     "product": "МОНОЭТИЛЕНГЛИКОЛЬ МЭГ", "qty": "120000", "unit": "kg",
-    "price_with_vat": "7686.525", "vat_rate": "12",
+    "unit_price": "7686.525", "vat_rate": "12",
     "payment_mode": "schedule", "refuse_after_days": "10", "delivery_days": "30",
     "payment_schedule": "22.08.2024 – 25%, 29.08.2024 – 25%, 05.09.2024 – 25%, 12.09.2024 – 25%",
     "delivery_basis": "pickup_address", "delivery_address": "Ташкент, станция «Уртааул»",

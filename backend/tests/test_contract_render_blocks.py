@@ -152,7 +152,7 @@ class TestDerivedValues:
         out = _render(
             "{{ spec_amount_with_vat }}|{{ spec_vat_sum }}|{{ spec_price_without_vat }}|"
             "{{ amount_total_phrase }}",
-            contract_kind="one_off", qty="120000", price_with_vat="16300", vat_rate="12",
+            contract_kind="one_off", qty="120000", unit_price="16300", vat_rate="12",
         )
         assert out == (
             "1 956 000 000|209 571 428,57|14 553,57|"
@@ -164,4 +164,22 @@ class TestDerivedValues:
         assert out == "20 000 000 000 (двадцать миллиардов) сум 00 тийин"
 
     def test_numbers_that_do_not_parse_leave_the_totals_empty(self) -> None:
-        assert _render("[{{ spec_amount_with_vat }}]", qty="много", price_with_vat="1") == "[]"
+        assert _render("[{{ spec_amount_with_vat }}]", qty="много", unit_price="1") == "[]"
+
+    def test_the_user_may_price_without_vat(self) -> None:
+        out = _render(
+            "{{ spec_amount_without_vat }}|{{ spec_vat_sum }}|{{ spec_amount_with_vat }}",
+            contract_kind="one_off", qty="120000", unit_price="14553.57", vat_rate="12",
+            price_basis="without_vat",
+        )
+        assert out == "1 746 428 400|209 571 408|1 955 999 808"
+
+
+class TestRawKeys:
+    def test_only_code_built_keys_are_inserted_raw(self) -> None:
+        out = contract_render.render_contract_html(
+            "<table>{{{ spec_rows_html }}}</table>{{{ product }}}",
+            {"spec_rows_html": "<tr><td>1</td></tr>", "product": "<b>x</b>"}, {}, {},
+            contract_public_id="x", generated_at="t",
+        )
+        assert out == "<table><tr><td>1</td></tr></table>"

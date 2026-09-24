@@ -133,15 +133,20 @@ def _mgbus_schema(kind: str) -> dict[str, object]:
         "qty": _text("Количество", group="subject", kind="number", when=one_off),
         "unit": _enum("Ед. изм.", {"kg": "кг", "t": "т", "pcs": "шт"}, group="subject",
                       default="kg", when=one_off),
-        "price_with_vat": _text("Цена за единицу с НДС, сум", group="subject", kind="number",
-                                when=one_off),
+        "unit_price": _text("Цена за единицу, сум", group="subject", kind="number",
+                            when=one_off),
+        # The user's call, not ours: with VAT keeps the agreed total round (as
+        # the real specifications do) but the ЭСФ may differ by a few soum;
+        # without VAT matches the ЭСФ to the tiyin.
+        "price_basis": _enum("Цена указана", {"with_vat": "С НДС", "without_vat": "Без НДС"},
+                             group="subject", default="with_vat", when=one_off),
         "vat_rate": _enum("НДС", {"12": "12%", "0": "0%", "none": "Без НДС"},
                           group="subject", default="12", when=one_off),
     }
     required = (
         ["goods_description", "amount_limit"]
         if kind == "frame"
-        else ["product", "qty", "unit", "price_with_vat"]
+        else ["product", "qty", "unit", "unit_price"]
     )
     properties: dict[str, object] = {
         "contract_number": _text("Номер договора", group="parties"),
@@ -300,6 +305,29 @@ def seed_contract_templates(db: Session | None = None) -> list[ContractTemplate]
             ).scalars():
                 legacy.is_active = False
             session.flush()
+
+        # The specification to a framework contract — its own form, the AKFA
+        # «Спецификация № 01». Rendered by `contracts.specifications`.
+        if session.execute(
+            select(ContractTemplate).where(ContractTemplate.code == "SPECIFICATION_V1")
+        ).scalar_one_or_none() is None:
+            spec_html = (_DATA_DIR / "specification_mgbus_ru.html").read_text(encoding="utf-8")
+            spec_row = ContractTemplate(
+                code="SPECIFICATION_V1",
+                kind="specification",
+                name_ru="Спецификация к договору поставки",
+                name_uz="Yetkazib berish shartnomasiga spetsifikatsiya",
+                name_en="Specification to a supply contract",
+                body_storage_path=storage_service.store_contract_template(
+                    "SPECIFICATION_V1", 1, spec_html
+                ),
+                variables_schema={"type": "object", "properties": {}},
+                version=1,
+                is_active=True,
+            )
+            session.add(spec_row)
+            session.flush()
+            created.append(spec_row)
 
         # The commitment letter shares this table (`kind` discriminates) and the
         # same pure renderer. A second table plus a second `{{ key }}` substituter

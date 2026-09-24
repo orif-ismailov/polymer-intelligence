@@ -38,6 +38,12 @@ _NUMBERED = re.compile(r"<(h2|p)(\s[^>]*?)?\s+data-n(\s[^>]*)?>", re.IGNORECASE)
 
 _FALSY = frozenset({"", "false", "0", "no"})
 
+#: `{{{ key }}}` — inserted WITHOUT escaping, and only for these keys, which the
+#: code builds itself from escaped values (a specification's table rows). Any other
+#: key in triple braces renders empty, so a user variable can never smuggle markup.
+RAW_KEYS: frozenset[str] = frozenset({"spec_rows_html"})
+_RAW = re.compile(r"\{\{\{\s*(\w+)\s*\}\}\}")
+
 
 def _truthy(value: str | None) -> bool:
     return (value or "").strip().lower() not in _FALSY
@@ -97,7 +103,12 @@ def _fill(template_html: str, context: dict[str, str]) -> str:
     def repl(match: re.Match[str]) -> str:
         return html.escape(context.get(match.group(1), ""))
 
-    return _PLACEHOLDER.sub(repl, _number(_blocks(template_html, context)))
+    def raw(match: re.Match[str]) -> str:
+        key = match.group(1)
+        return context.get(key, "") if key in RAW_KEYS else ""
+
+    body = _RAW.sub(raw, _number(_blocks(template_html, context)))
+    return _PLACEHOLDER.sub(repl, body)
 
 
 def render_contract_html(

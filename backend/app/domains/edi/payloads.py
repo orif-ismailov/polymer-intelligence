@@ -431,6 +431,50 @@ def build_facture_002(
     return body
 
 
+# ── 000 «Произвольный документ» — a specification ─────────────────────────────
+
+#: Didox's subtype for a «Произвольный документ» that is a specification.
+SUBTYPE_SPECIFICATION = 8
+
+
+def _party_000(party: PartyRequisites) -> JsonObject:
+    return {
+        "Name": party.name,
+        "BranchCode": party.branch_code,
+        "BranchName": party.branch_name,
+        "Address": party.address or "",
+    }
+
+
+def build_specification_000(
+    *,
+    number: str,
+    date: datetime.date,
+    name: str,
+    contract_number: str,
+    contract_date: datetime.date,
+    seller: PartyRequisites,
+    buyer: PartyRequisites,
+) -> JsonObject:
+    """A framework contract's specification, as a «Произвольный документ».
+
+    It stays inside Didox (no roaming) and carries our PDF, which the caller adds
+    as `document`; this is the `data` block around it. `ContractDoc` ties it to
+    the договор exactly as the ЭСФ does.
+    """
+    return {
+        "data": {
+            "Document": {"DocumentNo": number, "DocumentDate": _day(date), "DocumentName": name},
+            "Subtype": SUBTYPE_SPECIFICATION,
+            "ContractDoc": {"ContractNo": contract_number, "ContractDate": _day(contract_date)},
+            "SellerTin": seller.tin,
+            "Seller": _party_000(seller),
+            "BuyerTin": buyer.tin,
+            "Buyer": _party_000(buyer),
+        }
+    }
+
+
 # ── the read side ─────────────────────────────────────────────────────────────
 
 

@@ -35,6 +35,11 @@ interface DidoxFactureCardProps {
    * to be refused after the key password.
    */
   ready: boolean;
+  /**
+   * A framework contract's SIGNED specifications — its ЭСФ invoice one of them.
+   * Absent on a one-off contract, which is invoiced against its own goods.
+   */
+  specifications?: { id: number; number: number }[];
 }
 
 /** A form line: numbers as typed, VAT as the Select holds it. */
@@ -83,6 +88,7 @@ export function DidoxFactureCard({
   taxId,
   contractId,
   ready,
+  specifications,
 }: DidoxFactureCardProps) {
   const { t } = useTranslation();
   const session = useDidoxSession(companyId, taxId);
@@ -93,9 +99,13 @@ export function DidoxFactureCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [chosenSpec, setChosenSpec] = useState<number | null>(null);
+  const specId = specifications
+    ? (chosenSpec ?? specifications[0]?.id ?? null)
+    : null;
   const query = useQuery({
-    queryKey: ["didox", "factures", companyId, contractId],
-    queryFn: () => didoxApi.factures(companyId, contractId),
+    queryKey: ["didox", "factures", companyId, contractId, specId],
+    queryFn: () => didoxApi.factures(companyId, contractId, specId),
   });
   const data = query.data;
 
@@ -147,6 +157,7 @@ export function DidoxFactureCard({
           contractId,
           payload,
           data?.ikpu_choice ? choice : null,
+          specId,
         ),
       );
       documentId = created.id;
@@ -176,6 +187,25 @@ export function DidoxFactureCard({
         <CardTitle>{t("facture.title")}</CardTitle>
       </CardHeader>
       <CardBody className="space-y-4">
+        {specifications && specifications.length > 0 ? (
+          <FormField label={t("facture.specification")}>
+            {({ id }) => (
+              <Select
+                id={id}
+                value={specId != null ? String(specId) : ""}
+                onChange={(e) => {
+                  setChosenSpec(Number(e.target.value));
+                  setFormOpen(false);
+                }}
+                options={specifications.map((s) => ({
+                  value: String(s.id),
+                  label: t("specification.name", { n: s.number }),
+                }))}
+                data-testid="facture-specification"
+              />
+            )}
+          </FormField>
+        ) : null}
         {data.documents.length === 0 ? (
           <p className="text-sm text-text-muted">{t("facture.none")}</p>
         ) : (
@@ -197,6 +227,16 @@ export function DidoxFactureCard({
                   <div className="min-w-0">
                     <p className="font-medium text-text">
                       {doc.number ?? `#${doc.id}`}
+                      {doc.specification_id != null && specifications ? (
+                        <span className="ms-2 text-text-muted">
+                          {t("specification.name", {
+                            n:
+                              specifications.find(
+                                (sp) => sp.id === doc.specification_id,
+                              )?.number ?? "?",
+                          })}
+                        </span>
+                      ) : null}
                       <span className="ms-2 text-text-muted">
                         {formatDate(doc.doc_date)}
                       </span>
@@ -302,7 +342,11 @@ export function DidoxFactureCard({
                   {line.name}
                   {data.lines[index]?.unit ? (
                     <span className="ms-1 text-text-muted">
-                      ({data.lines[index]?.unit})
+                      (
+                      {t(`specification.units.${data.lines[index]?.unit}`, {
+                        defaultValue: data.lines[index]?.unit,
+                      })}
+                      )
                     </span>
                   ) : null}
                 </p>

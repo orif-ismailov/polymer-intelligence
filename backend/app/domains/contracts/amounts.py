@@ -132,3 +132,26 @@ def vat_line(
     return VatLine(
         amount_with_vat=total, vat_sum=vat, amount_without_vat=without, price_without_vat=price
     )
+
+
+def net_line(
+    *, qty: decimal.Decimal, price_without_vat: decimal.Decimal, vat_rate: int | None
+) -> VatLine:
+    """A line priced WITHOUT VAT, the way an ЭСФ states it.
+
+    `Count × Summa`, then VAT added on top — exactly `payloads._totals`, so a
+    specification priced this way and its ЭСФ agree to the tiyin. The price is
+    held to 2 decimals because that is all an ЭСФ accepts.
+    """
+    price = price_without_vat.quantize(_CENT, rounding=decimal.ROUND_HALF_UP)
+    without = (qty * price).quantize(_CENT, rounding=decimal.ROUND_HALF_UP)
+    if vat_rate is None or vat_rate == 0:
+        vat = decimal.Decimal("0.00")
+    else:
+        vat = (without * decimal.Decimal(vat_rate) / 100).quantize(
+            _CENT, rounding=decimal.ROUND_HALF_UP
+        )
+    return VatLine(
+        amount_with_vat=without + vat, vat_sum=vat, amount_without_vat=without,
+        price_without_vat=price,
+    )
