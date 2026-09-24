@@ -50,7 +50,7 @@ export function CompanySwitcher() {
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex max-w-[220px] items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-2"
+        className="flex max-w-[128px] items-center gap-2 rounded-md sm:max-w-[220px] border border-border bg-surface px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-2"
       >
         <span className="truncate">
           {activeCompany ? companyLabel(activeCompany, t("companies.noName")) : t("home.activeCompany")}

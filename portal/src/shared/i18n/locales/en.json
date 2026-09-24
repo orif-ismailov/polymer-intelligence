@@ -1122,7 +1122,11 @@
   "theme": {
     "dark": "Dark",
     "light": "Light",
-    "system": "System"
+    "system": "System",
+    "switchTo": {
+      "dark": "Switch to dark theme",
+      "light": "Switch to light theme"
+    }
   },
   "inquiryStatus": {
     "pending": "Pending",
@@ -2301,7 +2305,8 @@
       "signIn": "Sign in",
       "register": "Register",
       "language": "Language",
-      "pricesShort": "Prices"
+      "pricesShort": "Prices",
+      "theme": "Theme"
     },
     "role": {
       "manufacturer": "Manufacturer",

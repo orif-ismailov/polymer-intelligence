@@ -1122,7 +1122,11 @@
   "theme": {
     "dark": "To‘q",
     "light": "Yorug‘",
-    "system": "Tizim bo‘yicha"
+    "system": "Tizim bo‘yicha",
+    "switchTo": {
+      "dark": "Qorong'i mavzuni yoqish",
+      "light": "Yorug' mavzuni yoqish"
+    }
   },
   "inquiryStatus": {
     "pending": "Moderatsiyada",
@@ -2301,7 +2305,8 @@
       "signIn": "Kirish",
       "register": "Ro'yxatdan o'tish",
       "language": "Til",
-      "pricesShort": "Narxlar"
+      "pricesShort": "Narxlar",
+      "theme": "Mavzu"
     },
     "role": {
       "manufacturer": "Ishlab chiqaruvchi",

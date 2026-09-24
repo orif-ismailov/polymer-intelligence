@@ -1122,7 +1122,11 @@
   "theme": {
     "dark": "Тёмная",
     "light": "Светлая",
-    "system": "Системная"
+    "system": "Системная",
+    "switchTo": {
+      "dark": "Включить тёмную тему",
+      "light": "Включить светлую тему"
+    }
   },
   "inquiryStatus": {
     "pending": "На модерации",
@@ -2317,7 +2321,8 @@
       "signIn": "Войти",
       "register": "Регистрация",
       "language": "Язык",
-      "pricesShort": "Цены"
+      "pricesShort": "Цены",
+      "theme": "Тема"
     },
     "role": {
       "manufacturer": "Производитель",

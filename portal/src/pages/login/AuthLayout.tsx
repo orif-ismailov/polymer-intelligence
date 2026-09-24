@@ -3,6 +3,7 @@ import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
+import { ThemeToggle } from "@/features/switch-theme";
 import { BrandLogo, ShieldIcon } from "@/shared/ui";
 
 import { LanguageMenu } from "./LanguageMenu";
@@ -25,7 +26,8 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg text-text">
-      <header className="flex items-center justify-end px-4 py-4">
+      <header className="flex items-center justify-end gap-2 px-4 py-4">
+        <ThemeToggle className="h-9 w-9" />
         <LanguageMenu />
       </header>
 
