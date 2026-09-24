@@ -13,6 +13,12 @@ with a `/:companyId` profile), `/prices` and `/news`. These routes are **server-
 so search engines receive real HTML, and they read `/api/v1/public/*`, the only API surface
 with no auth dependency. Open to **everyone**, signed in or not.
 
+**Technologists** (0055) are a catalog of PEOPLE at `/technologists` + `/technologists/:id`
+(server-rendered, not a `PUBLIC_DIRECTORIES` slug — those list companies by role). An account
+with `applied_as === "technologist"` has no company by design: `RequireCompany` lets it through
+only to `/cabinet/expert/*`, notifications and settings, and `AppShell` swaps in the expert rail
+(no company switcher). The factory side is `/cabinet/tech-requests/*`.
+
 **The client cabinet** (R1): everything under **`/cabinet`** — a person signs in with a
 login and password ISSUED BY STAFF, registers companies, submits them for verification, and
 publishes offers. The browser counterpart to the staff `dashboard/` and the Telegram

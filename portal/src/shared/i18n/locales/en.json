@@ -76,7 +76,12 @@
     "doneTitle": "Request sent",
     "doneBody": "We will contact you on the number you gave.",
     "doneNext": "Your manager hands over the login and password in person — they are also written into the contract.",
-    "backToMarket": "Back to the marketplace"
+    "backToMarket": "Back to the marketplace",
+    "specialization": "Specialisation",
+    "specializationHint": "For example: film extrusion technologist, 12 years of experience.",
+    "expertTitle": "Expert application",
+    "expertSubtitle": "Technologists and engineers receive requests from factories. Tell us about yourself — we will check and open access.",
+    "expertNoteHint": "Processes, equipment you have worked with, languages — optional."
   },
   "password": {
     "title": "Change password",
@@ -122,7 +127,11 @@
       "company": "Company"
     },
     "collapseRail": "Collapse menu",
-    "expandRail": "Expand menu"
+    "expandRail": "Expand menu",
+    "techRequests": "Technologists",
+    "expertProfile": "My profile",
+    "expertRequests": "Factory requests",
+    "technologists": "Technologist catalog"
   },
   "home": {
     "title": "Overview",
@@ -1625,6 +1634,30 @@
     "lab_message": {
       "title": "New message on a request",
       "body": "Request {{number}} — new message"
+    },
+    "tech_request_new": {
+      "title": "New technologist request",
+      "body": "Request {{number}} matches your process"
+    },
+    "tech_invite": {
+      "title": "You're invited to a request",
+      "body": "A factory invites you: request {{number}}"
+    },
+    "tech_offer_new": {
+      "title": "New offer from a technologist",
+      "body": "{{expert}} responded to request {{number}}"
+    },
+    "tech_offer_decided": {
+      "title": "A decision on your offer",
+      "body": "The factory reviewed your offer on request {{number}}"
+    },
+    "tech_message": {
+      "title": "New message",
+      "body": "Request {{number}} — new message"
+    },
+    "technologist_decided": {
+      "title": "Your profile was reviewed",
+      "body": "Open your profile to see the decision"
     }
   },
   "contracts": {
@@ -2317,7 +2350,8 @@
       "register": "Register",
       "language": "Language",
       "pricesShort": "Prices",
-      "theme": "Theme"
+      "theme": "Theme",
+      "technologists": "Technologists"
     },
     "role": {
       "manufacturer": "Manufacturer",
@@ -3033,6 +3067,255 @@
     "errors": {
       "invalid": "Check the items: each needs goods, quantity and price.",
       "createFailed": "Could not draw up the specification."
+    }
+  },
+  "technologists": {
+    "title": "Technologists",
+    "metaTitle": "Technologists and industrial experts — IMEX AI",
+    "subtitle": "Find an industrial expert for your production.",
+    "needTitle": "I need a technologist",
+    "needBody": "Describe the task — technologists respond with offers, and you choose who does it.",
+    "needCta": "Create a request",
+    "amTitle": "I am a technologist",
+    "amBody": "A technologist, engineer or expert? Create a profile and receive requests from factories.",
+    "amCta": "Register as an expert",
+    "catalogTitle": "Expert catalog",
+    "filters": {
+      "any": "All",
+      "anyProcess": "All processes",
+      "anyMaterial": "All materials",
+      "anyLanguage": "All languages",
+      "search": "Search",
+      "searchPlaceholder": "Name, specialisation…",
+      "process": "Process",
+      "material": "Material",
+      "language": "Language"
+    },
+    "resultCount_one": "{{count}} expert",
+    "resultCount_other": "{{count}} experts",
+    "empty": "No experts yet.",
+    "noReviews": "No reviews",
+    "reviews_one": "{{count}} review",
+    "reviews_other": "{{count}} reviews",
+    "profileVerified": "Profile verified",
+    "untitled": "Expert",
+    "years_one": "{{count}} year of experience",
+    "years_other": "{{count}} years of experience",
+    "notFound": "Expert not found",
+    "backToCatalog": "Technologist catalog",
+    "profileMetaTitle": "{{name}} — technologist | IMEX AI",
+    "fields": {
+      "processes": "Processes",
+      "materials": "Materials",
+      "industries": "Industries",
+      "equipment": "Equipment experience",
+      "years": "Years of experience",
+      "projects": "Projects",
+      "countries": "Countries",
+      "formats": "Work format",
+      "languages": "Languages"
+    },
+    "process": {
+      "extrusion": "Extrusion",
+      "injection_molding": "Injection molding",
+      "blow_molding": "Blow molding",
+      "compounding": "Compounding",
+      "film": "Film",
+      "pipe": "Pipe",
+      "recycling": "Recycling",
+      "thermoforming": "Thermoforming"
+    },
+    "industry": {
+      "petrochemical": "Petrochemical",
+      "polymer": "Polymer",
+      "packaging": "Packaging",
+      "automotive": "Automotive",
+      "recycling": "Recycling",
+      "chemical": "Chemical"
+    },
+    "need": {
+      "equipment_setup": "Equipment setup",
+      "material_selection": "Material selection",
+      "production_launch": "Production launch",
+      "troubleshooting": "Troubleshooting",
+      "process_optimization": "Process optimization",
+      "other": "Other"
+    },
+    "urgency": {
+      "urgent": "Urgent",
+      "week": "Within a week",
+      "month": "Within a month",
+      "date": "By a date"
+    },
+    "format": {
+      "online": "Online",
+      "on_site": "On site",
+      "both": "Either"
+    },
+    "language": {
+      "ru": "Russian",
+      "uz": "Uzbek",
+      "en": "English",
+      "zh": "Chinese",
+      "tr": "Turkish",
+      "de": "German",
+      "fa": "Persian",
+      "kk": "Kazakh"
+    },
+    "capacityUnit": {
+      "kg_h": "kg/h",
+      "t_day": "t/day",
+      "t_month": "t/month"
+    },
+    "invite": {
+      "cta": "Invite to a request",
+      "postFirst": "Post a technologist request",
+      "pick": "Request",
+      "sent": "Invitation sent"
+    }
+  },
+  "techRequest": {
+    "form": {
+      "needType": "What do you need?",
+      "process": "Process",
+      "equipment": "Equipment",
+      "equipmentPlaceholder": "Extrusion line",
+      "equipmentModel": "Equipment model",
+      "product": "What do you produce?",
+      "productPlaceholder": "Polyethylene film",
+      "currentMaterial": "Current material",
+      "currentMaterialHint": "Don't know — leave it empty.",
+      "targetMaterial": "Target material",
+      "problem": "What is the task or problem?",
+      "problemPlaceholder": "For example: unstable film thickness. We want to switch to a cheaper grade.",
+      "capacity": "Capacity",
+      "capacityUnit": "Unit",
+      "country": "Country",
+      "city": "City",
+      "cityPlaceholder": "Tashkent",
+      "location": "Plant location",
+      "urgency": "When do you need the expert?",
+      "neededBy": "Date",
+      "workFormat": "Work format",
+      "languages": "Expert's language",
+      "budget": "Budget",
+      "budgetHint": "Optional. You can write «on request».",
+      "required": "Required",
+      "notVerified": "Only a verified company can post a request.",
+      "submit": "Post the request"
+    },
+    "status": {
+      "open": "Open",
+      "assigned": "Expert chosen",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "contactsHint": "Contract and payment are directly between you.",
+    "contactName": "Name",
+    "contactPhone": "Phone",
+    "contactEmail": "Email",
+    "notFound": "Request not found",
+    "chat": "Conversation with the factory",
+    "listTitle": "Technologist requests",
+    "listSubtitle": "Experts respond with offers — you choose who does the work.",
+    "browseExperts": "Technologist catalog",
+    "new": "Find a technologist",
+    "offerCount_one": "{{count}} offer",
+    "offerCount_other": "{{count}} offers",
+    "empty": "No requests yet",
+    "emptyBody": "Describe the task — technologists will send offers.",
+    "newTitle": "Find a technologist",
+    "newSubtitle": "Every verified technologist will see the request. Your company name is revealed once a conversation starts.",
+    "complete": "Work completed",
+    "cancel": "Cancel the request",
+    "offers": "Offers",
+    "inviteMore": "Invite an expert from the catalog",
+    "noOffers": "No offers yet",
+    "noOffersBody": "Matching experts have already been notified.",
+    "chatWith": "Conversation: {{name}}",
+    "expertContacts": "Expert's contacts",
+    "yourReview": "Your review",
+    "acceptConfirm": "Choose this expert?",
+    "acceptHint": "Other offers will be declined, and you and the expert will see each other's contacts.",
+    "declineConfirm": "Decline this offer?",
+    "cancelConfirm": "Cancel the request?",
+    "accept": "Choose",
+    "decline": "Decline",
+    "write": "Message",
+    "completeTitle": "Work completed",
+    "completeHint": "Rate the expert — the review goes into their rating.",
+    "rating": "Rating",
+    "reviewText": "Review"
+  },
+  "techOffer": {
+    "scope": "Scope of work",
+    "scopePlaceholder": "2 days of consulting, 1 day on site, equipment analysis, process tuning.",
+    "price": "Price",
+    "currency": "Currency",
+    "days": "Duration, days",
+    "daysValue_one": "{{count}} day",
+    "daysValue_other": "{{count}} days",
+    "conflict": "An offer is already sent or the request is closed.",
+    "update": "Save changes",
+    "submit": "Send the offer",
+    "withdraw": "Withdraw",
+    "withdrawConfirm": "Withdraw the offer?",
+    "status": {
+      "submitted": "Under review",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "withdrawn": "Withdrawn"
+    }
+  },
+  "expert": {
+    "profile": {
+      "title": "Expert profile",
+      "subtitle": "Factories see your profile in the catalog after review.",
+      "viewPublic": "Open in the catalog",
+      "photo": "Upload a photo",
+      "photoHint": "JPG or PNG, up to 5 MB",
+      "fullName": "Full name",
+      "titleField": "Professional title",
+      "titlePlaceholder": "Film extrusion technologist",
+      "bio": "About",
+      "bioPlaceholder": "Experience, projects, what you help with.",
+      "equipmentHint": "Equipment makers you have worked with.",
+      "contactsHint": "Only the factory that chooses your offer sees your contacts.",
+      "incomplete": "Fill in the marked fields to send the profile for review.",
+      "saved": "Saved",
+      "save": "Save draft",
+      "submit": "Send for review",
+      "required": "Required",
+      "submitted": "Your profile is sent for review — we will notify you of the decision."
+    },
+    "status": {
+      "published": "Your profile is published in the catalog",
+      "pending": "Your profile is under review",
+      "listedMeanwhile": "While it is reviewed, the catalog shows the previously approved version.",
+      "rejected": "The review was not passed",
+      "suspended": "Your profile is suspended",
+      "unsentChanges": "Your changes are not sent for review — the catalog shows the approved version.",
+      "draft": "Fill in your profile and send it for review."
+    },
+    "requests": {
+      "title": "Factory requests",
+      "subtitle": "Open tasks from verified companies.",
+      "notListed": "Requests become available once your profile is published.",
+      "toProfile": "Go to profile",
+      "all": "All",
+      "invited": "Invitations",
+      "empty": "No open requests yet",
+      "emptyInvited": "No invitations yet",
+      "invitedBadge": "You're invited",
+      "anonymousFactory": "Factory"
+    },
+    "request": {
+      "askHint": "Ask the factory a question before sending an offer.",
+      "ask": "Ask a question",
+      "factoryContacts": "Factory's contacts",
+      "myOffer": "My offer",
+      "offerClosed": "The offer is closed.",
+      "requestClosed": "The request no longer accepts offers."
     }
   }
 }

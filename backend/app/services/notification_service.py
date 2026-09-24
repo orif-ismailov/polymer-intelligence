@@ -83,6 +83,14 @@ KIND_LOGISTICS_MESSAGE = "logistics_message"
 # from `KIND_LAB_ORDER_STATUS`, which belongs to the staff-run P6 flow.
 KIND_LAB_REQUEST_NEW = "lab_request_new"
 KIND_LAB_MESSAGE = "lab_message"
+# Technologists (0055). The expert side is a PERSON, so these go to one account
+# (`notify_account`) where the company side goes to its members (`notify_company`).
+KIND_TECH_REQUEST_NEW = "tech_request_new"
+KIND_TECH_INVITE = "tech_invite"
+KIND_TECH_OFFER_NEW = "tech_offer_new"
+KIND_TECH_OFFER_DECIDED = "tech_offer_decided"
+KIND_TECH_MESSAGE = "tech_message"
+KIND_TECHNOLOGIST_DECIDED = "technologist_decided"
 
 
 def keys_for(kind: str) -> tuple[str, str]:

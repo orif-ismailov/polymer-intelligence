@@ -124,6 +124,8 @@ export const SERVER_RENDERED_PATTERNS: readonly RegExp[] = [
   /^\/news\/\d+\/?$/,
   ...PUBLIC_DIRECTORIES.map((d) => new RegExp(`^/${d.slug}/?$`)),
   ...PUBLIC_DIRECTORIES.map((d) => new RegExp(`^/${d.slug}/\\d+/?$`)),
+  /^\/technologists\/?$/,
+  /^\/technologists\/\d+\/?$/,
 ] as const;
 
 /** Does this pathname get server-rendered content, or just the app shell? */

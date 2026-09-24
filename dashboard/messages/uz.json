@@ -24,6 +24,7 @@
       "deals": "Bitimlar",
       "escrow": "Eskrou",
       "companies": "Kompaniyalar",
+      "technologists": "Texnologlar",
       "verification": "Kompaniyalarni tekshirish",
       "portalAccounts": "Mijoz kabinetlari",
       "labOrders": "Tahlillar",
@@ -827,6 +828,12 @@
       "login_taken": "Bu login band. Boshqasini tanlang.",
       "no_credentials": "Bu yozuvda hali login yo‘q — avval kirish bering.",
       "login_required": "Loginni kiriting."
+    },
+    "kind": {
+      "all": "Hammasi",
+      "company": "Kompaniyalar",
+      "technologist": "Texnolog",
+      "technologists": "Texnologlar"
     }
   },
   "adminProducts": {
@@ -2042,7 +2049,6 @@
       "sample_letter": "Majburiyat xati"
     }
   },
-
   "adminBankRegister": {
     "title": "Banklar ma'lumotnomasi",
     "subtitle": "MB filiallari reestri: MFO → bank nomi. Kompaniya ro'yxatdan o'tkazishda to'ldiriladi.",
@@ -2060,5 +2066,71 @@
     "failed": "Faylni yuklab bo'lmadi",
     "file": "Fayl",
     "hint": "Markaziy bank saytidagi filiallar reestri fayli (.xlsx)."
+  },
+  "technologists": {
+    "pageTitle": "Texnologlar",
+    "pageSubtitle": "Ekspert profillarini moderatsiya qilish: katalogga faqat tasdiqlangan versiya tushadi.",
+    "filterAll": "Hammasi",
+    "empty": "Profillar yo‘q",
+    "loadError": "Profillarni yuklab bo‘lmadi",
+    "saveError": "Qarorni saqlab bo‘lmadi",
+    "forbidden": "Ruxsat yo‘q: «Texnologlar» sahifasiga yozish huquqi kerak",
+    "editOfListed": "Ekspert allaqachon katalogda — tasdiqlash kartani almashtiradi, rad etish avvalgisini qoldiradi.",
+    "reasonLabel": "Sabab",
+    "reasonHint": "Rad etish va to‘xtatish uchun majburiy — ekspert uni ko‘radi.",
+    "approve": "Tasdiqlash",
+    "reject": "Rad etish",
+    "suspend": "To‘xtatish",
+    "status": {
+      "draft": "Qoralama",
+      "pending_review": "Tekshiruvda",
+      "published": "E’lon qilingan",
+      "rejected": "Rad etilgan",
+      "suspended": "To‘xtatilgan"
+    },
+    "table": {
+      "expert": "Ekspert",
+      "processes": "Jarayonlar",
+      "status": "Holat",
+      "submittedAt": "Yuborilgan"
+    },
+    "fields": {
+      "account": "Akkaunt",
+      "location": "Shahar, mamlakat",
+      "years": "Tajriba yillari",
+      "projects": "Loyihalar",
+      "countries": "Mamlakatlar",
+      "processes": "Jarayonlar",
+      "materials": "Materiallar",
+      "industries": "Sohalar",
+      "equipment": "Uskunalar",
+      "formats": "Format",
+      "languages": "Tillar",
+      "contacts": "Kontaktlar",
+      "submittedAt": "Yuborilgan",
+      "reason": "Sabab"
+    },
+    "process": {
+      "extrusion": "Ekstruziya",
+      "injection_molding": "Bosim ostida quyish",
+      "blow_molding": "Puflab shakllantirish",
+      "compounding": "Kompaundlash",
+      "film": "Plyonka",
+      "pipe": "Quvurlar",
+      "recycling": "Qayta ishlash",
+      "thermoforming": "Termoshakllantirish"
+    },
+    "industry": {
+      "petrochemical": "Neft-kimyo",
+      "polymer": "Polimerlar",
+      "packaging": "Qadoqlash",
+      "automotive": "Avtosanoat",
+      "recycling": "Qayta ishlash",
+      "chemical": "Kimyo"
+    },
+    "format": {
+      "online": "Onlayn",
+      "on_site": "Zavodda"
+    }
   }
 }

@@ -62,6 +62,7 @@ import app.domains.signals.counterparty_models  # noqa: F401
 import app.domains.signals.models  # noqa: F401
 import app.domains.signals.source_models  # noqa: F401
 import app.domains.sourcing.models  # noqa: F401
+import app.domains.technologists.models  # noqa: F401
 import app.domains.verification.models  # noqa: F401
 import app.domains.verification.registry_models  # noqa: F401
 from app.models.app_settings import AppSetting  # noqa: F401

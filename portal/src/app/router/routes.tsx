@@ -56,6 +56,13 @@ import {
 import { SamplesPage } from "@/pages/samples";
 import { SellerProfilePage } from "@/pages/sellers";
 import { SettingsPage } from "@/pages/settings";
+import { ExpertProfilePage, ExpertRequestPage, ExpertRequestsPage } from "@/pages/expert";
+import {
+  TechRequestDetailPage,
+  TechRequestNewPage,
+  TechRequestsPage,
+} from "@/pages/tech-requests";
+import { TechnologistPage, TechnologistsPage } from "@/pages/technologists";
 import { VerificationStatusPage } from "@/pages/verification-status";
 import { PUBLIC_DIRECTORIES } from "@/shared/config";
 import { AppShell } from "@/widgets/app-shell";
@@ -74,6 +81,7 @@ import { RequireAuth } from "./RequireAuth";
 import { RequireCompany } from "./RequireCompany";
 import { RequirePasswordCurrent } from "./RequirePasswordCurrent";
 import { RequireFeature } from "./RequireFeature";
+import { RequireTechnologist } from "./RequireTechnologist";
 import { RootLayout } from "./RootLayout";
 import { DidoxOnboardingGate } from "@/features/didox-session";
 import { DidoxOnboardingPage } from "@/pages/didox-onboarding";
@@ -143,6 +151,10 @@ const appRoutes: RouteObject[] = [
       { path: "/market", element: <PublicMarketPage /> },
       { path: "/market/:offerId", element: <PublicOfferPage /> },
       { path: "/prices", element: <PublicPricesPage /> },
+      // Technologists (0055): a catalog of PEOPLE, so its own pages rather than
+      // a `PUBLIC_DIRECTORIES` slug (those list companies by business role).
+      { path: "/technologists", element: <TechnologistsPage /> },
+      { path: "/technologists/:profileId", element: <TechnologistPage /> },
       { path: "/news", element: <NewsPage /> },
       { path: "/news/:signalId", element: <NewsArticlePage /> },
       // The four directories share one page component, keyed by slug.
@@ -447,6 +459,25 @@ const appRoutes: RouteObject[] = [
                           {
                             path: "requests/:requestId",
                             element: <RequestDetailPage />,
+                          },
+                        ],
+                      },
+                      // Technologists (0055). The factory side is universal —
+                      // any company may need a process expert. The expert side is
+                      // a PERSON with no company: `RequireCompany` lets that
+                      // account through to `expert/*` (and nowhere company-scoped),
+                      // and `RequireTechnologist` keeps company accounts out.
+                      { path: "tech-requests", element: <TechRequestsPage /> },
+                      { path: "tech-requests/new", element: <TechRequestNewPage /> },
+                      { path: "tech-requests/:requestId", element: <TechRequestDetailPage /> },
+                      {
+                        element: <RequireTechnologist />,
+                        children: [
+                          { path: "expert", element: <ExpertProfilePage /> },
+                          { path: "expert/requests", element: <ExpertRequestsPage /> },
+                          {
+                            path: "expert/requests/:requestId",
+                            element: <ExpertRequestPage />,
                           },
                         ],
                       },

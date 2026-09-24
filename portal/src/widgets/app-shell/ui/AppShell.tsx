@@ -3,6 +3,7 @@ import { type CSSProperties, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router-dom";
 
+import { useAuthStore } from "@/entities/account";
 import { cn, RAIL_WIDTH, RAIL_WIDTH_COLLAPSED, useRailStore } from "@/shared/lib";
 import { ChevronLeftIcon, ChevronRightIcon, IconButton } from "@/shared/ui";
 
@@ -40,6 +41,9 @@ export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const collapsed = useRailStore((s) => s.collapsed);
   const toggleRail = useRailStore((s) => s.toggle);
+  // A technologist (0055) is a person with no company: their own rail, no
+  // company switcher. One shell, one prop — not a second copy of the frame.
+  const expert = useAuthStore((s) => s.account?.applied_as === "technologist");
 
   return (
     <div
@@ -49,7 +53,7 @@ export function AppShell() {
       // something to interpolate.
       style={{ "--rail-w": collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH } as CSSProperties}
     >
-      <Topbar onOpenMenu={() => setDrawerOpen(true)} />
+      <Topbar onOpenMenu={() => setDrawerOpen(true)} expert={expert} />
 
       {/* `top-14` is the topbar's `h-14`: the rail starts under it so the brand
           lockup keeps the actual corner. Opaque `bg-surface`, never
@@ -63,7 +67,7 @@ export function AppShell() {
         )}
       >
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-4">
-          <SideNav collapsed={collapsed} />
+          <SideNav collapsed={collapsed} expert={expert} />
         </div>
 
         <div className="border-t border-border p-2">
@@ -97,7 +101,7 @@ export function AppShell() {
         </main>
       </div>
 
-      <MobileNav />
+      <MobileNav expert={expert} />
 
       {/* Mobile drawer */}
       {drawerOpen ? (
@@ -116,7 +120,7 @@ export function AppShell() {
           >
             {/* Never collapsed, and on full 44px rows — this instance is only
                 ever driven by a thumb. */}
-            <SideNav touch onNavigate={() => setDrawerOpen(false)} />
+            <SideNav touch expert={expert} onNavigate={() => setDrawerOpen(false)} />
           </div>
         </div>
       ) : null}

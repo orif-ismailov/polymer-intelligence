@@ -5,7 +5,7 @@ import { PublicCompanyTile, usePublicDirectory } from "@/entities/public";
 import { directoryBySlug, publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { Seo, useCanonical } from "@/shared/seo";
-import { LinkButton, PageShell, Skeleton } from "@/shared/ui";
+import { LinkButton, PageShell, Pagination, Skeleton } from "@/shared/ui";
 import { useSyncedDraft, useTierBase } from "@/shared/lib";
 
 const PAGE_SIZE = 24;
@@ -196,35 +196,16 @@ export function PublicDirectoryPage({ slug }: { slug: string }) {
               ))}
             </ul>
 
-            {total > PAGE_SIZE ? (
-              <nav
-                aria-label={t("public.market.pagination")}
-                className="mt-8 flex items-center justify-between gap-4"
-              >
-                <button
-                  type="button"
-                  disabled={offset === 0}
-                  onClick={() => goToOffset(offset - PAGE_SIZE)}
-                  className="rounded-md border border-border-strong px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:text-text-subtle disabled:hover:bg-transparent"
-                >
-                  {t("common.prev")}
-                </button>
-                <span className="num text-sm text-text-muted">
-                  {t("public.market.pageOf", {
-                    page: Math.floor(offset / PAGE_SIZE) + 1,
-                    pages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
-                  })}
-                </span>
-                <button
-                  type="button"
-                  disabled={offset + PAGE_SIZE >= total}
-                  onClick={() => goToOffset(offset + PAGE_SIZE)}
-                  className="rounded-md border border-border-strong px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:text-text-subtle disabled:hover:bg-transparent"
-                >
-                  {t("common.next")}
-                </button>
-              </nav>
-            ) : null}
+            <Pagination
+              offset={offset}
+              total={total}
+              pageSize={PAGE_SIZE}
+              onChange={goToOffset}
+              label={t("public.market.pagination")}
+              prevLabel={t("common.prev")}
+              nextLabel={t("common.next")}
+              pageOfLabel={(page, pages) => t("public.market.pageOf", { page, pages })}
+            />
           </>
         ) : (
           <div className="mt-4 rounded-lg border border-border bg-surface px-4 py-12 text-center">

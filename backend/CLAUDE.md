@@ -224,6 +224,21 @@ mocks the thing it is testing.
   A funded mark on a deal already past `payment_pending` moves only the payment. Stub/live
   payments keep every old rule — `/payment-received` answers 409 `not_direct` for them. The
   test conftest still pins `ESCROW_MODE=stub`, so direct-rail tests name the mode explicitly.
+- **Technologists** (`domains/technologists/`, migration 0055) — a marketplace of PRIVATE
+  experts, so one side of every flow is an account, not a company. `user_accounts.applied_as`
+  (`company`|`technologist`) is set by the access request and is what the portal routes on.
+  The expert's routes are `/portal/me/technologist/*` (403 `not_a_technologist` for a company
+  account); the factory's are `/portal/companies/{id}/tech-requests/*`; a thread is
+  `/portal/tech-threads/{id}` for both, with `?company_id=` meaning "as the factory" and the
+  server returning `mine` per SIDE (`tech_messages.author_kind`). Three rules to keep:
+  the catalog serves `published_snapshot`, written ONLY on staff approval (`is_listed` and
+  `_listed_clause` are twins — an edit of a listed expert never reaches a factory unreviewed);
+  the factory is anonymous in the feed until a thread exists (`company_visible_to`); contacts
+  cross only between the parties to the accepted offer (`contacts_visible`). Notification
+  entities are per READER — `tech_request` for the factory, `tech_feed` for the expert —
+  because `notificationLink` sees only `(entity, id)`. Photos are byte-proxied
+  (`/public/technologists/{id}/photo` from the snapshot; the live one is private and the
+  portal/dashboard fetch it as a Blob — an `<img>` cannot send the Bearer token).
 - **State registries (P7.c)** — `registry_snapshots` is append-only: no `updated_at`, no
   UPDATE path, a re-check is a new row. Two writers share one shape — `source='registry'`
   (an API answered, `created_by` NULL) and `source='manual'` (a staff member transcribed an

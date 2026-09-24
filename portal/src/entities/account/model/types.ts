@@ -12,7 +12,15 @@ export interface Account {
    * on every guarded route, and `RequirePasswordCurrent` keeps the UI off them.
    */
   must_change_password: boolean;
+  /**
+   * Who applied (0055). A `technologist` is a private expert with no company, so
+   * `RequireCompany` sends them to their own cabinet instead of to company
+   * registration — for them, "no company" is the finished state.
+   */
+  applied_as: AppliedAs;
 }
+
+export type AppliedAs = "company" | "technologist";
 
 export interface AuthResult {
   access_token: string;
@@ -29,8 +37,10 @@ export interface LoginPayload {
 export interface RegisterPayload {
   contact_name: string;
   phone: string;
-  company_name: string;
+  /** Required for a company applicant; a technologist has none. */
+  company_name?: string;
   note?: string;
+  applied_as?: AppliedAs;
 }
 
 export interface PasswordChangePayload {

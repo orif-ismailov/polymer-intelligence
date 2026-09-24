@@ -665,6 +665,35 @@ def store_lab_chat_file(
     return _store_chat_file("lab-chat", thread_id, content, filename)
 
 
+def store_tech_chat_file(
+    thread_id: int, content: bytes, filename: str
+) -> tuple[str, str]:
+    """Validate + store a technologist-thread chat attachment; return (key, mime)."""
+    return _store_chat_file("tech-chat", thread_id, content, filename)
+
+
+def store_technologist_photo(profile_id: int, content: bytes, filename: str) -> str:
+    """Validate + store an expert's portrait; return the new object key.
+
+    Same rules as a company logo (JPEG/PNG, 5 MB, random key — the client's
+    filename never reaches the bucket). Does NOT delete the previous object: the
+    catalog may still be serving it from `published_snapshot` until the new
+    photo is approved, and a deleted key would be a broken image on a live card.
+    """
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    if len(content) > MAX_LOGO_SIZE_BYTES:
+        raise ValueError("file_too_large")
+    mime = validate_upload(content, filename)
+    if mime not in LOGO_MIMES:
+        raise ValueError("invalid_file_type")
+    key = f"technologists/{profile_id}/photo/{secrets.token_hex(8)}.{_LOGO_EXTENSIONS[mime]}"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET, Key=key, Body=content, ContentType=mime
+    )
+    return key
+
+
 def get_object_bytes(key: str) -> bytes:
     """Fetch an S3 object's raw bytes (contract PDF integrity checks)."""
     from app.core.storage import s3_client  # noqa: PLC0415

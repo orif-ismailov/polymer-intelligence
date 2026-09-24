@@ -73,6 +73,15 @@ _TABLES = [
     "lab_request_messages",
     "lab_request_threads",
     "lab_requests",
+    # Technologists (0055): offers before requests — tech_requests.assigned_offer_id
+    # is SET NULL, but the offer's own FK to the request is not.
+    "tech_messages",
+    "tech_threads",
+    "tech_reviews",
+    "tech_request_invites",
+    "tech_offers",
+    "tech_requests",
+    "technologist_profiles",
     "logistics_request_messages",
     "logistics_request_threads",
     "logistics_requests",

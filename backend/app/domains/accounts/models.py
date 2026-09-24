@@ -82,6 +82,12 @@ class UserAccount(Base):
     # and the queue searches them. JSONB here is for foreign payloads, not our form.
     applied_company_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     application_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: Who is asking (0055): `company` — a person who will register a company, or
+    #: `technologist` — a private expert who never will. The cabinet routes on it:
+    #: a technologist with no company is not an unfinished registration.
+    applied_as: Mapped[str] = mapped_column(
+        Text, nullable=False, default="company", server_default="company"
+    )
 
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

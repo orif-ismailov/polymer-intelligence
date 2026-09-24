@@ -55,6 +55,15 @@ export function notificationLink(
       return `/cabinet/requests?request=${entityId}`;
     case "lab_thread":
       return `/cabinet/lab/threads/${entityId}`;
+    // Technologists (0055). One request, two readers, two pages — so two
+    // entities: the factory's `tech_request` and the expert's `tech_feed`.
+    // A chat line points at the request too; the conversation lives there.
+    case "tech_request":
+      return `/cabinet/tech-requests/${entityId}`;
+    case "tech_feed":
+      return `/cabinet/expert/requests/${entityId}`;
+    case "technologist":
+      return "/cabinet/expert";
     default:
       return null;
   }

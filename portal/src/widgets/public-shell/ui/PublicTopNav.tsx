@@ -30,6 +30,8 @@ interface NavEntry {
 const NAV: NavEntry[] = [
   { to: "/", labelKey: "public.nav.home", end: true },
   ...PUBLIC_DIRECTORIES.map((d) => ({ to: `/${d.slug}`, labelKey: d.labelKey })),
+  // People, not companies — so not a `PUBLIC_DIRECTORIES` slug (0055).
+  { to: "/technologists", labelKey: "public.nav.technologists" },
   { to: "/prices", labelKey: "public.nav.prices" },
   { to: "/news", labelKey: "public.nav.news" },
 ];

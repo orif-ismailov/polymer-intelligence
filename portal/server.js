@@ -59,6 +59,8 @@ const PUBLIC_PATTERNS = [
   /^\/news\/\d+\/?$/,
   ...DIRECTORY_SLUGS.map((s) => new RegExp(`^/${s}/?$`)),
   ...DIRECTORY_SLUGS.map((s) => new RegExp(`^/${s}/\\d+/?$`)),
+  /^\/technologists\/?$/,
+  /^\/technologists\/\d+\/?$/,
 ];
 
 function isPublicPath(pathname) {
@@ -278,7 +280,14 @@ async function createServer() {
   // ── sitemap.xml ───────────────────────────────────────────────────────────
   app.get("/sitemap.xml", async (req, res) => {
     const origin = siteOrigin(req);
-    const staticPaths = ["/", "/market", "/prices", "/news", ...DIRECTORY_SLUGS.map((s) => `/${s}`)];
+    const staticPaths = [
+      "/",
+      "/market",
+      "/prices",
+      "/news",
+      "/technologists",
+      ...DIRECTORY_SLUGS.map((s) => `/${s}`),
+    ];
 
     let entries = [];
     let truncated = false;
