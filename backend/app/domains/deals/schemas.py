@@ -75,6 +75,9 @@ class DealEscrowOut(BaseModel):
     """
 
     status: str
+    #: The rail the payment was opened on: `direct` (paid to the seller, who
+    #: confirms receipt), `stub` (an operator marks escrow) or `live` (a bank).
+    mode: str = "stub"
     amount: decimal.Decimal
     currency: str
     funded_at: datetime.datetime | None = None
@@ -137,6 +140,8 @@ class DealDetailOut(DealSummaryOut):
     #: Null until the contract is signed and the invoice is raised — a deal in
     #: negotiation has no payment behind it yet.
     escrow: DealEscrowOut | None = None
+    #: THIS side may press «Оплата получена» now (the seller, on the direct rail).
+    can_confirm_payment: bool = False
 
 
 class TransitionIn(BaseModel):

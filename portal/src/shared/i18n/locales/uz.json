@@ -1736,7 +1736,7 @@
       "contract_pending": "Shartnoma kutilmoqda",
       "contract_signed": "Shartnoma imzolandi",
       "payment_pending": "To‘lov kutilmoqda",
-      "paid_escrow": "To‘landi (eskrou)",
+      "paid_escrow": "To‘landi",
       "shipped": "Jo‘natildi",
       "delivered": "Qabul qilindi",
       "completed": "Yakunlandi",
@@ -1763,8 +1763,10 @@
       "reasonPlaceholder": "Sababni ko‘rsating",
       "confirm": {
         "cancelled": "Bitim bekor qilinsinmi?",
-        "disputed": "Bitim bo‘yicha nizo ochilsinmi?"
-      }
+        "disputed": "Bitim bo‘yicha nizo ochilsinmi?",
+        "confirmPayment": "Xaridor puli hisobingizga tushganini tasdiqlang. Belgini bekor qilib bo‘lmaydi."
+      },
+      "confirmPayment": "To‘lov olindi"
     },
     "chat": {
       "title": "Bitim chati",
@@ -1807,8 +1809,17 @@
         "refunded": "Xaridorga qaytarildi"
       },
       "refundCause": "Mablag‘ eskrou orqali xaridorga qaytarildi.",
-      "amount": "Bitim summasi"
-    }
+      "amount": "Bitim summasi",
+      "direct": {
+        "pending": "To‘lov kutilmoqda",
+        "paid": "To‘lov olindi",
+        "stepPayment": "To‘lov",
+        "title": "Sotuvchiga to‘g‘ridan-to‘g‘ri to‘lov",
+        "body": "Xaridor shartnomadagi rekvizitlar bo‘yicha to‘laydi. Pul tushganda sotuvchi «To‘lov olindi»ni belgilaydi. To‘lovdan oldin ham jo‘natish mumkin — tovar qabul qilinib, to‘lov tasdiqlanganda bitim yakunlanadi."
+      }
+    },
+    "factureHint": "Tovar jo‘natildi — shartnoma sahifasida xaridorga hisob-faktura (EHF) yuboring.",
+    "factureOpen": "Shartnomaga"
   },
   "rfq": {
     "marketTitle": "Ochiq tenderlar",

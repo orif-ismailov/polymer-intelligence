@@ -46,8 +46,10 @@ from sqlalchemy.sql import func
 from app.core.db import Base
 from app.models.enums import EscrowStatus
 
-#: The rails a payment can be opened on. `stub` = an operator confirms movement
-#: by hand against the bank statement; `live` = a bank adapter does (P7).
+#: The rails a payment can be opened on. `direct` = no escrow at all, the buyer
+#: pays the seller and the seller confirms receipt; `stub` = an operator confirms
+#: movement by hand against the bank statement; `live` = a bank adapter does (P7).
+ESCROW_MODE_DIRECT = "direct"
 ESCROW_MODE_STUB = "stub"
 ESCROW_MODE_LIVE = "live"
 

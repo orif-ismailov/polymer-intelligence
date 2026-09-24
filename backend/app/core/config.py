@@ -302,9 +302,12 @@ class Settings(BaseSettings):
     # `expire_stale_contracts` retires it.
     CONTRACT_PENDING_TTL_DAYS: int = Field(default=30, ge=1, le=365)
 
-    # Escrow rail (P3/P7.b): `stub` = an operator confirms every movement,
-    # `live` = the bank adapter drives it.
-    ESCROW_MODE: Literal["stub", "live"] = "stub"
+    # Payment rail (P3/P7.b): `direct` = no escrow, the buyer pays the seller on
+    # the contract's details and the SELLER confirms receipt (and may ship before
+    # it — postpayment); `stub` = an operator confirms every escrow movement;
+    # `live` = the bank adapter drives it. `direct` is the default because no
+    # bank is connected, and a deal must not claim someone holds the money.
+    ESCROW_MODE: Literal["direct", "stub", "live"] = "direct"
 
     # RFQ supplier push (P5) — notifying matched suppliers of a new buyer RFQ.
     RFQ_SUPPLIER_PUSH_ENABLED: bool = False

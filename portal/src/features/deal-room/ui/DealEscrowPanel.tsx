@@ -32,6 +32,11 @@ const TONES: Record<DealEscrow["status"], BadgeTone> = {
  * confirmed by an operator, so the room shows where it is and when it got there.
  * A refunded escrow shows two steps, not four — a refund is where that payment
  * ended, and drawing "released" behind it as if still pending would be a lie.
+ *
+ * On the DIRECT rail there is no escrow to show: nobody reserves the money and
+ * nobody pays it out, so the track is «Ожидает оплаты → Оплата получена», and
+ * `released` (the deal closing) reads as paid. The seller's button lives in the
+ * action bar with the deal's other moves.
  */
 export function DealEscrowPanel({ escrow }: DealEscrowPanelProps) {
   const { t, i18n } = useTranslation();
@@ -46,11 +51,20 @@ export function DealEscrowPanel({ escrow }: DealEscrowPanelProps) {
     );
   }
 
+  const direct = escrow.mode === "direct";
   const refunded = escrow.status === "refunded";
   const flow: DealEscrow["status"][] = refunded
     ? ["pending", "refunded"]
-    : ["pending", "funded", "released"];
-  const reached = flow.indexOf(escrow.status);
+    : direct
+      ? ["pending", "funded"]
+      : ["pending", "funded", "released"];
+  // Direct: `released` only means the deal closed — the money was already paid.
+  const shown = direct && escrow.status === "released" ? "funded" : escrow.status;
+  const reached = flow.indexOf(shown);
+  const label = (status: DealEscrow["status"]) =>
+    direct && status !== "refunded"
+      ? t(`deals.escrow.direct.${status === "pending" ? "pending" : "paid"}`)
+      : t(`deals.escrow.status.${status}`);
   const stampFor: Record<string, string | null> = {
     funded: escrow.funded_at,
     released: escrow.released_at,
@@ -59,7 +73,7 @@ export function DealEscrowPanel({ escrow }: DealEscrowPanelProps) {
 
   const steps: StatusStep[] = flow.map((status, index) => ({
     id: status,
-    label: t(`deals.escrow.status.${status}`),
+    label: label(status),
     hint: stampFor[status] ? formatDateTime(stampFor[status]) : undefined,
     state: index < reached ? "done" : index === reached ? "current" : "pending",
   }));
@@ -77,8 +91,8 @@ export function DealEscrowPanel({ escrow }: DealEscrowPanelProps) {
               label={t("deals.escrow.amount")}
               tone="brand"
             />
-            <Badge tone={TONES[escrow.status]}>
-              {t(`deals.escrow.status.${escrow.status}`)}
+            <Badge tone={direct && shown === "funded" ? "success" : TONES[escrow.status]}>
+              {label(shown)}
             </Badge>
           </div>
           <StatusStepper steps={steps} />
@@ -86,9 +100,15 @@ export function DealEscrowPanel({ escrow }: DealEscrowPanelProps) {
       </Card>
 
       {/* The operator will supply the final wording; the key is what matters. */}
-      <Alert tone="info" title={t("deals.escrow.bankTitle")}>
-        {t("deals.escrow.bankBody")}
-      </Alert>
+      {direct ? (
+        <Alert tone="info" title={t("deals.escrow.direct.title")}>
+          {t("deals.escrow.direct.body")}
+        </Alert>
+      ) : (
+        <Alert tone="info" title={t("deals.escrow.bankTitle")}>
+          {t("deals.escrow.bankBody")}
+        </Alert>
+      )}
     </div>
   );
 }

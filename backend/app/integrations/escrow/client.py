@@ -1,8 +1,11 @@
 """Escrow provider gateway (R4 / P3 — T1.3).
 
 The single seam between the payments domain and whatever actually moves money.
-Two rails exist by design:
+Three rails exist by design:
 
+  * **direct** — no escrow and no provider: the buyer pays the seller on the
+    contract's details and the seller confirms receipt in the cabinet
+    (`escrow_service.confirm_direct_payment`). Nothing here is ever called.
   * **stub** — no provider at all. An operator reconciles against the bank
     statement and marks movement in the dashboard. This is not a placeholder:
     the national bank API is promised but undated, so operator-confirmed escrow
@@ -32,6 +35,7 @@ from app.services import settings_service
 
 logger = logging.getLogger(__name__)
 
+MODE_DIRECT = "direct"
 MODE_STUB = "stub"
 MODE_LIVE = "live"
 
@@ -124,7 +128,9 @@ def get_escrow_client(db: Any) -> EscrowClient:  # noqa: ANN401
     standing in for a bank.
     """
     mode = current_mode()
-    if mode == MODE_STUB:
+    # `direct` has no provider to call either; the stub client is honest about
+    # doing no I/O, which is exactly what that rail needs.
+    if mode in (MODE_STUB, MODE_DIRECT):
         return StubEscrowClient()
     if mode == MODE_LIVE:
         raise ProviderUnavailable(

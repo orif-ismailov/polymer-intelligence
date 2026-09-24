@@ -43,6 +43,7 @@ def test_routes_registered() -> None:
         "/portal/companies/{company_id}/deals",
         "/portal/companies/{company_id}/deals/{deal_id}",
         "/portal/companies/{company_id}/deals/{deal_id}/transition",
+        "/portal/companies/{company_id}/deals/{deal_id}/payment-received",
         "/portal/companies/{company_id}/deals/{deal_id}/messages",
         "/portal/companies/{company_id}/deals/{deal_id}/documents",
         "/portal/companies/{company_id}/requests/{request_id}/responses",
@@ -830,8 +831,10 @@ def test_market_rfq_list_flags_my_existing_response(api) -> None:  # noqa: ANN00
 # ── escrow block (P3 T2.1) ────────────────────────────────────────────────────
 
 
-def _open_escrow(session, deal_id):  # noqa: ANN001, ANN202
-    """Walk the deal to contract_signed and raise its escrow, as the event would."""
+def _open_escrow(session, deal_id, mode=None):  # noqa: ANN001, ANN202
+    """Walk the deal to contract_signed and raise its escrow, as the event would.
+
+    `mode` names the rail; None takes it from the setting, as the consumer does."""
     from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
     from app.domains.deals import service as deal_service  # noqa: PLC0415
     from app.domains.deals.models import Deal  # noqa: PLC0415
@@ -843,7 +846,7 @@ def _open_escrow(session, deal_id):  # noqa: ANN001, ANN202
         db.flush()
         for status_ in (DealStatus.contract_pending, DealStatus.contract_signed):
             deal_service.transition(db, deal, status_, actor_kind=DealActorKind.system)
-        payment = escrow_service.open_for_deal(db, deal)
+        payment = escrow_service.open_for_deal(db, deal, mode=mode)
         db.commit()
         return payment.id
 
@@ -901,7 +904,11 @@ def test_the_escrow_block_follows_the_payment(api) -> None:  # noqa: ANN001
 @requires_real_db
 def test_the_parties_have_no_way_to_move_the_money(api) -> None:  # noqa: ANN001
     """Escrow is moved by the bank/operator alone. There must be no portal
-    mutation at all — not a forbidden one, none."""
+    mutation at all — not a forbidden one, none.
+
+    The one party-driven door, `/payment-received`, is the DIRECT rail's, where no
+    escrow exists at all; it answers 409 for a stub or live payment
+    (`test_a_stub_payment_is_not_the_sellers_to_confirm`)."""
     from app.domains.deals.api_portal import router  # noqa: PLC0415
 
     for route in router.routes:  # type: ignore[attr-defined]
@@ -917,3 +924,96 @@ def test_the_parties_have_no_way_to_move_the_money(api) -> None:  # noqa: ANN001
         headers=s["buyer_h"],
     )
     assert response.status_code in (403, 409)
+
+
+# ── direct payment (the seller confirms receipt; no bank) ─────────────────────
+
+
+@requires_real_db
+def test_on_the_direct_rail_only_the_seller_is_offered_the_confirmation(api) -> None:  # noqa: ANN001
+    client, session = api
+    s = _scene(session)
+    _open_escrow(session, s["deal_id"], mode="direct")
+
+    seller = client.get(
+        f"{_P}/companies/{s['seller_co']}/deals/{s['deal_id']}", headers=s["seller_h"]
+    ).json()
+    buyer = client.get(
+        f"{_P}/companies/{s['buyer_co']}/deals/{s['deal_id']}", headers=s["buyer_h"]
+    ).json()
+
+    assert seller["escrow"]["mode"] == "direct"
+    assert seller["can_confirm_payment"] is True
+    assert buyer["can_confirm_payment"] is False
+    assert "shipped" in seller["available_transitions"], "postpayment: goods may leave first"
+    assert seller["needs_action"] is True
+
+
+@requires_real_db
+def test_the_seller_confirms_the_payment_over_http(api) -> None:  # noqa: ANN001
+    client, session = api
+    s = _scene(session)
+    _open_escrow(session, s["deal_id"], mode="direct")
+
+    response = client.post(
+        f"{_P}/companies/{s['seller_co']}/deals/{s['deal_id']}/payment-received",
+        headers=s["seller_h"],
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["escrow"]["status"] == "funded"
+    assert body["status"] == "paid_escrow"
+    assert body["can_confirm_payment"] is False
+
+    again = client.post(
+        f"{_P}/companies/{s['seller_co']}/deals/{s['deal_id']}/payment-received",
+        headers=s["seller_h"],
+    )
+    assert again.status_code == 409
+    assert again.json()["detail"] == "invalid_transition"
+
+
+@requires_real_db
+def test_the_buyer_cannot_confirm_their_own_payment(api) -> None:  # noqa: ANN001
+    client, session = api
+    s = _scene(session)
+    _open_escrow(session, s["deal_id"], mode="direct")
+
+    response = client.post(
+        f"{_P}/companies/{s['buyer_co']}/deals/{s['deal_id']}/payment-received",
+        headers=s["buyer_h"],
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "actor_not_allowed"
+
+
+@requires_real_db
+def test_a_stub_payment_is_not_the_sellers_to_confirm(api) -> None:  # noqa: ANN001
+    client, session = api
+    s = _scene(session)
+    _open_escrow(session, s["deal_id"], mode="stub")
+
+    seller = client.get(
+        f"{_P}/companies/{s['seller_co']}/deals/{s['deal_id']}", headers=s["seller_h"]
+    ).json()
+    assert seller["can_confirm_payment"] is False
+    assert "shipped" not in seller["available_transitions"]
+
+    response = client.post(
+        f"{_P}/companies/{s['seller_co']}/deals/{s['deal_id']}/payment-received",
+        headers=s["seller_h"],
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "not_direct"
+
+
+@requires_real_db
+def test_confirming_with_no_invoice_yet_is_409(api) -> None:  # noqa: ANN001
+    client, session = api
+    s = _scene(session)
+    response = client.post(
+        f"{_P}/companies/{s['seller_co']}/deals/{s['deal_id']}/payment-received",
+        headers=s["seller_h"],
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "no_payment"

@@ -50,6 +50,7 @@ from app.core.time import utcnow
 from app.domains.deals import service as deal_service
 from app.domains.deals.models import Deal
 from app.domains.deals.payment_models import (
+    ESCROW_MODE_DIRECT,
     ESCROW_MODE_LIVE,
     ESCROW_MODE_STUB,
     EscrowPayment,
@@ -165,6 +166,16 @@ class WrongRail(Exception):
     """
 
 
+# ── The direct rail: no bank, the seller confirms receipt ─────────────────────
+
+#: Deal statuses in which the seller may say the money arrived. Prepayment
+#: (`payment_pending`) and postpayment (`shipped`, `delivered`) — never a deal
+#: that is cancelled, disputed or already closed.
+DIRECT_PAYABLE: frozenset[DealStatus] = frozenset(
+    {DealStatus.payment_pending, DealStatus.shipped, DealStatus.delivered}
+)
+
+
 # ── Lookups ───────────────────────────────────────────────────────────────────
 
 
@@ -250,6 +261,77 @@ def open_for_deal(
     return payment
 
 
+# ── The direct rail ───────────────────────────────────────────────────────────
+
+
+def can_confirm_direct(deal: Deal, payment: EscrowPayment | None) -> bool:
+    """Whether the seller may confirm this payment now (the portal's button)."""
+    return (
+        payment is not None
+        and payment.mode == ESCROW_MODE_DIRECT
+        and payment.status is EscrowStatus.pending
+        and deal.status in DIRECT_PAYABLE
+    )
+
+
+def confirm_direct_payment(
+    db: Session, payment: EscrowPayment, *, account_id: int
+) -> EscrowPayment:
+    """The SELLER records that the buyer's money arrived (direct rail only).
+
+    No bank and no operator sits between the parties on this rail, and the seller
+    is the one who sees the money land — so their word is the evidence, attributed
+    to their account in the audit log. The caller has already established that
+    `account_id` acts for the seller.
+
+    Goes through `_apply_mark` like every other door, so the row lock and the
+    transition table hold: a second confirmation is `InvalidEscrowTransition`.
+    If the buyer has already confirmed receipt, the deal completes here.
+    """
+    if payment.mode != ESCROW_MODE_DIRECT:
+        raise WrongRail(f"payment {payment.id} is on the {payment.mode} rail")
+    deal = db.get(Deal, payment.deal_id)
+    if deal is None or deal.status not in DIRECT_PAYABLE:
+        state = deal.status.value if deal is not None else "missing"
+        raise InvalidEscrowTransition(f"deal is {state}")
+    return _apply_mark(
+        db,
+        payment,
+        EscrowStatus.funded,
+        note=f"seller_account:{account_id}",
+        staff_user=None,
+        event=None,
+        account_id=account_id,
+    )
+
+
+def settle_direct(db: Session, deal: Deal) -> None:
+    """Complete a direct-rail deal once it is BOTH paid and received.
+
+    Called from both ends — after a payment confirmation and after the buyer's
+    «Получено» — because on postpayment either may come second. Marks the payment
+    `released` as `system`, which drags `delivered → completed` exactly as a bank
+    release would; the release-before-delivery guard still applies. Anything
+    else (another rail, unpaid, not yet received) is a no-op.
+    """
+    payment = for_deal(db, deal.id)
+    if (
+        payment is None
+        or payment.mode != ESCROW_MODE_DIRECT
+        or payment.status is not EscrowStatus.funded
+        or deal.status != DealStatus.delivered
+    ):
+        return
+    _apply_mark(
+        db,
+        payment,
+        EscrowStatus.released,
+        note="direct: paid and received",
+        staff_user=None,
+        event=None,
+    )
+
+
 # ── Marking a movement ────────────────────────────────────────────────────────
 
 
@@ -312,8 +394,10 @@ def _apply_mark(
     note: str,
     staff_user: StaffUser | None,
     event: ProviderEvent | None,
+    account_id: int | None = None,
 ) -> EscrowPayment:
-    """Shared body of `mark` (operator) and `mark_from_provider` (bank).
+    """Shared body of `mark` (operator), `mark_from_provider` (bank) and
+    `confirm_direct_payment` (the seller, `account_id`).
 
     The two doors differ ONLY in who is accountable; every rule below — the row
     lock, the transition table, the release-before-delivery guard, the deal being
@@ -350,12 +434,14 @@ def _apply_mark(
     locked.note = clean_note
     db.flush()
 
-    _drag_the_deal(db, deal, to_status, staff_user, clean_note)
+    _drag_the_deal(db, deal, locked, to_status, staff_user, clean_note)
 
     extra: dict[str, object] = {"from": frm.value, "note": clean_note}
     if event is not None:
         extra["provider"] = event.provider
         extra["provider_event_id"] = event.id
+    if account_id is not None:
+        extra["account_id"] = account_id
     event_service.emit(
         db,
         _EVENT_FOR[to_status],
@@ -366,7 +452,11 @@ def _apply_mark(
     audit_service.write_audit(
         db,
         staff_user.id if staff_user is not None else None,
-        "escrow.mark" if event is None else "escrow.mark_provider",
+        "escrow.mark_provider"
+        if event is not None
+        else "escrow.mark_party"
+        if account_id is not None
+        else "escrow.mark",
         "escrow_payments",
         str(locked.id),
         {
@@ -375,6 +465,7 @@ def _apply_mark(
             "to": to_status.value,
             "note": clean_note,
             **({"provider_event_id": event.id} if event is not None else {}),
+            **({"account_id": account_id} if account_id is not None else {}),
         },
     )
     _notify_both(
@@ -385,6 +476,10 @@ def _apply_mark(
         extra={"payment_id": locked.id, "deal_id": deal.id, "to": to_status.value},
     )
 
+    if to_status is EscrowStatus.funded and locked.mode == ESCROW_MODE_DIRECT:
+        # Postpayment: the buyer may have confirmed receipt already.
+        settle_direct(db, deal)
+
     if locked is not payment:
         db.refresh(payment)
     return payment
@@ -393,6 +488,7 @@ def _apply_mark(
 def _drag_the_deal(
     db: Session,
     deal: Deal,
+    payment: EscrowPayment,
     to_status: EscrowStatus,
     staff_user: StaffUser | None,
     note: str,
@@ -411,6 +507,14 @@ def _drag_the_deal(
     same door.
     """
     target = _DEAL_EFFECT[to_status]
+    if (
+        to_status is EscrowStatus.funded
+        and payment.mode == ESCROW_MODE_DIRECT
+        and deal.status != DealStatus.payment_pending
+    ):
+        # Postpayment on the direct rail: the goods already left, so the deal is
+        # past `paid_escrow` and stays where it is. Only the payment moves.
+        return
     if to_status is EscrowStatus.refunded:
         if staff_user is None:
             raise StaffRequired(f"deal {deal.id}: a refund needs a staff actor")

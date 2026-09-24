@@ -48,11 +48,14 @@ class TestRuntimeSetting:
     def test_escrow_mode_is_declared_with_a_safe_default(self) -> None:
         from app.core.config import Settings  # noqa: PLC0415
 
-        assert Settings.model_fields["ESCROW_MODE"].get_default() == "stub", (
+        # `direct` moves no money either — the parties pay each other and the
+        # seller confirms. It is the default because no bank is connected, and a
+        # deal must not claim that someone is holding the buyer's money.
+        assert Settings.model_fields["ESCROW_MODE"].get_default() == "direct", (
             "the default must never move real money"
         )
 
-    def test_only_the_two_known_rails_are_accepted(self) -> None:
+    def test_only_the_three_known_rails_are_accepted(self) -> None:
         """A typo must be refused at startup, not become a silently unroutable
         mode discovered later by a 503."""
         import typing  # noqa: PLC0415
@@ -60,6 +63,7 @@ class TestRuntimeSetting:
         from app.core.config import Settings  # noqa: PLC0415
 
         assert typing.get_args(Settings.model_fields["ESCROW_MODE"].annotation) == (
+            "direct",
             "stub",
             "live",
         )
