@@ -47,7 +47,7 @@ npm run e2e        # Playwright
 - **Landing** uses scoped CSS (`.imex-landing`, neon `#5CFF6E` on `#05070A`) + a tiny
   IntersectionObserver reveal (`hooks/useScrollReveal.ts`) — no Tailwind/Framer Motion (bundle budget).
   Marketplace cards come from the **public** `GET /webapp/market/featured` (no seller contacts).
-- Built as a **static bundle** and served by nginx at the **root of `ai-imex.com`** (Vite
+- Built as a **static bundle** and served by nginx at the **root of `ai-imex.com`** — *until 24.09.2026; the portal holds that root now and this bundle is served nowhere pending the Mini App rework* (Vite
   `base: "/"`). Build + load into the `webapp_static` volume from the repo root with
   `make webapp-bundle` (`deploy/Dockerfile.webapp`). The bot's WebApp button points at
   `${PUBLIC_WEBAPP_URL}/`.

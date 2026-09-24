@@ -204,7 +204,7 @@ From the shipped `e-imzo.js`, verified live:
   macOS with `defaults read uz.yt.eimzo`.
 - **A production domain needs its own issued key.** The shipped table covers only
   `localhost`, `127.0.0.1`, `null`, `e-imzo.uz`, `*.soliq.uz` and `test.e-imzo.uz`.
-  **`cabinet.ai-imex.com` is not registered**, and the key is verified against the
+  **`ai-imex.com` (the portal since 24.09.2026; `cabinet.ai-imex.com` before) is not registered**, and the key is verified against the
   domain so it cannot be self-generated — E-IMZO has to issue it. Until then, signing
   from the real cabinet cannot work; append the pair to `EIMZO_API_KEYS` when it
   arrives. This is an ops launch-blocker, not a code one.

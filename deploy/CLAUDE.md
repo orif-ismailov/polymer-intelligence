@@ -58,10 +58,13 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   `docker-compose.yml`, built from `Dockerfile.portal` — not a static bundle. It server-renders
   the public marketplace routes (`/`, `/market`, the directories, `/prices`, `/news`) so a
   crawler gets real HTML instead of an empty `<div id="root">`, and serves the app shell for
-  everything behind the login. nginx **proxies** `cabinet.ai-imex.com` to the `portal` container
-  + proxies `/api/` → `api:8000` same-origin (server block in `nginx.behind-proxy.conf`; the dev
-  stack's is `dev-cabinet.ai-imex.com` in `nginx.dev-server.behind-proxy.conf`). Prod needs DNS
-  `cabinet.*` + a host cert (behind-proxy: host nginx terminates TLS → docker nginx :8080).
+  everything behind the login. nginx **proxies** the apex `ai-imex.com` to the `portal` container
+  + proxies `/api/` → `api:8000` same-origin (server block in `nginx.behind-proxy.conf`;
+  `www.` only 301s to the apex; the dev stack's is `dev.ai-imex.com` in
+  `nginx.dev-server.behind-proxy.conf`). Until 24.09.2026 the portal lived on `cabinet.*` /
+  `dev-cabinet.*` and the apex served the Telegram Web App; both old names are retired, and the
+  Web App is served nowhere (`webapp_static` is no longer mounted) until the Mini App is
+  reworked to open the portal. Set `PUBLIC_SITE_ORIGIN=https://ai-imex.com` in prod.
   **There is no `portal-build` one-shot compose service and no `portal_static` volume flow
   anymore** — `make portal-bundle` now runs `docker compose build portal && docker compose up -d
   portal` to rebuild the image and restart the container in place. CI does that on every deploy
@@ -71,9 +74,9 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   to nothing), not a 404 from an empty volume.
   **Every public domain also needs a HOST-side vhost.** The inner nginx routes by `Host` and
   never sees a request for a name the host front door has no block for — that request just lands
-  on the default site. `cabinet.*` was inner-only until now;
-  `host-vhost.ai-imex{,-dev}.conf.example` ship the block, and the certbot line in each header
-  covers the name. If the cabinet is unreachable while the container is healthy, check there first. New envs (R1): `VERIFICATION_ENC_KEY` (**secret**, ≥32
+  on the default site. `host-vhost.ai-imex{,-dev}.conf.example` ship
+  the blocks, and the certbot line in each header covers the names. If the portal is unreachable
+  while the container is healthy, check there first. New envs (R1): `VERIFICATION_ENC_KEY` (**secret**, ≥32
   urlsafe-b64 chars) and `VERIFICATION_NOTIFY_CHAT_ID` (optional). The SMS vars that used to sit
   here are **gone** — migration 0048 replaced cabinet phone-OTP with staff-issued credentials, and
   OTP was the SMS rail's only consumer, so `SMS_PROVIDER`/`ESKIZ_*`/`OTP_*` no longer exist.
@@ -187,15 +190,15 @@ for the big picture and `docs/deployment-guide.md` for the full first-run proced
   unauthenticated `/portal/auth/otp/peek` hook meant anyone who knew a phone number could sign in
   as its owner on any `DEBUG=true` deployment — including the public dev stack. Both are deleted.
   What remains to keep honest is `SEED_DEMO_PASSWORD`: it is a real password on any stack the
-  showcase seeder has run against, so set it on `dev-cabinet.ai-imex.com` rather than leaving the
+  showcase seeder has run against, so set it on `dev.ai-imex.com` rather than leaving the
   default.
 
 ## Make targets (run from repo root)
 
 ```bash
 make smoke          # production-compose smoke test (synthetic data + placeholder env)
-make webapp-bundle  # build + load the Telegram Web App into the nginx-served volume
-make portal-bundle  # rebuild the portal image + restart the SSR container (cabinet.*)
+make webapp-bundle  # build + load the Telegram Web App into its volume (NOT served since 24.09.2026)
+make portal-bundle  # rebuild the portal image + restart the SSR container (ai-imex.com)
 ```
 Both use `docker compose --env-file .env -f deploy/docker-compose.yml` — the `--env-file .env` is
 required so Compose interpolates from the repo-root `.env`.

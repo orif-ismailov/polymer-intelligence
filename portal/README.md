@@ -65,7 +65,7 @@ npm run preview    # build + run with an optional /api dev proxy (DEV_API_PROXY=
 browser) and `dist/server` (imported by `server.js` to render). Both are required — either
 alone is an incomplete deploy. In production, `deploy/Dockerfile.portal` builds a runnable Node
 image and the `portal` compose service runs `node server.js` on port 3000; nginx proxies
-`cabinet.ai-imex.com` to it (the bundle is a long-running service, not a static file volume).
+`ai-imex.com` to it (the bundle is a long-running service, not a static file volume).
 `server.js` also serves `robots.txt` and a dynamically generated `sitemap.xml` (sourced from
 `GET /api/v1/public/sitemap`).
 
@@ -145,7 +145,7 @@ mismatch — see `resolveLang` in `server.js`.
 ## Configuration / env vars
 
 The client bundle takes **no build-time env vars** — the API base is always the relative
-`/api/v1` (dev: Vite proxy to `:8000`; prod: nginx same-origin on `cabinet.ai-imex.com`, no
+`/api/v1` (dev: Vite proxy to `:8000`; prod: nginx same-origin on `ai-imex.com`, no
 CORS). Two **runtime** env vars are read by `server.js` (not `VITE_*`, not baked into the
 bundle):
 
