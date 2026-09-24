@@ -164,7 +164,7 @@ export function DirectoryStrip() {
                   size={16}
                   strokeWidth={1.75}
                   aria-hidden
-                  className="text-text-subtle transition-colors group-hover:text-brand"
+                  className="rtl:-scale-x-100 text-text-subtle transition-colors group-hover:text-brand"
                 />
               </div>
             </Link>
@@ -190,7 +190,7 @@ export function DirectoryStrip() {
                 size={16}
                 strokeWidth={1.75}
                 aria-hidden
-                className="text-text-subtle transition-colors group-hover:text-brand"
+                className="rtl:-scale-x-100 text-text-subtle transition-colors group-hover:text-brand"
               />
             </div>
           </Link>

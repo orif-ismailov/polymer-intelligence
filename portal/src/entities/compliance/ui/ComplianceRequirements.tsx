@@ -46,7 +46,7 @@ export function ComplianceRequirements({
             {t("compliance.substance")}: <span className="font-medium">{substanceName}</span>
           </p>
         ) : null}
-        <ul className="list-disc space-y-1 pl-5 text-sm">
+        <ul className="list-disc space-y-1 ps-5 text-sm">
           {missing.map((item, index) => (
             <li key={`${item.kind}-${item.detail ?? index}`}>
               {item.kind === "document"

@@ -1126,7 +1126,10 @@
   "language": {
     "ru": "Русский",
     "uz": "O‘zbekcha",
-    "en": "English"
+    "en": "English",
+    "tr": "Türkçe",
+    "fa": "فارسی",
+    "zh": "中文"
   },
   "theme": {
     "dark": "Тёмная",

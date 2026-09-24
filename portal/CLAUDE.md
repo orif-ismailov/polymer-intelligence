@@ -174,8 +174,20 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
   project (`tsconfig.build.json`); `tsconfig.json` is the plain app config for `tsc --noEmit`
   (typecheck). `build:client` is `vite build` (the client bundle); `build:server` is
   `vite build --ssr src/entry-server.tsx` (the SSR render bundle `server.js` loads).
-- **i18n** locales `ru`/`uz`/`en` (ru primary) under `shared/i18n/locales/` — keep the key trees
-  identical across all three (a missing key is a runtime error). No fa/zh here (portal launch set).
+- **i18n** locales `ru`/`uz`/`en`/`tr`/`fa`/`zh` (ru primary) under `shared/i18n/locales/` — keep
+  the key trees identical across all six (a missing key is a runtime error; `en.json` is the
+  structural reference, `ru.json` additionally carries `_few`/`_many` plural forms). The list is
+  `SUPPORTED_LANGS` in `shared/i18n/i18n.ts`, mirrored as a literal in `server.js`.
+  - **Farsi is right-to-left.** `dirOf(lang)` sets `<html dir="rtl">` (server render and every
+    language switch), so layout must use LOGICAL utilities — `ms-`/`me-`, `ps-`/`pe-`,
+    `start-`/`end-`, `text-start`/`text-end`, `border-s` — never `ml-`/`left-`/`text-left`. A glyph
+    that points along the reading direction flips: `ChevronLeftIcon`/`ChevronRightIcon` do it
+    themselves, a raw lucide arrow or a `→` span needs `rtl:-scale-x-100`, and a `→` inside a
+    Farsi string is written `←`. Centred `left-1/2 -translate-x-1/2` is direction-neutral.
+  - A `?lang=` link is an explicit choice: `AppBootstrap` keeps and persists it rather than
+    switching to the browser language after hydration.
+  - tr/fa/zh were machine-translated (24.09.2026) with a terminology pass; have a native speaker
+    review before relying on them with customers.
 - **API base is relative** (`/api/v1`): dev = vite proxy → :8000; prod = nginx same-origin at
   `ai-imex.com` (no CORS). Don't hardcode absolute API URLs.
 - **Enforcement is badge-only in R1**: publishing requires a *verified* company (backend 403

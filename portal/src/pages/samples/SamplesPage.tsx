@@ -43,7 +43,7 @@ function SampleCard({
             <button
               type="button"
               onClick={onOpenOffer}
-              className="truncate text-left font-medium text-text hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="truncate text-start font-medium text-text hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
               {sample.offer_title ?? `#${sample.offer_id}`}
             </button>

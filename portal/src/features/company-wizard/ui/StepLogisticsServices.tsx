@@ -58,7 +58,7 @@ export function StepLogisticsServices({ onNext, onBack }: StepLogisticsServicesP
               aria-pressed={checked}
               onClick={() => toggleService(service)}
               className={cn(
-                "flex w-full items-center justify-between gap-3 rounded-md border px-3 py-3 text-left transition-colors",
+                "flex w-full items-center justify-between gap-3 rounded-md border px-3 py-3 text-start transition-colors",
                 checked
                   ? "border-brand bg-brand-soft text-text"
                   : "border-border bg-surface text-text hover:border-brand-line",

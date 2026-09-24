@@ -304,7 +304,7 @@ export function DealDetailPage() {
           onClick={() => navigate("/cabinet/deals")}
           className="text-sm text-text-muted underline-offset-2 hover:text-text hover:underline"
         >
-          ← {t("deals.title")}
+          <span aria-hidden className="inline-block rtl:-scale-x-100">←</span> {t("deals.title")}
         </button>
       </div>
     </div>

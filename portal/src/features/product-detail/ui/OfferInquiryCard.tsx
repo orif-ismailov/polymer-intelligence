@@ -123,7 +123,7 @@ export function OfferInquiryCard({ offer, companyId }: OfferInquiryCardProps) {
               <Link
                 key={inq.id}
                 to={`/cabinet/inquiries/${inq.id}`}
-                className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2 text-left text-sm hover:border-brand"
+                className="flex w-full items-center justify-between rounded-md border border-border px-3 py-2 text-start text-sm hover:border-brand"
               >
                 <span className="text-text-muted">{inq.message ?? `#${inq.id}`}</span>
                 <Badge tone={INQUIRY_STATUS_TONE[inq.status]}>

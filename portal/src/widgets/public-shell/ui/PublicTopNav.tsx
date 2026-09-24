@@ -36,7 +36,14 @@ const NAV: NavEntry[] = [
   { to: "/news", labelKey: "public.nav.news" },
 ];
 
-const LANG_LABELS: Record<Lang, string> = { ru: "RU", uz: "UZ", en: "EN" };
+const LANG_LABELS: Record<Lang, string> = {
+  ru: "RU",
+  uz: "UZ",
+  en: "EN",
+  tr: "TR",
+  fa: "FA",
+  zh: "ZH",
+};
 
 /** The active language, falling back to `ru` for anything unrecognised. */
 function useCurrentLang(): Lang {
@@ -47,6 +54,7 @@ function useCurrentLang(): Lang {
 }
 
 function LanguageMenu() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const current = useCurrentLang();
 
@@ -74,7 +82,7 @@ function LanguageMenu() {
           />
           <ul
             role="menu"
-            className="absolute end-0 z-20 mt-1 min-w-[7rem] overflow-hidden rounded-md border border-border bg-surface py-1 shadow-lg animate-fade-in"
+            className="absolute end-0 z-20 mt-1 min-w-[10rem] overflow-hidden rounded-md border border-border bg-surface py-1 shadow-lg animate-fade-in"
           >
             {SUPPORTED_LANGS.map((lang) => (
               <li key={lang}>
@@ -85,14 +93,18 @@ function LanguageMenu() {
                     setLanguage(lang);
                     setOpen(false);
                   }}
+                  // Six languages: the native name, which is what a reader
+                  // looks for, beside the code the bar shows.
+                  lang={lang}
                   className={cn(
-                    "flex w-full items-center px-3 py-1.5 text-sm transition-colors",
+                    "flex w-full items-center justify-between gap-3 px-3 py-1.5 text-sm transition-colors",
                     lang === current
                       ? "bg-brand-soft text-brand"
                       : "text-text-muted hover:bg-surface-2 hover:text-text",
                   )}
                 >
-                  {LANG_LABELS[lang]}
+                  <span>{t(`language.${lang}`)}</span>
+                  <span className="text-xs text-text-subtle">{LANG_LABELS[lang]}</span>
                 </button>
               </li>
             ))}
@@ -256,11 +268,12 @@ export function PublicTopNav() {
                 that is still reachable there. A row of three rather than the
                 bar's dropdown: a menu inside a menu is a worse affordance than
                 three 44px targets, and there are only ever three. */}
-            <li className="mt-1 flex items-center gap-2 border-t border-border pt-2 sm:hidden">
+            <li className="mt-1 flex flex-col items-start gap-1 border-t border-border pt-2 sm:hidden">
               <span className="px-2 text-xs text-text-muted">
                 {t("public.nav.language")}
               </span>
-              <span className="flex gap-1">
+              {/* Wraps: six 44px targets do not fit one row at 320px. */}
+              <span className="flex flex-wrap gap-1">
                 {SUPPORTED_LANGS.map((lang) => (
                   <button
                     key={lang}

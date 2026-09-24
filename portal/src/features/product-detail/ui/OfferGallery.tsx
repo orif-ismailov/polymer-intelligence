@@ -47,7 +47,7 @@ export function OfferGallery({
           <span className="text-xs">{t("market.detail.noPhoto")}</span>
         </div>
         {labVerified ? (
-          <span className="absolute left-2 top-2">
+          <span className="absolute start-2 top-2">
             <Badge variant="lab-verified">{t("lab.badge.verified")}</Badge>
           </span>
         ) : null}
@@ -84,7 +84,7 @@ export function OfferGallery({
       </Swiper>
 
       {labVerified ? (
-        <span className="pointer-events-none absolute left-2 top-2 z-10">
+        <span className="pointer-events-none absolute start-2 top-2 z-10">
           <Badge variant="lab-verified">{t("lab.badge.verified")}</Badge>
         </span>
       ) : null}

@@ -41,7 +41,7 @@ export function NotificationBell() {
       >
         <Bell size={20} strokeWidth={1.75} aria-hidden="true" />
         {count > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-danger-fg">
+          <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-danger-fg">
             {count > 9 ? "9+" : count}
           </span>
         ) : null}
@@ -81,7 +81,7 @@ export function NotificationBell() {
                     type="button"
                     onClick={() => openItem(n)}
                     className={cn(
-                      "flex w-full gap-2 border-b border-border px-4 py-3 text-left last:border-0 hover:bg-surface-2",
+                      "flex w-full gap-2 border-b border-border px-4 py-3 text-start last:border-0 hover:bg-surface-2",
                       !n.read_at && "bg-brand-soft/40",
                     )}
                   >

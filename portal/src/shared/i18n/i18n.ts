@@ -4,13 +4,25 @@ import { initReactI18next } from "react-i18next";
 import { LANGUAGE_KEY } from "@/shared/config";
 
 import en from "./locales/en.json";
+import fa from "./locales/fa.json";
 import ru from "./locales/ru.json";
+import tr from "./locales/tr.json";
 import uz from "./locales/uz.json";
+import zh from "./locales/zh.json";
 
-export const SUPPORTED_LANGS = ["ru", "uz", "en"] as const;
+/** The dashboard's five plus English. Mirrored as a literal in `server.js`. */
+export const SUPPORTED_LANGS = ["ru", "uz", "en", "tr", "fa", "zh"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
 
 export const DEFAULT_LANG: Lang = "ru";
+
+/** Languages written right to left. Farsi flips the whole layout. */
+const RTL_LANGS: readonly Lang[] = ["fa"];
+
+/** `dir` for a language — the `<html dir>` the page must carry. */
+export function dirOf(lang: string): "rtl" | "ltr" {
+  return (RTL_LANGS as readonly string[]).includes(lang) ? "rtl" : "ltr";
+}
 
 function isLang(value: string): value is Lang {
   return (SUPPORTED_LANGS as readonly string[]).includes(value);
@@ -61,6 +73,9 @@ void i18n.use(initReactI18next).init({
     ru: { translation: ru },
     uz: { translation: uz },
     en: { translation: en },
+    tr: { translation: tr },
+    fa: { translation: fa },
+    zh: { translation: zh },
   },
   lng: detectLanguage(),
   fallbackLng: DEFAULT_LANG,
@@ -79,6 +94,7 @@ export function setLanguage(lang: Lang): void {
   }
   if (typeof document !== "undefined") {
     document.documentElement.lang = lang;
+    document.documentElement.dir = dirOf(lang);
     // Also a cookie, because localStorage is invisible to the SSR server. With
     // it, a returning visitor's page is RENDERED in their language instead of
     // being rendered in the default and corrected after hydration, which is the

@@ -31,7 +31,11 @@ from app.models.enums import CompanyStatus, SellerOfferStatus
 def _label(
     name_ru: object, name_uz: object, name_en: object, lang: str
 ) -> str:
-    """Pick a product's display name for ``lang``, falling back to Russian.
+    """Pick a product's display name for ``lang``.
+
+    ru/uz/en have their own columns. A language without one (tr, fa, zh — the
+    portal speaks them, the reference data does not) gets the English name,
+    which its readers can use; Russian is the last resort for everyone.
 
     Takes the three columns rather than a `Product` because the aggregate queries
     select scalars, not entities -- loading a full row per tile just to read one
@@ -39,13 +43,13 @@ def _label(
     """
     if lang == "uz" and name_uz:
         return str(name_uz)
-    if lang == "en" and name_en:
+    if lang not in ("ru", "uz") and name_en:
         return str(name_en)
     return str(name_ru)
 
 
 def product_label(product: Product, lang: str) -> str:
-    """The product's display name in ``lang``, falling back to Russian."""
+    """The product's display name in ``lang`` (see `_label` for the fallback)."""
     return _label(product.name_ru, product.name_uz, product.name_en, lang)
 
 

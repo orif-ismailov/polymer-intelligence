@@ -118,7 +118,7 @@ export function StepLogisticsGeography({ onNext, onBack }: StepLogisticsGeograph
                 aria-pressed={active}
                 onClick={() => toggleIn(logistics.popular_routes, route, "popular_routes")}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-md border px-3 py-3 text-left text-sm transition-colors",
+                  "flex w-full items-center gap-3 rounded-md border px-3 py-3 text-start text-sm transition-colors",
                   active
                     ? "border-brand bg-brand-soft text-text"
                     : "border-border bg-surface text-text hover:border-brand-line",
