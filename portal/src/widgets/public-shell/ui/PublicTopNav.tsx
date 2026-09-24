@@ -157,15 +157,16 @@ export function PublicTopNav() {
           the lockup, the account CTA and the menu are all load-bearing. It keeps
           its place from `sm` up, where the width is there.
         */}
-        <div className="ms-auto flex items-center gap-1.5 sm:gap-2.5 xl:gap-5">
+        <div className="ms-auto flex items-center gap-1 sm:gap-2.5 xl:gap-5">
           <span className="hidden sm:block">
             <LanguageMenu />
           </span>
-          {/* Hidden below `sm` for the same 320px reason as the language menu;
-              the drawer carries it there. */}
-          <ThemeToggle className="hidden h-9 w-9 sm:inline-flex" />
+          {/* In the bar at every width — on a phone too. It used to hide below
+              `sm` and live in the drawer, which put a one-tap control two taps
+              away; the 320px budget is kept by the lockup's phone size below. */}
+          <ThemeToggle className="h-9 w-9" />
           {isAuthenticated ? (
-            <LinkButton to="/cabinet" size="sm" className="h-9 px-3.5">
+            <LinkButton to="/cabinet" size="sm" className="h-9 whitespace-nowrap px-3 sm:px-3.5">
               {t("common.cabinet")}
             </LinkButton>
           ) : (
@@ -176,7 +177,13 @@ export function PublicTopNav() {
               >
                 {t("public.nav.signIn")}
               </Link>
-              <LinkButton to="/cabinet/login" size="sm" className="h-9 px-3.5">
+              {/* Never wraps: «Ro'yxatdan o'tish» is the longest label and broke
+                  onto two lines at 320px once the theme toggle joined the bar. */}
+              <LinkButton
+                to="/cabinet/login"
+                size="sm"
+                className="h-9 whitespace-nowrap px-3 text-[13px] sm:px-3.5 sm:text-sm"
+              >
                 {t("public.nav.register")}
               </LinkButton>
             </>
@@ -274,10 +281,6 @@ export function PublicTopNav() {
                   </button>
                 ))}
               </span>
-            </li>
-            <li className="flex items-center gap-2 sm:hidden">
-              <span className="px-2 text-xs text-text-muted">{t("public.nav.theme")}</span>
-              <ThemeToggle className="h-11 w-11" />
             </li>
           </ul>
         </nav>
