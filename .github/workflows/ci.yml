@@ -494,7 +494,13 @@ jobs:
             COMPOSE="docker compose --env-file .env -f deploy/docker-compose.yml"
             # Log in to GHCR (private packages), then PULL — no more compiling on the box.
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            $COMPOSE pull
+            # Pull OUR images only — the ones a deploy exists to refresh. The
+            # third-party ones (postgres, redis, nginx, minio, mc) are pinned
+            # and already on the box, and `up -d` only fetches an image that is
+            # missing. A bare `pull` re-resolved all of them every deploy, and
+            # failed the whole deploy on 24.09.2026 when MinIO withdrew its
+            # public images from quay.io and Docker Hub (401 / access denied).
+            $COMPOSE pull api worker beat dashboard portal
             $COMPOSE up -d
             # Web App bundle: a one-shot copy into webapp_static (no --build →
             # nothing compiles on the box). Nothing serves that volume since the
@@ -560,7 +566,13 @@ jobs:
             COMPOSE="docker compose --env-file .env -p polymer-dev -f deploy/docker-compose.yml"
             # Log in to GHCR (private packages), then PULL — no more compiling on the box.
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            $COMPOSE pull
+            # Pull OUR images only — the ones a deploy exists to refresh. The
+            # third-party ones (postgres, redis, nginx, minio, mc) are pinned
+            # and already on the box, and `up -d` only fetches an image that is
+            # missing. A bare `pull` re-resolved all of them every deploy, and
+            # failed the whole deploy on 24.09.2026 when MinIO withdrew its
+            # public images from quay.io and Docker Hub (401 / access denied).
+            $COMPOSE pull api worker beat dashboard portal
             $COMPOSE up -d
             # Web App bundle: a one-shot copy into webapp_static (no --build →
             # nothing compiles on the box). Nothing serves that volume since the
