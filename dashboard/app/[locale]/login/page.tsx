@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError, apiFetch, isSafeNext } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,7 +61,11 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Polymer Intelligence</h1>
+          {/* The lockup carries the name; the h1 keeps the page's heading for
+              screen readers and the e2e locators without printing it twice. */}
+          <h1>
+            <BrandLogo className="mx-auto h-14 w-auto" />
+          </h1>
           <p className="mt-1 text-sm text-foreground-muted">{t("subtitle")}</p>
         </div>
         <form

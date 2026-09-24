@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SessionWatcher } from "@/components/layout/SessionWatcher";
 
@@ -47,9 +48,7 @@ export function AppShell({ children }: AppShellProps) {
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
-          <span className="truncate text-sm font-semibold text-accent">
-            Polymer Intelligence
-          </span>
+          <BrandLogo className="h-7 w-auto" />
         </header>
 
         <main className="flex-1 overflow-y-auto" id="main-content" tabIndex={-1}>

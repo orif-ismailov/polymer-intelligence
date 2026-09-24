@@ -13,8 +13,8 @@ import "../globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Polymer Intelligence",
-  description: "Market intelligence platform for the domestic polymer market",
+  title: "IMEX",
+  description: "IMEX — staff dashboard",
 };
 
 export function generateStaticParams() {
