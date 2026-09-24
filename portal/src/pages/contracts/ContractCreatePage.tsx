@@ -5,8 +5,17 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { dealApi, useDeals } from "@/entities/deal";
-import { contractApi, useContractTemplates } from "@/entities/contract";
-import type { ContractTemplate, DirectoryCompany } from "@/entities/contract";
+import {
+  PRESET_KEYS,
+  TemplateFieldInputs,
+  contractApi,
+  presetFields,
+  templateFields,
+  useContractTemplates,
+  useTermPresets,
+} from "@/entities/contract";
+import type { DirectoryCompany } from "@/entities/contract";
+import { TermPresetDialog } from "@/features/contract-term-preset";
 import { BusinessRoleBadges } from "@/entities/market";
 import { ApiError } from "@/shared/api";
 import {
@@ -20,28 +29,6 @@ import {
   PageHeader,
   Select,
 } from "@/shared/ui";
-
-interface FieldSpec {
-  key: string;
-  title: string;
-  enum?: string[];
-  required: boolean;
-}
-
-function fieldsOf(template: ContractTemplate): FieldSpec[] {
-  const schema = template.variables_schema as {
-    properties?: Record<string, { title?: string; enum?: string[] }>;
-    required?: string[];
-  };
-  const props = schema.properties ?? {};
-  const required = new Set(schema.required ?? []);
-  return Object.entries(props).map(([key, spec]) => ({
-    key,
-    title: spec.title ?? key,
-    enum: spec.enum,
-    required: required.has(key),
-  }));
-}
 
 export function ContractCreatePage() {
   const { t } = useTranslation();
@@ -62,6 +49,11 @@ export function ContractCreatePage() {
 
   const [templateId, setTemplateId] = useState<number | null>(null);
   const [variables, setVariables] = useState<Record<string, string>>({});
+  // «Шаблон условий»: the company's saved terms. Choosing one fills those fields;
+  // the id travels with the contract so it is known where its terms came from.
+  const presetsQuery = useTermPresets(active?.id ?? null);
+  const [presetId, setPresetId] = useState<number | null>(null);
+  const [savingPreset, setSavingPreset] = useState(false);
   const [cpQuery, setCpQuery] = useState("");
   const [cpResults, setCpResults] = useState<DirectoryCompany[]>([]);
   const [counterparty, setCounterparty] = useState<DirectoryCompany | null>(null);
@@ -80,7 +72,7 @@ export function ContractCreatePage() {
     () => templatesQuery.data?.find((tpl) => tpl.id === templateId) ?? null,
     [templatesQuery.data, templateId],
   );
-  const fields = template ? fieldsOf(template) : [];
+  const fields = template ? templateFields(template) : [];
 
   // Seed the form from what the two parties have already agreed on the deal.
   // Only once per (deal, template), and it never overwrites the user: a field is
@@ -180,6 +172,7 @@ export function ContractCreatePage() {
         offer_id: offerId ? Number(offerId) : null,
         deal_id: dealId,
         signing_provider: rail,
+        term_preset_id: presetId,
       });
       void navigate(`/cabinet/contracts/${created.id}`);
     } catch (err) {
@@ -220,6 +213,25 @@ export function ContractCreatePage() {
   // still submitting the id — the server answers that with a clear 409.
   if (dealId != null && !deal && !dealsQuery.isLoading) {
     dealOptions.push({ value: String(dealId), label: `#${dealId}` });
+  }
+
+  const presets = presetsQuery.data?.items ?? [];
+
+  function applyPreset(id: number | null): void {
+    setPresetId(id);
+    const preset = presets.find((p) => p.id === id);
+    if (!preset) return;
+    // Every term key is taken from the preset — including the ones it leaves
+    // blank — so switching presets never keeps a stale value from the last one.
+    setVariables((current) => {
+      const next = { ...current };
+      for (const key of PRESET_KEYS) {
+        const value = preset.terms[key];
+        if (value) next[key] = value;
+        else delete next[key];
+      }
+      return next;
+    });
   }
 
   const canSubmit = !!template && !!counterparty && !missingRequired() && !submitting;
@@ -264,6 +276,7 @@ export function ContractCreatePage() {
                 onChange={(e) => {
                   setTemplateId(e.target.value ? Number(e.target.value) : null);
                   setVariables({});
+                  setPresetId(null);
                   prefilled.current = {};
                 }}
                 options={[
@@ -274,31 +287,43 @@ export function ContractCreatePage() {
             )}
           </FormField>
 
-          {template
-            ? fields.map((f) => (
-                <FormField key={f.key} label={f.title} required={f.required}>
-                  {({ id }) =>
-                    f.enum ? (
-                      <Select
-                        id={id}
-                        value={variables[f.key] ?? ""}
-                        onChange={(e) => setVariables((v) => ({ ...v, [f.key]: e.target.value }))}
-                        options={[
-                          { value: "", label: "—" },
-                          ...f.enum.map((o) => ({ value: o, label: o })),
-                        ]}
-                      />
-                    ) : (
-                      <Input
-                        id={id}
-                        value={variables[f.key] ?? ""}
-                        onChange={(e) => setVariables((v) => ({ ...v, [f.key]: e.target.value }))}
-                      />
-                    )
-                  }
-                </FormField>
-              ))
-            : null}
+          {template && presets.length > 0 ? (
+            <FormField label={t("contractTerms.pick")} hint={t("contractTerms.pickHint")}>
+              {({ id }) => (
+                <Select
+                  id={id}
+                  value={presetId != null ? String(presetId) : ""}
+                  onChange={(e) => applyPreset(e.target.value ? Number(e.target.value) : null)}
+                  options={[
+                    { value: "", label: t("contractTerms.none") },
+                    ...presets.map((p) => ({ value: String(p.id), label: p.name })),
+                  ]}
+                  data-testid="contract-term-preset"
+                />
+              )}
+            </FormField>
+          ) : null}
+
+          {template ? (
+            <TemplateFieldInputs
+              fields={fields}
+              values={variables}
+              onChange={(key, value) => setVariables((v) => ({ ...v, [key]: value }))}
+            />
+          ) : null}
+
+          {template && presetsQuery.data?.can_edit ? (
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSavingPreset(true)}
+                data-testid="contract-save-terms"
+              >
+                {t("contractTerms.saveFromForm")}
+              </Button>
+            </div>
+          ) : null}
         </CardBody>
       </Card>
 
@@ -376,6 +401,17 @@ export function ContractCreatePage() {
       </Card>
 
       {error ? <Alert tone="danger">{error}</Alert> : null}
+
+      {template ? (
+        <TermPresetDialog
+          open={savingPreset}
+          onClose={() => setSavingPreset(false)}
+          companyId={active.id}
+          fields={presetFields(template)}
+          initialTerms={variables}
+          onSaved={(saved) => setPresetId(saved.id)}
+        />
+      ) : null}
 
       <div className="flex justify-end gap-3">
         <Button variant="ghost" onClick={() => navigate("/cabinet/contracts")}>

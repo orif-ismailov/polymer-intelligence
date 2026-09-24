@@ -6,6 +6,9 @@ import type {
   ContractTemplate,
   CreateContractPayload,
   DirectoryCompany,
+  TermPreset,
+  TermPresetList,
+  TermPresetPayload,
 } from "./types";
 
 interface ListParams {
@@ -55,6 +58,19 @@ export const contractApi = {
     api.get<{ url: string }>(`/portal/contracts/${id}/document`, { query: { as: "url" } }).then((r) => r.url),
   /** The signed bundle is a dynamic zip — fetch it authenticated as a Blob. */
   bundleBlob: (id: number): Promise<Blob> => api.blob(`/portal/contracts/${id}/bundle`),
+
+  termPresets: (companyId: number): Promise<TermPresetList> =>
+    api.get<TermPresetList>(`/portal/companies/${companyId}/contract-term-presets`),
+  createTermPreset: (companyId: number, payload: TermPresetPayload): Promise<TermPreset> =>
+    api.post<TermPreset>(`/portal/companies/${companyId}/contract-term-presets`, payload),
+  updateTermPreset: (
+    companyId: number,
+    presetId: number,
+    payload: TermPresetPayload,
+  ): Promise<TermPreset> =>
+    api.put<TermPreset>(`/portal/companies/${companyId}/contract-term-presets/${presetId}`, payload),
+  archiveTermPreset: (companyId: number, presetId: number): Promise<void> =>
+    api.del<void>(`/portal/companies/${companyId}/contract-term-presets/${presetId}`),
 };
 
 export const contractKeys = {
@@ -62,4 +78,5 @@ export const contractKeys = {
   list: (params: ListParams = {}) => ["contracts", "list", params] as const,
   detail: (id: number) => ["contracts", "detail", id] as const,
   templates: () => ["contracts", "templates"] as const,
+  termPresets: (companyId: number) => ["contracts", "term-presets", companyId] as const,
 };

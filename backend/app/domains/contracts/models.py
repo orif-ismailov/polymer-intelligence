@@ -16,6 +16,7 @@ module is only the schema.
 from __future__ import annotations
 
 import datetime
+import decimal
 import uuid
 from typing import Any
 
@@ -25,14 +26,17 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
+    Numeric,
+    SmallInteger,
     Text,
     UniqueConstraint,
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, text
 
 from app.core.db import Base
 from app.models.enums import ContractStatus
@@ -143,6 +147,22 @@ class Contract(Base):
         DateTime(timezone=True), nullable=True
     )
     declined_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    #: The company's saved set of terms this contract started from, if any. The
+    #: values themselves are copied into `variables` — the preset may change or be
+    #: archived later, and the contract must keep saying what was signed.
+    term_preset_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("contract_term_presets.id", ondelete="SET NULL"), nullable=True
+    )
+    #: The commercial terms as columns, not only as strings inside `variables` —
+    #: what the market analytics will read. Written by `service._sync_structured`
+    #: on every create/edit; `variables` stays what the document is rendered from.
+    currency: Mapped[str | None] = mapped_column(Text, nullable=True)
+    incoterms: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payment_terms: Mapped[str | None] = mapped_column(Text, nullable=True)
+    delivery_window: Mapped[str | None] = mapped_column(Text, nullable=True)
+    amount_total: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -181,3 +201,75 @@ class ContractSignature(Base):
     )
 
     contract: Mapped[Contract] = relationship("Contract", back_populates="signatures")
+
+
+class ContractLine(Base):
+    """One product line of a contract, as agreed — the analytics grain.
+
+    Written from `variables` when the contract is created or edited, so it holds
+    for BOTH rails; the tax classification (ИКПУ, package, VAT) is stamped on when
+    a Didox document is built, because that is the first moment it is known.
+    `qty`/`price` are NULL when the typed text is not a number — a zero would be
+    a price nobody agreed to.
+    """
+
+    __tablename__ = "contract_lines"
+    __table_args__ = (UniqueConstraint("contract_id", "ord_no", name="uq_contract_line_ord"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    contract_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False
+    )
+    ord_no: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    product_name: Mapped[str] = mapped_column(Text, nullable=False)
+    ikpu_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ikpu_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    package_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    package_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    qty: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 3), nullable=True)
+    unit: Mapped[str | None] = mapped_column(Text, nullable=True)
+    price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 3), nullable=True)
+    currency: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: NULL means «без НДС» — a different statement from a 0 % rate.
+    vat_rate: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    amount: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+
+
+class ContractTermPreset(Base):
+    """A company's saved commercial terms — «шаблон условий».
+
+    The legal text stays the platform's template; what a company repeats from one
+    contract to the next is its terms (payment, delivery, Incoterms, special
+    conditions), so that is what it saves. Choosing one fills the contract form;
+    the contract then carries its own copy (see `Contract.term_preset_id`).
+    """
+
+    __tablename__ = "contract_term_presets"
+    __table_args__ = (
+        Index(
+            "uq_contract_term_preset_name",
+            "company_id",
+            text("lower(name)"),
+            unique=True,
+            postgresql_where=text("archived_at IS NULL"),
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    company_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    terms: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+    created_by_user_account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=False
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+    archived_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

@@ -2928,5 +2928,52 @@
       "unavailable": "Xizmat vaqtincha ishlamayapti. Qayta urinib ko‘ring.",
       "failed": "Parolni tasdiqlab bo‘lmadi. Qayta urinib ko‘ring."
     }
+  },
+  "contractTerms": {
+    "title": "Shartlar shablonlari",
+    "subtitle": "To'lov va yetkazib berish shartlaringiz — shartnoma tuzishda shablonni tanlang, maydonlar o'zi to'ladi.",
+    "new": "Yangi shablon",
+    "edit": "Shablonni o'zgartirish",
+    "dialogHint": "Shartnomaning yuridik matni platforma uchun umumiy. Shablonda faqat sizning shartlaringiz; narx, miqdor va tovar har bir shartnomada ko'rsatiladi.",
+    "name": "Nomi",
+    "namePlaceholder": "Masalan: Doimiy mijozlar uchun",
+    "empty": "Hozircha shablonlar yo'q",
+    "emptyBody": "Shartnomadan shartnomaga takrorlanadigan shartlarni saqlang.",
+    "readOnly": "Shablonlarni kompaniya egasi va menejerlari yaratadi.",
+    "archiveConfirm": "«{{name}}» shablonini olib tashlaysizmi? Tuzilgan shartnomalar o'zgarmaydi.",
+    "pick": "Shartlar shabloni",
+    "pickHint": "To'lov va yetkazib berish shartlarini to'ldiradi — ularni tuzatish mumkin.",
+    "none": "Shablonsiz",
+    "saveFromForm": "Shartlarni shablon sifatida saqlash",
+    "errors": {
+      "nameTaken": "Bunday nomli shablon allaqachon bor.",
+      "saveFailed": "Shablonni saqlab bo'lmadi. Maydonlarni tekshiring."
+    }
+  },
+  "facture": {
+    "title": "Hisob-fakturalar (ESF)",
+    "none": "Shartnoma bo'yicha hozircha hisob-fakturalar yo'q.",
+    "new": "ESF chiqarish",
+    "issue": "Chiqarish va imzolash",
+    "issuing": "Chiqarilmoqda…",
+    "count": "Miqdor",
+    "price": "Birlik narxi, so'm",
+    "vat": "QQS",
+    "noVat": "QQSsiz",
+    "notInSoum": "Shartnoma {{currency}}da, ESF esa so'mda chiqariladi — narxni so'mda ko'rsating.",
+    "pending": "Oldingi ESF hali imzolanmagan — yangisini chiqarishdan oldin uni imzolang.",
+    "didoxNotReady": "ESFlar Didox orqali chiqariladi va imzolanadi — avval kompaniyani ulang.",
+    "blockedTitle": "Hozircha ESF chiqarib bo'lmaydi",
+    "blockers": {
+      "contract_reference_missing": "ESF havola qilishi kerak bo'lgan Didoxdagi shartnoma topilmadi.",
+      "not_active": "Shartnoma hali ikkala tomon tomonidan imzolanmagan."
+    },
+    "errors": {
+      "facture_pending": "Oldingi ESF hali imzolanmagan.",
+      "price_required": "Narxni so'mda ko'rsating.",
+      "precision": "Verguldan keyin juda ko'p raqam: miqdor — 6 gacha, narx — 2 gacha.",
+      "not_active": "Shartnoma hali ikkala tomon tomonidan imzolanmagan.",
+      "contract_reference_missing": "ESF havola qilishi kerak bo'lgan Didoxdagi shartnoma topilmadi."
+    }
   }
 }

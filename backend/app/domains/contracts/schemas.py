@@ -42,6 +42,9 @@ class ContractCreateIn(BaseModel):
     #: what puts it in front of the tax authority — and needs an operator account
     #: on BOTH sides, so it is opt-in and never the default.
     signing_provider: Literal["eimzo", "didox"] = "eimzo"
+    #: The company's saved terms the form was filled from, if any. The values
+    #: themselves arrive in `variables` — the user may have changed them since.
+    term_preset_id: int | None = None
 
 
 class VariablesUpdateIn(BaseModel):
@@ -204,3 +207,28 @@ class TemplatePreviewOut(BaseModel):
 
     html: str
     warnings: list[str] = Field(default_factory=list)
+
+
+class TermPresetIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    terms: dict[str, object] = Field(default_factory=dict)
+
+    @field_validator("name")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("name must not be blank")
+        return value
+
+
+class TermPresetOut(BaseModel):
+    id: int
+    name: str
+    terms: dict[str, str]
+    updated_at: datetime.datetime
+
+
+class TermPresetListOut(BaseModel):
+    items: list[TermPresetOut]
+    #: Owners and managers edit; every member reads.
+    can_edit: bool

@@ -27,6 +27,7 @@ import base64
 import datetime
 import json
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
@@ -38,7 +39,7 @@ from app.domains.edi.models import (
     STATUS_SIGNED,
     DidoxDocument,
 )
-from app.domains.edi.payloads import JsonObject
+from app.domains.edi.payloads import DocumentLine, JsonObject, line_totals
 from app.integrations.didox import (
     DidoxCreatedDocument,
     DidoxDocumentView,
@@ -145,12 +146,17 @@ def create_document(
     user_key: str,
     tax_id: str,
     client: DidoxDocuments,
+    lines: Sequence[DocumentLine] = (),
 ) -> DidoxDocument:
     """Record the row, THEN create it at Didox.
 
     That order is the recovery story: the row carries the number and is committed
     before the call, so a create we never saw the answer to is findable by
     ContractNo rather than lost.
+
+    `lines` are the goods the payload carries, recorded beside it as numbers
+    (`didox_document_lines`) — for the analytics, and for how much of a contract
+    has been invoiced.
     """
     onboarding.assert_live()
     row = DidoxDocument(
@@ -167,6 +173,7 @@ def create_document(
     )
     db.add(row)
     db.flush()
+    _record_lines(db, row, lines)
 
     try:
         created = client.create_document(doc_type, payload, user_key=user_key)
@@ -185,6 +192,31 @@ def create_document(
     row.last_error = None
     db.flush()
     return row
+
+
+def _record_lines(db: Session, row: DidoxDocument, lines: Sequence[DocumentLine]) -> None:
+    from app.domains.edi.models import DidoxDocumentLine  # noqa: PLC0415
+
+    for line in lines:
+        amount, vat_sum = line_totals(line)
+        db.add(
+            DidoxDocumentLine(
+                didox_document_id=row.id,
+                ord_no=line.ord_no,
+                product_name=line.name,
+                ikpu_code=line.catalog_code,
+                ikpu_name=line.catalog_name,
+                package_code=line.package_code,
+                package_name=line.package_name,
+                qty=line.count,
+                price=line.price,
+                vat_rate=line.vat_rate,
+                amount=amount,
+                vat_sum=vat_sum,
+                origin=line.origin,
+            )
+        )
+    db.flush()
 
 
 # ── signing, round 1: what to sign ────────────────────────────────────────────

@@ -39,6 +39,7 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
 from app.domains.contracts import service as contract_service
+from app.domains.contracts import term_presets
 from app.domains.contracts.eimzo import CertCompanyMismatch
 from app.domains.contracts.eimzo_models import SignatureEvidence
 from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
@@ -51,6 +52,9 @@ from app.domains.contracts.schemas import (
     SignChallengeOut,
     SignIn,
     TemplateOut,
+    TermPresetIn,
+    TermPresetListOut,
+    TermPresetOut,
     VariablesUpdateIn,
 )
 from app.integrations.eimzo import ProviderUnavailable
@@ -134,6 +138,8 @@ def _didox_document(db: Session, contract: Contract) -> DidoxDocument | None:
         .filter(
             DidoxDocument.subject_kind == "contract",
             DidoxDocument.subject_id == contract.id,
+            # The договор only: a contract's ЭСФ share its subject (0053).
+            DidoxDocument.doc_type == "007",
             DidoxDocument.status.notin_([5, 55]),
         )
         .order_by(DidoxDocument.id.desc())
@@ -222,6 +228,124 @@ def list_templates(
     ]
 
 
+# ── term presets («шаблоны условий») ───────────────────────────────────────
+
+
+def _preset_out(preset: object) -> TermPresetOut:
+    return TermPresetOut.model_validate(preset, from_attributes=True)
+
+
+def _member_company(db: Session, account: UserAccount, company_id: int) -> Company:
+    try:
+        return company_service.get_company_for(db, account, company_id)
+    except company_service.CompanyNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found") from exc
+
+
+def _can_edit_presets(db: Session, account: UserAccount, company_id: int) -> bool:
+    try:
+        company_service.require_company_role(
+            db, account, company_id, company_service.COMPANY_ADMIN_ROLES
+        )
+    except company_service.InsufficientCompanyRole:
+        return False
+    return True
+
+
+def _require_preset_editor(db: Session, account: UserAccount, company_id: int) -> None:
+    # Membership first (404 for outsiders), then the role (403) — never the other
+    # way round, or a stranger would learn the company exists.
+    _member_company(db, account, company_id)
+    if not _can_edit_presets(db, account, company_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only_owner_or_manager")
+
+
+def _invalid_terms(exc: term_presets.InvalidTerms) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail={"error": "invalid_terms", "fields": exc.fields},
+    )
+
+
+@router.get("/companies/{company_id}/contract-term-presets", response_model=TermPresetListOut)
+def list_term_presets(
+    company_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> TermPresetListOut:
+    _member_company(db, account, company_id)
+    return TermPresetListOut(
+        items=[_preset_out(p) for p in term_presets.list_presets(db, company_id)],
+        can_edit=_can_edit_presets(db, account, company_id),
+    )
+
+
+@router.post(
+    "/companies/{company_id}/contract-term-presets",
+    response_model=TermPresetOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_term_preset(
+    company_id: int,
+    body: TermPresetIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> TermPresetOut:
+    _require_preset_editor(db, account, company_id)
+    try:
+        preset = term_presets.create_preset(db, company_id, account, body.name, body.terms)
+    except term_presets.InvalidTerms as exc:
+        raise _invalid_terms(exc) from exc
+    except term_presets.PresetNameTaken as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="preset_name_taken") from exc
+    db.commit()
+    return _preset_out(preset)
+
+
+@router.put(
+    "/companies/{company_id}/contract-term-presets/{preset_id}", response_model=TermPresetOut
+)
+def update_term_preset(
+    company_id: int,
+    preset_id: int,
+    body: TermPresetIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> TermPresetOut:
+    _require_preset_editor(db, account, company_id)
+    try:
+        preset = term_presets.get_preset(db, company_id, preset_id)
+        term_presets.update_preset(db, preset, body.name, body.terms)
+    except term_presets.PresetNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="preset_not_found") from exc
+    except term_presets.InvalidTerms as exc:
+        raise _invalid_terms(exc) from exc
+    except term_presets.PresetNameTaken as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="preset_name_taken") from exc
+    db.commit()
+    return _preset_out(preset)
+
+
+@router.delete(
+    "/companies/{company_id}/contract-term-presets/{preset_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def archive_term_preset(
+    company_id: int,
+    preset_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> Response:
+    _require_preset_editor(db, account, company_id)
+    try:
+        preset = term_presets.get_preset(db, company_id, preset_id)
+    except term_presets.PresetNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="preset_not_found") from exc
+    term_presets.archive_preset(db, preset)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 # ── contract CRUD ─────────────────────────────────────────────────────────────
 
 
@@ -244,6 +368,13 @@ def create_contract(
     template = db.get(ContractTemplate, body.template_id)
     if template is None or not template.is_active or template.kind != "contract":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+    if body.term_preset_id is not None:
+        try:
+            term_presets.get_preset(db, initiator.id, body.term_preset_id)
+        except term_presets.PresetNotFound as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="preset_not_found"
+            ) from exc
 
     try:
         contract = contract_service.create_contract(
@@ -261,6 +392,7 @@ def create_contract(
     except contract_service.NotAParty as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="invalid_parties") from exc
 
+    contract.term_preset_id = body.term_preset_id
     if body.deal_id is not None:
         _link_to_deal(db, account, contract, body.deal_id)
 

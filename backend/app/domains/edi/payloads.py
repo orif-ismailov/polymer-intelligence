@@ -217,6 +217,16 @@ def _totals(line: DocumentLine) -> _LineTotals:
     return _LineTotals(delivery_sum=delivery, vat_sum=vat, with_vat=delivery + vat)
 
 
+def line_totals(line: DocumentLine) -> tuple[decimal.Decimal, decimal.Decimal]:
+    """`(delivery_sum, vat_sum)` exactly as the document states them.
+
+    Public for the one other reader: the structured copy of a document's lines
+    (`didox_document_lines`) must carry the same sums the operator was sent.
+    """
+    totals = _totals(line)
+    return totals.delivery_sum, totals.vat_sum
+
+
 def _has_vat(lines: list[DocumentLine]) -> bool:
     return any(line.vat_rate is not None for line in lines)
 

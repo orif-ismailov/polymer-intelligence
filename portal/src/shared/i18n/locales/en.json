@@ -2928,5 +2928,52 @@
       "unavailable": "The service is temporarily unavailable. Try again.",
       "failed": "Could not confirm your password. Try again."
     }
+  },
+  "contractTerms": {
+    "title": "Term templates",
+    "subtitle": "Your payment and delivery terms — pick a template when drawing up a contract and the fields fill themselves.",
+    "new": "New template",
+    "edit": "Edit template",
+    "dialogHint": "The contract's legal text is shared across the platform. A template holds only your terms; price, quantity and goods are set in each contract.",
+    "name": "Name",
+    "namePlaceholder": "E.g. Regular customers",
+    "empty": "No templates yet",
+    "emptyBody": "Save the terms you repeat from one contract to the next.",
+    "readOnly": "Templates are created by the company's owner and managers.",
+    "archiveConfirm": "Remove the template «{{name}}»? Contracts already drawn up will not change.",
+    "pick": "Term template",
+    "pickHint": "Fills in the payment and delivery terms — you can still edit them.",
+    "none": "No template",
+    "saveFromForm": "Save terms as a template",
+    "errors": {
+      "nameTaken": "A template with this name already exists.",
+      "saveFailed": "Could not save the template. Check the fields."
+    }
+  },
+  "facture": {
+    "title": "Invoices (ESF)",
+    "none": "No invoices for this contract yet.",
+    "new": "Issue an ESF",
+    "issue": "Issue and sign",
+    "issuing": "Issuing…",
+    "count": "Quantity",
+    "price": "Unit price, UZS",
+    "vat": "VAT",
+    "noVat": "No VAT",
+    "notInSoum": "The contract is in {{currency}}, but an ESF is issued in soum — enter the price in soum.",
+    "pending": "The previous ESF is not signed yet — sign it before issuing another.",
+    "didoxNotReady": "ESFs are issued and signed through Didox — connect the company first.",
+    "blockedTitle": "An ESF cannot be issued yet",
+    "blockers": {
+      "contract_reference_missing": "The Didox contract the ESF must refer to was not found.",
+      "not_active": "The contract is not signed by both parties yet."
+    },
+    "errors": {
+      "facture_pending": "The previous ESF is not signed yet.",
+      "price_required": "Enter the price in soum.",
+      "precision": "Too many decimals: quantity up to 6, price up to 2.",
+      "not_active": "The contract is not signed by both parties yet.",
+      "contract_reference_missing": "The Didox contract the ESF must refer to was not found."
+    }
   }
 }

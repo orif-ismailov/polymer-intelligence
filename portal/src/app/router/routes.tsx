@@ -7,6 +7,7 @@ import {
   ContractCreatePage,
   ContractDetailPage,
   ContractsPage,
+  ContractTermsPage,
 } from "@/pages/contracts";
 import { DealDetailPage, DealsPage } from "@/pages/deals";
 import { UiKitPage } from "@/pages/dev-ui";
@@ -498,6 +499,10 @@ const appRoutes: RouteObject[] = [
                       {
                         path: "contracts/new",
                         element: <ContractCreatePage />,
+                      },
+                      {
+                        path: "contracts/terms",
+                        element: <ContractTermsPage />,
                       },
                       {
                         path: "contracts/:contractId",

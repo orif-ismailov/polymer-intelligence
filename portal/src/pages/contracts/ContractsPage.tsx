@@ -62,9 +62,18 @@ export function ContractsPage() {
         title={t("contracts.title")}
         subtitle={t("contracts.subtitle")}
         actions={
-          <Button onClick={() => navigate("/cabinet/contracts/new")} data-testid="contracts-new">
-            {t("contracts.create")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/cabinet/contracts/terms")}
+              data-testid="contracts-terms"
+            >
+              {t("contractTerms.title")}
+            </Button>
+            <Button onClick={() => navigate("/cabinet/contracts/new")} data-testid="contracts-new">
+              {t("contracts.create")}
+            </Button>
+          </div>
         }
       />
 

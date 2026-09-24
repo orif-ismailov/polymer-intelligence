@@ -83,4 +83,26 @@ export interface CreateContractPayload {
    * `contract_pending` — no `contract_signed`, no escrow.
    */
   deal_id?: number | null;
+  /** The saved terms the form was filled from, if any. */
+  term_preset_id?: number | null;
+}
+
+/** A company's saved contract terms — «шаблон условий». */
+export interface TermPreset {
+  id: number;
+  name: string;
+  /** Only the keys in `PRESET_KEYS`; blank values are not stored. */
+  terms: Record<string, string>;
+  updated_at: string;
+}
+
+export interface TermPresetList {
+  items: TermPreset[];
+  /** Owners and managers edit; every member reads. */
+  can_edit: boolean;
+}
+
+export interface TermPresetPayload {
+  name: string;
+  terms: Record<string, string>;
 }

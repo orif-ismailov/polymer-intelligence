@@ -391,6 +391,8 @@ def _existing_document(db: Session, contract: Contract) -> DidoxDocument | None:
         .filter(
             DidoxDocument.subject_kind == "contract",
             DidoxDocument.subject_id == contract.id,
+            # The договор only: a contract's ЭСФ share its subject (0053).
+            DidoxDocument.doc_type == "007",
             DidoxDocument.status.notin_([5, 55]),
         )
         .order_by(DidoxDocument.id.desc())
@@ -414,18 +416,23 @@ class IkpuChoice:
 
 
 def contract_line_terms(contract: Contract) -> tuple[str, decimal.Decimal, decimal.Decimal]:
-    """Name, quantity and price of the one line — the CONTRACT's, as negotiated."""
+    """Name, quantity and price of the one line — the CONTRACT's, as negotiated.
+
+    Parsed by `contracts.terms`, the same reader that keeps the structured copy,
+    so the document and the analytics can never read one contract two ways. A
+    value that is not a number falls back to 1 × 0 — visible on the card, where
+    the seller corrects it before anything is sent.
+    """
+    from app.domains.contracts import terms  # noqa: PLC0415
+
     variables = contract.variables if isinstance(contract.variables, dict) else {}
-
-    def _number(key: str, fallback: str) -> decimal.Decimal:
-        raw = str(variables.get(key) or fallback).replace(",", ".").replace(" ", "")
-        try:
-            return decimal.Decimal(raw)
-        except decimal.InvalidOperation:
-            return decimal.Decimal(fallback)
-
-    name = str(variables.get("product") or contract.title)
-    return name, _number("qty", "1"), _number("price", "0")
+    qty = terms.parse_number(variables.get("qty"))
+    price = terms.parse_number(variables.get("price"))
+    return (
+        terms.line_name(contract),
+        qty if qty is not None else decimal.Decimal("1"),
+        price if price is not None else decimal.Decimal("0"),
+    )
 
 
 def suggested_lines(
@@ -475,6 +482,7 @@ def create_for_contract(
     """
     from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.contracts import service as contract_service  # noqa: PLC0415
+    from app.domains.contracts import terms as contract_terms  # noqa: PLC0415
     from app.domains.contracts.models import ContractTemplate  # noqa: PLC0415
     from app.domains.contracts.render import render_contract_html  # noqa: PLC0415
     from app.domains.edi import numbering  # noqa: PLC0415
@@ -552,6 +560,7 @@ def create_for_contract(
         deal_number=deal.number if deal is not None else None,
         contract_public_id=str(contract.public_id),
     )
+    document_lines = lines or suggested_lines(contract, offer, ikpu)
     body = build_body(
         number=number,
         date=today,
@@ -565,11 +574,11 @@ def create_for_contract(
             db, seller, vat_reg_code=seller_vat_code, vat_reg_status=seller_vat_status
         ),
         buyer=party_from_registry(client, buyer.tax_id),
-        lines=lines or suggested_lines(contract, offer, ikpu),
+        lines=document_lines,
         sections=sections_from_html(rendered),
     )
 
-    return edi_service.create_document(
+    row = edi_service.create_document(
         db,
         doc_type="007",
         subject_kind="contract",
@@ -584,4 +593,17 @@ def create_for_contract(
         user_key=user_key,
         tax_id=seller.tax_id,
         client=client,
+        lines=document_lines,
     )
+    for line in document_lines:
+        contract_terms.stamp_classification(
+            db,
+            int(contract.id),
+            ord_no=line.ord_no,
+            ikpu_code=line.catalog_code,
+            ikpu_name=line.catalog_name,
+            package_code=line.package_code,
+            package_name=line.package_name,
+            vat_rate=line.vat_rate,
+        )
+    return row

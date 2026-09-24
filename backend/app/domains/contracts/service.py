@@ -39,6 +39,7 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBankAccount
 from app.domains.contracts import render as contract_render
+from app.domains.contracts import terms as contract_terms
 from app.domains.contracts.eimzo import CertCompanyMismatch
 from app.domains.contracts.eimzo_models import SignatureEvidence
 from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
@@ -282,6 +283,7 @@ def create_contract(
     db.flush()
 
     _render_and_store(db, contract, template)
+    contract_terms.sync_structured(db, contract)
 
     event_service.emit(
         db, event_types.CONTRACT_CREATED, "contract", contract.id,
@@ -308,6 +310,7 @@ def update_variables(
     contract.variables = variables
     db.flush()
     _render_and_store(db, contract, template)
+    contract_terms.sync_structured(db, contract)
     audit_service.write_audit(
         db, None, "contract.update_variables", "contracts", str(contract.id),
         {"account_id": account.id},
