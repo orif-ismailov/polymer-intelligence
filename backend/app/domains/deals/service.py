@@ -19,6 +19,12 @@ Two rules are enforced on every move and they are separate concerns:
     activated, escrow opened, escrow funded, funds released). Only staff leaves
     a dispute.
 
+**The direct rail** (`escrow_mode=direct`, no bank): the goods may leave before
+the money — `payment_pending → shipped` is in the table but gated by
+`DIRECT_ONLY`, so a stub/live deal still ships only once paid. There the deal
+tracks the GOODS and the payment row tracks the money; the deal completes when
+both are done (`escrow_service.settle_direct`, called on `delivered`).
+
 FR-D8: a unilateral cancel is allowed strictly BEFORE `paid_escrow`. Once money
 is in escrow the way out is a dispute, which staff resolve by restoring a
 previous status or cancelling.
@@ -43,6 +49,7 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies.models import Company, CompanyMember
 from app.domains.contracts.models import Contract
 from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
+from app.domains.deals.payment_models import ESCROW_MODE_DIRECT, EscrowPayment
 from app.domains.lab_orders.models import SampleRequest
 from app.domains.marketplace.models import OfferRequest, SellerOffer
 from app.domains.reference.models import Product
@@ -96,6 +103,8 @@ VALID_TRANSITIONS: dict[DealStatus, set[DealStatus]] = {
     DealStatus.contract_signed: {DealStatus.payment_pending, DealStatus.cancelled},
     DealStatus.payment_pending: {
         DealStatus.paid_escrow,
+        # Postpayment — the direct rail only, see `DIRECT_ONLY`.
+        DealStatus.shipped,
         DealStatus.disputed,
         DealStatus.cancelled,
     },
@@ -137,6 +146,22 @@ _ACTOR_RULES: dict[DealStatus, frozenset[DealActorKind]] = {
         {DealActorKind.buyer, DealActorKind.seller, DealActorKind.staff}
     ),
 }
+
+#: Moves that exist only when the deal's payment is on the DIRECT rail. With no
+#: bank holding the money, the parties settle between themselves and the seller
+#: may ship on credit; with escrow, shipping unpaid goods is what it prevents.
+DIRECT_ONLY: frozenset[tuple[DealStatus, DealStatus]] = frozenset(
+    {(DealStatus.payment_pending, DealStatus.shipped)}
+)
+
+
+def is_direct(db: Session, deal: Deal) -> bool:
+    """Whether this deal's payment was opened on the direct rail."""
+    mode = db.execute(
+        select(EscrowPayment.mode).where(EscrowPayment.deal_id == deal.id)
+    ).scalar_one_or_none()
+    return mode == ESCROW_MODE_DIRECT
+
 
 #: Statuses whose transitions must carry a reason (they end or freeze the deal).
 _REASON_REQUIRED: frozenset[DealStatus] = frozenset(
@@ -796,6 +821,8 @@ def transition(
 
     if to_status not in VALID_TRANSITIONS[frm]:
         raise InvalidDealTransition(f"{frm} → {to_status}")
+    if (frm, to_status) in DIRECT_ONLY and not is_direct(db, locked):
+        raise InvalidDealTransition(f"{frm} → {to_status} needs the direct payment rail")
     if actor_kind not in allowed_actors(frm, to_status):
         raise ActorNotAllowed(f"{actor_kind} may not drive {frm} → {to_status}")
     clean_reason = (reason or "").strip() or None
@@ -853,6 +880,13 @@ def transition(
             extra={"status": to_status.value},
         )
 
+    if to_status == DealStatus.delivered:
+        # Received AND already paid on the direct rail = nothing left to wait for.
+        # Lazy: escrow imports this module.
+        from app.domains.deals import escrow as escrow_service  # noqa: PLC0415
+
+        escrow_service.settle_direct(db, locked)
+
     if locked is not deal:
         db.refresh(deal)
     return deal
@@ -878,28 +912,36 @@ def transition_by_party(
     )
 
 
-def available_transitions(deal: Deal, actor_kind: DealActorKind) -> list[DealStatus]:
+def available_transitions(
+    deal: Deal, actor_kind: DealActorKind, *, direct: bool = False
+) -> list[DealStatus]:
     """Statuses this actor may move the deal to right now.
 
     The action bar is built from this, so the UI never offers a button the API
     would refuse — and never re-implements the state machine in TypeScript.
+    `direct` (`is_direct`) unlocks the `DIRECT_ONLY` moves; it is a parameter
+    rather than a query so this stays pure.
     """
     return [
         to
         for to in DealStatus
         if to in VALID_TRANSITIONS[deal.status]
         and actor_kind in allowed_actors(deal.status, to)
+        and (direct or (deal.status, to) not in DIRECT_ONLY)
     ]
 
 
-def needs_action(deal: Deal, actor_kind: DealActorKind) -> bool:
+def needs_action(deal: Deal, actor_kind: DealActorKind, *, direct: bool = False) -> bool:
     """Whether this side owes the deal a move.
 
     Cancelling and disputing are always available and are not "progress", so
     they do not count — otherwise every live deal would demand attention.
     """
     passive = {DealStatus.cancelled, DealStatus.disputed}
-    return any(to not in passive for to in available_transitions(deal, actor_kind))
+    return any(
+        to not in passive
+        for to in available_transitions(deal, actor_kind, direct=direct)
+    )
 
 
 # ── Chat ──────────────────────────────────────────────────────────────────────

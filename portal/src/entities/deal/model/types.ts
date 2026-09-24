@@ -114,8 +114,16 @@ export type EscrowStatus = "pending" | "funded" | "released" | "refunded";
  * invoice issued by the partner bank, so there is nothing to act on here and no
  * account details to show — the platform holds none.
  */
+/**
+ * The rail the payment was opened on. `direct` — no escrow: the buyer pays the
+ * seller, who confirms receipt (and may ship first); `stub` — an operator marks
+ * escrow movements; `live` — a bank does.
+ */
+export type PaymentRail = "direct" | "stub" | "live";
+
 export interface DealEscrow {
   status: EscrowStatus;
+  mode: PaymentRail;
   amount: string;
   currency: string;
   funded_at: string | null;
@@ -140,6 +148,8 @@ export interface DealDetail extends DealSummary {
   available_transitions: DealStatus[];
   /** Null until the contract is signed and the invoice is raised. */
   escrow: DealEscrow | null;
+  /** This side may press «Оплата получена» now (the seller, direct rail). */
+  can_confirm_payment: boolean;
 }
 
 export interface RfqResponse {

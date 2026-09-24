@@ -23,10 +23,16 @@ interface DealActionBarProps {
  * state machine already knows what this side may do from this status, so the
  * rules are never restated here (and a button can never appear that the API
  * would then refuse).
+ *
+ * «Оплата получена» is the one action that is not a deal transition: on the
+ * direct rail it marks the PAYMENT, and the deal follows (or, on postpayment,
+ * stays put). It shows when the server says `can_confirm_payment`, and asks
+ * first — the seller cannot take it back.
  */
 export function DealActionBar({ companyId, deal, onChanged }: DealActionBarProps) {
   const { t } = useTranslation();
   const [pending, setPending] = useState<DealStatus | null>(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,14 +40,15 @@ export function DealActionBar({ companyId, deal, onChanged }: DealActionBarProps
   const forward = deal.available_transitions.filter((s) => !DESTRUCTIVE.includes(s));
   const destructive = deal.available_transitions.filter((s) => DESTRUCTIVE.includes(s));
 
-  if (deal.available_transitions.length === 0) return null;
+  if (deal.available_transitions.length === 0 && !deal.can_confirm_payment) return null;
 
-  async function run(to: DealStatus, why?: string): Promise<void> {
+  async function act(call: () => Promise<unknown>): Promise<void> {
     setBusy(true);
     setError(null);
     try {
-      await dealApi.transition(companyId, deal.id, to, why);
+      await call();
       setPending(null);
+      setConfirmingPayment(false);
       setReason("");
       onChanged();
     } catch (err) {
@@ -51,11 +58,29 @@ export function DealActionBar({ companyId, deal, onChanged }: DealActionBarProps
     }
   }
 
+  const run = (to: DealStatus, why?: string) =>
+    act(() => dealApi.transition(companyId, deal.id, to, why));
+  const confirmPayment = () => act(() => dealApi.confirmPayment(companyId, deal.id));
+
   return (
     <div className="space-y-3">
       {error ? <Alert tone="danger" title={error} /> : null}
 
-      {pending ? (
+      {confirmingPayment ? (
+        <div className="space-y-2 rounded-md border border-border bg-surface-inset p-3">
+          <p className="text-sm font-medium text-text">
+            {t("deals.actions.confirm.confirmPayment")}
+          </p>
+          <div className="flex gap-2">
+            <Button loading={busy} onClick={() => void confirmPayment()}>
+              {t("deals.actions.confirmPayment")}
+            </Button>
+            <Button variant="ghost" onClick={() => setConfirmingPayment(false)}>
+              {t("common.cancel")}
+            </Button>
+          </div>
+        </div>
+      ) : pending ? (
         <div className="space-y-2 rounded-md border border-border bg-surface-inset p-3">
           <p className="text-sm font-medium text-text">
             {t(`deals.actions.confirm.${pending}`)}
@@ -83,6 +108,11 @@ export function DealActionBar({ companyId, deal, onChanged }: DealActionBarProps
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
+          {deal.can_confirm_payment ? (
+            <Button onClick={() => setConfirmingPayment(true)}>
+              {t("deals.actions.confirmPayment")}
+            </Button>
+          ) : null}
           {forward.map((to) => (
             <Button key={to} loading={busy} onClick={() => void run(to)}>
               {t(`deals.actions.${to}`)}

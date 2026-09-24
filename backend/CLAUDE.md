@@ -213,6 +213,17 @@ mocks the thing it is testing.
   is the other half of that bargain — a dropped dispatch must cost latency, not evidence.
   The hold queue self-clears (a hold is a disagreement; the operator's manual mark ends it),
   which is why there is no resolve endpoint and no extra column.
+- **The direct payment rail** (`escrow_mode=direct`, the shipped default since 24.09.2026 — no
+  bank is connected). No escrow: the buyer pays the seller on the contract's details and the
+  SELLER confirms receipt (`POST /portal/…/deals/{id}/payment-received` →
+  `escrow_service.confirm_direct_payment`, audited as `escrow.mark_party` with the account id).
+  The deal tracks the GOODS and the payment row the money, so postpayment works:
+  `payment_pending → shipped` is in `VALID_TRANSITIONS` but gated by `deal_service.DIRECT_ONLY`,
+  and the deal completes when BOTH «Получено» and the payment exist, in either order
+  (`settle_direct`, called from `_apply_mark` on `funded` and from `transition` on `delivered`).
+  A funded mark on a deal already past `payment_pending` moves only the payment. Stub/live
+  payments keep every old rule — `/payment-received` answers 409 `not_direct` for them. The
+  test conftest still pins `ESCROW_MODE=stub`, so direct-rail tests name the mode explicitly.
 - **State registries (P7.c)** — `registry_snapshots` is append-only: no `updated_at`, no
   UPDATE path, a re-check is a new row. Two writers share one shape — `source='registry'`
   (an API answered, `created_by` NULL) and `source='manual'` (a staff member transcribed an

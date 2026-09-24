@@ -16,6 +16,7 @@ Two halves, and only one of them needs the bank to exist:
 from __future__ import annotations
 
 from app.integrations.escrow.client import (
+    MODE_DIRECT,
     MODE_LIVE,
     MODE_STUB,
     EscrowClient,
@@ -27,6 +28,7 @@ from app.integrations.escrow.client import (
 )
 
 __all__ = [
+    "MODE_DIRECT",
     "MODE_LIVE",
     "MODE_STUB",
     "EscrowClient",

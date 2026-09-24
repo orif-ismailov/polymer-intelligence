@@ -28,7 +28,9 @@ EXPECTED: dict[str, set[str]] = {
     # than killing it — the parties may simply redraft.
     "contract_pending": {"contract_signed", "negotiation", "cancelled"},
     "contract_signed": {"payment_pending", "cancelled"},
-    "payment_pending": {"paid_escrow", "disputed", "cancelled"},
+    # `shipped` here is postpayment, and exists on the DIRECT rail only
+    # (`DIRECT_ONLY`): with no bank holding the money, goods may leave first.
+    "payment_pending": {"paid_escrow", "shipped", "disputed", "cancelled"},
     # FR-D8: once money sits in escrow, a unilateral cancel is no longer possible
     # — the way out is a dispute, which only staff can resolve.
     "paid_escrow": {"shipped", "disputed"},
@@ -105,6 +107,7 @@ class TestTransitionMatrix:
 class TestActorRules:
     def test_only_the_seller_declares_a_shipment(self) -> None:
         assert _actors("paid_escrow", "shipped") == {"seller"}
+        assert _actors("payment_pending", "shipped") == {"seller"}
 
     def test_only_the_buyer_confirms_delivery(self) -> None:
         assert _actors("shipped", "delivered") == {"buyer"}
@@ -141,3 +144,27 @@ class TestActorRules:
     def test_only_staff_leaves_a_dispute(self) -> None:
         for to in _table()["disputed"]:
             assert _actors("disputed", to) == {"staff"}, f"disputed → {to} must be staff-only"
+
+
+class TestDirectRail:
+    """Postpayment is a property of the payment rail, not of the deal machine."""
+
+    def test_shipping_before_payment_is_the_only_direct_only_move(self) -> None:
+        from app.domains.deals.service import DIRECT_ONLY  # noqa: PLC0415
+        from app.models.enums import DealStatus  # noqa: PLC0415
+
+        assert {(DealStatus.payment_pending, DealStatus.shipped)} == DIRECT_ONLY
+
+    def test_the_action_bar_offers_it_on_the_direct_rail_only(self) -> None:
+        from types import SimpleNamespace  # noqa: PLC0415
+
+        from app.domains.deals.service import available_transitions  # noqa: PLC0415
+        from app.models.enums import DealActorKind, DealStatus  # noqa: PLC0415
+
+        deal = SimpleNamespace(status=DealStatus.payment_pending)
+        seller = DealActorKind.seller
+        assert DealStatus.shipped not in available_transitions(deal, seller)  # type: ignore[arg-type]
+        assert DealStatus.shipped in available_transitions(deal, seller, direct=True)  # type: ignore[arg-type]
+        assert DealStatus.shipped not in available_transitions(  # type: ignore[arg-type]
+            deal, DealActorKind.buyer, direct=True
+        )

@@ -1403,6 +1403,7 @@
       }
     },
     "modeValue": {
+      "direct": "sotuvchi to‘lovni o‘zi tasdiqlaydi",
       "stub": "operator qo‘lda tasdiqlaydi",
       "live": "bank adapteri"
     },
@@ -1791,7 +1792,7 @@
       },
       "escrow_mode": {
         "name": "Bitim bo‘yicha pul qanday o‘tadi",
-        "desc": "«stub» — har bir o‘tkazmani operator qo‘lda belgilaydi. «live» — pulni haqiqatda bank boshqaradi."
+        "desc": "«direct» — xaridor sotuvchiga to‘g‘ridan-to‘g‘ri to‘laydi, sotuvchi «To‘lov olindi»ni o‘zi belgilaydi va to‘lovdan oldin jo‘natishi mumkin. «stub» — har bir o‘tkazmani operator qo‘lda belgilaydi. «live» — pulni haqiqatda bank boshqaradi."
       },
       "rfq_supplier_push_enabled": {
         "name": "Yetkazib beruvchilarga yangi ariza haqida xabar berish",
