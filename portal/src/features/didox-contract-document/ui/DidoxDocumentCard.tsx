@@ -16,7 +16,12 @@ interface DidoxDocumentCardProps {
   /** The acting company's ИНН — the ИКПУ picker opens a Didox session with it. */
   taxId: string;
   contractId: number;
-  onCreated: () => void;
+  /**
+   * The document exists at Didox — sign it now. Awaited, so the button stays
+   * busy through the signature: creating and signing are ONE click for the
+   * seller, since there is no reason to create a document and not sign it.
+   */
+  onCreated: (documentId: number) => Promise<void>;
 }
 
 /**
@@ -27,7 +32,7 @@ interface DidoxDocumentCardProps {
  * exists there is nothing to sign, which is why this card sits where the sign
  * button will later appear.
  *
- * **The seller creates it.** The ЭСФ that follows is issued by the seller and
+ * **The seller creates it, and signs it in the same click** (`onCreated`). The ЭСФ that follows is issued by the seller and
  * quotes this document's number, so the buyer sees the state and waits.
  *
  * Blockers arrive as a list rather than one at a time: a seller who discovers
@@ -85,13 +90,23 @@ export function DidoxDocumentCard({
   async function create(): Promise<void> {
     setBusy(true);
     setError(null);
+    let documentId: number;
     try {
-      await didoxApi.createContractDocument(companyId, contractId, [], needsChoice ? choice : null);
-      onCreated();
+      // No separate «войти в Didox» step: a missing session is minted with the
+      // key on the first 409 and the request retried.
+      const created = await session.withSession(() =>
+        didoxApi.createContractDocument(companyId, contractId, [], needsChoice ? choice : null),
+      );
+      documentId = created.id;
     } catch (err) {
       // Every refusal is a named condition the seller can act on — a bare
       // "что-то пошло не так" would leave them pressing the same button.
       setError(err instanceof ApiError ? (err.code ?? "failed") : "failed");
+      setBusy(false);
+      return;
+    }
+    try {
+      await onCreated(documentId);
     } finally {
       setBusy(false);
     }

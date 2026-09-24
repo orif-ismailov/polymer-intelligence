@@ -100,39 +100,28 @@ test("Stage B: two verified companies sign a contract end-to-end", async ({
   await pageA.waitForURL(/\/cabinet\/contracts\/\d+/);
   const contractUrl = pageA.url();
 
-  // A sends → pending_counterparty
-  await pageA.getByTestId("contract-send").click();
-  await expect(
-    pageA.getByText(
-      /awaiting counterparty|ожидает контрагента|kontragent kutil/i,
-    ),
-  ).toBeVisible();
-
-  // B opens the same contract, accepts, signs.
-  // The dialog auto-signs (single stub cert) and, on success, the parent refetches —
+  // A signs and sends in one step («Подписать и отправить»). The dialog
+  // auto-signs (single stub cert) and, on success, the parent refetches —
   // which unmounts the sign button. So assert the DURABLE outcome (the recorded
   // signature + resulting state), not the transient success alert.
+  await pageA.getByTestId("eimzo-open").click();
+  await expect(
+    pageA.getByText(/awaiting the other|ожидаем подпись|ikkinchi tomon/i),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(pageA.getByTestId("eimzo-open")).toHaveCount(0);
+
+  // B opens the same contract and signs — no separate «accept» step; their
+  // signature is their agreement → both signatures present → active.
   const contractId = contractUrl.split("/").pop();
   await pageB.goto(`/cabinet/contracts/${contractId}`);
-  await pageB.getByTestId("contract-accept").click();
   await pageB.getByTestId("eimzo-open").click();
-  await expect(
-    pageB.getByText(/awaiting the other|ожидаем подпись|ikkinchi tomon/i),
-  ).toBeVisible({
+  await expect(pageB.getByTestId("contract-download")).toBeVisible({
     timeout: 15_000,
   });
-  await expect(pageB.getByTestId("eimzo-open")).toHaveCount(0);
-
-  // A signs → both signatures present → active
-  await pageA.goto(`/cabinet/contracts/${contractId}`);
-  await pageA.getByTestId("eimzo-open").click();
-  await expect(pageA.getByTestId("contract-download")).toBeVisible({
-    timeout: 15_000,
-  });
-  await pageA.reload();
-  await expect(pageA.getByText(/active|активен|faol/i).first()).toBeVisible();
-  await expect(pageA.getByTestId("contract-download")).toBeVisible();
-  await expect(pageA.getByTestId("contract-pdf")).toBeVisible();
+  await pageB.reload();
+  await expect(pageB.getByText(/active|активен|faol/i).first()).toBeVisible();
+  await expect(pageB.getByTestId("contract-download")).toBeVisible();
+  await expect(pageB.getByTestId("contract-pdf")).toBeVisible();
 
   await ctxA.close();
   await ctxB.close();

@@ -396,23 +396,6 @@ def send_contract(
     return _detail_out(db, contract, _my_company_ids(db, account))
 
 
-@router.post("/contracts/{contract_id}/accept", response_model=ContractDetailOut)
-def accept_contract(
-    contract_id: int,
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-) -> ContractDetailOut:
-    contract, _acting, role = _contract_and_role(db, account, contract_id)
-    if role != "counterparty":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only_counterparty")
-    try:
-        contract_service.accept_terms(db, contract, account)
-    except contract_service.InvalidContractTransition as exc:
-        raise _transition_error(exc) from exc
-    db.commit()
-    return _detail_out(db, contract, _my_company_ids(db, account))
-
-
 @router.post("/contracts/{contract_id}/decline", response_model=ContractDetailOut)
 def decline_contract(
     contract_id: int,

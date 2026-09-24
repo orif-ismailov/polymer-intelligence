@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -45,6 +45,9 @@ export function ContractDetailPage() {
   const [busy, setBusy] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [reason, setReason] = useState("");
+  // Set once «Подписать и отправить» has sent the draft, so a retry inside the
+  // same dialog does not send it again (and get 409 for it).
+  const sentRef = useRef(false);
 
   const contract = query.data;
   // The Didox session belongs to the company the user is ACTING AS, and the
@@ -142,8 +145,17 @@ export function ContractDetailPage() {
     URL.revokeObjectURL(url);
   }
 
+  // «Подписать и отправить»: a draft is sent only once the initiator has picked
+  // a key — cancelling the dialog before that leaves it a draft.
+  const isDraft = contract.status === "draft";
   const signer: EimzoSigner<ContractDetail> = {
-    getChallenge: () => contractApi.signChallenge(id).then((r) => r.challenge),
+    getChallenge: async () => {
+      if (isDraft && !sentRef.current) {
+        await contractApi.send(id);
+        sentRef.current = true;
+      }
+      return (await contractApi.signChallenge(id)).challenge;
+    },
     verify: ({ pkcs7_64 }) =>
       contractApi.sign(id, pkcs7_64).then((c) => ({ ok: true, reason: null, data: c })),
   };
@@ -226,6 +238,11 @@ export function ContractDetailPage() {
     };
   });
 
+  const canDecline =
+    isCounterparty &&
+    contract.status === "pending_signatures" &&
+    (isDidoxRail ? didoxSignedFor(myCompanyId) !== true : !iSigned);
+
   const signingSteps: StatusStep[] = [
     {
       id: "created",
@@ -265,12 +282,20 @@ export function ContractDetailPage() {
       {/* On the Didox rail the document has to EXIST before anyone can sign it,
           and creating it is the seller's move. The card removes itself once the
           document is there and the signing controls below take over. */}
-      {isDidoxRail && contract.didox_document_id == null && active ? (
+      {isDidoxRail &&
+      contract.status === "pending_signatures" &&
+      contract.didox_document_id == null &&
+      active ? (
         <DidoxDocumentCard
           companyId={active.id}
           taxId={active.tax_id}
           contractId={id}
-          onCreated={() => void query.refetch()}
+          onCreated={async (documentId) => {
+            // A refused signature leaves the document created and the error in
+            // the action bar, beside the «Подписать» button that retries it.
+            await didoxSign.sign(documentId);
+            await query.refetch();
+          }}
         />
       ) : null}
 
@@ -279,20 +304,13 @@ export function ContractDetailPage() {
           rather than left as an empty bordered strip. */}
       <Card className="has-[[data-testid=contract-actions]:empty]:hidden">
         <CardBody className="flex flex-wrap gap-3" data-testid="contract-actions">
-          {contract.status === "draft" && isInitiator ? (
+          {/* On Didox the seller's signature goes on a document the operator
+              holds, which only exists once the contract is out — so a Didox
+              draft is just sent, and the card above takes over. */}
+          {contract.status === "draft" && isInitiator && isDidoxRail ? (
             <Button disabled={busy} onClick={() => void act(() => contractApi.send(id))} data-testid="contract-send">
               {t("contracts.actions.send")}
             </Button>
-          ) : null}
-          {contract.status === "pending_counterparty" && isCounterparty ? (
-            <>
-              <Button disabled={busy} onClick={() => void act(() => contractApi.accept(id))} data-testid="contract-accept">
-                {t("contracts.actions.accept")}
-              </Button>
-              <Button variant="danger" disabled={busy} onClick={() => setDeclineOpen((v) => !v)}>
-                {t("contracts.actions.decline")}
-              </Button>
-            </>
           ) : null}
           {/* The two rails sign different things. On `eimzo` we verify the PKCS#7
               ourselves against a challenge; on `didox` the document lives at the
@@ -341,20 +359,34 @@ export function ContractDetailPage() {
               )}
             </>
           ) : null}
-          {contract.status === "pending_signatures" && !isDidoxRail && !iSigned ? (
+          {/* ONE slot for both «Подписать и отправить» (draft) and «Подписать»,
+              so the dialog is not unmounted when sending flips the status. */}
+          {!isDidoxRail &&
+          ((contract.status === "draft" && isInitiator) ||
+            (contract.status === "pending_signatures" && !iSigned)) ? (
             <EimzoSignButton
               signer={signer}
               variant="primary"
-              label={t("contracts.actions.sign")}
+              label={
+                contract.status === "draft"
+                  ? t("contracts.actions.signAndSend")
+                  : t("contracts.actions.sign")
+              }
               onConfirmed={() => void query.refetch()}
+              onClose={() => void query.refetch()}
             />
           ) : null}
           {contract.status === "pending_signatures" && !isDidoxRail && iSigned ? (
             <span className="text-sm text-text-muted">{t("contracts.awaitingOther")}</span>
           ) : null}
-          {(contract.status === "draft" ||
-            contract.status === "pending_counterparty" ||
-            contract.status === "pending_signatures") &&
+          {/* The counterparty's signature is their agreement; declining is the
+              other answer, open until they have signed. */}
+          {canDecline ? (
+            <Button variant="danger" disabled={busy} onClick={() => setDeclineOpen((v) => !v)}>
+              {t("contracts.actions.decline")}
+            </Button>
+          ) : null}
+          {(contract.status === "draft" || contract.status === "pending_signatures") &&
           isInitiator &&
           contract.signatures.length === 0 ? (
             <Button variant="ghost" disabled={busy} onClick={() => void act(() => contractApi.cancel(id))}>

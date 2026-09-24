@@ -409,8 +409,10 @@ class DocumentReviewStatus(enum.StrEnum):
 class ContractStatus(enum.StrEnum):
     """Contract lifecycle (PG type: contract_status).
 
-    draft → pending_counterparty → pending_signatures → active; declined /
-    cancelled / expired are terminal.
+    draft → pending_signatures → active; declined / cancelled / expired are
+    terminal. `pending_counterparty` is no longer entered (the «accept the terms»
+    step was dropped); it stays because a Postgres enum value cannot be removed
+    cheaply, and migration 0052 moved every row out of it.
     """
 
     draft = "draft"

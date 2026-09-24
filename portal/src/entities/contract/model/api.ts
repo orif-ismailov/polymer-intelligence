@@ -41,7 +41,6 @@ export const contractApi = {
     api.post<ContractDetail>("/portal/contracts", payload),
 
   send: (id: number): Promise<ContractDetail> => api.post<ContractDetail>(`/portal/contracts/${id}/send`),
-  accept: (id: number): Promise<ContractDetail> => api.post<ContractDetail>(`/portal/contracts/${id}/accept`),
   decline: (id: number, reason: string): Promise<ContractDetail> =>
     api.post<ContractDetail>(`/portal/contracts/${id}/decline`, { reason }),
   cancel: (id: number): Promise<ContractDetail> => api.post<ContractDetail>(`/portal/contracts/${id}/cancel`),

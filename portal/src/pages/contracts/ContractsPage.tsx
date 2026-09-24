@@ -26,10 +26,7 @@ type Tab = "all" | "action" | "active";
 const EMPTY: ContractSummary[] = [];
 
 function needsAction(c: ContractSummary): boolean {
-  return (
-    (c.status === "pending_counterparty" && c.role === "counterparty") ||
-    c.status === "pending_signatures"
-  );
+  return c.status === "pending_signatures";
 }
 
 export function ContractsPage() {

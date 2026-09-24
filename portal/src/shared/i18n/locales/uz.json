@@ -1660,8 +1660,8 @@
       "expired": "Muddati o‘tgan"
     },
     "actions": {
-      "send": "Kontragentga yuborish",
-      "accept": "Shartlarni qabul qilish",
+      "send": "Imzolashga yuborish",
+      "signAndSend": "Imzolash va yuborish",
       "decline": "Rad etish",
       "confirmDecline": "Rad etishni tasdiqlash",
       "sign": "E-IMZO bilan imzolash",
@@ -1675,7 +1675,7 @@
     },
     "timeline": {
       "created": "Loyiha yaratildi",
-      "sent": "Kelishuvga yuborildi",
+      "sent": "Imzolashga yuborildi",
       "signedBy": "Imzolandi: {{company}}",
       "signedNoDate": "Imzolangan",
       "awaitingSignature": "Imzo kutilmoqda: {{company}}",
@@ -2839,10 +2839,10 @@
   },
   "didoxDocument": {
     "title": "Didox’dagi hujjat",
-    "sellerHint": "Shartnoma EDI operatorida imzolanadi — hujjatni yarating, shundan so‘ng ikkala tomon ERI bilan imzolashi mumkin.",
+    "sellerHint": "Shartnoma EDI operatorida imzolanadi. Quyidagi tugma hujjatni yaratadi va darhol ERI bilan imzolaydi — keyin navbat xaridorda.",
     "buyerHint": "Sotuvchi hali operatorda hujjat yaratmagan. Imzolash shundan keyin ochiladi.",
-    "create": "Didox’da hujjat yaratish",
-    "creating": "Yaratilmoqda…",
+    "create": "Imzolash va Didox’ga yuborish",
+    "creating": "Imzolanmoqda…",
     "blockedTitle": "Hozircha hujjat yaratib bo‘lmaydi",
     "blockers": {
       "ikpu_missing": "E’londa IKPU ko‘rsatilmagan — tovar kodisiz hujjat qabul qilinmaydi. Uni e’londa ko‘rsating.",

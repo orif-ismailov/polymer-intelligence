@@ -3,7 +3,7 @@
 Route registration is DB-free. Behaviour runs against test_polymer (guarded) with
 S3/WeasyPrint stubbed and the E-IMZO adapter faked. Covers the authz matrix
 (initiator/counterparty/third-company 404), the directory (verified-only), the full
-create→send→accept→sign→active flow, the signed bundle, and staff read-only access.
+create→send→sign→active flow, the signed bundle, and staff read-only access.
 """
 
 from __future__ import annotations
@@ -266,12 +266,10 @@ def test_full_contract_flow_and_authz(api) -> None:  # noqa: ANN001
     # counterparty cannot send (only initiator) → 403
     assert client.post(f"{_P}/contracts/{cid}/send", headers=b_auth).status_code == 403
 
-    # initiator sends → pending_counterparty
-    assert client.post(f"{_P}/contracts/{cid}/send", headers=a_auth).json()["status"] == "pending_counterparty"
-    # initiator cannot accept (only counterparty) → 403
-    assert client.post(f"{_P}/contracts/{cid}/accept", headers=a_auth).status_code == 403
-    # counterparty accepts → pending_signatures
-    assert client.post(f"{_P}/contracts/{cid}/accept", headers=b_auth).json()["status"] == "pending_signatures"
+    # initiator sends → straight to signing: the counterparty's signature IS
+    # their agreement, so there is no separate «accept» step any more
+    assert client.post(f"{_P}/contracts/{cid}/send", headers=a_auth).json()["status"] == "pending_signatures"
+    assert client.post(f"{_P}/contracts/{cid}/accept", headers=b_auth).status_code in (404, 405)
 
     # both sign
     for auth, tin in ((a_auth, "301111111"), (b_auth, "302222222")):
@@ -315,7 +313,6 @@ def test_sign_inn_mismatch_422(api) -> None:  # noqa: ANN001
         headers=a_auth,
     ).json()["id"]
     client.post(f"{_P}/contracts/{cid}/send", headers=a_auth)
-    client.post(f"{_P}/contracts/{cid}/accept", headers=b_auth)
     ch = client.post(f"{_P}/contracts/{cid}/sign/challenge", headers=a_auth).json()["challenge"]
     res = client.post(f"{_P}/contracts/{cid}/sign", json={"pkcs7": _pkcs7(ch, "300000000")}, headers=a_auth)
     assert res.status_code == 422

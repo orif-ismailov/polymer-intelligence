@@ -154,7 +154,6 @@ def _make_sent_pending(db, monkeypatch):  # noqa: ANN001, ANN202
     tpl = _template(db)
     contract = contract_service.create_contract(db, comp_a, acc_a, tpl, _VARS, comp_b)
     contract_service.send(db, contract, acc_a)
-    contract_service.accept_terms(db, contract, acc_b)
     return (acc_a, comp_a), (acc_b, comp_b), contract
 
 
@@ -167,9 +166,9 @@ def test_transition_table_and_illegal(sf, monkeypatch) -> None:  # noqa: ANN001
     with sf() as db:
         (acc_a, _comp_a), _b, contract = _make_sent_pending(db, monkeypatch)
         assert contract.status == ContractStatus.pending_signatures
-        # illegal: cannot accept again from pending_signatures
+        # illegal: cannot send again once it is out for signing
         with pytest.raises(contract_service.InvalidContractTransition):
-            contract_service.accept_terms(db, contract, acc_a)
+            contract_service.send(db, contract, acc_a)
 
 
 @requires_real_db

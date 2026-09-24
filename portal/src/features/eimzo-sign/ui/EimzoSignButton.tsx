@@ -11,6 +11,9 @@ import type { EimzoSigner } from "../model/useEimzoSign";
 interface EimzoSignButtonProps<T> {
   signer: EimzoSigner<T>;
   onConfirmed?: (data: T) => void;
+  /** The dialog closed, whatever the outcome — a signer that moved server state
+      before failing (send-then-sign) needs the caller to re-read it. */
+  onClose?: () => void;
   holderOf?: (data: T) => string | null | undefined;
   variant?: ButtonVariant;
   disabled?: boolean;
@@ -21,6 +24,7 @@ interface EimzoSignButtonProps<T> {
 export function EimzoSignButton<T>({
   signer,
   onConfirmed,
+  onClose,
   holderOf,
   variant = "secondary",
   disabled,
@@ -37,7 +41,10 @@ export function EimzoSignButton<T>({
       <EimzoSignDialog
         open={open}
         signer={open ? signer : null}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          onClose?.();
+        }}
         onConfirmed={onConfirmed}
         holderOf={holderOf}
       />

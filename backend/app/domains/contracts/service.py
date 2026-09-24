@@ -2,11 +2,16 @@
 
 State machine (data, per ARCHITECTURE §6):
 
-    draft ─► pending_counterparty ─► pending_signatures ─► active
-      │             │                       │
-      └─ cancelled  ├─ declined             ├─ declined
-                    └─ cancelled            ├─ cancelled
-                                            └─ expired (TTL beat)
+    draft ─► pending_signatures ─► active
+      │             │
+      └─ cancelled  ├─ declined
+                    ├─ cancelled
+                    └─ expired (TTL beat)
+
+There is no separate «accept the terms» step: the counterparty cannot edit the
+terms, so their signature IS their agreement, and «Отклонить» stays as the way
+to say no. `pending_counterparty` survives only as a Postgres enum value
+(migration 0052 moved the last rows out of it).
 
 Both companies must be `verified`. Terms are edited only in `draft` (any edit
 re-renders the PDF + sha256). Signatures happen only in `pending_signatures`, via
@@ -57,13 +62,7 @@ _PURPOSE_CONTRACT = "contract"
 # ── State machine (data) ──────────────────────────────────────────────────────
 
 _TRANSITIONS: dict[ContractStatus, set[ContractStatus]] = {
-    ContractStatus.draft: {ContractStatus.pending_counterparty, ContractStatus.cancelled},
-    ContractStatus.pending_counterparty: {
-        ContractStatus.pending_signatures,
-        ContractStatus.declined,
-        ContractStatus.cancelled,
-        ContractStatus.expired,
-    },
+    ContractStatus.draft: {ContractStatus.pending_signatures, ContractStatus.cancelled},
     ContractStatus.pending_signatures: {
         ContractStatus.active,
         ContractStatus.declined,
@@ -332,8 +331,8 @@ def _assert_party(contract: Contract, company: Company) -> None:
 
 
 def send(db: Session, contract: Contract, account: UserAccount) -> Contract:
-    """Initiator sends the draft to the counterparty (→ pending_counterparty)."""
-    _transition(db, contract, ContractStatus.pending_counterparty)
+    """Initiator sends the draft out for both signatures (→ pending_signatures)."""
+    _transition(db, contract, ContractStatus.pending_signatures)
     contract.sent_at = company_service.now_utc()
     db.flush()
     event_service.emit(
@@ -343,17 +342,6 @@ def send(db: Session, contract: Contract, account: UserAccount) -> Contract:
     _notify_company(db, contract.counterparty_company_id, "contract_incoming", contract)
     audit_service.write_audit(
         db, None, "contract.send", "contracts", str(contract.id), {"account_id": account.id}
-    )
-    return contract
-
-
-def accept_terms(db: Session, contract: Contract, account: UserAccount) -> Contract:
-    """Counterparty accepts the terms (→ pending_signatures)."""
-    _transition(db, contract, ContractStatus.pending_signatures)
-    event_service.emit(db, event_types.CONTRACT_SENT, "contract", contract.id, {"accepted": True})
-    _notify_company(db, contract.initiator_company_id, "contract_accepted", contract)
-    audit_service.write_audit(
-        db, None, "contract.accept", "contracts", str(contract.id), {"account_id": account.id}
     )
     return contract
 
@@ -381,7 +369,6 @@ def cancel(db: Session, contract: Contract, account: UserAccount) -> Contract:
     )
     if signed > 0 or contract.status not in {
         ContractStatus.draft,
-        ContractStatus.pending_counterparty,
         ContractStatus.pending_signatures,
     }:
         raise CannotCancel(str(contract.status))

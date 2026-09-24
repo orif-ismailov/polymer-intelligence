@@ -1660,8 +1660,8 @@
       "expired": "Expired"
     },
     "actions": {
-      "send": "Send to counterparty",
-      "accept": "Accept terms",
+      "send": "Send for signing",
+      "signAndSend": "Sign and send",
       "decline": "Decline",
       "confirmDecline": "Confirm decline",
       "sign": "Sign with E-IMZO",
@@ -1675,7 +1675,7 @@
     },
     "timeline": {
       "created": "Draft created",
-      "sent": "Sent for approval",
+      "sent": "Sent for signing",
       "signedBy": "Signed by {{company}}",
       "signedNoDate": "Signed",
       "awaitingSignature": "Awaiting signature from {{company}}",
@@ -2839,10 +2839,10 @@
   },
   "didoxDocument": {
     "title": "Document at Didox",
-    "sellerHint": "This contract is signed at the EDI operator — create the document and both sides can then e-sign it.",
+    "sellerHint": "This contract is signed at the EDI operator. The button below creates the document and signs it with your key straight away — then it is the buyer's turn.",
     "buyerHint": "The seller has not created the document at the operator yet. Signing opens after that.",
-    "create": "Create the document at Didox",
-    "creating": "Creating…",
+    "create": "Sign and send via Didox",
+    "creating": "Signing…",
     "blockedTitle": "The document cannot be created yet",
     "blockers": {
       "ikpu_missing": "The offer has no IKPU — the document will not be accepted without a product code. Set it on the offer.",

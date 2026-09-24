@@ -298,8 +298,8 @@ class Settings(BaseSettings):
     # Company verification (R1).
     VERIFICATION_AUTO_APPROVE: bool = False
 
-    # Contracts (R3). Days a contract may sit in `pending_counterparty` /
-    # `pending_signatures` before `expire_stale_contracts` retires it.
+    # Contracts (R3). Days a contract may sit in `pending_signatures` before
+    # `expire_stale_contracts` retires it.
     CONTRACT_PENDING_TTL_DAYS: int = Field(default=30, ge=1, le=365)
 
     # Escrow rail (P3/P7.b): `stub` = an operator confirms every movement,
