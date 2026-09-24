@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { useBootstrapAuth } from "@/entities/account";
 import { StepUpDialog } from "@/features/step-up";
-import { i18n, preferredLanguage } from "@/shared/i18n";
+import { coerceLang, i18n, preferredLanguage, setLanguage, SUPPORTED_LANGS } from "@/shared/i18n";
 
 /**
  * Runs the boot-time session restore inside the QueryClient/i18n providers,
@@ -21,6 +21,14 @@ export function AppBootstrap({ children }: { children: ReactNode }) {
   // language differs from the server's default, because `setLanguage` writes a
   // cookie the server reads on every later request.
   useEffect(() => {
+    // A link that names its language (`?lang=fa` — the hreflang alternates, a
+    // shared URL) is an explicit choice: keep it, and remember it, rather than
+    // flipping the page to the browser's language right after it rendered.
+    const asked = new URLSearchParams(window.location.search).get("lang");
+    if (asked && (SUPPORTED_LANGS as readonly string[]).includes(asked)) {
+      setLanguage(coerceLang(asked));
+      return;
+    }
     const preferred = preferredLanguage();
     if (preferred !== i18n.language) {
       void i18n.changeLanguage(preferred);

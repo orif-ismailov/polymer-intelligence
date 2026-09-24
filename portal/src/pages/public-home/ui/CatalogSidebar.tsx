@@ -116,7 +116,7 @@ export function CatalogSidebar({ className }: { className?: string }) {
                     size={12}
                     strokeWidth={2}
                     aria-hidden
-                    className="hidden shrink-0 text-text-subtle lg:block"
+                    className="rtl:-scale-x-100 hidden shrink-0 text-text-subtle lg:block"
                   />
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
                 </Link>

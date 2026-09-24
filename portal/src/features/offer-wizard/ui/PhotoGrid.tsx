@@ -88,7 +88,7 @@ function Tile({
         )}
       </div>
       {isCover ? (
-        <Badge tone="brand" className="absolute left-1.5 top-1.5">
+        <Badge tone="brand" className="absolute start-1.5 top-1.5">
           {t("offers.photos.cover")}
         </Badge>
       ) : null}
@@ -96,7 +96,7 @@ function Tile({
         type="button"
         onClick={onRemove}
         aria-label={removeLabel}
-        className="absolute right-1.5 top-1.5 rounded-full bg-overlay p-1.5 text-text transition-colors hover:bg-danger hover:text-danger-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        className="absolute end-1.5 top-1.5 rounded-full bg-overlay p-1.5 text-text transition-colors hover:bg-danger hover:text-danger-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
       >
         <CloseIcon size={12} />
       </button>

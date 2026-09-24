@@ -284,3 +284,33 @@ def test_an_anonymous_caller_is_refused() -> None:
         create_app()
     ) as client:
         assert client.get(_BASE).status_code == 401
+
+
+# ── technologist applications (0055) ────────────────────────────────────────
+
+
+def test_the_queue_can_be_narrowed_to_technologists(admin_app) -> None:  # noqa: ANN001
+    client, db, _actor = admin_app
+    db.execute.return_value.scalars.return_value = []
+
+    assert client.get(_BASE, params={"applied_as": "technologist"}).status_code == 200
+    stmt = db.execute.call_args.args[0]
+    # The column is in every SELECT list; what matters is the WHERE clause.
+    assert "user_accounts.applied_as = " in str(stmt)
+
+
+def test_staff_see_who_applied_as_what(admin_app) -> None:  # noqa: ANN001
+    client, db, _actor = admin_app
+    account = _application()
+    account.applied_as = "technologist"
+    _target(db, account)
+
+    body = client.get(f"{_BASE}/5").json()
+    assert body["applied_as"] == "technologist"
+
+
+def test_an_unflushed_application_reads_as_a_company_one(admin_app) -> None:  # noqa: ANN001
+    """The column default lands at INSERT; an in-memory row must still serialise."""
+    client, db, _actor = admin_app
+    _target(db, _application())
+    assert client.get(f"{_BASE}/5").json()["applied_as"] == "company"

@@ -24,6 +24,7 @@
       "deals": "معاملات",
       "escrow": "امانی",
       "companies": "شرکت‌ها",
+      "technologists": "تکنولوژیست‌ها",
       "verification": "احراز هویت شرکت‌ها",
       "portalAccounts": "حساب‌های مشتری",
       "labOrders": "آزمایش‌ها",
@@ -812,6 +813,12 @@
       "login_taken": "این نام کاربری گرفته شده است. نام دیگری انتخاب کنید.",
       "no_credentials": "این حساب هنوز نام کاربری ندارد — نخست دسترسی صادر کنید.",
       "login_required": "نام کاربری را وارد کنید."
+    },
+    "kind": {
+      "all": "همه",
+      "company": "شرکت‌ها",
+      "technologist": "تکنولوژیست",
+      "technologists": "تکنولوژیست‌ها"
     }
   },
   "adminProducts": {
@@ -2027,7 +2034,6 @@
       "sample_letter": "نامهٔ تعهد"
     }
   },
-
   "adminBankRegister": {
     "title": "فهرست بانک‌ها",
     "subtitle": "سامانهٔ شعب بانک مرکزی: MFO ← نام بانک. هنگام ثبت شرکت پر می‌شود.",
@@ -2045,5 +2051,71 @@
     "failed": "بارگذاری فایل ناموفق بود",
     "file": "فایل",
     "hint": "فایل سامانهٔ شعب از وب‌گاه بانک مرکزی (‎.xlsx)."
+  },
+  "technologists": {
+    "pageTitle": "تکنولوژیست‌ها",
+    "pageSubtitle": "بررسی پروفایل کارشناسان: فقط نسخهٔ تأییدشده وارد کاتالوگ می‌شود.",
+    "filterAll": "همه",
+    "empty": "پروفایلی وجود ندارد",
+    "loadError": "بارگذاری پروفایل‌ها ناموفق بود",
+    "saveError": "ذخیرهٔ تصمیم ناموفق بود",
+    "forbidden": "دسترسی ندارید: صفحهٔ «تکنولوژیست‌ها» با مجوز نوشتن لازم است",
+    "editOfListed": "کارشناس در کاتالوگ است — تأیید، کارت را جایگزین می‌کند و رد، کارت قبلی را نگه می‌دارد.",
+    "reasonLabel": "دلیل",
+    "reasonHint": "برای رد و تعلیق الزامی است — کارشناس آن را می‌بیند.",
+    "approve": "تأیید",
+    "reject": "رد",
+    "suspend": "تعلیق",
+    "status": {
+      "draft": "پیش‌نویس",
+      "pending_review": "در حال بررسی",
+      "published": "منتشرشده",
+      "rejected": "ردشده",
+      "suspended": "معلق"
+    },
+    "table": {
+      "expert": "کارشناس",
+      "processes": "فرایندها",
+      "status": "وضعیت",
+      "submittedAt": "ارسال‌شده"
+    },
+    "fields": {
+      "account": "حساب",
+      "location": "شهر، کشور",
+      "years": "سال‌های تجربه",
+      "projects": "پروژه‌ها",
+      "countries": "کشورها",
+      "processes": "فرایندها",
+      "materials": "مواد",
+      "industries": "صنایع",
+      "equipment": "تجهیزات",
+      "formats": "شیوهٔ کار",
+      "languages": "زبان‌ها",
+      "contacts": "تماس",
+      "submittedAt": "ارسال‌شده",
+      "reason": "دلیل"
+    },
+    "process": {
+      "extrusion": "اکستروژن",
+      "injection_molding": "قالب‌گیری تزریقی",
+      "blow_molding": "قالب‌گیری بادی",
+      "compounding": "کامپاندینگ",
+      "film": "فیلم",
+      "pipe": "لوله",
+      "recycling": "بازیافت",
+      "thermoforming": "ترموفرمینگ"
+    },
+    "industry": {
+      "petrochemical": "پتروشیمی",
+      "polymer": "پلیمر",
+      "packaging": "بسته‌بندی",
+      "automotive": "خودرو",
+      "recycling": "بازیافت",
+      "chemical": "شیمیایی"
+    },
+    "format": {
+      "online": "آنلاین",
+      "on_site": "در کارخانه"
+    }
   }
 }

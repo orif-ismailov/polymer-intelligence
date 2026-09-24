@@ -9,9 +9,11 @@ import { BrandLogo } from "@/shared/ui";
 
 interface TopbarProps {
   onOpenMenu: () => void;
+  /** A technologist has no company to switch between. */
+  expert?: boolean;
 }
 
-export function Topbar({ onOpenMenu }: TopbarProps) {
+export function Topbar({ onOpenMenu, expert = false }: TopbarProps) {
   const { t } = useTranslation();
   return (
     // `z-30` — above the rail, which starts under this bar and must scroll
@@ -44,7 +46,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         <div className="ml-auto flex items-center gap-3">
           <ThemeToggle className="h-9 w-9" />
           <NotificationBell />
-          <CompanySwitcher />
+          {expert ? null : <CompanySwitcher />}
         </div>
       </div>
     </header>

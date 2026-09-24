@@ -15,6 +15,7 @@ import {
   Gavel,
   Globe,
   Handshake,
+  HardHat,
   Heart,
   Home,
   Inbox,
@@ -23,6 +24,7 @@ import {
   PackageOpen,
   Settings,
   Store,
+  UserRound,
   Truck,
 } from "lucide-react";
 
@@ -57,3 +59,7 @@ export const SampleBoxIcon = <PackageOpen {...props} />;
  * two links go to the same place.
  */
 export const PublicSiteIcon = <Globe {...props} />;
+/** Technologists (0055) — the factory's expert requests and the expert catalog. */
+export const ExpertIcon = <HardHat {...props} />;
+/** The expert's own professional profile. */
+export const ProfileIcon = <UserRound {...props} />;

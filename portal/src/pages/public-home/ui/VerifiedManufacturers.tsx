@@ -108,7 +108,7 @@ export function VerifiedManufacturers() {
           className="shrink-0 text-[12px] font-medium text-brand hover:underline"
         >
           {t("public.home.seeAllPeople")}
-          <span aria-hidden> →</span>
+          <span aria-hidden className="inline-block rtl:-scale-x-100"> →</span>
         </Link>
       </div>
 

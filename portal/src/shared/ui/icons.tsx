@@ -9,6 +9,8 @@
 
 import { type ComponentType } from "react";
 
+import { cn } from "@/shared/lib";
+
 import {
   AlertCircle,
   AlignLeft,
@@ -90,9 +92,20 @@ export interface IconProps {
 
 type LucideGlyph = ComponentType<LucideProps>;
 
-function icon(Glyph: LucideGlyph) {
+/**
+ * `mirrored`: a glyph that points along the reading direction («назад» / «далее»)
+ * flips under `dir="rtl"` (Farsi), where back is to the right.
+ */
+function icon(Glyph: LucideGlyph, mirrored = false) {
   function Icon({ size = 14, className }: IconProps) {
-    return <Glyph size={size} className={className} aria-hidden="true" strokeWidth={1.75} />;
+    return (
+      <Glyph
+        size={size}
+        className={mirrored ? cn("rtl:-scale-x-100", className) : className}
+        aria-hidden="true"
+        strokeWidth={1.75}
+      />
+    );
   }
   Icon.displayName = Glyph.displayName ?? Glyph.name;
   return Icon;
@@ -109,8 +122,8 @@ export const TestTubeIcon = icon(TestTube);
 export const BoxIcon = icon(Package);
 export const PackageOpenIcon = icon(PackageOpen);
 export const ClockIcon = icon(Clock);
-export const ChevronLeftIcon = icon(ChevronLeft);
-export const ChevronRightIcon = icon(ChevronRight);
+export const ChevronLeftIcon = icon(ChevronLeft, true);
+export const ChevronRightIcon = icon(ChevronRight, true);
 export const DownloadIcon = icon(Download);
 export const FileIcon = icon(FileText);
 export const InfoIcon = icon(Info);

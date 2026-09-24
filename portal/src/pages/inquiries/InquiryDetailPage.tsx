@@ -83,7 +83,7 @@ export function InquiryDetailPage() {
   return (
     <div className="space-y-6">
       <LinkButton to="/cabinet/inquiries" variant="ghost" className="text-sm">
-        ← {t("inquiries.back")}
+        <span aria-hidden className="inline-block rtl:-scale-x-100">←</span> {t("inquiries.back")}
       </LinkButton>
 
       <Card>

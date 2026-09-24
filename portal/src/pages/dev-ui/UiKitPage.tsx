@@ -14,6 +14,7 @@ import {
   ChecklistRow,
   ChevronLeftIcon,
   ChipInput,
+  ToggleChips,
   ChoiceTile,
   ClockIcon,
   Confetti,
@@ -157,6 +158,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function UiKitPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [checked, setChecked] = useState(true);
+  const [toggled, setToggled] = useState<string[]>(["PP"]);
   const [sectionTab, setSectionTab] = useState("description");
   const [accountType, setAccountType] = useState("distributor");
   const [eimzoMethod, setEimzoMethod] = useState("usb_token");
@@ -344,6 +346,14 @@ export function UiKitPage() {
                 />
               )}
             </FormField>
+            <ToggleChips
+              label="Материалы"
+              data-testid="ui-toggle-chips"
+              options={["PE", "PP", "PVC", "PET"]}
+              value={toggled}
+              onChange={setToggled}
+              renderLabel={(o) => o}
+            />
             <Dropzone
               data-testid="ui-dropzone"
               label="Перетащите файлы или нажмите для загрузки"

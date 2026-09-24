@@ -15,6 +15,7 @@ import {
   CogIcon,
   ContractIcon,
   DocIcon,
+  ExpertIcon,
   FlaskNavIcon,
   GavelIcon,
   TruckNavIcon,
@@ -23,6 +24,7 @@ import {
   HomeIcon,
   ManufacturersIcon,
   NewsIcon,
+  ProfileIcon,
   SampleBoxIcon,
   StoreIcon,
   TagIcon,
@@ -132,6 +134,14 @@ const NAV_ITEMS: NavItem[] = [
     // «Заявки» instead, so this entry would only ever be an empty page for one.
     feature: "logisticsOrdering",
   },
+  // A factory's expert requests (0055). Universal: any company may need a
+  // process technologist, whatever it trades.
+  {
+    to: "/cabinet/tech-requests",
+    labelKey: "nav.techRequests",
+    icon: ExpertIcon,
+    group: "services",
+  },
   // Out to the public reader — news has no cabinet twin any more.
   { to: "/news", labelKey: "nav.news", icon: NewsIcon, group: "services" },
 
@@ -139,7 +149,23 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/cabinet/settings", labelKey: "nav.settings", icon: CogIcon, group: "company" },
 ];
 
+/**
+ * The technologist's rail (0055). A private expert has no company, so none of
+ * the company-scoped entries above apply — their cabinet is their profile, the
+ * request feed, and the public catalog they are listed in.
+ */
+const EXPERT_NAV_ITEMS: NavItem[] = [
+  { to: "/cabinet/expert", labelKey: "nav.expertProfile", icon: ProfileIcon, end: true },
+  { to: "/cabinet/expert/requests", labelKey: "nav.expertRequests", icon: DocIcon, group: "trade" },
+  { to: "/technologists", labelKey: "nav.technologists", icon: ExpertIcon, group: "market" },
+  { to: "/market", labelKey: "nav.market", icon: StoreIcon, group: "market" },
+  { to: "/news", labelKey: "nav.news", icon: NewsIcon, group: "services" },
+  { to: "/cabinet/settings", labelKey: "nav.settings", icon: CogIcon, group: "company" },
+];
+
 interface SideNavProps {
+  /** The technologist rail instead of the company one. */
+  expert?: boolean;
   onNavigate?: () => void;
   /**
    * Icon-only rail. Labels move into tooltips and `aria-label`, so the links
@@ -154,17 +180,24 @@ interface SideNavProps {
   touch?: boolean;
 }
 
-export function SideNav({ onNavigate, collapsed = false, touch = false }: SideNavProps) {
+export function SideNav({
+  onNavigate,
+  collapsed = false,
+  touch = false,
+  expert = false,
+}: SideNavProps) {
   const { t } = useTranslation();
   // The menu is shaped by the active company's account type: a laboratory has
   // no «Предложения», a buyer no reason to see a supplier inbox. The same
   // matrix drives the route guards, so a hidden entry is also an unreachable
   // page — hiding here is presentation, not the enforcement.
-  const { activeCompany } = useActiveCompany();
+  const { activeCompany } = useActiveCompany(!expert);
   const requestsLabelKey = requestsNavLabelKey(activeCompany);
-  const items = NAV_ITEMS.filter(
-    (item) => !item.feature || companyHasFeature(activeCompany, item.feature),
-  );
+  const items = expert
+    ? EXPERT_NAV_ITEMS
+    : NAV_ITEMS.filter(
+        (item) => !item.feature || companyHasFeature(activeCompany, item.feature),
+      );
 
   const labelOf = (item: NavItem): string =>
     t(item.to === "/cabinet/requests" ? requestsLabelKey : item.labelKey);

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { Navigate, useLocation } from "react-router-dom";
 
+import { useAuthStore } from "@/entities/account";
 import { useActiveCompany } from "@/entities/company";
 import { useDidoxStatus } from "@/entities/edi";
 
@@ -20,7 +21,9 @@ export const DIDOX_ONBOARDING_PATH = "/cabinet/didox";
  */
 export function DidoxOnboardingGate({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const { activeCompany } = useActiveCompany();
+  // A technologist (0055) has no company — nothing to onboard, nothing to ask for.
+  const isExpert = useAuthStore((s) => s.account?.applied_as === "technologist");
+  const { activeCompany } = useActiveCompany(!isExpert);
   const verified = activeCompany?.status === "verified";
   const status = useDidoxStatus(
     verified ? (activeCompany?.id ?? null) : null,

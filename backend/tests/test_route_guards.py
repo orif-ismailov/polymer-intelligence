@@ -90,6 +90,13 @@ PUBLIC_ROUTES: frozenset[tuple[str, str]] = frozenset(
         ("GET", "/api/v1/public/prices"),
         ("GET", "/api/v1/public/stats"),
         ("GET", "/api/v1/public/sitemap"),
+        # The technologist catalog (0055). Built only from the APPROVED snapshot of
+        # a listed expert (`profiles.public_card`); the card model has no contact
+        # fields. The photo is an <img> target keyed from that snapshot.
+        ("GET", "/api/v1/public/technologists"),
+        ("GET", "/api/v1/public/technologists/facets"),
+        ("GET", "/api/v1/public/technologists/{profile_id}"),
+        ("GET", "/api/v1/public/technologists/{profile_id}/photo"),
         # Public marketplace media. These are <img> targets on public catalog
         # pages, so a browser must fetch them with no Authorization header. The
         # handlers resolve only approved offers / verified companies.

@@ -1,0 +1,3323 @@
+{
+  "common": {
+    "appName": "IMEX AI",
+    "cabinet": "Panel",
+    "loading": "Yükleniyor…",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor…",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "back": "Geri",
+    "next": "İleri",
+    "skip": "Atla",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "archive": "Arşivle",
+    "retry": "Tekrar dene",
+    "close": "Kapat",
+    "add": "Ekle",
+    "remove": "Kaldır",
+    "download": "İndir",
+    "optional": "isteğe bağlı",
+    "required": "zorunlu",
+    "yes": "Evet",
+    "no": "Hayır",
+    "soon": "yakında",
+    "notSpecified": "Belirtilmemiş",
+    "search": "Ara",
+    "all": "Tümü",
+    "prev": "Önceki",
+    "clear": "Temizle",
+    "pickDate": "Tarih seçin"
+  },
+  "errors": {
+    "generic": "Bir şeyler ters gitti",
+    "genericBody": "İstek tamamlanamadı. Lütfen tekrar deneyin.",
+    "network": "Ağ hatası. Bağlantınızı kontrol edin.",
+    "loadFailed": "Veriler yüklenemedi",
+    "notFound": "Bulunamadı",
+    "notFoundBody": "Sayfa veya kaynak mevcut değil.",
+    "forbidden": "Erişim reddedildi",
+    "unexpected": "Beklenmeyen hata"
+  },
+  "auth": {
+    "invalidCredentials": "Kullanıcı adı veya şifre hatalı.",
+    "loginHint": "Büyük/küçük harf duyarlı değildir.",
+    "loginLabel": "Kullanıcı adı",
+    "loginPlaceholder": "örn. acme-trade",
+    "loginSubtitle": "Size verilen kullanıcı adını ve şifreyi girin.",
+    "loginTitle": "Panele giriş",
+    "noAccount": "Henüz erişiminiz yok mu?",
+    "passwordLabel": "Şifre",
+    "phoneInvalid": "Geçerli bir telefon numarası girin",
+    "phoneLabel": "Telefon numarası",
+    "registerCta": "Erişim talep et",
+    "revealPassword": "Şifreyi göster",
+    "sessionExpired": "Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.",
+    "signIn": "Giriş yap",
+    "signingIn": "Giriş yapılıyor…",
+    "tooManyRequests": "Çok fazla deneme. Daha sonra tekrar deneyin.",
+    "trustBody": "Verileriniz korunur ve uluslararası güvenlik standartlarına uygundur.",
+    "trustTitle": "Güvenli ve emniyetli",
+    "tryLater": "Birkaç dakika sonra tekrar deneyin."
+  },
+  "register": {
+    "title": "Erişim talebi",
+    "subtitle": "Kendinizden bahsedin — sizinle iletişime geçip panel erişiminizi sağlayacağız.",
+    "contactName": "Adınız",
+    "companyName": "Şirket",
+    "companyHint": "Adına hareket ettiğiniz kuruluş.",
+    "phoneHint": "Bir yönetici sizi bu numaradan arayacak.",
+    "note": "Mesaj",
+    "noteHint": "Ne alıp sattığınız, hacimler, süreler — isteğe bağlı.",
+    "submit": "Talebi gönder",
+    "submitting": "Gönderiliyor…",
+    "haveAccount": "Zaten erişiminiz var mı?",
+    "doneTitle": "Talep gönderildi",
+    "doneBody": "Belirttiğiniz numaradan sizinle iletişime geçeceğiz.",
+    "doneNext": "Kullanıcı adı ve şifre yöneticiniz tarafından size bizzat teslim edilir — bunlar sözleşmede de yer alır.",
+    "backToMarket": "Pazar yerine dön",
+    "specialization": "Uzmanlık alanı",
+    "specializationHint": "Örneğin: film ekstrüzyon teknoloğu, 12 yıllık deneyim.",
+    "expertTitle": "Uzman başvurusu",
+    "expertSubtitle": "Teknologlar ve mühendisler fabrikalardan talepler alır. Kendinizden bahsedin — kontrol edip erişim açacağız.",
+    "expertNoteHint": "Süreçler, çalıştığınız ekipmanlar, diller — isteğe bağlı."
+  },
+  "password": {
+    "title": "Şifre değiştir",
+    "subtitle": "Panel girişi için yeni bir şifre belirleyin.",
+    "forcedSubtitle": "Sözleşmenizdeki şifre geçicidir. Devam etmek için kendi şifrenizi belirleyin.",
+    "current": "Mevcut şifre",
+    "currentHint": "Size verilen şifre.",
+    "new": "Yeni şifre",
+    "newHint": "En az {{n}} karakter.",
+    "tooShort": "Şifre en az {{n}} karakter olmalıdır",
+    "confirm": "Yeni şifreyi tekrarlayın",
+    "mismatch": "Şifreler eşleşmiyor",
+    "wrongCurrent": "Mevcut şifre hatalı",
+    "submit": "Şifreyi kaydet",
+    "saving": "Kaydediliyor…",
+    "changeCta": "Şifre değiştir"
+  },
+  "nav": {
+    "home": "Ana sayfa",
+    "companies": "Şirketler",
+    "offers": "Teklifler",
+    "contracts": "Sözleşmeler",
+    "settings": "Ayarlar",
+    "logout": "Çıkış yap",
+    "market": "Pazar",
+    "manufacturers": "Üreticiler",
+    "requests": "Hizmet talepleri",
+    "tenders": "İhalelerim",
+    "openTenders": "Açık ihaleler",
+    "inquiries": "Talepler",
+    "news": "Haberler",
+    "notifications": "Bildirimler",
+    "deals": "Anlaşmalar",
+    "favorites": "Favoriler",
+    "samples": "Numuneler",
+    "openMenu": "Menüyü aç",
+    "logisticsRequests": "Lojistik talepleri",
+    "lab": "Laboratuvar",
+    "groups": {
+      "market": "Pazar",
+      "trade": "Ticaret",
+      "services": "Hizmetler",
+      "company": "Şirket"
+    },
+    "collapseRail": "Menüyü daralt",
+    "expandRail": "Menüyü genişlet",
+    "techRequests": "Teknologlar",
+    "expertProfile": "Profilim",
+    "expertRequests": "Fabrika talepleri",
+    "technologists": "Teknolog kataloğu"
+  },
+  "home": {
+    "title": "Genel bakış",
+    "welcome": "Merhaba, {{name}}",
+    "welcomeAnon": "Hoş geldiniz",
+    "companiesCard": "Şirketler",
+    "companiesCardHint": "Kayıt ve doğrulama",
+    "offersCard": "Teklifler",
+    "offersCardHint": "Yayınlama ve moderasyon",
+    "noActiveCompany": "Aktif şirket seçilmedi",
+    "noActiveCompanyBody": "Başlamak için bir şirket oluşturun.",
+    "activeCompany": "Aktif şirket",
+    "verificationState": "Doğrulama durumu",
+    "quickActions": "Hızlı işlemler",
+    "createCompany": "Şirket oluştur",
+    "goToVerification": "Doğrulama durumuna git",
+    "publishOffer": "Teklif yayınla",
+    "activeRequests": "Aktif ihaleler",
+    "unread": "Okunmamış",
+    "latestNews": "Son haberler"
+  },
+  "companies": {
+    "title": "Şirketlerim",
+    "subtitle": "Tüzel kişiliklerinizi ve doğrulamalarını yönetin.",
+    "empty": "Henüz şirketiniz yok",
+    "emptyBody": "Bir şirket kaydedin, doğrulamayı tamamlayın ve teklif yayınlamaya başlayın.",
+    "create": "Şirket oluştur",
+    "taxId": "Vergi numarası (ИНН)",
+    "jurisdiction": "Yargı bölgesi",
+    "legalName": "Ticari unvan",
+    "shortName": "Kısa ad",
+    "verifiedAt": "Doğrulandı",
+    "open": "Aç",
+    "activeCase": "Başvuru",
+    "noName": "Adsız"
+  },
+  "company": {
+    "detailsTitle": "Şirket bilgileri",
+    "profile": "Profil",
+    "legalForm": "Hukuki yapı",
+    "legalAddress": "Yasal adres",
+    "director": "Direktör",
+    "roles": "Faaliyet alanları",
+    "bankAccounts": "Banka hesapları",
+    "documents": "Belgeler",
+    "reverificationDue": "Yeniden doğrulama tarihi",
+    "publicId": "Herkese açık ID",
+    "editProfile": "Profili düzenle",
+    "addBankAccount": "Hesap ekle",
+    "bankMfo": "Banka MFO kodu",
+    "bankName": "Banka adı",
+    "accountNumber": "Hesap numarası",
+    "accountMasked": "Hesap",
+    "currency": "Para birimi",
+    "status": "Durum",
+    "noBankAccounts": "Eklenmiş banka hesabı yok",
+    "noDocuments": "Yüklenmiş belge yok",
+    "uploadDocument": "Belge yükle",
+    "documentKind": "Belge türü",
+    "removeDocument": "Belgeyi sil",
+    "removeBankAccount": "Hesabı sil",
+    "removeBankAccountConfirm": "Hesap arşive taşınacak. Devam edilsin mi?",
+    "removeDocumentConfirm": "Belge silinecek. Bu işlem geri alınamaz.",
+    "notEditable": "Şirket bilgileri mevcut durumda düzenlenemez.",
+    "goToVerification": "Doğrulama durumu",
+    "manage": "Şirketi yönet",
+    "createOffer": "Teklif oluştur",
+    "viewOffers": "Şirket teklifleri",
+    "legalForms": {
+      "ООО": "Limited şirket",
+      "ЧП": "Özel işletme",
+      "АО": "Anonim şirket",
+      "СП": "Ortak girişim",
+      "ИП": "Şahıs işletmesi",
+      "ГУП": "Devlet işletmesi"
+    },
+    "registrationDate": "Şirket kayıt tarihi",
+    "storefront": {
+      "title": "Vitrin",
+      "hint": "Bu metni şirketin herkese açık sayfasını ziyaret eden herkes görür. Şirket bilgileri doğrulamadan sonra düzenlenemez, vitrin metni ise düzenlenebilir.",
+      "description": "Şirket açıklaması",
+      "experience": "Faaliyet süresi (yıl)",
+      "projects": "Tamamlanan projeler",
+      "countInvalid": "Sıfır veya daha büyük bir tam sayı girin",
+      "saveFailed": "Kaydedilemedi. Lütfen tekrar deneyin.",
+      "cover": "Profil kapağı",
+      "coverHint": "JPG veya PNG, en fazla 8 MB. Logonun üstünde gösterilir.",
+      "coverFailed": "Kapak yüklenemedi."
+    }
+  },
+  "wizard": {
+    "title": "Şirket kaydı",
+    "steps": {
+      "accountType": "Şirket türü",
+      "details": "Bilgiler",
+      "bank": "Banka",
+      "documents": "Belgeler",
+      "review": "Kontroller",
+      "production": "Üretim",
+      "catalog": "Katalog",
+      "certificates": "Sertifikalar",
+      "buyerReqs": "Alıcı şartları",
+      "services": "Hizmetler",
+      "geography": "Coğrafya",
+      "specialization": "Uzmanlık",
+      "tariffsDocs": "Tarifeler",
+      "labLicenses": "Lisanslar"
+    },
+    "bank": {
+      "title": "Banka hesabı",
+      "subtitle": "Bir cari hesap ekleyin. Bu adımı atlayabilirsiniz.",
+      "mfoHint": "MFO — 5 haneli.",
+      "mfoInvalid": "MFO 5 haneden oluşmalıdır",
+      "accountInvalid": "Hesap numarasını girin",
+      "skipHint": "Hesabı daha sonra şirket kartından ekleyebilirsiniz — ancak başvuru “banka bilgisi yok” işaretiyle gönderilecektir."
+    },
+    "documents": {
+      "title": "Belgeler",
+      "subtitle": "Doğrulama için kuruluş belgelerini yükleyin.",
+      "registrationRequired": "Tescil belgesi zorunludur.",
+      "bankLetterRequired": "Banka hesabı eklendiyse banka yazısı zorunludur.",
+      "dropHint": "Dosya seçmek için tıklayın (PDF, JPG, PNG, en fazla {{mb}} MB)",
+      "uploaded": "Yüklendi",
+      "uploading": "Yükleniyor…",
+      "tooLarge": "Dosya {{mb}} MB sınırını aşıyor",
+      "replace": "Değiştir",
+      "invalidType": "Desteklenmeyen dosya biçimi. PDF, JPG veya PNG yükleyin.",
+      "eimzoWaived": "Belgeler isteğe bağlıdır: şirket elektronik imzayla doğrulandı. Bunları daha sonra ekleyebilirsiniz.",
+      "registryWaived": "Tescil belgesi isteğe bağlıdır: şirket devlet sicili üzerinden doğrulandı. Dilerseniz yine de ekleyebilirsiniz."
+    },
+    "errors": {
+      "duplicate": "Bu vergi numarasına sahip bir şirket zaten mevcut.",
+      "createFailed": "Şirket oluşturulamadı.",
+      "submitFailed": "Şirket oluşturuldu ancak doğrulamaya gönderilemedi. Lütfen tekrar deneyin.",
+      "missingRequiredDocs": "Zorunlu belgeleri yükleyin.",
+      "documentFailed": "Belgeler yüklenemedi. Şirket oluşturuldu — dosyayı düzeltip tekrar deneyin.",
+      "conflict": "Bu işlem şirketin mevcut durumuyla çakışıyor.",
+      "profileLocked": "Şirket bilgileri artık değiştirilemez: başvuru zaten incelendi. Lütfen destek ekibiyle iletişime geçin.",
+      "identityLocked": "Ad, vergi numarası ve yönetici elektronik imzayla doğrulanmıştır ve değiştirilemez.",
+      "noOpenCase": "Aktif bir doğrulama başvurusu bulunamadı.",
+      "insufficientRole": "Bu işlem için şirkette yeterli yetkiniz yok.",
+      "rateLimited": "Günlük kayıt sınırına ulaştınız. Lütfen yarın tekrar deneyin.",
+      "jurisdictionInvalid": "Listeden bir tescil ülkesi seçin."
+    },
+    "accountType": {
+      "title": "Hesap türünü seçin",
+      "subtitle": "Platformda neler yapabileceğiniz buna bağlıdır",
+      "required": "Bir hesap türü seçin",
+      "options": {
+        "buyer": {
+          "title": "Alıcı",
+          "description": "Üretiminiz için hammadde ve malzeme tedariki"
+        },
+        "distributor": {
+          "title": "Distribütör / Tüccar",
+          "description": "Endüstriyel hammadde dağıtımı ve ticareti"
+        },
+        "manufacturer": {
+          "title": "Üretici / Fabrika",
+          "description": "Kendi üretiminizden doğrudan tedarik"
+        },
+        "logistics": {
+          "title": "Lojistik",
+          "description": "Taşımacılık, depolama ve teslimat hizmetleri"
+        },
+        "laboratory": {
+          "title": "Laboratuvar",
+          "description": "Malzeme analizi, testi ve sertifikasyonu"
+        }
+      }
+    },
+    "details": {
+      "title": "Şirket bilgileri",
+      "subtitle": "Şirketinizin bilgilerini doldurun",
+      "taxIdHint": "Özbekistan vergi numarası (STIR) — 9 haneli.",
+      "taxIdInvalid": "Vergi numarası 9 haneden oluşmalıdır",
+      "legalNameRequired": "Şirket adını girin",
+      "addressRequired": "Yasal adresi girin",
+      "legalFormRequired": "Bir mülkiyet biçimi seçin",
+      "legalFormPlaceholder": "Mülkiyet biçimini seçin",
+      "registrationDateInvalid": "Geçerli bir tescil tarihi girin",
+      "lockedTitle": "Bilgiler E-IMZO ile doğrulandı",
+      "lockedBody": "Ad, vergi numarası ve yönetici sertifikadan alınmıştır ve değiştirilemez.",
+      "fields": {
+        "legalName": "Şirket adı",
+        "country": "Tescil ülkesi",
+        "taxId": "Vergi numarası (STIR)",
+        "address": "Yasal adres",
+        "registrationDate": "Şirket tescil tarihi",
+        "ownershipForm": "Mülkiyet biçimi",
+        "logo": "Şirket logosu",
+        "factoryLegalName": "Fabrikanın tam yasal unvanı",
+        "commercialName": "Ticari ad (varsa)",
+        "registrationNumber": "Şirket sicil numarası",
+        "factoryAddress": "Fabrikanın fiili adresi",
+        "city": "Şehir",
+        "taxIdOrReg": "Vergi numarası / Sicil numarası",
+        "laboratoryName": "Laboratuvar adı",
+        "website": "Web sitesi",
+        "email": "E-posta",
+        "phone": "Telefon",
+        "description": "Açıklama"
+      },
+      "manufacturerTitle": "Fabrikanın yasal bilgileri",
+      "manufacturerSubtitle": "Fabrikanızın yasal bilgilerini doldurun",
+      "logoUpload": "Logo yükle",
+      "logoHint": "JPG veya PNG. En fazla 5 MB.",
+      "logoRemove": "Logoyu kaldır",
+      "registrationNumberRequired": "Şirket sicil numarasını girin",
+      "factoryAddressRequired": "Fabrika adresini girin",
+      "logisticsTitle": "Şirket bilgileri",
+      "logisticsSubtitle": "Lojistik şirketinizin bilgilerini doldurun",
+      "laboratoryTitle": "Temel bilgiler",
+      "laboratorySubtitle": "Laboratuvarınızın bilgilerini doldurun",
+      "cityRequired": "Şehri girin",
+      "emailInvalid": "Geçerli bir e-posta adresi girin",
+      "phoneRequired": "Telefon numarasını girin",
+      "descriptionRequired": "Laboratuvar açıklamasını girin"
+    },
+    "review": {
+      "title": "Şirket kontrolleri",
+      "subtitle": "Bilgilerinizi devlet sicilleri üzerinden doğruluyoruz",
+      "checkState": {
+        "pending": "Bekliyor",
+        "running": "Devam ediyor",
+        "passed": "Başarılı",
+        "warning": "Netleştirme gerekiyor",
+        "failed": "Başarısız"
+      },
+      "runningTitle": "Kontroller sürüyor",
+      "runningBody": "Bu işlem birkaç dakika sürebilir. Sayfayı açık bırakabilirsiniz.",
+      "passedTitle": "Şirket başarıyla doğrulandı",
+      "passedBody": "Tüm bilgiler doğrulandı. Bir sonraki adıma geçebilirsiniz.",
+      "needsAttentionTitle": "Netleştirme gerekiyor",
+      "needsAttentionBody": "Başvurunuz alındı. İşaretlenen maddeler için sizinle paneliniz üzerinden iletişime geçeceğiz."
+    },
+    "done": {
+      "title": "Kayıt tamamlandı!",
+      "subtitle": "Şirketiniz başarıyla kaydedildi:",
+      "statusLabel": "Şirket durumu",
+      "verified": "Doğrulanmış şirket",
+      "companyId": "Şirket ID",
+      "checkStatus": "Doğrulama durumu",
+      "accessLevel": "Şirket türü",
+      "toCabinet": "Panele git",
+      "toPublish": "Ürün yayınla",
+      "registeredAt": "Kayıt tarihi"
+    },
+    "manufacturerTitle": "Üretici kaydı",
+    "production": {
+      "title": "Üretim bilgileri",
+      "subtitle": "Üretim kapasitenizden bahsedin",
+      "required": "Bu alan zorunludur",
+      "selectPlaceholder": "Bir seçenek belirleyin",
+      "yearPlaceholder": "Yıl seçin",
+      "isoPlaceholder": "Sertifika seçin",
+      "exportCountriesRequired": "En az bir ihracat ülkesi seçin",
+      "fields": {
+        "productionType": "Üretim türü",
+        "mainProducts": "Ana ürünler",
+        "annualCapacity": "Yıllık üretim kapasitesi",
+        "productionLines": "Üretim hattı sayısı",
+        "employees": "Çalışan sayısı",
+        "markets": "Ana pazarlar",
+        "exportCountries": "İhracat ülkeleri",
+        "foundedYear": "Fabrikanın kuruluş yılı",
+        "iso": "ISO sertifikasyonu"
+      },
+      "types": {
+        "polymers": "Polimerler",
+        "petrochemicals": "Petrokimya",
+        "compounds": "Kompaundlar / masterbatch",
+        "recycling": "Geri dönüşüm",
+        "other": "Diğer"
+      },
+      "products": {
+        "pp": "PP",
+        "hdpe": "HDPE",
+        "ldpe": "LDPE",
+        "pvc": "PVC",
+        "pet": "PET",
+        "abs": "ABS",
+        "other": "Diğer"
+      },
+      "iso": {
+        "iso_9001": "ISO 9001",
+        "iso_14001": "ISO 14001",
+        "iso_45001": "ISO 45001",
+        "iso_22000": "ISO 22000",
+        "none": "Yok"
+      },
+      "markets": {
+        "domestic": "İç pazar",
+        "export": "İhracat"
+      },
+      "countries": {
+        "KZ": "Kazakistan",
+        "RU": "Rusya",
+        "TJ": "Tacikistan",
+        "KG": "Kırgızistan",
+        "TM": "Türkmenistan",
+        "CN": "Çin",
+        "TR": "Türkiye",
+        "AE": "BAE",
+        "other": "Diğer"
+      }
+    },
+    "catalog": {
+      "title": "Ürün kataloğu",
+      "subtitle": "Ürün yelpazenizi ekleyin — kayıttan sonra da tamamlayabilirsiniz",
+      "addManual": "Ürünü elle ekle",
+      "addExcel": "Excel ile yükle",
+      "excelFormats": ".xlsx, .xls",
+      "yourProducts": "Ürünleriniz ({{count}})",
+      "emptyTitle": "Ürün listesi boş",
+      "emptyBody": "Ürünleri elle ekleyin veya ürün yelpazenizi içeren bir Excel dosyası yükleyin",
+      "tipTitle": "İpucu",
+      "tipBody": "Her ürün için belgeleri ürün kataloğunda ayrı ayrı yükleyebilirsiniz.",
+      "deferNote": "Ürünler kayıttan sonra teklifler bölümü üzerinden yayınlanır. Bu adımı şimdilik atlayabilirsiniz.",
+      "openOffers": "Tekliflere git"
+    },
+    "mfrDocs": {
+      "title": "Fabrika sertifikaları ve lisansları",
+      "subtitle": "Genel belgeleri ve lisansları yükleyin",
+      "uploadHint": "Belge yükleyin",
+      "moderationNote": "Profiliniz yayınlanmadan önce tüm belgeler bir moderatör tarafından incelenir."
+    },
+    "buyerReqs": {
+      "title": "Alıcı gereksinimleri",
+      "subtitle": "Alıcılarınızın karşılaması gereken gereksinimleri belirtin",
+      "volumeSection": "Minimum sipariş miktarı",
+      "financialSection": "Finansal gereksinimler",
+      "additionalSection": "Ek gereksinimler",
+      "moqRequired": "Minimum sipariş miktarını girin",
+      "fields": {
+        "moq": "Minimum miktar (MOQ)",
+        "minAnnual": "Minimum yıllık miktar",
+        "otherDetail": "Diğer gereksinimler"
+      },
+      "financial": {
+        "bank_guarantee": "Banka teminatı",
+        "letter_of_credit": "Akreditif (LC)",
+        "payment_deferral": "Ödeme ertelemesi",
+        "prepayment": "Ön ödeme"
+      },
+      "additional": {
+        "financial_reporting": "Finansal raporlar",
+        "market_experience": "Piyasa deneyimi",
+        "licenses_certificates": "Lisanslar ve sertifikalar",
+        "end_products_info": "Nihai ürünler hakkında bilgi",
+        "production_photos": "Üretim fotoğrafları",
+        "other": "Diğer"
+      }
+    },
+    "almostReady": {
+      "title": "Neredeyse hazır!",
+      "subtitle": "Bilgileri kontrol edin ve profili moderasyona gönderin.",
+      "whatsNext": "Sırada ne var?",
+      "steps": {
+        "check": "Profilinizi ve belgelerinizi inceleyeceğiz (1–2 iş günü)",
+        "notify": "Onaylandıktan sonra bildirim alacaksınız",
+        "buyers": "Alıcılar size doğrudan talep gönderebilecek"
+      },
+      "privacyTitle": "Görünürlük",
+      "privacyBody": "Profiliniz yalnızca doğrulanmış alıcılar ve şirketler tarafından görülebilecek.",
+      "submit": "Moderasyona gönder",
+      "saveDraft": "Taslağı kaydet"
+    },
+    "units": {
+      "tons": "ton",
+      "tonsPerYear": "ton/yıl"
+    },
+    "logisticsTitle": "Lojistik şirketi kaydı",
+    "logistics": {
+      "details": {
+        "next": "Sonraki: Hizmetler →"
+      },
+      "services": {
+        "title": "Lojistik şirketi hizmetleri",
+        "subtitle": "Sunduğunuz hizmet türlerini seçin",
+        "required": "En az bir hizmet seçin",
+        "next": "Sonraki: Coğrafya →",
+        "options": {
+          "international_road": "Uluslararası karayolu taşımacılığı",
+          "rail": "Demiryolu taşımacılığı",
+          "sea": "Deniz taşımacılığı",
+          "air": "Hava taşımacılığı",
+          "multimodal": "Multimodal taşımacılık",
+          "customs_clearance": "Gümrük işlemleri",
+          "export_clearance": "İhracat işlemleri",
+          "import_clearance": "İthalat işlemleri",
+          "certification": "Sertifikasyon",
+          "cargo_insurance": "Yük sigortası",
+          "warehouse": "Depolama hizmetleri",
+          "consolidation": "Yük konsolidasyonu",
+          "container_transport": "Konteyner taşımacılığı"
+        }
+      },
+      "geography": {
+        "title": "Faaliyet coğrafyası",
+        "subtitle": "Ülkeleri ve popüler güzergâhları seçin",
+        "required": "En az bir çıkış ve bir varış ülkesi seçin",
+        "fromTitle": "Nereden (tedarikçi ülkeler)",
+        "toTitle": "Nereye (alıcı ülkeler)",
+        "routesTitle": "Popüler güzergâhlar",
+        "next": "Sonraki: Uzmanlık →",
+        "countries": {
+          "CN": "Çin",
+          "IR": "İran",
+          "RU": "Rusya",
+          "KZ": "Kazakistan",
+          "TR": "Türkiye",
+          "AE": "BAE",
+          "UZ": "Özbekistan",
+          "KG": "Kırgızistan",
+          "TJ": "Tacikistan",
+          "TM": "Türkmenistan",
+          "other": "Diğer ülkeler"
+        },
+        "routes": {
+          "shanghai_tashkent": "Şanghay → Taşkent",
+          "tehran_tashkent": "Tahran → Taşkent",
+          "bandar_abbas_tashkent": "Bender Abbas → Taşkent",
+          "moscow_tashkent": "Moskova → Taşkent",
+          "kazan_tashkent": "Kazan → Taşkent"
+        }
+      },
+      "specialization": {
+        "title": "Uzmanlık",
+        "subtitle": "Hangi yükleri taşıdığınızı ve hangi imkânlara sahip olduğunuzu belirtin",
+        "cargoTitle": "Hangi yükleri taşıyorsunuz?",
+        "capabilitiesTitle": "Şirket imkânları",
+        "required": "En az bir yük türü seçin",
+        "next": "Sonraki: Tarifeler →",
+        "cargo": {
+          "petrochemicals_polymers": "Petrokimya / polimerler",
+          "chemical_products": "Kimyasal ürünler",
+          "liquid_bulk": "Sıvı dökme yükler",
+          "dangerous_goods_adr": "Tehlikeli yükler (ADR)",
+          "container_shipping": "Konteyner taşımacılığı",
+          "big_bags": "Big Bag / çuvallar",
+          "other_cargo": "Diğer yükler"
+        },
+        "capabilities": {
+          "own_trucks": "Kendi karayolu araçları",
+          "own_rail_wagons": "Kendi demiryolu vagonları",
+          "sea_containers": "Deniz konteynerleri",
+          "storage_facilities": "Depolama tesisleri",
+          "customs_warehouse": "Gümrüklü depo",
+          "foreign_offices": "Diğer ülkelerdeki temsilcilikler",
+          "customs_brokers": "Gümrük müşavirleri"
+        }
+      },
+      "tariffs": {
+        "title": "Tarifeler ve belgeler",
+        "subtitle": "Fiyatlandırma modelini seçin ve belgeleri yükleyin",
+        "tariffsSection": "Tarifeler",
+        "tariffsHint": "Size uygun fiyatlandırma biçimini seçin:",
+        "required": "Bir tarife modeli seçin",
+        "docsSection": "Gerekli belgeler",
+        "docsHint": "Taşıyıcı belgelerini yükleyin — moderatör, yayından önce bunları inceler.",
+        "moderationNote": "Profiliniz yayınlanmadan önce tüm belgeler bir moderatör tarafından incelenir.",
+        "next": "Sonraki: Yayın →",
+        "models": {
+          "individual": "Fiyat bireysel olarak hesaplanır",
+          "per_container": "Konteyner başına ücret",
+          "per_ton": "Ton başına ücret",
+          "per_km": "Kilometre başına ücret",
+          "minimum_order": "Minimum sipariş"
+        }
+      }
+    },
+    "laboratoryTitle": "Laboratuvar kaydı",
+    "laboratory": {
+      "details": {
+        "next": "Sonraki: Lisanslar →"
+      },
+      "licenses": {
+        "next": "Sonraki: Moderasyon →"
+      }
+    },
+    "labDocs": {
+      "title": "Lisanslar ve sertifikalar",
+      "subtitle": "Laboratuvar akreditasyonlarını ve belgelerini yükleyin",
+      "moderationNote": "Profiliniz yayınlanmadan önce tüm belgeler bir moderatör tarafından incelenir."
+    },
+    "registry": {
+      "loading": "Şirket devlet sicilinde sorgulanıyor…",
+      "filledTitle": "Devlet sicilinden alınan veriler",
+      "filledBody": "Bilgiler vergi numarasına göre dolduruldu. Lütfen kontrol edin ve güncel olmayanları düzeltin — ekranda gördüğünüz bilgiler kaydedilir.",
+      "state": "Sicil durumu: {{state}}.",
+      "notFound": "Devlet sicilinde bu vergi numarasına ait kayıt yok. Lütfen formu elle doldurun.",
+      "unavailable": "Devlet sicili şu anda kullanılamıyor — lütfen formu elle doldurun."
+    }
+  },
+  "verification": {
+    "title": "Doğrulama durumu",
+    "subtitle": "{{company}} için doğrulama süreci.",
+    "noCase": "Henüz doğrulama başvurusu yok",
+    "noCaseBody": "Kontrolleri başlatmak için şirketi doğrulamaya gönderin.",
+    "submit": "Doğrulamaya gönder",
+    "submitting": "Gönderiliyor…",
+    "resubmit": "Yeniden gönder",
+    "submittedAt": "Gönderildi",
+    "caseType": "Başvuru türü",
+    "checks": "Kontroller",
+    "needsInfoTitle": "Ek bilgi gerekli",
+    "needsInfoBody": "İşaretli maddeleri inceleyin ve bilgileri tamamlayın.",
+    "fixStep": "Düzelt",
+    "checkTypes": {
+      "tax_id_format": "Vergi numarası (ИНН) formatı",
+      "bank_requisites": "Banka bilgileri",
+      "documents_complete": "Belgelerin eksiksizliği",
+      "manual_kyb": "Manuel inceleme (KYB)",
+      "eimzo_signature": "E-IMZO imzası",
+      "gov_registry": "Devlet sicili",
+      "vat_status": "KDV durumu"
+    },
+    "findings": {
+      "taxIdDigits": "Vergi numarası 9 haneli olmalıdır; {{digits}} hane girildi",
+      "taxIdEmpty": "Vergi numarası girilmedi",
+      "bankAccount": "Hesap ****{{last4}}: {{problem}}",
+      "bankIssue": {
+        "bad_account_length": "hesap numarası 20 haneli olmalıdır",
+        "bad_mfo": "MFO kodu 5 haneli olmalıdır",
+        "undecryptable": "hesap numarası okunamadı — lütfen yeniden girin"
+      },
+      "noBankAccount": "Banka hesabı eklenmedi",
+      "missingDocuments": "Eksik belgeler: {{list}}",
+      "registryInnMismatch": "Vergi numarası devlet sicili ile eşleşmiyor",
+      "registryLiquidated": "Devlet siciline göre şirket tasfiye edilmiş",
+      "registrySuspended": "Devlet siciline göre faaliyet askıya alınmış",
+      "registryStatusUnknown": "Devlet sicili şirketin durumunu belirtmedi",
+      "registryNameMismatch": "Ad, devlet sicilindekinden farklı: “{{name}}”",
+      "vatNotRegistered": "Şirket KDV mükellefi değil — bu, doğrulamayı engellemez",
+      "manualPending": "Bir personelin incelemesini bekliyor",
+      "unavailable": "Kaynak yanıt vermedi — kontrol yapılamadı",
+      "eimzoFailed": "Elektronik imza doğrulanamadı — lütfen yeniden imzalayın"
+    },
+    "checkDetail": {
+      "empty": "Ek bilgi yok.",
+      "reason": "Neden",
+      "message": "Not"
+    }
+  },
+  "eimzo": {
+    "title": "E-IMZO ile doğrulama",
+    "subtitle": "Talebi şirketin elektronik imza anahtarıyla imzalayın.",
+    "cta": "E-IMZO ile doğrula",
+    "retry": "Tekrar dene",
+    "done": "Tamam",
+    "selectCert": "Şirket anahtarını seçin:",
+    "noCerts": "Elektronik imza anahtarı bulunamadı. Anahtar taşıyıcıyı (token) takın ve tekrar deneyin.",
+    "confirmedBadge": "E-IMZO ile doğrulandı",
+    "confirmedBody": "Kimlik elektronik imza ile doğrulandı: {{name}}.",
+    "offerTitle": "Şirketi E-IMZO ile doğrulayın",
+    "offerBody": "İmzalayın — şirket bilgileri otomatik olarak doğrulanır.",
+    "progress": {
+      "probing": "E-IMZO modülü kontrol ediliyor…",
+      "listing": "Anahtar listesi yükleniyor…",
+      "signing": "Talebi E-IMZO penceresinde imzalayın…",
+      "verifying": "İmza doğrulanıyor…"
+    },
+    "moduleMissing": {
+      "title": "E-IMZO modülüne bağlanılamadı",
+      "body": "İki olası neden var — ikisini de kontrol edin. Tarayıcı hangisi olduğunu belirtmez.",
+      "causeNotRunning": "1. Modül yüklü değil veya çalışmıyor.",
+      "link_eimzo": "E-IMZO'yu indirin (e-imzo.uz)",
+      "link_soliq": "Talimatlar (my.soliq.uz)",
+      "causeCert": "2. Tarayıcı modülün sertifikasına güvenmiyor.",
+      "causeCertBody": "Modül, kendi sertifikasıyla HTTPS üzerinden çalışır. Aşağıdaki adresi yeni bir sekmede açın, «Gelişmiş» → «Devam et» seçeneğini seçin, ardından buraya dönüp tekrar deneyin.",
+      "link_cert": "https://127.0.0.1:64443 adresini açın",
+      "desktopHint": "İmzalama yalnızca E-IMZO modülünün yüklü olduğu bir bilgisayarda yapılabilir."
+    },
+    "success": {
+      "title": "İmza kabul edildi",
+      "body": "Şirket doğrulandı ({{holder}})."
+    },
+    "errors": {
+      "title": "Doğrulama başarısız",
+      "unavailable": "E-IMZO hizmeti kullanılamıyor. Şirketi manuel doğrulamaya gönderin.",
+      "module_not_authorized": "Bu site E-IMZO modülünde yetkilendirilmemiş. Destek ekibiyle iletişime geçin — alan adı için bir erişim anahtarı gerekiyor.",
+      "mismatch": "Sertifikadaki vergi numarası (ИНН), şirketin vergi numarasıyla eşleşmiyor.",
+      "expired": "Talebin süresi doldu. Lütfen tekrar deneyin.",
+      "already_registered": "Bu vergi numarasına sahip bir şirket zaten kayıtlı.",
+      "didox_account_required": "Bu şirketin Didox hesabı yok. Didox'a kaydolun, ardından doğrulamayı tekrarlayın.",
+      "signature_invalid": "İmza geçersiz.",
+      "cert_revoked": "Sertifika iptal edilmiş.",
+      "cert_expired": "Sertifikanın süresi dolmuş. İmza anahtarınızı yenileyip tekrar deneyin.",
+      "sign_failed": "E-IMZO modülünde imza oluşturulamadı.",
+      "unknown": "Bir hata oluştu. Lütfen tekrar deneyin.",
+      "cert_no_tin": "Sertifikada kuruluşun vergi numarası yok. Tüzel kişiye ait bir sertifika seçin."
+    }
+  },
+  "offers": {
+    "title": "Teklifler",
+    "subtitle": "{{company}} adına teklif yayınlayın.",
+    "empty": "Henüz teklif yok",
+    "emptyBody": "Moderasyona göndermek için ilk teklifinizi oluşturun.",
+    "create": "Teklif oluştur",
+    "edit": "Teklifi düzenle",
+    "product": "Ürün",
+    "productText": "Ürün adı",
+    "grade": "Sınıf",
+    "polymerType": "Polimer türü",
+    "availability": "Stok durumu",
+    "qtyAvailable": "Mevcut miktar",
+    "qtyUnit": "Birim",
+    "price": "Fiyat",
+    "currency": "Para birimi",
+    "incoterms": "Incoterms",
+    "warehouseCity": "Depo şehri",
+    "country": "Ülke",
+    "minOrderQty": "Min. sipariş",
+    "description": "Açıklama",
+    "moderationNote": "Moderatör notu",
+    "createdAt": "Oluşturulma",
+    "save": "Teklifi kaydet",
+    "saving": "Kaydediliyor…",
+    "archiveConfirm": "Bu teklif arşive taşınsın mı?",
+    "lockedTitle": "Şirket doğrulanmamış",
+    "lockedBody": "Yalnızca doğrulanmış şirketler teklif yayınlayabilir. Bu özelliği açmak için doğrulamayı tamamlayın.",
+    "goToVerification": "Doğrulamaya git",
+    "notVerifiedError": "Şirket henüz doğrulanmadı.",
+    "productTextRequired": "Ürün adını girin",
+    "qtyUnitRequired": "Bir birim seçin",
+    "attachments": "Görseller",
+    "addImage": "Görsel ekle",
+    "photos": {
+      "title": "Ürün fotoğrafları",
+      "hint": "En fazla {{max}} fotoğraf, JPEG veya PNG. İlk fotoğraf pazar listesinde kapak olarak gösterilir.",
+      "add": "Fotoğraf ekle",
+      "cover": "Kapak",
+      "remove": "Fotoğrafı kaldır",
+      "tooMany": "En fazla {{max}} fotoğraf yükleyebilirsiniz.",
+      "tooLarge": "Dosya çok büyük — en fazla 10 MB.",
+      "badType": "Yalnızca JPEG ve PNG desteklenir.",
+      "requeueWarning": "Fotoğrafları değiştirmek teklifi yeniden moderasyona gönderir."
+    },
+    "leadTimeDays": "Üretim süresi, gün",
+    "leadTimeHint": "Siparişe göre üretim teklifleri için zorunludur — bu tekliflerde fiyat yoktur.",
+    "leadTimeRequired": "Siparişe göre üretim teklifi için üretim süresini belirtin",
+    "saleModeLabel": "Satış şekli",
+    "saleModeUnset": "Belirtilmedi",
+    "saleMode": {
+      "from_stock": "Stoktan",
+      "made_to_order": "Siparişe göre",
+      "recurring_contract": "Düzenli sözleşme"
+    },
+    "readinessTitle": "Anlaşmaya hazırlık",
+    "readinessHint": "İşaretledikleriniz pazar kartınızda rozet olarak gösterilir.",
+    "acceptsRfq": "Alıcı taleplerine yanıt veriyorum",
+    "acceptsContract": "Platformda sözleşme imzalamaya hazırım",
+    "acceptsEscrow": "Escrow ile çalışmaya hazırım",
+    "samplesTitle": "Numuneler",
+    "samplesAvailable": "Numune göndermeye hazırım",
+    "samplePrice": "Numune fiyatı",
+    "samplePriceHint": "Boş bırakılırsa numune ücretsizdir",
+    "samplePriceInvalid": "Fiyat negatif olamaz",
+    "sampleDispatchDays": "Gönderim süresi, gün"
+  },
+  "offerWizard": {
+    "title": "Ürün ekle: kimyasal ürünler",
+    "editTitle": "Ürünü düzenle",
+    "subtitle": "Özbekistan'da ve yurt dışında kimyasal hammaddelerin güvenli ve profesyonel ticareti",
+    "stepOf": "Adım {{current}} / {{total}}",
+    "steps": {
+      "basics": "Bilgiler",
+      "ai": "AI kontrolü",
+      "availability": "Stok / Siparişe göre",
+      "documents": "Belgeler",
+      "lab": "Laboratuvar verileri",
+      "terms": "Satış koşulları",
+      "publish": "Yayınla"
+    },
+    "trust": {
+      "safe": "Güvenli",
+      "legal": "Yasal",
+      "professional": "Profesyonel",
+      "international": "Uluslararası standart"
+    },
+    "assurance": {
+      "deals": {
+        "title": "Güvenli anlaşmalar",
+        "body": "Escrow, doğrulanmış şirketler, hukuki koruma"
+      },
+      "trade": {
+        "title": "Yasal ticaret",
+        "body": "Özbekistan sicillerinde kontrol, tehlikeli madde denetimi"
+      },
+      "lab": {
+        "title": "Laboratuvar desteği",
+        "body": "IMEX AI üzerinden kalite pasaportu almada yardım"
+      },
+      "b2b": {
+        "title": "Profesyonel B2B",
+        "body": "RFQ talepleri, D-Doc, sözleşmeler, numuneler"
+      },
+      "global": {
+        "title": "Uluslararası pazarlara açılım",
+        "body": "Tek bir kalite ve güven standardı"
+      }
+    },
+    "basics": {
+      "title": "Temel bilgiler",
+      "heading": "Ürün ekle",
+      "productName": "Ürün adı",
+      "productPlaceholder": "Bir ürün seçin",
+      "productOther": "Diğer (elle girin)",
+      "productRequired": "Bir ürün seçin",
+      "productManual": "Ürün adı",
+      "productManualPlaceholder": "ör. PP H030 GP",
+      "productManualRequired": "Ürün adını girin",
+      "grade": "Sınıf",
+      "gradePlaceholder": "ör. H030 GP",
+      "cas": "CAS Numarası (varsa)",
+      "hs": "HS Kodu (varsa)",
+      "manufacturer": "Üretici",
+      "manufacturerPlaceholder": "ör. Sibur",
+      "manufacturerOther": "Diğer (elle girin)",
+      "manufacturerManual": "Üretici (elle)",
+      "originCountry": "Menşe ülkesi",
+      "category": "Kategori",
+      "categoryUnset": "Belirtilmedi",
+      "photos": "Ürün fotoğrafları",
+      "catalogUnavailable": "Katalog kullanılamıyor",
+      "catalogUnavailableBody": "“Diğer” seçeneğini seçip ürün adını elle girin."
+    },
+    "ai": {
+      "title": "AI ürün kontrolü",
+      "running": "AI ürünü analiz ediyor…",
+      "finished": "Analiz tamamlandı",
+      "rows": {
+        "substance": "Kimyasal madde belirleniyor",
+        "cas": "CAS Numarası kontrol ediliyor",
+        "hs": "HS Kodu kontrol ediliyor",
+        "dangerList": "Özbekistan tehlikeli maddeler listesi kontrol ediliyor",
+        "circulation": "Dolaşım gereklilikleri kontrol ediliyor",
+        "done": "Analiz tamamlandı"
+      },
+      "clearTitle": "Ürün düzenlemeye tabi değil",
+      "clearBody": "Bu ürün, Özbekistan Cumhuriyeti'nin düzenlemeye tabi veya tehlikeli kimyasal maddeler listesinde yer almıyor.",
+      "regulated": {
+        "free": "Dolaşım kısıtlanmamıştır.",
+        "docs_required": "Yayınlamak için maddeye ait belgeler gerekecektir.",
+        "license_required": "Yayınlamak için şirketin geçerli bir lisansı gerekecektir.",
+        "prohibited": "Bu maddenin dolaşımı yasaktır — ürün yayınlanamaz."
+      },
+      "unknownTitle": "Madde belirlenemedi",
+      "unknownBody": "Madde sicilde bulunamadığı için kısıtlamalar kontrol edilemedi — CAS ve HS Kodunu mümkün olduğunca doğru girin."
+    },
+    "availability": {
+      "title": "Stok / Siparişe göre",
+      "kind": "Teklif türü",
+      "inStockHint": "Ürün depoda mevcut",
+      "onOrderHint": "Talep üzerine üretim",
+      "inStockNote": "Ürün hemen sevkiyata hazır",
+      "onOrderNote": "Fiyat ve miktar talep üzerine belirlenir — üretim süresini belirtin",
+      "qty": "Stoktaki miktar",
+      "qtyRequired": "Miktarı girin",
+      "price": "Fiyat (birim başına)",
+      "priceRequired": "Fiyatı girin",
+      "warehouse": "Depo / Konum",
+      "warehouseManual": "Konumu girin",
+      "warehouseRequired": "Konumu girin",
+      "cityOther": "Diğer",
+      "cities": {
+        "Ташкент": "Taşkent",
+        "Ташкентская область": "Taşkent Bölgesi",
+        "Самарканд": "Semerkant",
+        "Бухара": "Buhara",
+        "Наманган": "Namangan",
+        "Андижан": "Andican",
+        "Фергана": "Fergana",
+        "Навои": "Navoi",
+        "Карши": "Karşı",
+        "Термез": "Termez",
+        "Нукус": "Nukus",
+        "Ургенч": "Ürgenç",
+        "Джизак": "Cizzah",
+        "Гулистан": "Gülistan"
+      },
+      "dispatch": {
+        "label": "Sevkiyat süresi",
+        "1-2": "1–2 gün",
+        "3-7": "3–7 gün",
+        "7-14": "7–14 gün",
+        "14-30": "14–30 gün",
+        "30-60": "30–60 gün"
+      },
+      "qtyInvalid": "Pozitif bir sayı girin",
+      "priceInvalid": "Pozitif bir sayı girin"
+    },
+    "documents": {
+      "title": "Belgeler",
+      "heading": "Zorunlu belgeler",
+      "kinds": {
+        "sds": "SDS (Güvenlik Bilgi Formu)",
+        "tds": "TDS (Teknik Veri Sayfası)",
+        "coa": "Analiz Sertifikası (varsa)"
+      },
+      "short": {
+        "sds": "SDS",
+        "tds": "TDS",
+        "coa": "COA"
+      },
+      "pick": "Dosya seçin",
+      "attached": "Belge eklendi",
+      "dropLabel": "Dosyaları buraya bırakın veya yüklemek için tıklayın",
+      "dropHint": "PDF, JPG, PNG (en fazla {{mb}} MB)",
+      "trustNote": "Belgeler alıcıların ilana güvenini artırır",
+      "missingTitle": "Zorunlu belgeler eksik",
+      "tooLarge": "Dosya çok büyük — en fazla {{mb}} MB.",
+      "allSlotsFull": "Üç alanın tamamı zaten dolu."
+    },
+    "lab": {
+      "title": "Laboratuvar verileri",
+      "heading": "Laboratuvar pasaportu",
+      "headingHint": "Kalite pasaportu malzemenin özelliklerini doğrular",
+      "hasPassport": "Pasaportum var",
+      "noPassport": "Pasaport yok",
+      "passportLabel": "Yüklenen kalite pasaportu (COA)",
+      "passportRequired": "Pasaportu ekleyin veya “Pasaport yok” seçeneğini seçin",
+      "offerIntro": "Gerekirse IMEX AI üzerinden laboratuvar sertifikasyonu sağlayabiliriz",
+      "offerWeWill": "Sizinle iletişime geçip şu konularda yardımcı olacağız:",
+      "points": {
+        "accredited": "akredite bir laboratuvar seçmek",
+        "cost": "ücret ve süreler üzerinde anlaşmak",
+        "testing": "testleri organize etmek",
+        "passport": "resmi kalite pasaportunu almak"
+      },
+      "requestCta": "Laboratuvar sertifikasyonu talep et"
+    },
+    "terms": {
+      "title": "Satış koşulları",
+      "samplesHint": "Numuneler alıcının daha hızlı karar vermesine yardımcı olur",
+      "samplesYes": "Mevcut",
+      "samplesNo": "Sunulmuyor",
+      "sampleFee": "Numune koşulları",
+      "fee": {
+        "free": "Ücretsiz",
+        "paid": "Ücretli"
+      },
+      "samplePriceRequired": "Numune fiyatını girin",
+      "sampleDispatch": "Gönderim süresi",
+      "sampleBands": {
+        "1-3": "1–3 gün",
+        "3-7": "3–7 gün",
+        "7-14": "7–14 gün"
+      },
+      "acceptsRfq": "Alıcı taleplerini kabul ediyorum",
+      "acceptsContract": "D-Doc üzerinden sözleşme imzalamaya hazırım",
+      "acceptsEscrow": "Escrow ödemelerini kabul ediyorum",
+      "sampleLetterRequired": "Numune göndermeden önce taahhüt mektubu iste",
+      "sampleLetterTerms": "Numune uygun olmazsa geçerli koşullar",
+      "sampleLetterHint": "Alıcı talebi göndermeden önce bu metni görür ve elektronik imzayla imzalar. Numune fiyatı ileride yapılacak sözleşmeye otomatik olarak mahsup edilir.",
+      "sampleLetterPlaceholder": "Örneğin: test sonuçlarına göre malzeme uygun değilse alıcı, kullanılmayan kısmı 10 iş günü içinde masrafları kendisine ait olmak üzere iade eder.",
+      "sampleLetterRequiredError": "Koşulları yazın — koşulsuz bir mektup hiçbir taahhüt içermez."
+    },
+    "extra": {
+      "title": "Ek bilgiler",
+      "description": "Ürün açıklaması",
+      "descriptionPlaceholder": "Malzemeyi, özelliklerini ve kullanım alanlarını açıklayın",
+      "keyProperties": "Temel özellikler",
+      "keyPropertiesPlaceholder": "ör. MFI: 3.0 g/10 dk",
+      "applications": "Kullanım alanları",
+      "applicationsPlaceholder": "ör. enjeksiyon kalıplama"
+    },
+    "preview": {
+      "title": "Önizleme",
+      "noPhoto": "Fotoğraf eklenmedi",
+      "country": "Ülke",
+      "qty": "Miktar",
+      "onRequest": "Talep üzerine",
+      "samplesAvailable": "Numune mevcut",
+      "dDoc": "D-Doc",
+      "escrow": "Escrow",
+      "publish": "Ürünü yayınla",
+      "publishing": "Yayınlanıyor…",
+      "uploading": "Dosyalar yükleniyor {{done}} / {{total}}"
+    },
+    "done": {
+      "title": "Ürün yayınlandı!",
+      "bodyLive": "Ürününüz IMEX AI'da yayında ve alıcılar tarafından görülebilir.",
+      "bodyModeration": "Ürününüz moderasyona gönderildi. İncelendikten sonra IMEX AI pazarında görünecek.",
+      "idLabel": "İlan ID",
+      "copyId": "ID'yi kopyala",
+      "toOffers": "Ürünlerime git",
+      "createAnother": "Başka bir ürün ekle"
+    }
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "profile": "Profil",
+    "name": "Ad",
+    "namePlaceholder": "Size nasıl hitap edelim",
+    "phone": "Telefon",
+    "language": "Arayüz dili",
+    "save": "Değişiklikleri kaydet",
+    "saved": "Değişiklikler kaydedildi",
+    "logout": "Oturumu kapat",
+    "logoutConfirm": "Oturumu kapatmak istediğinizden emin misiniz?",
+    "appearance": "Görünüm",
+    "theme": "Tema",
+    "themeHint": "Varsayılan tema koyudur. “Sistem” seçeneği cihazınızın ayarını izler.",
+    "login": "Kullanıcı adı",
+    "changePassword": "Şifreyi değiştir"
+  },
+  "companyStatus": {
+    "draft": "Taslak",
+    "pending_verification": "Doğrulama bekliyor",
+    "verified": "Doğrulandı",
+    "rejected": "Reddedildi",
+    "suspended": "Askıya alındı",
+    "liquidated": "Tasfiye edildi"
+  },
+  "caseStatus": {
+    "draft": "Taslak",
+    "submitted": "Gönderildi",
+    "checks_running": "Kontroller yapılıyor",
+    "needs_info": "Ek bilgi gerekli",
+    "pending_review": "İnceleniyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "cancelled": "İptal edildi"
+  },
+  "checkStatus": {
+    "pending": "Bekliyor",
+    "running": "Devam ediyor",
+    "passed": "Başarılı",
+    "warning": "Uyarı",
+    "failed": "Başarısız",
+    "unavailable": "Kullanılamıyor",
+    "waived": "Gerekli değil"
+  },
+  "offerStatus": {
+    "draft": "Taslak",
+    "pending_moderation": "Moderasyonda",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "archived": "Arşivlendi"
+  },
+  "businessRole": {
+    "manufacturer": "Üretici",
+    "importer": "İthalatçı",
+    "trader": "Tüccar",
+    "logistics_provider": "Lojistik",
+    "distributor": "Distribütör",
+    "laboratory": "Laboratuvar",
+    "insurance_provider": "Sigorta"
+  },
+  "documentKind": {
+    "registration_certificate": "Tescil belgesi",
+    "director_id": "Yönetici kimlik belgesi",
+    "bank_letter": "Banka yazısı",
+    "license": "Lisans",
+    "permit": "İzin belgesi",
+    "certificate": "Sertifika",
+    "power_of_attorney": "Vekâletname",
+    "other": "Diğer",
+    "production_license": "Üretim lisansı",
+    "export_license": "İhracat lisansı",
+    "certificate_of_origin": "Menşe şahadetnamesi",
+    "iso_certificate": "ISO sertifikaları",
+    "compliance_certificate": "REACH / RoHS / GOST",
+    "carrier_license": "Taşıyıcı lisansı",
+    "liability_insurance": "Sorumluluk sigortası",
+    "service_contract": "Sözleşme",
+    "accreditation_certificate": "Akreditasyon sertifikası"
+  },
+  "offerDocumentKind": {
+    "image": "Fotoğraf",
+    "tds": "Teknik veri föyü",
+    "sds": "Güvenlik bilgi formu",
+    "coa": "Analiz sertifikası",
+    "certificate": "Sertifika",
+    "lab_passport": "Laboratuvar pasaportu",
+    "other": "Diğer"
+  },
+  "availability": {
+    "in_stock": "Stokta",
+    "on_order": "Siparişe özel"
+  },
+  "jurisdiction": {
+    "UZ": "Özbekistan",
+    "RU": "Rusya",
+    "KZ": "Kazakistan",
+    "CN": "Çin",
+    "TR": "Türkiye",
+    "other": "Diğer"
+  },
+  "language": {
+    "ru": "Русский",
+    "uz": "O‘zbekcha",
+    "en": "English",
+    "tr": "Türkçe",
+    "fa": "فارسی",
+    "zh": "中文"
+  },
+  "theme": {
+    "dark": "Koyu",
+    "light": "Açık",
+    "system": "Sistem",
+    "switchTo": {
+      "dark": "Koyu temaya geç",
+      "light": "Açık temaya geç"
+    }
+  },
+  "inquiryStatus": {
+    "pending": "Moderasyonda",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi"
+  },
+  "market": {
+    "title": "Pazar",
+    "subtitle": "Onaylanmış tedarikçi teklifleri",
+    "searchPlaceholder": "Ürün veya sınıfa göre arayın…",
+    "availability": "Stok durumu",
+    "availabilityAll": "Tüm stok durumları",
+    "country": "Ülke",
+    "price": "Fiyat",
+    "qty": "Miktar",
+    "onRequest": "talep üzerine",
+    "verified": "Doğrulanmış",
+    "notVerified": "Doğrulanmamış",
+    "empty": "Teklif bulunamadı",
+    "emptyBody": "Filtreleri değiştirin veya daha sonra tekrar bakın.",
+    "backToMarket": "Pazara dön",
+    "notFound": "Teklif bulunamadı",
+    "seller": "Satıcı",
+    "incoterms": "Incoterms",
+    "warehouse": "Depo",
+    "minOrder": "Min. sipariş",
+    "description": "Açıklama",
+    "myInquiries": "Taleplerim",
+    "sendInquiry": "Talep gönder",
+    "quantity": "İstenen miktar",
+    "quantityInvalid": "Miktarı sıfırdan büyük bir sayı olarak girin.",
+    "targetPrice": "Hedef fiyat",
+    "targetPriceInvalid": "Fiyatı sıfırdan büyük bir sayı olarak girin.",
+    "message": "Mesaj",
+    "ownOffer": "Bu, şirketinizin teklifi.",
+    "selectCompanyHint": "Talep göndermek için bir şirket seçin.",
+    "inquirySent": "Talep moderasyona gönderildi.",
+    "inquiryFailed": "Talep gönderilemedi.",
+    "inquiryRateLimited": "Bugünkü talep limitinize ulaştınız. Yarın tekrar deneyin.",
+    "favorite": "Favorilere ekle",
+    "unfavorite": "Favorilerden çıkar",
+    "favorites": "Favoriler",
+    "favoritesHint": "Kişisel bir liste — şirket değiştirdiğinizde değişmez.",
+    "favoritesEmpty": "Henüz favori yok",
+    "favoritesEmptyBody": "Teklif kartındaki kalbe dokunun, teklif burada görünecektir.",
+    "leadTime": "Üretim süresi: {{count}} gün",
+    "readiness": {
+      "rfq": "Talepler",
+      "contract": "Sözleşme",
+      "escrow": "Escrow"
+    },
+    "filter": {
+      "labPassport": "Yalnızca laboratuvar pasaportlu",
+      "labVerified": "Yalnızca Laboratory Verified"
+    },
+    "tabs": {
+      "description": "Açıklama",
+      "specs": "Teknik özellikler",
+      "documents": "Belgeler",
+      "compatibility": "Uyumluluk",
+      "reviews": "Yorumlar"
+    },
+    "noDescription": "Açıklama yok",
+    "noDocuments": "Ekli belge yok",
+    "leadTimeShort": "Süre",
+    "detail": {
+      "marketplace": "IMEX AI Industrial Marketplace",
+      "share": "Paylaş",
+      "linkCopied": "Bağlantı kopyalandı",
+      "noPhoto": "Fotoğraf eklenmedi",
+      "gallery": "Galeri",
+      "requestRfq": "Satıcıya talep",
+      "addFavorite": "Favorilere ekle",
+      "basics": "Temel bilgiler",
+      "cas": "CAS",
+      "hs": "GTİP (HS Code)",
+      "country": "Ülke",
+      "offerType": "Teklif türü",
+      "offerTypeHint": "Satıcının bu ürünü nasıl sunduğu",
+      "qtyAvailable": "Stoktaki miktar",
+      "moq": "Minimum sipariş (MOQ)",
+      "samples": "Numuneler",
+      "samplesHint": "Satıcıdan numune talep edebilirsiniz",
+      "samplesAvailable": "Mevcut",
+      "samplesUnavailable": "Sağlanmıyor",
+      "requestSample": "Numune talep et",
+      "labPassport": "Laboratuvar pasaportu (COA)",
+      "labPassportHint": "Teklife eklenmiş kalite pasaportu",
+      "labPassportPresent": "Laboratuvar pasaportu mevcut",
+      "labPassportAbsent": "Pasaport eklenmemiş",
+      "sellerHint": "Teklifi yayımlayan şirket",
+      "verifiedSupplier": "Doğrulanmış tedarikçi",
+      "ratingPending": "Puan, anlaşmalardan sonra görünecektir",
+      "compatibility": "Ekipmanınızla uyumluluk",
+      "compatibilityHint": "Malzemenin prosesinize uygunluğunu kontrol edin",
+      "compatibilityBody": "Bu malzemenin prosesinize uygun olup olmadığını kontrol edin.",
+      "checkCompatibility": "Ekipmanla uyumluluğu kontrol et",
+      "comingSoon": "Yakında",
+      "documentsHint": "Satıcının eklediği belgeler",
+      "manufacturer": "Üretici",
+      "keyProperties": "Temel özellikler",
+      "applications": "Kullanım alanları",
+      "messageSeller": "Satıcıya yaz",
+      "requestContract": "Sözleşme talep et",
+      "escrow": "Escrow ödemesi",
+      "escrowInDealHint": "Escrow, anlaşma içinde kararlaştırılır — önce satıcıya talep gönderin",
+      "escrowNotOffered": "Bu satıcı escrow ile çalışmıyor",
+      "contractNeedsVerifiedSeller": "Sözleşme yalnızca doğrulanmış bir şirketle yapılabilir",
+      "contractNeedsVerifiedCompany": "Önce kendi şirketinizi doğrulatın",
+      "contractNotOffered": "Satıcı bu teklif için sözleşme imzalamaya hazır değil",
+      "rfqNotAccepted": "Satıcı bu teklif için talep kabul etmiyor",
+      "reviewsEmpty": "Bu ürün için henüz yorum yok.",
+      "docChip": {
+        "sds": "SDS PDF",
+        "tds": "TDS PDF",
+        "coa": "COA PDF",
+        "lab_passport": "Sertifika PDF",
+        "certificate": "Sertifika PDF"
+      }
+    }
+  },
+  "inquiries": {
+    "title": "Talepler",
+    "subtitle": "Gönderdiğiniz talepler ve tekliflerinize gelen talepler",
+    "tab": {
+      "sent": "Gönderilen",
+      "incoming": "Gelen"
+    },
+    "empty": {
+      "sent": "Gönderilmiş talep yok",
+      "incoming": "Gelen talep yok"
+    },
+    "emptyBody": "Burada görmek için pazardan bir talep gönderin.",
+    "notFound": "Talep bulunamadı",
+    "back": "Taleplere dön",
+    "viewOffer": "Teklifi görüntüle",
+    "editedNotice": "Bu talebi değiştirdiniz — yeniden moderasyona gönderilecek.",
+    "edit": "Düzenle",
+    "resubmit": "Yeniden gönder",
+    "editFailed": "Değişiklikler kaydedilemedi."
+  },
+  "requests": {
+    "title": "İhalelerim",
+    "subtitle": "Şirketinizin tedarikçilere açık ihaleleri",
+    "create": "İhale aç",
+    "forCompany": "{{company}} adına",
+    "empty": "Henüz ihale yok",
+    "emptyBody": "Bir ihale açın — tedarikçiler görecek ve teklif gönderecek.",
+    "notFound": "İhale bulunamadı",
+    "back": "İhalelere dön",
+    "timeline": "İhale geçmişi",
+    "cancel": "İhaleyi yayından kaldır"
+  },
+  "requestStatus": {
+    "new": "Yayında",
+    "in_review": "Teklifler toplanıyor",
+    "offer_received": "Teklif alındı",
+    "matched": "Tedarikçi seçildi",
+    "closed": "Kapandı",
+    "cancelled": "İptal edildi"
+  },
+  "requestWizard": {
+    "title": "İhale aç",
+    "subtitle": "Satın alımı tanımlayın — tedarikçiler ihaleyi görecek ve teklif gönderecek",
+    "stepOf": "Adım {{current}} / {{total}}",
+    "steps": {
+      "product": "Ürün",
+      "params": "Parametreler",
+      "extra": "Ek bilgiler",
+      "comm": "Erişim",
+      "preview": "Yayınla"
+    },
+    "product": {
+      "title": "1. Ürün seçin",
+      "searchPlaceholder": "Ürün, marka, CAS ara…",
+      "category": "Kategori",
+      "allCategories": "Tüm kategoriler",
+      "recent": "Son ürünler",
+      "empty": "Sonuç bulunamadı",
+      "manual": "Ürünü elle girin",
+      "manualName": "Ürün adı",
+      "manualNamePlaceholder": "Örn. Polietilen HDPE",
+      "manualGrade": "Marka",
+      "manualGradePlaceholder": "Örn. 5502",
+      "nameRequired": "Ürün adını girin",
+      "gradeRequired": "Markayı girin",
+      "pickRequired": "Listeden bir ürün seçin veya elle girin"
+    },
+    "params": {
+      "title": "2. İhale parametreleri",
+      "volume": "İstenen miktar",
+      "volumeRequired": "Miktar girin",
+      "unit": "Birim",
+      "price": "Hedef fiyat (azami fiyatınız)",
+      "priceHint": "Bu fiyat tedarikçilere gösterilmez — yalnızca IMEX AI ekibi görür",
+      "currency": "Para birimi",
+      "dealType": "Anlaşma türü",
+      "dealHint": "Incoterms® teslim şeklini seçin",
+      "incotermOpt": {
+        "EXW": "EXW şartlarıyla alım",
+        "FCA": "FCA şartlarıyla alım",
+        "FOB": "FOB şartlarıyla alım",
+        "CIF": "CIF şartlarıyla alım",
+        "CPT": "CPT şartlarıyla alım",
+        "DAP": "DAP şartlarıyla alım",
+        "DDP": "DDP şartlarıyla alım"
+      },
+      "country": "Teslimat ülkesi / bölgesi",
+      "city": "Şehir / liman",
+      "cityOther": "Diğer şehir",
+      "cityPlaceholder": "Şehir veya liman girin",
+      "delivery": "İstenen teslim süresi",
+      "deliveryOpt": {
+        "urgent": "Acil (1–7 gün)",
+        "month": "Bir ay içinde",
+        "quarter": "1–3 ay",
+        "later": "3 aydan fazla"
+      },
+      "validity": "İhale geçerlilik süresi",
+      "validityOpt": "{{days}} gün"
+    },
+    "extra": {
+      "title": "3. Ek parametreler",
+      "specs": "İstenen özellikler (isteğe bağlı)",
+      "specsPlaceholder": "İstenen özellikleri, etiketlemeyi, kalite standardını vb. yazın.",
+      "docs": "Tedarikçiden istenen belgeler",
+      "doc": {
+        "sds": "Güvenlik Bilgi Formu (SDS)",
+        "coa": "Analiz Sertifikası (COA)",
+        "coo": "Menşe Şahadetnamesi",
+        "commercial": "Ticari teklif",
+        "other": "Diğer belgeler"
+      },
+      "docOtherHint": "Seçin veya yorumlarda belirtin",
+      "comment": "Ek yorumlar",
+      "commentPlaceholder": "Tedarikçilere yönelik ek gereksinim veya istekleriniz…"
+    },
+    "comm": {
+      "title": "4. İhaleyi kimler görecek",
+      "visibilityLabel": "İhale erişimi",
+      "visibility": {
+        "verified": {
+          "title": "Yalnızca doğrulanmış tedarikçiler",
+          "body": "Yalnızca IMEX AI doğrulamasından geçen şirketler görecek"
+        },
+        "all": {
+          "title": "Platformdaki tüm tedarikçiler",
+          "body": "Tüm satıcılar görecek; yalnızca doğrulanmış olanlar teklif verebilir"
+        }
+      },
+      "contactsNote": "Şirketinizin iletişim bilgileri tedarikçilere gösterilmez: anlaşma açılana kadar tüm iletişim platform üzerinden yürür."
+    },
+    "preview": {
+      "title": "5. Kontrol edin ve yayınlayın",
+      "product": "Ürün",
+      "volume": "Miktar",
+      "price": "Hedef fiyat",
+      "terms": "Teslim şartları",
+      "delivery": "Teslim süresi",
+      "validity": "İhale geçerlilik süresi",
+      "comment": "Yorum",
+      "docs": "Tedarikçiden belgeler",
+      "visibility": "Erişim",
+      "publish": "İhaleyi yayınla",
+      "visibilityNote": {
+        "verified": "Bu ihaleyi yalnızca platformun doğrulanmış tedarikçileri görecek — yani teklif verebilecek şirketler.",
+        "all": "Bu ihaleyi platformdaki tüm tedarikçiler görecek. Yalnızca doğrulanmış şirketler teklif verebilir."
+      }
+    },
+    "done": {
+      "title": "İhale yayınlandı!",
+      "body": "Tedarikçiler ihaleyi görüyor ve teklif hazırlıyor.",
+      "idLabel": "İhale numarası",
+      "copyId": "Numarayı kopyala",
+      "nextTitle": "Sırada ne var?",
+      "next": {
+        "offers": "Tedarikçiler kısa süre içinde teklif gönderecek",
+        "notify": "Her yeni teklif için bildirim alacaksınız",
+        "compare": "Teklifleri karşılaştırın ve tedarikçi seçin"
+      },
+      "toRequests": "İhalelerime git",
+      "createAnother": "Yeni bir ihale aç"
+    },
+    "submitFailed": "İhale yayınlanamadı.",
+    "urgencyOpt": {
+      "low": "Düşük",
+      "medium": "Orta",
+      "high": "Yüksek"
+    }
+  },
+  "news": {
+    "title": "Haberler",
+    "subtitle": "Sınıflandırılmış petrokimya piyasası haberleri",
+    "breaking": "Son dakika",
+    "empty": "Henüz haber yok",
+    "emptyBody": "Piyasa güncellemeleri için daha sonra tekrar bakın.",
+    "notFound": "Haber bulunamadı",
+    "back": "Haberlere dön",
+    "analysis": "Analiz",
+    "recommendation": "Öneri",
+    "readSource": "Kaynakta oku →",
+    "metaTitle": "Petrokimya piyasası haberleri — IMEX AI",
+    "metaDescription": "Sınıflandırılmış petrokimya ve polimer haberleri: tesis duruşları, fiyatlar, arz ve düzenlemeler — Özbekistan ve dünyadan.",
+    "search": "Haber ara",
+    "searchPlaceholder": "Başlık, şirket, ürün…",
+    "filters": "Filtreler",
+    "filterAny": "Tümü",
+    "filterCategory": "Kategori",
+    "filterCountry": "Ülke",
+    "relatedProducts": "Ürünler",
+    "countries": "Ülkeler",
+    "companies": "Şirketler",
+    "sourcesLabel": "Kaynaklar",
+    "original": "asıl kaynak",
+    "reset": "Sıfırla",
+    "noResults": "Sonuç bulunamadı",
+    "noResultsBody": "Filtreleri veya arama ifadesini değiştirmeyi deneyin.",
+    "scopeLabel": "Kapsam",
+    "showResults": "Sonuçları göster",
+    "resultCount_one": "{{count}} haber",
+    "resultCount_other": "{{count}} haber",
+    "moreSources_one": "+{{count}} kaynak",
+    "moreSources_other": "+{{count}} kaynak",
+    "scope": {
+      "all": "Tümü",
+      "uzbekistan": "Özbekistan",
+      "global": "Dünya",
+      "producers": "Üreticiler"
+    },
+    "sort": {
+      "label": "Sırala",
+      "newest": "En yeni",
+      "importance": "Önem",
+      "category": "Kategori",
+      "products": "Ürünler",
+      "country": "Ülke",
+      "company": "Şirket"
+    },
+    "importance": {
+      "high": "Önemli",
+      "medium": "Dikkate değer",
+      "low": "Arka plan"
+    },
+    "impact": {
+      "positive": "Yükseliş",
+      "negative": "Düşüş",
+      "neutral": "Nötr"
+    },
+    "category": {
+      "demand": "Talep",
+      "prices": "Fiyatlar",
+      "production": "Üretim",
+      "investment": "Yatırım",
+      "trade": "Ticaret",
+      "feedstock": "Hammadde",
+      "logistics": "Lojistik",
+      "macro": "Makroekonomi",
+      "regulation": "Düzenleme",
+      "sustainability": "Sürdürülebilirlik",
+      "market_prices": "Piyasa fiyatları",
+      "petrochemicals": "Petrokimya",
+      "polymers": "Polimerler",
+      "polyethylene": "Polietilen",
+      "polypropylene": "Polipropilen",
+      "pvc": "PVC",
+      "pet": "PET",
+      "abs": "ABS",
+      "ps": "PS",
+      "styrene": "Stiren",
+      "methanol": "Metanol",
+      "meg": "MEG",
+      "plant_shutdown": "Tesis duruşu",
+      "maintenance": "Bakım",
+      "refineries": "Rafineriler",
+      "ports": "Limanlar",
+      "railways": "Demiryolları",
+      "customs": "Gümrük",
+      "import": "İthalat",
+      "export": "İhracat",
+      "technology": "Teknoloji",
+      "market_analysis": "Piyasa analizi",
+      "factories": "Fabrikalar",
+      "new_projects": "Yeni projeler"
+    }
+  },
+  "notifications": {
+    "subtitle": "İhaleleriniz, talepleriniz, teklifleriniz ve doğrulamanızla ilgili güncellemeler",
+    "markAllRead": "Tümünü okundu işaretle",
+    "viewAll": "Tümünü göster",
+    "empty": "Bildirim yok",
+    "emptyBody": "Tüm bildirimleri okudunuz.",
+    "request_status": {
+      "title": "İhale güncellemesi",
+      "body": "{{number}} numaralı ihale güncellendi"
+    },
+    "inquiry_approved": {
+      "title": "Yeni talep",
+      "body": "Teklifinize onaylanmış bir talep geldi"
+    },
+    "inquiry_reply": {
+      "title": "Talep güncellemesi",
+      "body": "Talebinizle ilgili bir güncelleme var"
+    },
+    "verification_decided": {
+      "title": "Doğrulama",
+      "body": "Şirketinizin doğrulama durumu değişti"
+    },
+    "offer_moderated": {
+      "title": "Teklif moderasyonu",
+      "body": "Teklifinizin durumu güncellendi"
+    },
+    "news_breaking": {
+      "title": "Son dakika haberleri",
+      "body": "{{headline}}"
+    },
+    "contract_incoming": {
+      "title": "Yeni sözleşme",
+      "body": "Size “{{title}}” sözleşmesi gönderildi"
+    },
+    "contract_accepted": {
+      "title": "Sözleşme kabul edildi",
+      "body": "“{{title}}” sözleşmesinin şartları kabul edildi"
+    },
+    "contract_declined": {
+      "title": "Sözleşme reddedildi",
+      "body": "“{{title}}” sözleşmesi reddedildi"
+    },
+    "contract_expired": {
+      "title": "Sözleşmenin süresi doldu",
+      "body": "“{{title}}” sözleşmesinin bekleme süresi doldu"
+    },
+    "rfq_response_new": {
+      "title": "Yeni fiyat teklifi",
+      "body": "{{number}} numaralı ihaleye bir tedarikçi teklif verdi"
+    },
+    "rfq_response_accepted": {
+      "title": "Fiyat teklifi kabul edildi",
+      "body": "Teklifiniz kabul edildi — {{number}} numaralı anlaşma açıldı"
+    },
+    "rfq_response_not_selected": {
+      "title": "Fiyat teklifi seçilmedi",
+      "body": "Bu ihale için başka bir tedarikçi seçildi"
+    },
+    "deal_opened": {
+      "title": "Anlaşma açıldı",
+      "body": "{{number}} numaralı anlaşma açıldı"
+    },
+    "deal_status": {
+      "title": "Anlaşma durumu",
+      "body": "Anlaşma {{number}}: durum değişti"
+    },
+    "deal_message": {
+      "title": "Yeni mesaj",
+      "body": "{{number}} numaralı anlaşmada yeni mesajlar var"
+    },
+    "deal_document": {
+      "title": "Yeni belge",
+      "body": "{{number}} numaralı anlaşmaya bir belge eklendi"
+    },
+    "escrow_opened": {
+      "title": "Ödeme faturası",
+      "body": "{{number}} numaralı anlaşma için {{amount}} {{currency}} tutarında fatura düzenlendi"
+    },
+    "escrow_status": {
+      "title": "Ödeme durumu",
+      "body": "Anlaşma {{number}}: {{amount}} {{currency}} — ödeme durumu değişti"
+    },
+    "rfq_match": {
+      "title": "Profilinize uygun yeni bir ihale",
+      "body": "{{product}} — {{volume}} {{volume_unit}}. İhale {{number}}"
+    },
+    "lab_order_status": {
+      "title": "Laboratuvar siparişi",
+      "body": "Sipariş {{number}}: durum değişti"
+    },
+    "sample_request_new": {
+      "title": "Numune talebi",
+      "body": "Bir alıcı teklifiniz için numune talep etti"
+    },
+    "sample_request_status": {
+      "title": "Numune durumu",
+      "body": "Numune talebi: durum değişti"
+    },
+    "logistics_request_new": {
+      "title": "Yeni taşıma talebi",
+      "body": "{{buyer}} taşıyıcı arıyor: {{cargo}}"
+    },
+    "logistics_message": {
+      "title": "Talepte yeni mesaj",
+      "body": "Talep {{number}} — yeni mesaj"
+    },
+    "lab_request_new": {
+      "title": "Yeni analiz talebi",
+      "body": "{{buyer}} laboratuvar arıyor: {{product}}"
+    },
+    "lab_message": {
+      "title": "Talepte yeni mesaj",
+      "body": "Talep {{number}} — yeni mesaj"
+    },
+    "tech_request_new": {
+      "title": "Yeni teknolog talebi",
+      "body": "{{number}} numaralı talep prosesinize uygun"
+    },
+    "tech_invite": {
+      "title": "Bir talebe davet edildiniz",
+      "body": "Bir fabrika sizi davet ediyor: talep {{number}}"
+    },
+    "tech_offer_new": {
+      "title": "Teknologdan yeni teklif",
+      "body": "{{expert}}, {{number}} numaralı talebe yanıt verdi"
+    },
+    "tech_offer_decided": {
+      "title": "Teklifinizle ilgili karar",
+      "body": "Fabrika, {{number}} numaralı talebe verdiğiniz teklifi inceledi"
+    },
+    "tech_message": {
+      "title": "Yeni mesaj",
+      "body": "Talep {{number}} — yeni mesaj"
+    },
+    "technologist_decided": {
+      "title": "Profiliniz incelendi",
+      "body": "Kararı görmek için profilinizi açın"
+    }
+  },
+  "contracts": {
+    "title": "Sözleşmeler",
+    "subtitle": "Doğrulanmış şirketlerle elektronik sözleşmeler.",
+    "create": "Sözleşme oluştur",
+    "createDraft": "Taslak oluştur",
+    "empty": "Henüz sözleşme yok",
+    "emptyBody": "Doğrulanmış bir şirketle sözleşme oluşturun.",
+    "template": "Sözleşme şablonu",
+    "selectTemplate": "Şablon seçin",
+    "counterparty": "Karşı taraf",
+    "counterpartyHint": "Yalnızca doğrulanmış şirketler.",
+    "counterpartySearch": "Ada veya vergi numarasına (ИНН) göre ara…",
+    "needVerifiedInitiator": "Sözleşmeyi yalnızca doğrulanmış bir şirket oluşturabilir. Yukarıdaki geçiş menüsünden doğrulanmış bir şirket seçin.",
+    "document": "Belge",
+    "signatures": "İmzalar",
+    "awaitingOther": "Karşı tarafın imzası bekleniyor.",
+    "declinedTitle": "Sözleşme reddedildi",
+    "declineReason": "Ret nedeni",
+    "tabs": {
+      "all": "Tümü",
+      "action": "İşlem gerekli",
+      "active": "Aktif"
+    },
+    "role": {
+      "initiator": "Başlatan",
+      "counterparty": "Karşı taraf"
+    },
+    "status": {
+      "draft": "Taslak",
+      "pending_counterparty": "Karşı taraf bekleniyor",
+      "pending_signatures": "İmzalar bekleniyor",
+      "active": "Aktif",
+      "declined": "Reddedildi",
+      "cancelled": "İptal edildi",
+      "expired": "Süresi doldu"
+    },
+    "actions": {
+      "send": "İmzaya gönder",
+      "signAndSend": "İmzala ve gönder",
+      "decline": "Reddet",
+      "confirmDecline": "Reddi onayla",
+      "sign": "E-IMZO ile imzala",
+      "cancel": "İptal et",
+      "downloadPdf": "PDF indir",
+      "downloadBundle": "Paketi indir (ZIP)"
+    },
+    "errors": {
+      "invalid": "Form alanlarını kontrol edin.",
+      "createFailed": "Sözleşme oluşturulamadı."
+    },
+    "timeline": {
+      "created": "Taslak oluşturuldu",
+      "sent": "İmzaya gönderildi",
+      "signedBy": "İmzalayan: {{company}}",
+      "signedNoDate": "İmzalandı",
+      "awaitingSignature": "İmza bekleniyor: {{company}}",
+      "active": "Sözleşme her iki tarafça imzalandı",
+      "awaiting": "Bekleniyor"
+    },
+    "basis": {
+      "label": "Dayanak",
+      "none": "Dayanak yok — kendim dolduracağım",
+      "hint": "Kabul edilmiş bir ihale teklifine dayalı anlaşma: ürün, miktar, fiyat ve karşı taraf otomatik doldurulur.",
+      "empty": "Henüz sözleşmesiz anlaşma yok — bir ihale teklifini kabul ettiğinizde veya sizinki kabul edildiğinde burada görünür.",
+      "counterpartyFromDeal": "Karşı taraf, seçilen anlaşmanın diğer tarafıdır."
+    },
+    "groups": {
+      "parties": "Taraflar ve sözleşme bilgileri",
+      "subject": "Konu ve tutar",
+      "payment": "Ödeme",
+      "delivery": "Teslimat",
+      "extra": "Ambalaj ve kalite",
+      "penalties": "Tarafların sorumluluğu"
+    }
+  },
+  "deals": {
+    "title": "Anlaşmalar",
+    "subtitle": "Anlaşma odaları: sohbet, belgeler, durum.",
+    "empty": "Henüz anlaşma yok",
+    "emptyBody": "Bir alıcının ihalesine teklif verin veya kendi ihalenizde bir tedarikçi seçin.",
+    "browseRfqs": "Açık ihaleler",
+    "needsAction": "İşlem gerekli",
+    "noAmount": "Tutar belirtilmedi",
+    "progress": "Anlaşmanın seyri",
+    "roleAny": "Tümü",
+    "cancelledTitle": "Anlaşma iptal edildi",
+    "disputedTitle": "Anlaşmazlık açıldı",
+    "disputedBody": "Anlaşmazlıkları platform ekibi çözer.",
+    "role": {
+      "buyer": "Alış",
+      "seller": "Satış"
+    },
+    "tabs": {
+      "all": "Tümü",
+      "action": "İşlem gerekli",
+      "active": "Aktif",
+      "closed": "Tamamlanan",
+      "chat": "Sohbet",
+      "documents": "Belgeler",
+      "timeline": "Zaman çizelgesi",
+      "contract": "Sözleşme",
+      "escrow": "Ödeme",
+      "lab": "Laboratuvar"
+    },
+    "status": {
+      "negotiation": "Müzakere",
+      "contract_pending": "Sözleşme bekleniyor",
+      "contract_signed": "Sözleşme imzalandı",
+      "payment_pending": "Ödeme bekleniyor",
+      "paid_escrow": "Ödendi",
+      "shipped": "Sevk edildi",
+      "delivered": "Teslim alındı",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi",
+      "disputed": "Anlaşmazlık"
+    },
+    "actor": {
+      "buyer": "alıcı",
+      "seller": "satıcı",
+      "staff": "ekip",
+      "system": "sistem"
+    },
+    "actions": {
+      "contract_pending": "Sözleşme gönder",
+      "contract_signed": "Sözleşme imzalandı",
+      "payment_pending": "Ödemeye geç",
+      "paid_escrow": "Ödendi",
+      "shipped": "Sevk edildi olarak işaretle",
+      "delivered": "Teslimatı onayla",
+      "completed": "Tamamla",
+      "cancelled": "İptal et",
+      "disputed": "Anlaşmazlık aç",
+      "negotiation": "Müzakereye geri dön",
+      "reasonPlaceholder": "Nedeni belirtin",
+      "confirm": {
+        "cancelled": "Bu anlaşma iptal edilsin mi?",
+        "disputed": "Bu anlaşma için anlaşmazlık açılsın mı?",
+        "confirmPayment": "Alıcının ödemesinin hesabınıza ulaştığını onaylayın. Bu işlem geri alınamaz."
+      },
+      "confirmPayment": "Ödeme alındı"
+    },
+    "chat": {
+      "title": "Anlaşma sohbeti",
+      "empty": "Henüz mesaj yok",
+      "placeholder": "Mesaj yazın…",
+      "send": "Gönder",
+      "attach": "Dosya"
+    },
+    "documents": {
+      "add": "Belge ekle",
+      "kind": "Belge türü",
+      "empty": "Henüz belge yok",
+      "emptyBody": "Fatura, irsaliye veya kalite sertifikası yükleyin.",
+      "revoked": "Geri çekildi",
+      "revokeAction": "Geri çek",
+      "revokePrompt": "Belgenin geri çekilme nedeni",
+      "kinds": {
+        "contract": "Sözleşme",
+        "invoice": "Fatura",
+        "lab_passport": "Kalite sertifikası",
+        "transport": "Taşıma belgesi",
+        "other": "Diğer"
+      }
+    },
+    "contract": {
+      "none": "Henüz sözleşme oluşturulmadı.",
+      "create": "Sözleşme oluştur",
+      "linked": "Sözleşme: {{status}}",
+      "open": "Sözleşmeyi aç"
+    },
+    "escrow": {
+      "noneTitle": "Henüz fatura düzenlenmedi",
+      "noneBody": "Ödeme faturası, sözleşme her iki tarafça imzalandıktan sonra görünür.",
+      "bankTitle": "Anlaşmalı banka üzerinden ödeme",
+      "bankBody": "Ödeme, anlaşmalı bankanın düzenlediği faturaya göre yapılır. Tutar bloke edilir ve alıcı teslimatı onayladıktan sonra satıcıya aktarılır.",
+      "status": {
+        "pending": "Ödeme bekleniyor",
+        "funded": "Tutar bloke edildi",
+        "released": "Satıcıya aktarıldı",
+        "refunded": "Alıcıya iade edildi"
+      },
+      "refundCause": "Tutar, emanet hesabı (escrow) üzerinden alıcıya iade edildi.",
+      "amount": "Anlaşma tutarı",
+      "direct": {
+        "pending": "Ödeme bekleniyor",
+        "paid": "Ödeme alındı",
+        "stepPayment": "Ödeme",
+        "title": "Satıcıya doğrudan ödeme",
+        "body": "Alıcı, sözleşmedeki banka bilgilerine göre ödeme yapar. Para ulaştığında satıcı «Ödeme alındı» olarak işaretler. Ürün ödemeden önce de sevk edilebilir — anlaşma, ürün teslim alındığında ve ödeme onaylandığında tamamlanır."
+      }
+    },
+    "factureHint": "Ürün sevk edildi — sözleşme sayfasında alıcıya elektronik fatura (ЭСФ) düzenleyin.",
+    "factureOpen": "Sözleşmeye git"
+  },
+  "rfq": {
+    "marketTitle": "Açık ihaleler",
+    "marketSubtitle": "Teklif verebileceğiniz alıcı ihaleleri.",
+    "marketEmpty": "Açık ihale yok",
+    "marketEmptyBody": "Daha sonra tekrar bakın — yeni ihaleler düzenli olarak eklenir.",
+    "respond": "Teklif ver",
+    "alreadyResponded": "Teklif gönderildi",
+    "submit": "Teklifi gönder",
+    "price": "Fiyat",
+    "currency": "Para birimi",
+    "qty": "Miktar",
+    "qtyUnit": "Birim",
+    "incoterms": "Incoterms",
+    "incotermsAny": "Belirtilmedi",
+    "leadTime": "Teslim süresi, gün",
+    "leadTimeDays": "{{count}} gün",
+    "comment": "Yorum",
+    "commentPlaceholder": "Koşullar, süreler, ayrıntılar",
+    "volume": "Hacim",
+    "destination": "Varış yeri",
+    "desiredDate": "İstenen tarih",
+    "requiredDocs": "Gerekli belgeler",
+    "responses": "Tedarikçi teklifleri",
+    "noResponses": "Henüz teklif yok",
+    "noResponsesBody": "Tedarikçiler bu ihaleye henüz yanıt vermedi.",
+    "accept": "Bu tedarikçiyi seç",
+    "acceptTitle": "Bu tedarikçi seçilsin mi?",
+    "acceptBody": "{{company}} ile {{price}} fiyatla bir anlaşma açılacak. Diğer teklifler reddedilecek.",
+    "openDeal": "Anlaşmayı aç",
+    "status": {
+      "submitted": "Gönderildi",
+      "accepted": "Kabul edildi",
+      "not_selected": "Seçilmedi",
+      "withdrawn": "Geri çekildi"
+    },
+    "tab": {
+      "open": "Açık",
+      "mine": "Tekliflerim"
+    },
+    "mine": {
+      "empty": "Henüz teklif vermediniz",
+      "emptyBody": "«Açık» sekmesini açın ve bir ihale için fiyatınızı önerin.",
+      "yourPrice": "Teklifiniz",
+      "tenderClosed": "İhale kapandı"
+    },
+    "withdraw": "Teklifi geri çek",
+    "withdrawTitle": "Teklif geri çekilsin mi?",
+    "withdrawBody": "Alıcı artık fiyatınızı görmeyecek. İhale açık olduğu sürece yeniden teklif verebilirsiniz.",
+    "errors": {
+      "notVerified": "Yalnızca doğrulanmış şirketler teklif verebilir. Doğrulamadan geçin — ihale açık kalacak.",
+      "roleNotAllowed": "Yalnızca satıcı şirketler teklif verebilir.",
+      "alreadyResponded": "Bu ihaleye zaten teklif verdiniz.",
+      "requestClosed": "Bu ihale artık teklif kabul etmiyor.",
+      "ownRequest": "Bu, kendi şirketinizin ihalesi.",
+      "unknownIncoterms": "Teslim koşullarını listeden seçin.",
+      "acceptRequestClosed": "İhale kapandı veya iptal edildi — artık tedarikçi seçilemez.",
+      "acceptResponseClosed": "Bu teklif geri çekildi veya artık geçerli değil.",
+      "acceptAlreadyAccepted": "Bu ihale için zaten bir tedarikçi seçildi."
+    },
+    "docs": {
+      "sds": "SDS",
+      "coa": "COA",
+      "origin_cert": "Menşe şahadetnamesi",
+      "commercial_offer": "Ticari teklif",
+      "other": "Diğer"
+    },
+    "columns": {
+      "product": "Ürün",
+      "volume": "Hacim",
+      "terms": "Koşullar",
+      "deliveryBy": "Son teslim",
+      "responseWindow": "Teklif kabulü",
+      "yourQuote": "Teklifiniz"
+    },
+    "deadline": {
+      "daysLeft": "{{count}} gün kaldı",
+      "lastDay": "bir günden az",
+      "closed": "kabul kapandı"
+    },
+    "urgent": "Acil",
+    "needs": "Gerekli: {{docs}}",
+    "reply": "Teklif ver",
+    "hideForm": "Daralt",
+    "viewMyQuote": "Teklifim",
+    "filters": {
+      "label": "İhale filtreleri",
+      "product": "Ürün",
+      "allProducts": "Tüm ürünler",
+      "closingSoon": "Yakında kapanacak",
+      "urgent": "Yalnızca acil",
+      "unanswered": "Teklif vermediklerim",
+      "reset": "Filtreleri sıfırla",
+      "status": "Teklif durumu",
+      "allStatuses": "Tümü",
+      "empty": "Bu filtrelere uyan ihale yok",
+      "emptyBody": "Tüm açık ihaleleri görmek için filtreleri değiştirin veya sıfırlayın.",
+      "mineEmpty": "Bu durumda teklif yok",
+      "mineEmptyBody": "Başka bir durum seçin veya tüm teklifleri gösterin."
+    }
+  },
+  "compliance": {
+    "title": "Madde ve uyumluluk",
+    "hint": "Teklif bir kimyasal ise maddeyi belirtin. Polimerler (PP, PE, PVC) için boş bırakılabilir.",
+    "search": "Madde rehberinde ara",
+    "searchHint": "Ad, eş anlamlı ad, CAS veya GTİP kodu",
+    "searchPlaceholder": "örn. aseton, 67-64-1, 2914",
+    "searchEmpty": "Hiçbir şey bulunamadı. CAS ve GTİP kodunu elle girebilirsiniz.",
+    "cas": "CAS",
+    "hs": "GTİP kodu",
+    "concentration": "Konsantrasyon, %",
+    "concentrationHint": "Maddenin eşik değerinin altında rejim uygulanmaz. Boş bırakılırsa denetime tabi kabul edilir.",
+    "askAi": "Maddeyi açıklamadan belirle",
+    "aiSuggestion": "AI önerisi",
+    "aiAccept": "Onayla",
+    "aiReject": "Uygun değil",
+    "aiNoHint": "Şu anda öneri alınamıyor — maddeyi elle seçin.",
+    "aiUnknownSubstance": "Bu madde rehberde yok — CAS ve GTİP kodunu elle girin.",
+    "substance": "Madde",
+    "blockedTitle": "Bu teklif yayınlanmıyor",
+    "wouldBlockTitle": "Yayın için gerekli olacak",
+    "prohibitedTitle": "İlan yasak",
+    "blockedHint": "Gereklilikler karşılanır karşılanmaz teklif otomatik olarak moderasyona gönderilir.",
+    "prohibitedHint": "Madde yasaklılar listesinde. Belge yüklemek bunu değiştirmez.",
+    "missingDocument": "Gerekli belge: {{doc}}",
+    "missingLicense": "Geçerli bir lisans gerekli: {{regime}}",
+    "missingProhibited": "Yasak dayanağı: {{act}}",
+    "licenses": "Lisanslar",
+    "licensesHint": "Lisanslar, yüklediğiniz belgeye göre operatör tarafından kaydedilir.",
+    "noLicenses": "Lisans yok",
+    "licenseActive": "Geçerli",
+    "until": "bitiş:",
+    "level": {
+      "free": "Serbest dolaşım",
+      "docs_required": "Belge gerekli",
+      "license_required": "Lisans gerekli",
+      "prohibited": "Yasak"
+    },
+    "regime": {
+      "precursor_list_iv": "Prekürsörler (Liste IV, ПКМ-330)",
+      "explosive_toxic": "Patlayıcı ve zehirli (ПКМ-782)",
+      "strong_acting": "Güçlü etkili (ПКМ-818)",
+      "pkm916_import": "Tehlikeli ürün ithalatı (ПКМ-916)"
+    },
+    "docKind": {
+      "sds": "güvenlik bilgi formu (SDS)",
+      "tds": "teknik veri sayfası (TDS)",
+      "coa": "analiz sertifikası (COA)",
+      "certificate": "sertifika"
+    },
+    "licenseStatus": {
+      "pending_review": "İncelemede",
+      "active": "Geçerli",
+      "expired": "Süresi doldu",
+      "revoked": "İptal edildi",
+      "rejected": "Reddedildi"
+    }
+  },
+  "lab": {
+    "blockTitle": "Laboratuvar pasaportu",
+    "blockHint": "Pasaport, malzemenin özelliklerini doğrular ve katalog kartında bir rozet gösterir. Kendi pasaportunuzu yükleyin veya IMEX üzerinden analiz sipariş edin.",
+    "saveFirst": "Önce teklifi kaydedin — pasaport mevcut bir teklife eklenir.",
+    "upload": "Pasaport yükle (PDF)",
+    "pdfOnly": "Pasaport yalnızca PDF olarak kabul edilir.",
+    "resultLocked": "Bu pasaport platform üzerinden verilen bir laboratuvar siparişinden geldi — silinemez.",
+    "orderCta": "IMEX üzerinden analiz sipariş et",
+    "orderCopy": "Laboratuvarı, ücreti ve numunenin teslim şeklini kararlaştırmak için sizi arayacağız.",
+    "orderCommentPlaceholder": "Neler kontrol edilsin: MFI, yoğunluk, nem…",
+    "orderSubmit": "Talebi gönder",
+    "partnerPending": "Laboratuvar henüz atanmadı",
+    "openPassport": "Pasaportu aç",
+    "volume": "Numune miktarı",
+    "comment": "Yorum",
+    "created": "Oluşturuldu",
+    "rejectedReason": "Ret nedeni",
+    "operatorNote": "Operatör notu",
+    "openOffer": "Teklifi aç",
+    "ordersTitle": "Laboratuvar siparişleri",
+    "ordersSubtitle": "Durumları operatörümüz yönetir; analizi iş ortağı bir laboratuvar yapar.",
+    "ordersEmpty": "Henüz sipariş yok",
+    "ordersEmptyBody": "Teklif formundan veya bir anlaşma odasından (Trade Room) analiz sipariş edin.",
+    "dealNoneTitle": "Bu anlaşma için analiz sipariş edilmedi",
+    "dealNoneBody": "Malzemeyi sevkiyattan önce kontrol ettirebilirsiniz — süreci operatörümüz yürütür.",
+    "dealResultInDocs": "Pasaport «Belgeler» sekmesine eklendi.",
+    "badge": {
+      "passport": "Lab. pasaportu",
+      "verified": "Laboratory Verified"
+    },
+    "status": {
+      "submitted": "Gönderildi",
+      "accepted": "Kabul edildi",
+      "sample_awaited": "Numune bekleniyor",
+      "in_analysis": "Analizde",
+      "done": "Tamamlandı",
+      "rejected": "Reddedildi"
+    },
+    "hub": {
+      "title": "Laboratuvar",
+      "subtitle": "Pazar yeri laboratuvarlarına talepler ve IMEX üzerinden analizleriniz",
+      "tabRequests": "Laboratuvar talepleri",
+      "tabOrders": "IMEX üzerinden analizler"
+    }
+  },
+  "samples": {
+    "title": "Numuneler",
+    "subtitle": "Numune talepleri: alıcılardan gelenler ve sizin talepleriniz.",
+    "tab": {
+      "incoming": "Gelen",
+      "sent": "Gönderilen"
+    },
+    "empty": {
+      "incoming": "Gelen talep yok",
+      "sent": "Henüz numune talep etmediniz"
+    },
+    "emptyBody": "Pazardaki bir teklif sayfasından numune talep edebilirsiniz.",
+    "offerTitle": "Numune talep et",
+    "free": "Numune ücretsiz",
+    "priced": "Numune: {{price}} {{currency}}",
+    "dispatch": "{{count}} gün içinde gönderilir",
+    "qty": "Miktar",
+    "qtyHint": "Serbest metin: “1 kg”, “birkaç granül”",
+    "address": "Teslimat adresi",
+    "send": "Numune talep et",
+    "sentOk": "Talep satıcıya gönderildi.",
+    "reason": "Neden",
+    "courier": "Kargo firması",
+    "tracking": "Takip numarası",
+    "shipmentHint": "Kargo firmasını ve takip numarasını girin — alıcı gönderiyi bunlarla takip eder.",
+    "action": {
+      "accepted": "Kabul et",
+      "declined": "Reddet",
+      "sent": "Gönderildi olarak işaretle",
+      "received": "Teslim alındı olarak işaretle",
+      "rejected_by_buyer": "Uygun değil"
+    },
+    "status": {
+      "requested": "Talep edildi",
+      "accepted": "Kabul edildi",
+      "declined": "Reddedildi",
+      "sent": "Gönderildi",
+      "received": "Teslim alındı",
+      "rejected_by_buyer": "Uygun değil",
+      "pending_letter": "Taahhüt mektubunun imzası bekleniyor"
+    },
+    "errors": {
+      "alreadyRequested": "Bu teklif için zaten aktif bir talebiniz var.",
+      "notAvailable": "Satıcı bu ilan için numune sunmuyor.",
+      "ownOffer": "Bu, kendi şirketinizin teklifi — numune talep etmenize gerek yok."
+    },
+    "letterOwed": "Talep oluşturuldu ancak henüz satıcıya ulaşmadı: önce taahhüt mektubunu e-imza ile imzalayın.",
+    "goSign": "İmzalamaya git"
+  },
+  "onboarding": {
+    "title": "Kaydolun:",
+    "subtitle": "Bir hesap oluşturun ve platformun tüm olanaklarına erişin",
+    "heroAlt": "Güvenli, doğrulanmış IMEX AI platformu",
+    "chips": {
+      "aiMatching": "AI eşleştirme",
+      "verifiedCompany": "Doğrulanmış şirketler",
+      "tradeFinance": "Ticaret finansmanı",
+      "secureDeals": "Güvenli anlaşmalar",
+      "logistics": "Lojistik",
+      "governmentApi": "Devlet sicilleri"
+    },
+    "trustTitle": "Güvenli ve güvenilir",
+    "trustBody": "Verileriniz korunur ve uluslararası güvenlik standartlarına uygundur",
+    "start": "Kayda başla"
+  },
+  "companyProfile": {
+    "title": "Şirket profili",
+    "officialSupplier": "IMEX AI'da resmi tedarikçi",
+    "verifiedCompany": "Doğrulanmış şirket",
+    "onPlatformSince": "{{date}} tarihinden beri platformda",
+    "notFound": "Şirket bulunamadı veya henüz doğrulanmadı",
+    "tabs": {
+      "about": "Hakkında",
+      "products": "Ürünler",
+      "reviews": "Değerlendirmeler",
+      "documents": "Belgeler"
+    },
+    "statSince": "{{date}} tarihinden beri",
+    "statSincePending": "Platformda",
+    "statOffers": "{{count}} ilan",
+    "statResponsePending": "Yanıt süresi — yakında",
+    "statLanguages": "RU / EN / UZ",
+    "about": "Açıklama",
+    "aboutForm": "Hukuki yapı: {{form}}.",
+    "aboutAddress": "Adres: {{address}}.",
+    "aboutEmpty": "Bu şirket henüz bir açıklama eklemedi.",
+    "kpiTitle": "Temel göstergeler",
+    "kpiOnTime": "Zamanında teslimat",
+    "kpiRating": "Alıcı puanı",
+    "kpiClients": "Düzenli müşteriler",
+    "kpiCountries": "Teslimat yapılan ülkeler",
+    "kpiPendingHint": "Göstergeler, platformda yeterli sayıda anlaşma gerçekleştikten sonra görünür.",
+    "certificates": "Sertifikalar",
+    "certificatesEmpty": "Henüz herkese açık sertifika yok",
+    "certificatesEmptyBody": "Tedarikçi ISO ve diğer sertifikalarını yayımladığında burada görünecektir.",
+    "details": "Şirket bilgileri",
+    "fullName": "Tam unvan",
+    "companyType": "Şirket türü",
+    "headOffice": "Merkez ofis",
+    "founded": "Kuruluş",
+    "jurisdiction": "Yetki alanı",
+    "advantages": "Avantajlar",
+    "advantageVerified": "IMEX AI'da doğrulandı",
+    "advantageOffers": "Pazarda {{count}} aktif ilan",
+    "mainProducts": "Ana ürünler",
+    "productsEmpty": "Yayımlanmış ürün yok",
+    "productsEmptyBody": "Bu şirketin henüz onaylanmış teklifi yok.",
+    "seeAllProducts": "Tüm ürünleri gör ({{count}})",
+    "reviewsScorePending": "— / 5",
+    "reviewsHint": "Puan, tamamlanan anlaşmalara göre oluşur",
+    "reviewsEmpty": "Henüz değerlendirme yok",
+    "reviewsEmptyBody": "Değerlendirmeler, bu şirketle yapılan anlaşmalardan sonra görünür.",
+    "documentsEmpty": "Henüz belge yok",
+    "documentsEmptyBody": "Tedarikçi yayımladığında herkese açık belge seti burada görünecektir.",
+    "message": "Mesaj yaz",
+    "requestRfq": "Teklif iste (RFQ)",
+    "messageManufacturer": "Fabrikayla iletişime geçin",
+    "requestFactoryRfq": "Teklif iste",
+    "pickOfferHint": "Satıcıya talep göndermek için aşağıdan bir ürün seçin",
+    "logistics": {
+      "aboutTitle": "Şirket hakkında",
+      "capabilitiesTitle": "Olanaklarımız",
+      "detailsTitle": "Hizmet koşulları",
+      "countries": "Hizmet verilen ülkeler",
+      "services": "Hizmetler",
+      "experience": "Faaliyet süresi",
+      "projects": "Tamamlanan projeler",
+      "cargo": "Yük türleri",
+      "routes": "Popüler güzergâhlar",
+      "tariff": "Fiyatlandırma modeli",
+      "city": "Şehir",
+      "years_one": "{{count}} yıl",
+      "years_other": "{{count}} yıl",
+      "capabilityBlurb": {
+        "own_trucks": "Modern çekiciler ve konteyner taşıyıcılar",
+        "own_rail_wagons": "Kendi vagon ve tank vagonu filomuz",
+        "sea_containers": "Dünyanın en büyük limanlarıyla çalışıyoruz",
+        "storage_facilities": "Yük konsolidasyonu için depo alanı",
+        "customs_warehouse": "Gözetim altında depolama için gümrüklü antrepo",
+        "foreign_offices": "Çıkış ülkelerinde temsilcilikler",
+        "customs_brokers": "Anahtar teslim gümrükleme için kadrolu müşavirler"
+      },
+      "projectsValue": "{{value}}+"
+    },
+    "reviewCount_one": "{{count}} değerlendirme",
+    "reviewCount_other": "{{count}} değerlendirme",
+    "reviewAnonymous": "Şirket",
+    "reviewTitle": "Değerlendirme bırakın",
+    "reviewRating": "Puan",
+    "reviewBody": "Yorum",
+    "reviewBodyPlaceholder": "İş birliği nasıl geçti?",
+    "reviewSubmit": "Değerlendirmeyi gönder",
+    "reviewErrors": {
+      "self": "Kendi şirketinizi değerlendiremezsiniz",
+      "ratingRequired": "1 ile 5 arasında bir puan verin"
+    },
+    "laboratory": {
+      "aboutTitle": "Laboratuvar hakkında",
+      "methodsTitle": "Yöntemler ve testler",
+      "detailsTitle": "İletişim",
+      "experience": "Faaliyet süresi",
+      "studies": "Tamamlanan analizler",
+      "turnaround": "Ortalama süre",
+      "city": "Şehir",
+      "website": "Web sitesi",
+      "years_one": "{{count}} yıl",
+      "years_other": "{{count}} yıl",
+      "days_one": "{{count}} gün",
+      "days_other": "{{count}} gün",
+      "studiesValue": "{{value}}+",
+      "accreditationOptions": {
+        "iso_17025": "ISO/IEC 17025",
+        "national_accreditation": "Ulusal akreditasyon",
+        "iso_9001": "ISO 9001",
+        "gost_certified": "GOST sertifikalı"
+      }
+    },
+    "statOffers_one": "{{count}} ilan",
+    "statOffers_other": "{{count}} ilan",
+    "advantageOffers_one": "Pazarda {{count}} aktif ilan",
+    "advantageOffers_other": "Pazarda {{count}} aktif ilan"
+  },
+  "manufacturers": {
+    "title": "Üreticiler",
+    "subtitle": "Doğrudan teklif isteyebileceğiniz doğrulanmış fabrikalar",
+    "search": "Ad veya ürüne göre arayın…",
+    "empty": "Üretici bulunamadı",
+    "emptyBody": "Farklı bir arama terimi deneyin.",
+    "noIso": "ISO sertifikası belirtilmemiş",
+    "offerCount": "{{count}} ilan",
+    "employeesShort": "{{count}} çalışan",
+    "foundedShort": "{{year}} yılından beri",
+    "chatWithFactory": "Fabrikayla sohbet",
+    "leaveFactoryRfq": "Fabrikaya talep bırakın"
+  },
+  "factoryRfq": {
+    "title": "Fabrikaya talep (RFQ)",
+    "subtitle": "Kapsamlı talebinizi doğrudan fabrikaya gönderin",
+    "stepOf": "Adım {{current}} / {{total}}",
+    "steps": {
+      "basic": "Koşullar",
+      "documents": "Belgeler",
+      "terms": "Ticari",
+      "contact": "İletişim"
+    },
+    "basic": {
+      "title": "1. Temel koşullar",
+      "quantity": "Miktar",
+      "quantityRequired": "Miktarı sıfırdan büyük bir sayı olarak girin",
+      "targetPrice": "Hedef fiyat",
+      "currency": "Para birimi",
+      "incoterms": "Teslim şekli (Incoterms)",
+      "incotermsPlaceholder": "Bir teslim şekli seçin",
+      "destinationPort": "Varış limanı / şehri",
+      "desiredDeliveryDate": "İstenen teslim tarihi"
+    },
+    "documents": {
+      "title": "2. Uyum belgeleri",
+      "subtitle": "Fabrikanın ihtiyaç duyacağı belgeleri ekleyin — bunları daha sonra talep üzerinden de ekleyebilirsiniz",
+      "dropLabel": "Yüklemek için tıklayın",
+      "dropHint": "PDF, JPG, PNG",
+      "uploaded": "Eklendi",
+      "remove": "Kaldır",
+      "kinds": {
+        "founding_docs": "Kuruluş belgeleri",
+        "registration_certificate": "Tescil belgesi",
+        "tax_id": "Vergi kimlik numarası belgesi (ИНН)",
+        "bank_details": "Banka bilgileri",
+        "import_export_license": "İthalat/ihracat lisansı"
+      }
+    },
+    "terms": {
+      "title": "3. Ticari koşullar",
+      "paymentMethod": "Ödeme yöntemi",
+      "paymentMethodPlaceholder": "ör. %30 peşin, kalanı konşimento karşılığı",
+      "offerValidity": "Teklif geçerlilik süresi",
+      "offerValidityPlaceholder": "ör. 30 gün",
+      "performanceGuarantee": "Kesin teminat",
+      "performanceGuaranteePlaceholder": "ör. %2 banka teminatı",
+      "inspectionRequirement": "Denetim gereksinimleri",
+      "inspectionRequirementPlaceholder": "ör. yüklemede SGS",
+      "additionalRequirements": "Ek gereksinimler",
+      "additionalRequirementsPlaceholder": "Fabrikanın bilmesi gereken diğer hususlar"
+    },
+    "contact": {
+      "title": "4. İletişim kişisi",
+      "name": "Ad soyad",
+      "nameRequired": "İletişim kişisinin adını girin",
+      "position": "Pozisyon",
+      "email": "E-posta",
+      "phone": "Telefon",
+      "phoneRequired": "Bir telefon numarası girin",
+      "telegram": "Telegram",
+      "submit": "Talebi gönder"
+    },
+    "submitFailed": "Talep gönderilemedi.",
+    "done": {
+      "title": "Talep fabrikaya gönderildi!",
+      "body": "Fabrika talebinizi inceleyip sizinle iletişime geçecektir.",
+      "numberLabel": "Talep numarası",
+      "dateLabel": "Gönderilme tarihi",
+      "toManufacturers": "Üreticilere dön",
+      "toHome": "Ana sayfaya git"
+    }
+  },
+  "manufacturerChat": {
+    "title": "Fabrikayla sohbet",
+    "subtitle": "Üreticiyle doğrudan sohbet",
+    "empty": "Henüz mesaj yok",
+    "placeholder": "Mesaj yazın…",
+    "send": "Gönder",
+    "attach": "Dosya"
+  },
+  "bankAccountStatus": {
+    "unverified": "Doğrulanmamış",
+    "pending": "İncelemede",
+    "verified": "Doğrulandı",
+    "failed": "Reddedildi",
+    "archived": "Arşivde"
+  },
+  "public": {
+    "nav": {
+      "primary": "Ana gezinme",
+      "home": "Ana sayfa",
+      "catalog": "Katalog",
+      "traders": "Tüccarlar",
+      "logistics": "Lojistik",
+      "laboratories": "Laboratuvarlar",
+      "prices": "Fiyatlar ve analiz",
+      "news": "Haberler",
+      "signIn": "Giriş yap",
+      "register": "Kayıt ol",
+      "language": "Dil",
+      "pricesShort": "Fiyatlar",
+      "technologists": "Teknologlar"
+    },
+    "role": {
+      "manufacturer": "Üretici",
+      "trader": "Tüccar",
+      "logistics_provider": "Lojistik",
+      "laboratory": "Laboratuvar",
+      "importer": "İthalatçı",
+      "distributor": "Distribütör",
+      "insurance_provider": "Sigorta"
+    },
+    "home": {
+      "metaTitle": "IMEX AI: petrokimya hammaddeleri pazaryeri",
+      "metaDescription": "Doğrulanmış üreticiler, tüccarlar ve laboratuvarlardan polimerler ve petrokimya ürünleri. Güncel fiyatlar, laboratuvar pasaportları, güvenli anlaşmalar.",
+      "heroTitle": "IMEX AI — Özbekistan petrokimya pazarının dijital platformu",
+      "heroSubtitle": "Üreticiler, tüccarlar, lojistik ve laboratuvarlar tek platformda",
+      "heroCtaPrimary": "Hesap oluşturun",
+      "heroCtaPrimaryAuthed": "Panele git",
+      "heroCtaSecondary": "Kataloğa göz atın",
+      "searchLabel": "Katalogda ara",
+      "searchPlaceholder": "Ürün, kalite, şirket, hizmet arayın...",
+      "searchAction": "Ara",
+      "popular": "Popüler aramalar:",
+      "statsHeading": "Rakamlarla platform",
+      "statLive": "Canlı platform verileriyle güncellenir",
+      "directoriesHeading": "Kimi arıyorsunuz",
+      "companyCount_one": "{{count}} şirket",
+      "companyCount_other": "{{count}} şirket",
+      "seeAll": "Tümünü gör",
+      "noOffers": "Henüz yayınlanmış ilan yok",
+      "marketPrices": "Piyasa fiyatları",
+      "priceProduct": "Ürün",
+      "priceValue": "Fiyat",
+      "priceChange": "Değ.",
+      "noHistory": "veri yok",
+      "noPrices": "Fiyatlar ilk gözlemlerden sonra görünecek",
+      "industryNews": "Sektör haberleri",
+      "noNews": "Henüz haber yok",
+      "whyEyebrow": "Doğrulanmış B2B pazaryeri",
+      "whyHeading": "Şirketler neden IMEX AI'ı seçiyor",
+      "whySubtitle": "Her şirket, siz bir anlaşmaya başlamadan önce devlet sicillerinde kontrol edilir ve belgelerini elektronik imzayla imzalar.",
+      "why": {
+        "verified": {
+          "title": "Doğrulanmış şirketler",
+          "body": "Yayın öncesinde sicil kontrolü ve elektronik imza."
+        },
+        "prices": {
+          "title": "Güncel fiyatlar ve analiz",
+          "body": "Borsa ve sektör kaynaklarından her gün toplanan fiyatlar."
+        },
+        "signing": {
+          "title": "D-Doc ile güvenli anlaşmalar",
+          "body": "Sözleşmeyi iki taraf da elektronik imzayla imzalar. Kâğıt yok, kurye yok."
+        },
+        "international": {
+          "title": "Uluslararası platform",
+          "body": "Birçok ülkeden tedarikçi ve alıcı tek pazaryerinde."
+        },
+        "support": {
+          "title": "7/24 destek",
+          "body": "IMEX AI ekibi anlaşmanın her aşamasında yardımcı olur."
+        }
+      },
+      "joinHeading": "IMEX AI'a katılın",
+      "joinBody": "Petrokimya işinizi bizimle küresel pazarda büyütün",
+      "allQueries": "Tüm aramalar",
+      "searchScope": "Arama kapsamı",
+      "scope": {
+        "products": "Ürünler",
+        "companies": "Şirketler",
+        "services": "Hizmetler"
+      },
+      "directoryCard": {
+        "manufacturersBody": "Fabrikalardan doğrudan tedarik",
+        "tradersBody": "Doğrulanmış tüccarlar ve distribütörler",
+        "logisticsBody": "Teslimat, gümrük, depolama",
+        "laboratoriesBody": "Laboratuvar analizleri ve kalite pasaportları",
+        "pricesBody": "Güncel fiyatlar ve piyasa analizi",
+        "newsBody": "Sektör haberleri ve güncellemeler",
+        "daily": "Her gün güncellenir"
+      },
+      "productCategories": "Ürün kategorileri",
+      "resetFilters": "Tümünü sıfırla",
+      "filterCountry": "Menşe ülke",
+      "filterCountryPlaceholder": "Ülke seçin",
+      "filterIncoterms": "Teslim şartları",
+      "filterCompany": "Üretici / Şirket",
+      "filterCompanyPlaceholder": "Seçin",
+      "showProducts": "Ürünleri göster",
+      "showProductsCount_one": "{{count}} ürünü göster",
+      "showProductsCount_other": "{{count}} ürünü göster",
+      "recommendedProducts": "Önerilen ürünler",
+      "verifiedManufacturers": "Doğrulanmış üreticiler",
+      "manufacturerOffers_one": "{{count}} teklif",
+      "manufacturerOffers_other": "{{count}} teklif",
+      "seeAllPeople": "Tümünü gör",
+      "contact": "İletişime geç",
+      "saveOffer": "İlanı kaydet",
+      "offerForm": "Form",
+      "offerFormGranules": "Granül",
+      "offerTerms": "Şartlar",
+      "priceValueUsd": "Fiyat (USD/MT)",
+      "priceChange24h": "Değ. (24 sa)",
+      "priceSource": "Kaynak: platformun piyasa gözlemleri",
+      "priceUpdated": "Güncelleme: {{date}}",
+      "popularServices": "Popüler hizmetler",
+      "allServices": "Tüm hizmetler",
+      "service": {
+        "logistics": {
+          "title": "Uluslararası lojistik",
+          "body": "Anahtar teslim taşıma"
+        },
+        "customs": {
+          "title": "Gümrük işlemleri",
+          "body": "İhracat / İthalat"
+        },
+        "lab": {
+          "title": "Laboratuvar analizleri",
+          "body": "Analiz ve kalite pasaportları"
+        }
+      },
+      "registerCompany": "Şirket kaydı",
+      "platformStat": {
+        "products": "Katalogdaki ürün",
+        "companies": "Şirket",
+        "countries": "Ülke",
+        "requests": "Günlük talep",
+        "deals": "Başarılı anlaşma",
+        "satisfaction": "Memnuniyet"
+      },
+      "fallbackCategory": {
+        "PE": "Polietilen (PE)",
+        "PP": "Polipropilen (PP)",
+        "PVC": "PVC",
+        "PET": "PET",
+        "PS": "Polistiren (PS)",
+        "Rubber": "Kauçuklar",
+        "Solvents": "Çözücüler",
+        "Additives": "Katkı maddeleri"
+      },
+      "popularTag": {
+        "rubber": "Kauçuk",
+        "solvents": "Çözücüler"
+      }
+    },
+    "market": {
+      "metaTitle": "Petrokimya hammaddeleri kataloğu",
+      "metaDescription": "Doğrulanmış tedarikçilerden polimerler, çözücüler ve katkı maddeleri. Ürün, stok durumu, ülke ve laboratuvar pasaportuna göre filtreleyin.",
+      "title": "Katalog",
+      "subtitle": "Doğrulanmış tedarikçilerin yayınlanmış ilanları",
+      "filters": "Filtreler",
+      "search": "Ara",
+      "searchPlaceholder": "Kalite veya ürün",
+      "category": "Kategori",
+      "allCategories": "Tüm kategoriler",
+      "availability": "Stok durumu",
+      "any": "Tümü",
+      "country": "Ülke",
+      "laboratory": "Laboratuvar",
+      "hasPassport": "Kalite pasaportu var",
+      "labVerified": "Platform üzerinden analiz edildi",
+      "reset": "Filtreleri temizle",
+      "resultCount_one": "{{count}} ilan",
+      "resultCount_other": "{{count}} ilan",
+      "empty": "Bu filtrelere uyan sonuç yok",
+      "pagination": "Sayfalama",
+      "pageOf": "Sayfa {{page}} / {{pages}}",
+      "anyPlural": "Tümü",
+      "showResults": "Sonuçları göster",
+      "showResultsCount_one": "{{count}} teklifi göster",
+      "showResultsCount_other": "{{count}} teklifi göster"
+    },
+    "offer": {
+      "untitled": "Adsız",
+      "onRequest": "Fiyat talep üzerine",
+      "moq": "Min. sipariş",
+      "leadTime": "Teslim süresi, gün",
+      "labVerified": "Laboratuvarca doğrulandı",
+      "labPassport": "Pasaport ekli",
+      "verified": "Doğrulandı",
+      "metaTitle": "{{seller}} firmasından {{name}}",
+      "metaDescription": "{{name}} stokta. Sevkiyat yeri: {{location}}. IMEX AI'da doğrulanmış tedarikçi.",
+      "notFound": "İlan bulunamadı",
+      "notFoundBody": "Yayından kaldırılmış olabilir.",
+      "breadcrumb": "Gezinme yolu",
+      "grade": "Kalite",
+      "polymer": "Polimer türü",
+      "cas": "CAS",
+      "hs": "GTİP kodu",
+      "manufacturer": "Üretici",
+      "incoterms": "Incoterms",
+      "location": "Sevkiyat yeri",
+      "properties": "Özellikler",
+      "applications": "Kullanım alanları",
+      "description": "Açıklama",
+      "soldBy": "Tedarikçi:",
+      "sendInquiry": "Talep gönder",
+      "signInToContact": "İletişim için giriş yapın",
+      "contactHint": "Tedarikçi iletişim bilgileri giriş yaptıktan sonra görünür."
+    },
+    "directory": {
+      "metaTitle": "{{name}}, doğrulanmış şirketler",
+      "search": "Şirket ara",
+      "searchPlaceholder": "Ad veya adres",
+      "resultCount_one": "{{count}} şirket",
+      "resultCount_other": "{{count}} şirket",
+      "empty": "Şirket bulunamadı",
+      "notFound": "Böyle bir bölüm yok"
+    },
+    "directories": {
+      "manufacturers": {
+        "subtitle": "Rolü doğrulanmış polimer fabrikaları ve üreticileri"
+      },
+      "traders": {
+        "subtitle": "Petrokimya hammaddeleri ticaret şirketleri ve distribütörleri"
+      },
+      "logistics": {
+        "subtitle": "Taşımacılık, gümrük işlemleri ve depolama"
+      },
+      "laboratories": {
+        "subtitle": "Analiz ve kalite pasaportları için akredite laboratuvarlar"
+      }
+    },
+    "company": {
+      "untitled": "Adsız",
+      "notFound": "Şirket bulunamadı",
+      "notFoundBody": "Henüz doğrulamadan geçmemiş olabilir.",
+      "metaTitle": "{{name}}, {{directory}}",
+      "metaDescription": "{{name}}, {{country}}. IMEX AI pazaryerinde doğrulanmış şirket.",
+      "offers": "İlanlar",
+      "founded": "Kuruluş",
+      "employees": "Çalışan sayısı",
+      "iso": "ISO",
+      "legalName": "Ticari unvan",
+      "legalForm": "Hukuki yapı",
+      "address": "Adres",
+      "jurisdiction": "Yargı yetkisi",
+      "productionType": "Üretim türü",
+      "exportTo": "İhracat yapılan ülkeler",
+      "products": "Şirket ilanları",
+      "noProducts": "Bu şirketin henüz yayınlanmış ilanı yok",
+      "about": "Hakkında",
+      "contact": "İletişime geç"
+    },
+    "prices": {
+      "metaTitle": "Polimer ve petrokimya fiyatları",
+      "metaDescription": "Güncel polimer fiyatları: HDPE, PP, LLDPE, PVC, PET ve önceki gözleme göre değişim.",
+      "title": "Fiyatlar ve analiz",
+      "subtitle": "Her ürün için son gözlem ve bir öncekine göre değişim",
+      "unit": "Birim",
+      "observed": "Tarih"
+    },
+    "footer": {
+      "marketplace": "Pazaryeri",
+      "directories": "Rehberler",
+      "account": "Hesap",
+      "blurb": "Şirket doğrulaması ve laboratuvar kontrolü olan petrokimya hammaddeleri pazaryeri.",
+      "legal": "IMEX AI. Tüm hakları saklıdır."
+    }
+  },
+  "logisticsRequest": {
+    "title": "Lojistik şirketi talebi",
+    "heroTitle": "Hızlı lojistik talebi",
+    "heroBody": "Talebinizi gönderin, uzmanlarımız sizin için en uygun lojistik çözümleri ve operatörleri bulsun.",
+    "cargoTitle": "Yük bilgileri",
+    "cargoName": "Yükün adı",
+    "cargoNamePlaceholder": "Polipropilen (PP)",
+    "volume": "Hacim",
+    "volumeHint": "ton cinsinden",
+    "packaging": "Ambalaj türü",
+    "packagingPlaceholder": "Tür seçin",
+    "requirements": "Özel gereksinimler",
+    "requirementsPlaceholder": "Güvenli taşıma, ADR",
+    "routeTitle": "Güzergâh",
+    "from": "Nereden",
+    "to": "Nereye",
+    "country": "Ülke",
+    "countryPlaceholder": "Ülke seçin",
+    "city": "Şehir",
+    "submit": "Talebi gönder",
+    "privacy": "Verileriniz korunur ve yalnızca lojistik çözümlerin seçimi için kullanılır.",
+    "number": "Talep numarası",
+    "doneTitle": "Talep gönderildi!",
+    "doneBody": "Taşıyıcı talebinizi aldı. Yanıt bildirimlerinize gelecek; acil konuları telefonla çözeceğiz.",
+    "backToDirectory": "Taşıyıcı listesine dön",
+    "toCabinet": "Panele git",
+    "packagingOptions": {
+      "containers": "Konteynerler",
+      "big_bags": "Big bag'ler",
+      "bags": "Torbalar",
+      "bulk": "Dökme",
+      "pallets": "Paletler",
+      "iso_tank": "ISO tank",
+      "drums": "Variller",
+      "other": "Diğer"
+    },
+    "lifecycle": {
+      "submitted": "Gönderildi",
+      "in_progress": "İşlemde",
+      "quoted": "Teklif var"
+    },
+    "errors": {
+      "cargoRequired": "Yükün adını girin",
+      "volumeInvalid": "Sıfırdan büyük bir hacim girin",
+      "countryRequired": "Ülke seçin"
+    },
+    "listTitle": "Lojistik talepleri",
+    "emptyTitle": "Henüz talep yok",
+    "emptySentBody": "Bir taşıyıcının profilini açın ve talep gönderin — burada görünecektir.",
+    "myRequests": "Taleplerim",
+    "buyer": "Alıcı",
+    "contact": "İletişim telefonu",
+    "broadcastHint": "Bu talebi doğrulanmış tüm lojistik şirketleri görecektir.",
+    "ctaFromProfile": "Taşıma talebi oluştur",
+    "newRequest": "Yeni talep",
+    "poolTitle": "Taşıma talepleri",
+    "poolSubtitle": "Yük sahiplerinin açık talepleri. Yanıt verin ve sohbette devam edin.",
+    "tabAll": "Tüm talepler",
+    "tabMine": "Yanıtlarım",
+    "poolEmptyTitle": "Henüz açık talep yok",
+    "poolEmptyBody": "Bir yük sahibi talep oluşturduğunda burada görünecektir.",
+    "poolEmptyMineBody": "Bir talebe yanıt verin, burada görünecektir.",
+    "reply": "Yanıt ver",
+    "openChat": "Sohbeti aç",
+    "responsesTitle": "Taşıyıcı yanıtları",
+    "noResponses": "Henüz yanıt yok",
+    "noResponsesBody": "Taşıyıcılar talebinizi görüyor. İlk yanıt burada görünecektir.",
+    "responseCount_one": "{{count}} yanıt",
+    "responseCount_other": "{{count}} yanıt"
+  },
+  "threadChat": {
+    "title": "Yazışma",
+    "empty": "Henüz mesaj yok. İlk mesajı siz yazın.",
+    "placeholder": "Mesajınız…",
+    "send": "Gönder",
+    "attach": "Dosya ekle"
+  },
+  "labRequest": {
+    "title": "Analiz talebi",
+    "heroTitle": "Yeni laboratuvar talebi",
+    "heroBody": "Neyin test edilmesi gerektiğini açıklayın. Talebi doğrulanmış tüm laboratuvarlar görecektir.",
+    "broadcastHint": "Bu talebi doğrulanmış tüm laboratuvarlar görecektir.",
+    "stepSubject": "Ne test edilecek",
+    "stepDetails": "Talep bilgileri",
+    "product": "Ne test ediliyor?",
+    "productPlaceholder": "HDPE S5502 BN",
+    "grade": "Sınıf",
+    "studyType": "Analiz türü",
+    "studyTypePlaceholder": "Tür seçin",
+    "methods": "Gerekli testler",
+    "methodsHint": "En az birini seçin",
+    "sampleQty": "Numune miktarı",
+    "sampleQtyHint": "ör. 1 kg",
+    "comment": "Not",
+    "commentPlaceholder": "Not girin",
+    "contactName": "İlgili kişi",
+    "contactEmail": "E-posta",
+    "contactPhone": "Telefon",
+    "contactPhoneHint": "Boş bırakırsanız hesabınızdaki numarayı kullanırız",
+    "purpose": "Analiz amacı",
+    "purposePlaceholder": "Amaç seçin",
+    "urgent": "Acil mi?",
+    "desiredDate": "İstenen tamamlanma tarihi",
+    "submit": "Talebi gönder",
+    "ctaFromProfile": "Analiz talebi oluştur",
+    "newRequest": "Yeni talep",
+    "listTitle": "Laboratuvar talepleri",
+    "myRequests": "Taleplerim",
+    "laboratory": "Laboratuvar",
+    "buyer": "Müşteri",
+    "contact": "İletişim",
+    "number": "Talep numarası",
+    "emptyTitle": "Henüz talep yok",
+    "emptySentBody": "Neyin test edilmesi gerektiğini açıklayın — talebi tüm laboratuvarlar görecektir.",
+    "doneTitle": "Talep gönderildi!",
+    "doneBody": "Laboratuvarlar talebinizi aldı. Yanıtlar bildirimlerinize gelecek, ayrıntıları yazışmada görüşebilirsiniz.",
+    "backToDirectory": "Laboratuvar listesine dön",
+    "toCabinet": "Panele git",
+    "poolTitle": "Analiz talepleri",
+    "poolSubtitle": "Müşterilerin açık talepleri. Yanıt verin ve sohbette devam edin.",
+    "tabAll": "Tüm talepler",
+    "tabMine": "Yanıtlarım",
+    "poolEmptyTitle": "Henüz açık talep yok",
+    "poolEmptyBody": "Bir müşteri talep oluşturduğunda burada görünecektir.",
+    "poolEmptyMineBody": "Bir talebe yanıt verin, burada görünecektir.",
+    "reply": "Yanıt ver",
+    "openChat": "Sohbeti aç",
+    "responsesTitle": "Laboratuvar yanıtları",
+    "noResponses": "Henüz yanıt yok",
+    "noResponsesBody": "Laboratuvarlar talebinizi görüyor. İlk yanıt burada görünecektir.",
+    "responseCount_one": "{{count}} yanıt",
+    "responseCount_other": "{{count}} yanıt",
+    "lifecycle": {
+      "submitted": "Gönderildi",
+      "in_progress": "İşlemde",
+      "quoted": "Teklif var"
+    },
+    "errors": {
+      "productRequired": "Neyin test edilmesi gerektiğini belirtin",
+      "methodsRequired": "En az bir test seçin"
+    },
+    "methodOptions": {
+      "mfi": "Erime akış indeksi (MFI)",
+      "density": "Yoğunluk",
+      "tensile_strength": "Çekme dayanımı",
+      "elongation": "Kopma uzaması",
+      "impact_strength": "Darbe dayanımı",
+      "dsc": "DSC",
+      "ftir": "FTIR",
+      "tga": "TGA",
+      "ash_content": "Kül içeriği",
+      "moisture": "Nem",
+      "vicat": "Vicat yumuşama noktası",
+      "hardness": "Sertlik",
+      "melting_point": "Erime noktası",
+      "carbon_black": "Karbon siyahı içeriği",
+      "oit": "OIT (oksidasyon indüksiyon süresi)",
+      "rheology": "Reoloji"
+    },
+    "studyTypes": {
+      "full_passport": "Tam laboratuvar pasaportu",
+      "single_method": "Tek parametre",
+      "comparison": "Karşılaştırmalı analiz",
+      "incoming_control": "Giriş kontrolü",
+      "certification": "Sertifikasyon için"
+    },
+    "purposes": {
+      "quality_and_compatibility": "Kalite ve ekipman uyumluluğu",
+      "supplier_check": "Tedarikçi kontrolü",
+      "certification": "Sertifikasyon",
+      "dispute": "Uyuşmazlık çözümü",
+      "rnd": "Ar-Ge"
+    }
+  },
+  "productCategory": {
+    "polymer": "Polimerler"
+  },
+  "ikpu": {
+    "label": "ИКПУ (ürün kodu)",
+    "hint": "my.soliq.uz'a iletilen belgeler için zorunludur. Didox'ta daha önce beyan ettiğiniz kodlar arasında arar; yeni bir kodu tasnif.soliq.uz'dan alın.",
+    "placeholder": "Ürün adı, ör. “polietilen”",
+    "search": "Ara",
+    "package": "Ambalaj",
+    "chosenPackage": "Ambalaj: {{name}}",
+    "empty": "Sonuç bulunamadı. Farklı bir ad deneyin.",
+    "errors": {
+      "unavailable": "Didox ИКПУ dizini şu anda kullanılamıyor. Daha sonra tekrar deneyin — kod sonradan da eklenebilir.",
+      "failed": "Arama yapılamadı.",
+      "badCode": "ИКПУ kodu 17 haneden oluşmalıdır."
+    },
+    "emptyAdd": "Kodlarınız arasında sonuç bulunamadı. Arama yalnızca Didox'ta daha önce beyan ettiğiniz kodları kapsar — yeni bir kodu tasnif.soliq.uz'dan alıp buraya ekleyin.",
+    "add": "{{code}} kodunu ekle",
+    "codeHint": "ИКПУ kodu 17 haneden oluşur.",
+    "origin": "Malın menşei",
+    "originHint": "Fatura için: bu malı nasıl edindiğiniz. Didox bunu bilemez — aynı kod bir fabrika için kendi üretimi, bir tüccar için yeniden satıştır.",
+    "originPlaceholder": "Menşei seçin",
+    "originRequired": "Malın menşei belirtilmeden kod belgelerde kullanılamaz.",
+    "origins": {
+      "1": "Kendi üretimi",
+      "2": "Yeniden satış (tedarikçiden satın alındı)",
+      "3": "Hizmetler",
+      "4": "Dolaşımda değil"
+    },
+    "session": {
+      "hint": "ИКПУ kodları Didox hesabınızda saklanır. Aramak ve eklemek için şirketin e-imzasıyla Didox'a giriş yapın — bir giriş 6 saat geçerlidir.",
+      "open": "E-imza ile Didox'a giriş yap"
+    }
+  },
+  "didox": {
+    "title": "Elektronik belgeler (Didox)",
+    "connect": "Didox'a bağlan",
+    "connecting": "Bağlanıyor…",
+    "signing": "İmzalanıyor…",
+    "signAndSend": "İmzala ve Didox ile gönder",
+    "sessionExpired": "Didox oturumunun süresi doldu — bir sonraki imzanızda kendiliğinden yenilenir.",
+    "states": {
+      "not_registered": "Bağlı değil",
+      "offer_unsigned": "Açık teklif imzalanmadı",
+      "ready": "Hazır",
+      "disabled": ""
+    },
+    "hints": {
+      "not_registered": "Sözleşmeleri Didox üzerinden imzalamak için şirketin kendi e-imza anahtarıyla bir kez bağlanması gerekir.",
+      "offer_unsigned": "Hesap oluşturuldu, ancak Didox açık teklifi henüz imzalanmadı. İmzalanana kadar belge gönderimleri reddedilecektir.",
+      "ready": "Bu şirket Didox üzerinden belge gönderebilir ve imzalayabilir.",
+      "disabled": ""
+    },
+    "documentStatus": {
+      "0": "Taslak — imzaya hazır",
+      "1": "Karşı tarafın imzası bekleniyor",
+      "2": "İmza sırası sizde",
+      "3": "Her iki tarafça imzalandı",
+      "4": "Karşı taraf reddetti",
+      "50": "Vergi idaresince iptal edildi"
+    },
+    "errors": {
+      "module_missing": "E-IMZO bulunamadı. E-IMZO modülünü başlatıp tekrar deneyin.",
+      "no_cert": "Hiçbir e-imza anahtarı bulunamadı.",
+      "cert_mismatch": "Sertifikadaki vergi numarası (INN) bu şirketle eşleşmiyor.",
+      "disabled": "Didox bu sistemde etkin değil.",
+      "failed": "Didox'a bağlanılamadı.",
+      "not_registered": "Şirketin henüz Didox hesabı yok — aşağıdan kaydedin.",
+      "rejected": "Didox reddetti: {{message}}"
+    },
+    "signErrors": {
+      "module_missing": "E-IMZO bulunamadı. Modülü başlatıp tekrar deneyin.",
+      "no_cert": "Hiçbir e-imza anahtarı bulunamadı.",
+      "expired": "İmza verilerinin süresi doldu. «İmzala»ya tekrar basın.",
+      "offer_required": "Önce Didox açık teklifinin imzalanması gerekir.",
+      "unavailable": "Didox şu anda kullanılamıyor. Daha sonra deneyin.",
+      "failed": "Belge imzalanamadı.",
+      "rejected": "EDI operatörü belgeyi reddetti: {{message}}",
+      "cancelled": "İmzalama iptal edildi — E-IMZO şifre penceresi kapatıldı. Tekrar basın ve anahtar şifrenizi girin."
+    },
+    "signOffer": "Didox açık teklifini imzala",
+    "signingOffer": "İmzalanıyor…",
+    "printForm": {
+      "title": "Didox basılı formu",
+      "loading": "Operatörün formu yükleniyor…",
+      "errors": {
+        "failed": "Basılı form operatörden alınamadı.",
+        "didox_session_required": "Didox oturumu gerekli — şirketi operatöre bağlayın.",
+        "document_not_created": "Belge henüz operatörde oluşturulmadı.",
+        "didox_unavailable": "Didox şu anda kullanılamıyor. Daha sonra tekrar deneyin."
+      }
+    },
+    "ownerOnly": "Şirketi Didox'a yalnızca şirket sahibi bağlayabilir."
+  },
+  "didoxOnboarding": {
+    "title": "Didox'a bağlanma",
+    "subtitle": "{{company}} — elektronik belge alışverişi",
+    "why": "Didox üzerinden imzalanan sözleşmeler my.soliq.uz'a ulaşır. Bunları imzalamak için şirketin bir Didox hesabı olmalı ve operatörün açık teklifini imzalamış olmalıdır. Bu işlem bir kez yapılır.",
+    "later": "Daha sonra",
+    "steps": {
+      "account": "Didox hesabı",
+      "offer": "Didox açık teklifi"
+    },
+    "account": {
+      "haveTitle": "Şirketin zaten bir Didox hesabı var mı?",
+      "haveBody": "Şirketin e-imza anahtarıyla giriş yapın — başka bir şey gerekmez. Açık teklif didox.uz'da zaten imzalandıysa bunu göreceğiz.",
+      "signIn": "Didox'a e-imza ile giriş yap",
+      "registerTitle": "Şirketi Didox'a kaydedin",
+      "registerBody": "E-posta ve şifre, didox.uz hesabınızın giriş bilgileridir. Bunları Didox'a iletiriz ve saklamayız. Kayıt, şirketin e-imza anahtarıyla onaylanır.",
+      "email": "E-posta",
+      "emailInvalid": "E-postayı «+» işareti olmadan girin — Didox bunu kabul etmiyor.",
+      "mobile": "Telefon",
+      "mobileHint": "Yalnızca rakam, ülke koduyla birlikte: 998901234567.",
+      "mobileInvalid": "9 ile 15 arası rakam.",
+      "password": "didox.uz şifresi",
+      "passwordHint": "En az 8 karakter.",
+      "passwordShort": "En az 8 karakter.",
+      "register": "E-imza ile kaydet"
+    },
+    "offer": {
+      "title": "Didox açık teklifi",
+      "body": "EDI operatörünün açık teklifini okuyun. Şirketin anahtarıyla imzalamak, teklifi kabul etmek anlamına gelir — bu olmadan Didox hiçbir belgeyi kabul etmez.",
+      "loading": "Açık teklif yükleniyor…",
+      "sessionHint": "Açık teklif Didox'ta saklanır. Açmak için şirketin e-imzasıyla giriş yapın.",
+      "loadFailed": "Açık teklif Didox'tan yüklenemedi.",
+      "openInTab": "Yeni sekmede aç",
+      "agree": "Didox açık teklifini okudum ve koşullarını kabul ediyorum",
+      "errors": {
+        "module_missing": "E-IMZO bulunamadı. E-IMZO modülünü başlatıp tekrar deneyin.",
+        "cert_mismatch": "Bu şirkete ait anahtar bulunamadı — sertifikadaki vergi numarası (INN) eşleşmiyor.",
+        "failed": "Açık teklif imzalanamadı. Lütfen tekrar deneyin."
+      }
+    },
+    "done": {
+      "title": "Şirket Didox'a bağlandı",
+      "body": "Artık sözleşmeler Didox üzerinden imzalanıp gönderilebilir.",
+      "cta": "Panele git"
+    },
+    "contractBlocked": {
+      "title": "Didox üzerinden imzalama henüz kullanılamıyor"
+    }
+  },
+  "sampleLetter": {
+    "title": "Taahhüt mektubu",
+    "buyerPending": "Satıcı bu talebi ancak siz mektubu e-imza ile imzaladıktan sonra görür.",
+    "sellerPending": "Alıcı mektubu henüz imzalamadı — talep gönderilmiş sayılmaz.",
+    "signedAt": "No. {{number}}, {{at}} tarihinde imzalandı",
+    "open": "Mektubu aç (PDF)",
+    "sign": "E-IMZO ile imzala",
+    "notSentYet": "Talep henüz satıcıya ulaşmadı.",
+    "loadFailed": "Mektup yüklenemedi. Sayfayı yenileyin."
+  },
+  "didoxDocument": {
+    "title": "Didox'taki belge",
+    "sellerHint": "Bu sözleşme EDI operatöründe imzalanır. Aşağıdaki düğme belgeyi oluşturur ve hemen sizin anahtarınızla imzalar — ardından sıra alıcıya geçer.",
+    "buyerHint": "Satıcı belgeyi henüz operatörde oluşturmadı. İmzalama bundan sonra açılır.",
+    "create": "İmzala ve Didox ile gönder",
+    "creating": "İmzalanıyor…",
+    "blockedTitle": "Belge henüz oluşturulamıyor",
+    "blockers": {
+      "ikpu_missing": "İlanda ürün kodu (IKPU) yok — ürün kodu olmadan belge kabul edilmez. İlanda belirtin.",
+      "signer_identity_missing": "İmzalayanın bilgileri (ad soyad ve PINFL) eksik ve belgede zorunludur. Şirketin e-imzasıyla Didox'a giriş yapın — bilgiler aynı imzadan alınır.",
+      "not_ready": "Sözleşme henüz iki tarafa da imzaya gönderilmedi.",
+      "wrong_rail": "Bu sözleşme Didox üzerinden değil, kendi E-IMZO altyapımızla imzalanır.",
+      "party_mismatch": "Sözleşmeden satıcı belirlenemedi.",
+      "counterparty_unknown": "Karşı tarafın vergi numarası EDI operatörünün kaydında yok — operatör ona gönderilen bir belgeyi kabul etmez.",
+      "counterparty_ikpu_missing": "Karşı taraf bu ürün kodunu kendi Didox hesabında beyan etmemiş, bu yüzden operatör reddedecek. Başkasının kod listesine ekleme yapamayız — karşı taraftan kodu eklemesini isteyin."
+    },
+    "errors": {
+      "didox_session_required": "Didox oturumu gerekli — e-imza ile giriş yapın.",
+      "didox_offer_required": "Şirket Didox açık teklifini imzalamadı.",
+      "didox_unavailable": "Didox şu anda kullanılamıyor. Daha sonra tekrar deneyin.",
+      "ikpu_missing": "IKPU seçilmedi.",
+      "not_ready": "Sözleşme henüz gönderime hazır değil.",
+      "not_seller": "Belgeyi satıcı oluşturur.",
+      "wrong_rail": "Sözleşme Didox kanalında değil.",
+      "empty_body": "Sözleşmede ne metin ne de kalem var."
+    },
+    "ikpuTitle": "Ürün kodu (IKPU)",
+    "ikpuHint": "Bu sözleşme bir ihaleden doğdu, bu yüzden kod taşıyan bir ilan yok — IKPU'yu kendiniz seçin. Kod belgeye ve my.soliq.uz'a aktarılır.",
+    "ikpuRequired": "IKPU'yu, ambalajı ve ürünün menşeini seçin — bunlar olmadan belge oluşturulamaz."
+  },
+  "stepUp": {
+    "title": "Şifrenizi onaylayın",
+    "description": "Bu işlem ödeme bilgilerini değiştirir. Devam etmek için şifrenizi girin.",
+    "passwordLabel": "Şifre",
+    "confirm": "Onayla",
+    "errors": {
+      "wrongPassword": "Şifre yanlış",
+      "unavailable": "Hizmet geçici olarak kullanılamıyor. Tekrar deneyin.",
+      "failed": "Şifreniz onaylanamadı. Tekrar deneyin."
+    }
+  },
+  "contractTerms": {
+    "title": "Koşul şablonları",
+    "subtitle": "Ödeme ve teslimat koşullarınız — sözleşme hazırlarken bir şablon seçin, alanlar kendiliğinden dolsun.",
+    "new": "Yeni şablon",
+    "edit": "Şablonu düzenle",
+    "dialogHint": "Sözleşmenin hukuki metni platform genelinde ortaktır. Şablon yalnızca sizin koşullarınızı içerir; fiyat, miktar ve ürün her sözleşmede ayrıca belirtilir.",
+    "name": "Ad",
+    "namePlaceholder": "Örn. Düzenli müşteriler",
+    "empty": "Henüz şablon yok",
+    "emptyBody": "Sözleşmeden sözleşmeye tekrarlanan koşullarınızı kaydedin.",
+    "readOnly": "Şablonları şirket sahibi ve yöneticileri oluşturur.",
+    "archiveConfirm": "«{{name}}» şablonu kaldırılsın mı? Önceden hazırlanmış sözleşmeler değişmez.",
+    "pick": "Koşul şablonu",
+    "pickHint": "Ödeme ve teslimat koşullarını doldurur — yine de düzenleyebilirsiniz.",
+    "none": "Şablonsuz",
+    "saveFromForm": "Koşulları şablon olarak kaydet",
+    "errors": {
+      "nameTaken": "Bu adda bir şablon zaten var.",
+      "saveFailed": "Şablon kaydedilemedi. Alanları kontrol edin."
+    }
+  },
+  "facture": {
+    "title": "Faturalar (ESF)",
+    "none": "Bu sözleşme için henüz fatura yok.",
+    "new": "ESF düzenle",
+    "issue": "Düzenle ve imzala",
+    "issuing": "Düzenleniyor…",
+    "count": "Miktar",
+    "price": "Birim fiyat, UZS",
+    "vat": "KDV",
+    "noVat": "KDV'siz",
+    "notInSoum": "Sözleşme {{currency}} cinsinden, ancak ESF som cinsinden düzenlenir — fiyatı som olarak girin.",
+    "pending": "Önceki ESF henüz imzalanmadı — yenisini düzenlemeden önce onu imzalayın.",
+    "didoxNotReady": "ESF'ler Didox üzerinden düzenlenir ve imzalanır — önce şirketi bağlayın.",
+    "blockedTitle": "ESF henüz düzenlenemiyor",
+    "blockers": {
+      "contract_reference_missing": "ESF'nin atıfta bulunması gereken Didox sözleşmesi bulunamadı.",
+      "not_active": "Sözleşme henüz iki tarafça imzalanmadı.",
+      "specification_required": "İmzalanmış bir spesifikasyon seçin — çerçeve sözleşmede ESF buna göre düzenlenir."
+    },
+    "errors": {
+      "facture_pending": "Önceki ESF henüz imzalanmadı.",
+      "price_required": "Fiyatı som olarak girin.",
+      "precision": "Ondalık basamak çok fazla: miktar en fazla 6, fiyat en fazla 2.",
+      "not_active": "Sözleşme henüz iki tarafça imzalanmadı.",
+      "contract_reference_missing": "ESF'nin atıfta bulunması gereken Didox sözleşmesi bulunamadı."
+    },
+    "specification": "Spesifikasyon"
+  },
+  "specification": {
+    "title": "Spesifikasyonlar",
+    "none": "Henüz spesifikasyon yok. Çerçeve sözleşme kapsamındaki her sevkiyat kendi spesifikasyonuyla düzenlenir.",
+    "new": "Yeni spesifikasyon",
+    "create": "Spesifikasyon hazırla",
+    "name": "Spesifikasyon No. {{n}}",
+    "line": "Kalem {{n}}",
+    "product": "Ürün",
+    "qty": "Miktar",
+    "unit": "Birim",
+    "unitPrice": "Birim fiyat, UZS",
+    "addLine": "Kalem ekle",
+    "units": {
+      "kg": "kg",
+      "t": "t",
+      "pcs": "adet"
+    },
+    "priceBasis": "Belirtilen fiyat",
+    "withVat": "KDV dahil",
+    "withoutVat": "KDV hariç",
+    "priceBasisHint": {
+      "with_vat": "Toplam yuvarlak çıkar, ancak ESF birkaç som farklı olabilir.",
+      "without_vat": "ESF, spesifikasyonla tiyinine kadar eşleşir."
+    },
+    "payment": "Ödeme",
+    "prepay": "%100 peşin ödeme",
+    "schedule": "Takvime göre",
+    "scheduleText": "Ödeme takvimi",
+    "deliveryDays": "Ödemeden sonra teslimat süresi, banka günü",
+    "openPdf": "PDF'i aç",
+    "status": {
+      "draft": "Taslak",
+      "pending_signatures": "İmzalar bekleniyor",
+      "active": "İmzalandı",
+      "declined": "Reddedildi",
+      "cancelled": "İptal edildi"
+    },
+    "errors": {
+      "invalid": "Kalemleri kontrol edin: her birinde ürün, miktar ve fiyat olmalı.",
+      "createFailed": "Spesifikasyon hazırlanamadı."
+    }
+  },
+  "technologists": {
+    "title": "Teknologlar",
+    "metaTitle": "Teknologlar ve endüstriyel uzmanlar — IMEX AI",
+    "subtitle": "Üretiminiz için endüstriyel bir uzman bulun.",
+    "needTitle": "Teknoloğa ihtiyacım var",
+    "needBody": "Görevi tanımlayın — teknologlar tekliflerini gönderir, işi kimin yapacağını siz seçersiniz.",
+    "needCta": "Talep oluştur",
+    "amTitle": "Ben bir teknoloğum",
+    "amBody": "Teknolog, mühendis veya uzman mısınız? Bir profil oluşturun ve fabrikalardan talepler alın.",
+    "amCta": "Uzman olarak kaydol",
+    "catalogTitle": "Uzman kataloğu",
+    "filters": {
+      "any": "Tümü",
+      "anyProcess": "Tüm prosesler",
+      "anyMaterial": "Tüm malzemeler",
+      "anyLanguage": "Tüm diller",
+      "search": "Ara",
+      "searchPlaceholder": "Ad, uzmanlık alanı…",
+      "process": "Proses",
+      "material": "Malzeme",
+      "language": "Dil"
+    },
+    "resultCount_one": "{{count}} uzman",
+    "resultCount_other": "{{count}} uzman",
+    "empty": "Henüz uzman yok.",
+    "noReviews": "Değerlendirme yok",
+    "reviews_one": "{{count}} değerlendirme",
+    "reviews_other": "{{count}} değerlendirme",
+    "profileVerified": "Profil doğrulandı",
+    "untitled": "Uzman",
+    "years_one": "{{count}} yıl deneyim",
+    "years_other": "{{count}} yıl deneyim",
+    "notFound": "Uzman bulunamadı",
+    "backToCatalog": "Teknolog kataloğu",
+    "profileMetaTitle": "{{name}} — teknolog | IMEX AI",
+    "fields": {
+      "processes": "Prosesler",
+      "materials": "Malzemeler",
+      "industries": "Sektörler",
+      "equipment": "Ekipman deneyimi",
+      "years": "Deneyim (yıl)",
+      "projects": "Proje",
+      "countries": "Ülke",
+      "formats": "Çalışma şekli",
+      "languages": "Diller"
+    },
+    "process": {
+      "extrusion": "Ekstrüzyon",
+      "injection_molding": "Enjeksiyon kalıplama",
+      "blow_molding": "Şişirme kalıplama",
+      "compounding": "Kompaundlama",
+      "film": "Film",
+      "pipe": "Boru",
+      "recycling": "Geri dönüşüm",
+      "thermoforming": "Termoformlama"
+    },
+    "industry": {
+      "petrochemical": "Petrokimya",
+      "polymer": "Polimer",
+      "packaging": "Ambalaj",
+      "automotive": "Otomotiv",
+      "recycling": "Geri dönüşüm",
+      "chemical": "Kimya"
+    },
+    "need": {
+      "equipment_setup": "Ekipman ayarı",
+      "material_selection": "Hammadde seçimi",
+      "production_launch": "Üretimin başlatılması",
+      "troubleshooting": "Sorun giderme",
+      "process_optimization": "Proses optimizasyonu",
+      "other": "Diğer"
+    },
+    "urgency": {
+      "urgent": "Acil",
+      "week": "Bir hafta içinde",
+      "month": "Bir ay içinde",
+      "date": "Belirli bir tarihe kadar"
+    },
+    "format": {
+      "online": "Çevrim içi",
+      "on_site": "Tesiste",
+      "both": "Her ikisi de"
+    },
+    "language": {
+      "ru": "Rusça",
+      "uz": "Özbekçe",
+      "en": "İngilizce",
+      "zh": "Çince",
+      "tr": "Türkçe",
+      "de": "Almanca",
+      "fa": "Farsça",
+      "kk": "Kazakça"
+    },
+    "capacityUnit": {
+      "kg_h": "kg/saat",
+      "t_day": "t/gün",
+      "t_month": "t/ay"
+    },
+    "invite": {
+      "cta": "Talebe davet et",
+      "postFirst": "Teknolog talebi oluştur",
+      "pick": "Talep",
+      "sent": "Davet gönderildi"
+    }
+  },
+  "techRequest": {
+    "form": {
+      "needType": "Neye ihtiyacınız var?",
+      "process": "Proses",
+      "equipment": "Ekipman",
+      "equipmentPlaceholder": "Ekstrüzyon hattı",
+      "equipmentModel": "Ekipman modeli",
+      "product": "Ne üretiyorsunuz?",
+      "productPlaceholder": "Polietilen film",
+      "currentMaterial": "Mevcut hammadde",
+      "currentMaterialHint": "Bilmiyorsanız boş bırakın.",
+      "targetMaterial": "Hedef hammadde",
+      "problem": "Görev veya sorun nedir?",
+      "problemPlaceholder": "Örneğin: film kalınlığı dengesiz. Daha ucuz bir hammaddeye geçmek istiyoruz.",
+      "capacity": "Kapasite",
+      "capacityUnit": "Birim",
+      "country": "Ülke",
+      "city": "Şehir",
+      "cityPlaceholder": "Taşkent",
+      "location": "Tesis konumu",
+      "urgency": "Uzmana ne zaman ihtiyacınız var?",
+      "neededBy": "Tarih",
+      "workFormat": "Çalışma şekli",
+      "languages": "Uzmanın dili",
+      "budget": "Bütçe",
+      "budgetHint": "İsteğe bağlı. «Talep üzerine» yazabilirsiniz.",
+      "required": "Zorunlu alan",
+      "notVerified": "Yalnızca doğrulanmış bir şirket talep yayınlayabilir.",
+      "submit": "Talebi yayınla"
+    },
+    "status": {
+      "open": "Açık",
+      "assigned": "Uzman seçildi",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi"
+    },
+    "contactsHint": "Sözleşme ve ödeme doğrudan sizin aranızda yapılır.",
+    "contactName": "Ad",
+    "contactPhone": "Telefon",
+    "contactEmail": "E-posta",
+    "notFound": "Talep bulunamadı",
+    "chat": "Fabrikayla yazışma",
+    "listTitle": "Teknolog talepleri",
+    "listSubtitle": "Uzmanlar tekliflerle yanıt verir — işi kimin yapacağını siz seçersiniz.",
+    "browseExperts": "Teknolog kataloğu",
+    "new": "Teknolog bul",
+    "offerCount_one": "{{count}} teklif",
+    "offerCount_other": "{{count}} teklif",
+    "empty": "Henüz talep yok",
+    "emptyBody": "Görevi tanımlayın — teknologlar teklif gönderecektir.",
+    "newTitle": "Teknolog bul",
+    "newSubtitle": "Talebi doğrulanmış tüm teknologlar görecektir. Şirketinizin adı, yazışma başladığında görünür olur.",
+    "complete": "İş tamamlandı",
+    "cancel": "Talebi iptal et",
+    "offers": "Teklifler",
+    "inviteMore": "Katalogdan uzman davet et",
+    "noOffers": "Henüz teklif yok",
+    "noOffersBody": "Uygun uzmanlara bildirim gönderildi.",
+    "chatWith": "Yazışma: {{name}}",
+    "expertContacts": "Uzmanın iletişim bilgileri",
+    "yourReview": "Değerlendirmeniz",
+    "acceptConfirm": "Bu uzmanı seçmek istiyor musunuz?",
+    "acceptHint": "Diğer teklifler reddedilecek; siz ve uzman birbirinizin iletişim bilgilerini göreceksiniz.",
+    "declineConfirm": "Teklif reddedilsin mi?",
+    "cancelConfirm": "Talep iptal edilsin mi?",
+    "accept": "Seç",
+    "decline": "Reddet",
+    "write": "Mesaj yaz",
+    "completeTitle": "İş tamamlandı",
+    "completeHint": "Uzmanı değerlendirin — yorumunuz uzmanın puanına yansır.",
+    "rating": "Puan",
+    "reviewText": "Değerlendirme"
+  },
+  "techOffer": {
+    "scope": "İşin kapsamı",
+    "scopePlaceholder": "2 gün danışmanlık, 1 gün tesiste çalışma, ekipman analizi, proses ayarı.",
+    "price": "Fiyat",
+    "currency": "Para birimi",
+    "days": "Süre, gün",
+    "daysValue_one": "{{count}} gün",
+    "daysValue_other": "{{count}} gün",
+    "conflict": "Teklif zaten gönderildi veya talep kapatıldı.",
+    "update": "Değişiklikleri kaydet",
+    "submit": "Teklifi gönder",
+    "withdraw": "Geri çek",
+    "withdrawConfirm": "Teklif geri çekilsin mi?",
+    "status": {
+      "submitted": "İnceleniyor",
+      "accepted": "Kabul edildi",
+      "declined": "Reddedildi",
+      "withdrawn": "Geri çekildi"
+    }
+  },
+  "expert": {
+    "profile": {
+      "title": "Uzman profili",
+      "subtitle": "Fabrikalar, inceleme sonrasında profilinizi katalogda görür.",
+      "viewPublic": "Katalogda aç",
+      "photo": "Fotoğraf yükleyin",
+      "photoHint": "JPG veya PNG, en fazla 5 MB",
+      "fullName": "Ad soyad",
+      "titleField": "Mesleki unvan",
+      "titlePlaceholder": "Film ekstrüzyon teknoloğu",
+      "bio": "Hakkımda",
+      "bioPlaceholder": "Deneyim, projeler, hangi konularda yardımcı olduğunuz.",
+      "equipmentHint": "Birlikte çalıştığınız ekipman üreticileri.",
+      "contactsHint": "İletişim bilgilerinizi yalnızca teklifinizi seçen fabrika görür.",
+      "incomplete": "Profili incelemeye göndermek için işaretli alanları doldurun.",
+      "saved": "Kaydedildi",
+      "save": "Taslağı kaydet",
+      "submit": "İncelemeye gönder",
+      "required": "Zorunlu alan",
+      "submitted": "Profiliniz incelemeye gönderildi — kararı size bildireceğiz."
+    },
+    "status": {
+      "published": "Profiliniz katalogda yayınlandı",
+      "pending": "Profiliniz inceleniyor",
+      "listedMeanwhile": "İnceleme sürerken katalogda daha önce onaylanan sürüm gösterilir.",
+      "rejected": "Profil incelemeden geçemedi",
+      "suspended": "Profiliniz askıya alındı",
+      "unsentChanges": "Değişiklikleriniz incelemeye gönderilmedi — katalogda onaylanan sürüm gösteriliyor.",
+      "draft": "Profilinizi doldurun ve incelemeye gönderin."
+    },
+    "requests": {
+      "title": "Fabrika talepleri",
+      "subtitle": "Doğrulanmış şirketlerin açık görevleri.",
+      "notListed": "Talepler, profiliniz yayınlandıktan sonra erişilebilir olur.",
+      "toProfile": "Profile git",
+      "all": "Tümü",
+      "invited": "Davetler",
+      "empty": "Henüz açık talep yok",
+      "emptyInvited": "Henüz davet yok",
+      "invitedBadge": "Davet edildiniz",
+      "anonymousFactory": "Fabrika"
+    },
+    "request": {
+      "askHint": "Teklif göndermeden önce fabrikaya soru sorun.",
+      "ask": "Soru sor",
+      "factoryContacts": "Fabrikanın iletişim bilgileri",
+      "myOffer": "Teklifim",
+      "offerClosed": "Teklif kapatıldı.",
+      "requestClosed": "Talep artık teklif kabul etmiyor."
+    }
+  }
+}

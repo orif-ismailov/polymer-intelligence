@@ -11,8 +11,13 @@ does not on the staff side (`app/schemas/staff_admin.py`).
 from __future__ import annotations
 
 import datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+#: Who an access request is from (0055). A technologist is a private person and
+#: never registers a company, so the cabinet must not treat them as unfinished.
+AppliedAs = Literal["company", "technologist"]
 
 #: Shared with the staff side (`app/schemas/staff_admin.py::_MIN_PASSWORD_LENGTH`).
 #: A password issued here is typed by hand off a printed contract, so the floor is
@@ -42,8 +47,16 @@ class RegisterIn(BaseModel):
 
     contact_name: str = Field(min_length=1, max_length=120)
     phone: str = Field(min_length=1, max_length=32)
-    company_name: str = Field(min_length=1, max_length=200)
+    #: Required for a company applicant; a technologist has none to name.
+    company_name: str | None = Field(default=None, max_length=200)
     note: str | None = Field(default=None, max_length=2000)
+    applied_as: AppliedAs = "company"
+
+    @model_validator(mode="after")
+    def _company_needs_a_name(self) -> RegisterIn:
+        if self.applied_as == "company" and not (self.company_name or "").strip():
+            raise ValueError("company_name is required")
+        return self
 
 
 class RegisterAccepted(BaseModel):
@@ -101,6 +114,13 @@ class AccountOut(BaseModel):
     language: str
     status: str
     must_change_password: bool = False
+    applied_as: str = "company"
+
+    @field_validator("applied_as", mode="before")
+    @classmethod
+    def _default_kind(cls, value: object) -> object:
+        # The column default lands at INSERT; an unflushed row carries None.
+        return value or "company"
 
 
 class PortalTokenResponse(BaseModel):
@@ -132,11 +152,17 @@ class PortalAccountOut(BaseModel):
     language: str
     applied_company_name: str | None = None
     application_note: str | None = None
+    applied_as: str = "company"
     must_change_password: bool
     credentials_issued_at: datetime.datetime | None = None
     credentials_issued_by: int | None = None
     last_login_at: datetime.datetime | None = None
     created_at: datetime.datetime
+
+    @field_validator("applied_as", mode="before")
+    @classmethod
+    def _default_kind(cls, value: object) -> object:
+        return value or "company"
 
 
 class IssueCredentialsIn(BaseModel):

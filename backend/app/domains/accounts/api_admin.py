@@ -21,6 +21,7 @@ from app.core.db import get_db
 from app.domains.accounts import admin_service as svc
 from app.domains.accounts.models import UserAccount
 from app.domains.accounts.schemas import (
+    AppliedAs,
     IssueCredentialsIn,
     IssuedCredentialsOut,
     PortalAccountOut,
@@ -79,12 +80,16 @@ def list_portal_accounts(
     _: StaffUser = Depends(require_admin),
     account_status: AccountStatus | None = Query(default=None, alias="status"),
     q: str | None = Query(default=None, max_length=120),
+    applied_as: AppliedAs | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ) -> list[PortalAccountOut]:
-    """`?status=pending` is the queue of people waiting for a decision."""
-    accounts = svc.list_accounts(db, status=account_status, q=q, limit=limit, offset=offset)
+    """`?status=pending` is the queue of people waiting for a decision;
+    `?applied_as=technologist` narrows it to private experts."""
+    accounts = svc.list_accounts(
+        db, status=account_status, q=q, applied_as=applied_as, limit=limit, offset=offset
+    )
     return [PortalAccountOut.model_validate(a) for a in accounts]
 
 

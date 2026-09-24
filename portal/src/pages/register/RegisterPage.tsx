@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { RegisterForm } from "@/features/register-account";
 import { AuthLayout } from "@/pages/login";
@@ -15,12 +15,19 @@ import { Card, CardBody } from "@/shared/ui";
 export function RegisterPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // «Я технолог» on /technologists links here with `?as=technologist`.
+  const [params] = useSearchParams();
+  const isExpert = params.get("as") === "technologist";
 
   return (
-    <AuthLayout title={t("register.title")} subtitle={t("register.subtitle")}>
+    <AuthLayout
+      title={t(isExpert ? "register.expertTitle" : "register.title")}
+      subtitle={t(isExpert ? "register.expertSubtitle" : "register.subtitle")}
+    >
       <Card>
         <CardBody>
           <RegisterForm
+            appliedAs={isExpert ? "technologist" : "company"}
             onSubmitted={() => void navigate("/cabinet/register/done", { replace: true })}
           />
         </CardBody>

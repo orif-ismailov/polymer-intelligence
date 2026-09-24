@@ -1,0 +1,3323 @@
+{
+  "common": {
+    "appName": "IMEX AI",
+    "cabinet": "个人中心",
+    "loading": "加载中…",
+    "save": "保存",
+    "saving": "保存中…",
+    "cancel": "取消",
+    "confirm": "确认",
+    "back": "返回",
+    "next": "下一步",
+    "skip": "跳过",
+    "edit": "编辑",
+    "delete": "删除",
+    "archive": "归档",
+    "retry": "重试",
+    "close": "关闭",
+    "add": "添加",
+    "remove": "移除",
+    "download": "下载",
+    "optional": "选填",
+    "required": "必填",
+    "yes": "是",
+    "no": "否",
+    "soon": "即将推出",
+    "notSpecified": "未填写",
+    "search": "搜索",
+    "all": "全部",
+    "prev": "上一页",
+    "clear": "清除",
+    "pickDate": "选择日期"
+  },
+  "errors": {
+    "generic": "出错了",
+    "genericBody": "请求未能完成，请重试。",
+    "network": "网络错误，请检查网络连接。",
+    "loadFailed": "数据加载失败",
+    "notFound": "未找到",
+    "notFoundBody": "页面或资源不存在。",
+    "forbidden": "无访问权限",
+    "unexpected": "意外错误"
+  },
+  "auth": {
+    "invalidCredentials": "登录名或密码错误。",
+    "loginHint": "不区分大小写。",
+    "loginLabel": "登录名",
+    "loginPlaceholder": "例如：acme-trade",
+    "loginSubtitle": "请输入发放给您的登录名和密码。",
+    "loginTitle": "登录个人中心",
+    "noAccount": "还没有访问权限？",
+    "passwordLabel": "密码",
+    "phoneInvalid": "请输入有效的电话号码",
+    "phoneLabel": "电话号码",
+    "registerCta": "申请访问",
+    "revealPassword": "显示密码",
+    "sessionExpired": "会话已过期，请重新登录。",
+    "signIn": "登录",
+    "signingIn": "正在登录…",
+    "tooManyRequests": "尝试次数过多，请稍后再试。",
+    "trustBody": "您的数据受到保护，符合国际安全标准。",
+    "trustTitle": "安全可靠",
+    "tryLater": "请几分钟后再试。"
+  },
+  "register": {
+    "title": "申请访问",
+    "subtitle": "请介绍一下您自己，我们将与您联系并开通个人中心访问权限。",
+    "contactName": "您的姓名",
+    "companyName": "公司",
+    "companyHint": "您所代表的机构名称。",
+    "phoneHint": "客户经理将通过此号码与您联系。",
+    "note": "留言",
+    "noteHint": "采购或销售的产品、数量、时间，选填。",
+    "submit": "提交申请",
+    "submitting": "正在提交…",
+    "haveAccount": "已有访问权限？",
+    "doneTitle": "申请已提交",
+    "doneBody": "我们将通过您提供的号码与您联系。",
+    "doneNext": "登录名和密码将由客户经理当面交给您，并同时写入合同。",
+    "backToMarket": "返回交易平台",
+    "specialization": "专业方向",
+    "specializationHint": "例如：薄膜挤出工艺师，12 年经验。",
+    "expertTitle": "专家申请",
+    "expertSubtitle": "工艺师和工程师可接收工厂的需求。请介绍一下您自己，我们审核后将为您开通访问权限。",
+    "expertNoteHint": "熟悉的工艺、使用过的设备、语言，选填。"
+  },
+  "password": {
+    "title": "修改密码",
+    "subtitle": "为个人中心设置新密码。",
+    "forcedSubtitle": "合同中的密码为临时密码，请设置您自己的密码以继续。",
+    "current": "当前密码",
+    "currentHint": "即发放给您的密码。",
+    "new": "新密码",
+    "newHint": "至少 {{n}} 个字符。",
+    "tooShort": "密码长度不能少于 {{n}} 个字符",
+    "confirm": "再次输入新密码",
+    "mismatch": "两次输入的密码不一致",
+    "wrongCurrent": "当前密码不正确",
+    "submit": "保存密码",
+    "saving": "保存中…",
+    "changeCta": "修改密码"
+  },
+  "nav": {
+    "home": "首页",
+    "companies": "公司",
+    "offers": "报价",
+    "contracts": "合同",
+    "settings": "设置",
+    "logout": "退出登录",
+    "market": "市场",
+    "manufacturers": "生产商",
+    "requests": "需求",
+    "tenders": "我的招标",
+    "openTenders": "公开招标",
+    "inquiries": "询价",
+    "news": "新闻",
+    "notifications": "通知",
+    "deals": "交易",
+    "favorites": "收藏",
+    "samples": "样品",
+    "openMenu": "打开菜单",
+    "logisticsRequests": "物流需求",
+    "lab": "实验室",
+    "groups": {
+      "market": "市场",
+      "trade": "贸易",
+      "services": "服务",
+      "company": "公司"
+    },
+    "collapseRail": "收起菜单",
+    "expandRail": "展开菜单",
+    "techRequests": "工艺师",
+    "expertProfile": "我的资料",
+    "expertRequests": "工厂需求",
+    "technologists": "工艺师目录"
+  },
+  "home": {
+    "title": "概览",
+    "welcome": "您好，{{name}}",
+    "welcomeAnon": "欢迎",
+    "companiesCard": "公司",
+    "companiesCardHint": "注册与认证",
+    "offersCard": "报价",
+    "offersCardHint": "发布与审核",
+    "noActiveCompany": "未选择当前公司",
+    "noActiveCompanyBody": "请创建公司以开始使用。",
+    "activeCompany": "当前公司",
+    "verificationState": "认证状态",
+    "quickActions": "快捷操作",
+    "createCompany": "创建公司",
+    "goToVerification": "查看认证状态",
+    "publishOffer": "发布报价",
+    "activeRequests": "进行中的招标",
+    "unread": "未读",
+    "latestNews": "最新新闻"
+  },
+  "companies": {
+    "title": "我的公司",
+    "subtitle": "管理您的法人实体及其认证。",
+    "empty": "您还没有公司",
+    "emptyBody": "注册公司、完成认证后即可发布报价。",
+    "create": "创建公司",
+    "taxId": "税号（ИНН）",
+    "jurisdiction": "司法管辖区",
+    "legalName": "法定名称",
+    "shortName": "简称",
+    "verifiedAt": "认证日期",
+    "open": "打开",
+    "activeCase": "申请",
+    "noName": "未命名"
+  },
+  "company": {
+    "detailsTitle": "公司信息",
+    "profile": "资料",
+    "legalForm": "法律形式",
+    "legalAddress": "注册地址",
+    "director": "负责人",
+    "roles": "业务类型",
+    "bankAccounts": "银行账户",
+    "documents": "文件",
+    "reverificationDue": "重新认证截止日期",
+    "publicId": "公开 ID",
+    "editProfile": "编辑资料",
+    "addBankAccount": "添加账户",
+    "bankMfo": "银行 MFO 代码",
+    "bankName": "银行名称",
+    "accountNumber": "账号",
+    "accountMasked": "账户",
+    "currency": "币种",
+    "status": "状态",
+    "noBankAccounts": "尚未添加银行账户",
+    "noDocuments": "尚未上传文件",
+    "uploadDocument": "上传文件",
+    "documentKind": "文件类型",
+    "removeDocument": "删除文件",
+    "removeBankAccount": "删除账户",
+    "removeBankAccountConfirm": "该账户将被归档。是否继续？",
+    "removeDocumentConfirm": "文件将被删除，此操作无法撤销。",
+    "notEditable": "当前状态下无法修改公司信息。",
+    "goToVerification": "认证状态",
+    "manage": "管理公司",
+    "createOffer": "创建报价",
+    "viewOffers": "公司报价",
+    "legalForms": {
+      "ООО": "有限责任公司",
+      "ЧП": "私营企业",
+      "АО": "股份公司",
+      "СП": "合资企业",
+      "ИП": "个体工商户",
+      "ГУП": "国有单一制企业"
+    },
+    "registrationDate": "公司注册日期",
+    "storefront": {
+      "title": "展示页",
+      "hint": "所有访客都能在公司公开页面上看到此内容。认证后公司登记信息不可修改，展示页内容仍可编辑。",
+      "description": "公司简介",
+      "experience": "从业年限",
+      "projects": "已完成项目",
+      "countInvalid": "请输入大于或等于零的整数",
+      "saveFailed": "保存失败，请重试。",
+      "cover": "资料封面",
+      "coverHint": "JPG 或 PNG，最大 8 MB，显示在徽标上方。",
+      "coverFailed": "封面上传失败。"
+    }
+  },
+  "wizard": {
+    "title": "注册公司",
+    "steps": {
+      "accountType": "公司类型",
+      "details": "基本信息",
+      "bank": "银行",
+      "documents": "文件",
+      "review": "核对",
+      "production": "生产",
+      "catalog": "产品目录",
+      "certificates": "证书",
+      "buyerReqs": "采购要求",
+      "services": "服务",
+      "geography": "服务区域",
+      "specialization": "专业方向",
+      "tariffsDocs": "费率",
+      "labLicenses": "许可证"
+    },
+    "bank": {
+      "title": "银行账户",
+      "subtitle": "添加结算账户。此步骤可跳过。",
+      "mfoHint": "MFO（银行代码）为 5 位数字。",
+      "mfoInvalid": "MFO 必须为 5 位数字",
+      "accountInvalid": "请输入账号",
+      "skipHint": "跳过后可稍后在公司资料中添加账户，但申请将被标注为“无银行信息”后提交。"
+    },
+    "documents": {
+      "title": "文件",
+      "subtitle": "请上传公司设立文件以供认证。",
+      "registrationRequired": "必须提供注册证书。",
+      "bankLetterRequired": "如已添加银行账户，则必须提供银行证明函。",
+      "dropHint": "点击选择文件（PDF、JPG、PNG，不超过 {{mb}} MB）",
+      "uploaded": "已上传",
+      "uploading": "上传中…",
+      "tooLarge": "文件超过 {{mb}} MB",
+      "replace": "替换",
+      "invalidType": "不支持的文件格式。请上传 PDF、JPG 或 PNG。",
+      "eimzoWaived": "文件为选填：公司已通过电子签名确认。可稍后添加。",
+      "registryWaived": "注册证书为选填：公司已通过国家登记册确认。如有需要仍可附上。"
+    },
+    "errors": {
+      "duplicate": "该税号的公司已存在。",
+      "createFailed": "创建公司失败。",
+      "submitFailed": "公司已创建，但未能提交认证。请重试。",
+      "missingRequiredDocs": "请上传必需的文件。",
+      "documentFailed": "文件上传失败。公司已创建，请修正文件后重试。",
+      "conflict": "该操作与公司当前状态冲突。",
+      "profileLocked": "公司信息已无法修改：申请已审核完毕。请联系客服。",
+      "identityLocked": "公司名称、税号和负责人已通过电子签名确认，无法修改。",
+      "noOpenCase": "未找到进行中的认证申请。",
+      "insufficientRole": "您在公司中的权限不足，无法执行此操作。",
+      "rateLimited": "已达到每日注册上限。请明天再试。",
+      "jurisdictionInvalid": "请从列表中选择注册国家。"
+    },
+    "accountType": {
+      "title": "选择账户类型",
+      "subtitle": "它决定您在平台上可使用的功能",
+      "required": "请选择账户类型",
+      "options": {
+        "buyer": {
+          "title": "买方",
+          "description": "为您的生产采购原材料"
+        },
+        "distributor": {
+          "title": "分销商 / 贸易商",
+          "description": "工业原材料的分销与贸易"
+        },
+        "manufacturer": {
+          "title": "生产商 / 工厂",
+          "description": "自有工厂直接供货"
+        },
+        "logistics": {
+          "title": "物流",
+          "description": "运输、仓储与配送服务"
+        },
+        "laboratory": {
+          "title": "实验室",
+          "description": "材料分析、检测与认证"
+        }
+      }
+    },
+    "details": {
+      "title": "公司信息",
+      "subtitle": "请填写公司信息",
+      "taxIdHint": "乌兹别克斯坦税号（STIR）为 9 位数字。",
+      "taxIdInvalid": "税号必须为 9 位数字",
+      "legalNameRequired": "请输入公司名称",
+      "addressRequired": "请输入注册地址",
+      "legalFormRequired": "请选择所有制形式",
+      "legalFormPlaceholder": "选择所有制形式",
+      "registrationDateInvalid": "请输入有效的注册日期",
+      "lockedTitle": "公司信息已通过 E-IMZO 确认",
+      "lockedBody": "公司名称、税号和负责人取自证书，无法修改。",
+      "fields": {
+        "legalName": "公司名称",
+        "country": "注册国家",
+        "taxId": "税号（STIR）",
+        "address": "注册地址",
+        "registrationDate": "公司注册日期",
+        "ownershipForm": "所有制形式",
+        "logo": "公司标志",
+        "factoryLegalName": "工厂法定全称",
+        "commercialName": "商业名称（如有）",
+        "registrationNumber": "公司注册号",
+        "factoryAddress": "工厂实际地址",
+        "city": "城市",
+        "taxIdOrReg": "税号 / 注册号",
+        "laboratoryName": "实验室名称",
+        "website": "网站",
+        "email": "电子邮箱",
+        "phone": "电话",
+        "description": "简介"
+      },
+      "manufacturerTitle": "工厂法律信息",
+      "manufacturerSubtitle": "请填写工厂的法律信息",
+      "logoUpload": "上传标志",
+      "logoHint": "JPG 或 PNG，最大 5 MB。",
+      "logoRemove": "删除标志",
+      "registrationNumberRequired": "请输入公司注册号",
+      "factoryAddressRequired": "请输入工厂实际地址",
+      "logisticsTitle": "公司信息",
+      "logisticsSubtitle": "请填写物流公司信息",
+      "laboratoryTitle": "基本信息",
+      "laboratorySubtitle": "请填写实验室信息",
+      "cityRequired": "请输入城市",
+      "emailInvalid": "请输入有效的电子邮箱",
+      "phoneRequired": "请输入电话号码",
+      "descriptionRequired": "请输入实验室简介"
+    },
+    "review": {
+      "title": "公司认证",
+      "subtitle": "我们将对照国家登记册认证您的公司信息",
+      "checkState": {
+        "pending": "等待中",
+        "running": "进行中",
+        "passed": "已通过",
+        "warning": "需补充说明",
+        "failed": "未通过"
+      },
+      "runningTitle": "正在认证",
+      "runningBody": "可能需要几分钟。您可以保持此页面打开。",
+      "passedTitle": "公司认证成功",
+      "passedBody": "所有信息均已确认。您可以进入下一步。",
+      "needsAttentionTitle": "需补充说明",
+      "needsAttentionBody": "申请已受理。对于标注的事项，我们将在个人中心与您联系。"
+    },
+    "done": {
+      "title": "注册完成！",
+      "subtitle": "您的公司已成功注册于",
+      "statusLabel": "公司状态",
+      "verified": "已认证公司",
+      "companyId": "公司 ID",
+      "checkStatus": "认证状态",
+      "accessLevel": "公司类型",
+      "toCabinet": "进入个人中心",
+      "toPublish": "发布产品",
+      "registeredAt": "注册日期"
+    },
+    "manufacturerTitle": "生产商注册",
+    "production": {
+      "title": "生产信息",
+      "subtitle": "请介绍您的产能情况",
+      "required": "此项为必填",
+      "selectPlaceholder": "请选择",
+      "yearPlaceholder": "选择年份",
+      "isoPlaceholder": "选择证书",
+      "exportCountriesRequired": "请至少选择一个出口国家",
+      "fields": {
+        "productionType": "生产类型",
+        "mainProducts": "主要产品",
+        "annualCapacity": "年产能",
+        "productionLines": "生产线数量",
+        "employees": "员工人数",
+        "markets": "主要市场",
+        "exportCountries": "出口国家",
+        "foundedYear": "工厂成立年份",
+        "iso": "ISO 认证"
+      },
+      "types": {
+        "polymers": "聚合物",
+        "petrochemicals": "石油化工",
+        "compounds": "改性料 / 色母粒",
+        "recycling": "回收再生",
+        "other": "其他"
+      },
+      "products": {
+        "pp": "PP",
+        "hdpe": "HDPE",
+        "ldpe": "LDPE",
+        "pvc": "PVC",
+        "pet": "PET",
+        "abs": "ABS",
+        "other": "其他"
+      },
+      "iso": {
+        "iso_9001": "ISO 9001",
+        "iso_14001": "ISO 14001",
+        "iso_45001": "ISO 45001",
+        "iso_22000": "ISO 22000",
+        "none": "无"
+      },
+      "markets": {
+        "domestic": "国内市场",
+        "export": "出口"
+      },
+      "countries": {
+        "KZ": "哈萨克斯坦",
+        "RU": "俄罗斯",
+        "TJ": "塔吉克斯坦",
+        "KG": "吉尔吉斯斯坦",
+        "TM": "土库曼斯坦",
+        "CN": "中国",
+        "TR": "土耳其",
+        "AE": "阿联酋",
+        "other": "其他"
+      }
+    },
+    "catalog": {
+      "title": "产品目录",
+      "subtitle": "添加您的产品，也可在注册后完成",
+      "addManual": "手动添加产品",
+      "addExcel": "通过 Excel 上传",
+      "excelFormats": ".xlsx, .xls",
+      "yourProducts": "您的产品（{{count}}）",
+      "emptyTitle": "产品列表为空",
+      "emptyBody": "手动添加产品，或上传包含产品清单的 Excel 文件",
+      "tipTitle": "提示",
+      "tipBody": "您可以在产品目录中为每个产品单独上传文件。",
+      "deferNote": "注册后可通过报价板块发布产品。此步骤可暂时跳过。",
+      "openOffers": "前往报价"
+    },
+    "mfrDocs": {
+      "title": "工厂证书与许可证",
+      "subtitle": "上传通用文件和许可证",
+      "uploadHint": "上传文件",
+      "moderationNote": "发布资料前，所有文件均需经审核员审核。"
+    },
+    "buyerReqs": {
+      "title": "买方要求",
+      "subtitle": "请说明买方需满足的要求",
+      "volumeSection": "最小订单量",
+      "financialSection": "财务要求",
+      "additionalSection": "其他要求",
+      "moqRequired": "请填写最小订单量",
+      "fields": {
+        "moq": "最小订单量（MOQ）",
+        "minAnnual": "最低年采购量",
+        "otherDetail": "其他要求"
+      },
+      "financial": {
+        "bank_guarantee": "银行保函",
+        "letter_of_credit": "信用证（LC）",
+        "payment_deferral": "延期付款",
+        "prepayment": "预付款"
+      },
+      "additional": {
+        "financial_reporting": "财务报表",
+        "market_experience": "市场经验",
+        "licenses_certificates": "许可证与证书",
+        "end_products_info": "终端产品信息",
+        "production_photos": "生产现场照片",
+        "other": "其他"
+      }
+    },
+    "almostReady": {
+      "title": "即将完成！",
+      "subtitle": "请核对信息并提交资料审核。",
+      "whatsNext": "后续流程",
+      "steps": {
+        "check": "我们将审核您的资料和文件（1–2 个工作日）",
+        "notify": "审核通过后您将收到通知",
+        "buyers": "买方即可直接向您发送询价"
+      },
+      "privacyTitle": "可见性",
+      "privacyBody": "您的资料仅对已认证的买方和企业可见。",
+      "submit": "提交审核",
+      "saveDraft": "保存草稿"
+    },
+    "units": {
+      "tons": "吨",
+      "tonsPerYear": "吨/年"
+    },
+    "logisticsTitle": "物流公司注册",
+    "logistics": {
+      "details": {
+        "next": "下一步：服务 →"
+      },
+      "services": {
+        "title": "物流公司服务",
+        "subtitle": "请选择您提供的服务类型",
+        "required": "请至少选择一项服务",
+        "next": "下一步：业务区域 →",
+        "options": {
+          "international_road": "国际公路运输",
+          "rail": "铁路运输",
+          "sea": "海运",
+          "air": "空运",
+          "multimodal": "多式联运",
+          "customs_clearance": "报关清关",
+          "export_clearance": "出口清关",
+          "import_clearance": "进口清关",
+          "certification": "认证",
+          "cargo_insurance": "货物保险",
+          "warehouse": "仓储服务",
+          "consolidation": "拼箱集运",
+          "container_transport": "集装箱运输"
+        }
+      },
+      "geography": {
+        "title": "业务区域",
+        "subtitle": "请选择国家和热门线路",
+        "required": "请至少选择一个始发国和一个目的国",
+        "fromTitle": "始发地（供货国）",
+        "toTitle": "目的地（收货国）",
+        "routesTitle": "热门线路",
+        "next": "下一步：专业领域 →",
+        "countries": {
+          "CN": "中国",
+          "IR": "伊朗",
+          "RU": "俄罗斯",
+          "KZ": "哈萨克斯坦",
+          "TR": "土耳其",
+          "AE": "阿联酋",
+          "UZ": "乌兹别克斯坦",
+          "KG": "吉尔吉斯斯坦",
+          "TJ": "塔吉克斯坦",
+          "TM": "土库曼斯坦",
+          "other": "其他国家"
+        },
+        "routes": {
+          "shanghai_tashkent": "上海 → 塔什干",
+          "tehran_tashkent": "德黑兰 → 塔什干",
+          "bandar_abbas_tashkent": "阿巴斯港 → 塔什干",
+          "moscow_tashkent": "莫斯科 → 塔什干",
+          "kazan_tashkent": "喀山 → 塔什干"
+        }
+      },
+      "specialization": {
+        "title": "专业领域",
+        "subtitle": "请说明您运输的货物类型及公司能力",
+        "cargoTitle": "您运输哪些货物？",
+        "capabilitiesTitle": "公司能力",
+        "required": "请至少选择一种货物类型",
+        "next": "下一步：运价 →",
+        "cargo": {
+          "petrochemicals_polymers": "石化产品 / 聚合物",
+          "chemical_products": "化工产品",
+          "liquid_bulk": "液体散货",
+          "dangerous_goods_adr": "危险品（ADR）",
+          "container_shipping": "集装箱运输",
+          "big_bags": "Big Bag / 袋装",
+          "other_cargo": "其他货物"
+        },
+        "capabilities": {
+          "own_trucks": "自有公路运输车辆",
+          "own_rail_wagons": "自有铁路车皮",
+          "sea_containers": "海运集装箱",
+          "storage_facilities": "仓储设施",
+          "customs_warehouse": "海关监管仓库",
+          "foreign_offices": "海外办事处",
+          "customs_brokers": "报关行"
+        }
+      },
+      "tariffs": {
+        "title": "运价与文件",
+        "subtitle": "选择计价方式并上传文件",
+        "tariffsSection": "运价",
+        "tariffsHint": "请选择合适的计价方式：",
+        "required": "请选择运价模式",
+        "docsSection": "所需文件",
+        "docsHint": "请上传承运人文件，发布前将由审核员审核。",
+        "moderationNote": "发布资料前，所有文件均需经审核员审核。",
+        "next": "下一步：发布 →",
+        "models": {
+          "individual": "单独报价",
+          "per_container": "按集装箱计价",
+          "per_ton": "按吨计价",
+          "per_km": "按公里计价",
+          "minimum_order": "最低订单"
+        }
+      }
+    },
+    "laboratoryTitle": "实验室注册",
+    "laboratory": {
+      "details": {
+        "next": "下一步：许可证 →"
+      },
+      "licenses": {
+        "next": "下一步：审核 →"
+      }
+    },
+    "labDocs": {
+      "title": "许可证与证书",
+      "subtitle": "上传实验室资质认可及相关文件",
+      "moderationNote": "发布资料前，所有文件均需经审核员审核。"
+    },
+    "registry": {
+      "loading": "正在从国家登记系统查询企业信息…",
+      "filledTitle": "国家登记系统数据",
+      "filledBody": "已根据税号（ИНН）自动填写企业信息。请核对，如有过时之处请更正——保存的内容即为您所见内容。",
+      "state": "登记状态：{{state}}。",
+      "notFound": "国家登记系统中没有该税号的记录。请手动填写。",
+      "unavailable": "国家登记系统暂时无法访问，请手动填写。"
+    }
+  },
+  "verification": {
+    "title": "认证状态",
+    "subtitle": "{{company}} 的认证进度。",
+    "noCase": "尚未创建认证申请",
+    "noCaseBody": "提交企业认证以开始审核。",
+    "submit": "提交认证",
+    "submitting": "提交中…",
+    "resubmit": "重新提交",
+    "submittedAt": "提交时间",
+    "caseType": "申请类型",
+    "checks": "审核项",
+    "needsInfoTitle": "需补充信息",
+    "needsInfoBody": "请查看标记的项目并补充资料。",
+    "fixStep": "修改",
+    "checkTypes": {
+      "tax_id_format": "税号格式",
+      "bank_requisites": "银行账户信息",
+      "documents_complete": "文件完整性",
+      "manual_kyb": "人工审核（KYB）",
+      "eimzo_signature": "E-IMZO 签名",
+      "gov_registry": "国家登记系统",
+      "vat_status": "增值税状态"
+    },
+    "findings": {
+      "taxIdDigits": "税号必须为 9 位数字，当前为 {{digits}} 位",
+      "taxIdEmpty": "未填写税号",
+      "bankAccount": "账户 ****{{last4}}：{{problem}}",
+      "bankIssue": {
+        "bad_account_length": "账号必须为 20 位数字",
+        "bad_mfo": "MFO 必须为 5 位数字",
+        "undecryptable": "无法读取账号，请重新输入"
+      },
+      "noBankAccount": "未添加银行账户",
+      "missingDocuments": "缺少文件：{{list}}",
+      "registryInnMismatch": "税号与国家登记系统数据不符",
+      "registryLiquidated": "国家登记系统显示该企业已清算",
+      "registrySuspended": "国家登记系统显示该企业已暂停经营",
+      "registryStatusUnknown": "国家登记系统未注明企业状态",
+      "registryNameMismatch": "名称与国家登记系统不一致：“{{name}}”",
+      "vatNotRegistered": "该企业非增值税纳税人，不影响认证",
+      "manualPending": "等待工作人员审核",
+      "unavailable": "数据源无响应，未执行审核",
+      "eimzoFailed": "电子签名未通过验证，请重新签名"
+    },
+    "checkDetail": {
+      "empty": "无其他信息。",
+      "reason": "原因",
+      "message": "备注"
+    }
+  },
+  "eimzo": {
+    "title": "通过 E-IMZO 认证",
+    "subtitle": "请使用企业电子签名密钥签署请求。",
+    "cta": "通过 E-IMZO 认证",
+    "retry": "重试",
+    "done": "完成",
+    "selectCert": "请选择企业密钥：",
+    "noCerts": "未找到电子签名密钥。请插入密钥介质后重试。",
+    "confirmedBadge": "已通过 E-IMZO 认证",
+    "confirmedBody": "已通过电子签名确认身份：{{name}}。",
+    "offerTitle": "通过 E-IMZO 认证企业",
+    "offerBody": "签名后，企业信息将自动确认。",
+    "progress": {
+      "probing": "正在检查 E-IMZO 模块…",
+      "listing": "正在加载密钥列表…",
+      "signing": "请在 E-IMZO 窗口中签署请求…",
+      "verifying": "正在验证签名…"
+    },
+    "moduleMissing": {
+      "title": "无法连接 E-IMZO 模块",
+      "body": "可能有两个原因，请逐一检查。浏览器不会提示具体是哪一个。",
+      "causeNotRunning": "1. 模块未安装或未运行。",
+      "link_eimzo": "下载 E-IMZO（e-imzo.uz）",
+      "link_soliq": "使用说明（my.soliq.uz）",
+      "causeCert": "2. 浏览器不信任模块的证书。",
+      "causeCertBody": "该模块使用自有证书提供 HTTPS 服务。请在新标签页中打开下方地址，选择「高级」→「继续前往」，然后返回此处重试。",
+      "link_cert": "打开 https://127.0.0.1:64443",
+      "desktopHint": "仅可在已安装 E-IMZO 模块的电脑上签名。"
+    },
+    "success": {
+      "title": "签名已接受",
+      "body": "企业已认证（{{holder}}）。"
+    },
+    "errors": {
+      "title": "认证失败",
+      "unavailable": "E-IMZO 服务不可用。请提交企业进行人工认证。",
+      "module_not_authorized": "本网站未在 E-IMZO 模块中获得授权。请联系客服——该域名需要访问密钥。",
+      "mismatch": "证书中的税号与企业税号不一致。",
+      "expired": "请求已过期，请重试。",
+      "already_registered": "该税号的企业已注册。",
+      "didox_account_required": "该企业没有 Didox 账户。请先注册 Didox，然后重新认证。",
+      "signature_invalid": "签名无效。",
+      "cert_revoked": "证书已被吊销。",
+      "cert_expired": "证书已过期。请更新电子签名密钥后重试。",
+      "sign_failed": "无法在 E-IMZO 模块中生成签名。",
+      "unknown": "出现错误，请重试。",
+      "cert_no_tin": "证书中未包含企业税号。请选择法人证书。"
+    }
+  },
+  "offers": {
+    "title": "报价",
+    "subtitle": "以 {{company}} 的名义发布报价。",
+    "empty": "暂无报价",
+    "emptyBody": "创建第一条报价，提交审核。",
+    "create": "创建报价",
+    "edit": "编辑报价",
+    "product": "产品",
+    "productText": "产品名称",
+    "grade": "牌号",
+    "polymerType": "聚合物类型",
+    "availability": "供货情况",
+    "qtyAvailable": "可供数量",
+    "qtyUnit": "单位",
+    "price": "价格",
+    "currency": "币种",
+    "incoterms": "Incoterms",
+    "warehouseCity": "仓库所在城市",
+    "country": "国家",
+    "minOrderQty": "最小起订量",
+    "description": "描述",
+    "moderationNote": "审核备注",
+    "createdAt": "创建时间",
+    "save": "保存报价",
+    "saving": "正在保存…",
+    "archiveConfirm": "将此报价移至归档？",
+    "lockedTitle": "公司未认证",
+    "lockedBody": "只有已认证的公司才能发布报价。完成认证后即可使用此功能。",
+    "goToVerification": "前往认证",
+    "notVerifiedError": "公司尚未通过认证。",
+    "productTextRequired": "请输入产品名称",
+    "qtyUnitRequired": "请选择单位",
+    "attachments": "图片",
+    "addImage": "添加图片",
+    "photos": {
+      "title": "产品照片",
+      "hint": "最多 {{max}} 张照片，JPEG 或 PNG 格式。第一张将作为市场列表中的封面。",
+      "add": "添加照片",
+      "cover": "封面",
+      "remove": "删除照片",
+      "tooMany": "最多只能上传 {{max}} 张照片。",
+      "tooLarge": "文件过大，最大 10 MB。",
+      "badType": "仅支持 JPEG 和 PNG 格式。",
+      "requeueWarning": "更改照片后，报价将重新提交审核。"
+    },
+    "leadTimeDays": "生产周期（天）",
+    "leadTimeHint": "按订单生产的报价必填——此类报价不标价。",
+    "leadTimeRequired": "请填写按订单生产报价的生产周期",
+    "saleModeLabel": "销售方式",
+    "saleModeUnset": "未指定",
+    "saleMode": {
+      "from_stock": "现货",
+      "made_to_order": "按订单生产",
+      "recurring_contract": "长期合同"
+    },
+    "readinessTitle": "交易准备情况",
+    "readinessHint": "勾选的项目将以标签形式显示在市场卡片上。",
+    "acceptsRfq": "我会回复买方询价",
+    "acceptsContract": "可在平台上签署合同",
+    "acceptsEscrow": "支持托管支付（escrow）",
+    "samplesTitle": "样品",
+    "samplesAvailable": "可提供样品",
+    "samplePrice": "样品价格",
+    "samplePriceHint": "留空即样品免费",
+    "samplePriceInvalid": "价格不能为负数",
+    "sampleDispatchDays": "发货时间（天）"
+  },
+  "offerWizard": {
+    "title": "添加产品：化工产品",
+    "editTitle": "编辑产品",
+    "subtitle": "在乌兹别克斯坦及海外安全、专业地进行化工原料贸易",
+    "stepOf": "第 {{current}} 步，共 {{total}} 步",
+    "steps": {
+      "basics": "基本信息",
+      "ai": "AI 检查",
+      "availability": "现货 / 订货",
+      "documents": "文件",
+      "lab": "实验室数据",
+      "terms": "销售条件",
+      "publish": "发布"
+    },
+    "trust": {
+      "safe": "安全",
+      "legal": "合法",
+      "professional": "专业",
+      "international": "国际标准"
+    },
+    "assurance": {
+      "deals": {
+        "title": "安全交易",
+        "body": "托管支付（escrow）、已认证公司、法律保障"
+      },
+      "trade": {
+        "title": "合法贸易",
+        "body": "核查乌兹别克斯坦官方登记册，管控危险物质"
+      },
+      "lab": {
+        "title": "实验室支持",
+        "body": "通过 IMEX AI 协助获取质量证书"
+      },
+      "b2b": {
+        "title": "专业 B2B",
+        "body": "RFQ 询价、D-Doc、合同、样品"
+      },
+      "global": {
+        "title": "拓展国际市场",
+        "body": "统一的质量与信任标准"
+      }
+    },
+    "basics": {
+      "title": "基本信息",
+      "heading": "添加产品",
+      "productName": "产品名称",
+      "productPlaceholder": "选择产品",
+      "productOther": "其他（手动输入）",
+      "productRequired": "请选择产品",
+      "productManual": "产品名称",
+      "productManualPlaceholder": "例如：PP H030 GP",
+      "productManualRequired": "请输入产品名称",
+      "grade": "牌号",
+      "gradePlaceholder": "例如：H030 GP",
+      "cas": "CAS 号（如有）",
+      "hs": "HS 编码（如有）",
+      "manufacturer": "生产商",
+      "manufacturerPlaceholder": "例如：Sibur",
+      "manufacturerOther": "其他（手动输入）",
+      "manufacturerManual": "生产商（手动输入）",
+      "originCountry": "原产国",
+      "category": "类别",
+      "categoryUnset": "未指定",
+      "photos": "产品照片",
+      "catalogUnavailable": "目录不可用",
+      "catalogUnavailableBody": "请选择“其他”并手动输入产品名称。"
+    },
+    "ai": {
+      "title": "AI 产品检查",
+      "running": "AI 正在分析产品…",
+      "finished": "分析完成",
+      "rows": {
+        "substance": "识别化学物质",
+        "cas": "核查 CAS 号",
+        "hs": "核查 HS 编码",
+        "dangerList": "核查乌兹别克斯坦危险物质清单",
+        "circulation": "核查流通要求",
+        "done": "分析完成"
+      },
+      "clearTitle": "产品不受管制",
+      "clearBody": "该产品不在乌兹别克斯坦共和国受管制或危险化学物质清单内。",
+      "regulated": {
+        "free": "流通不受限制。",
+        "docs_required": "发布时需提供该物质的相关文件。",
+        "license_required": "发布时需提供公司有效许可证。",
+        "prohibited": "该物质禁止流通，无法发布。"
+      },
+      "unknownTitle": "未能识别物质",
+      "unknownBody": "登记册中未找到该物质，因此未进行限制检查。请尽量准确填写 CAS 号和 HS 编码。"
+    },
+    "availability": {
+      "title": "现货 / 订货",
+      "kind": "报价类型",
+      "inStockHint": "仓库有货",
+      "onOrderHint": "按需生产",
+      "inStockNote": "货物可立即发运",
+      "onOrderNote": "价格和数量按询价商定，请填写生产周期",
+      "qty": "现货数量",
+      "qtyRequired": "请输入数量",
+      "price": "价格（单价）",
+      "priceRequired": "请输入价格",
+      "warehouse": "仓库 / 所在地",
+      "warehouseManual": "请输入所在地",
+      "warehouseRequired": "请输入所在地",
+      "cityOther": "其他",
+      "cities": {
+        "Ташкент": "塔什干",
+        "Ташкентская область": "塔什干州",
+        "Самарканд": "撒马尔罕",
+        "Бухара": "布哈拉",
+        "Наманган": "纳曼干",
+        "Андижан": "安集延",
+        "Фергана": "费尔干纳",
+        "Навои": "纳沃伊",
+        "Карши": "卡尔希",
+        "Термез": "铁尔梅兹",
+        "Нукус": "努库斯",
+        "Ургенч": "乌尔根奇",
+        "Джизак": "吉扎克",
+        "Гулистан": "古利斯坦"
+      },
+      "dispatch": {
+        "label": "发货时间",
+        "1-2": "1–2 天",
+        "3-7": "3–7 天",
+        "7-14": "7–14 天",
+        "14-30": "14–30 天",
+        "30-60": "30–60 天"
+      },
+      "qtyInvalid": "请输入正数",
+      "priceInvalid": "请输入正数"
+    },
+    "documents": {
+      "title": "文件",
+      "heading": "必需文件",
+      "kinds": {
+        "sds": "SDS（安全技术说明书）",
+        "tds": "TDS（技术数据表）",
+        "coa": "分析证书 COA（如有）"
+      },
+      "short": {
+        "sds": "SDS",
+        "tds": "TDS",
+        "coa": "COA"
+      },
+      "pick": "选择文件",
+      "attached": "文件已附加",
+      "dropLabel": "将文件拖到此处，或点击上传",
+      "dropHint": "PDF、JPG、PNG（最大 {{mb}} MB）",
+      "trustNote": "提供文件可提升买方信任",
+      "missingTitle": "缺少必需文件",
+      "tooLarge": "文件过大，最大 {{mb}} MB。",
+      "allSlotsFull": "三个文件位均已占用。"
+    },
+    "lab": {
+      "title": "实验室数据",
+      "heading": "实验室质量证书",
+      "headingHint": "质量证书可证明材料的性能指标",
+      "hasPassport": "我有质量证书",
+      "noPassport": "没有质量证书",
+      "passportLabel": "已上传的质量证书（COA）",
+      "passportRequired": "请附上质量证书，或选择“没有质量证书”",
+      "offerIntro": "如有需要，我们可通过 IMEX AI 为您安排实验室认证",
+      "offerWeWill": "我们将与您联系并协助您：",
+      "points": {
+        "accredited": "选择经认可的实验室",
+        "cost": "商定费用和时间",
+        "testing": "安排检测",
+        "passport": "获取正式质量证书"
+      },
+      "requestCta": "申请实验室认证"
+    },
+    "terms": {
+      "title": "销售条件",
+      "samplesHint": "样品有助于买方更快做出决定",
+      "samplesYes": "提供",
+      "samplesNo": "不提供",
+      "sampleFee": "样品条件",
+      "fee": {
+        "free": "免费",
+        "paid": "付费"
+      },
+      "samplePriceRequired": "请输入样品价格",
+      "sampleDispatch": "发货时间",
+      "sampleBands": {
+        "1-3": "1–3 天",
+        "3-7": "3–7 天",
+        "7-14": "7–14 天"
+      },
+      "acceptsRfq": "接受买方询价",
+      "acceptsContract": "可通过 D-Doc 签署合同",
+      "acceptsEscrow": "接受托管支付（escrow）付款",
+      "sampleLetterRequired": "发送样品前要求买方签署承诺函",
+      "sampleLetterTerms": "样品不合适时的条件",
+      "sampleLetterHint": "买方在提交申请前会看到此内容并进行电子签名。样品费用将自动抵扣后续合同金额。",
+      "sampleLetterPlaceholder": "例如：如检测结果表明材料不合适，买方须在 10 个工作日内自费退还未使用的剩余部分。",
+      "sampleLetterRequiredError": "请填写条件——没有条件的承诺函不具约束力。"
+    },
+    "extra": {
+      "title": "补充信息",
+      "description": "产品描述",
+      "descriptionPlaceholder": "描述材料、性能及用途",
+      "keyProperties": "主要性能",
+      "keyPropertiesPlaceholder": "例如：MFI: 3.0 g/10min",
+      "applications": "用途",
+      "applicationsPlaceholder": "例如：注塑成型"
+    },
+    "preview": {
+      "title": "预览",
+      "noPhoto": "未添加照片",
+      "country": "国家",
+      "qty": "数量",
+      "onRequest": "面议",
+      "samplesAvailable": "可提供样品",
+      "dDoc": "D-Doc",
+      "escrow": "托管支付",
+      "publish": "发布产品",
+      "publishing": "正在发布…",
+      "uploading": "正在上传文件 {{done}} / {{total}}"
+    },
+    "done": {
+      "title": "产品已发布！",
+      "bodyLive": "您的产品已在 IMEX AI 上线，买方可以查看。",
+      "bodyModeration": "您的产品已提交审核。审核通过后将显示在 IMEX AI 市场中。",
+      "idLabel": "产品 ID",
+      "copyId": "复制 ID",
+      "toOffers": "前往我的产品",
+      "createAnother": "再添加一个产品"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "profile": "个人资料",
+    "name": "姓名",
+    "namePlaceholder": "我们应如何称呼您",
+    "phone": "电话",
+    "language": "界面语言",
+    "save": "保存更改",
+    "saved": "更改已保存",
+    "logout": "退出登录",
+    "logoutConfirm": "确定要退出登录吗？",
+    "appearance": "外观",
+    "theme": "主题",
+    "themeHint": "默认为深色主题。“跟随系统”将沿用设备设置。",
+    "login": "登录名",
+    "changePassword": "修改密码"
+  },
+  "companyStatus": {
+    "draft": "草稿",
+    "pending_verification": "认证中",
+    "verified": "已认证",
+    "rejected": "已拒绝",
+    "suspended": "已暂停",
+    "liquidated": "已清算"
+  },
+  "caseStatus": {
+    "draft": "草稿",
+    "submitted": "已提交",
+    "checks_running": "核查中",
+    "needs_info": "需补充信息",
+    "pending_review": "待审核",
+    "approved": "已批准",
+    "rejected": "已拒绝",
+    "cancelled": "已取消"
+  },
+  "checkStatus": {
+    "pending": "等待中",
+    "running": "进行中",
+    "passed": "已通过",
+    "warning": "警告",
+    "failed": "未通过",
+    "unavailable": "不可用",
+    "waived": "无需核查"
+  },
+  "offerStatus": {
+    "draft": "草稿",
+    "pending_moderation": "待审核",
+    "approved": "已批准",
+    "rejected": "已拒绝",
+    "archived": "已归档"
+  },
+  "businessRole": {
+    "manufacturer": "生产商",
+    "importer": "进口商",
+    "trader": "贸易商",
+    "logistics_provider": "物流服务商",
+    "distributor": "经销商",
+    "laboratory": "实验室",
+    "insurance_provider": "保险服务商"
+  },
+  "documentKind": {
+    "registration_certificate": "注册证书",
+    "director_id": "负责人身份证件",
+    "bank_letter": "银行函件",
+    "license": "许可证",
+    "permit": "批准文件",
+    "certificate": "证书",
+    "power_of_attorney": "授权委托书",
+    "other": "其他",
+    "production_license": "生产许可证",
+    "export_license": "出口许可证",
+    "certificate_of_origin": "原产地证书",
+    "iso_certificate": "ISO 证书",
+    "compliance_certificate": "REACH / RoHS / GOST",
+    "carrier_license": "承运人许可证",
+    "liability_insurance": "责任保险",
+    "service_contract": "合同",
+    "accreditation_certificate": "认可证书"
+  },
+  "offerDocumentKind": {
+    "image": "照片",
+    "tds": "技术数据表",
+    "sds": "安全数据表",
+    "coa": "分析证书",
+    "certificate": "证书",
+    "lab_passport": "实验室质量证明",
+    "other": "其他"
+  },
+  "availability": {
+    "in_stock": "现货",
+    "on_order": "按订单供货"
+  },
+  "jurisdiction": {
+    "UZ": "乌兹别克斯坦",
+    "RU": "俄罗斯",
+    "KZ": "哈萨克斯坦",
+    "CN": "中国",
+    "TR": "土耳其",
+    "other": "其他"
+  },
+  "language": {
+    "ru": "Русский",
+    "uz": "O‘zbekcha",
+    "en": "English",
+    "tr": "Türkçe",
+    "fa": "فارسی",
+    "zh": "中文"
+  },
+  "theme": {
+    "dark": "深色",
+    "light": "浅色",
+    "system": "跟随系统",
+    "switchTo": {
+      "dark": "切换到深色主题",
+      "light": "切换到浅色主题"
+    }
+  },
+  "inquiryStatus": {
+    "pending": "待审核",
+    "approved": "已批准",
+    "rejected": "已拒绝"
+  },
+  "market": {
+    "title": "市场",
+    "subtitle": "已审核的供应商报价",
+    "searchPlaceholder": "按产品或牌号搜索…",
+    "availability": "供货状态",
+    "availabilityAll": "全部供货状态",
+    "country": "国家",
+    "price": "价格",
+    "qty": "数量",
+    "onRequest": "价格面议",
+    "verified": "已认证",
+    "notVerified": "未认证",
+    "empty": "未找到报价",
+    "emptyBody": "请调整筛选条件或稍后再来查看。",
+    "backToMarket": "返回市场",
+    "notFound": "未找到该报价",
+    "seller": "卖方",
+    "incoterms": "Incoterms",
+    "warehouse": "仓库",
+    "minOrder": "最小起订量",
+    "description": "描述",
+    "myInquiries": "我的询价",
+    "sendInquiry": "发送询价",
+    "quantity": "需求数量",
+    "quantityInvalid": "数量须为大于零的数字。",
+    "targetPrice": "目标价格",
+    "targetPriceInvalid": "价格须为大于零的数字。",
+    "message": "留言",
+    "ownOffer": "这是贵公司的报价。",
+    "selectCompanyHint": "请选择公司以发送询价。",
+    "inquirySent": "询价已提交审核。",
+    "inquiryFailed": "询价发送失败。",
+    "inquiryRateLimited": "今日询价次数已达上限，请明天再试。",
+    "favorite": "加入收藏",
+    "unfavorite": "取消收藏",
+    "favorites": "收藏",
+    "favoritesHint": "个人列表，切换公司不会改变。",
+    "favoritesEmpty": "暂无收藏",
+    "favoritesEmptyBody": "点击报价卡片上的爱心，报价将显示在这里。",
+    "leadTime": "交货期：{{count}} 天",
+    "readiness": {
+      "rfq": "询价",
+      "contract": "合同",
+      "escrow": "托管支付"
+    },
+    "filter": {
+      "labPassport": "仅限附实验室质量证明",
+      "labVerified": "仅显示 Laboratory Verified"
+    },
+    "tabs": {
+      "description": "描述",
+      "specs": "规格参数",
+      "documents": "文件",
+      "compatibility": "兼容性",
+      "reviews": "评价"
+    },
+    "noDescription": "暂无描述",
+    "noDocuments": "未附文件",
+    "leadTimeShort": "交货期",
+    "detail": {
+      "marketplace": "IMEX AI Industrial Marketplace",
+      "share": "分享",
+      "linkCopied": "链接已复制",
+      "noPhoto": "未添加照片",
+      "gallery": "图库",
+      "requestRfq": "向卖方询价",
+      "addFavorite": "加入收藏",
+      "basics": "基本信息",
+      "cas": "CAS",
+      "hs": "HS 编码",
+      "country": "国家",
+      "offerType": "报价类型",
+      "offerTypeHint": "卖方提供该产品的方式",
+      "qtyAvailable": "现货数量",
+      "moq": "最小起订量（MOQ）",
+      "samples": "样品",
+      "samplesHint": "可向卖方申请样品",
+      "samplesAvailable": "可提供",
+      "samplesUnavailable": "不提供",
+      "requestSample": "申请样品",
+      "labPassport": "实验室质量证明（COA）",
+      "labPassportHint": "随报价附带的质量证明",
+      "labPassportPresent": "附有实验室质量证明",
+      "labPassportAbsent": "未附质量证明",
+      "sellerHint": "发布该报价的公司",
+      "verifiedSupplier": "已认证供应商",
+      "ratingPending": "完成交易后将显示评分",
+      "compatibility": "与您设备的兼容性",
+      "compatibilityHint": "核查材料是否适合您的工艺",
+      "compatibilityBody": "检查该材料是否适用于您的工艺。",
+      "checkCompatibility": "检查设备兼容性",
+      "comingSoon": "即将推出",
+      "documentsHint": "卖方附带的文件",
+      "manufacturer": "生产商",
+      "keyProperties": "关键性能",
+      "applications": "应用领域",
+      "messageSeller": "联系卖方",
+      "requestContract": "申请签订合同",
+      "escrow": "托管支付（Escrow）",
+      "escrowInDealHint": "托管支付需在交易中商定，请先向卖方发送询价",
+      "escrowNotOffered": "该卖方不支持托管支付",
+      "contractNeedsVerifiedSeller": "仅可与已认证的公司签订合同",
+      "contractNeedsVerifiedCompany": "请先完成本公司的认证",
+      "contractNotOffered": "卖方暂不接受就此报价签订合同",
+      "rfqNotAccepted": "卖方不接受此报价的询价",
+      "reviewsEmpty": "该产品暂无评价。",
+      "docChip": {
+        "sds": "SDS PDF",
+        "tds": "TDS PDF",
+        "coa": "COA PDF",
+        "lab_passport": "证书 PDF",
+        "certificate": "证书 PDF"
+      }
+    }
+  },
+  "inquiries": {
+    "title": "询价",
+    "subtitle": "您发出的询价及您的报价收到的询价",
+    "tab": {
+      "sent": "已发送",
+      "incoming": "已收到"
+    },
+    "empty": {
+      "sent": "暂无已发送的询价",
+      "incoming": "暂无收到的询价"
+    },
+    "emptyBody": "在市场中发送询价后，将显示在此处。",
+    "notFound": "未找到询价",
+    "back": "返回询价",
+    "viewOffer": "查看报价",
+    "editedNotice": "您已修改此询价，它将重新提交审核。",
+    "edit": "编辑",
+    "resubmit": "重新提交",
+    "editFailed": "无法保存更改。"
+  },
+  "requests": {
+    "title": "我的招标",
+    "subtitle": "贵公司面向供应商开放的招标",
+    "create": "发布招标",
+    "forCompany": "代表 {{company}}",
+    "empty": "暂无招标",
+    "emptyBody": "发布招标后，供应商即可看到并提交报价。",
+    "notFound": "未找到招标",
+    "back": "返回招标",
+    "timeline": "招标记录",
+    "cancel": "撤回招标"
+  },
+  "requestStatus": {
+    "new": "已发布",
+    "in_review": "征集报价中",
+    "offer_received": "已收到报价",
+    "matched": "已选定供应商",
+    "closed": "已关闭",
+    "cancelled": "已取消"
+  },
+  "requestWizard": {
+    "title": "发布招标",
+    "subtitle": "描述采购需求，供应商将看到招标并提交报价",
+    "stepOf": "第 {{current}} 步，共 {{total}} 步",
+    "steps": {
+      "product": "产品",
+      "params": "参数",
+      "extra": "补充信息",
+      "comm": "可见范围",
+      "preview": "发布"
+    },
+    "product": {
+      "title": "1. 选择产品",
+      "searchPlaceholder": "搜索产品、牌号、CAS…",
+      "category": "类别",
+      "allCategories": "全部类别",
+      "recent": "最近产品",
+      "empty": "未找到结果",
+      "manual": "手动填写产品",
+      "manualName": "产品名称",
+      "manualNamePlaceholder": "例如：聚乙烯 HDPE",
+      "manualGrade": "牌号",
+      "manualGradePlaceholder": "例如：5502",
+      "nameRequired": "请输入产品名称",
+      "gradeRequired": "请输入牌号",
+      "pickRequired": "请从列表中选择产品或手动填写"
+    },
+    "params": {
+      "title": "2. 招标参数",
+      "volume": "需求数量",
+      "volumeRequired": "请输入数量",
+      "unit": "单位",
+      "price": "目标价格（您的最高价）",
+      "priceHint": "供应商看不到此价格，仅 IMEX AI 团队可见",
+      "currency": "币种",
+      "dealType": "交易类型",
+      "dealHint": "选择 Incoterms® 交货条件",
+      "incotermOpt": {
+        "EXW": "按 EXW 条件采购",
+        "FCA": "按 FCA 条件采购",
+        "FOB": "按 FOB 条件采购",
+        "CIF": "按 CIF 条件采购",
+        "CPT": "按 CPT 条件采购",
+        "DAP": "按 DAP 条件采购",
+        "DDP": "按 DDP 条件采购"
+      },
+      "country": "交货国家 / 地区",
+      "city": "城市 / 港口",
+      "cityOther": "其他城市",
+      "cityPlaceholder": "输入城市或港口",
+      "delivery": "期望交货时间",
+      "deliveryOpt": {
+        "urgent": "紧急（1–7 天）",
+        "month": "一个月内",
+        "quarter": "1–3 个月",
+        "later": "3 个月以上"
+      },
+      "validity": "招标有效期",
+      "validityOpt": "{{days}} 天"
+    },
+    "extra": {
+      "title": "3. 补充参数",
+      "specs": "技术要求（选填）",
+      "specsPlaceholder": "填写所需技术指标、标记、质量标准等",
+      "docs": "要求供应商提供的文件",
+      "doc": {
+        "sds": "安全技术说明书（SDS）",
+        "coa": "质量分析证书（COA）",
+        "coo": "原产地证书",
+        "commercial": "商业报价单",
+        "other": "其他文件"
+      },
+      "docOtherHint": "请选择或在备注中说明",
+      "comment": "补充备注",
+      "commentPlaceholder": "对供应商的其他要求或期望…"
+    },
+    "comm": {
+      "title": "4. 谁能看到招标",
+      "visibilityLabel": "招标可见范围",
+      "visibility": {
+        "verified": {
+          "title": "仅限已认证供应商",
+          "body": "仅通过 IMEX AI 认证的公司可见"
+        },
+        "all": {
+          "title": "平台全部供应商",
+          "body": "所有供应商可见，仅已认证供应商可报价"
+        }
+      },
+      "contactsNote": "贵公司的联系方式不会向供应商展示：交易开启前，所有沟通均通过平台进行。"
+    },
+    "preview": {
+      "title": "5. 确认并发布",
+      "product": "产品",
+      "volume": "数量",
+      "price": "目标价格",
+      "terms": "交货条件",
+      "delivery": "交货时间",
+      "validity": "招标有效期",
+      "comment": "备注",
+      "docs": "供应商文件",
+      "visibility": "可见范围",
+      "publish": "发布招标",
+      "visibilityNote": {
+        "verified": "仅平台上已认证的供应商可见此招标，也只有他们可以报价。",
+        "all": "平台上所有供应商均可见此招标，仅已认证公司可以报价。"
+      }
+    },
+    "done": {
+      "title": "招标已发布！",
+      "body": "供应商已能看到招标，正在准备报价。",
+      "idLabel": "招标编号",
+      "copyId": "复制编号",
+      "nextTitle": "后续步骤",
+      "next": {
+        "offers": "供应商将很快提交报价",
+        "notify": "每收到一份新报价，您都会收到通知",
+        "compare": "比较报价并选择供应商"
+      },
+      "toRequests": "前往我的招标",
+      "createAnother": "再发布一个招标"
+    },
+    "submitFailed": "无法发布招标。",
+    "urgencyOpt": {
+      "low": "低",
+      "medium": "中",
+      "high": "高"
+    }
+  },
+  "news": {
+    "title": "资讯",
+    "subtitle": "经分类的石化市场资讯",
+    "breaking": "快讯",
+    "empty": "暂无资讯",
+    "emptyBody": "请稍后再来查看市场动态。",
+    "notFound": "未找到文章",
+    "back": "返回资讯",
+    "analysis": "分析",
+    "recommendation": "建议",
+    "readSource": "阅读原文 →",
+    "metaTitle": "石化市场资讯 — IMEX AI",
+    "metaDescription": "经分类的石化与聚合物资讯：乌兹别克斯坦及全球的装置停车、价格、供应与监管动态。",
+    "search": "搜索资讯",
+    "searchPlaceholder": "标题、公司、产品…",
+    "filters": "筛选",
+    "filterAny": "全部",
+    "filterCategory": "类别",
+    "filterCountry": "国家",
+    "relatedProducts": "产品",
+    "countries": "国家",
+    "companies": "公司",
+    "sourcesLabel": "来源",
+    "original": "原始来源",
+    "reset": "重置",
+    "noResults": "未找到结果",
+    "noResultsBody": "请尝试更改筛选条件或搜索词。",
+    "scopeLabel": "范围",
+    "showResults": "显示结果",
+    "resultCount_one": "{{count}} 篇文章",
+    "resultCount_other": "{{count}} 篇文章",
+    "moreSources_one": "+{{count}} 个来源",
+    "moreSources_other": "+{{count}} 个来源",
+    "scope": {
+      "all": "全部",
+      "uzbekistan": "乌兹别克斯坦",
+      "global": "全球",
+      "producers": "生产商"
+    },
+    "sort": {
+      "label": "排序",
+      "newest": "最新",
+      "importance": "重要性",
+      "category": "类别",
+      "products": "产品",
+      "country": "国家",
+      "company": "公司"
+    },
+    "importance": {
+      "high": "重要",
+      "medium": "值得关注",
+      "low": "背景"
+    },
+    "impact": {
+      "positive": "上涨",
+      "negative": "下跌",
+      "neutral": "中性"
+    },
+    "category": {
+      "demand": "需求",
+      "prices": "价格",
+      "production": "生产",
+      "investment": "投资",
+      "trade": "贸易",
+      "feedstock": "原料",
+      "logistics": "物流",
+      "macro": "宏观经济",
+      "regulation": "监管",
+      "sustainability": "可持续发展",
+      "market_prices": "市场价格",
+      "petrochemicals": "石化",
+      "polymers": "聚合物",
+      "polyethylene": "聚乙烯",
+      "polypropylene": "聚丙烯",
+      "pvc": "PVC",
+      "pet": "PET",
+      "abs": "ABS",
+      "ps": "PS",
+      "styrene": "苯乙烯",
+      "methanol": "甲醇",
+      "meg": "MEG",
+      "plant_shutdown": "装置停车",
+      "maintenance": "检修",
+      "refineries": "炼油厂",
+      "ports": "港口",
+      "railways": "铁路",
+      "customs": "海关",
+      "import": "进口",
+      "export": "出口",
+      "technology": "技术",
+      "market_analysis": "市场分析",
+      "factories": "工厂",
+      "new_projects": "新项目"
+    }
+  },
+  "notifications": {
+    "subtitle": "您的招标、询价、报价及认证动态",
+    "markAllRead": "全部标为已读",
+    "viewAll": "查看全部",
+    "empty": "暂无通知",
+    "emptyBody": "所有通知均已读。",
+    "request_status": {
+      "title": "招标更新",
+      "body": "招标 {{number}} 已更新"
+    },
+    "inquiry_approved": {
+      "title": "新询价",
+      "body": "您的报价收到一条已审核的询价"
+    },
+    "inquiry_reply": {
+      "title": "询价更新",
+      "body": "您的询价有新动态"
+    },
+    "verification_decided": {
+      "title": "认证",
+      "body": "您公司的认证状态已变更"
+    },
+    "offer_moderated": {
+      "title": "报价审核",
+      "body": "您的报价状态已更新"
+    },
+    "news_breaking": {
+      "title": "突发新闻",
+      "body": "{{headline}}"
+    },
+    "contract_incoming": {
+      "title": "新合同",
+      "body": "您收到合同“{{title}}”"
+    },
+    "contract_accepted": {
+      "title": "合同已接受",
+      "body": "合同“{{title}}”的条款已被接受"
+    },
+    "contract_declined": {
+      "title": "合同已拒绝",
+      "body": "合同“{{title}}”已被拒绝"
+    },
+    "contract_expired": {
+      "title": "合同已过期",
+      "body": "合同“{{title}}”在等待期间已过期"
+    },
+    "rfq_response_new": {
+      "title": "新报价",
+      "body": "招标 {{number}} 收到一份供应商报价"
+    },
+    "rfq_response_accepted": {
+      "title": "报价已接受",
+      "body": "您的报价已被接受，交易 {{number}} 已开启"
+    },
+    "rfq_response_not_selected": {
+      "title": "报价未中选",
+      "body": "该招标已选定其他供应商"
+    },
+    "deal_opened": {
+      "title": "交易已开启",
+      "body": "交易 {{number}} 已开启"
+    },
+    "deal_status": {
+      "title": "交易状态",
+      "body": "交易 {{number}}：状态已变更"
+    },
+    "deal_message": {
+      "title": "新消息",
+      "body": "交易 {{number}} 有新消息"
+    },
+    "deal_document": {
+      "title": "新文件",
+      "body": "交易 {{number}} 中新增了一份文件"
+    },
+    "escrow_opened": {
+      "title": "付款账单",
+      "body": "交易 {{number}} 已开具金额为 {{amount}} {{currency}} 的账单"
+    },
+    "escrow_status": {
+      "title": "付款状态",
+      "body": "交易 {{number}}：{{amount}} {{currency}} — 付款状态已变更"
+    },
+    "rfq_match": {
+      "title": "与您资料匹配的新招标",
+      "body": "{{product}} — {{volume}} {{volume_unit}}。招标 {{number}}"
+    },
+    "lab_order_status": {
+      "title": "实验室订单",
+      "body": "订单 {{number}}：状态已变更"
+    },
+    "sample_request_new": {
+      "title": "样品申请",
+      "body": "有买方申请您报价的样品"
+    },
+    "sample_request_status": {
+      "title": "样品状态",
+      "body": "样品申请：状态已变更"
+    },
+    "logistics_request_new": {
+      "title": "新运输需求",
+      "body": "{{buyer}} 正在寻找承运商：{{cargo}}"
+    },
+    "logistics_message": {
+      "title": "需求有新消息",
+      "body": "需求 {{number}} — 有新消息"
+    },
+    "lab_request_new": {
+      "title": "新检测需求",
+      "body": "{{buyer}} 正在寻找实验室：{{product}}"
+    },
+    "lab_message": {
+      "title": "需求有新消息",
+      "body": "需求 {{number}} — 有新消息"
+    },
+    "tech_request_new": {
+      "title": "新的工艺师需求",
+      "body": "需求 {{number}} 与您的工艺匹配"
+    },
+    "tech_invite": {
+      "title": "您受邀参与需求",
+      "body": "有工厂邀请您：需求 {{number}}"
+    },
+    "tech_offer_new": {
+      "title": "工艺师的新方案",
+      "body": "{{expert}} 响应了需求 {{number}}"
+    },
+    "tech_offer_decided": {
+      "title": "您的方案已有答复",
+      "body": "工厂已审阅您针对需求 {{number}} 的方案"
+    },
+    "tech_message": {
+      "title": "新消息",
+      "body": "需求 {{number}} — 有新消息"
+    },
+    "technologist_decided": {
+      "title": "您的资料已审核",
+      "body": "打开资料页查看审核结果"
+    }
+  },
+  "contracts": {
+    "title": "合同",
+    "subtitle": "与已认证公司签订的电子合同。",
+    "create": "创建合同",
+    "createDraft": "创建草稿",
+    "empty": "暂无合同",
+    "emptyBody": "与已认证公司创建一份合同。",
+    "template": "合同模板",
+    "selectTemplate": "选择模板",
+    "counterparty": "交易对方",
+    "counterpartyHint": "仅限已认证公司。",
+    "counterpartySearch": "按名称或税号（ИНН）搜索…",
+    "needVerifiedInitiator": "只有已认证公司才能创建合同。请在上方切换器中选择一家已认证公司。",
+    "document": "文件",
+    "signatures": "签名",
+    "awaitingOther": "等待对方签署。",
+    "declinedTitle": "合同已拒绝",
+    "declineReason": "拒绝原因",
+    "tabs": {
+      "all": "全部",
+      "action": "待处理",
+      "active": "生效中"
+    },
+    "role": {
+      "initiator": "发起方",
+      "counterparty": "交易对方"
+    },
+    "status": {
+      "draft": "草稿",
+      "pending_counterparty": "等待对方确认",
+      "pending_signatures": "等待签署",
+      "active": "生效中",
+      "declined": "已拒绝",
+      "cancelled": "已取消",
+      "expired": "已过期"
+    },
+    "actions": {
+      "send": "提交签署",
+      "signAndSend": "签署并发送",
+      "decline": "拒绝",
+      "confirmDecline": "确认拒绝",
+      "sign": "使用 E-IMZO 签署",
+      "cancel": "取消",
+      "downloadPdf": "下载 PDF",
+      "downloadBundle": "下载文件包（ZIP）"
+    },
+    "errors": {
+      "invalid": "请检查表单字段。",
+      "createFailed": "合同创建失败。"
+    },
+    "timeline": {
+      "created": "草稿已创建",
+      "sent": "已提交签署",
+      "signedBy": "{{company}} 已签署",
+      "signedNoDate": "已签署",
+      "awaitingSignature": "等待 {{company}} 签署",
+      "active": "双方均已签署",
+      "awaiting": "等待中"
+    },
+    "basis": {
+      "label": "依据",
+      "none": "无依据 — 我将手动填写",
+      "hint": "基于已接受的招标报价的交易：产品、数量、价格和交易对方将自动填入。",
+      "empty": "暂无未签合同的交易 — 当您接受招标报价或您的报价被接受时，交易会出现在此处。",
+      "counterpartyFromDeal": "交易对方为所选交易的另一方。"
+    },
+    "groups": {
+      "parties": "双方及合同信息",
+      "subject": "标的及金额",
+      "payment": "付款",
+      "delivery": "交货",
+      "extra": "包装与质量",
+      "penalties": "双方责任"
+    }
+  },
+  "deals": {
+    "title": "交易",
+    "subtitle": "交易室：聊天、文件、状态。",
+    "empty": "暂无交易",
+    "emptyBody": "对买方的招标提交报价，或在您自己的招标中选择供应商。",
+    "browseRfqs": "进行中的招标",
+    "needsAction": "待处理",
+    "noAmount": "未设置金额",
+    "progress": "交易进度",
+    "roleAny": "全部",
+    "cancelledTitle": "交易已取消",
+    "disputedTitle": "争议处理中",
+    "disputedBody": "争议由平台团队处理。",
+    "role": {
+      "buyer": "采购",
+      "seller": "销售"
+    },
+    "tabs": {
+      "all": "全部",
+      "action": "待处理",
+      "active": "进行中",
+      "closed": "已结束",
+      "chat": "聊天",
+      "documents": "文件",
+      "timeline": "时间线",
+      "contract": "合同",
+      "escrow": "付款",
+      "lab": "实验室"
+    },
+    "status": {
+      "negotiation": "洽谈中",
+      "contract_pending": "等待合同",
+      "contract_signed": "合同已签署",
+      "payment_pending": "等待付款",
+      "paid_escrow": "已付款",
+      "shipped": "已发货",
+      "delivered": "已收货",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "disputed": "争议中"
+    },
+    "actor": {
+      "buyer": "买方",
+      "seller": "卖方",
+      "staff": "平台团队",
+      "system": "系统"
+    },
+    "actions": {
+      "contract_pending": "发送合同",
+      "contract_signed": "合同已签署",
+      "payment_pending": "前往付款",
+      "paid_escrow": "已付款",
+      "shipped": "标记为已发货",
+      "delivered": "确认收货",
+      "completed": "完成",
+      "cancelled": "取消",
+      "disputed": "发起争议",
+      "negotiation": "返回洽谈",
+      "reasonPlaceholder": "请说明原因",
+      "confirm": {
+        "cancelled": "确定取消此交易？",
+        "disputed": "确定对此交易发起争议？",
+        "confirmPayment": "请确认买方款项已到达您的账户。此操作不可撤销。"
+      },
+      "confirmPayment": "已收到付款"
+    },
+    "chat": {
+      "title": "交易聊天",
+      "empty": "暂无消息",
+      "placeholder": "输入消息…",
+      "send": "发送",
+      "attach": "文件"
+    },
+    "documents": {
+      "add": "添加文件",
+      "kind": "文件类型",
+      "empty": "暂无文件",
+      "emptyBody": "上传发票、运单或质量证书。",
+      "revoked": "已撤销",
+      "revokeAction": "撤销",
+      "revokePrompt": "撤销该文件的原因",
+      "kinds": {
+        "contract": "合同",
+        "invoice": "发票",
+        "lab_passport": "质量证书",
+        "transport": "运输单据",
+        "other": "其他"
+      }
+    },
+    "contract": {
+      "none": "尚未拟定合同。",
+      "create": "创建合同",
+      "linked": "合同：{{status}}",
+      "open": "打开合同"
+    },
+    "escrow": {
+      "noneTitle": "尚未开具账单",
+      "noneBody": "双方签署合同后将生成付款账单。",
+      "bankTitle": "通过合作银行付款",
+      "bankBody": "按合作银行开具的账单付款。资金将被冻结托管，待买方确认收货后划转给卖方。",
+      "status": {
+        "pending": "等待付款",
+        "funded": "资金已托管",
+        "released": "已划转给卖方",
+        "refunded": "已退还买方"
+      },
+      "refundCause": "资金已通过托管退还给买方。",
+      "amount": "交易金额",
+      "direct": {
+        "pending": "等待付款",
+        "paid": "已收到付款",
+        "stepPayment": "付款",
+        "title": "直接向卖方付款",
+        "body": "买方按合同中的账户信息付款。款项到账后，卖方标记“已收到付款”。可在付款前发货 — 货物签收且付款确认后，交易即完成。"
+      }
+    },
+    "factureHint": "货物已发货 — 请在合同页面向买方开具电子发票（ESF）。",
+    "factureOpen": "前往合同"
+  },
+  "rfq": {
+    "marketTitle": "进行中的招标",
+    "marketSubtitle": "您可以参与报价的买方招标。",
+    "marketEmpty": "暂无进行中的招标",
+    "marketEmptyBody": "请稍后再来查看，新招标会定期发布。",
+    "respond": "提交报价",
+    "alreadyResponded": "报价已发送",
+    "submit": "发送报价",
+    "price": "价格",
+    "currency": "币种",
+    "qty": "数量",
+    "qtyUnit": "单位",
+    "incoterms": "Incoterms",
+    "incotermsAny": "未指定",
+    "leadTime": "交货期（天）",
+    "leadTimeDays": "{{count}} 天",
+    "comment": "备注",
+    "commentPlaceholder": "条件、时间、详情",
+    "volume": "数量",
+    "destination": "目的地",
+    "desiredDate": "期望日期",
+    "requiredDocs": "所需文件",
+    "responses": "供应商报价",
+    "noResponses": "暂无报价",
+    "noResponsesBody": "供应商尚未回复此招标。",
+    "accept": "选择该供应商",
+    "acceptTitle": "确定选择该供应商？",
+    "acceptBody": "将以 {{price}} 与 {{company}} 开启交易，其他报价将被拒绝。",
+    "openDeal": "查看交易",
+    "status": {
+      "submitted": "已提交",
+      "accepted": "已接受",
+      "not_selected": "未中选",
+      "withdrawn": "已撤回"
+    },
+    "tab": {
+      "open": "进行中",
+      "mine": "我的报价"
+    },
+    "mine": {
+      "empty": "您尚未提交报价",
+      "emptyBody": "打开「进行中」标签页，对招标报出您的价格。",
+      "yourPrice": "您的报价",
+      "tenderClosed": "招标已结束"
+    },
+    "withdraw": "撤回报价",
+    "withdrawTitle": "确定撤回此报价？",
+    "withdrawBody": "买方将无法再看到您的价格。招标进行期间，您可以重新报价。",
+    "errors": {
+      "notVerified": "只有已认证的公司才能提交报价。请完成认证，招标将保持开放。",
+      "roleNotAllowed": "只有卖方公司才能提交报价。",
+      "alreadyResponded": "您已对此招标提交过报价。",
+      "requestClosed": "此招标已不再接受报价。",
+      "ownRequest": "这是贵公司自己的招标。",
+      "unknownIncoterms": "请从列表中选择交货条件。",
+      "acceptRequestClosed": "此招标已结束或已取消，无法再选择供应商。",
+      "acceptResponseClosed": "此报价已撤回或已失效。",
+      "acceptAlreadyAccepted": "此招标已选定供应商。"
+    },
+    "docs": {
+      "sds": "SDS",
+      "coa": "COA",
+      "origin_cert": "原产地证书",
+      "commercial_offer": "商业报价书",
+      "other": "其他"
+    },
+    "columns": {
+      "product": "产品",
+      "volume": "数量",
+      "terms": "条件",
+      "deliveryBy": "交货截止",
+      "responseWindow": "报价期限",
+      "yourQuote": "您的报价"
+    },
+    "deadline": {
+      "daysLeft": "剩余 {{count}} 天",
+      "lastDay": "不足一天",
+      "closed": "已截止"
+    },
+    "urgent": "紧急",
+    "needs": "所需：{{docs}}",
+    "reply": "报价",
+    "hideForm": "收起",
+    "viewMyQuote": "我的报价",
+    "filters": {
+      "label": "招标筛选",
+      "product": "产品",
+      "allProducts": "全部产品",
+      "closingSoon": "即将截止",
+      "urgent": "仅紧急",
+      "unanswered": "尚未报价",
+      "reset": "重置筛选",
+      "status": "报价状态",
+      "allStatuses": "全部",
+      "empty": "没有符合筛选条件的招标",
+      "emptyBody": "请修改或重置筛选条件，以查看全部进行中的招标。",
+      "mineEmpty": "没有该状态的报价",
+      "mineEmptyBody": "请选择其他状态或显示全部报价。"
+    }
+  },
+  "compliance": {
+    "title": "物质与合规",
+    "hint": "如果该报价为化学品，请指定物质。聚合物（PP、PE、PVC）可留空。",
+    "search": "在名录中搜索",
+    "searchHint": "名称、同义词、CAS 或 HS 编码",
+    "searchPlaceholder": "例如：丙酮、67-64-1、2914",
+    "searchEmpty": "未找到结果。您可以手动输入 CAS 和 HS 编码。",
+    "cas": "CAS",
+    "hs": "HS 编码",
+    "concentration": "浓度（%）",
+    "concentrationHint": "低于该物质的阈值时不适用管制制度。留空则视为受管制。",
+    "askAi": "根据描述识别物质",
+    "aiSuggestion": "AI 建议",
+    "aiAccept": "确认",
+    "aiReject": "不是这个",
+    "aiNoHint": "暂时无法提供提示，请手动选择物质。",
+    "aiUnknownSubstance": "名录中没有该物质，请手动输入 CAS 和 HS 编码。",
+    "substance": "物质",
+    "blockedTitle": "该报价未发布",
+    "wouldBlockTitle": "发布前需满足",
+    "prohibitedTitle": "禁止发布",
+    "blockedHint": "一旦满足要求，报价将自动提交审核。",
+    "prohibitedHint": "该物质在禁止清单中，上传文件也无法改变。",
+    "missingDocument": "需要文件：{{doc}}",
+    "missingLicense": "需要有效许可证：{{regime}}",
+    "missingProhibited": "禁止依据：{{act}}",
+    "licenses": "许可证",
+    "licensesHint": "许可证由工作人员根据您上传的文件登记。",
+    "noLicenses": "暂无许可证",
+    "licenseActive": "有效",
+    "until": "至",
+    "level": {
+      "free": "不受管制",
+      "docs_required": "需要文件",
+      "license_required": "需要许可证",
+      "prohibited": "禁止"
+    },
+    "regime": {
+      "precursor_list_iv": "易制毒化学品（清单 IV，ПКМ-330）",
+      "explosive_toxic": "易爆及有毒物质（ПКМ-782）",
+      "strong_acting": "强效物质（ПКМ-818）",
+      "pkm916_import": "危险品进口（ПКМ-916）"
+    },
+    "docKind": {
+      "sds": "安全技术说明书（SDS）",
+      "tds": "技术数据表（TDS）",
+      "coa": "分析证书（COA）",
+      "certificate": "证书"
+    },
+    "licenseStatus": {
+      "pending_review": "审核中",
+      "active": "有效",
+      "expired": "已过期",
+      "revoked": "已吊销",
+      "rejected": "已拒绝"
+    }
+  },
+  "lab": {
+    "blockTitle": "实验室检测报告",
+    "blockHint": "检测报告可证明材料特性，并在目录卡片上显示徽章。您可以上传自己的报告，或通过 IMEX 订购检测。",
+    "saveFirst": "请先保存报价，检测报告只能附加到已创建的报价上。",
+    "upload": "上传检测报告（PDF）",
+    "pdfOnly": "检测报告必须为 PDF 格式。",
+    "resultLocked": "该检测报告来自平台实验室订单，无法删除。",
+    "orderCta": "通过 IMEX 订购检测",
+    "orderCopy": "我们将与您联系，商定实验室、费用及样品交接方式。",
+    "orderCommentPlaceholder": "检测项目：熔体流动速率、密度、水分……",
+    "orderSubmit": "发送申请",
+    "partnerPending": "尚未指定实验室",
+    "openPassport": "打开检测报告",
+    "volume": "样品量",
+    "comment": "备注",
+    "created": "创建时间",
+    "rejectedReason": "拒绝原因",
+    "operatorNote": "运营人员备注",
+    "openOffer": "打开报价",
+    "ordersTitle": "实验室订单",
+    "ordersSubtitle": "状态由我们的运营人员跟进，检测由合作实验室完成。",
+    "ordersEmpty": "暂无订单",
+    "ordersEmptyBody": "可在报价表单或交易室中订购检测。",
+    "dealNoneTitle": "该交易尚未订购检测",
+    "dealNoneBody": "您可以在发货前检测材料，由我们的运营人员负责处理。",
+    "dealResultInDocs": "检测报告已添加到「文件」标签页。",
+    "badge": {
+      "passport": "检测报告",
+      "verified": "Laboratory Verified"
+    },
+    "status": {
+      "submitted": "已提交",
+      "accepted": "已受理",
+      "sample_awaited": "等待样品",
+      "in_analysis": "检测中",
+      "done": "已完成",
+      "rejected": "已拒绝"
+    },
+    "hub": {
+      "title": "实验室",
+      "subtitle": "向平台实验室发出的申请，以及您通过 IMEX 订购的检测",
+      "tabRequests": "实验室申请",
+      "tabOrders": "IMEX 检测订单"
+    }
+  },
+  "samples": {
+    "title": "样品",
+    "subtitle": "样品申请：买方向您提出的申请，以及您提出的申请。",
+    "tab": {
+      "incoming": "收到的申请",
+      "sent": "发出的申请"
+    },
+    "empty": {
+      "incoming": "暂无收到的申请",
+      "sent": "您尚未申请样品"
+    },
+    "emptyBody": "您可以在市场的报价页面申请样品。",
+    "offerTitle": "申请样品",
+    "free": "样品免费",
+    "priced": "样品：{{price}} {{currency}}",
+    "dispatch": "{{count}} 天内发出",
+    "qty": "数量",
+    "qtyHint": "自由填写，如“1 公斤”、“几粒颗粒”",
+    "address": "收货地址",
+    "send": "申请样品",
+    "sentOk": "申请已发送给卖方。",
+    "reason": "原因",
+    "courier": "快递公司",
+    "tracking": "运单号",
+    "shipmentHint": "请填写快递公司和运单号，买方将据此跟踪发货。",
+    "action": {
+      "accepted": "接受",
+      "declined": "拒绝",
+      "sent": "标记为已发出",
+      "received": "标记为已收到",
+      "rejected_by_buyer": "不合适"
+    },
+    "status": {
+      "requested": "已申请",
+      "accepted": "已接受",
+      "declined": "已拒绝",
+      "sent": "已发出",
+      "received": "已收到",
+      "rejected_by_buyer": "不合适",
+      "pending_letter": "等待签署承诺函"
+    },
+    "errors": {
+      "alreadyRequested": "您对该报价已有进行中的申请。",
+      "notAvailable": "卖方未对该报价提供样品。",
+      "ownOffer": "这是贵公司自己的报价，无需申请样品。"
+    },
+    "letterOwed": "申请已创建，但尚未发送给卖方：请先用电子签名签署承诺函。",
+    "goSign": "前往签署"
+  },
+  "onboarding": {
+    "title": "注册",
+    "subtitle": "创建账户，使用平台全部功能",
+    "heroAlt": "安全、经过认证的 IMEX AI 平台",
+    "chips": {
+      "aiMatching": "AI 智能匹配",
+      "verifiedCompany": "认证企业",
+      "tradeFinance": "贸易融资",
+      "secureDeals": "安全交易",
+      "logistics": "物流",
+      "governmentApi": "政府登记数据"
+    },
+    "trustTitle": "安全可靠",
+    "trustBody": "您的数据受到保护，符合国际安全标准",
+    "start": "开始注册"
+  },
+  "companyProfile": {
+    "title": "企业资料",
+    "officialSupplier": "IMEX AI 官方供应商",
+    "verifiedCompany": "认证企业",
+    "onPlatformSince": "自 {{date}} 起入驻平台",
+    "notFound": "未找到该企业或尚未通过认证",
+    "tabs": {
+      "about": "企业简介",
+      "products": "产品",
+      "reviews": "评价",
+      "documents": "文件"
+    },
+    "statSince": "自 {{date}} 起",
+    "statSincePending": "已入驻平台",
+    "statOffers": "{{count}} 条报价",
+    "statResponsePending": "响应时间：即将公布",
+    "statLanguages": "RU / EN / UZ",
+    "about": "简介",
+    "aboutForm": "组织形式：{{form}}。",
+    "aboutAddress": "地址：{{address}}。",
+    "aboutEmpty": "该企业尚未添加简介。",
+    "kpiTitle": "关键指标",
+    "kpiOnTime": "准时交货率",
+    "kpiRating": "买方评分",
+    "kpiClients": "长期客户",
+    "kpiCountries": "供货国家",
+    "kpiPendingHint": "平台交易积累到一定数量后将显示指标。",
+    "certificates": "证书",
+    "certificatesEmpty": "暂无公开证书",
+    "certificatesEmptyBody": "供应商发布 ISO 及其他证书后，将在此显示。",
+    "details": "企业信息",
+    "fullName": "全称",
+    "companyType": "企业类型",
+    "headOffice": "总部",
+    "founded": "成立时间",
+    "jurisdiction": "注册地",
+    "advantages": "优势",
+    "advantageVerified": "已通过 IMEX AI 认证",
+    "advantageOffers": "市场上有 {{count}} 条有效报价",
+    "mainProducts": "主营产品",
+    "productsEmpty": "暂无已发布产品",
+    "productsEmptyBody": "该企业尚无已审核通过的报价。",
+    "seeAllProducts": "查看全部产品（{{count}}）",
+    "reviewsScorePending": "— / 5",
+    "reviewsHint": "评分根据已完成的交易生成",
+    "reviewsEmpty": "暂无评价",
+    "reviewsEmptyBody": "与该企业完成交易后将显示评价。",
+    "documentsEmpty": "暂无文件",
+    "documentsEmptyBody": "供应商发布公开文件后将在此显示。",
+    "message": "发消息",
+    "requestRfq": "询价（RFQ）",
+    "messageManufacturer": "联系工厂",
+    "requestFactoryRfq": "询价",
+    "pickOfferHint": "请在下方选择产品，向卖方发送询价",
+    "logistics": {
+      "aboutTitle": "企业简介",
+      "capabilitiesTitle": "我们的能力",
+      "detailsTitle": "服务条件",
+      "countries": "服务国家",
+      "services": "服务",
+      "experience": "从业年限",
+      "projects": "已完成项目",
+      "cargo": "货物类型",
+      "routes": "热门线路",
+      "tariff": "计费方式",
+      "city": "城市",
+      "years_one": "{{count}} 年",
+      "years_other": "{{count}} 年",
+      "capabilityBlurb": {
+        "own_trucks": "现代化牵引车和集装箱运输车",
+        "own_rail_wagons": "自有车皮和罐车车队",
+        "sea_containers": "与全球主要港口合作",
+        "storage_facilities": "用于货物集拼的仓储空间",
+        "customs_warehouse": "海关监管仓库",
+        "foreign_offices": "在发货国设有代表处",
+        "customs_brokers": "自有报关员，提供一站式清关"
+      },
+      "projectsValue": "{{value}}+"
+    },
+    "reviewCount_one": "{{count}} 条评价",
+    "reviewCount_other": "{{count}} 条评价",
+    "reviewAnonymous": "企业",
+    "reviewTitle": "发表评价",
+    "reviewRating": "评分",
+    "reviewBody": "评论",
+    "reviewBodyPlaceholder": "合作情况如何？",
+    "reviewSubmit": "提交评价",
+    "reviewErrors": {
+      "self": "不能评价自己的企业",
+      "ratingRequired": "请给出 1 到 5 的评分"
+    },
+    "laboratory": {
+      "aboutTitle": "实验室简介",
+      "methodsTitle": "检测方法与项目",
+      "detailsTitle": "联系方式",
+      "experience": "从业年限",
+      "studies": "已完成检测",
+      "turnaround": "平均检测周期",
+      "city": "城市",
+      "website": "网站",
+      "years_one": "{{count}} 年",
+      "years_other": "{{count}} 年",
+      "days_one": "{{count}} 天",
+      "days_other": "{{count}} 天",
+      "studiesValue": "{{value}}+",
+      "accreditationOptions": {
+        "iso_17025": "ISO/IEC 17025",
+        "national_accreditation": "国家认可",
+        "iso_9001": "ISO 9001",
+        "gost_certified": "GOST 认证"
+      }
+    },
+    "statOffers_one": "{{count}} 条报价",
+    "statOffers_other": "{{count}} 条报价",
+    "advantageOffers_one": "市场上有 {{count}} 条有效报价",
+    "advantageOffers_other": "市场上有 {{count}} 条有效报价"
+  },
+  "manufacturers": {
+    "title": "生产商",
+    "subtitle": "经认证的工厂，可直接询价",
+    "search": "按名称或产品搜索…",
+    "empty": "未找到生产商",
+    "emptyBody": "请尝试其他搜索词。",
+    "noIso": "未标注 ISO 认证",
+    "offerCount": "{{count}} 个产品",
+    "employeesShort": "{{count}} 名员工",
+    "foundedShort": "成立于 {{year}} 年",
+    "chatWithFactory": "与工厂沟通",
+    "leaveFactoryRfq": "向工厂询价"
+  },
+  "factoryRfq": {
+    "title": "工厂询价（RFQ）",
+    "subtitle": "直接向工厂发送详细询价",
+    "stepOf": "第 {{current}} 步，共 {{total}} 步",
+    "steps": {
+      "basic": "条件",
+      "documents": "文件",
+      "terms": "商务",
+      "contact": "联系人"
+    },
+    "basic": {
+      "title": "1. 基本条件",
+      "quantity": "数量",
+      "quantityRequired": "请输入大于零的数量",
+      "targetPrice": "目标价格",
+      "currency": "币种",
+      "incoterms": "交货条件（Incoterms）",
+      "incotermsPlaceholder": "选择交货条款",
+      "destinationPort": "目的港／城市",
+      "desiredDeliveryDate": "期望交货日期"
+    },
+    "documents": {
+      "title": "2. 合规文件",
+      "subtitle": "附上工厂所需文件，也可稍后在询价中补充",
+      "dropLabel": "点击上传",
+      "dropHint": "PDF, JPG, PNG",
+      "uploaded": "已附上",
+      "remove": "删除",
+      "kinds": {
+        "founding_docs": "公司设立文件",
+        "registration_certificate": "注册证书",
+        "tax_id": "税号证书（ИНН）",
+        "bank_details": "银行信息",
+        "import_export_license": "进出口许可证"
+      }
+    },
+    "terms": {
+      "title": "3. 商务条件",
+      "paymentMethod": "付款方式",
+      "paymentMethodPlaceholder": "例如：30% 预付款，余款凭提单支付",
+      "offerValidity": "报价有效期",
+      "offerValidityPlaceholder": "例如：30 天",
+      "performanceGuarantee": "履约保函",
+      "performanceGuaranteePlaceholder": "例如：2% 银行保函",
+      "inspectionRequirement": "检验要求",
+      "inspectionRequirementPlaceholder": "例如：装货时 SGS 检验",
+      "additionalRequirements": "其他要求",
+      "additionalRequirementsPlaceholder": "工厂还需了解的其他信息"
+    },
+    "contact": {
+      "title": "4. 联系人",
+      "name": "姓名",
+      "nameRequired": "请输入联系人姓名",
+      "position": "职位",
+      "email": "Email",
+      "phone": "电话",
+      "phoneRequired": "请输入电话号码",
+      "telegram": "Telegram",
+      "submit": "提交询价"
+    },
+    "submitFailed": "询价提交失败。",
+    "done": {
+      "title": "询价已发送至工厂！",
+      "body": "工厂将审核您的询价并与您联系。",
+      "numberLabel": "询价编号",
+      "dateLabel": "提交时间",
+      "toManufacturers": "返回生产商",
+      "toHome": "返回首页"
+    }
+  },
+  "manufacturerChat": {
+    "title": "与工厂聊天",
+    "subtitle": "与生产商直接沟通",
+    "empty": "暂无消息",
+    "placeholder": "输入消息…",
+    "send": "发送",
+    "attach": "文件"
+  },
+  "bankAccountStatus": {
+    "unverified": "未认证",
+    "pending": "审核中",
+    "verified": "已认证",
+    "failed": "已拒绝",
+    "archived": "已归档"
+  },
+  "public": {
+    "nav": {
+      "primary": "主导航",
+      "home": "首页",
+      "catalog": "产品目录",
+      "traders": "贸易商",
+      "logistics": "物流",
+      "laboratories": "实验室",
+      "prices": "价格与分析",
+      "news": "新闻",
+      "signIn": "登录",
+      "register": "注册",
+      "language": "语言",
+      "pricesShort": "价格",
+      "technologists": "工艺师"
+    },
+    "role": {
+      "manufacturer": "生产商",
+      "trader": "贸易商",
+      "logistics_provider": "物流",
+      "laboratory": "实验室",
+      "importer": "进口商",
+      "distributor": "经销商",
+      "insurance_provider": "保险"
+    },
+    "home": {
+      "metaTitle": "IMEX AI：石化原料交易平台",
+      "metaDescription": "来自经过认证的生产商、贸易商和实验室的聚合物与石化产品。实时价格、实验室质量证书、安全交易。",
+      "heroTitle": "IMEX AI — 乌兹别克斯坦石化市场数字平台",
+      "heroSubtitle": "生产商、贸易商、物流与实验室汇聚于同一平台",
+      "heroCtaPrimary": "创建账户",
+      "heroCtaPrimaryAuthed": "进入个人中心",
+      "heroCtaSecondary": "浏览产品目录",
+      "searchLabel": "搜索产品目录",
+      "searchPlaceholder": "搜索产品、牌号、公司、服务...",
+      "searchAction": "搜索",
+      "popular": "热门搜索：",
+      "statsHeading": "平台数据一览",
+      "statLive": "基于平台实时数据更新",
+      "directoriesHeading": "您在寻找谁",
+      "companyCount_one": "{{count}} 家公司",
+      "companyCount_other": "{{count}} 家公司",
+      "seeAll": "查看全部",
+      "noOffers": "暂无已发布的报价",
+      "marketPrices": "市场价格",
+      "priceProduct": "产品",
+      "priceValue": "价格",
+      "priceChange": "涨跌",
+      "noHistory": "暂无数据",
+      "noPrices": "首批观测数据采集后将显示报价",
+      "industryNews": "行业新闻",
+      "noNews": "暂无新闻",
+      "whyEyebrow": "经过认证的 B2B 交易平台",
+      "whyHeading": "为什么企业选择 IMEX AI",
+      "whySubtitle": "在您开始交易之前，每家公司均已通过国家登记册核查，并使用电子签名签署文件。",
+      "why": {
+        "verified": {
+          "title": "经过认证的公司",
+          "body": "发布前须完成登记册核查和电子签名。"
+        },
+        "prices": {
+          "title": "实时价格与分析",
+          "body": "每日从交易所和行业来源采集报价。"
+        },
+        "signing": {
+          "title": "通过 D-Doc 安全交易",
+          "body": "双方以电子签名签约，无需纸质文件和快递。"
+        },
+        "international": {
+          "title": "国际化平台",
+          "body": "来自多个国家的供应商和买方汇聚于同一平台。"
+        },
+        "support": {
+          "title": "全天候支持",
+          "body": "IMEX AI 团队在交易的每个环节为您提供帮助。"
+        }
+      },
+      "joinHeading": "加入 IMEX AI",
+      "joinBody": "与我们一起在全球石化市场拓展业务",
+      "allQueries": "全部搜索",
+      "searchScope": "搜索范围",
+      "scope": {
+        "products": "产品",
+        "companies": "公司",
+        "services": "服务"
+      },
+      "directoryCard": {
+        "manufacturersBody": "工厂直供",
+        "tradersBody": "经过认证的贸易商和经销商",
+        "logisticsBody": "运输、清关、仓储",
+        "laboratoriesBody": "实验室检测与质量证书",
+        "pricesBody": "实时价格与市场分析",
+        "newsBody": "行业新闻与动态",
+        "daily": "每日更新"
+      },
+      "productCategories": "产品类别",
+      "resetFilters": "全部重置",
+      "filterCountry": "原产国",
+      "filterCountryPlaceholder": "选择国家",
+      "filterIncoterms": "交货条款",
+      "filterCompany": "生产商 / 公司",
+      "filterCompanyPlaceholder": "请选择",
+      "showProducts": "显示产品",
+      "showProductsCount_one": "显示 {{count}} 个产品",
+      "showProductsCount_other": "显示 {{count}} 个产品",
+      "recommendedProducts": "推荐产品",
+      "verifiedManufacturers": "经过认证的生产商",
+      "manufacturerOffers_one": "{{count}} 条报价",
+      "manufacturerOffers_other": "{{count}} 条报价",
+      "seeAllPeople": "查看全部",
+      "contact": "联系",
+      "saveOffer": "收藏报价",
+      "offerForm": "形态",
+      "offerFormGranules": "颗粒",
+      "offerTerms": "条款",
+      "priceValueUsd": "价格（USD/MT）",
+      "priceChange24h": "涨跌（24h）",
+      "priceSource": "来源：平台市场观测数据",
+      "priceUpdated": "更新时间：{{date}}",
+      "popularServices": "热门服务",
+      "allServices": "全部服务",
+      "service": {
+        "logistics": {
+          "title": "国际物流",
+          "body": "一站式交付"
+        },
+        "customs": {
+          "title": "报关清关",
+          "body": "出口 / 进口"
+        },
+        "lab": {
+          "title": "实验室检测",
+          "body": "分析与质量证书"
+        }
+      },
+      "registerCompany": "公司注册",
+      "platformStat": {
+        "products": "目录产品数",
+        "companies": "公司",
+        "countries": "国家",
+        "requests": "每日询价",
+        "deals": "成功交易",
+        "satisfaction": "满意度"
+      },
+      "fallbackCategory": {
+        "PE": "聚乙烯（PE）",
+        "PP": "聚丙烯（PP）",
+        "PVC": "聚氯乙烯（PVC）",
+        "PET": "PET",
+        "PS": "聚苯乙烯（PS）",
+        "Rubber": "橡胶",
+        "Solvents": "溶剂",
+        "Additives": "添加剂"
+      },
+      "popularTag": {
+        "rubber": "橡胶",
+        "solvents": "溶剂"
+      }
+    },
+    "market": {
+      "metaTitle": "石化原料产品目录",
+      "metaDescription": "来自经过认证的供应商的聚合物、溶剂和添加剂。可按产品、库存、国家和实验室质量证书筛选。",
+      "title": "产品目录",
+      "subtitle": "经过认证的供应商已发布的报价",
+      "filters": "筛选",
+      "search": "搜索",
+      "searchPlaceholder": "牌号或产品",
+      "category": "类别",
+      "allCategories": "全部类别",
+      "availability": "库存状态",
+      "any": "不限",
+      "country": "国家",
+      "laboratory": "实验室",
+      "hasPassport": "附质量证书",
+      "labVerified": "经平台检测",
+      "reset": "清除筛选",
+      "resultCount_one": "{{count}} 条报价",
+      "resultCount_other": "{{count}} 条报价",
+      "empty": "没有符合筛选条件的结果",
+      "pagination": "分页",
+      "pageOf": "第 {{page}} 页，共 {{pages}} 页",
+      "anyPlural": "不限",
+      "showResults": "显示结果",
+      "showResultsCount_one": "显示 {{count}} 条报价",
+      "showResultsCount_other": "显示 {{count}} 条报价"
+    },
+    "offer": {
+      "untitled": "未命名",
+      "onRequest": "价格面议",
+      "moq": "最小起订量",
+      "leadTime": "交货期（天）",
+      "labVerified": "实验室已验证",
+      "labPassport": "附质量证书",
+      "verified": "已认证",
+      "metaTitle": "{{name}}，供应商：{{seller}}",
+      "metaDescription": "{{name}} 现货供应。发货地：{{location}}。IMEX AI 认证供应商。",
+      "notFound": "未找到该报价",
+      "notFoundBody": "该报价可能已下架。",
+      "breadcrumb": "面包屑导航",
+      "grade": "牌号",
+      "polymer": "聚合物类型",
+      "cas": "CAS",
+      "hs": "HS 编码",
+      "manufacturer": "生产商",
+      "incoterms": "Incoterms",
+      "location": "发货地",
+      "properties": "技术指标",
+      "applications": "应用领域",
+      "description": "描述",
+      "soldBy": "供应商：",
+      "sendInquiry": "发送询价",
+      "signInToContact": "登录后联系",
+      "contactHint": "登录后可查看供应商联系方式。"
+    },
+    "directory": {
+      "metaTitle": "{{name}}，经过认证的公司",
+      "search": "搜索公司",
+      "searchPlaceholder": "名称或地址",
+      "resultCount_one": "{{count}} 家公司",
+      "resultCount_other": "{{count}} 家公司",
+      "empty": "未找到公司",
+      "notFound": "该栏目不存在"
+    },
+    "directories": {
+      "manufacturers": {
+        "subtitle": "角色经确认的聚合物工厂和生产商"
+      },
+      "traders": {
+        "subtitle": "石化原料贸易公司和经销商"
+      },
+      "logistics": {
+        "subtitle": "货运、报关清关与仓储"
+      },
+      "laboratories": {
+        "subtitle": "提供分析检测与质量证书的认可实验室"
+      }
+    },
+    "company": {
+      "untitled": "未命名",
+      "notFound": "未找到该公司",
+      "notFoundBody": "该公司可能尚未通过认证。",
+      "metaTitle": "{{name}}，{{directory}}",
+      "metaDescription": "{{name}}，{{country}}。IMEX AI 交易平台上经过认证的公司。",
+      "offers": "报价",
+      "founded": "成立时间",
+      "employees": "员工人数",
+      "iso": "ISO",
+      "legalName": "法定名称",
+      "legalForm": "组织形式",
+      "address": "地址",
+      "jurisdiction": "管辖地",
+      "productionType": "生产类型",
+      "exportTo": "出口至",
+      "products": "公司报价",
+      "noProducts": "该公司暂无已发布的报价",
+      "about": "公司简介",
+      "contact": "联系"
+    },
+    "prices": {
+      "metaTitle": "聚合物与石化产品价格",
+      "metaDescription": "聚合物实时报价：HDPE、PP、LLDPE、PVC、PET，并显示较上次观测的变化。",
+      "title": "价格与分析",
+      "subtitle": "各产品的最新观测值及较上次的变化",
+      "unit": "单位",
+      "observed": "日期"
+    },
+    "footer": {
+      "marketplace": "交易平台",
+      "directories": "企业名录",
+      "account": "账户",
+      "blurb": "提供公司认证和实验室质量控制的石化原料交易平台。",
+      "legal": "IMEX AI 版权所有。"
+    }
+  },
+  "logisticsRequest": {
+    "title": "物流公司需求",
+    "heroTitle": "快速物流需求",
+    "heroBody": "提交需求后，我们的专家将为您匹配最优的物流方案和承运商。",
+    "cargoTitle": "货物信息",
+    "cargoName": "货物名称",
+    "cargoNamePlaceholder": "聚丙烯 (PP)",
+    "volume": "货量",
+    "volumeHint": "单位：吨",
+    "packaging": "包装类型",
+    "packagingPlaceholder": "选择类型",
+    "requirements": "特殊要求",
+    "requirementsPlaceholder": "安全运输，ADR",
+    "routeTitle": "路线",
+    "from": "起运地",
+    "to": "目的地",
+    "country": "国家",
+    "countryPlaceholder": "选择国家",
+    "city": "城市",
+    "submit": "提交需求",
+    "privacy": "您的数据受保护，仅用于匹配物流方案。",
+    "number": "需求编号",
+    "doneTitle": "需求已提交！",
+    "doneBody": "承运商已收到您的需求。回复将发送至您的通知，紧急事项我们将电话沟通。",
+    "backToDirectory": "返回承运商列表",
+    "toCabinet": "进入个人中心",
+    "packagingOptions": {
+      "containers": "集装箱",
+      "big_bags": "吨袋",
+      "bags": "袋装",
+      "bulk": "散装",
+      "pallets": "托盘",
+      "iso_tank": "ISO 罐箱",
+      "drums": "桶装",
+      "other": "其他"
+    },
+    "lifecycle": {
+      "submitted": "已提交",
+      "in_progress": "处理中",
+      "quoted": "已报价"
+    },
+    "errors": {
+      "cargoRequired": "请输入货物名称",
+      "volumeInvalid": "请输入大于零的货量",
+      "countryRequired": "请选择国家"
+    },
+    "listTitle": "物流需求",
+    "emptyTitle": "暂无需求",
+    "emptySentBody": "打开承运商资料页并提交需求，需求将显示在这里。",
+    "myRequests": "我的需求",
+    "buyer": "买方",
+    "contact": "联系电话",
+    "broadcastHint": "所有已认证的物流公司都将看到此需求。",
+    "ctaFromProfile": "发布运输需求",
+    "newRequest": "新建需求",
+    "poolTitle": "运输需求",
+    "poolSubtitle": "货主的公开需求。回复后可在聊天中继续沟通。",
+    "tabAll": "全部需求",
+    "tabMine": "我的回复",
+    "poolEmptyTitle": "暂无公开需求",
+    "poolEmptyBody": "货主发布需求后，将显示在这里。",
+    "poolEmptyMineBody": "回复需求后，将显示在这里。",
+    "reply": "回复",
+    "openChat": "打开聊天",
+    "responsesTitle": "承运商回复",
+    "noResponses": "暂无回复",
+    "noResponsesBody": "承运商可以看到您的需求。第一条回复将显示在这里。",
+    "responseCount_one": "{{count}} 条回复",
+    "responseCount_other": "{{count}} 条回复"
+  },
+  "threadChat": {
+    "title": "对话",
+    "empty": "暂无消息。发送第一条吧。",
+    "placeholder": "输入消息…",
+    "send": "发送",
+    "attach": "添加附件"
+  },
+  "labRequest": {
+    "title": "检测需求",
+    "heroTitle": "新建实验室需求",
+    "heroBody": "请描述需要检测的内容。所有已认证的实验室都将看到此需求。",
+    "broadcastHint": "所有已认证的实验室都将看到此需求。",
+    "stepSubject": "检测对象",
+    "stepDetails": "需求详情",
+    "product": "检测什么？",
+    "productPlaceholder": "HDPE S5502 BN",
+    "grade": "牌号",
+    "studyType": "检测类型",
+    "studyTypePlaceholder": "选择类型",
+    "methods": "所需检测项目",
+    "methodsHint": "至少选择一项",
+    "sampleQty": "样品数量",
+    "sampleQtyHint": "例如 1 kg",
+    "comment": "备注",
+    "commentPlaceholder": "输入备注",
+    "contactName": "联系人",
+    "contactEmail": "Email",
+    "contactPhone": "电话",
+    "contactPhoneHint": "留空则使用您账户的手机号",
+    "purpose": "检测目的",
+    "purposePlaceholder": "选择目的",
+    "urgent": "是否加急？",
+    "desiredDate": "期望完成日期",
+    "submit": "提交需求",
+    "ctaFromProfile": "发布检测需求",
+    "newRequest": "新建需求",
+    "listTitle": "实验室需求",
+    "myRequests": "我的需求",
+    "laboratory": "实验室",
+    "buyer": "委托方",
+    "contact": "联系方式",
+    "number": "需求编号",
+    "emptyTitle": "暂无需求",
+    "emptySentBody": "描述需要检测的内容，所有实验室都将看到此需求。",
+    "doneTitle": "需求已提交！",
+    "doneBody": "实验室已收到您的需求。回复将发送至您的通知，具体细节可在对话中沟通。",
+    "backToDirectory": "返回实验室列表",
+    "toCabinet": "进入个人中心",
+    "poolTitle": "检测需求",
+    "poolSubtitle": "委托方的公开需求。回复后可在聊天中继续沟通。",
+    "tabAll": "全部需求",
+    "tabMine": "我的回复",
+    "poolEmptyTitle": "暂无公开需求",
+    "poolEmptyBody": "委托方发布需求后，将显示在这里。",
+    "poolEmptyMineBody": "回复需求后，将显示在这里。",
+    "reply": "回复",
+    "openChat": "打开聊天",
+    "responsesTitle": "实验室回复",
+    "noResponses": "暂无回复",
+    "noResponsesBody": "实验室可以看到您的需求。第一条回复将显示在这里。",
+    "responseCount_one": "{{count}} 条回复",
+    "responseCount_other": "{{count}} 条回复",
+    "lifecycle": {
+      "submitted": "已提交",
+      "in_progress": "处理中",
+      "quoted": "已报价"
+    },
+    "errors": {
+      "productRequired": "请说明需要检测的内容",
+      "methodsRequired": "请至少选择一项检测"
+    },
+    "methodOptions": {
+      "mfi": "熔体流动速率 (MFI)",
+      "density": "密度",
+      "tensile_strength": "拉伸强度",
+      "elongation": "断裂伸长率",
+      "impact_strength": "冲击强度",
+      "dsc": "差示扫描量热 (DSC)",
+      "ftir": "红外光谱 (FTIR)",
+      "tga": "热重分析 (TGA)",
+      "ash_content": "灰分",
+      "moisture": "水分",
+      "vicat": "维卡软化点",
+      "hardness": "硬度",
+      "melting_point": "熔点",
+      "carbon_black": "炭黑含量",
+      "oit": "OIT（氧化诱导时间）",
+      "rheology": "流变性能"
+    },
+    "studyTypes": {
+      "full_passport": "完整实验室检测报告",
+      "single_method": "单项检测",
+      "comparison": "对比分析",
+      "incoming_control": "来料检验",
+      "certification": "用于认证"
+    },
+    "purposes": {
+      "quality_and_compatibility": "质量及设备适配性评估",
+      "supplier_check": "供应商核查",
+      "certification": "认证",
+      "dispute": "争议解决",
+      "rnd": "研发"
+    }
+  },
+  "productCategory": {
+    "polymer": "聚合物"
+  },
+  "ikpu": {
+    "label": "ИКПУ（商品编码）",
+    "hint": "提交至 my.soliq.uz 的合同和发票须填写。仅在您已向 Didox 申报的编码中搜索；新编码请在 tasnif.soliq.uz 获取。",
+    "placeholder": "商品名称，例如“聚乙烯”",
+    "search": "搜索",
+    "package": "包装",
+    "chosenPackage": "包装：{{name}}",
+    "empty": "未找到结果。请尝试其他名称。",
+    "errors": {
+      "unavailable": "Didox 的 ИКПУ 目录暂时不可用。请稍后重试，编码也可以之后再添加。",
+      "failed": "搜索失败。",
+      "badCode": "ИКПУ 编码必须为 17 位数字。"
+    },
+    "emptyAdd": "在您的编码中未找到结果。搜索仅涵盖您已向 Didox 申报的编码——新编码请在 tasnif.soliq.uz 获取后在此添加。",
+    "add": "添加编码 {{code}}",
+    "codeHint": "ИКПУ 编码为 17 位数字。",
+    "origin": "货物来源",
+    "originHint": "用于发票：说明您如何获得该货物。Didox 无法得知此信息——同一编码对工厂而言是“自产”，对贸易商而言是“转售”。",
+    "originPlaceholder": "选择来源",
+    "originRequired": "未指定货物来源，该编码无法用于单据。",
+    "origins": {
+      "1": "自产",
+      "2": "转售（从供应商采购）",
+      "3": "服务",
+      "4": "不参与流通"
+    },
+    "session": {
+      "hint": "ИКПУ 编码保存在您的 Didox 账户中。如需搜索和添加，请使用公司电子签名登录 Didox，每次登录有效 6 小时。",
+      "open": "使用电子签名登录 Didox"
+    }
+  },
+  "didox": {
+    "title": "电子文档交换（Didox）",
+    "connect": "接入 Didox",
+    "connecting": "正在接入…",
+    "signing": "正在签署…",
+    "signAndSend": "签署并通过 Didox 发送",
+    "sessionExpired": "Didox 会话已过期——下次签署时将自动续期。",
+    "states": {
+      "not_registered": "未接入",
+      "offer_unsigned": "公开要约未签署",
+      "ready": "已就绪",
+      "disabled": ""
+    },
+    "hints": {
+      "not_registered": "如需通过 Didox 签署合同，公司须使用自己的电子签名密钥接入一次。",
+      "offer_unsigned": "账户已创建，但尚未签署 Didox 公开要约。签署之前，发送文档将被拒绝。",
+      "ready": "该公司可通过 Didox 发送和签署文档。",
+      "disabled": ""
+    },
+    "documentStatus": {
+      "0": "草稿——可以签署",
+      "1": "等待对方签署",
+      "2": "轮到您签署",
+      "3": "双方已签署",
+      "4": "对方已拒绝",
+      "50": "已被税务机关作废"
+    },
+    "errors": {
+      "module_missing": "未找到 E-IMZO。请启动 E-IMZO 模块后重试。",
+      "no_cert": "未找到任何电子签名密钥。",
+      "cert_mismatch": "证书中的税号（ИНН）与该公司不符。",
+      "disabled": "本系统未启用 Didox。",
+      "failed": "无法连接 Didox。",
+      "not_registered": "该公司尚无 Didox 账户——请在下方注册。",
+      "rejected": "Didox 拒绝：{{message}}"
+    },
+    "signErrors": {
+      "module_missing": "未找到 E-IMZO。请启动模块后重试。",
+      "no_cert": "未找到任何电子签名密钥。",
+      "expired": "签署数据已过期。请再次点击“签署”。",
+      "offer_required": "须先签署 Didox 公开要约。",
+      "unavailable": "Didox 暂时不可用，请稍后再试。",
+      "failed": "无法签署文档。",
+      "rejected": "电子文档交换运营商拒绝了该文档：{{message}}",
+      "cancelled": "签署已取消——E-IMZO 密码窗口已关闭。请再次点击并输入密钥密码。"
+    },
+    "signOffer": "签署 Didox 公开要约",
+    "signingOffer": "正在签署…",
+    "printForm": {
+      "title": "Didox 打印版",
+      "loading": "正在加载运营商表单…",
+      "errors": {
+        "failed": "无法从运营商获取打印版。",
+        "didox_session_required": "需要 Didox 会话——请将公司接入运营商。",
+        "document_not_created": "运营商处尚未创建该文档。",
+        "didox_unavailable": "Didox 暂时不可用，请稍后再试。"
+      }
+    },
+    "ownerOnly": "仅公司所有者可将公司接入 Didox。"
+  },
+  "didoxOnboarding": {
+    "title": "接入 Didox",
+    "subtitle": "{{company}}——电子文档交换",
+    "why": "通过 Didox 签署的合同会同步至 my.soliq.uz。签署前，公司须拥有 Didox 账户并签署运营商的公开要约。此操作只需一次。",
+    "later": "稍后",
+    "steps": {
+      "account": "Didox 账户",
+      "offer": "Didox 公开要约"
+    },
+    "account": {
+      "haveTitle": "公司已有 Didox 账户？",
+      "haveBody": "使用公司的电子签名密钥登录即可，无需其他操作。如已在 didox.uz 签署要约，我们会自动识别。",
+      "signIn": "使用电子签名登录 Didox",
+      "registerTitle": "在 Didox 注册公司",
+      "registerBody": "邮箱和密码用于登录 didox.uz。我们仅将其转交 Didox，不作保存。注册须使用公司的电子签名密钥确认。",
+      "email": "Email",
+      "emailInvalid": "请输入不含“+”的邮箱——Didox 不接受该字符。",
+      "mobile": "电话",
+      "mobileHint": "仅限数字，含国家代码：998901234567。",
+      "mobileInvalid": "9 至 15 位数字。",
+      "password": "didox.uz 密码",
+      "passwordHint": "至少 8 个字符。",
+      "passwordShort": "至少 8 个字符。",
+      "register": "使用电子签名注册"
+    },
+    "offer": {
+      "title": "Didox 公开要约",
+      "body": "请阅读电子文档交换运营商的要约。使用公司密钥签署即表示接受——否则 Didox 不接收任何文档。",
+      "loading": "正在加载要约…",
+      "sessionHint": "要约由 Didox 保管。请使用公司电子签名登录后打开。",
+      "loadFailed": "无法从 Didox 加载要约。",
+      "openInTab": "在新标签页中打开",
+      "agree": "我已阅读 Didox 公开要约并接受其条款",
+      "errors": {
+        "module_missing": "未找到 E-IMZO。请启动 E-IMZO 模块后重试。",
+        "cert_mismatch": "未找到该公司的密钥——证书中的税号（ИНН）不符。",
+        "failed": "无法签署要约，请重试。"
+      }
+    },
+    "done": {
+      "title": "公司已接入 Didox",
+      "body": "现在可以通过 Didox 签署和发送合同。",
+      "cta": "前往个人中心"
+    },
+    "contractBlocked": {
+      "title": "暂无法通过 Didox 签署"
+    }
+  },
+  "sampleLetter": {
+    "title": "承诺函",
+    "buyerPending": "您使用电子签名签署承诺函后，卖方才能看到此请求。",
+    "sellerPending": "买方尚未签署承诺函——该请求不视为已发送。",
+    "signedAt": "编号 {{number}}，签署于 {{at}}",
+    "open": "打开承诺函（PDF）",
+    "sign": "使用 E-IMZO 签署",
+    "notSentYet": "请求尚未发送给卖方。",
+    "loadFailed": "无法加载承诺函，请刷新页面。"
+  },
+  "didoxDocument": {
+    "title": "Didox 中的文档",
+    "sellerHint": "该合同在电子文档交换运营商处签署。点击下方按钮将创建文档并立即用您的密钥签署——随后轮到买方。",
+    "buyerHint": "卖方尚未在运营商处创建文档，创建后即可签署。",
+    "create": "签署并通过 Didox 发送",
+    "creating": "正在签署…",
+    "blockedTitle": "暂无法创建文档",
+    "blockers": {
+      "ikpu_missing": "报价中未填写商品编码（IKPU）——缺少商品编码，文档将不被接受。请在报价中填写。",
+      "signer_identity_missing": "缺少签署人信息（姓名和个人识别号 PINFL），文档要求必填。请使用公司电子签名登录 Didox——信息将从该签名中获取。",
+      "not_ready": "合同尚未发送给双方签署。",
+      "wrong_rail": "该合同使用平台自有的 E-IMZO 签署，而非通过 Didox。",
+      "party_mismatch": "无法根据合同确定卖方。",
+      "counterparty_unknown": "对方的税号（ИНН）不在电子文档交换运营商的登记册中——运营商不会接受发往该方的文档。",
+      "counterparty_ikpu_missing": "对方未在其 Didox 账户中登记该商品编码（IKPU），运营商将予以拒绝。我们无法修改他方的编码列表——请联系对方添加。"
+    },
+    "errors": {
+      "didox_session_required": "需要 Didox 会话——请使用电子签名登录。",
+      "didox_offer_required": "公司尚未签署 Didox 公开要约。",
+      "didox_unavailable": "Didox 暂时不可用，请稍后再试。",
+      "ikpu_missing": "未选择商品编码（IKPU）。",
+      "not_ready": "合同尚未准备好发送。",
+      "not_seller": "文档由卖方创建。",
+      "wrong_rail": "该合同不通过 Didox 签署。",
+      "empty_body": "合同既无正文也无明细。"
+    },
+    "ikpuTitle": "商品编码（IKPU）",
+    "ikpuHint": "该合同源自招标，没有带编码的报价——请自行选择商品编码（IKPU）。它将写入文档并同步至 my.soliq.uz。",
+    "ikpuRequired": "请选择商品编码（IKPU）、包装和货物原产地——缺少这些信息无法创建文档。"
+  },
+  "stepUp": {
+    "title": "确认密码",
+    "description": "此操作将修改收款信息。请输入密码以继续。",
+    "passwordLabel": "密码",
+    "confirm": "确认",
+    "errors": {
+      "wrongPassword": "密码错误",
+      "unavailable": "服务暂时不可用，请重试。",
+      "failed": "无法确认密码，请重试。"
+    }
+  },
+  "contractTerms": {
+    "title": "条款模板",
+    "subtitle": "您的付款和交货条款——起草合同时选择模板，字段将自动填写。",
+    "new": "新建模板",
+    "edit": "编辑模板",
+    "dialogHint": "合同法律文本由平台统一提供。模板仅包含您的条款；价格、数量和货物在每份合同中单独填写。",
+    "name": "名称",
+    "namePlaceholder": "例如：老客户",
+    "empty": "暂无模板",
+    "emptyBody": "保存在各份合同中反复使用的条款。",
+    "readOnly": "模板由公司所有者和经理创建。",
+    "archiveConfirm": "删除模板“{{name}}”？已起草的合同不受影响。",
+    "pick": "条款模板",
+    "pickHint": "自动填写付款和交货条款——仍可修改。",
+    "none": "不使用模板",
+    "saveFromForm": "将条款保存为模板",
+    "errors": {
+      "nameTaken": "同名模板已存在。",
+      "saveFailed": "无法保存模板，请检查各字段。"
+    }
+  },
+  "facture": {
+    "title": "电子发票（ESF）",
+    "none": "该合同暂无发票。",
+    "new": "开具 ESF",
+    "issue": "开具并签署",
+    "issuing": "正在开具…",
+    "count": "数量",
+    "price": "单价，UZS",
+    "vat": "增值税",
+    "noVat": "不含增值税",
+    "notInSoum": "合同以 {{currency}} 计价，但 ESF 须以苏姆开具——请输入苏姆价格。",
+    "pending": "上一张 ESF 尚未签署——请先签署再开具新发票。",
+    "didoxNotReady": "ESF 通过 Didox 开具和签署——请先接入公司。",
+    "blockedTitle": "暂无法开具 ESF",
+    "blockers": {
+      "contract_reference_missing": "未找到 ESF 应引用的 Didox 合同。",
+      "not_active": "合同尚未经双方签署。",
+      "specification_required": "请选择已签署的规格书——框架合同的 ESF 依据规格书开具。"
+    },
+    "errors": {
+      "facture_pending": "上一张 ESF 尚未签署。",
+      "price_required": "请输入苏姆价格。",
+      "precision": "小数位过多：数量最多 6 位，价格最多 2 位。",
+      "not_active": "合同尚未经双方签署。",
+      "contract_reference_missing": "未找到 ESF 应引用的 Didox 合同。"
+    },
+    "specification": "依据规格书"
+  },
+  "specification": {
+    "title": "规格书",
+    "none": "暂无规格书。框架合同下的每批交货均需单独的规格书。",
+    "new": "新建规格书",
+    "create": "起草规格书",
+    "name": "第 {{n}} 号规格书",
+    "line": "第 {{n}} 项",
+    "product": "货物",
+    "qty": "数量",
+    "unit": "单位",
+    "unitPrice": "单价，UZS",
+    "addLine": "添加项目",
+    "units": {
+      "kg": "千克",
+      "t": "吨",
+      "pcs": "件"
+    },
+    "priceBasis": "价格口径",
+    "withVat": "含增值税",
+    "withoutVat": "不含增值税",
+    "priceBasisHint": {
+      "with_vat": "合计金额为整数，但 ESF 可能相差几苏姆。",
+      "without_vat": "ESF 金额与规格书一致，精确到提因。"
+    },
+    "payment": "付款",
+    "prepay": "100% 预付款",
+    "schedule": "按计划付款",
+    "scheduleText": "付款计划",
+    "deliveryDays": "付款后交货期限（银行工作日）",
+    "openPdf": "打开 PDF",
+    "status": {
+      "draft": "草稿",
+      "pending_signatures": "等待签署",
+      "active": "已签署",
+      "declined": "已拒绝",
+      "cancelled": "已取消"
+    },
+    "errors": {
+      "invalid": "请检查各项：每项都需填写货物、数量和价格。",
+      "createFailed": "无法起草规格书。"
+    }
+  },
+  "technologists": {
+    "title": "工艺师",
+    "metaTitle": "工艺师与工业专家 — IMEX AI",
+    "subtitle": "为您的生产找到合适的工业专家。",
+    "needTitle": "我需要工艺师",
+    "needBody": "描述您的任务，工艺师会提交方案，由您选择执行人。",
+    "needCta": "创建需求",
+    "amTitle": "我是工艺师",
+    "amBody": "您是工艺师、工程师或专家？创建个人资料，接收工厂的需求。",
+    "amCta": "注册为专家",
+    "catalogTitle": "专家目录",
+    "filters": {
+      "any": "全部",
+      "anyProcess": "全部工艺",
+      "anyMaterial": "全部材料",
+      "anyLanguage": "全部语言",
+      "search": "搜索",
+      "searchPlaceholder": "姓名、专业方向…",
+      "process": "工艺",
+      "material": "材料",
+      "language": "语言"
+    },
+    "resultCount_one": "{{count}} 位专家",
+    "resultCount_other": "{{count}} 位专家",
+    "empty": "暂无专家。",
+    "noReviews": "暂无评价",
+    "reviews_one": "{{count}} 条评价",
+    "reviews_other": "{{count}} 条评价",
+    "profileVerified": "资料已认证",
+    "untitled": "专家",
+    "years_one": "{{count}} 年经验",
+    "years_other": "{{count}} 年经验",
+    "notFound": "未找到该专家",
+    "backToCatalog": "工艺师目录",
+    "profileMetaTitle": "{{name}} — 工艺师 | IMEX AI",
+    "fields": {
+      "processes": "工艺",
+      "materials": "材料",
+      "industries": "行业",
+      "equipment": "设备经验",
+      "years": "从业年限",
+      "projects": "项目数",
+      "countries": "国家数",
+      "formats": "工作方式",
+      "languages": "语言"
+    },
+    "process": {
+      "extrusion": "挤出",
+      "injection_molding": "注塑",
+      "blow_molding": "吹塑",
+      "compounding": "混炼改性",
+      "film": "薄膜",
+      "pipe": "管材",
+      "recycling": "回收再生",
+      "thermoforming": "热成型"
+    },
+    "industry": {
+      "petrochemical": "石油化工",
+      "polymer": "聚合物",
+      "packaging": "包装",
+      "automotive": "汽车",
+      "recycling": "回收再生",
+      "chemical": "化工"
+    },
+    "need": {
+      "equipment_setup": "设备调试",
+      "material_selection": "原料选型",
+      "production_launch": "生产投产",
+      "troubleshooting": "故障排除",
+      "process_optimization": "工艺优化",
+      "other": "其他"
+    },
+    "urgency": {
+      "urgent": "紧急",
+      "week": "一周内",
+      "month": "一个月内",
+      "date": "指定日期前"
+    },
+    "format": {
+      "online": "线上",
+      "on_site": "现场",
+      "both": "均可"
+    },
+    "language": {
+      "ru": "俄语",
+      "uz": "乌兹别克语",
+      "en": "英语",
+      "zh": "中文",
+      "tr": "土耳其语",
+      "de": "德语",
+      "fa": "波斯语",
+      "kk": "哈萨克语"
+    },
+    "capacityUnit": {
+      "kg_h": "公斤/小时",
+      "t_day": "吨/天",
+      "t_month": "吨/月"
+    },
+    "invite": {
+      "cta": "邀请参与需求",
+      "postFirst": "发布工艺师需求",
+      "pick": "需求",
+      "sent": "邀请已发送"
+    }
+  },
+  "techRequest": {
+    "form": {
+      "needType": "您需要什么？",
+      "process": "工艺",
+      "equipment": "设备",
+      "equipmentPlaceholder": "挤出生产线",
+      "equipmentModel": "设备型号",
+      "product": "您生产什么？",
+      "productPlaceholder": "聚乙烯薄膜",
+      "currentMaterial": "当前原料",
+      "currentMaterialHint": "不清楚可留空。",
+      "targetMaterial": "目标原料",
+      "problem": "任务或问题是什么？",
+      "problemPlaceholder": "例如：薄膜厚度不稳定。希望换用更便宜的牌号。",
+      "capacity": "产能",
+      "capacityUnit": "单位",
+      "country": "国家",
+      "city": "城市",
+      "cityPlaceholder": "塔什干",
+      "location": "工厂所在地",
+      "urgency": "何时需要专家？",
+      "neededBy": "日期",
+      "workFormat": "工作方式",
+      "languages": "专家语言",
+      "budget": "预算",
+      "budgetHint": "选填。可填写“面议”。",
+      "required": "必填项",
+      "notVerified": "只有已认证的公司才能发布需求。",
+      "submit": "发布需求"
+    },
+    "status": {
+      "open": "开放中",
+      "assigned": "已选定专家",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "contactsHint": "合同与付款由双方直接处理。",
+    "contactName": "姓名",
+    "contactPhone": "电话",
+    "contactEmail": "邮箱",
+    "notFound": "未找到该需求",
+    "chat": "与工厂的对话",
+    "listTitle": "工艺师需求",
+    "listSubtitle": "专家提交方案，由您选择执行人。",
+    "browseExperts": "工艺师目录",
+    "new": "寻找工艺师",
+    "offerCount_one": "{{count}} 个方案",
+    "offerCount_other": "{{count}} 个方案",
+    "empty": "暂无需求",
+    "emptyBody": "描述您的任务，工艺师会发送方案。",
+    "newTitle": "寻找工艺师",
+    "newSubtitle": "所有已认证的工艺师都能看到该需求。开始对话后才会显示您的公司名称。",
+    "complete": "工作已完成",
+    "cancel": "取消需求",
+    "offers": "方案",
+    "inviteMore": "从目录邀请专家",
+    "noOffers": "暂无方案",
+    "noOffersBody": "已通知匹配的专家。",
+    "chatWith": "对话：{{name}}",
+    "expertContacts": "专家联系方式",
+    "yourReview": "您的评价",
+    "acceptConfirm": "选择该专家？",
+    "acceptHint": "其他方案将被拒绝，您和专家将可以看到彼此的联系方式。",
+    "declineConfirm": "拒绝该方案？",
+    "cancelConfirm": "取消该需求？",
+    "accept": "选择",
+    "decline": "拒绝",
+    "write": "发消息",
+    "completeTitle": "工作已完成",
+    "completeHint": "为专家打分，评价将计入其评分。",
+    "rating": "评分",
+    "reviewText": "评价"
+  },
+  "techOffer": {
+    "scope": "工作内容",
+    "scopePlaceholder": "2 天咨询，1 天现场，设备分析，工艺调试。",
+    "price": "价格",
+    "currency": "币种",
+    "days": "工期（天）",
+    "daysValue_one": "{{count}} 天",
+    "daysValue_other": "{{count}} 天",
+    "conflict": "方案已发送，或需求已关闭。",
+    "update": "保存修改",
+    "submit": "发送方案",
+    "withdraw": "撤回",
+    "withdrawConfirm": "撤回该方案？",
+    "status": {
+      "submitted": "待处理",
+      "accepted": "已接受",
+      "declined": "已拒绝",
+      "withdrawn": "已撤回"
+    }
+  },
+  "expert": {
+    "profile": {
+      "title": "专家资料",
+      "subtitle": "审核通过后，工厂可在目录中看到您的资料。",
+      "viewPublic": "在目录中查看",
+      "photo": "上传照片",
+      "photoHint": "JPG 或 PNG，不超过 5 MB",
+      "fullName": "姓名",
+      "titleField": "职业头衔",
+      "titlePlaceholder": "薄膜挤出工艺师",
+      "bio": "个人简介",
+      "bioPlaceholder": "经验、项目，以及您能协助解决的问题。",
+      "equipmentHint": "您合作过的设备制造商。",
+      "contactsHint": "只有选择您方案的工厂才能看到您的联系方式。",
+      "incomplete": "请填写标记字段后再提交审核。",
+      "saved": "已保存",
+      "save": "保存草稿",
+      "submit": "提交审核",
+      "required": "必填项",
+      "submitted": "资料已提交审核，我们会通知您审核结果。"
+    },
+    "status": {
+      "published": "您的资料已在目录中发布",
+      "pending": "您的资料正在审核中",
+      "listedMeanwhile": "审核期间，目录中显示之前已通过的版本。",
+      "rejected": "审核未通过",
+      "suspended": "您的资料已被暂停",
+      "unsentChanges": "您的修改尚未提交审核，目录中显示已通过的版本。",
+      "draft": "请完善资料并提交审核。"
+    },
+    "requests": {
+      "title": "工厂需求",
+      "subtitle": "来自已认证公司的开放任务。",
+      "notListed": "资料发布后即可查看需求。",
+      "toProfile": "前往资料",
+      "all": "全部",
+      "invited": "邀请",
+      "empty": "暂无开放需求",
+      "emptyInvited": "暂无邀请",
+      "invitedBadge": "您已受邀",
+      "anonymousFactory": "工厂"
+    },
+    "request": {
+      "askHint": "发送方案前，可先向工厂提问。",
+      "ask": "提问",
+      "factoryContacts": "工厂联系方式",
+      "myOffer": "我的方案",
+      "offerClosed": "方案已关闭。",
+      "requestClosed": "该需求已不再接受方案。"
+    }
+  }
+}

@@ -52,6 +52,8 @@ interface PortalAccount {
   language: string;
   applied_company_name: string | null;
   application_note: string | null;
+  /** 0055: a technologist is a private expert — no company, a profile instead. */
+  applied_as: "company" | "technologist";
   must_change_password: boolean;
   credentials_issued_at: string | null;
   credentials_issued_by: number | null;
@@ -315,22 +317,27 @@ function IssueDialog({
 // ─── Table ─────────────────────────────────────────────────────────────────────
 
 const FILTERS = ["pending", "active", "blocked", "all"] as const;
+const KINDS = ["all", "company", "technologist"] as const;
 
 function AccountsTable() {
   const t = useTranslations("portalAccounts");
   const apiError = useApiError();
   const qc = useQueryClient();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("pending");
+  const [kind, setKind] = useState<(typeof KINDS)[number]>("all");
   const [issuing, setIssuing] = useState<PortalAccount | null>(null);
   const [issued, setIssued] = useState<IssuedCredentials | null>(null);
   const [rowError, setRowError] = useState<string | null>(null);
 
   const { data: accounts = [], isLoading, error } = useQuery<PortalAccount[]>({
-    queryKey: ["portal-accounts", filter],
-    queryFn: () =>
-      apiFetch<PortalAccount[]>(
-        `/admin/portal-accounts${filter === "all" ? "" : `?status=${filter}`}`,
-      ),
+    queryKey: ["portal-accounts", filter, kind],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (filter !== "all") params.set("status", filter);
+      if (kind !== "all") params.set("applied_as", kind);
+      const qs = params.toString();
+      return apiFetch<PortalAccount[]>(`/admin/portal-accounts${qs ? `?${qs}` : ""}`);
+    },
   });
 
   const toggleBlocked = useMutation({
@@ -373,6 +380,18 @@ function AccountsTable() {
               onClick={() => setFilter(f)}
             >
               {t(`filter.${f}`)}
+            </Button>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          {KINDS.map((k) => (
+            <Button
+              key={k}
+              variant={kind === k ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setKind(k)}
+            >
+              {t(k === "technologist" ? "kind.technologists" : `kind.${k}`)}
             </Button>
           ))}
         </div>
@@ -419,7 +438,13 @@ function AccountsTable() {
                     <span className="block text-xs text-foreground-muted">{a.phone}</span>
                   </td>
                   <td className="px-4 py-3 text-foreground-muted">
-                    {a.applied_company_name ?? "—"}
+                    {a.applied_as === "technologist" ? (
+                      <span className="inline-flex items-center rounded-full border border-accent/30 px-2 py-0.5 text-xs font-semibold text-accent">
+                        {t("kind.technologist")}
+                      </span>
+                    ) : (
+                      (a.applied_company_name ?? "—")
+                    )}
                     {a.application_note && (
                       <span
                         className="block truncate text-xs italic"

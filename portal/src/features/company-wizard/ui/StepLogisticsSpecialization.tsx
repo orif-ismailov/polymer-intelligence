@@ -67,7 +67,7 @@ export function StepLogisticsSpecialization({
                 aria-pressed={active}
                 onClick={() => toggle(logistics.cargo_types, cargo, "cargo_types")}
                 className={cn(
-                  "rounded-md border px-3 py-3 text-left text-sm font-medium transition-colors",
+                  "rounded-md border px-3 py-3 text-start text-sm font-medium transition-colors",
                   active
                     ? "border-brand bg-brand-soft text-text"
                     : "border-border bg-surface text-text-muted hover:border-brand-line",
@@ -95,7 +95,7 @@ export function StepLogisticsSpecialization({
                 aria-pressed={checked}
                 onClick={() => toggle(logistics.capabilities, cap, "capabilities")}
                 className={cn(
-                  "flex w-full items-center justify-between gap-3 rounded-md border px-3 py-3 text-left transition-colors",
+                  "flex w-full items-center justify-between gap-3 rounded-md border px-3 py-3 text-start transition-colors",
                   checked
                     ? "border-brand bg-brand-soft text-text"
                     : "border-border bg-surface text-text hover:border-brand-line",

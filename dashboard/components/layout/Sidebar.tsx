@@ -3,7 +3,8 @@
 import { usePathname } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 import { useState } from "react";
-import { Flame, Globe, LogOut, X } from "lucide-react";
+import { Flame, LogOut, X } from "lucide-react";
+import { BrandLogo } from "./BrandLogo";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -64,10 +65,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
     >
       {/* Logo + wordmark */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
-        <Globe className="h-5 w-5 text-accent flex-shrink-0" aria-hidden="true" />
-        <span className="text-base font-semibold text-accent leading-tight">
-          Polymer Intelligence
-        </span>
+        <BrandLogo className="h-9 w-auto" />
         <button
           type="button"
           onClick={onClose}

@@ -606,3 +606,38 @@ def test_logout_clears_cookie(portal_app) -> None:  # noqa: ANN001
     resp = client.post(_LOGOUT)
     assert resp.status_code == 200
     assert "portal_session=" in resp.headers.get("set-cookie", "")
+
+
+# ── Technologist applications (0055) ─────────────────────────────────────────
+
+
+def test_a_technologist_applies_without_a_company(portal_app) -> None:  # noqa: ANN001
+    """A private expert has no company to name — the field is not theirs to fill."""
+    client, _fake, db = portal_app
+    body = {k: v for k, v in _APPLICATION.items() if k != "company_name"}
+    resp = client.post(_REGISTER, json={**body, "applied_as": "technologist"})
+    assert resp.status_code == 202
+
+    added = [c.args[0] for c in db.add.call_args_list]
+    account = next(a for a in added if type(a).__name__ == "UserAccount")
+    assert account.applied_as == "technologist"
+    assert account.applied_company_name is None
+
+
+def test_a_company_application_still_needs_the_company_name(portal_app) -> None:  # noqa: ANN001
+    client, _fake, _db = portal_app
+    body = {k: v for k, v in _APPLICATION.items() if k != "company_name"}
+    assert client.post(_REGISTER, json=body).status_code == 422
+
+
+def test_an_unknown_applicant_kind_is_refused(portal_app) -> None:  # noqa: ANN001
+    client, _fake, _db = portal_app
+    resp = client.post(_REGISTER, json={**_APPLICATION, "applied_as": "wizard"})
+    assert resp.status_code == 422
+
+
+def test_the_account_payload_says_who_the_account_is() -> None:
+    """The cabinet routes on it: a technologist with no company is not unfinished."""
+    from app.domains.accounts.schemas import AccountOut  # noqa: PLC0415
+
+    assert "applied_as" in AccountOut.model_fields

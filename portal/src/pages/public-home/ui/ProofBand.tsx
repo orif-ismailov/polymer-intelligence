@@ -171,7 +171,7 @@ export function ProofBand() {
             className="w-full shrink-0 px-8 sm:w-auto"
           >
             {t(isAuthenticated ? "common.cabinet" : "public.home.registerCompany")}
-            <ArrowRight size={18} strokeWidth={2} aria-hidden />
+            <ArrowRight className="rtl:-scale-x-100" size={18} strokeWidth={2} aria-hidden />
           </LinkButton>
         </div>
       </div>

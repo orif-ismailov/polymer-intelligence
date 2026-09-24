@@ -123,9 +123,10 @@ def register(
     *,
     phone: str,
     contact_name: str,
-    company_name: str,
+    company_name: str | None,
     note: str | None = None,
     language: str = "ru",
+    applied_as: str = "company",
 ) -> UserAccount:
     """Record an access request as a `pending` account. Grants nothing.
 
@@ -142,8 +143,9 @@ def register(
         name=contact_name.strip() or None,
         language=language,
         status=AccountStatus.pending,
-        applied_company_name=company_name.strip() or None,
+        applied_company_name=(company_name or "").strip() or None,
         application_note=(note or "").strip() or None,
+        applied_as=applied_as,
     )
     db.add(account)
     db.flush()  # assign id for the audit row; caller commits

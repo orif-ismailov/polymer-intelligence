@@ -12,6 +12,14 @@ import {
   publicKeys,
   type PublicOfferFilters,
 } from "@/entities/public";
+import {
+  fetchTechFacets,
+  fetchTechnologist,
+  fetchTechnologists,
+  technologistKeys,
+  type TechnologistFilters,
+} from "@/entities/technologist";
+import { TECHNOLOGISTS_PAGE_SIZE } from "@/pages/technologists";
 import { directoryBySlug } from "@/shared/config";
 
 /**
@@ -122,6 +130,41 @@ export async function prefetchForUrl(
         prefetch(publicKeys.offer(offerId), () => fetchPublicOffer(offerId)),
       );
       return;
+    }
+    return;
+  }
+
+  // ── /technologists and /technologists/:id ─────────────────────────────────
+  if (segments[0] === "technologists") {
+    if (segments.length === 1) {
+      // The same object, key for key, that `TechnologistsPage` builds — a
+      // different shape is a different query key and a double fetch.
+      const filters: TechnologistFilters = {
+        process: searchParams.get("process") ?? "",
+        material: searchParams.get("material") ?? "",
+        language: searchParams.get("language") ?? "",
+        country: (searchParams.get("country") ?? "").toUpperCase(),
+        q: searchParams.get("q") ?? "",
+      };
+      const offset = Math.max(0, Number(searchParams.get("offset") ?? 0) || 0);
+      await Promise.all([
+        settle("tech-facets", prefetch(technologistKeys.facets(), fetchTechFacets)),
+        settle(
+          "technologists",
+          prefetch(technologistKeys.list(filters, offset, TECHNOLOGISTS_PAGE_SIZE), () =>
+            fetchTechnologists(filters, offset, TECHNOLOGISTS_PAGE_SIZE),
+          ),
+        ),
+      ]);
+      return;
+    }
+    const idSegment = segments[1];
+    if (segments.length === 2 && idSegment && /^\d+$/.test(idSegment)) {
+      const id = Number(idSegment);
+      await settle(
+        `technologist:${id}`,
+        prefetch(technologistKeys.card(id), () => fetchTechnologist(id)),
+      );
     }
     return;
   }

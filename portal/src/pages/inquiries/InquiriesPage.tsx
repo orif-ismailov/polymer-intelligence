@@ -36,7 +36,7 @@ function InquiryRow({ inquiry, onOpen }: { inquiry: Inquiry; onOpen: () => void 
     <button
       type="button"
       onClick={onOpen}
-      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
+      className="w-full text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
     >
       <Card className="transition-colors hover:border-brand-line">
         <CardBody className="flex items-center justify-between gap-3">

@@ -293,11 +293,11 @@ export function IkpuPicker({ companyId, taxId, value, onChange }: IkpuPickerProp
             <li key={row.class_code}>
               <button
                 type="button"
-                className="w-full rounded-md border border-border px-3 py-2 text-left text-sm hover:bg-surface-2"
+                className="w-full rounded-md border border-border px-3 py-2 text-start text-sm hover:bg-surface-2"
                 onClick={() => choose(row)}
               >
                 <span className="num text-text-muted">{row.class_code}</span>
-                <span className="ml-2">{row.name}</span>
+                <span className="ms-2">{row.name}</span>
               </button>
             </li>
           ))}
@@ -308,7 +308,7 @@ export function IkpuPicker({ companyId, taxId, value, onChange }: IkpuPickerProp
         <div className="rounded-md border border-border p-3 text-sm" data-testid="ikpu-chosen">
           <div>
             <span className="num text-text-muted">{value.code}</span>
-            <span className="ml-2">{value.name}</span>
+            <span className="ms-2">{value.name}</span>
           </div>
           {/* Packages come WITH the code — a package that is not on its list is
               rejected by the roaming centre, so this is a select, never free text. */}

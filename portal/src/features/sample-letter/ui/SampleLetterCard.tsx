@@ -95,7 +95,7 @@ export function SampleLetterCard({ sample }: SampleLetterCardProps) {
           the snapshot, so editing the offer afterwards never rewrites it. */}
       {letter.data.terms ? (
         <blockquote
-          className="border-l-2 border-border pl-3 text-sm text-text-muted"
+          className="border-s-2 border-border ps-3 text-sm text-text-muted"
           data-testid="sample-letter-terms"
         >
           {letter.data.terms}

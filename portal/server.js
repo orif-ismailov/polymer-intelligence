@@ -40,7 +40,14 @@ const INTERNAL_API_ORIGIN = process.env.INTERNAL_API_ORIGIN || "http://127.0.0.1
 const PUBLIC_SITE_ORIGIN = (process.env.PUBLIC_SITE_ORIGIN || "").replace(/\/+$/, "");
 
 /** Supported UI languages. Mirrors SUPPORTED_LANGS in shared/i18n. */
-const LANGS = ["ru", "uz", "en"];
+const LANGS = ["ru", "uz", "en", "tr", "fa", "zh"];
+/** Right-to-left languages. Mirrors RTL_LANGS in shared/i18n. */
+const RTL_LANGS = ["fa"];
+
+/** `<html lang dir>` for the render language — Farsi flips the layout. */
+function htmlOpen(lang) {
+  return `<html lang="${lang}" dir="${RTL_LANGS.includes(lang) ? "rtl" : "ltr"}"`;
+}
 
 globalThis.__INTERNAL_API_ORIGIN__ = INTERNAL_API_ORIGIN;
 
@@ -59,6 +66,8 @@ const PUBLIC_PATTERNS = [
   /^\/news\/\d+\/?$/,
   ...DIRECTORY_SLUGS.map((s) => new RegExp(`^/${s}/?$`)),
   ...DIRECTORY_SLUGS.map((s) => new RegExp(`^/${s}/\\d+/?$`)),
+  /^\/technologists\/?$/,
+  /^\/technologists\/\d+\/?$/,
 ];
 
 function isPublicPath(pathname) {
@@ -278,7 +287,14 @@ async function createServer() {
   // ── sitemap.xml ───────────────────────────────────────────────────────────
   app.get("/sitemap.xml", async (req, res) => {
     const origin = siteOrigin(req);
-    const staticPaths = ["/", "/market", "/prices", "/news", ...DIRECTORY_SLUGS.map((s) => `/${s}`)];
+    const staticPaths = [
+      "/",
+      "/market",
+      "/prices",
+      "/news",
+      "/technologists",
+      ...DIRECTORY_SLUGS.map((s) => `/${s}`),
+    ];
 
     let entries = [];
     let truncated = false;
@@ -398,7 +414,7 @@ async function createServer() {
           head: '<title>IMEX AI</title>\n    <meta name="robots" content="noindex,nofollow" />',
           body: "",
           state: injected.join(""),
-        });
+        }).replace('<html lang="ru"', htmlOpen(lang));
         return res.status(200).set({ "Content-Type": "text/html" }).send(html);
       }
 
@@ -422,7 +438,7 @@ async function createServer() {
         head: result.head,
         body: result.html,
         state: injected.join(""),
-      }).replace('<html lang="ru"', `<html lang="${result.lang}"`);
+      }).replace('<html lang="ru"', htmlOpen(result.lang));
 
       res
         .status(result.status)
