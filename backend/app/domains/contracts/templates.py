@@ -49,7 +49,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.domains.contracts.models import Contract, ContractTemplate
-from app.domains.contracts.render import _PLACEHOLDER, render_contract_html
+from app.domains.contracts.render import (
+    _PLACEHOLDER,
+    BLOCK_OPEN,
+    render_contract_html,
+)
 from app.services import audit_service, storage_service
 
 #: Mirrors `ck_contract_template_kind`. Kept here so a bad `kind` is a 422 from the
@@ -124,6 +128,12 @@ def renderable_names(kind: str, variables_schema: dict[str, object]) -> set[str]
         names |= _CONTRACT_EXTRA
     names |= {f"initiator_{k}" for k in party}
     names |= {f"counterparty_{k}" for k in party}
+    if kind != "sample_letter":
+        from app.domains.contracts.terms import DERIVED_KEYS  # noqa: PLC0415
+
+        names |= {f"supplier_{k}" for k in party}
+        names |= {f"buyer_{k}" for k in party}
+        names |= DERIVED_KEYS
     properties = variables_schema.get("properties") or {}
     if isinstance(properties, dict):
         names |= set(properties)
@@ -133,8 +143,8 @@ def renderable_names(kind: str, variables_schema: dict[str, object]) -> set[str]
 def validate_body(body: str, kind: str, variables_schema: dict[str, object]) -> BodyReport:
     """Check a template body against what the renderer can actually supply."""
     allowed = renderable_names(kind, variables_schema)
-    used = sorted(set(_PLACEHOLDER.findall(body)))
-    unknown = sorted(set(used) - allowed)
+    used = sorted(set(_PLACEHOLDER.findall(body)) | set(BLOCK_OPEN.findall(body)))
+    unknown = sorted(set(used) - allowed) + _block_errors(body)
 
     properties = variables_schema.get("properties") or {}
     declared = set(properties) if isinstance(properties, dict) else set()
@@ -155,6 +165,25 @@ def validate_body(body: str, kind: str, variables_schema: dict[str, object]) -> 
             "declared in variables_schema but never used in the body: " + ", ".join(unused)
         )
     return BodyReport(used=used, unknown=unknown, unused_schema_keys=unused, warnings=warnings)
+
+
+_BLOCK_TOKEN = re.compile(r"\{\{#if\b|\{\{/if\}\}")
+
+
+def _block_errors(body: str) -> list[str]:
+    """Every `{{#if}}` closed by its own `{{/if}}`, none closed twice.
+
+    An unbalanced block is refused like an unknown name: the renderer would print
+    a stray `{{/if}}` or swallow text up to the wrong closing tag, silently.
+    """
+    depth = 0
+    for token in _BLOCK_TOKEN.findall(body):
+        depth += 1 if token.startswith("{{#if") else -1
+        if depth < 0:
+            return ["{{/if}} without a matching {{#if}}"]
+    if depth:
+        return ["{{#if}} without a matching {{/if}}"]
+    return []
 
 
 def preview(body: str, kind: str, variables_schema: dict[str, object]) -> str:
@@ -183,7 +212,8 @@ def preview(body: str, kind: str, variables_schema: dict[str, object]) -> str:
     variables: dict[str, object] = {
         name: label(name)
         for name in names
-        if not name.startswith(("initiator_", "counterparty_")) and name not in _ALWAYS
+        if not name.startswith(("initiator_", "counterparty_", "supplier_", "buyer_"))
+        and name not in _ALWAYS
     }
     return render_contract_html(
         body,

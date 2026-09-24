@@ -34,14 +34,21 @@ def next_facture_number(db: Session, seller_company_id: int, on: datetime.date) 
     return f"ЭСФ-{on.year}-{value:06d}"
 
 
-def contract_number(*, deal_number: str | None, contract_public_id: str) -> str:
+def contract_number(
+    *, deal_number: str | None, contract_public_id: str, custom: str | None = None
+) -> str:
     """The договор's number.
+
+    A number the parties typed on the contract («346-01») wins: it is the one
+    printed on the document they sign, and the 007 and every ЭСФ must quote it.
 
     Prefers the deal's own number (`DEAL-2026-000125`) because the humans on both
     sides already use it everywhere — chat, documents, the escrow row — and a
     second identifier for the same transaction is a support ticket waiting to
     happen. Falls back to the contract's public id for a contract with no deal.
     """
+    if custom and custom.strip():
+        return custom.strip()
     if deal_number:
         return deal_number
     return f"C-{contract_public_id[:8]}"

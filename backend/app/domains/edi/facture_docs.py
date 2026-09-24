@@ -220,6 +220,7 @@ def contract_reference(db: Session, contract: Contract) -> tuple[str, datetime.d
     number = numbering.contract_number(
         deal_number=deal.number if deal is not None else None,
         contract_public_id=str(contract.public_id),
+        custom=str((contract.variables or {}).get("contract_number") or ""),
     )
     activated = contract.activated_at or contract.created_at
     return number, to_display_tz(activated).date(), None

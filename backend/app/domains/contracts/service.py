@@ -183,7 +183,7 @@ def _validate_variables(schema: dict[str, object], variables: dict[str, object])
 #: with a hole in it. `tests/test_contract_templates.py` pins the two together, or
 #: the validator would quietly rot the first time a field is added here.
 REQUISITE_KEYS: frozenset[str] = frozenset(
-    {"legal_name", "inn", "address", "director", "bank_account", "bank_mfo"}
+    {"legal_name", "inn", "address", "director", "bank_account", "bank_mfo", "bank_name", "oked"}
 )
 
 
@@ -198,10 +198,14 @@ def _requisites(db: Session, company: Company) -> dict[str, object]:
         .order_by(CompanyBankAccount.id)
         .first()
     )
+    from app.domains.verification.registry import latest_oked  # noqa: PLC0415
+
     account_number = ""
     bank_mfo = ""
+    bank_name = ""
     if bank is not None:
         bank_mfo = bank.bank_mfo
+        bank_name = bank.bank_name or ""
         try:
             account_number = decrypt_pii(bank.account_number_enc)
         except Exception:  # noqa: BLE001 — undecryptable → leave blank in the document
@@ -213,6 +217,8 @@ def _requisites(db: Session, company: Company) -> dict[str, object]:
         "director": company.director_name or "",
         "bank_account": account_number,
         "bank_mfo": bank_mfo,
+        "bank_name": bank_name,
+        "oked": latest_oked(db, int(company.id)) or "",
     }
 
 

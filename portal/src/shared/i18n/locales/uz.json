@@ -1682,21 +1682,20 @@
       "active": "Shartnoma ikki tomon tomonidan imzolandi",
       "awaiting": "Kutilmoqda"
     },
-    "rail": "Qanday imzolaymiz",
-    "rails": {
-      "eimzo": "Platformadagi ERI",
-      "didox": "Didox orqali (EDI, my.soliq.uz da ko‘rinadi)"
-    },
-    "railHint": {
-      "eimzo": "Ikkala tomon biz saqlaydigan hujjatni imzolaydi.",
-      "didox": "Hujjat EDI operatorida yaratiladi va my.soliq.uz ga tushadi. Ikkala tomonda Didox akkaunti kerak."
-    },
     "basis": {
       "label": "Asos",
       "none": "Asossiz — qo‘lda to‘ldiraman",
       "hint": "Tenderdagi qabul qilingan taklif bo‘yicha bitim: mahsulot, miqdor, narx va kontragent o‘zi to‘ldiriladi.",
       "empty": "Shartnomasiz bitimlar hali yo‘q — ular tenderdagi taklifni qabul qilganingizda yoki sizniki qabul qilinganda paydo bo‘ladi.",
       "counterpartyFromDeal": "Kontragent — tanlangan bitimning ikkinchi tomoni."
+    },
+    "groups": {
+      "parties": "Tomonlar va shartnoma rekvizitlari",
+      "subject": "Predmet va summa",
+      "payment": "To'lov",
+      "delivery": "Yetkazib berish",
+      "extra": "Idish va sifat",
+      "penalties": "Tomonlarning javobgarligi"
     }
   },
   "deals": {

@@ -222,6 +222,14 @@ class _StubQuery:
         return None
 
 
+class _StubResult:
+    def scalar_one_or_none(self) -> None:
+        return None
+
+
 class _StubSession:
     def query(self, *a: object, **k: object) -> _StubQuery:
         return _StubQuery()
+
+    def execute(self, *a: object, **k: object) -> _StubResult:
+        return _StubResult()

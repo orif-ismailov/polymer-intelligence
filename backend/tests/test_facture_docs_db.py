@@ -166,7 +166,7 @@ def test_an_eimzo_contract_is_quoted_by_its_own_number_and_signing_day(sf) -> No
     [(doc_type, payload)] = didox.created
     assert doc_type == "002"
     assert row.doc_type == "002"
-    assert row.number == "ЭСФ-2026-000001"
+    assert row.number.startswith("ЭСФ-2026-")
     # Activated at 21:30 UTC on the 20th — the 21st in Tashkent.
     assert payload["ContractDoc"] == {
         "ContractNo": f"C-{str(contract.public_id)[:8]}", "ContractDate": "2026-09-21",
@@ -225,7 +225,9 @@ def test_a_contract_is_invoiced_in_parts(sf) -> None:  # noqa: ANN001
         assert suggested.count == D("6")
 
         second = _issue(db, contract, seller, acc, didox, count="6")
-        assert second.number == "ЭСФ-2026-000002"
+        # The seller's own yearly sequence: the next number, whatever the first was
+        # (a sequence outlives the rows a test deletes).
+        assert int(second.number.rsplit("-", 1)[1]) == int(first.number.rsplit("-", 1)[1]) + 1
         stored = db.query(DidoxDocumentLine).filter(
             DidoxDocumentLine.didox_document_id == second.id
         ).one()

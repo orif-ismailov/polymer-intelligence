@@ -119,6 +119,10 @@ def resolve_parties(
             )
         buyer = next(pid for pid in parties if pid != seller)
         return seller, buyer
+    variables = getattr(contract, "variables", None)
+    if isinstance(variables, dict) and variables.get("initiator_side") == "buyer":
+        # The form said who sells: the initiator drew it up as the buyer.
+        return int(contract.counterparty_company_id), int(contract.initiator_company_id)
     return int(contract.initiator_company_id), int(contract.counterparty_company_id)
 
 
@@ -344,23 +348,9 @@ def party_from_registry(registry: _TinRegistry, tax_id: str) -> PartyRequisites:
 
 
 def _oked_for(db: Session, company: Company) -> str | None:
-    """OKED off the latest company registry snapshot, or nothing.
+    from app.domains.verification.registry import latest_oked  # noqa: PLC0415
 
-    Never guessed: an invented activity code on a document that reaches the tax
-    authority is worse than an absent one, which Didox accepts as an empty string.
-    """
-    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
-
-    snapshot = (
-        db.query(RegistrySnapshot)
-        .filter(RegistrySnapshot.company_id == company.id, RegistrySnapshot.kind == "company")
-        .order_by(RegistrySnapshot.id.desc())
-        .first()
-    )
-    if snapshot is None or not isinstance(snapshot.payload, dict):
-        return None
-    oked = snapshot.payload.get("oked")
-    return str(oked) if oked else None
+    return latest_oked(db, int(company.id))
 
 
 # ── the door itself ───────────────────────────────────────────────────────────
@@ -427,7 +417,13 @@ def contract_line_terms(contract: Contract) -> tuple[str, decimal.Decimal, decim
 
     variables = contract.variables if isinstance(contract.variables, dict) else {}
     qty = terms.parse_number(variables.get("qty"))
-    price = terms.parse_number(variables.get("price"))
+    if "price_with_vat" in variables:
+        # Priced WITH VAT, as the real MGBUS contracts are; the document states
+        # the price without it and adds the VAT itself.
+        line = terms.spec_line(variables)
+        price = line.price_without_vat if line is not None else None
+    else:
+        price = terms.parse_number(variables.get("price"))
     return (
         terms.line_name(contract),
         qty if qty is not None else decimal.Decimal("1"),
@@ -559,6 +555,7 @@ def create_for_contract(
     number = numbering.contract_number(
         deal_number=deal.number if deal is not None else None,
         contract_public_id=str(contract.public_id),
+        custom=str((contract.variables or {}).get("contract_number") or ""),
     )
     document_lines = lines or suggested_lines(contract, offer, ikpu)
     body = build_body(

@@ -190,3 +190,49 @@ def test_a_didox_document_keeps_its_lines(sf, monkeypatch) -> None:  # noqa: ANN
         )
         assert (stored.qty, stored.price, stored.vat_rate) == (D("2.5"), D("1000.00"), 12)
         assert (stored.amount, stored.vat_sum) == (D("2500.00"), D("300.00"))
+
+
+_MGBUS_ONE_OFF = {
+    "contract_kind": "one_off", "contract_number": "297-08", "contract_date": "15.08.2024",
+    "product": "МЭГ", "qty": "120000", "unit": "kg", "price_with_vat": "16300", "vat_rate": "12",
+    "payment_mode": "prepay", "delivery_days": "5", "delivery_basis": "supplier_warehouse",
+}
+
+
+@requires_real_db
+def test_a_one_off_contract_priced_with_vat_is_stored_without_it(sf, monkeypatch) -> None:  # noqa: ANN001
+    """The unit price analytics compares is the price without VAT; the contract
+    total is what the parties signed — with it."""
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
+
+    _patch(monkeypatch)
+    with sf() as db:
+        acc, comp_a, comp_b, tpl = _parties(db)
+        contract = contract_service.create_contract(db, comp_a, acc, tpl, dict(_MGBUS_ONE_OFF), comp_b)
+        db.commit()
+
+        assert contract.amount_total == D("1956000000.00")
+        assert contract.currency == "UZS"
+        assert (contract.payment_terms, contract.incoterms, contract.delivery_window) == (
+            "prepay", "supplier_warehouse", "5"
+        )
+        [line] = _lines(db, contract.id)
+        assert (line.price, line.amount, line.vat_rate) == (D("14553.57"), D("1746428571.43"), 12)
+
+
+@requires_real_db
+def test_a_frame_contract_keeps_its_limit_and_no_line(sf, monkeypatch) -> None:  # noqa: ANN001
+    from app.domains.contracts import service as contract_service  # noqa: PLC0415
+
+    _patch(monkeypatch)
+    with sf() as db:
+        acc, comp_a, comp_b, tpl = _parties(db)
+        contract = contract_service.create_contract(
+            db, comp_a, acc, tpl,
+            {"contract_kind": "frame", "goods_description": "Сырье", "amount_limit": "20000000000"},
+            comp_b,
+        )
+        db.commit()
+
+        assert contract.amount_total == D("20000000000.00")
+        assert _lines(db, contract.id) == []

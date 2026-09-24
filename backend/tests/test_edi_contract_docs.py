@@ -368,3 +368,33 @@ class TestIkpuForATenderContract:
         source = inspect.getsource(api_portal.didox_create_contract_document)
         assert "ikpu=choice" in source
         assert "_with_ikpu(db, contract, lines, choice)" in source
+
+
+class TestTheRealContractsAreQuotedAsNumbered:
+    def test_a_typed_contract_number_wins(self) -> None:
+        from app.domains.edi import numbering
+
+        assert numbering.contract_number(
+            deal_number="DEAL-2026-000125", contract_public_id="abcdef12-x", custom="346-01"
+        ) == "346-01"
+        assert numbering.contract_number(
+            deal_number=None, contract_public_id="abcdef12-x", custom="  "
+        ) == "C-abcdef12"
+
+    def test_a_buyer_initiator_is_not_taken_for_the_seller(self) -> None:
+        from app.domains.edi.contract_docs import resolve_parties
+
+        contract = SimpleNamespace(
+            id=1, initiator_company_id=30, counterparty_company_id=31, offer_id=None,
+            variables={"initiator_side": "buyer"},
+        )
+        assert resolve_parties(contract) == (31, 30)
+
+    def test_the_line_of_a_contract_priced_with_vat(self) -> None:
+        from app.domains.edi.contract_docs import contract_line_terms
+
+        contract = SimpleNamespace(
+            title="Договор",
+            variables={"product": "МЭГ", "qty": "120000", "price_with_vat": "16300", "vat_rate": "12"},
+        )
+        assert contract_line_terms(contract) == ("МЭГ", D("120000"), D("14553.57"))

@@ -9,12 +9,14 @@ import {
   PRESET_KEYS,
   TemplateFieldInputs,
   contractApi,
+  isFieldVisible,
   presetFields,
+  templateDefaults,
   templateFields,
   useContractTemplates,
   useTermPresets,
 } from "@/entities/contract";
-import type { DirectoryCompany } from "@/entities/contract";
+import type { ContractTemplate, DirectoryCompany } from "@/entities/contract";
 import { TermPresetDialog } from "@/features/contract-term-preset";
 import { BusinessRoleBadges } from "@/entities/market";
 import { ApiError } from "@/shared/api";
@@ -29,6 +31,15 @@ import {
   PageHeader,
   Select,
 } from "@/shared/ui";
+
+/** `contract_date` defaults to today, as the parties would write it: «24.09.2026». */
+function todayIfAsked(template: ContractTemplate): Record<string, string> {
+  if (!templateFields(template).some((f) => f.key === "contract_date")) return {};
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, "0");
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  return { contract_date: `${dd}.${mm}.${now.getFullYear()}` };
+}
 
 export function ContractCreatePage() {
   const { t } = useTranslation();
@@ -57,14 +68,6 @@ export function ContractCreatePage() {
   const [cpQuery, setCpQuery] = useState("");
   const [cpResults, setCpResults] = useState<DirectoryCompany[]>([]);
   const [counterparty, setCounterparty] = useState<DirectoryCompany | null>(null);
-  /**
-   * Which rail signs this contract, frozen at creation.
-   *
-   * Offered rather than assumed: `didox` puts the document in front of the tax
-   * authority and needs an operator account on BOTH sides, so choosing it for
-   * someone who has not onboarded would fail late — after the terms were typed.
-   */
-  const [rail, setRail] = useState<"eimzo" | "didox">("eimzo");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -155,8 +158,11 @@ export function ContractCreatePage() {
     }
   }
 
+  // Only what the form shows: a field hidden by a switch cannot be asked for.
   function missingRequired(): boolean {
-    return fields.some((f) => f.required && !(variables[f.key] ?? "").trim());
+    return fields.some(
+      (f) => f.required && isFieldVisible(f, variables) && !(variables[f.key] ?? "").trim(),
+    );
   }
 
   async function submit(): Promise<void> {
@@ -171,7 +177,9 @@ export function ContractCreatePage() {
         variables,
         offer_id: offerId ? Number(offerId) : null,
         deal_id: dealId,
-        signing_provider: rail,
+        // Every contract is signed at Didox — the platform signs nothing itself
+        // (24.09.2026). The API still reads `eimzo` for contracts made before.
+        signing_provider: "didox",
         term_preset_id: presetId,
       });
       void navigate(`/cabinet/contracts/${created.id}`);
@@ -221,12 +229,13 @@ export function ContractCreatePage() {
     setPresetId(id);
     const preset = presets.find((p) => p.id === id);
     if (!preset) return;
-    // Every term key is taken from the preset — including the ones it leaves
-    // blank — so switching presets never keeps a stale value from the last one.
+    // Every term key is taken from the preset; one it leaves blank goes back to
+    // the template's default, so switching presets never keeps a stale value.
+    const defaults = template ? templateDefaults(templateFields(template)) : {};
     setVariables((current) => {
       const next = { ...current };
       for (const key of PRESET_KEYS) {
-        const value = preset.terms[key];
+        const value = preset.terms[key] || defaults[key];
         if (value) next[key] = value;
         else delete next[key];
       }
@@ -274,8 +283,14 @@ export function ContractCreatePage() {
                 id={id}
                 value={templateId != null ? String(templateId) : ""}
                 onChange={(e) => {
-                  setTemplateId(e.target.value ? Number(e.target.value) : null);
-                  setVariables({});
+                  const nextId = e.target.value ? Number(e.target.value) : null;
+                  const next = templatesQuery.data?.find((tpl) => tpl.id === nextId);
+                  setTemplateId(nextId);
+                  // A template starts from its own defaults — the figures of the
+                  // real contracts it was built on — and today's date.
+                  setVariables(
+                    next ? { ...templateDefaults(templateFields(next)), ...todayIfAsked(next) } : {},
+                  );
                   setPresetId(null);
                   prefilled.current = {};
                 }}
@@ -329,21 +344,6 @@ export function ContractCreatePage() {
 
       <Card>
         <CardBody className="space-y-3">
-          <FormField label={t("contracts.rail")} hint={t(`contracts.railHint.${rail}`)}>
-            {({ id }) => (
-              <Select
-                id={id}
-                value={rail}
-                onChange={(e) => setRail(e.target.value as "eimzo" | "didox")}
-                options={[
-                  { value: "eimzo", label: t("contracts.rails.eimzo") },
-                  { value: "didox", label: t("contracts.rails.didox") },
-                ]}
-                data-testid="contract-rail"
-              />
-            )}
-          </FormField>
-
           <FormField
             label={t("contracts.counterparty")}
             required

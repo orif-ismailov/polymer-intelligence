@@ -26,7 +26,15 @@ if TYPE_CHECKING:  # pragma: no cover
 
 #: The variables a preset may carry — the terms, never the deal's own numbers.
 PRESET_KEYS: frozenset[str] = frozenset(
-    {"currency", "unit", "incoterms", "payment_terms", "delivery_window", "special_conditions"}
+    {
+        # The placeholder templates' terms.
+        "currency", "unit", "incoterms", "payment_terms", "delivery_window", "special_conditions",
+        # The switches of the MGBUS-based templates (24.09.2026).
+        "vat_rate", "payment_mode", "refuse_after_days", "delivery_days", "delivery_basis",
+        "pickup_days", "delivery_address", "delivery_note", "packaging", "quality_section",
+        "penalty_delivery_pct", "penalty_delivery_cap", "penalty_payment_pct",
+        "penalty_payment_cap", "refusal_fine_pct",
+    }
 )
 
 _MAX_VALUE = 4000
