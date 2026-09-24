@@ -92,6 +92,46 @@ export interface DidoxContractPrefill {
   blockers: string[];
 }
 
+/** A line the invoice form starts from. */
+export interface DidoxFactureLine {
+  ord_no: number;
+  name: string;
+  /** What is left to invoice under the contract. */
+  count: string | null;
+  /** Null when the contract is not priced in soum — an ЭСФ is. */
+  price: string | null;
+  vat_rate: number | null;
+  unit: string | null;
+}
+
+/** One invoice of a contract, with its status as THIS reader sees it. */
+export interface DidoxFacture {
+  id: number;
+  number: string | null;
+  doc_date: string | null;
+  status: number;
+  /** Issued by the reader's company. */
+  outgoing: boolean;
+  total: string;
+}
+
+export interface DidoxFactures {
+  contract_id: number;
+  currency: string | null;
+  is_seller: boolean;
+  /** No ИКПУ from an offer or the signed договор — the form asks for one. */
+  ikpu_choice: boolean;
+  lines: DidoxFactureLine[];
+  documents: DidoxFacture[];
+  /** An unsigned draft — sign it before issuing another. */
+  pending_document_id: number | null;
+  /**
+   * `not_active` · `not_seller` · `signer_identity_missing:{companyId}` ·
+   * `contract_reference_missing` · `counterparty_unknown` · `party_mismatch`.
+   */
+  blockers: string[];
+}
+
 export const didoxApi = {
   status: (companyId: number): Promise<DidoxStatus> =>
     api.get<DidoxStatus>(`/portal/companies/${companyId}/didox/status`),
@@ -161,6 +201,24 @@ export const didoxApi = {
   /** Sign it — the one-time step that unblocks every send for this company. */
   acceptOffer: (companyId: number, signature: DidoxSignature): Promise<DidoxStatus> =>
     api.post<DidoxStatus>(`/portal/companies/${companyId}/didox/offer`, signature),
+
+  /** The contract's ЭСФ, and the form for the next one. */
+  factures: (companyId: number, contractId: number): Promise<DidoxFactures> =>
+    api.get<DidoxFactures>(
+      `/portal/companies/${companyId}/didox/contracts/${contractId}/factures`,
+    ),
+
+  /** Issue an ЭСФ (Didox 002) for this contract; the seller signs it next. */
+  createFacture: (
+    companyId: number,
+    contractId: number,
+    lines: DidoxContractLine[],
+    ikpu: DidoxIkpuChoice | null = null,
+  ): Promise<DidoxDocumentResult> =>
+    api.post<DidoxDocumentResult>(
+      `/portal/companies/${companyId}/didox/contracts/${contractId}/factures`,
+      { lines, ikpu },
+    ),
 
   /** Round 1 — the exact bytes to sign, stashed single-use on the server. */
   signPayload: (documentId: number): Promise<DidoxSignPayload> =>

@@ -1,5 +1,5 @@
 export { api, ApiError, resolveDownloadUrl } from "./client";
-export { detailCode } from "./errorCode";
+export { detailCode, detailError } from "./errorCode";
 export { registerAuthBridge } from "./authBridge";
 export type { AuthBridge } from "./authBridge";
 export { registerStepUpBridge } from "./stepUpBridge";

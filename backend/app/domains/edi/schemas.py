@@ -171,6 +171,61 @@ class DidoxContractPrefillOut(BaseModel):
     )
 
 
+class DidoxFactureLineOut(BaseModel):
+    """A line the invoice form starts from.
+
+    `count` is what is left to invoice; `price` is None when the contract is not
+    priced in soum — an ЭСФ is, and the seller must state the soum price.
+    """
+
+    ord_no: int
+    name: str
+    count: decimal.Decimal | None
+    price: decimal.Decimal | None
+    vat_rate: int | None
+    unit: str | None
+
+
+class DidoxFactureOut(BaseModel):
+    """One invoice of a contract, with its status as the READER sees it."""
+
+    id: int
+    number: str | None
+    doc_date: datetime.date | None
+    status: int
+    #: True when the reader's company issued it (the seller).
+    outgoing: bool
+    #: Sum of the lines including VAT.
+    total: decimal.Decimal
+
+
+class DidoxFacturesOut(BaseModel):
+    """The contract's invoices, and what the seller would issue next."""
+
+    contract_id: int
+    currency: str | None
+    is_seller: bool
+    #: No ИКПУ to take from an offer or the signed 007 — the form asks for one.
+    ikpu_choice: bool = False
+    lines: list[DidoxFactureLineOut] = Field(default_factory=list)
+    documents: list[DidoxFactureOut] = Field(default_factory=list)
+    #: An unsigned draft — sign it before issuing another.
+    pending_document_id: int | None = None
+    blockers: list[str] = Field(
+        default_factory=list,
+        description=(
+            "not_active · not_seller · signer_identity_missing · "
+            "contract_reference_missing · counterparty_unknown"
+        ),
+    )
+
+
+class DidoxFactureIn(BaseModel):
+    lines: list[DidoxContractLineIn] = Field(min_length=1, max_length=50)
+    #: Only when `ikpu_choice` was true — otherwise the known code wins.
+    ikpu: DidoxIkpuIn | None = None
+
+
 class DidoxAdminDocumentOut(BaseModel):
     """One Didox document, as staff need to read it."""
 

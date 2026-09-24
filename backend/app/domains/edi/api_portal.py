@@ -13,6 +13,7 @@ token and not a `user-key`.
 from __future__ import annotations
 
 import base64
+import decimal
 from typing import TYPE_CHECKING, Protocol
 
 import redis
@@ -35,6 +36,10 @@ from app.domains.edi.schemas import (
     DidoxContractLineIn,
     DidoxContractPrefillOut,
     DidoxDocumentOut,
+    DidoxFactureIn,
+    DidoxFactureLineOut,
+    DidoxFactureOut,
+    DidoxFacturesOut,
     DidoxOfferIn,
     DidoxOfferOut,
     DidoxSessionOut,
@@ -878,3 +883,211 @@ def _with_ikpu(
         )
         for line in lines
     ]
+
+
+# ── the contract → ЭСФ 002 door ───────────────────────────────────────────────
+
+
+def _facture_out(db: Session, row: DidoxDocument, company_id: int) -> DidoxFactureOut:
+    from app.domains.contracts.api_portal import _didox_status_for_viewer  # noqa: PLC0415
+    from app.domains.edi.models import DidoxDocumentLine  # noqa: PLC0415
+
+    lines = db.query(DidoxDocumentLine).filter(DidoxDocumentLine.didox_document_id == row.id).all()
+    outgoing = row.owner_company_id == company_id
+    return DidoxFactureOut(
+        id=int(row.id),
+        number=row.number,
+        doc_date=row.doc_date,
+        status=_didox_status_for_viewer(row.status, viewer_is_owner=outgoing) or 0,
+        outgoing=outgoing,
+        total=sum((line.amount + line.vat_sum for line in lines), decimal.Decimal("0")),
+    )
+
+
+@router.get(
+    "/{company_id}/didox/contracts/{contract_id}/factures",
+    response_model=DidoxFacturesOut,
+)
+def didox_contract_factures(
+    company_id: int,
+    contract_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> DidoxFacturesOut:
+    """The contract's invoices, and the form for the next one — a plain read.
+
+    Blockers are collected, not raised one at a time, for the same reason as the
+    007 card: a seller who discovers three problems in three round trips, each
+    after loading a key, concludes the feature is broken.
+    """
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.edi import contract_docs, facture_docs  # noqa: PLC0415
+    from app.models.enums import ContractStatus  # noqa: PLC0415
+
+    company_or_404(db, account, company_id)
+    contract = _contract_or_404(db, contract_id, company_id)
+    deal = contract_docs._linked_deal(db, contract)  # noqa: SLF001
+    offer = contract_docs._linked_offer(db, contract, deal)  # noqa: SLF001
+    blockers: list[str] = []
+    try:
+        seller_id, buyer_id = contract_docs.resolve_parties(contract, deal=deal, offer=offer)
+    except contract_docs.PartyMismatch:
+        seller_id, buyer_id = contract.initiator_company_id, contract.counterparty_company_id
+        blockers.append("party_mismatch")
+    is_seller = company_id == seller_id
+    if not is_seller:
+        blockers.append("not_seller")
+    if contract.status != ContractStatus.active:
+        blockers.append("not_active")
+
+    pending = facture_docs.pending_draft(db, contract)
+    if is_seller and not blockers:
+        seller = db.get(Company, seller_id)
+        if seller is not None:
+            try:
+                contract_docs.party_from_company(db, seller)
+            except contract_docs.SignerIdentityMissing:
+                blockers.append(f"signer_identity_missing:{seller_id}")
+        try:
+            facture_docs.contract_reference(db, contract)
+        except facture_docs.ContractReferenceMissing:
+            blockers.append("contract_reference_missing")
+        buyer = db.get(Company, buyer_id)
+        if pending is None and buyer is not None:
+            unknown = _counterparty_blocker(get_didox_client(), buyer.tax_id)
+            if unknown:
+                blockers.append(unknown)
+
+    return DidoxFacturesOut(
+        contract_id=int(contract.id),
+        currency=contract.currency,
+        is_seller=is_seller,
+        ikpu_choice=facture_docs.classification(db, contract) is None,
+        lines=[
+            DidoxFactureLineOut(
+                ord_no=line.ord_no, name=line.name, count=line.count, price=line.price,
+                vat_rate=line.vat_rate, unit=line.unit,
+            )
+            for line in facture_docs.suggested_lines(db, contract)
+        ],
+        documents=[_facture_out(db, row, company_id) for row in facture_docs.list_for_contract(db, contract)],
+        pending_document_id=int(pending.id) if pending is not None else None,
+        blockers=blockers,
+    )
+
+
+@router.post(
+    "/{company_id}/didox/contracts/{contract_id}/factures",
+    response_model=DidoxDocumentOut,
+    status_code=status.HTTP_201_CREATED,
+    responses=errors.DIDOX_CONFLICT,
+)
+def didox_create_facture(
+    company_id: int,
+    contract_id: int,
+    body: DidoxFactureIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> DidoxDocumentOut:
+    """Issue an ЭСФ for this contract at Didox; the seller signs it next."""
+    from app.core.time import utcnow  # noqa: PLC0415
+    from app.domains.edi import contract_docs, facture_docs  # noqa: PLC0415
+    from app.domains.edi.payloads import (  # noqa: PLC0415
+        IkpuMissing,
+        PrecisionError,
+        line_from_offer,
+    )
+
+    company = company_or_404(db, account, company_id)
+    contract = _contract_or_404(db, contract_id, company_id)
+    _guard(db)
+
+    if any(line.price <= 0 for line in body.lines):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="price_required"
+        )
+    choice = (
+        None
+        if body.ikpu is None
+        else contract_docs.IkpuChoice(
+            ikpu_code=body.ikpu.code,
+            ikpu_name=body.ikpu.name,
+            ikpu_package_code=body.ikpu.package_code,
+            ikpu_package_name=body.ikpu.package_name,
+            ikpu_origin=body.ikpu.origin,
+        )
+    )
+    source = facture_docs.classification(db, contract, choice)
+    try:
+        if source is None:
+            raise IkpuMissing(contract_id)
+        lines = [
+            line_from_offer(
+                source, ord_no=index, name=line.name, count=line.count, price=line.price,
+                vat_rate=line.vat_rate,
+            )
+            for index, line in enumerate(body.lines, start=1)
+        ]
+        user_key = session.require_user_key(redis_client, company)
+        row = facture_docs.create_for_contract(
+            db,
+            contract,
+            acting_company_id=company_id,
+            account_id=int(account.id),
+            lines=lines,
+            user_key=user_key,
+            client=get_didox_client(),
+            today=utcnow().date(),
+        )
+    except IkpuMissing as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="ikpu_missing") from exc
+    except PrecisionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="precision"
+        ) from exc
+    except session.UserKeyRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_session_required"
+        ) from exc
+    except facture_docs.ContractNotActive as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_active") from exc
+    except facture_docs.FacturePending as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"error": "facture_pending", "document_id": exc.document_id},
+        ) from exc
+    except facture_docs.ContractReferenceMissing as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="contract_reference_missing"
+        ) from exc
+    except contract_docs.PartyMismatch as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_seller") from exc
+    except contract_docs.SignerIdentityMissing as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"error": "signer_identity_missing", "company_id": exc.company_id},
+        ) from exc
+    except contract_docs.CounterpartyNotInRegistry as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="counterparty_unknown"
+        ) from exc
+    except edi_service.OfferRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_offer_required"
+        ) from exc
+    except DidoxError as exc:
+        raise _provider_error(exc) from exc
+    except ProviderUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+
+    db.commit()
+    return DidoxDocumentOut(
+        id=row.id,
+        doc_type=row.doc_type,
+        number=row.number,
+        status=row.status,
+        didox_id=row.didox_id,
+    )

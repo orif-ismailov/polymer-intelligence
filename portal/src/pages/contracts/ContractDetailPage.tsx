@@ -10,6 +10,7 @@ import { ContractStatusBadge, contractApi, useContract } from "@/entities/contra
 import type { ContractDetail } from "@/entities/contract";
 import { DIDOX_STATUS, didoxApi, useDidoxStatus } from "@/entities/edi";
 import { DidoxDocumentCard } from "@/features/didox-contract-document";
+import { DidoxFactureCard } from "@/features/didox-facture";
 import { useDidoxSign } from "@/features/didox-sign";
 import { EimzoSignButton } from "@/features/eimzo-sign";
 import type { EimzoSigner } from "@/features/eimzo-sign";
@@ -435,6 +436,18 @@ export function ContractDetailPage() {
           ) : null}
         </CardBody>
       </Card>
+
+      {/* ЭСФ are issued against a signed contract, on either rail — the invoice
+          goes through Didox whichever way the contract was signed. Absent where
+          the deployment has no Didox at all. */}
+      {contract.status === "active" && active && myDidox && myDidox.state !== "disabled" ? (
+        <DidoxFactureCard
+          companyId={active.id}
+          taxId={active.tax_id}
+          contractId={id}
+          ready={myDidox.state === "ready"}
+        />
+      ) : null}
 
       {declineOpen ? (
         <Card>

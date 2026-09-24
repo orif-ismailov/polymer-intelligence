@@ -4,9 +4,8 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import { didoxApi } from "@/entities/edi";
-import type { DidoxIkpuChoice } from "@/entities/edi";
 import { useDidoxSession } from "@/features/didox-session";
-import { IkpuPicker } from "@/features/ikpu-picker";
+import { IkpuPicker, ikpuChoiceOf } from "@/features/ikpu-picker";
 import type { IkpuValue } from "@/features/ikpu-picker";
 import { ApiError } from "@/shared/api";
 import { Alert, Button } from "@/shared/ui";
@@ -73,17 +72,7 @@ export function DidoxDocumentCard({
 
   const isSeller = companyId === data.seller_company_id;
   const blocking = data.blockers.filter((code) => code !== "not_seller");
-  // Complete or nothing: the code, its package and the origin all reach soliq.
-  const choice: DidoxIkpuChoice | null =
-    ikpu && ikpu.packageCode && ikpu.origin != null
-      ? {
-          code: ikpu.code,
-          name: ikpu.name,
-          package_code: ikpu.packageCode,
-          package_name: ikpu.packageName,
-          origin: ikpu.origin,
-        }
-      : null;
+  const choice = ikpuChoiceOf(ikpu);
   const needsChoice = data.ikpu_choice && isSeller;
   const canCreate = blocking.length === 0 && (!needsChoice || choice != null) && !prefill.isFetching;
 

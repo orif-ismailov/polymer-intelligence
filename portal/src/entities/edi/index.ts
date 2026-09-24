@@ -3,6 +3,9 @@ export { useDidoxStatus, didoxStatusKey } from "./model/hooks";
 export type {
   DidoxContractLine,
   DidoxContractPrefill,
+  DidoxFacture,
+  DidoxFactureLine,
+  DidoxFactures,
   DidoxIkpuChoice,
   DidoxState,
   DidoxStatus,
