@@ -51,6 +51,7 @@ _TABLES = [
     "deals",
     "contract_signatures",
     "contracts",
+    "contract_term_presets",
     "contract_templates",
     "integration_call_log",
     "registry_snapshots",

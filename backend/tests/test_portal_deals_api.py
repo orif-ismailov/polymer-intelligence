@@ -211,6 +211,54 @@ def test_both_sides_see_the_deal_with_their_own_role(api) -> None:  # noqa: ANN0
 
 
 @requires_real_db
+def test_list_names_the_product_of_each_deal(api) -> None:  # noqa: ANN001
+    """«Создать договор» offers deals by name — a deal number alone means nothing."""
+    client, session = api
+    s = _scene(session)
+    items = client.get(f"{_P}/companies/{s['buyer_co']}/deals", headers=s["buyer_h"]).json()["items"]
+    assert items[0]["product"] == "HDPE film"
+
+
+@requires_real_db
+def test_needs_contract_lists_only_deals_a_contract_can_still_attach_to(api) -> None:  # noqa: ANN001
+    from app.domains.contracts.models import Contract, ContractTemplate  # noqa: PLC0415
+    from app.domains.deals.models import Deal  # noqa: PLC0415
+    from app.models.enums import DealStatus  # noqa: PLC0415
+
+    client, session = api
+    s = _scene(session)
+    url = f"{_P}/companies/{s['seller_co']}/deals?needs_contract=true"
+
+    # Either party may draw the contract up, so the seller sees it too.
+    assert [d["id"] for d in client.get(url, headers=s["seller_h"]).json()["items"]] == [s["deal_id"]]
+
+    with session() as db:
+        template = ContractTemplate(
+            code="SUPPLY_TEST", name_ru="Договор", body_storage_path="x",
+            variables_schema={"type": "object"}, version=1,
+        )
+        db.add(template)
+        db.flush()
+        contract = Contract(
+            template_id=template.id, template_version=1,
+            initiator_company_id=s["buyer_co"], counterparty_company_id=s["seller_co"],
+            title="Supply", variables={}, created_by_user_account_id=s["buyer_id"],
+        )
+        db.add(contract)
+        db.flush()
+        db.get(Deal, s["deal_id"]).contract_id = contract.id
+        db.commit()
+    assert client.get(url, headers=s["seller_h"]).json()["items"] == [], "already has one"
+
+    with session() as db:
+        deal = db.get(Deal, s["deal_id"])
+        deal.contract_id = None
+        deal.status = DealStatus.cancelled
+        db.commit()
+    assert client.get(url, headers=s["seller_h"]).json()["items"] == [], "a cancelled deal is over"
+
+
+@requires_real_db
 def test_detail_carries_both_parties_and_the_timeline(api) -> None:  # noqa: ANN001
     client, session = api
     s = _scene(session)

@@ -30,6 +30,7 @@ import {
   Handshake,
   Home,
   Inbox,
+  Landmark,
   Microscope,
   Newspaper,
   Package,
@@ -60,10 +61,10 @@ export interface NavItem {
    * The page key this item is granted by, when that is NOT its own `key`.
    *
    * Exists because the sidebar and the permission model are allowed to disagree
-   * about granularity. The seven Настройки проекта items are seven screens with
-   * seven labels and seven URLs, but one decision to delegate: whoever may tune
-   * the platform may tune all of it. Without this field `key` would have to be
-   * both, so seven screens would mean seven grants — a permission matrix that
+   * about granularity. The nine Настройки items are nine screens with nine
+   * labels and nine URLs, but one decision to delegate: whoever may tune the
+   * platform may tune all of it. Without this field `key` would have to be
+   * both, so nine screens would mean nine grants — a permission matrix that
    * grew because a menu did.
    *
    * Read it as `item.page ?? item.key` everywhere. Three places do:
@@ -102,21 +103,59 @@ export const NAV_GROUPS: NavGroup[] = [
       { key: "liveFeed", href: "/signals", icon: Activity },
     ],
   },
+  // The groups below name bounded contexts, not verbs. The previous shape had
+  // grown one group — «Заявки» — holding 14 of the 37 items: the marketplace, the
+  // whole deal lifecycle, chemical compliance, three lab screens and logistics,
+  // perhaps three of which were заявки. A group that holds everything sorts
+  // nothing, so the heading had stopped being a way to find a screen.
   {
-    key: "requests",
+    key: "marketplace",
     items: [
       { key: "purchaseRequests", href: "/requests", icon: ShoppingCart },
       { key: "offers", href: "/offers", icon: Tag },
-      { key: "moderation", href: "/moderation", icon: ShieldCheck },
       { key: "offerRequests", href: "/offer-requests", icon: Inbox },
-      { key: "verification", href: "/verification", icon: BadgeCheck },
-      { key: "companies", href: "/companies", icon: Building2 },
+      { key: "moderation", href: "/moderation", icon: ShieldCheck },
+    ],
+  },
+  // `dealFlow`, not `deals`: `deals` is already an ITEM key here, and the two
+  // would be indistinguishable at a glance in `app/core/pages.py`, where group
+  // and page key sit side by side on every PageSpec.
+  {
+    key: "dealFlow",
+    items: [
       { key: "contracts", href: "/contracts", icon: FileText },
       { key: "deals", href: "/deals", icon: Handshake },
       { key: "escrow", href: "/escrow", icon: Banknote },
-      { key: "substances", href: "/substances", icon: FlaskConical },
+    ],
+  },
+  {
+    key: "counterparties",
+    items: [
+      { key: "companies", href: "/companies", icon: Building2 },
+      { key: "verification", href: "/verification", icon: BadgeCheck },
+      {
+        key: "portalAccounts",
+        href: "/admin/portal-accounts",
+        icon: UserCog,
+        adminOnly: true,
+      },
+    ],
+  },
+  // Our own analysis queue and the partner directory that serves it. The third
+  // lab screen is NOT here: `labRequests` is a buyer broadcasting to every
+  // verified lab, a different flow with a different actor, and it sits under
+  // `fulfilment` with the other service request a buyer raises against a deal.
+  {
+    key: "labCompliance",
+    items: [
       { key: "labOrders", href: "/lab-orders", icon: Microscope },
       { key: "labPartners", href: "/lab-partners", icon: Building2 },
+      { key: "substances", href: "/substances", icon: FlaskConical },
+    ],
+  },
+  {
+    key: "fulfilment",
+    items: [
       { key: "logisticsRequests", href: "/logistics-requests", icon: Truck },
       { key: "labRequests", href: "/lab-requests", icon: TestTube },
     ],
@@ -131,6 +170,14 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    key: "content",
+    items: [
+      { key: "newsAdmin", href: "/admin/news", icon: SlidersHorizontal },
+      { key: "reports", href: "/reports", icon: Newspaper },
+      { key: "prices", href: "/prices", icon: BarChart3 },
+    ],
+  },
+  {
     key: "sources",
     items: [
       { key: "sources", href: "/sources", icon: Database },
@@ -138,16 +185,8 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    key: "settings",
+    key: "administration",
     items: [
-      { key: "reports", href: "/reports", icon: Newspaper },
-      { key: "newsAdmin", href: "/admin/news", icon: SlidersHorizontal },
-      { key: "prices", href: "/prices", icon: BarChart3 },
-      {
-        key: "adminProducts",
-        href: "/admin/products",
-        icon: Package,
-      },
       {
         key: "adminUsers",
         href: "/admin/users",
@@ -155,17 +194,26 @@ export const NAV_GROUPS: NavGroup[] = [
         adminOnly: true,
       },
       {
-        key: "portalAccounts",
-        href: "/admin/portal-accounts",
-        icon: UserCog,
-        adminOnly: true,
+        key: "adminProducts",
+        href: "/admin/products",
+        icon: Package,
+      },
+      {
+        key: "adminBankRegister",
+        href: "/admin/bank-register",
+        icon: Landmark,
       },
     ],
   },
-  // ── Настройки проекта ────────────────────────────────────────────────────
-  // Seven screens, one grant. Each is a real route so it can be linked, opened
-  // in a tab and found in history; `page: "appSettings"` is what stops seven
-  // menu entries from becoming seven things an administrator has to tick.
+  // ── Настройки ────────────────────────────────────────────────────────────
+  // Nine screens, one grant. Each is a real route so it can be linked, opened
+  // in a tab and found in history; `page: "appSettings"` is what stops nine
+  // menu entries from becoming nine things an administrator has to tick.
+  //
+  // The KEY must stay `projectSettings` even though the heading is now just
+  // «Настройки»: `SETTINGS_MODULES` below finds this group by that literal
+  // string, and a rename would empty the list — which does not fail a test, it
+  // 404s all eight /admin/settings/<module> routes at runtime.
   //
   // The settings themselves are grouped backend-side (`SettingSpec.group` in
   // `app/services/settings_service.py`) and each group maps to exactly one item

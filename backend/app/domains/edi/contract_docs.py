@@ -26,8 +26,10 @@ document that reaches my.soliq.uz.
 from __future__ import annotations
 
 import datetime
+import decimal
 import html
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 from app.domains.edi.payloads import (
@@ -117,6 +119,10 @@ def resolve_parties(
             )
         buyer = next(pid for pid in parties if pid != seller)
         return seller, buyer
+    variables = getattr(contract, "variables", None)
+    if isinstance(variables, dict) and variables.get("initiator_side") == "buyer":
+        # The form said who sells: the initiator drew it up as the buyer.
+        return int(contract.counterparty_company_id), int(contract.initiator_company_id)
     return int(contract.initiator_company_id), int(contract.counterparty_company_id)
 
 
@@ -195,11 +201,17 @@ def build_body(
     lines: list[DocumentLine],
     sections: list[tuple[str, str]],
     place: str = "г. Ташкент",
+    framework: bool = False,
 ) -> JsonObject:
-    """The 007 body for this contract — refusing anything hollow."""
+    """The 007 body for this contract — refusing anything hollow.
+
+    A framework contract names no goods (they arrive with its specifications),
+    so it goes with no `Products` at all: a line with a zero price would be a
+    false statement on a document that reaches my.soliq.uz.
+    """
     if not sections:
         raise EmptyContractBody("contract has no sections to send")
-    if not lines:
+    if not lines and not framework:
         raise EmptyContractBody("contract has no product lines")
     return build_contract_007(
         number=number,
@@ -342,23 +354,9 @@ def party_from_registry(registry: _TinRegistry, tax_id: str) -> PartyRequisites:
 
 
 def _oked_for(db: Session, company: Company) -> str | None:
-    """OKED off the latest company registry snapshot, or nothing.
+    from app.domains.verification.registry import latest_oked  # noqa: PLC0415
 
-    Never guessed: an invented activity code on a document that reaches the tax
-    authority is worse than an absent one, which Didox accepts as an empty string.
-    """
-    from app.domains.verification.registry_models import RegistrySnapshot  # noqa: PLC0415
-
-    snapshot = (
-        db.query(RegistrySnapshot)
-        .filter(RegistrySnapshot.company_id == company.id, RegistrySnapshot.kind == "company")
-        .order_by(RegistrySnapshot.id.desc())
-        .first()
-    )
-    if snapshot is None or not isinstance(snapshot.payload, dict):
-        return None
-    oked = snapshot.payload.get("oked")
-    return str(oked) if oked else None
+    return latest_oked(db, int(company.id))
 
 
 # ── the door itself ───────────────────────────────────────────────────────────
@@ -389,6 +387,8 @@ def _existing_document(db: Session, contract: Contract) -> DidoxDocument | None:
         .filter(
             DidoxDocument.subject_kind == "contract",
             DidoxDocument.subject_id == contract.id,
+            # The договор only: a contract's ЭСФ share its subject (0053).
+            DidoxDocument.doc_type == "007",
             DidoxDocument.status.notin_([5, 55]),
         )
         .order_by(DidoxDocument.id.desc())
@@ -396,34 +396,69 @@ def _existing_document(db: Session, contract: Contract) -> DidoxDocument | None:
     )
 
 
-def suggested_lines(contract: Contract, offer: SellerOffer | None) -> list[DocumentLine]:
-    """One line, from the contract's own variables plus the offer's ИКПУ.
+@dataclass(frozen=True)
+class IkpuChoice:
+    """The ИКПУ a seller picked on the Didox card, for a contract with no offer.
 
-    The quantity and price are the CONTRACT's — they were negotiated and may
-    differ from the listing — while the tax classification can only come from the
-    offer, which is where the seller chose it once.
+    Spelled like the `seller_offers` columns so `line_from_offer` — the one place a
+    code reaches a document line — reads it exactly as it reads an offer.
     """
-    import decimal  # noqa: PLC0415
 
-    from app.domains.edi.payloads import line_from_offer  # noqa: PLC0415
+    ikpu_code: str
+    ikpu_name: str
+    ikpu_package_code: str
+    ikpu_package_name: str
+    ikpu_origin: int
+
+
+def contract_line_terms(contract: Contract) -> tuple[str, decimal.Decimal, decimal.Decimal]:
+    """Name, quantity and price of the one line — the CONTRACT's, as negotiated.
+
+    Parsed by `contracts.terms`, the same reader that keeps the structured copy,
+    so the document and the analytics can never read one contract two ways. A
+    value that is not a number falls back to 1 × 0 — visible on the card, where
+    the seller corrects it before anything is sent.
+    """
+    from app.domains.contracts import terms  # noqa: PLC0415
 
     variables = contract.variables if isinstance(contract.variables, dict) else {}
+    qty = terms.parse_number(variables.get("qty"))
+    if "unit_price" in variables:
+        # The MGBUS-based templates: the document states the price WITHOUT VAT
+        # and adds the VAT itself, whichever way the contract was priced.
+        line = terms.spec_line(variables)
+        price = line.price_without_vat if line is not None else None
+    else:
+        price = terms.parse_number(variables.get("price"))
+    return (
+        terms.line_name(contract),
+        qty if qty is not None else decimal.Decimal("1"),
+        price if price is not None else decimal.Decimal("0"),
+    )
 
-    def _number(key: str, fallback: str) -> decimal.Decimal:
-        raw = str(variables.get(key) or fallback).replace(",", ".").replace(" ", "")
-        try:
-            return decimal.Decimal(raw)
-        except decimal.InvalidOperation:
-            return decimal.Decimal(fallback)
 
-    name = str(variables.get("product") or contract.title)
+def suggested_lines(
+    contract: Contract, offer: SellerOffer | None, ikpu: IkpuChoice | None = None
+) -> list[DocumentLine]:
+    """One line, from the contract's own variables plus an ИКПУ.
+
+    The quantity and price are the CONTRACT's — they were negotiated and may
+    differ from the listing. The tax classification comes from the offer, where
+    the seller chose it once; `ikpu` is consulted only when there IS no offer —
+    a contract drawn up from a tender, which passes through none. An offer that
+    lacks a code stays refused: the fix is on the offer, for every contract it
+    backs, not on one of them.
+    """
+    from app.domains.edi.payloads import line_from_offer  # noqa: PLC0415
+
+    name, count, price = contract_line_terms(contract)
     return [
         line_from_offer(
-            offer,
+            offer if offer is not None else ikpu,
             ord_no=1,
             name=name,
-            count=_number("qty", "1"),
-            price=_number("price", "0"),
+            count=count,
+            price=price,
         )
     ]
 
@@ -439,6 +474,7 @@ def create_for_contract(
     client: ContractGateway,
     today: datetime.date,
     term_days: int = 365,
+    ikpu: IkpuChoice | None = None,
 ) -> DidoxDocument:
     """Create (or return) the Didox 007 backing this contract.
 
@@ -448,6 +484,7 @@ def create_for_contract(
     """
     from app.domains.companies.models import Company  # noqa: PLC0415
     from app.domains.contracts import service as contract_service  # noqa: PLC0415
+    from app.domains.contracts import terms as contract_terms  # noqa: PLC0415
     from app.domains.contracts.models import ContractTemplate  # noqa: PLC0415
     from app.domains.contracts.render import render_contract_html  # noqa: PLC0415
     from app.domains.edi import numbering  # noqa: PLC0415
@@ -524,11 +561,19 @@ def create_for_contract(
     number = numbering.contract_number(
         deal_number=deal.number if deal is not None else None,
         contract_public_id=str(contract.public_id),
+        custom=str((contract.variables or {}).get("contract_number") or ""),
     )
+    from app.domains.contracts.specifications import is_framework  # noqa: PLC0415
+
+    framework = is_framework(contract)
+    document_lines = [] if framework else (lines or suggested_lines(contract, offer, ikpu))
+    # The date the parties typed on the contract, so the 007, its ЭСФ and its
+    # specifications all quote the date printed on the document they signed.
+    contract_day = contract_terms.typed_date((contract.variables or {}).get("contract_date")) or today
     body = build_body(
         number=number,
-        date=today,
-        expires_on=today + datetime.timedelta(days=term_days),
+        date=contract_day,
+        expires_on=contract_day + datetime.timedelta(days=term_days),
         title=contract.title,
         # Two sources, deliberately: we vouch for the seller (they sign here,
         # with a key we watched them use), the tax registry vouches for the buyer
@@ -538,11 +583,12 @@ def create_for_contract(
             db, seller, vat_reg_code=seller_vat_code, vat_reg_status=seller_vat_status
         ),
         buyer=party_from_registry(client, buyer.tax_id),
-        lines=lines or suggested_lines(contract, offer),
+        lines=document_lines,
         sections=sections_from_html(rendered),
+        framework=framework,
     )
 
-    return edi_service.create_document(
+    row = edi_service.create_document(
         db,
         doc_type="007",
         subject_kind="contract",
@@ -551,10 +597,23 @@ def create_for_contract(
         partner_company_id=buyer_id,
         deal_id=int(deal.id) if deal is not None else None,
         number=number,
-        doc_date=today,
+        doc_date=contract_day,
         payload=body,
         created_by_user_account_id=account_id,
         user_key=user_key,
         tax_id=seller.tax_id,
         client=client,
+        lines=document_lines,
     )
+    for line in document_lines:
+        contract_terms.stamp_classification(
+            db,
+            int(contract.id),
+            ord_no=line.ord_no,
+            ikpu_code=line.catalog_code,
+            ikpu_name=line.catalog_name,
+            package_code=line.package_code,
+            package_name=line.package_name,
+            vat_rate=line.vat_rate,
+        )
+    return row

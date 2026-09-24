@@ -250,7 +250,8 @@
       "tooLarge": "The file exceeds {{mb}} MB",
       "replace": "Replace",
       "invalidType": "Unsupported file format. Upload a PDF, JPG or PNG.",
-      "eimzoWaived": "Documents are optional: the company is confirmed by a digital signature. You can add them later."
+      "eimzoWaived": "Documents are optional: the company is confirmed by a digital signature. You can add them later.",
+      "registryWaived": "The registration certificate is optional: the company is confirmed by the state registry. You can still attach it if you like."
     },
     "errors": {
       "duplicate": "A company with this Tax ID already exists.",
@@ -1121,7 +1122,11 @@
   "theme": {
     "dark": "Dark",
     "light": "Light",
-    "system": "System"
+    "system": "System",
+    "switchTo": {
+      "dark": "Switch to dark theme",
+      "light": "Switch to light theme"
+    }
   },
   "inquiryStatus": {
     "pending": "Pending",
@@ -1659,8 +1664,8 @@
       "expired": "Expired"
     },
     "actions": {
-      "send": "Send to counterparty",
-      "accept": "Accept terms",
+      "send": "Send for signing",
+      "signAndSend": "Sign and send",
       "decline": "Decline",
       "confirmDecline": "Confirm decline",
       "sign": "Sign with E-IMZO",
@@ -1674,21 +1679,27 @@
     },
     "timeline": {
       "created": "Draft created",
-      "sent": "Sent for approval",
+      "sent": "Sent for signing",
       "signedBy": "Signed by {{company}}",
       "signedNoDate": "Signed",
       "awaitingSignature": "Awaiting signature from {{company}}",
       "active": "Signed by both parties",
       "awaiting": "Awaiting"
     },
-    "rail": "How it is signed",
-    "rails": {
-      "eimzo": "E-IMZO on the platform",
-      "didox": "Through Didox (EDI, visible in my.soliq.uz)"
+    "basis": {
+      "label": "Based on",
+      "none": "Nothing — I will fill it in",
+      "hint": "A deal from an accepted tender quote: product, quantity, price and counterparty fill in by themselves.",
+      "empty": "No deals without a contract yet — one appears when you accept a tender quote or yours is accepted.",
+      "counterpartyFromDeal": "The counterparty is the other side of the selected deal."
     },
-    "railHint": {
-      "eimzo": "Both sides sign a document we hold.",
-      "didox": "The document is created at the EDI operator and reaches my.soliq.uz. Both sides need a Didox account."
+    "groups": {
+      "parties": "Parties and contract details",
+      "subject": "Subject and amount",
+      "payment": "Payment",
+      "delivery": "Delivery",
+      "extra": "Packaging and quality",
+      "penalties": "Liability"
     }
   },
   "deals": {
@@ -1864,6 +1875,39 @@
       "origin_cert": "Certificate of origin",
       "commercial_offer": "Commercial offer",
       "other": "Other"
+    },
+    "columns": {
+      "product": "Product",
+      "volume": "Volume",
+      "terms": "Terms",
+      "deliveryBy": "Deliver by",
+      "responseWindow": "Accepting quotes",
+      "yourQuote": "Your quote"
+    },
+    "deadline": {
+      "daysLeft": "{{count}} days left",
+      "lastDay": "less than a day",
+      "closed": "closed"
+    },
+    "urgent": "Urgent",
+    "needs": "Required: {{docs}}",
+    "reply": "Quote",
+    "hideForm": "Collapse",
+    "viewMyQuote": "My quote",
+    "filters": {
+      "label": "Tender filters",
+      "product": "Product",
+      "allProducts": "All products",
+      "closingSoon": "Closing soon",
+      "urgent": "Urgent only",
+      "unanswered": "Not yet quoted",
+      "reset": "Reset filters",
+      "status": "Quote status",
+      "allStatuses": "All",
+      "empty": "No tenders match these filters",
+      "emptyBody": "Change or reset the filters to see every open tender.",
+      "mineEmpty": "No quotes with this status",
+      "mineEmptyBody": "Pick another status or show all quotes."
     }
   },
   "compliance": {
@@ -2261,7 +2305,8 @@
       "signIn": "Sign in",
       "register": "Register",
       "language": "Language",
-      "pricesShort": "Prices"
+      "pricesShort": "Prices",
+      "theme": "Theme"
     },
     "role": {
       "manufacturer": "Manufacturer",
@@ -2707,7 +2752,6 @@
     "chosenPackage": "Packaging: {{name}}",
     "empty": "Nothing found. Try a different name.",
     "errors": {
-      "session": "A Didox session is needed. Sign in with your key — it is one click.",
       "unavailable": "Didox's ИКПУ directory is unavailable right now. Try later — the code can be added afterwards.",
       "failed": "The search could not be run.",
       "badCode": "An ИКПУ code must be 17 digits."
@@ -2718,12 +2762,16 @@
     "origin": "Origin of the goods",
     "originHint": "For the invoice: how you came by these goods. Didox cannot know it — the same code is own production for a factory and resale for a trader.",
     "originPlaceholder": "Choose an origin",
-    "originRequired": "The offer cannot be published without an origin.",
+    "originRequired": "Without the goods' origin the code cannot be used in documents.",
     "origins": {
       "1": "Own production",
       "2": "Resale (bought from a supplier)",
       "3": "Services",
       "4": "Not in circulation"
+    },
+    "session": {
+      "hint": "IKPU codes live in your Didox account. To search and add them, sign in to Didox with the company’s e-signature — once every 6 hours.",
+      "open": "Sign in to Didox with e-signature"
     }
   },
   "didox": {
@@ -2758,7 +2806,9 @@
       "no_cert": "No signing key found.",
       "cert_mismatch": "The certificate's ИНН does not match this company.",
       "disabled": "Didox is not enabled in this deployment.",
-      "failed": "Could not connect to Didox."
+      "failed": "Could not connect to Didox.",
+      "not_registered": "The company has no Didox account yet — register it below.",
+      "rejected": "Didox refused: {{message}}"
     },
     "signErrors": {
       "module_missing": "E-IMZO not found. Start the module and retry.",
@@ -2781,6 +2831,55 @@
         "document_not_created": "The document does not exist at the operator yet.",
         "didox_unavailable": "Didox is unavailable right now. Try again later."
       }
+    },
+    "ownerOnly": "Only the company's owner can connect it to Didox."
+  },
+  "didoxOnboarding": {
+    "title": "Connect to Didox",
+    "subtitle": "{{company}} — electronic document exchange",
+    "why": "Contracts signed through Didox reach my.soliq.uz. To sign them the company needs a Didox account and the operator's public offer signed. This is done once.",
+    "later": "Later",
+    "steps": {
+      "account": "Didox account",
+      "offer": "Didox public offer"
+    },
+    "account": {
+      "haveTitle": "Does the company already have a Didox account?",
+      "haveBody": "Sign in with the company's e-signature key — nothing else is needed. If the offer was already signed on didox.uz, we will see it.",
+      "signIn": "Sign in to Didox with e-signature",
+      "registerTitle": "Register the company at Didox",
+      "registerBody": "The email and password are the login to didox.uz. We pass them to Didox and do not store them. Registration is confirmed with the company's e-signature key.",
+      "email": "Email",
+      "emailInvalid": "Enter an email without «+» — Didox does not accept it.",
+      "mobile": "Phone",
+      "mobileHint": "Digits only, with the country code: 998901234567.",
+      "mobileInvalid": "9 to 15 digits.",
+      "password": "Password for didox.uz",
+      "passwordHint": "At least 8 characters.",
+      "passwordShort": "At least 8 characters.",
+      "register": "Register with e-signature"
+    },
+    "offer": {
+      "title": "Didox public offer",
+      "body": "Read the EDI operator's offer. Signing it with the company's key means accepting it — without it Didox accepts no documents.",
+      "loading": "Loading the offer…",
+      "sessionHint": "The offer is held by Didox. Sign in with the company's key to open it.",
+      "loadFailed": "Could not load the offer from Didox.",
+      "openInTab": "Open in a new tab",
+      "agree": "I have read the Didox public offer and accept its terms",
+      "errors": {
+        "module_missing": "E-IMZO not found. Start the E-IMZO module and try again.",
+        "cert_mismatch": "No key for this company was found — the certificate's TIN does not match.",
+        "failed": "Could not sign the offer. Please try again."
+      }
+    },
+    "done": {
+      "title": "The company is connected to Didox",
+      "body": "Contracts can now be signed and sent through Didox.",
+      "cta": "Go to the cabinet"
+    },
+    "contractBlocked": {
+      "title": "Signing through Didox is not available yet"
     }
   },
   "sampleLetter": {
@@ -2795,15 +2894,14 @@
   },
   "didoxDocument": {
     "title": "Document at Didox",
-    "sellerHint": "This contract is signed at the EDI operator — create the document and both sides can then e-sign it.",
+    "sellerHint": "This contract is signed at the EDI operator. The button below creates the document and signs it with your key straight away — then it is the buyer's turn.",
     "buyerHint": "The seller has not created the document at the operator yet. Signing opens after that.",
-    "create": "Create the document at Didox",
-    "creating": "Creating…",
+    "create": "Sign and send via Didox",
+    "creating": "Signing…",
     "blockedTitle": "The document cannot be created yet",
-    "confirmIdentity": "Confirm identity with E-IMZO",
     "blockers": {
-      "ikpu_missing": "The offer carries no ИКПУ — without a product code the document is refused.",
-      "signer_identity_missing": "One side has not confirmed identity by E-IMZO: the signer's PINFL and full name are mandatory.",
+      "ikpu_missing": "The offer has no IKPU — the document will not be accepted without a product code. Set it on the offer.",
+      "signer_identity_missing": "The signer’s details (full name and PINFL) are missing and the document requires them. Sign in to Didox with the company’s e-signature — they are taken from that same signature.",
       "not_ready": "The contract has not been sent to both sides for signing yet.",
       "wrong_rail": "This contract is signed with our own E-IMZO, not through Didox.",
       "party_mismatch": "The seller could not be determined from the contract.",
@@ -2814,12 +2912,15 @@
       "didox_session_required": "A Didox session is needed — e-sign the login.",
       "didox_offer_required": "The company has not signed Didox's public offer.",
       "didox_unavailable": "Didox is unavailable right now. Try again later.",
-      "ikpu_missing": "The offer carries no ИКПУ.",
+      "ikpu_missing": "No IKPU chosen.",
       "not_ready": "The contract is not ready to send.",
       "not_seller": "The seller creates the document.",
       "wrong_rail": "The contract is not on the Didox rail.",
       "empty_body": "The contract has neither text nor lines."
-    }
+    },
+    "ikpuTitle": "Product code (IKPU)",
+    "ikpuHint": "This contract came from a tender, so there is no offer carrying a code — pick the IKPU yourself. It goes on the document and to my.soliq.uz.",
+    "ikpuRequired": "Pick the IKPU, its package and the origin of the goods — the document cannot be created without them."
   },
   "stepUp": {
     "title": "Confirm your password",
@@ -2830,6 +2931,97 @@
       "wrongPassword": "Incorrect password",
       "unavailable": "The service is temporarily unavailable. Try again.",
       "failed": "Could not confirm your password. Try again."
+    }
+  },
+  "contractTerms": {
+    "title": "Term templates",
+    "subtitle": "Your payment and delivery terms — pick a template when drawing up a contract and the fields fill themselves.",
+    "new": "New template",
+    "edit": "Edit template",
+    "dialogHint": "The contract's legal text is shared across the platform. A template holds only your terms; price, quantity and goods are set in each contract.",
+    "name": "Name",
+    "namePlaceholder": "E.g. Regular customers",
+    "empty": "No templates yet",
+    "emptyBody": "Save the terms you repeat from one contract to the next.",
+    "readOnly": "Templates are created by the company's owner and managers.",
+    "archiveConfirm": "Remove the template «{{name}}»? Contracts already drawn up will not change.",
+    "pick": "Term template",
+    "pickHint": "Fills in the payment and delivery terms — you can still edit them.",
+    "none": "No template",
+    "saveFromForm": "Save terms as a template",
+    "errors": {
+      "nameTaken": "A template with this name already exists.",
+      "saveFailed": "Could not save the template. Check the fields."
+    }
+  },
+  "facture": {
+    "title": "Invoices (ESF)",
+    "none": "No invoices for this contract yet.",
+    "new": "Issue an ESF",
+    "issue": "Issue and sign",
+    "issuing": "Issuing…",
+    "count": "Quantity",
+    "price": "Unit price, UZS",
+    "vat": "VAT",
+    "noVat": "No VAT",
+    "notInSoum": "The contract is in {{currency}}, but an ESF is issued in soum — enter the price in soum.",
+    "pending": "The previous ESF is not signed yet — sign it before issuing another.",
+    "didoxNotReady": "ESFs are issued and signed through Didox — connect the company first.",
+    "blockedTitle": "An ESF cannot be issued yet",
+    "blockers": {
+      "contract_reference_missing": "The Didox contract the ESF must refer to was not found.",
+      "not_active": "The contract is not signed by both parties yet.",
+      "specification_required": "Pick a signed specification — a framework contract's ESF is issued against one."
+    },
+    "errors": {
+      "facture_pending": "The previous ESF is not signed yet.",
+      "price_required": "Enter the price in soum.",
+      "precision": "Too many decimals: quantity up to 6, price up to 2.",
+      "not_active": "The contract is not signed by both parties yet.",
+      "contract_reference_missing": "The Didox contract the ESF must refer to was not found."
+    },
+    "specification": "Specification"
+  },
+  "specification": {
+    "title": "Specifications",
+    "none": "No specifications yet. Each shipment under a framework contract gets its own specification.",
+    "new": "New specification",
+    "create": "Draw up specification",
+    "name": "Specification No. {{n}}",
+    "line": "Item {{n}}",
+    "product": "Goods",
+    "qty": "Quantity",
+    "unit": "Unit",
+    "unitPrice": "Unit price, UZS",
+    "addLine": "Add item",
+    "units": {
+      "kg": "kg",
+      "t": "t",
+      "pcs": "pcs"
+    },
+    "priceBasis": "Price stated",
+    "withVat": "With VAT",
+    "withoutVat": "Without VAT",
+    "priceBasisHint": {
+      "with_vat": "The total comes out round, but the ESF may differ by a few soum.",
+      "without_vat": "The ESF matches the specification to the tiyin."
+    },
+    "payment": "Payment",
+    "prepay": "100% prepayment",
+    "schedule": "By schedule",
+    "scheduleText": "Payment schedule",
+    "deliveryDays": "Delivery after payment, banking days",
+    "openPdf": "Open PDF",
+    "status": {
+      "draft": "Draft",
+      "pending_signatures": "Awaiting signatures",
+      "active": "Signed",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
+    "errors": {
+      "invalid": "Check the items: each needs goods, quantity and price.",
+      "createFailed": "Could not draw up the specification."
     }
   }
 }

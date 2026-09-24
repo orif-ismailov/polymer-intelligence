@@ -3,7 +3,7 @@
 `verify_contract_integrity` (nightly) recomputes the sha256 of every active
 contract's stored PDF and alerts the admin channel on any mismatch (tamper
 detection). `expire_stale_contracts` (nightly) expires contracts that have sat in
-`pending_counterparty`/`pending_signatures` longer than `contract_pending_ttl_days`
+`pending_signatures` longer than `contract_pending_ttl_days`
 and notifies both parties. Both run on the `default` queue and never raise.
 """
 
@@ -103,9 +103,7 @@ def expire_stale_contracts() -> dict[str, Any]:
         stale = (
             db.query(Contract)
             .filter(
-                Contract.status.in_(
-                    [ContractStatus.pending_counterparty, ContractStatus.pending_signatures]
-                ),
+                Contract.status == ContractStatus.pending_signatures,
                 Contract.updated_at < cutoff,
             )
             .all()

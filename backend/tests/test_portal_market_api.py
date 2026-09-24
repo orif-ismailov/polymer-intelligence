@@ -363,3 +363,57 @@ def closed_open_list_is_empty(client, company_id: int, account_id: int) -> bool:
         f"{_BASE}/requests", params={"company_id": company_id}, headers=_auth(account_id)
     )
     return listing.json()["items"] == []
+
+
+@requires_real_db
+def test_market_lists_take_their_filters_from_the_query(api) -> None:  # noqa: ANN001
+    """The filters reach the service — the SQL itself is pinned in
+    `test_rfq_response_service_db.py`; this is the wiring, plus the refusal of a
+    status that does not exist rather than an empty list that looks like "none"."""
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.models.enums import CompanyStatus, Urgency  # noqa: PLC0415
+    from tests._verification_db import make_request  # noqa: PLC0415
+
+    client, session = api
+    with session() as db:
+        buyer_acc = make_account(db, "+998900007101")
+        buyer = make_company(db, buyer_acc, tax_id="318100001", roles=["distributor"])
+        buyer.status = CompanyStatus.verified
+        seller_acc = make_account(db, "+998900007102")
+        seller = make_company(db, seller_acc, tax_id="318100002", roles=["distributor"])
+        seller.status = CompanyStatus.verified
+        db.flush()
+
+        urgent = make_request(db, company=buyer, account=buyer_acc, number="REQ-F-URG", n=1)
+        urgent.urgency = Urgency.high
+        quoted = make_request(db, company=buyer, account=buyer_acc, number="REQ-F-Q", n=2)
+        rfq_response_service.submit(
+            db, quoted, seller, seller_acc,
+            price=decimal.Decimal("1000.00"), qty=decimal.Decimal("5"),
+        )
+        db.commit()
+        seller_id, seller_account_id = seller.id, seller_acc.id
+        urgent_id, quoted_id = urgent.id, quoted.id
+
+    def ids(path: str, **params: object) -> list[int]:
+        resp = client.get(
+            f"{_BASE}/{path}",
+            params={"company_id": seller_id, **params},
+            headers=_auth(seller_account_id),
+        )
+        assert resp.status_code == 200, resp.text
+        return [item["id"] for item in resp.json()["items"]]
+
+    assert sorted(ids("requests")) == sorted([urgent_id, quoted_id])
+    assert ids("requests", urgent="true") == [urgent_id]
+    assert ids("requests", unanswered="true") == [urgent_id]
+    assert ids("requests", closing_soon="true") == []
+
+    assert len(ids("responses", status="submitted")) == 1
+    assert ids("responses", status="accepted") == []
+    bad = client.get(
+        f"{_BASE}/responses",
+        params={"company_id": seller_id, "status": "bogus"},
+        headers=_auth(seller_account_id),
+    )
+    assert bad.status_code == 422

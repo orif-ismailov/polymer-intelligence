@@ -17,16 +17,98 @@ from __future__ import annotations
 import html
 import re
 
+from app.domains.contracts.terms import derived_values
+
 _PLACEHOLDER = re.compile(r"\{\{\s*(\w+)\s*\}\}")
+
+#: `{{#if key}}`, `{{#if key=value}}`, `{{#if key!=value}}` … `{{/if}}`. This pattern
+#: matches an INNERMOST block only — its body holds no further `{{#if` — so blocks
+#: nest, resolved from the inside out. `templates.validate_body` refuses an
+#: unbalanced one before it is saved.
+BLOCK = re.compile(
+    r"\{\{#if\s+(\w+)\s*(?:(!?=)\s*([\w-]+))?\s*\}\}"
+    r"((?:(?!\{\{#if).)*?)\{\{/if\}\}",
+    re.DOTALL,
+)
+BLOCK_OPEN = re.compile(r"\{\{#if\s+(\w+)[^}]*\}\}")
+BLOCK_CLOSE = re.compile(r"\{\{/if\}\}")
+
+#: A section (`<h2 data-n>`) or clause (`<p data-n>`) the renderer numbers.
+_NUMBERED = re.compile(r"<(h2|p)(\s[^>]*?)?\s+data-n(\s[^>]*)?>", re.IGNORECASE)
+
+_FALSY = frozenset({"", "false", "0", "no"})
+
+#: `{{{ key }}}` — inserted WITHOUT escaping, and only for these keys, which the
+#: code builds itself from escaped values (a specification's table rows). Any other
+#: key in triple braces renders empty, so a user variable can never smuggle markup.
+RAW_KEYS: frozenset[str] = frozenset({"spec_rows_html"})
+_RAW = re.compile(r"\{\{\{\s*(\w+)\s*\}\}\}")
+
+
+def _truthy(value: str | None) -> bool:
+    return (value or "").strip().lower() not in _FALSY
+
+
+def _blocks(template_html: str, context: dict[str, str]) -> str:
+    """Keep each `{{#if}}` block whose condition holds, drop the rest."""
+
+    def repl(match: re.Match[str]) -> str:
+        key, op, expected, body = match.groups()
+        value = context.get(key)
+        if op == "=":
+            keep = (value or "") == expected
+        elif op == "!=":
+            keep = (value or "") != expected
+        else:
+            keep = _truthy(value)
+        return body if keep else ""
+
+    previous = None
+    while previous != template_html:
+        previous = template_html
+        template_html = BLOCK.sub(repl, template_html)
+    return template_html
+
+
+def _number(template_html: str) -> str:
+    """Prefix `N.` to each numbered section and `N.M.` to each clause, in order.
+
+    Done after the blocks are resolved, so a switched-off section or clause leaves
+    no hole in the numbering. Didox prints its own section number (`ordno`) and
+    `contract_docs.sections_from_html` strips ours from the title; the clause
+    numbers inside the text agree with it because the order is the same.
+    """
+    section = 0
+    clause = 0
+
+    def repl(match: re.Match[str]) -> str:
+        nonlocal section, clause
+        tag = match.group(1)
+        attrs = (match.group(2) or "") + (match.group(3) or "")
+        if tag.lower() == "h2":
+            section += 1
+            clause = 0
+            label = f"{section}."
+        else:
+            clause += 1
+            label = f"{section}.{clause}."
+        return f"<{tag}{attrs}>{label} "
+
+    return _NUMBERED.sub(repl, template_html)
 
 
 def _fill(template_html: str, context: dict[str, str]) -> str:
-    """Substitute `{{ key }}` placeholders with HTML-escaped context values."""
+    """Resolve the blocks, number the sections, substitute HTML-escaped values."""
 
     def repl(match: re.Match[str]) -> str:
         return html.escape(context.get(match.group(1), ""))
 
-    return _PLACEHOLDER.sub(repl, template_html)
+    def raw(match: re.Match[str]) -> str:
+        key = match.group(1)
+        return context.get(key, "") if key in RAW_KEYS else ""
+
+    body = _RAW.sub(raw, _number(_blocks(template_html, context)))
+    return _PLACEHOLDER.sub(repl, body)
 
 
 def render_contract_html(
@@ -49,6 +131,18 @@ def render_contract_html(
         context[f"counterparty_{key}"] = "" if value is None else str(value)
     for key, value in variables.items():
         context[key] = "" if value is None else str(value)
+    # «Поставщик» / «Покупатель» as the contract names them. The initiator
+    # supplies unless the form says it is the buyer.
+    supplier, buyer = (
+        (counterparty, initiator)
+        if variables.get("initiator_side") == "buyer"
+        else (initiator, counterparty)
+    )
+    for key, value in supplier.items():
+        context[f"supplier_{key}"] = "" if value is None else str(value)
+    for key, value in buyer.items():
+        context[f"buyer_{key}"] = "" if value is None else str(value)
+    context.update(derived_values(variables))
     return _fill(template_html, context)
 
 

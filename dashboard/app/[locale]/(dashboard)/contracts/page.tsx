@@ -51,7 +51,6 @@ interface ContractDetail extends ContractRow {
 const STATUSES = [
   "",
   "draft",
-  "pending_counterparty",
   "pending_signatures",
   "active",
   "declined",

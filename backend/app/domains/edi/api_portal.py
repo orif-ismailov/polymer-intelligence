@@ -12,10 +12,12 @@ token and not a `user-key`.
 
 from __future__ import annotations
 
+import base64
+import decimal
 from typing import TYPE_CHECKING, Protocol
 
 import redis
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.api import errors
@@ -24,6 +26,7 @@ from app.api.portal.deps import company_or_404
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.accounts.models import UserAccount
+from app.domains.companies import service as company_service
 from app.domains.edi import onboarding, session
 from app.domains.edi import service as edi_service
 from app.domains.edi.models import DidoxCompany, DidoxDocument
@@ -33,6 +36,10 @@ from app.domains.edi.schemas import (
     DidoxContractLineIn,
     DidoxContractPrefillOut,
     DidoxDocumentOut,
+    DidoxFactureIn,
+    DidoxFactureLineOut,
+    DidoxFactureOut,
+    DidoxFacturesOut,
     DidoxOfferIn,
     DidoxOfferOut,
     DidoxSessionOut,
@@ -42,15 +49,37 @@ from app.domains.edi.schemas import (
     DidoxStatusOut,
 )
 from app.integrations.didox import DidoxError, ProviderUnavailable, get_didox_client
+from app.models.enums import CompanyMemberRole
 
 if TYPE_CHECKING:  # pragma: no cover
     # Annotation only: importing the contracts model at module scope would tie
     # this router's import order to that domain's for nothing.
-    from app.domains.contracts.models import Contract
+    from app.domains.contracts.models import Contract, ContractSpecification
+    from app.domains.edi.contract_docs import IkpuChoice
 
 router = APIRouter(prefix="/portal/companies", tags=["portal-didox"])
 
 _DISABLED = "didox_disabled"
+
+
+_ONBOARDERS = frozenset({CompanyMemberRole.owner})
+
+
+def _is_onboarder(db: Session, account: UserAccount, company_id: int) -> bool:
+    try:
+        company_service.require_company_role(db, account, company_id, _ONBOARDERS)
+    except company_service.InsufficientCompanyRole:
+        return False
+    return True
+
+
+def _require_onboarder(db: Session, account: UserAccount, company_id: int) -> None:
+    """Registering at Didox and accepting its offer act FOR the company — owner only.
+
+    Signing in is not gated: every member who signs documents needs a session.
+    """
+    if not _is_onboarder(db, account, company_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only_owner")
 
 
 def _guard(db: Session) -> None:
@@ -165,6 +194,7 @@ def didox_status(
     return DidoxStatusOut(
         state=onboarding.state_of(row),
         has_session=session.cached_user_key(redis_client, company.tax_id) is not None,
+        can_onboard=_is_onboarder(db, account, company.id),
     )
 
 
@@ -184,16 +214,25 @@ def didox_session(
 
     Succeeding proves the Didox account exists, which is the only signal we get
     for the signup step when a company registered on Didox's own site.
+
+    It also puts the signer on file. This is the same signature the identity
+    confirmation takes — the ИНН, authenticated by Didox — and the same profile
+    read names the person, so a seller who has signed in has everything a 007
+    needs from them. Asking for «Подтвердить личность» on top of it only made the
+    seller sign twice, and queued a verified company for a second staff review.
     """
+    from app.domains.edi import identity  # noqa: PLC0415
+
     company = company_or_404(db, account, company_id)
     _guard(db)
+    client = get_didox_client()
     try:
-        session.mint_user_key(
+        token = session.mint_user_key(
             redis_client,
             company,
             pkcs7_64=body.pkcs7_64,
             signature_hex=body.signature_hex,
-            client=get_didox_client(),
+            client=client,
         )
     except DidoxError as exc:
         raise _provider_error(exc) from exc
@@ -201,7 +240,16 @@ def didox_session(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
         ) from exc
+    # ONE profile read serves both: who signed (best effort — no profile means a
+    # signer with no name, and `remember_signer` records nothing for that), and
+    # whether the offer is signed, which spares a company that signed it on
+    # didox.uz from being asked again here.
+    profile = identity.read_profile(company, token, client)
+    identity.remember_signer(
+        db, company.id, int(account.id), identity.signer_from_profile(company, profile)
+    )
     row = onboarding.note_signed_in(db, company.id, company.tax_id)
+    onboarding.apply_profile(db, company.id, company.tax_id, profile)
     db.commit()
     return DidoxSessionOut(state=onboarding.state_of(row))
 
@@ -220,6 +268,7 @@ def didox_signup(
 ) -> DidoxSessionOut:
     """Create the company's Didox account (step 1 of 2)."""
     company = company_or_404(db, account, company_id)
+    _require_onboarder(db, account, company.id)
     _guard(db)
     try:
         token = onboarding.register(
@@ -248,6 +297,53 @@ def didox_signup(
 
 
 @router.get(
+    "/{company_id}/didox/offer/pdf",
+    response_class=Response,
+    responses={
+        **errors.DIDOX_CONFLICT,
+        200: {"content": {"application/pdf": {}}, "description": "The offer PDF"},
+    },
+)
+def didox_offer_pdf(
+    company_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> Response:
+    """Didox's public offer as the PDF they publish — to READ before signing.
+
+    Not the bytes that get signed (that is the JSON `GET /offer` prepares); a
+    person accepts a text they have seen, and this is that text.
+    """
+    company = company_or_404(db, account, company_id)
+    _guard(db)
+    try:
+        user_key = session.require_user_key(redis_client, company)
+        pdf_b64 = get_didox_client().offer_base64(user_key=user_key)
+    except session.UserKeyRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_session_required"
+        ) from exc
+    except DidoxError as exc:
+        raise _provider_error(exc) from exc
+    except ProviderUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+    try:
+        pdf = base64.b64decode(pdf_b64, validate=True)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'inline; filename="didox-offer.pdf"'},
+    )
+
+
+@router.get(
     "/{company_id}/didox/offer",
     response_model=DidoxOfferOut,
     responses=errors.DIDOX_CONFLICT,
@@ -260,6 +356,7 @@ def didox_offer(
 ) -> DidoxOfferOut:
     """The public offer PDF to sign (step 2 of 2)."""
     company = company_or_404(db, account, company_id)
+    _require_onboarder(db, account, company.id)
     _guard(db)
     try:
         user_key = session.require_user_key(redis_client, company)
@@ -294,6 +391,7 @@ def didox_accept_offer(
 ) -> DidoxSessionOut:
     """Sign the public offer. Until this succeeds the first SEND fails 422."""
     company = company_or_404(db, account, company_id)
+    _require_onboarder(db, account, company.id)
     _guard(db)
     try:
         user_key = session.require_user_key(redis_client, company)
@@ -521,7 +619,9 @@ def _contract_or_404(db: Session, contract_id: int, company_id: int) -> Contract
     return contract
 
 
-def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractPrefillOut:
+def _prefill(
+    db: Session, contract: Contract, company_id: int, *, ikpu_code: str | None = None
+) -> DidoxContractPrefillOut:
     """What the seller is about to send — and every reason it would be refused.
 
     Collected rather than raised one at a time: a seller who has to discover
@@ -550,15 +650,29 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
         blockers.append("not_seller")
 
     lines: list[DidoxContractLineIn] = []
-    try:
-        lines = [
-            DidoxContractLineIn(
-                name=line.name, count=line.count, price=line.price, vat_rate=line.vat_rate
-            )
-            for line in contract_docs.suggested_lines(contract, offer)
-        ]
-    except IkpuMissing:
-        blockers.append("ikpu_missing")
+    # No offer — the contract came from a tender — means no code to inherit, so
+    # the seller picks one on the card. `ikpu_missing` is for an offer that lacks
+    # one: that has a fix (edit the offer); a missing offer has none.
+    from app.domains.contracts.specifications import is_framework  # noqa: PLC0415
+
+    framework = is_framework(contract)
+    # A framework contract goes to Didox with no goods — nothing to classify.
+    ikpu_choice = offer is None and not framework
+    if framework:
+        lines = []
+    elif ikpu_choice:
+        name, count, price = contract_docs.contract_line_terms(contract)
+        lines = [DidoxContractLineIn(name=name, count=count, price=price)]
+    else:
+        try:
+            lines = [
+                DidoxContractLineIn(
+                    name=line.name, count=line.count, price=line.price, vat_rate=line.vat_rate
+                )
+                for line in contract_docs.suggested_lines(contract, offer)
+            ]
+        except IkpuMissing:
+            blockers.append("ikpu_missing")
 
     # The SELLER only. They are `Owner`, they sign here, and `Owner.FizTin`/`Fio`
     # are the subject of that signature — we hold those because they confirmed
@@ -585,10 +699,13 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
         unknown = _counterparty_blocker(client, buyer.tax_id)
         if unknown:
             blockers.append(unknown)
-        elif offer is not None:
+        else:
             # Only worth asking once the counterparty is real: an unknown ИНН has
             # no basket to look in, and two blockers for one cause read as two.
-            missing = _counterparty_ikpu_blocker(client, buyer.tax_id, offer.ikpu_code)
+            # The code is the offer's, or — on a tender contract — the one the
+            # seller has picked on the card so far.
+            code = offer.ikpu_code if offer is not None else ikpu_code
+            missing = _counterparty_ikpu_blocker(client, buyer.tax_id, code)
             if missing:
                 blockers.append(missing)
 
@@ -600,6 +717,7 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
         buyer_name=(buyer.legal_name or buyer.tax_id) if buyer else None,
         document_id=int(existing.id) if existing else None,
         lines=lines,
+        ikpu_choice=ikpu_choice,
         blockers=blockers,
     )
 
@@ -611,13 +729,18 @@ def _prefill(db: Session, contract: Contract, company_id: int) -> DidoxContractP
 def didox_contract_prefill(
     company_id: int,
     contract_id: int,
+    ikpu_code: str | None = Query(default=None, pattern=r"^\d{17}$"),
     db: Session = Depends(get_db),
     account: UserAccount = Depends(get_current_account),
 ) -> DidoxContractPrefillOut:
-    """Everything the create needs, plus what is missing — a plain read."""
+    """Everything the create needs, plus what is missing — a plain read.
+
+    `ikpu_code` is the code the seller has picked so far on a tender contract, so
+    the buyer's list can be checked BEFORE the key password rather than at `/sign`.
+    """
     company_or_404(db, account, company_id)
     contract = _contract_or_404(db, contract_id, company_id)
-    return _prefill(db, contract, company_id)
+    return _prefill(db, contract, company_id, ikpu_code=ikpu_code)
 
 
 @router.post(
@@ -663,6 +786,17 @@ def didox_create_contract_document(
         )
         for index, line in enumerate(body.lines, start=1)
     ]
+    choice = (
+        None
+        if body.ikpu is None
+        else contract_docs.IkpuChoice(
+            ikpu_code=body.ikpu.code,
+            ikpu_name=body.ikpu.name,
+            ikpu_package_code=body.ikpu.package_code,
+            ikpu_package_name=body.ikpu.package_name,
+            ikpu_origin=body.ikpu.origin,
+        )
+    )
     try:
         user_key = session.require_user_key(redis_client, company)
         row = contract_docs.create_for_contract(
@@ -672,10 +806,11 @@ def didox_create_contract_document(
             account_id=int(account.id),
             # An empty list means "use the prefill" — the seller confirmed it
             # unchanged, and re-deriving is how the ИКПУ stays the offer's.
-            lines=None if not lines else _with_ikpu(db, contract, lines),
+            lines=None if not lines else _with_ikpu(db, contract, lines, choice),
             user_key=user_key,
             client=get_didox_client(),
             today=utcnow().date(),
+            ikpu=choice,
         )
     except session.UserKeyRequired as exc:
         raise HTTPException(
@@ -725,13 +860,16 @@ def didox_create_contract_document(
 
 
 def _with_ikpu(
-    db: Session, contract: Contract, lines: list[DocumentLine]
+    db: Session,
+    contract: Contract,
+    lines: list[DocumentLine],
+    choice: IkpuChoice | None = None,
 ) -> list[DocumentLine]:
     """Stamp the offer's tax classification onto seller-edited lines.
 
     The seller may correct a name, a quantity or a price; they may not invent an
     ИКПУ, because that code is chosen once on the offer and reused by every
-    document it backs.
+    document it backs. `choice` counts only when there is no offer at all.
     """
     import dataclasses  # noqa: PLC0415
 
@@ -739,7 +877,7 @@ def _with_ikpu(
 
     deal = contract_docs._linked_deal(db, contract)  # noqa: SLF001
     offer = contract_docs._linked_offer(db, contract, deal)  # noqa: SLF001
-    [template] = contract_docs.suggested_lines(contract, offer)
+    [template] = contract_docs.suggested_lines(contract, offer, choice)
     return [
         dataclasses.replace(
             line,
@@ -751,3 +889,298 @@ def _with_ikpu(
         )
         for line in lines
     ]
+
+
+# ── the contract → ЭСФ 002 door ───────────────────────────────────────────────
+
+
+def _facture_out(db: Session, row: DidoxDocument, company_id: int) -> DidoxFactureOut:
+    from app.domains.contracts.api_portal import _didox_status_for_viewer  # noqa: PLC0415
+    from app.domains.edi.models import DidoxDocumentLine  # noqa: PLC0415
+
+    lines = db.query(DidoxDocumentLine).filter(DidoxDocumentLine.didox_document_id == row.id).all()
+    outgoing = row.owner_company_id == company_id
+    return DidoxFactureOut(
+        id=int(row.id),
+        number=row.number,
+        doc_date=row.doc_date,
+        status=_didox_status_for_viewer(row.status, viewer_is_owner=outgoing) or 0,
+        outgoing=outgoing,
+        total=sum((line.amount + line.vat_sum for line in lines), decimal.Decimal("0")),
+        specification_id=row.specification_id,
+    )
+
+
+@router.get(
+    "/{company_id}/didox/contracts/{contract_id}/factures",
+    response_model=DidoxFacturesOut,
+)
+def didox_contract_factures(
+    company_id: int,
+    contract_id: int,
+    specification_id: int | None = Query(default=None),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> DidoxFacturesOut:
+    """The contract's invoices, and the form for the next one — a plain read.
+
+    Blockers are collected, not raised one at a time, for the same reason as the
+    007 card: a seller who discovers three problems in three round trips, each
+    after loading a key, concludes the feature is broken.
+    """
+    from app.domains.companies.models import Company  # noqa: PLC0415
+    from app.domains.contracts.specifications import is_framework  # noqa: PLC0415
+    from app.domains.edi import contract_docs, facture_docs  # noqa: PLC0415
+    from app.models.enums import ContractStatus  # noqa: PLC0415
+
+    company_or_404(db, account, company_id)
+    contract = _contract_or_404(db, contract_id, company_id)
+    spec = _specification_for(db, contract, specification_id)
+    deal = contract_docs._linked_deal(db, contract)  # noqa: SLF001
+    offer = contract_docs._linked_offer(db, contract, deal)  # noqa: SLF001
+    blockers: list[str] = []
+    if is_framework(contract) and (spec is None or spec.status != "active"):
+        # A framework contract names no goods: its ЭСФ invoice a signed specification.
+        blockers.append("specification_required")
+    try:
+        seller_id, buyer_id = contract_docs.resolve_parties(contract, deal=deal, offer=offer)
+    except contract_docs.PartyMismatch:
+        seller_id, buyer_id = contract.initiator_company_id, contract.counterparty_company_id
+        blockers.append("party_mismatch")
+    is_seller = company_id == seller_id
+    if not is_seller:
+        blockers.append("not_seller")
+    if contract.status != ContractStatus.active:
+        blockers.append("not_active")
+
+    pending = facture_docs.pending_draft(db, contract)
+    if is_seller and not blockers:
+        seller = db.get(Company, seller_id)
+        if seller is not None:
+            try:
+                contract_docs.party_from_company(db, seller)
+            except contract_docs.SignerIdentityMissing:
+                blockers.append(f"signer_identity_missing:{seller_id}")
+        try:
+            facture_docs.contract_reference(db, contract)
+        except facture_docs.ContractReferenceMissing:
+            blockers.append("contract_reference_missing")
+        buyer = db.get(Company, buyer_id)
+        if pending is None and buyer is not None:
+            unknown = _counterparty_blocker(get_didox_client(), buyer.tax_id)
+            if unknown:
+                blockers.append(unknown)
+
+    return DidoxFacturesOut(
+        contract_id=int(contract.id),
+        currency=contract.currency,
+        is_seller=is_seller,
+        ikpu_choice=facture_docs.classification(db, contract) is None,
+        lines=[
+            DidoxFactureLineOut(
+                ord_no=line.ord_no, name=line.name, count=line.count, price=line.price,
+                vat_rate=line.vat_rate, unit=line.unit,
+            )
+            for line in facture_docs.suggested_lines(db, contract, spec)
+        ],
+        documents=[_facture_out(db, row, company_id) for row in facture_docs.list_for_contract(db, contract)],
+        pending_document_id=int(pending.id) if pending is not None else None,
+        blockers=blockers,
+    )
+
+
+@router.post(
+    "/{company_id}/didox/contracts/{contract_id}/factures",
+    response_model=DidoxDocumentOut,
+    status_code=status.HTTP_201_CREATED,
+    responses=errors.DIDOX_CONFLICT,
+)
+def didox_create_facture(
+    company_id: int,
+    contract_id: int,
+    body: DidoxFactureIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> DidoxDocumentOut:
+    """Issue an ЭСФ for this contract at Didox; the seller signs it next."""
+    from app.core.time import utcnow  # noqa: PLC0415
+    from app.domains.edi import contract_docs, facture_docs  # noqa: PLC0415
+    from app.domains.edi.payloads import (  # noqa: PLC0415
+        IkpuMissing,
+        PrecisionError,
+        line_from_offer,
+    )
+
+    company = company_or_404(db, account, company_id)
+    contract = _contract_or_404(db, contract_id, company_id)
+    _guard(db)
+
+    if any(line.price <= 0 for line in body.lines):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="price_required"
+        )
+    choice = (
+        None
+        if body.ikpu is None
+        else contract_docs.IkpuChoice(
+            ikpu_code=body.ikpu.code,
+            ikpu_name=body.ikpu.name,
+            ikpu_package_code=body.ikpu.package_code,
+            ikpu_package_name=body.ikpu.package_name,
+            ikpu_origin=body.ikpu.origin,
+        )
+    )
+    source = facture_docs.classification(db, contract, choice)
+    spec = _specification_for(db, contract, body.specification_id)
+    try:
+        if source is None:
+            raise IkpuMissing(contract_id)
+        lines = [
+            line_from_offer(
+                source, ord_no=index, name=line.name, count=line.count, price=line.price,
+                vat_rate=line.vat_rate,
+            )
+            for index, line in enumerate(body.lines, start=1)
+        ]
+        user_key = session.require_user_key(redis_client, company)
+        row = facture_docs.create_for_contract(
+            db,
+            contract,
+            acting_company_id=company_id,
+            account_id=int(account.id),
+            lines=lines,
+            user_key=user_key,
+            client=get_didox_client(),
+            today=utcnow().date(),
+            specification=spec,
+        )
+    except facture_docs.SpecificationRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="specification_required"
+        ) from exc
+    except IkpuMissing as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="ikpu_missing") from exc
+    except PrecisionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="precision"
+        ) from exc
+    except session.UserKeyRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_session_required"
+        ) from exc
+    except facture_docs.ContractNotActive as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_active") from exc
+    except facture_docs.FacturePending as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"error": "facture_pending", "document_id": exc.document_id},
+        ) from exc
+    except facture_docs.ContractReferenceMissing as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="contract_reference_missing"
+        ) from exc
+    except contract_docs.PartyMismatch as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_seller") from exc
+    except contract_docs.SignerIdentityMissing as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"error": "signer_identity_missing", "company_id": exc.company_id},
+        ) from exc
+    except contract_docs.CounterpartyNotInRegistry as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="counterparty_unknown"
+        ) from exc
+    except edi_service.OfferRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_offer_required"
+        ) from exc
+    except DidoxError as exc:
+        raise _provider_error(exc) from exc
+    except ProviderUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+
+    db.commit()
+    return DidoxDocumentOut(
+        id=row.id,
+        doc_type=row.doc_type,
+        number=row.number,
+        status=row.status,
+        didox_id=row.didox_id,
+    )
+
+
+def _specification_for(
+    db: Session, contract: Contract, specification_id: int | None
+) -> ContractSpecification | None:
+    """The named specification, only if it belongs to this contract."""
+    from app.domains.contracts.models import ContractSpecification  # noqa: PLC0415
+
+    if specification_id is None:
+        return None
+    spec = db.get(ContractSpecification, specification_id)
+    if spec is None or spec.contract_id != contract.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="specification_not_found")
+    return spec
+
+
+# ── the specification → 000 door ──────────────────────────────────────────────
+
+
+@router.post(
+    "/{company_id}/didox/specifications/{spec_id}/document",
+    response_model=DidoxDocumentOut,
+    status_code=status.HTTP_201_CREATED,
+    responses=errors.DIDOX_CONFLICT,
+)
+def didox_create_specification_document(
+    company_id: int,
+    spec_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> DidoxDocumentOut:
+    """Send a framework contract's specification to Didox; the seller signs it next.
+
+    Idempotent while its document lives, like the 007: a second press returns
+    the first document.
+    """
+    from app.domains.contracts.models import ContractSpecification  # noqa: PLC0415
+    from app.domains.edi import contract_docs, specification_docs  # noqa: PLC0415
+
+    company = company_or_404(db, account, company_id)
+    spec = db.get(ContractSpecification, spec_id)
+    if spec is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="specification_not_found")
+    _contract_or_404(db, spec.contract_id, company_id)
+    _guard(db)
+    try:
+        user_key = session.require_user_key(redis_client, company)
+        row = specification_docs.create_for_specification(
+            db, spec, acting_company_id=company_id, account_id=int(account.id),
+            user_key=user_key, client=get_didox_client(),
+        )
+    except session.UserKeyRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_session_required"
+        ) from exc
+    except specification_docs.SpecificationNotReady as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_ready") from exc
+    except contract_docs.PartyMismatch as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_seller") from exc
+    except edi_service.OfferRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_offer_required"
+        ) from exc
+    except DidoxError as exc:
+        raise _provider_error(exc) from exc
+    except ProviderUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+    db.commit()
+    return DidoxDocumentOut(
+        id=row.id, doc_type=row.doc_type, number=row.number, status=row.status, didox_id=row.didox_id,
+    )

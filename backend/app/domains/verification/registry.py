@@ -140,6 +140,20 @@ def latest(db: Session, company_id: int, kind: str) -> RegistrySnapshot | None:
     ).scalar_one_or_none()
 
 
+def latest_oked(db: Session, company_id: int) -> str | None:
+    """OKED off the newest company snapshot, or nothing — never guessed.
+
+    An invented activity code on a contract or a document bound for the tax
+    authority is worse than an absent one. Read by the contract renderer and the
+    Didox document builder alike, so both print the same code.
+    """
+    snapshot = latest(db, company_id, "company")
+    if snapshot is None or not isinstance(snapshot.payload, dict):
+        return None
+    oked = snapshot.payload.get("oked")
+    return str(oked) if oked else None
+
+
 def all_latest(db: Session, company_id: int) -> dict[str, RegistrySnapshot]:
     """The newest snapshot of each kind — what the case page shows."""
     found: dict[str, RegistrySnapshot] = {}

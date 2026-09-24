@@ -3,7 +3,7 @@
 Route registration is DB-free. Behaviour runs against test_polymer (guarded) with
 S3/WeasyPrint stubbed and the E-IMZO adapter faked. Covers the authz matrix
 (initiator/counterparty/third-company 404), the directory (verified-only), the full
-create→send→accept→sign→active flow, the signed bundle, and staff read-only access.
+create→send→sign→active flow, the signed bundle, and staff read-only access.
 """
 
 from __future__ import annotations
@@ -266,12 +266,10 @@ def test_full_contract_flow_and_authz(api) -> None:  # noqa: ANN001
     # counterparty cannot send (only initiator) → 403
     assert client.post(f"{_P}/contracts/{cid}/send", headers=b_auth).status_code == 403
 
-    # initiator sends → pending_counterparty
-    assert client.post(f"{_P}/contracts/{cid}/send", headers=a_auth).json()["status"] == "pending_counterparty"
-    # initiator cannot accept (only counterparty) → 403
-    assert client.post(f"{_P}/contracts/{cid}/accept", headers=a_auth).status_code == 403
-    # counterparty accepts → pending_signatures
-    assert client.post(f"{_P}/contracts/{cid}/accept", headers=b_auth).json()["status"] == "pending_signatures"
+    # initiator sends → straight to signing: the counterparty's signature IS
+    # their agreement, so there is no separate «accept» step any more
+    assert client.post(f"{_P}/contracts/{cid}/send", headers=a_auth).json()["status"] == "pending_signatures"
+    assert client.post(f"{_P}/contracts/{cid}/accept", headers=b_auth).status_code in (404, 405)
 
     # both sign
     for auth, tin in ((a_auth, "301111111"), (b_auth, "302222222")):
@@ -315,7 +313,6 @@ def test_sign_inn_mismatch_422(api) -> None:  # noqa: ANN001
         headers=a_auth,
     ).json()["id"]
     client.post(f"{_P}/contracts/{cid}/send", headers=a_auth)
-    client.post(f"{_P}/contracts/{cid}/accept", headers=b_auth)
     ch = client.post(f"{_P}/contracts/{cid}/sign/challenge", headers=a_auth).json()["challenge"]
     res = client.post(f"{_P}/contracts/{cid}/sign", json={"pkcs7": _pkcs7(ch, "300000000")}, headers=a_auth)
     assert res.status_code == 422
@@ -380,3 +377,38 @@ def test_create_unverified_initiator_is_403_typed(api) -> None:  # noqa: ANN001
     )
     assert res.status_code == 403, res.text
     assert res.json()["detail"]["code"] == "company_not_verified"
+
+
+@requires_real_db
+def test_the_sample_letter_is_not_a_contract_anyone_draws_up(api) -> None:  # noqa: ANN001
+    """The commitment letter is rendered by the sample flow, from the sample
+    request. Offered in «Создать договор» it became a form of eight blank fields
+    — «Номер письма», «Заявка» — that nobody could fill in meaningfully."""
+    from app.domains.contracts.models import ContractTemplate  # noqa: PLC0415
+
+    client, session = api
+    a_id, a_auth = _account(session, "+998900000001")
+    b_id, _ = _account(session, "+998900000002")
+    initiator = _verified_company(session, a_id, "301111111")
+    counterparty = _verified_company(session, b_id, "302222222")
+    contract_tpl = _template_id(session)
+    with session() as db:
+        letter = ContractTemplate(
+            code="SAMPLE_LETTER_TEST", kind="sample_letter", name_ru="Письмо", body_storage_path="x",
+            variables_schema={"type": "object", "properties": {}}, version=1, is_active=True,
+        )
+        db.add(letter)
+        db.commit()
+        letter_id = letter.id
+
+    listed = {t["id"] for t in client.get(f"{_P}/contract-templates", headers=a_auth).json()}
+    assert contract_tpl in listed
+    assert letter_id not in listed
+
+    res = client.post(
+        f"{_P}/contracts",
+        json={"initiator_company_id": initiator, "counterparty_company_id": counterparty,
+              "template_id": letter_id, "variables": {}},
+        headers=a_auth,
+    )
+    assert res.status_code == 404

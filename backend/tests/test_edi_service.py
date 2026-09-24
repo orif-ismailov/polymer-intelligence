@@ -324,3 +324,53 @@ class TestSubmitSignatureRouting:
         row, client = _Row(status=STATUS_AWAITING_US), _SigningClient(status_after=STATUS_SIGNED)
         self._submit(row, client, company_id=row.owner_company_id + 1)
         assert client.calls.index("join") < client.calls.index("sign")
+
+
+class _ReadFailsAfterSign(_SigningClient):
+    """Didox accepted the signature, then answered 500 to the status read —
+    recorded live on 23.09.2026, when the read was made as the wrong side."""
+
+    def get_document(self, didox_id: str, *, owner: int = 1, user_key: str | None = None):  # noqa: ANN201
+        if "sign" in self.calls:
+            from app.integrations.didox import ProviderUnavailable  # noqa: PLC0415
+
+            self.calls.append(f"get(owner={owner})")
+            raise ProviderUnavailable("didox 500")
+        return super().get_document(didox_id, owner=owner, user_key=user_key)
+
+
+class TestTheResultIsReadAsTheSideThatSigned:
+    """IMEX signed White Rock's 007: `/sign` answered 200, and the read that
+    followed asked for the document AS ITS OWNER (`owner=1`) with IMEX's key.
+    Didox answered 500, the request failed, the transaction rolled back — and the
+    buyer, told their signature had failed, pressed again into «Нет такого
+    документа». The signature had gone through; only the screen said otherwise."""
+
+    _submit = TestSubmitSignatureRouting._submit
+
+    def test_the_counterparty_reads_as_the_counterparty(self, monkeypatch) -> None:  # noqa: ANN001
+        monkeypatch.setattr(edi_service.onboarding, "assert_live", lambda: None)
+        row, client = _Row(status=STATUS_AWAITING_US), _SigningClient(status_after=STATUS_SIGNED)
+        self._submit(row, client, company_id=row.owner_company_id + 1)
+        assert "get(owner=1)" not in client.calls
+        assert client.calls[-1] == "get(owner=0)"
+
+    def test_the_owner_reads_as_the_owner(self, monkeypatch) -> None:  # noqa: ANN001
+        monkeypatch.setattr(edi_service.onboarding, "assert_live", lambda: None)
+        row, client = _Row(status=STATUS_DRAFT), _SigningClient()
+        self._submit(row, client, company_id=row.owner_company_id)
+        assert client.calls[-1] == "get(owner=1)"
+
+    def test_a_failed_read_after_an_accepted_signature_is_not_a_failed_signature(
+        self, monkeypatch  # noqa: ANN001
+    ) -> None:
+        """The status is the poller's to catch up on (every 10 minutes); failing
+        the request would tell the signer the opposite of what happened."""
+        monkeypatch.setattr(edi_service.onboarding, "assert_live", lambda: None)
+        row, client = _Row(status=STATUS_AWAITING_US), _ReadFailsAfterSign()
+
+        outcome = self._submit(row, client, company_id=row.owner_company_id + 1)
+
+        assert "sign" in client.calls
+        assert outcome.status == STATUS_AWAITING_US, "unknown yet — left for the poller"
+        assert outcome.activated is False

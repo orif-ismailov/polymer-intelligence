@@ -7,6 +7,7 @@ import {
   ContractCreatePage,
   ContractDetailPage,
   ContractsPage,
+  ContractTermsPage,
 } from "@/pages/contracts";
 import { DealDetailPage, DealsPage } from "@/pages/deals";
 import { UiKitPage } from "@/pages/dev-ui";
@@ -74,6 +75,8 @@ import { RequireCompany } from "./RequireCompany";
 import { RequirePasswordCurrent } from "./RequirePasswordCurrent";
 import { RequireFeature } from "./RequireFeature";
 import { RootLayout } from "./RootLayout";
+import { DidoxOnboardingGate } from "@/features/didox-session";
+import { DidoxOnboardingPage } from "@/pages/didox-onboarding";
 
 /**
  * Directories that still render a cabinet twin — read-only either way.
@@ -232,9 +235,16 @@ const appRoutes: RouteObject[] = [
                 element: <RequireCompany />,
                 children: [
                   {
-                    element: <AppShell />,
+                    // The owner of a verified company not yet on Didox is taken to
+                    // its onboarding once per visit — never blocked from the rest.
+                    element: (
+                      <DidoxOnboardingGate>
+                        <AppShell />
+                      </DidoxOnboardingGate>
+                    ),
                     children: [
                       { index: true, element: <HomePage /> },
+                      { path: "didox", element: <DidoxOnboardingPage /> },
 
                       // Marketplace. Browsing a listing and reading a company are
                       // PUBLIC — `/market`, `/market/:id`, `/manufacturers/:id` — and
@@ -489,6 +499,10 @@ const appRoutes: RouteObject[] = [
                       {
                         path: "contracts/new",
                         element: <ContractCreatePage />,
+                      },
+                      {
+                        path: "contracts/terms",
+                        element: <ContractTermsPage />,
                       },
                       {
                         path: "contracts/:contractId",

@@ -2,42 +2,48 @@
   "nav": {
     "groups": {
       "main": "主要",
-      "requests": "采购需求",
+      "marketplace": "交易市场",
+      "dealFlow": "交易流程",
+      "counterparties": "交易对手",
+      "labCompliance": "实验室与合规",
+      "fulfilment": "履约",
       "broker": "经纪",
+      "content": "内容",
       "sources": "数据源",
-      "settings": "设置",
-      "projectSettings": "项目设置"
+      "administration": "系统管理",
+      "projectSettings": "设置"
     },
     "items": {
       "dashboard": "仪表盘",
-      "liveFeed": "实时动态",
+      "liveFeed": "市场动态",
       "purchaseRequests": "采购需求",
-      "offers": "报价",
+      "offers": "卖方报价",
+      "offerRequests": "报价咨询",
       "moderation": "审核",
-      "sourcing": "AI 智能匹配",
-      "inventory": "库存",
-      "partners": "合作伙伴",
-      "intel": "市场分析",
-      "sources": "数据源",
-      "alerts": "预警",
-      "reports": "报告",
-      "prices": "价格",
-      "adminProducts": "产品",
-      "adminUsers": "用户",
-      "portalAccounts": "客户账户",
-      "offerRequests": "报价请求",
-      "newsAdmin": "新闻（管理）",
-      "verification": "验证",
-      "companies": "公司",
       "contracts": "合同",
       "deals": "交易",
       "escrow": "托管",
-      "substances": "物质",
-      "labOrders": "实验室",
+      "companies": "公司",
+      "verification": "公司验证",
+      "portalAccounts": "客户账户",
+      "labOrders": "检测分析",
       "labPartners": "合作实验室",
-      "logisticsRequests": "物流请求",
+      "substances": "物质",
+      "logisticsRequests": "物流",
       "labRequests": "实验室请求",
-      "settingsAnalytics": "分析",
+      "sourcing": "AI 智能匹配",
+      "inventory": "库存",
+      "partners": "供应商伙伴",
+      "intel": "市场分析",
+      "newsAdmin": "新闻",
+      "reports": "报告",
+      "prices": "价格",
+      "sources": "数据源",
+      "alerts": "预警",
+      "adminUsers": "员工",
+      "adminProducts": "产品目录",
+      "adminBankRegister": "银行目录",
+      "settingsAnalytics": "支出与额度",
       "settingsAi": "AI 与模型",
       "settingsNews": "新闻与报告",
       "settingsNotifications": "通知",
@@ -59,7 +65,7 @@
     },
     "adminBadge": "管理员",
     "pages": {
-      "appSettings": "项目设置"
+      "appSettings": "设置"
     }
   },
   "login": {
@@ -73,7 +79,7 @@
     "emailPlaceholder": "analyst@company.com"
   },
   "signals": {
-    "title": "实时动态",
+    "title": "市场动态",
     "subtitle": "来自所有已配置数据源的实时市场信号",
     "loading": "加载中…"
   },
@@ -809,7 +815,7 @@
     }
   },
   "adminProducts": {
-    "pageTitle": "产品",
+    "pageTitle": "产品目录",
     "pageSubtitle": "应用的产品列表。在此添加的产品将出现在选择器中。",
     "loadError": "加载产品失败。请刷新页面。",
     "empty": "未找到产品。",
@@ -843,7 +849,7 @@
     }
   },
   "offerRequests": {
-    "title": "报价请求",
+    "title": "报价咨询",
     "subtitle": "买方的报价请求——在发送给卖方前进行审核",
     "empty": "无待处理请求",
     "error": "加载请求失败",
@@ -939,7 +945,7 @@
     }
   },
   "verification": {
-    "title": "验证",
+    "title": "公司验证",
     "subtitle": "公司验证申请队列",
     "loading": "加载中…",
     "error": "无法加载数据",
@@ -1515,7 +1521,7 @@
     }
   },
   "labOrders": {
-    "title": "实验室检测申请",
+    "title": "检测分析",
     "subtitle": "检测由合作实验室完成——状态由运营人员推进。列表按最早提交排序。",
     "filterAll": "全部状态",
     "empty": "暂无申请",
@@ -1594,7 +1600,7 @@
     "adminOnly": "名录由管理员维护。"
   },
   "logisticsRequests": {
-    "title": "物流请求",
+    "title": "物流",
     "subtitle": "买家向承运商广播板的只读监督。",
     "loading": "加载中…",
     "error": "数据加载失败",
@@ -2019,5 +2025,24 @@
       "contract": "合同",
       "sample_letter": "承诺函"
     }
+  },
+
+  "adminBankRegister": {
+    "title": "银行目录",
+    "subtitle": "央行分支机构登记：MFO → 银行名称。公司注册时自动填充。",
+    "loaded": "目录已加载",
+    "notLoaded": "目录未加载",
+    "rows": "分支机构",
+    "fileDate": "央行发布日期",
+    "uploadedAt": "上传时间",
+    "uploadedBy": "上传者",
+    "shipped": "随版本发布",
+    "upload": "上传 .xlsx",
+    "uploading": "上传中…",
+    "imported": "已导入分支机构：{count}",
+    "unchanged": "文件未变更 — 目录保持不变",
+    "failed": "文件上传失败",
+    "file": "文件",
+    "hint": "来自中央银行网站的分支机构登记文件（.xlsx）。"
   }
 }

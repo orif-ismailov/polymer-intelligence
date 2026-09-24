@@ -29,6 +29,59 @@ logger = logging.getLogger(__name__)
 _CONTENTION_RETRY_SECONDS = 2
 
 
+def _dispatch_single(check_id: int) -> None:
+    """Enqueue one check on the verify queue (fail-soft). The single enqueue point,
+    so the dependency below can be exercised without a broker."""
+    try:
+        run_single_check.apply_async(args=[check_id], queue="verify", retry=False)
+    except Exception as exc:  # noqa: BLE001 — broker outage must not crash the caller
+        logger.warning(
+            "verification.single_check_dispatch_failed",
+            extra={"check_id": check_id, "error": str(exc)},
+        )
+
+
+def _registry_pending(db: Any, case_id: int) -> bool:  # noqa: ANN401
+    """Whether this case's `gov_registry` check has yet to give its verdict."""
+    from app.domains.verification.models import VerificationCheck
+    from app.models.enums import VerificationCheckStatus, VerificationCheckType
+
+    return bool(
+        db.query(VerificationCheck)
+        .filter(
+            VerificationCheck.case_id == case_id,
+            VerificationCheck.check_type == VerificationCheckType.gov_registry,
+            VerificationCheck.status.in_(
+                (VerificationCheckStatus.pending, VerificationCheckStatus.running)
+            ),
+        )
+        .count()
+        > 0
+    )
+
+
+def _release_deferred_documents(db: Any, case_id: int) -> list[int]:  # noqa: ANN401
+    """The `documents_complete` checks held back for the registry verdict.
+
+    Returned rather than dispatched: the caller enqueues them only AFTER its own
+    commit, or the documents task could read the registry check before its verdict
+    is visible and fail on the very certificate the verdict waives.
+    """
+    from app.domains.verification.models import VerificationCheck
+    from app.models.enums import VerificationCheckStatus, VerificationCheckType
+
+    return [
+        c.id
+        for c in db.query(VerificationCheck)
+        .filter(
+            VerificationCheck.case_id == case_id,
+            VerificationCheck.check_type == VerificationCheckType.documents_complete,
+            VerificationCheck.status == VerificationCheckStatus.pending,
+        )
+        .all()
+    ]
+
+
 def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-layer glue
     """Execute the pure check function for `check`, gathering its inputs from the DB."""
     from app.domains.companies.models import Company, CompanyBankAccount, CompanyBusinessRole
@@ -83,8 +136,23 @@ def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-lay
             .count()
             > 0
         )
+        registry_passed = (
+            db.query(VerificationCheck)
+            .filter(
+                VerificationCheck.case_id == check.case_id,
+                VerificationCheck.check_type == VerificationCheckType.gov_registry,
+                VerificationCheck.status == VerificationCheckStatus.passed,
+            )
+            .count()
+            > 0
+        )
         return verification_checks.check_documents_complete(
-            company, documents, roles, has_bank_account=has_bank, eimzo_passed=eimzo_passed
+            company,
+            documents,
+            roles,
+            has_bank_account=has_bank,
+            eimzo_passed=eimzo_passed,
+            registry_passed=registry_passed,
         )
 
     if check_type == VerificationCheckType.manual_kyb:
@@ -128,15 +196,33 @@ def _run_check(db: Any, check: Any) -> CheckResult:  # noqa: ANN401 — task-lay
     max_retries=MAX_CHECK_ATTEMPTS,
 )
 def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celery task
-    """Run one verification check, record its result, and re-evaluate the case."""
+    """Run one verification check, record its result, and re-evaluate the case.
+
+    Two things beyond "run it and record it", both introduced when the registry
+    checks started running on the Didox rail:
+
+    * **A returned `unavailable` is retried like a raised one.** The registry
+      checks do not raise when the provider is down — `fetch_and_record` returns
+      None and `check_gov_registry` answers `unavailable`, deliberately, so an
+      outage is never mistaken for a finding. But that answer used to be recorded
+      once and never retried, and the evaluator treats `unavailable` with attempts
+      left as still running — so one Didox blip at submit pinned the case in
+      `checks_running` for good. It now retries on the same budget and backoff as a
+      provider exception, and is only recorded as final once that budget is spent.
+    * **A settled registry verdict releases the documents check** that
+      `run_verification_checks` held back for it — on a pass, a fail, or retries
+      exhausted alike, because every one of those is a verdict the documents check
+      can be judged against.
+    """
     from sqlalchemy.exc import OperationalError
 
     from app.core.db import SessionLocal
     from app.domains.verification import service as verification_service
     from app.domains.verification.models import VerificationCheck
-    from app.models.enums import VerificationCheckStatus
+    from app.models.enums import VerificationCheckStatus, VerificationCheckType
     from app.services import event_service, event_types
 
+    release: list[int] = []
     try:
         with SessionLocal() as db:
             check = db.get(VerificationCheck, check_id)
@@ -147,6 +233,8 @@ def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celer
             check.started_at = company_service.now_utc()
             check.attempts += 1
             db.flush()
+            exhausted = check.attempts >= MAX_CHECK_ATTEMPTS
+            is_registry = check.check_type == VerificationCheckType.gov_registry
 
             try:
                 result = _run_check(db, check)
@@ -158,7 +246,15 @@ def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celer
                 check.status = VerificationCheckStatus.unavailable
                 check.last_error = str(exc)
                 check.finished_at = company_service.now_utc()
+                if exhausted:
+                    # The budget is spent, so this is the verdict. Evaluate now —
+                    # nothing else will, if this was the case's last open check.
+                    verification_service.on_check_completed(db, check.case_id)
+                    if is_registry:
+                        release = _release_deferred_documents(db, check.case_id)
                 db.commit()
+                for held in release:
+                    _dispatch_single(held)
                 logger.warning(
                     "verification.check_unavailable",
                     extra={"check_id": check_id, "attempts": check.attempts, "error": str(exc)},
@@ -168,12 +264,32 @@ def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celer
             check.status = result.status
             check.result = result.result
             check.finished_at = company_service.now_utc()
+
+            if result.status == VerificationCheckStatus.unavailable and not exhausted:
+                # Not an answer yet — see the docstring. No completion event, no
+                # evaluation: the check has not completed.
+                reason = (result.result or {}).get("reason")
+                check.last_error = str(reason) if reason else "unavailable"
+                db.commit()
+                raise self.retry(countdown=60 * check.attempts)
+
+            if result.status != VerificationCheckStatus.unavailable:
+                # An answer arrived, so the previous attempt's error no longer
+                # describes this check. Left in place it read on the case page as
+                # «Последняя ошибка: no_snapshot» under a verdict that had been
+                # reached — "answered" and "failed" on one row. A FINAL
+                # `unavailable` (retries exhausted) keeps it: that error is the
+                # reason there is no answer.
+                check.last_error = None
+
             db.flush()
             event_service.emit(
                 db, event_types.VERIFICATION_CHECK_COMPLETED, "verification_check", check.id,
                 {"case_id": check.case_id, "check_status": str(result.status)},
             )
             verification_service.on_check_completed(db, check.case_id)
+            if is_registry:
+                release = _release_deferred_documents(db, check.case_id)
             db.commit()
     except OperationalError as exc:
         # `on_check_completed` takes `SELECT … FOR UPDATE` on the SHARED parent
@@ -189,39 +305,48 @@ def run_single_check(self: Any, check_id: int) -> dict[str, Any]:  # bound Celer
         )
         raise self.retry(countdown=_CONTENTION_RETRY_SECONDS, exc=exc) from exc
 
+    # After the commit, so the documents task sees this verdict (see
+    # `_release_deferred_documents`).
+    for held in release:
+        _dispatch_single(held)
     return {"status": "ok", "check_status": str(result.status)}
 
 
 @celery_app.task(name="run_verification_checks")  # type: ignore[untyped-decorator]
 def run_verification_checks(case_id: int) -> dict[str, Any]:
-    """Dispatch run_single_check for every pending check of a case (verify queue)."""
+    """Dispatch run_single_check for every pending check of a case (verify queue).
+
+    Everything fans out in parallel EXCEPT `documents_complete` while the case has
+    a `gov_registry` check still to answer. The registry verdict can waive the
+    registration certificate, so judging the documents first would fail them —
+    and a failed automated check sends the case to `needs_info` and asks the
+    applicant for a certificate the next check was about to waive. The held check
+    is released by `run_single_check` once the registry has a verdict.
+    """
     from app.core.db import SessionLocal
     from app.domains.verification.models import VerificationCheck
-    from app.models.enums import VerificationCheckStatus
+    from app.models.enums import VerificationCheckStatus, VerificationCheckType
 
     with SessionLocal() as db:
-        check_ids = [
-            c.id
-            for c in db.query(VerificationCheck)
+        pending = (
+            db.query(VerificationCheck)
             .filter(
                 VerificationCheck.case_id == case_id,
                 VerificationCheck.status == VerificationCheckStatus.pending,
             )
             .all()
+        )
+        hold = _registry_pending(db, case_id)
+        check_ids = [
+            c.id
+            for c in pending
+            if not (hold and c.check_type == VerificationCheckType.documents_complete)
         ]
 
-    dispatched = 0
     for check_id in check_ids:
-        try:
-            run_single_check.apply_async(args=[check_id], queue="verify", retry=False)
-            dispatched += 1
-        except Exception as exc:  # noqa: BLE001 — broker outage must not crash the fan-out
-            logger.warning(
-                "verification.single_check_dispatch_failed",
-                extra={"check_id": check_id, "error": str(exc)},
-            )
+        _dispatch_single(check_id)
 
-    return {"dispatched": dispatched, "pending": len(check_ids)}
+    return {"dispatched": len(check_ids), "pending": len(pending)}
 
 
 @celery_app.task(name="archive_company_offers")  # type: ignore[untyped-decorator]

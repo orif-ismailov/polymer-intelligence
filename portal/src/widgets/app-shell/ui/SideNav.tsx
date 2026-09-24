@@ -76,6 +76,15 @@ const NAV_ITEMS: NavItem[] = [
   // pool for a carrier/lab — RequestsRouteSwitch picks the page, and
   // `requestsNavLabelKey` names it for whoever is looking.
   { to: "/cabinet/requests", labelKey: "nav.requests", icon: DocIcon, group: "trade" },
+  // What the company sells — trade, not company settings, so it sits beside the
+  // tenders it quotes against rather than at the bottom of the rail.
+  {
+    to: "/cabinet/offers",
+    labelKey: "nav.offers",
+    icon: TagIcon,
+    group: "trade",
+    feature: "offers",
+  },
   // The other end of the same object: tenders OTHER companies announced, which
   // a supplier quotes against. It had a route and a role gate but no way in —
   // reachable only from a notification or the deals page.
@@ -127,13 +136,6 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/news", labelKey: "nav.news", icon: NewsIcon, group: "services" },
 
   { to: "/cabinet/companies", labelKey: "nav.companies", icon: BuildingIcon, group: "company" },
-  {
-    to: "/cabinet/offers",
-    labelKey: "nav.offers",
-    icon: TagIcon,
-    group: "company",
-    feature: "offers",
-  },
   { to: "/cabinet/settings", labelKey: "nav.settings", icon: CogIcon, group: "company" },
 ];
 

@@ -73,6 +73,7 @@ from app.integrations.didox.client import is_configured as _is_configured
 
 if TYPE_CHECKING:  # pragma: no cover
     import redis
+    from sqlalchemy.orm import Session
 
     from app.domains.companies.models import Company
 
@@ -193,7 +194,7 @@ def verify_identity(
         )
         raise ProviderUnavailable(str(exc)) from exc
 
-    return DidoxIdentityResult(ok=True, signer=_signer_for(company, token, didox))
+    return DidoxIdentityResult(ok=True, signer=signer_for(company, token, didox))
 
 
 def _stub_identity(company: Company, pkcs7_64: str) -> DidoxIdentityResult:
@@ -233,14 +234,13 @@ def _stub_identity(company: Company, pkcs7_64: str) -> DidoxIdentityResult:
     )
 
 
-def _signer_for(company: Company, token: str, didox: _Verifier) -> DidoxSigner:
-    """Name the person behind `token`, falling back to what we already know.
+def read_profile(company: Company, token: str, didox: _Verifier) -> Mapping[str, object] | None:
+    """`GET /v1/profile` for `token`, or None when Didox will not say.
 
-    `GET /v1/profile` answers `422 "Failed to get Phis By Tin Info info from
-    soliq"` for any company Didox cannot resolve in the tax registry, and it can
-    be down like anything else. Neither may cost us the confirmation: the
-    signature verified and the INN is bound whatever the profile says, so a
-    failure here degrades to a signer carrying only the INN we authenticated for.
+    It answers `422 "Failed to get Phis By Tin Info info from soliq"` for any
+    company Didox cannot resolve in the tax registry, and it can be down like
+    anything else. Read ONCE per sign-in: it names the signer and carries the
+    offer state, and both are taken from the same answer.
     """
     try:
         payload = didox.profile(user_key=token)
@@ -249,8 +249,24 @@ def _signer_for(company: Company, token: str, didox: _Verifier) -> DidoxSigner:
             "didox.identity.profile_unavailable",
             extra={"tax_id": company.tax_id, "error": str(exc)},
         )
-        return DidoxSigner(org_inn=company.tax_id)
+        return None
+    return payload if isinstance(payload, Mapping) else None
 
+
+def signer_for(company: Company, token: str, didox: _Verifier) -> DidoxSigner:
+    """Name the person behind `token`, falling back to what we already know."""
+    return signer_from_profile(company, read_profile(company, token, didox))
+
+
+def signer_from_profile(company: Company, payload: Mapping[str, object] | None) -> DidoxSigner:
+    """The signer a profile names.
+
+    No profile may not cost us the confirmation: the signature verified and the
+    INN is bound whatever the profile says, so it degrades to a signer carrying
+    only the INN we authenticated for.
+    """
+    if payload is None:
+        return DidoxSigner(org_inn=company.tax_id)
     return DidoxSigner(
         org_name=_text(payload.get("fullName")),
         # Didox echoes the company it authenticated; ours is the INN it accepted
@@ -271,3 +287,74 @@ def _text(value: object) -> str | None:
     if not isinstance(value, str):
         return None
     return value.strip() or None
+
+
+# ── who signs for the company, on file ────────────────────────────────────────
+
+
+def _latest_person(db: Session, company_id: int) -> tuple[str, str] | None:
+    """The newest (full name, PINFL) on file for the company, decrypted."""
+    from app.core.crypto import decrypt_pii  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import CompanyPersonData  # noqa: PLC0415
+
+    row = (
+        db.query(CompanyPersonData)
+        .filter(CompanyPersonData.company_id == company_id)
+        .order_by(CompanyPersonData.id.desc())
+        .first()
+    )
+    if row is None:
+        return None
+    try:
+        return decrypt_pii(row.full_name_enc), decrypt_pii(row.pinfl_enc)
+    except Exception:  # noqa: BLE001 — undecryptable is the same as absent
+        return None
+
+
+def signer_changed(db: Session, company_id: int, signer: DidoxSigner) -> bool:
+    """Is someone OTHER than the person on file now signing for this company?
+
+    Only a known PINFL against a different known PINFL counts. Nothing on file,
+    or a profile that named nobody, is not news about a person.
+    """
+    if not signer.pinfl:
+        return False
+    on_file = _latest_person(db, company_id)
+    return on_file is not None and bool(on_file[1]) and on_file[1] != signer.pinfl
+
+
+def remember_signer(
+    db: Session,
+    company_id: int,
+    account_id: int | None,
+    signer: DidoxSigner,
+    *,
+    position: str | None = None,
+) -> None:
+    """Put the signer on file — what `Owner.FizTin`/`Fio` of a Didox 007 are read from.
+
+    Called from BOTH signatures over the company's ИНН: the identity confirmation
+    and the plain Didox sign-in. They are the same ceremony answered by the same
+    `GET /v1/profile`, so either one is enough; making the seller do the first to
+    unblock a document, after already doing the second, is what this replaced.
+    A sign-in is every six hours, so an unchanged signer writes nothing.
+    """
+    from app.core.crypto import encrypt_pii  # noqa: PLC0415
+    from app.domains.contracts.eimzo_models import CompanyPersonData  # noqa: PLC0415
+
+    if not (signer.full_name or signer.pinfl):
+        return
+    if _latest_person(db, company_id) == (signer.full_name or "", signer.pinfl or ""):
+        return
+    db.add(
+        CompanyPersonData(
+            company_id=company_id,
+            user_account_id=account_id,
+            full_name_enc=encrypt_pii(signer.full_name or ""),
+            pinfl_enc=encrypt_pii(signer.pinfl or ""),
+            pinfl_last4=(signer.pinfl or "")[-4:] or None,
+            position=position,
+            source="eimzo",
+        )
+    )
+    db.flush()

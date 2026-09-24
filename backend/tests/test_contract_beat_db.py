@@ -63,7 +63,7 @@ def test_expire_stale_contracts(engine, sf, monkeypatch) -> None:  # noqa: ANN00
     monkeypatch.setattr("app.core.db.SessionLocal", session_factory(engine))
     with sf() as db:
         stale = _contract(db, ContractStatus.pending_signatures)
-        fresh = _contract(db, ContractStatus.pending_counterparty, code="Y", tax_a="303333333", tax_b="304444444", phone_a="+998900000003", phone_b="+998900000004")
+        fresh = _contract(db, ContractStatus.pending_signatures, code="Y", tax_a="303333333", tax_b="304444444", phone_a="+998900000003", phone_b="+998900000004")
         db.commit()
         stale_id, fresh_id = stale.id, fresh.id
         db.execute(
@@ -78,7 +78,7 @@ def test_expire_stale_contracts(engine, sf, monkeypatch) -> None:  # noqa: ANN00
 
     with sf() as db:
         assert db.get(Contract, stale_id).status == ContractStatus.expired
-        assert db.get(Contract, fresh_id).status == ContractStatus.pending_counterparty
+        assert db.get(Contract, fresh_id).status == ContractStatus.pending_signatures
 
 
 @requires_real_db

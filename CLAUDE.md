@@ -230,7 +230,7 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 
 ### Analytics — what the external bills are spent on
 
-- **`/admin/analytics`** (dashboard «Аналитика», first under НАСТРОЙКИ ПРОЕКТА) answers, per rail,
+- **`/admin/analytics`** (dashboard «Расходы и лимиты», first under НАСТРОЙКИ) answers, per rail,
   *how much have we used, of what we paid for, on what, and is it working*. Backed by
   `app/services/analytics_service.py` + `app/api/admin_analytics.py`; it **writes nothing** —
   every number comes from data both rails were already journalling.

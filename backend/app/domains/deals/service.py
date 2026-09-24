@@ -45,6 +45,7 @@ from app.domains.contracts.models import Contract
 from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
 from app.domains.lab_orders.models import SampleRequest
 from app.domains.marketplace.models import OfferRequest, SellerOffer
+from app.domains.reference.models import Product
 from app.domains.requests import service as request_service
 from app.domains.requests.models import Request
 from app.models.enums import (
@@ -677,6 +678,40 @@ def attach_contract(
     return deal
 
 
+def _product_label(
+    db: Session, product_id: int | None, product_text: str | None, grade_text: str | None
+) -> str | None:
+    """«Полиэтилен высокой плотности (HDPE), I-1561» — what a contract calls the goods.
+
+    The buyer's or seller's own wording wins over the catalogue row, which is our
+    classification of it. Russian, because the contract templates are.
+    """
+    name = product_text
+    if not name and product_id is not None:
+        product = db.get(Product, product_id)
+        if product is not None:
+            name = f"{product.name_ru} ({product.code})"
+    parts = [part for part in (name, grade_text) if part]
+    return ", ".join(parts) or None
+
+
+def deal_product_label(db: Session, deal: Deal) -> str | None:
+    """The goods a deal is about, from the tender it came from or else the offer.
+
+    Portal tenders pick their product from the catalogue and type nothing, so
+    reading `product_text` alone left the contract's «Материал» blank for them.
+    """
+    if deal.request_id is not None:
+        request = db.get(Request, deal.request_id)
+        if request is not None:
+            return _product_label(db, request.product_id, request.product_text, request.grade_text)
+    if deal.offer_id is not None:
+        offer = db.get(SellerOffer, deal.offer_id)
+        if offer is not None:
+            return _product_label(db, offer.product_id, offer.product_text, offer.grade_text)
+    return None
+
+
 def contract_prefill(
     db: Session, deal: Deal, *, schema: dict[str, object] | None = None
 ) -> dict[str, str]:
@@ -691,6 +726,9 @@ def contract_prefill(
     block the whole form rather than leaving one field blank.
     """
     values: dict[str, str] = {}
+    product = deal_product_label(db, deal)
+    if product:
+        values["product"] = product
 
     response: RfqResponse | None = None
     if deal.request_id is not None:
@@ -702,11 +740,6 @@ def contract_prefill(
             )
             .first()
         )
-        request = db.get(Request, deal.request_id)
-        if request is not None:
-            product = request.product_text or request.grade_text
-            if product:
-                values["product"] = product
 
     if response is not None:
         values["price"] = f"{response.price:.2f}"
@@ -718,9 +751,6 @@ def contract_prefill(
     elif deal.offer_id is not None:
         offer = db.get(SellerOffer, deal.offer_id)
         if offer is not None:
-            product = offer.product_text or offer.grade_text
-            if product:
-                values["product"] = product
             if offer.price is not None:
                 values["price"] = f"{offer.price:.2f}"
             if offer.currency:

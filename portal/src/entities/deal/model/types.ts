@@ -78,12 +78,21 @@ export interface DealSummary {
   status: DealStatus;
   role: DealRole;
   counterparty: DealParty;
+  /** What is traded, as a contract names it: «Полиэтилен высокой плотности (HDPE)». */
+  product: string | null;
   amount: string | null;
   currency: string;
   contract_id: number | null;
   needs_action: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface DealListParams {
+  role?: string;
+  status?: string;
+  /** Only deals «Создать договор» can still attach a contract to. */
+  needs_contract?: boolean;
 }
 
 export interface DealCounters {
@@ -173,6 +182,19 @@ export interface MyRfqResponse {
   created_at: string;
   request: MarketRequest;
   request_open: boolean;
+}
+
+/**
+ * Filters on «Открытые тендеры». Applied by the API, not here: the list is paged,
+ * so narrowing a page in the browser would silently miss matches beyond it.
+ */
+export interface OpenRfqFilters {
+  productId?: number;
+  /** Three days or less left to reply — the rows the list paints amber or red. */
+  closingSoon?: boolean;
+  urgent?: boolean;
+  /** No live quote from us yet; a withdrawn one counts as none. */
+  unanswered?: boolean;
 }
 
 export interface RfqResponsePayload {

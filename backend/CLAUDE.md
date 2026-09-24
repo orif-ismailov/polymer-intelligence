@@ -220,9 +220,27 @@ mocks the thing it is testing.
   (`verification_checks.check_gov_registry`/`check_vat_status`) either way; `source` is the
   only record of which it was. `StubGovRegistryClient` **raises** instead of returning empty
   snapshots — an empty `CompanySnapshot` reads as "no such company", turning our missing
-  integration into a finding about a real business. Registry checks are spawned at submit
-  only when `gov_registry_mode='live'`; on the stub rail they appear when an operator records
-  a snapshot (`verification_service.upsert_check`), so no case waits on a channel we lack.
+  integration into a finding about a real business. Registry checks are spawned at submit on
+  every rail with a channel (`didox`, `live`); on the stub rail they appear when an operator
+  records a snapshot (`verification_service.upsert_check`), so no case waits on a channel we
+  lack. (Until 23.09.2026 the guard read `== 'live'`, written before `didox` existed, so on a
+  Didox deployment the registry only ever prefilled the form.)
+  - **A PASSED `gov_registry` check waives the registration certificate**, beside the E-IMZO
+    waiver in `check_documents_complete` (`registry_passed`). Only `passed`: a `warning` —
+    typically a name the applicant retyped, e.g. `MCHJ` vs the registry's
+    `MAS'ULIYATI CHEKLANGAN JAMIYAT` — leaves the certificate required. The bank letter is
+    never waived; the registry confirms the company, not the account.
+  - **`documents_complete` is held back until the registry has a verdict.**
+    `run_verification_checks` does not dispatch it while a `gov_registry` check is pending, and
+    `run_single_check` releases it (after its own commit) on a pass, a fail or exhausted
+    retries. Unordered, it would fail first and send the case to `needs_info` — notifying the
+    applicant — for a certificate the next check was about to waive.
+  - **A RETURNED `unavailable` is retried like a raised one.** The registry checks answer
+    `unavailable` rather than raising when the provider is down (so an outage is never a
+    finding), and that answer used to be recorded once and never retried — while the evaluator
+    counts `unavailable` with attempts left as still running. One Didox timeout at submit
+    pinned a case in `checks_running` for good. Seen live on the test contour 23.09.2026: the
+    third retry got the answer.
 - **Didox (P7.a Stage 1)** — the EDI operator's `/v1/utils/info/{tin}` reads the TAX REGISTRY, so it
   is wired in as a third `gov_registry_mode` rail (`stub` | **`didox`** | `live`) rather than as a
   second registry subsystem: `DidoxGovRegistryClient` implements the P7.c protocol, and the existing

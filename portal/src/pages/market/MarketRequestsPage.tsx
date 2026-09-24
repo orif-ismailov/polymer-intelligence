@@ -1,38 +1,45 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
-import { RfqResponseStatusBadge, useMyRfqResponses, useOpenRfqs } from "@/entities/deal";
-import type { MarketRequest } from "@/entities/deal";
-import { MyQuoteCard, RfqResponseForm } from "@/features/rfq-response";
-import { formatDate } from "@/shared/lib";
 import {
-  Badge,
+  TenderDeadlineBadge,
+  TenderList,
+  TenderRow,
+  useMyRfqResponses,
+  useOpenRfqs,
+} from "@/entities/deal";
+import type { MarketRequest, OpenRfqFilters } from "@/entities/deal";
+import { MyQuoteRow, RfqResponseForm } from "@/features/rfq-response";
+import {
   Button,
   Card,
-  CardBody,
+  ChevronDownIcon,
   EmptyState,
   ErrorView,
   LinkButton,
   PageHeader,
   Skeleton,
-  SpecItem,
-  SpecList,
   Tabs,
   type TabItem,
   ClipboardListIcon,
 } from "@/shared/ui";
+import { cn } from "@/shared/lib";
+
+import { parseQuoteStatus } from "./quoteStatus";
+import { OpenTenderFilters, QuoteStatusFilter } from "./TenderFilters";
 
 /**
- * Open buyer RFQs a supplier company may quote against.
+ * One open buyer tender a supplier company may quote against.
  *
  * The payload is anonymized server-side — trade terms only, no buyer contacts —
  * so there is nothing to hide here; the platform stays the intermediary until a
- * deal opens.
+ * deal opens. «Ответить» unfolds the quote form under the row rather than on a
+ * separate page, so the tender's terms stay in view while it is filled in.
  */
-function RequestCard({
+function OpenTenderRow({
   request,
   companyId,
   onResponded,
@@ -45,83 +52,85 @@ function RequestCard({
   highlighted?: boolean;
 }) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(Boolean(highlighted) && request.my_response_id == null);
-  const cardRef = useRef<HTMLDivElement>(null);
   const responded = request.my_response_id != null;
+  const [open, setOpen] = useState(Boolean(highlighted) && !responded);
+  const rowRef = useRef<HTMLLIElement>(null);
+  const panelId = useId();
 
   useEffect(() => {
-    if (highlighted) cardRef.current?.scrollIntoView({ block: "center" });
+    if (highlighted) rowRef.current?.scrollIntoView({ block: "center" });
   }, [highlighted]);
 
+  const docs = request.required_docs.map((code) => t(`rfq.docs.${code}`)).join(", ");
+
   return (
-    // A wrapper div carries the ref: Card is a plain function component, and
-    // making a shared primitive forwardRef for one scroll target is not worth it.
-    <div ref={cardRef}>
-    <Card className={highlighted ? "border-brand" : undefined}>
-      <CardBody className="space-y-3">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-text">{request.product ?? "—"}</p>
-            {request.grade ? (
-              <p className="truncate text-xs text-text-muted">{request.grade}</p>
-            ) : null}
-          </div>
-          {responded ? (
-            <RfqResponseStatusBadge status={request.my_response_status ?? "submitted"} />
-          ) : null}
-        </div>
-
-        <SpecList>
-          <SpecItem
-            label={t("rfq.volume")}
-            value={`${request.volume} ${request.volume_unit}`}
-            numeric
-          />
-          <SpecItem label={t("rfq.incoterms")} value={request.incoterms} />
-          <SpecItem
-            label={t("rfq.destination")}
-            value={[request.port_or_city, request.destination_country].filter(Boolean).join(", ")}
-          />
-          <SpecItem
-            label={t("rfq.desiredDate")}
-            value={request.desired_date ? formatDate(request.desired_date) : "—"}
-            numeric
-          />
-        </SpecList>
-
-        {request.required_docs.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-text-subtle">{t("rfq.requiredDocs")}:</span>
-            {request.required_docs.map((code) => (
-              <Badge key={code} tone="gold">
-                {t(`rfq.docs.${code}`)}
-              </Badge>
-            ))}
-          </div>
-        ) : null}
-
-        {open ? (
-          <div className="border-t border-border pt-3">
-            <RfqResponseForm
-              companyId={companyId}
-              requestId={request.id}
-              onSubmitted={() => {
-                setOpen(false);
-                onResponded();
-              }}
-              onCancel={() => setOpen(false)}
-            />
-          </div>
+    <TenderRow
+      request={request}
+      rowRef={rowRef}
+      highlighted={highlighted}
+      statusLabel={t("rfq.columns.responseWindow")}
+      status={<TenderDeadlineBadge request={request} />}
+      detail={
+        docs ? <p className="mt-1 text-sm text-text-muted">{t("rfq.needs", { docs })}</p> : null
+      }
+      action={
+        responded ? (
+          <LinkButton
+            to={`/cabinet/market/requests?tab=mine&response=${request.my_response_id}`}
+            variant="outline"
+            size="sm"
+            fullWidth
+          >
+            {t("rfq.viewMyQuote")}
+          </LinkButton>
         ) : (
-          <div className="border-t border-border pt-3">
-            <Button disabled={responded} onClick={() => setOpen(true)}>
-              {responded ? t("rfq.alreadyResponded") : t("rfq.respond")}
-            </Button>
-          </div>
-        )}
-      </CardBody>
+          <Button
+            size="sm"
+            variant={open ? "ghost" : "primary"}
+            fullWidth
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? t("rfq.hideForm") : t("rfq.reply")}
+            <ChevronDownIcon
+              size={16}
+              className={cn("transition-transform", open && "rotate-180")}
+            />
+          </Button>
+        )
+      }
+      panelId={panelId}
+      panel={
+        open && !responded ? (
+          <RfqResponseForm
+            companyId={companyId}
+            requestId={request.id}
+            onSubmitted={() => {
+              setOpen(false);
+              onResponded();
+            }}
+            onCancel={() => setOpen(false)}
+          />
+        ) : null
+      }
+    />
+  );
+}
+
+/** Placeholder rows shaped like the list, so the page does not jump on load. */
+function TenderListSkeleton() {
+  return (
+    <Card className="divide-y divide-border p-0">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="flex items-center gap-4 px-5 py-4">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="hidden h-6 w-24 md:block" />
+          <Skeleton className="hidden h-6 w-32 md:block" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+      ))}
     </Card>
-    </div>
   );
 }
 
@@ -142,8 +151,20 @@ export function MarketRequestsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab: Tab = searchParams.get("tab") === "mine" ? "mine" : "open";
 
-  const openQuery = useOpenRfqs(companyId);
-  const mineQuery = useMyRfqResponses(companyId);
+  // Filters live in the URL beside the tab, for the same reason: a filtered view
+  // is something a supplier bookmarks («срочные по PP»).
+  const productParam = Number(searchParams.get("product")) || null;
+  const filters: OpenRfqFilters = {
+    ...(productParam ? { productId: productParam } : {}),
+    closingSoon: searchParams.get("closing") === "1",
+    urgent: searchParams.get("urgent") === "1",
+    unanswered: searchParams.get("unanswered") === "1",
+  };
+  const filtered = productParam != null || filters.closingSoon || filters.urgent || filters.unanswered;
+  const quoteStatus = parseQuoteStatus(searchParams.get("status"));
+
+  const openQuery = useOpenRfqs(companyId, filters);
+  const mineQuery = useMyRfqResponses(companyId, quoteStatus ?? undefined);
   const active = tab === "mine" ? mineQuery : openQuery;
 
   // Set by the bells: ?rfq=<request id> on the open tab, ?response=<quote id> on ours.
@@ -166,6 +187,25 @@ export function MarketRequestsPage() {
     testId: `rfq-tab-${key}`,
   }));
 
+  /** Writes one URL param (`null` drops it), leaving the tab and the rest alone. */
+  function setParam(key: string, value: string | null): void {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value == null) next.delete(key);
+        else next.set(key, value);
+        return next;
+      },
+      { replace: true },
+    );
+  }
+
+  const TOGGLE_PARAM = { closingSoon: "closing", urgent: "urgent", unanswered: "unanswered" } as const;
+
+  function resetFilters(): void {
+    setSearchParams(tab === "mine" ? { tab: "mine" } : {}, { replace: true });
+  }
+
   function selectTab(next: string): void {
     // Drop the highlight params with the tab that owned them — a stale ?rfq=
     // would otherwise keep re-scrolling the other list on every switch.
@@ -178,11 +218,19 @@ export function MarketRequestsPage() {
 
       <Tabs items={tabs} value={tab} onChange={selectTab} label={t("rfq.marketTitle")} />
 
+      {tab === "open" ? (
+        <OpenTenderFilters
+          filters={filters}
+          onProductChange={(id) => setParam("product", id != null ? String(id) : null)}
+          onToggle={(key, on) => setParam(TOGGLE_PARAM[key], on ? "1" : null)}
+          onReset={resetFilters}
+        />
+      ) : (
+        <QuoteStatusFilter status={quoteStatus} onChange={(status) => setParam("status", status)} />
+      )}
+
       {active.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <Skeleton className="h-56 w-full" />
-          <Skeleton className="h-56 w-full" />
-        </div>
+        <TenderListSkeleton />
       ) : active.isError ? (
         <ErrorView
           title={t("errors.loadFailed")}
@@ -191,9 +239,9 @@ export function MarketRequestsPage() {
         />
       ) : tab === "open" ? (
         openItems.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <TenderList statusHeading={t("rfq.columns.responseWindow")}>
             {openItems.map((request) => (
-              <RequestCard
+              <OpenTenderRow
                 key={request.id}
                 request={request}
                 companyId={activeCompany.id}
@@ -204,21 +252,43 @@ export function MarketRequestsPage() {
                 highlighted={request.id === highlightedId}
               />
             ))}
-          </div>
+          </TenderList>
+        ) : filtered ? (
+          <EmptyState
+            icon={<ClipboardListIcon size={28} />}
+            title={t("rfq.filters.empty")}
+            description={t("rfq.filters.emptyBody")}
+            action={
+              <Button variant="outline" size="sm" onClick={resetFilters}>
+                {t("rfq.filters.reset")}
+              </Button>
+            }
+          />
         ) : (
           <EmptyState icon={<ClipboardListIcon size={28} />} title={t("rfq.marketEmpty")} description={t("rfq.marketEmptyBody")} />
         )
       ) : myQuotes.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <TenderList statusHeading={t("rfq.columns.yourQuote")}>
           {myQuotes.map((quote) => (
-            <MyQuoteCard
+            <MyQuoteRow
               key={quote.id}
               quote={quote}
               companyId={activeCompany.id}
               highlighted={quote.id === highlightedQuoteId}
             />
           ))}
-        </div>
+        </TenderList>
+      ) : quoteStatus ? (
+        <EmptyState
+          icon={<ClipboardListIcon size={28} />}
+          title={t("rfq.filters.mineEmpty")}
+          description={t("rfq.filters.mineEmptyBody")}
+          action={
+            <Button variant="outline" size="sm" onClick={resetFilters}>
+              {t("rfq.filters.reset")}
+            </Button>
+          }
+        />
       ) : (
         <EmptyState
           icon={<ClipboardListIcon size={28} />}

@@ -279,3 +279,137 @@ class TestRailIsChosenAtCreation:
         assert "signing_provider=body.signing_provider" in inspect.getsource(
             api_portal.create_contract
         )
+
+
+# ── a contract from a tender has no offer to take the ИКПУ from ───────────────
+
+
+def _tender_contract() -> Any:  # noqa: ANN401
+    return SimpleNamespace(
+        variables={"product": "Полипропилен (PP)", "qty": "10", "price": "1250.00"},
+        title="Договор поставки",
+    )
+
+
+def _choice() -> Any:  # noqa: ANN401
+    from app.domains.edi.contract_docs import IkpuChoice
+
+    return IkpuChoice(
+        ikpu_code="03902001001000000",
+        ikpu_name="Полипропилен",
+        ikpu_package_code="1486991",
+        ikpu_package_name="тонна",
+        ikpu_origin=2,
+    )
+
+
+class TestIkpuForATenderContract:
+    """Tender → quote → deal → contract passes through no offer at all, and the
+    offer was the ONLY place a document line could get its ИКПУ. Every Didox
+    contract drawn up from a tender was therefore dead: «В объявлении не указан
+    ИКПУ» with no объявление to fix and no button for either side."""
+
+    def test_the_sellers_choice_goes_on_the_line(self) -> None:
+        from app.domains.edi.contract_docs import suggested_lines
+
+        [line] = suggested_lines(_tender_contract(), None, ikpu=_choice())
+        assert line.catalog_code == "03902001001000000"
+        assert line.package_code == "1486991"
+        assert line.origin == 2
+        # The terms stay the contract's own.
+        assert (line.name, line.count, line.price) == ("Полипропилен (PP)", D("10"), D("1250.00"))
+
+    def test_without_a_choice_there_is_still_no_document(self) -> None:
+        from app.domains.edi.contract_docs import suggested_lines
+        from app.domains.edi.payloads import IkpuMissing
+
+        with pytest.raises(IkpuMissing):
+            suggested_lines(_tender_contract(), None)
+
+    def test_an_offer_keeps_its_own_code(self) -> None:
+        """The code is chosen once, on the offer — a contract drafted from one may
+        not re-answer it."""
+        from app.domains.edi.contract_docs import suggested_lines
+
+        [line] = suggested_lines(_tender_contract(), _Offer(), ikpu=_choice())
+        assert line.catalog_code == "03901001001000000"
+
+    def test_the_create_payload_takes_a_choice(self) -> None:
+        from app.domains.edi.schemas import DidoxContractDocumentIn
+
+        body = DidoxContractDocumentIn(
+            ikpu={"code": "03902001001000000", "name": "Полипропилен",
+                  "package_code": "1486991", "package_name": "тонна", "origin": 2}
+        )
+        assert body.ikpu is not None and body.ikpu.origin == 2
+        assert DidoxContractDocumentIn().ikpu is None
+
+    @pytest.mark.parametrize(
+        "override",
+        [{"code": "0390"}, {"origin": 5}, {"origin": None}, {"package_code": ""}],
+    )
+    def test_an_incomplete_choice_is_refused_before_it_reaches_the_tax_authority(
+        self, override: dict[str, Any]
+    ) -> None:
+        from pydantic import ValidationError
+
+        from app.domains.edi.schemas import DidoxContractDocumentIn
+
+        ikpu = {"code": "03902001001000000", "name": "PP", "package_code": "1486991",
+                "package_name": "тонна", "origin": 2, **override}
+        with pytest.raises(ValidationError):
+            DidoxContractDocumentIn(ikpu=ikpu)
+
+    def test_the_router_passes_the_choice_to_the_service(self) -> None:
+        import inspect
+
+        from app.domains.edi import api_portal
+
+        source = inspect.getsource(api_portal.didox_create_contract_document)
+        assert "ikpu=choice" in source
+        assert "_with_ikpu(db, contract, lines, choice)" in source
+
+
+class TestTheRealContractsAreQuotedAsNumbered:
+    def test_a_typed_contract_number_wins(self) -> None:
+        from app.domains.edi import numbering
+
+        assert numbering.contract_number(
+            deal_number="DEAL-2026-000125", contract_public_id="abcdef12-x", custom="346-01"
+        ) == "346-01"
+        assert numbering.contract_number(
+            deal_number=None, contract_public_id="abcdef12-x", custom="  "
+        ) == "C-abcdef12"
+
+    def test_a_buyer_initiator_is_not_taken_for_the_seller(self) -> None:
+        from app.domains.edi.contract_docs import resolve_parties
+
+        contract = SimpleNamespace(
+            id=1, initiator_company_id=30, counterparty_company_id=31, offer_id=None,
+            variables={"initiator_side": "buyer"},
+        )
+        assert resolve_parties(contract) == (31, 30)
+
+    def test_the_line_of_a_contract_priced_with_vat(self) -> None:
+        from app.domains.edi.contract_docs import contract_line_terms
+
+        contract = SimpleNamespace(
+            title="Договор",
+            variables={"product": "МЭГ", "qty": "120000", "unit_price": "16300", "vat_rate": "12"},
+        )
+        assert contract_line_terms(contract) == ("МЭГ", D("120000"), D("14553.57"))
+
+
+class TestAFrameworkContractGoesWithoutGoods:
+    def test_no_products_and_no_vat(self) -> None:
+        from app.domains.edi.contract_docs import EmptyContractBody, build_body
+
+        common = dict(
+            number="346-01", date=datetime.date(2026, 1, 15), expires_on=datetime.date(2027, 1, 15),
+            title="Договор", seller=_party("301111111"), buyer=_party("302222222"),
+            lines=[], sections=[("ПРЕДМЕТ ДОГОВОРА", "1.1. …")],
+        )
+        body = build_body(**common, framework=True)
+        assert (body["Products"], body["HasVat"]) == ([], False)
+        with pytest.raises(EmptyContractBody):
+            build_body(**common)

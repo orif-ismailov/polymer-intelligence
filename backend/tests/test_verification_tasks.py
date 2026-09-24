@@ -34,6 +34,25 @@ def test_verification_tasks_registered() -> None:
     assert {"run_verification_checks", "run_single_check"} <= set(celery_app.tasks)
 
 
+def test_suspending_a_company_still_archives_its_offers() -> None:
+    """The consumer is registered at import, by a call at the bottom of the module.
+
+    DB-free on purpose. The only other test of this path
+    (`test_admin_verification_api.py::test_suspend_archives_approved_offers`) needs
+    a real Postgres, and CI skips every such test — so when an edit to this module
+    once dropped its tail, `archive_company_offers` and `_register_consumers` went
+    with it and nothing that runs in CI noticed. Suspending a company would simply
+    have stopped archiving its offers: no error, just a consumer nobody registered.
+    """
+    from app.services import event_types  # noqa: PLC0415
+    from app.tasks.celery_app import celery_app  # noqa: PLC0415
+    from app.tasks.events import CONSUMERS  # noqa: PLC0415
+    from app.tasks.verification import archive_company_offers  # noqa: PLC0415
+
+    assert "archive_company_offers" in celery_app.tasks
+    assert archive_company_offers in CONSUMERS[event_types.COMPANY_SUSPENDED]
+
+
 def test_verification_tasks_route_to_verify_queue() -> None:
     from app.tasks.celery_app import celery_app  # noqa: PLC0415
 

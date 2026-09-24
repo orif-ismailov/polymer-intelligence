@@ -101,9 +101,9 @@ def eimzo_verify(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="eimzo_unavailable"
         ) from exc
     db.commit()
+    # None for a verified company that never had a case: a re-confirmation
+    # opens none any more (see `eimzo._reconfirm_verified`).
     case_payload = case_out(db, outcome.case)
-    if case_payload is None:  # pragma: no cover — outcome.case is always present here
-        raise RuntimeError("case_out returned None for a verified case")
     return VerifyOut(
         ok=outcome.ok,
         reason=outcome.reason,

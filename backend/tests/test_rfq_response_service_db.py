@@ -334,6 +334,124 @@ def test_market_list_excludes_closed_rfqs(sf) -> None:  # noqa: ANN001
         }
 
 
+# ── Market-list filters ───────────────────────────────────────────────────────
+#
+# The filters narrow the visible set IN SQL, like visibility does: the list is
+# paged, so filtering a page in the browser would silently miss matches beyond it.
+
+
+def _product(db, code: str) -> int:  # noqa: ANN001
+    """A catalog row to point a tender at — `clean()` leaves `products` alone and
+    the test database is not seeded, so upsert one by code."""
+    return int(
+        db.execute(
+            sa.text(
+                "INSERT INTO products (code, name_ru) VALUES (:code, :code) "
+                "ON CONFLICT (code) DO UPDATE SET name_ru = EXCLUDED.name_ru RETURNING id"
+            ),
+            {"code": code},
+        ).scalar_one()
+    )
+
+
+@requires_real_db
+def test_market_list_filters_by_product(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer, _sa, seller, other = _setup(db)
+        pp, hdpe = _product(db, "TST-PP"), _product(db, "TST-HDPE")
+        other.product_id = hdpe
+        wanted = make_request(db, company=buyer, account=buyer_acc, number="REQ-PP", n=2)
+        wanted.product_id = pp
+        db.flush()
+
+        listed = rfq_response_service.list_open_requests(db, seller, product_id=pp)
+        assert [r.id for r in listed] == [wanted.id]
+
+
+@requires_real_db
+def test_market_list_closing_soon_is_the_last_three_days(sf) -> None:  # noqa: ANN001
+    """«Скоро закрываются» is exactly the tenders the list paints amber or red:
+    three days or less left, and not already past their window."""
+    import datetime as dt  # noqa: PLC0415
+
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer, _sa, seller, fresh = _setup(db)
+        now = dt.datetime.now(dt.UTC)
+        fresh.validity_days = 30
+        closing = make_request(db, company=buyer, account=buyer_acc, number="REQ-SOON", n=2)
+        closing.validity_days = 30
+        closing.created_at = now - dt.timedelta(days=28)  # two days left
+        last_day = make_request(db, company=buyer, account=buyer_acc, number="REQ-LAST", n=3)
+        last_day.validity_days = 30
+        last_day.created_at = now - dt.timedelta(days=29, hours=20)
+        four_left = make_request(db, company=buyer, account=buyer_acc, number="REQ-FOUR", n=4)
+        four_left.validity_days = 30
+        four_left.created_at = now - dt.timedelta(days=26)
+        expired = make_request(db, company=buyer, account=buyer_acc, number="REQ-PAST", n=5)
+        expired.validity_days = 30
+        expired.created_at = now - dt.timedelta(days=31)
+        db.flush()
+
+        listed = {r.id for r in rfq_response_service.list_open_requests(db, seller, closing_soon=True)}
+        assert listed == {closing.id, last_day.id}
+
+
+@requires_real_db
+def test_market_list_urgent_only(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.models.enums import Urgency  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer, _sa, seller, normal = _setup(db)
+        urgent = make_request(db, company=buyer, account=buyer_acc, number="REQ-URG", n=2)
+        urgent.urgency = Urgency.high
+        db.flush()
+
+        listed = rfq_response_service.list_open_requests(db, seller, urgent=True)
+        assert [r.id for r in listed] == [urgent.id]
+        assert normal.id in {r.id for r in rfq_response_service.list_open_requests(db, seller)}
+
+
+@requires_real_db
+def test_market_list_unanswered_hides_live_quotes_only(sf) -> None:  # noqa: ANN001
+    """A withdrawn quote frees the tender to be answered again, so it is back in
+    «Без моего ответа» — the same rule as the one-live-response slot."""
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer, seller_acc, seller, quoted = _setup(db)
+        withdrawn = make_request(db, company=buyer, account=buyer_acc, number="REQ-WD", n=2)
+        untouched = make_request(db, company=buyer, account=buyer_acc, number="REQ-NEW", n=3)
+        rfq_response_service.submit(db, quoted, seller, seller_acc, **_QUOTE)
+        pulled = rfq_response_service.submit(db, withdrawn, seller, seller_acc, **_QUOTE)
+        rfq_response_service.withdraw(db, pulled, seller_acc)
+
+        listed = {r.id for r in rfq_response_service.list_open_requests(db, seller, unanswered=True)}
+        assert listed == {withdrawn.id, untouched.id}
+
+
+@requires_real_db
+def test_market_list_filters_combine(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.models.enums import Urgency  # noqa: PLC0415
+
+    with sf() as db:
+        buyer_acc, buyer, _sa, seller, plain = _setup(db)
+        pp = _product(db, "TST-PP")
+        plain.product_id = pp
+        both = make_request(db, company=buyer, account=buyer_acc, number="REQ-BOTH", n=2)
+        both.product_id = pp
+        both.urgency = Urgency.high
+        db.flush()
+
+        listed = rfq_response_service.list_open_requests(db, seller, product_id=pp, urgent=True)
+        assert [r.id for r in listed] == [both.id]
+
+
 # ── Required documents (FR-D10) ───────────────────────────────────────────────
 
 
@@ -421,6 +539,23 @@ def test_list_for_company_covers_every_status(sf) -> None:  # noqa: ANN001
             response.status for response, _ in rfq_response_service.list_for_company(db, seller)
         }
         assert statuses == {RfqResponseStatus.withdrawn, RfqResponseStatus.not_selected}
+
+
+@requires_real_db
+def test_list_for_company_filters_by_status(sf) -> None:  # noqa: ANN001
+    from app.domains.deals import rfq as rfq_response_service  # noqa: PLC0415
+    from app.models.enums import RfqResponseStatus  # noqa: PLC0415
+
+    with sf() as db:
+        _ba, _b, seller_acc, seller, request = _setup(db)
+        withdrawn = rfq_response_service.submit(db, request, seller, seller_acc, **_QUOTE)
+        rfq_response_service.withdraw(db, withdrawn, seller_acc)
+        live = rfq_response_service.submit(db, request, seller, seller_acc, **_QUOTE)
+
+        rows = rfq_response_service.list_for_company(
+            db, seller, status=RfqResponseStatus.submitted
+        )
+        assert [response.id for response, _ in rows] == [live.id]
 
 
 # ── The tender's own status timeline (IMEX-6) ─────────────────────────────────

@@ -79,7 +79,7 @@ export default tseslint.config(
     // Playwright specs run in a Node/test context. They aren't part of the app
     // TS project, so disable type-aware rules (which need the project service)
     // and lint them syntactically only.
-    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    files: ["e2e/**/*.ts", "playwright.config.ts", "src/**/*.test.ts"],
     ...tseslint.configs.disableTypeChecked,
     languageOptions: {
       ...tseslint.configs.disableTypeChecked.languageOptions,

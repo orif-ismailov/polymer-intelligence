@@ -217,6 +217,16 @@ def _totals(line: DocumentLine) -> _LineTotals:
     return _LineTotals(delivery_sum=delivery, vat_sum=vat, with_vat=delivery + vat)
 
 
+def line_totals(line: DocumentLine) -> tuple[decimal.Decimal, decimal.Decimal]:
+    """`(delivery_sum, vat_sum)` exactly as the document states them.
+
+    Public for the one other reader: the structured copy of a document's lines
+    (`didox_document_lines`) must carry the same sums the operator was sent.
+    """
+    totals = _totals(line)
+    return totals.delivery_sum, totals.vat_sum
+
+
 def _has_vat(lines: list[DocumentLine]) -> bool:
     return any(line.vat_rate is not None for line in lines)
 
@@ -419,6 +429,50 @@ def build_facture_002(
     if didox_contract_id:
         body["didoxcontractid"] = didox_contract_id
     return body
+
+
+# ── 000 «Произвольный документ» — a specification ─────────────────────────────
+
+#: Didox's subtype for a «Произвольный документ» that is a specification.
+SUBTYPE_SPECIFICATION = 8
+
+
+def _party_000(party: PartyRequisites) -> JsonObject:
+    return {
+        "Name": party.name,
+        "BranchCode": party.branch_code,
+        "BranchName": party.branch_name,
+        "Address": party.address or "",
+    }
+
+
+def build_specification_000(
+    *,
+    number: str,
+    date: datetime.date,
+    name: str,
+    contract_number: str,
+    contract_date: datetime.date,
+    seller: PartyRequisites,
+    buyer: PartyRequisites,
+) -> JsonObject:
+    """A framework contract's specification, as a «Произвольный документ».
+
+    It stays inside Didox (no roaming) and carries our PDF, which the caller adds
+    as `document`; this is the `data` block around it. `ContractDoc` ties it to
+    the договор exactly as the ЭСФ does.
+    """
+    return {
+        "data": {
+            "Document": {"DocumentNo": number, "DocumentDate": _day(date), "DocumentName": name},
+            "Subtype": SUBTYPE_SPECIFICATION,
+            "ContractDoc": {"ContractNo": contract_number, "ContractDate": _day(contract_date)},
+            "SellerTin": seller.tin,
+            "Seller": _party_000(seller),
+            "BuyerTin": buyer.tin,
+            "Buyer": _party_000(buyer),
+        }
+    }
 
 
 # ── the read side ─────────────────────────────────────────────────────────────
