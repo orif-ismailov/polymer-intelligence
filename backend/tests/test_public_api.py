@@ -238,6 +238,36 @@ def test_public_offer_detail_omits_moderation_internals() -> None:
     assert not (set(PublicOfferDetail.model_fields) & forbidden)
 
 
+def test_public_offer_detail_reads_null_product_facts_as_empty() -> None:
+    """An offer with no chips is a page with no chips, not a 500.
+
+    `key_properties` / `applications` are nullable columns (0030), and every
+    offer written before them — all of prod's, on 24.09.2026 — holds NULL. Read
+    from attributes, pydantic got an explicit None, which a `default_factory`
+    does not cover, and `/public/offers/13` answered 500.
+    """
+    from types import SimpleNamespace  # noqa: PLC0415
+
+    from app.domains.storefront.schemas import PublicOfferDetail  # noqa: PLC0415
+
+    required = {n for n, f in PublicOfferDetail.model_fields.items() if f.is_required()}
+    offer = SimpleNamespace(
+        **{
+            **dict.fromkeys(required, None),
+            "id": 13,
+            "availability": "in_stock",
+            "qty_unit": "t",
+            "currency": "UZS",
+            "incoterms": "unknown",
+            "key_properties": None,
+            "applications": None,
+        }
+    )
+    out = PublicOfferDetail.model_validate(offer)
+    assert out.key_properties == []
+    assert out.applications == []
+
+
 def test_public_company_card_omits_bank_and_case_data() -> None:
     from app.domains.storefront.schemas import (  # noqa: PLC0415
         PublicCompanyCard,
