@@ -76,7 +76,12 @@
     "doneTitle": "Ariza yuborildi",
     "doneBody": "Ko‘rsatilgan raqam orqali siz bilan bog‘lanamiz.",
     "doneNext": "Login va parolni menejer shaxsan topshiradi — ular shartnomada ham ko‘rsatiladi.",
-    "backToMarket": "Bozorga qaytish"
+    "backToMarket": "Bozorga qaytish",
+    "specialization": "Mutaxassislik",
+    "specializationHint": "Masalan: plyonka ekstruziyasi texnologi, 12 yillik tajriba.",
+    "expertTitle": "Ekspert arizasi",
+    "expertSubtitle": "Texnologlar va muhandislar zavodlardan arizalar oladi. O‘zingiz haqingizda yozing — tekshirib, kirish ochamiz.",
+    "expertNoteHint": "Jarayonlar, ishlagan uskunalar, tillar — ixtiyoriy."
   },
   "password": {
     "title": "Parolni almashtirish",
@@ -122,7 +127,11 @@
       "company": "Kompaniya"
     },
     "collapseRail": "Menyuni yig'ish",
-    "expandRail": "Menyuni yoyish"
+    "expandRail": "Menyuni yoyish",
+    "techRequests": "Texnologlar",
+    "expertProfile": "Mening profilim",
+    "expertRequests": "Zavod arizalari",
+    "technologists": "Texnologlar katalogi"
   },
   "home": {
     "title": "Umumiy ko‘rinish",
@@ -1117,7 +1126,10 @@
   "language": {
     "ru": "Русский",
     "uz": "O‘zbekcha",
-    "en": "English"
+    "en": "English",
+    "tr": "Türkçe",
+    "fa": "فارسی",
+    "zh": "中文"
   },
   "theme": {
     "dark": "To‘q",
@@ -1625,6 +1637,30 @@
     "lab_message": {
       "title": "Ariza bo‘yicha yangi xabar",
       "body": "{{number}} arizasi — yangi xabar"
+    },
+    "tech_request_new": {
+      "title": "Texnologga yangi ariza",
+      "body": "Jarayoningiz bo‘yicha {{number}} arizasi"
+    },
+    "tech_invite": {
+      "title": "Sizni arizaga taklif qilishdi",
+      "body": "Zavod sizni taklif qilmoqda: {{number}} arizasi"
+    },
+    "tech_offer_new": {
+      "title": "Texnologning yangi taklifi",
+      "body": "{{expert}} {{number}} arizasiga javob berdi"
+    },
+    "tech_offer_decided": {
+      "title": "Taklifingiz bo‘yicha qaror",
+      "body": "Zavod {{number}} arizasi bo‘yicha taklifingizni ko‘rib chiqdi"
+    },
+    "tech_message": {
+      "title": "Yangi xabar",
+      "body": "{{number}} arizasi — yangi xabar"
+    },
+    "technologist_decided": {
+      "title": "Profil ko‘rib chiqildi",
+      "body": "Qarorni ko‘rish uchun profilni oching"
     }
   },
   "contracts": {
@@ -2317,7 +2353,7 @@
       "register": "Ro'yxatdan o'tish",
       "language": "Til",
       "pricesShort": "Narxlar",
-      "theme": "Mavzu"
+      "technologists": "Texnologlar"
     },
     "role": {
       "manufacturer": "Ishlab chiqaruvchi",
@@ -3033,6 +3069,255 @@
     "errors": {
       "invalid": "Pozitsiyalarni tekshiring: har birida tovar, miqdor va narx bo'lishi kerak.",
       "createFailed": "Spetsifikatsiyani tuzib bo'lmadi."
+    }
+  },
+  "technologists": {
+    "title": "Texnologlar",
+    "metaTitle": "Texnologlar va sanoat ekspertlari — IMEX AI",
+    "subtitle": "Ishlab chiqarishingiz uchun sanoat ekspertini toping.",
+    "needTitle": "Menga texnolog kerak",
+    "needBody": "Vazifani yozing — texnologlar takliflari bilan javob beradi, siz ijrochini tanlaysiz.",
+    "needCta": "Ariza yaratish",
+    "amTitle": "Men texnologman",
+    "amBody": "Texnolog, muhandis yoki ekspertmisiz? Profil yarating va zavodlardan arizalar oling.",
+    "amCta": "Ekspert sifatida ro‘yxatdan o‘tish",
+    "catalogTitle": "Ekspertlar katalogi",
+    "filters": {
+      "any": "Hammasi",
+      "anyProcess": "Barcha jarayonlar",
+      "anyMaterial": "Barcha materiallar",
+      "anyLanguage": "Barcha tillar",
+      "search": "Qidiruv",
+      "searchPlaceholder": "Ism, mutaxassislik…",
+      "process": "Jarayon",
+      "material": "Material",
+      "language": "Til"
+    },
+    "resultCount_one": "{{count}} ekspert",
+    "resultCount_other": "{{count}} ekspert",
+    "empty": "Hozircha ekspertlar yo‘q.",
+    "noReviews": "Sharhlar yo‘q",
+    "reviews_one": "{{count}} sharh",
+    "reviews_other": "{{count}} sharh",
+    "profileVerified": "Profil tekshirilgan",
+    "untitled": "Ekspert",
+    "years_one": "{{count}} yil tajriba",
+    "years_other": "{{count}} yil tajriba",
+    "notFound": "Ekspert topilmadi",
+    "backToCatalog": "Texnologlar katalogi",
+    "profileMetaTitle": "{{name}} — texnolog | IMEX AI",
+    "fields": {
+      "processes": "Jarayonlar",
+      "materials": "Materiallar",
+      "industries": "Sohalar",
+      "equipment": "Uskunalar bilan tajriba",
+      "years": "Tajriba yillari",
+      "projects": "Loyihalar",
+      "countries": "Mamlakatlar",
+      "formats": "Ish formati",
+      "languages": "Tillar"
+    },
+    "process": {
+      "extrusion": "Ekstruziya",
+      "injection_molding": "Bosim ostida quyish",
+      "blow_molding": "Puflab shakllantirish",
+      "compounding": "Kompaundlash",
+      "film": "Plyonka",
+      "pipe": "Quvurlar",
+      "recycling": "Qayta ishlash",
+      "thermoforming": "Termoshakllantirish"
+    },
+    "industry": {
+      "petrochemical": "Neft-kimyo",
+      "polymer": "Polimerlar",
+      "packaging": "Qadoqlash",
+      "automotive": "Avtosanoat",
+      "recycling": "Qayta ishlash",
+      "chemical": "Kimyo"
+    },
+    "need": {
+      "equipment_setup": "Uskunani sozlash",
+      "material_selection": "Xomashyo tanlash",
+      "production_launch": "Ishlab chiqarishni ishga tushirish",
+      "troubleshooting": "Muammoni bartaraf etish",
+      "process_optimization": "Jarayonni optimallashtirish",
+      "other": "Boshqa"
+    },
+    "urgency": {
+      "urgent": "Shoshilinch",
+      "week": "Bir hafta ichida",
+      "month": "Bir oy ichida",
+      "date": "Sanagacha"
+    },
+    "format": {
+      "online": "Onlayn",
+      "on_site": "Zavodda",
+      "both": "Ikkalasi ham"
+    },
+    "language": {
+      "ru": "Rus",
+      "uz": "O‘zbek",
+      "en": "Ingliz",
+      "zh": "Xitoy",
+      "tr": "Turk",
+      "de": "Nemis",
+      "fa": "Fors",
+      "kk": "Qozoq"
+    },
+    "capacityUnit": {
+      "kg_h": "kg/soat",
+      "t_day": "t/sutka",
+      "t_month": "t/oy"
+    },
+    "invite": {
+      "cta": "Arizaga taklif qilish",
+      "postFirst": "Texnologga ariza yaratish",
+      "pick": "Ariza",
+      "sent": "Taklif yuborildi"
+    }
+  },
+  "techRequest": {
+    "form": {
+      "needType": "Nima kerak?",
+      "process": "Jarayon",
+      "equipment": "Uskuna",
+      "equipmentPlaceholder": "Ekstruziya liniyasi",
+      "equipmentModel": "Uskuna modeli",
+      "product": "Nima ishlab chiqarasiz?",
+      "productPlaceholder": "Polietilen plyonka",
+      "currentMaterial": "Hozirgi xomashyo",
+      "currentMaterialHint": "Bilmasangiz — bo‘sh qoldiring.",
+      "targetMaterial": "Kerakli xomashyo",
+      "problem": "Qanday vazifa yoki muammo?",
+      "problemPlaceholder": "Masalan: plyonka qalinligi barqaror emas. Xomashyoni arzonrog‘iga almashtirmoqchimiz.",
+      "capacity": "Unumdorlik",
+      "capacityUnit": "Birlik",
+      "country": "Mamlakat",
+      "city": "Shahar",
+      "cityPlaceholder": "Toshkent",
+      "location": "Ishlab chiqarish",
+      "urgency": "Mutaxassis qachon kerak?",
+      "neededBy": "Sana",
+      "workFormat": "Ish formati",
+      "languages": "Mutaxassis tili",
+      "budget": "Byudjet",
+      "budgetHint": "Ixtiyoriy. «So‘rov bo‘yicha» deb yozish mumkin.",
+      "required": "Majburiy maydon",
+      "notVerified": "Arizani faqat tekshirilgan kompaniya joylashtira oladi.",
+      "submit": "Arizani joylashtirish"
+    },
+    "status": {
+      "open": "Ochiq",
+      "assigned": "Ijrochi tanlangan",
+      "completed": "Yakunlangan",
+      "cancelled": "Bekor qilingan"
+    },
+    "contactsHint": "Shartnoma va to‘lov — to‘g‘ridan-to‘g‘ri o‘rtangizda.",
+    "contactName": "Ism",
+    "contactPhone": "Telefon",
+    "contactEmail": "Email",
+    "notFound": "Ariza topilmadi",
+    "chat": "Zavod bilan yozishma",
+    "listTitle": "Texnologga arizalar",
+    "listSubtitle": "Ekspertlar takliflar bilan javob beradi — siz ijrochini tanlaysiz.",
+    "browseExperts": "Texnologlar katalogi",
+    "new": "Texnolog topish",
+    "offerCount_one": "{{count}} taklif",
+    "offerCount_other": "{{count}} taklif",
+    "empty": "Hozircha arizalar yo‘q",
+    "emptyBody": "Vazifani yozing — texnologlar takliflar yuboradi.",
+    "newTitle": "Texnolog topish",
+    "newSubtitle": "Arizani barcha tekshirilgan texnologlar ko‘radi. Kompaniyangiz nomi yozishma boshlanganda ochiladi.",
+    "complete": "Ish bajarildi",
+    "cancel": "Arizani bekor qilish",
+    "offers": "Takliflar",
+    "inviteMore": "Katalogdan ekspert taklif qilish",
+    "noOffers": "Hozircha takliflar yo‘q",
+    "noOffersBody": "Mos ekspertlar allaqachon xabar oldi.",
+    "chatWith": "Yozishma: {{name}}",
+    "expertContacts": "Ekspert kontaktlari",
+    "yourReview": "Sizning sharhingiz",
+    "acceptConfirm": "Ushbu ekspertni tanlaysizmi?",
+    "acceptHint": "Qolgan takliflar rad etiladi, siz va ekspert bir-biringizning kontaktlaringizni ko‘rasiz.",
+    "declineConfirm": "Taklifni rad etasizmi?",
+    "cancelConfirm": "Arizani bekor qilasizmi?",
+    "accept": "Tanlash",
+    "decline": "Rad etish",
+    "write": "Yozish",
+    "completeTitle": "Ish bajarildi",
+    "completeHint": "Ekspertni baholang — sharh uning reytingida ko‘rinadi.",
+    "rating": "Baho",
+    "reviewText": "Sharh"
+  },
+  "techOffer": {
+    "scope": "Ishga nima kiradi",
+    "scopePlaceholder": "2 kun konsultatsiya, 1 kun ishlab chiqarishda, uskunani tahlil qilish, jarayonni sozlash.",
+    "price": "Narx",
+    "currency": "Valyuta",
+    "days": "Muddat, kun",
+    "daysValue_one": "{{count}} kun",
+    "daysValue_other": "{{count}} kun",
+    "conflict": "Taklif allaqachon yuborilgan yoki ariza yopilgan.",
+    "update": "O‘zgarishlarni saqlash",
+    "submit": "Taklif yuborish",
+    "withdraw": "Qaytarib olish",
+    "withdrawConfirm": "Taklifni qaytarib olasizmi?",
+    "status": {
+      "submitted": "Ko‘rib chiqilmoqda",
+      "accepted": "Qabul qilingan",
+      "declined": "Rad etilgan",
+      "withdrawn": "Qaytarib olingan"
+    }
+  },
+  "expert": {
+    "profile": {
+      "title": "Ekspert profili",
+      "subtitle": "Zavodlar profilingizni tekshiruvdan so‘ng katalogda ko‘radi.",
+      "viewPublic": "Katalogda ochish",
+      "photo": "Rasm yuklang",
+      "photoHint": "JPG yoki PNG, 5 MB gacha",
+      "fullName": "Ism va familiya",
+      "titleField": "Kasbiy sarlavha",
+      "titlePlaceholder": "Plyonka ekstruziyasi texnologi",
+      "bio": "O‘zim haqimda",
+      "bioPlaceholder": "Tajriba, loyihalar, qanday vazifalarda yordam berasiz.",
+      "equipmentHint": "Siz ishlagan uskuna ishlab chiqaruvchilari.",
+      "contactsHint": "Kontaktlarni faqat taklifingizni tanlagan zavod ko‘radi.",
+      "incomplete": "Profilni tekshiruvga yuborish uchun belgilangan maydonlarni to‘ldiring.",
+      "saved": "Saqlandi",
+      "save": "Qoralamani saqlash",
+      "submit": "Tekshiruvga yuborish",
+      "required": "Majburiy maydon",
+      "submitted": "Profil tekshiruvga yuborildi — qaror haqida xabar beramiz."
+    },
+    "status": {
+      "published": "Profil katalogda e’lon qilingan",
+      "pending": "Profil tekshiruvda",
+      "listedMeanwhile": "Tekshiruv davomida katalogda oldingi tasdiqlangan versiya ko‘rsatiladi.",
+      "rejected": "Tekshiruvdan o‘tmadi",
+      "suspended": "Profil to‘xtatilgan",
+      "unsentChanges": "O‘zgarishlar tekshiruvga yuborilmagan — katalogda tasdiqlangan versiya ko‘rsatilmoqda.",
+      "draft": "Profilni to‘ldiring va tekshiruvga yuboring."
+    },
+    "requests": {
+      "title": "Zavod arizalari",
+      "subtitle": "Tekshirilgan kompaniyalarning ochiq vazifalari.",
+      "notListed": "Arizalar profil e’lon qilingandan so‘ng mavjud bo‘ladi.",
+      "toProfile": "Profilga",
+      "all": "Hammasi",
+      "invited": "Takliflar",
+      "empty": "Hozircha ochiq arizalar yo‘q",
+      "emptyInvited": "Hozircha takliflar yo‘q",
+      "invitedBadge": "Sizni taklif qilishdi",
+      "anonymousFactory": "Zavod"
+    },
+    "request": {
+      "askHint": "Taklif yuborishdan oldin zavodga savol bering.",
+      "ask": "Savol berish",
+      "factoryContacts": "Zavod kontaktlari",
+      "myOffer": "Mening taklifim",
+      "offerClosed": "Taklif yopilgan.",
+      "requestClosed": "Ariza endi takliflarni qabul qilmaydi."
     }
   }
 }

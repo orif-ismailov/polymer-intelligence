@@ -2,6 +2,7 @@ export type {
   Account,
   AuthResult,
   AccountPatch,
+  AppliedAs,
   LoginPayload,
   PasswordChangePayload,
   RegisterPayload,

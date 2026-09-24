@@ -88,7 +88,7 @@ export function LogisticsRequestDetailPage() {
                 <li key={thread.id} className="rounded-md border border-border">
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left"
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-start"
                     onClick={() =>
                       setOpenThreadId((current) => (current === thread.id ? null : thread.id))
                     }

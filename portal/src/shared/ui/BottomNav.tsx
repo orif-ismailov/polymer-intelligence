@@ -56,7 +56,7 @@ export function BottomNav({ items, className }: BottomNavProps) {
                 {item.badge ? (
                   <span
                     data-testid="ui-bottom-nav-badge"
-                    className="num absolute -right-2 -top-1 min-w-4 rounded-full bg-danger px-1 text-[10px] font-semibold leading-4 text-danger-fg"
+                    className="num absolute -end-2 -top-1 min-w-4 rounded-full bg-danger px-1 text-[10px] font-semibold leading-4 text-danger-fg"
                   >
                     {item.badge}
                   </span>

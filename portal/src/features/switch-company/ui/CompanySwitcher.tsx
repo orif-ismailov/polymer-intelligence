@@ -61,7 +61,7 @@ export function CompanySwitcher() {
       {open ? (
         <ul
           role="listbox"
-          className="absolute right-0 z-30 mt-1 max-h-80 w-72 overflow-auto rounded-md border border-border bg-surface p-1 shadow-lg animate-fade-in"
+          className="absolute end-0 z-30 mt-1 max-h-80 w-72 overflow-auto rounded-md border border-border bg-surface p-1 shadow-lg animate-fade-in"
         >
           {companies.map((company) => {
             const isActive = company.id === activeCompany?.id;
@@ -74,7 +74,7 @@ export function CompanySwitcher() {
                     setOpen(false);
                   }}
                   className={cn(
-                    "flex w-full items-center justify-between gap-2 rounded px-2.5 py-2 text-left text-sm hover:bg-surface-2",
+                    "flex w-full items-center justify-between gap-2 rounded px-2.5 py-2 text-start text-sm hover:bg-surface-2",
                     isActive && "bg-brand-soft",
                   )}
                 >
@@ -93,7 +93,7 @@ export function CompanySwitcher() {
                 setOpen(false);
                 void navigate("/cabinet/companies/new/1");
               }}
-              className="w-full rounded px-2.5 py-2 text-left text-sm font-medium text-brand hover:bg-surface-2"
+              className="w-full rounded px-2.5 py-2 text-start text-sm font-medium text-brand hover:bg-surface-2"
             >
               + {t("companies.create")}
             </button>

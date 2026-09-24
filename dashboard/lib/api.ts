@@ -203,6 +203,29 @@ export async function apiFetch<T>(
 }
 
 /**
+ * Authenticated GET returning the raw body as a Blob — an image or file behind a
+ * staff route. An `<img src>` cannot carry the Bearer token, so a protected
+ * picture (a technologist's portrait under review) is fetched here and shown
+ * through an object URL.
+ */
+export async function apiBlob(path: string): Promise<Blob> {
+  const token = getToken();
+  const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: "include",
+  });
+  if (response.status === 401) {
+    redirectToLogin();
+    throw new ApiError(401, null, "Unauthorized — redirecting to login");
+  }
+  if (!response.ok) {
+    throw new ApiError(response.status, null, `API request failed: ${response.status}`);
+  }
+  return response.blob();
+}
+
+/**
  * Multipart upload (P6 — the lab-result PDF).
  *
  * Separate from `apiFetch` because that one always sets

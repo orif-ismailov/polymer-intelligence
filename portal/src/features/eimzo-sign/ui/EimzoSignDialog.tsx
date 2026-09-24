@@ -160,7 +160,7 @@ export function EimzoSignDialog<T>({
                   <button
                     type="button"
                     onClick={() => void pick(cert.id)}
-                    className="w-full rounded-md border border-border px-3 py-2 text-left text-sm hover:border-primary"
+                    className="w-full rounded-md border border-border px-3 py-2 text-start text-sm hover:border-primary"
                     data-testid="eimzo-cert-option"
                   >
                     <span className="block font-medium text-text">{cert.subjectName}</span>

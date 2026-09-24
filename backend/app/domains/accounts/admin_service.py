@@ -76,6 +76,7 @@ def list_accounts(
     *,
     status: AccountStatus | None = None,
     q: str | None = None,
+    applied_as: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[UserAccount]:
@@ -83,6 +84,8 @@ def list_accounts(
     stmt = sa.select(UserAccount)
     if status is not None:
         stmt = stmt.where(UserAccount.status == status)
+    if applied_as is not None:
+        stmt = stmt.where(UserAccount.applied_as == applied_as)
     if q:
         like = f"%{q.strip()}%"
         stmt = stmt.where(

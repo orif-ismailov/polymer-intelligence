@@ -48,10 +48,13 @@ function PublicFooter() {
     },
     {
       titleKey: "public.footer.directories",
-      links: PUBLIC_DIRECTORIES.map((d) => ({
-        to: `/${d.slug}`,
-        labelKey: d.labelKey,
-      })),
+      links: [
+        ...PUBLIC_DIRECTORIES.map((d) => ({
+          to: `/${d.slug}`,
+          labelKey: d.labelKey,
+        })),
+        { to: "/technologists", labelKey: "public.nav.technologists" },
+      ],
     },
     {
       titleKey: "public.footer.account",

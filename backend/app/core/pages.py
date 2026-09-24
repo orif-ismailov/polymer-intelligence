@@ -88,6 +88,7 @@ PAGES: tuple[PageSpec, ...] = (
     # see the note at the end of this tuple.
     PageSpec("companies", "counterparties"),
     PageSpec("verification", "counterparties"),
+    PageSpec("technologists", "counterparties"),
     # ── labCompliance ────────────────────────────────────────────────────────
     PageSpec("labOrders", "labCompliance"),
     PageSpec("labPartners", "labCompliance"),

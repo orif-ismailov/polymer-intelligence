@@ -24,6 +24,7 @@
       "deals": "交易",
       "escrow": "托管",
       "companies": "公司",
+      "technologists": "工艺专家",
       "verification": "公司验证",
       "portalAccounts": "客户账户",
       "labOrders": "检测分析",
@@ -812,6 +813,12 @@
       "login_taken": "该登录名已被占用，请另选一个。",
       "no_credentials": "该记录尚无登录名——请先发放凭据。",
       "login_required": "请填写登录名。"
+    },
+    "kind": {
+      "all": "全部",
+      "company": "公司",
+      "technologist": "工艺专家",
+      "technologists": "工艺专家"
     }
   },
   "adminProducts": {
@@ -2027,7 +2034,6 @@
       "sample_letter": "承诺函"
     }
   },
-
   "adminBankRegister": {
     "title": "银行目录",
     "subtitle": "央行分支机构登记：MFO → 银行名称。公司注册时自动填充。",
@@ -2045,5 +2051,71 @@
     "failed": "文件上传失败",
     "file": "文件",
     "hint": "来自中央银行网站的分支机构登记文件（.xlsx）。"
+  },
+  "technologists": {
+    "pageTitle": "工艺专家",
+    "pageSubtitle": "专家资料审核：只有通过审核的版本才会进入目录。",
+    "filterAll": "全部",
+    "empty": "暂无资料",
+    "loadError": "无法加载资料",
+    "saveError": "无法保存决定",
+    "forbidden": "无权限：需要「工艺专家」页面的写入权限",
+    "editOfListed": "该专家已在目录中——批准将替换其名片，拒绝则保留原名片。",
+    "reasonLabel": "原因",
+    "reasonHint": "拒绝和暂停时必填——专家会看到。",
+    "approve": "批准",
+    "reject": "拒绝",
+    "suspend": "暂停",
+    "status": {
+      "draft": "草稿",
+      "pending_review": "审核中",
+      "published": "已发布",
+      "rejected": "已拒绝",
+      "suspended": "已暂停"
+    },
+    "table": {
+      "expert": "专家",
+      "processes": "工艺",
+      "status": "状态",
+      "submittedAt": "提交时间"
+    },
+    "fields": {
+      "account": "账户",
+      "location": "城市、国家",
+      "years": "经验年数",
+      "projects": "项目",
+      "countries": "国家",
+      "processes": "工艺",
+      "materials": "材料",
+      "industries": "行业",
+      "equipment": "设备",
+      "formats": "工作方式",
+      "languages": "语言",
+      "contacts": "联系方式",
+      "submittedAt": "提交时间",
+      "reason": "原因"
+    },
+    "process": {
+      "extrusion": "挤出",
+      "injection_molding": "注塑",
+      "blow_molding": "吹塑",
+      "compounding": "混炼",
+      "film": "薄膜",
+      "pipe": "管材",
+      "recycling": "回收",
+      "thermoforming": "热成型"
+    },
+    "industry": {
+      "petrochemical": "石化",
+      "polymer": "聚合物",
+      "packaging": "包装",
+      "automotive": "汽车",
+      "recycling": "回收",
+      "chemical": "化工"
+    },
+    "format": {
+      "online": "线上",
+      "on_site": "现场"
+    }
   }
 }

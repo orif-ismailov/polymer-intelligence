@@ -14,7 +14,7 @@ import { publicSiteOrigin } from "@/shared/config";
 import { SUPPORTED_LANGS } from "@/shared/i18n";
 import { useSyncedDraft } from "@/shared/lib";
 import { Seo, useCanonical } from "@/shared/seo";
-import { Dialog, SearchIcon, Skeleton, buttonClasses } from "@/shared/ui";
+import { Dialog, Pagination, SearchIcon, Skeleton, buttonClasses } from "@/shared/ui";
 
 import { MarketFilters, type MarketFilterState } from "./MarketFilters";
 
@@ -282,36 +282,16 @@ export function PublicMarketPage() {
                   ))}
                 </div>
 
-                {total > PAGE_SIZE ? (
-                  <nav
-                    aria-label={t("public.market.pagination")}
-                    className="mt-8 flex items-center justify-between gap-4"
-                  >
-                    <button
-                      type="button"
-                      disabled={offset === 0}
-                      onClick={() => goToOffset(offset - PAGE_SIZE)}
-                      className="inline-flex h-11 items-center rounded-md border border-border-strong px-4 text-sm font-medium text-text transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:text-text-subtle disabled:hover:bg-transparent"
-                    >
-                      {t("common.prev")}
-                    </button>
-                    <span className="num text-sm text-text-muted">
-                      {t("public.market.pageOf", {
-                        page: Math.floor(offset / PAGE_SIZE) + 1,
-                        pages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
-                      })}
-                    </span>
-                    <button
-                      type="button"
-                      // A real end, from the real total. No guessing from a short page.
-                      disabled={offset + PAGE_SIZE >= total}
-                      onClick={() => goToOffset(offset + PAGE_SIZE)}
-                      className="inline-flex h-11 items-center rounded-md border border-border-strong px-4 text-sm font-medium text-text transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:text-text-subtle disabled:hover:bg-transparent"
-                    >
-                      {t("common.next")}
-                    </button>
-                  </nav>
-                ) : null}
+                <Pagination
+                  offset={offset}
+                  total={total}
+                  pageSize={PAGE_SIZE}
+                  onChange={goToOffset}
+                  label={t("public.market.pagination")}
+                  prevLabel={t("common.prev")}
+                  nextLabel={t("common.next")}
+                  pageOfLabel={(page, pages) => t("public.market.pageOf", { page, pages })}
+                />
               </>
             ) : (
               <p className="mt-4 rounded-lg border border-border bg-surface px-4 py-10 text-center text-sm text-text-muted">

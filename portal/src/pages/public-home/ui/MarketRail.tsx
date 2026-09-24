@@ -66,7 +66,7 @@ export function MarketRail() {
           </h2>
           <Link to="/prices" className="text-[12px] font-medium text-brand hover:underline">
             {t("public.home.seeAll")}
-            <span aria-hidden> →</span>
+            <span aria-hidden className="inline-block rtl:-scale-x-100"> →</span>
           </Link>
         </div>
 
@@ -168,7 +168,7 @@ export function MarketRail() {
           </h2>
           <Link to="/news" className="text-[12px] font-medium text-brand hover:underline">
             {t("public.home.seeAll")}
-            <span aria-hidden> →</span>
+            <span aria-hidden className="inline-block rtl:-scale-x-100"> →</span>
           </Link>
         </div>
 

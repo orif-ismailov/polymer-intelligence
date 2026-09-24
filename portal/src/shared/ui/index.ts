@@ -47,6 +47,8 @@ export { ChoiceTile } from "./ChoiceTile";
 export type { ChoiceTileTone } from "./ChoiceTile";
 export { Dropzone } from "./Dropzone";
 export { ChipInput } from "./ChipInput";
+export { ToggleChips } from "./ToggleChips";
+export { Pagination } from "./Pagination";
 export { StepPanel } from "./StepPanel";
 export { Skeleton } from "./Skeleton";
 export { Spinner } from "./Spinner";

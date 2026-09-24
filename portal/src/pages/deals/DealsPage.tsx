@@ -38,7 +38,7 @@ function DealCard({ deal, onOpen }: { deal: DealSummary; onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      className="w-full rounded-lg text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
       <Card className="transition-colors hover:border-brand-line">
         <CardBody className="space-y-3">

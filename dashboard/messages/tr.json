@@ -24,6 +24,7 @@
       "deals": "İşlemler",
       "escrow": "Emanet",
       "companies": "Şirketler",
+      "technologists": "Teknologlar",
       "verification": "Şirket doğrulama",
       "portalAccounts": "Müşteri hesapları",
       "labOrders": "Analizler",
@@ -827,6 +828,12 @@
       "login_taken": "Bu kullanıcı adı kullanımda. Başka birini seçin.",
       "no_credentials": "Bu kaydın henüz kullanıcı adı yok — önce erişim verin.",
       "login_required": "Kullanıcı adı girin."
+    },
+    "kind": {
+      "all": "Tümü",
+      "company": "Şirketler",
+      "technologist": "Teknolog",
+      "technologists": "Teknologlar"
     }
   },
   "adminProducts": {
@@ -2042,7 +2049,6 @@
       "sample_letter": "Taahhüt mektubu"
     }
   },
-
   "adminBankRegister": {
     "title": "Banka rehberi",
     "subtitle": "MB şube kaydı: MFO → banka adı. Şirket kaydında otomatik doldurulur.",
@@ -2060,5 +2066,71 @@
     "failed": "Dosya yüklenemedi",
     "file": "Dosya",
     "hint": "Merkez Bankası sitesindeki şube kayıt dosyası (.xlsx)."
+  },
+  "technologists": {
+    "pageTitle": "Teknologlar",
+    "pageSubtitle": "Uzman profillerinin moderasyonu: kataloğa yalnızca onaylanan sürüm girer.",
+    "filterAll": "Tümü",
+    "empty": "Profil yok",
+    "loadError": "Profiller yüklenemedi",
+    "saveError": "Karar kaydedilemedi",
+    "forbidden": "Erişim yok: «Teknologlar» sayfasında yazma yetkisi gerekir",
+    "editOfListed": "Uzman zaten katalogda — onay kartını değiştirir, ret eskisini bırakır.",
+    "reasonLabel": "Gerekçe",
+    "reasonHint": "Ret ve askıya alma için zorunlu — uzman görür.",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "suspend": "Askıya al",
+    "status": {
+      "draft": "Taslak",
+      "pending_review": "İncelemede",
+      "published": "Yayında",
+      "rejected": "Reddedildi",
+      "suspended": "Askıda"
+    },
+    "table": {
+      "expert": "Uzman",
+      "processes": "Süreçler",
+      "status": "Durum",
+      "submittedAt": "Gönderildi"
+    },
+    "fields": {
+      "account": "Hesap",
+      "location": "Şehir, ülke",
+      "years": "Deneyim yılı",
+      "projects": "Proje",
+      "countries": "Ülke",
+      "processes": "Süreçler",
+      "materials": "Malzemeler",
+      "industries": "Sektörler",
+      "equipment": "Ekipman",
+      "formats": "Çalışma şekli",
+      "languages": "Diller",
+      "contacts": "İletişim",
+      "submittedAt": "Gönderildi",
+      "reason": "Gerekçe"
+    },
+    "process": {
+      "extrusion": "Ekstrüzyon",
+      "injection_molding": "Enjeksiyon kalıplama",
+      "blow_molding": "Şişirme kalıplama",
+      "compounding": "Kompaundlama",
+      "film": "Film",
+      "pipe": "Boru",
+      "recycling": "Geri dönüşüm",
+      "thermoforming": "Termoform"
+    },
+    "industry": {
+      "petrochemical": "Petrokimya",
+      "polymer": "Polimer",
+      "packaging": "Ambalaj",
+      "automotive": "Otomotiv",
+      "recycling": "Geri dönüşüm",
+      "chemical": "Kimya"
+    },
+    "format": {
+      "online": "Çevrimiçi",
+      "on_site": "Tesiste"
+    }
   }
 }

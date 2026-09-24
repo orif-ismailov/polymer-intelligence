@@ -14,7 +14,9 @@ interface BrandLogoProps {
 
 const LOGO_SIZE: Record<NonNullable<BrandLogoProps["size"]>, string> = {
   md: "h-9",
-  lg: "h-10 xl:h-14",
+  // h-8 on a phone: at 320px the storefront bar holds the lockup, the theme
+  // toggle, the CTA and the menu, and every pixel of the lockup comes out of the CTA.
+  lg: "h-8 sm:h-10 xl:h-14",
 };
 
 /**

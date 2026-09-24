@@ -50,7 +50,7 @@ export function LabRequestsList({ companyId }: { companyId: number }) {
                   {t("labRequest.responseCount", { count: r.thread_count })}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="num text-xs text-text-muted">{r.number}</p>
                 <p className="mt-0.5 text-xs text-text-subtle">
                   {formatDate(r.created_at, lang)}

@@ -25,6 +25,14 @@ function intlLocale(lang: string): string {
       return "uz-UZ";
     case "en":
       return "en-US";
+    case "tr":
+      return "tr-TR";
+    // Latin digits: prices, volumes and codes sit next to Latin grades and
+    // ИНН/ИКПУ numbers, and a row mixing ۱۲۳ with 123 is harder to read.
+    case "fa":
+      return "fa-IR-u-nu-latn";
+    case "zh":
+      return "zh-CN";
     default:
       return "ru-RU";
   }

@@ -10,6 +10,12 @@ import { Alert, Button, Input, PaperclipIcon, Spinner } from "@/shared/ui";
 export interface ThreadMessage {
   id: number;
   author_company_id: number;
+  /**
+   * Server-resolved "this line is from my side". Sent by the technologist
+   * threads (0055), where one side is a PERSON and has no company id to
+   * compare; when present it wins over the company comparison.
+   */
+  mine?: boolean;
   body: string;
   has_file: boolean;
   file_name: string | null;
@@ -56,8 +62,10 @@ export interface ThreadChatProps {
  * The cursor lives in a REF, not state: the poll closure has to read the newest
  * value without the interval being torn down and rebuilt on every message.
  *
- * "Mine" is derived here from `author_company_id === companyId`. None of the
- * APIs resolve it, because one thread is read from both sides.
+ * "Mine" is `message.mine` when the API resolves it (the technologist threads,
+ * whose expert side has no company), else `author_company_id === companyId` —
+ * the company-to-company threads leave it to the client, because one thread is
+ * read from both sides. For an expert, `companyId` is 0 and unused.
  *
  * Nothing here decides who may read a thread — the backend refuses one the
  * caller is not a party to, which is what keeps a competitor's terms private.
@@ -164,7 +172,7 @@ export function ThreadChat({
           </p>
         ) : (
           messages.map((message) => {
-            const mine = message.author_company_id === companyId;
+            const mine = message.mine ?? message.author_company_id === companyId;
             return (
               <div key={message.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
                 <div

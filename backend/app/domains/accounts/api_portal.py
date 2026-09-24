@@ -247,6 +247,7 @@ def register(
             contact_name=body.contact_name,
             company_name=body.company_name,
             note=body.note,
+            applied_as=body.applied_as,
         )
     except account_service.InvalidPhone as exc:
         raise HTTPException(
@@ -260,7 +261,7 @@ def register(
         action="portal_account.applied",
         entity="user_accounts",
         entity_id=str(account.id),
-        details={"company": account.applied_company_name},
+        details={"company": account.applied_company_name, "applied_as": account.applied_as},
     )
     db.commit()
     return RegisterAccepted()

@@ -102,6 +102,9 @@ from app.domains.signals.api_feed import router as feed_router
 from app.domains.signals.api_sources import router as sources_router
 from app.domains.sourcing.api_admin import router as sourcing_router
 from app.domains.storefront.api import router as public_router
+from app.domains.technologists.api_admin import router as admin_technologists_router
+from app.domains.technologists.api_portal import router as portal_technologists_router
+from app.domains.technologists.api_public import router as public_technologists_router
 from app.domains.verification.api_admin import router as admin_verification_router
 from app.domains.verification.api_portal import router as portal_verification_router
 
@@ -236,6 +239,7 @@ def create_app() -> FastAPI:
     # the portal block where a reader would assume the account guard applies.
     # No auth surface ⇒ no router-level failures; its detail routes declare 404.
     application.include_router(public_router, prefix="/api/v1")
+    application.include_router(public_technologists_router, prefix="/api/v1")
     # ── dashboard routers (Phase 4 internal team dashboard) ──────────────────
     application.include_router(feed_router, prefix="/api/v1", responses=errors.STAFF)
     application.include_router(dashboard_router, prefix="/api/v1", responses=errors.STAFF)
@@ -336,6 +340,11 @@ def create_app() -> FastAPI:
     # `/portal/logistics` collides with nothing under `/portal/companies`, so
     # registration order against that router does not matter here.
     application.include_router(portal_logistics_router, prefix="/api/v1", responses=errors.PORTAL)
+    # Technologists (0055): `/portal/me/technologist`, `/portal/companies/{id}/tech-requests`
+    # and `/portal/tech-threads` — no literal collides with any other portal router.
+    application.include_router(
+        portal_technologists_router, prefix="/api/v1", responses=errors.PORTAL
+    )
     application.include_router(
         portal_lab_requests_router, prefix="/api/v1", responses=errors.PORTAL
     )
@@ -356,6 +365,9 @@ def create_app() -> FastAPI:
         admin_licenses_router, prefix="/api/v1", responses=errors.STAFF_RESOURCE
     )
     application.include_router(admin_lab_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(
+        admin_technologists_router, prefix="/api/v1", responses=errors.STAFF
+    )
     application.include_router(
         admin_logistics_requests_router, prefix="/api/v1", responses=errors.STAFF
     )

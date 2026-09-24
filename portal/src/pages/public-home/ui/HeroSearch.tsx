@@ -204,7 +204,7 @@ export function HeroSearch() {
             className="ms-1 inline-flex h-9 shrink-0 items-center gap-1 pe-1 text-[11px] font-medium text-brand underline underline-offset-2 sm:text-xs"
           >
             {t("public.home.allQueries")}
-            <span aria-hidden>→</span>
+            <span aria-hidden className="inline-block rtl:-scale-x-100">→</span>
           </Link>
         </div>
       </div>

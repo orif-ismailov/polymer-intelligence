@@ -408,10 +408,10 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 - **Time**: store UTC, display `Asia/Tashkent` (`TZ_DISPLAY`). Time helpers in `app/core/time.py`
   (backend) and `lib/tz.ts` (dashboard).
 - **Domain folders**: the backend reorg is **complete**. Every bounded context lives in
-  `backend/app/domains/<name>/` (models + schemas + service + routers together) — 20 of them:
+  `backend/app/domains/<name>/` (models + schemas + service + routers together) — 21 of them:
   accounts, alerts, companies, compliance, contracts, deals, lab_orders, laboratory, logistics,
   manufacturers, marketplace, news, notifications, pricing, reference, requests, signals,
-  sourcing, storefront, verification. What remains in `app/services|schemas|models|api/` is a
+  sourcing, storefront, technologists, verification. What remains in `app/services|schemas|models|api/` is a
   **closed shared kernel**, declared in those packages' `__init__.py` docstrings — "still in
   `app/services/`" means kernel, not unmigrated. Plans and the binding rules (including the
   models-barrel module-import rule) are in `.planning/backend-domain-reorg/`.

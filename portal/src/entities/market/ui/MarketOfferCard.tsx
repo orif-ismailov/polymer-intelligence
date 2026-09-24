@@ -40,7 +40,7 @@ export function MarketOfferCard({ offer, onOpen }: MarketOfferCardProps) {
     <button
       type="button"
       onClick={onOpen}
-      className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      className="w-full rounded-lg text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
       <Card className="flex h-full flex-col overflow-hidden transition-colors hover:border-brand-line">
         {/* Cover photo, or a neutral placeholder so a photo-less offer doesn't
@@ -49,7 +49,7 @@ export function MarketOfferCard({ offer, onOpen }: MarketOfferCardProps) {
           <FavoriteButton
             offerId={offer.id}
             isFavorite={offer.is_favorite}
-            className="absolute right-2 top-2 z-10"
+            className="absolute end-2 top-2 z-10"
           />
           {cover ? (
             <img

@@ -44,6 +44,7 @@ import {
   UserCog,
   Users,
   Workflow,
+  HardHat,
 } from "lucide-react";
 
 export interface NavItem {
@@ -133,6 +134,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { key: "companies", href: "/companies", icon: Building2 },
       { key: "verification", href: "/verification", icon: BadgeCheck },
+      { key: "technologists", href: "/technologists", icon: HardHat },
       {
         key: "portalAccounts",
         href: "/admin/portal-accounts",

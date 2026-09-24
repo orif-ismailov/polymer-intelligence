@@ -72,6 +72,11 @@ LOCK_BASE_ESF = 40_000
 #: Commitment letters are numbered globally per year — they are OUR document, not
 #: an entry in any seller's tax book.
 LOCK_BASE_SAMPLE_LETTER = 41_000
+#: Technologist requests (0055) are numbered in ONE global series —
+#: `IMX-TECH-000124`, no period — so this key is used as-is, not plus a year.
+#: 50_000 sits above every `base + year` above (the highest, 41_000 + year, is
+#: ~43_000) and far below the daily YYYYMMDD key.
+LOCK_BASE_TECH_REQUEST = 50_000
 #: The daily request counter keys on YYYYMMDD directly — see `generate_request_number`.
 LOCK_BASE_REQUEST = 0
 
