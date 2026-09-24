@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-import { didoxApi } from "@/entities/edi";
+import { didoxStatusKey, useDidoxStatus } from "@/entities/edi";
 import { useDidoxSession } from "@/features/didox-session";
 import { ApiError } from "@/shared/api";
 import { Button, FormField, Input, Select } from "@/shared/ui";
@@ -70,10 +70,7 @@ export function IkpuPicker({ companyId, taxId, value, onChange }: IkpuPickerProp
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const session = useDidoxSession(companyId, taxId);
-  const didoxStatus = useQuery({
-    queryKey: ["didox", "status", companyId],
-    queryFn: () => didoxApi.status(companyId),
-  });
+  const didoxStatus = useDidoxStatus(companyId);
   /** What to run again once the session exists — the search that asked for it. */
   const retry = useRef<(() => Promise<void>) | null>(null);
   const [query, setQuery] = useState("");
@@ -95,7 +92,7 @@ export function IkpuPicker({ companyId, taxId, value, onChange }: IkpuPickerProp
     const opened = await session.open();
     if (!opened) return;
     setError(null);
-    await queryClient.invalidateQueries({ queryKey: ["didox", "status", companyId] });
+    await queryClient.invalidateQueries({ queryKey: didoxStatusKey(companyId) });
     const again = retry.current;
     retry.current = null;
     if (again) await again();

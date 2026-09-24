@@ -2802,7 +2802,9 @@
       "no_cert": "No signing key found.",
       "cert_mismatch": "The certificate's ИНН does not match this company.",
       "disabled": "Didox is not enabled in this deployment.",
-      "failed": "Could not connect to Didox."
+      "failed": "Could not connect to Didox.",
+      "not_registered": "The company has no Didox account yet — register it below.",
+      "rejected": "Didox refused: {{message}}"
     },
     "signErrors": {
       "module_missing": "E-IMZO not found. Start the module and retry.",
@@ -2825,6 +2827,55 @@
         "document_not_created": "The document does not exist at the operator yet.",
         "didox_unavailable": "Didox is unavailable right now. Try again later."
       }
+    },
+    "ownerOnly": "Only the company's owner can connect it to Didox."
+  },
+  "didoxOnboarding": {
+    "title": "Connect to Didox",
+    "subtitle": "{{company}} — electronic document exchange",
+    "why": "Contracts signed through Didox reach my.soliq.uz. To sign them the company needs a Didox account and the operator's public offer signed. This is done once.",
+    "later": "Later",
+    "steps": {
+      "account": "Didox account",
+      "offer": "Didox public offer"
+    },
+    "account": {
+      "haveTitle": "Does the company already have a Didox account?",
+      "haveBody": "Sign in with the company's e-signature key — nothing else is needed. If the offer was already signed on didox.uz, we will see it.",
+      "signIn": "Sign in to Didox with e-signature",
+      "registerTitle": "Register the company at Didox",
+      "registerBody": "The email and password are the login to didox.uz. We pass them to Didox and do not store them. Registration is confirmed with the company's e-signature key.",
+      "email": "Email",
+      "emailInvalid": "Enter an email without «+» — Didox does not accept it.",
+      "mobile": "Phone",
+      "mobileHint": "Digits only, with the country code: 998901234567.",
+      "mobileInvalid": "9 to 15 digits.",
+      "password": "Password for didox.uz",
+      "passwordHint": "At least 8 characters.",
+      "passwordShort": "At least 8 characters.",
+      "register": "Register with e-signature"
+    },
+    "offer": {
+      "title": "Didox public offer",
+      "body": "Read the EDI operator's offer. Signing it with the company's key means accepting it — without it Didox accepts no documents.",
+      "loading": "Loading the offer…",
+      "sessionHint": "The offer is held by Didox. Sign in with the company's key to open it.",
+      "loadFailed": "Could not load the offer from Didox.",
+      "openInTab": "Open in a new tab",
+      "agree": "I have read the Didox public offer and accept its terms",
+      "errors": {
+        "module_missing": "E-IMZO not found. Start the E-IMZO module and try again.",
+        "cert_mismatch": "No key for this company was found — the certificate's TIN does not match.",
+        "failed": "Could not sign the offer. Please try again."
+      }
+    },
+    "done": {
+      "title": "The company is connected to Didox",
+      "body": "Contracts can now be signed and sent through Didox.",
+      "cta": "Go to the cabinet"
+    },
+    "contractBlocked": {
+      "title": "Signing through Didox is not available yet"
     }
   },
   "sampleLetter": {

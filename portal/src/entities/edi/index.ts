@@ -1,4 +1,5 @@
 export { didoxApi, DIDOX_STATUS } from "./model/api";
+export { useDidoxStatus, didoxStatusKey } from "./model/hooks";
 export type {
   DidoxContractLine,
   DidoxContractPrefill,
@@ -8,4 +9,5 @@ export type {
   DidoxSignPayload,
   DidoxDocumentResult,
   DidoxSignature,
+  DidoxSignupDetails,
 } from "./model/api";

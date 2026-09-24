@@ -24,6 +24,9 @@ class DidoxStatusOut(BaseModel):
     #: rather than failing an action later — but its absence never blocks the UI,
     #: since every action mints on demand and then continues.
     has_session: bool = False
+    #: Whether THIS account may register the company at Didox and accept its
+    #: offer — the owner only. Everyone else sees the state and nothing to press.
+    can_onboard: bool = False
 
 
 class DidoxSignatureIn(BaseModel):

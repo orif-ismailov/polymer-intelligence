@@ -93,7 +93,7 @@ export function CompanyManagePage() {
           says nothing about it. Verified-only: an unverified company cannot be a
           party to a contract anyway, so offering the connection would be noise. */}
       {isVerified ? (
-        <DidoxOnboardingCard companyId={company.id} taxId={company.tax_id} />
+        <DidoxOnboardingCard companyId={company.id} />
       ) : null}
 
       <ProfileSection company={company} editable={editable} />

@@ -35,6 +35,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Protocol
 
 from app.services import settings_service
@@ -178,13 +179,28 @@ def refresh_from_profile(
         return row
     if not isinstance(profile, dict):
         return row
+    apply_profile(db, company_id, tax_id, profile)
+    return row
+
+
+def apply_profile(
+    db: Session, company_id: int, tax_id: str, profile: Mapping[str, object] | None
+) -> None:
+    """Take the offer state from a profile already in hand.
+
+    The Didox sign-in reads the profile anyway (it names the signer), so it hands
+    the same answer here — no second call. A company that signed the offer on
+    didox.uz is then not asked to sign it again in the cabinet. A profile that
+    is missing, or silent on the field, changes nothing.
+    """
+    if profile is None:
+        return
     # `1`/`0` in every sample we have seen; accept a bool too rather than guess.
     signed = profile.get("offerSigned")
     if signed in (1, True):
         note_offer_signed(db, company_id, tax_id)
     elif signed in (0, False):
         note_offer_required(db, company_id, tax_id)
-    return row
 
 
 def note_offer_required(db: Session, company_id: int, tax_id: str) -> DidoxCompany:

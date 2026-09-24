@@ -2802,7 +2802,9 @@
       "no_cert": "Hech qanday ERI kaliti topilmadi.",
       "cert_mismatch": "Sertifikatdagi STIR kompaniya STIRiga mos emas.",
       "disabled": "Bu tizimda Didox ulanmagan.",
-      "failed": "Didox’ga ulanib bo‘lmadi."
+      "failed": "Didox’ga ulanib bo‘lmadi.",
+      "not_registered": "Kompaniyaning Didox’da hali akkaunti yo‘q — quyida ro‘yxatdan o‘tkazing.",
+      "rejected": "Didox rad etdi: {{message}}"
     },
     "signErrors": {
       "module_missing": "E-IMZO topilmadi. Modulni ishga tushiring.",
@@ -2825,6 +2827,55 @@
         "document_not_created": "Hujjat operatorda hali yaratilmagan.",
         "didox_unavailable": "Didox hozir mavjud emas. Keyinroq urinib ko‘ring."
       }
+    },
+    "ownerOnly": "Kompaniyani Didox’ga faqat uning egasi ulashi mumkin."
+  },
+  "didoxOnboarding": {
+    "title": "Didox’ga ulanish",
+    "subtitle": "{{company}} — elektron hujjat aylanishi",
+    "why": "Didox orqali shartnomalar my.soliq.uz’ga tushadi. Ularni imzolash uchun kompaniyaning Didox’da akkaunti va operatorning imzolangan ommaviy ofertasi bo‘lishi kerak. Bu bir marta qilinadi.",
+    "later": "Keyinroq",
+    "steps": {
+      "account": "Didox akkaunti",
+      "offer": "Didox ommaviy ofertasi"
+    },
+    "account": {
+      "haveTitle": "Kompaniyaning Didox’da akkaunti bormi?",
+      "haveBody": "Kompaniyaning ERI kaliti bilan kiring — boshqa hech narsa kerak emas. Oferta didox.uz’da imzolangan bo‘lsa, buni ko‘ramiz.",
+      "signIn": "Didox’ga ERI bilan kirish",
+      "registerTitle": "Kompaniyani Didox’da ro‘yxatdan o‘tkazish",
+      "registerBody": "Email va parol — didox.uz kabinetiga kirish uchun. Biz ularni Didox’ga uzatamiz va saqlamaymiz. Ro‘yxatdan o‘tish kompaniyaning ERI kaliti bilan tasdiqlanadi.",
+      "email": "Email",
+      "emailInvalid": "Email’ni «+» belgisisiz kiriting — Didox uni qabul qilmaydi.",
+      "mobile": "Telefon",
+      "mobileHint": "Faqat raqamlar, mamlakat kodi bilan: 998901234567.",
+      "mobileInvalid": "9 dan 15 gacha raqam.",
+      "password": "didox.uz uchun parol",
+      "passwordHint": "Kamida 8 ta belgi.",
+      "passwordShort": "Kamida 8 ta belgi.",
+      "register": "ERI bilan ro‘yxatdan o‘tkazish"
+    },
+    "offer": {
+      "title": "Didox ommaviy ofertasi",
+      "body": "EHA operatorining ofertasini o‘qing. Kompaniyaning ERI kaliti bilan imzolash uni qabul qilishni anglatadi — busiz Didox birorta hujjatni qabul qilmaydi.",
+      "loading": "Oferta yuklanmoqda…",
+      "sessionHint": "Oferta Didox’da saqlanadi. Uni ochish uchun kompaniyaning ERI kaliti bilan kiring.",
+      "loadFailed": "Didox’dan ofertani yuklab bo‘lmadi.",
+      "openInTab": "Yangi oynada ochish",
+      "agree": "Didox ommaviy ofertasini o‘qidim va shartlarini qabul qilaman",
+      "errors": {
+        "module_missing": "E-IMZO topilmadi. E-IMZO modulini ishga tushiring va qayta urinib ko‘ring.",
+        "cert_mismatch": "Ushbu kompaniyaning ERI kaliti topilmadi — sertifikatdagi STIR mos emas.",
+        "failed": "Ofertani imzolab bo‘lmadi. Qayta urinib ko‘ring."
+      }
+    },
+    "done": {
+      "title": "Kompaniya Didox’ga ulandi",
+      "body": "Endi shartnomalarni Didox orqali imzolash va yuborish mumkin.",
+      "cta": "Kabinetga o‘tish"
+    },
+    "contractBlocked": {
+      "title": "Didox orqali imzolash hozircha mavjud emas"
     }
   },
   "sampleLetter": {

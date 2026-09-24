@@ -12,6 +12,7 @@ token and not a `user-key`.
 
 from __future__ import annotations
 
+import base64
 from typing import TYPE_CHECKING, Protocol
 
 import redis
@@ -24,6 +25,7 @@ from app.api.portal.deps import company_or_404
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.domains.accounts.models import UserAccount
+from app.domains.companies import service as company_service
 from app.domains.edi import onboarding, session
 from app.domains.edi import service as edi_service
 from app.domains.edi.models import DidoxCompany, DidoxDocument
@@ -42,6 +44,7 @@ from app.domains.edi.schemas import (
     DidoxStatusOut,
 )
 from app.integrations.didox import DidoxError, ProviderUnavailable, get_didox_client
+from app.models.enums import CompanyMemberRole
 
 if TYPE_CHECKING:  # pragma: no cover
     # Annotation only: importing the contracts model at module scope would tie
@@ -52,6 +55,26 @@ if TYPE_CHECKING:  # pragma: no cover
 router = APIRouter(prefix="/portal/companies", tags=["portal-didox"])
 
 _DISABLED = "didox_disabled"
+
+
+_ONBOARDERS = frozenset({CompanyMemberRole.owner})
+
+
+def _is_onboarder(db: Session, account: UserAccount, company_id: int) -> bool:
+    try:
+        company_service.require_company_role(db, account, company_id, _ONBOARDERS)
+    except company_service.InsufficientCompanyRole:
+        return False
+    return True
+
+
+def _require_onboarder(db: Session, account: UserAccount, company_id: int) -> None:
+    """Registering at Didox and accepting its offer act FOR the company — owner only.
+
+    Signing in is not gated: every member who signs documents needs a session.
+    """
+    if not _is_onboarder(db, account, company_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only_owner")
 
 
 def _guard(db: Session) -> None:
@@ -166,6 +189,7 @@ def didox_status(
     return DidoxStatusOut(
         state=onboarding.state_of(row),
         has_session=session.cached_user_key(redis_client, company.tax_id) is not None,
+        can_onboard=_is_onboarder(db, account, company.id),
     )
 
 
@@ -211,12 +235,16 @@ def didox_session(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
         ) from exc
-    # Best effort: `signer_for` already degrades a failed profile read to a
-    # signer with no name, and `remember_signer` records nothing for that.
+    # ONE profile read serves both: who signed (best effort — no profile means a
+    # signer with no name, and `remember_signer` records nothing for that), and
+    # whether the offer is signed, which spares a company that signed it on
+    # didox.uz from being asked again here.
+    profile = identity.read_profile(company, token, client)
     identity.remember_signer(
-        db, company.id, int(account.id), identity.signer_for(company, token, client)
+        db, company.id, int(account.id), identity.signer_from_profile(company, profile)
     )
     row = onboarding.note_signed_in(db, company.id, company.tax_id)
+    onboarding.apply_profile(db, company.id, company.tax_id, profile)
     db.commit()
     return DidoxSessionOut(state=onboarding.state_of(row))
 
@@ -235,6 +263,7 @@ def didox_signup(
 ) -> DidoxSessionOut:
     """Create the company's Didox account (step 1 of 2)."""
     company = company_or_404(db, account, company_id)
+    _require_onboarder(db, account, company.id)
     _guard(db)
     try:
         token = onboarding.register(
@@ -263,6 +292,53 @@ def didox_signup(
 
 
 @router.get(
+    "/{company_id}/didox/offer/pdf",
+    response_class=Response,
+    responses={
+        **errors.DIDOX_CONFLICT,
+        200: {"content": {"application/pdf": {}}, "description": "The offer PDF"},
+    },
+)
+def didox_offer_pdf(
+    company_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+) -> Response:
+    """Didox's public offer as the PDF they publish — to READ before signing.
+
+    Not the bytes that get signed (that is the JSON `GET /offer` prepares); a
+    person accepts a text they have seen, and this is that text.
+    """
+    company = company_or_404(db, account, company_id)
+    _guard(db)
+    try:
+        user_key = session.require_user_key(redis_client, company)
+        pdf_b64 = get_didox_client().offer_base64(user_key=user_key)
+    except session.UserKeyRequired as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="didox_session_required"
+        ) from exc
+    except DidoxError as exc:
+        raise _provider_error(exc) from exc
+    except ProviderUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+    try:
+        pdf = base64.b64decode(pdf_b64, validate=True)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="didox_unavailable"
+        ) from exc
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'inline; filename="didox-offer.pdf"'},
+    )
+
+
+@router.get(
     "/{company_id}/didox/offer",
     response_model=DidoxOfferOut,
     responses=errors.DIDOX_CONFLICT,
@@ -275,6 +351,7 @@ def didox_offer(
 ) -> DidoxOfferOut:
     """The public offer PDF to sign (step 2 of 2)."""
     company = company_or_404(db, account, company_id)
+    _require_onboarder(db, account, company.id)
     _guard(db)
     try:
         user_key = session.require_user_key(redis_client, company)
@@ -309,6 +386,7 @@ def didox_accept_offer(
 ) -> DidoxSessionOut:
     """Sign the public offer. Until this succeeds the first SEND fails 422."""
     company = company_or_404(db, account, company_id)
+    _require_onboarder(db, account, company.id)
     _guard(db)
     try:
         user_key = session.require_user_key(redis_client, company)

@@ -20,6 +20,15 @@ export type DidoxState = "disabled" | "not_registered" | "offer_unsigned" | "rea
 export interface DidoxStatus {
   state: DidoxState;
   has_session: boolean;
+  /** This account may register the company at Didox and accept its offer — the owner. */
+  can_onboard: boolean;
+}
+
+/** The company's login at didox.uz — typed by the owner, never stored by us. */
+export interface DidoxSignupDetails {
+  email: string;
+  mobile: string;
+  password: string;
 }
 
 export interface DidoxSignPayload {
@@ -90,6 +99,21 @@ export const didoxApi = {
   /** Mint a session from a signature over the company's ИНН. */
   openSession: (companyId: number, signature: DidoxSignature): Promise<DidoxStatus> =>
     api.post<DidoxStatus>(`/portal/companies/${companyId}/didox/session`, signature),
+
+  /** Create the company's Didox account, signed with its key over the ИНН. */
+  signup: (
+    companyId: number,
+    signature: DidoxSignature,
+    details: DidoxSignupDetails,
+  ): Promise<DidoxStatus> =>
+    api.post<DidoxStatus>(`/portal/companies/${companyId}/didox/signup`, {
+      ...signature,
+      ...details,
+    }),
+
+  /** The public offer as Didox publishes it — to READ before signing. */
+  offerPdf: (companyId: number): Promise<Blob> =>
+    api.blob(`/portal/companies/${companyId}/didox/offer/pdf`),
 
   /** What the seller is about to send at the operator, and what blocks it. */
   /**

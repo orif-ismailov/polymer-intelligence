@@ -234,14 +234,13 @@ def _stub_identity(company: Company, pkcs7_64: str) -> DidoxIdentityResult:
     )
 
 
-def signer_for(company: Company, token: str, didox: _Verifier) -> DidoxSigner:
-    """Name the person behind `token`, falling back to what we already know.
+def read_profile(company: Company, token: str, didox: _Verifier) -> Mapping[str, object] | None:
+    """`GET /v1/profile` for `token`, or None when Didox will not say.
 
-    `GET /v1/profile` answers `422 "Failed to get Phis By Tin Info info from
-    soliq"` for any company Didox cannot resolve in the tax registry, and it can
-    be down like anything else. Neither may cost us the confirmation: the
-    signature verified and the INN is bound whatever the profile says, so a
-    failure here degrades to a signer carrying only the INN we authenticated for.
+    It answers `422 "Failed to get Phis By Tin Info info from soliq"` for any
+    company Didox cannot resolve in the tax registry, and it can be down like
+    anything else. Read ONCE per sign-in: it names the signer and carries the
+    offer state, and both are taken from the same answer.
     """
     try:
         payload = didox.profile(user_key=token)
@@ -250,8 +249,24 @@ def signer_for(company: Company, token: str, didox: _Verifier) -> DidoxSigner:
             "didox.identity.profile_unavailable",
             extra={"tax_id": company.tax_id, "error": str(exc)},
         )
-        return DidoxSigner(org_inn=company.tax_id)
+        return None
+    return payload if isinstance(payload, Mapping) else None
 
+
+def signer_for(company: Company, token: str, didox: _Verifier) -> DidoxSigner:
+    """Name the person behind `token`, falling back to what we already know."""
+    return signer_from_profile(company, read_profile(company, token, didox))
+
+
+def signer_from_profile(company: Company, payload: Mapping[str, object] | None) -> DidoxSigner:
+    """The signer a profile names.
+
+    No profile may not cost us the confirmation: the signature verified and the
+    INN is bound whatever the profile says, so it degrades to a signer carrying
+    only the INN we authenticated for.
+    """
+    if payload is None:
+        return DidoxSigner(org_inn=company.tax_id)
     return DidoxSigner(
         org_name=_text(payload.get("fullName")),
         # Didox echoes the company it authenticated; ours is the INN it accepted

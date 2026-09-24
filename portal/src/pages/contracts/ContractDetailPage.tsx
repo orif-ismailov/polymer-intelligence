@@ -8,7 +8,7 @@ import { useAuthStore } from "@/entities/account";
 import { useActiveCompany } from "@/entities/company";
 import { ContractStatusBadge, contractApi, useContract } from "@/entities/contract";
 import type { ContractDetail } from "@/entities/contract";
-import { DIDOX_STATUS, didoxApi } from "@/entities/edi";
+import { DIDOX_STATUS, didoxApi, useDidoxStatus } from "@/entities/edi";
 import { DidoxDocumentCard } from "@/features/didox-contract-document";
 import { useDidoxSign } from "@/features/didox-sign";
 import { EimzoSignButton } from "@/features/eimzo-sign";
@@ -56,6 +56,7 @@ export function ContractDetailPage() {
   // Hooks cannot sit behind the loading/error returns below.
   const active = useActiveCompany().activeCompany;
   const didoxSign = useDidoxSign(active?.id ?? 0, active?.tax_id ?? "");
+  const myDidox = useDidoxStatus(active?.id ?? null).data;
 
   useEffect(() => {
     let cancelled = false;
@@ -238,6 +239,19 @@ export function ContractDetailPage() {
     };
   });
 
+  /**
+   * Nothing is signed through Didox until OUR company is on it: an account there
+   * and the public offer signed. Otherwise the click reaches Didox only to be
+   * refused, after the E-IMZO password. The cabinet says what is missing and
+   * where to finish it instead. Declining stays available — it never reaches Didox.
+   */
+  const didoxNotReady =
+    isDidoxRail &&
+    contract.status === "pending_signatures" &&
+    myDidox != null &&
+    myDidox.state !== "ready" &&
+    myDidox.state !== "disabled";
+
   const canDecline =
     isCounterparty &&
     contract.status === "pending_signatures" &&
@@ -282,7 +296,23 @@ export function ContractDetailPage() {
       {/* On the Didox rail the document has to EXIST before anyone can sign it,
           and creating it is the seller's move. The card removes itself once the
           document is there and the signing controls below take over. */}
+      {didoxNotReady && myDidox ? (
+        <Alert tone="warning" title={t("didoxOnboarding.contractBlocked.title")}>
+          <p>{t(`didox.hints.${myDidox.state}`)}</p>
+          {myDidox.can_onboard ? (
+            <div className="mt-2">
+              <LinkButton to="/cabinet/didox" size="sm" data-testid="contract-didox-onboard">
+                {t("didox.connect")}
+              </LinkButton>
+            </div>
+          ) : (
+            <p className="mt-1 text-xs">{t("didox.ownerOnly")}</p>
+          )}
+        </Alert>
+      ) : null}
+
       {isDidoxRail &&
+      !didoxNotReady &&
       contract.status === "pending_signatures" &&
       contract.didox_document_id == null &&
       active ? (
@@ -320,7 +350,7 @@ export function ContractDetailPage() {
               status line is for a document that exists — `didox_status ?? 0`
               used to read «Черновик — можно подписать» here, beside no button,
               for one that did not. */}
-          {contract.status === "pending_signatures" && isDidoxRail ? (
+          {contract.status === "pending_signatures" && isDidoxRail && !didoxNotReady ? (
             <>
               {didoxSignable ? (
                 <Button
