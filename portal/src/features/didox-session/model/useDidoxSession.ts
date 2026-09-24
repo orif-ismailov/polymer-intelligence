@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 import { didoxApi } from "@/entities/edi";
 import type { DidoxSignature, DidoxStatus } from "@/entities/edi";
-import { ApiError } from "@/shared/api";
+import { ApiError, detailCode } from "@/shared/api";
 import { getEimzoBridge } from "@/shared/lib/eimzo";
 
 /**
@@ -82,8 +82,7 @@ export function useDidoxSession(companyId: number, taxId: string): UseDidoxSessi
         const needsSession =
           err instanceof ApiError &&
           err.status === 409 &&
-          typeof err.detail === "string" &&
-          err.detail === "didox_session_required";
+          detailCode(err) === "didox_session_required";
         if (!needsSession) throw err;
 
         setMinting(true);

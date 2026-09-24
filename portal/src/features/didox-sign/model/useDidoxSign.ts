@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { didoxApi } from "@/entities/edi";
 import type { DidoxDocumentResult } from "@/entities/edi";
 import { useDidoxSession } from "@/features/didox-session";
-import { ApiError } from "@/shared/api";
+import { ApiError, detailCode } from "@/shared/api";
 import { CapiwsError, getEimzoBridge } from "@/shared/lib/eimzo";
 
 /**
@@ -116,7 +116,7 @@ export function useDidoxSign(companyId: number, taxId: string): UseDidoxSign {
         else if (
           err instanceof ApiError &&
           err.status === 409 &&
-          err.detail === "didox_offer_required"
+          detailCode(err) === "didox_offer_required"
         ) {
           setError("offer_required");
         } else {
