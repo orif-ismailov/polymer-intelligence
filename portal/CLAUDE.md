@@ -31,9 +31,11 @@ whole SMS rail was deleted with it. Cabinet routes are **client-rendered only** 
 `noindex`, which is now one line of robots.txt (`Disallow: /cabinet`) rather than a list
 that kept drifting.
 
-Both are served from `cabinet.ai-imex.com`. The marketplace has not moved to the apex
-domain yet — that decision is open, and the code is written so it is one env var
-(`PUBLIC_SITE_ORIGIN`) plus an nginx vhost, never a rebuild.
+Both are served from the apex, **`ai-imex.com`** (dev: `dev.ai-imex.com`). They moved there
+from `cabinet.ai-imex.com` on 24.09.2026, which was one env var (`PUBLIC_SITE_ORIGIN`) plus
+nginx vhosts, no rebuild; `cabinet.*` is retired, not redirected. The Telegram Web App lost the
+apex in the same move and is currently served nowhere — the Mini App is to open the portal
+instead, not yet done.
 
 ### The two namespaces
 
@@ -169,7 +171,7 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
 - **i18n** locales `ru`/`uz`/`en` (ru primary) under `shared/i18n/locales/` — keep the key trees
   identical across all three (a missing key is a runtime error). No fa/zh here (portal launch set).
 - **API base is relative** (`/api/v1`): dev = vite proxy → :8000; prod = nginx same-origin at
-  `cabinet.ai-imex.com` (no CORS). Don't hardcode absolute API URLs.
+  `ai-imex.com` (no CORS). Don't hardcode absolute API URLs.
 - **Enforcement is badge-only in R1**: publishing requires a *verified* company (backend 403
   `company_not_verified`), surfaced as a locked offer form. No other gates are flipped.
 - **Registration is the gate, not a page in the cabinet.** `RequireCompany` sends an account with
@@ -316,7 +318,7 @@ Four more things this rail taught us the expensive way, all on 25–27.08.2026:
 
 **The portal is a long-running service now, not a static bundle.** `deploy/Dockerfile.portal`
 builds a runnable Node image; the `portal` compose service runs `server.js` on :3000, and
-nginx *proxies* `cabinet.ai-imex.com` to it instead of serving `/var/www/portal`. Prod TLS
+nginx *proxies* `ai-imex.com` to it instead of serving `/var/www/portal`. Prod TLS
 terminates on the host front door (behind-proxy topology — see `deploy/CLAUDE.md`).
 
 Two runtime env vars, both read by `server.js`, neither baked into the bundle:
@@ -341,9 +343,10 @@ gates `build-images`, which pushes `…-portal:<branch>`. The deploy job's `dock
 gone from both deploy jobs, and running it would fail on an undefined service.
 
 Two things a request needs that live OUTSIDE this repo's containers, and both are ops steps:
-`cabinet.ai-imex.com` DNS, and a **host** nginx vhost forwarding it to `127.0.0.1:8080` —
+`ai-imex.com` DNS, and a **host** nginx vhost forwarding it to `127.0.0.1:8080` —
 the inner nginx routes by `Host`, so a domain with no host-side block never reaches it
-(`deploy/nginx/host-vhost.ai-imex.conf.example` now ships that block; certbot covers the name).
+(`deploy/nginx/host-vhost.ai-imex.conf.example` ships that block; certbot covers the name).
+`www.ai-imex.com` only 301s to the apex, so canonical URLs have one host.
 
 The bundle needs no build-time env or secrets: the API base is the relative `/api/v1`. Nothing
 dev-only ships — `/dev/ui` is behind `import.meta.env.DEV`, and there is no dev-only auth hook

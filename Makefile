@@ -32,7 +32,7 @@ seed: ## Re-run the idempotent core seeders against the RUNNING stack
 smoke: ## Run the full-stack production-compose smoke (D-02, synthetic data + placeholder env)
 	bash tests/smoke/test_smoke_full_stack.sh
 
-webapp-bundle: ## Build the Telegram Web App and load it into the webapp_static volume (nginx serves /webapp/)
+webapp-bundle: ## Build the Telegram Web App and load it into the webapp_static volume (not served since 24.09.2026 — the portal holds ai-imex.com)
 	$(COMPOSE) --profile build run --rm --build webapp-build
 
 env-sync: ## Refresh the [panel: X] markers in deploy/.env.example from the settings specs
@@ -40,7 +40,7 @@ env-sync: ## Refresh the [panel: X] markers in deploy/.env.example from the sett
 # `test_env_contract_sync` fails when this is out of date, so CI says to run it.
 	uv run --project backend python scripts/sync_env_example.py
 
-portal-bundle: ## Rebuild + restart the SSR portal service (nginx proxies cabinet.*)
+portal-bundle: ## Rebuild + restart the SSR portal service (nginx proxies ai-imex.com)
 	# The portal is no longer a bundle copied into a volume: it is a long-running
 	# Node process that server-renders the public marketplace routes. The target
 	# keeps its name so existing runbooks and muscle memory still work.

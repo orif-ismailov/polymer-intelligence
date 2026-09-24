@@ -61,7 +61,7 @@ Each component also has its own scoped `CLAUDE.md` (`backend/CLAUDE.md`, `dashbo
    Company verification:    cabinet accounts, E-IMZO signature,          ├─ portal (Vite SSR)
                              staff verification queue                    │  client cabinet +
    Deal Lifecycle:          contracts (E-IMZO e-sign), escrow payments,  │  public storefront
-                             chemical compliance, lab sample verification,│  (cabinet.ai-imex.com)
+                             chemical compliance, lab sample verification,│  (ai-imex.com)
                              government-registry evidence               ─┘
 ```
 
@@ -270,8 +270,8 @@ Four separate frontends, each with its own scoped `CLAUDE.md`:
 | App | Stack | Purpose | Served at |
 |---|---|---|---|
 | `dashboard/` | Next.js 16 (App Router), React 18, TanStack Query, Tailwind, shadcn, `app/[locale]/` + `next-intl` | Internal team dashboard: live signal feed, moderation, admin (users/products/settings/verification/contracts/escrow/substances/licenses/lab), news/reports, sourcing/partners/inventory/intel. | `admin.ai-imex.com` |
-| `webapp/` | React 18 + Vite, react-router, i18next, zustand | Telegram Mini App: marketplace (buyer inquiries / seller offers), news reader, request-submission wizard. Also runs standalone in a plain browser. | `ai-imex.com` (static bundle at the site root) |
-| `portal/` | React 18 + Vite (SSR via a small Express `server.js`), react-router v7, TanStack Query, zustand, i18next, Feature-Sliced Design | Client cabinet (staff-issued login+password accounts, company verification, offer publishing, contracts, deals, compliance, lab/samples, manufacturers) **and** the public, server-rendered marketplace storefront (`/`, `/market`, the four company directories, `/prices`, `/news`) for SEO crawlability. Public routes render to HTML (`entry-server.tsx`); everything under `/cabinet` ships as an app shell and renders client-side (`entry-client.tsx`), because the access token lives in memory and the refresh cookie is scoped to `/api/v1/portal` — the SSR process has no session to render a cabinet page from. | `cabinet.ai-imex.com` |
+| `webapp/` | React 18 + Vite, react-router, i18next, zustand | Telegram Mini App: marketplace (buyer inquiries / seller offers), news reader, request-submission wizard. Also runs standalone in a plain browser. | none since 24.09.2026 (the portal took `ai-imex.com`; Mini App rework pending) |
+| `portal/` | React 18 + Vite (SSR via a small Express `server.js`), react-router v7, TanStack Query, zustand, i18next, Feature-Sliced Design | Client cabinet (staff-issued login+password accounts, company verification, offer publishing, contracts, deals, compliance, lab/samples, manufacturers) **and** the public, server-rendered marketplace storefront (`/`, `/market`, the four company directories, `/prices`, `/news`) for SEO crawlability. Public routes render to HTML (`entry-server.tsx`); everything under `/cabinet` ships as an app shell and renders client-side (`entry-client.tsx`), because the access token lives in memory and the refresh cookie is scoped to `/api/v1/portal` — the SSR process has no session to render a cabinet page from. | `ai-imex.com` (until 24.09.2026 `cabinet.ai-imex.com`) |
 | `telegram/` (bot) | aiogram 3 | Bot webhook (served inside the `api` container, no separate bot process) + message templates; inline moderation callbacks. | — |
 
 `userbot/` (Telethon, MTProto) is a fifth, non-UI long-lived process that monitors Telegram
@@ -287,10 +287,10 @@ stack (everything else is internal-only). Four host vhosts route by `Host` heade
 
 - `api.ai-imex.com` → `api:8000` directly.
 - `admin.ai-imex.com` → `/api/` to `api:8000`, everything else to `dashboard:3000`.
-- `ai-imex.com` (+`www`) → `/api/` to `api:8000`, everything else served from the static
-  `webapp_static` volume (populated by `make webapp-bundle`).
-- `cabinet.ai-imex.com` → `/api/` to `api:8000`, everything else proxied to `portal:3000` (the
-  portal's own Express SSR process — no longer a static bundle/volume).
+- `ai-imex.com` → `/api/` to `api:8000`, everything else proxied to `portal:3000` (the
+  portal's own Express SSR process — no longer a static bundle/volume). `www.` 301s to it.
+  Until 24.09.2026 this was `cabinet.ai-imex.com` and the apex served the Telegram Web App
+  from `webapp_static`; `cabinet.*` is retired and the Web App is served nowhere for now.
 
 <!-- VERIFY: production TLS termination happens on a host-level nginx in front of this
 docker-compose stack (behind-proxy topology) — confirm against the live deployment before

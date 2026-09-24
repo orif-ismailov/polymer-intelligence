@@ -16,7 +16,7 @@ production. Nothing here touches the live prod stack, volumes, bot, or userbot.
 | Deployed branch | `main` (prod CI job) | `dev` (dev CI job) |
 | Inner nginx port | `127.0.0.1:8080` | `127.0.0.1:8081` (`INNER_NGINX_PORT`) |
 | Inner nginx conf | `nginx.behind-proxy.conf` | `nginx.dev-server.behind-proxy.conf` (`INNER_NGINX_CONF`) |
-| Public domains | `ai-imex.com` / `admin.` / `api.` | `dev.ai-imex.com` / `dev-admin.` / `dev-api.` / `dev-cabinet.` |
+| Public domains | `ai-imex.com` / `admin.` / `api.` | `dev.ai-imex.com` / `dev-admin.` / `dev-api.` |
 | Telegram bot | prod BotFather token | **separate** dev BotFather token |
 | Userbot session | prod account session | **separate** account session |
 
@@ -27,8 +27,8 @@ so prod and dev never drift.
 
 ```
 Internet ─HTTPS─▶ HOST nginx (one front-door, systemd)
-   ├─ ai-imex.com / admin. / api.        → 127.0.0.1:8080  → PROD compose nginx → prod api/dashboard/webapp
-   └─ dev.ai-imex.com / dev-admin. / dev-api. → 127.0.0.1:8081 → DEV compose nginx → dev  api/dashboard/webapp
+   ├─ ai-imex.com / admin. / api.        → 127.0.0.1:8080  → PROD compose nginx → prod api/dashboard/portal
+   └─ dev.ai-imex.com / dev-admin. / dev-api. → 127.0.0.1:8081 → DEV compose nginx → dev  api/dashboard/portal
 ```
 
 ---
@@ -56,13 +56,12 @@ At your DNS provider add four A-records → **the same server IP prod already us
 dev.ai-imex.com          A   <server-ip>
 dev-admin.ai-imex.com    A   <server-ip>
 dev-api.ai-imex.com      A   <server-ip>
-dev-cabinet.ai-imex.com  A   <server-ip>
 ```
 
 Verify before continuing (so certbot's HTTP-01 challenge will pass in Phase 4):
 
 ```bash
-dig +short dev.ai-imex.com dev-admin.ai-imex.com dev-api.ai-imex.com dev-cabinet.ai-imex.com   # all → <server-ip>
+dig +short dev.ai-imex.com dev-admin.ai-imex.com dev-api.ai-imex.com   # all → <server-ip>
 ```
 
 ---
@@ -169,11 +168,11 @@ sudo nginx -t && sudo systemctl reload nginx
 > the **main** `/etc/nginx/nginx.conf` `http { }` block (same fix prod needed):
 > `server_names_hash_bucket_size 64;` then `sudo nginx -t && sudo systemctl reload nginx`.
 
-Issue certs for the four dev domains (DNS from Phase 1 must already resolve here):
+Issue certs for the three dev domains (DNS from Phase 1 must already resolve here):
 
 ```bash
-sudo certbot --nginx -d dev.ai-imex.com -d dev-admin.ai-imex.com -d dev-api.ai-imex.com \
-                     -d dev-cabinet.ai-imex.com
+sudo certbot --nginx -d dev.ai-imex.com -d dev-admin.ai-imex.com -d dev-api.ai-imex.com
+# (dev-cabinet.ai-imex.com is retired since 24.09.2026 — the portal is dev.ai-imex.com)
 # certbot rewrites the dev vhost in place: listen 443 ssl, cert paths, 80→443 redirect
 sudo systemctl reload nginx
 ```
@@ -221,8 +220,8 @@ this affects prod's webhook or prod's userbot session.
 - [ ] `https://dev-api.ai-imex.com/api/v1/health` → `{"status":"ok","db":"ok","redis":"ok"}`
 - [ ] `https://dev-admin.ai-imex.com` loads; log in with a seeded staff account, then
       rotate that password in dev.
-- [ ] `https://dev.ai-imex.com` serves the Telegram Web App bundle.
-- [ ] The **dev bot** replies to `/start` and opens the Web App button (dev webhook live).
+- [ ] `https://dev.ai-imex.com` serves the portal (storefront at `/`, cabinet at `/cabinet`).
+- [ ] The **dev bot** replies to `/start` and opens the menu button — it opens the portal now (dev webhook live).
 - [ ] Dev **userbot heartbeat** is fresh (no `check_userbot_health` alert), and only the
       dev userbot runs on the dev account.
 - [ ] `deploy/dev-compose.sh ps` shows api/worker/beat/userbot/dashboard/nginx Up.

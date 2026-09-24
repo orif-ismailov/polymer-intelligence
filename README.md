@@ -20,7 +20,7 @@ polymer-intelligence/
 │   └── tests/
 ├── dashboard/        # Next.js 16 (App Router) internal team dashboard
 ├── webapp/           # React + Vite Telegram Mini App (marketplace, news, request wizard)
-├── portal/           # React + Vite (Feature-Sliced Design) client cabinet — cabinet.ai-imex.com
+├── portal/           # React + Vite (Feature-Sliced Design) storefront + client cabinet — ai-imex.com
 ├── telegram/         # aiogram 3 bot (webhook + templates)
 ├── userbot/          # Telethon MTProto channel monitor (long-lived process)
 ├── workers/          # Standalone uzex_backfill crawler (own DB, own process)

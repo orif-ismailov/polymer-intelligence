@@ -34,7 +34,9 @@ on startup when `PUBLIC_WEBAPP_URL` is set.
 - `setup_webhook()` **no-ops when `PUBLIC_WEBAPP_URL` is empty** so dev/CI never call Telegram.
   Webhook URL = `${PUBLIC_API_URL or PUBLIC_WEBAPP_URL}/api/v1/telegram/webhook/${WEBHOOK_SECRET}`
   (the webhook lives on the API domain, `api.ai-imex.com`); the WebApp button points at
-  `${PUBLIC_WEBAPP_URL}/` (the Web App is served at the root of `ai-imex.com`).
+  `${PUBLIC_WEBAPP_URL}/` — `https://ai-imex.com`, which since 24.09.2026 is the PORTAL, not the
+  Web App. So the button opens the portal, and the `/#/requests/{id}` links in status pushes land
+  on the portal home until the Mini App rework maps them.
 - **Never log `WEBHOOK_SECRET`** — `setup_webhook` logs a masked URL only (CR-03).
 - **Templates**: `load_template(lang, name)` falls back to `ru` when a lang dir is missing. Add new
   templates to all of `ru`/`uz`/`tr`/`fa`/`zh`.

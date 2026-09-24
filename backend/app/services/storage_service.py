@@ -429,7 +429,7 @@ def presign_company_logo(company: Company, ttl: int = 600) -> str | None:
     already use, which also keeps media same-origin with the portal.
 
     Returned as a root-relative path so it works unchanged behind every host the
-    app is served from (cabinet./dev-cabinet./localhost) with no base-URL config.
+    app is served from (ai-imex.com / dev.ai-imex.com / localhost) with no base-URL config.
 
     `ttl` is accepted for call-site compatibility and ignored: the proxy route
     carries no signature to expire.

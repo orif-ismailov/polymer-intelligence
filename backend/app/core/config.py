@@ -371,8 +371,9 @@ class Settings(BaseSettings):
     S3_BUCKET: str = "polymer-files"
 
     # ── Telegram Web App ──────────────────────────────────────────────────────
-    # Externally reachable Web App base URL (ai-imex.com) used to build status-push
-    # deep-link buttons and the WebApp launch button. Empty default keeps the test
+    # Externally reachable Web App base URL used to build status-push deep-link
+    # buttons and the WebApp launch button. In prod it is https://ai-imex.com, which
+    # since 24.09.2026 serves the PORTAL, so those buttons open the portal. Empty default keeps the test
     # suite green (no live infrastructure needed); set in .env for production.
     PUBLIC_WEBAPP_URL: str = ""
     # Externally reachable API base URL (api.ai-imex.com) used to register the

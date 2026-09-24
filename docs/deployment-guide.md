@@ -20,7 +20,7 @@
 1. [Prerequisites](#1-prerequisites)
 2. [Environment / secrets matrix](#2-environment--secrets-matrix)
 3. [TLS certificates via certbot](#3-tls-certificates-via-certbot)
-4. [First run — stand up the stack](#4-first-run--stand-up-the-stack)
+4. [First run — stand up the stack](#4-first-run--stand-up-the-stack) — incl. §4c, the portal's move to the apex
 5. [Telegram bot webhook](#5-telegram-bot-webhook)
 6. [Userbot session setup](#6-userbot-session-setup)
 7. [Backup cron](#7-backup-cron)
@@ -159,14 +159,14 @@ steps above the same way:
   repo's containers) terminates TLS and forwards by `Host` header. An example host vhost
   ships at `deploy/nginx/host-vhost.ai-imex.conf.example`.
 - `deploy/nginx/nginx.dev-server.behind-proxy.conf` is the equivalent for the shared
-  dev-server environment (`dev.*`/`dev-cabinet.*` hostnames, `INNER_NGINX_PORT=8081`) — see
+  dev-server environment (`dev.*` hostnames, `INNER_NGINX_PORT=8081`) — see
   [`docs/runbook-dev-environment.md`](./runbook-dev-environment.md).
 
 If the host you are deploying to runs the behind-proxy topology, certs are managed by the
 **host** nginx, not this container — the domain/cert-path edits in Steps 2–3 above do not
 apply to `nginx.conf` in that case (the host vhost file is the one to edit instead), and
 `INNER_NGINX_CONF` in `../.env` selects which inner config compose mounts. Also note: the
-`cabinet.ai-imex.com` (client cabinet / portal, §4b) server block exists **only** in the
+`ai-imex.com` (client cabinet / portal, §4b) server block exists **only** in the
 behind-proxy configs — it is not present in the self-TLS `nginx.conf`. Confirm which
 topology is actually in use on your host before following this section verbatim.
 
@@ -223,6 +223,10 @@ stand-up sequence this guide describes, so a green smoke confirms the deployment
 
 ## 4a. Load the Telegram Web App bundle
 
+> **Not served since 24.09.2026.** The portal took the root of `ai-imex.com` (§4c) and
+> `webapp_static` is no longer mounted into nginx. The bundle is still built so the Mini App
+> rework (open the portal from Telegram) has something to start from.
+
 nginx serves the Telegram Web App at `/webapp/` from the `webapp_static` volume,
 which is **empty until you populate it**. A one-shot `webapp-build` compose service
 (profile `build`) builds the Vite bundle and loads it into that volume — run it at
@@ -245,11 +249,11 @@ nginx), so the build needs no environment or secrets.
 
 ## 4b. Client Cabinet / Portal (SSR service)
 
-The client cabinet (`cabinet.ai-imex.com`) is served by the `portal` compose service — **a
+The portal — storefront + client cabinet (`ai-imex.com`) — is served by the `portal` compose service — **a
 long-running Node process, not a static bundle.** It is built from
 `deploy/Dockerfile.portal` (context `portal/`) and runs `node server.js` on port 3000
 inside the container. Unlike the webapp, there is no bundle-to-volume step: nginx
-**proxies** `cabinet.ai-imex.com` to `http://portal:3000` (the `cabinet.ai-imex.com` server
+**proxies** `ai-imex.com` to `http://portal:3000` (the `ai-imex.com` server
 block lives in `deploy/nginx/nginx.behind-proxy.conf` — see the topology note in §3)
 instead of serving files from a volume.
 
@@ -292,9 +296,42 @@ deploy job pulls the prebuilt `…-portal` image and refreshes it via the same
 > `portal` container is down or unhealthy — check `docker compose ps portal` and its logs
 > first.
 
-DNS, TLS, and the required **host-level** nginx vhost for `cabinet.ai-imex.com` are the
+DNS, TLS, and the required **host-level** nginx vhost for `ai-imex.com` are the
 same three steps documented in step 5 of the "R1 — Company Verification & Portal rollout
 checklist" section below — this section does not duplicate them.
+
+---
+
+## 4c. Cutover: the portal moves from `cabinet.ai-imex.com` to the apex (24.09.2026)
+
+Before this change the apex served the static Telegram Web App and the portal lived on
+`cabinet.ai-imex.com`. Now `ai-imex.com` IS the portal, `www.` 301s to it, and `cabinet.*` is
+**retired — not redirected**. Nothing in the backend or the bundle names a host (the API base
+is relative, cookies carry no `Domain`), so the cutover is config on the server, in this order:
+
+1. **`../.env`** (prod): `PUBLIC_SITE_ORIGIN=https://ai-imex.com` (canonical / sitemap);
+   drop `https://cabinet.ai-imex.com` from `CORS_ALLOWED_ORIGINS`. `PUBLIC_WEBAPP_URL` stays
+   `https://ai-imex.com` — the bot's menu button now opens the portal.
+2. **Deploy** the commit (CI, or `git pull` + `docker compose … up -d nginx portal`) — the inner
+   `nginx.behind-proxy.conf` routes the apex to `portal:3000`.
+3. **Host vhost**: delete the `cabinet.ai-imex.com` block from the server's
+   `/etc/nginx/sites-enabled/ai-imex.conf` (the apex/www blocks already forward to :8080),
+   `nginx -t`, reload. Then drop the name from the certificate:
+   `certbot --nginx --cert-name <name> -d ai-imex.com -d www.ai-imex.com -d admin.ai-imex.com -d api.ai-imex.com`.
+4. **DNS**: remove the `cabinet` record once nothing answers there.
+5. **E-IMZO**: signing on `ai-imex.com` needs an API-key ISSUED for that origin
+   (`portal/src/shared/lib/eimzo/apikey.ts`) — without it every sign answers
+   `module_not_authorized`.
+6. **Verify**:
+   ```bash
+   curl -sI https://ai-imex.com/                  | head -1   # 200 from the portal
+   curl -sI https://www.ai-imex.com/market        | grep -i location   # https://ai-imex.com/market
+   curl -s  https://ai-imex.com/robots.txt | grep Sitemap         # https://ai-imex.com/sitemap.xml
+   curl -s  https://ai-imex.com/api/v1/health
+   ```
+
+The dev stack mirrors it: `dev.ai-imex.com` is the portal, `dev-cabinet.ai-imex.com` is retired
+(set `PUBLIC_SITE_ORIGIN=https://dev.ai-imex.com` or leave it empty there).
 
 ---
 
@@ -427,26 +464,26 @@ flipped. Rollout (dev → prod):
    - Leave the enforcement app-settings OFF (`verification_auto_approve`,
      `bank_verification_required`, `verification_required_for_publish`) — badge-only.
 5. **DNS + TLS + the host vhost** — three steps, and the third is the one that gets missed:
-   - `cabinet.ai-imex.com` DNS → the host front door;
+   - `ai-imex.com` DNS → the host front door;
    - a **host** nginx server block for that name forwarding to `127.0.0.1:8080`. The inner
      nginx routes by `Host`, so a domain with no host-side block never reaches it, no matter
      how healthy the container is. The block ships in
      `deploy/nginx/host-vhost.ai-imex.conf.example` — copy the file, `nginx -t`, reload;
-   - the cert: add `-d cabinet.ai-imex.com` to the certbot invocation in that file's header.
+   - the cert: add `-d ai-imex.com` to the certbot invocation in that file's header.
 
-   (The inner `cabinet.*` block has been in `nginx.behind-proxy.conf` since R1; the dev stack's
-   equivalent is `dev-cabinet.ai-imex.com` in `nginx.dev-server.behind-proxy.conf`.)
+   (The inner block is in `nginx.behind-proxy.conf`; the dev stack's equivalent is
+   `dev.ai-imex.com` in `nginx.dev-server.behind-proxy.conf`.)
 6. **Verify** (from outside the server, so the host front door is in the path):
    ```bash
-   curl -sI https://cabinet.ai-imex.com/            | head -1   # 200, not 404/502
-   curl -s   https://cabinet.ai-imex.com/cabinet    -o /dev/null -w '%{http_code}\n'  # 200 — cabinet shell
-   curl -sI  https://cabinet.ai-imex.com/companies  | head -1   # 301 → /cabinet/companies
-   curl -s   https://cabinet.ai-imex.com/api/v1/health                                 # same-origin API
+   curl -sI https://ai-imex.com/            | head -1   # 200, not 404/502
+   curl -s   https://ai-imex.com/cabinet    -o /dev/null -w '%{http_code}\n'  # 200 — cabinet shell
+   curl -sI  https://ai-imex.com/companies  | head -1   # 301 → /cabinet/companies
+   curl -s   https://ai-imex.com/api/v1/health                                 # same-origin API
    ```
    A **502** means either the inner nginx is unreachable (check the `nginx` container), or —
    now that the cabinet is proxied to a live service rather than served from a volume — that
    the `portal` container itself is down/unhealthy (check `docker compose ps portal` and its
-   logs; see §4b). **Landing on another site** means the host vhost for `cabinet.*` is
+   logs; see §4b). **Landing on another site** means the host vhost for `ai-imex.com` is
    missing → step 5.
 7. **Announce**: verified companies now carry a «проверено» badge and can publish from the cabinet.
 
@@ -490,7 +527,8 @@ Triggers on a push to `main`, after `build-images` and every other CI job succee
    alone refreshes every long-running service, **including `portal`** (it is no longer a
    bundle-to-volume step; see §4b).
 4. Refreshes the Telegram Web App bundle: `--profile build pull webapp-build` then
-   `--profile build run --rm webapp-build` (the one-shot copy into `webapp_static`, §4a).
+   `--profile build run --rm webapp-build` (the one-shot copy into `webapp_static`, §4a —
+   not served since 24.09.2026).
 5. `restart nginx`, `docker compose ps`, `docker logout ghcr.io`.
 
 A `concurrency` group (`deploy-main`) prevents two prod deploy runs from overlapping.
@@ -519,7 +557,7 @@ This guide covers first-run stand-up. For everything else:
 - **System architecture** (components, data flow) → [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
 - **Restore from a backup dump** (≤2 h procedure) → [`docs/runbook-backup-restore.md`](./runbook-backup-restore.md).
 - **Stand up the shared dev-server environment** (auto-deploys from `dev`, separate compose
-  project, `dev.*`/`dev-cabinet.*` hostnames) → [`docs/runbook-dev-environment.md`](./runbook-dev-environment.md).
+  project, `dev.*` hostnames) → [`docs/runbook-dev-environment.md`](./runbook-dev-environment.md).
 - **Migrate production to a new server** (fresh stand-up, same domain, no data carried over)
   → [`docs/runbook-server-migration.md`](./runbook-server-migration.md).
 - **Container/nginx/backup implementation details** → [`../deploy/CLAUDE.md`](../deploy/CLAUDE.md).
