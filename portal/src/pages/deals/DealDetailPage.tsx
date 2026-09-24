@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { useActiveCompany } from "@/entities/company";
 import { DealStatusBadge, useDeal } from "@/entities/deal";
-import type { DealParty, DealStatus } from "@/entities/deal";
+import type { DealDetail, DealParty, DealStatus } from "@/entities/deal";
 import {
   DealActionBar,
   DealChat,
@@ -50,6 +50,51 @@ const FLOW: DealStatus[] = [
   "delivered",
   "completed",
 ];
+
+/**
+ * The direct rail's track. The deal tracks the GOODS and the payment is its own
+ * step, because on postpayment the goods move first — a single line would have
+ * to mark «Оплачено» done for money nobody has received. Payment statuses sit
+ * at the contract_signed rank + ½: past the signature, before the shipment.
+ */
+const DIRECT_GOODS: DealStatus[] = [
+  "negotiation",
+  "contract_pending",
+  "contract_signed",
+  "shipped",
+  "delivered",
+  "completed",
+];
+
+function directRank(status: DealStatus): number {
+  if (status === "payment_pending" || status === "paid_escrow") return 2.5;
+  return DIRECT_GOODS.indexOf(status);
+}
+
+function directSteps(
+  deal: DealDetail,
+  t: (key: string) => string,
+): StatusStep[] {
+  const onPath = directRank(deal.status);
+  const rank =
+    onPath >= 0
+      ? onPath
+      : Math.max(-1, ...deal.timeline.map((entry) => directRank(entry.to_status)));
+  const stateOf = (index: number): StatusStep["state"] =>
+    rank < 0 ? "pending" : index < rank ? "done" : index === rank ? "current" : "pending";
+  const paid = deal.escrow?.status === "funded" || deal.escrow?.status === "released";
+  const payment: StatusStep = {
+    id: "payment",
+    label: t("deals.escrow.direct.stepPayment"),
+    state: paid ? "done" : deal.status === "payment_pending" ? "current" : "pending",
+  };
+  const goods = DIRECT_GOODS.map((status, index) => ({
+    id: status,
+    label: t(`deals.status.${status}`),
+    state: stateOf(index),
+  }));
+  return [...goods.slice(0, 3), payment, ...goods.slice(3)];
+}
 
 function PartyCard({ party, label }: { party: DealParty; label: string }) {
   const { t } = useTranslation();
@@ -120,11 +165,18 @@ export function DealDetailPage() {
           -1,
           ...deal.timeline.map((entry) => FLOW.indexOf(entry.to_status)),
         );
-  const steps: StatusStep[] = FLOW.map((status, index) => ({
-    id: status,
-    label: t(`deals.status.${status}`),
-    state: reached < 0 ? "pending" : index < reached ? "done" : index === reached ? "current" : "pending",
-  }));
+  const steps: StatusStep[] =
+    deal.escrow?.mode === "direct"
+      ? directSteps(deal, t)
+      : FLOW.map((status, index) => ({
+          id: status,
+          label: t(`deals.status.${status}`),
+          state:
+            reached < 0 ? "pending" : index < reached ? "done" : index === reached ? "current" : "pending",
+        }));
+  // The ЭСФ goes out with the goods. A hint, not a gate: a contract signed with
+  // E-IMZO, or a seller on another EDI operator, issues it elsewhere.
+  const factureHint = deal.role === "seller" && deal.status === "shipped" && deal.contract_id;
 
   const tabs: TabItem[] = (["chat", "documents", "timeline", "contract", "escrow", "lab"] as const).map(
     (id) => ({ id, label: t(`deals.tabs.${id}`) }),
@@ -164,7 +216,14 @@ export function DealDetailPage() {
               <PartyCard party={deal.buyer} label={t("deals.role.buyer")} />
               <PartyCard party={deal.seller} label={t("deals.role.seller")} />
             </div>
-            <div className="border-t border-border pt-4">
+            <div className="space-y-3 border-t border-border pt-4">
+              {factureHint ? (
+                <Alert tone="info" title={t("deals.factureHint")}>
+                  <LinkButton to={`/cabinet/contracts/${deal.contract_id}`} className="mt-2">
+                    {t("deals.factureOpen")}
+                  </LinkButton>
+                </Alert>
+              ) : null}
               <DealActionBar companyId={companyId as number} deal={deal} onChanged={refresh} />
             </div>
           </CardBody>

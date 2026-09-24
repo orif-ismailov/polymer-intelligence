@@ -1403,6 +1403,7 @@
       }
     },
     "modeValue": {
+      "direct": "satıcı ödemeyi kendisi onaylar",
       "stub": "operatör elle onaylar",
       "live": "banka adaptörü"
     },
@@ -1791,7 +1792,7 @@
       },
       "escrow_mode": {
         "name": "Anlaşmanın parası nasıl geçer",
-        "desc": "«stub» — her aktarımı bir operatör elle işaretler. «live» — parayı gerçekten banka yürütür."
+        "desc": "«direct» — alıcı satıcıya doğrudan öder, satıcı «Ödeme alındı»yı kendisi işaretler ve ödemeden önce sevk edebilir. «stub» — her aktarımı bir operatör elle işaretler. «live» — parayı gerçekten banka yürütür."
       },
       "rfq_supplier_push_enabled": {
         "name": "Yeni talebi tedarikçilere bildir",

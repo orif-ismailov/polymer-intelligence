@@ -30,6 +30,7 @@ from app.domains.deals import escrow as escrow_service
 from app.domains.deals import rfq as rfq_response_service
 from app.domains.deals import service as deal_service
 from app.domains.deals.models import Deal, DealDocument, DealMessage, DealStatusHistory, RfqResponse
+from app.domains.deals.payment_models import ESCROW_MODE_DIRECT
 from app.domains.deals.schemas import (
     DealCountersOut,
     DealDetailOut,
@@ -50,6 +51,7 @@ from app.domains.deals.schemas import (
 from app.domains.requests.models import Request
 from app.models.enums import (
     CompanyStatus,
+    DealActorKind,
     DealDocumentKind,
     DealStatus,
     PriceBasis,
@@ -115,6 +117,11 @@ def _summary(db: Session, deal: Deal, company_id: int) -> DealSummaryOut:
     role = deal.party_role(company_id) or "buyer"
     other = deal.seller_company_id if role == "buyer" else deal.buyer_company_id
     actor = deal_service.actor_kind_for(deal, db.get(Company, company_id))  # type: ignore[arg-type]
+    payment = escrow_service.for_deal(db, deal.id)
+    direct = payment is not None and payment.mode == ESCROW_MODE_DIRECT
+    owes_payment = actor == DealActorKind.seller and escrow_service.can_confirm_direct(
+        deal, payment
+    )
     return DealSummaryOut(
         id=deal.id,
         public_id=deal.public_id,
@@ -126,7 +133,7 @@ def _summary(db: Session, deal: Deal, company_id: int) -> DealSummaryOut:
         amount=deal.amount,
         currency=deal.currency,
         contract_id=deal.contract_id,
-        needs_action=deal_service.needs_action(deal, actor),
+        needs_action=deal_service.needs_action(deal, actor, direct=direct) or owes_payment,
         created_at=deal.created_at,
         updated_at=deal.updated_at,
     )
@@ -160,6 +167,7 @@ def _detail(db: Session, deal: Deal, company_id: int) -> DealDetailOut:
         if payment is None
         else DealEscrowOut(
             status=str(payment.status),
+            mode=payment.mode,
             amount=payment.amount,
             currency=payment.currency,
             funded_at=payment.funded_at,
@@ -189,9 +197,14 @@ def _detail(db: Session, deal: Deal, company_id: int) -> DealDetailOut:
         ],
         documents=[_document(db, d) for d in documents],
         available_transitions=[
-            str(s) for s in deal_service.available_transitions(deal, actor)
+            str(s)
+            for s in deal_service.available_transitions(
+                deal, actor, direct=payment is not None and payment.mode == ESCROW_MODE_DIRECT
+            )
         ],
         escrow=escrow,
+        can_confirm_payment=actor == DealActorKind.seller
+        and escrow_service.can_confirm_direct(deal, payment),
     )
 
 
@@ -344,6 +357,47 @@ def transition_deal(
             status_code=status.HTTP_403_FORBIDDEN, detail="actor_not_allowed"
         ) from exc
     except deal_service.InvalidDealTransition as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="invalid_transition"
+        ) from exc
+    db.commit()
+    db.refresh(deal)
+    return _detail(db, deal, company.id)
+
+
+@router.post(
+    "/companies/{company_id}/deals/{deal_id}/payment-received",
+    response_model=DealDetailOut,
+)
+def confirm_payment_received(
+    company_id: int,
+    deal_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> DealDetailOut:
+    """«Оплата получена» — the seller confirms the buyer's money arrived.
+
+    The direct rail only: with no bank and no escrow, the seller is the one who
+    sees the transfer land. A stub or live payment is moved by an operator or a
+    bank and answers 409 `not_direct` — that door stays closed to the parties.
+    """
+    company = _company_or_404(db, account, company_id)
+    deal = _deal_or_404(db, company, deal_id)
+    acting = _acting_or_403(db, deal, account, company)
+    if deal_service.actor_kind_for(deal, acting) != DealActorKind.seller:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="actor_not_allowed")
+
+    payment = escrow_service.for_deal(db, deal.id)
+    if payment is None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="no_payment")
+    try:
+        escrow_service.confirm_direct_payment(db, payment, account_id=account.id)
+    except escrow_service.WrongRail as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_direct") from exc
+    except (
+        escrow_service.InvalidEscrowTransition,
+        deal_service.InvalidDealTransition,
+    ) as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="invalid_transition"
         ) from exc

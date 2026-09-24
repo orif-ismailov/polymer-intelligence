@@ -1736,7 +1736,7 @@
       "contract_pending": "Awaiting contract",
       "contract_signed": "Contract signed",
       "payment_pending": "Awaiting payment",
-      "paid_escrow": "Paid (escrow)",
+      "paid_escrow": "Paid",
       "shipped": "Shipped",
       "delivered": "Delivered",
       "completed": "Completed",
@@ -1763,8 +1763,10 @@
       "reasonPlaceholder": "State the reason",
       "confirm": {
         "cancelled": "Cancel this deal?",
-        "disputed": "Open a dispute on this deal?"
-      }
+        "disputed": "Open a dispute on this deal?",
+        "confirmPayment": "Confirm that the buyer's money has reached your account. This cannot be undone."
+      },
+      "confirmPayment": "Payment received"
     },
     "chat": {
       "title": "Deal chat",
@@ -1807,8 +1809,17 @@
         "refunded": "Refunded to the buyer"
       },
       "refundCause": "The funds were refunded to the buyer through escrow.",
-      "amount": "Deal amount"
-    }
+      "amount": "Deal amount",
+      "direct": {
+        "pending": "Awaiting payment",
+        "paid": "Payment received",
+        "stepPayment": "Payment",
+        "title": "Direct payment to the seller",
+        "body": "The buyer pays using the details in the contract. The seller marks «Payment received» once the money arrives. Goods may ship before payment — the deal completes when the goods are received and the payment is confirmed."
+      }
+    },
+    "factureHint": "Goods shipped — issue the buyer an e-invoice (ESF) on the contract page.",
+    "factureOpen": "Open contract"
   },
   "rfq": {
     "marketTitle": "Open tenders",

@@ -268,7 +268,8 @@ def _specs() -> tuple[SettingSpec, ...]:
         SettingSpec(
             "escrow_mode",
             "ESCROW_MODE",
-            "Escrow rail: stub (an operator confirms movement) or live (bank adapter)",
+            "Payment rail: direct (the seller confirms receipt, may ship first), "
+            "stub (an operator confirms escrow movement) or live (bank adapter)",
             "deals",
             overridable=True,
             confirm=(

@@ -52,6 +52,10 @@ export const dealApi = {
       reason: reason ?? null,
     }),
 
+  /** «Оплата получена» — the seller, on the direct rail only. */
+  confirmPayment: (companyId: number, dealId: number): Promise<DealDetail> =>
+    api.post<DealDetail>(`${base(companyId)}/${dealId}/payment-received`),
+
   // ── chat ────────────────────────────────────────────────────────────────
   messages: (companyId: number, dealId: number, afterId?: number | null): Promise<DealMessagePage> =>
     api.get<DealMessagePage>(`${base(companyId)}/${dealId}/messages`, {
