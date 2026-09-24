@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
+import { useBankByMfo } from "@/entities/bank";
 import { useAddBankAccount, useRemoveBankAccount } from "@/entities/company";
 import type { CompanyDetail } from "@/entities/company";
 import { BANK_MFO_LENGTH, CURRENCIES } from "@/shared/config";
@@ -40,6 +41,25 @@ export function BankSection({ company, editable }: BankSectionProps) {
   const mfoOk = form.bank_mfo.length === BANK_MFO_LENGTH && DIGITS.test(form.bank_mfo);
   const accountOk = form.account_number.trim().length > 0;
   const valid = mfoOk && accountOk;
+
+  // Same МФО → «Название банка» prefill as the registration wizard. This form is
+  // a near-duplicate of that one, so a prefill on only one of them would be an
+  // inconsistency the user runs into the first time they add a second account.
+  //
+  // Local state rather than the wizard's store, so ownership is tracked with a
+  // ref: it is only ever true between our own fill and the user's next keystroke.
+  const { data: branch } = useBankByMfo(form.bank_mfo, adding);
+  const nameFromRegister = useRef(false);
+  useEffect(() => {
+    const incoming = branch?.bank_name?.trim();
+    if (!incoming) return;
+    setForm((f) => {
+      if (f.bank_name.trim() !== "" && !nameFromRegister.current) return f;
+      if (f.bank_name === incoming) return f;
+      nameFromRegister.current = true;
+      return { ...f, bank_name: incoming };
+    });
+  }, [branch]);
 
   function submit(): void {
     setTouched(true);
@@ -148,7 +168,15 @@ export function BankSection({ company, editable }: BankSectionProps) {
             </FormField>
             <FormField label={t("company.bankName")}>
               {({ id }) => (
-                <Input id={id} value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
+                <Input
+                  id={id}
+                  value={form.bank_name}
+                  onChange={(e) => {
+                    // Typing takes the field back off the register.
+                    nameFromRegister.current = false;
+                    setForm({ ...form, bank_name: e.target.value });
+                  }}
+                />
               )}
             </FormField>
             {add.isError ? <Alert tone="danger" title={t("errors.generic")}>{add.error.message}</Alert> : null}

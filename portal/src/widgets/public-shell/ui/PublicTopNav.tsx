@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link, NavLink } from "react-router-dom";
 
 import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
+import { ThemeToggle } from "@/features/switch-theme";
 import { PUBLIC_DIRECTORIES } from "@/shared/config";
 import { SUPPORTED_LANGS, setLanguage, type Lang } from "@/shared/i18n";
 import { cn } from "@/shared/lib";
@@ -158,6 +159,9 @@ export function PublicTopNav() {
           <span className="hidden sm:block">
             <LanguageMenu />
           </span>
+          {/* Hidden below `sm` for the same 320px reason as the language menu;
+              the drawer carries it there. */}
+          <ThemeToggle className="hidden h-9 w-9 sm:inline-flex" />
           {isAuthenticated ? (
             <LinkButton to="/cabinet" size="sm" className="h-9 px-3.5">
               {t("common.cabinet")}
@@ -268,6 +272,10 @@ export function PublicTopNav() {
                   </button>
                 ))}
               </span>
+            </li>
+            <li className="flex items-center gap-2 sm:hidden">
+              <span className="px-2 text-xs text-text-muted">{t("public.nav.theme")}</span>
+              <ThemeToggle className="h-11 w-11" />
             </li>
           </ul>
         </nav>

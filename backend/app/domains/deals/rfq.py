@@ -34,6 +34,7 @@ from app.models.enums import (
     RequestStatus,
     RfqResponseStatus,
     RfqVisibility,
+    Urgency,
 )
 from app.services import audit_service, event_service, event_types, notification_service
 
@@ -118,26 +119,61 @@ def visibility_clause(company: Company) -> ColumnElement[bool]:
     )
 
 
+#: «Скоро закрываются» — the window the tender list paints amber or red. Kept in
+#: step with `WARNING_DAYS` in the portal's `tenderDeadline.ts`, so the filter
+#: returns exactly the rows the badges mark.
+CLOSING_SOON_DAYS = 3
+
+
 def list_open_requests(
-    db: Session, company: Company, *, limit: int = 50, offset: int = 0
+    db: Session,
+    company: Company,
+    *,
+    product_id: int | None = None,
+    closing_soon: bool = False,
+    urgent: bool = False,
+    unanswered: bool = False,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[Request]:
     """Open RFQs this supplier company may answer, newest first.
 
     Filtering happens in SQL so LIMIT/OFFSET page over the visible set — a
     Python post-filter would silently under-fill pages. Excludes the viewer's
     own RFQs: a company cannot quote against itself, so listing them is a dead
-    end.
+    end. The optional filters narrow that same set, for the same reason.
+
+    - `closing_soon`: at most `CLOSING_SOON_DAYS` left of the reply window
+      (`created_at + validity_days`), and not already past it.
+    - `unanswered`: no LIVE quote from this company. A withdrawn one frees the
+      tender to be answered again, exactly as it frees the one-response slot.
     """
-    query: Query[Request] = (
-        db.query(Request)
-        .filter(
-            Request.status.in_(list(OPEN_STATUSES)),
-            Request.company_id.isnot(None),
-            Request.company_id != company.id,
-            visibility_clause(company),
-        )
-        .order_by(Request.created_at.desc(), Request.id.desc())
+    query: Query[Request] = db.query(Request).filter(
+        Request.status.in_(list(OPEN_STATUSES)),
+        Request.company_id.isnot(None),
+        Request.company_id != company.id,
+        visibility_clause(company),
     )
+    if product_id is not None:
+        query = query.filter(Request.product_id == product_id)
+    if closing_soon:
+        closes_at = Request.created_at + sa.func.make_interval(0, 0, 0, Request.validity_days)
+        now = sa.func.now()
+        query = query.filter(
+            closes_at > now,
+            closes_at <= now + sa.func.make_interval(0, 0, 0, CLOSING_SOON_DAYS),
+        )
+    if urgent:
+        query = query.filter(Request.urgency == Urgency.high)
+    if unanswered:
+        query = query.filter(
+            ~sa.exists().where(
+                RfqResponse.request_id == Request.id,
+                RfqResponse.company_id == company.id,
+                RfqResponse.status != RfqResponseStatus.withdrawn,
+            )
+        )
+    query = query.order_by(Request.created_at.desc(), Request.id.desc())
     return query.limit(max(1, min(limit, 200))).offset(max(0, offset)).all()
 
 
@@ -286,7 +322,12 @@ def list_for_request(
 
 
 def list_for_company(
-    db: Session, company: Company, *, limit: int = 50, offset: int = 0
+    db: Session,
+    company: Company,
+    *,
+    status: RfqResponseStatus | None = None,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[tuple[RfqResponse, Request]]:
     """Every quote this company has filed, newest first, with its tender.
 
@@ -295,13 +336,18 @@ def list_for_company(
     there lost sight of it exactly when the answer arrived — including the one
     that matters, `not_selected`.
 
+    `status` narrows it to one of them — the filter on «Мои предложения».
+
     Returns the pair because the caller needs both halves and a second lookup per
     row would be N+1; `ix_rfq_responses_company` covers the filter.
     """
     rows = (
         db.query(RfqResponse, Request)
         .join(Request, Request.id == RfqResponse.request_id)
-        .filter(RfqResponse.company_id == company.id)
+        .filter(
+            RfqResponse.company_id == company.id,
+            *([RfqResponse.status == status] if status is not None else []),
+        )
         .order_by(RfqResponse.id.desc())
         .limit(max(1, min(limit, 200)))
         .offset(max(0, offset))

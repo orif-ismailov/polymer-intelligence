@@ -24,6 +24,9 @@ class DidoxStatusOut(BaseModel):
     #: rather than failing an action later — but its absence never blocks the UI,
     #: since every action mints on demand and then continues.
     has_session: bool = False
+    #: Whether THIS account may register the company at Didox and accept its
+    #: offer — the owner only. Everyone else sees the state and nothing to press.
+    can_onboard: bool = False
 
 
 class DidoxSignatureIn(BaseModel):
@@ -116,8 +119,26 @@ class DidoxContractLineIn(BaseModel):
     vat_rate: int | None = Field(default=12, ge=0, le=100)
 
 
+class DidoxIkpuIn(BaseModel):
+    """The seller's ИКПУ for a contract with no offer to take it from (a tender).
+
+    Complete or refused: the code, its package and the seller's `origin` all reach
+    my.soliq.uz, and `ck_offer_ikpu_complete` asks the same of an offer.
+    """
+
+    #: 17 digits — the tasnif.soliq.uz format.
+    code: str = Field(pattern=r"^\d{17}$")
+    name: str = Field(min_length=1, max_length=500)
+    package_code: str = Field(min_length=1, max_length=50)
+    package_name: str = Field(default="", max_length=200)
+    #: How THIS seller came by the goods — Didox never supplies it.
+    origin: int = Field(ge=1, le=4)
+
+
 class DidoxContractDocumentIn(BaseModel):
     lines: list[DidoxContractLineIn] = Field(default_factory=list)
+    #: Only for a contract without an offer; an offer's own code always wins.
+    ikpu: DidoxIkpuIn | None = None
 
 
 class DidoxContractPrefillOut(BaseModel):
@@ -131,6 +152,9 @@ class DidoxContractPrefillOut(BaseModel):
     #: Already created — the screen shows the document instead of the form.
     document_id: int | None = None
     lines: list[DidoxContractLineIn] = Field(default_factory=list)
+    #: No offer behind this contract (it came from a tender), so the seller picks
+    #: the ИКПУ on the card instead of it arriving from the listing.
+    ikpu_choice: bool = False
     #: Machine-readable reasons the create would fail, so the UI can fix each in
     #: place: `ikpu_missing` · `signer_identity_missing` · `not_ready` ·
     #: `wrong_rail` · `not_seller` · `counterparty_unknown` (the buyer's ИНН is
@@ -145,6 +169,65 @@ class DidoxContractPrefillOut(BaseModel):
             "not_seller · counterparty_unknown · counterparty_ikpu_missing"
         ),
     )
+
+
+class DidoxFactureLineOut(BaseModel):
+    """A line the invoice form starts from.
+
+    `count` is what is left to invoice; `price` is None when the contract is not
+    priced in soum — an ЭСФ is, and the seller must state the soum price.
+    """
+
+    ord_no: int
+    name: str
+    count: decimal.Decimal | None
+    price: decimal.Decimal | None
+    vat_rate: int | None
+    unit: str | None
+
+
+class DidoxFactureOut(BaseModel):
+    """One invoice of a contract, with its status as the READER sees it."""
+
+    id: int
+    number: str | None
+    doc_date: datetime.date | None
+    status: int
+    #: True when the reader's company issued it (the seller).
+    outgoing: bool
+    #: Sum of the lines including VAT.
+    total: decimal.Decimal
+    #: The specification it invoices, on a framework contract.
+    specification_id: int | None = None
+
+
+class DidoxFacturesOut(BaseModel):
+    """The contract's invoices, and what the seller would issue next."""
+
+    contract_id: int
+    currency: str | None
+    is_seller: bool
+    #: No ИКПУ to take from an offer or the signed 007 — the form asks for one.
+    ikpu_choice: bool = False
+    lines: list[DidoxFactureLineOut] = Field(default_factory=list)
+    documents: list[DidoxFactureOut] = Field(default_factory=list)
+    #: An unsigned draft — sign it before issuing another.
+    pending_document_id: int | None = None
+    blockers: list[str] = Field(
+        default_factory=list,
+        description=(
+            "not_active · not_seller · signer_identity_missing · "
+            "contract_reference_missing · counterparty_unknown · specification_required"
+        ),
+    )
+
+
+class DidoxFactureIn(BaseModel):
+    lines: list[DidoxContractLineIn] = Field(min_length=1, max_length=50)
+    #: Required on a framework contract: the SIGNED specification this invoices.
+    specification_id: int | None = None
+    #: Only when `ikpu_choice` was true — otherwise the known code wins.
+    ikpu: DidoxIkpuIn | None = None
 
 
 class DidoxAdminDocumentOut(BaseModel):

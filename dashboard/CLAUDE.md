@@ -49,7 +49,16 @@ npx next typegen   # regenerate typed-route defs before tsc on a clean checkout 
   and the P7.c registry screenshot).
   They are separate because `apiFetch` always sets `Content-Type: application/json`; on a
   FormData body the browser must set the header itself so it can add the boundary.
-- **`/admin/analytics`** («Аналитика», first under НАСТРОЙКИ ПРОЕКТА) is deliberately NOT under
+- **Sidebar grouping lives in `lib/nav.ts`** (`NAV_GROUPS`), eleven groups named after bounded
+  contexts. Three things are load-bearing there: the group key `projectSettings` (renamed on screen
+  to «Настройки» but NOT in code — `SETTINGS_MODULES` finds it by that literal, and a rename 404s
+  all eight settings routes without failing a test); the `key`→`href`→`page` field order (two
+  backend tests parse this file with regexes between the `const NAV_GROUPS` and
+  `export function pageForPath` markers); and the group keys themselves, mirrored by `PageGroup`
+  in `backend/app/core/pages.py`. **Nothing checks `nav.*` locale parity** — `test_settings_translations.py`
+  covers `adminSettings` only — so a group key added to `ru.json` and missed in `zh.json` ships and
+  renders as a raw key path.
+- **`/admin/analytics`** («Расходы и лимиты», first under НАСТРОЙКИ) is deliberately NOT under
   `/admin/settings/` — the backend's `test_settings_modules.py` reads every
   `/admin/settings/<module>` href out of `lib/nav.ts` and fails when one has no matching settings
   group. `SETTINGS_MODULES` filters on that prefix for the same reason.

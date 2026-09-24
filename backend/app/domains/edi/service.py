@@ -27,6 +27,7 @@ import base64
 import datetime
 import json
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
@@ -38,12 +39,13 @@ from app.domains.edi.models import (
     STATUS_SIGNED,
     DidoxDocument,
 )
-from app.domains.edi.payloads import JsonObject
+from app.domains.edi.payloads import DocumentLine, JsonObject, line_totals
 from app.integrations.didox import (
     DidoxCreatedDocument,
     DidoxDocumentView,
     DidoxError,
     DidoxSignResult,
+    ProviderUnavailable,
 )
 from app.services import storage_service
 
@@ -144,12 +146,22 @@ def create_document(
     user_key: str,
     tax_id: str,
     client: DidoxDocuments,
+    lines: Sequence[DocumentLine] = (),
+    attachment_b64: str | None = None,
 ) -> DidoxDocument:
     """Record the row, THEN create it at Didox.
 
     That order is the recovery story: the row carries the number and is committed
     before the call, so a create we never saw the answer to is findable by
     ContractNo rather than lost.
+
+    `lines` are the goods the payload carries, recorded beside it as numbers
+    (`didox_document_lines`) — for the analytics, and for how much of a contract
+    has been invoiced.
+
+    `attachment_b64` is the PDF a «Произвольный документ» carries. It is sent as
+    `document` and NOT stored in `payload`: we hold the file already, and a copy
+    of it in JSONB would only bloat the row.
     """
     onboarding.assert_live()
     row = DidoxDocument(
@@ -166,9 +178,15 @@ def create_document(
     )
     db.add(row)
     db.flush()
+    _record_lines(db, row, lines)
 
     try:
-        created = client.create_document(doc_type, payload, user_key=user_key)
+        body = (
+            payload
+            if attachment_b64 is None
+            else {**payload, "document": f"data:application/pdf;base64,{attachment_b64}"}
+        )
+        created = client.create_document(doc_type, body, user_key=user_key)
     except DidoxError as exc:
         row.last_error = exc.message[:500]
         db.flush()
@@ -184,6 +202,31 @@ def create_document(
     row.last_error = None
     db.flush()
     return row
+
+
+def _record_lines(db: Session, row: DidoxDocument, lines: Sequence[DocumentLine]) -> None:
+    from app.domains.edi.models import DidoxDocumentLine  # noqa: PLC0415
+
+    for line in lines:
+        amount, vat_sum = line_totals(line)
+        db.add(
+            DidoxDocumentLine(
+                didox_document_id=row.id,
+                ord_no=line.ord_no,
+                product_name=line.name,
+                ikpu_code=line.catalog_code,
+                ikpu_name=line.catalog_name,
+                package_code=line.package_code,
+                package_name=line.package_name,
+                qty=line.count,
+                price=line.price,
+                vat_rate=line.vat_rate,
+                amount=amount,
+                vat_sum=vat_sum,
+                origin=line.origin,
+            )
+        )
+    db.flush()
 
 
 # ── signing, round 1: what to sign ────────────────────────────────────────────
@@ -285,10 +328,25 @@ def submit_signature(
             raise OfferRequired(str(company_id)) from exc
         raise
 
-    view = client.get_document(row.didox_id, owner=1, user_key=user_key)
-    activated = apply_status(
-        db, row, view.status, user_key=user_key, client=client
-    )
+    # Read the result AS THE SIDE THAT SIGNED. `owner=1` with the counterparty's
+    # key answers 500 — on 23.09.2026 that failed the request after Didox had
+    # accepted the buyer's signature, and the retry it provoked got «Нет такого
+    # документа».
+    #
+    # And a read that fails now is not a failed signature: `/sign` said yes, the
+    # signature is at the operator, and `poll_didox_documents` brings the status
+    # within ten minutes. Raising here rolled the request back and told the signer
+    # the opposite of what happened.
+    activated = False
+    try:
+        view = client.get_document(row.didox_id, owner=1 if outgoing else 0, user_key=user_key)
+    except (DidoxError, ProviderUnavailable) as exc:
+        logger.warning(
+            "edi.sign.status_read_failed",
+            extra={"doc_id": row.id, "error": str(exc)},
+        )
+    else:
+        activated = apply_status(db, row, view.status, user_key=user_key, client=client)
     return SignOutcome(
         status=row.status,
         activated=activated,
@@ -329,6 +387,9 @@ def apply_status(
     row.status_synced_at = utcnow()
     db.flush()
 
+    if row.subject_kind == "specification":
+        _settle_specification(db, row, status)
+
     if status in _TERMINAL_BAD:
         logger.warning(
             "didox.document.terminal",
@@ -339,6 +400,26 @@ def apply_status(
     if status != STATUS_SIGNED:
         return False
     return _on_signed(db, row, user_key=user_key, client=client)
+
+
+def _settle_specification(db: Session, row: DidoxDocument, status: int) -> None:
+    """A specification is decided at Didox: both signatures, or a refusal.
+
+    Unlike a договор it carries nothing downstream yet when it is refused, so a
+    refusal simply declines it — a new specification is drawn up instead.
+    """
+    from app.core.time import utcnow  # noqa: PLC0415
+    from app.domains.contracts.models import ContractSpecification  # noqa: PLC0415
+
+    spec = db.get(ContractSpecification, row.subject_id)
+    if spec is None or spec.status != "pending_signatures":
+        return
+    if status == STATUS_SIGNED:
+        spec.status = "active"
+        spec.activated_at = utcnow()
+    elif status == STATUS_REJECTED:
+        spec.status = "declined"
+    db.flush()
 
 
 def _on_signed(

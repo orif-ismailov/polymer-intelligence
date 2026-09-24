@@ -177,17 +177,60 @@ export function isLogisticsTariffsValid(profile: WizardLogisticsProfile): boolea
  * demanding a registration certificate here blocked people who had just presented
  * a stronger proof than the document would have been.
  */
+/**
+ * Whether the state registry has confirmed THIS company, the way the backend will
+ * judge it at submit.
+ *
+ * A prediction of the `gov_registry` check, so it asks what that check asks: the
+ * registry confirmed the STIR now on the form as ACTIVE, and the name on the form
+ * is still the registry's. A retyped name is compared, not trusted, and comes
+ * back as a `warning` — which does not waive the certificate.
+ *
+ * If the prediction is wrong the cost is soft: `documents_complete` fails, the
+ * case goes to `needs_info`, and `CHECK_TO_STEP` brings the applicant straight
+ * back to the documents step to attach it.
+ */
+export function isRegistryConfirmed(draft: {
+  identity: { tax_id: string };
+  prefilled: string[];
+  registryConfirmedTaxId: string | null;
+}): boolean {
+  const confirmed = draft.registryConfirmedTaxId;
+  return (
+    confirmed !== null &&
+    confirmed === draft.identity.tax_id.trim() &&
+    draft.prefilled.includes("legal_name")
+  );
+}
+
+/**
+ * Whether the registration certificate is superseded, mirroring
+ * `check_documents_complete`: a key that locked identity, or a registry that
+ * confirmed the company. Neither touches the bank letter.
+ */
+export function certificateWaived(draft: {
+  identityLocked: boolean;
+  identity: { tax_id: string };
+  prefilled: string[];
+  registryConfirmedTaxId: string | null;
+}): boolean {
+  return draft.identityLocked || isRegistryConfirmed(draft);
+}
+
 export function requiredDocumentKinds(
   bank: WizardBank,
-  identityLocked = false,
+  certificateSuperseded = false,
   accountType = "",
 ): string[] {
+  // `certificateSuperseded` is `certificateWaived(draft)`: E-IMZO locked identity,
+  // or the state registry confirmed the company. Either drops the registration
+  // certificate; neither drops the bank letter.
   if (isManufacturerType(accountType) || isLogisticsType(accountType) || isLaboratoryType(accountType)) {
-    // Typed-flow certs are optional to advance; registration cert still required
-    // when E-IMZO did not lock identity (documents_complete check).
-    return identityLocked ? [] : [...ALWAYS_REQUIRED_DOCS];
+    // Typed-flow certs are optional to advance; the registration cert is still
+    // required unless superseded (documents_complete check).
+    return certificateSuperseded ? [] : [...ALWAYS_REQUIRED_DOCS];
   }
-  const required = identityLocked ? [] : [...ALWAYS_REQUIRED_DOCS];
+  const required = certificateSuperseded ? [] : [...ALWAYS_REQUIRED_DOCS];
   if (bank.enabled) required.push("bank_letter");
   return required;
 }
@@ -195,10 +238,10 @@ export function requiredDocumentKinds(
 export function areDocumentsValid(
   documents: WizardDocuments,
   bank: WizardBank,
-  identityLocked = false,
+  certificateSuperseded = false,
   accountType = "",
 ): boolean {
-  return requiredDocumentKinds(bank, identityLocked, accountType).every(
+  return requiredDocumentKinds(bank, certificateSuperseded, accountType).every(
     (kind) => documents[kind] instanceof File,
   );
 }

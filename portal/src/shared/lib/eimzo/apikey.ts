@@ -19,7 +19,8 @@
  * They cover `localhost` and `127.0.0.1`, i.e. `npm run dev` and Playwright.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * PRODUCTION: `cabinet.ai-imex.com` is NOT registered with E-IMZO yet, so signing
+ * PRODUCTION: `ai-imex.com` (and `dev.ai-imex.com`) is NOT registered with E-IMZO
+ * yet — the portal moved there from `cabinet.ai-imex.com`, which never got a key — so signing
  * cannot work there. The key has to be ISSUED by E-IMZO for that exact origin — it
  * cannot be generated locally. Once obtained, append the pair to `EIMZO_API_KEYS`
  * (domain first, key second). Until then the bridge fails with a distinct

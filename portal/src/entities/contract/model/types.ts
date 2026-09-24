@@ -83,4 +83,86 @@ export interface CreateContractPayload {
    * `contract_pending` — no `contract_signed`, no escrow.
    */
   deal_id?: number | null;
+  /** The saved terms the form was filled from, if any. */
+  term_preset_id?: number | null;
+}
+
+/** A company's saved contract terms — «шаблон условий». */
+export interface TermPreset {
+  id: number;
+  name: string;
+  /** Only the keys in `PRESET_KEYS`; blank values are not stored. */
+  terms: Record<string, string>;
+  updated_at: string;
+}
+
+export interface TermPresetList {
+  items: TermPreset[];
+  /** Owners and managers edit; every member reads. */
+  can_edit: boolean;
+}
+
+export interface TermPresetPayload {
+  name: string;
+  terms: Record<string, string>;
+}
+
+/** One goods line of a specification, as stored (price WITHOUT VAT). */
+export interface SpecificationLine {
+  ord_no: number;
+  product: string;
+  qty: string | null;
+  unit: string | null;
+  price_without_vat: string | null;
+  vat_rate: number | null;
+  amount_without_vat: string | null;
+}
+
+export type SpecificationStatus =
+  | "draft"
+  | "pending_signatures"
+  | "active"
+  | "declined"
+  | "cancelled";
+
+/** «Спецификация № N» to a framework contract — one per shipment. */
+export interface Specification {
+  id: number;
+  number: number;
+  spec_date: string;
+  status: SpecificationStatus;
+  amount_without_vat: string | null;
+  vat_sum: string | null;
+  amount_with_vat: string | null;
+  document_available: boolean;
+  /** The «Произвольный документ» at Didox, once the seller has sent it. */
+  didox_document_id: number | null;
+  /** Didox's status as THIS reader sees it (1/2 mirrored). */
+  didox_status: number | null;
+  lines: SpecificationLine[];
+}
+
+export interface SpecificationList {
+  items: Specification[];
+  /** A signed framework contract takes specifications. */
+  can_create: boolean;
+  /** This company sells — it sends specifications to Didox. */
+  is_seller: boolean;
+}
+
+/** A line as typed on the form. `unit_price` is with or without VAT per `price_basis`. */
+export interface SpecificationLineInput {
+  product: string;
+  qty: string;
+  unit: string;
+  unit_price: string;
+}
+
+export interface SpecificationPayload {
+  lines: SpecificationLineInput[];
+  price_basis: "with_vat" | "without_vat";
+  vat_rate: string;
+  payment_mode: "prepay" | "schedule";
+  payment_schedule?: string;
+  delivery_days?: string;
 }

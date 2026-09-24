@@ -25,6 +25,9 @@ What it deliberately does NOT do:
 
 from __future__ import annotations
 
+import dataclasses
+import datetime
+import json
 import logging
 from typing import TYPE_CHECKING, NoReturn
 
@@ -50,6 +53,32 @@ if TYPE_CHECKING:  # pragma: no cover
     import redis
 
 logger = logging.getLogger(__name__)
+
+#: One Didox registry record per tax id, shared by every consumer in every process.
+INFO_CACHE_KEY = "didox:info:{tin}"
+
+#: A day. The registration prefill, the `gov_registry` check and the `vat_status`
+#: check all read the same `/v1/utils/info/{tin}` record, usually minutes apart;
+#: without this they asked Didox for it separately (eight calls for one company on
+#: 23.09.2026, most of them timeouts). A day is comfortably safe for the facts
+#: judged here — liquidating a company in Uzbekistan takes more than a month.
+INFO_CACHE_TTL_SECONDS = 24 * 60 * 60
+
+
+def _dump_info(info: DidoxCompanyInfo) -> str:
+    data = dataclasses.asdict(info)
+    if isinstance(info.registered_at, datetime.date):
+        data["registered_at"] = info.registered_at.isoformat()
+    return json.dumps(data, ensure_ascii=False)
+
+
+def _load_info(raw: str) -> DidoxCompanyInfo:
+    data = json.loads(raw)
+    known = {f.name for f in dataclasses.fields(DidoxCompanyInfo)}
+    data = {k: v for k, v in data.items() if k in known}
+    if data.get("registered_at"):
+        data["registered_at"] = datetime.date.fromisoformat(data["registered_at"])
+    return DidoxCompanyInfo(**data)
 
 
 class CompanyNotFound(ProviderUnavailable):
@@ -86,6 +115,85 @@ def normalize_status(info: DidoxCompanyInfo) -> str:
     if info.status_code == 0:
         return COMPANY_ACTIVE
     return COMPANY_UNKNOWN
+
+
+#: Short codes, matched on the WHOLE value after stripping punctuation and case.
+#: Separate from the keyword table because these are too short to be substrings:
+#: «АЖ» inside a longer word, or «ХК» inside an address, would place a company
+#: in a legal form nobody claimed.
+_LEGAL_FORM_ABBREVIATIONS: dict[str, str] = {
+    "ООО": "ООО", "МЧЖ": "ООО", "MCHJ": "ООО", "OOO": "ООО", "LLC": "ООО",
+    "ЧП": "ЧП", "ХК": "ЧП", "XK": "ЧП",
+    "АО": "АО", "АЖ": "АО", "AJ": "АО", "JSC": "АО",
+    "СП": "СП", "ҚК": "СП", "QK": "СП",
+    "ИП": "ИП", "ЯТТ": "ИП", "YATT": "ИП",
+    "ГУП": "ГУП", "ДУК": "ГУП", "DUK": "ГУП",
+}
+
+#: Distinctive stems, checked in order against the lower-cased wording.
+#:
+#: Two traps, both of which a mapping written from the spelt-out names alone
+#: walks into. Didox ABBREVIATES — the one captured record says «Общество с огр.
+#: ответствен.», so «огранич» never matches it — and three of the six forms end
+#: in «предприятие», so only the leading stem may decide between them. For the
+#: same reason the LLC rule may not match a bare «общество»: «Акционерное
+#: общество» is a different form and would be swallowed by it.
+_LEGAL_FORM_KEYWORDS: tuple[tuple[str, str], ...] = (
+    ("общество с огр", "ООО"),
+    ("огранич", "ООО"),
+    ("cheklangan", "ООО"),
+    ("чекланган", "ООО"),
+    ("акционер", "АО"),
+    ("aksiyador", "АО"),
+    ("акциядор", "АО"),
+    ("совместн", "СП"),
+    ("qo'shma", "СП"),
+    ("qo‘shma", "СП"),
+    ("qoshma", "СП"),
+    ("қўшма", "СП"),
+    ("индивидуальн", "ИП"),
+    ("yakka tartib", "ИП"),
+    ("якка тартиб", "ИП"),
+    ("унитар", "ГУП"),
+    ("unitar", "ГУП"),
+    ("частн", "ЧП"),
+    ("xususiy", "ЧП"),
+    ("хусусий", "ЧП"),
+)
+
+
+def normalize_legal_form(value: str | None) -> str | None:
+    """Registry wording → the code the registration select offers, or unchanged.
+
+    `companies.legal_form` is free text and the portal's «Форма собственности»
+    appends any value it does not recognise as an extra option, labelled with its
+    raw string. Didox states the form in its own words, so without this the
+    prefill produced a select listing the same legal form twice — «Общество с
+    ограниченной ответственностью» (ours) beside «Общество с огр. ответствен.»
+    (theirs) — and auto-selected the registry's spelling, taking the stored value
+    off the vocabulary with it.
+
+    Unrecognised wording is returned **unchanged**, never guessed. That branch is
+    load-bearing: `СП ООО` exists in real rows, names two forms and belongs to
+    neither, and collapsing it into one would rewrite a company's legal form on
+    its next save. The portal's append-an-option branch is where such a value is
+    meant to land.
+    """
+    if value is None:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+
+    exact = _LEGAL_FORM_ABBREVIATIONS.get(text.upper().replace(".", "").replace('"', "").strip())
+    if exact is not None:
+        return exact
+
+    lowered = text.lower()
+    for needle, code in _LEGAL_FORM_KEYWORDS:
+        if needle in lowered:
+            return code
+    return text
 
 
 def to_company_snapshot(info: DidoxCompanyInfo) -> CompanySnapshot:
@@ -149,7 +257,16 @@ class DidoxGovRegistryClient:
         Public because the registration form needs more than the protocol DTO
         carries (short name, legal form, bank requisites) and must not re-invent
         the exception translation to get it.
+
+        Read through a day-long Redis cache (`INFO_CACHE_KEY`), so the prefill and
+        both registry checks cost Didox ONE call between them. Only a FOUND record
+        is cached — a company registered this morning may reach the registry this
+        afternoon, and caching its absence would hide it for a day. Redis is an
+        optimisation only: any error there is a miss, never a failed lookup.
         """
+        cached = self._cached(inn)
+        if cached is not None:
+            return cached
         try:
             info = self._client.info_by_tin(inn, user_key=self._resolved_user_key())
         except DidoxUnavailable as exc:
@@ -161,7 +278,28 @@ class DidoxGovRegistryClient:
             raise ProviderUnavailable(f"gov_registry: didox rejected the lookup ({exc})") from exc
         if info is None:
             raise CompanyNotFound(f"gov_registry: didox has no record of {inn}")
+        self._remember(inn, info)
         return info
+
+    def _cached(self, inn: str) -> DidoxCompanyInfo | None:
+        if self._redis is None:
+            return None
+        try:
+            raw = self._redis.get(INFO_CACHE_KEY.format(tin=inn))
+            return _load_info(raw) if raw else None
+        except Exception as exc:  # noqa: BLE001 — a cache must never fail a lookup
+            logger.warning("didox.info_cache.read_failed", extra={"error": str(exc)})
+            return None
+
+    def _remember(self, inn: str, info: DidoxCompanyInfo) -> None:
+        if self._redis is None:
+            return
+        try:
+            self._redis.setex(
+                INFO_CACHE_KEY.format(tin=inn), INFO_CACHE_TTL_SECONDS, _dump_info(info)
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("didox.info_cache.write_failed", extra={"error": str(exc)})
 
     def _resolved_user_key(self) -> str | None:
         if self._user_key is not None:

@@ -20,6 +20,7 @@ with its own hash, and it must never overwrite `contracts.generated_document_pat
 from __future__ import annotations
 
 import datetime
+import decimal
 from typing import Any
 
 from sqlalchemy import (
@@ -29,6 +30,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Numeric,
     SmallInteger,
     Text,
 )
@@ -42,6 +44,9 @@ from app.core.db import Base
 #: deliberately absent: it never enters roaming, so it cannot stand in for a договор.
 DOC_TYPE_CONTRACT = "007"
 DOC_TYPE_FACTURE = "002"
+#: «Произвольный документ» — carries a PDF, stays inside Didox (no roaming). Used
+#: for a framework contract's specification, subtype 8 «Спецификация».
+DOC_TYPE_ARBITRARY = "000"
 
 #: Didox's own status ladder for these two types (reference/09-catalogs.md §6).
 STATUS_DRAFT = 0
@@ -63,11 +68,11 @@ class DidoxDocument(Base):
     __tablename__ = "didox_documents"
     __table_args__ = (
         CheckConstraint(
-            "doc_type IN ('007', '002')",
+            "doc_type IN ('007', '002', '000')",
             name="ck_didox_document_type",
         ),
         CheckConstraint(
-            "subject_kind IN ('contract', 'deal')",
+            "subject_kind IN ('contract', 'deal', 'specification')",
             name="ck_didox_document_subject_kind",
         ),
         # `didox_id` arrives one round trip AFTER the row is committed, so it is
@@ -80,17 +85,20 @@ class DidoxDocument(Base):
             unique=True,
             postgresql_where=text("didox_id IS NOT NULL"),
         ),
-        # One LIVE document of a type per subject — same discipline as
+        # One LIVE договор per subject — same discipline as
         # `uq_sample_request_active`: deleting a draft frees the slot, and a
-        # document that reached the roaming centre never does.
+        # document that reached the roaming centre never does. The ЭСФ is NOT
+        # held to it: goods ship in parts, and each shipment is its own invoice
+        # against the same contract (0053).
         Index(
             "uq_didox_documents_subject",
             "subject_kind",
             "subject_id",
             "doc_type",
             unique=True,
-            postgresql_where=text("status NOT IN (5, 55)"),
+            postgresql_where=text("status NOT IN (5, 55) AND doc_type = '007'"),
         ),
+        Index("ix_didox_documents_subject", "subject_kind", "subject_id", "doc_type"),
         Index("ix_didox_documents_poll", "status", "status_synced_at"),
         Index("ix_didox_documents_deal", "deal_id", "id"),
     )
@@ -114,6 +122,11 @@ class DidoxDocument(Base):
     #: which subject kind a row is.
     deal_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("deals.id", ondelete="SET NULL"), nullable=True
+    )
+    #: On an ЭСФ issued against a framework contract's specification — its lines
+    #: and what is left to invoice are that specification's (0054).
+    specification_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("contract_specifications.id", ondelete="SET NULL"), nullable=True
     )
 
     #: Whose `user-key` created it — a document is attributable to one company.
@@ -212,3 +225,33 @@ class DidoxCompany(Base):
     def is_ready(self) -> bool:
         """Both onboarding steps done — documents may be sent."""
         return self.signup_at is not None and self.offer_signed_at is not None
+
+
+class DidoxDocumentLine(Base):
+    """One product line of a document as it went to the operator — 007 and 002 alike.
+
+    `payload` already holds it, in Didox's strings; this is the same line as
+    numbers, for the market analytics and for «how much of this contract has
+    been invoiced». Written with the document row, before the provider call, so
+    it describes what we asserted whatever Didox answered.
+    """
+
+    __tablename__ = "didox_document_lines"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    didox_document_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("didox_documents.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    ord_no: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    product_name: Mapped[str] = mapped_column(Text, nullable=False)
+    ikpu_code: Mapped[str] = mapped_column(Text, nullable=False)
+    ikpu_name: Mapped[str] = mapped_column(Text, nullable=False)
+    package_code: Mapped[str] = mapped_column(Text, nullable=False)
+    package_name: Mapped[str] = mapped_column(Text, nullable=False)
+    qty: Mapped[decimal.Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    price: Mapped[decimal.Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    #: NULL means «без НДС».
+    vat_rate: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    amount: Mapped[decimal.Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    vat_sum: Mapped[decimal.Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    origin: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)

@@ -94,6 +94,9 @@ class DealSummaryOut(BaseModel):
     #: 'buyer' or 'seller' — which side the requesting company is on.
     role: str
     counterparty: PartyOut
+    #: What is being traded, as a contract would name it — the tender's or offer's
+    #: product. None when neither says.
+    product: str | None = None
     amount: decimal.Decimal | None = None
     currency: str
     contract_id: int | None = None

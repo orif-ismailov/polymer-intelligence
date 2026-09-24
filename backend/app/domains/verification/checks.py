@@ -101,10 +101,21 @@ def check_documents_complete(
     *,
     has_bank_account: bool,
     eimzo_passed: bool = False,
+    registry_passed: bool = False,
 ) -> CheckResult:
-    """registration_certificate required (UNLESS an E-IMZO signature supersedes it,
-    R3 TA1.5); bank_letter iff a bank account exists; plus per-role docs for
-    regulated roles. Missing kinds → failed with the list.
+    """registration_certificate required (UNLESS superseded — see below);
+    bank_letter iff a bank account exists; plus per-role docs for regulated roles.
+    Missing kinds → failed with the list.
+
+    Two things supersede the certificate, both because they prove more than a
+    scan of it does: a verified E-IMZO signature (R3 TA1.5 — the key carries the
+    registry-certified org identity) and a PASSED `gov_registry` check (the state
+    registry has just confirmed this tax id is a real, ACTIVE company under this
+    name). Only `passed` counts: a `warning` (name mismatch, no status stated)
+    means a human should look, and the certificate is what they would look at.
+
+    Neither relaxes the bank letter. Both confirm the COMPANY; nothing in them
+    says the account typed on the bank step belongs to it.
     """
     present = {
         doc.kind
@@ -113,9 +124,7 @@ def check_documents_complete(
     }
 
     required: set[VerificationDocumentKind] = set()
-    # A verified E-IMZO signature carries the registry-certified org identity, so it
-    # supersedes the uploaded registration certificate (bank_letter rule unchanged).
-    if not eimzo_passed:
+    if not (eimzo_passed or registry_passed):
         required.add(VerificationDocumentKind.registration_certificate)
     if has_bank_account:
         required.add(VerificationDocumentKind.bank_letter)
@@ -129,6 +138,7 @@ def check_documents_complete(
         "required": sorted(kind.value for kind in required),
         "missing": missing,
         "eimzo_passed": eimzo_passed,
+        "registry_passed": registry_passed,
     }
     status = (
         VerificationCheckStatus.failed if missing else VerificationCheckStatus.passed

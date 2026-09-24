@@ -182,7 +182,7 @@ BEAT_SCHEDULE: dict[str, dict[str, object]] = {
         "schedule": crontab(minute=0, hour=3),
     },
     # ── Contract expiry: daily at 04:00 UTC (R3 TB4.2) ───────────────────────
-    # Expires contracts inactive in pending_counterparty/pending_signatures beyond
+    # Expires contracts inactive in pending_signatures beyond
     # contract_pending_ttl_days (default 30) + notifies both parties.
     "expire_stale_contracts": {
         "task": "expire_stale_contracts",

@@ -44,7 +44,7 @@ gotchas. **Read the relevant one before working inside that directory:**
 | `backend/` | FastAPI + Celery + SQLAlchemy 2, Python 3.12, **uv**-managed | The core. API, ingest adapters, Celery tasks, LLM parsing. |
 | `dashboard/` | Next.js 16 (App Router), React 18, TanStack Query, Tailwind, shadcn | Internal team dashboard. |
 | `webapp/` | React 18 + Vite, react-router, i18next, zustand | Telegram Web App / Mini App: client request submission **+ two-sided marketplace (buyer inquiries / seller offers) + news reader**. Also runs standalone in a plain browser. |
-| `portal/` | React 18 + Vite, react-router v7, TanStack Query, zustand, i18next, **Feature-Sliced Design** | Client cabinet (R1): `user_accounts` signing in with a staff-issued login+password (0048), company registration + verification, offer publishing. Served at the root of `cabinet.ai-imex.com`. |
+| `portal/` | React 18 + Vite, react-router v7, TanStack Query, zustand, i18next, **Feature-Sliced Design** | Client cabinet (R1): `user_accounts` signing in with a staff-issued login+password (0048), company registration + verification, offer publishing. Served at the root of `ai-imex.com` (SSR storefront + `/cabinet`). |
 | `telegram/` | aiogram 3 | Bot handlers + webhook + message templates. **Repo-root package**, not inside `backend/` — mounted read-only into containers. |
 | `userbot/` | Telethon (MTProto) | Long-lived process monitoring Telegram channels. **Repo-root package**, separate from Celery worker/beat. |
 | `workers/` | standalone Python | `uzex_backfill/` — isolated crawler that walks the uzex.uz offer-detail ID space into its **own** Postgres tables. No app imports, own DB schema + entrypoint + requirements, own process (systemd/tmux) — **never Celery**. |
@@ -230,7 +230,7 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 
 ### Analytics — what the external bills are spent on
 
-- **`/admin/analytics`** (dashboard «Аналитика», first under НАСТРОЙКИ ПРОЕКТА) answers, per rail,
+- **`/admin/analytics`** (dashboard «Расходы и лимиты», first under НАСТРОЙКИ) answers, per rail,
   *how much have we used, of what we paid for, on what, and is it working*. Backed by
   `app/services/analytics_service.py` + `app/api/admin_analytics.py`; it **writes nothing** —
   every number comes from data both rails were already journalling.
@@ -399,7 +399,8 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
 - **Webapp**: Vite + react-router, i18next (`src/i18n/`, locales `ru`/`en`/`uz`/`tr`/`fa`/`zh`),
   zustand (request wizard + role stores). Now a full Telegram Mini App surface — marketplace
   (buyer inquiries / seller offers), news reader, and the request-submission wizard — that also runs
-  in a plain browser. Built as a static bundle served by nginx at the **root of `ai-imex.com`**
+  in a plain browser. Built as a static bundle — **served nowhere since 24.09.2026**, when the
+  portal took the root of `ai-imex.com`; the Mini App is to open the portal instead
   (see `make webapp-bundle`).
 
 ## Conventions

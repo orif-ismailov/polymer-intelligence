@@ -1,25 +1,27 @@
 # Host nginx vhost for the ai-imex.com split — place on the SERVER, not in a container.
 # ============================================================================
 # This is the shared HOST nginx front-door config (sibling to keira.uz.conf).
-# It terminates TLS for the three public domains and forwards plain HTTP by Host
-# to the compose stack's inner nginx on 127.0.0.1:8080, which routes each Host to
-# the right upstream (dashboard / api / static webapp).
+# It terminates TLS for the public domains and forwards plain HTTP by Host to the
+# compose stack's inner nginx on 127.0.0.1:8080, which routes each Host to the
+# right upstream (dashboard / api / portal; www → 301 to the apex).
 #
 # Install:
 #   sudo cp deploy/nginx/host-vhost.ai-imex.conf.example \
 #           /etc/nginx/sites-enabled/ai-imex.conf
 #   sudo nginx -t && sudo systemctl reload nginx
 #   sudo certbot --nginx -d ai-imex.com -d www.ai-imex.com \
-#                        -d admin.ai-imex.com -d api.ai-imex.com \
-#                        -d cabinet.ai-imex.com
+#                        -d admin.ai-imex.com -d api.ai-imex.com
 #   # certbot rewrites these blocks in place: adds `listen 443 ssl`, the cert
 #   # paths, and an 80→443 redirect. Then: sudo systemctl reload nginx
 #
 # EVERY public domain needs a block HERE as well as in the inner nginx config.
 # The inner nginx routes by Host, but it never sees a request whose domain has no
-# host-side vhost — that domain just lands on the default server. cabinet.* was
-# added late (R1 shipped the inner block only), so if the cabinet is unreachable
-# while the container is healthy, this file is the first thing to check.
+# host-side vhost — that domain just lands on the default server. So if the
+# portal is unreachable while the container is healthy, check this file first.
+#
+# cabinet.ai-imex.com is RETIRED: the portal moved to the apex (24.09.2026). Its
+# block is gone here and in the inner config; delete it from the server's copy
+# and drop it from the certificate (`certbot delete` / re-issue without it).
 # ============================================================================
 
 # SSE (dashboard live feed + /api streams) needs buffering off + a long read
@@ -47,30 +49,6 @@ server {
 server {
     listen 80;
     server_name admin.ai-imex.com;
-
-    client_max_body_size 12m;
-
-    location / {
-        proxy_pass         http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header   Connection "";
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_buffering    off;
-        proxy_read_timeout 3600s;
-    }
-}
-
-# Client cabinet (the Vite portal, R1 W7). Static bundle + same-origin /api/, both
-# served by the inner nginx from the `portal_static` volume — so this block is a
-# plain pass-through like the others. `proxy_buffering off` is inherited style; the
-# cabinet has no SSE, but uploads (verification documents, offer photos, the P7.c
-# registry screenshot) need the same 12 MB cap as the rest.
-server {
-    listen 80;
-    server_name cabinet.ai-imex.com;
 
     client_max_body_size 12m;
 

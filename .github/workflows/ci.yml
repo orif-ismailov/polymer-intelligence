@@ -434,7 +434,7 @@ jobs:
           cache-to: type=gha,scope=webapp,mode=max
 
       - name: Build & push portal bundle
-        # The client cabinet (cabinet.ai-imex.com). Same one-shot-bundle shape as
+        # The portal (ai-imex.com). Same one-shot-bundle shape as
         # the webapp, but the image is now a RUNNABLE Node server rather than a
         # /dist carrier: compose runs it as the `portal` service. Without
         # this image the deploy job would have to compile Vite on the 2-core box.
@@ -496,9 +496,9 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             $COMPOSE pull
             $COMPOSE up -d
-            # Web App bundle: still a one-shot copy into the nginx-served volume
-            # (no --build → nothing compiles on the box). A stale webapp_static
-            # serves the previous build; an empty one serves 404 at ai-imex.com.
+            # Web App bundle: a one-shot copy into webapp_static (no --build →
+            # nothing compiles on the box). Nothing serves that volume since the
+            # portal took ai-imex.com (24.09.2026); kept for the Mini App rework.
             $COMPOSE --profile build pull webapp-build
             $COMPOSE --profile build run --rm webapp-build
             # The portal is NOT in that list any more: it is a long-running SSR
@@ -562,9 +562,9 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             $COMPOSE pull
             $COMPOSE up -d
-            # Web App bundle: still a one-shot copy into the nginx-served volume
-            # (no --build → nothing compiles on the box). A stale webapp_static
-            # serves the previous build; an empty one serves 404 at ai-imex.com.
+            # Web App bundle: a one-shot copy into webapp_static (no --build →
+            # nothing compiles on the box). Nothing serves that volume since the
+            # portal took ai-imex.com (24.09.2026); kept for the Mini App rework.
             $COMPOSE --profile build pull webapp-build
             $COMPOSE --profile build run --rm webapp-build
             # The portal is NOT in that list any more: it is a long-running SSR

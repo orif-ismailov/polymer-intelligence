@@ -48,12 +48,17 @@ import redis
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.crypto import encrypt_pii
 from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyMember
-from app.domains.contracts.eimzo_models import CompanyPersonData, SignatureEvidence
-from app.domains.edi.identity import DidoxIdentityResult, DidoxSigner, verify_identity
+from app.domains.contracts.eimzo_models import SignatureEvidence
+from app.domains.edi.identity import (
+    DidoxIdentityResult,
+    DidoxSigner,
+    remember_signer,
+    signer_changed,
+    verify_identity,
+)
 from app.domains.verification import service as verification_service
 from app.domains.verification.models import VerificationCase, VerificationCheck
 from app.models.enums import (
@@ -114,7 +119,8 @@ class EimzoVerifyOutcome:
     """Result of a verify() call for the API layer."""
 
     ok: bool
-    case: VerificationCase
+    #: None only for a verified company that has never had a case at all.
+    case: VerificationCase | None
     reason: str | None = None
     holder_masked: str | None = None
 
@@ -342,20 +348,7 @@ def _store_evidence(
 def _store_person_data(
     db: Session, company: Company, account: UserAccount, signer: DidoxSigner
 ) -> None:
-    if not (signer.full_name or signer.pinfl):
-        return
-    db.add(
-        CompanyPersonData(
-            company_id=company.id,
-            user_account_id=account.id,
-            full_name_enc=encrypt_pii(signer.full_name or ""),
-            pinfl_enc=encrypt_pii(signer.pinfl or ""),
-            pinfl_last4=(signer.pinfl or "")[-4:] or None,
-            position=signer.position,
-            source="eimzo",
-        )
-    )
-    db.flush()
+    remember_signer(db, company.id, account.id, signer, position=signer.position)
 
 
 def _confirm_owner(db: Session, company: Company, account: UserAccount) -> None:
@@ -429,6 +422,14 @@ def verify(
     result = verify_identity(
         redis_client, company, pkcs7_64=pkcs7_b64, signature_hex=signature_hex
     )  # ProviderUnavailable propagates → 503
+
+    if (
+        company.status == CompanyStatus.verified
+        and verification_service.open_case_for(db, company.id) is None
+    ):
+        quiet = _reconfirm_verified(db, redis_client, company, account, challenge, pkcs7_b64, result)
+        if quiet is not None:
+            return quiet
 
     case = _open_or_create_case(db, company)
     _spawn_missing_checks(db, case.id)
@@ -513,6 +514,66 @@ def verify(
     verification_service.on_check_completed(db, case.id)
     db.refresh(case)
     return EimzoVerifyOutcome(ok=True, case=case, holder_masked=holder_masked)
+
+
+def _latest_case(db: Session, company_id: int) -> VerificationCase | None:
+    return (
+        db.query(VerificationCase)
+        .filter(VerificationCase.company_id == company_id)
+        .order_by(VerificationCase.id.desc())
+        .first()
+    )
+
+
+def _reconfirm_verified(
+    db: Session,
+    redis_client: redis.Redis[str],
+    company: Company,
+    account: UserAccount,
+    challenge: str,
+    pkcs7_b64: str,
+    result: DidoxIdentityResult,
+) -> EimzoVerifyOutcome | None:
+    """A company staff already verified signs its ИНН again — usually to unblock
+    a Didox document, which needs the signer on file.
+
+    Nothing here is for a person to review: the same ИНН, the same key, and the
+    director the registry already named. So it is recorded — evidence, signer,
+    audit — and the company's existing case stays the answer. It used to open a
+    «точечная проверка» with a pending manual KYB, which put every such company
+    in /verification twice and in front of staff for nothing.
+
+    Returns None — «handle it as a case» — when someone OTHER than the person on
+    file is now signing: a change of director is exactly what staff should see.
+    """
+    latest = _latest_case(db, company.id)
+    if not result.ok:
+        reason = result.error or "signature_invalid"
+        audit_service.write_audit(
+            db, None, "company.eimzo_verify_failed", "companies", str(company.id),
+            {"account_id": account.id, "reason": reason, "reconfirm": True},
+        )
+        db.flush()
+        return EimzoVerifyOutcome(ok=False, case=latest, reason=reason)
+
+    signer = result.signer or DidoxSigner()
+    if company.tax_id and signer.org_inn and signer.org_inn != company.tax_id:
+        raise CertCompanyMismatch(_mask_inn(signer.org_inn), _mask_inn(company.tax_id))
+    if signer_changed(db, company.id, signer):
+        return None
+
+    _store_evidence(db, company, account, challenge, pkcs7_b64, result)
+    _store_person_data(db, company, account, signer)
+    _apply_identity(db, company, signer, redis_client)
+    _confirm_owner(db, company, account)
+    audit_service.write_audit(
+        db, None, "company.eimzo_reconfirm", "companies", str(company.id),
+        {"account_id": account.id, "org_inn": _mask_inn(signer.org_inn)},
+    )
+    db.flush()
+    return EimzoVerifyOutcome(
+        ok=True, case=latest, holder_masked=_mask_pinfl(signer.pinfl)
+    )
 
 
 def _record_failure(

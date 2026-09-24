@@ -88,6 +88,7 @@ from app.domains.news.api_webapp import router as webapp_news_router
 from app.domains.notifications.api_portal import router as portal_notifications_router
 from app.domains.pricing.api_admin import router as prices_router
 from app.domains.reference.api_admin import router as admin_products_router
+from app.domains.reference.api_admin_banks import router as admin_bank_register_router
 from app.domains.reference.api_portal import router as portal_reference_router
 from app.domains.reference.api_webapp import router as webapp_reference_router
 from app.domains.requests.api_admin import router as dashboard_requests_router
@@ -249,6 +250,9 @@ def create_app() -> FastAPI:
         admin_portal_accounts_router, prefix="/api/v1", responses=errors.STAFF_RESOURCE
     )
     application.include_router(admin_products_router, prefix="/api/v1", responses=errors.STAFF)
+    application.include_router(
+        admin_bank_register_router, prefix="/api/v1", responses=errors.STAFF
+    )
     application.include_router(admin_settings_router, prefix="/api/v1", responses=errors.STAFF)
     application.include_router(admin_analytics_router, prefix="/api/v1", responses=errors.STAFF)
     # ── sources wizard router (Phase 4, Plan 06 — no-code source constructor) ─

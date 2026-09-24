@@ -90,6 +90,147 @@ _SAMPLE_LETTER_V1_SCHEMA: dict[str, object] = {
 }
 
 
+def _enum(title: str, labels: dict[str, str], *, group: str, default: str | None = None,
+          when: dict[str, str] | None = None, hidden: bool = False) -> dict[str, object]:
+    spec: dict[str, object] = {
+        "type": "string", "title": title, "enum": list(labels), "x-enum-labels": labels,
+        "x-group": group,
+    }
+    if default is not None:
+        spec["default"] = default
+    if when:
+        spec["x-when"] = when
+    if hidden:
+        spec["x-hidden"] = True
+    return spec
+
+
+def _text(title: str, *, group: str, default: str | None = None,
+          when: dict[str, str] | None = None, kind: str | None = None) -> dict[str, object]:
+    spec: dict[str, object] = {"type": "string", "title": title, "x-group": group}
+    if default is not None:
+        spec["default"] = default
+    if when:
+        spec["x-when"] = when
+    if kind:
+        spec["x-input"] = kind
+    return spec
+
+
+#: The switches of the real MGBUS supply contracts (docs/deals_documents/). Each
+#: enum picks a clause in `supply_mgbus_ru.html`; defaults are the figures those
+#: contracts carry. `x-group` places a field on the form, `x-when` shows it only
+#: when another field has a value, `x-hidden` fixes it per template.
+def _mgbus_schema(kind: str) -> dict[str, object]:
+    frame = {"contract_kind": "frame"}
+    one_off = {"contract_kind": "one_off"}
+    subject: dict[str, object] = {
+        "goods_description": _text("Предмет договора", group="subject",
+                                   default="Сырье в ассортименте", when=frame),
+        "amount_limit": _text("Общая сумма договора, сум с НДС", group="subject",
+                              kind="number", when=frame),
+        "product": _text("Товар", group="subject", when=one_off),
+        "qty": _text("Количество", group="subject", kind="number", when=one_off),
+        "unit": _enum("Ед. изм.", {"kg": "кг", "t": "т", "pcs": "шт"}, group="subject",
+                      default="kg", when=one_off),
+        "unit_price": _text("Цена за единицу, сум", group="subject", kind="number",
+                            when=one_off),
+        # The user's call, not ours: with VAT keeps the agreed total round (as
+        # the real specifications do) but the ЭСФ may differ by a few soum;
+        # without VAT matches the ЭСФ to the tiyin.
+        "price_basis": _enum("Цена указана", {"with_vat": "С НДС", "without_vat": "Без НДС"},
+                             group="subject", default="with_vat", when=one_off),
+        "vat_rate": _enum("НДС", {"12": "12%", "0": "0%", "none": "Без НДС"},
+                          group="subject", default="12", when=one_off),
+    }
+    required = (
+        ["goods_description", "amount_limit"]
+        if kind == "frame"
+        else ["product", "qty", "unit", "unit_price"]
+    )
+    properties: dict[str, object] = {
+        "contract_number": _text("Номер договора", group="parties"),
+        "contract_date": _text("Дата договора", group="parties", kind="date"),
+        "contract_kind": _enum("Вид договора", {"frame": "Рамочный", "one_off": "Разовый"},
+                               group="subject", default=kind, hidden=True),
+        "initiator_side": _enum("Мы в этом договоре", {"supplier": "Поставщик", "buyer": "Покупатель"},
+                                group="parties", default="supplier"),
+        "supplier_authority": _enum(
+            "Поставщик действует на основании",
+            {"charter": "Устава", "power_of_attorney": "Доверенности"},
+            group="parties", default="charter",
+        ),
+        "supplier_power_of_attorney": _text(
+            "Доверенность поставщика (№ и дата)", group="parties",
+            when={"supplier_authority": "power_of_attorney"},
+        ),
+        "buyer_authority": _enum(
+            "Покупатель действует на основании",
+            {"charter": "Устава", "power_of_attorney": "Доверенности"},
+            group="parties", default="charter",
+        ),
+        "buyer_power_of_attorney": _text(
+            "Доверенность покупателя (№ и дата)", group="parties",
+            when={"buyer_authority": "power_of_attorney"},
+        ),
+        **subject,
+        "payment_mode": _enum("Оплата", {"prepay": "100% предоплата", "schedule": "По графику"},
+                              group="payment", default="prepay"),
+        "payment_schedule": _text("График платежей", group="payment",
+                                  when={"payment_mode": "schedule"}, kind="multiline"),
+        "refuse_after_days": _text("Просрочка оплаты, после которой поставщик вправе отказаться, банк. дней",
+                                   group="payment", default="1", kind="number"),
+        "delivery_days": _text("Срок поставки после оплаты, банк. дней", group="delivery",
+                               default="5", kind="number"),
+        "delivery_basis": _enum(
+            "Базис поставки",
+            {"supplier_warehouse": "Самовывоз со склада поставщика",
+             "pickup_address": "Самовывоз по адресу",
+             "supplier_delivers": "Доставка поставщиком"},
+            group="delivery", default="supplier_warehouse",
+        ),
+        "pickup_days": _text("Срок самовывоза после извещения, дней", group="delivery",
+                             default="5", kind="number"),
+        "delivery_address": _text("Адрес", group="delivery",
+                                  when={"delivery_basis": "pickup_address|supplier_delivers"}),
+        "delivery_note": _text("Дополнительно о доставке", group="delivery", kind="multiline"),
+        "packaging": _enum("Тара и упаковка",
+                           {"none": "Не указывать", "bulk": "Без упаковки, наливом",
+                            "in_containers": "В таре, включена в цену"},
+                           group="extra", default="none"),
+        "quality_section": _enum("Раздел «Качество»", {"no": "Нет", "yes": "Да"},
+                                 group="extra", default="no"),
+        "penalty_delivery_pct": _text("Пеня за просрочку поставки, % в день", group="penalties",
+                                      default="0,1"),
+        "penalty_delivery_cap": _text("…но не более, % от суммы договора", group="penalties",
+                                      default="10"),
+        "penalty_payment_pct": _text("Пеня за просрочку оплаты, % в день", group="penalties",
+                                     default="0,5"),
+        "penalty_payment_cap": _text("…но не более, % от просроченной суммы", group="penalties",
+                                     default="50"),
+        "refusal_fine_pct": _text("Штраф за невыборку оплаченной продукции, %",
+                                  group="penalties", default="5"),
+    }
+    return {
+        "type": "object",
+        "required": ["contract_number", "contract_date", *required],
+        "properties": properties,
+        # JSONB keeps no key order, and the form must read top to bottom the way
+        # the contract does — so the order is stated, not inherited.
+        "x-order": list(properties),
+    }
+
+
+#: Code → (kind, names). Both share one body: the legal text is one text, and the
+#: kind is a switch fixed per template rather than a second copy to keep in step.
+_MGBUS_TEMPLATES: dict[str, tuple[str, str, str, str]] = {
+    "SUPPLY_FRAME_V1": ("frame", "Договор поставки — рамочный",
+                        "Yetkazib berish shartnomasi — ramkaviy", "Supply contract — framework"),
+    "SUPPLY_ONE_OFF_V1": ("one_off", "Договор поставки — разовый",
+                          "Yetkazib berish shartnomasi — bir martalik", "Supply contract — one-off"),
+}
+
+
 def seed_contract_templates(db: Session | None = None) -> list[ContractTemplate]:
     """Seed the contract templates (idempotent). Returns rows created this run."""
     own = db is None
@@ -110,7 +251,8 @@ def seed_contract_templates(db: Session | None = None) -> list[ContractTemplate]
                 body_storage_path=path,
                 variables_schema=_SUPPLY_V1_SCHEMA,
                 version=1,
-                is_active=True,
+                # Superseded by the MGBUS-based templates below (24.09.2026).
+                is_active=False,
             )
             session.add(template)
             session.flush()
@@ -130,11 +272,62 @@ def seed_contract_templates(db: Session | None = None) -> list[ContractTemplate]
                 body_storage_path=path_v2,
                 variables_schema=_SUPPLY_V2_SCHEMA,
                 version=1,
-                is_active=True,
+                is_active=False,
             )
             session.add(template_v2)
             session.flush()
             created.append(template_v2)
+
+        mgbus_html = (_DATA_DIR / "supply_mgbus_ru.html").read_text(encoding="utf-8")
+        for code, (kind, name_ru, name_uz, name_en) in _MGBUS_TEMPLATES.items():
+            if session.execute(
+                select(ContractTemplate).where(ContractTemplate.code == code)
+            ).scalar_one_or_none() is not None:
+                continue
+            row = ContractTemplate(
+                code=code,
+                name_ru=name_ru,
+                name_uz=name_uz,
+                name_en=name_en,
+                body_storage_path=storage_service.store_contract_template(code, 1, mgbus_html),
+                variables_schema=_mgbus_schema(kind),
+                version=1,
+                is_active=True,
+            )
+            session.add(row)
+            session.flush()
+            created.append(row)
+            # The dev placeholders step aside the moment their replacement exists —
+            # never before, so no deployment is ever left with nothing to pick.
+            # Only on this first creation: a template staff re-enable stays on.
+            for legacy in session.execute(
+                select(ContractTemplate).where(ContractTemplate.code.in_(("SUPPLY_V1", "SUPPLY_V2")))
+            ).scalars():
+                legacy.is_active = False
+            session.flush()
+
+        # The specification to a framework contract — its own form, the AKFA
+        # «Спецификация № 01». Rendered by `contracts.specifications`.
+        if session.execute(
+            select(ContractTemplate).where(ContractTemplate.code == "SPECIFICATION_V1")
+        ).scalar_one_or_none() is None:
+            spec_html = (_DATA_DIR / "specification_mgbus_ru.html").read_text(encoding="utf-8")
+            spec_row = ContractTemplate(
+                code="SPECIFICATION_V1",
+                kind="specification",
+                name_ru="Спецификация к договору поставки",
+                name_uz="Yetkazib berish shartnomasiga spetsifikatsiya",
+                name_en="Specification to a supply contract",
+                body_storage_path=storage_service.store_contract_template(
+                    "SPECIFICATION_V1", 1, spec_html
+                ),
+                variables_schema={"type": "object", "properties": {}},
+                version=1,
+                is_active=True,
+            )
+            session.add(spec_row)
+            session.flush()
+            created.append(spec_row)
 
         # The commitment letter shares this table (`kind` discriminates) and the
         # same pure renderer. A second table plus a second `{{ key }}` substituter

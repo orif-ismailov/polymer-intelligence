@@ -16,6 +16,7 @@ module is only the schema.
 from __future__ import annotations
 
 import datetime
+import decimal
 import uuid
 from typing import Any
 
@@ -23,16 +24,20 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
+    Numeric,
+    SmallInteger,
     Text,
     UniqueConstraint,
 )
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, text
 
 from app.core.db import Base
 from app.models.enums import ContractStatus
@@ -51,7 +56,7 @@ class ContractTemplate(Base):
     __tablename__ = "contract_templates"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('contract', 'sample_letter')",
+            "kind IN ('contract', 'sample_letter', 'specification')",
             name="ck_contract_template_kind",
         ),
     )
@@ -143,6 +148,22 @@ class Contract(Base):
         DateTime(timezone=True), nullable=True
     )
     declined_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    #: The company's saved set of terms this contract started from, if any. The
+    #: values themselves are copied into `variables` — the preset may change or be
+    #: archived later, and the contract must keep saying what was signed.
+    term_preset_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("contract_term_presets.id", ondelete="SET NULL"), nullable=True
+    )
+    #: The commercial terms as columns, not only as strings inside `variables` —
+    #: what the market analytics will read. Written by `service._sync_structured`
+    #: on every create/edit; `variables` stays what the document is rendered from.
+    currency: Mapped[str | None] = mapped_column(Text, nullable=True)
+    incoterms: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payment_terms: Mapped[str | None] = mapped_column(Text, nullable=True)
+    delivery_window: Mapped[str | None] = mapped_column(Text, nullable=True)
+    amount_total: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -181,3 +202,134 @@ class ContractSignature(Base):
     )
 
     contract: Mapped[Contract] = relationship("Contract", back_populates="signatures")
+
+
+class ContractLine(Base):
+    """One product line of a contract, as agreed — the analytics grain.
+
+    Written from `variables` when the contract is created or edited, so it holds
+    for BOTH rails; the tax classification (ИКПУ, package, VAT) is stamped on when
+    a Didox document is built, because that is the first moment it is known.
+    `qty`/`price` are NULL when the typed text is not a number — a zero would be
+    a price nobody agreed to.
+    """
+
+    __tablename__ = "contract_lines"
+    __table_args__ = (
+        # Numbered per specification: a framework contract's lines arrive with
+        # its specifications, each numbered from 1 (0054).
+        Index(
+            "uq_contract_line_ord",
+            "contract_id",
+            text("coalesce(specification_id, 0)"),
+            "ord_no",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    contract_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False
+    )
+    #: The specification this line belongs to — NULL for a one-off contract's own goods.
+    specification_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("contract_specifications.id", ondelete="CASCADE"), nullable=True
+    )
+    ord_no: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    product_name: Mapped[str] = mapped_column(Text, nullable=False)
+    ikpu_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ikpu_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    package_code: Mapped[str | None] = mapped_column(Text, nullable=True)
+    package_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    qty: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 3), nullable=True)
+    unit: Mapped[str | None] = mapped_column(Text, nullable=True)
+    price: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 3), nullable=True)
+    currency: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: NULL means «без НДС» — a different statement from a 0 % rate.
+    vat_rate: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    amount: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+
+
+class ContractTermPreset(Base):
+    """A company's saved commercial terms — «шаблон условий».
+
+    The legal text stays the platform's template; what a company repeats from one
+    contract to the next is its terms (payment, delivery, Incoterms, special
+    conditions), so that is what it saves. Choosing one fills the contract form;
+    the contract then carries its own copy (see `Contract.term_preset_id`).
+    """
+
+    __tablename__ = "contract_term_presets"
+    __table_args__ = (
+        Index(
+            "uq_contract_term_preset_name",
+            "company_id",
+            text("lower(name)"),
+            unique=True,
+            postgresql_where=text("archived_at IS NULL"),
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    company_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    terms: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+    created_by_user_account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=False
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+    archived_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class ContractSpecification(Base):
+    """«Спецификация № N» to a framework contract — one per shipment (0054).
+
+    Signed on its own, at Didox as a «Произвольный документ» (subtype 8) carrying
+    our PDF, and invoiced by its own ЭСФ. Its goods are `contract_lines` rows with
+    `specification_id` set; the totals here are what the document states.
+    """
+
+    __tablename__ = "contract_specifications"
+    __table_args__ = (
+        UniqueConstraint("contract_id", "number", name="uq_contract_specification_number"),
+        CheckConstraint(
+            "status IN ('draft', 'pending_signatures', 'active', 'declined', 'cancelled')",
+            name="ck_contract_specification_status",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    contract_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False
+    )
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    spec_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="draft", server_default="draft")
+    variables: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+    amount_without_vat: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+    vat_sum: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+    amount_with_vat: Mapped[decimal.Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+    generated_document_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    document_sha256: Mapped[str | None] = mapped_column(Text, nullable=True)
+    declined_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by_user_account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("user_accounts.id"), nullable=False
+    )
+    activated_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )

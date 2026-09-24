@@ -2,11 +2,16 @@
 
 State machine (data, per ARCHITECTURE §6):
 
-    draft ─► pending_counterparty ─► pending_signatures ─► active
-      │             │                       │
-      └─ cancelled  ├─ declined             ├─ declined
-                    └─ cancelled            ├─ cancelled
-                                            └─ expired (TTL beat)
+    draft ─► pending_signatures ─► active
+      │             │
+      └─ cancelled  ├─ declined
+                    ├─ cancelled
+                    └─ expired (TTL beat)
+
+There is no separate «accept the terms» step: the counterparty cannot edit the
+terms, so their signature IS their agreement, and «Отклонить» stays as the way
+to say no. `pending_counterparty` survives only as a Postgres enum value
+(migration 0052 moved the last rows out of it).
 
 Both companies must be `verified`. Terms are edited only in `draft` (any edit
 re-renders the PDF + sha256). Signatures happen only in `pending_signatures`, via
@@ -34,6 +39,7 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company, CompanyBankAccount
 from app.domains.contracts import render as contract_render
+from app.domains.contracts import terms as contract_terms
 from app.domains.contracts.eimzo import CertCompanyMismatch
 from app.domains.contracts.eimzo_models import SignatureEvidence
 from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
@@ -57,13 +63,7 @@ _PURPOSE_CONTRACT = "contract"
 # ── State machine (data) ──────────────────────────────────────────────────────
 
 _TRANSITIONS: dict[ContractStatus, set[ContractStatus]] = {
-    ContractStatus.draft: {ContractStatus.pending_counterparty, ContractStatus.cancelled},
-    ContractStatus.pending_counterparty: {
-        ContractStatus.pending_signatures,
-        ContractStatus.declined,
-        ContractStatus.cancelled,
-        ContractStatus.expired,
-    },
+    ContractStatus.draft: {ContractStatus.pending_signatures, ContractStatus.cancelled},
     ContractStatus.pending_signatures: {
         ContractStatus.active,
         ContractStatus.declined,
@@ -183,7 +183,7 @@ def _validate_variables(schema: dict[str, object], variables: dict[str, object])
 #: with a hole in it. `tests/test_contract_templates.py` pins the two together, or
 #: the validator would quietly rot the first time a field is added here.
 REQUISITE_KEYS: frozenset[str] = frozenset(
-    {"legal_name", "inn", "address", "director", "bank_account", "bank_mfo"}
+    {"legal_name", "inn", "address", "director", "bank_account", "bank_mfo", "bank_name", "oked"}
 )
 
 
@@ -198,10 +198,14 @@ def _requisites(db: Session, company: Company) -> dict[str, object]:
         .order_by(CompanyBankAccount.id)
         .first()
     )
+    from app.domains.verification.registry import latest_oked  # noqa: PLC0415
+
     account_number = ""
     bank_mfo = ""
+    bank_name = ""
     if bank is not None:
         bank_mfo = bank.bank_mfo
+        bank_name = bank.bank_name or ""
         try:
             account_number = decrypt_pii(bank.account_number_enc)
         except Exception:  # noqa: BLE001 — undecryptable → leave blank in the document
@@ -213,6 +217,8 @@ def _requisites(db: Session, company: Company) -> dict[str, object]:
         "director": company.director_name or "",
         "bank_account": account_number,
         "bank_mfo": bank_mfo,
+        "bank_name": bank_name,
+        "oked": latest_oked(db, int(company.id)) or "",
     }
 
 
@@ -283,6 +289,7 @@ def create_contract(
     db.flush()
 
     _render_and_store(db, contract, template)
+    contract_terms.sync_structured(db, contract)
 
     event_service.emit(
         db, event_types.CONTRACT_CREATED, "contract", contract.id,
@@ -309,6 +316,7 @@ def update_variables(
     contract.variables = variables
     db.flush()
     _render_and_store(db, contract, template)
+    contract_terms.sync_structured(db, contract)
     audit_service.write_audit(
         db, None, "contract.update_variables", "contracts", str(contract.id),
         {"account_id": account.id},
@@ -332,8 +340,8 @@ def _assert_party(contract: Contract, company: Company) -> None:
 
 
 def send(db: Session, contract: Contract, account: UserAccount) -> Contract:
-    """Initiator sends the draft to the counterparty (→ pending_counterparty)."""
-    _transition(db, contract, ContractStatus.pending_counterparty)
+    """Initiator sends the draft out for both signatures (→ pending_signatures)."""
+    _transition(db, contract, ContractStatus.pending_signatures)
     contract.sent_at = company_service.now_utc()
     db.flush()
     event_service.emit(
@@ -343,17 +351,6 @@ def send(db: Session, contract: Contract, account: UserAccount) -> Contract:
     _notify_company(db, contract.counterparty_company_id, "contract_incoming", contract)
     audit_service.write_audit(
         db, None, "contract.send", "contracts", str(contract.id), {"account_id": account.id}
-    )
-    return contract
-
-
-def accept_terms(db: Session, contract: Contract, account: UserAccount) -> Contract:
-    """Counterparty accepts the terms (→ pending_signatures)."""
-    _transition(db, contract, ContractStatus.pending_signatures)
-    event_service.emit(db, event_types.CONTRACT_SENT, "contract", contract.id, {"accepted": True})
-    _notify_company(db, contract.initiator_company_id, "contract_accepted", contract)
-    audit_service.write_audit(
-        db, None, "contract.accept", "contracts", str(contract.id), {"account_id": account.id}
     )
     return contract
 
@@ -381,7 +378,6 @@ def cancel(db: Session, contract: Contract, account: UserAccount) -> Contract:
     )
     if signed > 0 or contract.status not in {
         ContractStatus.draft,
-        ContractStatus.pending_counterparty,
         ContractStatus.pending_signatures,
     }:
         raise CannotCancel(str(contract.status))

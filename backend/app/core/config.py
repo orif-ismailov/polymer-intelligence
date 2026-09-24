@@ -298,8 +298,8 @@ class Settings(BaseSettings):
     # Company verification (R1).
     VERIFICATION_AUTO_APPROVE: bool = False
 
-    # Contracts (R3). Days a contract may sit in `pending_counterparty` /
-    # `pending_signatures` before `expire_stale_contracts` retires it.
+    # Contracts (R3). Days a contract may sit in `pending_signatures` before
+    # `expire_stale_contracts` retires it.
     CONTRACT_PENDING_TTL_DAYS: int = Field(default=30, ge=1, le=365)
 
     # Escrow rail (P3/P7.b): `stub` = an operator confirms every movement,
@@ -371,8 +371,9 @@ class Settings(BaseSettings):
     S3_BUCKET: str = "polymer-files"
 
     # ── Telegram Web App ──────────────────────────────────────────────────────
-    # Externally reachable Web App base URL (ai-imex.com) used to build status-push
-    # deep-link buttons and the WebApp launch button. Empty default keeps the test
+    # Externally reachable Web App base URL used to build status-push deep-link
+    # buttons and the WebApp launch button. In prod it is https://ai-imex.com, which
+    # since 24.09.2026 serves the PORTAL, so those buttons open the portal. Empty default keeps the test
     # suite green (no live infrastructure needed); set in .env for production.
     PUBLIC_WEBAPP_URL: str = ""
     # Externally reachable API base URL (api.ai-imex.com) used to register the

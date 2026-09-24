@@ -429,7 +429,7 @@ def presign_company_logo(company: Company, ttl: int = 600) -> str | None:
     already use, which also keeps media same-origin with the portal.
 
     Returned as a root-relative path so it works unchanged behind every host the
-    app is served from (cabinet./dev-cabinet./localhost) with no base-URL config.
+    app is served from (ai-imex.com / dev.ai-imex.com / localhost) with no base-URL config.
 
     `ttl` is accepted for call-site compatibility and ignored: the proxy route
     carries no signature to expire.
@@ -521,6 +521,19 @@ def store_contract_pdf(contract_public_id: str, version_n: int, pdf_bytes: bytes
     from app.core.storage import s3_client  # noqa: PLC0415
 
     key = f"contracts/{contract_public_id}/contract_v{version_n}.pdf"
+    s3_client.put_object(  # type: ignore[attr-defined]
+        Bucket=settings.S3_BUCKET, Key=key, Body=pdf_bytes, ContentType="application/pdf"
+    )
+    return key, hashlib.sha256(pdf_bytes).hexdigest()
+
+
+def store_specification_pdf(
+    contract_public_id: str, number: int, pdf_bytes: bytes
+) -> tuple[str, str]:
+    """Store a framework contract's specification PDF beside the contract's own."""
+    from app.core.storage import s3_client  # noqa: PLC0415
+
+    key = f"contracts/{contract_public_id}/specification_{number}.pdf"
     s3_client.put_object(  # type: ignore[attr-defined]
         Bucket=settings.S3_BUCKET, Key=key, Body=pdf_bytes, ContentType="application/pdf"
     )

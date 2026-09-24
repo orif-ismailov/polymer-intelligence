@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
+import { useBankByMfo } from "@/entities/bank";
 import { CURRENCIES } from "@/shared/config";
 import { Alert, Button, FormField, Input, Select } from "@/shared/ui";
 
@@ -25,8 +26,17 @@ export function StepBank({ onNext, onBack }: StepBankProps) {
   const { t } = useTranslation();
   const bank = useWizardDraft((s) => s.bank);
   const setBank = useWizardDraft((s) => s.setBank);
+  const applyRegisterBankName = useWizardDraft((s) => s.applyRegisterBankName);
   const currencyOptions = useEnumOptions("currency", CURRENCIES);
   const [touched, setTouched] = useState(false);
+
+  // МФО → «Название банка», from the Central Bank's register. A miss is silent:
+  // the register is a dated snapshot, so a branch it has not caught up with must
+  // still be registrable, and the field stays free-typed.
+  const { data: branch } = useBankByMfo(bank.bank_mfo);
+  useEffect(() => {
+    if (branch?.bank_name) applyRegisterBankName(branch.bank_name);
+  }, [branch, applyRegisterBankName]);
 
   const mfoOk = isMfoValid(bank.bank_mfo);
   const accountOk = bank.account_number.trim().length > 0;

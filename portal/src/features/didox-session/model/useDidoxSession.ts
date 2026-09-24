@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 
 import { didoxApi } from "@/entities/edi";
-import type { DidoxSignature, DidoxStatus } from "@/entities/edi";
-import { ApiError } from "@/shared/api";
+import type { DidoxSignature, DidoxSignupDetails, DidoxStatus } from "@/entities/edi";
+import { ApiError, detailCode } from "@/shared/api";
 import { getEimzoBridge } from "@/shared/lib/eimzo";
 
 /**
@@ -24,13 +24,19 @@ export type DidoxSessionError =
   | "no_cert"
   | "cert_mismatch"
   | "disabled"
+  | "not_registered"
+  | "rejected"
   | "failed";
 
 interface UseDidoxSession {
   minting: boolean;
   error: DidoxSessionError | null;
+  /** Didox's own sentence when it refused (`rejected`) — it names the field. */
+  errorMessage: string | null;
   /** Mint explicitly (the onboarding card's button). */
   open: () => Promise<DidoxStatus | null>;
+  /** Create the company's Didox account, signing its ИНН — the first onboarding step. */
+  signup: (details: DidoxSignupDetails) => Promise<DidoxStatus | null>;
   /** Run `action`; on `409 didox_session_required`, mint and run it once more. */
   withSession: <T>(action: () => Promise<T>) => Promise<T>;
   reset: () => void;
@@ -51,28 +57,65 @@ async function signTin(taxId: string): Promise<DidoxSignature> {
   return bridge.sign(cert.id, taxId);
 }
 
+/** `{detail: {error: "didox_rejected", message, description}}` — their words, if any. */
+function providerMessage(err: unknown): string | null {
+  if (!(err instanceof ApiError)) return null;
+  const body = err.detail as { detail?: { error?: unknown; message?: unknown; description?: unknown } } | null;
+  const inner = body?.detail;
+  if (!inner || inner.error !== "didox_rejected") return null;
+  const text = inner.description ?? inner.message;
+  return typeof text === "string" && text ? text : null;
+}
+
 export function useDidoxSession(companyId: number, taxId: string): UseDidoxSession {
   const [minting, setMinting] = useState(false);
   const [error, setError] = useState<DidoxSessionError | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const reset = useCallback(() => setError(null), []);
-
-  const open = useCallback(async (): Promise<DidoxStatus | null> => {
-    setMinting(true);
+  const reset = useCallback(() => {
     setError(null);
-    try {
-      return await didoxApi.openSession(companyId, await signTin(taxId));
-    } catch (err) {
-      if (err instanceof Error && err.message === "eimzo_module_missing") setError("module_missing");
-      else if (err instanceof Error && err.message === "eimzo_no_cert") setError("no_cert");
-      else if (err instanceof Error && err.message === "eimzo_cert_mismatch") setError("cert_mismatch");
-      else if (err instanceof ApiError && err.status === 409) setError("disabled");
-      else setError("failed");
-      return null;
-    } finally {
-      setMinting(false);
-    }
-  }, [companyId, taxId]);
+    setErrorMessage(null);
+  }, []);
+
+  /** Sign the ИНН and hand it to `send` — shared by sign-in and registration. */
+  const withTin = useCallback(
+    async (send: (signature: DidoxSignature) => Promise<DidoxStatus>): Promise<DidoxStatus | null> => {
+      setMinting(true);
+      setError(null);
+      setErrorMessage(null);
+      try {
+        return await send(await signTin(taxId));
+      } catch (err) {
+        const code = detailCode(err);
+        if (err instanceof Error && err.message === "eimzo_module_missing") setError("module_missing");
+        else if (err instanceof Error && err.message === "eimzo_no_cert") setError("no_cert");
+        else if (err instanceof Error && err.message === "eimzo_cert_mismatch") setError("cert_mismatch");
+        // Two different 409s: every 409 used to read «Didox не подключён в этой
+        // системе», including «this company has no Didox account yet».
+        else if (code === "didox_not_registered") setError("not_registered");
+        else if (code === "didox_disabled") setError("disabled");
+        else if (providerMessage(err) != null) {
+          setError("rejected");
+          setErrorMessage(providerMessage(err));
+        } else setError("failed");
+        return null;
+      } finally {
+        setMinting(false);
+      }
+    },
+    [taxId],
+  );
+
+  const open = useCallback(
+    () => withTin((signature) => didoxApi.openSession(companyId, signature)),
+    [companyId, withTin],
+  );
+
+  const signup = useCallback(
+    (details: DidoxSignupDetails) =>
+      withTin((signature) => didoxApi.signup(companyId, signature, details)),
+    [companyId, withTin],
+  );
 
   const withSession = useCallback(
     async <T,>(action: () => Promise<T>): Promise<T> => {
@@ -82,8 +125,7 @@ export function useDidoxSession(companyId: number, taxId: string): UseDidoxSessi
         const needsSession =
           err instanceof ApiError &&
           err.status === 409 &&
-          typeof err.detail === "string" &&
-          err.detail === "didox_session_required";
+          detailCode(err) === "didox_session_required";
         if (!needsSession) throw err;
 
         setMinting(true);
@@ -100,5 +142,5 @@ export function useDidoxSession(companyId: number, taxId: string): UseDidoxSessi
     [companyId, taxId],
   );
 
-  return { minting, error, open, withSession, reset };
+  return { minting, error, errorMessage, open, signup, withSession, reset };
 }

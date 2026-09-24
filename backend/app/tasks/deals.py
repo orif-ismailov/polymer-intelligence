@@ -83,11 +83,7 @@ def _advance(contract_id_raw: str | None, to_status: DealStatus, expect: DealSta
 def advance_deal_on_contract_sent(
     event_id: int | None = None, aggregate_id: str | None = None, payload: Any = None
 ) -> dict[str, Any]:
-    """CONTRACT_SENT → the deal is now waiting on a contract.
-
-    Fires for both `send` and `accept_terms`, which share the event type; the
-    second is a no-op because the deal has already left negotiation.
-    """
+    """CONTRACT_SENT → the deal is now waiting on a contract."""
     return _advance(aggregate_id, DealStatus.contract_pending, DealStatus.negotiation)
 
 

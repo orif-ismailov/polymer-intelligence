@@ -119,12 +119,32 @@ export function wizardStepCount(accountType: string): number {
  */
 export const LEGAL_FORMS = ["ООО", "ЧП", "АО", "СП", "ИП", "ГУП"] as const;
 
-/** Document kinds surfaced as dropzones in the default wizard. */
+/**
+ * Document kinds surfaced as dropzones in the default wizard.
+ *
+ * Exactly the two `check_documents_complete` can demand of a buyer or a
+ * distributor: the registration certificate (unless E-IMZO locked identity) and,
+ * if a bank account was added, the bank letter.
+ *
+ * `director_id` and `license` used to sit here as permanent optional slots and
+ * were removed on 23.09.2026, because neither could ever be asked for on this
+ * flow:
+ *   * NO rule references `director_id` at all — the director's name comes from
+ *     the state registry and their ПИНФЛ from confirming by key, so the upload
+ *     was a question every applicant had to consider and nothing ever read.
+ *   * `license` is required only of an `insurance_provider`, and no account type
+ *     maps to that role (`ACCOUNT_TYPES` above) — so "show it when a role needs
+ *     it" evaluates to never here. A LABORATORY needs `certificate` instead, and
+ *     has its own slot on its own step (`LABORATORY_DOC_KINDS`).
+ *
+ * The trade, stated plainly: this step is the only upload surface in the default
+ * flow — `CHECK_TO_STEP` sends `documents_complete` back here — so an applicant
+ * can no longer volunteer those two. `tests/test_wizard_document_slots.py` fails
+ * if a kind any rule CAN require ever loses its slot.
+ */
 export const WIZARD_DOCUMENT_KINDS: readonly DocumentKind[] = [
   "registration_certificate",
   "bank_letter",
-  "director_id",
-  "license",
 ];
 
 /** Always-required documents regardless of other inputs (default flow). */

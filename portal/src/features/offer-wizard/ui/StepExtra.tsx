@@ -35,6 +35,7 @@ export function StepExtra({ onNext, onBack }: StepExtraProps) {
         {active && (
           <IkpuPicker
             companyId={active.id}
+            taxId={active.tax_id}
             value={draft.ikpu}
             onChange={(value) => setField("ikpu", value)}
           />

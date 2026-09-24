@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import decimal
 import uuid
 from typing import Literal
 
@@ -42,6 +43,9 @@ class ContractCreateIn(BaseModel):
     #: what puts it in front of the tax authority — and needs an operator account
     #: on BOTH sides, so it is opt-in and never the default.
     signing_provider: Literal["eimzo", "didox"] = "eimzo"
+    #: The company's saved terms the form was filled from, if any. The values
+    #: themselves arrive in `variables` — the user may have changed them since.
+    term_preset_id: int | None = None
 
 
 class VariablesUpdateIn(BaseModel):
@@ -204,3 +208,68 @@ class TemplatePreviewOut(BaseModel):
 
     html: str
     warnings: list[str] = Field(default_factory=list)
+
+
+class TermPresetIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    terms: dict[str, object] = Field(default_factory=dict)
+
+    @field_validator("name")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("name must not be blank")
+        return value
+
+
+class TermPresetOut(BaseModel):
+    id: int
+    name: str
+    terms: dict[str, str]
+    updated_at: datetime.datetime
+
+
+class TermPresetListOut(BaseModel):
+    items: list[TermPresetOut]
+    #: Owners and managers edit; every member reads.
+    can_edit: bool
+
+
+class SpecificationIn(BaseModel):
+    """A framework contract's next specification: its lines and terms."""
+
+    variables: dict[str, object] = Field(default_factory=dict)
+
+
+class SpecificationLineOut(BaseModel):
+    ord_no: int
+    product: str
+    qty: decimal.Decimal | None
+    unit: str | None
+    price_without_vat: decimal.Decimal | None
+    vat_rate: int | None
+    amount_without_vat: decimal.Decimal | None
+
+
+class SpecificationOut(BaseModel):
+    id: int
+    number: int
+    spec_date: datetime.date
+    status: str
+    amount_without_vat: decimal.Decimal | None
+    vat_sum: decimal.Decimal | None
+    amount_with_vat: decimal.Decimal | None
+    document_available: bool
+    #: The «Произвольный документ» at Didox, once the seller has sent it.
+    didox_document_id: int | None = None
+    #: Didox's status as THIS reader sees it (1/2 mirrored), like the contract's.
+    didox_status: int | None = None
+    lines: list[SpecificationLineOut] = Field(default_factory=list)
+
+
+class SpecificationListOut(BaseModel):
+    items: list[SpecificationOut]
+    #: A signed framework contract takes specifications; nothing else does.
+    can_create: bool
+    #: The reader's company sells under this contract — it sends specifications to Didox.
+    is_seller: bool = False

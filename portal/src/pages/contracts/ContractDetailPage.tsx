@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -6,10 +6,17 @@ import { useParams } from "react-router-dom";
 
 import { useAuthStore } from "@/entities/account";
 import { useActiveCompany } from "@/entities/company";
-import { ContractStatusBadge, contractApi, useContract } from "@/entities/contract";
+import {
+  ContractStatusBadge,
+  contractApi,
+  useContract,
+  useSpecifications,
+} from "@/entities/contract";
 import type { ContractDetail } from "@/entities/contract";
-import { DIDOX_STATUS, didoxApi } from "@/entities/edi";
+import { DIDOX_STATUS, didoxApi, useDidoxStatus } from "@/entities/edi";
 import { DidoxDocumentCard } from "@/features/didox-contract-document";
+import { DidoxFactureCard } from "@/features/didox-facture";
+import { SpecificationsCard } from "@/features/contract-specification";
 import { useDidoxSign } from "@/features/didox-sign";
 import { EimzoSignButton } from "@/features/eimzo-sign";
 import type { EimzoSigner } from "@/features/eimzo-sign";
@@ -45,6 +52,9 @@ export function ContractDetailPage() {
   const [busy, setBusy] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [reason, setReason] = useState("");
+  // Set once «Подписать и отправить» has sent the draft, so a retry inside the
+  // same dialog does not send it again (and get 409 for it).
+  const sentRef = useRef(false);
 
   const contract = query.data;
   // The Didox session belongs to the company the user is ACTING AS, and the
@@ -53,6 +63,11 @@ export function ContractDetailPage() {
   // Hooks cannot sit behind the loading/error returns below.
   const active = useActiveCompany().activeCompany;
   const didoxSign = useDidoxSign(active?.id ?? 0, active?.tax_id ?? "");
+  const myDidox = useDidoxStatus(active?.id ?? null).data;
+  // A framework contract names no goods: its shipments are specifications, and
+  // its ЭСФ invoice a signed one.
+  const isFramework = contract?.variables?.contract_kind === "frame";
+  const specs = useSpecifications(isFramework && contract?.status === "active" ? id : null).data;
 
   useEffect(() => {
     let cancelled = false;
@@ -142,8 +157,17 @@ export function ContractDetailPage() {
     URL.revokeObjectURL(url);
   }
 
+  // «Подписать и отправить»: a draft is sent only once the initiator has picked
+  // a key — cancelling the dialog before that leaves it a draft.
+  const isDraft = contract.status === "draft";
   const signer: EimzoSigner<ContractDetail> = {
-    getChallenge: () => contractApi.signChallenge(id).then((r) => r.challenge),
+    getChallenge: async () => {
+      if (isDraft && !sentRef.current) {
+        await contractApi.send(id);
+        sentRef.current = true;
+      }
+      return (await contractApi.signChallenge(id)).challenge;
+    },
     verify: ({ pkcs7_64 }) =>
       contractApi.sign(id, pkcs7_64).then((c) => ({ ok: true, reason: null, data: c })),
   };
@@ -226,6 +250,24 @@ export function ContractDetailPage() {
     };
   });
 
+  /**
+   * Nothing is signed through Didox until OUR company is on it: an account there
+   * and the public offer signed. Otherwise the click reaches Didox only to be
+   * refused, after the E-IMZO password. The cabinet says what is missing and
+   * where to finish it instead. Declining stays available — it never reaches Didox.
+   */
+  const didoxNotReady =
+    isDidoxRail &&
+    contract.status === "pending_signatures" &&
+    myDidox != null &&
+    myDidox.state !== "ready" &&
+    myDidox.state !== "disabled";
+
+  const canDecline =
+    isCounterparty &&
+    contract.status === "pending_signatures" &&
+    (isDidoxRail ? didoxSignedFor(myCompanyId) !== true : !iSigned);
+
   const signingSteps: StatusStep[] = [
     {
       id: "created",
@@ -265,37 +307,61 @@ export function ContractDetailPage() {
       {/* On the Didox rail the document has to EXIST before anyone can sign it,
           and creating it is the seller's move. The card removes itself once the
           document is there and the signing controls below take over. */}
-      {isDidoxRail && contract.didox_document_id == null && active ? (
+      {didoxNotReady && myDidox ? (
+        <Alert tone="warning" title={t("didoxOnboarding.contractBlocked.title")}>
+          <p>{t(`didox.hints.${myDidox.state}`)}</p>
+          {myDidox.can_onboard ? (
+            <div className="mt-2">
+              <LinkButton to="/cabinet/didox" size="sm" data-testid="contract-didox-onboard">
+                {t("didox.connect")}
+              </LinkButton>
+            </div>
+          ) : (
+            <p className="mt-1 text-xs">{t("didox.ownerOnly")}</p>
+          )}
+        </Alert>
+      ) : null}
+
+      {isDidoxRail &&
+      !didoxNotReady &&
+      contract.status === "pending_signatures" &&
+      contract.didox_document_id == null &&
+      active ? (
         <DidoxDocumentCard
           companyId={active.id}
+          taxId={active.tax_id}
           contractId={id}
-          onCreated={() => void query.refetch()}
+          onCreated={async (documentId) => {
+            // A refused signature leaves the document created and the error in
+            // the action bar, beside the «Подписать» button that retries it.
+            await didoxSign.sign(documentId);
+            await query.refetch();
+          }}
         />
       ) : null}
 
-      {/* Action bar */}
-      <Card>
+      {/* Action bar. Hidden when it has nothing to offer — e.g. a Didox contract
+          before its document exists, where the card above does the talking —
+          rather than left as an empty bordered strip. */}
+      <Card className="has-[[data-testid=contract-actions]:empty]:hidden">
         <CardBody className="flex flex-wrap gap-3" data-testid="contract-actions">
-          {contract.status === "draft" && isInitiator ? (
+          {/* On Didox the seller's signature goes on a document the operator
+              holds, which only exists once the contract is out — so a Didox
+              draft is just sent, and the card above takes over. */}
+          {contract.status === "draft" && isInitiator && isDidoxRail ? (
             <Button disabled={busy} onClick={() => void act(() => contractApi.send(id))} data-testid="contract-send">
               {t("contracts.actions.send")}
             </Button>
-          ) : null}
-          {contract.status === "pending_counterparty" && isCounterparty ? (
-            <>
-              <Button disabled={busy} onClick={() => void act(() => contractApi.accept(id))} data-testid="contract-accept">
-                {t("contracts.actions.accept")}
-              </Button>
-              <Button variant="danger" disabled={busy} onClick={() => setDeclineOpen((v) => !v)}>
-                {t("contracts.actions.decline")}
-              </Button>
-            </>
           ) : null}
           {/* The two rails sign different things. On `eimzo` we verify the PKCS#7
               ourselves against a challenge; on `didox` the document lives at the
               operator, so it is a two-round-trip exchange and `iSigned` cannot be
               derived from `signatures` — Didox's own status is the truth. */}
-          {contract.status === "pending_signatures" && isDidoxRail ? (
+          {/* No document yet: the Didox card above says what is missing. The
+              status line is for a document that exists — `didox_status ?? 0`
+              used to read «Черновик — можно подписать» here, beside no button,
+              for one that did not. */}
+          {contract.status === "pending_signatures" && isDidoxRail && !didoxNotReady ? (
             <>
               {didoxSignable ? (
                 <Button
@@ -316,7 +382,7 @@ export function ContractDetailPage() {
                          signing. */
                       t("didox.signAndSend")}
                 </Button>
-              ) : (
+              ) : contract.didox_document_id == null ? null : (
                 <span className="text-sm text-text-muted" data-testid="didox-awaiting">
                   {t(`didox.documentStatus.${contract.didox_status ?? 0}`, {
                     defaultValue: t("contracts.awaitingOther"),
@@ -334,20 +400,34 @@ export function ContractDetailPage() {
               )}
             </>
           ) : null}
-          {contract.status === "pending_signatures" && !isDidoxRail && !iSigned ? (
+          {/* ONE slot for both «Подписать и отправить» (draft) and «Подписать»,
+              so the dialog is not unmounted when sending flips the status. */}
+          {!isDidoxRail &&
+          ((contract.status === "draft" && isInitiator) ||
+            (contract.status === "pending_signatures" && !iSigned)) ? (
             <EimzoSignButton
               signer={signer}
               variant="primary"
-              label={t("contracts.actions.sign")}
+              label={
+                contract.status === "draft"
+                  ? t("contracts.actions.signAndSend")
+                  : t("contracts.actions.sign")
+              }
               onConfirmed={() => void query.refetch()}
+              onClose={() => void query.refetch()}
             />
           ) : null}
           {contract.status === "pending_signatures" && !isDidoxRail && iSigned ? (
             <span className="text-sm text-text-muted">{t("contracts.awaitingOther")}</span>
           ) : null}
-          {(contract.status === "draft" ||
-            contract.status === "pending_counterparty" ||
-            contract.status === "pending_signatures") &&
+          {/* The counterparty's signature is their agreement; declining is the
+              other answer, open until they have signed. */}
+          {canDecline ? (
+            <Button variant="danger" disabled={busy} onClick={() => setDeclineOpen((v) => !v)}>
+              {t("contracts.actions.decline")}
+            </Button>
+          ) : null}
+          {(contract.status === "draft" || contract.status === "pending_signatures") &&
           isInitiator &&
           contract.signatures.length === 0 ? (
             <Button variant="ghost" disabled={busy} onClick={() => void act(() => contractApi.cancel(id))}>
@@ -366,6 +446,32 @@ export function ContractDetailPage() {
           ) : null}
         </CardBody>
       </Card>
+
+      {/* ЭСФ are issued against a signed contract, on either rail — the invoice
+          goes through Didox whichever way the contract was signed. Absent where
+          the deployment has no Didox at all. */}
+      {isFramework && contract.status === "active" && active && myDidox && myDidox.state !== "disabled" ? (
+        <SpecificationsCard
+          contractId={id}
+          companyId={active.id}
+          taxId={active.tax_id}
+          ready={myDidox.state === "ready"}
+        />
+      ) : null}
+
+      {contract.status === "active" && active && myDidox && myDidox.state !== "disabled" ? (
+        <DidoxFactureCard
+          companyId={active.id}
+          taxId={active.tax_id}
+          contractId={id}
+          ready={myDidox.state === "ready"}
+          specifications={
+            isFramework
+              ? (specs?.items ?? []).filter((sp) => sp.status === "active")
+              : undefined
+          }
+        />
+      ) : null}
 
       {declineOpen ? (
         <Card>

@@ -39,6 +39,7 @@ import {
 import { useWizardDraft } from "../model/draftStore";
 import {
   areDocumentsValid,
+  certificateWaived,
   isAccountTypeValid,
   isBankValid,
   isBuyerRequirementsValid,
@@ -91,7 +92,7 @@ export function CompanyWizard() {
         [MFR_STEP_CATALOG, true],
         [
           MFR_STEP_CERTIFICATES,
-          areDocumentsValid(draft.documents, draft.bank, draft.identityLocked, draft.accountType),
+          areDocumentsValid(draft.documents, draft.bank, certificateWaived(draft), draft.accountType),
         ],
         [MFR_STEP_BUYER, isBuyerRequirementsValid(draft.manufacturer)],
       ];
@@ -120,7 +121,7 @@ export function CompanyWizard() {
         [
           LOG_STEP_TARIFFS_DOCS,
           isLogisticsTariffsValid(draft.logistics) &&
-            areDocumentsValid(draft.documents, draft.bank, draft.identityLocked, draft.accountType),
+            areDocumentsValid(draft.documents, draft.bank, certificateWaived(draft), draft.accountType),
         ],
       ];
       const done: number[] = [];
@@ -149,7 +150,7 @@ export function CompanyWizard() {
         ],
         [
           LAB_STEP_LICENSES,
-          areDocumentsValid(draft.documents, draft.bank, draft.identityLocked, draft.accountType),
+          areDocumentsValid(draft.documents, draft.bank, certificateWaived(draft), draft.accountType),
         ],
       ];
       const done: number[] = [];
@@ -170,7 +171,7 @@ export function CompanyWizard() {
       [WIZARD_STEP_BANK, isBankValid(draft.bank)],
       [
         WIZARD_STEP_DOCUMENTS,
-        areDocumentsValid(draft.documents, draft.bank, draft.identityLocked, draft.accountType),
+        areDocumentsValid(draft.documents, draft.bank, certificateWaived(draft), draft.accountType),
       ],
     ];
     const done: number[] = [];

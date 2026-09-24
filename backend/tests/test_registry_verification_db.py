@@ -13,8 +13,9 @@ way; the registry checks can. The fix is narrow: `unavailable` blocks while
 retries remain and stops blocking once they are exhausted.
 
 **T5.3 — registry checks are not spawned into a void.** `submit_case` adds them
-only on the live rail; on the stub rail (the shipped default) they appear when an
-operator records a manual snapshot. So a case can never sit waiting for a channel
+only on a rail with a channel (`didox` or `live` — the Didox half is covered in
+`test_registry_waives_certificate_db.py`); on the stub rail (the shipped default)
+they appear when an operator records a manual snapshot. So a case can never sit waiting for a channel
 we do not have.
 
 **T5.4 — the operator path.** Staff transcribe an open service (my.soliq.uz,

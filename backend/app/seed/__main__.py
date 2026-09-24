@@ -90,6 +90,12 @@ def _seed_substances() -> str:
     )
 
 
+def _seed_bank_register() -> str:
+    from app.seed.seed_bank_register import seed_bank_register  # noqa: PLC0415
+
+    return seed_bank_register()
+
+
 #: Ordered by FK dependency. `seed_staff` is second because a database with no
 #: administrator cannot be logged into, so it is the one whose failure must surface
 #: before the slower seeders run.
@@ -99,6 +105,7 @@ SEEDERS: list[tuple[str, Callable[[], str]]] = [
     ("seed_sources", _seed_sources),
     ("seed_contract_templates", _seed_contract_templates),
     ("seed_substances", _seed_substances),
+    ("seed_bank_register", _seed_bank_register),
 ]
 
 

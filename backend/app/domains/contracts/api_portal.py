@@ -39,9 +39,16 @@ from app.domains.accounts.models import UserAccount
 from app.domains.companies import service as company_service
 from app.domains.companies.models import Company
 from app.domains.contracts import service as contract_service
+from app.domains.contracts import term_presets
 from app.domains.contracts.eimzo import CertCompanyMismatch
 from app.domains.contracts.eimzo_models import SignatureEvidence
-from app.domains.contracts.models import Contract, ContractSignature, ContractTemplate
+from app.domains.contracts.models import (
+    Contract,
+    ContractLine,
+    ContractSignature,
+    ContractSpecification,
+    ContractTemplate,
+)
 from app.domains.contracts.schemas import (
     ContractCreateIn,
     ContractDetailOut,
@@ -50,7 +57,14 @@ from app.domains.contracts.schemas import (
     SignatureOut,
     SignChallengeOut,
     SignIn,
+    SpecificationIn,
+    SpecificationLineOut,
+    SpecificationListOut,
+    SpecificationOut,
     TemplateOut,
+    TermPresetIn,
+    TermPresetListOut,
+    TermPresetOut,
     VariablesUpdateIn,
 )
 from app.integrations.eimzo import ProviderUnavailable
@@ -134,6 +148,8 @@ def _didox_document(db: Session, contract: Contract) -> DidoxDocument | None:
         .filter(
             DidoxDocument.subject_kind == "contract",
             DidoxDocument.subject_id == contract.id,
+            # The договор only: a contract's ЭСФ share its subject (0053).
+            DidoxDocument.doc_type == "007",
             DidoxDocument.status.notin_([5, 55]),
         )
         .order_by(DidoxDocument.id.desc())
@@ -207,6 +223,9 @@ def list_templates(
     rows = (
         db.query(ContractTemplate)
         .filter(ContractTemplate.is_active.is_(True))
+        # The commitment letter shares this table but is rendered by the sample
+        # flow from the sample request — nobody types it into this form.
+        .filter(ContractTemplate.kind == "contract")
         .order_by(ContractTemplate.code)
         .all()
     )
@@ -217,6 +236,124 @@ def list_templates(
         )
         for t in rows
     ]
+
+
+# ── term presets («шаблоны условий») ───────────────────────────────────────
+
+
+def _preset_out(preset: object) -> TermPresetOut:
+    return TermPresetOut.model_validate(preset, from_attributes=True)
+
+
+def _member_company(db: Session, account: UserAccount, company_id: int) -> Company:
+    try:
+        return company_service.get_company_for(db, account, company_id)
+    except company_service.CompanyNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found") from exc
+
+
+def _can_edit_presets(db: Session, account: UserAccount, company_id: int) -> bool:
+    try:
+        company_service.require_company_role(
+            db, account, company_id, company_service.COMPANY_ADMIN_ROLES
+        )
+    except company_service.InsufficientCompanyRole:
+        return False
+    return True
+
+
+def _require_preset_editor(db: Session, account: UserAccount, company_id: int) -> None:
+    # Membership first (404 for outsiders), then the role (403) — never the other
+    # way round, or a stranger would learn the company exists.
+    _member_company(db, account, company_id)
+    if not _can_edit_presets(db, account, company_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only_owner_or_manager")
+
+
+def _invalid_terms(exc: term_presets.InvalidTerms) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail={"error": "invalid_terms", "fields": exc.fields},
+    )
+
+
+@router.get("/companies/{company_id}/contract-term-presets", response_model=TermPresetListOut)
+def list_term_presets(
+    company_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> TermPresetListOut:
+    _member_company(db, account, company_id)
+    return TermPresetListOut(
+        items=[_preset_out(p) for p in term_presets.list_presets(db, company_id)],
+        can_edit=_can_edit_presets(db, account, company_id),
+    )
+
+
+@router.post(
+    "/companies/{company_id}/contract-term-presets",
+    response_model=TermPresetOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_term_preset(
+    company_id: int,
+    body: TermPresetIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> TermPresetOut:
+    _require_preset_editor(db, account, company_id)
+    try:
+        preset = term_presets.create_preset(db, company_id, account, body.name, body.terms)
+    except term_presets.InvalidTerms as exc:
+        raise _invalid_terms(exc) from exc
+    except term_presets.PresetNameTaken as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="preset_name_taken") from exc
+    db.commit()
+    return _preset_out(preset)
+
+
+@router.put(
+    "/companies/{company_id}/contract-term-presets/{preset_id}", response_model=TermPresetOut
+)
+def update_term_preset(
+    company_id: int,
+    preset_id: int,
+    body: TermPresetIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> TermPresetOut:
+    _require_preset_editor(db, account, company_id)
+    try:
+        preset = term_presets.get_preset(db, company_id, preset_id)
+        term_presets.update_preset(db, preset, body.name, body.terms)
+    except term_presets.PresetNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="preset_not_found") from exc
+    except term_presets.InvalidTerms as exc:
+        raise _invalid_terms(exc) from exc
+    except term_presets.PresetNameTaken as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="preset_name_taken") from exc
+    db.commit()
+    return _preset_out(preset)
+
+
+@router.delete(
+    "/companies/{company_id}/contract-term-presets/{preset_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def archive_term_preset(
+    company_id: int,
+    preset_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> Response:
+    _require_preset_editor(db, account, company_id)
+    try:
+        preset = term_presets.get_preset(db, company_id, preset_id)
+    except term_presets.PresetNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="preset_not_found") from exc
+    term_presets.archive_preset(db, preset)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # ── contract CRUD ─────────────────────────────────────────────────────────────
@@ -239,8 +376,15 @@ def create_contract(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="counterparty_not_verified"
         )
     template = db.get(ContractTemplate, body.template_id)
-    if template is None or not template.is_active:
+    if template is None or not template.is_active or template.kind != "contract":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+    if body.term_preset_id is not None:
+        try:
+            term_presets.get_preset(db, initiator.id, body.term_preset_id)
+        except term_presets.PresetNotFound as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="preset_not_found"
+            ) from exc
 
     try:
         contract = contract_service.create_contract(
@@ -258,6 +402,7 @@ def create_contract(
     except contract_service.NotAParty as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="invalid_parties") from exc
 
+    contract.term_preset_id = body.term_preset_id
     if body.deal_id is not None:
         _link_to_deal(db, account, contract, body.deal_id)
 
@@ -393,23 +538,6 @@ def send_contract(
     return _detail_out(db, contract, _my_company_ids(db, account))
 
 
-@router.post("/contracts/{contract_id}/accept", response_model=ContractDetailOut)
-def accept_contract(
-    contract_id: int,
-    db: Session = Depends(get_db),
-    account: UserAccount = Depends(get_current_account),
-) -> ContractDetailOut:
-    contract, _acting, role = _contract_and_role(db, account, contract_id)
-    if role != "counterparty":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only_counterparty")
-    try:
-        contract_service.accept_terms(db, contract, account)
-    except contract_service.InvalidContractTransition as exc:
-        raise _transition_error(exc) from exc
-    db.commit()
-    return _detail_out(db, contract, _my_company_ids(db, account))
-
-
 @router.post("/contracts/{contract_id}/decline", response_model=ContractDetailOut)
 def decline_contract(
     contract_id: int,
@@ -503,6 +631,148 @@ def sign_contract(
         ) from exc
     db.commit()
     return _detail_out(db, contract, _my_company_ids(db, account))
+
+
+# ── specifications of a framework contract ────────────────────────────────────
+
+
+def _specification_out(
+    db: Session, spec: ContractSpecification, viewer_company_id: int
+) -> SpecificationOut:
+    from app.domains.edi import specification_docs  # noqa: PLC0415
+
+    lines = (
+        db.query(ContractLine)
+        .filter(ContractLine.specification_id == spec.id)
+        .order_by(ContractLine.ord_no)
+        .all()
+    )
+    document = specification_docs.existing_document(db, spec)
+    return SpecificationOut(
+        id=int(spec.id),
+        number=spec.number,
+        spec_date=spec.spec_date,
+        status=spec.status,
+        amount_without_vat=spec.amount_without_vat,
+        vat_sum=spec.vat_sum,
+        amount_with_vat=spec.amount_with_vat,
+        document_available=bool(spec.generated_document_path),
+        didox_document_id=int(document.id) if document is not None else None,
+        didox_status=_didox_status_for_viewer(
+            document.status, viewer_is_owner=document.owner_company_id == viewer_company_id
+        )
+        if document is not None
+        else None,
+        lines=[
+            SpecificationLineOut(
+                ord_no=line.ord_no, product=line.product_name, qty=line.qty, unit=line.unit,
+                price_without_vat=line.price, vat_rate=line.vat_rate, amount_without_vat=line.amount,
+            )
+            for line in lines
+        ],
+    )
+
+
+def _specification_or_404(db: Session, contract: Contract, spec_id: int) -> ContractSpecification:
+    spec = db.get(ContractSpecification, spec_id)
+    if spec is None or spec.contract_id != contract.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="specification_not_found")
+    return spec
+
+
+@router.get("/contracts/{contract_id}/specifications", response_model=SpecificationListOut)
+def list_specifications(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> SpecificationListOut:
+    from app.domains.contracts import specifications  # noqa: PLC0415
+    from app.domains.edi import contract_docs  # noqa: PLC0415
+
+    contract, acting, _role = _contract_and_role(db, account, contract_id)
+    deal = contract_docs._linked_deal(db, contract)  # noqa: SLF001
+    try:
+        seller_id, _buyer_id = contract_docs.resolve_parties(
+            contract, deal=deal, offer=contract_docs._linked_offer(db, contract, deal)  # noqa: SLF001
+        )
+    except contract_docs.PartyMismatch:
+        seller_id = None
+    return SpecificationListOut(
+        items=[_specification_out(db, s, acting.id) for s in specifications.list_for(db, contract)],
+        can_create=contract.status == ContractStatus.active and specifications.is_framework(contract),
+        is_seller=seller_id == acting.id,
+    )
+
+
+@router.post(
+    "/contracts/{contract_id}/specifications",
+    response_model=SpecificationOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_specification(
+    contract_id: int,
+    body: SpecificationIn,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> SpecificationOut:
+    """Either party may draw it up; the seller sends it to Didox."""
+    from app.core.time import to_display_tz, utcnow  # noqa: PLC0415
+    from app.domains.contracts import specifications  # noqa: PLC0415
+
+    contract, acting, _role = _contract_and_role(db, account, contract_id)
+    try:
+        spec = specifications.create_specification(
+            db, contract, account, body.variables, today=to_display_tz(utcnow()).date()
+        )
+    except specifications.NotAFrameworkContract as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_a_framework_contract") from exc
+    except specifications.InvalidSpecification as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"error": "invalid_specification", "fields": exc.fields},
+        ) from exc
+    db.commit()
+    return _specification_out(db, spec, acting.id)
+
+
+@router.get("/contracts/{contract_id}/specifications/{spec_id}/document")
+def specification_document(
+    contract_id: int,
+    spec_id: int,
+    as_: str = Query(default="redirect", alias="as"),
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> Response:
+    """The specification's PDF — `?as=url` for an iframe, like the contract's."""
+    contract, _acting, _role = _contract_and_role(db, account, contract_id)
+    spec = _specification_or_404(db, contract, spec_id)
+    if not spec.generated_document_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No document")
+    url = storage_service.presign_object(spec.generated_document_path, ttl=600)
+    if as_ == "url":
+        return JSONResponse({"url": url})
+    return RedirectResponse(url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+
+@router.post(
+    "/contracts/{contract_id}/specifications/{spec_id}/cancel", response_model=SpecificationOut
+)
+def cancel_specification(
+    contract_id: int,
+    spec_id: int,
+    db: Session = Depends(get_db),
+    account: UserAccount = Depends(get_current_account),
+) -> SpecificationOut:
+    from app.domains.contracts import specifications  # noqa: PLC0415
+
+    contract, acting, _role = _contract_and_role(db, account, contract_id)
+    spec = _specification_or_404(db, contract, spec_id)
+    try:
+        specifications.cancel(db, spec)
+    except specifications.SpecificationNotEditable as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="not_editable") from exc
+    db.commit()
+    return _specification_out(db, spec, acting.id)
 
 
 # ── document + bundle ─────────────────────────────────────────────────────────

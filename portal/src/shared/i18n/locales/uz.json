@@ -250,7 +250,8 @@
       "tooLarge": "Fayl {{mb}} MB dan oshib ketdi",
       "replace": "Almashtirish",
       "invalidType": "Fayl formati qo‘llab-quvvatlanmaydi. PDF, JPG yoki PNG yuklang.",
-      "eimzoWaived": "Hujjatlar majburiy emas: kompaniya elektron imzo bilan tasdiqlangan. Ularni keyinroq qo‘shishingiz mumkin."
+      "eimzoWaived": "Hujjatlar majburiy emas: kompaniya elektron imzo bilan tasdiqlangan. Ularni keyinroq qo‘shishingiz mumkin.",
+      "registryWaived": "Ro'yxatdan o'tganlik guvohnomasi majburiy emas: kompaniya davlat reestri bo'yicha tasdiqlangan. Xohlasangiz, uni qo'shishingiz mumkin."
     },
     "errors": {
       "duplicate": "Bunday STIR bilan kompaniya allaqachon mavjud.",
@@ -1121,7 +1122,11 @@
   "theme": {
     "dark": "To‘q",
     "light": "Yorug‘",
-    "system": "Tizim bo‘yicha"
+    "system": "Tizim bo‘yicha",
+    "switchTo": {
+      "dark": "Qorong'i mavzuni yoqish",
+      "light": "Yorug' mavzuni yoqish"
+    }
   },
   "inquiryStatus": {
     "pending": "Moderatsiyada",
@@ -1659,8 +1664,8 @@
       "expired": "Muddati o‘tgan"
     },
     "actions": {
-      "send": "Kontragentga yuborish",
-      "accept": "Shartlarni qabul qilish",
+      "send": "Imzolashga yuborish",
+      "signAndSend": "Imzolash va yuborish",
       "decline": "Rad etish",
       "confirmDecline": "Rad etishni tasdiqlash",
       "sign": "E-IMZO bilan imzolash",
@@ -1674,21 +1679,27 @@
     },
     "timeline": {
       "created": "Loyiha yaratildi",
-      "sent": "Kelishuvga yuborildi",
+      "sent": "Imzolashga yuborildi",
       "signedBy": "Imzolandi: {{company}}",
       "signedNoDate": "Imzolangan",
       "awaitingSignature": "Imzo kutilmoqda: {{company}}",
       "active": "Shartnoma ikki tomon tomonidan imzolandi",
       "awaiting": "Kutilmoqda"
     },
-    "rail": "Qanday imzolaymiz",
-    "rails": {
-      "eimzo": "Platformadagi ERI",
-      "didox": "Didox orqali (EDI, my.soliq.uz da ko‘rinadi)"
+    "basis": {
+      "label": "Asos",
+      "none": "Asossiz — qo‘lda to‘ldiraman",
+      "hint": "Tenderdagi qabul qilingan taklif bo‘yicha bitim: mahsulot, miqdor, narx va kontragent o‘zi to‘ldiriladi.",
+      "empty": "Shartnomasiz bitimlar hali yo‘q — ular tenderdagi taklifni qabul qilganingizda yoki sizniki qabul qilinganda paydo bo‘ladi.",
+      "counterpartyFromDeal": "Kontragent — tanlangan bitimning ikkinchi tomoni."
     },
-    "railHint": {
-      "eimzo": "Ikkala tomon biz saqlaydigan hujjatni imzolaydi.",
-      "didox": "Hujjat EDI operatorida yaratiladi va my.soliq.uz ga tushadi. Ikkala tomonda Didox akkaunti kerak."
+    "groups": {
+      "parties": "Tomonlar va shartnoma rekvizitlari",
+      "subject": "Predmet va summa",
+      "payment": "To'lov",
+      "delivery": "Yetkazib berish",
+      "extra": "Idish va sifat",
+      "penalties": "Tomonlarning javobgarligi"
     }
   },
   "deals": {
@@ -1864,6 +1875,39 @@
       "origin_cert": "Kelib chiqish sertifikati",
       "commercial_offer": "Tijorat taklifi",
       "other": "Boshqa"
+    },
+    "columns": {
+      "product": "Mahsulot",
+      "volume": "Hajm",
+      "terms": "Shartlar",
+      "deliveryBy": "Yetkazish muddati",
+      "responseWindow": "Javob qabul qilish",
+      "yourQuote": "Sizning taklifingiz"
+    },
+    "deadline": {
+      "daysLeft": "yana {{count}} kun",
+      "lastDay": "bir kundan kam",
+      "closed": "qabul yopildi"
+    },
+    "urgent": "Shoshilinch",
+    "needs": "Kerak: {{docs}}",
+    "reply": "Javob berish",
+    "hideForm": "Yig'ish",
+    "viewMyQuote": "Mening taklifim",
+    "filters": {
+      "label": "Tender filtrlari",
+      "product": "Mahsulot",
+      "allProducts": "Barcha mahsulotlar",
+      "closingSoon": "Tez yopiladi",
+      "urgent": "Faqat shoshilinch",
+      "unanswered": "Javob bermaganlarim",
+      "reset": "Filtrlarni tozalash",
+      "status": "Taklif holati",
+      "allStatuses": "Barchasi",
+      "empty": "Bu filtrlar bo‘yicha tender yo‘q",
+      "emptyBody": "Barcha ochiq tenderlarni ko‘rish uchun filtrlarni o‘zgartiring yoki tozalang.",
+      "mineEmpty": "Bu holatdagi takliflar yo‘q",
+      "mineEmptyBody": "Boshqa holatni tanlang yoki barcha takliflarni ko‘rsating."
     }
   },
   "compliance": {
@@ -2261,7 +2305,8 @@
       "signIn": "Kirish",
       "register": "Ro'yxatdan o'tish",
       "language": "Til",
-      "pricesShort": "Narxlar"
+      "pricesShort": "Narxlar",
+      "theme": "Mavzu"
     },
     "role": {
       "manufacturer": "Ishlab chiqaruvchi",
@@ -2707,7 +2752,6 @@
     "chosenPackage": "Qadoq: {{name}}",
     "empty": "Hech narsa topilmadi. Boshqa nom bilan urinib ko‘ring.",
     "errors": {
-      "session": "Didox sessiyasi kerak. ERI bilan kiring — bu bir marta bosish.",
       "unavailable": "Didox IKPU ma’lumotnomasi hozir mavjud emas. Keyinroq urinib ko‘ring — kodni keyin ham qo‘shsa bo‘ladi.",
       "failed": "Qidiruvni bajarib bo‘lmadi.",
       "badCode": "IKPU kodi 17 ta raqamdan iborat bo‘lishi kerak."
@@ -2718,12 +2762,16 @@
     "origin": "Tovar kelib chiqishi",
     "originHint": "Hisob-faktura uchun: bu tovarni qanday olgansiz. Didox buni bilmaydi — bir xil kod zavod uchun «o‘z ishlab chiqarishi», treyder uchun «qayta sotish».",
     "originPlaceholder": "Kelib chiqishini tanlang",
-    "originRequired": "Kelib chiqishisiz e’lonni chop etib bo‘lmaydi.",
+    "originRequired": "Tovarning kelib chiqishisiz kodni hujjatlarda ishlatib bo'lmaydi.",
     "origins": {
       "1": "O‘z ishlab chiqarishi",
       "2": "Qayta sotish (yetkazib beruvchidan olingan)",
       "3": "Xizmatlar",
       "4": "Aylanmada ishtirok etmaydi"
+    },
+    "session": {
+      "hint": "IKPU kodlari Didox kabinetingizda saqlanadi. Ularni qidirish va qo‘shish uchun kompaniya ERI bilan Didox ga kiring — 6 soatda bir marta.",
+      "open": "Didox ga ERI bilan kirish"
     }
   },
   "didox": {
@@ -2758,7 +2806,9 @@
       "no_cert": "Hech qanday ERI kaliti topilmadi.",
       "cert_mismatch": "Sertifikatdagi STIR kompaniya STIRiga mos emas.",
       "disabled": "Bu tizimda Didox ulanmagan.",
-      "failed": "Didox’ga ulanib bo‘lmadi."
+      "failed": "Didox’ga ulanib bo‘lmadi.",
+      "not_registered": "Kompaniyaning Didox’da hali akkaunti yo‘q — quyida ro‘yxatdan o‘tkazing.",
+      "rejected": "Didox rad etdi: {{message}}"
     },
     "signErrors": {
       "module_missing": "E-IMZO topilmadi. Modulni ishga tushiring.",
@@ -2781,6 +2831,55 @@
         "document_not_created": "Hujjat operatorda hali yaratilmagan.",
         "didox_unavailable": "Didox hozir mavjud emas. Keyinroq urinib ko‘ring."
       }
+    },
+    "ownerOnly": "Kompaniyani Didox’ga faqat uning egasi ulashi mumkin."
+  },
+  "didoxOnboarding": {
+    "title": "Didox’ga ulanish",
+    "subtitle": "{{company}} — elektron hujjat aylanishi",
+    "why": "Didox orqali shartnomalar my.soliq.uz’ga tushadi. Ularni imzolash uchun kompaniyaning Didox’da akkaunti va operatorning imzolangan ommaviy ofertasi bo‘lishi kerak. Bu bir marta qilinadi.",
+    "later": "Keyinroq",
+    "steps": {
+      "account": "Didox akkaunti",
+      "offer": "Didox ommaviy ofertasi"
+    },
+    "account": {
+      "haveTitle": "Kompaniyaning Didox’da akkaunti bormi?",
+      "haveBody": "Kompaniyaning ERI kaliti bilan kiring — boshqa hech narsa kerak emas. Oferta didox.uz’da imzolangan bo‘lsa, buni ko‘ramiz.",
+      "signIn": "Didox’ga ERI bilan kirish",
+      "registerTitle": "Kompaniyani Didox’da ro‘yxatdan o‘tkazish",
+      "registerBody": "Email va parol — didox.uz kabinetiga kirish uchun. Biz ularni Didox’ga uzatamiz va saqlamaymiz. Ro‘yxatdan o‘tish kompaniyaning ERI kaliti bilan tasdiqlanadi.",
+      "email": "Email",
+      "emailInvalid": "Email’ni «+» belgisisiz kiriting — Didox uni qabul qilmaydi.",
+      "mobile": "Telefon",
+      "mobileHint": "Faqat raqamlar, mamlakat kodi bilan: 998901234567.",
+      "mobileInvalid": "9 dan 15 gacha raqam.",
+      "password": "didox.uz uchun parol",
+      "passwordHint": "Kamida 8 ta belgi.",
+      "passwordShort": "Kamida 8 ta belgi.",
+      "register": "ERI bilan ro‘yxatdan o‘tkazish"
+    },
+    "offer": {
+      "title": "Didox ommaviy ofertasi",
+      "body": "EHA operatorining ofertasini o‘qing. Kompaniyaning ERI kaliti bilan imzolash uni qabul qilishni anglatadi — busiz Didox birorta hujjatni qabul qilmaydi.",
+      "loading": "Oferta yuklanmoqda…",
+      "sessionHint": "Oferta Didox’da saqlanadi. Uni ochish uchun kompaniyaning ERI kaliti bilan kiring.",
+      "loadFailed": "Didox’dan ofertani yuklab bo‘lmadi.",
+      "openInTab": "Yangi oynada ochish",
+      "agree": "Didox ommaviy ofertasini o‘qidim va shartlarini qabul qilaman",
+      "errors": {
+        "module_missing": "E-IMZO topilmadi. E-IMZO modulini ishga tushiring va qayta urinib ko‘ring.",
+        "cert_mismatch": "Ushbu kompaniyaning ERI kaliti topilmadi — sertifikatdagi STIR mos emas.",
+        "failed": "Ofertani imzolab bo‘lmadi. Qayta urinib ko‘ring."
+      }
+    },
+    "done": {
+      "title": "Kompaniya Didox’ga ulandi",
+      "body": "Endi shartnomalarni Didox orqali imzolash va yuborish mumkin.",
+      "cta": "Kabinetga o‘tish"
+    },
+    "contractBlocked": {
+      "title": "Didox orqali imzolash hozircha mavjud emas"
     }
   },
   "sampleLetter": {
@@ -2795,15 +2894,14 @@
   },
   "didoxDocument": {
     "title": "Didox’dagi hujjat",
-    "sellerHint": "Shartnoma EDI operatorida imzolanadi — hujjatni yarating, shundan so‘ng ikkala tomon ERI bilan imzolashi mumkin.",
+    "sellerHint": "Shartnoma EDI operatorida imzolanadi. Quyidagi tugma hujjatni yaratadi va darhol ERI bilan imzolaydi — keyin navbat xaridorda.",
     "buyerHint": "Sotuvchi hali operatorda hujjat yaratmagan. Imzolash shundan keyin ochiladi.",
-    "create": "Didox’da hujjat yaratish",
-    "creating": "Yaratilmoqda…",
+    "create": "Imzolash va Didox’ga yuborish",
+    "creating": "Imzolanmoqda…",
     "blockedTitle": "Hozircha hujjat yaratib bo‘lmaydi",
-    "confirmIdentity": "ERI bilan shaxsni tasdiqlash",
     "blockers": {
-      "ikpu_missing": "E’londa IKPU ko‘rsatilmagan — tovar kodisiz hujjat qabul qilinmaydi.",
-      "signer_identity_missing": "Tomonlardan biri ERI orqali shaxsini tasdiqlamagan: hujjatda imzolovchining JSHSHIR va F.I.Sh. majburiy.",
+      "ikpu_missing": "E’londa IKPU ko‘rsatilmagan — tovar kodisiz hujjat qabul qilinmaydi. Uni e’londa ko‘rsating.",
+      "signer_identity_missing": "Imzolovchi ma’lumotlari (F.I.Sh. va JShShIR) yo‘q — ular hujjatda majburiy. Kompaniya ERI bilan Didox ga kiring: ularni shu imzodan olamiz.",
       "not_ready": "Shartnoma hali ikkala tomonga imzoga yuborilmagan.",
       "wrong_rail": "Bu shartnoma Didox orqali emas, bizning ERI bilan imzolanadi.",
       "party_mismatch": "Shartnoma bo‘yicha sotuvchini aniqlab bo‘lmadi.",
@@ -2814,12 +2912,15 @@
       "didox_session_required": "Didox sessiyasi kerak — kirishni ERI bilan imzolang.",
       "didox_offer_required": "Kompaniya Didox ommaviy ofertasini imzolamagan.",
       "didox_unavailable": "Didox hozir ishlamayapti. Keyinroq urinib ko‘ring.",
-      "ikpu_missing": "E’londa IKPU ko‘rsatilmagan.",
+      "ikpu_missing": "IKPU tanlanmagan.",
       "not_ready": "Shartnoma yuborishga tayyor emas.",
       "not_seller": "Hujjatni sotuvchi yaratadi.",
       "wrong_rail": "Shartnoma Didox relsida emas.",
       "empty_body": "Shartnomada na matn, na pozitsiyalar bor."
-    }
+    },
+    "ikpuTitle": "Tovar kodi (IKPU)",
+    "ikpuHint": "Shartnoma tender bo‘yicha tuzilgan, uning ortida kodli e’lon yo‘q — IKPU ni o‘zingiz tanlang. U hujjatga va my.soliq.uz ga boradi.",
+    "ikpuRequired": "IKPU, qadoq va tovar kelib chiqishini tanlang — ularsiz hujjat yaratilmaydi."
   },
   "stepUp": {
     "title": "Parolni tasdiqlang",
@@ -2830,6 +2931,97 @@
       "wrongPassword": "Parol noto‘g‘ri",
       "unavailable": "Xizmat vaqtincha ishlamayapti. Qayta urinib ko‘ring.",
       "failed": "Parolni tasdiqlab bo‘lmadi. Qayta urinib ko‘ring."
+    }
+  },
+  "contractTerms": {
+    "title": "Shartlar shablonlari",
+    "subtitle": "To'lov va yetkazib berish shartlaringiz — shartnoma tuzishda shablonni tanlang, maydonlar o'zi to'ladi.",
+    "new": "Yangi shablon",
+    "edit": "Shablonni o'zgartirish",
+    "dialogHint": "Shartnomaning yuridik matni platforma uchun umumiy. Shablonda faqat sizning shartlaringiz; narx, miqdor va tovar har bir shartnomada ko'rsatiladi.",
+    "name": "Nomi",
+    "namePlaceholder": "Masalan: Doimiy mijozlar uchun",
+    "empty": "Hozircha shablonlar yo'q",
+    "emptyBody": "Shartnomadan shartnomaga takrorlanadigan shartlarni saqlang.",
+    "readOnly": "Shablonlarni kompaniya egasi va menejerlari yaratadi.",
+    "archiveConfirm": "«{{name}}» shablonini olib tashlaysizmi? Tuzilgan shartnomalar o'zgarmaydi.",
+    "pick": "Shartlar shabloni",
+    "pickHint": "To'lov va yetkazib berish shartlarini to'ldiradi — ularni tuzatish mumkin.",
+    "none": "Shablonsiz",
+    "saveFromForm": "Shartlarni shablon sifatida saqlash",
+    "errors": {
+      "nameTaken": "Bunday nomli shablon allaqachon bor.",
+      "saveFailed": "Shablonni saqlab bo'lmadi. Maydonlarni tekshiring."
+    }
+  },
+  "facture": {
+    "title": "Hisob-fakturalar (ESF)",
+    "none": "Shartnoma bo'yicha hozircha hisob-fakturalar yo'q.",
+    "new": "ESF chiqarish",
+    "issue": "Chiqarish va imzolash",
+    "issuing": "Chiqarilmoqda…",
+    "count": "Miqdor",
+    "price": "Birlik narxi, so'm",
+    "vat": "QQS",
+    "noVat": "QQSsiz",
+    "notInSoum": "Shartnoma {{currency}}da, ESF esa so'mda chiqariladi — narxni so'mda ko'rsating.",
+    "pending": "Oldingi ESF hali imzolanmagan — yangisini chiqarishdan oldin uni imzolang.",
+    "didoxNotReady": "ESFlar Didox orqali chiqariladi va imzolanadi — avval kompaniyani ulang.",
+    "blockedTitle": "Hozircha ESF chiqarib bo'lmaydi",
+    "blockers": {
+      "contract_reference_missing": "ESF havola qilishi kerak bo'lgan Didoxdagi shartnoma topilmadi.",
+      "not_active": "Shartnoma hali ikkala tomon tomonidan imzolanmagan.",
+      "specification_required": "Imzolangan spetsifikatsiyani tanlang — ramkaviy shartnoma bo'yicha ESF shu asosida chiqariladi."
+    },
+    "errors": {
+      "facture_pending": "Oldingi ESF hali imzolanmagan.",
+      "price_required": "Narxni so'mda ko'rsating.",
+      "precision": "Verguldan keyin juda ko'p raqam: miqdor — 6 gacha, narx — 2 gacha.",
+      "not_active": "Shartnoma hali ikkala tomon tomonidan imzolanmagan.",
+      "contract_reference_missing": "ESF havola qilishi kerak bo'lgan Didoxdagi shartnoma topilmadi."
+    },
+    "specification": "Spetsifikatsiya bo'yicha"
+  },
+  "specification": {
+    "title": "Spetsifikatsiyalar",
+    "none": "Hozircha spetsifikatsiyalar yo'q. Ramkaviy shartnoma bo'yicha har bir yetkazib berish o'z spetsifikatsiyasi bilan rasmiylashtiriladi.",
+    "new": "Yangi spetsifikatsiya",
+    "create": "Spetsifikatsiya tuzish",
+    "name": "Spetsifikatsiya № {{n}}",
+    "line": "Pozitsiya {{n}}",
+    "product": "Tovar",
+    "qty": "Miqdor",
+    "unit": "O'lchov birligi",
+    "unitPrice": "Birlik narxi, so'm",
+    "addLine": "Pozitsiya qo'shish",
+    "units": {
+      "kg": "kg",
+      "t": "t",
+      "pcs": "dona"
+    },
+    "priceBasis": "Narx ko'rsatilgan",
+    "withVat": "QQS bilan",
+    "withoutVat": "QQSsiz",
+    "priceBasisHint": {
+      "with_vat": "Jami yaxlit chiqadi, lekin ESF bir necha so'mga farq qilishi mumkin.",
+      "without_vat": "ESF spetsifikatsiya bilan tiyingacha mos keladi."
+    },
+    "payment": "To'lov",
+    "prepay": "100% oldindan to'lov",
+    "schedule": "Jadval bo'yicha",
+    "scheduleText": "To'lov jadvali",
+    "deliveryDays": "To'lovdan keyin yetkazib berish muddati, bank kunlari",
+    "openPdf": "PDF ochish",
+    "status": {
+      "draft": "Qoralama",
+      "pending_signatures": "Imzolar kutilmoqda",
+      "active": "Imzolangan",
+      "declined": "Rad etilgan",
+      "cancelled": "Bekor qilingan"
+    },
+    "errors": {
+      "invalid": "Pozitsiyalarni tekshiring: har birida tovar, miqdor va narx bo'lishi kerak.",
+      "createFailed": "Spetsifikatsiyani tuzib bo'lmadi."
     }
   }
 }

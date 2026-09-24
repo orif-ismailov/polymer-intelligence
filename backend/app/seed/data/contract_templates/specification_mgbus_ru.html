@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 1.8cm 1.6cm; }
+  body { font-family: "DejaVu Serif", serif; font-size: 10.5pt; color: #111; line-height: 1.4; }
+  h1 { font-size: 13pt; text-align: center; margin: 12pt 0 8pt; }
+  p { margin: 0 0 4pt; }
+  table { width: 100%; border-collapse: collapse; }
+  .annex-head { text-align: right; font-size: 9.5pt; }
+  .spec th, .spec td { border: 1px solid #333; padding: 3pt 4pt; font-size: 9pt; text-align: center; }
+  .spec td.name { text-align: left; }
+  .req td { width: 50%; vertical-align: top; padding: 2pt 6pt 2pt 0; font-size: 9.5pt; }
+  .sign td { padding-top: 22pt; }
+</style>
+</head>
+<body>
+  <!-- По форме «Спецификация № 01» к договору 346-01 (docs/deals_documents/).
+       Строки таблицы собирает код (spec_rows_html) из экранированных значений. -->
+  <p class="annex-head">Приложение № {{ spec_number }}<br />к Договору № {{ contract_number }}<br />от {{ contract_date }}</p>
+  <h1>СПЕЦИФИКАЦИЯ № {{ spec_number }} от {{ spec_date }}</h1>
+  <table class="spec">
+    <tr><th>№</th><th>Товар</th><th>Кол-во</th><th>Ед.</th><th>Цена без НДС</th><th>Сумма без НДС</th><th>НДС</th><th>Сумма с НДС</th></tr>
+    {{{ spec_rows_html }}}
+  </table>
+  <p>Итого: {{ spec_amount_with_vat }} сум с НДС</p>
+  <p>Сумма НДС: {{ spec_vat_sum }} сум</p>
+  <p>Всего наименований {{ spec_count }}, на сумму {{ spec_total_phrase }}</p>
+  {{#if payment_mode=prepay}}<p>Условия оплаты: 100% предоплата.</p>{{/if}}
+  {{#if payment_mode=schedule}}<p>График оплат: {{ payment_schedule }}</p>{{/if}}
+  {{#if delivery_days}}<p>Срок поставки: {{ delivery_days }} банковских дней с момента оплаты.</p>{{/if}}
+
+  <table class="req">
+    <tr><td><strong>ПОСТАВЩИК</strong></td><td><strong>ПОКУПАТЕЛЬ</strong></td></tr>
+    <tr><td>{{ supplier_legal_name }}</td><td>{{ buyer_legal_name }}</td></tr>
+    <tr><td>Адрес: {{ supplier_address }}</td><td>Адрес: {{ buyer_address }}</td></tr>
+    <tr><td>Р/с: {{ supplier_bank_account }}</td><td>Р/с: {{ buyer_bank_account }}</td></tr>
+    <tr><td>Банк: {{ supplier_bank_name }}</td><td>Банк: {{ buyer_bank_name }}</td></tr>
+    <tr><td>МФО: {{ supplier_bank_mfo }}</td><td>МФО: {{ buyer_bank_mfo }}</td></tr>
+    <tr><td>ИНН: {{ supplier_inn }}</td><td>ИНН: {{ buyer_inn }}</td></tr>
+    <tr><td>ОКЭД: {{ supplier_oked }}</td><td>ОКЭД: {{ buyer_oked }}</td></tr>
+    <tr class="sign"><td>_________________ {{ supplier_director }}</td><td>_________________ {{ buyer_director }}</td></tr>
+  </table>
+</body>
+</html>
