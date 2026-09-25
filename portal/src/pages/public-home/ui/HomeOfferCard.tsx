@@ -39,7 +39,7 @@ export function HomeOfferCard({ offer }: { offer: PublicOfferCard }) {
           </span>
         )}
         {offer.polymer_type ? (
-          <span className="absolute start-2 top-2 rounded-sm border border-border bg-bg/80 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-text-muted">
+          <span className="absolute start-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-sm border border-border bg-bg/80 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-text-muted">
             {offer.polymer_type}
           </span>
         ) : null}
