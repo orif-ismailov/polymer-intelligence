@@ -235,11 +235,17 @@ class AccountStatus(enum.StrEnum):
     "has no password yet" because `deps.get_current_account` refuses anything that
     is not `active`, so every one of the ~140 routes behind that guard fails closed
     for an applicant without knowing this state exists. Added in migration 0048.
+
+    `deleted` (0056) is the person's own, final decision (`accounts/deletion.py`):
+    the row survives as a scrubbed tombstone because contracts, deals and signatures
+    reference it. Unlike `blocked` — a staff decision staff may reverse — nothing
+    moves an account out of `deleted`.
     """
 
     pending = "pending"
     active = "active"
     blocked = "blocked"
+    deleted = "deleted"
 
 
 class CompanyStatus(enum.StrEnum):

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuthStore, useLogout, useUpdateAccount } from "@/entities/account";
+import { DeleteAccountCard } from "@/features/delete-account";
 import { SUPPORTED_LANGS, coerceLang } from "@/shared/i18n";
 import { THEME_MODES, formatPhoneMask, useThemeStore, type ThemeMode } from "@/shared/lib";
 import {
@@ -155,6 +156,8 @@ export function SettingsPage() {
           </Button>
         </CardBody>
       </Card>
+
+      <DeleteAccountCard />
 
       <ConfirmDialog
         open={confirmLogout}

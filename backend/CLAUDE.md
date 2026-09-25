@@ -239,6 +239,16 @@ mocks the thing it is testing.
   because `notificationLink` sees only `(entity, id)`. Photos are byte-proxied
   (`/public/technologists/{id}/photo` from the snapshot; the live one is private and the
   portal/dashboard fetch it as a Blob — an `<img>` cannot send the Bearer token).
+- **Account self-deletion** (`accounts/deletion.py`, migration 0056, `POST /portal/me/delete`)
+  — the path both app stores require. The row is KEPT as a tombstone (`status='deleted'`,
+  phone → `deleted-{id}`, login/hash/name/Telegram/application fields NULL) because ~40 FKs
+  from contracts, deals, signatures and verification point at it; memberships, favourites and
+  portal notifications are deleted; a technologist card is suspended and scrubbed. Company
+  records (companies, deals, contracts, ЭСФ, signature evidence, `company_person_data`) are
+  NOT touched — legal retention. `deleted` differs from `blocked` in being final: the admin
+  service refuses every credential/status action on it (`account_deleted`, 409). The route
+  sits behind `get_current_account`, so the first-login gate applies, and re-verifies the
+  password (400 `invalid_password`) with a per-account 5/5-min cap (429).
 - **State registries (P7.c)** — `registry_snapshots` is append-only: no `updated_at`, no
   UPDATE path, a re-check is a new row. Two writers share one shape — `source='registry'`
   (an API answered, `created_by` NULL) and `source='manual'` (a staff member transcribed an

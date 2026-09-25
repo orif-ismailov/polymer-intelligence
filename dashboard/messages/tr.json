@@ -782,7 +782,8 @@
     "status": {
       "pending": "Başvuru",
       "active": "Aktif",
-      "blocked": "Engelli"
+      "blocked": "Engelli",
+      "deleted": "Sahibi tarafından silindi"
     },
     "filter": {
       "pending": "Başvurular",
@@ -827,7 +828,8 @@
     "errors": {
       "login_taken": "Bu kullanıcı adı kullanımda. Başka birini seçin.",
       "no_credentials": "Bu kaydın henüz kullanıcı adı yok — önce erişim verin.",
-      "login_required": "Kullanıcı adı girin."
+      "login_required": "Kullanıcı adı girin.",
+      "account_deleted": "Hesap sahibi tarafından silindi — geri yüklenemez."
     },
     "kind": {
       "all": "Tümü",

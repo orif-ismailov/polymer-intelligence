@@ -767,7 +767,8 @@
     "status": {
       "pending": "申请",
       "active": "已启用",
-      "blocked": "已封禁"
+      "blocked": "已封禁",
+      "deleted": "已由本人删除"
     },
     "filter": {
       "pending": "申请",
@@ -812,7 +813,8 @@
     "errors": {
       "login_taken": "该登录名已被占用，请另选一个。",
       "no_credentials": "该记录尚无登录名——请先发放凭据。",
-      "login_required": "请填写登录名。"
+      "login_required": "请填写登录名。",
+      "account_deleted": "该账户已由本人删除，无法恢复。"
     },
     "kind": {
       "all": "全部",

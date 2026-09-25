@@ -27,6 +27,7 @@ import {
   LogisticsRequestsPage,
   LogisticsThreadPage,
 } from "@/pages/logistics";
+import { AccountDeletionPage, PrivacyPage } from "@/pages/legal";
 import { LoginPage } from "@/pages/login";
 import { PasswordChangePage } from "@/pages/password";
 import { RegisterDonePage, RegisterPage } from "@/pages/register";
@@ -157,6 +158,10 @@ const appRoutes: RouteObject[] = [
       { path: "/technologists/:profileId", element: <TechnologistPage /> },
       { path: "/news", element: <NewsPage /> },
       { path: "/news/:signalId", element: <NewsArticlePage /> },
+      // Legal pages the app stores link to (privacy policy + the public account
+      // deletion page Google Play requires). Server-rendered like the rest.
+      { path: "/privacy", element: <PrivacyPage /> },
+      { path: "/account-deletion", element: <AccountDeletionPage /> },
       // The four directories share one page component, keyed by slug.
       // Declared as literal paths rather than `/:slug` so an unknown segment
       // falls through to the 404 instead of rendering an empty directory.

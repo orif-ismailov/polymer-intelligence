@@ -1038,7 +1038,19 @@
     "theme": "Mavzu",
     "themeHint": "Standart holatda — to‘q mavzu. «Tizim bo‘yicha» qurilma sozlamasiga mos keladi.",
     "login": "Login",
-    "changePassword": "Parolni almashtirish"
+    "changePassword": "Parolni almashtirish",
+    "deleteAccount": {
+      "title": "Hisobni o‘chirish",
+      "description": "Hisob qayta tiklash imkoniyatisiz o‘chiriladi. Kompaniyalar, shartnomalar va bitimlar qonun talabiga ko‘ra saqlanadi.",
+      "action": "Hisobni o‘chirish",
+      "dialogTitle": "Hisob butunlay o‘chirilsinmi?",
+      "dialogBody": "Barcha qurilmalarda kabinetga kirish huquqini yo‘qotasiz va barcha kompaniyalardan chiqarilasiz. Tasdiqlash uchun joriy parolni kiriting.",
+      "password": "Joriy parol",
+      "confirm": "Butunlay o‘chirish",
+      "wrongPassword": "Parol noto‘g‘ri.",
+      "rateLimited": "Urinishlar juda ko‘p. Keyinroq qayta urinib ko‘ring.",
+      "learnMore": "Nima o‘chiriladi va nima saqlanadi"
+    }
   },
   "companyStatus": {
     "draft": "Qoralama",
@@ -2610,7 +2622,10 @@
       "directories": "Ma'lumotnomalar",
       "account": "Hisob",
       "blurb": "Kompaniyalarni tekshirish va laboratoriya nazorati bilan neftkimyo xomashyosi bozori.",
-      "legal": "IMEX AI. Barcha huquqlar himoyalangan."
+      "legal": "IMEX AI. Barcha huquqlar himoyalangan.",
+      "legalTitle": "Huquqiy ma'lumot",
+      "privacy": "Maxfiylik siyosati",
+      "accountDeletion": "Hisobni o‘chirish"
     }
   },
   "logisticsRequest": {
@@ -3318,6 +3333,155 @@
       "myOffer": "Mening taklifim",
       "offerClosed": "Taklif yopilgan.",
       "requestClosed": "Ariza endi takliflarni qabul qilmaydi."
+    }
+  },
+  "legal": {
+    "updated": "Oxirgi yangilanish: {{date}}",
+    "privacy": {
+      "metaTitle": "Maxfiylik siyosati — IMEX AI",
+      "metaDescription": "IMEX AI (ai-imex.com va mobil ilovalar) qanday ma'lumotlarni to‘playdi, nima uchun, kimga uzatadi, qancha saqlaydi va hisobni qanday o‘chirish mumkin.",
+      "title": "Maxfiylik siyosati",
+      "intro": "Ushbu siyosat IMEX AI {{site}} sayti hamda Android va iOS uchun IMEX AI mobil ilovalari (birgalikda — «Xizmat») foydalanuvchilarining shaxsiy ma'lumotlarini qanday qayta ishlashini tavsiflaydi.",
+      "operator": {
+        "title": "1. Operator",
+        "body": "Shaxsiy ma'lumotlar operatori — {{operator}} (keyingi o‘rinlarda — «biz»). Ma'lumotlarni qayta ishlash bo‘yicha savollar uchun {{email}} manziliga yozing."
+      },
+      "collect": {
+        "title": "2. Qanday ma'lumotlarni to‘playmiz",
+        "intro": "Biz faqat bozor ishlashi uchun zarur bo‘lgan ma'lumotlarni to‘playmiz:",
+        "items": {
+          "account": "Hisob ma'lumotlari: telefon, ism, login va parol xeshi (parolning o‘zini saqlamaymiz), interfeys tili, oxirgi kirish sanasi.",
+          "company": "Kompaniyaning ro‘yxatdan o‘tish ma'lumotlari: nomi, STIR, manzili, bank rekvizitlari, siz ko‘rsatgan rahbar va xodimlar haqidagi ma'lumotlar.",
+          "documents": "Kompaniyani tekshirish uchun hujjatlar: ro‘yxatdan o‘tganlik guvohnomasi, bank xati, litsenziyalar, sertifikatlar va siz yuklagan boshqa fayllar.",
+          "trade": "Savdo ma'lumotlari: takliflar, xarid arizalari, so‘rovlar, bitimlar, shartnomalar, spetsifikatsiyalar, elektron hisob-fakturalar (EHF) va to‘lov belgilari.",
+          "messages": "Boshqa kompaniyalar, laboratoriyalar, logistlar va texnologlar bilan chatlardagi yozishmalar va ilovalar.",
+          "photos": "Siz yuklagan rasm va tasvirlar: mahsulot rasmlari, kompaniya logotiplari va muqovalari, texnolog profili rasmi.",
+          "eimzo": "Kompaniyani tasdiqlash yoki shartnomani imzolashda E-IMZO sertifikati ma'lumotlari: F.I.Sh., JShShIR, STIR, lavozim, sertifikat haqidagi ma'lumotlar va imzoning o‘zi (PKCS#7). F.I.Sh. va JShShIR shifrlangan holda saqlanadi.",
+          "didox": "Didox elektron hujjat aylanishi ma'lumotlari: hujjatlar, ularning holatlari va imzolari, soliq reestridagi kompaniya ma'lumotlari.",
+          "technical": "Texnik jurnallar: IP-manzil, so‘rovlar vaqti, brauzer yoki qurilma turi, xatolar. Ular xavfsizlik va nosozliklarni aniqlash uchun kerak."
+        }
+      },
+      "purposes": {
+        "title": "3. Ulardan nima uchun foydalanamiz",
+        "items": {
+          "service": "Xizmatni taqdim etish uchun: kabinetga kirish, takliflarni joylashtirish, so‘rovlar, bitimlar, chatlar;",
+          "verification": "kompaniyalarni tekshirish va ishtirokchilarni firibgarlikdan himoya qilish uchun;",
+          "contracts": "shartnomalar va elektron hujjatlarni rasmiylashtirish va imzolash uchun;",
+          "communication": "bitimlaringiz, so‘rovlaringiz va xabarlaringiz haqida bildirishnomalar yuborish uchun;",
+          "security": "xavfsizlikni ta'minlash, suiiste'molni cheklash va xatolarni tuzatish uchun;",
+          "legal": "soliq, fuqarolik va boshqa qonunchilik talablarini bajarish uchun."
+        }
+      },
+      "basis": {
+        "title": "4. Huquqiy asoslar",
+        "body": "Biz ma'lumotlarni sizning roziligingiz asosida, siz va kompaniyangiz bilan shartnoma tuzish va uni bajarish uchun, shuningdek qonunda belgilangan majburiyatlarni bajarish uchun — O‘zbekiston Respublikasining «Shaxsga doir ma'lumotlar to‘g‘risida»gi Qonuni va boshqa amaldagi normalarga muvofiq qayta ishlaymiz."
+      },
+      "processors": {
+        "title": "5. Ma'lumotlarni kimga uzatamiz",
+        "intro": "Biz shaxsiy ma'lumotlarni sotmaymiz. Ularni faqat Xizmatni ko‘rsatishda yordam beradiganlarga va faqat zarur hajmda uzatamiz:",
+        "items": {
+          "hosting": "Xosting va fayllarni saqlash — {{hosting}}. Fayllar ushbu serverlardagi o‘zimizning S3-mos omborimizda saqlanadi.",
+          "didox": "Didox (elektron hujjat aylanishi operatori, O‘zbekiston) — kompaniyani soliq reestri bo‘yicha tekshirish hamda siz ushbu imzolash usulini tanlagan bo‘lsangiz, shartnomalar va EHFni yuborish uchun.",
+          "eimzo": "E-IMZO (UNICON.UZ) — elektron raqamli imzo. Imzo qurilmangizdagi E-IMZO moduli tomonidan yaratiladi va bizning infratuzilmamizda ishlaydigan E-IMZO tekshiruv serveri tomonidan tekshiriladi.",
+          "telegram": "Telegram — botimiz va kanalimiz orqali yangiliklar va bildirishnomalarni yetkazish. Agar Telegramdagi mini-ilovamizdan foydalansangiz, Telegram bizga Telegram ID va ismingizni uzatadi.",
+          "llm": "Anthropic va OpenAI (AQSh) — yangiliklarni tasniflash hamda arizalar va takliflar matnlarini tahlil qilishda foydalanadigan sun'iy intellekt modellari yetkazib beruvchilari. Ularga ariza yoki taklif matni uzatiladi, lekin telefoningiz, login yoki parolingiz uzatilmaydi. Bu ma'lumotlarning transchegaraviy uzatilishidir."
+        },
+        "outro": "Bundan tashqari, qonun talab qilganda ma'lumotlarni davlat organlariga, bitimning boshqa tarafiga esa bitimning o‘zi uchun zarur hajmda oshkor qilamiz."
+      },
+      "retention": {
+        "title": "6. Ma'lumotlarni qancha saqlaymiz",
+        "items": {
+          "account": "Hisob ma'lumotlari — hisob mavjud ekan. Hisob o‘chirilgandan so‘ng undagi shaxsiy ma'lumotlar o‘chiriladi.",
+          "company": "Kompaniya yozuvlari — kompaniya ma'lumotlari, shartnomalar, bitimlar, EHF, imzolangan hujjatlar va imzo dalillari — soliq va fuqarolik qonunchiligi talab qilgancha, jumladan hisobingiz o‘chirilgandan keyin ham saqlanadi. Ular alohida foydalanuvchiga emas, kompaniyaga tegishli.",
+          "messages": "Boshqa kompaniyalar bilan yozishmalar bitim tarixining bir qismi sifatida ikkinchi tarafda qoladi.",
+          "logs": "Tashqi xizmatlarga murojaatlar jurnali — 90 kun; server texnik jurnallari — xavfsizlik va nosozliklarni aniqlash uchun zarur bo‘lgandan uzoq emas."
+        }
+      },
+      "rights": {
+        "title": "7. Sizning huquqlaringiz",
+        "intro": "Siz quyidagilarga haqlisiz:",
+        "items": {
+          "access": "qaysi ma'lumotlaringizni qayta ishlayotganimizni bilish va ularning nusxasini olish;",
+          "rectify": "noaniq ma'lumotlarni tuzatish — ularning ko‘pini kabinetda o‘zingiz o‘zgartirishingiz mumkin;",
+          "delete": "hisobni o‘chirish — ilovada yoki saytda, qo‘llab-quvvatlash xizmatiga murojaat qilmasdan;",
+          "withdraw": "agar qayta ishlash rozilikka asoslangan bo‘lsa, rozilikni qaytarib olish;",
+          "complain": "shaxsiy ma'lumotlarni himoya qilish bo‘yicha vakolatli davlat organiga murojaat qilish."
+        },
+        "outro": "Hisobni qanday o‘chirish va bunda nima saqlanishi «Hisobni o‘chirish» sahifasida tavsiflangan."
+      },
+      "mobile": {
+        "title": "8. Mobil ilovalar",
+        "body": "IMEX AI mobil ilovalari sizni boshqa ilovalar va saytlarda kuzatmaydi, reklama identifikatorlaridan (IDFA, Google Advertising ID) foydalanmaydi, reklama ko‘rsatmaydi va ma'lumotlarni reklama tarmoqlari yoki ma'lumot brokerlariga uzatmaydi."
+      },
+      "security": {
+        "title": "9. Xavfsizlik",
+        "body": "Xizmat bilan ulanish shifrlanadi (HTTPS). Parollar faqat xesh ko‘rinishida, bank rekvizitlari va sertifikat ma'lumotlari shifrlangan holda saqlanadi, xodimlarning kirishi cheklangan va jurnalga yoziladi."
+      },
+      "minors": {
+        "title": "10. Yosh",
+        "body": "Xizmat kompaniya vakillari uchun mo‘ljallangan va 18 yoshga to‘lmagan shaxslar uchun mo‘ljallanmagan."
+      },
+      "changes": {
+        "title": "11. Siyosatdagi o‘zgarishlar",
+        "body": "Biz ushbu siyosatni yangilashimiz mumkin. Oxirgi tahrir sanasi sahifa boshida ko‘rsatilgan; muhim o‘zgarishlar haqida Xizmatda xabar beramiz."
+      },
+      "contact": {
+        "title": "12. Aloqa",
+        "body": "Shaxsiy ma'lumotlar bo‘yicha savollar va huquqlaringizni amalga oshirish bo‘yicha so‘rovlarni {{email}} manziliga yuboring."
+      }
+    },
+    "deletion": {
+      "metaTitle": "Hisobni o‘chirish — IMEX AI",
+      "metaDescription": "IMEX AI hisobini mobil ilovada yoki saytda qanday o‘chirish, nima o‘chiriladi va qonunga ko‘ra nima saqlanadi.",
+      "title": "Hisobni o‘chirish",
+      "intro": "IMEX AI hisobingizni istalgan vaqtda — mobil ilovada yoki {{site}} saytida o‘chirishingiz mumkin. O‘chirishni ortga qaytarib bo‘lmaydi.",
+      "inApp": {
+        "title": "Mobil ilovada",
+        "steps": {
+          "s1": "IMEX AI ilovasiga kiring.",
+          "s2": "«Kabinet» → «Sozlamalar»ni oching.",
+          "s3": "«Hisobni o‘chirish» tugmasini bosing.",
+          "s4": "Joriy parolni kiriting va o‘chirishni tasdiqlang."
+        }
+      },
+      "web": {
+        "title": "Saytda",
+        "steps": {
+          "s1": "{{site}} saytidagi kabinetga kiring.",
+          "s2": "«Sozlamalar»ni oching.",
+          "s3": "«Hisobni o‘chirish» tugmasini bosing, parolni kiriting va tasdiqlang."
+        },
+        "cta": "Sozlamalarni ochish"
+      },
+      "deleted": {
+        "title": "Nima o‘chiriladi",
+        "items": {
+          "profile": "ism, telefon va login — ular anonim yozuv bilan almashtiriladi;",
+          "login": "parol: hisobga endi hech bir qurilmadan kirib bo‘lmaydi;",
+          "sessions": "barcha faol seanslar;",
+          "memberships": "barcha kompaniyalardagi a'zoligingiz;",
+          "technologist": "texnolog kartochkasi: u nashrdan olinadi, ism, rasm va kontaktlar o‘chiriladi;",
+          "personal": "saralanganlar va bildirishnomalar."
+        }
+      },
+      "retained": {
+        "title": "Nima saqlanadi",
+        "intro": "Quyidagi yozuvlar shaxsan sizga emas, kompaniyaga tegishli va soliq hamda fuqarolik qonunchiligi talab qilgancha saqlanadi:",
+        "items": {
+          "companies": "kompaniyalarning o‘zi va ularni tekshirish tarixi;",
+          "contracts": "shartnomalar, spetsifikatsiyalar, EHF va elektron imzo bilan imzolangan hujjatlar imzo dalillari bilan birga;",
+          "deals": "bitimlar, to‘lov belgilari, takliflar va arizalar;",
+          "messages": "boshqa ishtirokchilar bilan yozishmalar — ular ikkinchi tarafda qoladi;",
+          "audit": "xavfsizlik jurnali — unda shaxsiy ma'lumotlaringizsiz o‘chirish haqida belgi qoladi."
+        },
+        "outro": "Ushbu yozuvlarda siz endi ism, telefon yoki login bilan bog‘lanmaysiz."
+      },
+      "noAccess": {
+        "title": "Hisobga kira olmayapsizmi?",
+        "body": "Agar kira olmasangiz, {{email}} manziliga hisob logini yoki telefonini ko‘rsatib yozing — hisob sizniki ekanini tekshirib, uni o‘chiramiz."
+      },
+      "done": "Hisob o‘chirildi. IMEX AIdan foydalanganingiz uchun rahmat.",
+      "privacyLink": "Maxfiylik siyosati"
     }
   }
 }

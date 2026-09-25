@@ -83,6 +83,16 @@ class StepUpIn(BaseModel):
     password: str
 
 
+class AccountDeleteIn(BaseModel):
+    """Body for POST /portal/me/delete — the current password, re-entered.
+
+    A live access token is not enough to erase a person: a borrowed screen or a
+    stolen token must not be able to do it.
+    """
+
+    password: str
+
+
 class StepUpOut(BaseModel):
     """How long the unlocked window lasts, so the client can hide the prompt until
     it is actually needed again rather than guessing at the server's policy."""

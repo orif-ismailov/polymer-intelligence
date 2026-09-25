@@ -178,7 +178,12 @@ def block_account(
     """Revocation, deliberately not a DELETE: the person's contracts, offers and
     membership rows stay exactly where they are, and only the door closes."""
     target = _target_or_404(db, account_id)
-    svc.set_status(db, actor=actor, target=target, status=AccountStatus.blocked)
+    try:
+        svc.set_status(db, actor=actor, target=target, status=AccountStatus.blocked)
+    except svc.PortalAdminRefused as exc:
+        raise _refuse(
+            db, exc, actor=actor, target_id=account_id, action="portal_account.blocked"
+        ) from exc
     db.commit()
     return PortalAccountOut.model_validate(target)
 

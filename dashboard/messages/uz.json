@@ -782,7 +782,8 @@
     "status": {
       "pending": "Ariza",
       "active": "Faol",
-      "blocked": "Bloklangan"
+      "blocked": "Bloklangan",
+      "deleted": "Egasi tomonidan o'chirilgan"
     },
     "filter": {
       "pending": "Arizalar",
@@ -827,7 +828,8 @@
     "errors": {
       "login_taken": "Bu login band. Boshqasini tanlang.",
       "no_credentials": "Bu yozuvda hali login yo‘q — avval kirish bering.",
-      "login_required": "Loginni kiriting."
+      "login_required": "Loginni kiriting.",
+      "account_deleted": "Akkaunt egasi tomonidan o'chirilgan — uni tiklab bo'lmaydi."
     },
     "kind": {
       "all": "Hammasi",

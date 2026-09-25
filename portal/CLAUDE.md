@@ -19,6 +19,14 @@ with `applied_as === "technologist"` has no company by design: `RequireCompany` 
 only to `/cabinet/expert/*`, notifications and settings, and `AppShell` swaps in the expert rail
 (no company switcher). The factory side is `/cabinet/tech-requests/*`.
 
+**Legal pages** (25.09.2026, for the app stores): `/privacy` and `/account-deletion`,
+server-rendered storefront pages (`pages/legal`) linked from the footer's «Правовая
+информация» column and listed in the sitemap. The operator's legal name, contact e-mail and
+hosting are PLACEHOLDERS in `shared/config/legal.ts`, interpolated into all six locales — fill
+them in there before submitting. The web deletion button is `features/delete-account` on
+`/cabinet/settings` (`POST /portal/me/delete`, password-confirmed); it lands on
+`/account-deletion` with `state.deleted` and only then forgets the local session.
+
 **The client cabinet** (R1): everything under **`/cabinet`** — a person signs in with a
 login and password ISSUED BY STAFF, registers companies, submits them for verification, and
 publishes offers. The browser counterpart to the staff `dashboard/` and the Telegram
@@ -188,6 +196,10 @@ FSD import rule: a layer may import only from layers below it (`shared ⇐ entit
     switching to the browser language after hydration.
   - tr/fa/zh were machine-translated (24.09.2026) with a terminology pass; have a native speaker
     review before relying on them with customers.
+  - **Needs native review — `legal.*` (25.09.2026):** the privacy policy and account-deletion
+    texts were written in ru/en and machine-translated into uz/tr/fa/zh. They are LEGAL text:
+    a lawyer should review the Russian original, and a native speaker each translation, before
+    the store submission. Same for `settings.deleteAccount.*`.
 - **API base is relative** (`/api/v1`): dev = vite proxy → :8000; prod = nginx same-origin at
   `ai-imex.com` (no CORS). Don't hardcode absolute API URLs.
 - **Enforcement is badge-only in R1**: publishing requires a *verified* company (backend 403
