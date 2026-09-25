@@ -27,13 +27,13 @@ export function PublicOfferTile({ offer }: { offer: PublicOfferCard }) {
       to={`/market/${offer.id}`}
       className="group flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-surface transition-colors hover:border-brand-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
     >
-      <div className="relative aspect-[4/3] w-full border-b border-border bg-surface-inset">
+      <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-border bg-surface-inset">
         {cover ? (
           <img
             src={publicOfferImageUrl(offer.id, cover.id)}
             alt={title}
             loading="lazy"
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-text-subtle">
@@ -41,7 +41,7 @@ export function PublicOfferTile({ offer }: { offer: PublicOfferCard }) {
           </div>
         )}
         {offer.polymer_type ? (
-          <span className="absolute start-2 top-2 rounded-sm border border-border bg-bg/80 px-1.5 py-0.5 text-[11px] font-medium text-text-muted backdrop-blur">
+          <span className="absolute start-2 top-2 max-w-[calc(100%-1rem)] truncate rounded-sm border border-border bg-bg/80 px-1.5 py-0.5 text-[11px] font-medium text-text-muted backdrop-blur">
             {offer.polymer_type}
           </span>
         ) : null}

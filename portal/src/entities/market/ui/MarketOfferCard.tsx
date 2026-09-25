@@ -45,7 +45,7 @@ export function MarketOfferCard({ offer, onOpen }: MarketOfferCardProps) {
       <Card className="flex h-full flex-col overflow-hidden transition-colors hover:border-brand-line">
         {/* Cover photo, or a neutral placeholder so a photo-less offer doesn't
             collapse the card and break the grid (FR-M3). */}
-        <div className="relative aspect-[4/3] w-full border-b border-border bg-surface-inset">
+        <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-border bg-surface-inset">
           <FavoriteButton
             offerId={offer.id}
             isFavorite={offer.is_favorite}
@@ -56,7 +56,7 @@ export function MarketOfferCard({ offer, onOpen }: MarketOfferCardProps) {
               src={offerImageUrl(offer.id, cover.id)}
               alt=""
               loading="lazy"
-              className="h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-text-subtle">
