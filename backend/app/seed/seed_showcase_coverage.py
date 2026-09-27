@@ -28,6 +28,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
 from app.seed.align_numbering import align_reference_numbers
+from app.seed.seed_showcase import _moderator_id
 
 RNG = random.Random(20260731)
 UTC = datetime.UTC
@@ -344,7 +345,7 @@ def ensure_coverage(db: Session) -> None:
                     "target": round(float(offer["price"] or 1200) * 0.96, 2),
                     "message": RNG.choice(_INQUIRY_MESSAGES),
                     "status": status,
-                    "moderated_by": 2 if status != "pending" else None,
+                    "moderated_by": _moderator_id(db) if status != "pending" else None,
                     "reviewed": created + datetime.timedelta(hours=5) if status != "pending" else None,
                     "forwarded": created + datetime.timedelta(hours=6) if status == "approved" else None,
                     "created": created,
@@ -403,7 +404,7 @@ def ensure_coverage(db: Session) -> None:
                         "status": status,
                         "partner": partner if status != "submitted" else None,
                         "note": "Образец получен." if status == "in_analysis" else None,
-                        "handled_by": 2 if status != "submitted" else None,
+                        "handled_by": _moderator_id(db) if status != "submitted" else None,
                         "created": created,
                     },
                 )
