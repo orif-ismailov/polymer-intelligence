@@ -6,6 +6,7 @@
 - POST /portal/auth/refresh   → rotate cookie + new access token
 - POST /portal/auth/logout    → clear cookie
 - GET  /portal/me / PATCH /portal/me
+- POST /portal/me/delete      → 204; the account becomes a scrubbed tombstone (store requirement)
 
 Credentials are issued by staff (`api_admin.py`); nothing here creates an account that
 can sign in. Identity comes only from the verified password check or the verified JWT,
@@ -31,9 +32,11 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.redis import get_redis
 from app.core.security import create_portal_access_token, decode_token
+from app.domains.accounts import deletion as account_deletion
 from app.domains.accounts import service as account_service
 from app.domains.accounts.models import UserAccount
 from app.domains.accounts.schemas import (
+    AccountDeleteIn,
     AccountOut,
     LoginIn,
     MeUpdateIn,
@@ -45,7 +48,7 @@ from app.domains.accounts.schemas import (
     StepUpOut,
 )
 from app.models.enums import AccountStatus
-from app.services import rate_limit, session_service
+from app.services import rate_limit, session_service, storage_service
 from app.services.audit_service import write_audit
 from app.services.auth_service import (
     begin_session,
@@ -553,3 +556,100 @@ def update_me(
         account.language = body.language
     db.commit()
     return AccountOut.model_validate(account)
+
+
+#: The wrong-password answer of `POST /portal/me/delete`. A bare stable code, as the
+#: mobile app and the portal both branch on it.
+_INVALID_PASSWORD = "invalid_password"  # noqa: S105 — an error code, not a secret
+
+
+def _session_family(token: str | None, expected_type: str) -> str | None:
+    """The `fam` claim of a token, or None for an absent/unreadable/legacy one."""
+    if not token:
+        return None
+    try:
+        fam = decode_token(token, expected_type=expected_type).get("fam")
+    except JWTError:
+        return None
+    return fam if isinstance(fam, str) else None
+
+
+@router.post(
+    "/me/delete",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    responses={
+        **errors.PORTAL,
+        **errors.error(
+            400,
+            "The password did not match. A bare stable code.",
+            _INVALID_PASSWORD,
+        ),
+        **errors.error(
+            429,
+            "Too many attempts for this account.",
+            "Too many attempts",
+            headers=errors.RETRY_AFTER_HEADER,
+        ),
+    },
+)
+def delete_me(
+    body: AccountDeleteIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
+    account: UserAccount = Depends(get_current_account),
+    portal_session: str | None = Cookie(default=None, alias=_PORTAL_COOKIE),
+) -> Response:
+    """Delete the caller's own account — the path Google Play and the App Store require.
+
+    Behind `get_current_account`, so the first-login gate APPLIES: an account that
+    still owes a password change gets 403 `password_change_required` and must set its
+    own password first. Its issued password is printed in a contract and is not proof
+    the person holding the screen is the account's owner.
+
+    The password is re-verified, and attempts are counted per ACCOUNT on the step-up
+    footing (5 per 5 minutes → 429), so a stolen access token cannot turn this route
+    into a password oracle. A correct password ends the account, so in practice every
+    counted attempt past the first is a failure.
+
+    What happens is `accounts/deletion.py`: the row becomes a scrubbed tombstone with
+    status `deleted`, memberships and personal conveniences go, and company records —
+    companies, deals, contracts, ЭСФ, signed documents — are kept, as tax and contract
+    law require. Every session dies with it: the status alone makes every guard and
+    `/auth/refresh` refuse, and the families behind this request's access token and
+    cookie are revoked outright. The cookie is cleared in the 204.
+    """
+    try:
+        rate_limit.enforce_window(
+            redis_client,
+            "portal_account_delete",
+            account.id,
+            rate_limit.PORTAL_PASSWORD_CHANGE_PER_5MIN,
+            300,
+        )
+    except rate_limit.RateLimited as exc:
+        raise _too_many(exc) from exc
+
+    if not account_service.verify_account_password(account, body.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_INVALID_PASSWORD)
+
+    discard = account_deletion.delete_account(db, account)
+    db.commit()
+
+    # After the commit: a rolled-back deletion must not have lost the portrait.
+    for key in discard:
+        storage_service.discard_object(key, context="account_self_delete")
+
+    auth = request.headers.get("authorization", "")
+    bearer = auth[7:] if auth[:7].lower() == "bearer " else None
+    for fam in {
+        _session_family(bearer, "portal_access"),
+        _session_family(portal_session, "portal_refresh"),
+    }:
+        if fam is not None:
+            session_service.revoke(redis_client, fam)  # never raises
+
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    clear_portal_session_cookie(response)
+    return response

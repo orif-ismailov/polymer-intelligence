@@ -39,6 +39,14 @@ export const accountApi = {
 
   updateMe: (patch: AccountPatch): Promise<Account> =>
     api.patch<Account>("/portal/me", patch),
+
+  /**
+   * Delete the caller's own account (204). The server scrubs the account, revokes
+   * the session and clears the refresh cookie; a wrong password is 400
+   * `invalid_password`, too many attempts 429. Irreversible.
+   */
+  deleteMe: (password: string): Promise<void> =>
+    api.post<void>("/portal/me/delete", { password }),
 };
 
 export const accountKeys = {

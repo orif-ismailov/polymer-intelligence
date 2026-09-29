@@ -78,3 +78,23 @@ export function useLogout() {
     },
   });
 }
+
+/**
+ * Delete the account. On success the session no longer exists anywhere, so the
+ * caller must drop local auth and every cached query — AFTER it has navigated
+ * away from the cabinet: clearing first lets `RequireAuth` bounce the page to the
+ * login screen before the caller's own navigation runs. `forgetSession` is that
+ * second half, returned so the order stays in one place.
+ */
+export function useDeleteAccount() {
+  const qc = useQueryClient();
+  const clear = useAuthStore((s) => s.clear);
+  const mutation = useMutation<void, Error, string>({
+    mutationFn: (password) => accountApi.deleteMe(password),
+  });
+  const forgetSession = (): void => {
+    clear();
+    qc.clear();
+  };
+  return { ...mutation, forgetSession };
+}

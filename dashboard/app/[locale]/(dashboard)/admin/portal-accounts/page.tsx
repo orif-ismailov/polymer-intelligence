@@ -41,7 +41,7 @@ import { formatTashkent } from "@/lib/tz";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-type AccountStatus = "pending" | "active" | "blocked";
+type AccountStatus = "pending" | "active" | "blocked" | "deleted";
 
 interface PortalAccount {
   id: number;
@@ -469,25 +469,28 @@ function AccountsTable() {
                     </time>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => setIssuing(a)}>
-                        <KeyRound className="h-4 w-4" aria-hidden="true" />
-                        {a.login ? t("regenerate.action") : t("issue.action")}
-                      </Button>
-                      {a.login && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setRowError(null);
-                            toggleBlocked.mutate(a);
-                          }}
-                          disabled={toggleBlocked.isPending}
-                        >
-                          {a.status === "blocked" ? t("unblock") : t("block")}
+                    {/* A self-deleted account is a tombstone: nothing to issue or toggle. */}
+                    {a.status !== "deleted" && (
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => setIssuing(a)}>
+                          <KeyRound className="h-4 w-4" aria-hidden="true" />
+                          {a.login ? t("regenerate.action") : t("issue.action")}
                         </Button>
-                      )}
-                    </div>
+                        {a.login && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setRowError(null);
+                              toggleBlocked.mutate(a);
+                            }}
+                            disabled={toggleBlocked.isPending}
+                          >
+                            {a.status === "blocked" ? t("unblock") : t("block")}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

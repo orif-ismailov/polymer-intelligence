@@ -65,6 +65,15 @@ function PublicFooter() {
             { to: "/cabinet/login", labelKey: "public.nav.register" },
           ],
     },
+    {
+      // What both app stores link to: the policy, and the public deletion page
+      // Google Play requires beside the in-app path.
+      titleKey: "public.footer.legalTitle",
+      links: [
+        { to: "/privacy", labelKey: "public.footer.privacy" },
+        { to: "/account-deletion", labelKey: "public.footer.accountDeletion" },
+      ],
+    },
   ];
 
   return (
@@ -77,7 +86,7 @@ function PublicFooter() {
           rests on the footer's own `bg-surface` instead of on a strip of page
           background, so the seam does not show through the translucency. */}
       <div className="mx-auto max-w-[1440px] px-4 pb-24 pt-10 md:pb-10 lg:px-6">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
             <Link to="/" aria-label={t("common.appName")} className="inline-flex">
               <BrandLogo withTagline />

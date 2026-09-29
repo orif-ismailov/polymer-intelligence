@@ -68,6 +68,8 @@ const PUBLIC_PATTERNS = [
   ...DIRECTORY_SLUGS.map((s) => new RegExp(`^/${s}/\\d+/?$`)),
   /^\/technologists\/?$/,
   /^\/technologists\/\d+\/?$/,
+  /^\/privacy\/?$/,
+  /^\/account-deletion\/?$/,
 ];
 
 function isPublicPath(pathname) {
@@ -294,6 +296,8 @@ async function createServer() {
       "/news",
       "/technologists",
       ...DIRECTORY_SLUGS.map((s) => `/${s}`),
+      "/privacy",
+      "/account-deletion",
     ];
 
     let entries = [];

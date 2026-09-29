@@ -1038,7 +1038,19 @@
     "theme": "Tema",
     "themeHint": "Varsayılan tema koyudur. “Sistem” seçeneği cihazınızın ayarını izler.",
     "login": "Kullanıcı adı",
-    "changePassword": "Şifreyi değiştir"
+    "changePassword": "Şifreyi değiştir",
+    "deleteAccount": {
+      "title": "Hesabı sil",
+      "description": "Hesabınız kalıcı olarak silinecek. Şirketler, sözleşmeler ve anlaşmalar kanunun gerektirdiği şekilde saklanır.",
+      "action": "Hesabı sil",
+      "dialogTitle": "Hesabınız kalıcı olarak silinsin mi?",
+      "dialogBody": "Tüm cihazlarda kabine erişiminizi kaybedecek ve tüm şirketlerden çıkarılacaksınız. Onaylamak için mevcut parolanızı girin.",
+      "password": "Mevcut parola",
+      "confirm": "Kalıcı olarak sil",
+      "wrongPassword": "Parola yanlış.",
+      "rateLimited": "Çok fazla deneme. Lütfen daha sonra tekrar deneyin.",
+      "learnMore": "Neler silinir, neler saklanır"
+    }
   },
   "companyStatus": {
     "draft": "Taslak",
@@ -2610,7 +2622,10 @@
       "directories": "Rehberler",
       "account": "Hesap",
       "blurb": "Şirket doğrulaması ve laboratuvar kontrolü olan petrokimya hammaddeleri pazaryeri.",
-      "legal": "IMEX AI. Tüm hakları saklıdır."
+      "legal": "IMEX AI. Tüm hakları saklıdır.",
+      "legalTitle": "Yasal",
+      "privacy": "Gizlilik Politikası",
+      "accountDeletion": "Hesap silme"
     }
   },
   "logisticsRequest": {
@@ -3318,6 +3333,155 @@
       "myOffer": "Teklifim",
       "offerClosed": "Teklif kapatıldı.",
       "requestClosed": "Talep artık teklif kabul etmiyor."
+    }
+  },
+  "legal": {
+    "updated": "Son güncelleme: {{date}}",
+    "privacy": {
+      "metaTitle": "Gizlilik Politikası — IMEX AI",
+      "metaDescription": "IMEX AI'nin (ai-imex.com ve mobil uygulamalar) hangi verileri topladığı, neden, kiminle paylaştığı, ne kadar sakladığı ve hesabınızı nasıl silebileceğiniz.",
+      "title": "Gizlilik Politikası",
+      "intro": "Bu politika, IMEX AI'nin {{site}} web sitesi ile Android ve iOS için IMEX AI mobil uygulamalarının (birlikte \"Hizmet\") kullanıcılarına ait kişisel verileri nasıl işlediğini açıklar.",
+      "operator": {
+        "title": "1. Veri sorumlusu",
+        "body": "Kişisel verilerin sorumlusu {{operator}}'dir (\"biz\"). Veri işleme ile ilgili sorularınız için {{email}} adresine yazın."
+      },
+      "collect": {
+        "title": "2. Topladığımız veriler",
+        "intro": "Yalnızca pazaryerinin çalışması için gerekenleri topluyoruz:",
+        "items": {
+          "account": "Hesap verileri: telefon, ad, kullanıcı adı ve parola özeti (parolanın kendisini saklamayız), arayüz dili, son giriş zamanı.",
+          "company": "Şirket kayıt verileri: unvan, vergi numarası (INN), adres, banka bilgileri, girdiğiniz yönetici ve çalışan bilgileri.",
+          "documents": "Şirket doğrulama belgeleri: kayıt belgesi, banka yazısı, lisanslar, sertifikalar ve yüklediğiniz diğer dosyalar.",
+          "trade": "Ticari veriler: teklifler, satın alma talepleri, sorular, anlaşmalar, sözleşmeler, spesifikasyonlar, elektronik faturalar (ESF) ve ödeme kayıtları.",
+          "messages": "Diğer şirketler, laboratuvarlar, lojistik firmaları ve teknologlarla sohbetlerdeki yazışmalar ve ekler.",
+          "photos": "Yüklediğiniz fotoğraf ve görseller: ürün fotoğrafları, şirket logoları ve kapakları, teknolog profil fotoğrafı.",
+          "eimzo": "Şirketi onaylarken veya sözleşme imzalarken E-IMZO sertifika verileri: ad soyad, PINFL, vergi numarası, unvan, sertifika bilgileri ve imzanın kendisi (PKCS#7). Ad soyad ve PINFL şifreli saklanır.",
+          "didox": "Didox elektronik belge alışverişi verileri: belgeler, durumları ve imzaları, vergi sicilindeki şirket bilgileri.",
+          "technical": "Teknik kayıtlar: IP adresi, istek zamanları, tarayıcı veya cihaz türü, hatalar. Güvenlik ve hata ayıklama için gereklidir."
+        }
+      },
+      "purposes": {
+        "title": "3. Verileri neden kullanıyoruz",
+        "items": {
+          "service": "Hizmeti sunmak için: kabine giriş, teklif yayınlama, talepler, anlaşmalar, sohbetler;",
+          "verification": "şirketleri doğrulamak ve katılımcıları dolandırıcılığa karşı korumak için;",
+          "contracts": "sözleşmeleri ve elektronik belgeleri hazırlamak ve imzalamak için;",
+          "communication": "anlaşmalarınız, talepleriniz ve mesajlarınız hakkında bildirim göndermek için;",
+          "security": "güvenliği sağlamak, kötüye kullanımı sınırlamak ve hataları gidermek için;",
+          "legal": "vergi, medeni ve diğer mevzuattan doğan yükümlülükleri yerine getirmek için."
+        }
+      },
+      "basis": {
+        "title": "4. Hukuki dayanak",
+        "body": "Verileri; rızanıza dayanarak, sizinle ve şirketinizle sözleşme kurmak ve ifa etmek için ve kanundan doğan yükümlülükleri yerine getirmek için — Özbekistan Cumhuriyeti \"Kişisel Veriler Hakkında\" Kanunu ve diğer uygulanabilir düzenlemelere uygun olarak işliyoruz."
+      },
+      "processors": {
+        "title": "5. Verileri kiminle paylaşıyoruz",
+        "intro": "Kişisel verileri satmıyoruz. Yalnızca Hizmeti sunmamıza yardımcı olanlarla ve yalnızca gerektiği kadar paylaşıyoruz:",
+        "items": {
+          "hosting": "Barındırma ve dosya depolama — {{hosting}}. Dosyalar bu sunuculardaki kendi S3 uyumlu depolamamızda tutulur.",
+          "didox": "Didox (elektronik belge alışverişi operatörü, Özbekistan) — şirketi vergi siciline göre kontrol etmek ve bu imza yöntemini seçtiyseniz sözleşme ve ESF göndermek için.",
+          "eimzo": "E-IMZO (UNICON.UZ) — elektronik imza. İmza, cihazınızdaki E-IMZO modülü tarafından oluşturulur ve altyapımızda çalışan E-IMZO doğrulama sunucusu tarafından doğrulanır.",
+          "telegram": "Telegram — botumuz ve kanalımız aracılığıyla haber ve bildirim iletimi. Telegram'daki mini uygulamamızı kullanırsanız Telegram bize Telegram kimliğinizi ve adınızı iletir.",
+          "llm": "Anthropic ve OpenAI (ABD) — haberleri sınıflandırmak ve talep ile teklif metinlerini analiz etmek için kullandığımız yapay zekâ modeli sağlayıcıları. Onlara talep veya teklif metni iletilir; telefonunuz, kullanıcı adınız veya parolanız iletilmez. Bu, sınır ötesi veri aktarımıdır."
+        },
+        "outro": "Ayrıca kanunen gerekli olduğunda verileri kamu makamlarına ve anlaşmanın diğer tarafına, anlaşmanın gerektirdiği ölçüde açıklarız."
+      },
+      "retention": {
+        "title": "6. Verileri ne kadar saklıyoruz",
+        "items": {
+          "account": "Hesap verileri — hesap var olduğu sürece. Hesap silindiğinde içindeki kişisel veriler silinir.",
+          "company": "Şirket kayıtları — şirket bilgileri, sözleşmeler, anlaşmalar, ESF, imzalı belgeler ve imza kanıtları — hesabınız silindikten sonra da dahil olmak üzere vergi ve medeni hukukun gerektirdiği süre boyunca saklanır. Bunlar tek bir kullanıcıya değil, şirkete aittir.",
+          "messages": "Diğer şirketlerle yazışmalar, anlaşma geçmişinin bir parçası olarak karşı tarafta kalır.",
+          "logs": "Harici hizmet çağrıları kaydı — 90 gün; sunucu teknik kayıtları — güvenlik ve hata ayıklama için gerekenden uzun değil."
+        }
+      },
+      "rights": {
+        "title": "7. Haklarınız",
+        "intro": "Şu haklara sahipsiniz:",
+        "items": {
+          "access": "hangi verilerinizi işlediğimizi öğrenmek ve bir kopyasını almak;",
+          "rectify": "hatalı verileri düzeltmek — çoğunu kabinde kendiniz değiştirebilirsiniz;",
+          "delete": "hesabınızı silmek — uygulamada veya web sitesinde, destek ekibine başvurmadan;",
+          "withdraw": "işleme rızaya dayanıyorsa rızanızı geri çekmek;",
+          "complain": "kişisel verilerin korunmasından sorumlu yetkili devlet kurumuna başvurmak."
+        },
+        "outro": "Hesabınızı nasıl sileceğiniz ve nelerin saklandığı \"Hesap silme\" sayfasında açıklanmıştır."
+      },
+      "mobile": {
+        "title": "8. Mobil uygulamalar",
+        "body": "IMEX AI mobil uygulamaları sizi diğer uygulama ve web sitelerinde izlemez, reklam kimliklerini (IDFA, Google Advertising ID) kullanmaz, reklam göstermez ve verileri reklam ağlarıyla veya veri simsarlarıyla paylaşmaz."
+      },
+      "security": {
+        "title": "9. Güvenlik",
+        "body": "Hizmete bağlantılar şifrelenir (HTTPS). Parolalar yalnızca özet olarak, banka bilgileri ve sertifika verileri şifreli olarak saklanır; personel erişimi sınırlıdır ve kayıt altına alınır."
+      },
+      "minors": {
+        "title": "10. Yaş",
+        "body": "Hizmet şirket temsilcileri içindir ve 18 yaşından küçükler için tasarlanmamıştır."
+      },
+      "changes": {
+        "title": "11. Politika değişiklikleri",
+        "body": "Bu politikayı güncelleyebiliriz. Geçerli sürümün tarihi sayfanın başında yer alır; önemli değişiklikleri Hizmet içinde duyururuz."
+      },
+      "contact": {
+        "title": "12. İletişim",
+        "body": "Kişisel verilerle ilgili sorularınızı ve haklarınızı kullanma taleplerinizi {{email}} adresine gönderin."
+      }
+    },
+    "deletion": {
+      "metaTitle": "Hesap silme — IMEX AI",
+      "metaDescription": "IMEX AI hesabınızı mobil uygulamada veya web sitesinde nasıl silebileceğiniz, nelerin silindiği ve kanunen nelerin saklandığı.",
+      "title": "Hesap silme",
+      "intro": "IMEX AI hesabınızı istediğiniz zaman mobil uygulamada veya {{site}} üzerinde silebilirsiniz. Silme işlemi geri alınamaz.",
+      "inApp": {
+        "title": "Mobil uygulamada",
+        "steps": {
+          "s1": "IMEX AI uygulamasında oturum açın.",
+          "s2": "Kabin → Ayarlar'ı açın.",
+          "s3": "\"Hesabı sil\"e dokunun.",
+          "s4": "Mevcut parolanızı girin ve onaylayın."
+        }
+      },
+      "web": {
+        "title": "Web sitesinde",
+        "steps": {
+          "s1": "{{site}} adresindeki kabine giriş yapın.",
+          "s2": "Ayarlar'ı açın.",
+          "s3": "\"Hesabı sil\"e tıklayın, parolanızı girin ve onaylayın."
+        },
+        "cta": "Ayarları aç"
+      },
+      "deleted": {
+        "title": "Neler silinir",
+        "items": {
+          "profile": "adınız, telefonunuz ve kullanıcı adınız — anonim bir kayıtla değiştirilir;",
+          "login": "parolanız: hesaba artık hiçbir cihazdan giriş yapılamaz;",
+          "sessions": "tüm etkin oturumlar;",
+          "memberships": "tüm şirketlerdeki üyeliğiniz;",
+          "technologist": "teknolog kartınız: yayından kaldırılır; adınız, fotoğrafınız ve iletişim bilgileriniz silinir;",
+          "personal": "favoriler ve bildirimler."
+        }
+      },
+      "retained": {
+        "title": "Neler saklanır",
+        "intro": "Aşağıdaki kayıtlar kişisel olarak size değil şirkete aittir ve vergi ile medeni hukukun gerektirdiği süre boyunca saklanır:",
+        "items": {
+          "companies": "şirketlerin kendisi ve doğrulama geçmişleri;",
+          "contracts": "sözleşmeler, spesifikasyonlar, ESF ve elektronik imzayla imzalanmış belgeler, imza kanıtlarıyla birlikte;",
+          "deals": "anlaşmalar, ödeme kayıtları, teklifler ve talepler;",
+          "messages": "diğer katılımcılarla yazışmalar — karşı tarafta kalır;",
+          "audit": "güvenlik kaydı — kişisel verileriniz olmadan silme işlemine dair bir not tutar."
+        },
+        "outro": "Bu kayıtlarda artık bir ad, telefon veya kullanıcı adıyla ilişkilendirilmezsiniz."
+      },
+      "noAccess": {
+        "title": "Hesabınıza erişemiyor musunuz?",
+        "body": "Giriş yapamıyorsanız hesabın kullanıcı adını veya telefonunu belirterek {{email}} adresine yazın — hesabın size ait olduğunu doğrulayıp sileriz."
+      },
+      "done": "Hesabınız silindi. IMEX AI'yi kullandığınız için teşekkür ederiz.",
+      "privacyLink": "Gizlilik Politikası"
     }
   }
 }
