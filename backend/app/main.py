@@ -160,12 +160,12 @@ def create_app() -> FastAPI:
     configure_logging()
     init_sentry("api")
 
-    # WR-03: gate OpenAPI docs behind settings.DEBUG so the full API schema
-    # (endpoints, request/response models, security requirements) is not publicly
-    # accessible in production. Set DEBUG=true in .env for local development.
-    _docs_url = "/docs" if settings.DEBUG else None
-    _redoc_url = "/redoc" if settings.DEBUG else None
-    _openapi_url = "/openapi.json" if settings.DEBUG else None
+    # WR-03 / IMEX-08: the OpenAPI docs (endpoints, request/response models, security
+    # requirements) are published only where API_DOCS_ENABLED says so — deliberately
+    # NOT DEBUG, which the public dev server keeps on for other reasons.
+    _docs_url = "/docs" if settings.API_DOCS_ENABLED else None
+    _redoc_url = "/redoc" if settings.API_DOCS_ENABLED else None
+    _openapi_url = "/openapi.json" if settings.API_DOCS_ENABLED else None
 
     application = FastAPI(
         title="Polymer Intelligence API",

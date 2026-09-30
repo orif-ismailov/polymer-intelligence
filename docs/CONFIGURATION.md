@@ -160,7 +160,8 @@ Everything else is **Optional** and falls back to the listed default.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `RUN_MIGRATIONS_ON_STARTUP` | No | `false` | When true, the FastAPI lifespan runs `alembic upgrade head` (advisory-locked, `app/entrypoint.py`) on startup, so a fresh `docker compose up` auto-applies the schema. Default `false` so the test suite / CI (which build the app via `TestClient` with no database) never attempt migrations at import/startup. Both compose files instead run migrations as an explicit pre-start step in the `api` service `command` (`python -m app.entrypoint`), so this flag stays `false` even under compose. |
-| `DEBUG` | No | `false` | When true, exposes `/docs`, `/redoc`, and `/openapi.json`. **Must be `false` in production** — otherwise the full API schema (attack-surface map) is publicly accessible. Set `DEBUG=true` in `.env` for local development. |
+| `DEBUG` | No | `false` | Development relaxations: permits `EIMZO_STUB` and switching the rate limits off. **Must be `false` in production.** Does not expose the API docs (see `API_DOCS_ENABLED`). |
+| `API_DOCS_ENABLED` | No | `false` | When true, exposes `/docs`, `/redoc`, and `/openapi.json`. **Must be `false` on every internet-reachable host, dev included** — the full API schema is an attack-surface map (audit IMEX-08). Set `API_DOCS_ENABLED=true` in `.env` for local development. |
 
 ### Validated at startup
 

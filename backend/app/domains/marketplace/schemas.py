@@ -17,6 +17,7 @@ import decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.core.text import reject_markup
 from app.domains.compliance.schemas import ComplianceOut
 from app.models.enums import (
     OfferAvailability,
@@ -43,14 +44,15 @@ class SellerOfferCreate(BaseModel):
     # Optional: «под заказ» (on_order) offers carry no qty/price (price is "по запросу").
     # The availability rule below forces them to null for on_order and requires them
     # (positive) for in_stock.
-    qty_available: decimal.Decimal | None = None
-    qty_unit: str = "MT"
-    price: decimal.Decimal | None = None
-    currency: str = "USD"
+    qty_available: decimal.Decimal | None = Field(default=None, lt=10**11)
+    qty_unit: str = Field(default="MT", max_length=20)
+    price: decimal.Decimal | None = Field(default=None, lt=10**12)
+    currency: str = Field(default="USD", max_length=3)
     incoterms: PriceBasis = PriceBasis.unknown
     warehouse_city: str | None = Field(default=None, max_length=200)
     country: str | None = Field(default=None, max_length=2)
-    min_order_qty: decimal.Decimal | None = None
+    # Positive when given (audit IMEX-12) — the one number the rule below missed.
+    min_order_qty: decimal.Decimal | None = Field(default=None, gt=0, lt=10**11)
     description: str | None = Field(default=None, max_length=2000)
     # Seller contact — upserts the Seller for this Telegram identity.
     company_name: str | None = Field(default=None, max_length=300)
@@ -66,6 +68,20 @@ class SellerOfferCreate(BaseModel):
         if v is not None and v <= 0:
             raise ValueError("must be greater than 0")
         return v
+
+    @field_validator(
+        "product_text",
+        "grade_text",
+        "polymer_type",
+        "warehouse_city",
+        "description",
+        "company_name",
+        "contact_name",
+    )
+    @classmethod
+    def _plain_text(cls, value: str | None) -> str | None:
+        """Offer text is plain text; a tag in it is refused (audit IMEX-06)."""
+        return reject_markup(value)
 
     @model_validator(mode="after")
     def _availability_pricing(self) -> SellerOfferCreate:

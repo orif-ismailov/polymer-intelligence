@@ -339,3 +339,20 @@ def decode_token(token: str, expected_type: str) -> dict[str, Any]:
         raise JWTError(f"Token type mismatch: expected '{expected_type}'")
 
     return raw_payload
+
+
+def family_of(token: str | None, expected_type: str) -> str | None:
+    """The session family a token names, or None if it is absent, unreadable or foreign.
+
+    For logout, which must end a session whichever credential the caller presents — the
+    refresh cookie, a Bearer access token, or both (audit IMEX-07: the PoC logged out
+    with only the header, and the session outlived it). Never raises: an expired or
+    garbled token is not a reason to fail the one action a worried user takes first.
+    """
+    if not token:
+        return None
+    try:
+        fam = decode_token(token, expected_type).get("fam")
+    except JWTError:
+        return None
+    return fam if isinstance(fam, str) else None

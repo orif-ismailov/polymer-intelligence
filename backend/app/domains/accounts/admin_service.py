@@ -114,6 +114,19 @@ def _assert_login_free(db: Session, login: str, *, exclude_id: int | None = None
         raise PortalAdminRefused("login_taken", f"Login {login!r} is already in use")
 
 
+def _assert_not_deleted(target: UserAccount) -> None:
+    """Refuse any credential or status action on a self-deleted account (0056).
+
+    Deletion is the person's own final decision and the row is a scrubbed tombstone
+    kept only for foreign-key integrity. Issuing it credentials would resurrect an
+    identity its owner asked us to erase.
+    """
+    if target.status == AccountStatus.deleted:
+        raise PortalAdminRefused(
+            "account_deleted", "This account was deleted by its owner and cannot be restored"
+        )
+
+
 def issue_credentials(
     db: Session,
     *,
@@ -130,6 +143,7 @@ def issue_credentials(
     Sets `status=active` — this IS the decision the application was waiting for —
     and `must_change_password`, because what staff hand over is written down.
     """
+    _assert_not_deleted(target)
     folded = normalize_login(login)
     if not folded:
         raise PortalAdminRefused("login_required", "A login is required")
@@ -161,6 +175,7 @@ def regenerate_password(
     db: Session, *, actor: StaffUser, target: UserAccount, password: str
 ) -> str:
     """Replace the password; return the PLAINTEXT, once. Same one-read contract."""
+    _assert_not_deleted(target)
     if target.login is None:
         raise PortalAdminRefused(
             "no_credentials", "This account has no login yet — issue credentials first"
@@ -190,6 +205,7 @@ def set_status(
     system considers cleared to act who cannot sign in, and the only way back is the
     issue flow anyway.
     """
+    _assert_not_deleted(target)
     if status == AccountStatus.active and target.password_hash is None:
         raise PortalAdminRefused(
             "no_credentials", "This account has no credentials — issue them instead"

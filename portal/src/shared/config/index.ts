@@ -1,5 +1,7 @@
 export * from "./enums";
 
+export * from "./legal";
+
 export * from "./publicRoutes";
 
 /** Relative base — the SPA calls the API same-origin (dev proxy / prod nginx). */

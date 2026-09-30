@@ -172,7 +172,10 @@ async def on_verification_moderation(callback: CallbackQuery) -> None:
     if message is not None:
         try:
             if message.text is not None:
-                await message.edit_text(text=(message.text + suffix)[:4096], reply_markup=None)
+                # Plain text, as it was sent — see moderation._finish_moderation_message.
+                await message.edit_text(
+                    text=(message.text + suffix)[:4096], reply_markup=None, parse_mode=None
+                )
             else:
                 await message.edit_reply_markup(reply_markup=None)
         except Exception as exc:  # noqa: BLE001 — the decision is already committed

@@ -333,3 +333,36 @@ def test_revoke_swallows_an_unreachable_redis() -> None:
     holding a cookie they were told was cleared. The cookie is cleared regardless,
     and the session dies with its TTL."""
     svc.revoke(BrokenRedis(), _FAM)
+
+
+# ── is_live: the access-token check (audit IMEX-07) ──────────────────────────
+
+
+def test_is_live_for_the_family_owner() -> None:
+    fake = FakeRedis()
+    _start(fake)
+    assert svc.is_live(fake, _FAM, kind=svc.KIND_PORTAL, subject_id=42) is True
+
+
+def test_is_live_false_once_revoked() -> None:
+    fake = FakeRedis()
+    _start(fake)
+    svc.revoke(fake, _FAM)
+    assert svc.is_live(fake, _FAM, kind=svc.KIND_PORTAL, subject_id=42) is False
+
+
+@pytest.mark.parametrize(
+    ("kind", "subject_id"), [(svc.KIND_STAFF, 42), (svc.KIND_PORTAL, 43)]
+)
+def test_is_live_refuses_someone_elses_family(kind: str, subject_id: int) -> None:
+    """staff_users.id 42 and user_accounts.id 42 are different people, and a family
+    id is only a session of the subject it was started for."""
+    fake = FakeRedis()
+    _start(fake)
+    assert svc.is_live(fake, _FAM, kind=kind, subject_id=subject_id) is False
+
+
+def test_is_live_fails_open_when_redis_is_down() -> None:
+    """The opposite of `current`, by decision: this runs on every request, and a
+    Redis blip must not sign the whole platform out."""
+    assert svc.is_live(BrokenRedis(), _FAM, kind=svc.KIND_PORTAL, subject_id=42) is True

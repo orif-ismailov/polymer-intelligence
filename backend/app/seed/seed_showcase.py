@@ -75,6 +75,33 @@ def _ago(days: float = 0, hours: float = 0) -> datetime.datetime:
     return NOW - datetime.timedelta(days=days, hours=hours)
 
 
+def _moderator_id(db: Session) -> int:
+    """The staff user credited with moderating showcase rows.
+
+    Looked up, not assumed: `seed_staff` seeds ONE administrator now, so the
+    literal `2` this used to name was a foreign-key violation on any database
+    seeded after that change.
+    """
+    staff_id = db.scalar(sa.text("SELECT min(id) FROM staff_users"))
+    if staff_id is None:
+        raise RuntimeError("no staff user to moderate with — run seed_staff first")
+    return int(staff_id)
+
+
+def _free_number(db: Session, table: str, prefix: str, width: int, n: int) -> str:
+    """`{prefix}{n}`, or the next `{prefix}{n + k}` that `table` does not hold.
+
+    The showcase numbers its rows from 1, which only works on an empty table —
+    a dev database with a few real deals already owns `DEAL-2026-000001`.
+    """
+    while db.scalar(
+        sa.text(f"SELECT 1 FROM {table} WHERE number = :number"),
+        {"number": f"{prefix}{n:0{width}d}"},
+    ):
+        n += 1
+    return f"{prefix}{n:0{width}d}"
+
+
 def _money(value: float) -> decimal.Decimal:
     return _D(str(round(value, 2)))
 
@@ -546,6 +573,7 @@ def seed_offers(
     """Publish the catalogue. Returns a light record per offer for later wiring."""
     offers: list[dict[str, object]] = []
     index = 0
+    moderator = _moderator_id(db)
 
     for key in _SELLER_KEYS:
         spec = next(c for c in COMPANIES if c["key"] == key)
@@ -624,7 +652,7 @@ def seed_offers(
                     "moq": _qty(RNG.choice([5, 10, 20, 25, 40])),
                     "description": grade["desc"],
                     "status": status,
-                    "moderated_by": 2 if status in ("approved", "rejected") else None,
+                    "moderated_by": moderator if status in ("approved", "rejected") else None,
                     "moderation_note": (
                         "Отклонено: не приложен паспорт качества на партию."
                         if status == "rejected" else None
@@ -748,7 +776,9 @@ def seed_requests(
                 """
             ),
             {
-                "number": f"REQ-{created.strftime('%Y-%m-%d')}-{i + 1:05d}",
+                "number": _free_number(
+                    db, "requests", f"REQ-{created.strftime('%Y-%m-%d')}-", 5, i + 1
+                ),
                 "product_id": product_id,
                 "grade": RNG.choice([g["grade"] for g in GRADE_SPECS if g["product_id"] == product_id] or [None]),
                 "ptype": code,
@@ -899,6 +929,7 @@ def seed_inquiries(
     """Per-offer buyer inquiries (the marketplace's other demand channel)."""
     live = [o for o in offers if o["status"] == "approved"]
     made = 0
+    moderator = _moderator_id(db)
     for i in range(34):
         offer = RNG.choice(live)
         key = _BUYER_KEYS[i % len(_BUYER_KEYS)]
@@ -933,7 +964,7 @@ def seed_inquiries(
                     ]
                 ),
                 "status": status,
-                "moderated_by": 2 if status != "pending" else None,
+                "moderated_by": moderator if status != "pending" else None,
                 "note": "Не указан контакт для связи." if status == "rejected" else None,
                 "reviewed": created + datetime.timedelta(hours=6) if status != "pending" else None,
                 "forwarded": created + datetime.timedelta(hours=7) if status == "approved" else None,
@@ -1184,7 +1215,9 @@ def seed_deals(
                 """
             ),
             {
-                "number": f"DEAL-{opened.year}-{i + 1:06d}",
+                "number": _free_number(
+                    db, "deals", f"DEAL-{opened.year}-", 6, i + 1
+                ),
                 "buyer": buyer_id,
                 "seller": seller_id,
                 "offer_id": offer["id"],
@@ -1452,7 +1485,9 @@ def seed_labs(
                 """
             ),
             {
-                "number": f"LAB-{created.year}-{i + 1:06d}",
+                "number": _free_number(
+                    db, "lab_orders", f"LAB-{created.year}-", 6, i + 1
+                ),
                 "company_id": offer["company_id"],
                 "account_id": offer["account_id"],
                 "offer_id": offer["id"],
@@ -1472,7 +1507,7 @@ def seed_labs(
                     "Объём образца недостаточен для полного цикла испытаний."
                     if status == "rejected" else None
                 ),
-                "handled_by": 2 if status != "submitted" else None,
+                "handled_by": _moderator_id(db) if status != "submitted" else None,
                 "completed": created + datetime.timedelta(days=6) if done else None,
                 "created": created,
                 "updated": created + datetime.timedelta(days=RNG.randrange(1, 8)),

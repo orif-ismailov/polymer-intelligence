@@ -449,7 +449,7 @@ Telegram-личности (`clients`/`sellers`) — отдельный «зам�
 
 ```sql
 -- ── ENUM-типы (14) ────────────────────────────────────────────────────────
-CREATE TYPE account_status              AS ENUM ('active','blocked');
+CREATE TYPE account_status              AS ENUM ('pending','active','blocked','deleted');  -- 0048 +pending; 0056 +deleted (самоудаление: строка-надгробие, PII вычищены)
 CREATE TYPE company_status              AS ENUM ('draft','pending_verification','verified','rejected','suspended','liquidated');
 CREATE TYPE company_member_role         AS ENUM ('owner','manager','member');
 CREATE TYPE company_member_status       AS ENUM ('active','invited','removed');

@@ -608,6 +608,78 @@ def test_logout_clears_cookie(portal_app) -> None:  # noqa: ANN001
     assert "portal_session=" in resp.headers.get("set-cookie", "")
 
 
+# ── Access tokens die with their session (audit IMEX-07) ──────────────────────
+
+
+def _signed_in(client: TestClient, db: MagicMock) -> tuple[str, str]:
+    """Sign in through the real route; return (access token, refresh cookie)."""
+    _found(db, _account(7))
+    resp = client.post(_LOGIN, json={"login": "acme-trade", "password": _PASS})
+    assert resp.status_code == 200
+    cookie = _cookie_from(resp)
+    assert cookie is not None
+    return resp.json()["access_token"], cookie
+
+
+def _auth(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}
+
+
+def test_logout_by_cookie_kills_the_access_token(portal_app) -> None:  # noqa: ANN001
+    """The audit's PoC: after logout the 15-minute access token still answered 200.
+    A signed token proves it was minted here, not that its session is alive."""
+    client, _fake, db = portal_app
+    access, cookie = _signed_in(client, db)
+    assert client.get(_ME, headers=_auth(access)).status_code == 200
+
+    client.post(_LOGOUT, headers={"Cookie": f"portal_session={cookie}"})
+
+    assert client.get(_ME, headers=_auth(access)).status_code == 401
+
+
+def test_logout_by_bearer_alone_kills_the_session(portal_app) -> None:  # noqa: ANN001
+    """The PoC logged out with only an Authorization header. That must end the
+    session too — the refresh cookie included — not just clear a cookie nobody sent."""
+    client, fake, db = portal_app
+    access, cookie = _signed_in(client, db)
+
+    client.post(_LOGOUT, headers=_auth(access))
+
+    assert client.get(_ME, headers=_auth(access)).status_code == 401
+    fake.store.pop(
+        f"rs:used:{__import__('jose').jwt.get_unverified_claims(cookie)['jti']}", None
+    )
+    resp = client.post(_REFRESH, headers={"Cookie": f"portal_session={cookie}"})
+    assert resp.status_code == 401
+
+
+def test_refresh_reuse_kills_outstanding_access_tokens(portal_app) -> None:  # noqa: ANN001
+    """Reuse detection revokes the family; an access token minted from it must stop
+    working at once, not fifteen minutes later."""
+    from jose import jwt as jose_jwt  # noqa: PLC0415
+
+    client, fake, db = portal_app
+    access, cookie = _signed_in(client, db)
+
+    client.post(_REFRESH, headers={"Cookie": f"portal_session={cookie}"})
+    fake.delete(f"rs:used:{jose_jwt.get_unverified_claims(cookie)['jti']}")
+    client.post(_REFRESH, headers={"Cookie": f"portal_session={cookie}"})  # the theft
+
+    assert client.get(_ME, headers=_auth(access)).status_code == 401
+
+
+def test_an_unreachable_redis_does_not_sign_everyone_out(portal_app) -> None:  # noqa: ANN001
+    """Fail open, by decision: the signature and expiry still hold, and an outage of
+    the revocation store must not become an outage of the cabinet."""
+    import redis  # noqa: PLC0415
+
+    client, fake, db = portal_app
+    access, _cookie = _signed_in(client, db)
+
+    with patch.object(fake, "get", side_effect=redis.ConnectionError("down")):
+        assert client.get(_ME, headers=_auth(access)).status_code == 200
+
+
 # ── Technologist applications (0055) ─────────────────────────────────────────
 
 
