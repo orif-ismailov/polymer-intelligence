@@ -36,6 +36,7 @@ def _make_staff_user(
     user = MagicMock()
     user.id = id
     user.email = email
+    user.full_name = "Admin"
     user.is_admin = role == "admin"
     user.is_active = is_active
     user.password_hash = hash_password(password)
@@ -367,6 +368,40 @@ def test_logout_needs_no_access_token(auth_client: TestClient):
         "/api/v1/auth/logout", headers={"Authorization": "Bearer expired.garbage.token"}
     )
     assert resp.status_code == 204, resp.text
+
+
+def _staff_login(client: TestClient) -> str:
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@polymer.uz", "password": "admin_password_secure"},
+    )
+    assert resp.status_code == 200
+    return str(resp.json()["access_token"])
+
+
+def test_logout_kills_the_access_token(auth_client: TestClient):
+    """Audit IMEX-07: the access token outlived logout by up to fifteen minutes."""
+    access = _staff_login(auth_client)
+    bearer = {"Authorization": f"Bearer {access}"}
+    assert auth_client.get("/api/v1/auth/me", headers=bearer).status_code == 200
+
+    assert auth_client.post("/api/v1/auth/logout").status_code == 204
+
+    assert auth_client.get("/api/v1/auth/me", headers=bearer).status_code == 401
+
+
+def test_bearer_only_logout_ends_the_session(auth_client: TestClient):
+    """No cookie sent — the access token alone names the family to revoke."""
+    access = _staff_login(auth_client)
+    refresh_cookie = auth_client.cookies.get("refresh_token")
+    auth_client.cookies.clear()
+    bearer = {"Authorization": f"Bearer {access}"}
+
+    assert auth_client.post("/api/v1/auth/logout", headers=bearer).status_code == 204
+
+    assert auth_client.get("/api/v1/auth/me", headers=bearer).status_code == 401
+    auth_client.cookies.set("refresh_token", refresh_cookie or "")
+    assert auth_client.post("/api/v1/auth/refresh").status_code == 401
 
 
 # ── Security hardening tests (CR-04, CR-05, T-03-01) ──────────────────────────

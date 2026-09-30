@@ -10,9 +10,9 @@ For architecture and data-flow context, see [`docs/ARCHITECTURE.md`](ARCHITECTUR
 env/runtime-settings contract referenced by some endpoints below, see
 [`docs/CONFIGURATION.md`](CONFIGURATION.md).
 
-> **Always-current reference:** when `DEBUG=true` (local/dev only — verified in
+> **Always-current reference:** when `API_DOCS_ENABLED=true` (local only — verified in
 > `backend/app/main.py`, `create_app()`), the live OpenAPI schema is served at
-> `/docs` (Swagger UI), `/redoc` (ReDoc), and `/openapi.json`. In production `DEBUG` is false and
+> `/docs` (Swagger UI), `/redoc` (ReDoc), and `/openapi.json`. On every public host the flag is false and
 > all three are `None` — the full schema (endpoints, request/response models, security
 > requirements) is deliberately not publicly exposed (`WR-03`). This document is the reference of
 > record for production.
@@ -680,8 +680,8 @@ Two known gaps, deliberate rather than overlooked:
   provider-unavailable answers on the Didox/E-IMZO/registry rails — is still route-by-route work
   that the schema does not yet carry.
 
-The schema itself is served only when `DEBUG=true` (`/docs`, `/redoc`, `/openapi.json`); in
-production all three are `None` per `WR-03`, so this document remains the reference of record
+The schema itself is served only when `API_DOCS_ENABLED=true` (`/docs`, `/redoc`, `/openapi.json`); on
+every public host, dev included (audit IMEX-08), all three are `None` per `WR-03`, so this document remains the reference of record
 there.
 
 <!-- VERIFY: production base URL for the API (e.g. https://api.ai-imex.com or the cabinet/webapp origin's /api/v1 path) is deployment-specific and not established from repository contents alone. -->

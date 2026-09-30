@@ -22,6 +22,7 @@ from datetime import UTC, datetime
 
 import redis
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 
@@ -31,7 +32,7 @@ from app.api.portal.deps import get_current_session_family
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.redis import get_redis
-from app.core.security import create_portal_access_token, decode_token
+from app.core.security import create_portal_access_token, decode_token, family_of
 from app.domains.accounts import deletion as account_deletion
 from app.domains.accounts import service as account_service
 from app.domains.accounts.models import UserAccount
@@ -61,6 +62,8 @@ from app.services.auth_service import (
 router = APIRouter(prefix="/portal", tags=["portal-auth"])
 
 _PORTAL_COOKIE = get_portal_session_cookie_name()
+# Logout reads a Bearer token when one is sent, and must not demand one.
+_optional_bearer = HTTPBearer(auto_error=False)
 
 #: One generic answer for an unknown login, a wrong password, a blocked account and
 #: an application that has not been granted credentials. Splitting them would tell a
@@ -448,6 +451,7 @@ def logout(
     response: Response,
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
     portal_session: str | None = Cookie(default=None, alias=_PORTAL_COOKIE),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_optional_bearer),
 ) -> dict[str, bool]:
     """End the session: revoke the family, then clear the cookie.
 
@@ -458,14 +462,15 @@ def logout(
     Stays unauthenticated and always answers ok: an expired access token must never
     be the reason someone cannot end their own session.
     """
-    if portal_session:
-        try:
-            payload = decode_token(portal_session, expected_type="portal_refresh")
-            fam = payload.get("fam")
-            if isinstance(fam, str):
-                session_service.revoke(redis_client, fam)
-        except JWTError:
-            pass  # unreadable cookie: still clear it
+    # Either credential names the family; revoke whatever was presented (IMEX-07).
+    # An unreadable one is skipped, and the cookie is cleared regardless.
+    bearer = credentials.credentials if credentials is not None else None
+    for fam in {
+        family_of(portal_session, "portal_refresh"),
+        family_of(bearer, "portal_access"),
+    }:
+        if fam is not None:
+            session_service.revoke(redis_client, fam)
 
     clear_portal_session_cookie(response)
     return {"ok": True}

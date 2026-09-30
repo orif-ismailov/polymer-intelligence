@@ -117,7 +117,9 @@ def test_deletion_scrubs_the_person_and_keeps_the_company(api) -> None:  # noqa:
     assert (
         client.post(_LOGIN, json={"login": "ivan-petrov", "password": _PASS}).status_code == 401
     )
-    assert client.get("/api/v1/portal/me", headers=headers).status_code == 403
+    # 401, not 403: deletion revokes the session, and an access token dies with its
+    # session (audit IMEX-07) before the account-status check is ever reached.
+    assert client.get("/api/v1/portal/me", headers=headers).status_code == 401
 
     with session() as db:
         row = db.get(UserAccount, person_id)

@@ -181,3 +181,79 @@ def test_missing_offer_returns_error() -> None:
         result = send_offer_to_group(offer_id=99999)
 
     assert result["status"] == "error"
+
+
+# ── Audit IMEX-06: seller text is never Telegram markup ──────────────────────
+
+
+def _send_capturing(offer: MagicMock) -> list[dict[str, object]]:
+    calls: list[dict[str, object]] = []
+
+    async def _capture(**kwargs: object) -> None:
+        calls.append(kwargs)
+
+    from app.core.config import settings  # noqa: PLC0415
+
+    mock_s3 = MagicMock()
+    mock_s3.get_object.return_value = {"Body": MagicMock(read=MagicMock(return_value=b"\xff\xd8"))}
+    with (
+        patch.object(settings, "REQUEST_NOTIFY_CHAT_ID", -100),
+        patch("sqlalchemy.orm.Session") as mock_session_cls,
+        patch("app.core.db.engine"),
+        patch("app.core.storage.s3_client", mock_s3),
+        patch("telegram.bot.bot") as mock_bot,
+    ):
+        mock_session = MagicMock()
+        mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
+        mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
+        mock_session.get.return_value = offer
+        mock_bot.send_message = _capture
+        mock_bot.send_photo = _capture
+
+        from app.tasks.notify import send_offer_to_group  # noqa: PLC0415
+
+        assert send_offer_to_group(offer_id=11)["status"] == "ok"
+    return calls
+
+
+def test_offer_card_is_sent_as_plain_text() -> None:
+    """The bot defaults to HTML; an offer description of `<a href=…>` must reach the
+    group as the characters the seller typed, never as a link."""
+    offer = _make_offer()
+    offer.description = '<a href="https://evil.example">Скидка</a>'
+    (call,) = _send_capturing(offer)
+    assert call["parse_mode"] is None
+    assert '<a href="https://evil.example">' in str(call["text"])
+
+
+def test_offer_photo_caption_is_sent_as_plain_text() -> None:
+    offer = _make_offer(with_image=True)
+    offer.grade_text = "<b>PE100</b>"
+    (call,) = _send_capturing(offer)
+    assert call["parse_mode"] is None
+    assert "<b>PE100</b>" in str(call["caption"])
+
+
+def test_moderation_edit_keeps_the_card_plain() -> None:
+    """The handler re-sends the DECODED text plus the moderator's display name; under
+    HTML a `<` in either would become markup or fail the edit."""
+    import asyncio  # noqa: PLC0415
+
+    from telegram.handlers.moderation import _finish_moderation_message  # noqa: PLC0415
+
+    message = MagicMock()
+    message.caption = None
+    message.text = "💬 <script>x</script>"
+    message.edit_text = AsyncMock()
+    callback = MagicMock(message=message)
+    callback.from_user.full_name = "<i>Admin</i>"
+
+    asyncio.run(
+        _finish_moderation_message(
+            callback, approve=True, approved_label="✅", rejected_label="❌"
+        )
+    )
+
+    kwargs = message.edit_text.call_args.kwargs
+    assert kwargs["parse_mode"] is None
+    assert "<i>Admin</i>" in kwargs["text"]

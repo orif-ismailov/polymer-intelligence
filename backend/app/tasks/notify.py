@@ -76,13 +76,22 @@ async def _deliver_to_group(
         extra: dict[str, Any] = {}
         if with_thread and thread_id is not None:
             extra["message_thread_id"] = thread_id
+        # parse_mode=None: these cards are PLAIN text built from seller/buyer input, and
+        # the bot's default is HTML — so a `<` in an offer was markup to Telegram
+        # (audit IMEX-06). Switching parsing off covers every field, including ones
+        # added later, where escaping each one would have to be remembered.
         if photo is not None:
             await bot.send_photo(
-                chat_id=chat_id, photo=photo, caption=caption, reply_markup=reply_markup, **extra
+                chat_id=chat_id,
+                photo=photo,
+                caption=caption,
+                reply_markup=reply_markup,
+                parse_mode=None,
+                **extra,
             )
         else:
             await bot.send_message(
-                chat_id=chat_id, text=text, reply_markup=reply_markup, **extra
+                chat_id=chat_id, text=text, reply_markup=reply_markup, parse_mode=None, **extra
             )
 
     try:
@@ -283,6 +292,7 @@ def send_status_change_notification(request_id: int) -> dict[str, Any]:
                         chat_id=client.telegram_user_id,
                         text=text,
                         reply_markup=keyboard,
+                        parse_mode=None,  # plain text — see _deliver_to_group
                     )
                 )
                 logger.info(
@@ -940,7 +950,13 @@ def send_offer_request_to_seller(offer_request_id: int) -> dict[str, Any]:
             else:
                 lines.append("С вами свяжется наш менеджер для деталей.")
 
-            asyncio.run(bot.send_message(chat_id=seller.telegram_user_id, text="\n".join(lines)))
+            asyncio.run(
+                bot.send_message(
+                    chat_id=seller.telegram_user_id,
+                    text="\n".join(lines),
+                    parse_mode=None,  # plain text — see _deliver_to_group
+                )
+            )
 
             # Record the seller has now seen it (so a later edit is framed as an update)
             # and clear the consumed diff.
@@ -1068,6 +1084,7 @@ def send_verification_case_to_group(
                     chat_id=chat_id,
                     text="\n".join(lines)[:4096],
                     reply_markup=verification_moderation_keyboard(case_id),
+                    parse_mode=None,  # plain text — see _deliver_to_group
                 )
             )
     except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
@@ -1125,7 +1142,11 @@ def send_contract_activated_to_group(
                 f"🏢 {initiator} → {counterparty}",
                 f"🆔 {contract.public_id}",
             ]
-            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+            asyncio.run(
+                bot.send_message(
+                    chat_id=chat_id, text="\n".join(lines)[:4096], parse_mode=None
+                )
+            )
     except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
         logger.error("notify.contract_activated.error", extra={"contract_id": contract_id, "error": str(exc)})
         return {"status": "error", "error": str(exc)}
@@ -1178,7 +1199,11 @@ def _deal_card(deal_id_raw: str | None, headline: str, extra: list[str] | None =
                 f"📊 {deal.status}",
                 *(extra or []),
             ]
-            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+            asyncio.run(
+                bot.send_message(
+                    chat_id=chat_id, text="\n".join(lines)[:4096], parse_mode=None
+                )
+            )
     except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
         logger.error("notify.deal_card.error", extra={"deal_id": deal_id, "error": str(exc)})
         return {"status": "error", "error": str(exc)}
@@ -1312,7 +1337,11 @@ def send_lab_order_to_group(
                 lines.append(f"⚖️ {order.sample_volume}")
             if order.comment:
                 lines.append(f"📝 {order.comment}")
-            asyncio.run(bot.send_message(chat_id=chat_id, text="\n".join(lines)[:4096]))
+            asyncio.run(
+                bot.send_message(
+                    chat_id=chat_id, text="\n".join(lines)[:4096], parse_mode=None
+                )
+            )
     except Exception as exc:  # noqa: BLE001 — a bot/DB hiccup must not kill the worker
         logger.error(
             "notify.lab_order.error", extra={"lab_order_id": lab_order_id, "error": str(exc)}

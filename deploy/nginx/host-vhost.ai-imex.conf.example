@@ -24,12 +24,17 @@
 # and drop it from the certificate (`certbot delete` / re-issue without it).
 # ============================================================================
 
+# `server_tokens off` is repeated per block so this file is safe on its own; also set it
+# once in the host's /etc/nginx/nginx.conf `http {}` so sibling vhosts (keira.uz, the
+# default server) stop naming the version too — see docs/deployment-guide.md.
+
 # SSE (dashboard live feed + /api streams) needs buffering off + a long read
 # timeout; uploads need the 12 MB cap to match the API / inner nginx.
 
 server {
     listen 80;
     server_name api.ai-imex.com;
+    server_tokens off;   # no `Server: nginx/1.24.0 (Ubuntu)` (audit IMEX-09)
 
     client_max_body_size 12m;
 
@@ -49,6 +54,7 @@ server {
 server {
     listen 80;
     server_name admin.ai-imex.com;
+    server_tokens off;   # no `Server: nginx/1.24.0 (Ubuntu)` (audit IMEX-09)
 
     client_max_body_size 12m;
 
@@ -68,6 +74,7 @@ server {
 server {
     listen 80;
     server_name ai-imex.com www.ai-imex.com;
+    server_tokens off;   # no `Server: nginx/1.24.0 (Ubuntu)` (audit IMEX-09)
 
     client_max_body_size 12m;
 

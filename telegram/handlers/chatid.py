@@ -12,6 +12,7 @@ notifications into that topic.
 
 from __future__ import annotations
 
+import html
 import logging
 
 from aiogram import Router
@@ -32,7 +33,8 @@ async def cmd_chatid(message: Message) -> None:
         f"<b>Type:</b> {chat.type}",
     ]
     if chat.title:
-        lines.append(f"<b>Title:</b> {chat.title}")
+        # A group title is anyone's text; this reply is HTML (audit IMEX-06).
+        lines.append(f"<b>Title:</b> {html.escape(chat.title)}")
     # In a forum, a message sent inside a topic carries its thread id. The General
     # topic reports no thread id (is_topic_message is falsy there).
     thread_id = message.message_thread_id if message.is_topic_message else None

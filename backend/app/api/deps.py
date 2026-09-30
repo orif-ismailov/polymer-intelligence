@@ -26,7 +26,9 @@ claim, so revoking access takes effect on the next request rather than when a
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
+import redis
 import sqlalchemy as sa
 from fastapi import Cookie, Depends, Header, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -35,19 +37,52 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.pages import PAGES, AccessLevel, is_page, satisfies
+from app.core.redis import get_redis
 from app.core.security import decode_token
 from app.domains.accounts.models import UserAccount
 from app.domains.requests.models import Client
 from app.models.enums import AccountStatus
 from app.models.staff import StaffPageAccess, StaffUser
+from app.services import session_service
 
 # HTTP Bearer token extractor — auto_error=False so we can return 401 (not 403) on missing header
 _bearer_scheme = HTTPBearer(auto_error=False)
 
 
+def _require_live_session(
+    payload: dict[str, Any],
+    redis_client: redis.Redis,  # type: ignore[type-arg]
+    *,
+    kind: str,
+    subject_id: int,
+) -> None:
+    """401 when the access token's session has ended (audit IMEX-07).
+
+    A signature proves the token was minted here, not that its session is still
+    alive: before this check, logout and refresh-reuse revocation ended the refresh
+    family while every access token minted from it kept working for its remaining
+    fifteen minutes.
+
+    A token WITHOUT `fam` is let through. Every production mint site has passed one
+    since IMEX-1 (login, refresh, password change), so none of those exist outside
+    the test suite; rejecting them would buy nothing but a rewrite of ~150 fixtures.
+    Redis being unreachable also lets the token through — `is_live` fails open.
+    """
+    fam = payload.get("fam")
+    if not isinstance(fam, str):
+        return
+    if not session_service.is_live(redis_client, fam, kind=kind, subject_id=subject_id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
 def get_current_staff_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     db: Session = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> StaffUser:
     """Extract and verify the Bearer access token, load the staff user.
 
@@ -64,13 +99,14 @@ def get_current_staff_user(
         The authenticated StaffUser ORM object.
     """
     token = credentials.credentials if credentials is not None else None
-    return _resolve_staff_user(token, db)
+    return _resolve_staff_user(token, db, redis_client)
 
 
 def get_current_staff_user_sse(
     access_token: str | None = Query(default=None),
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     db: Session = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> StaffUser:
     """Staff auth for EventSource (SSE) endpoints.
 
@@ -82,10 +118,14 @@ def get_current_staff_user_sse(
     :func:`get_current_staff_user` (same 401/403 semantics).
     """
     token = credentials.credentials if credentials is not None else access_token
-    return _resolve_staff_user(token, db)
+    return _resolve_staff_user(token, db, redis_client)
 
 
-def _resolve_staff_user(token: str | None, db: Session) -> StaffUser:
+def _resolve_staff_user(
+    token: str | None,
+    db: Session,
+    redis_client: redis.Redis,  # type: ignore[type-arg]
+) -> StaffUser:
     """Verify an access JWT string and load the active staff user it identifies.
 
     Shared core of :func:`get_current_staff_user` (Bearer header) and
@@ -127,6 +167,10 @@ def _resolve_staff_user(token: str | None, db: Session) -> StaffUser:
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 
+    _require_live_session(
+        payload, redis_client, kind=session_service.KIND_STAFF, subject_id=staff_user_id
+    )
+
     # Load the user from DB to confirm they still exist and check is_active
     user: StaffUser | None = (
         db.query(StaffUser).filter(StaffUser.id == staff_user_id).first()
@@ -150,6 +194,7 @@ def _resolve_staff_user(token: str | None, db: Session) -> StaffUser:
 def get_account_for_password_change(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     db: Session = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
 ) -> UserAccount:
     """Authenticate a portal person via the Bearer `portal_access` token.
 
@@ -195,6 +240,10 @@ def get_account_for_password_change(
             detail="Invalid token: subject",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
+
+    _require_live_session(
+        payload, redis_client, kind=session_service.KIND_PORTAL, subject_id=account_id
+    )
 
     account: UserAccount | None = (
         db.query(UserAccount).filter(UserAccount.id == account_id).first()

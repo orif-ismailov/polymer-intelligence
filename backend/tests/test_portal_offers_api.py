@@ -166,3 +166,49 @@ def test_archive_and_membership_isolation(api) -> None:  # noqa: ANN001
         f"{_BASE}/{company_id}/offers/{offer_id}/archive", headers=_auth(account_a)
     )
     assert archived.json()["status"] == "archived"
+
+
+@requires_real_db
+@pytest.mark.parametrize("status", ["draft", "pending_moderation", "rejected", "archived"])
+def test_unpublished_offer_files_are_not_served(api, status: str) -> None:  # noqa: ANN001
+    """Audit IMEX-11 feared draft photos could be enumerated through the public media
+    route by walking sequential ids. They cannot: the route resolves approved offers
+    only, answers every other status with the same 404 as "no such offer", and never
+    reaches storage. The approved control proves the 404 is the gate, not the fixture.
+    """
+    from unittest.mock import MagicMock, patch  # noqa: PLC0415
+
+    from app.domains.marketplace.models import SellerOffer, SellerOfferFile  # noqa: PLC0415
+    from app.models.enums import OfferFileKind, SellerOfferStatus  # noqa: PLC0415
+
+    client, session = api
+    account_id, company_id = _company(session, "+998900000001", "123456789", verified=True)
+    offer_id = client.post(
+        f"{_BASE}/{company_id}/offers", json=_OFFER, headers=_auth(account_id)
+    ).json()["id"]
+    with session() as db:
+        db.get(SellerOffer, offer_id).status = SellerOfferStatus(status)
+        f = SellerOfferFile(
+            offer_id=offer_id,
+            kind=OfferFileKind.image,
+            file_name="p.jpg",
+            mime_type="image/jpeg",
+            storage_path=f"offers/{offer_id}/p.jpg",
+        )
+        db.add(f)
+        db.commit()
+        file_id = f.id
+
+    url = f"/api/v1/webapp/market/offers/{offer_id}/images/{file_id}"
+    s3 = MagicMock()
+    s3.get_object.return_value = {"Body": MagicMock(read=MagicMock(return_value=b"\xff\xd8"))}
+    with patch("app.core.storage.s3_client", s3):
+        hidden = client.get(url)
+        assert hidden.status_code == 404
+        assert hidden.json() == {"detail": "Not found"}
+        s3.get_object.assert_not_called()
+
+        with session() as db:
+            db.get(SellerOffer, offer_id).status = SellerOfferStatus.approved
+            db.commit()
+        assert client.get(url).status_code == 200

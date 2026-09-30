@@ -108,6 +108,19 @@ class SellerOffer(Base):
             "OR (ikpu_package_code IS NOT NULL AND ikpu_origin IS NOT NULL)",
             name="ck_offer_ikpu_complete",
         ),
+        # Audit IMEX-12: both API schemas refuse these too; this is the layer a
+        # future schema cannot forget. NULL = «под заказ» / free sample. Migration
+        # 0057 adds them NOT VALID, so legacy rows are not scanned.
+        CheckConstraint("price IS NULL OR price > 0", name="ck_offer_price_positive"),
+        CheckConstraint(
+            "qty_available IS NULL OR qty_available > 0", name="ck_offer_qty_positive"
+        ),
+        CheckConstraint(
+            "min_order_qty IS NULL OR min_order_qty > 0", name="ck_offer_min_order_positive"
+        ),
+        CheckConstraint(
+            "sample_price IS NULL OR sample_price >= 0", name="ck_offer_sample_price_nonneg"
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -135,8 +148,8 @@ class SellerOffer(Base):
         server_default="in_stock",
     )
     # Nullable: made-to-order («под заказ») offers have no fixed stock qty and no unit
-    # price (price is "по запросу"). In-stock offers keep a positive value — enforced in
-    # the API schema (SellerOfferCreate), not the DB. See migration 0013.
+    # price (price is "по запросу"). A value, when present, is positive — enforced in
+    # both API schemas and by the CHECKs above (migrations 0013, 0057).
     qty_available: Mapped[decimal.Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
     qty_unit: Mapped[str] = mapped_column(
         Text, nullable=False, default="MT", server_default="MT"

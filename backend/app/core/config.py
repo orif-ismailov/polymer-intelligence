@@ -437,11 +437,16 @@ class Settings(BaseSettings):
     # attempt migrations at import/startup. The dev compose sets this to "true".
     RUN_MIGRATIONS_ON_STARTUP: bool = False
 
-    # When True, the FastAPI app exposes /docs, /redoc, and /openapi.json.
-    # Must be False in production so the OpenAPI schema (full attack-surface map)
-    # is not publicly accessible (WR-03 / REQ-nfr-security).
-    # Set DEBUG=true in .env for local development.
+    # Development relaxations: permits EIMZO_STUB and switching the rate limits off.
+    # It no longer exposes the API docs — see API_DOCS_ENABLED.
     DEBUG: bool = False
+
+    # When True, the FastAPI app exposes /docs, /redoc, and /openapi.json — the full
+    # attack-surface map (WR-03 / REQ-nfr-security). Its own flag since audit IMEX-08:
+    # it used to ride on DEBUG, which the internet-facing dev server needs on for its
+    # E-IMZO stub, so the dev API published all 332 endpoints to anyone. Turn it on
+    # locally; leave it off on every host a stranger can reach.
+    API_DOCS_ENABLED: bool = False
 
     @field_validator("JWT_SECRET")
     @classmethod
