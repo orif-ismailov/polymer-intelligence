@@ -117,10 +117,18 @@ async def _finish_moderation_message(
     suffix = f"\n\n{verdict} · {who}"
     if message is not None:
         try:
+            # parse_mode=None: `message.text` is the DECODED plain text and `who` is a
+            # Telegram display name — under the bot's HTML default a `<` in either
+            # became markup, or failed the edit (audit IMEX-06). The card was sent as
+            # plain text (notify._deliver_to_group), so it is edited as plain text.
             if message.caption is not None:
-                await message.edit_caption(caption=(message.caption + suffix)[:1024], reply_markup=None)
+                await message.edit_caption(
+                    caption=(message.caption + suffix)[:1024], reply_markup=None, parse_mode=None
+                )
             elif message.text is not None:
-                await message.edit_text(text=(message.text + suffix)[:4096], reply_markup=None)
+                await message.edit_text(
+                    text=(message.text + suffix)[:4096], reply_markup=None, parse_mode=None
+                )
             else:
                 await message.edit_reply_markup(reply_markup=None)
         except Exception as exc:  # noqa: BLE001 — the decision is already committed

@@ -116,7 +116,8 @@ Note: `make` targets use `docker compose --env-file .env -f deploy/docker-compos
   from **one level above the repo root** (`../.env`).
 - `RUN_MIGRATIONS_ON_STARTUP` defaults `false` so the TestClient-built app (tests/CI) never
   touches a database. Compose runs migrations as an explicit pre-start step instead.
-- `DEBUG=true` exposes `/docs`, `/redoc`, `/openapi.json` (off in prod).
+- `API_DOCS_ENABLED=true` exposes `/docs`, `/redoc`, `/openapi.json` — off on every public host,
+  dev included (audit IMEX-08). `DEBUG` no longer does; it only gates dev relaxations (`EIMZO_STUB`).
 
 ## Backend architecture
 

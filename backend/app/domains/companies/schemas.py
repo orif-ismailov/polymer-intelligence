@@ -13,6 +13,7 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.core.text import reject_markup
 from app.domains.compliance.schemas import MissingOut
 from app.domains.compliance.substance_schemas import SubstanceBrief
 from app.domains.marketplace.schemas import OfferFileRef
@@ -379,14 +380,17 @@ class CompanyOfferIn(BaseModel):
     grade_text: str | None = Field(default=None, max_length=500)
     polymer_type: str | None = Field(default=None, max_length=200)
     availability: OfferAvailability = OfferAvailability.in_stock
-    qty_available: decimal.Decimal | None = None
-    qty_unit: str = "MT"
-    price: decimal.Decimal | None = None
-    currency: str = "USD"
+    #: Positive when given (audit IMEX-12 — a PATCH with price -500 was stored), and
+    #: below the column's Numeric(14, n) ceiling so an absurd value is a 422 rather
+    #: than a database error. The DB CHECKs of migration 0057 say the same thing.
+    qty_available: decimal.Decimal | None = Field(default=None, gt=0, lt=10**11)
+    qty_unit: str = Field(default="MT", max_length=20)
+    price: decimal.Decimal | None = Field(default=None, gt=0, lt=10**12)
+    currency: str = Field(default="USD", max_length=3)
     incoterms: PriceBasis = PriceBasis.unknown
     warehouse_city: str | None = Field(default=None, max_length=200)
     country: str | None = Field(default=None, max_length=2)
-    min_order_qty: decimal.Decimal | None = None
+    min_order_qty: decimal.Decimal | None = Field(default=None, gt=0, lt=10**11)
     description: str | None = Field(default=None, max_length=2000)
     # ── Product facts (migration 0030) ────────────────────────────────────────
     #: Who made the goods, and the two chip rows on the product sheet. Capped in
@@ -465,11 +469,27 @@ class CompanyOfferIn(BaseModel):
         return self
     sample_dispatch_days: int | None = Field(default=None, ge=1, le=365)
 
+    @field_validator(
+        "product_text",
+        "grade_text",
+        "polymer_type",
+        "warehouse_city",
+        "description",
+        "manufacturer",
+        "sample_letter_terms",
+    )
+    @classmethod
+    def _plain_text(cls, value: str | None) -> str | None:
+        """Offer text is plain text; a tag in it is refused (audit IMEX-06)."""
+        return reject_markup(value)
+
     @field_validator("key_properties", "applications", mode="after")
     @classmethod
     def _clean_chips(cls, value: list[str]) -> list[str]:
         """Trim, drop blanks, cap each chip — a pill is a phrase, not a paragraph."""
         cleaned = [chip.strip()[:80] for chip in value if chip.strip()]
+        for chip in cleaned:
+            reject_markup(chip)
         return cleaned
 
     @model_validator(mode="after")

@@ -36,6 +36,7 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import json
+import logging
 
 import redis
 
@@ -49,6 +50,8 @@ KIND_PORTAL = "portal"
 
 _FAMILY_PREFIX = "rs:"
 _USED_PREFIX = "rs:used:"
+
+logger = logging.getLogger(__name__)
 
 
 class SessionUnavailable(Exception):
@@ -256,6 +259,36 @@ def rotate(
 
     revoke(client, fam)
     raise SessionReused("refresh token replayed after it was spent")
+
+
+def is_live(
+    client: redis.Redis,  # type: ignore[type-arg]
+    fam: str,
+    *,
+    kind: str,
+    subject_id: int,
+) -> bool:
+    """Whether an ACCESS token's family is still a live session of this subject (IMEX-07).
+
+    The access-token counterpart of `current`, and deliberately its opposite on one
+    point: it FAILS OPEN. `current` guards a refresh, where a 503 costs one retry; this
+    runs on every authenticated request, where the same 503 would turn a Redis blip
+    into an outage of both the cabinet and the dashboard. With Redis down the token
+    falls back to what it was before this existed — a signature and a 15-minute
+    expiry — and the warning says revocation is not being enforced.
+
+    `kind` and `subject_id` must match the record: family ids are random, but a
+    staff token naming a portal family (or another person's) is not a session of its
+    bearer whatever the key says.
+    """
+    try:
+        record = current(client, fam)
+    except SessionInvalid:
+        return False
+    except SessionUnavailable:
+        logger.warning("session store unreachable; access token accepted unchecked")
+        return True
+    return record.kind == kind and record.subject_id == subject_id
 
 
 def revoke(client: redis.Redis, fam: str) -> None:  # type: ignore[type-arg]

@@ -218,7 +218,7 @@ seller contact details.
   OpenAPI schema.
 - CORS origins come from `CORS_ALLOWED_ORIGINS` — an explicit list, never a wildcard (wildcard +
   credentials is both insecure and non-functional).
-- `/docs`, `/redoc`, `/openapi.json` are only mounted when `settings.DEBUG` is true.
+- `/docs`, `/redoc`, `/openapi.json` are only mounted when `settings.API_DOCS_ENABLED` is true.
 
 ## Bounded contexts beyond the signal core
 

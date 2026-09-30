@@ -52,8 +52,8 @@ uv run uvicorn app.main:app --reload   # needs DATABASE_URL/REDIS_URL + required
 ```
 
 Routes are mounted under `/api/v1` by the `create_app()` factory in `app/main.py`.
-With `DEBUG=true`, `/docs`, `/redoc`, and `/openapi.json` are exposed (off by
-default/production).
+With `API_DOCS_ENABLED=true`, `/docs`, `/redoc`, and `/openapi.json` are exposed (off by
+default, and on every public host — dev included).
 
 To run the full stack (Postgres, Redis, MinIO, api, worker, beat, userbot, nginx)
 instead, use the repo-root compose file — see

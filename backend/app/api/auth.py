@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 
 import redis
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 
@@ -28,7 +29,7 @@ from app.api import errors
 from app.api.deps import get_current_staff_user, page_access_for
 from app.core.db import get_db
 from app.core.redis import get_redis
-from app.core.security import create_access_token, decode_token
+from app.core.security import create_access_token, decode_token, family_of
 from app.models.staff import StaffUser
 from app.schemas.auth import LoginRequest, MeResponse, TokenResponse
 from app.services import session_service
@@ -45,6 +46,8 @@ from app.services.auth_service import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 _REFRESH_COOKIE = get_refresh_cookie_name()
+# Logout reads a Bearer token when one is sent, and must not demand one.
+_optional_bearer = HTTPBearer(auto_error=False)
 
 
 @router.post(
@@ -130,6 +133,7 @@ def logout(
     db: Session = Depends(get_db),
     redis_client: redis.Redis = Depends(get_redis),  # type: ignore[type-arg]
     refresh_token_cookie: str | None = Cookie(default=None, alias=_REFRESH_COOKIE),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_optional_bearer),
 ) -> None:
     """End the staff session: clear the refresh cookie so the browser cannot re-auth.
 
@@ -158,6 +162,12 @@ def logout(
                 session_service.revoke(redis_client, fam)
         except (JWTError, ValueError, TypeError):
             staff_user_id = None  # unreadable cookie: still clear it, just unattributed
+
+    # The access token names the same family; revoke it too, so a Bearer-only logout
+    # ends the session and the token it was presented with (audit IMEX-07).
+    bearer_fam = family_of(credentials.credentials if credentials else None, "access")
+    if bearer_fam is not None:
+        session_service.revoke(redis_client, bearer_fam)
 
     if staff_user_id is not None:
         write_audit(

@@ -170,6 +170,42 @@ apply to `nginx.conf` in that case (the host vhost file is the one to edit inste
 behind-proxy configs — it is not present in the self-TLS `nginx.conf`. Confirm which
 topology is actually in use on your host before following this section verbatim.
 
+### Host nginx hardening (audit IMEX-09 / IMEX-10, pentest of 24–27.09.2026)
+
+The pentest read `Server: nginx/1.24.0 (Ubuntu)` off every domain. That header comes from the
+**host** nginx: the inner container already sets `server_tokens off`, and nginx replaces the
+upstream's `Server` header with its own. Ubuntu's 1.24.0 package is also affected by
+CVE-2025-23419 (TLS session resumption can bypass client-certificate checks across
+`server` blocks). Both are fixed on the host, and neither can be fixed from this repository.
+Run these on each server (prod and dev), in a maintenance window:
+
+```bash
+# 1. Hide the version for EVERY vhost on the host, not just ours:
+#    in /etc/nginx/nginx.conf, inside `http { … }`, add:   server_tokens off;
+#    (the host-vhost.*.conf.example files also set it per block.)
+
+# 2. Upgrade to a patched nginx (>= 1.27.4 mainline / >= 1.26.3 stable) from nginx.org —
+#    Ubuntu's own repository stays on 1.24:
+sudo apt install curl gnupg2 ca-certificates lsb-release ubuntu-keyring
+curl -fsSL https://nginx.org/keys/nginx_signing.key \
+  | sudo gpg --dearmor -o /usr/share/keyrings/nginx-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+https://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" \
+  | sudo tee /etc/apt/sources.list.d/nginx.list
+sudo cp -a /etc/nginx /etc/nginx.bak-$(date +%F)     # nginx.org's package ships its own layout
+sudo apt update && sudo apt install nginx
+#    nginx.org's package reads /etc/nginx/conf.d/*.conf, NOT sites-enabled/ — make sure
+#    `include /etc/nginx/sites-enabled/*;` is still in the http {} block afterwards.
+
+# 3. Verify, then reload:
+sudo nginx -t && sudo systemctl reload nginx
+nginx -v                                   # expect >= 1.26.3
+curl -sI https://ai-imex.com | grep -i '^server:'   # expect exactly "Server: nginx"
+```
+
+The inner container image floats on `nginx:stable` (`deploy/docker-compose.yml`), so it
+picks up patched releases on the next `docker compose pull`.
+
 ---
 
 ## 4. First Run — Stand Up the Stack
