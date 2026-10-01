@@ -9,16 +9,16 @@
  */
 
 /** Legal name of the entity operating ai-imex.com and the mobile apps. */
-export const LEGAL_OPERATOR_NAME = "[LEGAL ENTITY NAME — TO BE FILLED IN]";
+export const LEGAL_OPERATOR_NAME = "Allinsan LLC";
 
 /** Where privacy questions and deletion requests go. */
-export const LEGAL_CONTACT_EMAIL = "[CONTACT EMAIL — TO BE FILLED IN]";
+export const LEGAL_CONTACT_EMAIL = "support@ai-imex.com";
 
 /** Hosting provider and the country the servers are in. */
-export const LEGAL_HOSTING = "[HOSTING PROVIDER, COUNTRY — TO BE FILLED IN]";
+export const LEGAL_HOSTING = "Best Internet Solution, Uzbekistan";
 
 /** Date of the current revision, as printed on both pages. */
-export const LEGAL_UPDATED_AT = "25.09.2026";
+export const LEGAL_UPDATED_AT = "01.10.2026";
 
 /** The public site the policy covers. */
 export const LEGAL_SITE = "ai-imex.com";
