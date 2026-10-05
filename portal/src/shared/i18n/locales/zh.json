@@ -2443,9 +2443,11 @@
         "tradersBody": "经过认证的贸易商和经销商",
         "logisticsBody": "运输、清关、仓储",
         "laboratoriesBody": "实验室检测与质量证书",
+        "technologistsBody": "工艺与配方专家",
         "pricesBody": "实时价格与市场分析",
         "newsBody": "行业新闻与动态",
-        "daily": "每日更新"
+        "daily": "每日更新",
+        "consultations": "咨询服务"
       },
       "productCategories": "产品类别",
       "resetFilters": "全部重置",
@@ -2540,6 +2542,8 @@
     },
     "offer": {
       "untitled": "未命名",
+      "similarTitle": "相似报价",
+      "similarSeeAll": "查看全部",
       "onRequest": "价格面议",
       "moq": "最小起订量",
       "leadTime": "交货期（天）",

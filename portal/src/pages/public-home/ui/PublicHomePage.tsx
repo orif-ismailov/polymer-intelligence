@@ -57,7 +57,7 @@ export function PublicHomePage() {
       {/* 1. Hero — full-bleed band, dissolving into the page at both ends. */}
       <HeroBanner />
 
-      {/* 2. Six directory / surface cards */}
+      {/* 2. Seven directory / surface cards */}
       <DirectoryStrip />
 
       {/* 3. Marketplace body: categories+filters | products+manufacturers | rail */}

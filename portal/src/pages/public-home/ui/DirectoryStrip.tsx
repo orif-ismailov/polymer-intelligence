@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 
 import { usePublicStats } from "@/entities/public";
 import { PUBLIC_DIRECTORIES } from "@/shared/config";
+import { cn } from "@/shared/lib";
 import { Skeleton } from "@/shared/ui";
 
 /**
@@ -24,7 +25,8 @@ import { Skeleton } from "@/shared/ui";
  * The `<img>` paints past that box on purpose: `absolute` takes it out of
  * flow, so scaling it up costs the text column nothing — it bleeds into the
  * row's own gap and the card's padding, both otherwise empty, rather than
- * eating the width `truncate` on the heading is depending on.
+ * eating the width the heading wraps in (it clamps to two lines rather than
+ * truncating, so a long translation still reads whole).
  *
  * `size-10 sm:size-14`, not `-inset-*` with `h-auto w-auto`: an absolutely
  * positioned replaced element with all four insets set and an auto size does
@@ -70,8 +72,11 @@ const DIRECTORY_BODY_KEYS: Record<string, string> = {
 };
 
 /**
- * Six equal entry cards under the hero (marketplace.jpeg §3): 224x115 on the
- * 1440 layout, 10px apart — a glyph in a left column, title and a
+ * Seven entry cards under the hero (marketplace.jpeg §3), in two rows from `lg`
+ * on a 12-column grid: the four company directories at 3 columns each, then
+ * technologists, prices and news at 4. Seven in one row was measured and does
+ * not fit — even at 1440 «Производители» cut mid-word and three Russian bodies
+ * clipped. 10px apart — a glyph in a left column, title and a
  * two-line body beside it, count/meta + chevron on the baseline. No hairline of
  * its own above the row: the hero section closes with one, and a second rule
  * 24px below it would read as a gap rather than a join. (That rule used to
@@ -83,6 +88,19 @@ export function DirectoryStrip() {
   const stats = usePublicStats();
 
   const extras = [
+    /*
+     * Technologists are people, not a company role, so they are not a
+     * `PUBLIC_DIRECTORIES` slug and `/stats` carries no count for them — the
+     * baseline says what they offer instead of how many there are.
+     */
+    {
+      key: "technologists",
+      to: "/technologists",
+      icon: cardIcon("technologist_no_bg.png"),
+      title: t("public.nav.technologists"),
+      body: t("public.home.directoryCard.technologistsBody"),
+      meta: t("public.home.directoryCard.consultations"),
+    },
     {
       key: "prices",
       to: "/prices",
@@ -135,16 +153,16 @@ export function DirectoryStrip() {
       <h2 id="directories-heading" className="sr-only">
         {t("public.home.directoriesHeading")}
       </h2>
-      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-12">
         {PUBLIC_DIRECTORIES.map((dir) => {
           const count = stats.data?.directory_counts?.[dir.role] ?? 0;
           const bodyKey = DIRECTORY_BODY_KEYS[dir.slug];
           return (
-            <Link key={dir.slug} to={`/${dir.slug}`} className={cardClass}>
+            <Link key={dir.slug} to={`/${dir.slug}`} className={cn(cardClass, "lg:col-span-3")}>
               <div className={headClass}>
                 {DIRECTORY_ICONS[dir.slug]}
                 <div className="min-w-0">
-                  <h3 className="truncate text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
+                  <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                     {t(dir.labelKey)}
                   </h3>
                   <p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-text-muted sm:mt-1.5">
@@ -171,12 +189,21 @@ export function DirectoryStrip() {
           );
         })}
 
-        {extras.map((item) => (
-          <Link key={item.key} to={item.to} className={cardClass}>
+        {extras.map((item, index) => (
+          <Link
+            key={item.key}
+            to={item.to}
+            className={cn(
+              cardClass,
+              "lg:col-span-4",
+              // Seven cards two-up leave the last one alone: let it take the row.
+              index === extras.length - 1 && "col-span-2 lg:col-span-4",
+            )}
+          >
             <div className={headClass}>
               {item.icon}
               <div className="min-w-0">
-                <h3 className="truncate text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
+                <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-text sm:text-[15px]">
                   {item.title}
                 </h3>
                 <p className="mt-1 line-clamp-2 text-[11px] leading-[1.45] text-text-muted sm:mt-1.5">

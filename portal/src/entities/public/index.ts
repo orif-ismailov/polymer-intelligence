@@ -7,6 +7,7 @@ export {
   fetchPublicOffers,
   fetchPublicPrices,
   fetchPublicStats,
+  fetchSimilarOffers,
   publicKeys,
   publicOfferImageUrl,
 } from "./model/api";
@@ -19,6 +20,7 @@ export {
   usePublicOffers,
   usePublicPrices,
   usePublicStats,
+  useSimilarOffers,
 } from "./model/hooks";
 export { PublicCompanyTile } from "./ui/PublicCompanyTile";
 export { PublicOfferTile } from "./ui/PublicOfferTile";

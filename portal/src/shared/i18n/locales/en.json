@@ -2443,9 +2443,11 @@
         "tradersBody": "Verified traders and distributors",
         "logisticsBody": "Delivery, customs, warehousing",
         "laboratoriesBody": "Lab research and quality passports",
+        "technologistsBody": "Process and formulation experts",
         "pricesBody": "Live prices and market analytics",
         "newsBody": "Industry news and updates",
-        "daily": "Updated daily"
+        "daily": "Updated daily",
+        "consultations": "Consultations"
       },
       "productCategories": "Product categories",
       "resetFilters": "Reset all",
@@ -2540,6 +2542,8 @@
     },
     "offer": {
       "untitled": "Untitled",
+      "similarTitle": "Similar offers",
+      "similarSeeAll": "See all",
       "onRequest": "Price on request",
       "moq": "Min. order",
       "leadTime": "Lead time, days",

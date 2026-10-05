@@ -421,6 +421,40 @@ def list_catalog(
     )
 
 
+def list_similar_catalog(db: Session, offer: SellerOffer, *, limit: int = 4) -> list[SellerOffer]:
+    """«Похожие предложения» for an offer page: approved offers like ``offer``, never itself.
+
+    Same catalog product first, newest first. When that leaves room, fill from the same
+    «Категория», which the wizard stores in ``polymer_type`` — `Product.category` is
+    "polymer" for every row and would match the whole catalog. The fill is what gives a
+    «Другое» offer (no ``product_id``) any neighbours at all.
+    """
+    newest = SellerOffer.published_at.desc().nullslast()
+    picked: list[SellerOffer] = []
+    if offer.product_id is not None:
+        picked = (
+            _catalog_query(db, product_id=offer.product_id)
+            .filter(SellerOffer.id != offer.id)
+            .order_by(newest)
+            .limit(limit)
+            .all()
+        )
+    family = (offer.polymer_type or "").strip().lower()
+    if len(picked) < limit and family:
+        seen = [offer.id, *(o.id for o in picked)]
+        picked += (
+            _catalog_query(db)
+            .filter(
+                func.lower(func.trim(SellerOffer.polymer_type)) == family,
+                SellerOffer.id.notin_(seen),
+            )
+            .order_by(newest)
+            .limit(limit - len(picked))
+            .all()
+        )
+    return picked
+
+
 def get_catalog_offer(db: Session, offer_id: int) -> SellerOffer | None:
     """A single approved (public) offer, or None."""
     return (

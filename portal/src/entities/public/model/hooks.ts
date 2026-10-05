@@ -10,6 +10,7 @@ import {
   fetchPublicOffers,
   fetchPublicPrices,
   fetchPublicStats,
+  fetchSimilarOffers,
   publicKeys,
 } from "./api";
 import type {
@@ -17,6 +18,7 @@ import type {
   PublicCompanyDetail,
   PublicCompanyList,
   PublicNewsCard,
+  PublicOfferCard,
   PublicOfferDetail,
   PublicOfferFilters,
   PublicOfferList,
@@ -50,6 +52,15 @@ export function usePublicOffer(offerId: number | null): UseQueryResult<PublicOff
   return useQuery({
     queryKey: publicKeys.offer(offerId ?? 0),
     queryFn: () => fetchPublicOffer(offerId as number),
+    enabled: offerId != null,
+    staleTime: STALE,
+  });
+}
+
+export function useSimilarOffers(offerId: number | null): UseQueryResult<PublicOfferCard[]> {
+  return useQuery({
+    queryKey: publicKeys.similar(offerId ?? 0),
+    queryFn: () => fetchSimilarOffers(offerId as number),
     enabled: offerId != null,
     staleTime: STALE,
   });

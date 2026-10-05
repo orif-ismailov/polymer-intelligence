@@ -38,6 +38,8 @@ import {
   type TabItem,
 } from "@/shared/ui";
 
+import { SimilarOffers } from "./SimilarOffers";
+
 /**
  * `/market/:offerId` — a listing's public page, and the marketplace's main
  * search-landing surface.
@@ -405,6 +407,10 @@ export function PublicOfferPage() {
               />
             </>
           ) : null}
+
+          {/* Last on the page, and outside the session block: anonymous
+              visitors and the SSR HTML get the links too. */}
+          <SimilarOffers offer={offer} />
         </div>
       </div>
     </>

@@ -2443,9 +2443,11 @@
         "tradersBody": "Tekshirilgan treyderlar va distributorlar",
         "logisticsBody": "Yetkazib berish, bojxona, ombor",
         "laboratoriesBody": "Laboratoriya tadqiqotlari va pasportlar",
+        "technologistsBody": "Jarayon va retseptura mutaxassislari",
         "pricesBody": "Dolzarb narxlar va bozor tahlili",
         "newsBody": "Soha yangiliklari va yangilanishlar",
-        "daily": "Har kuni"
+        "daily": "Har kuni",
+        "consultations": "Maslahatlar"
       },
       "productCategories": "Mahsulot kategoriyalari",
       "resetFilters": "Hammasini tozalash",
@@ -2540,6 +2542,8 @@
     },
     "offer": {
       "untitled": "Nomsiz",
+      "similarTitle": "O‘xshash takliflar",
+      "similarSeeAll": "Barchasini ko‘rish",
       "onRequest": "Narx so'rov bo'yicha",
       "moq": "Min. partiya",
       "leadTime": "Yetkazib berish muddati, kun",
