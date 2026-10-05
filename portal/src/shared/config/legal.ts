@@ -8,8 +8,30 @@
  * here changes every language at once.
  */
 
-/** Legal name of the entity operating ai-imex.com and the mobile apps. */
-export const LEGAL_OPERATOR_NAME = "Allinsan LLC";
+/**
+ * Legal name of the entity operating ai-imex.com and the mobile apps. IMEX is its
+ * own company — not Allinsan LLC, which only owns the Play developer account.
+ */
+export const LEGAL_OPERATOR_NAME = "«IMEX INDUSTRIAL GROUP CA» MCHJ";
+
+/**
+ * Registered address. Kept in the original wording in every locale — it is the
+ * address on the registration, not a translation of it.
+ */
+export const LEGAL_OPERATOR_ADDRESS =
+  "г. Ташкент, Алмазарский район, МФЙ Гани Азамов, улица Галаба, дом 9";
+
+/** ИНН / STIR. */
+export const LEGAL_OPERATOR_TIN = "312 616 547";
+
+/** Display form, and the `tel:` form of the same number. */
+export const LEGAL_OPERATOR_PHONE = "+998 77 391 88 88";
+export const LEGAL_OPERATOR_PHONE_HREF = "tel:+998773918888";
+
+/** Bank requisites printed in the footer. */
+export const LEGAL_BANK_ACCOUNT = "20208000907356860001";
+export const LEGAL_BANK_NAME = "АКБ «КАПИТАЛБАНК»";
+export const LEGAL_BANK_MFO = "01088";
 
 /** Where privacy questions and deletion requests go. */
 export const LEGAL_CONTACT_EMAIL = "support@ai-imex.com";
@@ -18,7 +40,7 @@ export const LEGAL_CONTACT_EMAIL = "support@ai-imex.com";
 export const LEGAL_HOSTING = "Best Internet Solution, Uzbekistan";
 
 /** Date of the current revision, as printed on both pages. */
-export const LEGAL_UPDATED_AT = "01.10.2026";
+export const LEGAL_UPDATED_AT = "05.10.2026";
 
 /** The public site the policy covers. */
 export const LEGAL_SITE = "ai-imex.com";
@@ -26,6 +48,8 @@ export const LEGAL_SITE = "ai-imex.com";
 /** Values interpolated into every `legal.*` string. */
 export const LEGAL_VALUES = {
   operator: LEGAL_OPERATOR_NAME,
+  address: LEGAL_OPERATOR_ADDRESS,
+  tin: LEGAL_OPERATOR_TIN,
   email: LEGAL_CONTACT_EMAIL,
   hosting: LEGAL_HOSTING,
   date: LEGAL_UPDATED_AT,
