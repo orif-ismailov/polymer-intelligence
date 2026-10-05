@@ -71,6 +71,16 @@ async function stubEimzo(context: BrowserContext, tin: string): Promise<void> {
   }, tin);
 }
 
+/** A real 1×1 PNG — the backend sniffs magic bytes, and the preview renders it. */
+const PNG = {
+  name: "product.png",
+  mimeType: "image/png",
+  buffer: Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+    "base64",
+  ),
+};
+
 /**
  * Publish an offer through the add-product wizard and return its id.
  *
@@ -90,6 +100,7 @@ async function publishOffer(
   // 1 — «Информация»
   await page.getByTestId("offer-wizard-product").selectOption("other");
   await page.getByTestId("offer-wizard-product-text").fill(name);
+  await page.getByTestId("offer-wizard-photo-input").setInputFiles(PNG);
   await page.getByTestId("offer-wizard-next").click();
 
   // 2 — AI check: the sheet gates «Далее» on the verdict settling.

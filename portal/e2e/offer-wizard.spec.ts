@@ -18,11 +18,21 @@ const PDF = {
   buffer: Buffer.from("%PDF-1.4 test document"),
 };
 
+/** A real 1×1 PNG — the backend sniffs magic bytes, and the preview renders it. */
+const PNG = {
+  name: "product.png",
+  mimeType: "image/png",
+  buffer: Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+    "base64",
+  ),
+};
+
 function uniqueTaxId(): string {
   return String(100_000_000 + Math.floor(Math.random() * 899_999_999));
 }
 
-/** Walk sheet 1: name the product, then move on. */
+/** Walk sheet 1: name the product, attach the required photo, then move on. */
 async function fillBasics(
   page: Page,
   opts: { manual?: string } = {},
@@ -37,6 +47,7 @@ async function fillBasics(
     // The first catalog row — index 0 is the disabled placeholder.
     await select.selectOption({ index: 1 });
   }
+  await page.getByTestId("offer-wizard-photo-input").setInputFiles(PNG);
   await page.getByTestId("offer-wizard-next").click();
 }
 
@@ -98,6 +109,27 @@ test.describe("add-product flow", () => {
     // Still on sheet 1, with the field flagged.
     await expect(page).toHaveURL(/\/cabinet\/offers\/new\/1/);
     await expect(page.getByTestId("offer-wizard-step-1")).toBeVisible();
+  });
+
+  test("the first sheet will not advance without a photo", async ({ page }) => {
+    await page.goto("/cabinet/offers/new/1");
+    if (
+      await page
+        .getByText(/не верифицирована|not verified|tekshirilmagan/i)
+        .isVisible()
+    ) {
+      test.skip(true, "account has no verified company");
+    }
+
+    await page.getByTestId("offer-wizard-product").selectOption({ index: 1 });
+    await page.getByTestId("offer-wizard-next").click();
+    await expect(page.getByTestId("offer-wizard-photo-required")).toBeVisible();
+    await expect(page.getByTestId("offer-wizard-step-1")).toBeVisible();
+
+    await page.getByTestId("offer-wizard-photo-input").setInputFiles(PNG);
+    await expect(page.getByTestId("offer-wizard-photo-required")).toHaveCount(0);
+    await page.getByTestId("offer-wizard-next").click();
+    await expect(page.getByTestId("offer-wizard-step-2")).toBeVisible();
   });
 
   test("a product walks all seven sheets and publishes", async ({ page }) => {
