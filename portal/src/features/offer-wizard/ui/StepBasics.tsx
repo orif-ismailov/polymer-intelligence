@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { PRODUCT_OTHER, productLabel, useProducts } from "@/entities/product";
 import { coerceLang } from "@/shared/i18n";
 import { countryName } from "@/shared/lib";
-import { Alert, FormField, Input, Select, StepPanel } from "@/shared/ui";
+import { Alert, FormField, Input, Label, Select, StepPanel } from "@/shared/ui";
 import type { SelectOption } from "@/shared/ui";
 
 import {
@@ -16,7 +16,7 @@ import {
   STEP_BASICS,
 } from "../model/constants";
 import { useOfferDraft } from "../model/draftStore";
-import { isProductNamed } from "../model/validation";
+import { hasPhoto, isProductNamed } from "../model/validation";
 import { PhotoGrid } from "./PhotoGrid";
 import { StepNav } from "./StepNav";
 
@@ -31,6 +31,8 @@ export function StepBasics({ companyId, onNext }: StepBasicsProps) {
   const lang = coerceLang(i18n.language);
   const draft = useOfferDraft((s) => s.draft);
   const setField = useOfferDraft((s) => s.setField);
+  const photos = useOfferDraft((s) => s.photos);
+  const serverFiles = useOfferDraft((s) => s.serverFiles);
   const products = useProducts();
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
@@ -97,6 +99,7 @@ export function StepBasics({ companyId, onNext }: StepBasicsProps) {
       : "";
 
   const nameMissing = touched && !isProductNamed(draft);
+  const photoMissing = touched && !hasPhoto(photos, serverFiles);
 
   function handleProductChange(value: string): void {
     setField("productChoice", value);
@@ -122,7 +125,7 @@ export function StepBasics({ companyId, onNext }: StepBasicsProps) {
 
   function handleNext(): void {
     setTouched(true);
-    if (isProductNamed(draft)) onNext();
+    if (isProductNamed(draft) && hasPhoto(photos, serverFiles)) onNext();
   }
 
   return (
@@ -250,13 +253,17 @@ export function StepBasics({ companyId, onNext }: StepBasicsProps) {
         </FormField>
 
         <div>
-          <p className="mb-1.5 text-sm font-medium text-text">
+          <Label htmlFor="offer-wizard-photo-input" required>
             {t("offerWizard.basics.photos")}
-          </p>
+          </Label>
           <PhotoGrid companyId={companyId} onError={setPhotoError} />
           {photoError ? (
             <p role="alert" className="mt-2 text-xs text-danger">
               {photoError}
+            </p>
+          ) : photoMissing ? (
+            <p role="alert" className="mt-2 text-xs text-danger" data-testid="offer-wizard-photo-required">
+              {t("offerWizard.basics.photoRequired")}
             </p>
           ) : null}
         </div>

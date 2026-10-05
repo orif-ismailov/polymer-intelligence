@@ -857,6 +857,7 @@
       "category": "Kategoriya",
       "categoryUnset": "Ko‘rsatilmagan",
       "photos": "Tovar rasmlari",
+      "photoRequired": "Kamida bitta mahsulot rasmini qo'shing",
       "catalogUnavailable": "Katalog mavjud emas",
       "catalogUnavailableBody": "«Boshqa»ni tanlang va tovar nomini qo‘lda kiriting."
     },
@@ -2623,6 +2624,11 @@
       "account": "Hisob",
       "blurb": "Kompaniyalarni tekshirish va laboratoriya nazorati bilan neftkimyo xomashyosi bozori.",
       "legal": "IMEX AI. Barcha huquqlar himoyalangan.",
+      "contactsTitle": "Kontaktlar",
+      "tin": "STIR",
+      "bankAccount": "H/r",
+      "bank": "Bank",
+      "mfo": "MFO",
       "legalTitle": "Huquqiy ma'lumot",
       "privacy": "Maxfiylik siyosati",
       "accountDeletion": "Hisobni o‘chirish"
@@ -3344,7 +3350,7 @@
       "intro": "Ushbu siyosat IMEX AI {{site}} sayti hamda Android va iOS uchun IMEX AI mobil ilovalari (birgalikda — «Xizmat») foydalanuvchilarining shaxsiy ma'lumotlarini qanday qayta ishlashini tavsiflaydi.",
       "operator": {
         "title": "1. Operator",
-        "body": "Shaxsiy ma'lumotlar operatori — {{operator}} (keyingi o‘rinlarda — «biz»). Ma'lumotlarni qayta ishlash bo‘yicha savollar uchun {{email}} manziliga yozing."
+        "body": "Shaxsiy ma'lumotlar operatori — {{operator}} (STIR {{tin}}; manzil: {{address}}), keyingi o‘rinlarda — «biz». Ma'lumotlarni qayta ishlash bo‘yicha savollar uchun {{email}} manziliga yozing."
       },
       "collect": {
         "title": "2. Qanday ma'lumotlarni to‘playmiz",

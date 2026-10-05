@@ -857,6 +857,7 @@
       "category": "类别",
       "categoryUnset": "未指定",
       "photos": "产品照片",
+      "photoRequired": "请至少添加一张产品照片",
       "catalogUnavailable": "目录不可用",
       "catalogUnavailableBody": "请选择“其他”并手动输入产品名称。"
     },
@@ -2623,6 +2624,11 @@
       "account": "账户",
       "blurb": "提供公司认证和实验室质量控制的石化原料交易平台。",
       "legal": "IMEX AI 版权所有。",
+      "contactsTitle": "联系方式",
+      "tin": "税号",
+      "bankAccount": "账号",
+      "bank": "银行",
+      "mfo": "MFO",
       "legalTitle": "法律信息",
       "privacy": "隐私政策",
       "accountDeletion": "删除账户"
@@ -3344,7 +3350,7 @@
       "intro": "本政策说明 IMEX AI 如何处理 {{site}} 网站及 IMEX AI Android 和 iOS 移动应用（统称“服务”）用户的个人数据。",
       "operator": {
         "title": "1. 数据控制者",
-        "body": "个人数据控制者为 {{operator}}（“我们”）。如对数据处理有疑问，请发送邮件至 {{email}}。"
+        "body": "个人数据控制者为 {{operator}}（税号 {{tin}}；地址：{{address}}）（“我们”）。如对数据处理有疑问，请发送邮件至 {{email}}。"
       },
       "collect": {
         "title": "2. 我们收集的数据",

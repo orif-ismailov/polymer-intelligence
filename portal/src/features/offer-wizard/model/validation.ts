@@ -1,3 +1,4 @@
+import type { OfferFile } from "@/entities/offer";
 import { PRODUCT_OTHER } from "@/entities/product";
 
 import {
@@ -22,6 +23,8 @@ export interface StepInputs {
   documentKinds: ReadonlySet<OfferDocumentKind>;
   /** True once the AI sheet has finished its pass. */
   aiChecked: boolean;
+  photos: readonly StagedFile[];
+  serverFiles: readonly OfferFile[];
 }
 
 function isPositive(value: string): boolean {
@@ -35,8 +38,21 @@ export function isProductNamed(draft: OfferDraft): boolean {
   return draft.productChoice !== "";
 }
 
-export function isBasicsValid(draft: OfferDraft): boolean {
-  return isProductNamed(draft);
+/**
+ * At least one photo — staged on this visit or already on the server when an
+ * offer is reopened. The first one is the cover the market list shows, and an
+ * offer without it renders as a grey placeholder card.
+ */
+export function hasPhoto(photos: readonly StagedFile[], serverFiles: readonly OfferFile[]): boolean {
+  return photos.length > 0 || serverFiles.some((f) => f.kind === "image");
+}
+
+export function isBasicsValid(
+  draft: OfferDraft,
+  photos: readonly StagedFile[],
+  serverFiles: readonly OfferFile[],
+): boolean {
+  return isProductNamed(draft) && hasPhoto(photos, serverFiles);
 }
 
 /**
@@ -81,7 +97,7 @@ export function isTermsValid(draft: OfferDraft): boolean {
 export function isStepValid(step: number, inputs: StepInputs, passport: StagedFile | null, passportOnServer: boolean): boolean {
   switch (step) {
     case STEP_BASICS:
-      return isBasicsValid(inputs.draft);
+      return isBasicsValid(inputs.draft, inputs.photos, inputs.serverFiles);
     case STEP_AI_CHECK:
       return inputs.aiChecked;
     case STEP_AVAILABILITY:
