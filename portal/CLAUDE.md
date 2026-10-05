@@ -363,6 +363,16 @@ from an empty `portal_static` volume. It is now a **502** from the nginx proxy. 
 `docker compose ps portal` first. `make portal-bundle` keeps its name but now rebuilds and
 restarts the service.
 
+**PWA (05.10.2026).** `public/manifest.webmanifest` + `public/sw.js` make the site installable;
+icons are generated from the mobile app's `assets/branding/icon-1024.png` so both stores and the
+browser show one mark. The worker caches ONLY the content-hashed `/assets/*` (cache-first) and
+serves `public/offline.html` when a navigation has no network — it never touches `/api/*` or page
+HTML (one visitor's cabinet must never be replayed to another). It registers in production builds
+only, so verify it with `npm run build && PORT=4173 NODE_ENV=production DEV_API_PROXY=1 node
+server.js`, not `npm run dev`. `server.js` overrides sirv's year-long `immutable` for `sw.js`, the
+manifest and the offline page (`no-cache`) and the icons (one day) — a year-cached worker would pin
+every installed copy to its first version. Changing caching logic: bump `VERSION` in `sw.js`.
+
 `robots.txt` and `sitemap.xml` are served by `server.js`, not by a static file: the sitemap
 is generated per request from `GET /api/v1/public/sitemap`, and falls back to the static
 section alone if the API is unreachable (a partial sitemap beats a 500).

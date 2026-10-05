@@ -207,9 +207,26 @@ async function createServer() {
     const compression = (await import("compression")).default;
     const sirv = (await import("sirv")).default;
     app.use(compression());
-    // Hashed asset filenames are immutable; index.html never is.
+    // Hashed asset filenames are immutable; index.html never is. Neither are the
+    // PWA files: a year-cached sw.js or manifest would pin every installed copy
+    // to the version it first saw, so those revalidate on every request.
+    const revalidated = new Set(["/sw.js", "/manifest.webmanifest", "/offline.html"]);
+    const appIcons = new Set(["/favicon.ico", "/apple-touch-icon.png", "/icon-192.png", "/icon-512.png"]);
     app.use(
-      sirv(path.resolve(rootDir, "dist/client"), { extensions: [], maxAge: 31536000, immutable: true }),
+      sirv(path.resolve(rootDir, "dist/client"), {
+        extensions: [],
+        maxAge: 31536000,
+        immutable: true,
+        setHeaders(res, pathname) {
+          if (revalidated.has(pathname)) res.setHeader("Cache-Control", "no-cache");
+          // Icons keep their names across a rebrand, so a day, not a year.
+          if (appIcons.has(pathname)) res.setHeader("Cache-Control", "public, max-age=86400");
+          if (pathname === "/manifest.webmanifest") {
+            res.setHeader("Content-Type", "application/manifest+json");
+          }
+          if (pathname === "/favicon.ico") res.setHeader("Content-Type", "image/x-icon");
+        },
+      }),
     );
     templateHtml = await fs.readFile(path.resolve(rootDir, "dist/client/index.html"), "utf-8");
     ssrRender = (await import("./dist/server/entry-server.js")).render;

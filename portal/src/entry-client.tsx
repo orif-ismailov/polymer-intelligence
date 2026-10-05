@@ -69,3 +69,14 @@ if (container.firstElementChild) {
 } else {
   createRoot(container).render(app);
 }
+
+/*
+ * The service worker (`public/sw.js`) is what makes the portal installable. Production
+ * only: in dev it would cache-first Vite's `/assets` and fight HMR. Registered after
+ * `load` so it never competes with the first render for bandwidth.
+ */
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js");
+  });
+}
