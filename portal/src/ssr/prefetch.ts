@@ -6,6 +6,7 @@ import {
   fetchPublicDirectory,
   fetchPublicNews,
   fetchPublicOffer,
+  fetchSimilarOffers,
   fetchPublicOffers,
   fetchPublicPrices,
   fetchPublicStats,
@@ -125,10 +126,17 @@ export async function prefetchForUrl(
     const offerSegment = segments[1];
     if (segments.length === 2 && offerSegment && /^\d+$/.test(offerSegment)) {
       const offerId = Number(offerSegment);
-      await settle(
-        `offer:${offerId}`,
-        prefetch(publicKeys.offer(offerId), () => fetchPublicOffer(offerId)),
-      );
+      // The similar row ships in the HTML too: its tiles are crawlable links.
+      await Promise.all([
+        settle(
+          `offer:${offerId}`,
+          prefetch(publicKeys.offer(offerId), () => fetchPublicOffer(offerId)),
+        ),
+        settle(
+          `similar:${offerId}`,
+          prefetch(publicKeys.similar(offerId), () => fetchSimilarOffers(offerId)),
+        ),
+      ]);
       return;
     }
     return;

@@ -2540,6 +2540,8 @@
     },
     "offer": {
       "untitled": "Untitled",
+      "similarTitle": "Similar offers",
+      "similarSeeAll": "See all",
       "onRequest": "Price on request",
       "moq": "Min. order",
       "leadTime": "Lead time, days",

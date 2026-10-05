@@ -5,6 +5,7 @@ import type {
   PublicCompanyDetail,
   PublicCompanyList,
   PublicNewsCard,
+  PublicOfferCard,
   PublicOfferDetail,
   PublicOfferFilters,
   PublicOfferList,
@@ -28,6 +29,7 @@ export const publicKeys = {
   offers: (filters: PublicOfferFilters, offset: number, limit: number) =>
     ["public", "offers", filters, offset, limit] as const,
   offer: (id: number) => ["public", "offer", id] as const,
+  similar: (id: number) => ["public", "offer", id, "similar"] as const,
   categories: (lang: string) => ["public", "categories", lang] as const,
   directory: (slug: string, q: string, country: string, offset: number, limit: number) =>
     ["public", "directory", slug, q, country, offset, limit] as const,
@@ -49,6 +51,11 @@ export function fetchPublicOffers(
 
 export function fetchPublicOffer(offerId: number): Promise<PublicOfferDetail> {
   return api.get<PublicOfferDetail>(`${BASE}/offers/${offerId}`);
+}
+
+/** «Похожие предложения»: the same product first, then the same category. */
+export function fetchSimilarOffers(offerId: number): Promise<PublicOfferCard[]> {
+  return api.get<PublicOfferCard[]>(`${BASE}/offers/${offerId}/similar`);
 }
 
 export function fetchPublicCategories(lang: string): Promise<PublicCategory[]> {

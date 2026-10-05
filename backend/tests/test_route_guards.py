@@ -80,6 +80,9 @@ PUBLIC_ROUTES: frozenset[tuple[str, str]] = frozenset(
         # drop seller contact details.
         ("GET", "/api/v1/public/offers"),
         ("GET", "/api/v1/public/offers/{offer_id}"),
+        # «Похожие предложения» under the offer page: approved offers only, the same
+        # cards the anonymous catalog already serves.
+        ("GET", "/api/v1/public/offers/{offer_id}/similar"),
         ("GET", "/api/v1/public/categories"),
         ("GET", "/api/v1/public/directories/{slug}"),
         ("GET", "/api/v1/public/directories/{slug}/{company_id}"),

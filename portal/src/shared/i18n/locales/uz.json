@@ -2540,6 +2540,8 @@
     },
     "offer": {
       "untitled": "Nomsiz",
+      "similarTitle": "O‘xshash takliflar",
+      "similarSeeAll": "Barchasini ko‘rish",
       "onRequest": "Narx so'rov bo'yicha",
       "moq": "Min. partiya",
       "leadTime": "Yetkazib berish muddati, kun",

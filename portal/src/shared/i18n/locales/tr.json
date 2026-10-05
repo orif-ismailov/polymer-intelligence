@@ -2540,6 +2540,8 @@
     },
     "offer": {
       "untitled": "Adsız",
+      "similarTitle": "Benzer teklifler",
+      "similarSeeAll": "Tümünü gör",
       "onRequest": "Fiyat talep üzerine",
       "moq": "Min. sipariş",
       "leadTime": "Teslim süresi, gün",

@@ -40,6 +40,7 @@ def test_public_routes_registered() -> None:
     paths = {r.path for r in router.routes}  # type: ignore[attr-defined]
     assert "/public/offers" in paths
     assert "/public/offers/{offer_id}" in paths
+    assert "/public/offers/{offer_id}/similar" in paths
     assert "/public/categories" in paths
     assert "/public/directories/{slug}" in paths
     assert "/public/directories/{slug}/{company_id}" in paths
@@ -479,6 +480,95 @@ def test_total_reflects_the_filter_not_the_page(api) -> None:  # noqa: ANN001
     page = client.get(f"{_BASE}/offers", params={"q": "COUNTME", "limit": 2}).json()
     assert len(page["items"]) == 2
     assert page["total"] == 5
+
+
+def _product_id(db, code: str) -> int:  # noqa: ANN001
+    from app.domains.reference.models import Product  # noqa: PLC0415
+    from app.seed.seed_reference import seed_all  # noqa: PLC0415
+
+    seed_all(db)  # idempotent: products + synonyms
+    product = db.query(Product).filter(Product.code == code).one()
+    return product.id
+
+
+@requires_real_db
+def test_similar_offers_rank_the_product_then_fill_from_the_category(api) -> None:  # noqa: ANN001
+    """Same catalog product first, then the same «Категория» (`polymer_type`) —
+    never the offer being viewed, never an unapproved one, never past `limit`."""
+    from app.models.enums import CompanyStatus, SellerOfferStatus  # noqa: PLC0415
+
+    client, session = api
+    with session() as db:
+        owner = make_account(db, "+998900007010")
+        company = make_company(
+            db,
+            owner,
+            tax_id="317000010",
+            status=CompanyStatus.verified,
+            verified_at=datetime(2024, 6, 1, tzinfo=UTC),
+        )
+        pp = _product_id(db, "PP")
+        hdpe = _product_id(db, "HDPE")
+
+        def offer(grade: str, published: int, **kw: Any) -> int:
+            return make_seller_offer(
+                db,
+                company=company,
+                grade_text=grade,
+                published_at=datetime(2026, 1, published, tzinfo=UTC),
+                **kw,
+            ).id
+
+        viewed = offer("VIEWED", 1, product_id=pp, polymer_type="PP")
+        same_old = offer("SAME-OLD", 2, product_id=pp, polymer_type="PP")
+        same_new = offer("SAME-NEW", 3, product_id=pp, polymer_type="PP")
+        # «Другое» offer in the same family: no product link, category only.
+        family = offer("FAMILY", 4, product_text="PP raffia", polymer_type="pp")
+        offer("OTHER-PRODUCT", 5, product_id=hdpe, polymer_type="HDPE")
+        offer(
+            "PENDING",
+            6,
+            product_id=pp,
+            polymer_type="PP",
+            status=SellerOfferStatus.pending_moderation,
+        )
+        db.commit()
+
+    resp = client.get(f"{_BASE}/offers/{viewed}/similar")
+    assert resp.status_code == 200
+    ids = [i["id"] for i in resp.json()]
+    assert ids == [same_new, same_old, family]
+
+    capped = client.get(f"{_BASE}/offers/{viewed}/similar", params={"limit": 1}).json()
+    assert [i["id"] for i in capped] == [same_new]
+
+
+@requires_real_db
+def test_similar_offers_are_empty_when_nothing_matches_and_404_for_hidden(api) -> None:  # noqa: ANN001
+    from app.models.enums import CompanyStatus, SellerOfferStatus  # noqa: PLC0415
+
+    client, session = api
+    with session() as db:
+        owner = make_account(db, "+998900007011")
+        company = make_company(
+            db,
+            owner,
+            tax_id="317000011",
+            status=CompanyStatus.verified,
+            verified_at=datetime(2024, 6, 1, tzinfo=UTC),
+        )
+        lonely = make_seller_offer(db, company=company, grade_text="LONELY").id
+        pending = make_seller_offer(
+            db,
+            company=company,
+            grade_text="HIDDEN",
+            status=SellerOfferStatus.pending_moderation,
+        ).id
+        db.commit()
+
+    assert client.get(f"{_BASE}/offers/{lonely}/similar").json() == []
+    assert client.get(f"{_BASE}/offers/{pending}/similar").status_code == 404
+    assert client.get(f"{_BASE}/offers/999999999/similar").status_code == 404
 
 
 @requires_real_db

@@ -217,6 +217,29 @@ def list_public_offers(
 
 
 @router.get(
+    "/offers/{offer_id}/similar",
+    response_model=list[PublicOfferCard],
+    summary="Offers like this one",
+    responses=errors.NOT_FOUND,
+)
+def list_similar_offers(
+    offer_id: int,
+    limit: int = Query(default=4, ge=1, le=12),
+    db: Session = Depends(get_db),
+) -> list[PublicOfferCard]:
+    """GET /public/offers/{id}/similar -- the «Похожие предложения» row under an offer.
+
+    404 on exactly the ids the offer page itself 404s on, so the row cannot leak that
+    a withdrawn or unmoderated offer exists.
+    """
+    offer = offer_service.get_catalog_offer(db, offer_id)
+    if offer is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
+    similar = offer_service.list_similar_catalog(db, offer, limit=limit)
+    return [PublicOfferCard.model_validate(o) for o in similar]
+
+
+@router.get(
     "/offers/{offer_id}",
     response_model=PublicOfferDetail,
     summary="Public offer page",

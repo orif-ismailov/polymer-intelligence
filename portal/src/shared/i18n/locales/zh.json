@@ -2540,6 +2540,8 @@
     },
     "offer": {
       "untitled": "未命名",
+      "similarTitle": "相似报价",
+      "similarSeeAll": "查看全部",
       "onRequest": "价格面议",
       "moq": "最小起订量",
       "leadTime": "交货期（天）",
