@@ -2443,9 +2443,11 @@
         "tradersBody": "Doğrulanmış tüccarlar ve distribütörler",
         "logisticsBody": "Teslimat, gümrük, depolama",
         "laboratoriesBody": "Laboratuvar analizleri ve kalite pasaportları",
+        "technologistsBody": "Proses ve formülasyon uzmanları",
         "pricesBody": "Güncel fiyatlar ve piyasa analizi",
         "newsBody": "Sektör haberleri ve güncellemeler",
-        "daily": "Her gün güncellenir"
+        "daily": "Her gün güncellenir",
+        "consultations": "Danışmanlık"
       },
       "productCategories": "Ürün kategorileri",
       "resetFilters": "Tümünü sıfırla",
