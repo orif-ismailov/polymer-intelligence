@@ -155,6 +155,8 @@ export function PhotoGrid({ companyId, onError }: PhotoGridProps) {
         accept={PHOTO_MIME.join(",")}
         multiple
         className="sr-only"
+        id="offer-wizard-photo-input"
+        data-testid="offer-wizard-photo-input"
         onChange={(e) => {
           handleFiles(e.target.files);
           e.target.value = "";

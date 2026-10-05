@@ -857,6 +857,7 @@
       "category": "Category",
       "categoryUnset": "Not specified",
       "photos": "Product photos",
+      "photoRequired": "Add at least one product photo",
       "catalogUnavailable": "Catalog unavailable",
       "catalogUnavailableBody": "Choose “Other” and type the product name in."
     },
@@ -2623,6 +2624,11 @@
       "account": "Account",
       "blurb": "A petrochemical raw materials marketplace with company verification and lab control.",
       "legal": "IMEX AI. All rights reserved.",
+      "contactsTitle": "Contacts",
+      "tin": "TIN",
+      "bankAccount": "Account",
+      "bank": "Bank",
+      "mfo": "MFO",
       "legalTitle": "Legal",
       "privacy": "Privacy Policy",
       "accountDeletion": "Account deletion"
@@ -3344,7 +3350,7 @@
       "intro": "This policy explains how IMEX AI processes the personal data of users of the {{site}} website and the IMEX AI mobile apps for Android and iOS (together, the \"Service\").",
       "operator": {
         "title": "1. Operator",
-        "body": "The personal data operator is {{operator}} (\"we\"). For questions about data processing, write to {{email}}."
+        "body": "The personal data operator is {{operator}} (TIN {{tin}}; address: {{address}}) (\"we\"). For questions about data processing, write to {{email}}."
       },
       "collect": {
         "title": "2. Data we collect",

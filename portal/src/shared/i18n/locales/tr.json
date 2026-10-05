@@ -857,6 +857,7 @@
       "category": "Kategori",
       "categoryUnset": "Belirtilmedi",
       "photos": "Ürün fotoğrafları",
+      "photoRequired": "En az bir ürün fotoğrafı ekleyin",
       "catalogUnavailable": "Katalog kullanılamıyor",
       "catalogUnavailableBody": "“Diğer” seçeneğini seçip ürün adını elle girin."
     },
@@ -2623,6 +2624,11 @@
       "account": "Hesap",
       "blurb": "Şirket doğrulaması ve laboratuvar kontrolü olan petrokimya hammaddeleri pazaryeri.",
       "legal": "IMEX AI. Tüm hakları saklıdır.",
+      "contactsTitle": "İletişim",
+      "tin": "VKN",
+      "bankAccount": "Hesap no.",
+      "bank": "Banka",
+      "mfo": "MFO",
       "legalTitle": "Yasal",
       "privacy": "Gizlilik Politikası",
       "accountDeletion": "Hesap silme"
@@ -3344,7 +3350,7 @@
       "intro": "Bu politika, IMEX AI'nin {{site}} web sitesi ile Android ve iOS için IMEX AI mobil uygulamalarının (birlikte \"Hizmet\") kullanıcılarına ait kişisel verileri nasıl işlediğini açıklar.",
       "operator": {
         "title": "1. Veri sorumlusu",
-        "body": "Kişisel verilerin sorumlusu {{operator}}'dir (\"biz\"). Veri işleme ile ilgili sorularınız için {{email}} adresine yazın."
+        "body": "Kişisel verilerin sorumlusu {{operator}}'dir (VKN {{tin}}; adres: {{address}}) (\"biz\"). Veri işleme ile ilgili sorularınız için {{email}} adresine yazın."
       },
       "collect": {
         "title": "2. Topladığımız veriler",

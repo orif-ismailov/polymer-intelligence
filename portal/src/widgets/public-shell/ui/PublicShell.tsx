@@ -2,7 +2,18 @@ import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router-dom";
 
 import { selectIsAuthenticated, useAuthStore } from "@/entities/account";
-import { PUBLIC_DIRECTORIES } from "@/shared/config";
+import {
+  LEGAL_BANK_ACCOUNT,
+  LEGAL_BANK_MFO,
+  LEGAL_BANK_NAME,
+  LEGAL_CONTACT_EMAIL,
+  LEGAL_OPERATOR_ADDRESS,
+  LEGAL_OPERATOR_NAME,
+  LEGAL_OPERATOR_PHONE,
+  LEGAL_OPERATOR_PHONE_HREF,
+  LEGAL_OPERATOR_TIN,
+  PUBLIC_DIRECTORIES,
+} from "@/shared/config";
 import { BrandLogo } from "@/shared/ui";
 
 import { PublicMobileNav } from "./PublicMobileNav";
@@ -86,7 +97,7 @@ function PublicFooter() {
           rests on the footer's own `bg-surface` instead of on a strip of page
           background, so the seam does not show through the translucency. */}
       <div className="mx-auto max-w-[1440px] px-4 pb-24 pt-10 md:pb-10 lg:px-6">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-1">
             <Link to="/" aria-label={t("common.appName")} className="inline-flex">
               <BrandLogo withTagline />
@@ -113,11 +124,39 @@ function PublicFooter() {
               </ul>
             </nav>
           ))}
+
+          <address className="not-italic" data-testid="public-footer-contacts">
+            <h2 className="text-sm font-semibold text-text">{t("public.footer.contactsTitle")}</h2>
+            <ul className="mt-3 space-y-2 text-sm text-text-muted">
+              <li>
+                <a href={LEGAL_OPERATOR_PHONE_HREF} className="transition-colors hover:text-brand">
+                  {LEGAL_OPERATOR_PHONE}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${LEGAL_CONTACT_EMAIL}`}
+                  className="transition-colors hover:text-brand"
+                >
+                  {LEGAL_CONTACT_EMAIL}
+                </a>
+              </li>
+              <li>{LEGAL_OPERATOR_ADDRESS}</li>
+            </ul>
+          </address>
         </div>
 
-        <p className="mt-10 border-t border-border pt-6 text-xs text-text-subtle">
-          {t("public.footer.legal")}
-        </p>
+        {/* The operator's requisites: who runs the site, under which ИНН, paid
+            into which account — what a counterparty checks before a deal. */}
+        <div className="mt-10 space-y-1 border-t border-border pt-6 text-xs text-text-subtle">
+          <p className="font-medium text-text-muted">{LEGAL_OPERATOR_NAME}</p>
+          <p>
+            {t("public.footer.tin")}: {LEGAL_OPERATOR_TIN} · {t("public.footer.bankAccount")}:{" "}
+            {LEGAL_BANK_ACCOUNT} · {t("public.footer.bank")}: {LEGAL_BANK_NAME} ·{" "}
+            {t("public.footer.mfo")}: {LEGAL_BANK_MFO}
+          </p>
+          <p>{t("public.footer.legal")}</p>
+        </div>
       </div>
     </footer>
   );
